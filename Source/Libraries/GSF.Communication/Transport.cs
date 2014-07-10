@@ -29,7 +29,7 @@
 //       Added new header and license agreement.
 //  10/30/2009 - Pinal C. Patel
 //       Added IsIPv6IP() and IsMulticastIP() methods.
-//       Fixed bug in CreateSocket() that was breaking one-way communication support in UDP components.
+//       Fixed issue in CreateSocket() that was breaking one-way communication support in UDP components.
 //  04/29/2010 - Pinal C. Patel
 //       Added EndpointFormatRegex constant to be used for parsing endpoint strings.
 //  08/18/2011 - J. Ritchie Carroll
@@ -128,7 +128,7 @@ namespace GSF.Communication
             if (stack == IPStack.IPv6 && !Socket.OSSupportsIPv6)
                 throw new NotSupportedException(string.Format("IPv6 stack is not available for socket creation on {0}:{1}", hostNameOrAddress.ToNonNullNorWhiteSpace("localhost"), port));
 #if !MONO
-            else if (stack == IPStack.IPv4 && !Socket.OSSupportsIPv4)
+            if (stack == IPStack.IPv4 && !Socket.OSSupportsIPv4)
                 throw new NotSupportedException(string.Format("IPv4 stack is not available for socket creation on {0}:{1}", hostNameOrAddress.ToNonNullNorWhiteSpace("localhost"), port));
 #endif
 
@@ -140,60 +140,58 @@ namespace GSF.Communication
 
                 return new IPEndPoint(IPAddress.Any, port);
             }
-            else
+
+            IPAddress address;
+            bool ipStackMismatch = false;
+
+            // Attempt to parse provided address name as a literal IP address
+            if (IPAddress.TryParse(hostNameOrAddress, out address))
             {
-                IPAddress address;
-                bool ipStackMismatch = false;
+                // As long as desired IP stack matches format of specified IP address, return end point for address
+                if ((stack == IPStack.IPv6 && address.AddressFamily == AddressFamily.InterNetworkV6) ||
+                    (stack == IPStack.IPv4 && address.AddressFamily == AddressFamily.InterNetwork))
+                    return new IPEndPoint(address, port);
 
-                // Attempt to parse provided address name as a literal IP address
-                if (IPAddress.TryParse(hostNameOrAddress, out address))
+                // User specified an IP address that is mismatch with the desired IP stack. If the DNS server
+                // responds to this IP, we can attempt to see if an IP is defined for the desired IP stack, 
+                // otherwise this is an exception
+                ipStackMismatch = true;
+            }
+
+            try
+            {
+                // Handle "localhost" as a special case, returning proper loopback address for the desired IP stack
+                if (string.Compare(hostNameOrAddress, "localhost", true) == 0)
+                    return new IPEndPoint(stack == IPStack.IPv6 ? IPAddress.IPv6Loopback : IPAddress.Loopback, port);
+
+                // Failed to parse an IP address for the desired stack - this may simply be that a host name was provided
+                // so we attempt a DNS lookup. Note that exceptions will occur if DNS lookup fails.
+                IPAddress[] dnsAddressList = Dns.GetHostEntry(hostNameOrAddress).AddressList;
+
+                if (dnsAddressList.Length > 0)
                 {
-                    // As long as desired IP stack matches format of specified IP address, return end point for address
-                    if ((stack == IPStack.IPv6 && address.AddressFamily == AddressFamily.InterNetworkV6) ||
-                        (stack == IPStack.IPv4 && address.AddressFamily == AddressFamily.InterNetwork))
-                        return new IPEndPoint(address, port);
+                    // Traverse address list looking for first match on desired IP stack
+                    foreach (IPAddress dnsAddress in dnsAddressList)
+                    {
+                        if ((stack == IPStack.IPv6 && dnsAddress.AddressFamily == AddressFamily.InterNetworkV6) ||
+                            (stack == IPStack.IPv4 && dnsAddress.AddressFamily == AddressFamily.InterNetwork))
+                            return new IPEndPoint(dnsAddress, port);
+                    }
 
-                    // User specified an IP address that is mismatch with the desired IP stack. If the DNS server
-                    // responds to this IP, we can attempt to see if an IP is defined for the desired IP stack, 
-                    // otherwise this is an exception
+                    // If no available matching address was found for desired IP stack, this is an IP stack mismatch
                     ipStackMismatch = true;
                 }
 
-                try
-                {
-                    // Handle "localhost" as a special case, returning proper loopback address for the desired IP stack
-                    if (string.Compare(hostNameOrAddress, "localhost", true) == 0)
-                        return new IPEndPoint(stack == IPStack.IPv6 ? IPAddress.IPv6Loopback : IPAddress.Loopback, port);
+                throw new InvalidOperationException(string.Format("No valid {0} addresses could be found for \"{1}\"", stack, hostNameOrAddress));
+            }
+            catch
+            {
+                // Spell out a specific error message for IP stack mismatches
+                if (ipStackMismatch)
+                    throw new InvalidOperationException(string.Format("IP address mismatch: unable to find an {0} address for \"{1}\"", stack, hostNameOrAddress));
 
-                    // Failed to parse an IP address for the deisred stack - this may simply be that a host name was provided
-                    // so we attempt a DNS lookup. Note that exceptions will occur if DNS lookup fails.
-                    IPAddress[] dnsAddressList = Dns.GetHostEntry(hostNameOrAddress).AddressList;
-
-                    if (dnsAddressList.Length > 0)
-                    {
-                        // Traverse address list looking for first match on desired IP stack
-                        foreach (IPAddress dnsAddress in dnsAddressList)
-                        {
-                            if ((stack == IPStack.IPv6 && dnsAddress.AddressFamily == AddressFamily.InterNetworkV6) ||
-                                (stack == IPStack.IPv4 && dnsAddress.AddressFamily == AddressFamily.InterNetwork))
-                                return new IPEndPoint(dnsAddress, port);
-                        }
-
-                        // If no available matching address was found for desired IP stack, this is an IP stack mismatch
-                        ipStackMismatch = true;
-                    }
-
-                    throw new InvalidOperationException(string.Format("No valid {0} addresses could be found for \"{1}\"", stack, hostNameOrAddress));
-                }
-                catch
-                {
-                    // Spell out a specific error message for ip stack mismatches
-                    if (ipStackMismatch)
-                        throw new InvalidOperationException(string.Format("IP address mismatch: unable to find an {0} address for \"{1}\"", stack, hostNameOrAddress));
-
-                    // Otherwise report original exception
-                    throw;
-                }
+                // Otherwise report original exception
+                throw;
             }
         }
 
@@ -208,8 +206,8 @@ namespace GSF.Communication
         /// <returns>An <see cref="Socket"/> object.</returns>
         public static Socket CreateSocket(string address, int port, ProtocolType protocol, IPStack stack, bool allowDualStackSocket = true)
         {
-            Socket socket = null;
-            IPEndPoint endpoint = null;
+            Socket socket;
+            IPEndPoint endpoint;
 
             switch (protocol)
             {
@@ -217,7 +215,7 @@ namespace GSF.Communication
                     endpoint = CreateEndPoint(address, port, stack);
                     socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-                    // If allowDualModeSocket is true and the enpoint is IPv6, we setup a dual-mode socket
+                    // If allowDualModeSocket is true and the endpoint is IPv6, we setup a dual-mode socket
                     // by setting the IPv6Only socket option to false
                     if (allowDualStackSocket && endpoint.AddressFamily == AddressFamily.InterNetworkV6 && Environment.OSVersion.Version.Major > 5)
                         socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
@@ -298,20 +296,20 @@ namespace GSF.Communication
         /// <summary>
         /// Derives the desired <see cref="IPStack"/> from the "interface" setting in the connection string key/value pairs.
         /// </summary>
-        /// <param name="connectionStringKVPairs">Connection string key/value pairs.</param>
+        /// <param name="connectionStringEntries">Connection string key/value pairs.</param>
         /// <returns>Desired <see cref="IPStack"/> based on "interface" setting.</returns>
         /// <remarks>
-        /// The "interface" setting will be added to the <paramref name="connectionStringKVPairs"/> if it
+        /// The "interface" setting will be added to the <paramref name="connectionStringEntries"/> if it
         /// doesn't exist, in this case return value will be <see cref="IPStack.Default"/>.
         /// </remarks>
-        public static IPStack GetInterfaceIPStack(Dictionary<string, string> connectionStringKVPairs)
+        public static IPStack GetInterfaceIPStack(Dictionary<string, string> connectionStringEntries)
         {
-            string ipAddress = null;
+            string ipAddress;
 
-            if (connectionStringKVPairs.TryGetValue("interface", out ipAddress))
+            if (connectionStringEntries.TryGetValue("interface", out ipAddress))
                 return IsIPv6IP(ipAddress) ? IPStack.IPv6 : IPStack.IPv4;
 
-            connectionStringKVPairs.Add("interface", string.Empty);
+            connectionStringEntries.Add("interface", string.Empty);
 
             return IPStack.Default;
         }
@@ -344,22 +342,18 @@ namespace GSF.Communication
             if (ipAddress == null)
                 throw new ArgumentNullException("ipAddress");
 
+            // Check for IPv6
             if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
-            {
-                // IP is IPv6
                 return ipAddress.IsIPv6Multicast;
-            }
-            else
-            {
-                // IP is IPv4
-                int firstOctet = int.Parse(ipAddress.ToString().Split('.')[0]);
 
-                // Check first octet to see if IP is a Class D multicast IP
-                if (firstOctet >= 224 && firstOctet <= 247)
-                    return true;
+            // IP is IPv4, check octet for multicast range
+            int firstOctet = int.Parse(ipAddress.ToString().Split('.')[0]);
 
-                return false;
-            }
+            // Check first octet to see if IP is a Class D multicast IP
+            if (firstOctet >= 224 && firstOctet <= 247)
+                return true;
+
+            return false;
         }
 
         /// <summary>
@@ -381,7 +375,7 @@ namespace GSF.Communication
                 return false;
             }
 
-            throw new ArgumentException("Port number is not a valid number");
+            throw new ArgumentException("Specified port is not a valid number");
         }
 
         /// <summary>

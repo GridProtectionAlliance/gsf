@@ -27,6 +27,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Security;
@@ -473,6 +474,42 @@ namespace GSF.Communication
             set
             {
                 m_enabledSslProtocols = value;
+
+                // As of July 2014, Tls12 is the latest and most secure TLS protocol - all other protocols
+                // represent a security risk when used, as such we log a security message when any of the
+                // older protocols are being used.
+                if (m_enabledSslProtocols != SslProtocols.Tls12)
+                {
+                    try
+                    {
+                        string applicationName;
+
+                        // Get application name
+                        try
+                        {
+                            // Attempt to retrieve application name as defined in common security settings - this name
+                            // is typically preconfigured as the desired event source for event log entries
+                            ConfigurationFile config = ConfigurationFile.Current;
+                            CategorizedSettingsElementCollection settings = config.Settings["SecurityProvider"];
+                            applicationName = settings["ApplicationName"].Value;
+                        }
+                        catch
+                        {
+                            applicationName = null;
+                        }
+
+                        // Fall back on running executable name
+                        if (string.IsNullOrWhiteSpace(applicationName))
+                            applicationName = FilePath.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName);
+
+                        string message = string.Format("One or more less secure TLS/SSL protocols \"{0}\" are being used by an instance of the TlsServer in {1}", m_enabledSslProtocols, applicationName);
+                        EventLog.WriteEntry(applicationName, message, EventLogEntryType.Warning, 1);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new SecurityException(string.Format("Failed to write event log entry for security warning about use of less secure TLS/SSL protocols \"{0}\": {1}", m_enabledSslProtocols, ex.Message), ex);
+                    }
+                }
             }
         }
 
