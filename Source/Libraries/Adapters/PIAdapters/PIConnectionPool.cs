@@ -203,41 +203,43 @@ namespace PIAdapters
             {
                 lock (m_connectionPool)
                 {
-                    // Get next connection from the pool with lowest accessibility count
-                    if (m_connectionPool.Count > 0)
+                    while ((object)connection == null)
                     {
-                        PIConnection[] availableConnections = m_connectionPool.Where(c => c.AccessCount < m_accessCountPerConnection).ToArray();
-
-                        if (availableConnections.Length > 0)
-                            connection = availableConnections.Aggregate((currentMin, nextItem) => (object)nextItem != null && currentMin.AccessCount < nextItem.AccessCount ? currentMin : nextItem);
-                    }
-
-                    if ((object)connection == null)
-                    {
-                        // Add pooled connections in groups for better distribution
-                        for (int i = 0; i < m_minimumPoolSize; i++)
+                        // Get next connection from the pool with lowest accessibility count
+                        if (m_connectionPool.Count > 0)
                         {
-                            // Create a new connection
-                            connection = new PIConnection
+                            PIConnection[] availableConnections = m_connectionPool.Where(c => c.AccessCount < m_accessCountPerConnection).ToArray();
+
+                            if (availableConnections.Length > 0)
+                                connection = availableConnections.Aggregate((currentMin, nextItem) => (object)nextItem != null && currentMin.AccessCount < nextItem.AccessCount ? currentMin : nextItem);
+                        }
+
+                        if ((object)connection == null)
+                        {
+                            // Add pooled connections in groups for better distribution
+                            for (int i = 0; i < m_minimumPoolSize; i++)
                             {
-                                ServerName = serverName,
-                                UserName = userName,
-                                Password = password,
-                                ConnectTimeout = connectTimeout
-                            };
+                                // Create a new connection
+                                connection = new PIConnection
+                                {
+                                    ServerName = serverName,
+                                    UserName = userName,
+                                    Password = password,
+                                    ConnectTimeout = connectTimeout
+                                };
 
-                            // Since PI doesn't detect disconnection until an operation is attempted,
-                            // we must monitor for disconnections from the pooled connections as well
-                            connection.Disconnected += connection_Disconnected;
-                            connection.Open();
+                                // Since PI doesn't detect disconnection until an operation is attempted,
+                                // we must monitor for disconnections from the pooled connections as well
+                                connection.Disconnected += connection_Disconnected;
+                                connection.Open();
 
-                            // Add the new connection to the server pool
-                            m_connectionPool.Add(connection);
+                                // Add the new connection to the server pool
+                                m_connectionPool.Add(connection);
+                            }
                         }
                     }
 
                     // Increment current connection access count
-                    // ReSharper disable once PossibleNullReferenceException
                     connection.AccessCount++;
                 }
             }

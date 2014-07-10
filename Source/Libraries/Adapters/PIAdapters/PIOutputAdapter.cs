@@ -40,6 +40,7 @@ using GSF.IO;
 using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using GSF.Units;
 using PISDK;
 using PISDKCommon;
 using ConnectionPoint = System.Tuple<PIAdapters.PIConnection, PISDK.PIPoint>;
@@ -55,13 +56,23 @@ namespace PIAdapters
     {
         #region [ Members ]
 
+        // Nested Types
+
+        // Define measurement processing stages
+        enum ProcessingStage
+        {
+            AssociatingMeasurementsToConnectionPoints,
+            CollatingMeasurementsIntoPointValues,
+            ArchivingPointValuesToPIServer
+        }
+
         // Fields
 
         // Define cached mapping between GSFSchema measurements and PI points
         private readonly ConcurrentDictionary<MeasurementKey, ConnectionPoint> m_mappedConnectionPoints;
 
         // Define a queue of requested mappings for GSFSchema measurements per connection
-        private readonly ProcessDictionary<PIConnection, List<MeasurementKey>> m_queuedMappingRequests;
+        private readonly ProcessQueue<Tuple<PIConnection, MeasurementKey>> m_queuedMappingRequests;
 
         private readonly ShortSynchronizedOperation m_restartConnection;    // Restart connection operation
         private readonly ConcurrentDictionary<Guid, string> m_tagMap;       // Tag name to measurement Guid lookup
@@ -82,6 +93,11 @@ namespace PIAdapters
         private volatile int m_processedMeasurements;                       // Total number of measurements processed so far
         private volatile bool m_refreshingMetadata;                         // Flag that determines if meta-data is currently refreshing
         private double m_metadataRefreshProgress;                           // Current meta-data refresh progress
+        private ProcessingStage m_processingStage;                          // Current processing stage
+        private Time m_timeSpentInLastStage1;                               // Time spent in last stage 1 processing - associating measurements to connection points
+        private Time m_timeSpentInLastStage2;                               // Time spent in last stage 2 processing - collating measurements into point values
+        private Time m_timeSpentInLastStage3;                               // Time spent in last stage 3 processing - archiving point values to PI server
+        private int m_lastNumberOfPointsProcessed;                          // Last total number of points processed
         private bool m_disposed;                                            // Flag that determines if class is disposed
 
         #endregion
@@ -95,7 +111,7 @@ namespace PIAdapters
         {
             m_pointsPerConnection = PIConnectionPool.DefaultAccessCountPerConnection;
             m_mappedConnectionPoints = new ConcurrentDictionary<MeasurementKey, ConnectionPoint>();
-            m_queuedMappingRequests = new ProcessDictionary<PIConnection, List<MeasurementKey>>(EstablishConnectionPointMapping, 1.0D, PIConnectionPool.DefaultMinimumPoolSize / 2);
+            m_queuedMappingRequests = ProcessQueue<Tuple<PIConnection, MeasurementKey>>.CreateAsynchronousQueue(EstablishConnectionPointMappings);
             m_restartConnection = new ShortSynchronizedOperation(Start);
             m_tagMap = new ConcurrentDictionary<Guid, string>();
             m_pendingMappings = new HashSet<MeasurementKey>();
@@ -320,10 +336,30 @@ namespace PIAdapters
                     status.AppendLine();
                 }
 
-                status.AppendFormat("   PI connection pool size: {0:N0}", m_connectionPool.Size);
-                status.AppendLine();
+                if ((object)m_connection != null)
+                {
+                    status.AppendFormat("   PI connection pool size: {0:N0}", m_connectionPool.Size);
+                    status.AppendLine();
+                }
+
                 status.AppendFormat("  PI points per connection: {0:N0}", m_pointsPerConnection);
                 status.AppendLine();
+                status.AppendFormat("  Current processing stage: {0} : {1}", (int)m_processingStage + 1, m_processingStage);
+                status.AppendLine();
+                status.AppendFormat("Time spent in last stage 1: {0}", m_timeSpentInLastStage1.ToString(2));
+                status.AppendLine();
+                status.AppendFormat("Time spent in last stage 2: {0}", m_timeSpentInLastStage2.ToString(2));
+                status.AppendLine();
+                status.AppendFormat("Time spent in last stage 3: {0}", m_timeSpentInLastStage3.ToString(2));
+                status.AppendLine();
+                status.AppendFormat("Last processed point count: {0:N0}", m_lastNumberOfPointsProcessed);
+                status.AppendLine();
+
+                if (m_lastNumberOfPointsProcessed > 0)
+                {
+                    status.AppendFormat("  Average write time/point: {0} for last batch", (m_timeSpentInLastStage3 / m_lastNumberOfPointsProcessed).ToString(2));
+                    status.AppendLine();
+                }
 
                 return status.ToString();
             }
@@ -505,15 +541,27 @@ namespace PIAdapters
 
             // We use dictionaries to create grouping constructs whereby each PI connection will have its own set of points
             // and associated values so that archive operations for each PI connection can be processed in parallel
-            ConcurrentDictionary<PIConnection, ConcurrentDictionary<PIPoint, PIValues>> connectionPointValues = new ConcurrentDictionary<PIConnection, ConcurrentDictionary<PIPoint, PIValues>>();
-            ConnectionPoint connectionPoint;
+            ConcurrentDictionary<PIConnection, ConcurrentDictionary<PIPoint, List<IMeasurement>>> connectionPointMeasurements = new ConcurrentDictionary<PIConnection, ConcurrentDictionary<PIPoint, List<IMeasurement>>>();
+            ConcurrentDictionary<PIConnection, Dictionary<PIPoint, PIValues>> connectionPointValues = new ConcurrentDictionary<PIConnection, Dictionary<PIPoint, PIValues>>();
+            Ticks startTime, endTime;
+            int numberOfPointsProcessed = 0;
 
-            // Handle measurement grouping and mapping operations in parallel
+            startTime = DateTime.UtcNow.Ticks;
+            m_processingStage = ProcessingStage.AssociatingMeasurementsToConnectionPoints;
+
+            // Handle measurement grouping
             Parallel.ForEach(measurements, measurement =>
             {
                 try
                 {
-                    // Lookup connection point mapping for this measurement
+                    ConnectionPoint connectionPoint;
+
+                    // If adapter gets disabled while executing this thread - go ahead and exit
+                    if (!Enabled || (object)m_connectionPool == null)
+                        return;
+
+                    // Lookup connection point mapping for this measurement, if it wasn't found or adapter
+                    // gets disabled while executing this thread, then we go ahead and exit
                     if (!m_mappedConnectionPoints.TryGetValue(measurement.Key, out connectionPoint))
                         return;
 
@@ -537,11 +585,9 @@ namespace PIAdapters
                             lock (m_queuedMappingRequests.SyncRoot)
                             {
                                 // No mapping is defined for this point, get a connection from the
-                                // server pool and queue-up a mapping for this point
+                                // server pool and queue-up a mapping for this point                                
                                 PIConnection connection = m_connectionPool.GetPooledConnection(m_serverName, m_userName, m_password, m_connectTimeout);
-                                List<MeasurementKey> mappingRequests = m_queuedMappingRequests.GetOrAdd(connection, c => new List<MeasurementKey>());
-                                mappingRequests.Add(measurement.Key);
-                                m_queuedMappingRequests.SignalDataModified();
+                                m_queuedMappingRequests.Add(new Tuple<PIConnection, MeasurementKey>(connection, measurement.Key));
                             }
                         }
                     }
@@ -550,37 +596,106 @@ namespace PIAdapters
                         PIConnection connection = connectionPoint.Item1;
                         PIPoint point = connectionPoint.Item2;
 
-                        if ((object)connection != null && (object)point != null)
+                        // Create a grouping per connection that contains a lookup table of PIPoint to associated measurements
+                        ConcurrentDictionary<PIPoint, List<IMeasurement>> pointMeasurements = connectionPointMeasurements.GetOrAdd(connection, c => new ConcurrentDictionary<PIPoint, List<IMeasurement>>());
+
+                        // Get or add a list of measurements associated with this PIPoint
+                        List<IMeasurement> measurementValues = pointMeasurements.GetOrAdd(point, p => new List<IMeasurement>());
+
+                        lock (measurementValues)
                         {
-                            DateTime timestamp = new DateTime(measurement.Timestamp).ToLocalTime();
-                            double value = measurement.AdjustedValue;
-
-                            // Get PI values collection for this connection point
-                            ConcurrentDictionary<PIPoint, PIValues> pointValues = connectionPointValues.GetOrAdd(connection, c => new ConcurrentDictionary<PIPoint, PIValues>());
-
-                            PIValues values = pointValues.GetOrAdd(point, p => new PIValues()
-                            {
-                                ReadOnly = false
-                            });
-
-                            // Add measurement value to PI values collection
-                            values.Add(timestamp, value, null);
+                            measurementValues.Add(measurement);
                         }
+
+                        Interlocked.Add(ref numberOfPointsProcessed, measurementValues.Count);
                     }
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException(string.Format("Failed to collate measurement value into OSI-PI point value collection for '{0}': {1}", measurement.Key, ex.Message), ex));
+                    OnProcessException(new InvalidOperationException(string.Format("Failed to associate measurement value with connection point for '{0}': {1}", measurement.Key, ex.Message), ex));
                 }
             });
+
+            endTime = DateTime.UtcNow.Ticks;
+            m_timeSpentInLastStage1 = (endTime - startTime).ToSeconds();
+
+            // If adapter gets disabled while executing this thread - go ahead and exit
+            if (!Enabled)
+                return;
+
+            startTime = endTime;
+            m_processingStage = ProcessingStage.CollatingMeasurementsIntoPointValues;
+
+            // Create series of PIValues to insert into PI per connection - note each connection performs these steps in their own STA space
+            Parallel.ForEach(connectionPointMeasurements, connectionPointMeasurement => connectionPointMeasurement.Key.Execute(server =>
+            {
+                // Create a dictionary of PIPoints each with a PIValues collection for each connection
+                Dictionary<PIPoint, PIValues> pointValues = connectionPointValues.GetOrAdd(connectionPointMeasurement.Key, c => new Dictionary<PIPoint, PIValues>());
+                ConcurrentDictionary<PIPoint, List<IMeasurement>> pointMeasurements = connectionPointMeasurement.Value;
+
+                foreach (KeyValuePair<PIPoint, List<IMeasurement>> pointMeasurement in pointMeasurements)
+                {
+                    // If adapter gets disabled while executing this thread - go ahead and exit
+                    if (!Enabled)
+                        return;
+
+                    PIPoint point = pointMeasurement.Key;
+                    List<IMeasurement> measurementValues = pointMeasurement.Value;
+                    DateTime timestamp;
+                    double value;
+
+                    PIValues values = pointValues.GetOrAdd(point, p => new PIValues()
+                    {
+                        ReadOnly = false
+                    });
+
+                    // Populate PIValues collection with measurements
+                    foreach (IMeasurement measurement in measurementValues)
+                    {
+                        // If adapter gets disabled while executing this thread - go ahead and exit
+                        if (!Enabled)
+                            return;
+
+                        try
+                        {
+                            timestamp = new DateTime(measurement.Timestamp).ToLocalTime();
+                            value = measurement.AdjustedValue;
+
+                            // Add measurement value to PI values collection
+                            values.Add(timestamp, value, null);
+                        }
+                        catch (Exception ex)
+                        {
+                            MeasurementKey key = measurement.Key;
+
+                            // Raise event in MTA space
+                            ThreadPool.QueueUserWorkItem(state => OnProcessException(new InvalidOperationException(string.Format("Failed to collate measurement value into OSI-PI point value collection for '{0}': {1}", key, ex.Message), ex)));
+                        }
+                    }
+                }
+            }));
+
+            endTime = DateTime.UtcNow.Ticks;
+            m_timeSpentInLastStage2 = (endTime - startTime).ToSeconds();
+
+            // If adapter gets disabled while executing this thread - go ahead and exit
+            if (!Enabled)
+                return;
+
+            startTime = endTime;
+            m_processingStage = ProcessingStage.ArchivingPointValuesToPIServer;
 
             // Handle inserts for each PI connection in parallel - note each connection performs these steps in their own STA space
             Parallel.ForEach(connectionPointValues, connectionPointValue => connectionPointValue.Key.Execute(server =>
             {
-                ConcurrentDictionary<PIPoint, PIValues> pointValues = connectionPointValue.Value;
+                Dictionary<PIPoint, PIValues> pointValues = connectionPointValue.Value;
 
                 foreach (KeyValuePair<PIPoint, PIValues> pointValue in pointValues)
                 {
+                    // If adapter gets disabled while executing this thread - go ahead and exit
+                    if (!Enabled)
+                        return;
+
                     PIPoint point = pointValue.Key;
                     PIValues values = pointValue.Value;
 
@@ -589,8 +704,8 @@ namespace PIAdapters
                         try
                         {
                             // Add values for current PI point
-                            point.Data.UpdateValues(values);
                             m_processedMeasurements += values.Count;
+                            point.Data.UpdateValues(values);
                         }
                         catch (Exception ex)
                         {
@@ -600,27 +715,46 @@ namespace PIAdapters
                     }
                 }
             }));
+
+            endTime = DateTime.UtcNow.Ticks;
+            m_timeSpentInLastStage3 = (endTime - startTime).ToSeconds();
+            m_lastNumberOfPointsProcessed = numberOfPointsProcessed;
         }
 
-        private void EstablishConnectionPointMapping(PIConnection connection, List<MeasurementKey> keys)
+        private void EstablishConnectionPointMappings(Tuple<PIConnection, MeasurementKey>[] connectionKeys)
         {
             ConnectionPoint connectionPoint;
             bool mappingEstablished = false;
 
-            foreach (MeasurementKey key in keys)
+            foreach (Tuple<PIConnection, MeasurementKey> connectionKey in connectionKeys)
             {
                 // If adapter gets disabled while executing this thread - go ahead and exit
                 if (!Enabled)
                     return;
 
+                PIConnection connection = connectionKey.Item1;
+                MeasurementKey key = connectionKey.Item2;
+
                 try
                 {
-                    connectionPoint = CreateMappedConnectionPoint(connection, key);
-
-                    if ((object)connectionPoint != null)
+                    if (m_mappedConnectionPoints.TryGetValue(key, out connectionPoint))
                     {
-                        m_mappedConnectionPoints[key] = connectionPoint;
-                        mappingEstablished = true;
+                        if ((object)connectionPoint == null || (object)connectionPoint.Item1 == null || (object)connectionPoint.Item2 == null)
+                        {
+                            // Create new connection point
+                            connectionPoint = CreateMappedConnectionPoint(connection, key);
+
+                            if ((object)connectionPoint != null)
+                            {
+                                m_mappedConnectionPoints[key] = connectionPoint;
+                                mappingEstablished = true;
+                            }
+                        }
+                        else
+                        {
+                            // Connection point is already established
+                            mappingEstablished = true;
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -700,7 +834,10 @@ namespace PIAdapters
             }
 
             // If no point could be mapped, return null connection mapping so key can be removed from tag-map
-            return (object)point == null ? null : new ConnectionPoint(connection, point);
+            if ((object)point == null)
+                return null;
+
+            return new ConnectionPoint(connection, point);
         }
 
         /// <summary>
