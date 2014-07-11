@@ -22,7 +22,6 @@
 //******************************************************************************************************
 
 using System;
-
 using GSF;
 using GSF.Communication;
 
@@ -30,6 +29,15 @@ namespace LibraryTester
 {
     class Program
     {
+        //private enum GetFormattedNameTest
+        //{
+        //    ABClittleXYZ,
+        //    ABClittleXYZo,
+        //    AssociatingMeasurementsToConnectionPoints,
+        //    CollatingMeasurementsIntoPointValues,
+        //    ArchivingPointValuesToXYServer
+        //}
+
         static void Main(string[] args)
         {
             // Add references for projects as needed, then add a simple call so that immediate window
@@ -37,6 +45,13 @@ namespace LibraryTester
 
             Common.IsDefaultValue(true);            // Call to load GSF.Core
             Transport.GetDefaultIPStack();          // Call to load GSF.Communications
+
+            //foreach (GetFormattedNameTest stage in Enum.GetValues(typeof(GetFormattedNameTest)).Cast<GetFormattedNameTest>())
+            //{
+            //    Console.WriteLine(stage.GetFormattedName());
+            //}
+
+            //Console.WriteLine();
 
             Console.WriteLine("Library Testing Host Application");
             Console.WriteLine();

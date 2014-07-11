@@ -59,7 +59,7 @@ namespace PIAdapters
         // Nested Types
 
         // Define measurement processing stages
-        enum ProcessingStage
+        private enum ProcessingStage
         {
             AssociatingMeasurementsToConnectionPoints,
             CollatingMeasurementsIntoPointValues,
@@ -77,14 +77,14 @@ namespace PIAdapters
         private readonly ShortSynchronizedOperation m_restartConnection;    // Restart connection operation
         private readonly ConcurrentDictionary<Guid, string> m_tagMap;       // Tag name to measurement Guid lookup
         private readonly HashSet<MeasurementKey> m_pendingMappings;         // List of pending measurement mappings
-        private PIConnectionPool m_connectionPool;                          // PI server connection object pool for data writes
+        private PIConnectionPool m_connectionPool;                          // PI server connection pool for data writes
         private PIConnection m_connection;                                  // PI server connection for meta-data synchronization
         private string m_serverName;                                        // Server for PI connection
         private string m_userName;                                          // Username for PI connection
         private string m_password;                                          // Password for PI connection
         private int m_connectTimeout;                                       // PI connection timeout
         private string m_tagMapCacheFileName;                               // Tag map cache file name
-        private bool m_runMetadataSync;                                     // Whether or not to automatically create/update PI points on the server
+        private bool m_runMetadataSync;                                     // Flag for automatically creating and/or updating PI points on the server
         private string m_pointSource;                                       // Point source to set on PI points when automatically created by the adapter
         private string m_pointClass;                                        // Point class to use for new PI points when automatically created by the adapter
         private int m_pointsPerConnection;                                  // Number of points each PI connection is set to handle
@@ -93,10 +93,11 @@ namespace PIAdapters
         private volatile int m_processedMeasurements;                       // Total number of measurements processed so far
         private volatile bool m_refreshingMetadata;                         // Flag that determines if meta-data is currently refreshing
         private double m_metadataRefreshProgress;                           // Current meta-data refresh progress
-        private ProcessingStage m_processingStage;                          // Current processing stage
+        private ProcessingStage m_processingStage;                          // Current data processing stage
         private Time m_timeSpentInLastStage1;                               // Time spent in last stage 1 processing - associating measurements to connection points
         private Time m_timeSpentInLastStage2;                               // Time spent in last stage 2 processing - collating measurements into point values
         private Time m_timeSpentInLastStage3;                               // Time spent in last stage 3 processing - archiving point values to PI server
+        private int m_lastStage3ThreadCount;                                // Number of threads used to process last stage 3 inserts
         private int m_lastNumberOfPointsProcessed;                          // Last total number of points processed
         private bool m_disposed;                                            // Flag that determines if class is disposed
 
@@ -336,7 +337,7 @@ namespace PIAdapters
                     status.AppendLine();
                 }
 
-                if ((object)m_connection != null)
+                if ((object)m_connectionPool != null)
                 {
                     status.AppendFormat("   PI connection pool size: {0:N0}", m_connectionPool.Size);
                     status.AppendLine();
@@ -344,7 +345,19 @@ namespace PIAdapters
 
                 status.AppendFormat("  PI points per connection: {0:N0}", m_pointsPerConnection);
                 status.AppendLine();
-                status.AppendFormat("  Current processing stage: {0} : {1}", (int)m_processingStage + 1, m_processingStage);
+
+                status.AppendLine();
+                status.AppendLine(">> Measurement Processing Stages");
+                status.AppendLine();
+
+                foreach (ProcessingStage stage in Enum.GetValues(typeof(ProcessingStage)).Cast<ProcessingStage>())
+                {
+                    status.AppendFormat("        Processing stage {0}: {1}", (int)stage + 1, stage.GetFormattedName());
+                }
+
+                status.AppendLine();
+
+                status.AppendFormat("  Current processing stage: {0}", (int)m_processingStage + 1);
                 status.AppendLine();
                 status.AppendFormat("Time spent in last stage 1: {0}", m_timeSpentInLastStage1.ToString(2));
                 status.AppendLine();
@@ -352,12 +365,21 @@ namespace PIAdapters
                 status.AppendLine();
                 status.AppendFormat("Time spent in last stage 3: {0}", m_timeSpentInLastStage3.ToString(2));
                 status.AppendLine();
+                status.AppendFormat(" Last stage 3 thread count: {0:N0}", m_lastStage3ThreadCount);
+                status.AppendLine();
                 status.AppendFormat("Last processed point count: {0:N0}", m_lastNumberOfPointsProcessed);
                 status.AppendLine();
 
+                if (m_lastStage3ThreadCount > 0)
+                {
+                    status.AppendFormat("  Average work time/thread: {0} for last stage 3 batch", (m_timeSpentInLastStage3 / m_lastStage3ThreadCount).ToString(2));
+                    status.AppendLine();
+                }
+
                 if (m_lastNumberOfPointsProcessed > 0)
                 {
-                    status.AppendFormat("  Average write time/point: {0} for last batch", (m_timeSpentInLastStage3 / m_lastNumberOfPointsProcessed).ToString(2));
+                    // Adjust the PointsPerConnection setting to optimize the write time per point
+                    status.AppendFormat("  Average write time/point: {0} for last stage 3 batch", (m_timeSpentInLastStage3 / m_lastNumberOfPointsProcessed).ToString(2));
                     status.AppendLine();
                 }
 
@@ -494,6 +516,14 @@ namespace PIAdapters
 
             m_connectionPool.Disconnected += m_connection_Disconnected;
 
+            m_mappedConnectionPoints.Clear();
+
+            lock (m_pendingMappings)
+            {
+                m_pendingMappings.Clear();
+            }
+
+            m_queuedMappingRequests.Clear();
             m_queuedMappingRequests.Start();
 
             // Kick off meta-data refresh
@@ -545,11 +575,12 @@ namespace PIAdapters
             ConcurrentDictionary<PIConnection, Dictionary<PIPoint, PIValues>> connectionPointValues = new ConcurrentDictionary<PIConnection, Dictionary<PIPoint, PIValues>>();
             Ticks startTime, endTime;
             int numberOfPointsProcessed = 0;
+            int stage3ThreadCount = 0;
 
             startTime = DateTime.UtcNow.Ticks;
-            m_processingStage = ProcessingStage.AssociatingMeasurementsToConnectionPoints;
+            m_processingStage = ProcessingStage.AssociatingMeasurementsToConnectionPoints;  // Stage 1
 
-            // Handle measurement grouping
+            // Create initial connection point to measurements grouping or associate incoming measurements with a connection point if one is not already defined
             Parallel.ForEach(measurements, measurement =>
             {
                 try
@@ -557,11 +588,10 @@ namespace PIAdapters
                     ConnectionPoint connectionPoint;
 
                     // If adapter gets disabled while executing this thread - go ahead and exit
-                    if (!Enabled || (object)m_connectionPool == null)
+                    if (!Enabled)
                         return;
 
-                    // Lookup connection point mapping for this measurement, if it wasn't found or adapter
-                    // gets disabled while executing this thread, then we go ahead and exit
+                    // Lookup connection point mapping for this measurement, if it wasn't found - go ahead and exit
                     if (!m_mappedConnectionPoints.TryGetValue(measurement.Key, out connectionPoint))
                         return;
 
@@ -607,7 +637,7 @@ namespace PIAdapters
                             measurementValues.Add(measurement);
                         }
 
-                        Interlocked.Add(ref numberOfPointsProcessed, measurementValues.Count);
+                        Interlocked.Increment(ref numberOfPointsProcessed);
                     }
                 }
                 catch (Exception ex)
@@ -624,7 +654,7 @@ namespace PIAdapters
                 return;
 
             startTime = endTime;
-            m_processingStage = ProcessingStage.CollatingMeasurementsIntoPointValues;
+            m_processingStage = ProcessingStage.CollatingMeasurementsIntoPointValues;   // Stage 2
 
             // Create series of PIValues to insert into PI per connection - note each connection performs these steps in their own STA space
             Parallel.ForEach(connectionPointMeasurements, connectionPointMeasurement => connectionPointMeasurement.Key.Execute(server =>
@@ -683,12 +713,13 @@ namespace PIAdapters
                 return;
 
             startTime = endTime;
-            m_processingStage = ProcessingStage.ArchivingPointValuesToPIServer;
+            m_processingStage = ProcessingStage.ArchivingPointValuesToPIServer;     // Stage 3
 
             // Handle inserts for each PI connection in parallel - note each connection performs these steps in their own STA space
             Parallel.ForEach(connectionPointValues, connectionPointValue => connectionPointValue.Key.Execute(server =>
             {
                 Dictionary<PIPoint, PIValues> pointValues = connectionPointValue.Value;
+                Interlocked.Increment(ref stage3ThreadCount);
 
                 foreach (KeyValuePair<PIPoint, PIValues> pointValue in pointValues)
                 {
@@ -704,8 +735,8 @@ namespace PIAdapters
                         try
                         {
                             // Add values for current PI point
-                            m_processedMeasurements += values.Count;
                             point.Data.UpdateValues(values);
+                            m_processedMeasurements += values.Count;
                         }
                         catch (Exception ex)
                         {
@@ -719,6 +750,7 @@ namespace PIAdapters
             endTime = DateTime.UtcNow.Ticks;
             m_timeSpentInLastStage3 = (endTime - startTime).ToSeconds();
             m_lastNumberOfPointsProcessed = numberOfPointsProcessed;
+            m_lastStage3ThreadCount = stage3ThreadCount;
         }
 
         private void EstablishConnectionPointMappings(Tuple<PIConnection, MeasurementKey>[] connectionKeys)
@@ -891,6 +923,10 @@ namespace PIAdapters
 
                         foreach (MeasurementKey key in inputMeasurements)
                         {
+                            // If adapter gets disabled while executing this thread - go ahead and exit
+                            if (!Enabled)
+                                return;
+
                             Guid signalID = key.SignalID;
                             DataRow[] rows = measurements.Select(string.Format("SignalID='{0}'", signalID));
                             DataRow measurementRow;
@@ -1065,7 +1101,7 @@ namespace PIAdapters
                     });
                     // End STA PIConnection thread Execute
 
-                    if (m_tagMap.Count > 0)
+                    if (m_tagMap.Count > 0 && Enabled)
                     {
                         // Cache tag-map for faster future PI adapter startup
                         try
@@ -1099,13 +1135,17 @@ namespace PIAdapters
                 m_refreshingMetadata = false;
             }
 
-            m_lastMetadataRefresh = latestUpdateTime > DateTime.MinValue ? latestUpdateTime : DateTime.UtcNow;
+            if (Enabled)
+            {
+                m_lastMetadataRefresh = latestUpdateTime > DateTime.MinValue ? latestUpdateTime : DateTime.UtcNow;
 
-            OnStatusMessage("Completed metadata refresh successfully.");
+                OnStatusMessage("Completed metadata refresh successfully.");
 
-            // Re-establish connection point dictionary since meta-data and tags may exist now that didn't before. We also
-            // need to show warning messages for un-mappable points now that meta-data refresh has completed.
-            EstablishConnectionPointDictionary(inputMeasurements);
+                // Re-establish connection point dictionary since meta-data and tags may exist in PI server now that didn't before.
+                // This will also start showing warning messages in CreateMappedConnectionPoint function for un-mappable points
+                // now that meta-data refresh has completed.
+                EstablishConnectionPointDictionary(inputMeasurements);
+            }
 
             // Restore original measurement reporting interval
             MeasurementReportingInterval = previousMeasurementReportingInterval;
@@ -1187,6 +1227,7 @@ namespace PIAdapters
             }
         }
 
+        // It is recommended that the GetPIPoint overloads are called from a PIConnection.Execute function
         private PIPoint GetPIPoint(Server server, string tagName)
         {
             PIPoint point;

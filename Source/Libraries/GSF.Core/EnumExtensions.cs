@@ -86,7 +86,7 @@ namespace GSF
         /// <param name="type"><see cref="Type"/> of the enumeration.</param>
         /// <param name="ignoreCase"><c>true</c> to ignore case during the comparison; otherwise, <c>false</c>.</param>
         /// <returns>Specific value of the enumerated constant in terms of its underlying type associated with the specified <paramref name="name"/>, or <c>null</c>
-        /// if no macthing enumerated value was found.</returns>
+        /// if no matching enumerated value was found.</returns>
         public static object GetEnumValueByName(this string name, Type type, bool ignoreCase = false)
         {
             if (!type.IsEnum)
@@ -119,17 +119,24 @@ namespace GSF
                 // Create word spaces at every capital letter
                 if (Char.IsUpper(letter) && image.Length > 0)
                 {
-                    // Test for "ID" sequence exception
-                    if (i < chars.Length - 1 && letter == 'I')
+                    // Check for all caps sequence (e.g., ID)
+                    if (Char.IsUpper(chars[i - 1]))
                     {
-                        if (chars[i + 1] == 'D')
+                        // Look ahead for proper breaking point
+                        if (i + 1 < chars.Length)
                         {
-                            image.Append(" ID");
-                            i++;
+                            if (Char.IsLower(chars[i + 1]))
+                            {
+                                image.Append(' ');
+                                image.Append(letter);
+                            }
+                            else
+                            {
+                                image.Append(letter);
+                            }
                         }
                         else
                         {
-                            image.Append(' ');
                             image.Append(letter);
                         }
                     }
@@ -140,7 +147,9 @@ namespace GSF
                     }
                 }
                 else
+                {
                     image.Append(letter);
+                }
             }
 
             return image.ToString();
