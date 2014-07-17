@@ -33,16 +33,18 @@ using GSF.IO;
 using GSF.PhasorProtocols;
 using GSF.PhasorProtocols.Anonymous;
 using GSF.TimeSeries;
+using GSF.Units.EE;
 
 namespace ProtocolTester
 {
     /// <summary>
     /// This is a test tool designed to help with protocol development, it is not intended for deployment...
     /// </summary>
+    // ReSharper disable ConvertToConstant.Local
     public class Program
     {
-        private static bool WriteLogs = false;
-        private static bool TestConcentrator = false;
+        private static readonly bool WriteLogs = false;
+        private static readonly bool TestConcentrator = false;
 
         private static Concentrator concentrator;
         private static MultiProtocolFrameParser parser;
@@ -199,11 +201,7 @@ namespace ProtocolTester
             AnalogValueCollection analogs;
             DigitalValueCollection digitals;
             IMeasurement[] measurements;
-            Ticks timestamp;
             int x, count;
-
-            // Get adjusted timestamp of this frame
-            timestamp = frame.Timestamp;
 
             // Loop through each parsed device in the data frame
             foreach (IDataCell parsedDevice in frame.Cells)
@@ -211,14 +209,11 @@ namespace ProtocolTester
                 try
                 {
                     // Lookup device by its label (if needed), then by its ID code
-                    definedDevice = m_definedDevices.GetOrAdd(parsedDevice.IDCode, id =>
+                    definedDevice = m_definedDevices.GetOrAdd(parsedDevice.IDCode, id => new ConfigurationCell(id)
                     {
-                        return new ConfigurationCell(id)
-                        {
-                            StationName = parsedDevice.StationName,
-                            IDLabel = parsedDevice.IDLabel.ToNonNullNorWhiteSpace(parsedDevice.StationName),
-                            IDCode = parsedDevice.IDCode
-                        };
+                        StationName = parsedDevice.StationName,
+                        IDLabel = parsedDevice.IDLabel.ToNonNullNorWhiteSpace(parsedDevice.StationName),
+                        IDCode = parsedDevice.IDCode
                     });
 
                     // Map status flags (SF) from device data cell itself (IDataCell implements IMeasurement

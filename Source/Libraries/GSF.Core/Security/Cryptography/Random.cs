@@ -113,7 +113,7 @@ namespace GSF.Security.Cryptography
 
                 s_randomNumberGenerator.GetBytes(value);
 
-                return (value[0] % 2 == 0 ? true : false);
+                return value[0] % 2 == 0;
             }
         }
 

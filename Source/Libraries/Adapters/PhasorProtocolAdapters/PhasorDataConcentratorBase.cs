@@ -56,6 +56,7 @@ using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
 using GSF.Units;
+using GSF.Units.EE;
 using Timer = System.Timers.Timer;
 
 namespace PhasorProtocolAdapters

@@ -170,47 +170,5 @@ namespace GSF.PhasorProtocols
                     return protocol.ToString().Replace('_', '.').ToUpper();
             }
         }
-
-        /// <summary>
-        /// Returns display friendly signal type name.
-        /// </summary>
-        /// <param name="signalType"><see cref="SignalType"/> to return display name for.</param>
-        /// <returns>Friendly protocol display name for specified <paramref name="signalType"/>.</returns>
-        public static string GetFormattedSignalTypeName(this SignalType signalType)
-        {
-            switch (signalType)
-            {
-                case SignalType.IPHM:
-                    return "Current phase magnitude";
-                case SignalType.IPHA:
-                    return "Current phase angle";
-                case SignalType.VPHM:
-                    return "Voltage phase magnitude";
-                case SignalType.VPHA:
-                    return "Voltage phase angle";
-                case SignalType.FREQ:
-                    return "Frequency";
-                case SignalType.DFDT:
-                    return "Frequency delta (dF/dt)";
-                case SignalType.ALOG:
-                    return "Analog";
-                case SignalType.FLAG:
-                    return "Status flags";
-                case SignalType.DIGI:
-                    return "Digital Values";
-                case SignalType.CALC:
-                    return "Calculated Value";
-                case SignalType.STAT:
-                    return "Statistic";
-                case SignalType.ALRM:
-                    return "Alarm";
-                case SignalType.QUAL:
-                    return "Quality Flags";
-                case SignalType.NONE:
-                    return "Undefined";
-                default:
-                    return signalType.ToString().ToTitleCase();
-            }
-        }
     }
 }

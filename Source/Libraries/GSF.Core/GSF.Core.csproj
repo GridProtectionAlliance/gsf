@@ -366,6 +366,10 @@
     <Compile Include="Units\Angle.cs" />
     <Compile Include="Units\Charge.cs" />
     <Compile Include="Units\Current.cs" />
+    <Compile Include="Units\EE\NamespaceDoc.cs" />
+    <Compile Include="Units\EE\SignalKind.cs" />
+    <Compile Include="Units\EE\SignalReference.cs" />
+    <Compile Include="Units\EE\SignalType.cs" />
     <Compile Include="Units\Energy.cs" />
     <Compile Include="Units\Length.cs" />
     <Compile Include="Units\Mass.cs" />

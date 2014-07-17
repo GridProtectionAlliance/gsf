@@ -48,6 +48,7 @@ using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
 using GSF.Units;
+using GSF.Units.EE;
 
 namespace PhasorProtocolAdapters
 {
@@ -805,7 +806,6 @@ namespace PhasorProtocolAdapters
 
                 timeQualityProtocolIDs = timeQualityProtocolIDList.ToString();
 
-                string qualityFlagsAcronym = SignalReference.GetSignalKindAcronym(SignalKind.Quality);
                 int qualityFlagsSignalTypeID = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym='QUAL'"));
 
                 // Make sure one device quality flags measurement exists for each "connection" for devices that support time quality flags
@@ -813,7 +813,7 @@ namespace PhasorProtocolAdapters
                 {
                     deviceID = device.ConvertField<int>("ID");
                     acronym = device.Field<string>("Acronym");
-                    signalReference = string.Format("{0}-{1}", acronym, qualityFlagsAcronym);
+                    signalReference = SignalReference.ToString(acronym, SignalKind.Quality);
 
                     // See if quality flags measurement exists for device
                     if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Measurement WHERE SignalReference = '{0}' AND DeviceID = {1}", signalReference, deviceID))) == 0)

@@ -27,6 +27,7 @@
 
 using System;
 using GSF.TimeSeries;
+using GSF.Units.EE;
 
 namespace GSF.PhasorProtocols
 {

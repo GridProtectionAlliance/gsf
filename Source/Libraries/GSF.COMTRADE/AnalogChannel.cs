@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using GSF.Collections;
 using GSF.PhasorProtocols;
+using GSF.Units.EE;
 
 namespace GSF.COMTRADE
 {
@@ -201,8 +202,8 @@ namespace GSF.COMTRADE
                         {
                             if (m_coordinateFormat == CoordinateFormat.Rectangular)
                                 return m_phaseDesignation + "r";
-                            else
-                                return m_phaseDesignation + "m";
+
+                            return m_phaseDesignation + "m";
                         }
                         break;
                     case SignalKind.Angle:
@@ -210,8 +211,8 @@ namespace GSF.COMTRADE
                         {
                             if (m_coordinateFormat == CoordinateFormat.Rectangular)
                                 return m_phaseDesignation + "i";
-                            else
-                                return m_phaseDesignation + "a";
+
+                            return m_phaseDesignation + "a";
                         }
                         break;
                     case SignalKind.Frequency:
@@ -268,8 +269,6 @@ namespace GSF.COMTRADE
                             case 'a':
                                 this.SignalKind = SignalKind.Angle;
                                 m_coordinateFormat = CoordinateFormat.Polar;
-                                break;
-                            default:
                                 break;
                         }
                     }
@@ -637,15 +636,11 @@ namespace GSF.COMTRADE
         #region [ Static ]
 
         // Static Fields
-        private static readonly List<char> s_validPhaseDesignations;
         private static readonly List<SignalKind> s_validAnalogSignalKinds;
 
         // Static Constructor
         static AnalogChannel()
         {
-            s_validPhaseDesignations = new List<char>(new[] { 'A', 'B', 'C', 'R', 'S', 'T', '1', '2', '3', 'P', '+', 'N', '-', 'Z', '0' });
-            s_validPhaseDesignations.Sort();
-
             s_validAnalogSignalKinds = new List<SignalKind>(new[] { SignalKind.Analog, SignalKind.Angle, SignalKind.Calculation, SignalKind.DfDt, SignalKind.Frequency, SignalKind.Magnitude, SignalKind.Statistic });
             s_validAnalogSignalKinds.Sort();
         }

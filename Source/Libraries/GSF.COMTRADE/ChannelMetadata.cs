@@ -22,12 +22,10 @@
 //******************************************************************************************************
 
 using System.Collections.Generic;
-using GSF.PhasorProtocols;
+using GSF.Units.EE;
 
 namespace GSF.COMTRADE
 {
-
-
     /// <summary>
     /// Defines a minimal set of channel metadata for a COMTRADE config file.
     /// </summary>

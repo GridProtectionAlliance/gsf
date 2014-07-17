@@ -34,9 +34,9 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using GSF;
-using GSF.PhasorProtocols;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using GSF.Units.EE;
 
 namespace PhasorProtocolAdapters
 {
@@ -190,7 +190,7 @@ namespace PhasorProtocolAdapters
 
                         if (count > 0)
                         {
-                            status.AppendFormat("{0} {1} signal{2}", count.ToString().PadLeft(15), signalType.GetFormattedSignalTypeName(), count > 1 ? "s" : "");
+                            status.AppendFormat("{0} {1} signal{2}", count.ToString().PadLeft(15), signalType.GetFormattedName(), count > 1 ? "s" : "");
                             status.AppendLine();
                         }
                     }
@@ -208,7 +208,7 @@ namespace PhasorProtocolAdapters
 
                         if (count > 0)
                         {
-                            status.AppendFormat("{0} {1} signal{2}", count.ToString().PadLeft(15), signalType.GetFormattedSignalTypeName(), count > 1 ? "s" : "");
+                            status.AppendFormat("{0} {1} signal{2}", count.ToString().PadLeft(15), signalType.GetFormattedName(), count > 1 ? "s" : "");
                             status.AppendLine();
                         }
                     }
@@ -250,14 +250,14 @@ namespace PhasorProtocolAdapters
         {
             try
             {
-                DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select(string.Format("ID = '{0}'", key.ToString()));
+                DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select(string.Format("ID = '{0}'", key));
 
                 if (filteredRows.Length > 0)
                     return (SignalType)Enum.Parse(typeof(SignalType), filteredRows[0]["SignalType"].ToString(), true);
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Failed to lookup signal type for measurement {0}: {1}", key.ToString(), ex.Message), ex));
+                OnProcessException(new InvalidOperationException(string.Format("Failed to lookup signal type for measurement {0}: {1}", key, ex.Message), ex));
             }
 
             return SignalType.NONE;

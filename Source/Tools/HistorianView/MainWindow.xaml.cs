@@ -46,7 +46,7 @@ using GSF.COMTRADE;
 using GSF.Historian;
 using GSF.Historian.Files;
 using GSF.IO;
-using GSF.PhasorProtocols;
+using GSF.Units.EE;
 using Microsoft.Win32;
 
 namespace HistorianView

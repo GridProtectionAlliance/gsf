@@ -34,11 +34,11 @@ using System.Text;
 using GSF;
 using GSF.Collections;
 using GSF.IO;
-using GSF.PhasorProtocols;
 using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.Units;
+using GSF.Units.EE;
 using PhasorProtocolAdapters;
 
 namespace EpriExport
@@ -249,7 +249,7 @@ namespace EpriExport
             SignalType signalType = InputMeasurementKeyTypes[InputMeasurementKeys.IndexOf(key => key == m_referenceAngleKey)];
 
             if (signalType != SignalType.IPHA && signalType != SignalType.VPHA)
-                throw new InvalidOperationException(string.Format("Specified reference angle measurement key is a {0} signal, not a phase angle.", signalType.GetFormattedSignalTypeName()));
+                throw new InvalidOperationException(string.Format("Specified reference angle measurement key is a {0} signal, not a phase angle.", signalType.GetFormattedName()));
 
             Comments = settings.TryGetValue("comments", out setting) ? setting : "Comment section---";
 

@@ -25,152 +25,8 @@
 
 using System;
 
-namespace GSF.PhasorProtocols
+namespace GSF.Units.EE
 {
-    #region [ Enumerations ]
-
-    /// <summary>
-    /// Fundamental signal type enumeration that represents a kind of signal, not an explicit type.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// This enumeration represents the basic type of a signal used to suffix a formatted signal
-    /// reference. When used in context along with an optional index the fundamental signal type
-    /// will identify a signal's location within a frame of data (see <see cref="SignalReference"/>).
-    /// </para>
-    /// <para>
-    /// Contrast this to the <see cref="SignalType"/> enumeration which further defines an explicit
-    /// type for a signal (e.g., a voltage or current type for an angle).
-    /// </para>
-    /// </remarks>
-    [Serializable]
-    public enum SignalKind
-    {
-        /// <summary>
-        /// Phase angle.
-        /// </summary>
-        Angle,
-        /// <summary>
-        /// Phase magnitude.
-        /// </summary>
-        Magnitude,
-        /// <summary>
-        /// Line frequency.
-        /// </summary>
-        Frequency,
-        /// <summary>
-        /// Frequency delta over time (dF/dt).
-        /// </summary>
-        DfDt,
-        /// <summary>
-        /// Status flags.
-        /// </summary>
-        Status,
-        /// <summary>
-        /// Digital value.
-        /// </summary>
-        Digital,
-        /// <summary>
-        /// Analog value.
-        /// </summary>
-        Analog,
-        /// <summary>
-        /// Calculated value.
-        /// </summary>
-        Calculation,
-        /// <summary>
-        /// Statistical value.
-        /// </summary>
-        Statistic,
-        /// <summary>
-        /// Alarm value.
-        /// </summary>
-        Alarm,
-        /// <summary>
-        /// Quality flags.
-        /// </summary>
-        Quality,
-        /// <summary>
-        /// Undetermined signal type.
-        /// </summary>
-        Unknown
-    }
-
-    /// <summary>
-    /// Fundamental signal type enumeration that represents an explicit type of signal.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// This enumeration represents the explicit type of a signal that a value represents.
-    /// </para>
-    /// <para>
-    /// Contrast this to the <see cref="SignalKind"/> enumeration which only defines an
-    /// abstract type for a signal (e.g., simply a phase or an angle).
-    /// </para>
-    /// </remarks>
-    [Serializable]
-    public enum SignalType
-    {
-        /// <summary>
-        /// Current phase magnitude.
-        /// </summary>
-        IPHM = 1,
-        /// <summary>
-        /// Current phase angle.
-        /// </summary>
-        IPHA = 2,
-        /// <summary>
-        /// Voltage phase magnitude.
-        /// </summary>
-        VPHM = 3,
-        /// <summary>
-        /// Voltage phase angle.
-        /// </summary>
-        VPHA = 4,
-        /// <summary>
-        /// Frequency.
-        /// </summary>
-        FREQ = 5,
-        /// <summary>
-        /// Frequency delta (dF/dt).
-        /// </summary>
-        DFDT = 6,
-        /// <summary>
-        /// Analog value.
-        /// </summary>
-        ALOG = 7,
-        /// <summary>
-        /// Status flags.
-        /// </summary>
-        FLAG = 8,
-        /// <summary>
-        /// Digital value.
-        /// </summary>
-        DIGI = 9,
-        /// <summary>
-        /// Calculated value.
-        /// </summary>
-        CALC = 10,
-        /// <summary>
-        /// Statistical value.
-        /// </summary>
-        STAT = 11,
-        /// <summary>
-        /// Alarm value.
-        /// </summary>
-        ALRM = 12,
-        /// <summary>
-        /// Quality flags.
-        /// </summary>
-        QUAL = 13,
-        /// <summary>
-        /// Undefined signal.
-        /// </summary>
-        NONE = -1
-    }
-
-    #endregion
-
     /// <summary>
     /// Represents a signal that can be referenced by its constituent components.
     /// </summary>
@@ -196,7 +52,7 @@ namespace GSF.PhasorProtocols
         public SignalKind Kind;
 
         /// <summary>
-        /// Gets or sets the cell index of this <see cref="SignalReference"/>.
+        /// Gets or sets the cell index, if applicable, of this <see cref="SignalReference"/>.
         /// </summary>
         public int CellIndex;
 
@@ -226,13 +82,13 @@ namespace GSF.PhasorProtocols
                 // is an indexed signal type (e.g., CORDOVA-PA2)
                 if (signalType.Length > 2)
                 {
-                    Kind = ParseSignalKind(signalType.Substring(0, 2));
+                    Kind = signalType.Substring(0, 2).ParseSignalKind();
 
                     if (Kind != SignalKind.Unknown)
                         Index = int.Parse(signalType.Substring(2));
                 }
                 else
-                    Kind = ParseSignalKind(signalType);
+                    Kind = signalType.ParseSignalKind();
             }
             else
             {
@@ -401,78 +257,6 @@ namespace GSF.PhasorProtocols
         // Static Methods
 
         /// <summary>
-        /// Gets the <see cref="SignalKind"/> for the specified <paramref name="acronym"/>.
-        /// </summary>
-        /// <param name="acronym">Acronym of the desired <see cref="SignalKind"/>.</param>
-        /// <returns>The <see cref="SignalKind"/> for the specified <paramref name="acronym"/>.</returns>
-        public static SignalKind ParseSignalKind(string acronym)
-        {
-            switch (acronym)
-            {
-                case "PA": // Phase Angle
-                    return SignalKind.Angle;
-                case "PM": // Phase Magnitude
-                    return SignalKind.Magnitude;
-                case "FQ": // Frequency
-                    return SignalKind.Frequency;
-                case "DF": // dF/dt
-                    return SignalKind.DfDt;
-                case "SF": // Status Flags
-                    return SignalKind.Status;
-                case "DV": // Digital Value
-                    return SignalKind.Digital;
-                case "AV": // Analog Value
-                    return SignalKind.Analog;
-                case "CV": // Calculated Value
-                    return SignalKind.Calculation;
-                case "ST": // Statistical Value
-                    return SignalKind.Statistic;
-                case "AL": // Alarm Value
-                    return SignalKind.Alarm;
-                case "QF": // Quality Flags
-                    return SignalKind.Quality;
-                default:
-                    return SignalKind.Unknown;
-            }
-        }
-
-        /// <summary>
-        /// Gets the acronym for the specified <see cref="SignalKind"/>.
-        /// </summary>
-        /// <param name="signal"><see cref="SignalKind"/> to convert to an acronym.</param>
-        /// <returns>The acronym for the specified <see cref="SignalKind"/>.</returns>
-        public static string GetSignalKindAcronym(SignalKind signal)
-        {
-            switch (signal)
-            {
-                case SignalKind.Angle:
-                    return "PA"; // Phase Angle
-                case SignalKind.Magnitude:
-                    return "PM"; // Phase Magnitude
-                case SignalKind.Frequency:
-                    return "FQ"; // Frequency
-                case SignalKind.DfDt:
-                    return "DF"; // dF/dt
-                case SignalKind.Status:
-                    return "SF"; // Status Flags
-                case SignalKind.Digital:
-                    return "DV"; // Digital Value
-                case SignalKind.Analog:
-                    return "AV"; // Analog Value
-                case SignalKind.Calculation:
-                    return "CV"; // Calculated Value
-                case SignalKind.Statistic:
-                    return "ST"; // Statistical Value
-                case SignalKind.Alarm:
-                    return "AL"; // Alarm Value
-                case SignalKind.Quality:
-                    return "QF"; // Quality Flags
-                default:
-                    return "??";
-            }
-        }
-
-        /// <summary>
         /// Returns a <see cref="string"/> that represents the specified <paramref name="acronym"/> and <see cref="SignalKind"/>.
         /// </summary>
         /// <param name="acronym">Acronym portion of the desired <see cref="string"/> representation.</param>
@@ -493,9 +277,9 @@ namespace GSF.PhasorProtocols
         public static string ToString(string acronym, SignalKind type, int index)
         {
             if (index > 0)
-                return string.Format("{0}-{1}{2}", acronym, GetSignalKindAcronym(type), index);
+                return string.Format("{0}-{1}{2}", acronym, type.GetAcronym(), index);
 
-            return string.Format("{0}-{1}", acronym, GetSignalKindAcronym(type));
+            return string.Format("{0}-{1}", acronym, type.GetAcronym());
         }
 
         #endregion

@@ -32,9 +32,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
-using GSF.PhasorProtocols;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using GSF.Units.EE;
 using PhasorProtocolAdapters;
 
 namespace PowerCalculations.EventDetection
@@ -337,7 +337,6 @@ namespace PowerCalculations.EventDetection
         /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            MeasurementKey[] inputMeasurements = InputMeasurementKeys;
             double averageFrequency = double.NaN;
 
             // Increment frame counter

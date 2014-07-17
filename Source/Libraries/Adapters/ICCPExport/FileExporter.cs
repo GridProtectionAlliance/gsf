@@ -27,7 +27,7 @@
 //  02/01/2010 - Jian R. Zuo
 //      Change "return Status.ToString();" to "return status.ToString();"
 //  04/27/2010 - J. Ritchie Carroll
-//       Performed full code review, optimization and bug fixes for ICCP data export.
+//       Performed full code review, optimization and issue fixes for ICCP data export.
 //  04/26/2011 - J. Ritchie Carroll
 //       Modified code to optimize export quality.
 //  12/27/2011 - J. Ritchie Carroll
@@ -48,9 +48,9 @@ using System.Threading;
 using GSF;
 using GSF.Collections;
 using GSF.IO;
-using GSF.PhasorProtocols;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using GSF.Units.EE;
 using PhasorProtocolAdapters;
 
 namespace ICCPExport
@@ -197,7 +197,7 @@ namespace ICCPExport
 
                 if (m_useReferenceAngle)
                 {
-                    status.AppendFormat("     Reference angle point: {0}", m_referenceAngleKey.ToString());
+                    status.AppendFormat("     Reference angle point: {0}", m_referenceAngleKey);
                     status.AppendLine();
                 }
 
@@ -254,14 +254,14 @@ namespace ICCPExport
         }
 
         /// <summary>
-        /// Intializes <see cref="FileExporter"/>.
+        /// Initializes <see cref="FileExporter"/>.
         /// </summary>
         public override void Initialize()
         {
             base.Initialize();
 
             Dictionary<string, string> settings = Settings;
-            string errorMessage = "{0} is missing from Settings - Example: exportInterval=5; useReferenceAngle=True; referenceAngleMeasurement=DEVARCHIVE:6; companyTagPrefix=TVA; useNumericQuality=True; inputMeasurementKeys={{FILTER ActiveMeasurements WHERE Device='SHELBY' AND SignalType='FREQ'}}";
+            const string errorMessage = "{0} is missing from Settings - Example: exportInterval=5; useReferenceAngle=True; referenceAngleMeasurement=DEVARCHIVE:6; companyTagPrefix=TVA; useNumericQuality=True; inputMeasurementKeys={{FILTER ActiveMeasurements WHERE Device='SHELBY' AND SignalType='FREQ'}}";
             string setting;
             double seconds;
 
@@ -299,7 +299,7 @@ namespace ICCPExport
                 SignalType signalType = InputMeasurementKeyTypes[InputMeasurementKeys.IndexOf(key => key == m_referenceAngleKey)];
 
                 if (signalType != SignalType.IPHA && signalType != SignalType.VPHA)
-                    throw new InvalidOperationException(string.Format("Specified reference angle measurement key is a {0} signal, not a phase angle.", signalType.GetFormattedSignalTypeName()));
+                    throw new InvalidOperationException(string.Format("Specified reference angle measurement key is a {0} signal, not a phase angle.", signalType.GetFormattedName()));
             }
 
             // Load optional parameters
@@ -321,7 +321,7 @@ namespace ICCPExport
             m_dataExporter = new MultipleDestinationExporter(ConfigurationSection, m_exportInterval);
             m_dataExporter.StatusMessage += m_dataExporter_StatusMessage;
             m_dataExporter.ProcessException += m_dataExporter_ProcessException;
-            m_dataExporter.Initialize(new[] { new ExportDestination(FilePath.GetAbsolutePath(ConfigurationSection + ".txt"), false, "", "", "") });
+            m_dataExporter.Initialize(new[] { new ExportDestination(FilePath.GetAbsolutePath(ConfigurationSection + ".txt"), false) });
 
             // Create new measurement tag name dictionary
             m_measurementTags = new ConcurrentDictionary<MeasurementKey, string>();

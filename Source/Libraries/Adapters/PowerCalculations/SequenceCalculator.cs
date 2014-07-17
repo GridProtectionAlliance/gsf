@@ -31,10 +31,10 @@ using System.Linq;
 using System.Text;
 using GSF;
 using GSF.Collections;
-using GSF.PhasorProtocols;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.Units;
+using GSF.Units.EE;
 using PhasorProtocolAdapters;
 
 namespace PowerCalculations

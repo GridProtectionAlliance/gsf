@@ -32,10 +32,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
 using GSF.Collections;
-using GSF.PhasorProtocols;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.Units;
+using GSF.Units.EE;
 using PhasorProtocolAdapters;
 
 namespace PowerCalculations.EventDetection
@@ -52,9 +52,9 @@ namespace PowerCalculations.EventDetection
         private const double SqrtOf3 = 1.7320508075688772935274463415059D;
 
         // Fields
-        private double m_pSet;                      // Threshold of Pset MW: default value -600 mW      
-        private double m_qSet;                      // Threshold of Qset MVar: default value 200 mVar
-        private double m_qAreaSet;                  // Threshold of Qarea MVar-sec: default value 500 mVar-sec
+        private double m_pSet;                      // Threshold of P-set MW: default value -600 mW      
+        private double m_qSet;                      // Threshold of Q-set MVar: default value 200 mVar
+        private double m_qAreaSet;                  // Threshold of Q-area MVar-sec: default value 500 mVar-sec
         private double m_voltageThreshold;          // Threshold of Voltage: default value 0.95 p.u. or 475 kV
         private double m_qAreamVar;                 // Calculated Q area value                 
         private int m_analysisInterval;             // Interval between adjacent calculations
@@ -67,17 +67,23 @@ namespace PowerCalculations.EventDetection
         private MeasurementKey m_currentAngle;      // Measurement input key for current angle
 
         // Important: Make sure output definition defines points in the following order
-        private enum Output { WarningSignal, RealPower, ReactivePower, QAreaValue }
+        private enum Output
+        {
+            WarningSignal,
+            RealPower,
+            ReactivePower,
+            QAreaValue
+        }
 
         #endregion
 
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the threshold of Pset MW.
+        /// Gets or sets the threshold of P-set MW.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define the threshold of Pset MW."),
+        Description("Define the threshold of P-set MW."),
         DefaultValue(-600)]
         public double PSet
         {
@@ -92,10 +98,10 @@ namespace PowerCalculations.EventDetection
         }
 
         /// <summary>
-        /// Gets or sets the threshold of Qset MVar.
+        /// Gets or sets the threshold of Q-set MVar.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define the threshold of Qset MVar."),
+        Description("Define the threshold of Q-set MVar."),
         DefaultValue(200)]
         public double QSet
         {
@@ -110,10 +116,10 @@ namespace PowerCalculations.EventDetection
         }
 
         /// <summary>
-        /// Gets or sets the threshold of Qarea MVar-sec.
+        /// Gets or sets the threshold of Q-area MVar-sec.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define the threshold of Qarea MVar-sec."),
+        Description("Define the threshold of Q-area MVar-sec."),
         DefaultValue(500)]
         public double QAreaSet
         {
@@ -184,7 +190,7 @@ namespace PowerCalculations.EventDetection
                 status.AppendLine();
                 status.AppendFormat("      Calculation interval: {0}", m_analysisInterval);
                 status.AppendLine();
-                
+
                 status.Append(base.Status);
 
                 return status.ToString();
@@ -204,7 +210,7 @@ namespace PowerCalculations.EventDetection
 
             Dictionary<string, string> settings = Settings;
             string setting;
-            
+
             // Load parameters
             if (settings.TryGetValue("pSet", out setting))
                 m_pSet = double.Parse(setting);
@@ -252,7 +258,7 @@ namespace PowerCalculations.EventDetection
 
             m_voltageAngle = InputMeasurementKeys[index];
 
-            // Get expecpted current magnitude
+            // Get expected current magnitude
             index = InputMeasurementKeyTypes.IndexOf(signalType => signalType == SignalType.IPHM);
             if (index < 0)
                 throw new InvalidOperationException("No current magnitude input measurement key was not found - this is a required input measurement for the loss of field detector.");
@@ -289,13 +295,7 @@ namespace PowerCalculations.EventDetection
             {
                 IDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
                 IMeasurement measurement;
-                double voltageMagnitude = 0.0D;
-                double voltageAngle = 0.0D;
-                double currentMagnitude = 0.0D;
-                double currentAngle = 0.0D;
-                double realPower;
-                double reactivePower;
-                double deltaT;
+                double voltageMagnitude, voltageAngle, currentMagnitude, currentAngle, realPower, reactivePower, deltaT;
                 bool warningSignaled = false;
 
                 m_count1 = m_count2;
@@ -323,7 +323,7 @@ namespace PowerCalculations.EventDetection
 
                 realPower = 3 * voltageMagnitude * currentMagnitude * Math.Cos(voltageAngle - currentAngle) / SI.Mega;
                 reactivePower = 3 * voltageMagnitude * currentMagnitude * Math.Sin(voltageAngle - currentAngle) / SI.Mega;
-                deltaT = (m_count2 - m_count1) / FramesPerSecond;
+                deltaT = (m_count2 - m_count1) / (double)FramesPerSecond;
 
                 if (realPower < m_pSet && reactivePower > m_qSet)
                 {

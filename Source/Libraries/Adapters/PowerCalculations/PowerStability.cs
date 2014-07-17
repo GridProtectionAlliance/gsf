@@ -21,7 +21,7 @@
 //  05/27/2008 - J. Ritchie Carroll
 //       Added Montgomery line to power calculation
 //  12/22/2009 - Jian R. Zuo
-//       Conveted code to C#;
+//       Converted code to C#;
 //  04/12/2010 - J. Ritchie Carroll
 //       Performed full code review, optimization and further abstracted code for stability calculator.
 //  12/13/2012 - Starlynn Danyelle Gilliam
@@ -36,10 +36,10 @@ using System.Linq;
 using System.Text;
 using GSF.Collections;
 using GSF.NumericalAnalysis;
-using GSF.PhasorProtocols;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.Units;
+using GSF.Units.EE;
 using PhasorProtocolAdapters;
 
 namespace PowerCalculations
@@ -81,7 +81,11 @@ namespace PowerCalculations
         private MeasurementKey[] m_currentMagnitudes;
 
         // Important: Make sure output definition defines points in the following order
-        private enum Output { Power, StDev }
+        private enum Output
+        {
+            Power,
+            StDev
+        }
 
         #endregion
 
@@ -131,7 +135,7 @@ namespace PowerCalculations
             get
             {
                 const int ValuesToShow = 3;
-                
+
                 StringBuilder status = new StringBuilder();
 
                 status.AppendFormat("          Data sample size: {0} seconds", (int)(m_minimumSamples / FramesPerSecond));
@@ -143,7 +147,7 @@ namespace PowerCalculations
                 status.AppendFormat("     Total current phasors: {0}", m_currentMagnitudes.Length);
                 status.AppendLine();
                 status.Append("         Last power values: ");
-                
+
                 lock (m_powerDataSample)
                 {
                     // Display last several values
@@ -218,7 +222,7 @@ namespace PowerCalculations
             if (OutputMeasurements.Length < Enum.GetValues(typeof(Output)).Length)
                 throw new InvalidOperationException("Not enough output measurements were specified for the power stability monitor, expecting measurements for the \"Calculated Power\", and the \"Standard Deviation of Power\" - in this order.");
 
-            m_powerDataSample = new List<double>();            
+            m_powerDataSample = new List<double>();
         }
 
         /// <summary>
@@ -251,7 +255,7 @@ namespace PowerCalculations
             // Exit if bus voltage measurements were not available for calculation
             if (double.IsNaN(voltageMagnitude))
                 return;
-            
+
             // Calculate the sum of the current phasors
             for (i = 0; i < m_currentMagnitudes.Length; i++)
             {
@@ -264,12 +268,12 @@ namespace PowerCalculations
 
             // Apply bus voltage and convert to 3-phase megawatts
             power = power * voltageMagnitude / (SI.Mega / 3.0D);
-            
+
             // Add latest calculated power to data sample
             lock (m_powerDataSample)
             {
                 m_powerDataSample.Add(power);
-                
+
                 // Maintain sample size
                 while (m_powerDataSample.Count > m_minimumSamples)
                     m_powerDataSample.RemoveAt(0);
@@ -290,7 +294,7 @@ namespace PowerCalculations
 
                 // Provide calculated measurements for external consumption
                 OnNewMeasurements(new IMeasurement[] { powerMeasurement, stdevMeasurement });
-                
+
                 // Track last standard deviation...
                 m_lastStdev = stdevMeasurement.AdjustedValue;
             }

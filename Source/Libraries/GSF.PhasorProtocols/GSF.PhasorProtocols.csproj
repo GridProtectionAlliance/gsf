@@ -203,7 +203,6 @@
     <Compile Include="PhasorDefinitionCollection.cs" />
     <Compile Include="PhasorValueBase.cs" />
     <Compile Include="PhasorValueCollection.cs" />
-    <Compile Include="SignalReference.cs" />
     <Compile Include="SignalReferenceMeasurement.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Anonymous\AnalogDefinition.cs" />

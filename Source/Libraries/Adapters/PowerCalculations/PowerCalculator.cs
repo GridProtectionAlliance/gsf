@@ -31,10 +31,10 @@ using System.Linq;
 using System.Text;
 using GSF;
 using GSF.Collections;
-using GSF.PhasorProtocols;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.Units;
+using GSF.Units.EE;
 using PhasorProtocolAdapters;
 
 namespace PowerCalculations
@@ -193,16 +193,16 @@ namespace PowerCalculations
             m_currentAngle = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.IPHA).FirstOrDefault();
             m_currentMagnitude = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.IPHM).FirstOrDefault();
 
-            if (m_voltageAngle.ID == 0)
+            if ((object)m_voltageAngle == null || m_voltageAngle.ID == 0)
                 throw new InvalidOperationException("No voltage angle input was defined - one voltage angle input measurement is required for the power calculator.");
 
-            if (m_voltageMagnitude.ID == 0)
+            if ((object)m_voltageMagnitude == null || m_voltageMagnitude.ID == 0)
                 throw new InvalidOperationException("No voltage magnitude input was defined - one voltage magnitude input measurement is required for the power calculator.");
 
-            if (m_currentAngle.ID == 0)
+            if ((object)m_currentAngle == null || m_currentAngle.ID == 0)
                 throw new InvalidOperationException("No current angle input was defined - one current angle input measurement is required for the power calculator.");
 
-            if (m_currentMagnitude.ID == 0)
+            if ((object)m_currentMagnitude == null || m_currentMagnitude.ID == 0)
                 throw new InvalidOperationException("No current magnitude input measurement was defined - one current magnitude input measurement is required for the power calculator.");
 
             // Make sure only these four phasor measurements are used as input (any others will be ignored)

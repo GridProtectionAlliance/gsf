@@ -44,6 +44,7 @@ using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
 using GSF.Units;
+using GSF.Units.EE;
 
 namespace PhasorProtocolAdapters
 {
@@ -959,7 +960,7 @@ namespace PhasorProtocolAdapters
             string setting;
 
             // Cache signal reference name for connected device quality flags - in normal usage, name will not change for adapter lifetime
-            m_qualityFlagsSignalReferenceName = string.Format("{0}-{1}", Name, SignalReference.GetSignalKindAcronym(SignalKind.Quality));
+            m_qualityFlagsSignalReferenceName = SignalReference.ToString(Name, SignalKind.Quality);
 
             // Load optional mapper specific connection parameters
             if (settings.TryGetValue("isConcentrator", out setting))
