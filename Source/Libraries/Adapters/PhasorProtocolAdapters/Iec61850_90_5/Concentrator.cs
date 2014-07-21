@@ -31,6 +31,7 @@ using GSF.PhasorProtocols;
 using GSF.PhasorProtocols.IEC61850_90_5;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using GSF.Units.EE;
 using DigitalDefinition = GSF.PhasorProtocols.Anonymous.DigitalDefinition;
 
 namespace PhasorProtocolAdapters.Iec61850_90_5

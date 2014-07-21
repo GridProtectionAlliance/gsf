@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using GSF.Units.EE;
 
 namespace GSF.PhasorProtocols.IEEE1344
 {

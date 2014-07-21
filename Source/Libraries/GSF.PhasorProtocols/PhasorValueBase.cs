@@ -29,6 +29,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using GSF.TimeSeries;
 using GSF.Units;
+using GSF.Units.EE;
 
 namespace GSF.PhasorProtocols
 {

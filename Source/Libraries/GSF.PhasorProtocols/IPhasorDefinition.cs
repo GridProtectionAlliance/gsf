@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System;
+using GSF.Units.EE;
 
 namespace GSF.PhasorProtocols
 {
@@ -58,22 +59,6 @@ namespace GSF.PhasorProtocols
         /// Serialize angles in radians.
         /// </summary>
         Radians
-    }
-
-    /// <summary>
-    /// Phasor types enumeration.
-    /// </summary>
-    [Serializable]
-    public enum PhasorType : byte
-    {
-        /// <summary>
-        /// Voltage phasor.
-        /// </summary>
-        Voltage,
-        /// <summary>
-        /// Current phasor.
-        /// </summary>
-        Current
     }
 
     #endregion

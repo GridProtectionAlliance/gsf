@@ -26,15 +26,16 @@
 //******************************************************************************************************
 
 using System;
+using GSF;
 using GSF.TimeSeries;
 using GSF.Units.EE;
 
-namespace GSF.PhasorProtocols
+namespace PhasorProtocolAdapters
 {
     /// <summary>
     /// Represents an <see cref="IMeasurement"/> wrapper that is associated with a <see cref="SignalReference"/>.
     /// </summary>
-    public class SignalReferenceMeasurement : IMeasurement
+    internal sealed class SignalReferenceMeasurement : IMeasurement
     {
         #region [ Members ]
 

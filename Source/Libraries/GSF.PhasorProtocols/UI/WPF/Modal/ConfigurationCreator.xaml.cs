@@ -27,6 +27,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using GSF.PhasorProtocols.Anonymous;
+using GSF.Units.EE;
 
 namespace GSF.PhasorProtocols.UI.Modal
 {
@@ -351,7 +352,7 @@ namespace GSF.PhasorProtocols.UI.Modal
             IConfigurationCell cell;
 
             // If suggested ID code already exists, try another
-            if (m_configurationFrame.Cells.TryGetByIDCode(suggested, out cell) && cell != this.SelectedDevice)
+            if (m_configurationFrame.Cells.TryGetByIDCode(suggested, out cell) && !Equals(cell, this.SelectedDevice))
                 return GenerateUniqueIDCode((ushort)(suggested + 1));
 
             return suggested;

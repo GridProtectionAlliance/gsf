@@ -25,6 +25,7 @@
 
 using System;
 using System.Runtime.Serialization;
+using GSF.Units.EE;
 
 namespace GSF.PhasorProtocols.IEC61850_90_5
 {

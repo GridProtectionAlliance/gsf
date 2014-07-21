@@ -40,6 +40,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using GSF.Units.EE;
 using AnalogDefinition = GSF.PhasorProtocols.IEEEC37_118.AnalogDefinition;
 using ConfigurationCell = GSF.PhasorProtocols.IEEEC37_118.ConfigurationCell;
 using DigitalDefinition = GSF.PhasorProtocols.Anonymous.DigitalDefinition;

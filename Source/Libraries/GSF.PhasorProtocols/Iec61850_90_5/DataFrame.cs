@@ -32,6 +32,7 @@ using System.Runtime.Serialization;
 using System.Security.Cryptography;
 using GSF.IO;
 using GSF.Parsing;
+using GSF.Units.EE;
 
 namespace GSF.PhasorProtocols.IEC61850_90_5
 {

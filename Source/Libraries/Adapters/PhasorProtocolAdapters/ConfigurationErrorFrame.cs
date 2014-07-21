@@ -35,6 +35,7 @@ using GSF;
 using GSF.Parsing;
 using GSF.PhasorProtocols;
 using GSF.TimeSeries;
+using GSF.Units.EE;
 
 namespace PhasorProtocolAdapters
 {

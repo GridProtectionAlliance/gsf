@@ -87,6 +87,7 @@ using GSF.PhasorProtocols.Macrodyne;
 using GSF.PhasorProtocols.SelFastMessage;
 using GSF.TimeSeries;
 using GSF.Units;
+using GSF.Units.EE;
 using TcpClient = GSF.Communication.TcpClient;
 using Timer = System.Timers.Timer;
 using UdpClient = GSF.Communication.UdpClient;
@@ -477,6 +478,7 @@ namespace GSF.PhasorProtocols
 
                     return false;
                 }
+                // ReSharper disable once ValueParameterNotUsed
                 set
                 {
                     // value parameter not used here intentionally
@@ -729,6 +731,7 @@ namespace GSF.PhasorProtocols
             /// Terminates the server as quickly as possible and
             /// removes it from the collection of shared servers.
             /// </summary>
+            // ReSharper disable once UnusedMember.Local
             private void TerminateSharedClient()
             {
                 EndPoint localEndPoint;
@@ -1111,6 +1114,7 @@ namespace GSF.PhasorProtocols
             /// </summary>
             public bool ReceivePacketInfo
             {
+                // ReSharper disable once UnusedMember.Local
                 get
                 {
                     if ((object)m_udpClient != null)

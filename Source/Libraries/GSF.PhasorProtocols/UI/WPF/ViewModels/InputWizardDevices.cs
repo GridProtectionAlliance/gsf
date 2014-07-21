@@ -44,9 +44,11 @@ using GSF.ServiceProcess;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.Commands;
 using GSF.TimeSeries.UI.DataModels;
+using GSF.Units.EE;
 using PhasorProtocolAdapters;
 using Application = System.Windows.Application;
 using Cursors = System.Windows.Input.Cursors;
+using Phasor = GSF.PhasorProtocols.UI.DataModels.Phasor;
 
 namespace GSF.PhasorProtocols.UI.ViewModels
 {

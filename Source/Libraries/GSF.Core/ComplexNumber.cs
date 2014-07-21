@@ -65,6 +65,8 @@
 #endregion
 
 using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Text;
 using GSF.Units;
 
@@ -86,7 +88,7 @@ namespace GSF
 
         private double? m_angle;        // Angle value of complex number
         private double? m_magnitude;    // Magnitude value of complex number
-        
+
         #endregion
 
         #region [ Constructors ]
@@ -127,7 +129,7 @@ namespace GSF
             // Make sure state of source complex number is replicated exactly
             m_real = z.m_real;
             m_imaginary = z.m_imaginary;
-            
+
             m_angle = z.m_angle;
             m_magnitude = z.m_magnitude;
         }
@@ -201,12 +203,12 @@ namespace GSF
                     return Math.Sqrt(real * real + imaginary * imaginary);
                 }
 
-                    return double.NaN;
+                return double.NaN;
             }
             set
             {
                 // Cache assigned magnitude value
-                    m_magnitude = value;
+                m_magnitude = value;
 
                 if (!m_real.HasValue || !m_imaginary.HasValue)
                 {
@@ -243,12 +245,12 @@ namespace GSF
                 if (AllAssigned)
                     return Math.Atan2(m_imaginary.Value, m_real.Value);
 
-                    return double.NaN;
+                return double.NaN;
             }
             set
             {
                 // Cache assigned angle value
-                    m_angle = value;
+                m_angle = value;
 
                 if (!m_real.HasValue || !m_imaginary.HasValue)
                 {
@@ -324,7 +326,7 @@ namespace GSF
         }
 
         /// <summary>
-        /// Returns a value indicating whether this instance is equal to a specified Int24 value.
+        /// Returns a value indicating whether this instance is equal to a specified ComplexNumber value.
         /// </summary>
         /// <param name="obj">A <see cref="ComplexNumber"/> to compare to this instance.</param>
         /// <returns>
@@ -332,7 +334,7 @@ namespace GSF
         /// </returns>
         public bool Equals(ComplexNumber obj)
         {
-            return (this == obj);
+            return this == obj;
         }
 
         /// <summary>
@@ -343,7 +345,7 @@ namespace GSF
         /// </returns>
         public override int GetHashCode()
         {
-            return (Real.GetHashCode() ^ Imaginary.GetHashCode());
+            return Real.GetHashCode() ^ Imaginary.GetHashCode();
         }
 
         /// <summary>
@@ -480,7 +482,7 @@ namespace GSF
         }
 
         ///<summary>
-        ///Returns specified <see cref="ComplexNumber"/> raised to the specified power.
+        /// Returns specified <see cref="ComplexNumber"/> raised to the specified power.
         ///</summary>
         ///<param name="z">Complex number to be raised to power <paramref name="y"/>.</param>
         ///<param name="y">Power to raise <see cref="ComplexNumber"/> <paramref name="z"/>.</param>
@@ -488,6 +490,21 @@ namespace GSF
         public static ComplexNumber Pow(ComplexNumber z, double y)
         {
             return new ComplexNumber(z.Angle * y, Math.Pow(z.Magnitude, y));
+        }
+
+        // C# doesn't expose an exponent operator but some other .NET languages do,
+        // so we expose the operator via its native special IL function name
+
+        /// <summary>
+        /// Returns result of first value raised to power of second value.
+        /// </summary>
+        ///<param name="z">Complex number to be raised to power <paramref name="y"/>.</param>
+        ///<param name="y">Power to raise <see cref="ComplexNumber"/> <paramref name="z"/>.</param>
+        /// <returns>ComplexNumber representing the result of the operation.</returns>
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
+        public static ComplexNumber op_Exponent(ComplexNumber z, double y)
+        {
+            return Pow(z, y);
         }
 
         #endregion

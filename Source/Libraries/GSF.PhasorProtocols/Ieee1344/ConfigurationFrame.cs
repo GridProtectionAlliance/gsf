@@ -31,6 +31,7 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using GSF.IO.Checksums;
 using GSF.Parsing;
+using GSF.Units.EE;
 
 namespace GSF.PhasorProtocols.IEEE1344
 {

@@ -33,6 +33,7 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using System.Text;
+using GSF.Units.EE;
 
 namespace GSF.PhasorProtocols.BPAPDCstream
 {

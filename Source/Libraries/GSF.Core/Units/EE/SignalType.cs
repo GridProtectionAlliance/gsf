@@ -141,7 +141,7 @@ namespace GSF.Units.EE
                 case SignalType.NONE:
                     return "Undefined";
                 default:
-                    return signalType.ToString().ToTitleCase();
+                    return ((Enum)signalType).GetFormattedName();
             }
         }
     }

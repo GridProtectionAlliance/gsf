@@ -95,6 +95,7 @@
     <Compile Include="PhasorDataConcentratorBase.cs" />
     <Compile Include="PhasorMeasurementMapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SignalReferenceMeasurement.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\GSF.Communication\GSF.Communication.csproj">

@@ -26,6 +26,7 @@
 //******************************************************************************************************
 
 using System.Diagnostics.CodeAnalysis;
+using GSF.Units.EE;
 
 namespace GSF.PhasorProtocols.FNET
 {

@@ -30,6 +30,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using GSF.Units.EE;
 
 namespace GSF.PhasorProtocols.SelFastMessage
 {
@@ -256,7 +257,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
-            
+
             // Serialize configuration frame
             info.AddValue("frameSize", m_frameSize, typeof(FrameSize));
             info.AddValue("messagePeriod", m_messagePeriod, typeof(MessagePeriod));

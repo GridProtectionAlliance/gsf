@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using GSF.Units;
+using GSF.Units.EE;
 
 namespace GSF.PhasorProtocols
 {
