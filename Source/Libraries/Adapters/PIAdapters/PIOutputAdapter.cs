@@ -353,6 +353,7 @@ namespace PIAdapters
                 foreach (ProcessingStage stage in Enum.GetValues(typeof(ProcessingStage)).Cast<ProcessingStage>())
                 {
                     status.AppendFormat("        Processing stage {0}: {1}", (int)stage + 1, stage.GetFormattedName());
+                    status.AppendLine();
                 }
 
                 status.AppendLine();
