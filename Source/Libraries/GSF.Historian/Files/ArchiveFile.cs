@@ -1444,7 +1444,7 @@ namespace GSF.Historian.Files
         {
             if (!IsOpen)
             {
-                // Check for the existance of dependencies.
+                // Check for the existence of dependencies.
                 if ((object)m_stateFile == null || (object)m_intercomFile == null | (object)m_metadataFile == null)
                     throw (new InvalidOperationException("One or more of the dependency files are not specified."));
 
@@ -1465,6 +1465,26 @@ namespace GSF.Historian.Files
                 if (!Directory.Exists(FilePath.GetDirectoryName(m_fileName)))
                     Directory.CreateDirectory(FilePath.GetDirectoryName(m_fileName));
 
+                // Validate a roll-over is not in progress when opening archive as read-only
+                if (m_fileType == ArchiveFileType.Active && m_fileAccessMode == FileAccess.Read)
+                {
+                    // Open intercom file if closed.
+                    if (!m_intercomFile.IsOpen)
+                        m_intercomFile.Open();
+
+                    m_intercomFile.Load();
+                    IntercomRecord record = m_intercomFile.Read(1);
+                    int waitCount = 0;
+
+                    while ((object)record != null && record.RolloverInProgress && waitCount < 30)
+                    {
+                        Thread.Sleep(1000);
+                        m_intercomFile.Load();
+                        record = m_intercomFile.Read(1);
+                        waitCount++;
+                    }
+                }
+
                 OpenStream();
 
                 // Don't proceed further for standby and historic files.
@@ -1480,7 +1500,7 @@ namespace GSF.Historian.Files
                 if (!m_stateFile.IsOpen)
                     m_stateFile.Open();
 
-                //Open intercom file if closed.
+                // Open intercom file if closed.
                 if (!m_intercomFile.IsOpen)
                     m_intercomFile.Open();
 

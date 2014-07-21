@@ -496,9 +496,10 @@ namespace GSF.Historian.Files
                     // Read the inter-process communications file for changes in roll-over state
                     if ((object)m_archiveFile != null && (object)m_archiveFile.IntercomFile != null && m_archiveFile.IntercomFile.IsOpen)
                     {
+                        m_archiveFile.IntercomFile.Load();
                         IntercomRecord record = m_archiveFile.IntercomFile.Read(1);
 
-                        if (record != null)
+                        if ((object)record != null)
                         {
                             // Pause processing
                             if (record.RolloverInProgress && m_archiveFile.IsOpen)
