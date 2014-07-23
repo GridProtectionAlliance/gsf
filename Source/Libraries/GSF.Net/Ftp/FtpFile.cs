@@ -163,7 +163,7 @@ namespace GSF.Net.Ftp
         /// <summary>
         /// Gets or sets timestamp of file.
         /// </summary>
-        public DateTime TimeStamp
+        public DateTime Timestamp
         {
             get
             {

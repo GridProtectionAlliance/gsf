@@ -88,6 +88,6 @@ namespace GSF.Net.Ftp
         /// <summary>
         /// Gets or sets timestamp of file or directory.
         /// </summary>
-        DateTime TimeStamp { get; set; }
+        DateTime Timestamp { get; set; }
     }
 }

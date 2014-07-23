@@ -249,7 +249,7 @@ namespace GSF.Net.Ftp
         /// <summary>
         /// Gets or sets timestamp of directory.
         /// </summary>
-        public DateTime TimeStamp
+        public DateTime Timestamp
         {
             get
             {
