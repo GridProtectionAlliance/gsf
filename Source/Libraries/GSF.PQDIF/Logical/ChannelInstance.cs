@@ -101,6 +101,23 @@ namespace GSF.PQDIF.Logical
         }
 
         /// <summary>
+        /// Gets the identifier for the harmonic or
+        /// interharmonic group represented by this channel.
+        /// </summary>
+        public short ChannelGroupID
+        {
+            get
+            {
+                ScalarElement channelGroupIDElement = m_physicalStructure.GetScalarByTag(ChannelGroupIDTag);
+
+                if ((object)channelGroupIDElement == null)
+                    return 0;
+
+                return channelGroupIDElement.GetInt2();
+            }
+        }
+
+        /// <summary>
         /// Gets the name of the of a device specific code or hardware
         /// module, algorithm, or rule not necessarily channel based
         /// that cause this channel to be recorded.
@@ -161,6 +178,11 @@ namespace GSF.PQDIF.Logical
         /// Tag that identifies the channel definition index.
         /// </summary>
         public static readonly Guid ChannelDefinitionIndexTag = new Guid("b48d858f-f5f5-11cf-9d89-0080c72e70a3");
+
+        /// <summary>
+        /// Tag that identifies the channel group ID.
+        /// </summary>
+        public static readonly Guid ChannelGroupIDTag = new Guid("f90de218-e67b-4cf1-a295-b021a2d46767");
 
         /// <summary>
         /// Tag that identifies the series instances collection.

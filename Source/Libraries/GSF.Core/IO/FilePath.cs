@@ -777,6 +777,24 @@ namespace GSF.IO
         }
 
         /// <summary>
+        /// Attempts to get read access on a file.
+        /// </summary>
+        /// <param name="fileName">The file to check for read access.</param>
+        /// <returns>True if read access is obtained; false otherwise.</returns>
+        public static bool TryGetReadLockExclusive(string fileName)
+        {
+            try
+            {
+                using (new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.None))
+                    return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Attempts to get write access on a file.
         /// </summary>
         /// <param name="fileName">The file to check for write access.</param>
@@ -817,6 +835,41 @@ namespace GSF.IO
             double startTime = Common.SystemTimer;
 
             while (!TryGetReadLock(fileName))
+            {
+                if (secondsToWait > 0)
+                {
+                    if (Common.SystemTimer > startTime + secondsToWait)
+                        throw new IOException("Could not open \"" + fileName + "\" for read access, tried for " + secondsToWait + " seconds");
+                }
+
+                // Yields to all other system threads.
+                Thread.Sleep(250);
+            }
+        }
+
+        /// <summary>
+        /// Waits for the default duration (5 seconds) for read access on a file.
+        /// </summary>
+        /// <param name="fileName">The name of the file to wait for to obtain read access.</param>
+        public static void WaitForReadLockExclusive(string fileName)
+        {
+            WaitForReadLockExclusive(fileName, 5);
+        }
+
+        /// <summary>
+        /// Waits for read access on a file for the specified number of seconds.
+        /// </summary>
+        /// <param name="fileName">The name of the file to wait for to obtain read access.</param>
+        /// <param name="secondsToWait">The time to wait for in seconds to obtain read access on a file. Set to zero to wait infinitely.</param>
+        public static void WaitForReadLockExclusive(string fileName, double secondsToWait)
+        {
+            if (!File.Exists(fileName))
+                throw new FileNotFoundException("Could not test file lock for \"" + fileName + "\", file does not exist", fileName);
+
+            // Keeps trying for a file lock.
+            double startTime = Common.SystemTimer;
+
+            while (!TryGetReadLockExclusive(fileName))
             {
                 if (secondsToWait > 0)
                 {
