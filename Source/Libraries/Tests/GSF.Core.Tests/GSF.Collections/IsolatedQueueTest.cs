@@ -178,7 +178,7 @@ namespace GSF.Core.Tests.GSF.Collections
         private void RunTwo(object state)
         {
             m_wait.Set();
-            SpinWait wait = new SpinWait();
+            //SpinWait wait = new SpinWait();
             //Thread.Sleep(1000);
             Stopwatch sw = new Stopwatch();
             sw.Start();
