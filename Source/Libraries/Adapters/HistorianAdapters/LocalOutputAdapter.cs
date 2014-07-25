@@ -1135,7 +1135,7 @@ namespace HistorianAdapters
                         if (string.IsNullOrEmpty(userName))
                             connectionString = string.Format("ServerName={0}; ConnectTimeout={1}; sourceIDs={2}", serverName, connectTimeout, instanceName);
                         else
-                            connectionString = string.Format("ServerName={0}; UserName={1}; Password={2}; ConnectTimeout={3}; sourceIDs={4}", serverName, userName, password.ToNonNullString(), connectTimeout, instanceName);
+                            connectionString = string.Format("ServerName={0}; UserName={1}; Password={2}; ConnectTimeout={3}; sourceIDs={4}; connectOnDemand=true", serverName, userName, password.ToNonNullString(), connectTimeout, instanceName);
 
                         string query = string.Format("INSERT INTO CustomInputAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, LoadOrder, Enabled) " +
                             "VALUES({0}, @adapterName, 'PIAdapters.dll', 'PIAdapters.PIPBInputAdapter', @connectionString, 0, 1)", nodeIDQueryString);
