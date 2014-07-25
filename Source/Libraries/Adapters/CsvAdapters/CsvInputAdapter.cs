@@ -45,7 +45,7 @@ namespace CsvAdapters
     /// <summary>
     /// Represents an input adapter that reads measurements from a CSV file.
     /// </summary>
-    [Description("CSV: reads measurements from a CSV file.")]
+    [Description("CSV: Reads measurements from a CSV file")]
     public class CsvInputAdapter : InputAdapterBase
     {
         #region [ Members ]
@@ -477,8 +477,8 @@ namespace CsvAdapters
                     // Reserve a column mapping for timestamp value
                     IMeasurement timestampMeasurement = new Measurement
                         {
-                        TagName = "Timestamp"
-                    };
+                            TagName = "Timestamp"
+                        };
 
                     m_columnMappings[timestampColumn] = timestampMeasurement;
                 }

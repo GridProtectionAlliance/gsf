@@ -37,7 +37,7 @@ namespace DataQualityMonitoring
     /// <summary>
     /// Tests measurements to determine whether their values satisfy a range condition.
     /// </summary>
-    [Description("Range Test: notifies when the values of received measurements are outside of a given range")]
+    [Description("Range Test: Notifies when the values of received measurements are outside of a given range")]
     public class RangeTest : ActionAdapterBase
     {
         #region [ Members ]
@@ -245,7 +245,7 @@ namespace DataQualityMonitoring
             if (settings.TryGetValue("signalType", out m_signalType))
                 rangeSet = TrySetRange(m_signalType);
 
-            if(!rangeSet)
+            if (!rangeSet)
             {
                 // Load required parameters
                 if (!settings.TryGetValue("lowRange", out setting))
@@ -545,6 +545,6 @@ namespace DataQualityMonitoring
                 s_exceptionProcessor.OnProcessException(e.Argument);
         }
 
-        #endregion        
+        #endregion
     }
 }

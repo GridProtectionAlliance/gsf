@@ -46,7 +46,7 @@ namespace HistorianAdapters
     /// <summary>
     /// Represents an input adapters that listens for time-series data from a remote Historian.
     /// </summary>
-    [Description("Historian Listener: listens for time-series data from a a remote historian.")]
+    [Description("Historian Listener: Listens for time-series data from a a remote historian")]
     public class RemoteInputAdapter : InputAdapterBase
     {
         #region [ Members ]

@@ -35,7 +35,7 @@ namespace TestingAdapters
     /// <summary>
     /// Represents a virtual historian output adapter used for testing purposes - no data gets archived.
     /// </summary>
-    [Description("Virtual: defines a testing output that does not archive measurements.")]
+    [Description("Virtual: Defines a testing output that does not archive measurements")]
     public class VirtualOutputAdapter : OutputAdapterBase
     {
         #region [ Properties ]

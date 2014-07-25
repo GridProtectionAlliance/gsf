@@ -44,7 +44,7 @@ namespace HistorianAdapters
     /// <summary>
     /// Represents an output adapter that publishes measurements to openHistorian for archival.
     /// </summary>
-    [Description("Local Historian Reader: reads data from local openHistorian for replay.")]
+    [Description("Local Historian Reader: Reads data from local openHistorian for replay")]
     public class LocalInputAdapter : InputAdapterBase
     {
         #region [ Members ]

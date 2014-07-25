@@ -35,7 +35,7 @@ namespace TestingAdapters
     /// <summary>
     /// Represents a class used to stream a series of values that move randomly but change gradually.
     /// </summary>
-    [Description("Moving Value: Generates a series of values that move randomly but change gradually.")]
+    [Description("Moving Value: Generates a series of values that move randomly but change gradually")]
     public class MovingValueInputAdapter : InputAdapterBase
     {
         #region [ Members ]

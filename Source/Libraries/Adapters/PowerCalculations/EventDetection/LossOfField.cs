@@ -43,7 +43,7 @@ namespace PowerCalculations.EventDetection
     /// <summary>
     /// Represents an algorithm that detects Loss of Field from a synchrophasor device.
     /// </summary>
-    [Description("Loss of Field: detects Loss of Field from a synchrophasor device")]
+    [Description("Loss of Field: Detects Loss-of-Field from a synchrophasor device")]
     public class LossOfField : CalculatedMeasurementBase
     {
         #region [ Members ]

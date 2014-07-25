@@ -41,7 +41,7 @@ namespace MySqlAdapters
     /// <summary>
     /// Represents an input adapter that reads measurements from a MySQL database table.
     /// </summary>
-    [Description("MySQL: reads measurements from a MySQL database")]
+    [Description("MySQL: Reads measurements from a MySQL database")]
     public class MySqlInputAdapter : InputAdapterBase
     {
 

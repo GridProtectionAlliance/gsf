@@ -42,7 +42,7 @@ namespace PowerCalculations
     /// <summary>
     /// Calculates positive, negative and zero sequences using A, B and C phase voltage or current magnitude and angle signals input to the adapter.
     /// </summary>
-    [Description("Sequence Calculator: positive, negative and zero sequences for synchrophasor measurements")]
+    [Description("Sequence Calculator: Computes positive, negative and zero sequences for synchrophasor measurements")]
     public class SequenceCalculator : CalculatedMeasurementBase
     {
         #region [ Members ]

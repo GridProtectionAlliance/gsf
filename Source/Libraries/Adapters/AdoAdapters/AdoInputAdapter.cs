@@ -45,7 +45,7 @@ namespace AdoAdapters
     /// <summary>
     /// Represents an input adapter that reads measurements from a database table.
     /// </summary>
-    [Description("ADO: reads measurements from any ADO data source (e.g., OSI-PI via ODBC).")]
+    [Description("ADO: Reads measurements from an ADO data source")]
     public class AdoInputAdapter : InputAdapterBase
     {
         #region [ Members ]

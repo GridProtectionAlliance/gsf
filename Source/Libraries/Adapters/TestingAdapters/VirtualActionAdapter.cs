@@ -22,7 +22,6 @@
 //******************************************************************************************************
 
 using System.ComponentModel;
-using System.Linq;
 using GSF;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -32,7 +31,7 @@ namespace TestingAdapters
     /// <summary>
     /// Represents a virtual action adapter used for testing purposes - no data gets produced.
     /// </summary>
-    [Description("Virtual: defines a testing action that concentrates, but does not process frames.")]
+    [Description("Virtual: Defines a testing action that concentrates, but does not process frames")]
     public class VirtualActionAdapter : ActionAdapterBase
     {
         #region [ Properties ]

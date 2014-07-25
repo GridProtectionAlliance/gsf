@@ -50,7 +50,7 @@ namespace PowerCalculations
     /// <summary>
     /// Calculates a composed reference angle.
     /// </summary>
-    [Description("Reference Angle: calculates a composed reference angle")]
+    [Description("Reference Angle: Calculates a composed reference angle")]
     public class ReferenceAngle : CalculatedMeasurementBase
     {
         #region [ Members ]

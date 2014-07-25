@@ -37,7 +37,7 @@ namespace MongoAdapters
     /// <summary>
     /// Represents an input adapter that reads measurements from a MongoDB database.
     /// </summary>
-    [Description("MongoDB: reads measurements from a MongoDB database")]
+    [Description("MongoDB: Reads measurements from a MongoDB database")]
     public class MongoInputAdapter : InputAdapterBase
     {
         #region [ Members ]

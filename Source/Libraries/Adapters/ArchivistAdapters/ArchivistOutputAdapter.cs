@@ -41,7 +41,7 @@ namespace ArchivistAdapters
     /// <summary>
     /// Represents an output adapter that writes measurements to a CSV file.
     /// </summary>
-    [Description("Archivist: archives measurements to a an archivist/openArchiveMediator instance")]
+    [Description("Archivist: Archives measurements to a an archivist/openArchiveMediator instance")]
     public class ArchivistOutputAdapter : OutputAdapterBase
     {
 
@@ -131,7 +131,7 @@ namespace ArchivistAdapters
                 return false;
             }
         }
-        
+
         /// <summary>
         /// Returns the detailed status of this <see cref="ArchivistOutputAdapter"/>.
         /// </summary>
@@ -159,7 +159,7 @@ namespace ArchivistAdapters
         /// </summary>
         public override void Initialize()
         {
-            base.Initialize();            
+            base.Initialize();
 
             Dictionary<string, string> settings = Settings;
             string setting;
@@ -181,7 +181,7 @@ namespace ArchivistAdapters
         /// </summary>
         protected override void AttemptConnection()
         {
-            
+
         }
 
         /// <summary>
@@ -227,7 +227,7 @@ namespace ArchivistAdapters
         #region Static Members
 
         private static ICollection<MeasurementWithId> Convert(IMeasurement[] m)
-        { 
+        {
             var list = new List<MeasurementWithId>();
             for (int i = 0; i < m.Length; ++i)
             {
@@ -238,10 +238,10 @@ namespace ArchivistAdapters
 
         private static MeasurementWithId Convert(IMeasurement m)
         {
-            var builder = Measurement.CreateBuilder();            
+            var builder = Measurement.CreateBuilder();
             builder.SetTime(m.Timestamp);
             builder.SetType(Type.FLOAT64);
-            builder.SetDoubleValue(m.Value);            
+            builder.SetDoubleValue(m.Value);
             builder.SetQuality(0); // TODO - convert quality types
             return MeasurementWithId.CreateBuilder().SetId(m.TagName).SetMeas(builder.Build()).Build();
         }

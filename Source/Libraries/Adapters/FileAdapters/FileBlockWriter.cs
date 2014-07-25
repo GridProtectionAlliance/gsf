@@ -37,7 +37,7 @@ namespace FileAdapters
     /// <summary>
     /// Output adapter that receives blocks of data as measurements and writes them to a file.
     /// </summary>
-    [Description("FileBlockWriter: Receives buffer block measurements and writes them to files.")]
+    [Description("FileBlockWriter: Receives buffer block measurements and writes them to files")]
     public class FileBlockWriter : OutputAdapterBase
     {
         #region [ Members ]

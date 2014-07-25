@@ -46,7 +46,7 @@ namespace EpriExport
     /// <summary>
     /// Represents an action adapter that exports measurements on an interval to a file that can be picked up by EPRI applications.
     /// </summary>
-    [Description("EPRI: exports measurements to a file that can be used by EPRI systems")]
+    [Description("EPRI File Exporter: Exports measurements to a file that can be used by EPRI systems")]
     public class FileExporter : CalculatedMeasurementBase
     {
         #region [ Members ]

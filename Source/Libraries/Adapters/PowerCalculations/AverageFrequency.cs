@@ -41,7 +41,7 @@ namespace PowerCalculations
     /// <summary>
     /// Calculates a real-time average frequency reporting the average, maximum and minimum values.
     /// </summary>
-    [Description("Average Frequency: calculates a real-time average frequency reporting the average, maximum, and minimum values")]
+    [Description("Average Frequency: Calculates a real-time average frequency reporting the average, maximum, and minimum values")]
     public class AverageFrequency : CalculatedMeasurementBase
     {
         #region [ Members ]

@@ -35,7 +35,7 @@ namespace MongoAdapters
     /// <summary>
     /// Represents an output adapter that archives measurements to a MongoDB database.
     /// </summary>
-    [Description("MongoDB: archives measurements to a MongoDB database.")]
+    [Description("MongoDB: Archives measurements to a MongoDB database")]
     public class MongoOutputAdapter : OutputAdapterBase
     {
 
@@ -172,7 +172,10 @@ namespace MongoAdapters
         /// </summary>
         public override bool OutputIsForArchive
         {
-            get { return true; }
+            get
+            {
+                return true;
+            }
         }
 
         /// <summary>
@@ -180,7 +183,10 @@ namespace MongoAdapters
         /// </summary>
         protected override bool UseAsyncConnect
         {
-            get { return false; }
+            get
+            {
+                return false;
+            }
         }
 
         #endregion

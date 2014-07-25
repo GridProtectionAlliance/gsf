@@ -40,7 +40,7 @@ namespace DataQualityMonitoring
     /// <summary>
     /// Action adapter that generates alarm measurements based on alarm definitions from the database.
     /// </summary>
-    [Description("Alarm: Generates alarm events for alarms defined in the database.")]
+    [Description("Alarm: Generates alarm events for alarms defined in the database")]
     public class AlarmAdapter : FacileActionAdapterBase
     {
         #region [ Members ]

@@ -42,7 +42,7 @@ namespace PowerCalculations
     /// <summary>
     /// Calculates MW and MVAR using Voltage and Current Magnitude and Angle signals input to the adapter.
     /// </summary>
-    [Description("Power Calculator: calculates power and reactive power for synchrophasor measurements")]
+    [Description("Power Calculator: Calculates power and reactive power for synchrophasor measurements")]
     public class PowerCalculator : CalculatedMeasurementBase
     {
         #region [ Members ]

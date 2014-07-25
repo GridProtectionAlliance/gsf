@@ -51,7 +51,7 @@ namespace PIAdapters
     /// Exports measurements to PI if the point tag or alternate tag corresponds to a PI point's tag name.
     /// </summary>
     // ReSharper disable RedundantArgumentDefaultValue
-    [Description("OSI-PI : Archives measurements to an OSI-PI server using 64-bit PI SDK")]
+    [Description("OSI-PI: Archives measurements to an OSI-PI server using 64-bit PI SDK")]
     public class PIOutputAdapter : OutputAdapterBase
     {
         #region [ Members ]

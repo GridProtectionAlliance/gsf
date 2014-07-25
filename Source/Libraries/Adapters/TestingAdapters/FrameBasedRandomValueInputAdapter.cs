@@ -35,7 +35,7 @@ namespace TestingAdapters
     /// <summary>
     /// Represents a class used to stream frames of measurements with random values meant to simulate a frame-based input source.
     /// </summary>
-    [Description("Random Frames: streams frames of measurements with random values meant to simulate a frame-based input source.")]
+    [Description("Random Frames: Streams frames of measurements with random values meant to simulate a frame-based input source")]
     public class FrameBasedRandomValueInputAdapter : InputAdapterBase
     {
         #region [ Members ]

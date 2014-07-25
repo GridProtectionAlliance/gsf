@@ -42,7 +42,7 @@ namespace DynamicCalculator
     /// input measurements and performs a calculation on those measurements
     /// to generate its own calculated measurement.
     /// </summary>
-    [Description("Dynamic Calculator: Performs arithmetic operations on multiple input signals.")]
+    [Description("Dynamic Calculator: Performs arithmetic operations on multiple input signals")]
     public class DynamicCalculator : ActionAdapterBase
     {
         #region [ Members ]

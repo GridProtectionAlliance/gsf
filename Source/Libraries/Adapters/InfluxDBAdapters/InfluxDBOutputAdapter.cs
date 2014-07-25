@@ -40,7 +40,7 @@ namespace InfluxDBAdapters
     /// <summary>
     /// Represents an output adapter that archives measurements to a local archive.
     /// </summary>
-    [Description("InfluxDB: archives measurements to an InfluxDB instance.")]
+    [Description("InfluxDB: Archives measurements to an InfluxDB instance")]
     public class InfluxDBOutputAdapter : OutputAdapterBase
     {
         #region [ Members ]

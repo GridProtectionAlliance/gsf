@@ -832,8 +832,8 @@ namespace HistorianAdapters
         // Static Methods
 
         // Apply historian configuration optimizations at start-up
-        // ReSharper disable once UnusedMember.Local
-        // ReSharper disable once UnusedParameter.Local
+        // ReSharper disable UnusedMember.Local
+        // ReSharper disable UnusedParameter.Local
         private static void OptimizeLocalHistorianSettings(AdoDataConnection database, string nodeIDQueryString, ulong trackingVersion, string arguments, Action<string> statusMessage, Action<Exception> processException)
         {
             // Make sure setting exists to allow user to by-pass local historian optimizations at startup
@@ -1066,6 +1066,90 @@ namespace HistorianAdapters
 
                 // Save any applied changes
                 configFile.Save();
+
+                // Associate temporal data readers with any added OSI-PI historian archive adapters
+                AddPIHistorianReaders(database, nodeIDQueryString, processException);
+            }
+        }
+
+        private static void AddPIHistorianReaders(AdoDataConnection database, string nodeIDQueryString, Action<Exception> processException)
+        {
+            // Load the defined local PI historians
+            IEnumerable<DataRow> historians = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT AdapterName, ConnectionString FROM RuntimeHistorian WHERE NodeID = {0} AND TypeName = 'PIAdapters.PIOutputAdapter'", nodeIDQueryString)).AsEnumerable();
+            IEnumerable<DataRow> readers = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM CustomInputAdapter WHERE NodeID = {0} AND TypeName = 'PIAdapters.PIPBInputAdapter'", nodeIDQueryString)).AsEnumerable();
+
+            // Make sure a temporal reader is defined for each OSI-PI historian
+            foreach (DataRow row in historians)
+            {
+                string acronym = row.Field<string>("AdapterName").ToLower();
+
+                // Lookup matching reader record (i.e., PIPBInputAdapter with instance name of the current PI historian)
+                DataRow match;
+
+                try
+                {
+                    match = readers.FirstOrDefault(inputRow =>
+                    {
+                        string instanceName;
+
+                        if (inputRow["ConnectionString"].ToNonNullString().ParseKeyValuePairs().TryGetValue("instanceName", out instanceName))
+                            return string.Compare(instanceName, acronym, StringComparison.OrdinalIgnoreCase) == 0;
+
+                        return false;
+                    });
+                }
+                catch
+                {
+                    match = null;
+                }
+
+                // If no match was found, add record for associated historical data reader
+                if ((object)match == null)
+                {
+                    try
+                    {
+                        Dictionary<string, string> settings = row.Field<string>("ConnectionString").ToNonNullString().ParseKeyValuePairs();
+                        string instanceName = acronym.ToUpper().Trim();
+                        string adapterName = string.Format("{0}READER", instanceName);
+                        string serverName, userName, password, setting;
+                        int connectTimeout;
+
+                        if (!settings.TryGetValue("ServerName", out serverName))
+                            throw new InvalidOperationException("Server name is a required setting for PI connections. Please add a server in the format servername=myservername to the connection string.");
+
+                        if (settings.TryGetValue("UserName", out setting))
+                            userName = setting;
+                        else
+                            userName = null;
+
+                        if (settings.TryGetValue("Password", out setting))
+                            password = setting;
+                        else
+                            password = null;
+
+                        if (!settings.TryGetValue("ConnectTimeout", out setting) || !int.TryParse(setting, out connectTimeout))
+                            connectTimeout = 30000;
+
+                        string connectionString;
+
+                        if (string.IsNullOrEmpty(userName))
+                            connectionString = string.Format("ServerName={0}; ConnectTimeout={1}; sourceIDs={2}", serverName, connectTimeout, instanceName);
+                        else
+                            connectionString = string.Format("ServerName={0}; UserName={1}; Password={2}; ConnectTimeout={3}; sourceIDs={4}", serverName, userName, password.ToNonNullString(), connectTimeout, instanceName);
+
+                        string query = string.Format("INSERT INTO CustomInputAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, LoadOrder, Enabled) " +
+                            "VALUES({0}, @adapterName, 'PIAdapters.dll', 'PIAdapters.PIPBInputAdapter', @connectionString, 0, 1)", nodeIDQueryString);
+
+                        if (database.IsOracle)
+                            query = query.Replace('@', ':');
+
+                        database.Connection.ExecuteNonQuery(query, adapterName, connectionString);
+                    }
+                    catch (Exception ex)
+                    {
+                        processException(new InvalidOperationException("Failed to add associated OSI-PI historian temporal data reader input adapter for local OSI-PI historian: " + ex.Message, ex));
+                    }
+                }
             }
         }
 

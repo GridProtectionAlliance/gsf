@@ -37,7 +37,7 @@ namespace CsvAdapters
     /// <summary>
     /// Represents an output adapter that writes measurements to a CSV file.
     /// </summary>
-    [Description("CSV: archives measurements to a CSV file.")]
+    [Description("CSV: Archives measurements to a CSV file")]
     public class CsvOutputAdapter : OutputAdapterBase
     {
         #region [ Members ]
@@ -185,7 +185,7 @@ namespace CsvAdapters
 
                 m_outStream.Write(builder.ToString());
                 m_measurementCount += measurements.Length;
-            }           
+            }
         }
 
         /// <summary>

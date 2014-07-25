@@ -37,7 +37,7 @@ namespace AudioAdapters
     /// <summary>
     /// Represents an input adapter that reads measurements from a recording device.
     /// </summary>
-    [Description("MIC: Reads measurements from a recording device.")]
+    [Description("MIC: Reads measurements from a recording device")]
     public class MicrophoneInputAdapter : InputAdapterBase
     {
         #region [ Members ]
@@ -280,7 +280,7 @@ namespace AudioAdapters
 
                 // Get the timestamp for the next sample in this block of data
                 sampleTime += m_ticksPerSample;
-                
+
                 // Update the index to the next sample in this block of data
                 index += m_sampleSize * m_channels;
             }

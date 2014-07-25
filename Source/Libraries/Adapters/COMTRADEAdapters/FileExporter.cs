@@ -37,7 +37,7 @@ namespace COMTRADEAdapters
     /// <summary>
     /// Represents an action adapter that exports measurements on an interval to a COMTRADE formatted file that can be imported into other systems for analysis.
     /// </summary>
-    [Description("COMTRADE: exports measurements to a COMTRADE formatted file that can be imported into other systems for analysis")]
+    [Description("COMTRADE: Exports measurements to a COMTRADE formatted file that can be imported into other systems for analysis")]
     public class FileExporter : CalculatedMeasurementBase
     {
         #region [ Members ]

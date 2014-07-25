@@ -46,7 +46,7 @@ namespace EpriExport
     /// <summary>
     /// Represents an input adapter that reads measurements from an EPRI export file.
     /// </summary>
-    [Description("EPRI: reads measurements from an EPRI export file.")]
+    [Description("EPRI File Based Data Importer: Reads measurements from an EPRI export file")]
     public class FileImporter : InputAdapterBase
     {
         #region [ Members ]
@@ -484,8 +484,8 @@ namespace EpriExport
                 // Reserve a column mapping for timestamp value
                 IMeasurement timestampMeasurement = new Measurement
                     {
-                    TagName = "Timestamp"
-                };
+                        TagName = "Timestamp"
+                    };
 
                 m_columnMappings[timestampColumn] = timestampMeasurement;
             }

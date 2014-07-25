@@ -65,7 +65,7 @@ namespace PowerCalculations
     /// pair can be matched up appropriately. For example: angle1;mag1;  angle2;mag2;  angle3;mag3.
     /// </para>
     /// </remarks>
-    [Description("Power Stability: calculates power and stability for a synchrophasor device")]
+    [Description("Power Stability: Calculates power and stability for a synchrophasor device")]
     public class PowerStability : CalculatedMeasurementBase
     {
         #region [ Members ]

@@ -44,7 +44,7 @@ namespace DataQualityMonitoring
     /// <summary>
     /// Tests measurements to determine whether they have flat-lined.
     /// </summary>
-    [Description("Flat-line Test: notifies when measurements are received whose values do not change")]
+    [Description("Flat-line Test: Notifies when measurements are received whose values do not change")]
     public class FlatlineTest : ActionAdapterBase
     {
         #region [ Members ]

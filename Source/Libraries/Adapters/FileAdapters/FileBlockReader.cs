@@ -39,7 +39,7 @@ namespace FileAdapters
     /// <summary>
     /// Action adapter that reads blocks of data into buffers and publishes them as measurements.
     /// </summary>
-    [Description("FileBlockReader: Reads blocks of data from files and publishes them as buffer block measurements.")]
+    [Description("FileBlockReader: Reads blocks of data from files and publishes them as buffer block measurements")]
     public class FileBlockReader : FacileActionAdapterBase
     {
         #region [ Members ]

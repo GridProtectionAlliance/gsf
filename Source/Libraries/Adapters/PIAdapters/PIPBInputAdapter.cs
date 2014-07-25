@@ -41,6 +41,7 @@ namespace PIAdapters
     /// <summary>
     /// Retrieves PI data for non-real time temporal sessions. The real-time PI input adapter is preferred for real-time data due to use of event pipes.
     /// </summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public class PIPBInputAdapter : InputAdapterBase
     {
         #region [ Members ]

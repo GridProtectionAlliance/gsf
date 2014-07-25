@@ -57,7 +57,7 @@ namespace PowerCalculations.EventDetection
     /// <summary>
     /// Represents an algorithm that detects frequency excursions.
     /// </summary>
-    [Description("Frequency Excursion: detects frequency excursions")]
+    [Description("Frequency Excursion: Detects frequency excursions in synchrophasor data")]
     public class FrequencyExcursion : CalculatedMeasurementBase
     {
         #region [ Members ]

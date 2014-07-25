@@ -43,7 +43,7 @@ namespace EpriExport
     /// <summary>
     /// Represents an input adapter that reads metrics from an EPRI export file.
     /// </summary>
-    [Description("EPRI: reads metrics from an EPRI export file.")]
+    [Description("EPRI File Based Metric Importer: Reads metrics from an EPRI export file")]
     public class MetricImporter : InputAdapterBase
     {
         #region [ Members ]

@@ -58,7 +58,7 @@ namespace ICCPExport
     /// <summary>
     /// Represents an action adapter that exports measurements on an interval to a file that can be picked up by other systems such as ICCP.
     /// </summary>
-    [Description("ICCP: exports measurements to a file that can be picked up by other systems")]
+    [Description("File Based ICCP: Exports measurements to a file that can be picked up by other systems")]
     public class FileExporter : CalculatedMeasurementBase
     {
         #region [ Members ]

@@ -41,14 +41,14 @@ namespace PowerCalculations
     /// <summary>
     /// Calculates an average magnitude associated with a composed reference angle.
     /// </summary>
-    [Description("Reference Magnitude: calculates an average magnitude associated with a composed reference angle")]
+    [Description("Reference Magnitude: Calculates an average magnitude associated with a composed reference angle")]
     public class ReferenceMagnitude : CalculatedMeasurementBase
     {
         #region [ Members ]
 
         // Fields
         private double m_referenceMagnitude;
-        
+
         #endregion
 
         #region [ Properties ]

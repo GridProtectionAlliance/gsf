@@ -77,7 +77,9 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Xml" />
-    <Reference Include="Microsoft.Deployment.WindowsInstaller" />
+    <Reference Include="Microsoft.Deployment.WindowsInstaller">
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CustomActions.cs" />

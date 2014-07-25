@@ -32,7 +32,7 @@ namespace TestingAdapters
     /// <summary>
     /// Represents a virtual input adapter used for testing purposes - no data gets produced.
     /// </summary>
-    [Description("Virtual: defines a testing input that does not provide measurements.")]
+    [Description("Virtual: Defines a testing input that does not provide measurements")]
     [EditorBrowsable(EditorBrowsableState.Advanced)] // Normally defined as an input device protocol
     public class VirtualInputAdapter : InputAdapterBase
     {

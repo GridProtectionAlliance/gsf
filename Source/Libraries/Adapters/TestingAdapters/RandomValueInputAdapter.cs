@@ -91,7 +91,7 @@ namespace TestingAdapters
     /// <c>outputMeasurements={LocalDevArchive:2,59.95,0.1}</c>
     /// </para>
     /// </remarks>
-    [Description("Random Values: streams random values for input measurements")]
+    [Description("Random Values: Streams random values for input measurements")]
     public class RandomValueInputAdapter : InputAdapterBase
     {
         #region [ Members ]
