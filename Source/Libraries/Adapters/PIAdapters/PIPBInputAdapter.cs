@@ -117,7 +117,7 @@ namespace PIAdapters
             set
             {
                 // only run the adapter in playback temporal constraints
-                if (StartTimeConstraint != DateTime.MinValue)
+                if (this.TemporalConstraintIsDefined())
                 {
                     base.RequestedOutputMeasurementKeys = value;
 
@@ -291,17 +291,20 @@ namespace PIAdapters
         /// </summary>
         protected override void AttemptConnection()
         {
-            m_processedMeasurements = 0;
-
-            m_connection = new PIConnection
+            if (this.TemporalConstraintIsDefined())
             {
-                ServerName = m_serverName,
-                UserName = m_userName,
-                Password = m_password,
-                ConnectTimeout = m_connectTimeout
-            };
+                m_processedMeasurements = 0;
 
-            m_connection.Open();
+                m_connection = new PIConnection
+                {
+                    ServerName = m_serverName,
+                    UserName = m_userName,
+                    Password = m_password,
+                    ConnectTimeout = m_connectTimeout
+                };
+
+                m_connection.Open();
+            }
         }
 
         /// <summary>
