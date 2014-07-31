@@ -126,6 +126,7 @@
     <Compile Include="ServiceInstallerEx.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="ServiceMonitorBase.cs" />
     <Compile Include="ServiceMonitors.cs" />
     <Compile Include="ServiceProcess.cs" />
     <Compile Include="ServiceResponse.cs" />
