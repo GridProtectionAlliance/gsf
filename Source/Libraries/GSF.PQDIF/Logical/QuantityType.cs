@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 
 namespace GSF.PQDIF.Logical
 {
@@ -99,5 +100,43 @@ namespace GSF.PQDIF.Logical
         /// Time, magnitude, duration, and count.
         /// </summary>
         public static readonly Guid MagDurCount = new Guid("67f6af8e-f753-11cf-9d89-0080c72e70a3");
+
+        /// <summary>
+        /// Gets the name of the quantity type with the given ID.
+        /// </summary>
+        /// <param name="quantityTypeID">The ID of the quantity type.</param>
+        /// <returns>The name of the quantity type with the given ID.</returns>
+        public static string ToString(Guid quantityTypeID)
+        {
+            string name;
+            return QuantityTypeNames.TryGetValue(quantityTypeID, out name) ? name : null;
+        }
+
+        /// <summary>
+        /// Determines whether the given ID is a quantity type ID.
+        /// </summary>
+        /// <param name="id">The ID to be tested.</param>
+        /// <returns>True if the given ID is a quantity type ID; false otherwise.</returns>
+        public static bool IsQuantityTypeID(Guid id)
+        {
+            return QuantityTypeNames.ContainsKey(id);
+        }
+
+        private static readonly Dictionary<Guid, string> QuantityTypeNames = new Dictionary<Guid, string>()
+        {
+            { WaveForm, "WaveForm" },
+            { ValueLog, "ValueLog" },
+            { Phasor, "Phasor" },
+            { Response, "Response" },
+            { Flash, "Flash" },
+            { Histogram, "Histogram" },
+            { Histogram3D, "Histogram3D" },
+            { CPF, "CPF" },
+            { XY, "XY" },
+            { MagDur, "MagDur" },
+            { XYZ, "XYZ" },
+            { MagDurTime, "MagDurTime" },
+            { MagDurCount, "MagDurCount" }
+        }; 
     }
 }
