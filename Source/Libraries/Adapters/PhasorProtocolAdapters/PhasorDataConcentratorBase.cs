@@ -1100,6 +1100,7 @@ namespace PhasorProtocolAdapters
 
             // Register with the statistics engine
             StatisticsEngine.Register(this, "OutputStream", "OS");
+            StatisticsEngine.Calculated += (sender, args) => ResetLatencyCounters();
             StatisticsEngine.Calculated += (sender, args) => ResetMeasurementsPerSecondCounters();
         }
 
