@@ -48,6 +48,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Web.Hosting;
 using GSF.Reflection;
 
@@ -138,6 +139,7 @@ namespace GSF
         /// <para>This function acts as a strongly-typed immediate if (a.k.a. inline if).</para>
         /// <para>It is expected that this function will only be used in Visual Basic.NET as a strongly-typed IIf replacement.</para>
         /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T IIf<T>(bool expression, T truePart, T falsePart)
         {
             return (expression ? truePart : falsePart);
@@ -162,6 +164,7 @@ namespace GSF
         ///     Dim matrix As Integer()() = CreateArray(Of Integer())(10)
         /// </code>
         /// </example>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T[] CreateArray<T>(int length)
         {
             // The following provides better performance than "Return New T(length) {}".
@@ -182,6 +185,7 @@ namespace GSF
         ///     Dim names As String() = CreateArray(100, "undefined")
         /// </code>
         /// </example>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T[] CreateArray<T>(int length, T initialValue)
         {
             T[] typedArray = CreateArray<T>(length);
@@ -254,6 +258,7 @@ namespace GSF
         /// <typeparam name="T"><see cref="Type"/> of <see cref="Object"/> to convert to string.</typeparam>
         /// <param name="value">Value to convert to string.</param>
         /// <returns><paramref name="value"/> as a string; if <paramref name="value"/> is null, empty string ("") will be returned. </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ToNonNullString<T>(this T value) where T : class
         {
             return ((object)value == null || value is DBNull ? "" : value.ToString());
@@ -282,6 +287,7 @@ namespace GSF
         /// </summary>
         /// <param name="value"><see cref="String"/> to verify is not null.</param>
         /// <returns><see cref="String"/> value; if <paramref name="value"/> is null, empty string ("") will be returned.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ToNonNullString(this string value)
         {
             return ((object)value == null ? "" : value);
@@ -416,65 +422,64 @@ namespace GSF
 
             Type itemType = item.GetType();
 
-            if (itemType.IsValueType)
-            {
-                // Handle common types
-                IConvertible convertible = item as IConvertible;
+            if (!itemType.IsValueType)
+                return false;
 
-                if ((object)convertible != null)
+            // Handle common types
+            IConvertible convertible = item as IConvertible;
+
+            if ((object)convertible != null)
+            {
+                try
                 {
-                    try
+                    switch (convertible.GetTypeCode())
                     {
-                        switch (convertible.GetTypeCode())
-                        {
-                            case TypeCode.Boolean:
-                                return ((bool)item == default(bool));
-                            case TypeCode.SByte:
-                                return ((sbyte)item == default(sbyte));
-                            case TypeCode.Byte:
-                                return ((byte)item == default(byte));
-                            case TypeCode.Int16:
-                                return ((short)item == default(short));
-                            case TypeCode.UInt16:
-                                return ((ushort)item == default(ushort));
-                            case TypeCode.Int32:
-                                return ((int)item == default(int));
-                            case TypeCode.UInt32:
-                                return ((uint)item == default(uint));
-                            case TypeCode.Int64:
-                                return ((long)item == default(long));
-                            case TypeCode.UInt64:
-                                return ((ulong)item == default(ulong));
-                            case TypeCode.Single:
-                                return ((float)item == default(float));
-                            case TypeCode.Double:
-                                return ((double)item == default(double));
-                            case TypeCode.Decimal:
-                                return ((decimal)item == default(decimal));
-                            case TypeCode.Char:
-                                return ((char)item == default(char));
-                            case TypeCode.DateTime:
-                                return ((DateTime)item == default(DateTime));
-                        }
-                    }
-                    catch (InvalidCastException)
-                    {
-                        // An exception here indicates that the item is a custom type that
-                        // lied about its type code. The type should still be instantiable,
-                        // so we can ignore this exception
+                        case TypeCode.Boolean:
+                            return ((bool)item == default(bool));
+                        case TypeCode.SByte:
+                            return ((sbyte)item == default(sbyte));
+                        case TypeCode.Byte:
+                            return ((byte)item == default(byte));
+                        case TypeCode.Int16:
+                            return ((short)item == default(short));
+                        case TypeCode.UInt16:
+                            return ((ushort)item == default(ushort));
+                        case TypeCode.Int32:
+                            return ((int)item == default(int));
+                        case TypeCode.UInt32:
+                            return ((uint)item == default(uint));
+                        case TypeCode.Int64:
+                            return ((long)item == default(long));
+                        case TypeCode.UInt64:
+                            return ((ulong)item == default(ulong));
+                        case TypeCode.Single:
+                            return ((float)item == default(float));
+                        case TypeCode.Double:
+                            return ((double)item == default(double));
+                        case TypeCode.Decimal:
+                            return ((decimal)item == default(decimal));
+                        case TypeCode.Char:
+                            return ((char)item == default(char));
+                        case TypeCode.DateTime:
+                            return ((DateTime)item == default(DateTime));
                     }
                 }
-
-                // Handle custom value types
-                return ((ValueType)item).Equals(Activator.CreateInstance(itemType));
+                catch (InvalidCastException)
+                {
+                    // An exception here indicates that the item is a custom type that
+                    // lied about its type code. The type should still be instantiable,
+                    // so we can ignore this exception
+                }
             }
 
-            return false;
+            // Handle custom value types
+            return ((ValueType)item).Equals(Activator.CreateInstance(itemType));
         }
 
         /// <summary>Determines if given item is a reference type.</summary>
         /// <param name="item">Object to evaluate.</param>
         /// <returns>Result of evaluation as a <see cref="bool"/>.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsReference(object item)
         {
             return !(item is ValueType);
@@ -483,6 +488,7 @@ namespace GSF
         /// <summary>Determines if given item is a reference type but not a string.</summary>
         /// <param name="item">Object to evaluate.</param>
         /// <returns>Result of evaluation as a <see cref="bool"/>.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNonStringReference(object item)
         {
             return (IsReference(item) && !(item is string));
@@ -491,6 +497,7 @@ namespace GSF
         /// <summary>Determines if given item is numeric.</summary>
         /// <param name="item">Object to evaluate.</param>
         /// <returns>Result of evaluation as a <see cref="bool"/>.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNumeric(object item)
         {
             IConvertible convertible = item as IConvertible;
@@ -526,6 +533,7 @@ namespace GSF
         /// <typeparam name="T">Return type <see cref="Type"/> that is the minimum value in the <paramref name="itemList"/>.</typeparam>
         /// <param name="itemList">A variable number of parameters of the specified type.</param>
         /// <returns>Result is the minimum value of type <see cref="Type"/> in the <paramref name="itemList"/>.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Min<T>(params T[] itemList)
         {
             return itemList.Min();
@@ -536,6 +544,7 @@ namespace GSF
         /// <typeparam name="T">Return type <see cref="Type"/> that is the maximum value in the <paramref name="itemList"/>.</typeparam>
         /// <param name="itemList">A variable number of parameters of the specified type .</param>
         /// <returns>Result is the maximum value of type <see cref="Type"/> in the <paramref name="itemList"/>.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Max<T>(params T[] itemList)
         {
             return itemList.Max();

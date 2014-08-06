@@ -41,8 +41,10 @@
 //******************************************************************************************************
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using GSF.IO;
 
 namespace GSF
@@ -706,6 +708,37 @@ namespace GSF
                 // return combined data buffers
                 return combinedBuffer.ToArray();
             }
+        }
+
+        /// <summary>
+        /// Reads a structure from a byte array.
+        /// </summary>
+        /// <typeparam name="T">Type of structure to read.</typeparam>
+        /// <param name="bytes">Bytes containing structure.</param>
+        /// <returns>A structure from <paramref name="bytes"/>.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static T ReadStructure<T>(this byte[] bytes)
+        {
+            T structure;
+
+            fixed (byte* ptrToBytes = bytes)
+            {
+                structure = (T)Marshal.PtrToStructure(new IntPtr(ptrToBytes), typeof(T));
+            }
+
+            return structure;
+        }
+
+        /// <summary>
+        /// Reads a structure from a <see cref="BinaryReader"/>.
+        /// </summary>
+        /// <typeparam name="T">Type of structure to read.</typeparam>
+        /// <param name="reader"><see cref="BinaryReader"/> positioned at desired structure.</param>
+        /// <returns>A structure read from <see cref="BinaryReader"/>.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T ReadStructure<T>(this BinaryReader reader)
+        {
+            return reader.ReadBytes(Marshal.SizeOf(typeof(T))).ReadStructure<T>();
         }
     }
 }

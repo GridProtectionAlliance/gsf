@@ -18,8 +18,6 @@
 //  ----------------------------------------------------------------------------------------------------
 //  11/08/2006 - J. Ritchie Carroll
 //      Initial version of source generated
-//  05/27/2008 - J. Ritchie Carroll
-//       Added Montgomery line to power calculation
 //  12/22/2009 - Jian R. Zuo
 //       Converted code to C#;
 //  04/12/2010 - J. Ritchie Carroll

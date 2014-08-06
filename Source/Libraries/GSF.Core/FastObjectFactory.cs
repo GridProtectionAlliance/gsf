@@ -52,11 +52,17 @@ namespace GSF
         {
             // This is markedly faster than using Activator.CreateInstance
             Type type = typeof(T);
-            DynamicMethod dynMethod = new DynamicMethod("ctor$" + type.Name, type, null, type);
-            ILGenerator ilGen = dynMethod.GetILGenerator();
-            ilGen.Emit(OpCodes.Newobj, type.GetConstructor(Type.EmptyTypes));
-            ilGen.Emit(OpCodes.Ret);
-            s_createObjectFunction = (Func<T>)dynMethod.CreateDelegate(typeof(Func<T>));
+            DynamicMethod method = new DynamicMethod("ctor$" + type.Name, type, null, type);
+            ILGenerator generator = method.GetILGenerator();
+            ConstructorInfo constructor = type.GetConstructor(Type.EmptyTypes);
+
+            if ((object)constructor == null)
+                throw new InvalidOperationException("No parameterless constructor exists for type " + type.FullName);
+
+            generator.Emit(OpCodes.Newobj, constructor);
+            generator.Emit(OpCodes.Ret);
+
+            s_createObjectFunction = (Func<T>)method.CreateDelegate(typeof(Func<T>));
         }
 
         /// <summary>
@@ -112,29 +118,29 @@ namespace GSF
             // Since user can call this function with any type, we verify that it is related to the return type. If return type
             // is a class, see if type derives from it, else if return type is an interface, see if type implements it.
             Type typeT = typeof(T);
-            if (!type.IsAbstract && ((typeT.IsClass && type.IsSubclassOf(typeT)) || (typeT.IsInterface && (object)type.GetInterface(typeT.Name) != null)))
-            {
-                int key = type.GUID.GetHashCode() ^ typeT.GUID.GetHashCode();
-                return (Func<T>)s_createObjectFunctions.GetOrAdd(key, k =>
-                {
-                    // Get parameterless constructor for this type
-                    ConstructorInfo typeCtor = type.GetConstructor(Type.EmptyTypes);
 
-                    if ((object)typeCtor == null)
-                        throw new InvalidOperationException("Specified type parameter does not support parameterless public constructor");
-
-                    // This is markedly faster than using Activator.CreateInstance
-                    DynamicMethod dynMethod = new DynamicMethod("ctor_type$" + type.Name, type, null, type);
-                    ILGenerator ilGen = dynMethod.GetILGenerator();
-                    ilGen.Emit(OpCodes.Newobj, typeCtor);
-                    ilGen.Emit(OpCodes.Ret);
-                    return (Func<T>)dynMethod.CreateDelegate(typeof(Func<T>));
-                });
-            }
-            else
-            {
+            if (type.IsAbstract || ((!typeT.IsClass || !type.IsSubclassOf(typeT)) && (!typeT.IsInterface || (object)type.GetInterface(typeT.Name) == null)))
                 throw new InvalidOperationException("Specified type parameter is not a subclass or interface implementation of function type definition");
-            }
+
+            int key = type.GUID.GetHashCode() ^ typeT.GUID.GetHashCode();
+
+            return (Func<T>)s_createObjectFunctions.GetOrAdd(key, k =>
+            {
+                // Get parameterless constructor for this type
+                ConstructorInfo constructor = type.GetConstructor(Type.EmptyTypes);
+
+                if ((object)constructor == null)
+                    throw new InvalidOperationException("No parameterless constructor exists for type " + type.FullName);
+
+                // This is markedly faster than using Activator.CreateInstance
+                DynamicMethod method = new DynamicMethod("ctor_type$" + type.Name, type, null, type);
+                ILGenerator generator = method.GetILGenerator();
+
+                generator.Emit(OpCodes.Newobj, constructor);
+                generator.Emit(OpCodes.Ret);
+
+                return (Func<T>)method.CreateDelegate(typeof(Func<T>));
+            });
         }
     }
 }
