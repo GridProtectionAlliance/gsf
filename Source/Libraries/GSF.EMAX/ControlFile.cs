@@ -67,14 +67,14 @@ namespace GSF.EMAX
 
         public string FileName;
         public DataSize DataSize;
-        public byte AnalogChannels;
+        public int ConfiguredAnalogChannels;
         public CTL_HEADER Header;
         public CTL_FILE_STRUCT[] FileStructures;
         public SYSTEM_PARAMETERS SystemParameters;
+        public SYS_SETTINGS SystemSettings;
         public ANALOG_GROUP AnalogGroup;
         public EVENT_GROUP EventGroup;
         public A_E_RSLTS AnalogEventResults;
-        public SYS_SETTINGS SystemSettings;
         public IDENTSTRING IdentityString;
         public ANLG_CHNL_NEW AnalogChannelSettings;
         public EVNT_CHNL_NEW EventChannelSettings;
@@ -99,6 +99,44 @@ namespace GSF.EMAX
             Debug.Assert(StructureTypeProcessingOrder.Length == Enum.GetValues(typeof(StructureType)).Length, "StructureTypeProcessOrder is not the same length as StructureType enumeration!");
         }
 
+        public ControlFile(string fileName)
+        {
+            FileName = fileName;
+            Parse();
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        public int AnalogChannelCount
+        {
+            get
+            {
+                ushort samplesPerSecond = SystemSettings.samples_per_second;
+                return ConfiguredAnalogChannels * (samplesPerSecond > 5760 ? samplesPerSecond / 5760 : 1);
+            }
+        }
+
+        public int EventGroupCount
+        {
+            get
+            {
+                if (SystemSettings.samples_per_second > 5760)
+                    return 4;
+
+                return 4 * (ConfiguredAnalogChannels > 32 ? 2 : 1);
+            }
+        }
+
+        public int FrameLength
+        {
+            get
+            {
+                return 2 * (2 + AnalogChannelCount + 2 * EventGroupCount);
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -119,7 +157,7 @@ namespace GSF.EMAX
                 using (BinaryReader reader = new BinaryReader(stream, Encoding.ASCII, true))
                 {
                     // Read byte that defines number of analog channels
-                    AnalogChannels = reader.ReadByte();
+                    ConfiguredAnalogChannels = BinaryCodedDecimal.Decode((ushort)reader.ReadByte());
 
                     // Read byte that defines data size (i.e., 12 or 16 bits)
                     byteValue = reader.ReadByte();
@@ -176,14 +214,17 @@ namespace GSF.EMAX
                             case StructureType.SYSTEM_PARAMETERS:
                                 SystemParameters = reader.ReadStructure<SYSTEM_PARAMETERS>();
                                 break;
+                            case StructureType.SYS_SETTINGS:
+                                SystemSettings = reader.ReadStructure<SYS_SETTINGS>();
+                                break;
                             case StructureType.A_E_RSLTS:
                                 if (SystemSettings.analog_groups == 0)
                                     throw new InvalidOperationException("Cannot parse A_E_RSLTS without first parsing SYS_SETTINGS");
 
-                                AnalogEventResults = new A_E_RSLTS(reader, AnalogChannels, SystemSettings.analog_groups);
+                                AnalogEventResults = new A_E_RSLTS(reader, ConfiguredAnalogChannels, SystemSettings.analog_groups);
                                 break;
                             case StructureType.ANALOG_GROUP:
-                                AnalogGroup = new ANALOG_GROUP(reader, AnalogChannels);
+                                AnalogGroup = new ANALOG_GROUP(reader, ConfiguredAnalogChannels);
                                 break;
                             case StructureType.EVENT_GROUP:
                                 EventGroup = reader.ReadStructure<EVENT_GROUP>();
@@ -195,9 +236,6 @@ namespace GSF.EMAX
                                 EventChannelSettings = reader.ReadStructure<EVNT_CHNL_NEW>();
                                 break;
                             case StructureType.ANLG_CHNLS:
-                                break;
-                            case StructureType.SYS_SETTINGS:
-                                SystemSettings = reader.ReadStructure<SYS_SETTINGS>();
                                 break;
                             case StructureType.SHORT_HEADER:
                                 // TODO: Add decoder once structure definition is known...

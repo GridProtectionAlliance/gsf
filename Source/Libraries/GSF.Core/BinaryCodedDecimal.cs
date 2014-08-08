@@ -60,6 +60,7 @@
 #endregion
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace GSF
 {
@@ -81,6 +82,7 @@ namespace GSF
         /// </summary>
         /// <param name="bcd">Binary-coded decimal value.</param>
         /// <returns>Standard binary representation of binary-coded decimal value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte Decode(byte bcd)
         {
             return (byte)(bcd.HighNibble() * TenP1 + bcd.LowNibble());
@@ -91,6 +93,7 @@ namespace GSF
         /// </summary>
         /// <param name="bcd">Two-byte binary-coded decimal value.</param>
         /// <returns>Standard binary representation of binary-coded decimal value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort Decode(ushort bcd)
         {
             return (ushort)(Decode(bcd.HighByte()) * TenP2 + Decode(bcd.LowByte()));
@@ -101,6 +104,7 @@ namespace GSF
         /// </summary>
         /// <param name="bcd">Four-byte binary-coded decimal value.</param>
         /// <returns>Standard binary representation of binary-coded decimal value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint Decode(uint bcd)
         {
             return (uint)(Decode(bcd.HighWord()) * TenP4 + Decode(bcd.LowWord()));
@@ -111,6 +115,7 @@ namespace GSF
         /// </summary>
         /// <param name="bcd">Eight-byte binary-coded decimal value.</param>
         /// <returns>Standard binary representation of binary-coded decimal value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong Decode(ulong bcd)
         {
             return (ulong)(Decode(bcd.HighDoubleWord()) * TenP8 + Decode(bcd.LowDoubleWord()));
@@ -122,6 +127,7 @@ namespace GSF
         /// <param name="value">Binary value.</param>
         /// <returns>Binary-coded decimal representation of standard binary value.</returns>
         /// <exception cref="ArgumentOutOfRangeException">A binary-coded decimal has a maximum value of 99 for a single byte.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte Encode(byte value)
         {
             if (value > (byte)99)
@@ -139,6 +145,7 @@ namespace GSF
         /// <param name="value">Binary value.</param>
         /// <returns>Binary-coded decimal representation of standard binary value.</returns>
         /// <exception cref="ArgumentOutOfRangeException">A binary-coded decimal has a maximum value of 9,999 for two bytes.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort Encode(ushort value)
         {
             if (value > (ushort)9999)
@@ -156,6 +163,7 @@ namespace GSF
         /// <param name="value">Binary value.</param>
         /// <returns>Binary-coded decimal representation of standard binary value.</returns>
         /// <exception cref="ArgumentOutOfRangeException">A binary-coded decimal has a maximum value of 99,999,999 for four bytes.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint Encode(uint value)
         {
             if (value > (uint)99999999)
@@ -173,6 +181,7 @@ namespace GSF
         /// <param name="value">Binary value.</param>
         /// <returns>Binary-coded decimal representation of standard binary value.</returns>
         /// <exception cref="ArgumentOutOfRangeException">A binary-coded decimal has a maximum value of 9,999,999,999,999,999 for eight bytes.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong Encode(ulong value)
         {
             if (value > (ulong)9999999999999999)

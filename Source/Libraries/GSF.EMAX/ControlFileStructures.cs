@@ -73,16 +73,24 @@ namespace GSF.EMAX
     {
         public UInt24 id;               // System ID
         public uint time;               // Time of CTL file creation
-        public ushort num_of_structs;   // Number of Structures in CTL file (not really)
+        public int num_of_structs;      // Number of Structures in CTL file (not really)
 
         public CTL_HEADER(BinaryReader reader)
         {
             id = BigEndian.ToUInt24(reader.ReadBytes(3), 0);
             time = BigEndian.ToUInt32(reader.ReadBytes(4), 0);
-            num_of_structs = BigEndian.ToUInt16(reader.ReadBytes(2), 0);
+            num_of_structs = (int)BinaryCodedDecimal.Decode((uint)BigEndian.ToUInt16(reader.ReadBytes(2), 0));
 
             // Skip padding
             reader.ReadBytes(2);
+        }
+
+        public DateTime Timestamp
+        {
+            get
+            {
+                return (new UnixTimeTag(time)).ToDateTime();
+            }
         }
     }
 
@@ -469,49 +477,49 @@ namespace GSF.EMAX
         private const int PEAK_CAL_LEN = 4;
 
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = CHANLNUM_LEN + 1)]
-        string chanlnum;
+        public string chanlnum;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = TITLE_LEN + 1)]
-        string title;
+        public string title;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = TYPE_LEN + 1)]
-        string type;
+        public string type;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = PRIMARY_LEN + 1)]
-        string primary;
+        public string primary;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = SECONDARY_LEN + 1)]
-        string secondary;
+        public string secondary;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = CAL_LEN + 1)]
-        string cal_in;
+        public string cal_in;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = CAL_LEN + 1)]
-        string cal_ref;
+        public string cal_ref;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = SHUNT_LEN + 1)]
-        string shunt;
+        public string shunt;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = ZERO_LINE_LEN + 1)]
-        string display_location;
+        public string display_location;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = SCALE_FACTOR_LEN + 1)]
-        string display_scale;
+        public string display_scale;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = LIMIT_SET_LEN + 1)]
-        string limit_set;
+        public string limit_set;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = ON_OFF_LEN + 1)]
-        string limit_on_off;
+        public string limit_on_off;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = SET_LEN + 1)]
-        string over_set;
+        public string over_set;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = ON_OFF_LEN + 1)]
-        string over_on_off;
+        public string over_on_off;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = SET_LEN + 1)]
-        string under_set;
+        public string under_set;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = ON_OFF_LEN + 1)]
-        string under_on_off;
+        public string under_on_off;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = SET_LEN + 1)]
-        string rate_set;
+        public string rate_set;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = ON_OFF_LEN + 1)]
-        string rate_on_off;
+        public string rate_on_off;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MULT_FACT_LEN + 1)]
-        string mult_factor;
+        public string mult_factor;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = CT_RATIO_LEN + 1)]
-        string ct_ratio;
+        public string ct_ratio;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = PEAK_CAL_LEN + 1)]
-        string peak_cal;
+        public string peak_cal;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 3)]
-        string cr_lf;
+        public string cr_lf;
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -523,17 +531,17 @@ namespace GSF.EMAX
         private const int E_ON_OFF_LEN = 3;
 
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = EVENTNUM_LEN + 1)]
-        string eventnum;
+        public string eventnum;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = E_TITLE_LEN + 1)]
-        string e_title;
+        public string e_title;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = NC_NO_LEN + 1)]
-        string nc_no;
+        public string nc_no;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = E_ON_OFF_LEN + 1)]
-        string alarm_on_off;
+        public string alarm_on_off;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = E_ON_OFF_LEN + 1)]
-        string rtn_on_off;
+        public string rtn_on_off;
         [MarshalAs(UnmanagedType.I2)]
-        ushort eveentdebouncems;
+        public ushort eveentdebouncems;
     }
 
     // Since this structure includes dynamically sized arrays, we manually parse structure
@@ -691,12 +699,12 @@ namespace GSF.EMAX
     public struct A_SELECTION
     {
         public short size;
-        public string value;
+        public byte[] value;
 
         public A_SELECTION(BinaryReader reader)
         {
             size = reader.ReadInt16();
-            value = Encoding.ASCII.GetString(reader.ReadBytes(size));
+            value = reader.ReadBytes(size);
         }
     }
 
@@ -862,9 +870,9 @@ namespace GSF.EMAX
     public struct FAULT_LOCATION
     {
         [MarshalAs(UnmanagedType.I2)]
-        short type;
+        public short type;
         [MarshalAs(UnmanagedType.R4)]
-        float k;
+        public float k;
     };
 
     // Since this structure includes a dynamically sized array, we manually parse structure
@@ -896,16 +904,16 @@ namespace GSF.EMAX
     public struct SEQUENCE_CHANNELS
     {
         public short length;
-        public SEQUENCE_CHANNEL[] groups;
+        public SEQUENCE_CHANNEL[] channels;
 
         public SEQUENCE_CHANNELS(BinaryReader reader)
         {
             length = reader.ReadInt16();
-            groups = new SEQUENCE_CHANNEL[length / Marshal.SizeOf(typeof(SEQUENCE_CHANNEL))];
+            channels = new SEQUENCE_CHANNEL[length / Marshal.SizeOf(typeof(SEQUENCE_CHANNEL))];
 
-            for (int i = 0; i < groups.Length; i++)
+            for (int i = 0; i < channels.Length; i++)
             {
-                groups[i] = reader.ReadStructure<SEQUENCE_CHANNEL>();
+                channels[i] = reader.ReadStructure<SEQUENCE_CHANNEL>();
             }
         }
     }
