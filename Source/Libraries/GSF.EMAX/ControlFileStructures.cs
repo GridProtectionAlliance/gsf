@@ -121,41 +121,41 @@ namespace GSF.EMAX
         }
     }
 
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Pack = 2)]
     public struct SYSTEMTIME
     {
         [MarshalAs(UnmanagedType.U2)]
-        public short Year;
+        public ushort Year;
         [MarshalAs(UnmanagedType.U2)]
-        public short Month;
+        public ushort Month;
         [MarshalAs(UnmanagedType.U2)]
-        public short DayOfWeek;
+        public ushort DayOfWeek;
         [MarshalAs(UnmanagedType.U2)]
-        public short Day;
+        public ushort Day;
         [MarshalAs(UnmanagedType.U2)]
-        public short Hour;
+        public ushort Hour;
         [MarshalAs(UnmanagedType.U2)]
-        public short Minute;
+        public ushort Minute;
         [MarshalAs(UnmanagedType.U2)]
-        public short Second;
+        public ushort Second;
         [MarshalAs(UnmanagedType.U2)]
-        public short Milliseconds;
+        public ushort Milliseconds;
 
         public SYSTEMTIME(DateTime dt)
         {
             dt = dt.ToUniversalTime(); // SetSystemTime expects the SYSTEMTIME in UTC
-            Year = (short)dt.Year;
-            Month = (short)dt.Month;
-            DayOfWeek = (short)dt.DayOfWeek;
-            Day = (short)dt.Day;
-            Hour = (short)dt.Hour;
-            Minute = (short)dt.Minute;
-            Second = (short)dt.Second;
-            Milliseconds = (short)dt.Millisecond;
+            Year = (ushort)dt.Year;
+            Month = (ushort)dt.Month;
+            DayOfWeek = (ushort)dt.DayOfWeek;
+            Day = (ushort)dt.Day;
+            Hour = (ushort)dt.Hour;
+            Minute = (ushort)dt.Minute;
+            Second = (ushort)dt.Second;
+            Milliseconds = (ushort)dt.Millisecond;
         }
     }
 
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     public struct TIME_ZONE_INFORMATION
     {
         [MarshalAs(UnmanagedType.I4)]
@@ -172,7 +172,7 @@ namespace GSF.EMAX
         public Int32 DaylightBias;
     }
 
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
     public struct SYSTEM_PARAMETERS
     {
         [MarshalAs(UnmanagedType.U2)]
@@ -234,7 +234,7 @@ namespace GSF.EMAX
         public TIME_ZONE_INFORMATION time_zone_information;
     }
 
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
     public struct SYS_SETTINGS
     {
         [MarshalAs(UnmanagedType.I2)]
