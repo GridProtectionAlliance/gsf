@@ -43,6 +43,7 @@
 using System;
 using System.Collections.Generic;
 using System.ServiceModel;
+using System.ServiceModel.Description;
 using System.Text;
 using System.Threading;
 using GSF.Collections;
@@ -1040,6 +1041,31 @@ namespace GSF.ServiceBus
         public virtual ICollection<RegistrationInfo> GetTopics()
         {
             return m_topics.Values;
+        }
+
+        protected override void OnServiceHostCreated()
+        {
+            base.OnServiceHostCreated();
+
+            foreach (ServiceEndpoint endpoint in ServiceHost.Description.Endpoints)
+            {
+                endpoint.Binding.ReceiveTimeout = TimeSpan.MaxValue;
+
+                // Enable reliable messaging for TCP endpoint.
+                if (endpoint.Binding is NetTcpBinding)
+                {
+                    NetTcpBinding binding = endpoint.Binding as NetTcpBinding;
+                    binding.ReliableSession.Enabled = true;
+                    binding.ReliableSession.InactivityTimeout = TimeSpan.MaxValue;
+                }
+
+                // Enable reliable messaging for HTTP duplex endpoint.
+                if (endpoint.Binding is WSDualHttpBinding)
+                {
+                    WSDualHttpBinding binding = endpoint.Binding as WSDualHttpBinding;
+                    binding.ReliableSession.InactivityTimeout = TimeSpan.MaxValue;
+                }
+            }
         }
 
         /// <summary>
