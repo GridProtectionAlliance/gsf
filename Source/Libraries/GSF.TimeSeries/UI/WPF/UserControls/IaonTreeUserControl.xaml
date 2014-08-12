@@ -23,7 +23,7 @@
             <StackPanel Orientation="Vertical">
                 <StackPanel.Resources>
                     <HierarchicalDataTemplate x:Key="ChildNodeTemplate">
-                        <StackPanel Orientation="Horizontal">
+                        <StackPanel sdk:ToolTipService.ShowDuration="60000" Orientation="Horizontal">
                             <ToolTipService.ToolTip>
                                 <TextBlock Width="500" TextWrapping="Wrap" Text="{Binding Path=ConnectionString}"/>
                             </ToolTipService.ToolTip>
