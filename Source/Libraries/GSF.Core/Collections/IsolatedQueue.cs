@@ -98,6 +98,17 @@ namespace GSF.Collections
             }
 
             /// <summary>
+            /// Gets the number of items that can be enqueued.
+            /// </summary>
+            public int AvailableEnqueueLength
+            {
+                get
+                {
+                    return m_lastBlock - m_head;
+                }
+            }
+
+            /// <summary>
             /// Resets the queue. This operation must be synchronized external 
             /// from this class with the read and write operations. Therefore it 
             /// is only recommended to call this once the item has been returned to a 
@@ -121,6 +132,21 @@ namespace GSF.Collections
                 m_blocks[m_head] = item;
                 //No memory barior here since .NET 2.0 ensures that writes will not be reordered.
                 m_head = m_head + 1;
+            }
+
+            /// <summary>
+            /// Adds the following items to the queue. Be sure to check if it is full first. 
+            /// Adjust the length if not the right size.
+            /// </summary>
+            /// <param name="items"></param>
+            /// <param name="offset"></param>
+            /// <param name="length"></param>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Enqueue(T[] items, int offset, int length)
+            {
+                Array.Copy(items, offset, m_blocks, m_head, length);
+                //No memory barior here since .NET 2.0 ensures that writes will not be reordered.
+                m_head = m_head + length;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -180,6 +206,45 @@ namespace GSF.Collections
         }
 
         /// <summary>
+        /// Addes the provided items to the <see cref="IsolatedQueue{T}"/>.
+        /// </summary>
+        /// <param name="items">the items to add</param>
+        /// <param name="offset">the offset postion</param>
+        /// <param name="length">the length</param>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public void Enqueue(T[] items, int offset, int length)
+        {
+            items.ValidateParameters(offset, length);
+            while (true)
+            {
+                //If the header is empty. Get a new one.
+                if (m_currentHead == null || !m_currentHead.CanEnqueue)
+                {
+                    m_currentHead = GetNode();
+                    m_currentHead.Reset();
+                    Thread.MemoryBarrier();
+                    m_blocks.Enqueue(m_currentHead);
+                    m_enqueueCount++;
+                }
+
+                //If the remainder will fit, queue it all. 
+                int enqueueLength = m_currentHead.AvailableEnqueueLength;
+                if (length <= enqueueLength)
+                {
+                    m_currentHead.Enqueue(items, offset, length);
+                    m_enqueueCount += length;
+                    return;
+                }
+
+                //Some will not fit. Enqueue what will fit, then repeat.
+                m_currentHead.Enqueue(items, offset, enqueueLength);
+                m_enqueueCount += enqueueLength;
+                offset += enqueueLength;
+                length -= enqueueLength;
+            }
+        }
+
+        /// <summary>
         /// Addes the provided item to the <see cref="IsolatedQueue{T}"/>.
         /// </summary>
         /// <param name="item"></param>
@@ -235,6 +300,7 @@ namespace GSF.Collections
         /// <returns>the number of items dequeued</returns>
         public int Dequeue(T[] items, int startingIndex, int length)
         {
+            items.ValidateParameters(startingIndex, length);
             int itemCount = 0;
 
         TryAgain:

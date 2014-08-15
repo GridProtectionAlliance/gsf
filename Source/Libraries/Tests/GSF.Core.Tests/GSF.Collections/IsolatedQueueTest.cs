@@ -21,11 +21,13 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using GSF.Collections;
+using GSF.Validation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GSF.Core.Tests.GSF.Collections
@@ -83,6 +85,57 @@ namespace GSF.Core.Tests.GSF.Collections
 
                 swDequeue.Start();
                 while (queue.TryDequeue(out value))
+                    ;
+                swDequeue.Stop();
+            }
+
+
+            System.Console.WriteLine("Enqueue " + (cnt * loop / swEnqueue.Elapsed.TotalSeconds / 1000000));
+            System.Console.WriteLine("Dequeue " + (cnt * loop / swDequeue.Elapsed.TotalSeconds / 1000000));
+            System.Console.WriteLine(swDequeue.Elapsed.TotalSeconds);
+        }
+
+        [TestMethod]
+        public void BenchmarkBulkWrite()
+        {
+
+            string value = null;
+            int x = 0;
+            const int cnt = 10000;
+            const int loop = 10000;
+
+            byte[] items = new byte[cnt];
+            byte[] itemsRead = new byte[cnt];
+
+            var queue = new IsolatedQueue<byte>();
+
+            Stopwatch swDequeue = new Stopwatch();
+            Stopwatch swEnqueue = new Stopwatch();
+
+            for (int repeat = 0; repeat < loop; repeat++)
+            {
+                swEnqueue.Start();
+                queue.Enqueue(items, 0, items.Length);
+                swEnqueue.Stop();
+
+                swDequeue.Start();
+                while (queue.Dequeue(itemsRead, 0, items.Length) > 0)
+                    ;
+                swDequeue.Stop();
+            }
+
+
+            swEnqueue.Reset();
+            swDequeue.Reset();
+
+            for (int repeat = 0; repeat < loop; repeat++)
+            {
+                swEnqueue.Start();
+                queue.Enqueue(items, 0, items.Length);
+                swEnqueue.Stop();
+
+                swDequeue.Start();
+                while (queue.Dequeue(itemsRead, 0, items.Length) > 0)
                     ;
                 swDequeue.Stop();
             }
@@ -203,7 +256,74 @@ namespace GSF.Core.Tests.GSF.Collections
             Assert.AreEqual(count, cnt);
         }
 
+        [TestMethod]
+        public void TestBulk()
+        {
+            int[] sendBuffer = new int[3];
 
+            m_wait = new ManualResetEvent(false);
+            m_collection = new IsolatedQueue<int>();
+
+            ThreadPool.QueueUserWorkItem(RunTwoBulk);
+            m_wait.WaitOne();
+            m_wait.Reset();
+
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            for (int x = 0; x < cnt; x++)
+            {
+                if (x % 10000 == 0)
+                {
+                    System.Console.WriteLine(m_collection.Count);
+                    Thread.Sleep(1);
+                }
+                sendBuffer[0] = x;
+                sendBuffer[1] = x;
+                sendBuffer[2] = x;
+                m_collection.Enqueue(sendBuffer, 0, 3);
+            }
+            sw.Stop();
+            System.Console.WriteLine(sw.Elapsed.TotalSeconds);
+            m_wait.WaitOne();
+        }
+
+        private void RunTwoBulk(object state)
+        {
+            m_wait.Set();
+            //SpinWait wait = new SpinWait();
+            //Thread.Sleep(1000);
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
+            int value = 0;
+            int count = 0;
+            int countRepeats = 0;
+            while (count < cnt)
+            {
+                while (m_collection.TryDequeue(out value))
+                {
+                    if (value != count)
+                        throw new Exception();
+                    while (!m_collection.TryDequeue(out value)) ;
+                    
+                    if (value != count)
+                        throw new Exception();
+                    while (!m_collection.TryDequeue(out value)) ;
+
+                    if (value != count)
+                        throw new Exception();
+
+                    count++;
+                }
+                countRepeats++;
+                Thread.Sleep(1);
+            }
+            sw.Stop();
+            System.Console.WriteLine(sw.Elapsed.TotalSeconds);
+            System.Console.WriteLine(countRepeats);
+            m_wait.Set();
+            Assert.AreEqual(count, cnt);
+        }
 
 
         [TestMethod]
