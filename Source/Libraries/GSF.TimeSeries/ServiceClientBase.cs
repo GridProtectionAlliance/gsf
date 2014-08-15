@@ -106,14 +106,28 @@ namespace GSF.TimeSeries
         /// </summary>
         public void Initialize()
         {
-            CategorizedSettingsElementCollection remotingClientSettings = ConfigurationFile.Current.Settings["remotingClient"];
+            CategorizedSettingsElementCollection remotingClientSettings;
 
-            m_remotingClient = InitializeTlsClient();
+            try
+            {
+                remotingClientSettings = ConfigurationFile.Current.Settings["remotingClient"];
+            }
+            catch
+            {
+                remotingClientSettings = null;
+            }
 
-            if (remotingClientSettings.Cast<CategorizedSettingsElement>().Any(element => element.Name.Equals("EnabledSslProtocols", StringComparison.OrdinalIgnoreCase) && !element.Value.Equals("None", StringComparison.OrdinalIgnoreCase)))
-                m_remotingClient = InitializeTlsClient();
+            if ((object)remotingClientSettings != null)
+            {
+                if (remotingClientSettings.Cast<CategorizedSettingsElement>().Any(element => element.Name.Equals("EnabledSslProtocols", StringComparison.OrdinalIgnoreCase) && !element.Value.Equals("None", StringComparison.OrdinalIgnoreCase)))
+                    m_remotingClient = InitializeTlsClient();
+                else
+                    m_remotingClient = InitializeTcpClient();
+            }
             else
-                m_remotingClient = InitializeTcpClient();
+            {
+                m_remotingClient = InitializeTlsClient();
+            }
 
             m_clientHelper = new ClientHelper();
             m_clientHelper.PersistSettings = true;
@@ -599,7 +613,9 @@ namespace GSF.TimeSeries
                         {
                             string tempPath = Path.Combine(Path.GetTempPath(), string.Format("{0}.pdf", Process.GetCurrentProcess().Id));
                             File.WriteAllBytes(tempPath, reportData);
-                            using (Process.Start(tempPath)) { }
+                            using (Process.Start(tempPath))
+                            {
+                            }
                         }
                     }
                 }

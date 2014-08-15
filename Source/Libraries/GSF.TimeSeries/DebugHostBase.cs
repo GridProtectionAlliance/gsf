@@ -118,7 +118,7 @@ namespace GSF.TimeSeries
                 this.WindowState = FormWindowState.Minimized;
 
                 // Start the windows service.
-                ServiceHost.StartDebugging(Environment.CommandLine.Split(' '));
+                ServiceHost.StartHostedService();
             }
         }
 
@@ -130,7 +130,7 @@ namespace GSF.TimeSeries
                     "Stop Service", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
                     // Stop the windows service.
-                    ServiceHost.StopDebugging();
+                    ServiceHost.StopHostedService();
 
                     // Call user overridable debug host unloading method
                     DebugHostUnloading();

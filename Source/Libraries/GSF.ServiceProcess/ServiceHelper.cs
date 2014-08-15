@@ -322,6 +322,27 @@ namespace GSF.ServiceProcess
         Description("Occurs when the state of a defined ServiceProcess changes.")]
         public event EventHandler<EventArgs<string, ServiceProcessState>> ProcessStateChanged;
 
+        /// <summary>
+        /// Provides notification of when status messages were sent to consumer(s).
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the status message sent to consumer(s).<br/>
+        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the message <see cref="UpdateType"/>.
+        /// </remarks>
+        [Category("Notification"),
+        Description("Occurs when there are status messages sent to consumer(s).")]
+        public event EventHandler<EventArgs<string, UpdateType>> UpdatedStatus;
+
+        /// <summary>
+        /// Provides notification of when there is an exception logged.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the exception that was logged.
+        /// </remarks>
+        [Category("Notification"),
+        Description("Occurs when there is an exception logged.")]
+        public event EventHandler<EventArgs<Exception>> LoggedException;
+
         // Fields
         private bool m_logStatusUpdates;
         private int m_maxStatusUpdatesLength;
@@ -1175,7 +1196,7 @@ namespace GSF.ServiceProcess
                     catch (UnauthorizedAccessException ex)
                     {
                         string message = string.Format("Unable to start health monitor due to exception: {0}", ex.Message);
-                        m_errorLogger.Log(new InvalidOperationException(message, ex));
+                        LogException(new InvalidOperationException(message, ex));
                         UpdateStatus(UpdateType.Warning, "{0} Is the service account a member of the \"Performance Log Users\" group?", message);
                     }
                 }
@@ -1318,7 +1339,7 @@ namespace GSF.ServiceProcess
             catch (Exception ex)
             {
                 // Log the exception.
-                m_errorLogger.Log(ex);
+                LogException(ex);
             }
         }
 
@@ -1359,6 +1380,8 @@ namespace GSF.ServiceProcess
 
                 // Send response to service
                 SendResponse(requestInfo.Sender.ClientID, response);
+
+                OnUpdatedStatus(response.Message, success ? UpdateType.Information : UpdateType.Alarm);
             }
             catch (Exception ex)
             {
@@ -1610,6 +1633,18 @@ namespace GSF.ServiceProcess
         }
 
         /// <summary>
+        /// Log exception to <see cref="ErrorLogger"/>.
+        /// </summary>
+        /// <param name="ex">Exception to log.</param>
+        public void LogException(Exception ex)
+        {
+            if ((object)m_errorLogger != null)
+                m_errorLogger.Log(ex);
+
+            OnLoggedException(ex);
+        }
+
+        /// <summary>
         /// Raises the <see cref="ServiceStarting"/> event.
         /// </summary>
         /// <param name="args">Arguments to be sent to <see cref="ServiceStarting"/> event.</param>
@@ -1739,6 +1774,30 @@ namespace GSF.ServiceProcess
 
             // Notify all remote clients of change in process state
             SendProcessStateChangedResponse(processName, processState);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="UpdatedStatus"/> event with the updated status message.
+        /// </summary>
+        /// <param name="status">Updated status message.</param>
+        /// <param name="type"><see cref="UpdateType"/> of status message.</param>
+        /// <remarks>
+        /// This overload combines string.Format and SendStatusMessage for convenience.
+        /// </remarks>
+        protected virtual void OnUpdatedStatus(string status, UpdateType type)
+        {
+            if ((object)UpdatedStatus != null)
+                UpdatedStatus(this, new EventArgs<string, UpdateType>(status, type));
+        }
+
+        /// <summary>
+        /// Raises <see cref="LoggedException"/> event with logged exception.
+        /// </summary>
+        /// <param name="ex">Logged <see cref="Exception"/>.</param>
+        protected virtual void OnLoggedException(Exception ex)
+        {
+            if ((object)LoggedException != null)
+                LoggedException(this, new EventArgs<Exception>(ex));
         }
 
         /// <summary>
@@ -1982,29 +2041,31 @@ namespace GSF.ServiceProcess
             SendResponse(clientID, new ServiceResponse("AuthenticationFailure"));
         }
 
-        private void SendUpdateClientStatusResponse(Guid clientID, UpdateType type, string response)
+        private void SendUpdateClientStatusResponse(Guid clientID, UpdateType type, string responseMessage)
         {
-            if (string.IsNullOrEmpty(response))
+            if (string.IsNullOrEmpty(responseMessage))
                 return;
 
-            ServiceResponse serviceResponse = new ServiceResponse();
-            serviceResponse.Type = "UPDATECLIENTSTATUS-" + type.ToString().ToUpper();
-            serviceResponse.Message = CurtailMessageLength(response);
-            SendResponse(clientID, serviceResponse);
+            ServiceResponse response = new ServiceResponse();
+            response.Type = "UPDATECLIENTSTATUS-" + type.ToString().ToUpper();
+            response.Message = CurtailMessageLength(responseMessage);
+            SendResponse(clientID, response);
+
+            OnUpdatedStatus(response.Message, type);
         }
 
         private void SendServiceStateChangedResponse(ServiceState currentState)
         {
-            ServiceResponse serviceResponse = new ServiceResponse("SERVICESTATECHANGED");
-            serviceResponse.Attachments.Add(new ObjectState<ServiceState>(Name, currentState));
-            SendResponse(serviceResponse);
+            ServiceResponse response = new ServiceResponse("SERVICESTATECHANGED");
+            response.Attachments.Add(new ObjectState<ServiceState>(Name, currentState));
+            SendResponse(response);
         }
 
         private void SendProcessStateChangedResponse(string processName, ServiceProcessState currentState)
         {
-            ServiceResponse serviceResponse = new ServiceResponse("PROCESSSTATECHANGED");
-            serviceResponse.Attachments.Add(new ObjectState<ServiceProcessState>(processName, currentState));
-            SendResponse(serviceResponse);
+            ServiceResponse response = new ServiceResponse("PROCESSSTATECHANGED");
+            response.Attachments.Add(new ObjectState<ServiceProcessState>(processName, currentState));
+            SendResponse(response);
         }
 
         private void Process_StateChanged(object sender, EventArgs e)
@@ -2028,7 +2089,7 @@ namespace GSF.ServiceProcess
 
         private void StatusUpdateQueue_ProcessException(object sender, EventArgs<Exception> e)
         {
-            m_errorLogger.Log(e.Argument);
+            LogException(e.Argument);
         }
 
         private void StatusLog_LogException(object sender, EventArgs<Exception> e)
@@ -2047,7 +2108,7 @@ namespace GSF.ServiceProcess
         private void RemotingServer_ClientConnectingException(object sender, EventArgs<Exception> e)
         {
             UpdateStatus(UpdateType.Alarm, "Error occurred while connecting client to remoting server - {0}\r\n\r\n", e.Argument.Message);
-            m_errorLogger.Log(e.Argument);
+            LogException(e.Argument);
         }
 
         private void RemotingServer_ClientDisconnected(object sender, EventArgs<Guid> e)
@@ -2067,7 +2128,7 @@ namespace GSF.ServiceProcess
                 {
                     // We'll encounter an exception because we'll try to update the status of the client that had the
                     // remote command session open and this will fail since the client is disconnected.
-                    m_errorLogger.Log(ex);
+                    LogException(ex);
                 }
             }
 
@@ -2125,7 +2186,7 @@ namespace GSF.ServiceProcess
                 }
                 catch (Exception ex)
                 {
-                    m_errorLogger.Log(ex);
+                    LogException(ex);
 
                     try
                     {
@@ -2139,7 +2200,7 @@ namespace GSF.ServiceProcess
                     }
                     catch (Exception ex2)
                     {
-                        m_errorLogger.Log(ex2);
+                        LogException(ex2);
                     }
                 }
             }
@@ -2220,7 +2281,7 @@ namespace GSF.ServiceProcess
                     }
                     catch (Exception ex)
                     {
-                        m_errorLogger.Log(ex);
+                        LogException(ex);
 
                         if ((object)requestInfo != null)
                             SendActionableResponse(requestInfo, false, null, "Failed to process request \"{0}\" - {1}\r\n\r\n", request.Command, ex.Message);
@@ -2747,8 +2808,8 @@ namespace GSF.ServiceProcess
                 {
                     foreach (ClientRequestHandler handler in m_clientRequestHandlers)
                     {
-                        if (m_secureRemoteInteractions && 
-                            SecurityProviderUtility.IsResourceSecurable(handler.Command) && 
+                        if (m_secureRemoteInteractions &&
+                            SecurityProviderUtility.IsResourceSecurable(handler.Command) &&
                             !SecurityProviderUtility.IsResourceAccessible(handler.Command))
                             continue;
 
@@ -2816,7 +2877,7 @@ namespace GSF.ServiceProcess
                     }
                     catch (Exception ex)
                     {
-                        m_errorLogger.Log(ex);
+                        LogException(ex);
                         message = "Failed to query system health monitor status: " + ex.Message;
                         UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, message + "\r\n\r\n");
                         success = false;
@@ -2873,7 +2934,7 @@ namespace GSF.ServiceProcess
                 }
                 catch (Exception ex)
                 {
-                    m_errorLogger.Log(ex);
+                    LogException(ex);
                     UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to reset system health monitor: {0}\r\n\r\n", ex.Message);
                 }
             }
@@ -3200,7 +3261,7 @@ namespace GSF.ServiceProcess
                     }
                     catch (Exception ex)
                     {
-                        m_errorLogger.Log(ex);
+                        LogException(ex);
                         UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to start system process \"{0}\". {1}.\r\n\r\n", processName, ex.Message);
                     }
                 }
@@ -3339,7 +3400,7 @@ namespace GSF.ServiceProcess
                         }
                         catch (Exception ex)
                         {
-                            m_errorLogger.Log(ex);
+                            LogException(ex);
                             UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to abort system process \"{0}\". {1}.\r\n\r\n", processName, ex.Message);
                         }
                     }
@@ -3478,7 +3539,7 @@ namespace GSF.ServiceProcess
                 }
                 catch (Exception ex)
                 {
-                    m_errorLogger.Log(ex);
+                    LogException(ex);
                     UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to schedule process \"{0}\". {1}\r\n\r\n", processName, ex.Message);
                 }
 

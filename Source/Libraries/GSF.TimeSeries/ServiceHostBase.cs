@@ -101,6 +101,9 @@ namespace GSF.TimeSeries
         private const int DefaultMaxThreadPoolSize = 2048;
         private const int DefaultConfigurationBackups = 5;
 
+        internal event EventHandler<EventArgs<string, UpdateType>> UpdatedStatus;
+        internal event EventHandler<EventArgs<Exception>> LoggedException;
+
         // Fields
         private IaonSession m_iaonSession;
         private string m_nodeIDQueryString;
@@ -359,7 +362,7 @@ namespace GSF.TimeSeries
             catch (Exception ex)
             {
                 DisplayStatusMessage("Failed to create configuration cache directory due to exception: {0}", UpdateType.Alarm, ex.Message);
-                m_serviceHelper.ErrorLogger.Log(ex);
+                LogException(ex);
             }
 
             // Initialize system settings
@@ -388,7 +391,7 @@ namespace GSF.TimeSeries
             catch (Exception ex)
             {
                 DisplayStatusMessage("Failed to set desired thread pool size due to exception: {0}", UpdateType.Alarm, ex.Message);
-                m_serviceHelper.ErrorLogger.Log(ex);
+                LogException(ex);
             }
 
             // Define guid with query string delimiters according to database needs
@@ -462,7 +465,7 @@ namespace GSF.TimeSeries
             }
             catch (Exception ex)
             {
-                m_serviceHelper.ErrorLogger.Log(ex, false);
+                LogException(ex);
             }
 #endif
         }
@@ -643,6 +646,8 @@ namespace GSF.TimeSeries
             m_serviceHelper.ServiceStarting -= ServiceStartingHandler;
             m_serviceHelper.ServiceStarted -= ServiceStartedHandler;
             m_serviceHelper.ServiceStopping -= ServiceStoppingHandler;
+            m_serviceHelper.UpdatedStatus -= UpdatedStatusHandler;
+            m_serviceHelper.LoggedException -= LoggedExceptionHandler;
 
             if ((object)m_serviceHelper.StatusLog != null)
             {
@@ -658,6 +663,18 @@ namespace GSF.TimeSeries
 
             // Unattach from handler for unobserved task exceptions
             TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;
+        }
+
+        private void UpdatedStatusHandler(object sender, EventArgs<string, UpdateType> e)
+        {
+            if ((object)UpdatedStatus != null)
+                UpdatedStatus(sender, new EventArgs<string, UpdateType>(e.Argument1, e.Argument2));
+        }
+
+        private void LoggedExceptionHandler(object sender, EventArgs<Exception> e)
+        {
+            if ((object)LoggedException != null)
+                LoggedException(sender, new EventArgs<Exception>(e.Argument));
         }
 
         #endregion
@@ -885,7 +902,7 @@ namespace GSF.TimeSeries
                     catch (Exception ex)
                     {
                         DisplayStatusMessage("Failed to execute callback for ReloadConfig request of type {0}: {1}", UpdateType.Alarm, type, ex.Message);
-                        m_serviceHelper.ErrorLogger.Log(ex);
+                        LogException(ex);
                     }
                 }
 
@@ -1042,7 +1059,7 @@ namespace GSF.TimeSeries
             catch (Exception ex)
             {
                 DisplayStatusMessage(ex.Message, UpdateType.Alarm);
-                m_serviceHelper.ErrorLogger.Log(ex);
+                LogException(ex);
 
                 // Most of the methods used above have a try-catch implemented to display helpful error messages
                 // and prevent this code from executing. This should only execute when using a database configuration
@@ -1077,7 +1094,7 @@ namespace GSF.TimeSeries
             catch (Exception ex)
             {
                 DisplayStatusMessage("Failed to load {0} configuration due to exception: {1}", UpdateType.Warning, m_configurationType, ex.Message);
-                m_serviceHelper.ErrorLogger.Log(ex);
+                LogException(ex);
                 return null;
             }
         }
@@ -1094,7 +1111,7 @@ namespace GSF.TimeSeries
             catch (Exception ex)
             {
                 DisplayStatusMessage("Failed to load cached binary configuration due to exception: {0}", UpdateType.Alarm, ex.Message);
-                m_serviceHelper.ErrorLogger.Log(ex);
+                LogException(ex);
                 return null;
             }
         }
@@ -1111,7 +1128,7 @@ namespace GSF.TimeSeries
             catch (Exception ex)
             {
                 DisplayStatusMessage("Failed to load cached XML configuration due to exception: {0}", UpdateType.Alarm, ex.Message);
-                m_serviceHelper.ErrorLogger.Log(ex);
+                LogException(ex);
                 return null;
             }
         }
@@ -1126,7 +1143,7 @@ namespace GSF.TimeSeries
             catch (Exception ex)
             {
                 DisplayStatusMessage("Failed to augment configuration due to exception: {0}", UpdateType.Warning, ex.Message);
-                m_serviceHelper.ErrorLogger.Log(ex);
+                LogException(ex);
                 return null;
             }
         }
@@ -1141,7 +1158,7 @@ namespace GSF.TimeSeries
             catch (Exception ex)
             {
                 DisplayStatusMessage("Unable to propagate configuration data set to adapters due to exception: {0}", UpdateType.Alarm, ex.Message);
-                m_serviceHelper.ErrorLogger.Log(ex);
+                LogException(ex);
                 return false;
             }
         }
@@ -1189,7 +1206,7 @@ namespace GSF.TimeSeries
                 catch (Exception ex)
                 {
                     DisplayStatusMessage("Failed to cache last known configuration due to exception: {0}", UpdateType.Alarm, ex.Message);
-                    m_serviceHelper.ErrorLogger.Log(ex);
+                    LogException(ex);
                 }
 
                 // Serialize current data set to configuration files
@@ -1208,7 +1225,7 @@ namespace GSF.TimeSeries
                 catch (Exception ex)
                 {
                     DisplayStatusMessage("Failed to cache last known configuration due to exception: {0}", UpdateType.Alarm, ex.Message);
-                    m_serviceHelper.ErrorLogger.Log(ex);
+                    LogException(ex);
                 }
             }
         }
@@ -1236,7 +1253,7 @@ namespace GSF.TimeSeries
             catch (Exception ex)
             {
                 DisplayStatusMessage("Failed to create extra backup {0} configurations due to exception: {1}", UpdateType.Warning, configType, ex.Message);
-                m_serviceHelper.ErrorLogger.Log(ex);
+                LogException(ex);
             }
 
             try
@@ -1258,7 +1275,7 @@ namespace GSF.TimeSeries
             catch (Exception ex)
             {
                 DisplayStatusMessage("Failed to backup last known cached {0} configuration due to exception: {1}", UpdateType.Warning, configType, ex.Message);
-                m_serviceHelper.ErrorLogger.Log(ex);
+                LogException(ex);
             }
         }
 
@@ -1305,14 +1322,29 @@ namespace GSF.TimeSeries
 
         #region [ Service Binding ]
 
-        internal void StartDebugging(string[] args)
+        internal void StartHostedService()
         {
-            OnStart(args);
+            OnStart(Environment.CommandLine.Split(' '));
         }
 
-        internal void StopDebugging()
+        internal void StopHostedService()
         {
             OnStop();
+        }
+
+        internal void SendRequest(string userInput)
+        {
+            ClientRequest request = ClientRequest.Parse(userInput);
+
+            if ((object)request != null)
+            {
+                ClientRequestHandler requestHandler = m_serviceHelper.FindClientRequestHandler(request.Command);
+
+                if ((object)requestHandler != null)
+                    requestHandler.HandlerMethod(new ClientRequestInfo(new ClientInfo(), request));
+                else
+                    DisplayStatusMessage(string.Format("Command \"{0}\" is not supported\r\n\r\n", request.Command), UpdateType.Alarm);
+            }
         }
 
         /// <summary>
@@ -1328,6 +1360,8 @@ namespace GSF.TimeSeries
             m_serviceHelper.ServiceStarting += ServiceStartingHandler;
             m_serviceHelper.ServiceStarted += ServiceStartedHandler;
             m_serviceHelper.ServiceStopping += ServiceStoppingHandler;
+            m_serviceHelper.UpdatedStatus += UpdatedStatusHandler;
+            m_serviceHelper.LoggedException += LoggedExceptionHandler;
 
             if (m_serviceHelper.StatusLog != null)
                 m_serviceHelper.StatusLog.LogException += LogExceptionHandler;
@@ -1397,7 +1431,7 @@ namespace GSF.TimeSeries
         /// </remarks>
         private void ProcessExceptionHandler(object sender, EventArgs<Exception> e)
         {
-            m_serviceHelper.ErrorLogger.Log(e.Argument, false);
+            LogException(e.Argument);
         }
 
         /// <summary>
@@ -1422,7 +1456,7 @@ namespace GSF.TimeSeries
         {
             foreach (Exception ex in e.Exception.Flatten().InnerExceptions)
             {
-                m_serviceHelper.ErrorLogger.Log(ex, false);
+                LogException(ex);
             }
 
             e.SetObserved();
@@ -1892,7 +1926,7 @@ namespace GSF.TimeSeries
                     catch (Exception ex)
                     {
                         SendResponse(requestInfo, false, "Failed to invoke command: {0}", ex.Message);
-                        m_serviceHelper.ErrorLogger.Log(ex);
+                        LogException(ex);
                     }
                 }
             }
@@ -2020,7 +2054,7 @@ namespace GSF.TimeSeries
                     catch (Exception ex)
                     {
                         SendResponse(requestInfo, false, "Failed to list commands: {0}", ex.Message);
-                        m_serviceHelper.ErrorLogger.Log(ex);
+                        LogException(ex);
                     }
                 }
             }
@@ -2955,7 +2989,7 @@ namespace GSF.TimeSeries
                 catch (Exception ex)
                 {
                     SendResponse(requestInfo, false, "Failed to reauthenticate network shares: {0}", ex.Message);
-                    m_serviceHelper.ErrorLogger.Log(ex);
+                    LogException(ex);
                 }
             }
         }
@@ -3015,7 +3049,7 @@ namespace GSF.TimeSeries
                     catch (Exception ex)
                     {
                         SendResponse(requestInfo, false, "Failed to restart host service: {0}", ex.Message);
-                        m_serviceHelper.ErrorLogger.Log(ex);
+                        LogException(ex);
                     }
                 }
                 else
@@ -3086,7 +3120,7 @@ namespace GSF.TimeSeries
             }
             catch (Exception ex)
             {
-                m_serviceHelper.ErrorLogger.Log(ex);
+                LogException(ex);
                 m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to send client response due to an exception: " + ex.Message + "\r\n\r\n");
             }
         }
@@ -3105,7 +3139,7 @@ namespace GSF.TimeSeries
             }
             catch (Exception ex)
             {
-                m_serviceHelper.ErrorLogger.Log(ex);
+                LogException(ex);
                 m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to update client status \"" + status.ToNonNullString() + "\" due to an exception: " + ex.Message + "\r\n\r\n");
             }
         }
@@ -3124,7 +3158,7 @@ namespace GSF.TimeSeries
             }
             catch (Exception ex)
             {
-                m_serviceHelper.ErrorLogger.Log(ex);
+                LogException(ex);
                 m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to update client status \"" + status.ToNonNullString() + "\" due to an exception: " + ex.Message + "\r\n\r\n");
             }
         }
@@ -3143,16 +3177,25 @@ namespace GSF.TimeSeries
             }
             catch (Exception ex)
             {
-                m_serviceHelper.ErrorLogger.Log(ex);
+                LogException(ex);
                 m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to update client status \"" + status.ToNonNullString() + "\" due to an exception: " + ex.Message + "\r\n\r\n");
             }
+        }
+
+        /// <summary>
+        /// Logs an exception to the service helper <see cref="GSF.ErrorManagement.ErrorLogger"/>.
+        /// </summary>
+        /// <param name="ex"><see cref="Exception"/> to log.</param>
+        protected virtual void LogException(Exception ex)
+        {
+            m_serviceHelper.LogException(ex);
         }
 
         // Processes exceptions coming from the configuration loaders.
         private void ConfigurationLoader_ProcessException(object o, EventArgs<Exception> args)
         {
             DisplayStatusMessage(args.Argument.Message, UpdateType.Warning);
-            m_serviceHelper.ErrorLogger.Log(args.Argument);
+            LogException(args.Argument);
         }
 
         #endregion

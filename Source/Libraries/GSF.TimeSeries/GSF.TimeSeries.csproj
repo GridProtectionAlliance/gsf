@@ -108,6 +108,7 @@
     <Compile Include="Configuration\IConfigurationLoader.cs" />
     <Compile Include="Configuration\WebServiceConfigurationLoader.cs" />
     <Compile Include="Configuration\XMLConfigurationLoader.cs" />
+    <Compile Include="ConsoleHost.cs" />
     <Compile Include="Frame.cs" />
     <Compile Include="FrameQueue.cs" />
     <Compile Include="IDevice.cs" />

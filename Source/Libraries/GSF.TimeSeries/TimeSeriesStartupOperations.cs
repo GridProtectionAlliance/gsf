@@ -24,12 +24,15 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using GSF.Configuration;
 using GSF.Data;
+
+#if !MONO
+using System.Collections.Generic;
+using System.Linq;
 using GSF.Identity;
+#endif
 
 namespace GSF.TimeSeries
 {
@@ -105,6 +108,7 @@ namespace GSF.TimeSeries
         /// </summary>
         private static void ValidateAccountsAndGroups(AdoDataConnection database, string nodeIDQueryString)
         {
+#if !MONO
             const string SelectUserAccountQuery = "SELECT ID, Name, UseADAuthentication FROM UserAccount";
             const string SelectSecurityGroupQuery = "SELECT ID, Name FROM SecurityGroup";
             const string UpdateUserAccountFormat = "UPDATE UserAccount SET Name = '{0}' WHERE ID = '{1}'";
@@ -162,6 +166,7 @@ namespace GSF.TimeSeries
             // Update security groups
             foreach (KeyValuePair<string, string> pair in updateMap)
                 database.Connection.ExecuteNonQuery(string.Format(UpdateSecurityGroupFormat, pair.Value, pair.Key));
+#endif
         }
 
         /// <summary>
