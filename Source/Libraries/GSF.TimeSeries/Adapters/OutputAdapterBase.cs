@@ -657,15 +657,7 @@ namespace GSF.TimeSeries.Adapters
             if (m_disposed)
                 return;
 
-            if (total > m_measurementQueue.Count)
-                total = m_measurementQueue.Count;
-
-            IMeasurement measurement;
-
-            for (int i = 0; i < total; i++)
-            {
-                m_measurementQueue.TryTake(out measurement);
-            }
+            m_measurementQueue.Clear();
         }
 
         /// <summary>
