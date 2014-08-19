@@ -657,7 +657,10 @@ namespace GSF.TimeSeries.Adapters
             if (m_disposed)
                 return;
 
-            m_measurementQueue.Clear();
+            lock (m_measurementQueue.SyncRoot)
+            {
+                m_measurementQueue.RemoveRange(0, Math.Min(total, m_measurementQueue.Count));
+            }
         }
 
         /// <summary>
