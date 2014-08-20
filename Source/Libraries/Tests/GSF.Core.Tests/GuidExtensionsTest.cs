@@ -39,9 +39,9 @@ namespace GSF.Core.Tests
         {
             Guid guid = Guid.NewGuid();
             byte[] data = guid.ToByteArray();
-            byte[] data2 = GuidExtensions.__ToLittleEndianOrderBytes(guid);
+            byte[] data2 = GuidExtensions.ToLittleEndianBytes(guid);
             byte[] data3 = EndianOrder.LittleEndian.GetBytes(guid);
-            Guid guid2 = GuidExtensions.__ToLittleEndianOrderGuid(data2);
+            Guid guid2 = GuidExtensions.ToLittleEndianGuid(data2);
             Guid guid3 = EndianOrder.LittleEndian.ToGuid(data3, 0);
 
             foreach (var b in data)

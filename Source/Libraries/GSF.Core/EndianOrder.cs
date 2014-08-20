@@ -625,7 +625,7 @@ namespace GSF
             if (TargetEndianness == Endianness.BigEndian)
                 return GuidExtensions.__ToBigEndianOrderGuid(value, startIndex);
 
-            return GuidExtensions.__ToLittleEndianOrderGuid(value, startIndex);
+            return GuidExtensions.ToLittleEndianGuid(value, startIndex);
         }
 
         /// <summary>
@@ -857,7 +857,7 @@ namespace GSF
             if (TargetEndianness == Endianness.BigEndian)
                 return GuidExtensions.__ToBigEndianOrderBytes(value);
 
-            return GuidExtensions.__ToLittleEndianOrderBytes(value);
+            return GuidExtensions.ToLittleEndianBytes(value);
         }
 
         /// <summary>
@@ -1156,7 +1156,7 @@ namespace GSF
             if (TargetEndianness == Endianness.BigEndian)
                 GuidExtensions.__ToBigEndianOrderBytes(value, destinationArray, destinationIndex);
             else
-                GuidExtensions.__ToLittleEndianOrderBytes(value, destinationArray, destinationIndex);
+                GuidExtensions.CopyLittleEndianBytes(value, destinationArray, destinationIndex);
 
             return 16;
         }
