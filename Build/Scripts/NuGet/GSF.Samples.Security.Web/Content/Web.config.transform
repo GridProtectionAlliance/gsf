@@ -1,0 +1,58 @@
+<configuration>
+  <configSections>
+    <section name="categorizedSettings" type="GSF.Configuration.CategorizedSettingsSection, GSF.Core" />
+  </configSections>
+  <categorizedSettings>
+    <securityProvider>
+      <add name="ApplicationName" value="" description="Name of the application being secured as defined in the backend security datastore."
+        encrypted="false" />
+      <add name="ConnectionString" value="" description="Connection string to be used for connection to the backend security datastore."
+        encrypted="false" />
+      <add name="ProviderType" value="GSF.Security.LdapSecurityProvider, GSF.Security"
+        description="The type to be used for enforcing security." encrypted="false" />
+      <add name="IncludedResources" value="*/*=*" description="Semicolon delimited list of resources to be secured along with role names."
+        encrypted="false" />
+      <add name="ExcludedResources" value="/;*/WebResource.axd*;*/SecurityPortal.aspx*"
+        description="Semicolon delimited list of resources to be excluded from being secured."
+        encrypted="false" />
+      <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
+        encrypted="false" />
+      <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages."
+        encrypted="false" />
+      <add name="EnableOfflineCaching" value="False" description="True to enable caching of user information for authentication in offline state, otherwise False."
+        encrypted="false" />
+      <add name="CacheRetryDelayInterval" value="200" description="Wait interval, in milliseconds, before retrying load of user data cache."
+        encrypted="false" />
+      <add name="CacheMaximumRetryAttempts" value="10" description="Maximum retry attempts allowed for loading user data cache."
+        encrypted="false" />
+    </securityProvider>
+    <activeDirectory>
+      <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
+        encrypted="false" />
+      <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
+        encrypted="false" />
+      <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
+        encrypted="true" />
+    </activeDirectory>
+    <cryptographyServices>
+      <add name="CryptoCache" value="KeyIVCache.bin" description="Path and file name of cryptographic key and initialization vector cache."
+        encrypted="false" />
+      <add name="CacheRetryDelayInterval" value="200" description="Wait interval, in milliseconds, before retrying load of cryptographic key and initialization vector cache."
+        encrypted="false" />
+      <add name="CacheMaximumRetryAttempts" value="10" description="Maximum retry attempts allowed for loading cryptographic key and initialization vector cache."
+        encrypted="false" />
+    </cryptographyServices>
+  </categorizedSettings>
+  <system.web>
+    <authentication mode="Windows"/>
+    <httpModules>
+      <add name="SecurityModule" type="GSF.Web.SecurityModule, GSF.Web" />
+    </httpModules>
+  </system.web>
+  <system.webServer>
+    <validation validateIntegratedModeConfiguration="false" />
+    <modules>
+      <add name="SecurityModule" type="GSF.Web.SecurityModule, GSF.Web" />
+    </modules>
+  </system.webServer>
+</configuration>
