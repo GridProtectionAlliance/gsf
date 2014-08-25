@@ -234,17 +234,52 @@ namespace GSF.PhasorProtocols.UI.UserControls
             m_xAxisBindingCollection = new EnumerableDataSource<int>(m_xAxisDataCollection);
             m_xAxisBindingCollection.SetXMapping(x => x);
 
-            ComboBoxDevice.ItemsSource = Device.GetLookupList(null);
+            LoadComboBoxDeviceAsync();
+        }
 
-            if (Application.Current.Resources.Contains("SelectedDevice_Home"))
-                ComboBoxDevice.SelectedIndex = (int)Application.Current.Resources["SelectedDevice_Home"];
-            else
-                ComboBoxDevice.SelectedIndex = 0;
+        private void LoadComboBoxDeviceAsync()
+        {
+            Thread t = new Thread(() =>
+            {
+                Dictionary<int, string> deviceLookupList = Device.GetLookupList(null);
 
-            if (Application.Current.Resources.Contains("SelectedMeasurement_Home"))
-                ComboBoxMeasurement.SelectedIndex = (int)Application.Current.Resources["SelectedMeasurement_Home"];
-            else
-                ComboBoxMeasurement.SelectedIndex = 0;
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    ComboBoxDevice.ItemsSource = deviceLookupList;
+
+                    if (Application.Current.Resources.Contains("SelectedDevice_Home"))
+                        ComboBoxDevice.SelectedIndex = (int)Application.Current.Resources["SelectedDevice_Home"];
+                    else
+                        ComboBoxDevice.SelectedIndex = 0;
+                }));
+            });
+
+            t.IsBackground = true;
+            t.Start();
+        }
+
+        private void LoadComboBoxMeasurementAsync()
+        {
+            int selectedDeviceID = ((KeyValuePair<int, string>)ComboBoxDevice.SelectedItem).Key;
+
+            Thread t = new Thread(() =>
+            {
+                ObservableCollection<Measurement> measurements = Measurement.Load(null, selectedDeviceID);
+                ObservableCollection<Measurement> itemsSource = new ObservableCollection<Measurement>(measurements.Where(m => m.SignalSuffix == "PA" || m.SignalSuffix == "FQ"));
+
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    ComboBoxMeasurement.ItemsSource = itemsSource;
+
+                    if (Application.Current.Resources.Contains("SelectedMeasurement_Home") && (int)Application.Current.Resources["SelectedMeasurement_Home"] != -1)
+                        ComboBoxMeasurement.SelectedIndex = (int)Application.Current.Resources["SelectedMeasurement_Home"];
+                    else
+                        ComboBoxMeasurement.SelectedIndex = 0;
+                }));
+            });
+
+            t.IsBackground = true;
+            t.Start();
         }
 
         void RefreshTimer_Tick(object sender, EventArgs e)
@@ -448,29 +483,11 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 Application.Current.Resources.Add("SelectedDevice_Home", ComboBoxDevice.SelectedIndex);
             }
             else
+            {
                 Application.Current.Resources.Add("SelectedDevice_Home", ComboBoxDevice.SelectedIndex);
+            }
 
-            //if (m_selectedMeasurement = null)
-            //{
-            //    m_signalID = m_selectedMeasurement.SignalID.ToString();
-            //}
-
-            ObservableCollection<Measurement> measurements = Measurement.Load(null, ((KeyValuePair<int, string>)ComboBoxDevice.SelectedItem).Key);
-            ComboBoxMeasurement.ItemsSource = new ObservableCollection<Measurement>(measurements.Where(m => m.SignalSuffix == "PA" || m.SignalSuffix == "FQ"));
-
-
-            // assign selected value to device combo box
-            if (Application.Current.Resources.Contains("SelectedDevice_Home"))
-                ComboBoxDevice.SelectedIndex = (int)Application.Current.Resources["SelectedDevice_Home"];
-            else
-                ComboBoxDevice.SelectedIndex = 0;
-
-            // assign selected value to measurement combo box
-            if (Application.Current.Resources.Contains("SelectedMeasurement_Home") && (int)Application.Current.Resources["SelectedMeasurement_Home"] != -1)
-                ComboBoxMeasurement.SelectedIndex = (int)Application.Current.Resources["SelectedMeasurement_Home"];
-            else
-                ComboBoxMeasurement.SelectedIndex = 0;
-
+            LoadComboBoxMeasurementAsync();
         }
 
         #region [ Unsynchronized Subscription ]
@@ -479,16 +496,15 @@ namespace GSF.PhasorProtocols.UI.UserControls
         {
             m_subscribedUnsynchronized = false;
             UnsubscribeUnsynchronizedData();
+
             try
             {
-                ChartPlotterDynamic.Dispatcher.BeginInvoke((Action)delegate
-                {
-                    ChartPlotterDynamic.Children.Remove((IPlotterElement)m_lineGraph);
-                });
+                ChartPlotterDynamic.Dispatcher.BeginInvoke(new Action(() => ChartPlotterDynamic.Children.Remove(m_lineGraph)));
             }
             catch
             {
             }
+
             if (m_restartConnectionCycle)
                 InitializeUnsynchronizedSubscription();
         }
@@ -506,26 +522,27 @@ namespace GSF.PhasorProtocols.UI.UserControls
                         if (!double.IsNaN(tempValue) && !double.IsInfinity(tempValue)) // Process data only if it is not NaN or infinity.
                         {
                             ChartPlotterDynamic.Dispatcher.Invoke(DispatcherPriority.Normal, (Action)delegate
+                            {
+                                if (m_yAxisDataCollection.Count == 0)
                                 {
-                                    if (m_yAxisDataCollection.Count == 0)
-                                    {
-                                        for (int i = 0; i < m_numberOfPointsToPlot; i++)
-                                            m_yAxisDataCollection.Enqueue(tempValue);
+                                    for (int i = 0; i < m_numberOfPointsToPlot; i++)
+                                        m_yAxisDataCollection.Enqueue(tempValue);
 
-                                        m_yAxisBindingCollection = new EnumerableDataSource<double>(m_yAxisDataCollection);
-                                        m_yAxisBindingCollection.SetYMapping(y => y);
+                                    m_yAxisBindingCollection = new EnumerableDataSource<double>(m_yAxisDataCollection);
+                                    m_yAxisBindingCollection.SetYMapping(y => y);
 
-                                        m_lineGraph = ChartPlotterDynamic.AddLineGraph(new CompositeDataSource(m_xAxisBindingCollection, m_yAxisBindingCollection), Color.FromArgb(255, 25, 25, 200), 1, "");
+                                    m_lineGraph = ChartPlotterDynamic.AddLineGraph(new CompositeDataSource(m_xAxisBindingCollection, m_yAxisBindingCollection), Color.FromArgb(255, 25, 25, 200), 1, "");
 
-                                    }
-                                    else
-                                    {
-                                        double oldValue;
-                                        if (m_yAxisDataCollection.TryDequeue(out oldValue))
-                                            m_yAxisDataCollection.Enqueue(tempValue);
-                                    }
-                                    m_yAxisBindingCollection.RaiseDataChanged();
-                                });
+                                }
+                                else
+                                {
+                                    double oldValue;
+                                    
+                                    if (m_yAxisDataCollection.TryDequeue(out oldValue))
+                                        m_yAxisDataCollection.Enqueue(tempValue);
+                                }
+                                m_yAxisBindingCollection.RaiseDataChanged();
+                            });
                         }
                     }
                 }
@@ -594,19 +611,18 @@ namespace GSF.PhasorProtocols.UI.UserControls
         {
             if (m_unsynchronizedSubscriber == null)
                 InitializeUnsynchronizedSubscription();
+
             try
             {
-                ChartPlotterDynamic.Dispatcher.BeginInvoke((Action)delegate
-                {
-                    ChartPlotterDynamic.Children.Remove((IPlotterElement)m_lineGraph);
-                });
+                ChartPlotterDynamic.Dispatcher.BeginInvoke(new Action(() => ChartPlotterDynamic.Children.Remove(m_lineGraph)));
             }
             catch
             {
             }
+
             m_yAxisDataCollection = new ConcurrentQueue<double>();
 
-            if (m_subscribedUnsynchronized && !string.IsNullOrEmpty(m_signalID))
+            if (m_subscribedUnsynchronized && (object)m_unsynchronizedSubscriber != null && !string.IsNullOrEmpty(m_signalID))
                 m_unsynchronizedSubscriber.UnsynchronizedSubscribe(true, true, m_signalID, null, true, m_refreshInterval);
         }
 
