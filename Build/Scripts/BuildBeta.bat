@@ -22,9 +22,20 @@
 ::       Modified to force a build and suppress archives from being published to public locations.
 ::  10/03/2010 - Pinal C. Patel
 ::       Updated to use MSBuild 4.0.
+::  08/25 - Gavin E. Holden
+::       Modified to call CommonBuild.bat 
 ::
 ::*******************************************************************************************************
 
-@ECHO OFF
-C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe GridSolutionsFramework.buildproj /p:ForceBuild=true /l:FileLogger,Microsoft.Build.Engine;logfile=GridSolutionsFramework.output
-PAUSE
+echo off
+
+setlocal enabledelayedexpansion
+set parameter_list=
+for %%y in (%*) do (
+	set parameter_list=!parameter_list! %%y
+)
+echo %parameter_list%
+call CommonBuild.bat  %parameter_list%
+
+C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe GridSolutionsFramework.buildproj /p:BuildDeployFolder=%deploy%;NugetApiKey=%api_key%;NugetPackagesFolder=%package%;TfsUserName=%tfs_user_name%;TfsPassword=%tfs_password%;ForceBuild=true /l:FileLogger,Microsoft.Build.Engine;logfile=%logger%  
+endlocal
