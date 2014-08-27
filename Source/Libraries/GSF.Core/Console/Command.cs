@@ -70,8 +70,8 @@ namespace GSF.Console
                     }
                 };
 
-                m_process.OutputDataReceived += process_OutputDataReceived;
-                m_process.ErrorDataReceived += process_ErrorDataReceived;
+                m_process.OutputDataReceived += m_process_OutputDataReceived;
+                m_process.ErrorDataReceived += m_process_ErrorDataReceived;
 
                 m_process.BeginOutputReadLine();
                 m_process.BeginErrorReadLine();
@@ -134,7 +134,11 @@ namespace GSF.Console
                         if (disposing)
                         {
                             if ((object)m_process != null)
+                            {
+                                m_process.OutputDataReceived -= m_process_OutputDataReceived;
+                                m_process.ErrorDataReceived -= m_process_ErrorDataReceived;
                                 m_process.Dispose();
+                            }
                         }
                     }
                     finally
@@ -163,12 +167,12 @@ namespace GSF.Console
                 return true;
             }
 
-            private void process_OutputDataReceived(object sender, DataReceivedEventArgs e)
+            private void m_process_OutputDataReceived(object sender, DataReceivedEventArgs e)
             {
                 m_standardOutput.Append(e.Data);
             }
 
-            private void process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
+            private void m_process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
             {
                 m_standardError.Append(e.Data);
             }
@@ -203,6 +207,7 @@ namespace GSF.Console
         /// <param name="standardOutput">Any standard output reported by the command line operation.</param>
         /// <param name="standardError">Any standard error reported by the command line operation.</param>
         /// <returns><c>true</c> if there was no standard error reported; otherwise, <c>false</c>.</returns>
+        /// <remarks>This function waits indefinitely for the command line operation to complete.</remarks>
         public static bool Execute(string fileName, string arguments, out string standardOutput, out string standardError)
         {
             bool processCompleted;
