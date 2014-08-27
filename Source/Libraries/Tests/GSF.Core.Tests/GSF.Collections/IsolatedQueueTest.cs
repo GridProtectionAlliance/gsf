@@ -99,8 +99,8 @@ namespace GSF.Core.Tests.GSF.Collections
         public void BenchmarkBulkWrite()
         {
 
-            string value = null;
-            int x = 0;
+            //string value = null;
+            //int x = 0;
             const int cnt = 10000;
             const int loop = 10000;
 
@@ -389,7 +389,7 @@ namespace GSF.Core.Tests.GSF.Collections
         private void RunTwoBulkDequeue(object state)
         {
             m_wait.Set();
-            SpinWait wait = new SpinWait();
+            //SpinWait wait = new SpinWait();
             //Thread.Sleep(1000);
             Stopwatch sw = new Stopwatch();
             sw.Start();

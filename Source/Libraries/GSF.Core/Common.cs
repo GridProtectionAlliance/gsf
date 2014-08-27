@@ -56,7 +56,9 @@ namespace GSF
 {
     #region [ Enumerations ]
 
-    /// <summary>Specifies the type of the application.</summary>
+    /// <summary>
+    /// Specifies the type of the application.
+    /// </summary>
     public enum ApplicationType
     {
         /// <summary>
@@ -80,7 +82,7 @@ namespace GSF
         /// </summary>
         OS2Cui = 5,
         /// <summary>
-        /// Application runs in the Posix character subsystem.
+        /// Application runs in the POSIX character subsystem.
         /// </summary>
         PosixCui = 7,
         /// <summary>
@@ -129,6 +131,16 @@ namespace GSF
     {
         private static ApplicationType? s_applicationType;
 
+        /// <summary>
+        /// Determines if the current system is a POSIX style environment.
+        /// </summary>
+        /// <remarks>
+        /// This property will return <c>true</c> for both MacOSX and Unix environments. Use the Platform property
+        /// of the <see cref="System.Environment.OSVersion"/> to determine more specific platform type, e.g., 
+        /// MacOSX or Unix. Note that all flavors of Linux will show up as <see cref="PlatformID.Unix"/>.
+        /// </remarks>        
+        public static readonly bool IsPosixEnvironment = (Path.DirectorySeparatorChar == '/');   // This is how Mono source often checks this
+
         /// <summary>Returns one of two strongly-typed objects.</summary>
         /// <returns>One of two objects, depending on the evaluation of given expression.</returns>
         /// <param name="expression">The expression you want to evaluate.</param>
@@ -137,7 +149,10 @@ namespace GSF
         /// <typeparam name="T">Return type used for immediate expression</typeparam>
         /// <remarks>
         /// <para>This function acts as a strongly-typed immediate if (a.k.a. inline if).</para>
-        /// <para>It is expected that this function will only be used in Visual Basic.NET as a strongly-typed IIf replacement.</para>
+        /// <para>
+        /// It is expected that this function will only be used in languages that do not support ?: conditional operations, e.g., Visual Basic.NET.
+        /// In Visual Basic this function can be used as a strongly-typed IIf replacement by specifying "Imports GSF.Common".
+        /// </para>
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T IIf<T>(bool expression, T truePart, T falsePart)
@@ -168,6 +183,7 @@ namespace GSF
         public static T[] CreateArray<T>(int length)
         {
             // The following provides better performance than "Return New T(length) {}".
+            // ReSharper disable once UseArrayCreationExpression.1
             return (T[])Array.CreateInstance(typeof(T), length);
         }
 
@@ -233,7 +249,7 @@ namespace GSF
 
                     Buffer.BlockCopy(exeHeader, 92, subSystem, 0, 2);
 
-                    s_applicationType = ((ApplicationType)(BitConverter.ToInt16(subSystem, 0)));
+                    s_applicationType = ((ApplicationType)(LittleEndian.ToInt16(subSystem, 0)));
                 }
                 catch
                 {
@@ -250,7 +266,7 @@ namespace GSF
         // "not" to apply extensions to all objects (this to avoid general namespace pollution) and make sure extensions are
         // grouped together in their own source file (e.g., StringExtensions.cs); however these items do apply to all items
         // and are essentially type-less hence their location in the "Common" class. These extension methods are at least
-        // limited to classes and won't show up on native types and custom structs.
+        // limited to classes and won't show up on native types and custom structures.
 
         /// <summary>
         /// Converts value to string; null objects (or DBNull objects) will return an empty string (""). 

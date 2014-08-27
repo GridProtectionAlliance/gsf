@@ -365,6 +365,16 @@ namespace GSF.TimeSeries
                 LogException(ex);
             }
 
+            try
+            {
+                Directory.SetCurrentDirectory(FilePath.GetAbsolutePath(""));
+            }
+            catch (Exception ex)
+            {
+                DisplayStatusMessage("Failed to set current directory to execution path due to exception: {0}", UpdateType.Alarm, ex.Message);
+                LogException(ex);
+            }
+
             // Initialize system settings
             m_configurationType = systemSettings["ConfigurationType"].ValueAs<ConfigurationType>();
             m_cachedXmlConfigurationFile = FilePath.AddPathSuffix(cachePath) + systemSettings["CachedConfigurationFile"].Value;

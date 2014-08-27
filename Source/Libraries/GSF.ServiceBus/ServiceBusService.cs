@@ -1043,6 +1043,9 @@ namespace GSF.ServiceBus
             return m_topics.Values;
         }
 
+        /// <summary>
+        /// Raises the <see cref="SelfHostingService.ServiceHostCreated"/> event.
+        /// </summary>
         protected override void OnServiceHostCreated()
         {
             base.OnServiceHostCreated();
