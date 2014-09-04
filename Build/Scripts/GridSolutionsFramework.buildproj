@@ -74,27 +74,27 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <Import Project="MasterBuild.buildproj"/>
-  
+
   <PropertyGroup>
     <SkipNugetPackages></SkipNugetPackages>
     <VersionSource>true</VersionSource>
   </PropertyGroup>
-  
-  <Target Name="BeforePrepareSettings"> 
+
+  <Target Name="BeforePrepareSettings">
     <Error Condition="'$(NugetPackagesFolder)' == ''"  Text="Error: Location of Nuget Packages must be specified."/>
-    <Error Condition="'$(BuildDeployFolder)' == ''" Text="Error: Drop location of the build content must be specified."/>	
+    <Error Condition="'$(BuildDeployFolder)' == ''" Text="Error: Drop location of the build content must be specified."/>
     <PropertyGroup>
       <!--Must-override setting(s).-->
       <ProjectName>GridSolutionsFramework</ProjectName>
       <TfsServer>https://tfs.codeplex.com/tfs/tfs07</TfsServer>
       <VersionBuildChange>Increment</VersionBuildChange>
       <VersionRevisionChange>Reset</VersionRevisionChange>
-	  
+
       <!-- Server folder does not match project name -->
       <ServerFolder>$/gsf/Main</ServerFolder>
     </PropertyGroup>
   </Target>
-  
+
   <Target Name="AfterPrepareSettings">
     <PropertyGroup>
       <!--Project specific settings.-->
@@ -105,10 +105,10 @@
       <BuildDeployFolder>$(BuildDeployFolder)</BuildDeployFolder>
     </PropertyGroup>
   </Target>
-  
-  <Target Name="BeforeVersionSource"> 
+
+  <Target Name="BeforeVersionSource">
     <Message Text="VersionSource = --$(VersionSource)--"/>
-    <Message Text="SkipNugetPackages = --$(SkipNugetPackages)--"/>	
+    <Message Text="SkipNugetPackages = --$(SkipNugetPackages)--"/>
     <ItemGroup>
       <!--List of files to be versioned.-->
       <FilesToVersion Include="$(LocalFolder)\Source\**\AssemblyInfo.*">
@@ -121,66 +121,66 @@
       </FilesToVersion>
     </ItemGroup>
   </Target>
-  
+
   <Target Name="BeforeBuildProjects">
     <ItemGroup>
       <!--List of projects to build.-->
       <ProjectsToBuild Include="$(ProjectSolution)"/>
     </ItemGroup>
   </Target>
-  
+
   <Target Name="BeforeExecuteUnitTests">
     <ItemGroup>
       <!--List of unit test assemblies.-->
       <UnitTestAssemblies Include="$(BuildOutputFolder)\**\*.Tests.dll"/>
     </ItemGroup>
   </Target>
-  
+
   <Target Name="AfterExecuteUnitTests">
     <!--Clean-up after all unit tests have been executed and passed.-->
     <RemoveDir Directories="%(UnitTestAssemblies.RootDir)%(UnitTestAssemblies.Directory)" Condition="Exists('%(UnitTestAssemblies.RootDir)%(UnitTestAssemblies.Directory)')"/>
   </Target>
-  
+
   <Target Name="BeforeDeployBuild">
     <ItemGroup>
       <!--List of binaries to archive.-->
       <BinariesToArchive Include="$(BuildOutputFolder)\**\*.*" Exclude="$(BuildOutputFolder)\**\*.msi"/>
-	  
+
       <!--List of installs to archive.-->
       <InstallsToArchive Include="$(BuildOutputFolder)\**\*.msi"/>
-	  
+
       <!--Destinations of archive files (*.zip).-->
       <ArchiveDestinations Include="$(BuildDeployFolder)"/>
     </ItemGroup>
   </Target>
-  
+
   <Target Name="AfterDeployBuild" Condition="'$(VersionSource)' == 'true' And '$(SkipNugetPackages)' == ''">
     <!-- Delete existing nuget packages. -->
     <Message Text="Deleting nuget packages..."/>
     <ItemGroup>
-      <NugetPackages Include="$(NugetPackagesFolder)\GSF.*.$(Major).$(Minor).$(Build)*.nupkg"/>
+      <NugetPackages Include="$(NugetPackagesFolder)\GSF.*.$(Major).$(Minor)*.nupkg"/>
     </ItemGroup>
     <Delete Files="@(NugetPackages)"/>
-	
+
     <!-- Create nuget packages. -->
     <Message Text="Creating nuget library packages..."/>
     <ItemGroup>
       <NugetLibraries Include="$(LocalFolder)\Source\Libraries\**\*.nuspec"/>
     </ItemGroup>
-    <Exec Command="%22$(Nuget)%22 pack %22%(NugetLibraries.RootDir)%(NugetLibraries.Directory)%(NugetLibraries.Filename).csproj%22 /Version $(Major).$(Minor).$(Build) /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'"/>
-    <Exec Command="%22$(Nuget)%22 pack %22%(NugetLibraries.RootDir)%(NugetLibraries.Directory)%(NugetLibraries.Filename).csproj%22 /Version $(Major).$(Minor).$(Build)-beta$(Revision) /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'"/>
+    <Exec Command="%22$(Nuget)%22 pack %22%(NugetLibraries.RootDir)%(NugetLibraries.Directory)%(NugetLibraries.Filename).csproj%22 /Version $(Major).$(Minor) /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'"/>
+    <Exec Command="%22$(Nuget)%22 pack %22%(NugetLibraries.RootDir)%(NugetLibraries.Directory)%(NugetLibraries.Filename).csproj%22 /Version $(Major).$(Minor)-beta$(Build) /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'"/>
     <Message Text="Creating nuget samples packages..."/>
     <ItemGroup>
       <NugetSamples Include="$(LocalFolder)\Build\Scripts\**\*.nuspec"/>
     </ItemGroup>
-    <Exec Command="%22$(Nuget)%22 pack %22%(NugetSamples.FullPath)%22 /Version $(Major).$(Minor).$(Build) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'"/>
-    <Exec Command="%22$(Nuget)%22 pack %22%(NugetSamples.FullPath)%22 /Version $(Major).$(Minor).$(Build)-beta$(Revision) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'"/>
+    <Exec Command="%22$(Nuget)%22 pack %22%(NugetSamples.FullPath)%22 /Version $(Major).$(Minor) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'"/>
+    <Exec Command="%22$(Nuget)%22 pack %22%(NugetSamples.FullPath)%22 /Version $(Major).$(Minor)-beta$(Build) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'"/>
 
     <!-- Publish nuget packages. -->
     <Message Text="Publishing nuget packages to NuGet.org..."/>
     <ItemGroup>
       <NugetPackages Remove="@(NugetPackages)"/>
-      <NugetPackages Include="$(NugetPackagesFolder)\GSF.*.$(Major).$(Minor).$(Build)*.nupkg" Exclude="$(NugetPackagesFolder)\GSF.*.$(Major).$(Minor).$(Build)*.symbols.nupkg"/>
+      <NugetPackages Include="$(NugetPackagesFolder)\GSF.*.$(Major).$(Minor)*.nupkg" Exclude="$(NugetPackagesFolder)\GSF.*.$(Major).$(Minor)*.symbols.nupkg"/>
     </ItemGroup>
     <Exec Command="%22$(Nuget)%22 push %22%(NugetPackages.FullPath)%22 $(NugetApiKey)" Condition="'@(NugetPackages)' != ''"/>
   </Target>
