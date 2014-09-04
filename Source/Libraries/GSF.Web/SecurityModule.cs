@@ -256,35 +256,48 @@ namespace GSF.Web
                 return false;
         }
 
+        /// <summary>
+        /// Determines if access to the requested <paramref name="resource"/> is to be secured.
+        /// </summary>
+        /// <param name="resource">Name of the resource being requested.</param>
+        /// <returns>True if access to the resource is to be secured, otherwise False.</returns>
+        protected virtual bool IsAccessSecured(string resource)
+        {
+            return SecurityProviderUtility.IsResourceSecurable(GetResourceName());
+        }
+
         private void Application_PostMapRequestHandler(object sender, EventArgs e)
         {
-            if (!SecurityProviderUtility.IsResourceSecurable(GetResourceName()))
+            // Check if access to resource is to be secured.
+            if (!IsAccessSecured(GetResourceName()))
                 return;
 
             if (m_application.Context.Handler is IReadOnlySessionState ||
                 m_application.Context.Handler is IRequiresSessionState)
-                // no need to replace the current handler 
+                // No need to replace the current handler 
                 return;
 
-            // swap the current handler 
+            // Swap the current handler 
             m_application.Context.Handler = new SessionEnabledHandler(m_application.Context.Handler);
         }
 
         private void Application_PostAcquireRequestState(object sender, EventArgs e)
         {
-            if (!SecurityProviderUtility.IsResourceSecurable(GetResourceName()))
+            // Check if access to resource is to be secured.
+            if (!IsAccessSecured(GetResourceName()))
                 return;
 
             SessionEnabledHandler handler = HttpContext.Current.Handler as SessionEnabledHandler;
             if (handler != null)
-                // set the original handler back 
+                // Set the original handler back 
                 HttpContext.Current.Handler = handler.OriginalHandler;
         }
 
         private void Application_PreRequestHandlerExecute(object sender, EventArgs e)
         {
+            // Check if access to resource is to be secured.
             string resource = GetResourceName();
-            if (!SecurityProviderUtility.IsResourceSecurable(resource))
+            if (!IsAccessSecured(resource))
                 return;
 
             if (SecurityProviderCache.CurrentProvider == null)

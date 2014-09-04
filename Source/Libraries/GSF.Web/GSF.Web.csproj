@@ -141,6 +141,7 @@
     <Compile Include="Hosting\NamespaceDoc.cs" />
     <Compile Include="Hosting\VirtualFileBaseCollection.cs" />
     <Compile Include="Embedded\ISecurityService.cs" />
+    <Compile Include="IgnoreServicesSecurityModule.cs" />
     <Compile Include="NamespaceDoc.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SecurityModule.cs" />
