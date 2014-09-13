@@ -23,8 +23,11 @@
 
 //  Compiling for Linux:
 //
+//		Get PAM development libraries, e.g., for Ubuntu: apt-get install libpam0g-dev
+//
 //      gcc -c -Wall -Werror -fpic GSF.POSIX.c
 //      gcc -shared -o GSF.POSIX.so GSF.POSIX.o -lpam -lpam_misc
+//
 
 #include <security/pam_appl.h>
 #include <security/pam_misc.h>
@@ -35,6 +38,7 @@
 #include <pwd.h>
 #include <grp.h>
 #include <shadow.h>
+#include <crypt.h>
 
 // Structure used to return key spwd information
 struct UserPasswordInformation
@@ -102,18 +106,18 @@ int ChangePasswordConveration(int num_msg, const struct pam_message** msg, struc
 			// PAM_PROMPT_ECHO_OFF requests are for passwords, starting with old password
 			switch (info->requestCount)
 			{
-			case 0:
-				reply[0].resp = info->oldPassword;
-				break;
-			case 1:
-				reply[0].resp = info->newPassword1;
-				break;
-			case 2:
-				reply[0].resp = info->newPassword2;
-				break;
-			default:
-				reply[0].resp = NULL;
-				break;
+				case 0:
+					reply[0].resp = info->oldPassword;
+					break;
+				case 1:
+					reply[0].resp = info->newPassword1;
+					break;
+				case 2:
+					reply[0].resp = info->newPassword2;
+					break;
+				default:
+					reply[0].resp = NULL;
+					break;
 			}
 
 			info->requestCount++;
@@ -146,6 +150,10 @@ int AuthenticateUser(const char* userName, const char* password)
 		// All done
 		pam_end(pamh, 0); 
 	}
+	else
+	{
+		free(appdata);
+	}
 
 	return retval;
 }
@@ -171,9 +179,6 @@ int ChangeUserPassword(const char* userName, const char* oldPassword, const char
 
 	if (retval == PAM_SUCCESS)
 	{
-		// Authenticate the user
-		retval = pam_authenticate(pamh, 0);
-
 		// Begin PAM change password conversation
 		if (retval == PAM_SUCCESS)
 			retval = pam_chauthtok(pamh, PAM_SILENT);
@@ -181,6 +186,19 @@ int ChangeUserPassword(const char* userName, const char* oldPassword, const char
 		// All done
 		pam_end(pamh, 0); 
 	}
+	else
+	{
+		free(appdata.userName);
+	}
+
+	if (appdata.requestCount < 3)
+		free(appdata.newPassword2);
+
+	if (appdata.requestCount < 2);
+		free(appdata.newPassword1);
+
+	if (appdata.requestCount < 1);
+		free(appdata.oldPassword);
 
 	return retval;
 }

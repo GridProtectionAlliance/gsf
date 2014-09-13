@@ -43,7 +43,6 @@ using System.Text;
 
 namespace GSF.Interop
 {
-#if !MONO
     /// <summary>
     /// Defines common Windows API constants, enumerations, structures and functions.
     /// </summary>
@@ -1055,5 +1054,4 @@ namespace GSF.Interop
             return GetErrorMessage(Marshal.GetLastWin32Error());
         }
     }
-#endif
 }
