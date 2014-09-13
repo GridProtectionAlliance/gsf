@@ -417,7 +417,7 @@ namespace GSF.Security
                 if (UserData.IsDefined)
                 {
                     // Fill in user information from domain data if it is available
-                    if (user.DomainAvailable)
+                    if (user.DomainRespondsForUser)
                     {
                         // Copy relevant user information
                         UserData.FirstName = user.FirstName;
@@ -505,9 +505,6 @@ namespace GSF.Security
         /// </remarks>
         public override bool ChangePassword(string oldPassword, string newPassword)
         {
-#if MONO
-            return false;
-#else
             // Check prerequisites
             if (!UserData.IsDefined || UserData.IsDisabled || UserData.IsLockedOut)
                 return false;
@@ -533,11 +530,7 @@ namespace GSF.Security
                 context = user.ImpersonatePrivilegedAccount();
 
                 // Change user password
-                user.UserEntry.Invoke("ChangePassword", oldPassword, newPassword);
-
-                // Commit changes (required for non-local accounts)
-                if (!user.IsWinNTEntry)
-                    user.UserEntry.CommitChanges();
+                user.ChangePassword(oldPassword, newPassword);
 
                 return true;
             }
@@ -559,7 +552,6 @@ namespace GSF.Security
 
                 RefreshData();
             }
-#endif
         }
 
         /// <summary>
@@ -582,13 +574,14 @@ namespace GSF.Security
         /// <returns>The LDAP path.</returns>
         protected virtual string GetLdapPath()
         {
-            if (ConnectionString.StartsWith("LDAP://", StringComparison.InvariantCultureIgnoreCase) || ConnectionString.StartsWith("LDAPS://", StringComparison.InvariantCultureIgnoreCase))
+            if (ConnectionString.StartsWith("LDAP://", StringComparison.OrdinalIgnoreCase) ||
+                ConnectionString.StartsWith("LDAPS://", StringComparison.OrdinalIgnoreCase))
                 return ConnectionString;
 
             foreach (KeyValuePair<string, string> pair in ConnectionString.ParseKeyValuePairs())
             {
-                if (pair.Value.StartsWith("LDAP://", StringComparison.InvariantCultureIgnoreCase) ||
-                    pair.Value.StartsWith("LDAPS://", StringComparison.InvariantCultureIgnoreCase))
+                if (pair.Value.StartsWith("LDAP://", StringComparison.OrdinalIgnoreCase) ||
+                    pair.Value.StartsWith("LDAPS://", StringComparison.OrdinalIgnoreCase))
                     return pair.Value;
             }
 

@@ -256,7 +256,10 @@ namespace GSF.TimeSeries.UI.DataModels
                     });
                 }
 
-                securityGroupList.Insert(0, new SecurityGroup { ID = Guid.Empty });
+                securityGroupList.Insert(0, new SecurityGroup
+                {
+                    ID = Guid.Empty
+                });
 
                 return securityGroupList;
             }
@@ -444,7 +447,7 @@ namespace GSF.TimeSeries.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-                groupSID = UserInfo.AccountNameToSID(securityGroup.Name);
+                groupSID = UserInfo.GroupNameToSID(securityGroup.Name);
 
                 if (!UserInfo.IsGroupSID(groupSID))
                     groupSID = securityGroup.Name;

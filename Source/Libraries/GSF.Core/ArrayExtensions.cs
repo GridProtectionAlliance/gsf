@@ -717,7 +717,7 @@ namespace GSF
         /// <param name="bytes">Bytes containing structure.</param>
         /// <returns>A structure from <paramref name="bytes"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static T ReadStructure<T>(this byte[] bytes)
+        public unsafe static T ReadStructure<T>(this byte[] bytes) where T : struct
         {
             T structure;
 
@@ -736,7 +736,7 @@ namespace GSF
         /// <param name="reader"><see cref="BinaryReader"/> positioned at desired structure.</param>
         /// <returns>A structure read from <see cref="BinaryReader"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T ReadStructure<T>(this BinaryReader reader)
+        public static T ReadStructure<T>(this BinaryReader reader) where T : struct
         {
             return reader.ReadBytes(Marshal.SizeOf(typeof(T))).ReadStructure<T>();
         }

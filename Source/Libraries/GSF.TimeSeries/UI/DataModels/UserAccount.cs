@@ -364,7 +364,11 @@ namespace GSF.TimeSeries.UI.DataModels
                     });
                 }
 
-                userAccountList.Insert(0, new UserAccount { ID = Guid.Empty, ChangePasswordOn = DateTime.Now.AddDays(90) });
+                userAccountList.Insert(0, new UserAccount
+                {
+                    ID = Guid.Empty,
+                    ChangePasswordOn = DateTime.Now.AddDays(90)
+                });
 
                 return userAccountList;
             }
@@ -437,7 +441,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 else if (database.IsJetEngine)
                     changePasswordOn = userAccount.ChangePasswordOn.ToOADate();
 
-                userAccountSID = UserInfo.AccountNameToSID(userAccount.Name);
+                userAccountSID = UserInfo.UserNameToSID(userAccount.Name);
 
                 if (!userAccount.UseADAuthentication || !UserInfo.IsUserSID(userAccountSID))
                     userAccountSID = userAccount.Name;

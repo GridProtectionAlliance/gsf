@@ -340,7 +340,7 @@ namespace GSF.Security
 
                 DataRow userAccount = null;
                 Guid userAccountID = Guid.Empty;
-                string userSID = UserInfo.AccountNameToSID(UserData.Username);
+                string userSID = UserInfo.UserNameToSID(UserData.Username);
 
                 // Filter user account data for the current user
                 DataRow[] userAccounts = securityContext.Tables[UserAccountTable].Select(string.Format("Name = '{0}'", userSID));
@@ -467,7 +467,7 @@ namespace GSF.Security
                     foreach (string groupName in UserData.Groups)
                     {
                         // Convert NT/AD group names back to SIDs for lookup in the database
-                        string groupSID = UserInfo.AccountNameToSID(groupName);
+                        string groupSID = UserInfo.GroupNameToSID(groupName);
 
                         // Locate associated security group record
                         DataRow[] securityGroups = securityContext.Tables[SecurityGroupTable].Select(string.Format("Name = '{0}'", groupSID));

@@ -42,6 +42,7 @@ namespace GSF.Console
             private readonly Process m_process;
             private readonly StringBuilder m_standardOutput;
             private readonly StringBuilder m_standardError;
+            private int m_exitCode;
             private bool m_disposed;
 
             #endregion
@@ -57,6 +58,7 @@ namespace GSF.Console
             {
                 m_standardOutput = new StringBuilder();
                 m_standardError = new StringBuilder();
+                m_exitCode = -1;
 
                 m_process = new Process
                 {
@@ -108,6 +110,17 @@ namespace GSF.Console
                 get
                 {
                     return m_standardError.ToString();
+                }
+            }
+
+            /// <summary>
+            /// Gets exit code assuming process
+            /// </summary>
+            public int ExitCode
+            {
+                get
+                {
+                    return m_exitCode;
                 }
             }
 
@@ -164,6 +177,7 @@ namespace GSF.Console
                     return false;
                 }
 
+                m_exitCode = m_process.ExitCode;
                 return true;
             }
 
@@ -181,22 +195,28 @@ namespace GSF.Console
         }
 
         /// <summary>
-        /// Executes a command line operation and returns its standard output or throws an exception with the standard error.
+        /// Executes a command line operation and returns its standard output and exit code or throws an exception with the standard error.
         /// </summary>
         /// <param name="fileName">Command line file name to execute.</param>
         /// <param name="arguments">Command line arguments to use, if any.</param>
         /// <param name="timeout">Timeout, in milliseconds, to wait for command line operation to complete.</param>
-        /// <returns>Standard output received from command.</returns>
-        /// <exception cref="CommandException">Exception occurs when executed command process reports standard error output.</exception>
-        public static string Execute(string fileName, string arguments = null, int timeout = Timeout.Infinite)
+        /// <returns>A <see cref="CommandResponse"/> containing the standard output received from command and the exit code.</returns>
+        /// <exception cref="CommandException">
+        /// Exception occurs when executed command process reports standard error output or process times-out.
+        /// </exception>
+        public static CommandResponse Execute(string fileName, string arguments = null, int timeout = Timeout.Infinite)
         {
             string standardOutput, standardError;
             bool processCompleted;
+            int exitCode;
 
-            if (!Execute(fileName, arguments, out standardOutput, out standardError, out processCompleted, timeout))
-                throw new CommandException(standardError, processCompleted);
+            if (!Execute(fileName, arguments, out standardOutput, out standardError, out processCompleted, out exitCode, timeout))
+                throw new CommandException(standardError, processCompleted, exitCode);
 
-            return standardOutput;
+            if (!processCompleted)
+                throw new CommandException("Process timed-out.", false, -1);
+
+            return new CommandResponse(standardOutput, exitCode);
         }
 
         /// <summary>
@@ -206,12 +226,13 @@ namespace GSF.Console
         /// <param name="arguments">Command line arguments to use, if any.</param>
         /// <param name="standardOutput">Any standard output reported by the command line operation.</param>
         /// <param name="standardError">Any standard error reported by the command line operation.</param>
+        /// <param name="exitCode">Exit code of the process, assuming process successfully completed.</param>
         /// <returns><c>true</c> if there was no standard error reported; otherwise, <c>false</c>.</returns>
         /// <remarks>This function waits indefinitely for the command line operation to complete.</remarks>
-        public static bool Execute(string fileName, string arguments, out string standardOutput, out string standardError)
+        public static bool Execute(string fileName, string arguments, out string standardOutput, out string standardError, out int exitCode)
         {
             bool processCompleted;
-            return Execute(fileName, arguments, out standardOutput, out standardError, out processCompleted, Timeout.Infinite);
+            return Execute(fileName, arguments, out standardOutput, out standardError, out processCompleted, out exitCode, Timeout.Infinite);
         }
 
         /// <summary>
@@ -222,15 +243,17 @@ namespace GSF.Console
         /// <param name="standardOutput">Any standard output reported by the command line operation.</param>
         /// <param name="standardError">Any standard error reported by the command line operation.</param>
         /// <param name="processCompleted">Flag that determines if process completed or timed-out. This is only relevant if <paramref name="timeout"/> is not -1.</param>
+        /// <param name="exitCode">Exit code of the process, assuming process successfully completed.</param>
         /// <param name="timeout">Timeout, in milliseconds, to wait for command line operation to complete. Set to <see cref="Timeout.Infinite"/>, i.e., -1, for infinite wait.</param>
         /// <returns><c>true</c> if there was no standard error reported; otherwise, <c>false</c>.</returns>
-        public static bool Execute(string fileName, string arguments, out string standardOutput, out string standardError, out bool processCompleted, int timeout)
+        public static bool Execute(string fileName, string arguments, out string standardOutput, out string standardError, out bool processCompleted, out int exitCode, int timeout)
         {
             using (CommandProcess process = new CommandProcess(fileName, arguments ?? ""))
             {
                 processCompleted = process.Execute(timeout);
                 standardOutput = process.StandardOutput;
                 standardError = process.StandardError;
+                exitCode = process.ExitCode;
             }
 
             return string.IsNullOrWhiteSpace(standardError);

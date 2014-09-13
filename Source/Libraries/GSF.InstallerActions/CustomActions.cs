@@ -104,7 +104,7 @@ namespace GSF.InstallerActions
                 isManagedServiceAccountValid = serviceAccountInfo.Exists &&
                     !serviceAccountInfo.AccountIsDisabled &&
                     !serviceAccountInfo.AccountIsLockedOut &&
-                    serviceAccountInfo.GetUserPropertyValueAsString("msDS-HostServiceAccountBL").Split(',')[0].Equals("CN=" + Environment.MachineName, StringComparison.CurrentCultureIgnoreCase);
+                    serviceAccountInfo.GetUserPropertyValue("msDS-HostServiceAccountBL").Split(',')[0].Equals("CN=" + Environment.MachineName, StringComparison.CurrentCultureIgnoreCase);
 
                 if (isManagedServiceAccountValid)
                 {

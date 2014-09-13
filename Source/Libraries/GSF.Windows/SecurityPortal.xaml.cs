@@ -354,7 +354,7 @@ namespace GSF.Windows
                 // running the application does not have access to domain objects, it's possible that
                 // the user logging in does have access to the domain. So we attempt to impersonate the
                 // user logging in to allow authentication to proceed
-                if (!userInfo.DomainAvailable && TryImpersonate(userInfo.LoginID, TextBoxPassword.Password, out impersonationContext))
+                if (!userInfo.DomainRespondsForUser && TryImpersonate(userInfo.LoginID, TextBoxPassword.Password, out impersonationContext))
                 {
                     try
                     {

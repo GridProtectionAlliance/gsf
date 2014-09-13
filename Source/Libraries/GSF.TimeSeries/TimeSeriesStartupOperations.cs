@@ -131,7 +131,7 @@ namespace GSF.TimeSeries
 
                     if (userAccountReader["UseADAuthentication"].ToNonNullString().ParseBoolean())
                     {
-                        sid = UserInfo.AccountNameToSID(accountName);
+                        sid = UserInfo.UserNameToSID(accountName);
 
                         if (!ReferenceEquals(accountName, sid) && UserInfo.IsUserSID(sid))
                             updateMap.Add(id, sid);
@@ -155,7 +155,7 @@ namespace GSF.TimeSeries
 
                     if (accountName.Contains('\\'))
                     {
-                        sid = UserInfo.AccountNameToSID(accountName);
+                        sid = UserInfo.GroupNameToSID(accountName);
 
                         if (!ReferenceEquals(accountName, sid) && UserInfo.IsGroupSID(sid))
                             updateMap.Add(id, sid);

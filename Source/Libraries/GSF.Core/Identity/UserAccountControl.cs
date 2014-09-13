@@ -25,6 +25,9 @@
 //
 //******************************************************************************************************
 
+// These functions are strictly for Windows, so we don't even have the class show up in Mono
+#if !MONO
+
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -35,7 +38,6 @@ using Microsoft.Win32;
 
 namespace GSF.Identity
 {
-#if !MONO
     /// <summary>
     /// Provides facilities for enabling and disabling User Account Control (UAC), determining elevation and virtualization status, and launching a process under elevated credentials.
     /// </summary>
@@ -341,5 +343,6 @@ namespace GSF.Identity
             // This shutdown flag corresponds to: "Operating System: Reconfiguration (Planned)".
         }
     }
-#endif
 }
+
+#endif

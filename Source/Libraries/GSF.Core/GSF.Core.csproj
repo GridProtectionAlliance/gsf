@@ -127,6 +127,14 @@
     <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Mono.Security">
+      <HintPath>..\..\Dependencies\Mono\Mono.Security.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Novell.Directory.Ldap">
+      <HintPath>..\..\Dependencies\Mono\Novell.Directory.Ldap.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core">
@@ -162,6 +170,10 @@
     <Compile Include="BinaryCodedDecimal.cs" />
     <Compile Include="Console\Command.cs" />
     <Compile Include="Console\CommandException.cs" />
+    <Compile Include="Console\CommandResponse.cs" />
+    <Compile Include="Identity\IUserInfo.cs" />
+    <Compile Include="Identity\UnixUserInfo.cs" />
+    <Compile Include="Identity\WindowsUserInfo.cs" />
     <Compile Include="IO\Outage.cs" />
     <Compile Include="IO\OutageLog.cs" />
     <Compile Include="IO\OutageLogProcessor.cs" />
@@ -323,6 +335,7 @@
     <Compile Include="PrecisionTimer.cs" />
     <Compile Include="ProcessProgress.cs" />
     <Compile Include="ProcessProgressHandler.cs" />
+    <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reflection\NamespaceDoc.cs" />
     <Compile Include="ReusableObjectPool.cs" />

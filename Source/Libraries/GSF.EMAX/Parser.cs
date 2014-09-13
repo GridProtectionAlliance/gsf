@@ -217,12 +217,14 @@ namespace GSF.EMAX
 
             // Create a new file stream for each file
             m_fileStreams = new FileStream[fileNames.Length];
-            byte[] skipBytes = new byte[2];
+            byte[] skipBytes = new byte[ControlFile.SystemParameters.channel_offset];
 
             for (int i = 0; i < fileNames.Length; i++)
             {
                 m_fileStreams[i] = new FileStream(fileNames[i], FileMode.Open, FileAccess.Read, FileShare.Read);
-                m_fileStreams[i].Read(skipBytes, 0, 2);
+
+                if (ControlFile.SystemParameters.channel_offset > 0)
+                    m_fileStreams[i].Read(skipBytes, 0, ControlFile.SystemParameters.channel_offset);
             }
 
             m_streamIndex = 0;
@@ -293,13 +295,41 @@ namespace GSF.EMAX
 #if DEBUG
                     // HACK: Attempt to find / parse record level timestamp...
                     DateTime sourceTime = ControlFile.Header.Timestamp;
-                    Debug.WriteLine("Target time = {0:dd-MMM-yyyy HH:mm:ss.ffffff}", sourceTime);
-                    DateTime parsedTime;
-                    ushort temp;
+                    //UnixTimeTag timetag = new UnixTimeTag(sourceTime.Ticks);
 
-                    // Perform full scan through each byte in buffer reading forwards and backwards
+                    DateTime parsedTime;
+                    //byte temp;
+                    //byte[] clockBytes = new byte[16];
+                    //bool irigWasValidOnce = false;
+
+                    //// Perform full scan through each byte in buffer reading forwards and backwards
                     for (int i = 0; i < recordLength - 8; i++)
                     {
+                        //    Buffer.BlockCopy(buffer, i, clockBytes, 0, 16);
+
+                        //    parsedTime = (new Timestamp(ControlFile.Header.Timestamp, clockBytes, ref irigWasValidOnce)).Value;
+
+                        //    if (parsedTime.DayOfYear == sourceTime.DayOfYear && parsedTime.Year == sourceTime.Year && parsedTime.Hour == sourceTime.Hour)
+                        //    {
+                        //        Debug.WriteLine("Target time = {0:dd-MMM-yyyy HH:mm:ss.ffffff}", sourceTime);
+                        //        Debug.WriteLine("Day-of-year match found @Index {0} [0x{0:X}] Clock word 0 = [0x{1:X}] => LE={2:dd-MMM-yyyy HH:mm:ss.ffffff}", i, clockWords[0], parsedTime);
+                        //    }
+
+                        //    for (int j = 0; j < clockBytes.Length / 2; j++)
+                        //    {
+                        //        temp = clockBytes[j];
+                        //        clockBytes[j] = clockBytes[clockBytes.Length - j - 1];
+                        //        clockBytes[clockBytes.Length - j - 1] = temp;
+                        //    }
+
+                        //    parsedTime = (new Timestamp(ControlFile.Header.Timestamp, clockBytes, ref irigWasValidOnce)).Value;
+
+                        //    if (parsedTime.DayOfYear == sourceTime.DayOfYear && parsedTime.Year == sourceTime.Year && parsedTime.Hour == sourceTime.Hour)
+                        //    {
+                        //        Debug.WriteLine("Target time = {0:dd-MMM-yyyy HH:mm:ss.ffffff}", sourceTime);
+                        //        Debug.WriteLine("Day-of-year match found @Index {0} [0x{0:X}] Clock word 0 = [0x{1:X}] => BE={2:dd-MMM-yyyy HH:mm:ss.ffffff}", i, clockWords[0], parsedTime);
+                        //    }
+
                         clockWords[0] = BigEndian.ToUInt16(buffer, i);
                         clockWords[1] = BigEndian.ToUInt16(buffer, i + 2);
                         clockWords[2] = BigEndian.ToUInt16(buffer, i + 4);
@@ -308,19 +338,22 @@ namespace GSF.EMAX
                         parsedTime = (new Timestamp(ControlFile.Header.Timestamp, clockWords)).Value;
 
                         if (parsedTime.DayOfYear == sourceTime.DayOfYear && parsedTime.Year == sourceTime.Year && parsedTime.Hour == sourceTime.Hour)
+                        {
+                            Debug.WriteLine("Target time = {0:dd-MMM-yyyy HH:mm:ss.ffffff}", sourceTime);
                             Debug.WriteLine("Day-of-year match found @Index {0} [0x{0:X}] Clock word 0 = [0x{1:X}] => BE={2:dd-MMM-yyyy HH:mm:ss.ffffff}", i, clockWords[0], parsedTime);
+                        }
 
-                        temp = clockWords[0];
-                        clockWords[0] = clockWords[3];
-                        clockWords[3] = temp;
-                        temp = clockWords[1];
-                        clockWords[1] = clockWords[2];
-                        clockWords[2] = temp;
+                        //temp = clockWords[0];
+                        //clockWords[0] = clockWords[3];
+                        //clockWords[3] = temp;
+                        //temp = clockWords[1];
+                        //clockWords[1] = clockWords[2];
+                        //clockWords[2] = temp;
 
-                        parsedTime = (new Timestamp(ControlFile.Header.Timestamp, clockWords)).Value;
+                        //parsedTime = (new Timestamp(ControlFile.Header.Timestamp, clockWords)).Value;
 
-                        if (parsedTime.DayOfYear == sourceTime.DayOfYear && parsedTime.Year == sourceTime.Year && parsedTime.Hour == sourceTime.Hour)
-                            Debug.WriteLine("Day-of-year match found (reverse words) @Index {0} [0x{0:X}] Clock word 0 = [0x{1:X}] => BE={2:dd-MMM-yyyy HH:mm:ss.ffffff}", i, clockWords[0], parsedTime);
+                        //if (parsedTime.DayOfYear == sourceTime.DayOfYear && parsedTime.Year == sourceTime.Year && parsedTime.Hour == sourceTime.Hour)
+                        //    Debug.WriteLine("Day-of-year match found (reverse words) @Index {0} [0x{0:X}] Clock word 0 = [0x{1:X}] => BE={2:dd-MMM-yyyy HH:mm:ss.ffffff}", i, clockWords[0], parsedTime);
 
                         clockWords[0] = LittleEndian.ToUInt16(buffer, i);
                         clockWords[1] = LittleEndian.ToUInt16(buffer, i + 2);
@@ -330,29 +363,32 @@ namespace GSF.EMAX
                         parsedTime = (new Timestamp(ControlFile.Header.Timestamp, clockWords)).Value;
 
                         if (parsedTime.DayOfYear == sourceTime.DayOfYear && parsedTime.Year == sourceTime.Year && parsedTime.Hour == sourceTime.Hour)
+                        {
+                            Debug.WriteLine("Target time = {0:dd-MMM-yyyy HH:mm:ss.ffffff}", sourceTime);
                             Debug.WriteLine("Day-of-year match found @Index {0} [0x{0:X}] Clock word 0 = [0x{1:X}] => LE={2:dd-MMM-yyyy HH:mm:ss.ffffff}", i, clockWords[0], parsedTime);
+                        }
 
-                        temp = clockWords[0];
-                        clockWords[0] = clockWords[3];
-                        clockWords[3] = temp;
-                        temp = clockWords[1];
-                        clockWords[1] = clockWords[2];
-                        clockWords[2] = temp;
+                        //temp = clockWords[0];
+                        //clockWords[0] = clockWords[3];
+                        //clockWords[3] = temp;
+                        //temp = clockWords[1];
+                        //clockWords[1] = clockWords[2];
+                        //clockWords[2] = temp;
 
-                        parsedTime = (new Timestamp(ControlFile.Header.Timestamp, clockWords)).Value;
+                        //parsedTime = (new Timestamp(ControlFile.Header.Timestamp, clockWords)).Value;
 
-                        if (parsedTime.DayOfYear == sourceTime.DayOfYear && parsedTime.Year == sourceTime.Year && parsedTime.Hour == sourceTime.Hour)
-                            Debug.WriteLine("Day-of-year match found (reverse words) @Index {0} [0x{0:X}] Clock word 0 = [0x{1:X}] => LE={2:dd-MMM-yyyy HH:mm:ss.ffffff}", i, clockWords[0], parsedTime);
+                        //if (parsedTime.DayOfYear == sourceTime.DayOfYear && parsedTime.Year == sourceTime.Year && parsedTime.Hour == sourceTime.Hour)
+                        //    Debug.WriteLine("Day-of-year match found (reverse words) @Index {0} [0x{0:X}] Clock word 0 = [0x{1:X}] => LE={2:dd-MMM-yyyy HH:mm:ss.ffffff}", i, clockWords[0], parsedTime);
 
-                        parsedTime = (new UnixTimeTag(BigEndian.ToUInt32(buffer, i))).ToDateTime();
+                        //parsedTime = (new UnixTimeTag(BigEndian.ToUInt32(buffer, i))).ToDateTime();
 
-                        if (parsedTime.DayOfYear == sourceTime.DayOfYear && parsedTime.Year == sourceTime.Year && parsedTime.Hour == sourceTime.Hour)
-                            Debug.WriteLine("Day-of-year match found (Unix Time Tag) @Index {0} [0x{0:X}] Clock word 0 = [0x{1:X}] => BE={2:dd-MMM-yyyy HH:mm:ss.ffffff}", i, clockWords[0], parsedTime);
+                        //if (parsedTime.DayOfYear == sourceTime.DayOfYear && parsedTime.Year == sourceTime.Year && parsedTime.Hour == sourceTime.Hour)
+                        //    Debug.WriteLine("Day-of-year match found (Unix Time Tag) @Index {0} [0x{0:X}] Clock word 0 = [0x{1:X}] => BE={2:dd-MMM-yyyy HH:mm:ss.ffffff}", i, clockWords[0], parsedTime);
 
-                        parsedTime = (new UnixTimeTag(LittleEndian.ToUInt32(buffer, i))).ToDateTime();
+                        //parsedTime = (new UnixTimeTag(LittleEndian.ToUInt32(buffer, i))).ToDateTime();
 
-                        if (parsedTime.DayOfYear == sourceTime.DayOfYear && parsedTime.Year == sourceTime.Year && parsedTime.Hour == sourceTime.Hour)
-                            Debug.WriteLine("Day-of-year match found (Unix Time Tag) @Index {0} [0x{0:X}] Clock word 0 = [0x{1:X}] => LE={2:dd-MMM-yyyy HH:mm:ss.ffffff}", i, clockWords[0], parsedTime);
+                        //if (parsedTime.DayOfYear == sourceTime.DayOfYear && parsedTime.Year == sourceTime.Year && parsedTime.Hour == sourceTime.Hour)
+                        //    Debug.WriteLine("Day-of-year match found (Unix Time Tag) @Index {0} [0x{0:X}] Clock word 0 = [0x{1:X}] => LE={2:dd-MMM-yyyy HH:mm:ss.ffffff}", i, clockWords[0], parsedTime);
 
                     }
 #endif

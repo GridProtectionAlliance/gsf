@@ -66,6 +66,7 @@ namespace GSF.EMAX
         SEQUENCE_CHANNELS = 0x0051,
         TPwrRcd = 0x0052,
         BoardAnalogEventChannels = 0x0060,
+        BREAKER_TRIP_TIMES = 0x0061,
         Unknown = 0xFFFF
     }
 
@@ -73,13 +74,13 @@ namespace GSF.EMAX
     {
         public UInt24 id;               // System ID
         public uint time;               // Time of CTL file creation
-        public int num_of_structs;      // Number of Structures in CTL file (not really)
+        public ushort sp_offset;        // System parameters offset
 
         public CTL_HEADER(BinaryReader reader)
         {
             id = BigEndian.ToUInt24(reader.ReadBytes(3), 0);
             time = BigEndian.ToUInt32(reader.ReadBytes(4), 0);
-            num_of_structs = (int)BinaryCodedDecimal.Decode((uint)BigEndian.ToUInt16(reader.ReadBytes(2), 0));
+            sp_offset = BigEndian.ToUInt16(reader.ReadBytes(2), 0);
 
             // Skip padding
             reader.ReadBytes(2);
@@ -112,12 +113,10 @@ namespace GSF.EMAX
 
             offset = reader.ReadUInt32() >> 8;
 
-            //Debug.WriteLine("{0} [0x{1}] => Offset = 0x{2} [{3}]",
+            //Debug.WriteLine("{0} [0x{1}] => Offset = 0x{2}",
             //    type,
             //    ushortValue.ToString("X").PadLeft(4, '0'),
-            //    offset.ToString("X").PadLeft(8, '0'),
-            //    offset < length && offset > 0 ? "Valid" : "Invalid"
-            //    );
+            //    offset.ToString("X").PadLeft(8, '0'));
         }
     }
 
@@ -455,6 +454,35 @@ namespace GSF.EMAX
         public short length;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 163)]
         public string value;
+    }
+
+    // Since this structure includes dynamically sized arrays, we manually parse structure
+    public struct BREAKER_TRIP_TIMES
+    {
+        public float[] breaker_trip_time;
+        public float[] accumulated_breaker_trip_time;
+        public float[] zero_trip_percent;
+        public float[] zero_trip_time;
+
+        public BREAKER_TRIP_TIMES(BinaryReader reader, int channels, int analogGroups)
+        {
+            breaker_trip_time = ReadArray(reader, channels, analogGroups);
+            accumulated_breaker_trip_time = ReadArray(reader, channels, analogGroups);
+            zero_trip_percent = ReadArray(reader, channels, analogGroups);
+            zero_trip_time = ReadArray(reader, channels, analogGroups);
+        }
+
+        private static float[] ReadArray(BinaryReader reader, int channels, int analogGroups)
+        {
+            float[] floats = new float[channels * analogGroups];
+
+            for (int i = 0; i < floats.Length; i++)
+            {
+                floats[i] = reader.ReadSingle();
+            }
+
+            return floats;
+        }
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]

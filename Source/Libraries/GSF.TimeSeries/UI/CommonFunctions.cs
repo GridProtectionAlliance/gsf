@@ -1201,7 +1201,7 @@ namespace GSF.TimeSeries.UI
                         // running the application does not have access to domain objects, it's possible that
                         // the user logging in does have access to the domain. So we attempt to impersonate the
                         // user logging in to allow authentication to proceed
-                        if (!userInfo.DomainAvailable && TryImpersonate(userInfo.LoginID, GetCurrentUserPassword(), out impersonationContext))
+                        if (!userInfo.DomainRespondsForUser && TryImpersonate(userInfo.LoginID, GetCurrentUserPassword(), out impersonationContext))
                         {
                             try
                             {

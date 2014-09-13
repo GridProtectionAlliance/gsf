@@ -89,7 +89,7 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                return m_allowedRoles ?? new string[] { "Administrator" };
+                return m_allowedRoles ?? new[] { "Administrator" };
             }
         }
 
