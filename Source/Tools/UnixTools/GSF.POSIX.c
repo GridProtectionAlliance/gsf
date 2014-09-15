@@ -21,14 +21,23 @@
 //
 //******************************************************************************************************
 
+// This will create a shared object for needed GSF functions
+
 //  Compiling for Linux:
 //
-//		Get PAM development libraries, e.g., for Ubuntu: apt-get install libpam0g-dev
+//	Get PAM development libraries, e.g., for Ubuntu: apt-get install libpam0g-dev
 //
+//	To compile to an object library
 //      gcc -c -Wall -Werror -fpic GSF.POSIX.c
-//      gcc -shared -o GSF.POSIX.so GSF.POSIX.o -lpam -lpam_misc
+//
+//	To compile as a shared object
+//      gcc -shared -o GSF.POSIX.so GSF.POSIX.o -lpam -lpam_misc -lcrypt
+//
+//	To deploy, copy to user libraries folder
+//		sudo cp GSF.POSIX.so /usr/lib/
 //
 
+#include <stdlib.h>
 #include <security/pam_appl.h>
 #include <security/pam_misc.h>
 #include <sys/types.h>
@@ -39,26 +48,14 @@
 #include <grp.h>
 #include <shadow.h>
 #include <crypt.h>
-
-// Structure used to return key spwd information
-struct UserPasswordInformation
-{
-	// Do not include any pointer types in this structure
-	// to keep marshaling into .NET simple
-	long lastChangeDate;
-	long minDaysForChange;
-	long maxDaysForChange;
-	long warningDays;
-	long inactivityDays;
-	long accountExpirationDate;
-};
+#include "GSF.POSIX.h"
 
 // Define custom PAM conversation function for authentication
 int AuthenticateConveration(int num_msg, const struct pam_message** msg, struct pam_response** resp, void* appdata_ptr)
 {
 	const struct pam_message* message = *msg;
 
-	if (num_msg == 1 && message->msg != NULL && message->msg_style == PAM_PROMPT_ECHO_ON)
+	if (num_msg == 1 && message->msg != NULL && message->msg_style == PAM_PROMPT_ECHO_OFF)
 	{
 		// Provide password for the PAM conversation response that was passed into appdata_ptr
 		struct pam_response* reply = (struct pam_response*)malloc(sizeof(struct pam_response));
@@ -139,8 +136,8 @@ int AuthenticateUser(const char* userName, const char* password)
 	pam_handle_t* pamh; 
 	int retval;
 
-	// Start PAM - just associate with something simple like the "whoami" command
-	retval = pam_start("whoami", userName, &pamc, &pamh);
+	// Start PAM - just associate with something simple like the "passwd" command
+	retval = pam_start("gsf", userName, &pamc, &pamh);
 
 	if (retval == PAM_SUCCESS)
 	{

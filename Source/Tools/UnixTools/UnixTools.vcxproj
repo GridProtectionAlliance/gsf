@@ -11,9 +11,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="gsf.c" />
     <ClCompile Include="GSF.POSIX.c">
       <DeploymentContent>false</DeploymentContent>
     </ClCompile>
+    <ClCompile Include="test.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GSF.POSIX.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{63AF9800-2CDE-41F7-9706-76EF0AE181CE}</ProjectGuid>

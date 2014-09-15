@@ -74,9 +74,6 @@ namespace GSF.Console
 
                 m_process.OutputDataReceived += m_process_OutputDataReceived;
                 m_process.ErrorDataReceived += m_process_ErrorDataReceived;
-
-                m_process.BeginOutputReadLine();
-                m_process.BeginErrorReadLine();
             }
 
             /// <summary>
@@ -170,6 +167,9 @@ namespace GSF.Console
             {
                 m_process.Start();
 
+                m_process.BeginOutputReadLine();
+                m_process.BeginErrorReadLine();
+
                 if (!m_process.WaitForExit(timeout))
                 {
                     m_process.CancelOutputRead();
@@ -183,12 +183,12 @@ namespace GSF.Console
 
             private void m_process_OutputDataReceived(object sender, DataReceivedEventArgs e)
             {
-                m_standardOutput.Append(e.Data);
+                m_standardOutput.AppendLine(e.Data);
             }
 
             private void m_process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
             {
-                m_standardError.Append(e.Data);
+                m_standardError.AppendLine(e.Data);
             }
 
             #endregion

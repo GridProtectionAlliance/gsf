@@ -21,6 +21,9 @@
 //
 //******************************************************************************************************
 
+// Undefine to use internally linked unmanaged functions (e.g., when Mono hosted in gsf service)
+#define USE_SHARED_OBJECT
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -44,6 +47,12 @@ namespace GSF.Identity
     // Unix implementation of key UserInfo class elements
     internal class UnixUserInfo : IUserInfo
     {
+#if USE_SHARED_OBJECT
+        private const string IMPORT = "GSF.POSIX.so";
+#else
+        private const string IMPORT = "__Internal";
+#endif
+
         #region [ Members ]
 
         // Nested Types
@@ -450,7 +459,7 @@ namespace GSF.Identity
                 if (!m_isLocalAccount)
                     return GetUserPropertyValueCollection("memberOf");
 
-                return new string[0];
+                return LocalGroups;
             }
         }
 
@@ -481,6 +490,9 @@ namespace GSF.Identity
 
                 if (string.IsNullOrWhiteSpace(userName))
                     return m_parent.UserName;
+
+                if (userName.Contains(","))
+                    userName = userName.Split(',')[0];
 
                 return userName;
             }
@@ -1271,51 +1283,51 @@ namespace GSF.Identity
         #endregion
 
         // AuthenticateUser function is PAM based, so it will support more than local users
-        [DllImport("GSF.POSIX.so")]
+        [DllImport(IMPORT)]
         private static extern int AuthenticateUser(string userName, string password);
 
         // ChangeUserPassword function is PAM based, so it will support more than local users
-        [DllImport("GSF.POSIX.so")]
+        [DllImport(IMPORT)]
         private static extern int ChangeUserPassword(string userName, string oldPassword, string newPassword);
 
-        [DllImport("GSF.POSIX.so")]
+        [DllImport(IMPORT)]
         private static extern int GetLocalUserID(string userName, out uint userID);
 
         // Preallocate outbound userName to 256 characters
-        [DllImport("GSF.POSIX.so")]
+        [DllImport(IMPORT)]
         private static extern int GetLocalUserName(uint uid, StringBuilder userName);
 
         // Returns a char* that needs to marshaled to a .NET string
-        [DllImport("GSF.POSIX.so")]
+        [DllImport(IMPORT)]
         private static extern IntPtr GetLocalUserGecos(string userName);
 
         // UserPasswordInformation structure contains only blittable types so it will be marshaled by reference 
-        [DllImport("GSF.POSIX.so")]
+        [DllImport(IMPORT)]
         private static extern int GetLocalUserPasswordInformation(string userName, UserPasswordInformation userPasswordInfo, out AccountStatus status);
 
-        [DllImport("GSF.POSIX.so")]
+        [DllImport(IMPORT)]
         private static extern int SetLocalUserPassword(string userName, string password, string salt);
 
         // Returns a char* that needs to be marshaled to a .NET string
-        [DllImport("GSF.POSIX.so")]
+        [DllImport(IMPORT)]
         private static extern IntPtr GetPasswordHash(string password, string salt);
 
-        [DllImport("GSF.POSIX.so")]
+        [DllImport(IMPORT)]
         private static extern int GetLocalUserGroupCount(string userName);
 
         // Preallocate groupIDs as an unsigned integer array sized from GetLocalUserGroupCount
-        [DllImport("GSF.POSIX.so")]
+        [DllImport(IMPORT)]
         private static extern int GetLocalUserGroupIDs(string userName, int groupCount, ref uint[] groupsIDs);
 
-        [DllImport("GSF.POSIX.so")]
+        [DllImport(IMPORT)]
         private static extern int GetLocalGroupID(string groupName, out uint groupID);
 
         // Preallocate outbound userName to 256 characters
-        [DllImport("GSF.POSIX.so")]
+        [DllImport(IMPORT)]
         private static extern int GetLocalGroupName(uint uid, StringBuilder groupName);
 
         // Returns a char** that needs to be marshaled to a .NET string array
-        [DllImport("GSF.POSIX.so")]
+        [DllImport(IMPORT)]
         private static extern IntPtr GetLocalGroupMembers(string groupName);
 
         #endregion

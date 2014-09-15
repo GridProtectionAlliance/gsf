@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Principal;
-using System.Text;
-using System.Threading.Tasks;
 using GSF.Collections;
 using GSF.Identity;
 
@@ -40,10 +36,10 @@ namespace UserInfoTest
             Console.WriteLine("Current user: " + info.LoginID);
 
             Console.WriteLine("Attempting initialization...");
-            
+
             info.Initialize();
 
-            Console.WriteLine("Groups: " + info.LocalGroups.ToDelimitedString());
+            Console.WriteLine("Groups: " + info.Groups.ToDelimitedString());
 
             Console.WriteLine("Next password change date: " + info.NextPasswordChangeDate);
 

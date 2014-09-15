@@ -18,5 +18,16 @@
     <ClCompile Include="GSF.POSIX.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="gsf.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GSF.POSIX.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
