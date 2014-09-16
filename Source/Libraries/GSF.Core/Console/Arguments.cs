@@ -163,7 +163,7 @@ namespace GSF.Console
             //   /param4=happy -param5 '--=nice=--'
             string[] args = ParseCommand(m_commandLine);
 
-            if (skipFirstArgument && args.Length > 0)
+            if (skipFirstArgument && args.Length > 1)
                 args = args.Copy(1, args.Length - 1);
 
             foreach (string arg in args)
