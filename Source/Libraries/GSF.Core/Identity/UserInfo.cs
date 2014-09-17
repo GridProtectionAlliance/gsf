@@ -205,7 +205,6 @@ namespace GSF.Identity
         private bool m_persistSettings;
         private string m_settingsCategory;
         private int m_userAccountControl;
-        private bool m_enabled;
         private bool m_disposed;
 
         internal string m_privilegedDomain;
@@ -264,6 +263,10 @@ namespace GSF.Identity
             }
 
             m_ldapPath = ldapPath;
+
+            // Initialize default settings
+            m_persistSettings = DefaultPersistSettings;
+            m_settingsCategory = DefaultSettingsCategory;
             m_userAccountControl = -1;
 
             if (Common.IsPosixEnvironment)
@@ -288,11 +291,11 @@ namespace GSF.Identity
         {
             get
             {
-                return m_enabled;
+                return m_userInfo.Enabled;
             }
             set
             {
-                m_enabled = value;
+                m_userInfo.Enabled = value;
             }
         }
 
@@ -470,7 +473,7 @@ namespace GSF.Identity
         {
             get
             {
-                if (m_enabled && m_userAccountControl == -1)
+                if (m_userInfo.Enabled && m_userAccountControl == -1)
                 {
                     if (m_userInfo.IsLocalAccount)
                     {
@@ -841,7 +844,6 @@ namespace GSF.Identity
                 }
                 finally
                 {
-                    m_enabled = false;  // Mark as disabled.
                     m_disposed = true;  // Prevent duplicate dispose.
 
                     if (Disposed != null)

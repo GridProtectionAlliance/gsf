@@ -263,6 +263,18 @@ namespace GSF.Identity
             }
         }
 
+        public bool Enabled
+        {
+            get
+            {
+                return m_enabled;
+            }
+            set
+            {
+                m_enabled = value;
+            }
+        }
+
         public DateTime LastLogon
         {
             get

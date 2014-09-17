@@ -53,6 +53,15 @@ namespace GSF.Identity
         }
 
         /// <summary>
+        /// Gets or sets enabled state.
+        /// </summary>
+        bool Enabled
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets the last login time of the user.
         /// </summary>
         DateTime LastLogon
