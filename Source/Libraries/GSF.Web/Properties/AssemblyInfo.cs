@@ -59,4 +59,4 @@ using GSF.Web.Hosting;
 [assembly: WebResource("GSF.Web.Embedded.Images.GSFLogo.png", "img/png")]
 [assembly: WebResource("GSF.Web.Embedded.Images.Help.png", "img/png")]
 [assembly: WebResource("GSF.Web.Embedded.Images.Warning.png", "img/png")]
-[assembly: WebResource("GSf.Web.Embedded.Styles.SecurityPortal.css", "text/css")]
+[assembly: WebResource("GSF.Web.Embedded.Styles.SecurityPortal.css", "text/css")]
