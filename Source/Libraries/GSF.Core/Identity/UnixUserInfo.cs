@@ -21,14 +21,17 @@
 //
 //******************************************************************************************************
 
-// Undefine to use internally linked unmanaged functions (e.g., when Mono hosted in gsf service)
-#define USE_SHARED_OBJECT
+// Define USE_SHARED_OBJECT to use GSF.POSIX.so shared object library for unmanaged functions
+// Undefine USE_SHARED_OBJECT to use internally linked unmanaged functions (e.g., Mono hosted gsf service)
+
+// #define USE_SHARED_OBJECT
+#undef USE_SHARED_OBJECT
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.Principal;
@@ -47,38 +50,35 @@ namespace GSF.Identity
     // Unix implementation of key UserInfo class elements
     internal class UnixUserInfo : IUserInfo
     {
-#if USE_SHARED_OBJECT
-        private const string IMPORT = "GSF.POSIX.so";
-#else
-        private const string IMPORT = "__Internal";
-#endif
-
         #region [ Members ]
 
         // Nested Types
-
-        internal class UnixSecurityIdentity : WindowsIdentity
+        private class UnixIdentity : WindowsIdentity
         {
             #region [ Members ]
 
             // Fields
-            private readonly string m_providerType;
-            private readonly LdapConnection m_connection;
+            private LdapConnection m_connection;
+            private string m_providerType;
+            private string m_ldapRoot;
+            private readonly bool m_loadedUserPasswordInformation;
+            private readonly UserPasswordInformation m_userPasswordInformation;
+            private readonly AccountStatus m_accountStatus;
 
             #endregion
 
             #region [ Constructors ]
 
-            public UnixSecurityIdentity(string userName)
-                : this(userName, null)
-            {
-            }
-
-            public UnixSecurityIdentity(string userName, LdapConnection connection)
+            public UnixIdentity(string userName, LdapConnection connection = null)
                 : base(GetUserIDAsToken(userName), null, WindowsAccountType.Normal, true)
             {
-                m_providerType = (object)connection == null ? "PAM" : "LDAP";
-                m_connection = connection;
+                Connection = connection;
+
+                // Cache shadow information before possible reduction in privileges
+                if (GetLocalUserPasswordInformation(userName, ref m_userPasswordInformation, out m_accountStatus) == 0)
+                    m_loadedUserPasswordInformation = true;
+                else
+                    m_accountStatus = AccountStatus.Disabled;
             }
 
             #endregion
@@ -93,11 +93,74 @@ namespace GSF.Identity
                 }
             }
 
+            public string LdapRoot
+            {
+                get
+                {
+                    return m_ldapRoot;
+                }
+            }
+
             public LdapConnection Connection
             {
                 get
                 {
                     return m_connection;
+                }
+                set
+                {
+                    m_connection = value;
+                    m_providerType = (object)m_connection == null ? "PAM_LOCAL" : "PAM_LDAP";
+
+                    if ((object)m_connection != null)
+                    {
+                        // Extract LDAP root distinguished name
+                        StringBuilder ldapRoot = new StringBuilder();
+                        string[] elements = m_connection.GetSchemaDN().Split(',');
+
+                        for (int i = 0; i < elements.Length; i++)
+                        {
+                            string element = elements[i].Trim();
+
+                            if (element.StartsWith("DC", StringComparison.OrdinalIgnoreCase))
+                            {
+                                if (ldapRoot.Length > 0)
+                                    ldapRoot.Append(',');
+
+                                ldapRoot.Append(element);
+                            }
+                        }
+
+                        m_ldapRoot = ldapRoot.ToString();
+                    }
+                    else
+                    {
+                        m_ldapRoot = "";
+                    }
+                }
+            }
+
+            public bool LoadedUserPasswordInformation
+            {
+                get
+                {
+                    return m_loadedUserPasswordInformation;
+                }
+            }
+
+            public UserPasswordInformation UserPasswordInformation
+            {
+                get
+                {
+                    return m_userPasswordInformation;
+                }
+            }
+
+            public AccountStatus AccountStatus
+            {
+                get
+                {
+                    return m_accountStatus;
                 }
             }
 
@@ -108,7 +171,7 @@ namespace GSF.Identity
             private static IntPtr GetUserIDAsToken(string userName)
             {
                 uint userID;
-                return GetLocalUserID(userName, out userID) == 0 ? new IntPtr((long)userID) : IntPtr.Zero;
+                return GetLocalUserID(userName, out userID) == 0 ? new IntPtr(userID) : IntPtr.Zero;
             }
 
             #endregion
@@ -162,6 +225,13 @@ namespace GSF.Identity
 
         // Constants
         private const int MaxAccountNameLength = 256;
+
+        // DllImport code is in GSF.POSIX.c
+#if USE_SHARED_OBJECT
+        private const string ImportFileName = "GSF.POSIX.so";
+#else
+        private const string ImportFileName = "__Internal";
+#endif
 
         // Fields
         private readonly UserInfo m_parent;
@@ -293,13 +363,13 @@ namespace GSF.Identity
                             {
                                 string[] lines = response.StandardOutput.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 
-                                if (lines.Length > 1 && lines[1].Length > 43)
-                                    DateTime.TryParseExact(lines[1].Substring(43), "ddd MMM d HH:mm:ss zzff yyyy", CultureInfo.InvariantCulture, DateTimeStyles.AllowInnerWhite, out lastLogon);
+                                if (lines.Length < 2 || lines[1].Length < 44 || !DateTime.TryParseExact(lines[1].Substring(43), "ddd MMM d HH:mm:ss zzff yyyy", CultureInfo.InvariantCulture, DateTimeStyles.AllowInnerWhite, out lastLogon))
+                                    lastLogon = DateTime.MinValue;
                             }
-                        }
-                        else
-                        {
-                            lastLogon = DateTime.FromFileTime(long.Parse(GetUserPropertyValue("lastLogon")));
+                            else
+                            {
+                                lastLogon = DateTime.FromFileTime(long.Parse(GetUserPropertyValue("lastLogon")));
+                            }
                         }
                     }
                     catch
@@ -323,9 +393,14 @@ namespace GSF.Identity
                     try
                     {
                         if (m_isLocalAccount)
+                        {
                             creationDate = Directory.GetCreationTime("/home/" + m_parent.UserName);
+                        }
                         else
-                            creationDate = Convert.ToDateTime(GetUserPropertyValue("whenCreated"));
+                        {
+                            if (!DateTime.TryParseExact(GetUserPropertyValue("whenCreated"), "yyyyMMddHHmmss.fZ", CultureInfo.InvariantCulture, DateTimeStyles.AllowInnerWhite | DateTimeStyles.AssumeUniversal, out creationDate))
+                                creationDate = DateTime.MinValue;
+                        }
                     }
                     catch
                     {
@@ -347,10 +422,10 @@ namespace GSF.Identity
                 {
                     if (m_isLocalAccount)
                     {
-                        UserPasswordInformation userPasswordInfo = new UserPasswordInformation();
+                        UserPasswordInformation userPasswordInfo;
                         AccountStatus status;
 
-                        if (GetLocalUserPasswordInformation(m_parent.UserName, userPasswordInfo, out status) == 0)
+                        if (GetPasswordInformation(m_parent.UserName, out userPasswordInfo, out status) == 0)
                         {
                             if (userPasswordInfo.maxDaysForChange >= 99999)
                             {
@@ -383,7 +458,7 @@ namespace GSF.Identity
                                 long maxPasswordAge = MaximumPasswordAge;
 
                                 // Ignore extremes
-                                if (maxPasswordAge != long.MaxValue)
+                                if (maxPasswordAge != long.MaxValue && maxPasswordAge > 0)
                                     passwordChangeDate = DateTime.FromFileTime(passwordSetOn).AddDays(TimeSpan.FromTicks(maxPasswordAge).Duration().Days);
                             }
                         }
@@ -406,10 +481,10 @@ namespace GSF.Identity
 
                 if (m_enabled && m_isLocalAccount)
                 {
-                    UserPasswordInformation userPasswordInfo = new UserPasswordInformation();
+                    UserPasswordInformation userPasswordInfo;
                     AccountStatus status;
 
-                    if (GetLocalUserPasswordInformation(m_parent.UserName, userPasswordInfo, out status) == 0)
+                    if (GetPasswordInformation(m_parent.UserName, out userPasswordInfo, out status) == 0)
                     {
                         userAccountControl = 0;
 
@@ -443,7 +518,7 @@ namespace GSF.Identity
                         UserPasswordInformation userPasswordInfo = new UserPasswordInformation();
                         AccountStatus status;
 
-                        if (GetLocalUserPasswordInformation(m_parent.UserName, userPasswordInfo, out status) == 0 && userPasswordInfo.maxDaysForChange < 99999)
+                        if (GetLocalUserPasswordInformation(m_parent.UserName, ref userPasswordInfo, out status) == 0 && userPasswordInfo.maxDaysForChange < 99999)
                             maxPasswordAge = Ticks.FromSeconds(userPasswordInfo.maxDaysForChange * Time.SecondsPerDay);
                     }
                     else
@@ -469,7 +544,14 @@ namespace GSF.Identity
             get
             {
                 if (!m_isLocalAccount)
-                    return GetUserPropertyValueCollection("memberOf");
+                {
+                    List<string> groups = new List<string>();
+                    string[] dnGroups = GetUserPropertyValueCollection("memberOf");
+
+                    // TODO: Validate DC is correct - if so, prefix with domainName\, else for other domains: cn@dc.dc.dc
+
+                    // Convert distinguished names to AD style group names
+                }
 
                 return LocalGroups;
             }
@@ -584,7 +666,7 @@ namespace GSF.Identity
                 {
                     WindowsImpersonationContext currentContext = null;
 
-                    // Initialize the directory entry object used to retrieve active directory information
+                    // Initialize the LdapEntry object used to retrieve LDAP user attributes
                     try
                     {
                         // Impersonate to the privileged account if specified
@@ -592,19 +674,29 @@ namespace GSF.Identity
 
                         // Pick up current user or impersonated user principal
                         WindowsPrincipal principal = Thread.CurrentPrincipal as WindowsPrincipal;
+                        string ldapRoot = "";
 
                         if ((object)principal != null)
                         {
-                            UnixSecurityIdentity identity = principal.Identity as UnixSecurityIdentity;
+                            UnixIdentity identity = principal.Identity as UnixIdentity;
 
-                            // If user has already been authenticated so we can make some initial assumptions
+                            // If domain user has already been authenticated, we should already have an active LDAP connection
                             if ((object)identity != null)
+                            {
                                 m_connection = identity.Connection;
+                                ldapRoot = identity.LdapRoot;
+                            }
                         }
 
                         if ((object)m_connection != null)
                         {
-                            LdapSearchResults results = m_connection.Search("", LdapConnection.SCOPE_ONE, string.Format("(SAMAccountName={0})", m_parent.UserName), null, false);
+                            // Search for user by account name starting at root and moving through hierarchy recursively
+                            LdapSearchResults results = m_connection.Search(
+                                ldapRoot,
+                                LdapConnection.SCOPE_SUB,
+                                string.Format("(&(objectCategory=person)(objectClass=user)(sAMAccountName={0}))", m_parent.UserName),
+                                null,
+                                false);
 
                             if (results.hasMore())
                             {
@@ -660,21 +752,9 @@ namespace GSF.Identity
                 if (!m_enabled)
                     return null;
 
+                // Return requested LDAP property value
                 if ((object)m_userEntry != null)
-                {
-                    // Return requested Active Directory property value
-                    LdapAttributeSet attributeSet = m_userEntry.getAttributeSet();
-
-                    IEnumerator enumerator = attributeSet.GetEnumerator();
-
-                    while (enumerator.MoveNext())
-                    {
-                        LdapAttribute attribute = (LdapAttribute)enumerator.Current;
-
-                        if (attribute.Name.Equals(propertyName))
-                            return attribute.StringValueArray;
-                    }
-                }
+                    return m_userEntry.getAttributeSet().getAttribute(propertyName).StringValueArray;
             }
             catch
             {
@@ -686,10 +766,10 @@ namespace GSF.Identity
 
         public string GetUserPropertyValue(string propertyName)
         {
-            string[] values = GetUserPropertyValueCollection(propertyName);
+            string[] value = GetUserPropertyValueCollection(propertyName);
 
-            if ((object)values != null && values.Length > 0)
-                return values[0].Replace("  ", " ").Trim();
+            if ((object)value != null && value.Length > 0)
+                return value[0].Replace("  ", " ").Trim();
 
             return string.Empty;
         }
@@ -720,15 +800,45 @@ namespace GSF.Identity
         {
             get
             {
+                int retval;
+
                 try
                 {
-                    // TODO: Following command checks for SAMBA style AD connection, may need to check Likewise, others? Is Mac different?
-                    return Command.Execute("wbinfo", "-t").ExitCode == 0;
+                    // Check Winbind / Samba
+                    retval = Command.Execute("wbinfo", "-t").ExitCode;
                 }
                 catch
                 {
-                    return false;
+                    retval = 1;
                 }
+
+                if (retval != 0)
+                {
+                    try
+                    {
+                        // Check Centrify DirectControl Express
+                        retval = Command.Execute("adinfo").ExitCode;
+                    }
+                    catch
+                    {
+                        retval = 1;
+                    }
+                }
+
+                if (retval != 0)
+                {
+                    try
+                    {
+                        // Check LikewiseOpen / Beyond Trust
+                        retval = Command.Execute("lw-get-status").ExitCode;
+                    }
+                    catch
+                    {
+                        retval = 1;
+                    }
+                }
+
+                return retval == 0;
             }
         }
 
@@ -749,7 +859,7 @@ namespace GSF.Identity
                 responseCode = AuthenticateUser(username, password);
 
                 if (responseCode == 0)
-                    principal = new WindowsPrincipal(new UnixSecurityIdentity(username));
+                    principal = new WindowsPrincipal(new UnixIdentity(username));
                 else
                     errorMessage = string.Format("Failed to authenticate \"{0}\": {1}", username, GetPAMErrorMessage(responseCode));
             }
@@ -761,42 +871,48 @@ namespace GSF.Identity
                 responseCode = AuthenticateUser(domainUserName, password);
 
                 if (responseCode == 0)
+                    principal = new WindowsPrincipal(new UnixIdentity(domainUserName));
+
+                string ldapPath = GetLdapPath();
+
+                // If LDAP path cannot be determined, no LdapConnection can be established  - if authentication
+                // succeeded, user will be treated as a local user
+                if ((object)ldapPath == null)
                 {
-                    principal = new WindowsPrincipal(new UnixSecurityIdentity(domainUserName));
+                    if ((object)principal == null)
+                        errorMessage = string.Format("Failed to authenticate \"{0}\": {1}", domainUserName, GetPAMErrorMessage(responseCode));
+                    else
+                        errorMessage = string.Format("User authentication succeeded, but no LDAP path could be derived.");
+
+                    return principal;
                 }
-                else
+
+                try
                 {
-                    // Attempt to derive an LDAP path from the configuration for known security providers
-                    string ldapPath = GetLdapPath();
+                    // Attempt LDAP account authentication                    
+                    LdapConnection connection = new LdapConnection();
 
-                    if ((object)ldapPath == null)
-                        return null;
-
-                    try
+                    if (ldapPath.StartsWith("LDAP", StringComparison.OrdinalIgnoreCase))
                     {
-                        // Attempt LDAP account authentication
-                        LdapConnection connection = new LdapConnection();
-                        int port = 389;
-
-                        if (ldapPath.Contains(":"))
-                        {
-                            string[] parts = ldapPath.Split(':');
-
-                            if (int.TryParse(parts[1].ToNonNullNorWhiteSpace("389").Trim(), out port))
-                                ldapPath = parts[0];
-                            else
-                                port = 389;
-                        }
-
-                        connection.Connect(ldapPath, port);
-                        connection.Bind(domainUserName, password);
-
-                        principal = new WindowsPrincipal(new UnixSecurityIdentity(domainUserName, connection));
+                        Uri ldapURI = new Uri(ldapPath);
+                        ldapPath = ldapURI.Host + (ldapURI.Port == 0 ? "" : ":" + ldapURI.Port);
                     }
-                    catch (Exception ex)
-                    {
+
+                    // If host LDAP path contains suffixed port number, this will be preferred over specified 389 default
+                    connection.Connect(ldapPath, 389);
+                    connection.Bind(string.Format("{0}@{1}", username, domain), password);
+
+                    if ((object)principal == null)
+                        principal = new WindowsPrincipal(new UnixIdentity(domainUserName, connection));
+                    else
+                        ((UnixIdentity)principal.Identity).Connection = connection;
+                }
+                catch (Exception ex)
+                {
+                    if (responseCode == 0)
+                        errorMessage = string.Format("User authentication succeeded, but LDAP connection failed. LDAP response: {0}", ex.Message);
+                    else
                         errorMessage = string.Format("LDAP response: {0}{1}PAM response: {2}", ex.Message, Environment.NewLine, GetPAMErrorMessage(responseCode));
-                    }
                 }
             }
 
@@ -805,39 +921,39 @@ namespace GSF.Identity
 
         private static string GetLdapPath()
         {
-            string ldapPath;
+            string ldapPath = null;
 
+            // Attempt to derive an LDAP path from a Samba configuration @ /etc/samba/smb.conf looking for key "realm"
             try
             {
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings["SecurityProvider"];
+                const string smbConfFileName = "/etc/samba/smb.conf";
 
-                // Attempt to get LDAP path defined by AdoSecurityProvider
-                try
+                if (File.Exists(smbConfFileName))
                 {
-                    // In AdoSecurityProvider the ConnectionString setting is used for database connection
-                    // to load role based security -- so it adds a new setting for actual LdapPath
-                    ldapPath = settings["LdapPath"].Value;
-                }
-                catch
-                {
-                    ldapPath = null;
-                }
+                    string line;
 
-                // Otherwise, attempt to get LDAP path defined by LdapSecurityProvider
-                if ((object)ldapPath == null)
-                {
-                    string ldapConnectionString = settings["ConnectionString"].Value;
-
-                    if (ldapConnectionString.StartsWith("LDAP://", StringComparison.OrdinalIgnoreCase) ||
-                        ldapConnectionString.StartsWith("LDAPS://", StringComparison.OrdinalIgnoreCase))
-                        ldapPath = ldapConnectionString;
-
-                    foreach (KeyValuePair<string, string> pair in ldapConnectionString.ParseKeyValuePairs())
+                    using (StreamReader smbConf = File.OpenText(smbConfFileName))
                     {
-                        if (pair.Value.StartsWith("LDAP://", StringComparison.OrdinalIgnoreCase) ||
-                            pair.Value.StartsWith("LDAPS://", StringComparison.OrdinalIgnoreCase))
-                            ldapPath = pair.Value;
+                        do
+                        {
+                            line = smbConf.ReadLine();
+
+                            if (!string.IsNullOrEmpty(line))
+                            {
+                                line = line.Trim();
+
+                                if (line.StartsWith("realm", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    string[] parts = line.Split('=');
+
+                                    if (parts.Length > 1)
+                                        ldapPath = parts[1].Trim();
+
+                                    break;
+                                }
+                            }
+                        }
+                        while ((object)line != null);
                     }
                 }
             }
@@ -846,24 +962,166 @@ namespace GSF.Identity
                 ldapPath = null;
             }
 
+            // If LDAP path has not been derived yet, attempt to derive an LDAP path from an OpenLDAP configuration @ /etc/openldap/ldap.conf looking for key "URI"
+            if (string.IsNullOrEmpty(ldapPath))
+            {
+                try
+                {
+                    const string ldapConfFileName = "/etc/openldap/ldap.conf";
+
+                    if (File.Exists(ldapConfFileName))
+                    {
+                        string line;
+
+                        using (StreamReader ldapConf = File.OpenText(ldapConfFileName))
+                        {
+                            do
+                            {
+                                line = ldapConf.ReadLine();
+
+                                if (!string.IsNullOrEmpty(line))
+                                {
+                                    line = line.Trim();
+
+                                    if (line.StartsWith("URI", StringComparison.OrdinalIgnoreCase) && line.Length > 3)
+                                    {
+                                        ldapPath = line.Substring(3).Trim();
+                                        break;
+                                    }
+                                }
+                            }
+                            while ((object)line != null);
+                        }
+                    }
+                }
+                catch
+                {
+                    ldapPath = null;
+                }
+            }
+
+            // If LDAP path has not been derived yet, attempt to derive an LDAP path from a Centrify DirectControl Express adinfo call looking for key "Joined to domain:"
+            if (string.IsNullOrEmpty(ldapPath))
+            {
+                try
+                {
+                    string line;
+
+                    using (StreamReader ldapConf = new StreamReader(new MemoryStream(Encoding.Default.GetBytes(Command.Execute("adinfo").StandardOutput))))
+                    {
+                        do
+                        {
+                            line = ldapConf.ReadLine();
+
+                            if (!string.IsNullOrEmpty(line))
+                            {
+                                line = line.Trim();
+
+                                if (line.StartsWith("Joined to domain:", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    string[] parts = line.Split(':');
+
+                                    if (parts.Length > 1)
+                                        ldapPath = parts[1].Trim();
+
+                                    break;
+                                }
+                            }
+                        }
+                        while ((object)line != null);
+                    }
+                }
+                catch
+                {
+                    ldapPath = null;
+                }
+            }
+
+            // If LDAP path has not been derived yet, attempt to derive an LDAP path from a LikewiseOpen / Beyond Trust lw-get-status call looking for key "Domain:"
+            if (string.IsNullOrEmpty(ldapPath))
+            {
+                try
+                {
+                    string line;
+
+                    using (StreamReader ldapConf = new StreamReader(new MemoryStream(Encoding.Default.GetBytes(Command.Execute("lw-get-status").StandardOutput))))
+                    {
+                        do
+                        {
+                            line = ldapConf.ReadLine();
+
+                            if (!string.IsNullOrEmpty(line))
+                            {
+                                line = line.Trim();
+
+                                if (line.StartsWith("Domain:", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    string[] parts = line.Split(':');
+
+                                    if (parts.Length > 1)
+                                        ldapPath = parts[1].Trim();
+
+                                    break;
+                                }
+                            }
+                        }
+                        while ((object)line != null);
+                    }
+                }
+                catch
+                {
+                    ldapPath = null;
+                }
+            }
+
+            // If LDAP path has not been derived yet, attempt to derive an LDAP path from the configuration for known GSF security providers
+            if (string.IsNullOrEmpty(ldapPath))
+            {
+                try
+                {
+                    ConfigurationFile config = ConfigurationFile.Current;
+                    CategorizedSettingsElementCollection settings = config.Settings["SecurityProvider"];
+
+                    // Attempt to get LDAP path defined by AdoSecurityProvider
+                    try
+                    {
+                        // In AdoSecurityProvider the ConnectionString setting is used for database connection
+                        // to load role based security -- so it adds a new setting for actual LdapPath
+                        ldapPath = settings["LdapPath"].Value;
+                    }
+                    catch
+                    {
+                        ldapPath = null;
+                    }
+
+                    // Otherwise, attempt to get LDAP path defined by LdapSecurityProvider
+                    if ((object)ldapPath == null)
+                    {
+                        string ldapConnectionString = settings["ConnectionString"].Value;
+
+                        if (ldapConnectionString.StartsWith("LDAP://", StringComparison.OrdinalIgnoreCase) ||
+                            ldapConnectionString.StartsWith("LDAPS://", StringComparison.OrdinalIgnoreCase))
+                            ldapPath = ldapConnectionString;
+
+                        foreach (KeyValuePair<string, string> pair in ldapConnectionString.ParseKeyValuePairs())
+                        {
+                            if (pair.Value.StartsWith("LDAP://", StringComparison.OrdinalIgnoreCase) ||
+                                pair.Value.StartsWith("LDAPS://", StringComparison.OrdinalIgnoreCase))
+                                ldapPath = pair.Value;
+                        }
+                    }
+                }
+                catch
+                {
+                    ldapPath = null;
+                }
+            }
+
             return ldapPath;
         }
 
         public static WindowsImpersonationContext ImpersonateUser(string domain, string userName, string password)
         {
-            // I was only able to get Mono WindowsImpersonationContext code to work under two conditions:
-            //      (1) Code has to be compiled with gmcs (i.e., Mono compiler)
-            //      (2) User requires CAP_SETUID rights (e.g., root) to impersonate
-            // Philosophically we would like to have GSF fully compiled under Windows then deployed under Mono to keep
-            // the build process simple, so a requirement to build with gmcs is currently precluded. Also, since the
-            // desired intention of this function is to emulate and possibly even elevate an existing user's rights as
-            // long as you have the right credentials, this function will not work exactly the same on Mono. However,
-            // the common use case for this function in GSF is to impersonate a user (such as a domain user) then
-            // attempt to initialize a UserInfo object for the user. For example, a local user would not necessarily
-            // be able to access the domain so the impersonation is required authenticate and then emulate the user
-            // so that the user's domain level information for the user can be requested. For this use case we can
-            // just set the thread's current principal to a custom security principal that has a reference the
-            // LdapConnection and/or local user data so the UnixUserInfo instance can use this during initialization:
             WindowsImpersonationContext context = null;
 
             string errorMessage;
@@ -871,14 +1129,29 @@ namespace GSF.Identity
 
             if ((object)principal != null)
             {
-                // We will attempt to impersonate ourselves as this should be allowed for any user,
-                // this way an impersonation context object will at least exist:
                 try
                 {
-                    WindowsIdentity current = WindowsIdentity.GetCurrent();
+                    uint userID;
 
-                    if ((object)current != null)
-                        context = WindowsIdentity.Impersonate(current.Token);
+                    // TODO: What to do if Linux stores mapped LDAP users as userName@domain? Format setting in config file?
+                    if (!UserInfo.IsLocalDomain(domain))
+                        userName = string.Format("{0}\\{1}", domain, userName);
+
+                    if (GetLocalUserID(userName, out userID) == 0)
+                    {
+                        // This requires that initial program load has root privileges
+                        context = WindowsIdentity.Impersonate(new IntPtr(userID));
+                    }
+                    else
+                    {
+                        // If we can't derive local user ID, we will attempt to impersonate ourselves
+                        // as this should be allowed for any user, this way an impersonation context
+                        // object will at least exist:
+                        WindowsIdentity current = WindowsIdentity.GetCurrent();
+
+                        if ((object)current != null)
+                            context = WindowsIdentity.Impersonate(current.Token);
+                    }
                 }
                 catch
                 {
@@ -886,7 +1159,8 @@ namespace GSF.Identity
                 }
 
                 // Set current thread principal to authenticated user principal - this creates a viable
-                // impersonation for the current thread, but not the entire application domain:
+                // impersonation with needed LdapConnection information available for the current thread,
+                // but not the entire application domain:
                 Thread.CurrentPrincipal = principal;
             }
 
@@ -1031,7 +1305,7 @@ namespace GSF.Identity
             try
             {
                 // See if user is in group
-                return GetGroupUserSet(groupName).Contains(userName);
+                return GetLocalGroupUserSet(groupName).Contains(userName);
             }
             catch (Exception ex)
             {
@@ -1052,7 +1326,7 @@ namespace GSF.Identity
             try
             {
                 // If user already exists in group, exit and return false
-                if (GetGroupUserSet(groupName).Contains(userName))
+                if (GetLocalGroupUserSet(groupName).Contains(userName))
                     return false;
 
                 // Add new user to group
@@ -1078,7 +1352,7 @@ namespace GSF.Identity
             try
             {
                 // If user exists in group, remove user and return true
-                if (GetGroupUserSet(groupName).Contains(userName))
+                if (GetLocalGroupUserSet(groupName).Contains(userName))
                 {
                     Command.Execute("gpasswd ", string.Format("-d {0} {1}", userName, groupName));
                     return true;
@@ -1092,9 +1366,33 @@ namespace GSF.Identity
             return false;
         }
 
-        private static HashSet<string> GetGroupUserSet(string groupName)
+        public static string[] GetLocalGroupUserList(string groupName)
         {
-            return new HashSet<string>(PtrToStringArray(GetLocalGroupMembers(groupName)), StringComparer.InvariantCulture);
+            // Determine if local group exists
+            if (!LocalGroupExists(groupName))
+                throw new InvalidOperationException(string.Format("Cannot get members for local group \"{0}\": group does not exist.", groupName));
+
+            return GetLocalGroupUserSet(groupName).ToArray();
+        }
+
+        // A HashSet is used to ensure a unique list since there can be membership overlap in primary and secondary groups
+        private static HashSet<string> GetLocalGroupUserSet(string groupName)
+        {
+            IntPtr groupMembers;
+
+            if (GetLocalGroupMembers(groupName, out groupMembers) == 0)
+            {
+                try
+                {
+                    return new HashSet<string>(PtrToStringArray(groupMembers), StringComparer.InvariantCulture);
+                }
+                finally
+                {
+                    FreeLocalGroupMembers(groupMembers);
+                }
+            }
+
+            return new HashSet<string>();
         }
 
         public static string UserNameToSID(string userName)
@@ -1203,6 +1501,28 @@ namespace GSF.Identity
             return groups.ToArray();
         }
 
+        private static int GetPasswordInformation(string userName, out UserPasswordInformation userPasswordInformation, out AccountStatus accountStatus)
+        {
+            // Attempt to pick up Unix user principal identity in case shadow information has already been parsed
+            WindowsPrincipal principal = Thread.CurrentPrincipal as WindowsPrincipal;
+
+            if ((object)principal != null)
+            {
+                UnixIdentity identity = principal.Identity as UnixIdentity;
+
+                // If user has already been authenticated, we can load pre-parsed shadow information
+                if ((object)identity != null && identity.LoadedUserPasswordInformation)
+                {
+                    userPasswordInformation = identity.UserPasswordInformation;
+                    accountStatus = identity.AccountStatus;
+                    return 0;
+                }
+            }
+
+            userPasswordInformation = new UserPasswordInformation();
+            return GetLocalUserPasswordInformation(userName, ref userPasswordInformation, out accountStatus);
+        }
+
         private static string GetPAMErrorMessage(int responseCode)
         {
             if (Enum.IsDefined(typeof(PAMResponseCode), responseCode))
@@ -1295,52 +1615,55 @@ namespace GSF.Identity
         #endregion
 
         // AuthenticateUser function is PAM based, so it will support more than local users
-        [DllImport(IMPORT)]
+        [DllImport(ImportFileName)]
         private static extern int AuthenticateUser(string userName, string password);
 
         // ChangeUserPassword function is PAM based, so it will support more than local users
-        [DllImport(IMPORT)]
+        [DllImport(ImportFileName)]
         private static extern int ChangeUserPassword(string userName, string oldPassword, string newPassword);
 
-        [DllImport(IMPORT)]
+        [DllImport(ImportFileName)]
         private static extern int GetLocalUserID(string userName, out uint userID);
 
         // Preallocate outbound userName to 256 characters
-        [DllImport(IMPORT)]
+        [DllImport(ImportFileName)]
         private static extern int GetLocalUserName(uint uid, StringBuilder userName);
 
         // Returns a char* that needs to marshaled to a .NET string
-        [DllImport(IMPORT)]
+        [DllImport(ImportFileName)]
         private static extern IntPtr GetLocalUserGecos(string userName);
 
-        // UserPasswordInformation structure contains only blittable types so it will be marshaled by reference 
-        [DllImport(IMPORT)]
-        private static extern int GetLocalUserPasswordInformation(string userName, UserPasswordInformation userPasswordInfo, out AccountStatus status);
+        [DllImport(ImportFileName)]
+        private static extern int GetLocalUserPasswordInformation(string userName, ref UserPasswordInformation userPasswordInfo, out AccountStatus status);
 
-        [DllImport(IMPORT)]
+        [DllImport(ImportFileName)]
         private static extern int SetLocalUserPassword(string userName, string password, string salt);
 
         // Returns a char* that needs to be marshaled to a .NET string
-        [DllImport(IMPORT)]
+        [DllImport(ImportFileName)]
         private static extern IntPtr GetPasswordHash(string password, string salt);
 
-        [DllImport(IMPORT)]
+        [DllImport(ImportFileName)]
         private static extern int GetLocalUserGroupCount(string userName);
 
         // Preallocate groupIDs as an unsigned integer array sized from GetLocalUserGroupCount
-        [DllImport(IMPORT)]
+        [DllImport(ImportFileName)]
         private static extern int GetLocalUserGroupIDs(string userName, int groupCount, ref uint[] groupsIDs);
 
-        [DllImport(IMPORT)]
+        [DllImport(ImportFileName)]
         private static extern int GetLocalGroupID(string groupName, out uint groupID);
 
         // Preallocate outbound userName to 256 characters
-        [DllImport(IMPORT)]
+        [DllImport(ImportFileName)]
         private static extern int GetLocalGroupName(uint uid, StringBuilder groupName);
 
-        // Returns a char** that needs to be marshaled to a .NET string array
-        [DllImport(IMPORT)]
-        private static extern IntPtr GetLocalGroupMembers(string groupName);
+        // Parameter groupMembers is a char*** out parameter that needs to be marshaled into
+        // a .NET string array and must then be freed using FreeLocalGroupMembers function
+        [DllImport(ImportFileName)]
+        private static extern int GetLocalGroupMembers(string groupName, out IntPtr groupMembers);
+
+        [DllImport(ImportFileName)]
+        private static extern void FreeLocalGroupMembers(IntPtr groupMembers);
 
         #endregion
     }

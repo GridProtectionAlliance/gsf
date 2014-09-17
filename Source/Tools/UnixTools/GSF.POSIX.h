@@ -40,6 +40,8 @@ int ChangeUserPassword(const char* userName, const char* oldPassword, const char
 
 int GetLocalUserID(const char* userName, /*out*/ unsigned int* uid);
 
+int GetLocalUserPrimaryGroupID(const char* userName, /*out*/ unsigned int* gid);
+
 // Preallocate outbound userName to 256 characters
 int GetLocalUserName(unsigned int uid, /*out*/ char* userName);
 
@@ -70,4 +72,6 @@ int GetLocalGroupID(const char* groupName, /*out*/ unsigned int* gid);
 // Preallocate outbound groupName to 256 characters
 int GetLocalGroupName(unsigned int gid, /*out*/ char* groupName);
 
-char** GetLocalGroupMembers(const char* groupName);
+int GetLocalGroupMembers(const char* groupName, /*out*/ char*** groupMembers);
+
+void FreeLocalGroupMembers(char** groupMembers);

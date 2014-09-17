@@ -41,44 +41,46 @@
 
 int main(int argc, char* argv[])
 {
-	MonoDomain *domain;
-	MonoAssembly *assembly;
-	const char *file;
-	int retval;
-	
-	if (argc < 2)
-	{
-		fprintf(stderr, "Please provide name of .NET assembly to load.\n");
-		return 1;
-	}
-	
-	file = argv[1];
+    MonoDomain *domain;
+    MonoAssembly *assembly;
+    const char *file;
+    int retval;
+    
+    if (argc < 2)
+    {
+        fprintf(stderr, "Please provide name of mono assembly to load.\n");
+        return 1;
+    }
+    
+    file = argv[1];
 
-	// Load the default Mono configuration file, this is needed
-	// if you are planning on using the dllmaps defined on the
-	// system configuration
-	mono_config_parse(NULL);
-	
-	// Create mono AppDomain
-	domain = mono_jit_init(file);
+    // Load the default Mono configuration file, this is needed
+    // if you are planning on using the dllmaps defined on the
+    // system configuration
+    mono_config_parse(NULL);
+    
+    // Create mono AppDomain
+    domain = mono_jit_init(file);
 
-	// Open entry assembly in new AppDomain
-	assembly = mono_domain_assembly_open(domain, file);
+    // Open entry assembly in new AppDomain
+    assembly = mono_domain_assembly_open(domain, file);
 
-	if (assembly != NULL)
-	{
-		// mono_jit_exec runs the Main() method in the assembly
-		mono_jit_exec(domain, assembly, argc - 1, argv + 1);
+    if (assembly != NULL)
+    {
+        // mono_jit_exec runs the Main() method in the assembly
+        mono_jit_exec(domain, assembly, argc - 1, argv + 1);
 
-		// Get exit code from entry assembly
-		retval = mono_environment_exitcode_get();
-	}
-	else
-	{
-		retval = 2;
-	}
-	
-	mono_jit_cleanup(domain);
+        // Get exit code from entry assembly
+        retval = mono_environment_exitcode_get();
+    }
+    else
+    {
+        fprintf(stderr, "Failed to load mono assembly: %s\n", file);
+        retval = 2;
+    }
+    
+    // This clean up call tends to crash - since we are exiting anyway, we skip it...
+    //mono_jit_cleanup(domain);
 
-	return retval;
+    return retval;
 }

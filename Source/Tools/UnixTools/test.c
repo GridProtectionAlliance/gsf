@@ -35,29 +35,47 @@
 
 int main(int argc, char* argv[])
 {
-	int retval;
+    int retval;
 
-	if (argc != 2)
-	{
-		fprintf(stderr, "Specify user name as an argument.\n");
-		retval = 1;
-	}
-	else
-	{
-		struct UserPasswordInformation info;
-		int status;
-		int retval = GetLocalUserPasswordInformation(argv[1], &info, &status);
+    if (argc != 2)
+    {
+        fprintf(stderr, "Specify account name as an argument.\n");
+        retval = 1;
+    }
+    else
+    {
+        char** members;
 
-		fprintf(stdout, "retval = %d\n", retval);
+        if (GetLocalGroupMembers(argv[1], &members) == 0)
+        {
+            int i;
 
-		if (retval == 0)
-		{
-			fprintf(stdout, "lastChangeDate = %ld\n", info.lastChangeDate);
-			fprintf(stdout, "minDaysForChange = %ld\n", info.minDaysForChange);
-			fprintf(stdout, "maxDaysForChange = %ld\n", info.maxDaysForChange);
-			fprintf(stdout, "status = %d\n", status);
-		}
-	}
+            fprintf(stdout, "Group \"%s\" members: ", argv[1]);
 
-	return retval;
+            for (i = 0; members[i] != NULL; i++)
+            {
+                fprintf(stdout, "%s%s", i > 0 ? "," : "", members[i]);
+            }
+
+            fprintf(stdout, "\n\n");
+
+            FreeLocalGroupMembers(members);
+        }
+
+        struct UserPasswordInformation info;
+        int status;
+        int retval = GetLocalUserPasswordInformation(argv[1], &info, &status);
+
+        fprintf(stdout, "GetLocalUserPasswordInformation(%s) = %d\n", argv[1], retval);
+
+        if (retval == 0)
+        {
+            fprintf(stdout, "lastChangeDate = %ld\n", info.lastChangeDate);
+            fprintf(stdout, "minDaysForChange = %ld\n", info.minDaysForChange);
+            fprintf(stdout, "maxDaysForChange = %ld\n", info.maxDaysForChange);
+            fprintf(stdout, "status = %d\n", status);
+        }
+    }
+
+    return retval;
 }

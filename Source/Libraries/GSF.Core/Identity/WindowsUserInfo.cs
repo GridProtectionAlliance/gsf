@@ -282,7 +282,7 @@ namespace GSF.Identity
                                 long maxPasswordAge = MaximumPasswordAge;
 
                                 // Ignore extremes
-                                if (maxPasswordAge != long.MaxValue)
+                                if (maxPasswordAge != long.MaxValue && maxPasswordAge > 0)
                                     passwordChangeDate = DateTime.FromFileTime(passwordSetOn).AddDays(TimeSpan.FromTicks(maxPasswordAge).Duration().Days);
                             }
                         }
@@ -1326,6 +1326,50 @@ namespace GSF.Identity
             }
 
             return false;
+        }
+
+        public static string[] GetLocalGroupUserList(string groupName)
+        {
+            List<string> userList = new List<string>();
+
+            // Create a directory entry for the local machine
+            using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
+            {
+                DirectoryEntry groupEntry = null;
+                DirectoryEntry userEntry = null;
+                string userPath;
+
+                try
+                {
+                    // Determine if local group exists
+                    if (!LocalAccountExists(localMachine, groupName, "group", false, out groupEntry))
+                        throw new InvalidOperationException(string.Format("Cannot get members for local group \"{0}\": group does not exist.", groupName));
+
+                    // See if user is in group
+                    foreach (object adsUser in (IEnumerable)groupEntry.Invoke("Members"))
+                    {
+                        using (DirectoryEntry groupUserEntry = new DirectoryEntry(adsUser))
+                        {
+                            userList.Add(groupUserEntry.Name);
+                        }
+                    }
+                }
+                catch (COMException ex)
+                {
+                    throw new InvalidOperationException(string.Format("Cannot get members for local group \"{0}\": {1}", groupName, ex.Message), ex);
+                }
+                catch (TargetInvocationException ex)
+                {
+                    throw new InvalidOperationException(string.Format("Cannot get members for local group \"{0}\": {1}", groupName, ex.InnerException.Message), ex.InnerException);
+                }
+                finally
+                {
+                    if ((object)groupEntry != null)
+                        groupEntry.Dispose();
+                }
+            }
+
+            return userList.ToArray();
         }
 
         public static string AccountNameToSID(string accountName)

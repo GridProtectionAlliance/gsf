@@ -7,7 +7,7 @@ namespace UserInfoTest
 {
     class Program
     {
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
             string userName, password, errorMessage;
 
@@ -15,7 +15,18 @@ namespace UserInfoTest
             userName = Console.ReadLine();
 
             Console.Write("Enter password: ");
-            password = Console.ReadLine();
+
+            ConsoleKeyInfo consoleKey = Console.ReadKey(true);
+            password = "";
+
+            while (consoleKey.Key != ConsoleKey.Enter)
+            {
+                Console.Write('*');
+                password += consoleKey.KeyChar;
+                consoleKey = Console.ReadKey(true);
+            }
+
+            Console.WriteLine();
 
             IPrincipal principal = UserInfo.AuthenticateUser("", userName, password, out errorMessage);
 
@@ -31,6 +42,38 @@ namespace UserInfoTest
                 Console.WriteLine("Authentication succeeded!");
             }
 
+            Console.WriteLine();
+
+            // Show info for root user
+            Console.WriteLine("\nRunning user \"{0}\" information:\n", UserInfo.CurrentUserInfo.LoginID);
+            ShowUserInfo();
+
+            Console.WriteLine("\nAttempting impersonation of \"{0}\"...", userName);
+
+            WindowsImpersonationContext context = UserInfo.ImpersonateUser("", userName, password);
+
+            if ((object)context != null)
+            {
+                try
+                {
+                    Console.WriteLine("Impersonation of \"{0}\" succeeded, information:\n", UserInfo.CurrentUserInfo.LoginID);
+                    ShowUserInfo();
+                }
+                finally
+                {
+                    UserInfo.EndImpersonation(context);
+                }
+            }
+            else
+            {
+                Console.WriteLine("Impersonation of \"{0}\" failed.\n", userName);
+            }
+
+            return 0;
+        }
+
+        private static void ShowUserInfo()
+        {
             UserInfo info = UserInfo.CurrentUserInfo;
 
             Console.WriteLine("Current user: " + info.LoginID);
@@ -43,7 +86,11 @@ namespace UserInfoTest
 
             Console.WriteLine("Next password change date: " + info.NextPasswordChangeDate);
 
-            Console.ReadLine();
+            Console.WriteLine("{0} is in group {0} = {1}", info.UserName, UserInfo.UserIsInLocalGroup(info.UserName, info.UserName));
+
+            Console.WriteLine("{0} group members: {1}", info.UserName, UserInfo.GetLocalGroupUserList(info.UserName).ToDelimitedString());
+
+            Console.WriteLine();
         }
     }
 }

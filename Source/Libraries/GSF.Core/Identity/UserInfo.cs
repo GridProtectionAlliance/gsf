@@ -252,8 +252,19 @@ namespace GSF.Identity
 
             if (accountParts.Length != 2)
             {
-                // Login ID is specified in 'username' format.
-                m_userName = loginID;
+                accountParts = loginID.Split('@');
+
+                if (accountParts.Length != 2)
+                {
+                    // Login ID is specified in 'username' format.
+                    m_userName = loginID;
+                }
+                else
+                {
+                    // Login ID is specified in 'username@domain' format.
+                    m_userName = accountParts[0];
+                    m_domain = accountParts[1];
+                }
             }
             else
             {
@@ -375,12 +386,22 @@ namespace GSF.Identity
         /// <summary>
         /// Gets the Login ID of the user.
         /// </summary>
-        /// <remarks>Returns the value provided in the <see cref="UserInfo(string)"/> constructor.</remarks>
         public string LoginID
         {
             get
             {
                 return string.Format("{0}\\{1}", m_domain, m_userName);
+            }
+        }
+
+        /// <summary>
+        /// Gets the ID of the user in LDAP format.
+        /// </summary>
+        public string LdapID
+        {
+            get
+            {
+                return string.Format("{0}@{1}", m_userName, m_domain);
             }
         }
 
@@ -1028,33 +1049,16 @@ namespace GSF.Identity
         #region [ Static ]
 
         // Static Fields
-        private static readonly UserInfo s_currentUserInfo;
-
-        // Static constructor
-        static UserInfo()
-        {
-            string currentUserID = CurrentUserID;
-
-            if (!string.IsNullOrEmpty(currentUserID))
-            {
-                try
-                {
-                    s_currentUserInfo = new UserInfo(currentUserID);
-                    s_currentUserInfo.Initialize();
-                }
-                catch (InitializationException)
-                {
-                }
-            }
-        }
+        private static string m_lastUserID;
+        private static UserInfo s_currentUserInfo;
 
         // Static Properties
 
         /// <summary>
-        /// Gets the <see cref="LoginID"/> of the current user.
+        /// Gets the ID name of the current user.
         /// </summary>
         /// <remarks>
-        /// The <see cref="LoginID"/> returned is that of the user account under which the code is executing.
+        /// The ID name returned is that of the user account under which the code is executing.
         /// </remarks>
         public static string CurrentUserID
         {
@@ -1083,6 +1087,27 @@ namespace GSF.Identity
         {
             get
             {
+                string currentUserID = CurrentUserID;
+
+                if (!string.IsNullOrEmpty(currentUserID))
+                {
+                    if ((object)s_currentUserInfo == null ||
+                        string.IsNullOrEmpty(m_lastUserID) ||
+                        !currentUserID.Equals(m_lastUserID, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        try
+                        {
+                            s_currentUserInfo = new UserInfo(currentUserID);
+                            s_currentUserInfo.Initialize();
+                        }
+                        catch (InitializationException)
+                        {
+                        }
+                    }
+                }
+
+                m_lastUserID = currentUserID;
+
                 return s_currentUserInfo;
             }
         }
@@ -1647,6 +1672,33 @@ namespace GSF.Identity
                 return UnixUserInfo.RemoveUserFromLocalGroup(groupName, userName);
 
             return WindowsUserInfo.RemoveUserFromLocalGroup(groupName, userName);
+        }
+
+        /// <summary>
+        /// Gets a list of users that exist in the specified local <paramref name="groupName"/>.
+        /// </summary>
+        /// <param name="groupName">Group name to remove local user from.</param>
+        /// <returns>List of users that exist in the in group.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="groupName"/> was <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">No <paramref name="groupName"/> was specified.</exception>
+        /// <exception cref="InvalidOperationException">Could not get members for local group.</exception>
+        public static string[] GetLocalGroupUserList(string groupName)
+        {
+            if ((object)groupName == null)
+                throw new ArgumentNullException("groupName");
+
+            // Remove any irrelevant white space
+            groupName = groupName.Trim();
+
+            if (groupName == string.Empty)
+                throw new ArgumentException("Cannot get members for local group: no group name was specified.", "groupName");
+
+            groupName = ValidateGroupName(groupName);
+
+            if (Common.IsPosixEnvironment)
+                return UnixUserInfo.GetLocalGroupUserList(groupName);
+
+            return WindowsUserInfo.GetLocalGroupUserList(groupName);
         }
 
         /// <summary>
