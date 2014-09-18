@@ -33,7 +33,7 @@ namespace UserInfoTest
             if ((object)principal == null)
             {
                 if (string.IsNullOrEmpty(errorMessage))
-                    Console.WriteLine("Authentication failed with error message.");
+                    Console.WriteLine("Authentication failed without error message.");
                 else
                     Console.WriteLine("Authentication failed: " + errorMessage);
             }
@@ -89,6 +89,18 @@ namespace UserInfoTest
             Console.WriteLine("{0} is in group {0} = {1}", info.UserName, UserInfo.UserIsInLocalGroup(info.UserName, info.UserName));
 
             Console.WriteLine("{0} group members: {1}", info.UserName, UserInfo.GetLocalGroupUserList(info.UserName).ToDelimitedString());
+
+            Console.WriteLine("{0} account disabled = {1}", info.UserName, info.AccountIsDisabled);
+
+            Console.WriteLine("{0} account locked-out = {1}", info.UserName, info.AccountIsLockedOut);
+
+            Console.WriteLine("{0} account password cannot change = {1}", info.UserName, info.PasswordCannotChange);
+
+            Console.WriteLine("{0} account password does not expire = {1}", info.UserName, info.PasswordDoesNotExpire);
+
+            Console.WriteLine("{0} account last logon time = {1}", info.UserName, info.LastLogon);
+
+            Console.WriteLine("{0} account creation date = {1}", info.UserName, info.AccountCreationDate);
 
             Console.WriteLine();
         }

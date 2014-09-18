@@ -53,212 +53,212 @@
 // Define custom PAM conversation function for authentication
 int AuthenticateConveration(int num_msg, const struct pam_message** msg, struct pam_response** resp, void* appdata_ptr)
 {
-    const struct pam_message* message = *msg;
+	const struct pam_message* message = *msg;
 
-    if (num_msg == 1 && message->msg != NULL && message->msg_style == PAM_PROMPT_ECHO_OFF)
-    {
-        // Provide password for the PAM conversation response that was passed into appdata_ptr
-        struct pam_response* reply = (struct pam_response*)malloc(sizeof(struct pam_response));
-        reply[0].resp = (char*)appdata_ptr;
-        reply[0].resp_retcode = 0;
+	if (num_msg == 1 && message->msg != NULL && message->msg_style == PAM_PROMPT_ECHO_OFF)
+	{
+		// Provide password for the PAM conversation response that was passed into appdata_ptr
+		struct pam_response* reply = (struct pam_response*)malloc(sizeof(struct pam_response));
+		reply[0].resp = (char*)appdata_ptr;
+		reply[0].resp_retcode = 0;
 
-        *resp = reply;
+		*resp = reply;
 
-        return PAM_SUCCESS;
-    }
+		return PAM_SUCCESS;
+	}
 
-    return PAM_CONV_ERR;
+	return PAM_CONV_ERR;
 }
 
 struct ChangePasswordInformation
 {
-    char* userName;         // User name
-    char* oldPassword;      // Old password
-    char* newPassword1;     // Initial request for new password
-    char* newPassword2;     // Confirmation request for new password
-    int requestCount;       // Always initialize to zero
+	char* userName;         // User name
+	char* oldPassword;      // Old password
+	char* newPassword1;     // Initial request for new password
+	char* newPassword2;     // Confirmation request for new password
+	int requestCount;       // Always initialize to zero
 };
 
 // Define custom PAM conversation function for changing a password
 int ChangePasswordConveration(int num_msg, const struct pam_message** msg, struct pam_response** resp, void* appdata_ptr)
 {
-    const struct pam_message* message = *msg;
+	const struct pam_message* message = *msg;
 
-    if (num_msg == 1 && message->msg != NULL && (message->msg_style == PAM_PROMPT_ECHO_ON || message->msg_style == PAM_PROMPT_ECHO_OFF))
-    {
-        // Initialize the PAM conversation response
-        struct pam_response* reply = (struct pam_response*)malloc(sizeof(struct pam_response));
-        reply[0].resp_retcode = 0;
+	if (num_msg == 1 && message->msg != NULL && (message->msg_style == PAM_PROMPT_ECHO_ON || message->msg_style == PAM_PROMPT_ECHO_OFF))
+	{
+		// Initialize the PAM conversation response
+		struct pam_response* reply = (struct pam_response*)malloc(sizeof(struct pam_response));
+		reply[0].resp_retcode = 0;
 
-        // Dereference change password information structure
-        struct ChangePasswordInformation* info = (struct ChangePasswordInformation*)appdata_ptr;
+		// Dereference change password information structure
+		struct ChangePasswordInformation* info = (struct ChangePasswordInformation*)appdata_ptr;
 
-        if (message->msg_style == PAM_PROMPT_ECHO_ON)
-        {
-            // PAM_PROMPT_ECHO_ON request is for user name
-            reply[0].resp = info->userName;
-        }
-        else
-        {
-            // PAM_PROMPT_ECHO_OFF requests are for passwords, starting with old password
-            switch (info->requestCount)
-            {
-                case 0:
-                    reply[0].resp = info->oldPassword;
-                    break;
-                case 1:
-                    reply[0].resp = info->newPassword1;
-                    break;
-                case 2:
-                    reply[0].resp = info->newPassword2;
-                    break;
-                default:
-                    reply[0].resp = NULL;
-                    break;
-            }
+		if (message->msg_style == PAM_PROMPT_ECHO_ON)
+		{
+			// PAM_PROMPT_ECHO_ON request is for user name
+			reply[0].resp = info->userName;
+		}
+		else
+		{
+			// PAM_PROMPT_ECHO_OFF requests are for passwords, starting with old password
+			switch (info->requestCount)
+			{
+			case 0:
+				reply[0].resp = info->oldPassword;
+				break;
+			case 1:
+				reply[0].resp = info->newPassword1;
+				break;
+			case 2:
+				reply[0].resp = info->newPassword2;
+				break;
+			default:
+				reply[0].resp = NULL;
+				break;
+			}
 
-            info->requestCount++;
-        }
+			info->requestCount++;
+		}
 
-        *resp = reply;
+		*resp = reply;
 
-        return PAM_SUCCESS;
-    }
+		return PAM_SUCCESS;
+	}
 
-    return PAM_CONV_ERR;
+	return PAM_CONV_ERR;
 }
 
 int AuthenticateUser(const char* userName, const char* password) 
 {
-    // Set up a custom PAM conversation passing in authentication password
-    char* appdata = strdup(password);
-    struct pam_conv pamc = { AuthenticateConveration, appdata };
-    pam_handle_t* pamh; 
-    int retval;
+	// Set up a custom PAM conversation passing in authentication password
+	char* appdata = strdup(password);
+	struct pam_conv pamc = { AuthenticateConveration, appdata };
+	pam_handle_t* pamh; 
+	int retval;
 
-    // Start PAM
-    retval = pam_start("gsf", userName, &pamc, &pamh);
+	// Start PAM
+	retval = pam_start("gsf", userName, &pamc, &pamh);
 
-    if (retval == PAM_SUCCESS)
-    {
-        // Authenticate the user
-        retval = pam_authenticate(pamh, 0);
+	if (retval == PAM_SUCCESS)
+	{
+		// Authenticate the user
+		retval = pam_authenticate(pamh, 0);
 
-        // All done
-        pam_end(pamh, 0); 
-    }
-    else
-    {
-        free(appdata);
-    }
+		// All done
+		pam_end(pamh, 0); 
+	}
+	else
+	{
+		free(appdata);
+	}
 
-    return retval;
+	return retval;
 }
 
 int ChangeUserPassword(const char* userName, const char* oldPassword, const char* newPassword)
 {
-    // Set up a custom PAM conversation passing in needed information to change the user's password
-    struct ChangePasswordInformation appdata;
+	// Set up a custom PAM conversation passing in needed information to change the user's password
+	struct ChangePasswordInformation appdata;
 
-    // Have to create copies of these strings as PAM frees them after every conversation request
-    appdata.userName = strdup(userName);
-    appdata.oldPassword = strdup(oldPassword);
-    appdata.newPassword1 = strdup(newPassword);
-    appdata.newPassword2 = strdup(newPassword);
-    appdata.requestCount = 0;
+	// Have to create copies of these strings as PAM frees them after every conversation request
+	appdata.userName = strdup(userName);
+	appdata.oldPassword = strdup(oldPassword);
+	appdata.newPassword1 = strdup(newPassword);
+	appdata.newPassword2 = strdup(newPassword);
+	appdata.requestCount = 0;
 
-    struct pam_conv pamc = { ChangePasswordConveration, &appdata };
-    pam_handle_t* pamh; 
-    int retval;
+	struct pam_conv pamc = { ChangePasswordConveration, &appdata };
+	pam_handle_t* pamh; 
+	int retval;
 
-    // Start PAM
-    retval = pam_start("gsf", userName, &pamc, &pamh);
+	// Start PAM
+	retval = pam_start("gsf", userName, &pamc, &pamh);
 
-    if (retval == PAM_SUCCESS)
-    {
-        // Begin PAM change password conversation
-        if (retval == PAM_SUCCESS)
-            retval = pam_chauthtok(pamh, PAM_SILENT);
+	if (retval == PAM_SUCCESS)
+	{
+		// Begin PAM change password conversation
+		if (retval == PAM_SUCCESS)
+			retval = pam_chauthtok(pamh, PAM_SILENT);
 
-        // All done
-        pam_end(pamh, 0); 
-    }
-    else
-    {
-        free(appdata.userName);
-    }
+		// All done
+		pam_end(pamh, 0); 
+	}
+	else
+	{
+		free(appdata.userName);
+	}
 
-    if (appdata.requestCount < 3)
-        free(appdata.newPassword2);
+	if (appdata.requestCount < 3)
+		free(appdata.newPassword2);
 
-    if (appdata.requestCount < 2);
-        free(appdata.newPassword1);
+	if (appdata.requestCount < 2);
+	free(appdata.newPassword1);
 
-    if (appdata.requestCount < 1);
-        free(appdata.oldPassword);
+	if (appdata.requestCount < 1);
+	free(appdata.oldPassword);
 
-    return retval;
+	return retval;
 }
 
 int GetLocalUserID(const char* userName, /*out*/ unsigned int* uid)
 {
-    struct passwd* pwd = getpwnam(userName);
+	struct passwd* pwd = getpwnam(userName);
 
-    if (pwd == NULL)
-    {
-        *uid = 0;
-        return 1;
-    }
+	if (pwd == NULL)
+	{
+		*uid = 0;
+		return 1;
+	}
 
-    *uid = pwd->pw_uid;
-    return 0;
+	*uid = pwd->pw_uid;
+	return 0;
 }
 
 int GetLocalUserPrimaryGroupID(const char* userName, /*out*/ unsigned int* gid)
 {
-    struct passwd* pwd = getpwnam(userName);
+	struct passwd* pwd = getpwnam(userName);
 
-    if (pwd == NULL)
-    {
-        *gid = 0;
-        return 1;
-    }
+	if (pwd == NULL)
+	{
+		*gid = 0;
+		return 1;
+	}
 
-    *gid = pwd->pw_gid;
-    return 0;
+	*gid = pwd->pw_gid;
+	return 0;
 }
 
 // Preallocate outbound userName to 256 characters
 int GetLocalUserName(unsigned int uid, /*out*/ char* userName)
 {
-    struct passwd* pwd = getpwuid((uid_t)uid);
+	struct passwd* pwd = getpwuid((uid_t)uid);
 
-    if (pwd == NULL)
-        return 1;
+	if (pwd == NULL)
+		return 1;
 
-    strcpy(userName, pwd->pw_name);
+	strcpy(userName, pwd->pw_name);
 
-    return 0;
+	return 0;
 }
 
 char* GetLocalUserHomeDirectory(const char* userName)
 {
-    struct passwd* pwd = getpwnam(userName);
+	struct passwd* pwd = getpwnam(userName);
 
-    if (pwd == NULL)
-        return NULL;
+	if (pwd == NULL)
+		return NULL;
 
-    return pwd->pw_dir;
+	return pwd->pw_dir;
 }
 
 char* GetLocalUserGecos(const char* userName)
 {
-    struct passwd* pwd = getpwnam(userName);
+	struct passwd* pwd = getpwnam(userName);
 
-    if (pwd == NULL)
-        return NULL;
+	if (pwd == NULL)
+		return NULL;
 
-    return pwd->pw_gecos;
+	return pwd->pw_gecos;
 }
 
 // Values for status parameter:
@@ -270,194 +270,203 @@ char* GetLocalUserGecos(const char* userName)
 //      0 -- "<else>"   Account assumed normal (encrypted password)
 int GetLocalUserPasswordInformation(const char* userName, struct UserPasswordInformation* userPasswordInfo, /*out*/ int* status)
 {
-    struct spwd* sp = getspnam(userName);
+	struct spwd* sp = getspnam(userName);
 
-    if (sp == NULL)
-        return 1;
+	if (sp == NULL)
+		return 1;
 
-    userPasswordInfo->lastChangeDate = sp->sp_lstchg;
-    userPasswordInfo->minDaysForChange = sp->sp_min;
-    userPasswordInfo->maxDaysForChange = sp->sp_max;
-    userPasswordInfo->warningDays = sp->sp_warn;
-    userPasswordInfo->inactivityDays = sp->sp_inact;
-    userPasswordInfo->accountExpirationDate = sp->sp_expire;
+	userPasswordInfo->lastChangeDate = sp->sp_lstchg;
+	userPasswordInfo->minDaysForChange = sp->sp_min;
+	userPasswordInfo->maxDaysForChange = sp->sp_max;
+	userPasswordInfo->warningDays = sp->sp_warn;
+	userPasswordInfo->inactivityDays = sp->sp_inact;
+	userPasswordInfo->accountExpirationDate = sp->sp_expire;
 
-    if (sp->sp_pwdp == NULL)
-    {
-        *status = 3;
-    }
-    else
-    {
-        // Determine account password status
-        int passwordLen = strlen(sp->sp_pwdp);
+	if (sp->sp_pwdp == NULL)
+	{
+		*status = 3;
+	}
+	else
+	{
+		// Determine account password status
+		int passwordLen = strlen(sp->sp_pwdp);
 
-        if (passwordLen > 0)
-        {
-            char firstChar = sp->sp_pwdp[0];
+		if (passwordLen > 0)
+		{
+			char firstChar = sp->sp_pwdp[0];
 
-            if (passwordLen == 1 && firstChar == '*')
-                *status = 1;
-            else if (firstChar == '!')
-                *status = 2;
-            else
-                *status = 0;
-        }
-        else
-        {
-            *status = 3;
-        }
-    }
+			if (passwordLen == 1 && firstChar == '*')
+				*status = 1;
+			else if (firstChar == '!')
+				*status = 2;
+			else
+				*status = 0;
+		}
+		else
+		{
+			*status = 3;
+		}
+	}
 
-    return 0;
+	return 0;
 }
 
 int SetLocalUserPassword(const char* userName, const char* password, const char* salt)
 {
-    struct spwd* sp = getspnam(userName);
-    int retval = 1;
+	struct passwd* pwd = getpwnam(userName);
 
-    if (sp != NULL)
-    {
-        if (lckpwdf() == 0)
-        {
-            FILE* shadow = fopen(_PATH_SHADOW, "w");
+	if (pwd == NULL)
+		return 1;
 
-            if (shadow != NULL)
-            {
-                sp->sp_pwdp = crypt(password, salt);
-                retval = putspent(sp, shadow);
-                fclose(shadow);
-            }
+	// Not allowing password to be set on root
+	if (pwd->pw_uid == 0)
+		return 1;
 
-            ulckpwdf();
-        }
-    }
+	struct spwd* sp = getspnam(userName);
+	int retval = 1;
 
-    return retval;
+	if (sp != NULL)
+	{
+		if (lckpwdf() == 0)
+		{
+			FILE* shadow = fopen(_PATH_SHADOW, "w");
+
+			if (shadow != NULL)
+			{
+				sp->sp_pwdp = crypt(password, salt);
+				retval = putspent(sp, shadow);
+				fclose(shadow);
+			}
+
+			ulckpwdf();
+		}
+	}
+
+	return retval;
 }
 
 char* GetPasswordHash(const char* password, const char* salt)
 {
-    return crypt(password, salt);
+	return crypt(password, salt);
 }
 
 int GetLocalUserGroupCount(const char* userName)
 {
-    struct passwd* pwd = getpwnam(userName);
+	struct passwd* pwd = getpwnam(userName);
 
-    if (pwd == NULL)
-        return -1;
+	if (pwd == NULL)
+		return -1;
 
-    gid_t groupIDs[1];
-    int groupCount = 0;
+	gid_t groupIDs[1];
+	int groupCount = 0;
 
-    if (getgrouplist(userName, pwd->pw_gid, groupIDs, &groupCount) == -1)
-        return groupCount;
+	if (getgrouplist(userName, pwd->pw_gid, groupIDs, &groupCount) == -1)
+		return groupCount;
 
-    return -1;
+	return -1;
 }
 
 // Preallocate outbound groupIDs as an unsigned integer array sized from GetLocalUserGroupCount
 int GetLocalUserGroupIDs(const char* userName, int groupCount, /*out*/ gid_t** groupIDs)
 {
-    struct passwd* pwd = getpwnam(userName);
+	struct passwd* pwd = getpwnam(userName);
 
-    if (pwd == NULL)
-        return 1;
+	if (pwd == NULL)
+		return 1;
 
-    getgrouplist(userName, pwd->pw_gid, *groupIDs, &groupCount);
+	getgrouplist(userName, pwd->pw_gid, *groupIDs, &groupCount);
 
-    return 0;
+	return 0;
 }
 
 int GetLocalGroupID(const char* groupName, /*out*/ unsigned int* gid)
 {
-    struct group* grp = getgrnam(groupName);
+	struct group* grp = getgrnam(groupName);
 
-    if (grp == NULL)
-    {
-        *gid = 0;
-        return 1;
-    }
+	if (grp == NULL)
+	{
+		*gid = 0;
+		return 1;
+	}
 
-    *gid = grp->gr_gid;
-    return 0;
+	*gid = grp->gr_gid;
+	return 0;
 }
 
 // Preallocate outbound groupName to 256 characters
 int GetLocalGroupName(unsigned int gid, /*out*/ char* groupName)
 {
-    struct group* grp = getgrgid((gid_t)gid);
+	struct group* grp = getgrgid((gid_t)gid);
 
-    if (grp == NULL)
-        return 1;
+	if (grp == NULL)
+		return 1;
 
-    strcpy(groupName, grp->gr_name);
+	strcpy(groupName, grp->gr_name);
 
-    return 0;
+	return 0;
 }
 
 int GetLocalGroupMembers(const char* groupName, /*out*/ char*** groupMembers)
 {
-    struct group* grp;
-    struct passwd* pwd;
-    int i, grpCount = 0, pwdCount = 0;
+	struct group* grp;
+	struct passwd* pwd;
+	int i, grpCount = 0, pwdCount = 0;
 
-    // Get secondary group members
-    grp = getgrnam(groupName);
+	// Get secondary group members
+	grp = getgrnam(groupName);
 
-    if (grp == NULL)
-        return 1;
+	if (grp == NULL)
+		return 1;
 
-    // Count number of secondary group members
-    for (i = 0; grp->gr_mem[i] != NULL; i++)
-        grpCount++;
-    
-    // Count number of primary group members
-    while ((pwd = getpwent()) != NULL)
-    {
-        if (pwd->pw_gid == grp->gr_gid)
-            pwdCount++;
-    }
+	// Count number of secondary group members
+	for (i = 0; grp->gr_mem[i] != NULL; i++)
+		grpCount++;
 
-    *groupMembers = (char**)malloc(sizeof(char*) * (grpCount + pwdCount + 1));
-    char** memberList = *groupMembers;
+	// Count number of primary group members
+	while ((pwd = getpwent()) != NULL)
+	{
+		if (pwd->pw_gid == grp->gr_gid)
+			pwdCount++;
+	}
 
-    if (memberList != NULL)
-    {
-        // Add secondary group members
-        for (i = 0; i < grpCount; i++)
-            memberList[i] = strdup(grp->gr_mem[i]);
+	*groupMembers = (char**)malloc(sizeof(char*) * (grpCount + pwdCount + 1));
+	char** memberList = *groupMembers;
 
-        if (pwdCount > 0)
-        {
-            // Move back to beginning of passwd file
-            setpwent();
+	if (memberList != NULL)
+	{
+		// Add secondary group members
+		for (i = 0; i < grpCount; i++)
+			memberList[i] = strdup(grp->gr_mem[i]);
 
-            // Add primary group members
-            while ((pwd = getpwent()) != NULL)
-            {
-                if (pwd->pw_gid == grp->gr_gid)
-                    memberList[i++] = strdup(pwd->pw_name);
-            }
-        }
-        
-        memberList[i] = NULL;
-    }
+		if (pwdCount > 0)
+		{
+			// Move back to beginning of passwd file
+			setpwent();
 
-    endpwent();
-    return 0;
+			// Add primary group members
+			while ((pwd = getpwent()) != NULL)
+			{
+				if (pwd->pw_gid == grp->gr_gid)
+					memberList[i++] = strdup(pwd->pw_name);
+			}
+		}
+
+		memberList[i] = NULL;
+	}
+
+	endpwent();
+	return 0;
 }
 
 void FreeLocalGroupMembers(char** groupMembers)
 {
-    if (groupMembers != NULL)
-    {
-        int i;
+	if (groupMembers != NULL)
+	{
+		int i;
 
-        for (i = 0; groupMembers[i] != NULL; i++)
-            free(groupMembers[i]);
-    
-        free(groupMembers);  
-    }
+		for (i = 0; groupMembers[i] != NULL; i++)
+			free(groupMembers[i]);
+
+		free(groupMembers);  
+	}
 }

@@ -38,6 +38,7 @@ using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using GSF.Annotations;
+using GSF.Collections;
 using GSF.Configuration;
 using GSF.Console;
 using GSF.Units;
@@ -180,6 +181,22 @@ namespace GSF.Identity
         private struct UserPasswordInformation
         {
             [UsedImplicitly]
+            public long lastChangeDate;
+            [UsedImplicitly]
+            public long minDaysForChange;
+            [UsedImplicitly]
+            public long maxDaysForChange;
+            [UsedImplicitly]
+            public long warningDays;
+            [UsedImplicitly]
+            public long inactivityDays;
+            [UsedImplicitly]
+            public long accountExpirationDate;
+        }
+
+        private struct UserPasswordInformation32
+        {
+            [UsedImplicitly]
             public int lastChangeDate;
             [UsedImplicitly]
             public int minDaysForChange;
@@ -237,6 +254,7 @@ namespace GSF.Identity
         private readonly UserInfo m_parent;
         private LdapConnection m_connection;
         private LdapEntry m_userEntry;
+        private string m_ldapRoot;
         private bool m_domainRespondsForUser;
         private bool m_isLocalAccount;
         private bool m_enabled;
@@ -425,7 +443,7 @@ namespace GSF.Identity
                         UserPasswordInformation userPasswordInfo;
                         AccountStatus status;
 
-                        if (GetPasswordInformation(m_parent.UserName, out userPasswordInfo, out status) == 0)
+                        if (GetCachedLocalUserPasswordInformation(m_parent.UserName, out userPasswordInfo, out status) == 0)
                         {
                             if (userPasswordInfo.maxDaysForChange >= 99999)
                             {
@@ -484,7 +502,7 @@ namespace GSF.Identity
                     UserPasswordInformation userPasswordInfo;
                     AccountStatus status;
 
-                    if (GetPasswordInformation(m_parent.UserName, out userPasswordInfo, out status) == 0)
+                    if (GetCachedLocalUserPasswordInformation(m_parent.UserName, out userPasswordInfo, out status) == 0)
                     {
                         userAccountControl = 0;
 
@@ -515,10 +533,10 @@ namespace GSF.Identity
                 {
                     if (m_isLocalAccount)
                     {
-                        UserPasswordInformation userPasswordInfo = new UserPasswordInformation();
+                        UserPasswordInformation userPasswordInfo;
                         AccountStatus status;
 
-                        if (GetLocalUserPasswordInformation(m_parent.UserName, ref userPasswordInfo, out status) == 0 && userPasswordInfo.maxDaysForChange < 99999)
+                        if (GetCachedLocalUserPasswordInformation(m_parent.UserName, out userPasswordInfo, out status) == 0 && userPasswordInfo.maxDaysForChange < 99999)
                             maxPasswordAge = Ticks.FromSeconds(userPasswordInfo.maxDaysForChange * Time.SecondsPerDay);
                     }
                     else
@@ -547,10 +565,25 @@ namespace GSF.Identity
                 {
                     List<string> groups = new List<string>();
                     string[] dnGroups = GetUserPropertyValueCollection("memberOf");
+                    string ldapRoot, cn, dc;
 
-                    // TODO: Validate DC is correct - if so, prefix with domainName\, else for other domains: cn@dc.dc.dc
+                    if (string.IsNullOrEmpty(m_ldapRoot))
+                        ldapRoot = m_parent.Domain;
+                    else
+                        ldapRoot = ParseDNTokens(m_ldapRoot, "DC");
 
-                    // Convert distinguished names to AD style group names
+                    // Convert LDAP distinguished names to AD style group names
+                    foreach (string dnGroup in dnGroups)
+                    {
+                        cn = ParseDNTokens(dnGroup, "CN");
+                        dc = ParseDNTokens(dnGroup, "DC");
+
+                        // If group domain matches LDAP root, assume this is a valid group
+                        if (dc.Equals(ldapRoot, StringComparison.InvariantCultureIgnoreCase))
+                            groups.Add(string.Format("{0}\\{1}", m_parent.Domain, cn));
+                    }
+
+                    return groups.ToArray();
                 }
 
                 return LocalGroups;
@@ -674,7 +707,6 @@ namespace GSF.Identity
 
                         // Pick up current user or impersonated user principal
                         WindowsPrincipal principal = Thread.CurrentPrincipal as WindowsPrincipal;
-                        string ldapRoot = "";
 
                         if ((object)principal != null)
                         {
@@ -684,7 +716,7 @@ namespace GSF.Identity
                             if ((object)identity != null)
                             {
                                 m_connection = identity.Connection;
-                                ldapRoot = identity.LdapRoot;
+                                m_ldapRoot = identity.LdapRoot ?? m_parent.Domain;
                             }
                         }
 
@@ -692,7 +724,7 @@ namespace GSF.Identity
                         {
                             // Search for user by account name starting at root and moving through hierarchy recursively
                             LdapSearchResults results = m_connection.Search(
-                                ldapRoot,
+                                m_ldapRoot,
                                 LdapConnection.SCOPE_SUB,
                                 string.Format("(&(objectCategory=person)(objectClass=user)(sAMAccountName={0}))", m_parent.UserName),
                                 null,
@@ -1501,7 +1533,7 @@ namespace GSF.Identity
             return groups.ToArray();
         }
 
-        private static int GetPasswordInformation(string userName, out UserPasswordInformation userPasswordInformation, out AccountStatus accountStatus)
+        private static int GetCachedLocalUserPasswordInformation(string userName, out UserPasswordInformation userPasswordInformation, out AccountStatus accountStatus)
         {
             // Attempt to pick up Unix user principal identity in case shadow information has already been parsed
             WindowsPrincipal principal = Thread.CurrentPrincipal as WindowsPrincipal;
@@ -1521,6 +1553,34 @@ namespace GSF.Identity
 
             userPasswordInformation = new UserPasswordInformation();
             return GetLocalUserPasswordInformation(userName, ref userPasswordInformation, out accountStatus);
+        }
+
+        // Bit-size inter-mediator for getting user password information structure 
+        private static int GetLocalUserPasswordInformation(string userName, ref UserPasswordInformation userPasswordInformation, out AccountStatus accountStatus)
+        {
+            if (IntPtr.Size == 4)
+            {
+                // 32-bit OS call
+                UserPasswordInformation32 userPasswordInformation32 = new UserPasswordInformation32();
+
+                if (GetLocalUserPasswordInformation32(userName, ref userPasswordInformation32, out accountStatus) == 0)
+                {
+                    userPasswordInformation.lastChangeDate = userPasswordInformation32.lastChangeDate;
+                    userPasswordInformation.minDaysForChange = userPasswordInformation32.minDaysForChange;
+                    userPasswordInformation.maxDaysForChange = userPasswordInformation32.maxDaysForChange;
+                    userPasswordInformation.warningDays = userPasswordInformation32.warningDays;
+                    userPasswordInformation.inactivityDays = userPasswordInformation32.inactivityDays;
+                    userPasswordInformation.accountExpirationDate = userPasswordInformation32.accountExpirationDate;
+                    return 0;
+                }
+            }
+            else
+            {
+                // 64-bit OS call
+                return GetLocalUserPasswordInformation64(userName, ref userPasswordInformation, out accountStatus);
+            }
+
+            return 1;
         }
 
         private static string GetPAMErrorMessage(int responseCode)
@@ -1563,6 +1623,28 @@ namespace GSF.Identity
             }
 
             return responseCode.ToString();
+        }
+
+        // Parse LDAP distinguished name tokens
+        private static string ParseDNTokens(string dn, string token, char delimiter = '.')
+        {
+            List<string> tokens = new List<string>();
+            string[] elements = dn.Split(',');
+
+            for (int i = 0; i < elements.Length; i++)
+            {
+                string element = elements[i].Trim();
+
+                if (element.StartsWith(token, StringComparison.OrdinalIgnoreCase))
+                {
+                    string[] parts = element.Split('=');
+
+                    if (parts.Length == 2)
+                        tokens.Add(parts[1].Trim());
+                }
+            }
+
+            return tokens.ToDelimitedString(delimiter);
         }
 
         #region [ String Marshaling Functions ]
@@ -1633,8 +1715,11 @@ namespace GSF.Identity
         [DllImport(ImportFileName)]
         private static extern IntPtr GetLocalUserGecos(string userName);
 
-        [DllImport(ImportFileName)]
-        private static extern int GetLocalUserPasswordInformation(string userName, ref UserPasswordInformation userPasswordInfo, out AccountStatus status);
+        [DllImport(ImportFileName, EntryPoint = "GetLocalUserPasswordInformation")] // 64-bit version
+        private static extern int GetLocalUserPasswordInformation64(string userName, ref UserPasswordInformation userPasswordInfo, out AccountStatus status);
+
+        [DllImport(ImportFileName, EntryPoint = "GetLocalUserPasswordInformation")] // 32-bit version
+        private static extern int GetLocalUserPasswordInformation32(string userName, ref UserPasswordInformation32 userPasswordInfo, out AccountStatus status);
 
         [DllImport(ImportFileName)]
         private static extern int SetLocalUserPassword(string userName, string password, string salt);
