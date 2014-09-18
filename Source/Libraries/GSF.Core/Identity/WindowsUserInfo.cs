@@ -1336,8 +1336,6 @@ namespace GSF.Identity
             using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
             {
                 DirectoryEntry groupEntry = null;
-                DirectoryEntry userEntry = null;
-                string userPath;
 
                 try
                 {

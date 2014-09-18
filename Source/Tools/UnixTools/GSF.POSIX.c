@@ -192,10 +192,10 @@ int ChangeUserPassword(const char* userName, const char* oldPassword, const char
 		free(appdata.newPassword2);
 
 	if (appdata.requestCount < 2);
-	free(appdata.newPassword1);
+		free(appdata.newPassword1);
 
 	if (appdata.requestCount < 1);
-	free(appdata.oldPassword);
+		free(appdata.oldPassword);
 
 	return retval;
 }
