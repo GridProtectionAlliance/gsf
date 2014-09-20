@@ -135,11 +135,25 @@ namespace GSF
         /// Determines if the current system is a POSIX style environment.
         /// </summary>
         /// <remarks>
+        /// <para>
+        /// Since a .NET application compiled under Mono can run under both Windows and Unix style platforms,
+        /// you can use this property to easily determine the current operating environment.
+        /// </para>
+        /// <para>
         /// This property will return <c>true</c> for both MacOSX and Unix environments. Use the Platform property
         /// of the <see cref="System.Environment.OSVersion"/> to determine more specific platform type, e.g., 
         /// MacOSX or Unix. Note that all flavors of Linux will show up as <see cref="PlatformID.Unix"/>.
+        /// </para>
         /// </remarks>        
         public static readonly bool IsPosixEnvironment = (Path.DirectorySeparatorChar == '/');   // This is how Mono source often checks this
+
+        /// <summary>
+        /// Determines if the code base is currently running under Mono.
+        /// </summary>
+        /// <remarks>
+        /// You can use this property to make a run-time determination if Windows or Mono based .NET is being used.
+        /// </remarks>
+        public static bool IsMono = ((object)Type.GetType("Mono.Runtime") != null);
 
         /// <summary>Returns one of two strongly-typed objects.</summary>
         /// <returns>One of two objects, depending on the evaluation of given expression.</returns>

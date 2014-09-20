@@ -54,11 +54,15 @@ namespace GSF.Identity
         #region [ Members ]
 
         // Nested Types
+
+        // ReSharper disable UnusedMember.Local
         private class UnixIdentity : WindowsIdentity
         {
             #region [ Members ]
 
             // Fields
+            private readonly string m_domain;
+            private readonly string m_userName;
             private LdapConnection m_connection;
             private string m_providerType;
             private string m_ldapRoot;
@@ -70,21 +74,50 @@ namespace GSF.Identity
 
             #region [ Constructors ]
 
-            public UnixIdentity(string userName, LdapConnection connection = null)
-                : base(GetUserIDAsToken(userName), null, WindowsAccountType.Normal, true)
+            public UnixIdentity(string domain, string userName, LdapConnection connection = null)
+                : base(GetUserIDAsToken(domain, userName), null, WindowsAccountType.Normal, true)
             {
+                m_domain = domain;
+                m_userName = userName;
                 Connection = connection;
 
-                // Cache shadow information before possible reduction in privileges
-                if (GetLocalUserPasswordInformation(userName, ref m_userPasswordInformation, out m_accountStatus) == 0)
-                    m_loadedUserPasswordInformation = true;
-                else
-                    m_accountStatus = AccountStatus.Disabled;
+                if (UserInfo.IsLocalDomain(domain))
+                {
+                    // Cache shadow information for local user before possible reduction in privileges
+                    if (GetLocalUserPasswordInformation(userName, ref m_userPasswordInformation, out m_accountStatus) == 0)
+                        m_loadedUserPasswordInformation = true;
+                    else
+                        m_accountStatus = AccountStatus.Disabled;
+                }
             }
 
             #endregion
 
             #region [ Properties ]
+
+            public string Domain
+            {
+                get
+                {
+                    return m_domain;
+                }
+            }
+
+            public string UserName
+            {
+                get
+                {
+                    return m_userName;
+                }
+            }
+
+            public string LoginID
+            {
+                get
+                {
+                    return string.Format("{0}\\{1}", m_domain, m_userName);
+                }
+            }
 
             public string ProviderType
             {
@@ -115,7 +148,7 @@ namespace GSF.Identity
 
                     if ((object)m_connection != null)
                     {
-                        // Extract LDAP root distinguished name
+                        // Extract LDAP search root distinguished name
                         StringBuilder ldapRoot = new StringBuilder();
                         string[] elements = m_connection.GetSchemaDN().Split(',');
 
@@ -169,9 +202,14 @@ namespace GSF.Identity
 
             #region [ Static ]
 
-            private static IntPtr GetUserIDAsToken(string userName)
+            private static IntPtr GetUserIDAsToken(string domain, string userName)
             {
                 uint userID;
+
+                // TODO: What to do if Linux stores mapped LDAP users as userName@domain? Format setting in config file?
+                if (!UserInfo.IsLocalDomain(domain))
+                    userName = string.Format("{0}\\{1}", domain, userName);
+
                 return GetLocalUserID(userName, out userID) == 0 ? new IntPtr(userID) : IntPtr.Zero;
             }
 
@@ -707,13 +745,14 @@ namespace GSF.Identity
 
                         // Pick up current user or impersonated user principal
                         WindowsPrincipal principal = Thread.CurrentPrincipal as WindowsPrincipal;
+                        UnixIdentity identity = null;
 
                         if ((object)principal != null)
                         {
-                            UnixIdentity identity = principal.Identity as UnixIdentity;
+                            identity = principal.Identity as UnixIdentity;
 
                             // If domain user has already been authenticated, we should already have an active LDAP connection
-                            if ((object)identity != null)
+                            if ((object)identity != null && identity.LoginID.Equals(m_parent.LoginID, StringComparison.InvariantCultureIgnoreCase))
                             {
                                 m_connection = identity.Connection;
                                 m_ldapRoot = identity.LdapRoot ?? m_parent.Domain;
@@ -741,7 +780,18 @@ namespace GSF.Identity
                         }
                         else
                         {
-                            throw new InvalidOperationException("Failed to get a valid LDAP connection");
+                            // If PAM authentication succeeded but no LDAP connection can be found, we attempt to treat this user as local
+                            if ((object)identity != null && identity.LoginID.Equals(m_parent.LoginID, StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                m_isLocalAccount = true;
+                                m_enabled = true;
+                                m_domainRespondsForUser = false;
+                                m_parent.UserAccountControl = -1;
+                            }
+                            else
+                            {
+                                throw new InvalidOperationException("No valid LDAP connection was found or user is not authenticated");
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -749,7 +799,7 @@ namespace GSF.Identity
                         m_userEntry = null;
                         m_domainRespondsForUser = false;
 
-                        throw new InitializationException(string.Format("Failed to initialize directory entry for domain user '{0}'", m_parent.LoginID), ex);
+                        throw new InitializationException(string.Format("Failed to initialize LDAP entry for domain user '{0}': {1}", m_parent.LoginID, ex.Message), ex);
                     }
                     finally
                     {
@@ -880,7 +930,7 @@ namespace GSF.Identity
             return s_builtInLocalGroups;
         }
 
-        public static IPrincipal AuthenticateUser(string domain, string username, string password, out string errorMessage)
+        public static IPrincipal AuthenticateUser(string domain, string userName, string password, out string errorMessage)
         {
             WindowsPrincipal principal = null;
             int responseCode;
@@ -888,28 +938,33 @@ namespace GSF.Identity
 
             if (UserInfo.IsLocalDomain(domain))
             {
-                responseCode = AuthenticateUser(username, password);
+                // Set the domain as the local machine if one is not specified
+                if (string.IsNullOrEmpty(domain))
+                    domain = Environment.MachineName;
+
+                responseCode = AuthenticateUser(userName, password);
 
                 if (responseCode == 0)
-                    principal = new WindowsPrincipal(new UnixIdentity(username));
+                    principal = new WindowsPrincipal(new UnixIdentity(domain, userName));
                 else
-                    errorMessage = string.Format("Failed to authenticate \"{0}\": {1}", username, GetPAMErrorMessage(responseCode));
+                    errorMessage = string.Format("Failed to authenticate \"{0}\": {1}", userName, GetPAMErrorMessage(responseCode));
             }
             else
             {
                 // Attempt PAM based authentication first - if configured, this will be the best option
-                string domainUserName = string.Format("{0}\\{1}", domain, username);
+                string domainUserName = string.Format("{0}\\{1}", domain, userName);
 
                 responseCode = AuthenticateUser(domainUserName, password);
 
                 if (responseCode == 0)
-                    principal = new WindowsPrincipal(new UnixIdentity(domainUserName));
+                    principal = new WindowsPrincipal(new UnixIdentity(domain, userName));
 
-                string ldapPath = GetLdapPath();
+                // Try really hard to find a configured LDAP host
+                string ldapHost = GetLdapHost();
 
-                // If LDAP path cannot be determined, no LdapConnection can be established  - if authentication
+                // If LDAP host cannot be determined, no LdapConnection can be established  - if authentication
                 // succeeded, user will be treated as a local user
-                if ((object)ldapPath == null)
+                if ((object)ldapHost == null)
                 {
                     if ((object)principal == null)
                         errorMessage = string.Format("Failed to authenticate \"{0}\": {1}", domainUserName, GetPAMErrorMessage(responseCode));
@@ -924,18 +979,18 @@ namespace GSF.Identity
                     // Attempt LDAP account authentication                    
                     LdapConnection connection = new LdapConnection();
 
-                    if (ldapPath.StartsWith("LDAP", StringComparison.OrdinalIgnoreCase))
+                    if (ldapHost.StartsWith("LDAP", StringComparison.OrdinalIgnoreCase))
                     {
-                        Uri ldapURI = new Uri(ldapPath);
-                        ldapPath = ldapURI.Host + (ldapURI.Port == 0 ? "" : ":" + ldapURI.Port);
+                        Uri ldapURI = new Uri(ldapHost);
+                        ldapHost = ldapURI.Host + (ldapURI.Port == 0 ? "" : ":" + ldapURI.Port);
                     }
 
                     // If host LDAP path contains suffixed port number, this will be preferred over specified 389 default
-                    connection.Connect(ldapPath, 389);
-                    connection.Bind(string.Format("{0}@{1}", username, domain), password);
+                    connection.Connect(ldapHost, 389);
+                    connection.Bind(string.Format("{0}@{1}", userName, domain), password);
 
                     if ((object)principal == null)
-                        principal = new WindowsPrincipal(new UnixIdentity(domainUserName, connection));
+                        principal = new WindowsPrincipal(new UnixIdentity(domain, userName, connection));
                     else
                         ((UnixIdentity)principal.Identity).Connection = connection;
                 }
@@ -951,11 +1006,11 @@ namespace GSF.Identity
             return principal;
         }
 
-        private static string GetLdapPath()
+        private static string GetLdapHost()
         {
-            string ldapPath = null;
+            string ldapHost = null;
 
-            // Attempt to derive an LDAP path from a Samba configuration @ /etc/samba/smb.conf looking for key "realm"
+            // Attempt to derive an LDAP host from a Samba configuration @ /etc/samba/smb.conf looking for key "realm"
             try
             {
                 const string smbConfFileName = "/etc/samba/smb.conf";
@@ -979,7 +1034,7 @@ namespace GSF.Identity
                                     string[] parts = line.Split('=');
 
                                     if (parts.Length > 1)
-                                        ldapPath = parts[1].Trim();
+                                        ldapHost = parts[1].Trim();
 
                                     break;
                                 }
@@ -991,11 +1046,11 @@ namespace GSF.Identity
             }
             catch
             {
-                ldapPath = null;
+                ldapHost = null;
             }
 
-            // If LDAP path has not been derived yet, attempt to derive an LDAP path from an OpenLDAP configuration @ /etc/openldap/ldap.conf looking for key "URI"
-            if (string.IsNullOrEmpty(ldapPath))
+            // If LDAP host has not been derived yet, attempt to derive an LDAP host from an OpenLDAP configuration @ /etc/openldap/ldap.conf looking for key "URI"
+            if (string.IsNullOrEmpty(ldapHost))
             {
                 try
                 {
@@ -1017,7 +1072,7 @@ namespace GSF.Identity
 
                                     if (line.StartsWith("URI", StringComparison.OrdinalIgnoreCase) && line.Length > 3)
                                     {
-                                        ldapPath = line.Substring(3).Trim();
+                                        ldapHost = line.Substring(3).Trim();
                                         break;
                                     }
                                 }
@@ -1028,12 +1083,12 @@ namespace GSF.Identity
                 }
                 catch
                 {
-                    ldapPath = null;
+                    ldapHost = null;
                 }
             }
 
-            // If LDAP path has not been derived yet, attempt to derive an LDAP path from a Centrify DirectControl Express adinfo call looking for key "Joined to domain:"
-            if (string.IsNullOrEmpty(ldapPath))
+            // If LDAP host has not been derived yet, attempt to derive an LDAP host from a Centrify DirectControl Express adinfo call looking for key "Joined to domain:"
+            if (string.IsNullOrEmpty(ldapHost))
             {
                 try
                 {
@@ -1054,7 +1109,7 @@ namespace GSF.Identity
                                     string[] parts = line.Split(':');
 
                                     if (parts.Length > 1)
-                                        ldapPath = parts[1].Trim();
+                                        ldapHost = parts[1].Trim();
 
                                     break;
                                 }
@@ -1065,12 +1120,12 @@ namespace GSF.Identity
                 }
                 catch
                 {
-                    ldapPath = null;
+                    ldapHost = null;
                 }
             }
 
-            // If LDAP path has not been derived yet, attempt to derive an LDAP path from a LikewiseOpen / Beyond Trust lw-get-status call looking for key "Domain:"
-            if (string.IsNullOrEmpty(ldapPath))
+            // If LDAP host has not been derived yet, attempt to derive an LDAP host from a LikewiseOpen / Beyond Trust lw-get-status call looking for key "Domain:"
+            if (string.IsNullOrEmpty(ldapHost))
             {
                 try
                 {
@@ -1091,7 +1146,7 @@ namespace GSF.Identity
                                     string[] parts = line.Split(':');
 
                                     if (parts.Length > 1)
-                                        ldapPath = parts[1].Trim();
+                                        ldapHost = parts[1].Trim();
 
                                     break;
                                 }
@@ -1102,12 +1157,12 @@ namespace GSF.Identity
                 }
                 catch
                 {
-                    ldapPath = null;
+                    ldapHost = null;
                 }
             }
 
-            // If LDAP path has not been derived yet, attempt to derive an LDAP path from the configuration for known GSF security providers
-            if (string.IsNullOrEmpty(ldapPath))
+            // If LDAP host has not been derived yet, attempt to derive an LDAP host from the configuration for known GSF security providers
+            if (string.IsNullOrEmpty(ldapHost))
             {
                 try
                 {
@@ -1119,37 +1174,37 @@ namespace GSF.Identity
                     {
                         // In AdoSecurityProvider the ConnectionString setting is used for database connection
                         // to load role based security -- so it adds a new setting for actual LdapPath
-                        ldapPath = settings["LdapPath"].Value;
+                        ldapHost = settings["LdapPath"].Value;
                     }
                     catch
                     {
-                        ldapPath = null;
+                        ldapHost = null;
                     }
 
                     // Otherwise, attempt to get LDAP path defined by LdapSecurityProvider
-                    if ((object)ldapPath == null)
+                    if ((object)ldapHost == null)
                     {
                         string ldapConnectionString = settings["ConnectionString"].Value;
 
                         if (ldapConnectionString.StartsWith("LDAP://", StringComparison.OrdinalIgnoreCase) ||
                             ldapConnectionString.StartsWith("LDAPS://", StringComparison.OrdinalIgnoreCase))
-                            ldapPath = ldapConnectionString;
+                            ldapHost = ldapConnectionString;
 
                         foreach (KeyValuePair<string, string> pair in ldapConnectionString.ParseKeyValuePairs())
                         {
                             if (pair.Value.StartsWith("LDAP://", StringComparison.OrdinalIgnoreCase) ||
                                 pair.Value.StartsWith("LDAPS://", StringComparison.OrdinalIgnoreCase))
-                                ldapPath = pair.Value;
+                                ldapHost = pair.Value;
                         }
                     }
                 }
                 catch
                 {
-                    ldapPath = null;
+                    ldapHost = null;
                 }
             }
 
-            return ldapPath;
+            return ldapHost;
         }
 
         public static WindowsImpersonationContext ImpersonateUser(string domain, string userName, string password)
@@ -1535,7 +1590,8 @@ namespace GSF.Identity
 
         private static int GetCachedLocalUserPasswordInformation(string userName, out UserPasswordInformation userPasswordInformation, out AccountStatus accountStatus)
         {
-            // Attempt to pick up Unix user principal identity in case shadow information has already been parsed
+            // Attempt to retrieve Unix user principal identity in case shadow information has already been parsed, in most
+            // cases we will have already reduced rights needed to read this information so we pick up pre-parsed info
             WindowsPrincipal principal = Thread.CurrentPrincipal as WindowsPrincipal;
 
             if ((object)principal != null)
@@ -1543,7 +1599,7 @@ namespace GSF.Identity
                 UnixIdentity identity = principal.Identity as UnixIdentity;
 
                 // If user has already been authenticated, we can load pre-parsed shadow information
-                if ((object)identity != null && identity.LoadedUserPasswordInformation)
+                if ((object)identity != null && identity.LoadedUserPasswordInformation && identity.UserName.Equals(userName, StringComparison.InvariantCultureIgnoreCase))
                 {
                     userPasswordInformation = identity.UserPasswordInformation;
                     accountStatus = identity.AccountStatus;
@@ -1614,7 +1670,7 @@ namespace GSF.Identity
                     case PAMResponseCode.PAM_AUTHTOK_DISABLE_AGING:
                         return "Authentication token aging has been disabled for at least one of the modules.";
                     case PAMResponseCode.PAM_PERM_DENIED:
-                        return "Permission denied.";
+                        return "Permission denied. Validate user credentials.";
                     case PAMResponseCode.PAM_TRY_AGAIN:
                         return "Not all of the modules were in a position to update the authentication token(s). None of the user's authentication tokens were updated.";
                     default:

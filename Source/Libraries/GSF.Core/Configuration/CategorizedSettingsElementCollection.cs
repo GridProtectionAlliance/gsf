@@ -111,6 +111,7 @@ namespace GSF.Configuration
                     base.BaseRemoveAt(index);
 
                 base.BaseAdd(index, value);
+                Modified = true;
             }
         }
 
@@ -137,20 +138,26 @@ namespace GSF.Configuration
         {
             get
             {
+                // Add setting since it's not there
                 if (ensureExistance && (object)base.BaseGet(name) == null)
-                {
-                    // Add setting since it's not there.
                     Add(name, string.Empty);
-                }
 
                 CategorizedSettingsElement setting = (CategorizedSettingsElement)base.BaseGet(name);
+
+                // Set the crypto key for the setting
                 if ((object)setting != null)
-                {
-                    // Set the crypto key for the setting.
                     setting.SetCryptoKey(m_cryptoKey);
-                }
 
                 return setting;
+            }
+        }
+
+        internal bool Modified
+        {
+            set
+            {
+                if ((object)m_section != null)
+                    m_section.Modified = value;
             }
         }
 
@@ -242,6 +249,7 @@ namespace GSF.Configuration
                 setting.Category = this;
                 setting.SetCryptoKey(m_cryptoKey);
                 base.BaseAdd(setting);
+                Modified = true;
             }
         }
 
@@ -252,6 +260,7 @@ namespace GSF.Configuration
         public void Remove(string name)
         {
             base.BaseRemove(name);
+            Modified = true;
         }
 
         /// <summary>
@@ -263,6 +272,7 @@ namespace GSF.Configuration
             if (base.BaseIndexOf(setting) >= 0)
             {
                 Remove(setting.Name);
+                Modified = true;
             }
         }
 
@@ -273,6 +283,7 @@ namespace GSF.Configuration
         public void RemoveAt(int index)
         {
             base.BaseRemoveAt(index);
+            Modified = true;
         }
 
         /// <summary>
@@ -281,6 +292,7 @@ namespace GSF.Configuration
         public void Clear()
         {
             base.BaseClear();
+            Modified = true;
         }
 
         /// <summary>

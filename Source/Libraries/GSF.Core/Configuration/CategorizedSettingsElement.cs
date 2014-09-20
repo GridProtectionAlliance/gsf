@@ -170,6 +170,7 @@ namespace GSF.Configuration
             set
             {
                 base["name"] = value;
+                Modified = true;
             }
         }
 
@@ -229,6 +230,8 @@ namespace GSF.Configuration
                 else
                     // Setting is user specific so update setting in user settings store.
                     Category.Section.File.UserSettings.Write(Category.Name, Name, value);
+
+                Modified = true;
             }
         }
 
@@ -250,6 +253,7 @@ namespace GSF.Configuration
                     return;
 
                 base["description"] = value;
+                Modified = true;
             }
         }
 
@@ -271,6 +275,7 @@ namespace GSF.Configuration
                     return;
 
                 base["encrypted"] = value;
+                Modified = true;
             }
         }
 
@@ -291,6 +296,16 @@ namespace GSF.Configuration
                     return;
 
                 base["scope"] = value;
+                Modified = true;
+            }
+        }
+
+        internal bool Modified
+        {
+            set
+            {
+                if ((object)m_category != null)
+                    m_category.Modified = value;
             }
         }
 
@@ -311,6 +326,7 @@ namespace GSF.Configuration
                 string decryptedValue = Value;
                 m_cryptoKey = cryptoKey;
                 Value = decryptedValue;
+                Modified = true;
             }
         }
 
@@ -357,6 +373,7 @@ namespace GSF.Configuration
             this.Encrypted = encrypted;
             this.Value = Common.TypeConvertToString(value, m_category.Section.File.Culture);
             this.Description = description;
+            Modified = true;
         }
 
         /// <summary>

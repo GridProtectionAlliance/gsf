@@ -64,7 +64,6 @@ using System.Configuration;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using System.Threading;
 using System.Web.Configuration;
 using System.Web.Hosting;
 using System.Xml;
@@ -177,7 +176,6 @@ namespace GSF.Configuration
         #region [ Members ]
 
         // Nested Types
-
         internal class UserConfigurationFile
         {
             private readonly string m_fileName;
@@ -229,6 +227,7 @@ namespace GSF.Configuration
             public void Write(string category, string name, string value)
             {
                 XmlNode node = GetSetting(category, name);
+
                 if ((object)node != null)
                 {
                     // Setting exists so update it.
@@ -242,18 +241,20 @@ namespace GSF.Configuration
                     setting.SetAttributeValue("value", value);
                     m_settings.GetXmlNode(category).AppendChild(setting);
                 }
+
                 m_settingsModified = true;
             }
 
             public string Read(string category, string name, string defaultValue)
             {
                 XmlNode node = GetSetting(category, name);
-                if ((object)node != null)
-                    // Setting exists so return its value.
+
+                // If setting exists, return its value
+                if ((object)node != null && (object)node.Attributes != null)
                     return node.Attributes["value"].Value;
-                else
-                    // Setting doesn't exist so return the default.
-                    return defaultValue;
+
+                // Setting doesn't exist so return the default
+                return defaultValue;
             }
 
             public XmlNode GetSetting(string category, string name)
@@ -272,7 +273,8 @@ namespace GSF.Configuration
         private System.Configuration.Configuration m_configuration;
         private UserConfigurationFile m_userConfiguration;
         private volatile ConfigurationSaveMode m_saveMode;
-        private LongSynchronizedOperation m_saveOperation;
+        private readonly LongSynchronizedOperation m_saveOperation;
+        internal bool m_forceSave;
 
         #endregion
 
@@ -288,7 +290,7 @@ namespace GSF.Configuration
 
             m_configuration = GetConfiguration(configFilePath);
 
-            if (m_configuration.HasFile)
+            if (m_configuration.HasFile && File.Exists(m_configuration.FilePath))
                 ValidateConfigurationFile(m_configuration.FilePath);
             else
                 CreateConfigurationFile(m_configuration.FilePath);
@@ -364,7 +366,7 @@ namespace GSF.Configuration
         /// </summary>
         public void Save()
         {
-            Save(ConfigurationSaveMode.Modified);
+            Save(m_forceSave ? ConfigurationSaveMode.Full : ConfigurationSaveMode.Modified);
         }
 
         /// <summary>
@@ -373,8 +375,7 @@ namespace GSF.Configuration
         /// <param name="saveMode">One of the <see cref="ConfigurationSaveMode"/> values.</param>
         public void Save(ConfigurationSaveMode saveMode)
         {
-            if (m_saveMode == ConfigurationSaveMode.Minimal || saveMode == ConfigurationSaveMode.Full)
-                m_saveMode = saveMode;
+            m_saveMode = saveMode;
 
             // Since the static open method always returns the same instance for the same configuration files,
             // synchronizing the instance will sync all saves.
@@ -385,9 +386,10 @@ namespace GSF.Configuration
         {
             // Perform configuration save
             ConfigurationSaveMode saveMode = m_saveMode;
-            m_configuration.Save(saveMode);
+            m_configuration.Save(saveMode, m_forceSave);
             m_userConfiguration.Save(saveMode == ConfigurationSaveMode.Full);
             m_saveMode = ConfigurationSaveMode.Minimal;
+            m_forceSave = false;
         }
 
         /// <summary>
@@ -436,7 +438,7 @@ namespace GSF.Configuration
         private System.Configuration.Configuration GetConfiguration(string configFilePath)
         {
             ApplicationType appType = Common.GetApplicationType();
-            System.Configuration.Configuration configuration = null;
+            System.Configuration.Configuration configuration;
 
             if ((object)configFilePath != null)
             {
@@ -475,13 +477,15 @@ namespace GSF.Configuration
             if (!string.IsNullOrEmpty(configFilePath))
             {
                 XmlTextWriter configFileWriter = new XmlTextWriter(configFilePath, Encoding.UTF8);
-                configFileWriter.Indentation = 4;
+                configFileWriter.Indentation = 2;
                 configFileWriter.Formatting = Formatting.Indented;
+
                 // Populates the very basic information required in a config file.
                 configFileWriter.WriteStartDocument();
                 configFileWriter.WriteStartElement("configuration");
                 configFileWriter.WriteEndElement();
                 configFileWriter.WriteEndDocument();
+
                 // Closes the config file.
                 configFileWriter.Close();
 
@@ -505,32 +509,44 @@ namespace GSF.Configuration
                 // Make sure that the config file has the necessary section information under <customSections />
                 // that is required by the .Net configuration API to process our custom <categorizedSettings />
                 // section. The configuration API will raise an exception if it doesn't find this section.
-                if (configFile.DocumentElement.SelectNodes("configSections").Count == 0)
+                if ((object)configFile.DocumentElement != null)
                 {
-                    // Adds a <configSections> node, if one is not present.
-                    configFile.DocumentElement.InsertBefore(configFile.CreateElement("configSections"), configFile.DocumentElement.FirstChild);
+                    XmlNodeList configSections = configFile.DocumentElement.SelectNodes("configSections");
 
-                    configFileModified = true;
-                }
-                XmlNode configSectionsNode = configFile.DocumentElement.SelectSingleNode("configSections");
-                if (configSectionsNode.SelectNodes("section[@name = \'" + CustomSectionName + "\']").Count == 0)
-                {
-                    // Adds the <section> node that specifies the DLL that handles the <categorizedSettings> node in
-                    // the config file, if one is not present.
-                    XmlNode node = configFile.CreateElement("section");
-                    node.SetAttributeValue("name", CustomSectionName);
-                    node.SetAttributeValue("type", CustomSectionType);
-                    configSectionsNode.AppendChild(node);
+                    if ((object)configSections != null && configSections.Count == 0)
+                    {
+                        // Add a <configSections> node, if one is not present.
+                        if ((object)configFile.DocumentElement != null)
+                        {
+                            // ReSharper disable once PossibleNullReferenceException
+                            configFile.DocumentElement.InsertBefore(configFile.CreateElement("configSections"), configFile.DocumentElement.FirstChild);
+                            configFileModified = true;
+                        }
+                    }
 
-                    configFileModified = true;
+                    XmlNode configSectionsNode = configFile.DocumentElement.SelectSingleNode("configSections");
+
+                    if ((object)configSectionsNode != null)
+                    {
+                        XmlNodeList section = configSectionsNode.SelectNodes("section[@name = \'" + CustomSectionName + "\']");
+
+                        if ((object)section != null && section.Count == 0)
+                        {
+                            // Adds the <section> node that specifies the DLL that handles the <categorizedSettings> node in
+                            // the config file, if one is not present.
+                            XmlNode node = configFile.CreateElement("section");
+                            node.SetAttributeValue("name", CustomSectionName);
+                            node.SetAttributeValue("type", CustomSectionType);
+                            configSectionsNode.AppendChild(node);
+                            configFileModified = true;
+                        }
+                    }
                 }
 
                 // 11/14/2006 - PCP: We'll save the config file only it was modified. This will prevent ASP.Net
                 // web sites from restarting every time a configuration element is accessed.
                 if (configFileModified)
-                {
                     configFile.Save(configFilePath);
-                }
             }
             else
             {

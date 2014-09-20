@@ -30,8 +30,6 @@
 //       Edited Comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
-//  12/14/2012 - Starlynn Danyelle Gilliam
-//       Modifed Header.
 //
 //******************************************************************************************************
 
@@ -105,15 +103,21 @@ namespace GSF.Xml
             {
                 XmlNodeList nodes = parentNode.SelectNodes(xpath);
 
-                if (nodes.Count == 0)
+                if ((object)nodes != null)
                 {
-                    node = parentNode.OwnerDocument.CreateElement(xpath);
-                    parentNode.AppendChild(node);
-                    isDirty = true;
-                }
-                else
-                {
-                    node = nodes[0];
+                    if (nodes.Count == 0)
+                    {
+                        if ((object)parentNode.OwnerDocument != null)
+                        {
+                            node = parentNode.OwnerDocument.CreateElement(xpath);
+                            parentNode.AppendChild(node);
+                            isDirty = true;
+                        }
+                    }
+                    else
+                    {
+                        node = nodes[0];
+                    }
                 }
             }
             else
@@ -135,16 +139,15 @@ namespace GSF.Xml
         /// <returns>A <see cref="System.String"/> value returned for the attribute's value.</returns>
         public static string GetAttributeValue(this XmlNode node, string name)
         {
-            XmlAttribute attr = node.Attributes[name];
-
-            if ((object)attr == null)
-            {
+            if ((object)node == null || (object)node.Attributes == null)
                 return null;
-            }
-            else
-            {
-                return attr.Value;
-            }
+
+            XmlAttribute attribute = node.Attributes[name];
+
+            if ((object)attribute == null)
+                return null;
+
+            return attribute.Value;
         }
 
         /// <summary>Safely sets an XML node's attribute.</summary>
@@ -154,19 +157,26 @@ namespace GSF.Xml
         /// <param name="value">A <see cref="System.String"/> value to set the node attribute's value to.</param>
         public static void SetAttributeValue(this XmlNode node, string name, string value)
         {
-            XmlAttribute attr = node.Attributes[name];
+            if ((object)node == null || (object)node.Attributes == null)
+                return;
 
-            if ((object)attr == null)
+            XmlAttribute attribute = node.Attributes[name];
+
+            if ((object)attribute == null)
             {
                 // Add the attribute.
-                attr = node.OwnerDocument.CreateAttribute(name);
-                node.Attributes.Append(attr);
+                if ((object)node.OwnerDocument != null)
+                {
+                    attribute = node.OwnerDocument.CreateAttribute(name);
+                    attribute.Value = value;
+                    node.Attributes.Append(attribute);
+                }
             }
-            if ((object)attr != null)
+            else
             {
                 // Set the attribute value.
-                attr.Value = value;
-                node.Attributes.SetNamedItem(attr);
+                attribute.Value = value;
+                node.Attributes.SetNamedItem(attribute);
             }
         }
 

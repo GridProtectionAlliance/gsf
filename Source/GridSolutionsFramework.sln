@@ -297,9 +297,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnixTools", "Tools\UnixTool
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserInfoTest", "Tools\UserInfoTest\UserInfoTest.csproj", "{CD74CE4C-6319-4946-889A-413DC51B03F6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigTest", "Tools\ConfigTest\ConfigTest.csproj", "{B38AC5E5-B880-43E9-8F88-107294F3E69F}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 86
+		SccNumberOfProjects = 87
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs07
 		SccLocalPath0 = .
@@ -643,6 +645,10 @@ Global
 		SccProjectTopLevelParentUniqueName85 = GridSolutionsFramework.sln
 		SccProjectName85 = Tools/UserInfoTest
 		SccLocalPath85 = Tools\\UserInfoTest
+		SccProjectUniqueName86 = Tools\\ConfigTest\\ConfigTest.csproj
+		SccProjectTopLevelParentUniqueName86 = GridSolutionsFramework.sln
+		SccProjectName86 = Tools/ConfigTest
+		SccLocalPath86 = Tools\\ConfigTest
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = GSF.Core.Tests.vsmdi
@@ -1542,6 +1548,15 @@ Global
 		{CD74CE4C-6319-4946-889A-413DC51B03F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CD74CE4C-6319-4946-889A-413DC51B03F6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CD74CE4C-6319-4946-889A-413DC51B03F6}.Release|x86.ActiveCfg = Release|Any CPU
+		{B38AC5E5-B880-43E9-8F88-107294F3E69F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B38AC5E5-B880-43E9-8F88-107294F3E69F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B38AC5E5-B880-43E9-8F88-107294F3E69F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B38AC5E5-B880-43E9-8F88-107294F3E69F}.Mono|Any CPU.ActiveCfg = Release|Any CPU
+		{B38AC5E5-B880-43E9-8F88-107294F3E69F}.Mono|Any CPU.Build.0 = Release|Any CPU
+		{B38AC5E5-B880-43E9-8F88-107294F3E69F}.Mono|x86.ActiveCfg = Release|Any CPU
+		{B38AC5E5-B880-43E9-8F88-107294F3E69F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B38AC5E5-B880-43E9-8F88-107294F3E69F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B38AC5E5-B880-43E9-8F88-107294F3E69F}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1638,6 +1653,7 @@ Global
 		{4508009C-7011-4981-B35F-594F42CC0D1F} = {B48642A1-1163-4E1D-948A-50EE19DCD38D}
 		{5A047659-4C24-4B72-A9F3-6553D91F95DC} = {B48642A1-1163-4E1D-948A-50EE19DCD38D}
 		{CD74CE4C-6319-4946-889A-413DC51B03F6} = {B48642A1-1163-4E1D-948A-50EE19DCD38D}
+		{B38AC5E5-B880-43E9-8F88-107294F3E69F} = {B48642A1-1163-4E1D-948A-50EE19DCD38D}
 		{AEB62271-270D-4F3E-B596-2297B382A95F} = {99F344EA-D35D-42C8-882B-B495527B5F40}
 		{4F46CF24-163D-4541-9EBF-C291053C0948} = {99F344EA-D35D-42C8-882B-B495527B5F40}
 		{94F36768-E9A0-4783-BB0F-8C2C1771352E} = {AEB62271-270D-4F3E-B596-2297B382A95F}
