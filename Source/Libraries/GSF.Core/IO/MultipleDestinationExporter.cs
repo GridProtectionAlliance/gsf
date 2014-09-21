@@ -771,7 +771,7 @@ namespace GSF.IO
         public void Initialize()
         {
             // We provide a simple default set of export destinations since no others are specified.
-            Initialize(new[] { new ExportDestination("C:\\filename.txt", false, "domain", "username", "password") });
+            Initialize(new[] { new ExportDestination(Common.IsPosixEnvironment ? "/usr/share/filename.txt" : "C:\\filename.txt", false, "domain", "username", "password") });
         }
 
         /// <summary>
@@ -829,24 +829,27 @@ namespace GSF.IO
                 // Connect to network shares if necessary
                 if (destinations[x].ConnectToShare)
                 {
-#if MONO
-                    OnStatusMessage("Network share authentication is not available on Mono deployments. Requested authentication not attempted for: {0}\\{1} to {2}...", destinations[x].Domain, destinations[x].UserName, destinations[x].Share);
-#else
-                    // Attempt connection to external network share
-                    try
+                    if (Common.IsPosixEnvironment)
                     {
-                        OnStatusMessage("Attempting network share authentication for user {0}\\{1} to {2}...", destinations[x].Domain, destinations[x].UserName, destinations[x].Share);
-
-                        FilePath.ConnectToNetworkShare(destinations[x].Share, destinations[x].UserName, destinations[x].Password, destinations[x].Domain);
-
-                        OnStatusMessage("Network share authentication to {0} succeeded.", destinations[x].Share);
+                        OnStatusMessage("Network share authentication not available under POSIX environment...");
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        // Something unexpected happened during attempt to connect to network share - so we'll report it...
-                        OnProcessException(new IOException(string.Format("Network share authentication to {0} failed due to exception: {1}", destinations[x].Share, ex.Message), ex));
+                        // Attempt connection to external network share
+                        try
+                        {
+                            OnStatusMessage("Attempting network share authentication for user {0}\\{1} to {2}...", destinations[x].Domain, destinations[x].UserName, destinations[x].Share);
+
+                            FilePath.ConnectToNetworkShare(destinations[x].Share, destinations[x].UserName, destinations[x].Password, destinations[x].Domain);
+
+                            OnStatusMessage("Network share authentication to {0} succeeded.", destinations[x].Share);
+                        }
+                        catch (Exception ex)
+                        {
+                            // Something unexpected happened during attempt to connect to network share - so we'll report it...
+                            OnProcessException(new IOException(string.Format("Network share authentication to {0} failed due to exception: {1}", destinations[x].Share, ex.Message), ex));
+                        }
                     }
-#endif
                 }
             }
 
@@ -868,8 +871,7 @@ namespace GSF.IO
                     // We'll be nice and disconnect network shares when this class is disposed...
                     for (int x = 0; x < m_exportDestinations.Count; x++)
                     {
-#if !MONO
-                        if (m_exportDestinations[x].ConnectToShare)
+                        if (m_exportDestinations[x].ConnectToShare && !Common.IsPosixEnvironment)
                         {
                             try
                             {
@@ -881,7 +883,6 @@ namespace GSF.IO
                                 OnProcessException(new IOException(string.Format("Network share disconnect from {0} failed due to exception: {1}", m_exportDestinations[x].Share, ex.Message), ex));
                             }
                         }
-#endif
                     }
                 }
             }

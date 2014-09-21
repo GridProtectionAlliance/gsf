@@ -225,13 +225,16 @@ namespace GSF.Configuration
                 value = EncryptValue(value);
 
                 if (Scope == SettingScope.Application || (object)Category[Name] == null)
+                {
                     // Setting is application wide or is being added for the first time.
                     base["value"] = value;
+                    Modified = true;
+                }
                 else
+                {
                     // Setting is user specific so update setting in user settings store.
                     Category.Section.File.UserSettings.Write(Category.Name, Name, value);
-
-                Modified = true;
+                }
             }
         }
 
@@ -721,7 +724,7 @@ namespace GSF.Configuration
         {
             string value = (string)base["value"];
 
-            // If setting is user specific, retrive value from user settings store.
+            // If setting is user specific, retrieve value from user settings store.
             if (Scope == SettingScope.User)
                 value = Category.Section.File.UserSettings.Read(Category.Name, Name, value);
 

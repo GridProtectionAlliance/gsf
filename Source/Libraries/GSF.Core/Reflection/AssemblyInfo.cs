@@ -376,7 +376,7 @@ namespace GSF.Reflection
         {
             get
             {
-                return m_assemblyInstance.Location.ToLower();
+                return m_assemblyInstance.Location;
             }
         }
 
@@ -387,7 +387,7 @@ namespace GSF.Reflection
         {
             get
             {
-                return m_assemblyInstance.CodeBase.Replace("file:///", "").ToLower();
+                return m_assemblyInstance.CodeBase.Replace("file:///", "");
             }
         }
 

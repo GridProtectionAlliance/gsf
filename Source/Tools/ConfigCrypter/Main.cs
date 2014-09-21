@@ -29,6 +29,7 @@
 
 using System;
 using System.Windows.Forms;
+using GSF.Configuration;
 using GSF.Reflection;
 using GSF.Security.Cryptography;
 
@@ -65,6 +66,7 @@ namespace ConfigCrypter
         private void Main_FormClosing(object sender, FormClosingEventArgs e)
         {
             Cipher.FlushCache();
+            ConfigurationFile.Current.Save();
         }
 
         private void RadioButtonEncrypt_CheckedChanged(object sender, EventArgs e)

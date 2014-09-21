@@ -456,23 +456,30 @@ namespace GSF.TimeSeries
         /// </summary>
         private string GetProcessOwner(int processId)
         {
-            string query = "Select * From Win32_Process Where ProcessID = " + processId;
-            ManagementObjectSearcher searcher = new ManagementObjectSearcher(query);
-            ManagementObjectCollection processList = searcher.Get();
-
-            object[] argList;
-            int returnVal;
-
-            foreach (ManagementObject obj in processList)
+            try
             {
-                argList = new object[] { string.Empty, string.Empty };
-                returnVal = Convert.ToInt32(obj.InvokeMethod("GetOwner", argList));
+                string query = "Select * From Win32_Process Where ProcessID = " + processId;
+                ManagementObjectSearcher searcher = new ManagementObjectSearcher(query);
+                ManagementObjectCollection processList = searcher.Get();
 
-                if (returnVal == 0)
-                    return argList[1] + "\\" + argList[0];
+                object[] argList;
+                int returnVal;
+
+                foreach (ManagementObject obj in processList)
+                {
+                    argList = new object[] { string.Empty, string.Empty };
+                    returnVal = Convert.ToInt32(obj.InvokeMethod("GetOwner", argList));
+
+                    if (returnVal == 0)
+                        return argList[1] + "\\" + argList[0];
+                }
+
+                return "NO OWNER";
             }
-
-            return "NO OWNER";
+            catch
+            {
+                return "NO OWNER";
+            }
         }
 
         #endregion

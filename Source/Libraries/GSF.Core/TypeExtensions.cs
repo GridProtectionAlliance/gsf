@@ -41,6 +41,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using GSF.IO;
@@ -149,7 +150,7 @@ namespace GSF
                     // The binaries directory is not specified.
                     case ApplicationType.Web:
                         // Use the bin directory for web applications.
-                        binariesDirectory = FilePath.GetAbsolutePath("bin\\*.*");
+                        binariesDirectory = FilePath.GetAbsolutePath(string.Format("bin{0}*.*", Path.DirectorySeparatorChar));
                         break;
                     default:
                         // Use application install directory for application.

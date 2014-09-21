@@ -422,6 +422,9 @@ namespace GSF.Security.Cryptography
         // Switch to turn off managed encryption and use wrappers over FIPS-compliant algorithms.
         private static readonly bool s_managedEncryption;
 
+        // Set default encoding base Base64 strings
+        private static readonly Encoding s_textEncoding = Common.IsMono ? Encoding.Default : s_textEncoding;
+
         /// <summary>
         /// Static constructor for the <see cref="Cipher"/> class.
         /// </summary>
@@ -448,7 +451,10 @@ namespace GSF.Security.Cryptography
             maximumRetryAttempts = settings["CacheMaximumRetryAttempts"].ValueAs(maximumRetryAttempts);
 
             // Determine if the user needs to use FIPS-compliant algorithms
-            s_managedEncryption = (Registry.GetValue(fipsKeyNew, "Enabled", 0) ?? Registry.GetValue(fipsKeyOld, "FIPSAlgorithmPolicy", 0)).ToString() == "0";
+            if (Common.IsPosixEnvironment)
+                s_managedEncryption = true; // FIPS not supported on Mono
+            else
+                s_managedEncryption = (Registry.GetValue(fipsKeyNew, "Enabled", 0) ?? Registry.GetValue(fipsKeyOld, "FIPSAlgorithmPolicy", 0)).ToString() == "0";
 
             // Initialize local cryptographic key and initialization vector cache (application may only have read-only access to this cache)
             localKeyIVCache = new KeyIVCache
@@ -699,7 +705,7 @@ namespace GSF.Security.Cryptography
             if (strength == CipherStrength.None)
                 return source;
 
-            return Convert.ToBase64String(Encoding.Unicode.GetBytes(source).Encrypt(password, strength));
+            return Convert.ToBase64String(s_textEncoding.GetBytes(source).Encrypt(password, strength));
         }
 
         /// <summary>
@@ -903,7 +909,7 @@ namespace GSF.Security.Cryptography
             if (strength == CipherStrength.None)
                 return source;
 
-            return Encoding.Unicode.GetString(Convert.FromBase64String(source).Decrypt(password, strength));
+            return s_textEncoding.GetString(Convert.FromBase64String(source).Decrypt(password, strength));
         }
 
         /// <summary>

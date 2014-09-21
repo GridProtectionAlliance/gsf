@@ -784,7 +784,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 if (!foundETRFile)
                 {
                     // Also test for ETR in configuration cache folder
-                    etrFilePath = FilePath.GetAbsolutePath("ConfigurationCache\\" + etrFileName);
+                    etrFilePath = FilePath.GetAbsolutePath(string.Format("ConfigurationCache{0}{1}", Path.DirectorySeparatorChar, etrFileName));
                     foundETRFile = File.Exists(etrFilePath);
                 }
 

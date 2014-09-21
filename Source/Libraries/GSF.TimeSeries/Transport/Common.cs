@@ -43,7 +43,7 @@ namespace GSF.TimeSeries.Transport
             const string fipsKeyNew = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\FipsAlgorithmPolicy";
 
             // Determine if the operating system configuration to set to use FIPS-compliant algorithms
-            s_canUseManagedEncryption = (Registry.GetValue(fipsKeyNew, "Enabled", 0) ?? Registry.GetValue(fipsKeyOld, "FipsAlgorithmPolicy", 0)).ToString() == "0";
+            s_canUseManagedEncryption = GSF.Common.IsMono || (Registry.GetValue(fipsKeyNew, "Enabled", 0) ?? Registry.GetValue(fipsKeyOld, "FipsAlgorithmPolicy", 0)).ToString() == "0";
         }
 
         /// <summary>

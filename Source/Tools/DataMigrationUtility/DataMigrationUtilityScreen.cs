@@ -35,6 +35,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using GSF;
+using GSF.Configuration;
 using GSF.Data;
 using GSF.IO;
 using GSF.Reflection;
@@ -174,8 +175,11 @@ namespace DataMigrationUtility
 
             this.RestoreLocation();
 
-            Show();
-            BringToFront();
+            if (!GSF.Common.IsPosixEnvironment)
+            {
+                Show();
+                BringToFront();
+            }
 
             string[] args = Environment.GetCommandLineArgs();
             bool installFlag = args.Contains("-install", StringComparer.CurrentCultureIgnoreCase);

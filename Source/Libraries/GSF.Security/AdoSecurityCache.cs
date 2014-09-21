@@ -216,11 +216,11 @@ namespace GSF.Security
                     cachePath = FilePath.GetAbsolutePath(systemSettings["ConfigurationCachePath"].Value);
 
                 if (string.IsNullOrEmpty(cachePath))
-                    cachePath = string.Format("{0}\\ConfigurationCache\\", FilePath.GetAbsolutePath(""));
+                    cachePath = string.Format("{0}{1}ConfigurationCache{1}", FilePath.GetAbsolutePath(""), Path.DirectorySeparatorChar);
             }
             catch (ConfigurationErrorsException)
             {
-                cachePath = string.Format("{0}\\ConfigurationCache\\", FilePath.GetAbsolutePath(""));
+                cachePath = string.Format("{0}{1}ConfigurationCache{1}", FilePath.GetAbsolutePath(""), Path.DirectorySeparatorChar);
             }
 
             string localCacheFileName = Path.Combine(cachePath, DefaultCacheFileName);

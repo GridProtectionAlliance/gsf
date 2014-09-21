@@ -132,7 +132,7 @@ namespace GSF.PhasorProtocols.Anonymous
                 if (string.IsNullOrEmpty(s_configurationCachePath))
                 {
                     // Define default configuration cache directory relative to path of host application
-                    s_configurationCachePath = string.Format("{0}\\ConfigurationCache\\", FilePath.GetAbsolutePath(""));
+                    s_configurationCachePath = string.Format("{0}{1}ConfigurationCache{1}", FilePath.GetAbsolutePath(""), Path.DirectorySeparatorChar);
 
                     // Make sure configuration cache path setting exists within system settings section of config file
                     ConfigurationFile configFile = ConfigurationFile.Current;

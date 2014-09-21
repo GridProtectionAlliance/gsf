@@ -312,7 +312,7 @@ namespace GSF.TimeSeries
 
             // Make sure default service settings exist
             ConfigurationFile configFile = ConfigurationFile.Current;
-            string cachePath = string.Format("{0}\\ConfigurationCache\\", FilePath.GetAbsolutePath(""));
+            string cachePath = string.Format("{0}{1}ConfigurationCache{1}", FilePath.GetAbsolutePath(""), Path.DirectorySeparatorChar);
 
             // System settings
             CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
@@ -412,7 +412,7 @@ namespace GSF.TimeSeries
             switch (m_configurationType)
             {
                 case ConfigurationType.Database:
-                    m_configurationLoader = new DatabaseConfigurationLoader()
+                    m_configurationLoader = new DatabaseConfigurationLoader
                     {
                         ConnectionString = systemSettings["ConnectionString"].Value,
                         DataProviderString = systemSettings["DataProviderString"].Value,
@@ -422,7 +422,7 @@ namespace GSF.TimeSeries
                     break;
 
                 case ConfigurationType.WebService:
-                    m_configurationLoader = new WebServiceConfigurationLoader()
+                    m_configurationLoader = new WebServiceConfigurationLoader
                     {
                         URI = systemSettings["ConnectionString"].Value
                     };
@@ -430,7 +430,7 @@ namespace GSF.TimeSeries
                     break;
 
                 case ConfigurationType.BinaryFile:
-                    m_configurationLoader = new BinaryFileConfigurationLoader()
+                    m_configurationLoader = new BinaryFileConfigurationLoader
                     {
                         FilePath = systemSettings["ConnectionString"].Value
                     };
@@ -438,7 +438,7 @@ namespace GSF.TimeSeries
                     break;
 
                 case ConfigurationType.XmlFile:
-                    m_configurationLoader = new XMLConfigurationLoader()
+                    m_configurationLoader = new XMLConfigurationLoader
                     {
                         FilePath = systemSettings["ConnectionString"].Value
                     };
@@ -446,12 +446,12 @@ namespace GSF.TimeSeries
                     break;
             }
 
-            m_binaryCacheConfigurationLoader = new BinaryFileConfigurationLoader()
+            m_binaryCacheConfigurationLoader = new BinaryFileConfigurationLoader
             {
                 FilePath = m_cachedBinaryConfigurationFile
             };
 
-            m_xmlCacheConfigurationLoader = new XMLConfigurationLoader()
+            m_xmlCacheConfigurationLoader = new XMLConfigurationLoader
             {
                 FilePath = m_cachedXmlConfigurationFile
             };
@@ -516,7 +516,7 @@ namespace GSF.TimeSeries
                 FilePath.TrimFileName(FilePath.RemovePathSuffix(FilePath.GetAbsolutePath("")), 61),
                 Environment.MachineName,
                 Environment.OSVersion.VersionString,
-                Registry.GetValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "ProductName", null).ToNonNullString("<Unavailable>"),
+                Common.IsPosixEnvironment ? "POSIX" : Registry.GetValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "ProductName", null).ToNonNullString("<Unavailable>"),
                 SI2.ToScaledString(Environment.WorkingSet, 4, "B", SI2.IECSymbols),
                 IntPtr.Size * 8,
                 Environment.ProcessorCount,
@@ -711,7 +711,7 @@ namespace GSF.TimeSeries
                 remotingServer.Add("CertificateFile", string.Format("{0}.cer", ServiceName), "Path to the local certificate used by this server for authentication.");
                 certificatePath = FilePath.GetAbsolutePath(remotingServer["CertificateFile"].Value);
 
-                certificateGenerator = new CertificateGenerator()
+                certificateGenerator = new CertificateGenerator
                 {
                     Issuer = ServiceName,
                     CertificatePath = certificatePath
@@ -795,7 +795,7 @@ namespace GSF.TimeSeries
             remotingServer.PayloadAware = true;
             remotingServer.PersistSettings = true;
             remotingServer.SettingsCategory = "RemotingServer";
-            remotingServer.TrustedCertificatesPath = "Certs\\Remotes";
+            remotingServer.TrustedCertificatesPath = string.Format("Certs{0}Remotes", Path.DirectorySeparatorChar);
             remotingServer.Initialize();
 
             remotingServer.RemoteCertificateValidationCallback = (o, certificate, chain, errors) => true;

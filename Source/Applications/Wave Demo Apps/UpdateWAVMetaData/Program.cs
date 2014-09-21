@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
 using GSF;
 using GSF.Configuration;
@@ -84,7 +85,7 @@ namespace UpdateWAVMetaData
                 //signalTypeID = Convert.ToInt32(connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym='ALOG'"));
 
                 string pathRoot = FilePath.GetDirectoryName((args.Length > 0) ? args[0] : systemSettings["MusicDirectory"].Value);
-                string sourcePath = pathRoot + "*\\*.wav";
+                string sourcePath = Path.Combine(pathRoot, "*" + Path.DirectorySeparatorChar + "*.wav");
 
                 foreach (string sourceFileName in FilePath.GetFileList(sourcePath))
                 {

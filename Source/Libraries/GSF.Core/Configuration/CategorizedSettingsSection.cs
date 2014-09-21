@@ -64,6 +64,7 @@ namespace GSF.Configuration
         private string m_cryptoKey;
         private ConfigurationFile m_file;
         private readonly Dictionary<string, CategorizedSettingsElementCollection> m_sections;
+        private bool m_sectionLoaded;
 
         #endregion
 
@@ -164,6 +165,14 @@ namespace GSF.Configuration
             get
             {
                 return this["general"];
+            }
+        }
+
+        internal bool SectionLoaded
+        {
+            get
+            {
+                return m_sectionLoaded;
             }
         }
 
@@ -280,6 +289,8 @@ namespace GSF.Configuration
                     }
                 }
 
+                m_sectionLoaded = true;
+
                 if ((object)m_sections == null)
                 {
                     configSectionStream.Seek(0, SeekOrigin.Begin);
@@ -353,7 +364,7 @@ namespace GSF.Configuration
                 }
             }
 
-            return base.SerializeSection(parentElement, name, ConfigurationSaveMode.Full);
+            return base.SerializeSection(parentElement, name, saveMode);
         }
 
         #endregion

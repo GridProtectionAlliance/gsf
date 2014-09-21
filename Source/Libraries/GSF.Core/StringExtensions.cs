@@ -130,7 +130,8 @@ namespace GSF
                     return bresult;
 
                 char test = value.ToUpper()[0];
-                return (test == 'T' || test == 'Y' ? true : false);
+
+                return (test == 'T' || test == 'Y');
             }
 
             return false;

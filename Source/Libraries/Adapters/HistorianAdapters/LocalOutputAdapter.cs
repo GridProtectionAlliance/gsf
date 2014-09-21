@@ -881,7 +881,7 @@ namespace HistorianAdapters
 
                         // Older versions placed the archive data files in the same folder as the executables, for both better organization
                         // and performance related to file monitoring, these files are now located in their own folder
-                        defaultFileName = string.Format("{0}\\{1}_dbase.dat", archivePath, acronym);
+                        defaultFileName = string.Format("{0}{1}{2}_dbase.dat", archivePath, Path.DirectorySeparatorChar, acronym);
                         settings.Add("FileName", defaultFileName, string.Format("Name of the {0} meta-data file including its path.", acronym));
                         fileName = settings["FileName"].Value;
 
@@ -902,7 +902,7 @@ namespace HistorianAdapters
                         settings["SaveOnClose"].Update(true);
                         settings["ReloadOnModify"].Update(false);
 
-                        defaultFileName = string.Format("{0}\\{1}_startup.dat", archivePath, acronym);
+                        defaultFileName = string.Format("{0}{1}{2}_startup.dat", archivePath, Path.DirectorySeparatorChar, acronym);
                         settings.Add("FileName", defaultFileName, string.Format("Name of the {0} state file including its path.", acronym));
                         fileName = settings["FileName"].Value;
 
@@ -923,7 +923,7 @@ namespace HistorianAdapters
                         settings["SaveOnClose"].Update(true);
                         settings["ReloadOnModify"].Update(false);
 
-                        defaultFileName = string.Format("{0}\\scratch.dat", archivePath);
+                        defaultFileName = string.Format("{0}{1}scratch.dat", archivePath, Path.DirectorySeparatorChar);
                         settings.Add("FileName", defaultFileName, string.Format("Name of the {0} intercom file including its path.", acronym));
                         fileName = settings["FileName"].Value;
 
@@ -940,7 +940,7 @@ namespace HistorianAdapters
                         settings["CacheWrites"].Update(true);
                         settings["ConserveMemory"].Update(false);
 
-                        defaultFileName = string.Format("{0}\\{1}_archive.d", archivePath, acronym);
+                        defaultFileName = string.Format("{0}{1}{2}_archive.d", archivePath, Path.DirectorySeparatorChar, acronym);
                         settings.Add("FileName", defaultFileName, string.Format("Name of the {0} working archive file including its path.", acronym));
                         fileName = settings["FileName"].Value;
 
@@ -952,7 +952,7 @@ namespace HistorianAdapters
                         }
 
                         // Move any historical files in executable folder to the archive folder...
-                        string[] archiveFileNames = FilePath.GetFileList(string.Format("{0}\\{1}_archive*.d", FilePath.GetAbsolutePath(""), acronym));
+                        string[] archiveFileNames = FilePath.GetFileList(string.Format("{0}{1}{2}_archive*.d", FilePath.GetAbsolutePath(""), Path.DirectorySeparatorChar, acronym));
 
                         if ((object)archiveFileNames != null && archiveFileNames.Length > 0)
                         {
@@ -960,7 +960,7 @@ namespace HistorianAdapters
 
                             foreach (string archiveFileName in archiveFileNames)
                             {
-                                defaultFileName = string.Format("{0}\\{1}", archivePath, FilePath.GetFileName(archiveFileName));
+                                defaultFileName = string.Format("{0}{1}{2}", archivePath, Path.DirectorySeparatorChar, FilePath.GetFileName(archiveFileName));
 
                                 if (!File.Exists(defaultFileName))
                                     File.Move(archiveFileName, defaultFileName);

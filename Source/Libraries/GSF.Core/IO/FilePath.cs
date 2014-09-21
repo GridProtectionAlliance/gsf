@@ -468,7 +468,7 @@ namespace GSF.IO
                     if (string.IsNullOrEmpty(AssemblyInfo.EntryAssembly.Company))
                         return Path.Combine(rootFolder, AssemblyInfo.EntryAssembly.Name);
 
-                    return Path.Combine(rootFolder, AssemblyInfo.EntryAssembly.Company + "\\" + AssemblyInfo.EntryAssembly.Name);
+                    return Path.Combine(rootFolder, AssemblyInfo.EntryAssembly.Company, AssemblyInfo.EntryAssembly.Name);
             }
         }
 
@@ -484,7 +484,7 @@ namespace GSF.IO
             if (string.IsNullOrEmpty(AssemblyInfo.EntryAssembly.Company))
                 return Path.Combine(rootFolder, AssemblyInfo.EntryAssembly.Name);
 
-            return Path.Combine(rootFolder, AssemblyInfo.EntryAssembly.Company + "\\" + AssemblyInfo.EntryAssembly.Name);
+            return Path.Combine(rootFolder, AssemblyInfo.EntryAssembly.Company, AssemblyInfo.EntryAssembly.Name);
         }
 
         /// <summary>
@@ -650,7 +650,7 @@ namespace GSF.IO
                 int offset = length - justName.Length - 4;
 
                 if (justFilePath.Length > offset && offset > 0)
-                    return justFilePath.Substring(0, offset) + "...\\" + justName;
+                    return justFilePath.Substring(0, offset) + "..." + Path.DirectorySeparatorChar + justName;
 
                 // Can not fit path. Trims file name.
                 return TrimFileName(justName, length);

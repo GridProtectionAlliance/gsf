@@ -433,7 +433,7 @@ namespace GSF.TimeSeries
             remotingClient.PayloadAware = true;
             remotingClient.PersistSettings = true;
             remotingClient.SettingsCategory = "RemotingClient";
-            remotingClient.TrustedCertificatesPath = "Certs\\Remotes";
+            remotingClient.TrustedCertificatesPath = string.Format("Certs{0}Remotes", Path.DirectorySeparatorChar);
             remotingClient.ValidChainFlags = X509ChainStatusFlags.UntrustedRoot;
             remotingClient.ValidPolicyErrors = SslPolicyErrors.RemoteCertificateChainErrors;
             remotingClient.Initialize();

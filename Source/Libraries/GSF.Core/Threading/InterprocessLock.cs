@@ -93,39 +93,42 @@ namespace GSF.Threading
             // application sessions in case terminal services is running.
             string mutexName = "Global\\" + Cipher.GetPasswordHash(name.ToLower(), MutexHash).Replace('\\', '-');
 
-#if MONO
-            // Mono Mutex implementations do not include ability to change access rules
-            namedMutex = new Mutex(false, mutexName, out mutexWasCreated);
-#else
-            bool doesNotExist = false;
-
-            // Attempt to open the named mutex
-            try
+            if (Common.IsMono)
             {
-                namedMutex = Mutex.OpenExisting(mutexName, MutexRights.Synchronize | MutexRights.Modify);
+                // Mono Mutex implementations do not include ability to change access rules
+                namedMutex = new Mutex(false, mutexName, out mutexWasCreated);
             }
-            catch (WaitHandleCannotBeOpenedException)
+            else
             {
-                namedMutex = null;
-                doesNotExist = true;
-            }
+                bool doesNotExist = false;
 
-            // If mutex does not exist we attempt to create it
-            if (doesNotExist)
-            {
+                // Attempt to open the named mutex
                 try
                 {
-                    MutexSecurity security = new MutexSecurity();
-                    security.AddAccessRule(new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), MutexRights.Synchronize | MutexRights.Modify, AccessControlType.Allow));
-                    namedMutex = new Mutex(false, mutexName, out mutexWasCreated, security);
-                }
-                catch (UnauthorizedAccessException)
-                {
-                    // Named mutex exists now but current user doesn't have full control, attempt to open with minimum needed rights
                     namedMutex = Mutex.OpenExisting(mutexName, MutexRights.Synchronize | MutexRights.Modify);
                 }
+                catch (WaitHandleCannotBeOpenedException)
+                {
+                    namedMutex = null;
+                    doesNotExist = true;
+                }
+
+                // If mutex does not exist we attempt to create it
+                if (doesNotExist)
+                {
+                    try
+                    {
+                        MutexSecurity security = new MutexSecurity();
+                        security.AddAccessRule(new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), MutexRights.Synchronize | MutexRights.Modify, AccessControlType.Allow));
+                        namedMutex = new Mutex(false, mutexName, out mutexWasCreated, security);
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        // Named mutex exists now but current user doesn't have full control, attempt to open with minimum needed rights
+                        namedMutex = Mutex.OpenExisting(mutexName, MutexRights.Synchronize | MutexRights.Modify);
+                    }
+                }
             }
-#endif
 
             return namedMutex;
         }
@@ -182,39 +185,42 @@ namespace GSF.Threading
             // http://msdn.microsoft.com/en-us/library/windows/desktop/ms684326(v=vs.85).aspx
             string semaphoreName = "Global\\" + Cipher.GetPasswordHash(name.ToLower(), SemaphoreHash).Replace('\\', '-');
 
-#if MONO
-            // Mono Semaphore implementations do not include ability to change access rules
-            namedSemaphore = new Semaphore(initialCount, maximumCount, semaphoreName, out semaphoreWasCreated);
-#else
-            bool doesNotExist = false;
-
-            // Attempt to open the named semaphore with minimum needed rights
-            try
+            if (Common.IsMono)
             {
-                namedSemaphore = Semaphore.OpenExisting(semaphoreName, SemaphoreRights.Synchronize | SemaphoreRights.Modify);
+                // Mono Semaphore implementations do not include ability to change access rules
+                namedSemaphore = new Semaphore(initialCount, maximumCount, semaphoreName, out semaphoreWasCreated);
             }
-            catch (WaitHandleCannotBeOpenedException)
+            else
             {
-                namedSemaphore = null;
-                doesNotExist = true;
-            }
+                bool doesNotExist = false;
 
-            // If semaphore does not exist we attempt to create it
-            if (doesNotExist)
-            {
+                // Attempt to open the named semaphore with minimum needed rights
                 try
                 {
-                    SemaphoreSecurity security = new SemaphoreSecurity();
-                    security.AddAccessRule(new SemaphoreAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), SemaphoreRights.Synchronize | SemaphoreRights.Modify, AccessControlType.Allow));
-                    namedSemaphore = new Semaphore(initialCount, maximumCount, semaphoreName, out semaphoreWasCreated, security);
-                }
-                catch (UnauthorizedAccessException)
-                {
-                    // Named semaphore exists now but current user doesn't have full control, attempt to open with minimum needed rights
                     namedSemaphore = Semaphore.OpenExisting(semaphoreName, SemaphoreRights.Synchronize | SemaphoreRights.Modify);
                 }
+                catch (WaitHandleCannotBeOpenedException)
+                {
+                    namedSemaphore = null;
+                    doesNotExist = true;
+                }
+
+                // If semaphore does not exist we attempt to create it
+                if (doesNotExist)
+                {
+                    try
+                    {
+                        SemaphoreSecurity security = new SemaphoreSecurity();
+                        security.AddAccessRule(new SemaphoreAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), SemaphoreRights.Synchronize | SemaphoreRights.Modify, AccessControlType.Allow));
+                        namedSemaphore = new Semaphore(initialCount, maximumCount, semaphoreName, out semaphoreWasCreated, security);
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        // Named semaphore exists now but current user doesn't have full control, attempt to open with minimum needed rights
+                        namedSemaphore = Semaphore.OpenExisting(semaphoreName, SemaphoreRights.Synchronize | SemaphoreRights.Modify);
+                    }
+                }
             }
-#endif
 
             return namedSemaphore;
         }

@@ -245,7 +245,7 @@ namespace GSF.TimeSeries.UI.ViewModels
                     // and restore them after updating the adapter type list.
                     string assemblyName = CurrentItem.AssemblyName;
                     string typeName = CurrentItem.TypeName;
-                    string ext = string.IsNullOrEmpty(m_searchDirectory) ? string.Empty : "\\";
+                    string ext = string.IsNullOrEmpty(m_searchDirectory) ? string.Empty : Path.DirectorySeparatorChar.ToString();
 
                     AdapterTypeList = GetAdapterTypeList(m_searchDirectory + ext, GetAdapterInterfaceType(m_adapterType));
                     CurrentItem.TypeName = typeName;
@@ -763,7 +763,7 @@ namespace GSF.TimeSeries.UI.ViewModels
             if (parameter == null)
             {
                 // Create a brand new parameter to be returned.
-                parameter = new AdapterConnectionStringParameter()
+                parameter = new AdapterConnectionStringParameter
                 {
                     Info = info,
                     Name = info.Name,

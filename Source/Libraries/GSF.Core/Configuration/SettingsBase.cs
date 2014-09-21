@@ -509,7 +509,7 @@ namespace GSF.Configuration
         /// <summary>
         /// Executes specified action over all public derived class member fields.
         /// </summary>
-        /// <param name="fieldAction">Action to excute for all derived class member fields.</param>
+        /// <param name="fieldAction">Action to execute for all derived class member fields.</param>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         protected void ExecuteActionForFields(Action<FieldInfo> fieldAction)
         {

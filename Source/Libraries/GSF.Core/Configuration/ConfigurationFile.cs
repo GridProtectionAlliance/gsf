@@ -189,10 +189,20 @@ namespace GSF.Configuration
             {
                 m_settings = new XmlDocument();
                 m_fileName = Path.Combine(FilePath.GetApplicationDataFolder(), Filename);
+
                 if (File.Exists(m_fileName))
                 {
-                    // Load existing settings.
-                    m_settings.Load(m_fileName);
+                    try
+                    {
+                        // Load existing settings.
+                        m_settings.Load(m_fileName);
+                    }
+                    catch (Exception)
+                    {
+                        // Create new settings file.
+                        m_settings.AppendChild(m_settings.CreateNode(XmlNodeType.XmlDeclaration, null, null));
+                        m_settings.AppendChild(m_settings.CreateElement(RootNode));
+                    }
                 }
                 else
                 {
@@ -210,12 +220,13 @@ namespace GSF.Configuration
                 }
             }
 
-            public void Save(bool force)
+            public void Save(bool forceSave)
             {
-                if (force || m_settingsModified)
+                if (forceSave || m_settingsModified)
                 {
                     // Create directory if missing.
                     string folder = FilePath.GetDirectoryName(m_fileName);
+
                     if (!Directory.Exists(folder))
                         Directory.CreateDirectory(folder);
 
@@ -286,7 +297,14 @@ namespace GSF.Configuration
         internal ConfigurationFile(string configFilePath)
         {
             m_culture = CultureInfo.InvariantCulture;
-            m_saveOperation = new LongSynchronizedOperation(ExecuteConfigurationSave);
+
+            // Do not run the save operation on a background thread since the application may be
+            // performing the save as a final step during shutdown and the save operation must
+            // complete, incomplete saves can cause a zero length config file to be created.
+            m_saveOperation = new LongSynchronizedOperation(ExecuteConfigurationSave)
+            {
+                IsBackground = false
+            };
 
             m_configuration = GetConfiguration(configFilePath);
 
@@ -297,6 +315,11 @@ namespace GSF.Configuration
 
             m_configuration = GetConfiguration(configFilePath);
             m_userConfiguration = new UserConfigurationFile();
+        }
+
+        ~ConfigurationFile()
+        {
+            Save();
         }
 
         #endregion
@@ -357,6 +380,15 @@ namespace GSF.Configuration
             }
         }
 
+        private string BackupConfigFilePath
+        {
+            get
+            {
+                string filePath = m_configuration.FilePath;
+                return Path.Combine(FilePath.GetDirectoryName(filePath), FilePath.GetFileNameWithoutExtension(filePath) + ".config.backup");
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -377,19 +409,28 @@ namespace GSF.Configuration
         {
             m_saveMode = saveMode;
 
-            // Since the static open method always returns the same instance for the same configuration files,
-            // synchronizing the instance will sync all saves.
-            m_saveOperation.RunOnceAsync();
+            if (saveMode == ConfigurationSaveMode.Full)
+                m_saveOperation.RunOnce();
+            else
+                m_saveOperation.TryRun();
         }
 
         private void ExecuteConfigurationSave()
         {
-            // Perform configuration save
             ConfigurationSaveMode saveMode = m_saveMode;
             m_configuration.Save(saveMode, m_forceSave);
             m_userConfiguration.Save(saveMode == ConfigurationSaveMode.Full);
-            m_saveMode = ConfigurationSaveMode.Minimal;
             m_forceSave = false;
+
+            try
+            {
+                // Attempt to create a backup configuration file
+                m_configuration.SaveAs(BackupConfigFilePath, ConfigurationSaveMode.Full, true);
+            }
+            catch
+            {
+                // May not have needed rights to save backup configuration file
+            }
         }
 
         /// <summary>
@@ -461,12 +502,12 @@ namespace GSF.Configuration
                 }
                 else
                 {
-                    throw (new ArgumentException("Path of configuration file must be either empty or end in \'.config\'"));
+                    throw new ArgumentException("Path of configuration file must be either empty or end in \'.config\'");
                 }
             }
             else
             {
-                throw (new ArgumentNullException("configFilePath", "Path of configuration file path cannot be null"));
+                throw new ArgumentNullException("configFilePath", "Path of configuration file path cannot be null");
             }
 
             return configuration;
@@ -550,7 +591,7 @@ namespace GSF.Configuration
             }
             else
             {
-                throw (new ArgumentNullException("configFilePath", "Path of configuration file path cannot be null"));
+                throw new ArgumentNullException("configFilePath", "Path of configuration file path cannot be null");
             }
         }
 
@@ -573,7 +614,6 @@ namespace GSF.Configuration
         private static readonly ConcurrentDictionary<string, ConfigurationFile> s_configFiles;
 
         // Static Constructor
-
         static ConfigurationFile()
         {
             s_configFiles = new ConcurrentDictionary<string, ConfigurationFile>(StringComparer.CurrentCultureIgnoreCase);

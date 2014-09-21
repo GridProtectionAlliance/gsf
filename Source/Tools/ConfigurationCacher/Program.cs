@@ -73,7 +73,7 @@ namespace ConfigurationCacher
         public static void Main(string[] args)
         {
             CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Open(GetConfigurationFileName(args)).Settings["systemSettings"];
-            string cachePath = string.Format("{0}\\ConfigurationCache\\", FilePath.GetAbsolutePath(""));
+            string cachePath = string.Format("{0}{1}ConfigurationCache{1}", FilePath.GetAbsolutePath(""), Path.DirectorySeparatorChar);
             DataSet configuration;
 
             systemSettings.Add("NodeID", Guid.NewGuid().ToString(), "Unique Node ID");
