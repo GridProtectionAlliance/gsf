@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  IniFile.cs - Gbtc
+//  WindowsIniFile.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,66 +16,42 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  11/12/2004 - J. Ritchie Carroll
-//       Initial version of source generated.
-//  01/05/2006 - J. Ritchie Carroll
-//       2.0 version of source code migrated from 1.1 source (GSF.Interop.Windows.IniFile).
-//  01/05/2007 - J. Ritchie Carroll
-//       Breaking change: Renamed "IniFileName" property to "FileName".
-//       Updated "SectionNames" to use List(Of String) instead of ArrayList.
-//  09/10/2008 - J. Ritchie Carroll
-//       Converted to C#.
-//  04/01/2009 - J. Ritchie Carroll
-//       Added "GetSectionKeys" to enumerate keys of a specified section.
-//  08/05/2009 - Josh L. Patterson
-//       Edited Comments.
-//  09/14/2009 - Stephen C. Wills
-//       Added new header and license agreement.
-//  09/21/2011 - J. Ritchie Carroll
-//       Excluded class from Mono deployments due to P/Invoke requirements.
-//  12/14/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
 //  08/25/2013 - J. Ritchie Carroll
 //       Made INI file work for both Mono and Windows based implementations.
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace GSF.Interop
 {
     /// <summary>
     /// Represents a Windows INI style configuration file.
     /// </summary>
-    public class IniFile
+    public class WindowsIniFile : IIniFile
     {
         #region [ Members ]
 
+        // Constants
+        private const int BufferSize = 32768;
+
         // Fields
-        private readonly IIniFile m_iniFile;
+        private string m_fileName;
 
         #endregion
 
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="IniFile"/>.
-        /// </summary>
-        /// <remarks>INI file name defaults to "Win.ini" - change using FileName property.</remarks>
-        public IniFile()
-            : this("Win.ini")
-        {
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="IniFile"/> using the specified INI file name.
+        /// Creates a new <see cref="WindowsIniFile"/> using the specified INI file name.
         /// </summary>
         /// <param name="fileName">Specified INI file name to use.</param>
-        public IniFile(string fileName)
+        public WindowsIniFile(string fileName)
         {
-            if (Common.IsPosixEnvironment)
-                m_iniFile = new UnixIniFile(fileName);
-            else
-                m_iniFile = new WindowsIniFile(fileName);
+            m_fileName = fileName;
         }
 
         #endregion
@@ -89,11 +65,11 @@ namespace GSF.Interop
         {
             get
             {
-                return m_iniFile.FileName;
+                return m_fileName;
             }
             set
             {
-                m_iniFile.FileName = value;
+                m_fileName = value;
             }
         }
 
@@ -109,7 +85,14 @@ namespace GSF.Interop
         {
             get
             {
-                return m_iniFile[section, entry, defaultValue];
+                StringBuilder buffer = new StringBuilder(BufferSize);
+
+                if ((object)defaultValue == null)
+                    defaultValue = "";
+
+                GetPrivateProfileString(section, entry, defaultValue, buffer, BufferSize, m_fileName);
+
+                return IniFile.RemoveComments(buffer.ToString());
             }
         }
 
@@ -129,7 +112,7 @@ namespace GSF.Interop
             }
             set
             {
-                m_iniFile[section, entry] = value;
+                WritePrivateProfileString(section, entry, value, m_fileName);
             }
         }
 
@@ -138,47 +121,39 @@ namespace GSF.Interop
         #region [ Methods ]
 
         /// <summary>
-        /// Gets the value of the specified key.
-        /// </summary>
-        /// <param name="section">Section key exists in.</param>
-        /// <param name="entry">Name of key.</param>
-        /// <returns>Value of key.</returns>
-        public string GetKeyValue(string section, string entry)
-        {
-            return this[section, entry, null];
-        }
-
-        /// <summary>
-        /// Gets the value of the specified key.
-        /// </summary>
-        /// <param name="section">Section key exists in.</param>
-        /// <param name="entry">Name of key.</param>
-        /// <param name="defaultValue">Default value of key.</param>
-        /// <returns>Value of key.</returns>
-        public string GetKeyValue(string section, string entry, string defaultValue)
-        {
-            return this[section, entry, defaultValue];
-        }
-
-        /// <summary>
-        /// Sets the value of the specified key.
-        /// </summary>
-        /// <param name="section">Section key exists in.</param>
-        /// <param name="entry">Name of key.</param>
-        /// <param name="newValue">The new key value to store in the INI file.</param>
-        public void SetKeyValue(string section, string entry, string newValue)
-        {
-            this[section, entry] = newValue;
-        }
-
-        /// <summary>
         /// Gets an array of keys from the specified section in the INI file.
         /// </summary>
         /// <param name="section">Section to retrieve keys from.</param>
         /// <returns>Array of <see cref="string"/> keys from the specified section of the INI file.</returns>
         public string[] GetSectionKeys(string section)
         {
-            return m_iniFile.GetSectionKeys(section);
+            List<string> keys = new List<string>();
+            byte[] buffer = new byte[BufferSize];
+            int startIndex = 0;
+            int readLength;
+            int nullIndex;
+
+            readLength = GetPrivateProfileSection(section, buffer, BufferSize, m_fileName);
+
+            if (readLength > 0)
+            {
+                while (startIndex < readLength)
+                {
+                    nullIndex = Array.IndexOf(buffer, (byte)0, startIndex);
+
+                    if (nullIndex > -1)
+                    {
+                        if (buffer[startIndex] > 0)
+                            keys.Add(IniFile.RemoveComments(Encoding.Default.GetString(buffer, startIndex, nullIndex - startIndex).RemoveCrLfs().Split('=')[0]));
+
+                        startIndex = nullIndex + 1;
+                    }
+                    else
+                        break;
+                }
+            }
+
+            return keys.ToArray();
         }
 
         /// <summary>
@@ -187,26 +162,51 @@ namespace GSF.Interop
         /// <returns>Array of <see cref="string"/> section names from the INI file.</returns>
         public string[] GetSectionNames()
         {
-            return m_iniFile.GetSectionNames();
+            List<string> sections = new List<string>();
+            byte[] buffer = new byte[BufferSize];
+            int startIndex = 0;
+            int readLength;
+            int nullIndex;
+
+            readLength = GetPrivateProfileSectionNames(buffer, BufferSize, m_fileName);
+
+            if (readLength > 0)
+            {
+                while (startIndex < readLength)
+                {
+                    nullIndex = Array.IndexOf(buffer, (byte)0, startIndex);
+
+                    if (nullIndex > -1)
+                    {
+                        if (buffer[startIndex] > 0)
+                            sections.Add(Encoding.Default.GetString(buffer, startIndex, nullIndex - startIndex).Trim());
+
+                        startIndex = nullIndex + 1;
+                    }
+                    else
+                        break;
+                }
+            }
+
+            return sections.ToArray();
         }
 
         #endregion
 
         #region [ Static ]
 
-        // Remove any comments from key value string
-        internal static string RemoveComments(string keyValue)
-        {
-            // Remove any trailing comments from key value
-            keyValue = keyValue.Trim();
+        // Static Methods
+        [DllImport("kernel32", EntryPoint = "GetPrivateProfileString", BestFitMapping = false)]
+        private static extern int GetPrivateProfileString(string lpAppName, string lpKeyName, string lpDefault, StringBuilder lpReturnedString, int nSize, string lpFileName);
 
-            int commentIndex = keyValue.IndexOf(';');
+        [DllImport("kernel32", EntryPoint = "WritePrivateProfileString", BestFitMapping = false)]
+        private static extern int WritePrivateProfileString(string lpAppName, string lpKeyName, string lpString, string lpFileName);
 
-            if (commentIndex > -1)
-                keyValue = keyValue.Substring(0, commentIndex).Trim();
+        [DllImport("kernel32", EntryPoint = "GetPrivateProfileSection", BestFitMapping = false)]
+        private static extern int GetPrivateProfileSection(string lpAppName, byte[] lpszReturnBuffer, int nSize, string lpFileName);
 
-            return keyValue;
-        }
+        [DllImport("kernel32", EntryPoint = "GetPrivateProfileSectionNames", BestFitMapping = false)]
+        private static extern int GetPrivateProfileSectionNames(byte[] lpszReturnBuffer, int nSize, string lpFileName);
 
         #endregion
     }

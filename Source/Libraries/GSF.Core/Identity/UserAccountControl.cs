@@ -26,6 +26,7 @@
 //******************************************************************************************************
 
 // These functions are strictly for Windows, so we don't even have the class show up in Mono
+// TODO: Can test if this works under Mono on Windows then just exit code when not POSIX
 #if !MONO
 
 using System;

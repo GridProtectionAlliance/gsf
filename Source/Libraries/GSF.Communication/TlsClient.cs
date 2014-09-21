@@ -152,7 +152,7 @@ namespace GSF.Communication
             m_defaultCertificateChecker = new SimpleCertificateChecker();
             m_localCertificateSelectionCallback = DefaultLocalCertificateSelectionCallback;
             m_clientCertificates = new X509Certificate2Collection();
-            m_enabledSslProtocols = SslProtocols.Tls12;
+            m_enabledSslProtocols = Common.IsMono ? SslProtocols.Tls : SslProtocols.Tls12;
             m_checkCertificateRevocation = true;
 
             m_trustedCertificatesPath = DefaultTrustedCertificatesPath;

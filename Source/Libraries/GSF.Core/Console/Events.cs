@@ -91,6 +91,7 @@ namespace GSF.Console
         private static ConsoleWindowEventHandler s_handler;
 
 #if !MONO
+        // TODO: See if there a standard POSIX way to pickup similar events
         [DllImport("kernel32.dll", EntryPoint = "SetConsoleCtrlHandler")]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool SetConsoleWindowEventRaising(ConsoleWindowEventHandler handler, [MarshalAs(UnmanagedType.Bool)] bool enable);
