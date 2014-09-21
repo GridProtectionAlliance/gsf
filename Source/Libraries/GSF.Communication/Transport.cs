@@ -214,12 +214,12 @@ namespace GSF.Communication
                 case ProtocolType.Tcp:
                     endpoint = CreateEndPoint(address, port, stack);
                     socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
+#if !MONO
                     // If allowDualModeSocket is true and the endpoint is IPv6, we setup a dual-mode socket
                     // by setting the IPv6Only socket option to false
                     if (allowDualStackSocket && endpoint.AddressFamily == AddressFamily.InterNetworkV6 && Environment.OSVersion.Version.Major > 5)
                         socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
-
+#endif
                     // Associate the socket with the local endpoint
                     socket.Bind(endpoint);
 
@@ -230,12 +230,12 @@ namespace GSF.Communication
                     {
                         endpoint = CreateEndPoint(address, port, stack);
                         socket = new Socket(endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-
+#if !MONO
                         // If allowDualModeSocket is true and the endpoint is IPv6, we setup a dual-mode socket
                         // by setting the IPv6Only socket option to false
                         if (allowDualStackSocket && endpoint.AddressFamily == AddressFamily.InterNetworkV6 && Environment.OSVersion.Version.Major > 5)
                             socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
-
+#endif
                         socket.Bind(endpoint);
                     }
                     else

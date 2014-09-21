@@ -59,10 +59,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web.Hosting;
 using GSF.Identity;
-using GSF.Reflection;
-#if !MONO
 using GSF.Interop;
-#endif
+using GSF.Reflection;
 
 namespace GSF.IO
 {
@@ -75,6 +73,7 @@ namespace GSF.IO
 
         // Nested Types
 
+        // ReSharper disable MemberCanBePrivate.Local
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         private struct NETRESOURCE
         {
@@ -89,21 +88,9 @@ namespace GSF.IO
         }
 
         // Constants
-
         private const int RESOURCETYPE_DISK = 0x1;
 
-        // Delegates
-
-#if !MONO
-        [DllImport("mpr.dll", EntryPoint = "WNetAddConnection2W", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
-        private static extern int WNetAddConnection2(ref NETRESOURCE lpNetResource, string lpPassword, string lpUsername, int dwFlags);
-
-        [DllImport("mpr.dll", EntryPoint = "WNetCancelConnection2W", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
-        private static extern int WNetCancelConnection2(string lpName, int dwFlags, [MarshalAs(UnmanagedType.Bool)] bool fForce);
-#endif
-
         // Fields
-
         private static readonly string s_fileNameCharPattern;
 
         #endregion
@@ -136,16 +123,18 @@ namespace GSF.IO
 
         #region [ Methods ]
 
-#if !MONO
         /// <summary>
         /// Connects to a network share with the specified user's credentials.
         /// </summary>
         /// <param name="sharename">UNC share name to connect to.</param>
-        /// <param name="username">Username to use for connection.</param>
+        /// <param name="userName">User name to use for connection.</param>
         /// <param name="password">Password to use for connection.</param>
         /// <param name="domain">Domain name to use for connection. Specify the computer name for local system accounts.</param>
-        public static void ConnectToNetworkShare(string sharename, string username, string password, string domain)
+        public static void ConnectToNetworkShare(string sharename, string userName, string password, string domain)
         {
+            if (Common.IsPosixEnvironment)
+                throw new NotImplementedException("Failed to connect to network share \"" + sharename + "\" as user " + userName + " - not implemented in POSIX environment");
+
             NETRESOURCE resource = new NETRESOURCE();
             int result;
 
@@ -153,11 +142,12 @@ namespace GSF.IO
             resource.lpRemoteName = sharename;
 
             if (domain.Length > 0)
-                username = domain + "\\" + username;
+                userName = domain + "\\" + userName;
 
-            result = WNetAddConnection2(ref resource, password, username, 0);
+            result = WNetAddConnection2(ref resource, password, userName, 0);
+
             if (result != 0)
-                throw new InvalidOperationException("Failed to connect to network share \"" + sharename + "\" as user " + username + " - " + WindowsApi.GetErrorMessage(result));
+                throw new InvalidOperationException("Failed to connect to network share \"" + sharename + "\" as user " + userName + " - " + WindowsApi.GetErrorMessage(result));
         }
 
         /// <summary>
@@ -176,11 +166,14 @@ namespace GSF.IO
         /// <param name="force"><c>true</c> to force a disconnect; otherwise <c>false</c>.</param>
         public static void DisconnectFromNetworkShare(string sharename, bool force)
         {
+            if (Common.IsPosixEnvironment)
+                throw new NotImplementedException("Failed to disconnect from network share \"" + sharename + "\" - not implemented in POSIX environment");
+
             int result = WNetCancelConnection2(sharename, 0, force);
+
             if (result != 0)
                 throw new InvalidOperationException("Failed to disconnect from network share \"" + sharename + "\" - " + WindowsApi.GetErrorMessage(result));
         }
-#endif
 
         /// <summary>
         /// Determines whether the specified file name matches any of the given file specs (wildcards are defined as '*' or '?' characters).
@@ -948,6 +941,12 @@ namespace GSF.IO
                 Thread.Sleep(250);
             }
         }
+
+        [DllImport("mpr.dll", EntryPoint = "WNetAddConnection2W", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern int WNetAddConnection2(ref NETRESOURCE lpNetResource, string lpPassword, string lpUsername, int dwFlags);
+
+        [DllImport("mpr.dll", EntryPoint = "WNetCancelConnection2W", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern int WNetCancelConnection2(string lpName, int dwFlags, [MarshalAs(UnmanagedType.Bool)] bool fForce);
 
         #endregion
     }

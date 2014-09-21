@@ -317,11 +317,6 @@ namespace GSF.Configuration
             m_userConfiguration = new UserConfigurationFile();
         }
 
-        ~ConfigurationFile()
-        {
-            Save();
-        }
-
         #endregion
 
         #region [ Properties ]
