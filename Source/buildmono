@@ -1,2 +1,2 @@
-# Build Grid Solutions Framework on Mono
+# Build Grid Solutions Framework on Mono - to execute, chmod 755 buildmono
 xbuild /p:Configuration=Mono /p:PreBuildEvent="" /p:PostBuildEvent="" GridSolutionsFramework.sln
