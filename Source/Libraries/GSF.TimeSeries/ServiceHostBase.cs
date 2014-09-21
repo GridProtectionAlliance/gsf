@@ -58,7 +58,6 @@ using GSF.Threading;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Configuration;
 using GSF.Units;
-using Microsoft.Win32;
 
 namespace GSF.TimeSeries
 {
@@ -493,6 +492,9 @@ namespace GSF.TimeSeries
             // Define a line of asterisks for emphasis
             string stars = new string('*', 79);
 
+            // Get current process memory usage
+            long processMemory = Common.GetProcessMemory();
+
             // Log startup information
             m_serviceHelper.UpdateStatus(
                 UpdateType.Information,
@@ -516,8 +518,8 @@ namespace GSF.TimeSeries
                 FilePath.TrimFileName(FilePath.RemovePathSuffix(FilePath.GetAbsolutePath("")), 61),
                 Environment.MachineName,
                 Environment.OSVersion.VersionString,
-                Common.IsPosixEnvironment ? "POSIX" : Registry.GetValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "ProductName", null).ToNonNullString("<Unavailable>"),
-                SI2.ToScaledString(Environment.WorkingSet, 4, "B", SI2.IECSymbols),
+                Common.GetOSProductName(),
+                processMemory > 0 ? SI2.ToScaledString(processMemory, 4, "B", SI2.IECSymbols) : "Undetermined",
                 IntPtr.Size * 8,
                 Environment.ProcessorCount,
                 GCSettings.IsServerGC,

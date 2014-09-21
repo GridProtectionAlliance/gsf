@@ -931,6 +931,7 @@ namespace HistorianAdapters
                         {
                             if (!File.Exists(defaultFileName))
                                 File.Move(fileName, defaultFileName);
+
                             settings["FileName"].Update(defaultFileName);
                         }
 
@@ -948,6 +949,7 @@ namespace HistorianAdapters
                         {
                             if (!File.Exists(defaultFileName))
                                 File.Move(fileName, defaultFileName);
+
                             settings["FileName"].Update(defaultFileName);
                         }
 
@@ -1090,10 +1092,10 @@ namespace HistorianAdapters
                 {
                     match = readers.FirstOrDefault(inputRow =>
                     {
-                        string instanceName;
+                        string sourceIDs;
 
-                        if (inputRow["ConnectionString"].ToNonNullString().ParseKeyValuePairs().TryGetValue("instanceName", out instanceName))
-                            return string.Compare(instanceName, acronym, StringComparison.OrdinalIgnoreCase) == 0;
+                        if (inputRow["ConnectionString"].ToNonNullString().ParseKeyValuePairs().TryGetValue("sourceIDs", out sourceIDs))
+                            return string.Compare(sourceIDs, acronym, StringComparison.OrdinalIgnoreCase) == 0;
 
                         return false;
                     });

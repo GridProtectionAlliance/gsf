@@ -44,13 +44,19 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Web.Hosting;
+using GSF.Collections;
+using GSF.Console;
 using GSF.Reflection;
+using GSF.Units;
+using Microsoft.Win32;
 
 namespace GSF
 {
@@ -130,6 +136,7 @@ namespace GSF
     public static class Common
     {
         private static ApplicationType? s_applicationType;
+        private static string s_osPlatformName;
 
         /// <summary>
         /// Determines if the current system is a POSIX style environment.
@@ -273,6 +280,102 @@ namespace GSF
             }
 
             return s_applicationType.Value;
+        }
+
+        /// <summary>
+        /// Gets the operating system product name.
+        /// </summary>
+        /// <returns>Operating system product name.</returns>
+        public static string GetOSProductName()
+        {
+            if ((object)s_osPlatformName != null)
+                return s_osPlatformName;
+
+            switch (Environment.OSVersion.Platform)
+            {
+                case PlatformID.Unix:
+                    // Try some common ways to get product name on Linux
+                    try
+                    {
+                        string output = Command.Execute("cat", "/etc/*release*").StandardOutput;
+                        Dictionary<string, string> kvps = output.ParseKeyValuePairs('\n');
+                        if (kvps.TryGetValue("PRETTY_NAME", out s_osPlatformName) && !string.IsNullOrEmpty(s_osPlatformName))
+                            s_osPlatformName = s_osPlatformName.Replace("\"", "");
+                    }
+                    catch
+                    {
+                        try
+                        {
+                            string output = Command.Execute("lsb_release", "-a").StandardOutput;
+                            Dictionary<string, string> kvps = output.ParseKeyValuePairs('\n', ':');
+                            if (kvps.TryGetValue("Description", out s_osPlatformName) && !string.IsNullOrEmpty(s_osPlatformName))
+                                s_osPlatformName = s_osPlatformName.Trim();
+
+                        }
+                        catch
+                        {
+                            s_osPlatformName = null;
+                        }
+                    }
+                    break;
+                case PlatformID.MacOSX:
+                    // Call sw_vers on Mac to get product name and version information
+                    try
+                    {
+                        string output = Command.Execute("sw_vers").StandardOutput;
+                        Dictionary<string, string> kvps = output.ParseKeyValuePairs('\n', ':');
+                        if (kvps.Count > 0)
+                            s_osPlatformName = kvps.Values.Select(val => val.Trim()).ToDelimitedString(" ");
+                    }
+                    catch
+                    {
+                        s_osPlatformName = null;
+                    }
+                    break;
+                default:
+                    // Get Windows product name
+                    try
+                    {
+                        s_osPlatformName = Registry.GetValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "ProductName", null).ToString();
+                    }
+                    catch
+                    {
+                        s_osPlatformName = null;
+                    }
+                    break;
+            }
+
+            if (string.IsNullOrWhiteSpace(s_osPlatformName))
+                s_osPlatformName = Environment.OSVersion.Platform.ToString();
+
+            return s_osPlatformName;
+        }
+
+        /// <summary>
+        /// Gets the memory usage by the current process.
+        /// </summary>
+        /// <returns>Memory usage by the current process.</returns>
+        public static long GetProcessMemory()
+        {
+            long processMemory = Environment.WorkingSet;
+
+            if (processMemory == 0 && IsPosixEnvironment)
+            {
+                try
+                {
+                    double kiloBytesOfMemory;
+                    string output = Command.Execute("ps", string.Format("-p {0} -o %mem", Process.GetCurrentProcess().Id)).StandardOutput;
+                    string[] lines = output.Split('\n');
+                    if (lines.Length > 1 && double.TryParse(lines[1].Trim(), out kiloBytesOfMemory))
+                        processMemory = (long)Math.Round(kiloBytesOfMemory * SI2.Kilo);
+                }
+                catch
+                {
+                    processMemory = -1;
+                }
+            }
+
+            return processMemory;
         }
 
         // The following "ToNonNullString" methods extend all class based objects. Note that these extension methods can be

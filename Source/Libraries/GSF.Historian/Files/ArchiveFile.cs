@@ -1449,11 +1449,9 @@ namespace GSF.Historian.Files
                     throw (new InvalidOperationException("One or more of the dependency files are not specified."));
 
                 // Validate file type against its name.
-                m_fileName = m_fileName.ToLower();
-
-                if (Path.GetExtension(m_fileName) == StandbyFileExtension)
+                if (Path.GetExtension(m_fileName).ToNonNullString().ToLower() == StandbyFileExtension)
                     m_fileType = ArchiveFileType.Standby;
-                else if (Regex.IsMatch(m_fileName, string.Format(".+_.+_to_.+\\{0}$", FileExtension)))
+                else if (Regex.IsMatch(m_fileName.ToLower(), string.Format(".+_.+_to_.+\\{0}$", FileExtension)))
                     m_fileType = ArchiveFileType.Historic;
                 else
                     m_fileType = ArchiveFileType.Active;
