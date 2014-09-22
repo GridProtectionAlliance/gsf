@@ -101,12 +101,16 @@ namespace GSF.Threading
         /// operation as pending if the operation is already running.
         /// </summary>
         /// <remarks>
-        /// When the operation is marked as pending, it will run again after the
-        /// operation that is currently running has completed. This is useful if
-        /// an update has invalidated the operation that is currently running and
-        /// will therefore need to be run again.
+        /// <para>When the operation is marked as pending, it will run again after
+        /// the operation that is currently running has completed. This is useful
+        /// if an update has invalidated the operation that is currently running
+        /// and will therefore need to be run again.</para>
+        /// 
+        /// <para>This method does not guarantee that control will be returned to the
+        /// thread that called it. If other threads continuously mark the operation as
+        /// pending, this thread will continue to run the operation indefinitely.</para>
         /// </remarks>
-        public void RunOnce()
+        public void Run()
         {
             // if (m_state == NotRunning)
             //     TryRun();
@@ -115,6 +119,55 @@ namespace GSF.Threading
 
             if (Interlocked.CompareExchange(ref m_state, Pending, Running) == NotRunning)
                 TryRun();
+        }
+
+        /// <summary>
+        /// Attempts to execute the action on this thread.
+        /// Does nothing if the operation is already running.
+        /// </summary>
+        /// <remarks>
+        /// This method does not guarantee that control will be returned to the thread
+        /// that called it. If other threads continuously mark the operation as pending,
+        /// this thread will continue to run the operation indefinitely.
+        /// </remarks>
+        public void TryRun()
+        {
+            // if (m_state == NotRunning)
+            // {
+            //     m_state = Running;
+            //
+            //     while (ExecuteAction())
+            //     {
+            //     }
+            // }
+
+            if (Interlocked.CompareExchange(ref m_state, Running, NotRunning) == NotRunning)
+            {
+                while (ExecuteAction())
+                {
+                }
+            }
+        }
+
+        /// <summary>
+        /// Executes the action on this thread or marks the
+        /// operation as pending if the operation is already running.
+        /// </summary>
+        /// <remarks>
+        /// When the operation is marked as pending, it will run again after the
+        /// operation that is currently running has completed. This is useful if
+        /// an update has invalidated the operation that is currently running and
+        /// will therefore need to be run again.
+        /// </remarks>
+        public void RunOnce()
+        {
+            // if (m_state == NotRunning)
+            //     TryRunOnce();
+            // else if (m_state == Running)
+            //     m_state = Pending;
+
+            if (Interlocked.CompareExchange(ref m_state, Pending, Running) == NotRunning)
+                TryRunOnce();
         }
 
         /// <summary>
@@ -130,19 +183,19 @@ namespace GSF.Threading
         public void RunOnceAsync()
         {
             // if (m_state == NotRunning)
-            //     TryRunAsync();
+            //     TryRunOnceAsync();
             // else if (m_state == Running)
             //     m_state = Pending;
 
             if (Interlocked.CompareExchange(ref m_state, Pending, Running) == NotRunning)
-                TryRunAsync();
+                TryRunOnceAsync();
         }
 
         /// <summary>
         /// Attempts to execute the action on this thread.
         /// Does nothing if the operation is already running.
         /// </summary>
-        public void TryRun()
+        public void TryRunOnce()
         {
             // if (m_state == NotRunning)
             // {
@@ -163,7 +216,7 @@ namespace GSF.Threading
         /// Attempts to execute the action on another thread.
         /// Does nothing if the operation is already running.
         /// </summary>
-        public void TryRunAsync()
+        public void TryRunOnceAsync()
         {
             // if (m_state == NotRunning)
             // {

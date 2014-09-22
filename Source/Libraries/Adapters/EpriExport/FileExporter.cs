@@ -418,7 +418,7 @@ namespace EpriExport
 
             // Only publish when the export interval time has passed
             if ((timestamp - m_startTime).ToMilliseconds() > m_exportInterval)
-                m_fileExport.TryRunAsync();
+                m_fileExport.TryRunOnceAsync();
         }
 
         private void WriteFileData()

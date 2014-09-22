@@ -77,8 +77,9 @@ namespace GSF.Historian
         /// <param name="historianID">Historian identifier for which <see cref="IDataPoint"/>s are to be read.</param>
         /// <param name="startTime"><see cref="System.String"/> representation of the start time (in UTC) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
         /// <param name="endTime"><see cref="System.String"/> representation of the end time (in UTC) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
+        /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="IDataPoint"/>s.</returns>
-        IEnumerable<IDataPoint> ReadData(int historianID, string startTime, string endTime);
+        IEnumerable<IDataPoint> ReadData(int historianID, string startTime, string endTime, bool timeSorted = true);
 
         /// <summary>
         /// Reads time-series data from the repository.
@@ -86,8 +87,9 @@ namespace GSF.Historian
         /// <param name="historianIDs">Historian identifiers for which <see cref="IDataPoint"/>s are to be read.</param>
         /// <param name="startTime"><see cref="System.String"/> representation of the start time (in UTC) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
         /// <param name="endTime"><see cref="System.String"/> representation of the end time (in UTC) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
+        /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="IDataPoint"/>s.</returns>
-        IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, string startTime, string endTime);
+        IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, string startTime, string endTime, bool timeSorted = true);
 
         /// <summary>
         /// Read meta information for the specified <paramref name="historianID"/>.

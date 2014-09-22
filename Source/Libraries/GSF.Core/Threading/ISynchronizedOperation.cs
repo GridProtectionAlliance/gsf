@@ -63,6 +63,33 @@ namespace GSF.Threading
         /// operation as pending if the operation is already running.
         /// </summary>
         /// <remarks>
+        /// <para>When the operation is marked as pending, it will run again after
+        /// the operation that is currently running has completed. This is useful
+        /// if an update has invalidated the operation that is currently running
+        /// and will therefore need to be run again.</para>
+        /// 
+        /// <para>This method does not guarantee that control will be returned to the
+        /// thread that called it. If other threads continuously mark the operation as
+        /// pending, this thread will continue to run the operation indefinitely.</para>
+        /// </remarks>
+        void Run();
+
+        /// <summary>
+        /// Attempts to execute the action on this thread.
+        /// Does nothing if the operation is already running.
+        /// </summary>
+        /// <remarks>
+        /// This method does not guarantee that control will be returned to the thread
+        /// that called it. If other threads continuously mark the operation as pending,
+        /// this thread will continue to run the operation indefinitely.
+        /// </remarks>
+        void TryRun();
+
+        /// <summary>
+        /// Executes the action on this thread or marks the
+        /// operation as pending if the operation is already running.
+        /// </summary>
+        /// <remarks>
         /// When the operation is marked as pending, it will run again after the
         /// operation that is currently running has completed. This is useful if
         /// an update has invalidated the operation that is currently running and
@@ -86,12 +113,12 @@ namespace GSF.Threading
         /// Attempts to execute the action on this thread.
         /// Does nothing if the operation is already running.
         /// </summary>
-        void TryRun();
+        void TryRunOnce();
 
         /// <summary>
         /// Attempts to execute the action on another thread.
         /// Does nothing if the operation is already running.
         /// </summary>
-        void TryRunAsync();
+        void TryRunOnceAsync();
     }
 }

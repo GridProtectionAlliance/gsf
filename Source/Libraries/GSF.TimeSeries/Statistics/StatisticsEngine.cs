@@ -418,7 +418,7 @@ namespace GSF.TimeSeries.Statistics
         private void StatisticCalculationTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             // If multiple timer events overlap, try-run will make sure only one is running at once
-            m_calculateStatisticsOperation.TryRun();
+            m_calculateStatisticsOperation.TryRunOnce();
         }
 
         private void CalculateStatistics()

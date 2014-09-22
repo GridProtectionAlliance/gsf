@@ -1816,20 +1816,22 @@ namespace GSF.Historian.Files
         /// Reads all <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/> for the specified <paramref name="historianID"/>.
         /// </summary>
         /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
+        /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
-        public IEnumerable<IDataPoint> ReadData(int historianID)
+        public IEnumerable<IDataPoint> ReadData(int historianID, bool timeSorted = true)
         {
-            return ReadData(historianID, TimeTag.MinValue);
+            return ReadData(historianID, TimeTag.MinValue, timeSorted);
         }
 
         /// <summary>
         /// Reads all <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/> for the specified <paramref name="historianIDs"/>.
         /// </summary>
         /// <param name="historianIDs">Historian identifiers for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
+        /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
-        public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs)
+        public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, bool timeSorted = true)
         {
-            return ReadData(historianIDs, TimeTag.MinValue);
+            return ReadData(historianIDs, TimeTag.MinValue, timeSorted);
         }
 
         /// <summary>
@@ -1837,10 +1839,11 @@ namespace GSF.Historian.Files
         /// </summary>
         /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
         /// <param name="startTime"><see cref="String"/> representation of the start time (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
-        public IEnumerable<IDataPoint> ReadData(int historianID, string startTime)
+        public IEnumerable<IDataPoint> ReadData(int historianID, string startTime, bool timeSorted = true)
         {
-            return ReadData(historianID, startTime, TimeTag.MinValue.ToString());
+            return ReadData(historianID, startTime, TimeTag.MinValue.ToString(), timeSorted);
         }
 
         /// <summary>
@@ -1848,10 +1851,11 @@ namespace GSF.Historian.Files
         /// </summary>
         /// <param name="historianIDs">Historian identifiers for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
         /// <param name="startTime"><see cref="String"/> representation of the start time (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
-        public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, string startTime)
+        public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, string startTime, bool timeSorted = true)
         {
-            return ReadData(historianIDs, startTime, TimeTag.MinValue.ToString());
+            return ReadData(historianIDs, startTime, TimeTag.MinValue.ToString(), timeSorted);
         }
 
         /// <summary>
@@ -1860,10 +1864,11 @@ namespace GSF.Historian.Files
         /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
         /// <param name="startTime"><see cref="String"/> representation of the start time (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
         /// <param name="endTime"><see cref="String"/> representation of the end time (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
-        public IEnumerable<IDataPoint> ReadData(int historianID, string startTime, string endTime)
+        public IEnumerable<IDataPoint> ReadData(int historianID, string startTime, string endTime, bool timeSorted = true)
         {
-            return ReadData(historianID, TimeTag.Parse(startTime), TimeTag.Parse(endTime));
+            return ReadData(historianID, TimeTag.Parse(startTime), TimeTag.Parse(endTime), timeSorted);
         }
 
         /// <summary>
@@ -1872,10 +1877,11 @@ namespace GSF.Historian.Files
         /// <param name="historianIDs">Historian identifiers for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
         /// <param name="startTime"><see cref="String"/> representation of the start time (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
         /// <param name="endTime"><see cref="String"/> representation of the end time (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
-        public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, string startTime, string endTime)
+        public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, string startTime, string endTime, bool timeSorted = true)
         {
-            return ReadData(historianIDs, TimeTag.Parse(startTime), TimeTag.Parse(endTime));
+            return ReadData(historianIDs, TimeTag.Parse(startTime), TimeTag.Parse(endTime), timeSorted);
         }
 
         /// <summary>
@@ -1883,10 +1889,11 @@ namespace GSF.Historian.Files
         /// </summary>
         /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
         /// <param name="startTime">Start <see cref="DateTime"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
-        public IEnumerable<IDataPoint> ReadData(int historianID, DateTime startTime)
+        public IEnumerable<IDataPoint> ReadData(int historianID, DateTime startTime, bool timeSorted = true)
         {
-            return ReadData(historianID, startTime, TimeTag.MinValue.ToDateTime());
+            return ReadData(historianID, startTime, TimeTag.MinValue.ToDateTime(), timeSorted);
         }
 
         /// <summary>
@@ -1894,10 +1901,11 @@ namespace GSF.Historian.Files
         /// </summary>
         /// <param name="historianIDs">Historian identifiers for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
         /// <param name="startTime">Start <see cref="DateTime"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
-        public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, DateTime startTime)
+        public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, DateTime startTime, bool timeSorted = true)
         {
-            return ReadData(historianIDs, startTime, TimeTag.MinValue.ToDateTime());
+            return ReadData(historianIDs, startTime, TimeTag.MinValue.ToDateTime(), timeSorted);
         }
 
         /// <summary>
@@ -1906,10 +1914,11 @@ namespace GSF.Historian.Files
         /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
         /// <param name="startTime">Start <see cref="DateTime"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
         /// <param name="endTime">End <see cref="DateTime"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
-        public IEnumerable<IDataPoint> ReadData(int historianID, DateTime startTime, DateTime endTime)
+        public IEnumerable<IDataPoint> ReadData(int historianID, DateTime startTime, DateTime endTime, bool timeSorted = true)
         {
-            return ReadData(historianID, new TimeTag(startTime), new TimeTag(endTime));
+            return ReadData(historianID, new TimeTag(startTime), new TimeTag(endTime), timeSorted);
         }
 
         /// <summary>
@@ -1918,10 +1927,11 @@ namespace GSF.Historian.Files
         /// <param name="historianIDs">Historian identifiers for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
         /// <param name="startTime">Start <see cref="DateTime"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
         /// <param name="endTime">End <see cref="DateTime"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
-        public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, DateTime startTime, DateTime endTime)
+        public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, DateTime startTime, DateTime endTime, bool timeSorted = true)
         {
-            return ReadData(historianIDs, new TimeTag(startTime), new TimeTag(endTime));
+            return ReadData(historianIDs, new TimeTag(startTime), new TimeTag(endTime), timeSorted);
         }
 
         /// <summary>
@@ -1929,10 +1939,11 @@ namespace GSF.Historian.Files
         /// </summary>
         /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
         /// <param name="startTime">Start <see cref="TimeTag"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
-        public IEnumerable<IDataPoint> ReadData(int historianID, TimeTag startTime)
+        public IEnumerable<IDataPoint> ReadData(int historianID, TimeTag startTime, bool timeSorted = true)
         {
-            return ReadData(historianID, startTime, TimeTag.MaxValue);
+            return ReadData(historianID, startTime, TimeTag.MaxValue, timeSorted);
         }
 
         /// <summary>
@@ -1940,10 +1951,11 @@ namespace GSF.Historian.Files
         /// </summary>
         /// <param name="historianIDs">Historian identifiers for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
         /// <param name="startTime">Start <see cref="TimeTag"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
-        public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, TimeTag startTime)
+        public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, TimeTag startTime, bool timeSorted = true)
         {
-            return ReadData(historianIDs, startTime, TimeTag.MaxValue);
+            return ReadData(historianIDs, startTime, TimeTag.MaxValue, timeSorted);
         }
 
         /// <summary>
@@ -1952,10 +1964,11 @@ namespace GSF.Historian.Files
         /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
         /// <param name="startTime">Start <see cref="TimeTag"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
         /// <param name="endTime">End <see cref="TimeTag"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
-        public IEnumerable<IDataPoint> ReadData(int historianID, TimeTag startTime, TimeTag endTime)
+        public IEnumerable<IDataPoint> ReadData(int historianID, TimeTag startTime, TimeTag endTime, bool timeSorted = true)
         {
-            return ReadData(new[] { historianID }, startTime, endTime);
+            return ReadData(new[] { historianID }, startTime, endTime, timeSorted);
         }
 
         /// <summary>
@@ -1964,14 +1977,15 @@ namespace GSF.Historian.Files
         /// <param name="historianIDs">Historian identifiers for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
         /// <param name="startTime">Start <see cref="TimeTag"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
         /// <param name="endTime">End <see cref="TimeTag"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
-        public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, TimeTag startTime, TimeTag endTime)
+        public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, TimeTag startTime, TimeTag endTime, bool timeSorted = true)
         {
-            return ReadData(historianIDs, startTime, endTime, -1);
+            return ReadData(historianIDs, startTime, endTime, null, timeSorted);
         }
 
         // Read data implementation
-        private IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, TimeTag startTime, TimeTag endTime, int lastHistorianID)
+        private IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, TimeTag startTime, TimeTag endTime, IDataPoint resumeFrom, bool timeSorted)
         {
             // Yield to archive rollover process.
             m_rolloverWaitHandle.WaitOne();
@@ -2043,11 +2057,23 @@ namespace GSF.Historian.Files
                         file.Open();
                     }
 
-                    // Create new time sorted data point scanner for the desired points in this file and given time range
-                    TimeSortedDataPointScanner scanner = new TimeSortedDataPointScanner(file.Fat, historianIDs, startTime, endTime, lastHistorianID, (sender, e) => OnDataReadException(e.Argument));
+                    // Create new data point scanner for the desired points in this file and given time range
+                    IArchiveFileScanner scanner;
 
-                    // Reset last historian ID to scan from beginning after picking up where left off from roll over
-                    lastHistorianID = -1;
+                    if (timeSorted)
+                        scanner = new TimeSortedArchiveFileScanner();
+                    else
+                        scanner = new ArchiveFileScanner();
+
+                    scanner.FileAllocationTable = file.Fat;
+                    scanner.HistorianIDs = historianIDs;
+                    scanner.StartTime = startTime;
+                    scanner.EndTime = endTime;
+                    scanner.ResumeFrom = resumeFrom;
+                    scanner.DataReadExceptionHandler = (sender, e) => OnDataReadException(e.Argument);
+
+                    // Reset resumeFrom to scan from beginning after picking up where left off from roll over
+                    resumeFrom = null;
 
                     // Return data points
                     foreach (IDataPoint dataPoint in scanner.Read())
@@ -2057,8 +2083,7 @@ namespace GSF.Historian.Files
                         // If a rollover needs to happen, we need to relinquish read lock and close file
                         if (m_rolloverInProgress)
                         {
-                            startTime = dataPoint.Time;
-                            lastHistorianID = dataPoint.HistorianID;
+                            resumeFrom = dataPoint;
                             pendingRollover = true;
                             break;
                         }
@@ -2085,7 +2110,7 @@ namespace GSF.Historian.Files
             {
                 // Recurse into this function with an updated start time and last read point ID so that read can
                 // resume right where it left off - recursed function call will wait until rollover is complete
-                foreach (IDataPoint dataPoint in ReadData(historianIDs, startTime, endTime, lastHistorianID))
+                foreach (IDataPoint dataPoint in ReadData(historianIDs, startTime, endTime, resumeFrom, timeSorted))
                 {
                     yield return dataPoint;
                 }
@@ -3048,7 +3073,6 @@ namespace GSF.Historian.Files
                     {
                         // This is the second time data is received.
                         calculateSlopes = true;
-                        archiveData = true;
                     }
                     else
                     {

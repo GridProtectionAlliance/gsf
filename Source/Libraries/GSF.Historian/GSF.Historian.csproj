@@ -157,6 +157,9 @@
     <Compile Include="Files\ArchiveFileAllocationTable.cs" />
     <Compile Include="Files\ArchiveFileStatistics.cs" />
     <Compile Include="Files\ArchiveReader.cs" />
+    <Compile Include="Files\ArchiveFileScanner.cs" />
+    <Compile Include="Files\DataPointScanner.cs" />
+    <Compile Include="Files\IArchiveFileScanner.cs" />
     <Compile Include="Files\IntercomFile.cs" />
     <Compile Include="Files\IntercomRecord.cs" />
     <Compile Include="Files\MetadataFile.cs" />
@@ -170,7 +173,7 @@
     <Compile Include="Files\MetadataRecordSecurityFlags.cs" />
     <Compile Include="Files\MetadataRecordSummary.cs" />
     <Compile Include="Files\NamespaceDoc.cs" />
-    <Compile Include="Files\TimeSortedDataPointScanner.cs" />
+    <Compile Include="Files\TimeSortedArchiveFileScanner.cs" />
     <Compile Include="Files\StateFile.cs" />
     <Compile Include="Files\StateRecord.cs" />
     <Compile Include="Files\StateRecordDataPoint.cs" />

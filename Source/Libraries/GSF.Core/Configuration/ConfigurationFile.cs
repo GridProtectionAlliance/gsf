@@ -404,10 +404,10 @@ namespace GSF.Configuration
         {
             m_saveMode = saveMode;
 
-            if (saveMode == ConfigurationSaveMode.Full)
-                m_saveOperation.RunOnce();
+            if (Common.IsMono)
+                m_saveOperation.Run();
             else
-                m_saveOperation.TryRun();
+                m_saveOperation.RunOnceAsync();
         }
 
         private void ExecuteConfigurationSave()
