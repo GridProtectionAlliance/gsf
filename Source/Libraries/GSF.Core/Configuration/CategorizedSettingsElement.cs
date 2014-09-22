@@ -376,7 +376,6 @@ namespace GSF.Configuration
             this.Encrypted = encrypted;
             this.Value = Common.TypeConvertToString(value, m_category.Section.File.Culture);
             this.Description = description;
-            Modified = true;
         }
 
         /// <summary>
