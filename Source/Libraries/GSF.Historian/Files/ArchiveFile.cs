@@ -1445,7 +1445,7 @@ namespace GSF.Historian.Files
             if (!IsOpen)
             {
                 // Check for the existence of dependencies.
-                if ((object)m_stateFile == null || (object)m_intercomFile == null | (object)m_metadataFile == null)
+                if ((object)m_stateFile == null || (object)m_intercomFile == null || (object)m_metadataFile == null)
                     throw (new InvalidOperationException("One or more of the dependency files are not specified."));
 
                 // Validate file type against its name.
@@ -3048,6 +3048,7 @@ namespace GSF.Historian.Files
                     {
                         // This is the second time data is received.
                         calculateSlopes = true;
+                        archiveData = true;
                     }
                     else
                     {

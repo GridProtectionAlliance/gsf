@@ -51,6 +51,7 @@ namespace GSF.Historian.Files
             private readonly TimeTag m_startTime;
             private readonly TimeTag m_endTime;
             private readonly int m_historianID;
+            private readonly bool m_includeStartTime;
             private readonly EventHandler<EventArgs<Exception>> m_dataReadExceptionHandler;
 
             #endregion
@@ -64,14 +65,16 @@ namespace GSF.Historian.Files
             /// <param name="historianID">Historian ID to scan for.</param>
             /// <param name="startTime">Desired start time.</param>
             /// <param name="endTime">Desired end time.</param>
+            /// <param name="includeStartTime">True to include data points equal to the start time; false to exclude.</param>
             /// <param name="dataReadExceptionHandler">Read exception handler.</param>
-            public DataPointScanner(ArchiveFileAllocationTable dataBlockAllocationTable, int historianID, TimeTag startTime, TimeTag endTime, EventHandler<EventArgs<Exception>> dataReadExceptionHandler)
+            public DataPointScanner(ArchiveFileAllocationTable dataBlockAllocationTable, int historianID, TimeTag startTime, TimeTag endTime, bool includeStartTime, EventHandler<EventArgs<Exception>> dataReadExceptionHandler)
             {
                 // Find all data blocks for desired point over given time range
                 m_dataBlocks = dataBlockAllocationTable.FindDataBlocks(historianID, startTime, endTime, false);
                 m_startTime = startTime;
                 m_endTime = endTime;
                 m_historianID = historianID;
+                m_includeStartTime = includeStartTime;
                 m_dataReadExceptionHandler = dataReadExceptionHandler;
             }
 
@@ -103,6 +106,13 @@ namespace GSF.Historian.Files
                 int count = m_dataBlocks.Count;
                 int index = 0;
 
+                Func<IDataPoint, bool> includeDataPoint;
+                
+                if (m_includeStartTime)
+                    includeDataPoint = dataPoint => (dataPoint.Time.CompareTo(m_startTime) >= 0 && dataPoint.Time.CompareTo(m_endTime) <= 0);
+                else
+                    includeDataPoint = dataPoint => (dataPoint.Time.CompareTo(m_startTime) > 0 && dataPoint.Time.CompareTo(m_endTime) <= 0);
+
                 // Loop through each data block
                 foreach (ArchiveDataBlock dataBlock in m_dataBlocks)
                 {
@@ -117,7 +127,7 @@ namespace GSF.Historian.Files
                         // Read data through first and last data blocks validating time range
                         foreach (IDataPoint dataPoint in dataBlock.Read())
                         {
-                            if (dataPoint.Time.CompareTo(m_startTime) >= 0 && dataPoint.Time.CompareTo(m_endTime) <= 0)
+                            if (includeDataPoint(dataPoint))
                                 dataPoints.Add(dataPoint);
                         }
                     }
@@ -163,16 +173,17 @@ namespace GSF.Historian.Files
         /// <param name="dataReadExceptionHandler">Read exception handler.</param>
         public TimeSortedDataPointScanner(ArchiveFileAllocationTable dataBlockAllocationTable, IEnumerable<int> historianIDs, TimeTag startTime, TimeTag endTime, int lastHistorianID, EventHandler<EventArgs<Exception>> dataReadExceptionHandler)
         {
+            bool includeStartTime = (lastHistorianID == -1);
+
             m_dataPointScanners = new List<DataPointScanner>();
 
             // Create data point scanners for each historian ID
             foreach (int historianID in historianIDs)
             {
-                // Start scan when last Historian ID is -1, otherwise if last historian ID is encountered, start reading at next point
-                if (lastHistorianID == -1)
-                    m_dataPointScanners.Add(new DataPointScanner(dataBlockAllocationTable, historianID, startTime, endTime, dataReadExceptionHandler));
-                else if (lastHistorianID == historianID)
-                    lastHistorianID = -1;
+                m_dataPointScanners.Add(new DataPointScanner(dataBlockAllocationTable, historianID, startTime, endTime, includeStartTime, dataReadExceptionHandler));
+
+                if (historianID == lastHistorianID)
+                    includeStartTime = true;
             }
         }
 
