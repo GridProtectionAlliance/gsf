@@ -420,7 +420,7 @@ namespace GSF.Configuration
             try
             {
                 // Attempt to create a backup configuration file
-                m_configuration.SaveAs(BackupConfigFilePath, ConfigurationSaveMode.Full, true);
+                File.Copy(m_configuration.FilePath, BackupConfigFilePath, true);
             }
             catch
             {

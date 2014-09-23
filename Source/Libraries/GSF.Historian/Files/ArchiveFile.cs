@@ -226,7 +226,7 @@ namespace GSF.Historian.Files
         /// <summary>
         /// Specifies the default value for the <see cref="RolloverPreparationThreshold"/> property.
         /// </summary>
-        public const int DefaultRolloverPreparationThreshold = 75;
+        public const double DefaultRolloverPreparationThreshold = 75.0D;
 
         /// <summary>
         /// Specifies the default value for the <see cref="ArchiveOffloadCount"/> property.
@@ -241,7 +241,12 @@ namespace GSF.Historian.Files
         /// <summary>
         /// Specifies the default value for the <see cref="ArchiveOffloadThreshold"/> property.
         /// </summary>
-        public const int DefaultArchiveOffloadThreshold = 90;
+        public const double DefaultArchiveOffloadThreshold = 90.0D;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="ArchiveOffloadMaxAge"/> property.
+        /// </summary>
+        public const int DefaultArchiveOffloadMaxAge = -1;
 
         /// <summary>
         /// Specifies the default value for the <see cref="MaxHistoricArchiveFiles"/> property.
@@ -467,10 +472,11 @@ namespace GSF.Historian.Files
         private double m_fileSize;
         private FileAccess m_fileAccessMode;
         private int m_dataBlockSize;
-        private short m_rolloverPreparationThreshold;
+        private double m_rolloverPreparationThreshold;
         private string m_archiveOffloadLocation;
         private int m_archiveOffloadCount;
-        private short m_archiveOffloadThreshold;
+        private double m_archiveOffloadThreshold;
+        private int m_archiveOffloadMaxAge;
         private int m_maxHistoricArchiveFiles;
         private double m_leadTimeTolerance;
         private bool m_compressData;
@@ -526,6 +532,7 @@ namespace GSF.Historian.Files
             m_archiveOffloadLocation = DefaultArchiveOffloadLocation;
             m_archiveOffloadCount = DefaultArchiveOffloadCount;
             m_archiveOffloadThreshold = DefaultArchiveOffloadThreshold;
+            m_archiveOffloadMaxAge = DefaultArchiveOffloadMaxAge;
             m_maxHistoricArchiveFiles = DefaultMaxHistoricArchiveFiles;
             m_leadTimeTolerance = DefaultLeadTimeTolerance;
             m_compressData = DefaultCompressData;
@@ -691,7 +698,7 @@ namespace GSF.Historian.Files
         [Category("Rollover"),
         DefaultValue(DefaultRolloverPreparationThreshold),
         Description("ArchiveFile usage (in %) that will trigger the creation of an empty ArchiveFile for rollover.")]
-        public short RolloverPreparationThreshold
+        public double RolloverPreparationThreshold
         {
             get
             {
@@ -699,7 +706,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value < 1 || value > 95)
+                if (value < 1.0D || value > 95.0D)
                     throw new ArgumentOutOfRangeException("value", "RolloverPreparationThreshold value must be between 1 and 95");
 
                 m_rolloverPreparationThreshold = value;
@@ -750,11 +757,11 @@ namespace GSF.Historian.Files
         /// <summary>
         /// Gets or sets the free disk space (in %) of the primary archive location that triggers the offload of historic <see cref="ArchiveFile"/>s.
         /// </summary>
-        /// <exception cref="ArgumentOutOfRangeException">The value being assigned is not between 1 and 99.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">The value being assigned is not between 0 and 99.</exception>
         [Category("Archive"),
         DefaultValue(DefaultArchiveOffloadThreshold),
         Description("Free disk space (in %) of the primary archive location that triggers the offload of historic ArchiveFiles.")]
-        public short ArchiveOffloadThreshold
+        public double ArchiveOffloadThreshold
         {
             get
             {
@@ -762,10 +769,28 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value < 1 || value > 99)
-                    throw new ArgumentOutOfRangeException("value", "ArchiveOffloadThreshold value must be between 1 and 99");
+                if (value <= 0.0D || value > 99.0D)
+                    throw new ArgumentOutOfRangeException("value", "ArchiveOffloadThreshold value must be between 0 and 99");
 
                 m_archiveOffloadThreshold = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum number of days before an archive file triggers the offload of historic <see cref="ArchiveFile"/>s.
+        /// </summary>
+        [Category("Archive"),
+        DefaultValue(DefaultArchiveOffloadMaxAge),
+        Description("Maximum number of days before an archive file will be offloaded.")]
+        public int ArchiveOffloadMaxAge
+        {
+            get
+            {
+                return m_archiveOffloadMaxAge;
+            }
+            set
+            {
+                m_archiveOffloadMaxAge = value;
             }
         }
 
@@ -1375,6 +1400,7 @@ namespace GSF.Historian.Files
                 settings["ArchiveOffloadLocation", true].Update(m_archiveOffloadLocation);
                 settings["ArchiveOffloadCount", true].Update(m_archiveOffloadCount);
                 settings["ArchiveOffloadThreshold", true].Update(m_archiveOffloadThreshold);
+                settings["ArchiveOffloadMaxAge", true].Update(m_archiveOffloadMaxAge);
                 settings["MaxHistoricArchiveFiles", true].Update(m_maxHistoricArchiveFiles);
                 settings["LeadTimeTolerance", true].Update(m_leadTimeTolerance);
                 settings["CompressData", true].Update(m_compressData);
@@ -1411,6 +1437,7 @@ namespace GSF.Historian.Files
                 settings.Add("ArchiveOffloadLocation", m_archiveOffloadLocation, "Path to the location where historic files are to be moved when disk start getting full. Set to *DELETE* to remove files instead of offloading.");
                 settings.Add("ArchiveOffloadCount", m_archiveOffloadCount, "Number of files that are to be moved to the offload location when the disk starts getting full.");
                 settings.Add("ArchiveOffloadThreshold", m_archiveOffloadThreshold, "Percentage disk full when the historic files should be moved to the offload location.");
+                settings.Add("ArchiveOffloadMaxAge", m_archiveOffloadMaxAge, "Maximum number of days before an archive file will be offloaded.");
                 settings.Add("MaxHistoricArchiveFiles", m_maxHistoricArchiveFiles, "Maximum number of historic files to be kept at both the primary and offload locations combined.");
                 settings.Add("LeadTimeTolerance", m_leadTimeTolerance, "Number of minutes by which incoming data points can be ahead of local system clock and still be considered valid.");
                 settings.Add("CompressData", m_compressData, "True if compression (swinging door - lossy) is to be performed on the incoming data points; otherwise False.");
@@ -1427,6 +1454,7 @@ namespace GSF.Historian.Files
                 ArchiveOffloadLocation = settings["ArchiveOffloadLocation"].ValueAs(m_archiveOffloadLocation);
                 ArchiveOffloadCount = settings["ArchiveOffloadCount"].ValueAs(m_archiveOffloadCount);
                 ArchiveOffloadThreshold = settings["ArchiveOffloadThreshold"].ValueAs(m_archiveOffloadThreshold);
+                ArchiveOffloadMaxAge = settings["ArchiveOffloadMaxAge"].ValueAs(m_archiveOffloadMaxAge);
                 MaxHistoricArchiveFiles = settings["MaxHistoricArchiveFiles"].ValueAs(m_maxHistoricArchiveFiles);
                 LeadTimeTolerance = settings["LeadTimeTolerance"].ValueAs(m_leadTimeTolerance);
                 CompressData = settings["CompressData"].ValueAs(m_compressData);
@@ -2647,7 +2675,10 @@ namespace GSF.Historian.Files
                 DriveInfo archiveDrive = new DriveInfo(Path.GetPathRoot(m_fileName).ToNonNullString());
 
                 // We'll start offloading historic files if we've reached the offload threshold.
-                if (archiveDrive.AvailableFreeSpace < archiveDrive.TotalSize * (1 - ((double)m_archiveOffloadThreshold / 100)))
+                if (m_archiveOffloadMaxAge > 0)
+                    OffloadMaxAgedFiles();
+
+                if (archiveDrive.AvailableFreeSpace < archiveDrive.TotalSize * (1 - (m_archiveOffloadThreshold / 100)))
                     OffloadHistoricFiles();
 
                 // Maintain maximum number of historic files, if configured to do so
@@ -2695,6 +2726,148 @@ namespace GSF.Historian.Files
             catch (Exception ex)
             {
                 OnRolloverPreparationException(ex);
+            }
+        }
+
+        private void OffloadMaxAgedFiles()
+        {
+            if (Directory.Exists(m_archiveOffloadLocation))
+            {
+                // Wait until the historic file list has been built.
+                if (m_buildHistoricFileListThread.IsAlive)
+                    m_buildHistoricFileListThread.Join();
+
+                try
+                {
+                    OnOffloadStart();
+
+                    // The offload path that is specified is a valid one so we'll gather a list of all historic
+                    // files in the directory where the current (active) archive file is located.
+                    List<Info> newHistoricFiles;
+
+                    lock (m_historicArchiveFiles)
+                    {
+                        newHistoricFiles = m_historicArchiveFiles.FindAll(info => IsNewHistoricArchiveFile(info, m_fileName));
+                    }
+
+                    // Sorting the list will sort the historic files from oldest to newest.
+                    newHistoricFiles.Sort();
+
+                    List<Info> filesToOffload = new List<Info>();
+
+                    foreach (Info file in newHistoricFiles)
+                    {
+                        if ((DateTime.UtcNow - file.StartTimeTag.ToDateTime()).TotalDays > m_archiveOffloadMaxAge)
+                            filesToOffload.Add(file);
+                    }
+
+                    // We'll offload the specified number of oldest historic files to the offload location if the
+                    // number of historic files is more than the offload count or all of the historic files if the
+                    // offload count is smaller the available number of historic files.
+                    ProcessProgress<int> offloadProgress = new ProcessProgress<int>("FileOffload");
+
+                    offloadProgress.Total = filesToOffload.Count;
+
+                    for (int i = 0; i < offloadProgress.Total; i++)
+                    {
+                        // Don't attempt to offload active file
+                        if (string.Compare(filesToOffload[i].FileName, m_fileName, StringComparison.OrdinalIgnoreCase) != 0)
+                        {
+                            string destinationFileName = FilePath.AddPathSuffix(m_archiveOffloadLocation) + FilePath.GetFileName(filesToOffload[i].FileName);
+
+                            try
+                            {
+                                DeleteFile(destinationFileName);
+                                MoveFile(filesToOffload[i].FileName, destinationFileName);
+                            }
+                            catch (Exception ex)
+                            {
+                                OnOffloadException(new InvalidOperationException(string.Format("Failed to offload historic file \"{0}\": {1}", FilePath.GetFileName(filesToOffload[i].FileName), ex.Message), ex));
+                            }
+
+                            offloadProgress.Complete++;
+                            offloadProgress.ProgressMessage = FilePath.GetFileName(filesToOffload[i].FileName);
+
+                            OnOffloadProgress(offloadProgress);
+                        }
+                    }
+
+                    OnOffloadComplete();
+                }
+                catch (ThreadAbortException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    OnOffloadException(ex);
+                }
+            }
+            else if (string.Compare(m_archiveOffloadLocation.ToNonNullString().Trim(), "*DELETE*", StringComparison.OrdinalIgnoreCase) == 0)
+            {
+                // Handle case where user has requested historic files be deleted instead of offloaded
+
+                // Wait until the historic file list has been built.
+                if (m_buildHistoricFileListThread.IsAlive)
+                    m_buildHistoricFileListThread.Join();
+
+                try
+                {
+                    OnOffloadStart();
+
+                    // Get a local copy of all the historic archive files.
+                    List<Info> allHistoricFiles;
+
+                    lock (m_historicArchiveFiles)
+                    {
+                        allHistoricFiles = new List<Info>(m_historicArchiveFiles);
+                    }
+
+                    // Start deleting historic files from oldest to newest.
+                    allHistoricFiles.Sort();
+
+                    List<Info> filesToDelete = new List<Info>();
+
+                    foreach (Info file in allHistoricFiles)
+                    {
+                        if ((DateTime.UtcNow - file.StartTimeTag.ToDateTime()).TotalDays > m_archiveOffloadMaxAge)
+                            filesToDelete.Add(file);
+                    }
+
+                    ProcessProgress<int> offloadProgress = new ProcessProgress<int>("FileOffload");
+                    offloadProgress.Total = filesToDelete.Count;
+
+                    for (int i = 0; i < filesToDelete.Count; i++)
+                    {
+                        // Don't attempt to offload active file
+                        if (string.Compare(filesToDelete[i].FileName, m_fileName, StringComparison.OrdinalIgnoreCase) != 0)
+                        {
+                            try
+                            {
+                                DeleteFile(filesToDelete[i].FileName);
+                            }
+                            catch (Exception ex)
+                            {
+                                OnOffloadException(new InvalidOperationException(string.Format("Failed to remove historic file \"{0}\": {1}", FilePath.GetFileName(filesToDelete[i].FileName), ex.Message), ex));
+                            }
+                        }
+
+                        offloadProgress.Complete++;
+                        offloadProgress.ProgressMessage = FilePath.GetFileName(filesToDelete[i].FileName);
+
+                        OnOffloadProgress(offloadProgress);
+                    }
+
+                    OnOffloadComplete();
+                }
+                catch (ThreadAbortException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    OnOffloadException(ex);
+                }
             }
         }
 
