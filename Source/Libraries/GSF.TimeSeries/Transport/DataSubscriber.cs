@@ -1434,6 +1434,7 @@ namespace GSF.TimeSeries.Transport
                     // This will prevent any recursive data gap recovery operations from being established:
                     Dictionary<string, string> connectionSettings = m_commandChannel.ConnectionString.ParseKeyValuePairs();
                     connectionSettings.Remove("dataGapRecovery");
+                    connectionSettings.Remove("autoConnect");
 
                     // Note that the data gap recoverer will connect on the same command channel port as
                     // the real-time subscriber (TCP only)
@@ -1441,7 +1442,7 @@ namespace GSF.TimeSeries.Transport
                     m_dataGapRecoverer = new DataGapRecoverer();
                     m_dataGapRecoverer.SourceConnectionName = Name;
                     m_dataGapRecoverer.DataSource = DataSource;
-                    m_dataGapRecoverer.ConnectionString = string.Join("; ", dataGapSettings.JoinKeyValuePairs(), connectionSettings.JoinKeyValuePairs());
+                    m_dataGapRecoverer.ConnectionString = string.Join("; ", dataGapSettings.JoinKeyValuePairs(), connectionSettings.JoinKeyValuePairs(), "autoConnect=false");
                     m_dataGapRecoverer.RecoveredMeasurements += m_dataGapRecoverer_RecoveredMeasurements;
                     m_dataGapRecoverer.StatusMessage += m_dataGapRecoverer_StatusMessage;
                     m_dataGapRecoverer.ProcessException += m_dataGapRecoverer_ProcessException;
