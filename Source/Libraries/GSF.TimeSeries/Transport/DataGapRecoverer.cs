@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -124,6 +125,7 @@ namespace GSF.TimeSeries.Transport
         private OutageLogProcessor m_dataGapLogProcessor;
         private OutageLog m_dataGapLog;
         private Timer m_dataStreamMonitor;
+        private DataSet m_dataSource;
         private string m_sourceConnectionName;
         private string m_connectionString;
         private Time m_recoveryStartDelay;
@@ -194,6 +196,21 @@ namespace GSF.TimeSeries.Transport
                     throw new ArgumentOutOfRangeException("value", "SourceConnectionName cannot be null or an empty string.");
 
                 m_sourceConnectionName = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="DataSet"/> based data source available to this <see cref="DataGapRecoverer"/>.
+        /// </summary>
+        public DataSet DataSource
+        {
+            get
+            {
+                return m_dataSource;
+            }
+            set
+            {
+                m_dataSource = value;
             }
         }
 
@@ -630,6 +647,7 @@ namespace GSF.TimeSeries.Transport
             // Setup a new temporal data subscriber that will be used to query historical data
             m_temporalSubscription = new DataSubscriber();
             m_temporalSubscription.Name = m_sourceConnectionName + "!" + GetType().Name;
+            m_temporalSubscription.DataSource = m_dataSource;
             m_temporalSubscription.ConnectionString = m_connectionString;
             m_temporalSubscription.StatusMessage += Common_StatusMessage;
             m_temporalSubscription.ProcessException += Common_ProcessException;

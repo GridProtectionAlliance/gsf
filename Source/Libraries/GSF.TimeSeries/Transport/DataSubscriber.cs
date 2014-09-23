@@ -1440,6 +1440,7 @@ namespace GSF.TimeSeries.Transport
                     m_dataGapRecoveryEnabled = true;
                     m_dataGapRecoverer = new DataGapRecoverer();
                     m_dataGapRecoverer.SourceConnectionName = Name;
+                    m_dataGapRecoverer.DataSource = DataSource;
                     m_dataGapRecoverer.ConnectionString = string.Join("; ", dataGapSettings.JoinKeyValuePairs(), connectionSettings.JoinKeyValuePairs());
                     m_dataGapRecoverer.RecoveredMeasurements += m_dataGapRecoverer_RecoveredMeasurements;
                     m_dataGapRecoverer.StatusMessage += m_dataGapRecoverer_StatusMessage;
