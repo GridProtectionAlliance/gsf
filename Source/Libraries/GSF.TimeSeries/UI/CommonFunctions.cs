@@ -30,6 +30,7 @@ using System.Diagnostics;
 using System.IO.Ports;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Security.Principal;
 using System.Threading;
 using System.Timers;
@@ -649,7 +650,17 @@ namespace GSF.TimeSeries.UI
 
         private static void RemotingClient_ConnectionException(object sender, EventArgs<Exception> e)
         {
-            LogException(null, "Remoting Client Connect", e.Argument);
+            bool logException = true;
+            SocketException ex = e.Argument as SocketException;
+
+            if ((object)ex == null && (object)e.Argument.InnerException != null)
+                ex = e.Argument.InnerException as SocketException;
+
+            if ((object)ex != null)
+                logException = (ex.SocketErrorCode != SocketError.ConnectionRefused);
+
+            if (logException)
+                LogException(null, "Remoting Client Connect", e.Argument);
         }
 
         /// <summary>

@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
+using System.Net.Sockets;
 using System.Threading;
 using System.Timers;
 using GSF.Data;
@@ -506,7 +507,17 @@ namespace GSF.TimeSeries.UI
 
         private void m_dataSubscriber_ProcessException(object sender, EventArgs<Exception> e)
         {
-            CommonFunctions.LogException(null, "AlarmMonitor", e.Argument);
+            bool logException = true;
+            SocketException ex = e.Argument as SocketException;
+
+            if ((object)ex == null && (object)e.Argument.InnerException != null)
+                ex = e.Argument.InnerException as SocketException;
+
+            if ((object)ex != null)
+                logException = (ex.SocketErrorCode != SocketError.ConnectionRefused);
+
+            if (logException)
+                CommonFunctions.LogException(null, "AlarmMonitor", e.Argument);
         }
 
         #region [ Old Code ]
