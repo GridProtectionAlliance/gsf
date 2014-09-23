@@ -1485,15 +1485,6 @@ namespace GSF.Historian.Files
 
                 OpenStream();
 
-                // Don't proceed further for standby and historic files.
-                if (m_fileType != ArchiveFileType.Active)
-                    return;
-
-                // Start internal process queues.
-                m_currentDataQueue.Start();
-                m_historicDataQueue.Start();
-                m_outOfSequenceDataQueue.Start();
-
                 // Open state file if closed.
                 if (!m_stateFile.IsOpen)
                     m_stateFile.Open();
@@ -1505,6 +1496,15 @@ namespace GSF.Historian.Files
                 // Open metadata file if closed.
                 if (!m_metadataFile.IsOpen)
                     m_metadataFile.Open();
+
+                // Don't proceed further for standby and historic files.
+                if (m_fileType != ArchiveFileType.Active)
+                    return;
+
+                // Start internal process queues.
+                m_currentDataQueue.Start();
+                m_historicDataQueue.Start();
+                m_outOfSequenceDataQueue.Start();
 
                 // Create data block lookup list.
                 if (m_stateFile.RecordsInMemory > 0)
@@ -2521,6 +2521,18 @@ namespace GSF.Historian.Files
                         Thread.Sleep(500);
                     }
                 }
+            }
+            else if (m_fileAccessMode == FileAccess.Read)
+            {
+                // File does not exist, so we create a placeholder file in the temp directory
+                m_fileStream = new FileStream(Path.GetTempFileName(), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+                m_fat = new ArchiveFileAllocationTable(this);
+                m_fat.FileStartTime = TimeTag.MaxValue;
+                m_fat.FileEndTime = TimeTag.MaxValue;
+
+                // Manually call file monitoring event if file watchers are not enabled
+                if (!m_monitorNewArchiveFiles)
+                    FileWatcher_Created(this, new FileSystemEventArgs(WatcherChangeTypes.Created, FilePath.GetAbsolutePath(m_fileName), FilePath.GetFileName(m_fileName)));
             }
             else
             {

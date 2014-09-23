@@ -422,7 +422,7 @@ namespace GSF.Historian.Files
 
             string archiveLocation = FilePath.GetDirectoryName(fileName);
             string archiveName = FilePath.GetFileName(fileName);
-            string instance = archiveName.Substring(0, archiveName.LastIndexOf('_'));
+            string instance = archiveName.Substring(0, archiveName.LastIndexOf("_archive", StringComparison.OrdinalIgnoreCase));
 
             ArchiveFile file = new ArchiveFile
             {

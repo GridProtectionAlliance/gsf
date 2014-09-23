@@ -621,17 +621,17 @@ namespace HistorianView
                 return null;
 
             if (archiveFilePath.EndsWith("_dbase.dat", StringComparison.OrdinalIgnoreCase))
-                archiveFilePath = FilePath.GetFileList(Path.Combine(FilePath.GetDirectoryName(archiveFilePath), "*.d")).FirstOrDefault();
+                archiveFilePath = string.Format("{0}_archive.d", archiveFilePath.Substring(0, archiveFilePath.LastIndexOf("_dbase.dat", StringComparison.OrdinalIgnoreCase)));
 
-            if (archiveFilePath == null)
+            if ((object)archiveFilePath == null)
                 return null;
 
             file = new ArchiveReader();
 
             if (paths.Length > 1)
-                file.Open(paths[0], paths[1]);
+                file.Open(archiveFilePath, paths[1]);
             else
-                file.Open(paths[0]);
+                file.Open(archiveFilePath);
 
             return file;
         }
