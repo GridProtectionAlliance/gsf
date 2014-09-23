@@ -51,9 +51,11 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Web.Hosting;
 using GSF.Collections;
 using GSF.Console;
+using GSF.IO;
 using GSF.Reflection;
 using GSF.Units;
 using Microsoft.Win32;
@@ -297,8 +299,17 @@ namespace GSF
                     // Try some common ways to get product name on Linux
                     try
                     {
-                        string output = Command.Execute("cat", "/etc/*release*").StandardOutput;
-                        Dictionary<string, string> kvps = output.ParseKeyValuePairs('\n');
+                        StringBuilder content = new StringBuilder();
+
+                        foreach (string fileName in FilePath.GetFileList("/etc/*release*"))
+                        {
+                            using (StreamReader reader = new StreamReader(fileName))
+                            {
+                                content.AppendLine(reader.ReadToEnd());
+                            }
+                        }
+
+                        Dictionary<string, string> kvps = content.ToString().ParseKeyValuePairs('\n');
                         if (kvps.TryGetValue("PRETTY_NAME", out s_osPlatformName) && !string.IsNullOrEmpty(s_osPlatformName))
                             s_osPlatformName = s_osPlatformName.Replace("\"", "");
                     }
