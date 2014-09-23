@@ -236,7 +236,7 @@ namespace HistorianView
                 {
                     ArchiveReader reader = visiblePoint.Item1;
                     MetadataRecord record = visiblePoint.Item2;
-                    IEnumerable<IDataPoint> data = reader.ReadData(record.HistorianID, startTime, endTime);
+                    IEnumerable<IDataPoint> data = reader.ReadData(record.HistorianID, startTime, endTime, false);
 
                     LineSeries series = new LineSeries();
                     int interval = (data.Count() / m_chartResolution) + 1;

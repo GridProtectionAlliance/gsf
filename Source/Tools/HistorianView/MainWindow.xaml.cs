@@ -569,7 +569,7 @@ namespace HistorianView
             OpenArchivesDialog dialog = new OpenArchivesDialog();
 
             dialog.ArchiveLocations = m_archiveReaders
-                .Select(reader => string.Format("{0}|{1}", reader.FileName, reader.ArchiveOffloadLocation))
+                .Select(reader => string.Format("{0}|{1}", GetArchiveLocation(reader), reader.ArchiveOffloadLocation))
                 .ToList();
 
             dialog.Owner = this;
@@ -614,16 +614,14 @@ namespace HistorianView
         private ArchiveReader OpenArchiveReader(string archiveLocation)
         {
             string[] paths = archiveLocation.Split('|');
-            string archiveFilePath = paths[0];
+            string archiveFilePath;
             ArchiveReader file;
 
-            if (!File.Exists(paths[0]))
-                return null;
-
-            if (archiveFilePath.EndsWith("_dbase.dat", StringComparison.OrdinalIgnoreCase))
-                archiveFilePath = string.Format("{0}_archive.d", archiveFilePath.Substring(0, archiveFilePath.LastIndexOf("_dbase.dat", StringComparison.OrdinalIgnoreCase)));
-
-            if ((object)archiveFilePath == null)
+            if (paths[0].EndsWith("_archive.d"))
+                archiveFilePath = paths[0];
+            else if (paths[0].EndsWith("_dbase.dat", StringComparison.OrdinalIgnoreCase))
+                archiveFilePath = string.Format("{0}_archive.d", paths[0].Remove(paths[0].Length - 10));
+            else
                 return null;
 
             file = new ArchiveReader();
@@ -1300,6 +1298,22 @@ namespace HistorianView
                 m_chartResolutionTextBox.Text = int.MaxValue.ToString();
                 m_chartWindow.ChartResolution = int.MaxValue;
             }
+        }
+
+        // Gets the archive location of the reader
+        private string GetArchiveLocation(ArchiveReader reader)
+        {
+            string metadataFilePath;
+
+            if (!File.Exists(reader.FileName))
+            {
+                metadataFilePath = string.Format("{0}_dbase.dat", reader.FileName.Remove(reader.FileName.Length - 10));
+
+                if (File.Exists(metadataFilePath))
+                    return metadataFilePath;
+            }
+
+            return reader.FileName;
         }
 
         // Gets the file path of the CSV file in which to export measurements.
