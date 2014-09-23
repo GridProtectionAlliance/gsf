@@ -26,7 +26,7 @@ namespace GSF.TimeSeries.Statistics
     class DeviceStatistics
     {
         /// <summary>
-        /// Calculates number of data quaility errors reported by device during last reporting interval.
+        /// Calculates number of data quality errors reported by device during last reporting interval.
         /// </summary>
         /// <param name="source">Source Device.</param>
         /// <param name="arguments">Any needed arguments for statistic calculation.</param>

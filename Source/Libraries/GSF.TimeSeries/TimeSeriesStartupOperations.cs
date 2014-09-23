@@ -24,15 +24,12 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using GSF.Configuration;
 using GSF.Data;
-
-#if !MONO
-using System.Collections.Generic;
-using System.Linq;
 using GSF.Identity;
-#endif
 
 namespace GSF.TimeSeries
 {
@@ -108,7 +105,6 @@ namespace GSF.TimeSeries
         /// </summary>
         private static void ValidateAccountsAndGroups(AdoDataConnection database, string nodeIDQueryString)
         {
-#if !MONO
             const string SelectUserAccountQuery = "SELECT ID, Name, UseADAuthentication FROM UserAccount";
             const string SelectSecurityGroupQuery = "SELECT ID, Name FROM SecurityGroup";
             const string UpdateUserAccountFormat = "UPDATE UserAccount SET Name = '{0}' WHERE ID = '{1}'";
@@ -166,7 +162,6 @@ namespace GSF.TimeSeries
             // Update security groups
             foreach (KeyValuePair<string, string> pair in updateMap)
                 database.Connection.ExecuteNonQuery(string.Format(UpdateSecurityGroupFormat, pair.Value, pair.Key));
-#endif
         }
 
         /// <summary>
@@ -241,7 +236,7 @@ namespace GSF.TimeSeries
             const string PublisherStatisticDeleteFormat = "DELETE FROM Statistic WHERE Source = 'Publisher' AND SignalIndex <= {0}";
 
             // Names and descriptions for each of the statistics
-            string[] SystemStatNames = { "CPU Usage", "Average CPU Usage", "Memory Usage", "Average Memory Usage", "Thread Count", "Average Thread Count", "Threading Contention Rate", "Average Threading Contention Rate", "IO Usage", "Average IO Usage", "Datagram Send Rate", "Average Datagram Send Rate", "Datagram Receive Rate", "Average Datagram Receive Rate" };
+            string[] SystemStatNames = { "CPU Usage", "Average CPU Usage", "Memory Usage", "Average Memory Usage", "Thread Count", "Average Thread Count", "Threading Contention Rate", "Average Threading Contention Rate", "IO Usage", "Average IO Usage", "IP Data Send Rate", "Average IP Data Send Rate", "IP Data Receive Rate", "Average IP Data Receive Rate" };
 
             string[] SystemStatDescriptions = { "Percentage of CPU currently used by this process.",
                                                 "Average percentage of CPU used by this process.",
@@ -253,15 +248,15 @@ namespace GSF.TimeSeries
                                                 "Average thread lock contention rate in attempts per second.",
                                                 "Amount of IO currently used by this process in kilobytes per second.",
                                                 "Average amount of IO used by this process in kilobytes per second.",
-                                                "Number of IPv4 datagrams currently sent by this process per second.",
-                                                "Average number of IPv4 datagrams sent by this process per second.",
-                                                "Number of IPv4 datagrams currently received by this process per second.",
-                                                "Average number of IPv4 datagrams received by this process per second."
+                                                "Number of IP datagrams (or bytes on Mono) currently sent by this process per second.",
+                                                "Average number of IP datagrams (or bytes on Mono) sent by this process per second.",
+                                                "Number of IP datagrams (or bytes on Mono) currently received by this process per second.",
+                                                "Average number of IP datagrams (or bytes on Mono) received by this process per second."
                                               };
 
             string[] DeviceStatNames = { "Data Quality Errors", "Time Quality Errors", "Device Errors", "Measurements Received", "Measurements Expected" };
 
-            string[] DeviceStatDescriptions = { "Number of data quaility errors reported by device during last reporting interval.",
+            string[] DeviceStatDescriptions = { "Number of data quality errors reported by device during last reporting interval.",
                                                 "Number of time quality errors reported by device during last reporting interval.",
                                                 "Number of device errors reported by device during last reporting interval.",
                                                 "Number of measurements received from device during last reporting interval.",

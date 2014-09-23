@@ -120,7 +120,7 @@ namespace GSF.Diagnostics
         /// <param name="samplingInterval">Interval, in milliseconds, at which the <see cref="Counters"/> are to be sampled.</param>
         /// <param name="addDefaultCounters">Set to <c>true</c> to add default counters; otherwise <c>false</c>.</param>
         public PerformanceMonitor(double samplingInterval, bool addDefaultCounters = true)
-            : this(Process.GetCurrentProcess().ProcessName, samplingInterval, addDefaultCounters)
+            : this(Common.IsMono ? Process.GetCurrentProcess().Id.ToString() : Process.GetCurrentProcess().ProcessName, samplingInterval, addDefaultCounters)
         {
         }
 
@@ -152,47 +152,78 @@ namespace GSF.Diagnostics
             {
                 // Add default process and .NET counters
                 AddCounter("Process", "% Processor Time", m_processName, "CPU Utilization", "Average % / CPU", Environment.ProcessorCount);
-                AddCounter("Process", "IO Data Bytes/sec", m_processName, "I/O Data Rate", "Kilobytes / sec", SI2.Kilo);
-                AddCounter("Process", "IO Data Operations/sec", m_processName, "I/O Activity Rate", "Operations / sec", 1);
-                AddCounter("Process", "Handle Count", m_processName, "Process Handle Count", "Total Handles", 1);
+
+                if (!Common.IsMono)
+                {
+                    AddCounter("Process", "IO Data Bytes/sec", m_processName, "I/O Data Rate", "Kilobytes / sec", SI2.Kilo);
+                    AddCounter("Process", "IO Data Operations/sec", m_processName, "I/O Activity Rate", "Operations / sec", 1);
+                    AddCounter("Process", "Handle Count", m_processName, "Process Handle Count", "Total Handles", 1);
+                }
+
                 AddCounter("Process", "Thread Count", m_processName, "Process Thread Count", "System Threads", 1);
                 AddCounter(".NET CLR LocksAndThreads", "# of current logical Threads", m_processName, "CLR Thread Count", "Managed Threads", 1);
 
-                if (PerformanceCounterCategory.Exists(ThreadPoolCountersCategoryName))
+                if (Common.IsMono)
                 {
-                    // Add custom thread pool counters                                                             1234567890123456
-                    AddCounter(ThreadPoolCountersCategoryName, "Worker Threads", m_processName, "Worker Threads", "Active in Pool", 1, false);
+                    // Add custom thread pool counters                                              1234567890123456
+                    AddCounter("Mono Threadpool", "# of Threads", m_processName, "Worker Threads", "Active in Pool", 1, false);
                     //                                                                                   12345678901234567890
-                    AddCounter(ThreadPoolCountersCategoryName, "Completion Port Threads", m_processName, "I/O Port Threads", "Active in Pool", 1, false);
+                    AddCounter("Mono Threadpool", "# of IO Threads", m_processName, "I/O Port Threads", "Active in Pool", 1, false);
+                }
+                else
+                {
+                    if (PerformanceCounterCategory.Exists(ThreadPoolCountersCategoryName))
+                    {
+                        // Add custom thread pool counters                                                             1234567890123456
+                        AddCounter(ThreadPoolCountersCategoryName, "Worker Threads", m_processName, "Worker Threads", "Active in Pool", 1, false);
+                        //                                                                                   12345678901234567890
+                        AddCounter(ThreadPoolCountersCategoryName, "Completion Port Threads", m_processName, "I/O Port Threads", "Active in Pool", 1, false);
+                    }
                 }
 
                 AddCounter(".NET CLR LocksAndThreads", "Current Queue Length", m_processName, "Thread Queue Size", "Waiting Threads", 1);
                 AddCounter(".NET CLR LocksAndThreads", "Contention Rate / sec", m_processName, "Lock Contention Rate", "Attempts / sec", 1);
+
                 AddCounter("Process", "Working Set", m_processName, "Process Memory Usage", "Megabytes", SI2.Mega);
+
                 AddCounter(".NET CLR Memory", "# Bytes in all Heaps", m_processName, "CLR Memory Usage", "Megabytes", SI2.Mega);
                 AddCounter(".NET CLR Memory", "Large Object Heap size", m_processName, "Large Object Heap", "Megabytes", SI2.Mega);
                 //                                                                                         1234567890123456
                 AddCounter(".NET CLR Exceptions", "# of Exceps Thrown", m_processName, "Exception Count", "Total Exceptions", 1);
-                AddCounter(".NET CLR Exceptions", "# of Exceps Thrown / sec", m_processName, "Exception Rate", "Exceptions / sec", 1);
+
+                if (Common.IsMono)
+                    AddCounter(".NET CLR Exceptions", "# of Exceps Thrown/Sec", m_processName, "Exception Rate", "Exceptions / sec", 1);
+                else
+                    AddCounter(".NET CLR Exceptions", "# of Exceps Thrown / sec", m_processName, "Exception Rate", "Exceptions / sec", 1);
 
                 // Add default networking counters
-                if (PerformanceCounterCategory.Exists("IPv4"))
+                if (Common.IsMono)
                 {
-                    //                                            12345678901234567890
-                    AddCounter("IPv4", "Datagrams Sent/sec", "", "IPv4 Outgoing Rate", "Datagrams / sec", 1);
-                    //                                                12345678901234567890
-                    AddCounter("IPv4", "Datagrams Received/sec", "", "IPv4 Incoming Rate", "Datagrams / sec", 1);
+                    //                                                     12345678901234567890
+                    AddCounter("Network Interface", "Bytes Sent/sec", "", "IP Outgoing Rate", "Bytes / sec", 1);
+                    //                                                         12345678901234567890
+                    AddCounter("Network Interface", "Bytes Received/sec", "", "IP Incoming Rate", "Bytes / sec", 1);
                 }
-                else if (PerformanceCounterCategory.Exists("IP"))
+                else
                 {
-                    AddCounter("IP", "Datagrams Sent/sec", "", "IP Outgoing Rate", "Datagrams / sec", 1);
-                    AddCounter("IP", "Datagrams Received/sec", "", "IP Incoming Rate", "Datagrams / sec", 1);
-                }
+                    if (PerformanceCounterCategory.Exists("IPv4"))
+                    {
+                        //                                            12345678901234567890
+                        AddCounter("IPv4", "Datagrams Sent/sec", "", "IPv4 Outgoing Rate", "Datagrams / sec", 1);
+                        //                                                12345678901234567890
+                        AddCounter("IPv4", "Datagrams Received/sec", "", "IPv4 Incoming Rate", "Datagrams / sec", 1);
+                    }
+                    else if (PerformanceCounterCategory.Exists("IP"))
+                    {
+                        AddCounter("IP", "Datagrams Sent/sec", "", "IP Outgoing Rate", "Datagrams / sec", 1);
+                        AddCounter("IP", "Datagrams Received/sec", "", "IP Incoming Rate", "Datagrams / sec", 1);
+                    }
 
-                if (PerformanceCounterCategory.Exists("IPv6"))
-                {
-                    AddCounter("IPv6", "Datagrams Sent/sec", "", "IPv6 Outgoing Rate", "Datagrams / sec", 1);
-                    AddCounter("IPv6", "Datagrams Received/sec", "", "IPv6 Incoming Rate", "Datagrams / sec", 1);
+                    if (PerformanceCounterCategory.Exists("IPv6"))
+                    {
+                        AddCounter("IPv6", "Datagrams Sent/sec", "", "IPv6 Outgoing Rate", "Datagrams / sec", 1);
+                        AddCounter("IPv6", "Datagrams Received/sec", "", "IPv6 Incoming Rate", "Datagrams / sec", 1);
+                    }
                 }
             }
 
@@ -286,7 +317,7 @@ namespace GSF.Diagnostics
         {
             get
             {
-                return FindCounter("Datagrams Sent/sec");
+                return FindCounter("Datagrams Sent/sec") ?? FindCounter("Bytes Sent/sec");
             }
         }
 
@@ -298,7 +329,7 @@ namespace GSF.Diagnostics
         {
             get
             {
-                return FindCounter("Datagrams Received/sec");
+                return FindCounter("Datagrams Received/sec") ?? FindCounter("Bytes Received/sec");
             }
         }
 
@@ -664,7 +695,7 @@ namespace GSF.Diagnostics
         /// <returns>A <see cref="PerformanceCounter"/> object if a match is found; otherwise null.</returns>
         /// <remarks>
         /// First <see cref="PerformanceCounter"/> with matching name is returned. If same name exists within
-        /// muliple monitored categories, use <see cref="FindCounter(string,string)"/> overload instead.
+        /// multiple monitored categories, use <see cref="FindCounter(string,string)"/> overload instead.
         /// </remarks>
         public PerformanceCounter FindCounter(string counterName)
         {
@@ -708,23 +739,26 @@ namespace GSF.Diagnostics
             lock (m_counters)
             {
                 // Sample custom thread pool counters
-                PerformanceCounter workerThreadsCounter = FindCounter(ThreadPoolCountersCategoryName, "Worker Threads");
-                PerformanceCounter completionPortThreadsCounter = FindCounter(ThreadPoolCountersCategoryName, "Completion Port Threads");
-
-                if (workerThreadsCounter != null && completionPortThreadsCounter != null)
+                if (!Common.IsMono)
                 {
-                    System.Diagnostics.PerformanceCounter workerThreads = workerThreadsCounter.BaseCounter;
-                    System.Diagnostics.PerformanceCounter completionPortThreads = completionPortThreadsCounter.BaseCounter;
+                    PerformanceCounter workerThreadsCounter = FindCounter(ThreadPoolCountersCategoryName, "Worker Threads");
+                    PerformanceCounter completionPortThreadsCounter = FindCounter(ThreadPoolCountersCategoryName, "Completion Port Threads");
 
-                    if (workerThreads != null && completionPortThreads != null)
+                    if ((object)workerThreadsCounter != null && (object)completionPortThreadsCounter != null)
                     {
-                        int maximumWorkerThreads, maximumCompletionPortThreads, availableWorkerThreads, availableCompletionPortThreads;
+                        System.Diagnostics.PerformanceCounter workerThreads = workerThreadsCounter.BaseCounter;
+                        System.Diagnostics.PerformanceCounter completionPortThreads = completionPortThreadsCounter.BaseCounter;
 
-                        ThreadPool.GetMaxThreads(out maximumWorkerThreads, out maximumCompletionPortThreads);
-                        ThreadPool.GetAvailableThreads(out availableWorkerThreads, out availableCompletionPortThreads);
+                        if ((object)workerThreads != null && (object)completionPortThreads != null)
+                        {
+                            int maximumWorkerThreads, maximumCompletionPortThreads, availableWorkerThreads, availableCompletionPortThreads;
 
-                        workerThreads.RawValue = maximumWorkerThreads - availableWorkerThreads;
-                        completionPortThreads.RawValue = maximumCompletionPortThreads - availableCompletionPortThreads;
+                            ThreadPool.GetMaxThreads(out maximumWorkerThreads, out maximumCompletionPortThreads);
+                            ThreadPool.GetAvailableThreads(out availableWorkerThreads, out availableCompletionPortThreads);
+
+                            workerThreads.RawValue = maximumWorkerThreads - availableWorkerThreads;
+                            completionPortThreads.RawValue = maximumCompletionPortThreads - availableCompletionPortThreads;
+                        }
                     }
                 }
 
@@ -749,7 +783,7 @@ namespace GSF.Diagnostics
         {
             try
             {
-                if (!PerformanceCounterCategory.Exists(ThreadPoolCountersCategoryName))
+                if (!Common.IsMono && !PerformanceCounterCategory.Exists(ThreadPoolCountersCategoryName))
                 {
                     CounterCreationDataCollection customPerformanceCounters = new CounterCreationDataCollection();
 

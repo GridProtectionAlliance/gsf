@@ -189,7 +189,7 @@ namespace GSF.TimeSeries.Statistics
 
         #endregion
 
-        #region [ Datagram Send Rate ]
+        #region [ IP Data Send Rate ]
 
         private static double GetSystemStatistic_DatagramSendRate(object source, string arguments)
         {
@@ -221,7 +221,7 @@ namespace GSF.TimeSeries.Statistics
 
         #endregion
 
-        #region [ Datagram Receive Rate ]
+        #region [ IP Data Receive Rate ]
 
         private static double GetSystemStatistic_DatagramReceiveRate(object source, string arguments)
         {
