@@ -1321,7 +1321,8 @@ namespace PhasorProtocolAdapters
 
             Dictionary<string, DefinedMeasurement> definedMeasurements = new Dictionary<string, DefinedMeasurement>();
 
-            foreach (DataRow row in DataSource.Tables["ActiveMeasurements"].Select(string.Format("DeviceID={0}", SharedMappingID)))
+            // Have to use a Convert expression for DeviceID column in Select function here since SQLite doesn't report data types for COALESCE based columns
+            foreach (DataRow row in DataSource.Tables["ActiveMeasurements"].Select(string.Format("Convert(DeviceID, 'System.Int32')={0}", SharedMappingID)))
             {
                 signalReference = row["SignalReference"].ToString();
 

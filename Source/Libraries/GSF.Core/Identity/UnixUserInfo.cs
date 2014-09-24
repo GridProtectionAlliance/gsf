@@ -1164,6 +1164,7 @@ namespace GSF.Identity
             // If LDAP host has not been derived yet, attempt to derive an LDAP host from the configuration for known GSF security providers
             if (string.IsNullOrEmpty(ldapHost))
             {
+                // TODO: If defined, should these values take precedence over derived LDAP host?
                 try
                 {
                     ConfigurationFile config = ConfigurationFile.Current;
@@ -1297,21 +1298,20 @@ namespace GSF.Identity
 
         private static string GetRandomSalt()
         {
-            Random random = new Random();
             char[] salt = new char[16];
 
             for (int i = 0; i < salt.Length; i++)
             {
-                switch (random.Next(0, 3))
+                switch (Security.Cryptography.Random.Int32Between(0, 3))
                 {
                     case 0:
-                        salt[i] = (char)((int)'A' + random.Next(0, 26));
+                        salt[i] = (char)((int)'A' + Security.Cryptography.Random.Int32Between(0, 26));
                         break;
                     case 1:
-                        salt[i] = (char)((int)'a' + random.Next(0, 26));
+                        salt[i] = (char)((int)'a' + Security.Cryptography.Random.Int32Between(0, 26));
                         break;
                     case 2:
-                        salt[i] = (char)((int)'.' + random.Next(0, 12));
+                        salt[i] = (char)((int)'.' + Security.Cryptography.Random.Int32Between(0, 12));
                         break;
                 }
             }

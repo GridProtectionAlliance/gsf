@@ -489,6 +489,9 @@ namespace GSF.Data
             if (IsJetEngine)
                 return DateTime.UtcNow.ToOADate();
 
+            if (IsSqlite)
+                return new DateTime(DateTime.UtcNow.Ticks, DateTimeKind.Unspecified);
+
             return DateTime.UtcNow;
         }
 
