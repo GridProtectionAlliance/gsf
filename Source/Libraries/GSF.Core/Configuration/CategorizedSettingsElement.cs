@@ -303,6 +303,17 @@ namespace GSF.Configuration
             }
         }
 
+        /// <summary>
+        /// Gets value that will actually be serialized to the configuration file.
+        /// </summary>
+        public string SerializedValue
+        {
+            get
+            {
+                return EncryptValue((string)base["value"]);
+            }
+        }
+
         internal bool Modified
         {
             set

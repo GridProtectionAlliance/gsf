@@ -124,6 +124,9 @@ namespace GSF
 
             int key = type.GUID.GetHashCode() ^ typeT.GUID.GetHashCode();
 
+            if (Common.IsMono)
+                return () => (T)Activator.CreateInstance(type);
+
             return (Func<T>)s_createObjectFunctions.GetOrAdd(key, k =>
             {
                 // Get parameterless constructor for this type

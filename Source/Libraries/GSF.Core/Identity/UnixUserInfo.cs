@@ -24,8 +24,8 @@
 // Define USE_SHARED_OBJECT to use GSF.POSIX.so shared object library for unmanaged functions
 // Undefine USE_SHARED_OBJECT to use internally linked unmanaged functions (e.g., Mono hosted gsf service)
 
-// #define USE_SHARED_OBJECT
-#undef USE_SHARED_OBJECT
+#define USE_SHARED_OBJECT
+// #undef USE_SHARED_OBJECT
 
 using System;
 using System.Collections.Generic;
@@ -283,7 +283,7 @@ namespace GSF.Identity
 
         // DllImport code is in GSF.POSIX.c
 #if USE_SHARED_OBJECT
-        private const string ImportFileName = "GSF.POSIX.so";
+        private const string ImportFileName = "./GSF.POSIX.so";
 #else
         private const string ImportFileName = "__Internal";
 #endif
@@ -1506,7 +1506,7 @@ namespace GSF.Identity
                     return "user:" + userID;
             }
 
-            return "user:" + userName;
+            return userName.EnsureStart("user:");
         }
 
         public static string GroupNameToSID(string groupName)
@@ -1533,17 +1533,18 @@ namespace GSF.Identity
                     return "group:" + groupID;
             }
 
-            return "group:" + groupName;
+            return groupName.EnsureStart("group:");
         }
 
         public static string SIDToAccountName(string sid)
         {
             StringBuilder accountName = new StringBuilder(MaxAccountNameLength);
+            uint accountID;
 
-            if (IsUserSID(sid) && GetLocalUserName(ExtractAccountID(sid), accountName) == 0)
+            if (IsUserSID(sid) && TryExtractAccountID(sid, out accountID) && GetLocalUserName(accountID, accountName) == 0)
                 return accountName.ToString();
 
-            if (IsGroupSID(sid) && GetLocalGroupName(ExtractAccountID(sid), accountName) == 0)
+            if (IsGroupSID(sid) && TryExtractAccountID(sid, out accountID) && GetLocalGroupName(accountID, accountName) == 0)
                 return accountName.ToString();
 
             return sid;
@@ -1559,9 +1560,9 @@ namespace GSF.Identity
             return sid.StartsWith("group:", StringComparison.OrdinalIgnoreCase);
         }
 
-        private static uint ExtractAccountID(string sid)
+        private static bool TryExtractAccountID(string sid, out uint accountID)
         {
-            return uint.Parse(sid.Substring(sid.IndexOf(':') + 1));
+            return uint.TryParse(sid.Substring(sid.IndexOf(':') + 1), out accountID);
         }
 
         private static string[] GetLocalUserGroups(string userName)

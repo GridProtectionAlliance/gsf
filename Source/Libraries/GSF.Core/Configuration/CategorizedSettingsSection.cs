@@ -339,7 +339,7 @@ namespace GSF.Configuration
                             writer.WriteStartElement("add");
 
                             writer.WriteAttributeString("name", categorySetting.Name);
-                            writer.WriteAttributeString("value", categorySetting.Value);
+                            writer.WriteAttributeString("value", categorySetting.SerializedValue);
                             writer.WriteAttributeString("description", categorySetting.Description ?? "");
                             writer.WriteAttributeString("encrypted", categorySetting.Encrypted.ToString());
 
