@@ -687,7 +687,6 @@ namespace GSF
             return itemList.Min();
         }
 
-
         /// <summary>Returns the largest item from a list of parameters.</summary>
         /// <typeparam name="T">Return type <see cref="Type"/> that is the maximum value in the <paramref name="itemList"/>.</typeparam>
         /// <param name="itemList">A variable number of parameters of the specified type .</param>
@@ -696,6 +695,44 @@ namespace GSF
         public static T Max<T>(params T[] itemList)
         {
             return itemList.Max();
+        }
+
+        /// <summary>Returns the largest item from a list of parameters.</summary>
+        /// <typeparam name="T"><see cref="Type"/> of the objects passed to and returned from this method.</typeparam>
+        /// <param name="obj1">A variable number of parameters of the specified type .</param>
+        /// <param name="obj2">A variable number of parameters of the specified type .</param>
+        /// <param name="obj3">A variable number of parameters of the specified type .</param>
+        /// <returns>Result is the value that is neither the largest nor the smallest.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Mid<T>(T obj1, T obj2, T obj3) where T : IComparable<T>
+        {
+            int comp12;
+            int comp13;
+            int comp23;
+
+            if ((object)obj1 == null)
+                throw new ArgumentNullException("obj1");
+
+            if ((object)obj2 == null)
+                throw new ArgumentNullException("obj2");
+
+            if ((object)obj3 == null)
+                throw new ArgumentNullException("obj3");
+
+            comp12 = obj1.CompareTo(obj2);
+            comp13 = obj1.CompareTo(obj3);
+            comp23 = obj2.CompareTo(obj3);
+
+            // If 3 is the smallest, pick the smaller of 1 and 2
+            if (comp13 >= 0 && comp23 >= 0)
+                return (comp12 <= 0) ? obj1 : obj2;
+
+            // If 2 is the smallest, pick the smaller of 1 and 3
+            if (comp12 >= 0 && comp23 <= 0)
+                return (comp13 <= 0) ? obj1 : obj3;
+
+            // 1 is the smallest so pick the smaller of 2 and 3
+            return (comp23 <= 0) ? obj2 : obj3;
         }
 
         #region [ Old Code ]

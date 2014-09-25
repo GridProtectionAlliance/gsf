@@ -678,9 +678,7 @@ namespace PhasorProtocolAdapters
             configFile.Save();
 
             // Get the needed statistic related IDs
-            int statSignalTypeID = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym='STAT'"));
             int statHistorianID = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT ID FROM Historian WHERE Acronym='STAT' AND NodeID={0}", nodeIDQueryString)));
-            object nodeCompanyID = database.Connection.ExecuteScalar(string.Format("SELECT CompanyID FROM Node WHERE ID={0}", nodeIDQueryString));
 
             // Load the defined system statistics
             IEnumerable<DataRow> statistics = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM Statistic ORDER BY Source, SignalIndex").AsEnumerable();
@@ -688,14 +686,13 @@ namespace PhasorProtocolAdapters
             // Filter statistics to device, input stream and output stream types            
             IEnumerable<DataRow> deviceStatistics = statistics.Where(row => string.Compare(row.Field<string>("Source"), "Device", true) == 0).ToList();
             IEnumerable<DataRow> inputStreamStatistics = statistics.Where(row => string.Compare(row.Field<string>("Source"), "InputStream", true) == 0).ToList();
-            IEnumerable<DataRow> outputStreamStatistics = statistics.Where(row => string.Compare(row.Field<string>("Source"), "OutputStream", true) == 0).ToList();
 
             // Define kinds of output signal that will designate a location in an output stream protocol frame - other non-mappable measurements will be removed from output stream measurements
             SignalKind[] validOutputSignalKinds = { SignalKind.Angle, SignalKind.Magnitude, SignalKind.Frequency, SignalKind.DfDt, SignalKind.Status, SignalKind.Analog, SignalKind.Digital, SignalKind.Quality };
 
             HashSet<int> measurementIDsToDelete = new HashSet<int>();
             SignalReference deviceSignalReference;
-            string query, signalReference, pointTag, company, vendorDevice, description, protocolIDs;
+            string query, signalReference, pointTag, company, description, protocolIDs;
             int adapterID, deviceID, signalIndex;
             bool firstStatisticExisted;
             int? historianID;
@@ -839,8 +836,6 @@ namespace PhasorProtocolAdapters
                 // Make sure needed device statistic measurements exist, currently statistics are only associated with phasor devices so we filter based on protocol
                 foreach (DataRow device in database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM Device WHERE IsConcentrator = 0 AND NodeID = {0} AND ProtocolID IN ({1})", nodeIDQueryString, protocolIDs)).Rows)
                 {
-                    firstStatisticExisted = true;
-
                     foreach (DataRow statistic in deviceStatistics)
                     {
                         string oldAcronym;
@@ -854,78 +849,13 @@ namespace PhasorProtocolAdapters
 
                         // If the original format for device statistics is found in the database, update to new format
                         if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Measurement WHERE SignalReference='{0}' AND HistorianID={1}", oldSignalReference, statHistorianID))) > 0)
-                        {
                             database.Connection.ExecuteNonQuery(string.Format("UPDATE Measurement SET SignalReference='{0}' WHERE SignalReference='{1}' AND HistorianID={2}", signalReference, oldSignalReference, statHistorianID));
-
-                            // No need to insert it since we
-                            // can guarantee its existence
-                            continue;
-                        }
-
-                        if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Measurement WHERE SignalReference='{0}' AND HistorianID={1}", signalReference, statHistorianID))) == 0)
-                        {
-                            firstStatisticExisted = false;
-                            company = (string)database.Connection.ExecuteScalar(string.Format("SELECT MapAcronym FROM Company WHERE ID={0}", device.ConvertNullableField<int>("CompanyID") ?? 0));
-                            if (string.IsNullOrEmpty(company))
-                                company = configFile.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
-
-                            vendorDevice = (string)database.Connection.ExecuteScalar(string.Format("SELECT Name FROM VendorDevice WHERE ID={0}", device.ConvertNullableField<int>("VendorDeviceID") ?? 0));
-                            pointTag = CreatePointTag(company, acronym, null, "STAT", signalIndex);
-                            description = string.Format("{0}{1} Statistic for {2}", device.Field<string>("Name"), string.IsNullOrWhiteSpace(vendorDevice) ? "" : " " + vendorDevice, statistic.Field<string>("Description"));
-
-                            query = database.ParameterizedQueryString("INSERT INTO Measurement(HistorianID, DeviceID, PointTag, SignalTypeID, PhasorSourceIndex, " +
-                                                                      "SignalReference, Description, Enabled) VALUES({0}, {1}, {2}, {3}, NULL, {4}, {5}, 1)", "statHistorianID", "deviceID", "pointTag",
-                                "statSignalTypeID", "signalReference", "description");
-
-                            database.Connection.ExecuteNonQuery(query, DataExtensions.DefaultTimeoutDuration, statHistorianID, device.ConvertField<int>("ID"), pointTag, statSignalTypeID, signalReference, description);
-                        }
-                        else
-                        {
-                            // To reduce time required to execute these steps, only first statistic is verified to exist
-                            if (!skipOptimization && firstStatisticExisted)
-                                break;
-                        }
+                        else if (!skipOptimization)
+                            break;
                     }
                 }
 
                 statusMessage("Validating input stream measurements...");
-
-                // Make sure needed input stream statistic measurements exist, currently statistics are only associated with phasor devices so we filter based on protocol
-                foreach (DataRow inputStream in database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM Device WHERE ((IsConcentrator <> 0) OR (IsConcentrator = 0 AND ParentID IS NULL)) AND NodeID = {0} AND ProtocolID IN ({1})", nodeIDQueryString, protocolIDs)).Rows)
-                {
-                    firstStatisticExisted = true;
-
-                    foreach (DataRow statistic in inputStreamStatistics)
-                    {
-                        acronym = inputStream.Field<string>("Acronym") + "!IS";
-                        signalIndex = statistic.ConvertField<int>("SignalIndex");
-                        signalReference = SignalReference.ToString(acronym, SignalKind.Statistic, signalIndex);
-
-                        if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Measurement WHERE SignalReference='{0}' AND HistorianID={1}", signalReference, statHistorianID))) == 0)
-                        {
-                            firstStatisticExisted = false;
-                            company = (string)database.Connection.ExecuteScalar(string.Format("SELECT MapAcronym FROM Company WHERE ID={0}", inputStream.ConvertNullableField<int>("CompanyID") ?? 0));
-                            if (string.IsNullOrEmpty(company))
-                                company = configFile.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
-
-                            vendorDevice = (string)database.Connection.ExecuteScalar(string.Format("SELECT Name FROM VendorDevice WHERE ID={0}", inputStream.ConvertNullableField<int>("VendorDeviceID") ?? 0)); // Modified to retrieve VendorDeviceID into nullable of int as it is not a required field.
-                            pointTag = CreatePointTag(company, acronym, null, "STAT", signalIndex);
-                            description = string.Format("{0}{1} Statistic for {2}", inputStream.Field<string>("Name"), string.IsNullOrWhiteSpace(vendorDevice) ? "" : " " + vendorDevice, statistic.Field<string>("Description"));
-
-                            query = database.ParameterizedQueryString("INSERT INTO Measurement(HistorianID, DeviceID, PointTag, SignalTypeID, PhasorSourceIndex, " +
-                                                                      "SignalReference, Description, Enabled) VALUES({0}, {1}, {2}, {3}, NULL, {4}, {5}, 1)", "statHistorianID", "deviceID", "pointTag",
-                                "statSignalTypeID", "signalReference", "description");
-
-                            database.Connection.ExecuteNonQuery(query, DataExtensions.DefaultTimeoutDuration, statHistorianID, inputStream.ConvertField<int>("ID"), pointTag, statSignalTypeID, signalReference, description);
-                        }
-                        else
-                        {
-                            // To reduce time required to execute these steps, only first statistic is verified to exist
-                            if (!skipOptimization && firstStatisticExisted)
-                                break;
-                        }
-                    }
-                }
 
                 // Make sure devices associated with a concentrator do not have any extraneous input stream statistic measurements - this can happen
                 // when a device was once a direct connect device but now is part of a concentrator...
@@ -976,39 +906,7 @@ namespace PhasorProtocolAdapters
                 // Make sure needed output stream statistic measurements exist
                 foreach (DataRow outputStream in database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM OutputStream WHERE NodeID = {0}", nodeIDQueryString)).Rows)
                 {
-                    firstStatisticExisted = true;
                     adapterID = outputStream.ConvertField<int>("ID");
-                    acronym = outputStream.Field<string>("Acronym") + "!OS";
-
-                    foreach (DataRow statistic in outputStreamStatistics)
-                    {
-                        signalIndex = statistic.ConvertField<int>("SignalIndex");
-                        signalReference = SignalReference.ToString(acronym, SignalKind.Statistic, signalIndex);
-
-                        if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Measurement WHERE SignalReference='{0}' AND HistorianID={1}", signalReference, statHistorianID))) == 0)
-                        {
-                            firstStatisticExisted = false;
-                            if (nodeCompanyID is DBNull)
-                                company = configFile.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
-                            else
-                                company = (string)database.Connection.ExecuteScalar(string.Format("SELECT MapAcronym FROM Company WHERE ID={0}", nodeCompanyID));
-
-                            pointTag = CreatePointTag(company, acronym, null, "STAT", signalIndex);
-                            description = string.Format("{0} Statistic for {1}", outputStream.Field<string>("Name"), statistic.Field<string>("Description"));
-
-                            query = database.ParameterizedQueryString("INSERT INTO Measurement(HistorianID, DeviceID, PointTag, SignalTypeID, PhasorSourceIndex, " +
-                                                                      "SignalReference, Description, Enabled) VALUES({0}, NULL, {1}, {2}, NULL, {3}, {4}, 1)", "statHistorianID", "pointTag", "statSignalTypeID",
-                                "signalReference", "description");
-
-                            database.Connection.ExecuteNonQuery(query, DataExtensions.DefaultTimeoutDuration, statHistorianID, pointTag, statSignalTypeID, signalReference, description);
-                        }
-                        else
-                        {
-                            // To reduce time required to execute these steps, only first statistic is verified to exist
-                            if (!skipOptimization && firstStatisticExisted)
-                                break;
-                        }
-                    }
 
                     // Load devices acronyms associated with this output stream
                     List<string> deviceAcronyms =

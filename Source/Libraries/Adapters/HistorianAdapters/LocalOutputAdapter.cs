@@ -877,12 +877,13 @@ namespace HistorianAdapters
                         // The data block size is set to its minimum of 1 KB which works better for archives with a low sample rate and a large number of signals.
                         const int DataBlocksPerSignal = 2;
                         int statisticsCount = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM ActiveMeasurement WHERE SignalType = 'STAT'"));
-                        int fileSize = (int)Math.Ceiling(statisticsCount * DataBlocksPerSignal / 1024.0D);
+                        int fileSize = (int)Math.Max(1.0D, Math.Ceiling(statisticsCount * DataBlocksPerSignal / 1024.0D));
 
                         // Set rollover preparation such that the historian will not be creating a standby file and rolling over simulataneously.
+                        // Common.Mid is used to ensure that the setting is between 1 and 95, which are the upper and lower bounds of the rollover preparation threshold.
                         // The actual number of data blocks per signal is calculated because it may be different since the file size was rounded up to the nearest MB.
                         double actualDataBlocksPerSignal = fileSize * 1024.0D / statisticsCount;
-                        int rolloverPreparationThreshold = 100 - (int)(100 / actualDataBlocksPerSignal) - 1;
+                        int rolloverPreparationThreshold = Common.Mid(95, 100 - (int)(100 / actualDataBlocksPerSignal) - 1, 1);
 
                         settings = configFile.Settings["statArchiveFile"];
                         settings.Add("FileSize", fileSize, "Size (in MB) of the file.");

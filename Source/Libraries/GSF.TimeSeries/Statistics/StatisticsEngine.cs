@@ -39,6 +39,7 @@ using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Threading;
 using GSF.TimeSeries.Adapters;
+using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries.Statistics
 {
@@ -66,32 +67,331 @@ namespace GSF.TimeSeries.Statistics
         private struct SignalReference
         {
             public readonly string Acronym;
+            public readonly int Index;
             public readonly bool IsStatistic;
 
             public SignalReference(string signal)
             {
-                // Signal reference may contain multiple dashes, we're interested in the last one
-                int splitIndex = signal.LastIndexOf('-');
-                string signalType;
+                const string Pattern = "^(?<Acronym>.+)-ST(?<Index>[0-9]+)$";
+                Match match = Regex.Match(signal, Pattern);
 
-                if (splitIndex > -1)
+                if (match.Success)
                 {
-                    Acronym = signal.Substring(0, splitIndex).Trim().ToUpper();
-                    signalType = signal.Substring(splitIndex + 1).Trim().ToUpper();
+                    Acronym = match.Groups["Acronym"].Value;
+                    Index = Convert.ToInt32(match.Groups["Index"].Value);
+                    IsStatistic = true;
+                }
+                else
+                {
+                    Acronym = signal;
+                    Index = 0;
+                    IsStatistic = false;
+                }
+            }
+        }
 
-                    // If the length of the signal type acronym is greater than 2, then this is
-                    // an indexed signal type (e.g., SHELBY!PMU-ST2) - all statistics are indexed
-                    if (signalType.Length > 2)
-                    {
-                        IsStatistic = (signalType.Substring(0, 2) == "ST");
-                        return;
-                    }
+        private class DBUpdateHelper
+        {
+            #region [ Members ]
+
+            // Fields
+            private AdoDataConnection m_database;
+            private StatisticSource m_source;
+            private DataRow m_statistic;
+
+            private int? m_historianID;
+            private object m_deviceID;
+            private string m_pointTag;
+            private int? m_signalTypeID;
+            private string m_signalReference;
+            private string m_description;
+
+            private Guid? m_nodeID;
+            private string m_nodeOwner;
+            private string m_company;
+
+            private Dictionary<string, DataRow> m_deviceLookup;
+            private Dictionary<int, string> m_companyLookup;
+
+            #endregion
+
+            #region [ Constructors ]
+
+            public DBUpdateHelper(AdoDataConnection database)
+            {
+                m_database = database;
+            }
+
+            #endregion
+
+            #region [ Properties ]
+
+            public StatisticSource Source
+            {
+                get
+                {
+                    return m_source;
+                }
+                set
+                {
+                    m_source = value;
+                    m_deviceID = null;
+                    m_company = null;
+                }
+            }
+
+            public DataRow Statistic
+            {
+                get
+                {
+                    return m_statistic;
+                }
+                set
+                {
+                    m_statistic = value;
+                    m_pointTag = null;
+                    m_signalReference = null;
+                    m_description = null;
+                }
+            }
+
+            public int HistorianID
+            {
+                get
+                {
+                    return m_historianID ?? (int)(m_historianID = GetHistorianID());
+                }
+            }
+
+            public object DeviceID
+            {
+                get
+                {
+                    return m_deviceID ?? (m_deviceID = GetDeviceID());
+                }
+            }
+
+            public string PointTag
+            {
+                get
+                {
+                    return m_pointTag ?? (m_pointTag = GetPointTag());
+                }
+            }
+
+            public int SignalTypeID
+            {
+                get
+                {
+                    return m_signalTypeID ?? (int)(m_signalTypeID = GetSignalTypeID());
+                }
+            }
+
+            public string SignalReference
+            {
+                get
+                {
+                    return m_signalReference ?? (m_signalReference = GetSignalReference());
+                }
+            }
+
+            public string Description
+            {
+                get
+                {
+                    return m_description ?? (m_description = GetDescription());
+                }
+            }
+
+            public int Index
+            {
+                get
+                {
+                    return Convert.ToInt32(m_statistic["SignalIndex"]);
+                }
+            }
+
+            private Guid NodeID
+            {
+                get
+                {
+                    return m_nodeID ?? (Guid)(m_nodeID = GetNodeID());
+                }
+            }
+
+            private string Company
+            {
+                get
+                {
+                    return m_company ?? (m_company = GetCompany());
+                }
+            }
+
+            private string NodeOwner
+            {
+                get
+                {
+                    return m_nodeOwner ?? (m_nodeOwner = GetNodeOwner());
+                }
+            }
+
+            private string Name
+            {
+                get
+                {
+                    return m_source.SourceName;
+                }
+            }
+
+            private string Category
+            {
+                get
+                {
+                    return m_source.SourceCategory;
+                }
+            }
+
+            private string Acronym
+            {
+                get
+                {
+                    return m_source.SourceAcronym;
+                }
+            }
+
+            private Dictionary<string, DataRow> DeviceLookup
+            {
+                get
+                {
+                    return m_deviceLookup ?? (m_deviceLookup = GetDeviceLookup());
+                }
+            }
+
+            private Dictionary<int, string> CompanyLookup
+            {
+                get
+                {
+                    return m_companyLookup ?? (m_companyLookup = GetCompanyLookup());
+                }
+            }
+
+            #endregion
+
+            #region [ Methods ]
+
+            private int GetHistorianID()
+            {
+                const string StatHistorianIDFormat = "SELECT ID FROM Historian WHERE Acronym = 'STAT' AND NodeID = {0}";
+                return ExecuteScalar<int>(StatHistorianIDFormat, m_database.Guid(NodeID));
+            }
+
+            private object GetDeviceID()
+            {
+                DataRow device;
+
+                if (!DeviceLookup.TryGetValue(Name, out device))
+                    return DBNull.Value;
+
+                return device["ID"];
+            }
+
+            private string GetPointTag()
+            {
+                return string.Format("{0}_{1}!{2}:ST{3}", Company, Name, Acronym, Index);
+            }
+
+            private int GetSignalTypeID()
+            {
+                const string SignalTypeIDFormat = "SELECT ID FROM SignalType WHERE Acronym = 'STAT'";
+                return ExecuteScalar<int>(SignalTypeIDFormat);
+            }
+
+            private string GetSignalReference()
+            {
+                return string.Format("{0}!{1}-ST{2}", Name, Acronym, Index);
+            }
+
+            private string GetDescription()
+            {
+                return string.Format("{0} statistic for {1}", Category, m_statistic["Description"].ToNonNullString());
+            }
+
+            private Guid GetNodeID()
+            {
+                return Guid.Parse(ConfigurationFile.Current.Settings["systemSettings"]["NodeID"].Value);
+            }
+
+            private string GetCompany()
+            {
+                DataRow device;
+                int companyID;
+                string company = null;
+
+                bool isNodeOwner = !DeviceLookup.TryGetValue(Name, out device) ||
+                                   !int.TryParse(device["CompanyID"].ToNonNullString(), out companyID) ||
+                                   !CompanyLookup.TryGetValue(companyID, out company);
+
+                return isNodeOwner ? NodeOwner : company;
+            }
+
+            private string GetNodeOwner()
+            {
+                const string NodeCompanyIDFormat = "SELECT CompanyID FROM Node WHERE ID = {0}";
+                const string CompanyAcronymFormat = "SELECT MapAcronym FROM Company WHERE ID = {0}";
+
+                int nodeCompanyID;
+                string companyAcronym;
+
+                try
+                {
+                    nodeCompanyID = ExecuteScalar<int>(NodeCompanyIDFormat, m_database.Guid(NodeID));
+                    companyAcronym = ExecuteScalar<string>(CompanyAcronymFormat, nodeCompanyID);
+                }
+                catch
+                {
+                    companyAcronym = ConfigurationFile.Current.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
                 }
 
-                // This is not a statistic signal reference
-                Acronym = signal;
-                IsStatistic = false;
+                return companyAcronym;
             }
+
+            private Dictionary<string, DataRow> GetDeviceLookup()
+            {
+                const string DeviceLookupFormat = "SELECT ID, Acronym, CompanyID FROM Device WHERE NodeID = {0}";
+
+                return RetrieveData(DeviceLookupFormat, m_database.Guid(NodeID)).Select()
+                    .ToDictionary(row => row["Acronym"].ToNonNullString());
+            }
+
+            private Dictionary<int, string> GetCompanyLookup()
+            {
+                const string CompanyLookupFormat = "SELECT ID, Acronym FROM Company";
+                int id = 0;
+
+                return RetrieveData(CompanyLookupFormat).Select()
+                    .Where(row => int.TryParse(row["ID"].ToNonNullString(), out id))
+                    .ToDictionary(row => id, row => row["Acronym"].ToNonNullString());
+            }
+
+            public T ExecuteScalar<T>(string queryFormat, params object[] parameters)
+            {
+                string query = m_database.ParameterizedQueryString(queryFormat, parameters.Select((parameter, index) => "p" + index).ToArray());
+                return (T)Convert.ChangeType(m_database.Connection.ExecuteScalar(query, DataExtensions.DefaultTimeoutDuration, parameters), typeof(T));
+            }
+
+            public void ExecuteNonQuery(string queryFormat, params object[] parameters)
+            {
+                string query = m_database.ParameterizedQueryString(queryFormat, parameters.Select((parameter, index) => "p" + index).ToArray());
+                m_database.Connection.ExecuteNonQuery(query, DataExtensions.DefaultTimeoutDuration, parameters);
+            }
+
+            public DataTable RetrieveData(string queryFormat, params object[] parameters)
+            {
+                string query = m_database.ParameterizedQueryString(queryFormat, parameters.Select((parameter, index) => "p" + index).ToArray());
+                return m_database.Connection.RetrieveData(m_database.AdapterType, query, DataExtensions.DefaultTimeoutDuration, parameters);
+            }
+
+            #endregion
         }
 
         // Events
@@ -110,11 +410,19 @@ namespace GSF.TimeSeries.Statistics
         // Fields
         private readonly object m_statisticsLock;
         private readonly List<Statistic> m_statistics;
-        private Timer m_statisticCalculationTimer;
-        private readonly LongSynchronizedOperation m_calculateStatisticsOperation;
-        private readonly PerformanceMonitor m_performanceMonitor;
-        private int m_lastStatisticCalculationCount;
         private readonly Dictionary<string, List<DataRow>> m_dataSourceCache;
+
+        private Timer m_reloadStatisticsTimer;
+        private Timer m_statisticCalculationTimer;
+
+        private readonly LongSynchronizedOperation m_updateStatisticMeasurementsOperation;
+        private readonly LongSynchronizedOperation m_loadStatisticsOperation;
+        private readonly LongSynchronizedOperation m_calculateStatisticsOperation;
+
+        private readonly PerformanceMonitor m_performanceMonitor;
+
+        private int m_lastStatisticCalculationCount;
+
         private bool m_disposed;
 
         #endregion
@@ -128,7 +436,26 @@ namespace GSF.TimeSeries.Statistics
         {
             m_statisticsLock = new object();
             m_statistics = new List<Statistic>();
+            m_reloadStatisticsTimer = new Timer();
             m_statisticCalculationTimer = new Timer();
+
+            // Set up the statistic calculation timer
+            m_reloadStatisticsTimer.Elapsed += ReloadStatisticsTimer_Elapsed;
+            m_reloadStatisticsTimer.Interval = 1.0D;
+            m_reloadStatisticsTimer.AutoReset = false;
+            m_reloadStatisticsTimer.Enabled = false;
+
+            m_updateStatisticMeasurementsOperation = new LongSynchronizedOperation(UpdateStatisticMeasurements, ex =>
+            {
+                string message = "An error occurred while attempting to update statistic measurement definitions: " + ex.Message;
+                OnProcessException(new InvalidOperationException(message, ex));
+            });
+
+            m_loadStatisticsOperation = new LongSynchronizedOperation(LoadStatistics, ex =>
+            {
+                string message = "An error occurred while attempting to load statistic definitions: " + ex.Message;
+                OnProcessException(new InvalidOperationException(message, ex));
+            });
 
             m_calculateStatisticsOperation = new LongSynchronizedOperation(CalculateStatistics, ex =>
             {
@@ -138,6 +465,8 @@ namespace GSF.TimeSeries.Statistics
 
             m_performanceMonitor = new PerformanceMonitor();
             m_dataSourceCache = new Dictionary<string, List<DataRow>>(StringComparer.OrdinalIgnoreCase);
+
+            SourceRegistered += HandleSourceRegistered;
         }
 
         #endregion
@@ -156,7 +485,7 @@ namespace GSF.TimeSeries.Statistics
             set
             {
                 base.DataSource = value;
-                ReloadStatistics();
+                RestartReloadStatisticsTimer();
             }
         }
 
@@ -257,116 +586,8 @@ namespace GSF.TimeSeries.Statistics
             // See if statistics should be processed
             if (settings["ProcessStatistics"].ValueAsBoolean())
             {
-                Statistic statistic;
-                Assembly assembly;
-                Type type;
-                MethodInfo method;
-                string assemblyName, typeName, methodName;
-                bool reenable;
-
-                lock (StatisticSources)
-                {
-                    // Clear the statistic measurements for each source
-                    // so that they will reload on next calculation
-                    foreach (StatisticSource source in StatisticSources)
-                    {
-                        source.StatisticMeasurements = null;
-                    }
-
-                    // Reload data source cache - we do this within existing StatisticSources lock
-                    // such that if contending with lock in CalculateStatistics it will wait for
-                    // this updated data source cache as well before running calculations.
-                    lock (m_dataSourceCache)
-                    {
-                        SignalReference signal;
-                        List<DataRow> dataRows;
-
-                        m_dataSourceCache.Clear();
-
-                        // Create a measurement row cache for each statistic measurement keyed to statistic source (i.e., SourceName!SourceAcronym).
-                        // Using a preprocessed dictionary is much faster than processing a LIKE expression in the Select method later.
-                        foreach (DataRow row in DataSource.Tables["ActiveMeasurements"].Select("SignalType = 'STAT'"))
-                        {
-                            signal = new SignalReference(row["SignalReference"].ToNonNullString());
-
-                            if (signal.IsStatistic)
-                            {
-                                dataRows = m_dataSourceCache.GetOrAdd(signal.Acronym, source => new List<DataRow>());
-                                dataRows.Add(row);
-                            }
-                        }
-                    }
-                }
-
-                lock (m_statisticsLock)
-                {
-                    // Empty the statistics list
-                    m_statistics.Clear();
-
-                    // Turn off statistic calculation timer while statistics are being reloaded
-                    reenable = m_statisticCalculationTimer.Enabled;
-                    m_statisticCalculationTimer.Enabled = false;
-
-                    // Load all defined statistics
-                    foreach (DataRow row in DataSource.Tables["Statistics"].Select("Enabled <> 0", "Source, SignalIndex"))
-                    {
-                        // Create a new statistic
-                        statistic = new Statistic();
-
-                        // Load primary statistic parameters
-                        statistic.Source = row["Source"].ToNonNullString();
-                        statistic.Index = int.Parse(row["SignalIndex"].ToNonNullString("-1"));
-                        statistic.Arguments = row["Arguments"].ToNonNullString();
-
-                        // Load statistic's code location information
-                        assemblyName = row["AssemblyName"].ToNonNullString();
-                        typeName = row["TypeName"].ToNonNullString();
-                        methodName = row["MethodName"].ToNonNullString();
-
-                        if (string.IsNullOrEmpty(assemblyName))
-                            throw new InvalidOperationException("Statistic assembly name was not defined.");
-
-                        if (string.IsNullOrEmpty(typeName))
-                            throw new InvalidOperationException("Statistic type name was not defined.");
-
-                        if (string.IsNullOrEmpty(methodName))
-                            throw new InvalidOperationException("Statistic method name was not defined.");
-
-                        try
-                        {
-                            // See if statistic is defined in this assembly (no need to reload)
-                            if (string.Compare(GetType().FullName, typeName, true) == 0)
-                            {
-                                // Assign statistic handler to local method (assumed to be private static)
-                                statistic.Method = (StatisticCalculationFunction)Delegate.CreateDelegate(typeof(StatisticCalculationFunction), GetType().GetMethod(methodName, BindingFlags.IgnoreCase | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.InvokeMethod));
-                            }
-                            else
-                            {
-                                // Load statistic method from containing assembly and type
-                                assembly = Assembly.LoadFrom(FilePath.GetAbsolutePath(assemblyName));
-                                type = assembly.GetType(typeName);
-                                method = type.GetMethod(methodName, BindingFlags.IgnoreCase | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.InvokeMethod);
-
-                                // Assign statistic handler to loaded assembly method
-                                statistic.Method = (StatisticCalculationFunction)Delegate.CreateDelegate(typeof(StatisticCalculationFunction), method);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            OnProcessException(new InvalidOperationException(string.Format("Failed to load statistic handler \"{0}\" from \"{1} [{2}::{3}()]\" due to exception: {4}", row["Name"].ToNonNullString("n/a"), assemblyName, typeName, methodName, ex.Message), ex));
-                        }
-
-                        // Add statistic to list
-                        m_statistics.Add(statistic);
-                    }
-                }
-
-                OnStatusMessage("Loaded {0} statistic calculation definitions...", m_statistics.Count);
-
-                if (reenable)
-                {
-                    m_statisticCalculationTimer.Enabled = true;
-                }
+                m_updateStatisticMeasurementsOperation.RunOnceAsync();
+                m_loadStatisticsOperation.RunOnce();
             }
             else
             {
@@ -397,6 +618,13 @@ namespace GSF.TimeSeries.Statistics
                 {
                     if (disposing)
                     {
+                        if ((object)m_reloadStatisticsTimer != null)
+                        {
+                            m_reloadStatisticsTimer.Elapsed -= ReloadStatisticsTimer_Elapsed;
+                            m_reloadStatisticsTimer.Dispose();
+                            m_reloadStatisticsTimer = null;
+                        }
+
                         if ((object)m_statisticCalculationTimer != null)
                         {
                             m_statisticCalculationTimer.Elapsed -= StatisticCalculationTimer_Elapsed;
@@ -415,10 +643,203 @@ namespace GSF.TimeSeries.Statistics
             }
         }
 
-        private void StatisticCalculationTimer_Elapsed(object sender, ElapsedEventArgs e)
+        private void UpdateStatisticMeasurements()
         {
-            // If multiple timer events overlap, try-run will make sure only one is running at once
-            m_calculateStatisticsOperation.TryRunOnce();
+            const string StatisticSelectFormat = "SELECT Source, SignalIndex, Description FROM Statistic WHERE Enabled <> 0";
+            const string StatisticMeasurementSelectFormat = "SELECT SignalReference FROM ActiveMeasurement WHERE SignalType = 'STAT' AND SignalReference LIKE {0}";
+            const string StatisticMeasurementInsertFormat = "INSERT INTO Measurement(HistorianID, DeviceID, PointTag, SignalTypeID, SignalReference, Description, Enabled) VALUES({0}, {1}, {2}, {3}, {4}, {5}, 1)";
+
+            StatisticSource[] sources;
+
+            Dictionary<string, List<DataRow>> statisticsLookup;
+            List<DataRow> statistics;
+
+            string signalReferencePattern;
+            List<DataRow> statisticMeasurements;
+
+            DBUpdateHelper helper;
+            HashSet<int> existingIndexes;
+
+            bool configurationChanged = false;
+
+            lock (StatisticSources)
+            {
+                // Obtain a snapshot of the sources that are
+                // currently registered with the statistics engine
+                sources = StatisticSources.ToArray();
+            }
+
+            using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
+            {
+                // Handles database queries, caching, and lazy loading for
+                // determining the parameters to send in to each INSERT query
+                helper = new DBUpdateHelper(database);
+
+                // Load statistics from the statistics table to determine
+                // what statistics should be defined for each source
+                statisticsLookup = helper.RetrieveData(StatisticSelectFormat).Select()
+                    .GroupBy(row => row["Source"].ToNonNullString())
+                    .ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
+
+                // Make sure the full set of statistic measurements are defined for each source
+                foreach (StatisticSource source in sources)
+                {
+                    // If no statistics exist for this category,
+                    // there are no statistics that can be created for this source
+                    if (!statisticsLookup.TryGetValue(source.SourceCategory, out statistics))
+                        continue;
+                    
+                    // Get the statistic measurements from the database which have already been defined for this source
+                    signalReferencePattern = string.Format("{0}!{1}-ST%", source.SourceName, source.SourceAcronym);
+                    statisticMeasurements = helper.RetrieveData(StatisticMeasurementSelectFormat, signalReferencePattern).Select().ToList();
+
+                    // If the number of statistics for the source category matches
+                    // the number of statistic measurements for the source, assume
+                    // all is well and move to the next source
+                    if (statistics.Count == statisticMeasurements.Count)
+                        continue;
+
+                    helper.Source = source;
+
+                    // Get a collection of signal indexes already have statistic measurements
+                    existingIndexes = new HashSet<int>(statisticMeasurements
+                        .Select(measurement => measurement["SignalReference"].ToNonNullString())
+                        .Select(str => new SignalReference(str))
+                        .Select(signalReference => signalReference.Index));
+
+                    // Create statistic measurements for statistics that do not have any
+                    foreach (DataRow statistic in statistics)
+                    {
+                        helper.Statistic = statistic;
+
+                        // If a measurement already exists for this statistic, skip it
+                        if (existingIndexes.Contains(helper.Index))
+                            continue;
+
+                        // Insert the statistic measurement and mark configuration as changed
+                        helper.ExecuteNonQuery(StatisticMeasurementInsertFormat, helper.HistorianID, helper.DeviceID, helper.PointTag, helper.SignalTypeID, helper.SignalReference, helper.Description);
+                        configurationChanged = true;
+                    }
+                }
+            }
+
+            // If configuration was changed by this operation, notify the host
+            if (configurationChanged)
+                OnConfigurationChanged();
+        }
+
+        private void LoadStatistics()
+        {
+            Statistic statistic;
+            Assembly assembly;
+            Type type;
+            MethodInfo method;
+            string assemblyName, typeName, methodName;
+            bool reenable;
+
+            lock (StatisticSources)
+            {
+                // Clear the statistic measurements for each source
+                // so that they will reload on next calculation
+                foreach (StatisticSource source in StatisticSources)
+                {
+                    source.StatisticMeasurements = null;
+                }
+
+                // Reload data source cache - we do this within existing StatisticSources lock
+                // such that if contending with lock in CalculateStatistics it will wait for
+                // this updated data source cache as well before running calculations.
+                lock (m_dataSourceCache)
+                {
+                    SignalReference signal;
+                    List<DataRow> dataRows;
+
+                    m_dataSourceCache.Clear();
+
+                    // Create a measurement row cache for each statistic measurement keyed to statistic source (i.e., SourceName!SourceAcronym).
+                    // Using a preprocessed dictionary is much faster than processing a LIKE expression in the Select method later.
+                    foreach (DataRow row in DataSource.Tables["ActiveMeasurements"].Select("SignalType = 'STAT'"))
+                    {
+                        signal = new SignalReference(row["SignalReference"].ToNonNullString());
+
+                        if (signal.IsStatistic)
+                        {
+                            dataRows = m_dataSourceCache.GetOrAdd(signal.Acronym, source => new List<DataRow>());
+                            dataRows.Add(row);
+                        }
+                    }
+                }
+            }
+
+            lock (m_statisticsLock)
+            {
+                // Empty the statistics list
+                m_statistics.Clear();
+
+                // Turn off statistic calculation timer while statistics are being reloaded
+                reenable = m_statisticCalculationTimer.Enabled;
+                m_statisticCalculationTimer.Enabled = false;
+
+                // Load all defined statistics
+                foreach (DataRow row in DataSource.Tables["Statistics"].Select("Enabled <> 0", "Source, SignalIndex"))
+                {
+                    // Create a new statistic
+                    statistic = new Statistic();
+
+                    // Load primary statistic parameters
+                    statistic.Source = row["Source"].ToNonNullString();
+                    statistic.Index = int.Parse(row["SignalIndex"].ToNonNullString("-1"));
+                    statistic.Arguments = row["Arguments"].ToNonNullString();
+
+                    // Load statistic's code location information
+                    assemblyName = row["AssemblyName"].ToNonNullString();
+                    typeName = row["TypeName"].ToNonNullString();
+                    methodName = row["MethodName"].ToNonNullString();
+
+                    if (string.IsNullOrEmpty(assemblyName))
+                        throw new InvalidOperationException("Statistic assembly name was not defined.");
+
+                    if (string.IsNullOrEmpty(typeName))
+                        throw new InvalidOperationException("Statistic type name was not defined.");
+
+                    if (string.IsNullOrEmpty(methodName))
+                        throw new InvalidOperationException("Statistic method name was not defined.");
+
+                    try
+                    {
+                        // See if statistic is defined in this assembly (no need to reload)
+                        if (string.Compare(GetType().FullName, typeName, true) == 0)
+                        {
+                            // Assign statistic handler to local method (assumed to be private static)
+                            statistic.Method = (StatisticCalculationFunction)Delegate.CreateDelegate(typeof(StatisticCalculationFunction), GetType().GetMethod(methodName, BindingFlags.IgnoreCase | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.InvokeMethod));
+                        }
+                        else
+                        {
+                            // Load statistic method from containing assembly and type
+                            assembly = Assembly.LoadFrom(FilePath.GetAbsolutePath(assemblyName));
+                            type = assembly.GetType(typeName);
+                            method = type.GetMethod(methodName, BindingFlags.IgnoreCase | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.InvokeMethod);
+
+                            // Assign statistic handler to loaded assembly method
+                            statistic.Method = (StatisticCalculationFunction)Delegate.CreateDelegate(typeof(StatisticCalculationFunction), method);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        OnProcessException(new InvalidOperationException(string.Format("Failed to load statistic handler \"{0}\" from \"{1} [{2}::{3}()]\" due to exception: {4}", row["Name"].ToNonNullString("n/a"), assemblyName, typeName, methodName, ex.Message), ex));
+                    }
+
+                    // Add statistic to list
+                    m_statistics.Add(statistic);
+                }
+            }
+
+            OnStatusMessage("Loaded {0} statistic calculation definitions...", m_statistics.Count);
+
+            if (reenable)
+            {
+                m_statisticCalculationTimer.Enabled = true;
+            }
         }
 
         private void CalculateStatistics()
@@ -532,7 +953,7 @@ namespace GSF.TimeSeries.Statistics
                 if ((object)statistic != null)
                 {
                     // Calculate the current value of the statistic measurement
-                    return new Measurement
+                    return new Measurement()
                     {
                         Key = MeasurementKey.LookUpOrCreate(signalID, measurement["ID"].ToString()),
                         TagName = measurement["PointTag"].ToNonNullString(),
@@ -573,6 +994,32 @@ namespace GSF.TimeSeries.Statistics
             }
         }
 
+        private void RestartReloadStatisticsTimer()
+        {
+            if ((object)m_reloadStatisticsTimer != null)
+            {
+                m_reloadStatisticsTimer.Stop();
+                m_reloadStatisticsTimer.Start();
+            }
+        }
+
+        private void HandleSourceRegistered(object sender, EventArgs eventArgs)
+        {
+            if ((object)DataSource != null)
+                RestartReloadStatisticsTimer();
+        }
+
+        private void ReloadStatisticsTimer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
+        {
+            ReloadStatistics();
+        }
+
+        private void StatisticCalculationTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            // If multiple timer events overlap, try-run will make sure only one is running at once
+            m_calculateStatisticsOperation.TryRunOnce();
+        }
+
         private void OnBeforeCalculate()
         {
             if ((object)BeforeCalculate != null)
@@ -591,6 +1038,7 @@ namespace GSF.TimeSeries.Statistics
 
         // Static Fields
         private static readonly List<StatisticSource> StatisticSources;
+        private static event EventHandler<EventArgs> SourceRegistered;
 
         // Static Constructor
 
@@ -627,7 +1075,7 @@ namespace GSF.TimeSeries.Statistics
             StatisticSource sourceInfo;
             IAdapter adapter;
 
-            sourceInfo = new StatisticSource
+            sourceInfo = new StatisticSource()
             {
                 Source = source,
                 SourceName = sourceName,
@@ -647,6 +1095,8 @@ namespace GSF.TimeSeries.Statistics
 
             if ((object)adapter != null)
                 adapter.Disposed += (sender, args) => Unregister(sender);
+
+            OnSourceRegistered();
         }
 
         /// <summary>
@@ -695,6 +1145,15 @@ namespace GSF.TimeSeries.Statistics
         {
             string regex = string.Format(@"!{0}-ST\d+$", suffix);
             return Regex.IsMatch(signalReference, regex);
+        }
+
+        // Triggered when a source registers with the statistics engine.
+        private static void OnSourceRegistered()
+        {
+            EventHandler<EventArgs> sourceRegistered = SourceRegistered;
+
+            if ((object)sourceRegistered != null)
+                sourceRegistered(null, EventArgs.Empty);
         }
 
         #endregion

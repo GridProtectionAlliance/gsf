@@ -226,9 +226,6 @@ namespace GSF.TimeSeries
             const string SubscriberStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Subscriber', {0}, '{1}', '{2}', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.GatewayStatistics', 'GetSubscriberStatistic_{3}', '', 1, '{4}', '{5}', {6}, {0})";
             const string PublisherStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Publisher', {0}, '{1}', '{2}', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.GatewayStatistics', 'GetPublisherStatistic_{3}', '', 1, '{4}', '{5}', {6}, {0})";
 
-            const string StatMeasurementInsertFormat = "INSERT INTO Measurement(HistorianID, PointTag, SignalTypeID, SignalReference, Description, Enabled) VALUES({0}, {1}, {2}, {3}, {4}, 1)";
-            const string DeviceStatMeausrementInsertFormat = "INSERT INTO Measurement(HistorianID, DeviceID, PointTag, SignalTypeID, SignalReference, Description, Enabled) VALUES({0}, {1}, {2}, {3}, {4}, {5}, 1)";
-
             // DELETE queries
             const string SystemStatisticDeleteFormat = "DELETE FROM Statistic WHERE Source = 'System' AND SignalIndex <= {0}";
             const string DeviceStatisticDeleteFormat = "DELETE FROM Statistic WHERE Source = 'Device' AND SignalIndex <= {0}";
@@ -305,10 +302,6 @@ namespace GSF.TimeSeries
             string[] PublisherStatTypes = { "System.Boolean", "System.Int32", "System.Int32", "System.Int32", "System.Int64", "System.Int64", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int32" };
             string[] PublisherStatFormats = { "{0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0} ms", "{0:N0} ms", "{0:N0} ms" };
 
-            // Parameterized query string for inserting statistic measurements
-            string statMeasurementInsertQuery = database.ParameterizedQueryString(StatMeasurementInsertFormat, "historianID", "pointTag", "signalTypeID", "signalReference", "description");
-            string deviceStatMeasurementInsertQuery = database.ParameterizedQueryString(DeviceStatMeausrementInsertFormat, "historianID", "deviceID", "pointTag", "signalTypeID", "signalReference", "description");
-
             // Query for count values to ensure existence of these records
             int statConfigEntityCount = Convert.ToInt32(database.Connection.ExecuteScalar(StatConfigEntityCountFormat));
             int statSignalTypeCount = Convert.ToInt32(database.Connection.ExecuteScalar(StatSignalTypeCountFormat));
@@ -327,24 +320,6 @@ namespace GSF.TimeSeries
             string statMethodSuffix;
             string statType;
             string statFormat;
-
-            // Values from queries to ensure existence of statistic measurements
-            int statHistorianID;
-            int statSignalTypeID;
-            int statMeasurementCount;
-            int runtimeDeviceCount;
-
-            // Statistic measurement info for inserting statistic measurements
-            string nodeName;
-            string pointTag;
-            string signalReference;
-            string measurementDescription;
-
-            // Adapter info for inserting gateway measurements
-            int adapterID;
-            int adapterSourceID;
-            string adapterName;
-            string companyAcronym;
 
             // Ensure that STAT signal type exists
             if (statSignalTypeCount == 0)
@@ -423,111 +398,6 @@ namespace GSF.TimeSeries
                     statType = PublisherStatTypes[i];
                     statFormat = PublisherStatFormats[i];
                     database.Connection.ExecuteNonQuery(string.Format(PublisherStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat, signalIndex == 1 ? 1 : 0));
-                }
-            }
-
-            // Ensure that system statistic measurements exist
-            statHistorianID = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(StatHistorianIDFormat, nodeIDQueryString)));
-            statSignalTypeID = Convert.ToInt32(database.Connection.ExecuteScalar(StatSignalTypeIDFormat));
-            nodeName = GetNodeName(database, nodeIDQueryString);
-
-            // Modify node name so that it can be applied in a measurement point tag
-            nodeName = nodeName.RemoveCharacters(c => !char.IsLetterOrDigit(c));
-            nodeName = nodeName.Replace(' ', '_').ToUpper();
-
-            for (int i = 0; i < SystemStatNames.Length; i++)
-            {
-                signalIndex = i + 1;
-                signalReference = string.Format("{0}!SYSTEM-ST{1}", nodeName, signalIndex);
-                statMeasurementCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(StatMeasurementCountFormat, signalReference, statHistorianID)));
-
-                if (statMeasurementCount == 0)
-                {
-                    pointTag = string.Format("{0}!SYSTEM:ST{1}", nodeName, signalIndex);
-                    measurementDescription = string.Format("System Statistic for {0}", SystemStatDescriptions[i]);
-                    database.Connection.ExecuteNonQuery(statMeasurementInsertQuery, (object)statHistorianID, pointTag, statSignalTypeID, signalReference, measurementDescription);
-                }
-            }
-
-            // Ensure that subscriber statistic measurements exist
-            foreach (DataRow subscriber in database.Connection.RetrieveData(database.AdapterType, string.Format(SubscriberRowsFormat, nodeIDQueryString)).Rows)
-            {
-                adapterID = subscriber.ConvertField<int>("ID");
-                adapterSourceID = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(RuntimeSourceIDFormat, adapterID)));
-                runtimeDeviceCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(RuntimeDeviceCountFormat, adapterID)));
-                adapterName = subscriber.Field<string>("AdapterName");
-
-                if (!TryGetCompanyAcronymFromDevice(database, adapterSourceID, out companyAcronym))
-                    companyAcronym = GetCompanyAcronym(database, nodeIDQueryString);
-
-                for (int i = 0; i < SubscriberStatNames.Length; i++)
-                {
-                    signalIndex = i + 1;
-                    signalReference = string.Format("{0}!SUB-ST{1}", adapterName, signalIndex);
-                    statMeasurementCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(StatMeasurementCountFormat, signalReference, statHistorianID)));
-
-                    if (statMeasurementCount == 0)
-                    {
-                        pointTag = string.Format("{0}_{1}!SUB:ST{2}", companyAcronym, adapterName, signalIndex);
-                        measurementDescription = string.Format("Subscriber Statistic for {0}", SubscriberStatDescriptions[i]);
-
-                        if (runtimeDeviceCount > 0)
-                        {
-                            // Subscriber is defined in the Device table; include the device ID in the insert query
-                            database.Connection.ExecuteNonQuery(deviceStatMeasurementInsertQuery, (object)statHistorianID, adapterSourceID, pointTag, statSignalTypeID, signalReference, measurementDescription);
-                        }
-                        else
-                        {
-                            // Subscriber is not defined in the Device table; do not include a device ID
-                            database.Connection.ExecuteNonQuery(statMeasurementInsertQuery, (object)statHistorianID, pointTag, statSignalTypeID, signalReference, measurementDescription);
-                        }
-                    }
-                }
-
-                if (runtimeDeviceCount > 0)
-                {
-                    // Ensure that device statistic measurements exist
-                    foreach (DataRow device in database.Connection.RetrieveData(database.AdapterType, string.Format(DeviceRowsFormat, adapterSourceID)).Rows)
-                    {
-                        adapterID = device.ConvertField<int>("ID");
-                        adapterName = "LOCAL$" + device.Field<string>("Acronym");
-
-                        for (int i = 0; i < DeviceStatNames.Length; i++)
-                        {
-                            signalIndex = i + 1;
-                            signalReference = string.Format("{0}!PMU-ST{1}", adapterName, signalIndex);
-                            statMeasurementCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(StatMeasurementCountFormat, signalReference, statHistorianID)));
-
-                            if (statMeasurementCount == 0)
-                            {
-                                pointTag = string.Format("{0}_{1}!PMU:ST{2}", companyAcronym, adapterName, signalIndex);
-                                measurementDescription = string.Format("Device Statistic local to node '{0}' for {1}", nodeName, DeviceStatDescriptions[i]);
-                                database.Connection.ExecuteNonQuery(deviceStatMeasurementInsertQuery, (object)statHistorianID, adapterID, pointTag, statSignalTypeID, signalReference, measurementDescription);
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Ensure that publisher statistic measurements exist
-            companyAcronym = GetCompanyAcronym(database, nodeIDQueryString);
-
-            foreach (DataRow publisher in database.Connection.RetrieveData(database.AdapterType, string.Format(PublisherRowsFormat, nodeIDQueryString)).Rows)
-            {
-                adapterName = publisher.Field<string>("AdapterName");
-
-                for (int i = 0; i < PublisherStatNames.Length; i++)
-                {
-                    signalIndex = i + 1;
-                    signalReference = string.Format("{0}!PUB-ST{1}", adapterName, signalIndex);
-                    statMeasurementCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(StatMeasurementCountFormat, signalReference, statHistorianID)));
-
-                    if (statMeasurementCount == 0)
-                    {
-                        pointTag = string.Format("{0}_{1}!PUB:ST{2}", companyAcronym, adapterName, signalIndex);
-                        measurementDescription = string.Format("Publisher Statistic for {0}", PublisherStatDescriptions[i]);
-                        database.Connection.ExecuteNonQuery(statMeasurementInsertQuery, (object)statHistorianID, pointTag, statSignalTypeID, signalReference, measurementDescription);
-                    }
                 }
             }
         }
