@@ -226,6 +226,11 @@ namespace GSF.ServiceProcess
         public const bool DefaultSecureRemoteInteractions = false;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="ServiceHelper.SerializationFormat"/> property.
+        /// </summary>
+        public const SerializationFormat DefaultSerializationFormat = SerializationFormat.Binary;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="PersistSettings"/> property.
         /// </summary>
         public const bool DefaultPersistSettings = false;
@@ -353,6 +358,7 @@ namespace GSF.ServiceProcess
         private bool m_supportTelnetSessions;
         private bool m_supportSystemCommands;
         private bool m_secureRemoteInteractions;
+        private SerializationFormat m_serializationFormat;
         private bool m_persistSettings;
         private string m_settingsCategory;
         private string m_telnetSessionPassword;
@@ -370,15 +376,15 @@ namespace GSF.ServiceProcess
         private readonly Dictionary<ISupportLifecycle, bool> m_componentEnabledStates;
         private TryGetClientPrincipalFunctionSignature m_tryGetClientPrincipalFunction;
         private readonly ProcessQueue<StatusUpdate> m_statusUpdateQueue;
-        private bool m_enabled;
-        private bool m_disposed;
-        private bool m_initialized;
         private bool m_suppressUpdates;
         private Guid m_remoteCommandClientID;
         private Process m_remoteCommandProcess;
         private Ticks m_lastStatusUpdateTime;
         private long m_statusUpdateCount;
         private bool m_supressStatusUpdates;
+        private bool m_enabled;
+        private bool m_initialized;
+        private bool m_disposed;
 
         #endregion
 
@@ -399,6 +405,7 @@ namespace GSF.ServiceProcess
             m_supportTelnetSessions = DefaultSupportTelnetSessions;
             m_supportSystemCommands = DefaultSupportSystemCommands;
             m_secureRemoteInteractions = DefaultSecureRemoteInteractions;
+            m_serializationFormat = DefaultSerializationFormat;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
             m_processes = new List<ServiceProcess>();
@@ -619,6 +626,24 @@ namespace GSF.ServiceProcess
             set
             {
                 m_secureRemoteInteractions = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a value that indicates the desired message <see cref="GSF.SerializationFormat"/> for interaction with <see cref="ClientHelper"/>.
+        /// </summary>
+        [Category("Settings"),
+        DefaultValue(DefaultSerializationFormat),
+        Description("Indicates messaging serialization format for interactions with ClientHelper.")]
+        public SerializationFormat SerializationFormat
+        {
+            get
+            {
+                return m_serializationFormat;
+            }
+            set
+            {
+                m_serializationFormat = value;
             }
         }
 
@@ -1049,6 +1074,7 @@ namespace GSF.ServiceProcess
             settings["SupportTelnetSessions", true].Update(m_supportTelnetSessions);
             settings["SupportSystemCommands", true].Update(m_supportSystemCommands);
             settings["SecureRemoteInteractions", true].Update(m_secureRemoteInteractions);
+            settings["SerializationFormat", true].Update(m_serializationFormat);
             config.Save();
         }
 
@@ -1103,6 +1129,7 @@ namespace GSF.ServiceProcess
             settings.Add("SupportTelnetSessions", m_supportTelnetSessions, "True to enable the support for remote telnet-like sessions; otherwise False.");
             settings.Add("SupportSystemCommands", m_supportSystemCommands, "True to enable system-level access (-system switch) via the build-in commands; otherwise False.");
             settings.Add("SecureRemoteInteractions", m_secureRemoteInteractions, "True to enable security of remote client interactions; otherwise False.");
+            settings.Add("SerializationFormat", m_serializationFormat, "Message serialization format for interactions with clients, one of: Xml, Json or Binary. Default is Binary.");
 
             if ((object)settings["TelnetSessionPassword"] != null)
                 m_telnetSessionPassword = settings["TelnetSessionPassword"].ValueAs(m_telnetSessionPassword);
@@ -1116,6 +1143,7 @@ namespace GSF.ServiceProcess
             SupportTelnetSessions = settings["SupportTelnetSessions"].ValueAs(m_supportTelnetSessions);
             SupportSystemCommands = settings["SupportSystemCommands"].ValueAs(m_supportSystemCommands);
             SecureRemoteInteractions = settings["SecureRemoteInteractions"].ValueAs(m_secureRemoteInteractions);
+            SerializationFormat = settings["SerializationFormat"].ValueAs(m_serializationFormat);
         }
 
         /// <summary>
@@ -2146,7 +2174,7 @@ namespace GSF.ServiceProcess
             if ((object)client == null)
             {
                 // First message from a remote client should be its info.
-                Serialization.TryDeserialize(e.Argument2.BlockCopy(0, e.Argument3), SerializationFormat.Binary, out client);
+                Serialization.TryDeserialize(e.Argument2.BlockCopy(0, e.Argument3), m_serializationFormat, out client);
 
                 try
                 {
@@ -2210,7 +2238,7 @@ namespace GSF.ServiceProcess
                 ClientRequest request;
                 ClientRequestInfo requestInfo = null;
 
-                Serialization.TryDeserialize(e.Argument2.BlockCopy(0, e.Argument3), SerializationFormat.Binary, out request);
+                Serialization.TryDeserialize(e.Argument2.BlockCopy(0, e.Argument3), m_serializationFormat, out request);
 
                 if ((object)request != null)
                 {

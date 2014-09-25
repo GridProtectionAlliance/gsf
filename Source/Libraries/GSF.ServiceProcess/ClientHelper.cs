@@ -156,6 +156,7 @@ namespace GSF.ServiceProcess
         private ClientBase m_remotingClient;
         private string m_username;
         private string m_password;
+        private SerializationFormat m_serializationFormat;
         private bool m_persistSettings;
         private string m_settingsCategory;
         private bool m_attemptReconnection;
@@ -271,6 +272,24 @@ namespace GSF.ServiceProcess
                     throw new ArgumentNullException("value");
 
                 m_password = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a value that indicates the desired message <see cref="GSF.SerializationFormat"/> for interaction with <see cref="ServiceHelper"/>.
+        /// </summary>
+        [Category("Settings"),
+        DefaultValue(ServiceHelper.DefaultSerializationFormat),
+        Description("Indicates messaging serialization format for interactions with ServiceHelper.")]
+        public SerializationFormat SerializationFormat
+        {
+            get
+            {
+                return m_serializationFormat;
+            }
+            set
+            {
+                m_serializationFormat = value;
             }
         }
 
@@ -423,6 +442,7 @@ namespace GSF.ServiceProcess
 
                 settings["Username", true].Update(m_username);
                 settings["Password", true].Update(m_password);
+                settings["SerializationFormat", true].Update(m_serializationFormat);
 
                 settings["Username"].Scope = SettingScope.User;
                 settings["Password"].Scope = SettingScope.User;
@@ -450,9 +470,11 @@ namespace GSF.ServiceProcess
 
                 settings.Add("Username", m_username, "Username to be used for authentication with the service.", false, SettingScope.User);
                 settings.Add("Password", m_password, "Password to be used for authentication with the service.", true, SettingScope.User);
+                settings.Add("SerializationFormat", m_password, "Message serialization format for interactions with service, one of: Xml, Json or Binary. Default is Binary.");
 
                 Username = settings["Username"].ValueAs(m_username);
                 Password = settings["Password"].ValueAs(m_password);
+                SerializationFormat = settings["SerializationFormat"].ValueAs(m_serializationFormat);
             }
         }
 
@@ -686,7 +708,7 @@ namespace GSF.ServiceProcess
         {
             ServiceResponse response;
 
-            Serialization.TryDeserialize(e.Argument1.BlockCopy(0, e.Argument2), SerializationFormat.Binary, out response);
+            Serialization.TryDeserialize(e.Argument1.BlockCopy(0, e.Argument2), m_serializationFormat, out response);
 
             if ((object)response != null)
             {
@@ -792,7 +814,7 @@ namespace GSF.ServiceProcess
         }
 
         /// <summary>
-        /// Attempts to parse an actionable reponse sent from the service.
+        /// Attempts to parse an actionable response sent from the service.
         /// </summary>
         /// <param name="serviceResponse"><see cref="ServiceResponse"/> to test for actionable response.</param>
         /// <param name="sourceCommand">Command that invoked <paramref name="serviceResponse"/>.</param>
@@ -812,7 +834,7 @@ namespace GSF.ServiceProcess
                 // Attempt to parse response message
                 if (!string.IsNullOrWhiteSpace(response))
                 {
-                    // Reponse types are formatted as "Command:Success" or "Command:Failure"
+                    // Response types are formatted as "Command:Success" or "Command:Failure"
                     string[] parts = response.Split(':');
 
                     if (parts.Length > 1)

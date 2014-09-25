@@ -62,6 +62,7 @@ namespace GSF.TimeSeries.UI
         {
             // Initialize status cache members.
             Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
+            SerializationFormat serializationFormat;
             string setting;
 
             if (settings.TryGetValue("statusBufferSize", out setting) && !string.IsNullOrWhiteSpace(setting))
@@ -77,8 +78,13 @@ namespace GSF.TimeSeries.UI
             else
                 m_remotingClient = InitializeTcpClient(connectionString);
 
+            // Parse out desired message serialization format, if specified
+            if (!settings.TryGetValue("serializationFormat", out setting) || !Enum.TryParse(setting, true, out serializationFormat))
+                serializationFormat = SerializationFormat.Binary;
+
             // Initialize windows service client.
             m_clientHelper = new ClientHelper();
+            m_clientHelper.SerializationFormat = serializationFormat;
             m_clientHelper.RemotingClient = m_remotingClient;
             m_clientHelper.ReceivedServiceUpdate += ClientHelper_ReceivedServiceUpdate;
         }
