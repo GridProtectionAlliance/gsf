@@ -422,7 +422,11 @@ namespace GSF.Configuration
             try
             {
                 // Attempt to create a backup configuration file
+#if MONO
+                m_configuration.SaveAs(BackupConfigFilePath, ConfigurationSaveMode.Full);
+#else
                 File.Copy(m_configuration.FilePath, BackupConfigFilePath, true);
+#endif
             }
             catch
             {
