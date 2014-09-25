@@ -404,10 +404,12 @@ namespace GSF.Configuration
         {
             m_saveMode = saveMode;
 
-            if (Common.IsMono)
-                m_saveOperation.Run();
-            else
-                m_saveOperation.RunOnceAsync();
+#if MONO
+            // As of Mono v3.8.0, threads are killed even when marked as non-background (at least on Linux)
+            m_saveOperation.Run();
+#else
+            m_saveOperation.RunOnceAsync();
+#endif
         }
 
         private void ExecuteConfigurationSave()

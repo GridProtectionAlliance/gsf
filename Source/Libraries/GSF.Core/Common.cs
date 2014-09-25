@@ -160,7 +160,8 @@ namespace GSF
         /// Determines if the code base is currently running under Mono.
         /// </summary>
         /// <remarks>
-        /// You can use this property to make a run-time determination if Windows or Mono based .NET is being used.
+        /// This property can be used to make a run-time determination if Windows or Mono based .NET is being used. However, it is highly
+        /// recommended to use the MONO compiler directive be used wherever possible instead of determining this at run-time.
         /// </remarks>
         public static bool IsMono = ((object)Type.GetType("Mono.Runtime") != null);
 
@@ -358,6 +359,9 @@ namespace GSF
 
             if (string.IsNullOrWhiteSpace(s_osPlatformName))
                 s_osPlatformName = Environment.OSVersion.Platform.ToString();
+
+            if (IsMono)
+                s_osPlatformName += " using Mono";
 
             return s_osPlatformName;
         }

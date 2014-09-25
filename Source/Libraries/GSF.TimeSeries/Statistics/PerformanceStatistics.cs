@@ -198,8 +198,8 @@ namespace GSF.TimeSeries.Statistics
 
             if ((object)perfMon != null)
             {
-                if ((object)perfMon.DatagramSendRate != null)
-                    statistic = perfMon.DatagramSendRate.LastValue;
+                if ((object)perfMon.IPDataSendRate != null)
+                    statistic = perfMon.IPDataSendRate.LastValue;
             }
 
             return statistic;
@@ -212,8 +212,8 @@ namespace GSF.TimeSeries.Statistics
 
             if ((object)perfMon != null)
             {
-                if (perfMon.DatagramSendRate != null)
-                    statistic = perfMon.DatagramSendRate.AverageValue;
+                if (perfMon.IPDataSendRate != null)
+                    statistic = perfMon.IPDataSendRate.AverageValue;
             }
 
             return statistic;
@@ -230,8 +230,8 @@ namespace GSF.TimeSeries.Statistics
 
             if ((object)perfMon != null)
             {
-                if ((object)perfMon.DatagramReceiveRate != null)
-                    statistic = perfMon.DatagramReceiveRate.LastValue;
+                if ((object)perfMon.IPDataReceiveRate != null)
+                    statistic = perfMon.IPDataReceiveRate.LastValue;
             }
 
             return statistic;
@@ -244,8 +244,8 @@ namespace GSF.TimeSeries.Statistics
 
             if ((object)perfMon != null)
             {
-                if ((object)perfMon.DatagramReceiveRate != null)
-                    statistic = perfMon.DatagramReceiveRate.AverageValue;
+                if ((object)perfMon.IPDataReceiveRate != null)
+                    statistic = perfMon.IPDataReceiveRate.AverageValue;
             }
 
             return statistic;

@@ -117,7 +117,7 @@ namespace GSF.Data
     public static class DataSetExtensions
     {
         // Constant array of supported data types
-        private readonly static Type[] s_supportedDataTypes = new[]
+        private readonly static Type[] s_supportedDataTypes = 
         {
             // This must match DataType enum order
             typeof(bool),
@@ -146,7 +146,8 @@ namespace GSF.Data
         /// </summary>
         /// <param name="source"><see cref="DataSet"/> to serialize.</param>
         /// <param name="destination"><see cref="Stream"/> to serialize <see cref="DataSet"/> on.</param>
-        public static void SerializeToStream(this DataSet source, Stream destination)
+        /// <param name="assumeStringForUnknownTypes">Flag to determine if unknown column types should be serialized as strings.</param>
+        public static void SerializeToStream(this DataSet source, Stream destination, bool assumeStringForUnknownTypes = true)
         {
             if ((object)source == null)
                 throw new ArgumentNullException("source");
@@ -178,7 +179,7 @@ namespace GSF.Data
                 foreach (DataColumn column in table.Columns)
                 {
                     // Get column data type, unknown types will be represented as object
-                    dataType = GetDataType(column.DataType);
+                    dataType = GetDataType(column.DataType, assumeStringForUnknownTypes);
 
                     // Only objects of a known type can be properly serialized
                     if (dataType != DataType.Object)
@@ -245,7 +246,7 @@ namespace GSF.Data
                                 output.Write(value.NotDBNull<float>());
                                 break;
                             case DataType.String:
-                                output.Write(value.NotDBNull(""));
+                                output.Write(value.NotDBNullString());
                                 break;
                             case DataType.TimeSpan:
                                 output.Write(value.NotDBNull<TimeSpan>().Ticks);
@@ -423,7 +424,8 @@ namespace GSF.Data
         /// </summary>
         /// <param name="objectType"><see cref="Type"/> of object to test.</param>
         /// <returns>Derived <see cref="DataType"/> based on object <see cref="Type"/> if matched; otherwise <see cref="DataType.Object"/>.</returns>
-        public static DataType GetDataType(this Type objectType)
+        /// <param name="assumeStringForUnknownTypes">Flag to determine if unknown column types should be serialized as strings.</param>
+        public static DataType GetDataType(this Type objectType, bool assumeStringForUnknownTypes = true)
         {
             for (int i = 0; i < s_supportedDataTypes.Length; i++)
             {
@@ -442,6 +444,11 @@ namespace GSF.Data
         public static Type DeriveColumnType(this DataType dataType)
         {
             return s_supportedDataTypes[(int)dataType];
+        }
+
+        private static string NotDBNullString(this object value)
+        {
+            return value == DBNull.Value ? "" : value.ToString();
         }
 
         private static T NotDBNull<T>(this object value, T defaultValue)

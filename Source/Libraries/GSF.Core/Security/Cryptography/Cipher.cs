@@ -423,15 +423,25 @@ namespace GSF.Security.Cryptography
         private static readonly bool s_managedEncryption;
 
         // Set default encoding base Base64 strings
-        private static readonly Encoding s_textEncoding = Common.IsMono ? Encoding.Default : s_textEncoding;
+        private static readonly Encoding s_textEncoding;
 
         /// <summary>
         /// Static constructor for the <see cref="Cipher"/> class.
         /// </summary>
         static Cipher()
         {
+#if MONO
+            // Common .NET FIPS wrapper algorithms are implemented as managed code under Mono, check status of Crimson project
+            s_managedEncryption = true;
+            s_textEncoding = Encoding.Default;
+#else
             const string fipsKeyOld = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa";
             const string fipsKeyNew = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\FipsAlgorithmPolicy";
+
+            // Determine if the user needs to use FIPS-compliant algorithms
+            s_managedEncryption = (Registry.GetValue(fipsKeyNew, "Enabled", 0) ?? Registry.GetValue(fipsKeyOld, "FIPSAlgorithmPolicy", 0)).ToString() == "0";
+            s_textEncoding = Encoding.Unicode;
+#endif
 
             KeyIVCache localKeyIVCache;
             string localCacheFileName = DefaultCacheFileName;
@@ -449,12 +459,6 @@ namespace GSF.Security.Cryptography
             localCacheFileName = FilePath.GetAbsolutePath(settings["CryptoCache"].ValueAs(localCacheFileName));
             retryDelayInterval = settings["CacheRetryDelayInterval"].ValueAs(retryDelayInterval);
             maximumRetryAttempts = settings["CacheMaximumRetryAttempts"].ValueAs(maximumRetryAttempts);
-
-            // Determine if the user needs to use FIPS-compliant algorithms
-            if (Common.IsPosixEnvironment)
-                s_managedEncryption = true; // FIPS not supported on Mono
-            else
-                s_managedEncryption = (Registry.GetValue(fipsKeyNew, "Enabled", 0) ?? Registry.GetValue(fipsKeyOld, "FIPSAlgorithmPolicy", 0)).ToString() == "0";
 
             // Initialize local cryptographic key and initialization vector cache (application may only have read-only access to this cache)
             localKeyIVCache = new KeyIVCache

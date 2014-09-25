@@ -73,8 +73,11 @@ namespace GSF.Configuration
         /// </summary>
         public CategorizedSettingsSection()
         {
-            if (Common.IsMono)
-                m_sections = new Dictionary<string, CategorizedSettingsElementCollection>();
+#if MONO
+            m_sections = new Dictionary<string, CategorizedSettingsElementCollection>();
+#else
+            m_sections = null;
+#endif
         }
 
         #region [ Properties ]

@@ -50,19 +50,24 @@ namespace GSF
 
         static FastObjectFactory()
         {
-            // This is markedly faster than using Activator.CreateInstance
             Type type = typeof(T);
-            DynamicMethod method = new DynamicMethod("ctor$" + type.Name, type, null, type);
-            ILGenerator generator = method.GetILGenerator();
             ConstructorInfo constructor = type.GetConstructor(Type.EmptyTypes);
 
             if ((object)constructor == null)
                 throw new InvalidOperationException("No parameterless constructor exists for type " + type.FullName);
+#if MONO
+            // TODO: Dynamic IL constructor code (below) needs further testing on Mono to be sure it works properly
+            s_createObjectFunction = () => (T)Activator.CreateInstance(type);
+#else
+            // This is markedly faster than using Activator.CreateInstance
+            DynamicMethod method = new DynamicMethod("ctor$" + type.Name, type, null, type);
+            ILGenerator generator = method.GetILGenerator();
 
             generator.Emit(OpCodes.Newobj, constructor);
             generator.Emit(OpCodes.Ret);
 
             s_createObjectFunction = (Func<T>)method.CreateDelegate(typeof(Func<T>));
+#endif
         }
 
         /// <summary>
@@ -124,9 +129,6 @@ namespace GSF
 
             int key = type.GUID.GetHashCode() ^ typeT.GUID.GetHashCode();
 
-            if (Common.IsMono)
-                return () => (T)Activator.CreateInstance(type);
-
             return (Func<T>)s_createObjectFunctions.GetOrAdd(key, k =>
             {
                 // Get parameterless constructor for this type
@@ -134,7 +136,10 @@ namespace GSF
 
                 if ((object)constructor == null)
                     throw new InvalidOperationException("No parameterless constructor exists for type " + type.FullName);
-
+#if MONO
+                // TODO: Dynamic IL constructor code (below) needs further testing on Mono to be sure it works properly
+                return (Func<T>)(() => (T)Activator.CreateInstance(type));
+#else
                 // This is markedly faster than using Activator.CreateInstance
                 DynamicMethod method = new DynamicMethod("ctor_type$" + type.Name, type, null, type);
                 ILGenerator generator = method.GetILGenerator();
@@ -143,6 +148,7 @@ namespace GSF
                 generator.Emit(OpCodes.Ret);
 
                 return (Func<T>)method.CreateDelegate(typeof(Func<T>));
+#endif
             });
         }
     }
