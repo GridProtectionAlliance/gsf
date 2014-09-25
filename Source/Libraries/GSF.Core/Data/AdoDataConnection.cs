@@ -442,6 +442,221 @@ namespace GSF.Data
         #region [ Methods ]
 
         /// <summary>
+        /// Executes the SQL statement using <see cref="Connection"/>, and returns the number of rows affected.
+        /// </summary>
+        /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
+        /// <returns>The number of rows affected.</returns>
+        public int ExecuteNonQuery(string sqlFormat, params object[] parameters)
+        {
+            return ExecuteNonQuery(DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="Connection"/>, and returns the number of rows affected.
+        /// </summary>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
+        /// <returns>The number of rows affected.</returns>
+        public int ExecuteNonQuery(int timeout, string sqlFormat, params object[] parameters)
+        {
+            string sql = GenericParameterizedQueryString(sqlFormat, parameters);
+            FixParameters(parameters);
+            return Connection.ExecuteNonQuery(sql, timeout, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="Connection"/>, and builds a <see cref="IDataReader"/>.
+        /// </summary>
+        /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
+        /// <returns>A <see cref="IDataReader"/> object.</returns>
+        public IDataReader ExecuteReader(string sqlFormat, params object[] parameters)
+        {
+            return ExecuteReader(DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="Connection"/>, and builds a <see cref="IDataReader"/>.
+        /// </summary>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
+        /// <returns>A <see cref="IDataReader"/> object.</returns>
+        public IDataReader ExecuteReader(int timeout, string sqlFormat, params object[] parameters)
+        {
+            string sql = GenericParameterizedQueryString(sqlFormat, parameters);
+            FixParameters(parameters);
+            return Connection.ExecuteReader(sql, timeout, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="Connection"/>, and returns the value in the first column 
+        /// of the first row in the result set as type <see cref="T"/>.
+        /// </summary>
+        /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
+        public T ExecuteScalar<T>(string sqlFormat, params object[] parameters)
+        {
+            return ExecuteScalar<T>(DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="Connection"/>, and returns the value in the first column 
+        /// of the first row in the result set as type <see cref="T"/>.
+        /// </summary>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
+        public T ExecuteScalar<T>(int timeout, string sqlFormat, params object[] parameters)
+        {
+            return ExecuteScalar(default(T), timeout, sqlFormat, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="Connection"/>, and returns the value in the first column 
+        /// of the first row in the result set as type <see cref="T"/>, substituting <paramref name="defaultValue"/>
+        /// if <see cref="DBNull.Value"/> is retrieved.
+        /// </summary>
+        /// <param name="defaultValue">The value to be substituted if <see cref="DBNull.Value"/> is retrieved.</param>
+        /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
+        public T ExecuteScalar<T>(T defaultValue, string sqlFormat, params object[] parameters)
+        {
+            return ExecuteScalar(defaultValue, DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="Connection"/>, and returns the value in the first column 
+        /// of the first row in the result set as type <see cref="T"/>, substituting <paramref name="defaultValue"/>
+        /// if <see cref="DBNull.Value"/> is retrieved.
+        /// </summary>
+        /// <param name="defaultValue">The value to be substituted if <see cref="DBNull.Value"/> is retrieved.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
+        public T ExecuteScalar<T>(T defaultValue, int timeout, string sqlFormat, params object[] parameters)
+        {
+            object value = ExecuteScalar(timeout, sqlFormat, parameters);
+
+            if (value == DBNull.Value)
+                return defaultValue;
+
+            return (T)Convert.ChangeType(value, typeof(T));
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="Connection"/>, and returns the value in the first column 
+        /// of the first row in the result set.
+        /// </summary>
+        /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
+        public object ExecuteScalar(string sqlFormat, params object[] parameters)
+        {
+            return ExecuteScalar(DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="Connection"/>, and returns the value in the first column 
+        /// of the first row in the result set.
+        /// </summary>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
+        public object ExecuteScalar(int timeout, string sqlFormat, params object[] parameters)
+        {
+            string sql = GenericParameterizedQueryString(sqlFormat, parameters);
+            FixParameters(parameters);
+            return Connection.ExecuteScalar(sql, timeout, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="Connection"/>, and returns the first <see cref="DataRow"/> in the result set.
+        /// </summary>
+        /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
+        public DataRow RetrieveRow(string sqlFormat, params object[] parameters)
+        {
+            return RetrieveRow(DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="Connection"/>, and returns the first <see cref="DataRow"/> in the result set.
+        /// </summary>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
+        public DataRow RetrieveRow(int timeout, string sqlFormat, params object[] parameters)
+        {
+            string sql = GenericParameterizedQueryString(sqlFormat, parameters);
+            FixParameters(parameters);
+            return Connection.RetrieveRow(m_adapterType, sql, timeout, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="Connection"/>, and returns the first <see cref="DataTable"/> 
+        /// of result set, if the result set contains at least one table.
+        /// </summary>
+        /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
+        /// <returns>A <see cref="DataTable"/> object.</returns>
+        public DataTable RetrieveData(string sqlFormat, params object[] parameters)
+        {
+            return RetrieveData(DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="Connection"/>, and returns the first <see cref="DataTable"/> 
+        /// of result set, if the result set contains at least one table.
+        /// </summary>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
+        /// <returns>A <see cref="DataTable"/> object.</returns>
+        public DataTable RetrieveData(int timeout, string sqlFormat, params object[] parameters)
+        {
+            string sql = GenericParameterizedQueryString(sqlFormat, parameters);
+            FixParameters(parameters);
+            return Connection.RetrieveData(m_adapterType, sql, timeout, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="Connection"/>, and returns the <see cref="DataSet"/> that 
+        /// may contain multiple tables, depending on the SQL statement.
+        /// </summary>
+        /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
+        /// <returns>A <see cref="DataSet"/> object.</returns>
+        public DataSet RetrieveDataSet(string sqlFormat, params object[] parameters)
+        {
+            return RetrieveDataSet(DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="Connection"/>, and returns the <see cref="DataSet"/> that 
+        /// may contain multiple tables, depending on the SQL statement.
+        /// </summary>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
+        /// <returns>A <see cref="DataSet"/> object.</returns>
+        public DataSet RetrieveDataSet(int timeout, string sqlFormat, params object[] parameters)
+        {
+            string sql = GenericParameterizedQueryString(sqlFormat, parameters);
+            FixParameters(parameters);
+            return Connection.RetrieveDataSet(m_adapterType, sql, timeout, parameters);
+        }
+
+        /// <summary>
         /// Releases all the resources used by the <see cref="AdoDataConnection"/> object.
         /// </summary>
         public void Dispose()
@@ -560,6 +775,26 @@ namespace GSF.Data
             }
 
             return type;
+        }
+
+        private string GenericParameterizedQueryString(string sqlFormat, object[] parameters)
+        {
+            string[] parameterNames = parameters
+                .Select((parameter, index) => "p" + index)
+                .ToArray();
+
+            return ParameterizedQueryString(sqlFormat, parameterNames);
+        }
+
+        private void FixParameters(object[] parameters)
+        {
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                if (parameters[i] is bool)
+                    parameters[i] = Bool((bool)parameters[i]);
+                else if (parameters[i] is Guid)
+                    parameters[i] = Guid((Guid)parameters[i]);
+            }
         }
 
         #endregion
