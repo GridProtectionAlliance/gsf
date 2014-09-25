@@ -1484,54 +1484,36 @@ namespace GSF.Identity
 
         public static string UserNameToSID(string userName)
         {
-            string[] accountParts;
-            bool isLocalDomain = true;
+            uint userID;
 
             if ((object)userName == null)
                 throw new ArgumentNullException("userName");
 
-            accountParts = userName.Split('\\');
+            if (GetLocalUserID(userName, out userID) == 0)
+                return "user:" + userID;
 
-            if (accountParts.Length == 2)
-            {
-                userName = accountParts[1];
-                isLocalDomain = UserInfo.IsLocalDomain(accountParts[0]);
-            }
+            string[] accountParts = userName.Split('\\');
 
-            if (isLocalDomain)
-            {
-                uint userID;
-
-                if (GetLocalUserID(userName, out userID) == 0)
-                    return "user:" + userID;
-            }
+            if (accountParts.Length == 2 && UserInfo.IsLocalDomain(accountParts[0]) && GetLocalUserID(accountParts[1], out userID) == 0)
+                return "user:" + userID;
 
             return userName.EnsureStart("user:");
         }
 
         public static string GroupNameToSID(string groupName)
         {
-            string[] accountParts;
-            bool isLocalDomain = true;
+            uint groupID;
 
             if ((object)groupName == null)
                 throw new ArgumentNullException("groupName");
 
-            accountParts = groupName.Split('\\');
+            if (GetLocalGroupID(groupName, out groupID) == 0)
+                return "group:" + groupID;
 
-            if (accountParts.Length == 2)
-            {
-                groupName = accountParts[1];
-                isLocalDomain = UserInfo.IsLocalDomain(accountParts[0]);
-            }
+            string[] accountParts = groupName.Split('\\');
 
-            if (isLocalDomain)
-            {
-                uint groupID;
-
-                if (GetLocalGroupID(groupName, out groupID) == 0)
-                    return "group:" + groupID;
-            }
+            if (accountParts.Length == 2 && UserInfo.IsLocalDomain(accountParts[0]) && GetLocalGroupID(accountParts[1], out groupID) == 0)
+                return "group:" + groupID;
 
             return groupName.EnsureStart("group:");
         }

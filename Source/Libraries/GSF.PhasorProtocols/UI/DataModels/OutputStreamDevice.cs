@@ -558,7 +558,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         outputStreamDevice.Acronym, outputStreamDevice.BpaAcronym.ToNotNull(), outputStreamDevice.Name, outputStreamDevice.PhasorDataFormat.ToNotNull(),
                         outputStreamDevice.FrequencyDataFormat.ToNotNull(), outputStreamDevice.AnalogDataFormat.ToNotNull(), outputStreamDevice.CoordinateFormat.ToNotNull(),
                         outputStreamDevice.LoadOrder, database.Bool(outputStreamDevice.Enabled), CommonFunctions.CurrentUser,
-                        database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                        database.UtcNow, CommonFunctions.CurrentUser, database.UtcNow);
                 }
                 else
                 {
@@ -573,7 +573,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         outputStreamDevice.Acronym, outputStreamDevice.BpaAcronym.ToNotNull(), outputStreamDevice.Name, outputStreamDevice.PhasorDataFormat.ToNotNull(),
                         outputStreamDevice.FrequencyDataFormat.ToNotNull(), outputStreamDevice.AnalogDataFormat.ToNotNull(), outputStreamDevice.CoordinateFormat.ToNotNull(),
                         outputStreamDevice.LoadOrder, database.Bool(outputStreamDevice.Enabled), CommonFunctions.CurrentUser,
-                        database.UtcNow(), outputStreamDevice.ID);
+                        database.UtcNow, outputStreamDevice.ID);
 
                     if (originalDevice != null && originalDevice.Acronym != outputStreamDevice.Acronym)
                     {

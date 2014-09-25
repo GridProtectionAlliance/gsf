@@ -409,7 +409,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, outputStreamMeasurement.NodeID == Guid.Empty ? database.CurrentNodeID() : database.Guid(outputStreamMeasurement.NodeID),
                         outputStreamMeasurement.AdapterID, outputStreamMeasurement.HistorianID.ToNotNull(), outputStreamMeasurement.PointID, outputStreamMeasurement.SignalReference,
-                        CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                        CommonFunctions.CurrentUser, database.UtcNow, CommonFunctions.CurrentUser, database.UtcNow);
                 }
                 else
                 {
@@ -419,7 +419,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(outputStreamMeasurement.NodeID), outputStreamMeasurement.AdapterID,
                         outputStreamMeasurement.HistorianID.ToNotNull(), outputStreamMeasurement.PointID, outputStreamMeasurement.SignalReference,
-                        CommonFunctions.CurrentUser, database.UtcNow(), outputStreamMeasurement.ID);
+                        CommonFunctions.CurrentUser, database.UtcNow, outputStreamMeasurement.ID);
                 }
 
                 return "OutputStreamMeasurement information saved successfully";

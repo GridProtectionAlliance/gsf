@@ -382,8 +382,8 @@ namespace GSF.TimeSeries.UI.DataModels
                         "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})", "acronym", "name", "phoneNumber", "contactEmail", "url", "updatedBy", "updatedOn", "createdBy",
                         "createdOn");
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, vendor.Acronym.Replace(" ", "").ToUpper(),
-                        vendor.Name, vendor.PhoneNumber.ToNotNull(), vendor.ContactEmail.ToNotNull(), vendor.URL.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow(),
-                        CommonFunctions.CurrentUser, database.UtcNow());
+                        vendor.Name, vendor.PhoneNumber.ToNotNull(), vendor.ContactEmail.ToNotNull(), vendor.URL.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow,
+                        CommonFunctions.CurrentUser, database.UtcNow);
                 }
                 else
                 {
@@ -392,7 +392,7 @@ namespace GSF.TimeSeries.UI.DataModels
                         "updatedOn", "id");
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, vendor.Acronym.Replace(" ", "").ToUpper(), vendor.Name,
-                        vendor.PhoneNumber.ToNotNull(), vendor.ContactEmail.ToNotNull(), vendor.URL.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow(), vendor.ID);
+                        vendor.PhoneNumber.ToNotNull(), vendor.ContactEmail.ToNotNull(), vendor.URL.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow, vendor.ID);
                 }
 
                 return "Vendor information saved successfully";

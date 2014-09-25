@@ -751,7 +751,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         database.Bool(calculatedMeasurement.AllowSortsByArrival), calculatedMeasurement.LoadOrder, database.Bool(calculatedMeasurement.Enabled),
                         database.Bool(calculatedMeasurement.IgnoreBadTimeStamps), calculatedMeasurement.TimeResolution, database.Bool(calculatedMeasurement.AllowPreemptivePublishing),
                         calculatedMeasurement.DownsamplingMethod, database.Bool(calculatedMeasurement.PerformTimestampReasonabilityCheck), CommonFunctions.CurrentUser,
-                        database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                        database.UtcNow, CommonFunctions.CurrentUser, database.UtcNow);
                 }
                 else
                 {
@@ -771,7 +771,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         calculatedMeasurement.LagTime, calculatedMeasurement.LeadTime, database.Bool(calculatedMeasurement.UseLocalClockAsRealTime), database.Bool(calculatedMeasurement.AllowSortsByArrival),
                         calculatedMeasurement.LoadOrder, database.Bool(calculatedMeasurement.Enabled), database.Bool(calculatedMeasurement.IgnoreBadTimeStamps), calculatedMeasurement.TimeResolution,
                         database.Bool(calculatedMeasurement.AllowPreemptivePublishing), calculatedMeasurement.DownsamplingMethod, database.Bool(calculatedMeasurement.PerformTimestampReasonabilityCheck),
-                        CommonFunctions.CurrentUser, database.UtcNow(), calculatedMeasurement.ID);
+                        CommonFunctions.CurrentUser, database.UtcNow, calculatedMeasurement.ID);
                 }
 
                 return "Calculated measurement information saved successfully";

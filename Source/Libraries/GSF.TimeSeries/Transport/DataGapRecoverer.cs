@@ -511,6 +511,14 @@ namespace GSF.TimeSeries.Transport
                 status.AppendFormat("Use millisecond resolution: {0}", UseMillisecondResolution);
                 status.AppendLine();
 
+                if ((object)m_temporalSubscription != null)
+                {
+                    status.AppendLine();
+                    status.AppendLine("Data Gap Temporal Subscription Status".CenterText(50));
+                    status.AppendLine("-------------------------------------".CenterText(50));
+                    status.AppendFormat(m_temporalSubscription.Status);
+                }
+
                 if ((object)m_dataGapLog != null)
                 {
                     status.AppendLine();
@@ -519,7 +527,12 @@ namespace GSF.TimeSeries.Transport
                     status.AppendFormat(m_dataGapLog.Status);
 
                     if ((object)m_dataGapLogProcessor != null)
+                    {
+                        status.AppendLine();
+                        status.AppendLine("Data Gap Log Processor Status".CenterText(50));
+                        status.AppendLine("-----------------------------".CenterText(50));
                         status.AppendFormat(m_dataGapLogProcessor.Status);
+                    }
                 }
 
                 return status.ToString();
@@ -742,7 +755,7 @@ namespace GSF.TimeSeries.Transport
         // Can only start data gap processing when end time of recovery range is beyond recovery start delay
         private bool CanProcessDataGap(Outage dataGap)
         {
-            return (DateTime.UtcNow.Ticks - dataGap.EndTime).ToSeconds() > m_recoveryStartDelay;
+            return Enabled && (DateTime.UtcNow.Ticks - dataGap.EndTime).ToSeconds() > m_recoveryStartDelay;
         }
 
         // Any exceptions in this handler will be exposed through ProcessException event and cause OutageLogProcessor
@@ -778,6 +791,7 @@ namespace GSF.TimeSeries.Transport
 
                 // Re-insert adjusted data gap at the top of the processing queue
                 m_dataGapLogProcessor.Insert(0, dataGap);
+                FlushLogAsync();
 
                 if (m_measurementsRecoveredForDataGap == 0)
                     OnStatusMessage("WARNING: Failed to establish temporal session. Data recovery for period \"{0}\" - \"{1}\" will be re-attempted.", m_subscriptionInfo.StartTime, m_subscriptionInfo.StopTime);

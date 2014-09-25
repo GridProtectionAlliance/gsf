@@ -661,7 +661,7 @@ namespace GSF.TimeSeries.UI.DataModels
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, node.Name, node.CompanyID.ToNotNull(), node.Longitude.ToNotNull(), node.Latitude.ToNotNull(),
                         node.Description.ToNotNull(), node.ImagePath.ToNotNull(), node.Settings.ToNotNull(), node.MenuType, node.MenuData, database.Bool(node.Master), node.LoadOrder,
-                        database.Bool(node.Enabled), CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                        database.Bool(node.Enabled), CommonFunctions.CurrentUser, database.UtcNow, CommonFunctions.CurrentUser, database.UtcNow);
                 }
                 else
                 {
@@ -678,7 +678,7 @@ namespace GSF.TimeSeries.UI.DataModels
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, node.Name, node.CompanyID.ToNotNull(), node.Longitude.ToNotNull(), node.Latitude.ToNotNull(),
                         node.Description.ToNotNull(), node.ImagePath.ToNotNull(), node.Settings.ToNotNull(), node.MenuType, node.MenuData, database.Bool(node.Master), node.LoadOrder,
-                        database.Bool(node.Enabled), CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(node.ID));
+                        database.Bool(node.Enabled), CommonFunctions.CurrentUser, database.UtcNow, database.Guid(node.ID));
 
                     if (nodeTable.Rows.Count > 0)
                     {

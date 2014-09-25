@@ -19,7 +19,7 @@
 //  05/10/2011 - Magdiel Lorenzo
 //       Generated original version of source code.
 // 05/13/2011 - Aniket Salver
-//       Modified the way Guid is retrived from the Data Base.
+//       Modified the way Guid is retrieved from the Data Base.
 // 05/20/2011 - Mehulbhai P Thakkar
 //       Added methods to retrieve, add and remove measurements and measurement groups.
 //
@@ -752,7 +752,7 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
                         "updatedBy", "createdOn", "createdBy");
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.CurrentNodeID(), database.Guid(subscriberID), database.Guid(id),
-                        database.Bool(allowed), database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser);
+                        database.Bool(allowed), database.UtcNow, CommonFunctions.CurrentUser, database.UtcNow, CommonFunctions.CurrentUser);
                 }
 
                 if (allowed)
@@ -822,7 +822,7 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
                         "allowed", "updatedOn", "updatedBy", "createdOn", "createdBy");
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.CurrentNodeID(), database.Guid(subscriberID), id, database.Bool(allowed),
-                        database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser);
+                        database.UtcNow, CommonFunctions.CurrentUser, database.UtcNow, CommonFunctions.CurrentUser);
                 }
 
                 if (allowed)
@@ -934,8 +934,8 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.CurrentNodeID(), subscriber.Acronym, subscriber.Name.ToNotNull(), subscriber.SharedSecret.ToNotNull(),
                                                         subscriber.AuthKey.ToNotNull(), subscriber.ValidIPAddresses.ToNotNull(), subscriber.RemoteCertificateFile.ToNotNull(), validPolicyErrors.ToString(),
-                                                        validChainFlags.ToString(), subscriber.AccessControlFilter.ToNotNull(), database.Bool(subscriber.Enabled), CommonFunctions.CurrentUser, database.UtcNow(),
-                                                        CommonFunctions.CurrentUser, database.UtcNow());
+                                                        validChainFlags.ToString(), subscriber.AccessControlFilter.ToNotNull(), database.Bool(subscriber.Enabled), CommonFunctions.CurrentUser, database.UtcNow,
+                                                        CommonFunctions.CurrentUser, database.UtcNow);
                 }
                 else
                 {
@@ -946,7 +946,7 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(subscriber.NodeID), subscriber.Acronym, subscriber.Name.ToNotNull(), subscriber.SharedSecret.ToNotNull(),
                                                         subscriber.AuthKey.ToNotNull(), subscriber.ValidIPAddresses.ToNotNull(), subscriber.RemoteCertificateFile.ToNotNull(), validPolicyErrors.ToString(),
-                                                        validChainFlags.ToString(), subscriber.AccessControlFilter.ToNotNull(), database.Bool(subscriber.Enabled), CommonFunctions.CurrentUser, database.UtcNow(),
+                                                        validChainFlags.ToString(), subscriber.AccessControlFilter.ToNotNull(), database.Bool(subscriber.Enabled), CommonFunctions.CurrentUser, database.UtcNow,
                                                         database.Guid(subscriber.ID));
                 }
 

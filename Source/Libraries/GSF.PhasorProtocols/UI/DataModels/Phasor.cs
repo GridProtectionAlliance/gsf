@@ -480,7 +480,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         "createdOn");
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, phasor.DeviceID, phasor.Label, phasor.Type, phasor.Phase, phasor.SourceIndex,
-                        CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                        CommonFunctions.CurrentUser, database.UtcNow, CommonFunctions.CurrentUser, database.UtcNow);
                 }
                 else
                 {
@@ -488,7 +488,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         "UpdatedBy = {5}, UpdatedOn = {6} WHERE ID = {7}", "deviceID", "label", "type", "phase", "sourceIndex", "updatedBy", "updatedOn", "id");
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, phasor.DeviceID, phasor.Label, phasor.Type,
-                        phasor.Phase, phasor.SourceIndex, CommonFunctions.CurrentUser, database.UtcNow(), phasor.ID);
+                        phasor.Phase, phasor.SourceIndex, CommonFunctions.CurrentUser, database.UtcNow, phasor.ID);
                 }
 
                 // Get reference to the device to which phasor is being added.

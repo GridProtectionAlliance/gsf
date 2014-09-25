@@ -264,7 +264,10 @@ namespace GSF.Security
                 password = provider.Password;
 
             // Reset the current principal
-            Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+            WindowsIdentity currentIdentity = WindowsIdentity.GetCurrent();
+
+            if ((object)currentIdentity != null)
+                Thread.CurrentPrincipal = new WindowsPrincipal(currentIdentity);
 
             // Create a new provider associated with current identity
             provider = SecurityProviderUtility.CreateProvider(currentPrincipal.Identity.Name);

@@ -531,8 +531,8 @@ namespace GSF.TimeSeries.UI.DataModels
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, (historian.NodeID != Guid.Empty) ? database.Guid(historian.NodeID) : database.CurrentNodeID(),
                         historian.Acronym.Replace(" ", "").ToUpper(), historian.Name.ToNotNull(), historian.AssemblyName.ToNotNull(),
                         historian.TypeName.ToNotNull(), historian.ConnectionString.ToNotNull(), database.Bool(historian.IsLocal), historian.MeasurementReportingInterval,
-                        historian.Description.ToNotNull(), historian.LoadOrder, database.Bool(historian.Enabled), CommonFunctions.CurrentUser, database.UtcNow(),
-                        CommonFunctions.CurrentUser, database.UtcNow());
+                        historian.Description.ToNotNull(), historian.LoadOrder, database.Bool(historian.Enabled), CommonFunctions.CurrentUser, database.UtcNow,
+                        CommonFunctions.CurrentUser, database.UtcNow);
                 }
                 else
                 {
@@ -544,7 +544,7 @@ namespace GSF.TimeSeries.UI.DataModels
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, (historian.NodeID != Guid.Empty) ? database.Guid(historian.NodeID) : database.CurrentNodeID(),
                         historian.Acronym.Replace(" ", "").ToUpper(), historian.Name.ToNotNull(), historian.AssemblyName.ToNotNull(), historian.TypeName.ToNotNull(),
                         historian.ConnectionString.ToNotNull(), database.Bool(historian.IsLocal), historian.MeasurementReportingInterval, historian.Description.ToNotNull(),
-                        historian.LoadOrder, database.Bool(historian.Enabled), CommonFunctions.CurrentUser, database.UtcNow(), historian.ID);
+                        historian.LoadOrder, database.Bool(historian.Enabled), CommonFunctions.CurrentUser, database.UtcNow, historian.ID);
                 }
 
                 return "Historian information saved successfully";

@@ -426,7 +426,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.CurrentNodeID(), outputStreamDeviceAnalog.OutputStreamDeviceID,
                         outputStreamDeviceAnalog.Label, outputStreamDeviceAnalog.Type, outputStreamDeviceAnalog.ScalingValue, outputStreamDeviceAnalog.LoadOrder,
-                        CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                        CommonFunctions.CurrentUser, database.UtcNow, CommonFunctions.CurrentUser, database.UtcNow);
 
                     //outputStreamDeviceAnalog.TypeName,
                 }
@@ -440,7 +440,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, outputStreamDeviceAnalog.NodeID, outputStreamDeviceAnalog.OutputStreamDeviceID,
                         outputStreamDeviceAnalog.Label, outputStreamDeviceAnalog.Type, outputStreamDeviceAnalog.ScalingValue, outputStreamDeviceAnalog.LoadOrder,
-                        CommonFunctions.CurrentUser, database.UtcNow(), outputStreamDeviceAnalog.ID);
+                        CommonFunctions.CurrentUser, database.UtcNow, outputStreamDeviceAnalog.ID);
                 }
 
                 //  OutputStreamDeviceAnalog.TypeName,

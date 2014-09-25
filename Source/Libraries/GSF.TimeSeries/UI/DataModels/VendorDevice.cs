@@ -368,7 +368,7 @@ namespace GSF.TimeSeries.UI.DataModels
                         "Values ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})", "vendorID", "name", "description", "url", "updatedBy", "updatedOn", "createdBy", "createdOn");
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, vendorDevice.VendorID, vendorDevice.Name, vendorDevice.Description.ToNotNull(),
-                        vendorDevice.URL.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                        vendorDevice.URL.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow, CommonFunctions.CurrentUser, database.UtcNow);
                 }
                 else
                 {
@@ -376,7 +376,7 @@ namespace GSF.TimeSeries.UI.DataModels
                         "UpdatedOn = {5} WHERE ID = {6}", "vendorID", "name", "description", "url", "updatedBy", "updatedOn", "id");
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, vendorDevice.VendorID, vendorDevice.Name, vendorDevice.Description.ToNotNull(),
-                        vendorDevice.URL.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow(), vendorDevice.ID);
+                        vendorDevice.URL.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow, vendorDevice.ID);
                 }
 
                 return "Vendor Device information saved successfully";

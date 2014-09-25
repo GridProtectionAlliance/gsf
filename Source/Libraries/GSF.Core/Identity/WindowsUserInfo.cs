@@ -1438,7 +1438,7 @@ namespace GSF.Identity
                 if ((object)sid == null)
                     throw new ArgumentNullException("sid");
 
-                securityIdentifier = new SecurityIdentifier(sid);
+                securityIdentifier = new SecurityIdentifier(CleanSid(sid));
                 account = (NTAccount)securityIdentifier.Translate(typeof(NTAccount));
 
                 return account.ToString();
@@ -1473,6 +1473,8 @@ namespace GSF.Identity
                 if ((object)sid == null)
                     throw new ArgumentNullException("sid");
 
+                sid = CleanSid(sid);
+
                 if (!sid.StartsWith("S-"))
                     return false;
 
@@ -1485,6 +1487,16 @@ namespace GSF.Identity
             {
                 return false;
             }
+        }
+
+        private static string CleanSid(string sid)
+        {
+            // When the same security database is being used in both Windows and Unix environments, SIDs could
+            // have "user:" or "group:" prefix as needed by UnixUserInfo, under Windows we will ignore this
+            if (sid.StartsWith("user:", StringComparison.OrdinalIgnoreCase) || sid.StartsWith("group:", StringComparison.OrdinalIgnoreCase))
+                return sid.Substring(sid.IndexOf(':') + 1);
+
+            return sid;
         }
 
         #endregion

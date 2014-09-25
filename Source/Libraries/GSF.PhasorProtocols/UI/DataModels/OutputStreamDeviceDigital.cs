@@ -406,7 +406,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.CurrentNodeID(), outputStreamDeviceDigital.OutputStreamDeviceID,
                         outputStreamDeviceDigital.Label, outputStreamDeviceDigital.MaskValue, outputStreamDeviceDigital.LoadOrder, CommonFunctions.CurrentUser,
-                        database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                        database.UtcNow, CommonFunctions.CurrentUser, database.UtcNow);
                 }
                 else
                 {
@@ -416,7 +416,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, outputStreamDeviceDigital.NodeID, outputStreamDeviceDigital.OutputStreamDeviceID,
                         outputStreamDeviceDigital.Label, outputStreamDeviceDigital.MaskValue, outputStreamDeviceDigital.LoadOrder, CommonFunctions.CurrentUser,
-                        database.UtcNow(), outputStreamDeviceDigital.ID);
+                        database.UtcNow, outputStreamDeviceDigital.ID);
                 }
 
                 return "OutputStreamDeviceDigital information saved successfully";

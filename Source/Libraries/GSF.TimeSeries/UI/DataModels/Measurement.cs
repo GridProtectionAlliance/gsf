@@ -1076,7 +1076,7 @@ namespace GSF.TimeSeries.UI.DataModels
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, measurement.HistorianID.ToNotNull(), measurement.DeviceID.ToNotNull(), measurement.PointTag,
                         measurement.AlternateTag.ToNotNull(), measurement.SignalTypeID, measurement.PhasorSourceIndex ?? measurement.PhasorSourceIndex.ToNotNull(), measurement.SignalReference,
                         measurement.Adder, measurement.Multiplier, database.Bool(measurement.Subscribed), database.Bool(measurement.Internal), measurement.Description.ToNotNull(),
-                        database.Bool(measurement.Enabled), CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                        database.Bool(measurement.Enabled), CommonFunctions.CurrentUser, database.UtcNow, CommonFunctions.CurrentUser, database.UtcNow);
                 }
                 else
                 {
@@ -1089,7 +1089,7 @@ namespace GSF.TimeSeries.UI.DataModels
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, measurement.HistorianID.ToNotNull(), measurement.DeviceID.ToNotNull(), measurement.PointTag,
                         measurement.AlternateTag.ToNotNull(), measurement.SignalTypeID, measurement.PhasorSourceIndex ?? measurement.PhasorSourceIndex.ToNotNull(), measurement.SignalReference,
                         measurement.Adder, measurement.Multiplier, measurement.Description.ToNotNull(), database.Bool(measurement.Subscribed), database.Bool(measurement.Internal),
-                        database.Bool(measurement.Enabled), CommonFunctions.CurrentUser, database.UtcNow(), measurement.PointID);
+                        database.Bool(measurement.Enabled), CommonFunctions.CurrentUser, database.UtcNow, measurement.PointID);
                 }
 
                 return "Measurement information saved successfully";

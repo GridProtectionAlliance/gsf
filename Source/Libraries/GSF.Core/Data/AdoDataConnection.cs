@@ -107,8 +107,15 @@ namespace GSF.Data
     ///     <item>
     ///         <term>SQLite</term>
     ///         <description>
-    ///         ConnectionString = "Data Source=databaseName.db; Version=3"<br/>
-    ///         DataProviderString = "AssemblyName={System.Data.SQLite, Version=1.0.74.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139}; ConnectionType=System.Data.SQLite.SQLiteConnection; AdapterType=System.Data.SQLite.SQLiteDataAdapter"
+    ///         ConnectionString = "Data Source=databaseName.db; Version=3; Foreign Keys=True; FailIfMissing=True"<br/>
+    ///         DataProviderString = "AssemblyName={System.Data.SQLite, Version=1.0.93.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139}; ConnectionType=System.Data.SQLite.SQLiteConnection; AdapterType=System.Data.SQLite.SQLiteDataAdapter"
+    ///         </description>
+    ///     </item>
+    ///     <item>
+    ///         <term>SQLite (Mono native driver)</term>
+    ///         <description>
+    ///         ConnectionString = "Data Source=./databaseName.db; Version=3; Foreign Keys=True; FailIfMissing=True"<br/>
+    ///         DataProviderString = "AssemblyName={Mono.Data.Sqlite, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756}; ConnectionType=Mono.Data.Sqlite.SqliteConnection; AdapterType=Mono.Data.Sqlite.SqliteDataAdapter"
     ///         </description>
     ///     </item>
     ///     <item>
@@ -141,7 +148,7 @@ namespace GSF.Data
     ///     </systemSettings>
     ///   </categorizedSettings>
     ///   <startup>
-    ///     <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.0" />
+    ///     <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.5" />
     ///   </startup>
     /// </configuration>
     /// ]]>
@@ -222,6 +229,7 @@ namespace GSF.Data
                 throw new InvalidOperationException("Failed to open ADO data connection, verify \"ConnectionString\" in configuration file: " + ex.Message, ex);
             }
         }
+
         /// <summary>
         /// Creates and opens a new <see cref="AdoDataConnection"/> from specified <paramref name="connectionString"/> and <paramref name="dataProviderString"/>.
         /// </summary>
@@ -344,6 +352,37 @@ namespace GSF.Data
         }
 
         /// <summary>
+        /// Gets current UTC date-time in an implementation that is proper for the connected <see cref="AdoDataConnection"/> database type.
+        /// </summary>
+        public object UtcNow
+        {
+            get
+            {
+                if (IsJetEngine)
+                    return DateTime.UtcNow.ToOADate();
+
+                if (IsSqlite)
+                    return new DateTime(DateTime.UtcNow.Ticks, DateTimeKind.Unspecified);
+
+                return DateTime.UtcNow;
+            }
+        }
+
+        /// <summary>
+        /// Gets the default <see cref="IsolationLevel"/> for the connected <see cref=" AdoDataConnection"/> database type.
+        /// </summary>
+        public IsolationLevel DefaultIsloationLevel
+        {
+            get
+            {
+                if (IsSQLServer)
+                    return IsolationLevel.ReadUncommitted;
+
+                return IsolationLevel.Unspecified;
+            }
+        }
+
+        /// <summary>
         /// Gets a value to indicate whether source database is Microsoft Access.
         /// </summary>
         public bool IsJetEngine
@@ -456,9 +495,9 @@ namespace GSF.Data
         public object Guid(Guid guid)
         {
             if (IsJetEngine)
-                return "{" + guid.ToString() + "}";
+                return "{" + guid + "}";
 
-            if (IsOracle || IsSqlite)
+            if (IsSqlite || IsOracle)
                 return guid.ToString().ToLower();
 
             //return "P" + guid.ToString();
@@ -474,37 +513,10 @@ namespace GSF.Data
         /// <returns><see cref="System.Guid"/>.</returns>
         public Guid Guid(DataRow row, string fieldName)
         {
-            if (IsJetEngine || IsMySQL || IsOracle || IsSqlite)
-                return System.Guid.Parse(row.Field<object>(fieldName).ToString());
-
-            return row.Field<Guid>(fieldName);
-        }
-
-        /// <summary>
-        /// Returns current UTC time in an implementation that is proper for connected <see cref="AdoDataConnection"/> database type.
-        /// </summary>
-        /// <returns>Current UTC time in implementation that is proper for connected <see cref="AdoDataConnection"/> database type.</returns>
-        public object UtcNow()
-        {
-            if (IsJetEngine)
-                return DateTime.UtcNow.ToOADate();
-
-            if (IsSqlite)
-                return new DateTime(DateTime.UtcNow.Ticks, DateTimeKind.Unspecified);
-
-            return DateTime.UtcNow;
-        }
-
-        /// <summary>
-        /// Gets the default <see cref="IsolationLevel"/> for the connected <see cref=" AdoDataConnection"/> database type.
-        /// </summary>
-        /// <returns>Default <see cref="IsolationLevel"/> for the connected <see cref=" AdoDataConnection"/> database type.</returns>
-        public IsolationLevel DefaultIsloationLevel()
-        {
             if (IsSQLServer)
-                return IsolationLevel.ReadUncommitted;
+                return row.Field<Guid>(fieldName);
 
-            return IsolationLevel.Unspecified;
+            return System.Guid.Parse(row.Field<object>(fieldName).ToString());
         }
 
         /// <summary>
@@ -526,22 +538,22 @@ namespace GSF.Data
 
             if ((object)m_adapterType != null)
             {
-                switch (m_adapterType.Name)
+                switch (m_adapterType.Name.ToLowerInvariant())
                 {
-                    case "SqlDataAdapter":
+                    case "sqldataadapter":
                         type = DatabaseType.SQLServer;
                         break;
-                    case "MySqlDataAdapter":
+                    case "mysqldataadapter":
                         type = DatabaseType.MySQL;
                         break;
-                    case "OracleDataAdapter":
+                    case "oracledataadapter":
                         type = DatabaseType.Oracle;
                         break;
-                    case "SQLiteDataAdapter":
+                    case "sqlitedataadapter":
                         type = DatabaseType.SQLite;
                         break;
-                    case "OleDbDataAdapter":
-                        if ((object)m_connectionString != null && m_connectionString.Contains("Microsoft.Jet.OLEDB"))
+                    case "oledbdataadapter":
+                        if ((object)m_connectionString != null && m_connectionString.ToLowerInvariant().Contains("microsoft.jet.oledb"))
                             type = DatabaseType.Access;
                         break;
                 }

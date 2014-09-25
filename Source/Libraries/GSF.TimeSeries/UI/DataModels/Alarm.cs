@@ -723,8 +723,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, (alarm.NodeID != Guid.Empty) ? database.Guid(alarm.NodeID) : database.CurrentNodeID(),
                         alarm.TagName.ToNotNull(), database.Guid(alarm.SignalID), associatedMeasurementId, alarm.Description.ToNotNull(), alarm.Severity, alarm.Operation, alarm.SetPoint.ToNotNull(),
-                        alarm.Tolerance.ToNotNull(), alarm.Delay.ToNotNull(), alarm.Hysteresis.ToNotNull(), alarm.LoadOrder, database.Bool(alarm.Enabled), CommonFunctions.CurrentUser, database.UtcNow(),
-                        CommonFunctions.CurrentUser, database.UtcNow());
+                        alarm.Tolerance.ToNotNull(), alarm.Delay.ToNotNull(), alarm.Hysteresis.ToNotNull(), alarm.LoadOrder, database.Bool(alarm.Enabled), CommonFunctions.CurrentUser, database.UtcNow,
+                        CommonFunctions.CurrentUser, database.UtcNow);
 
                     createdAlarm = GetAlarm(database, string.Format("WHERE TagName = '{0}'", alarm.TagName));
                 }
@@ -738,7 +738,7 @@ namespace GSF.TimeSeries.UI.DataModels
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, (alarm.NodeID != Guid.Empty) ? database.Guid(alarm.NodeID) : database.CurrentNodeID(),
                         alarm.TagName, database.Guid(alarm.SignalID), associatedMeasurementId, alarm.Description.ToNotNull(), alarm.Severity, alarm.Operation,
                         alarm.SetPoint.ToNotNull(), alarm.Tolerance.ToNotNull(), alarm.Delay.ToNotNull(), alarm.Hysteresis.ToNotNull(), alarm.LoadOrder, database.Bool(alarm.Enabled),
-                        CommonFunctions.CurrentUser, database.UtcNow(), alarm.ID);
+                        CommonFunctions.CurrentUser, database.UtcNow, alarm.ID);
                 }
 
                 updateQuery = database.ParameterizedQueryString("UPDATE Alarm SET AssociatedMeasurementID = {0} WHERE ID = {1}", "associatedMeasurementId", "id");

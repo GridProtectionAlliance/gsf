@@ -459,7 +459,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.CurrentNodeID(), outputStreamDevicePhasor.OutputStreamDeviceID,
                         outputStreamDevicePhasor.Label, outputStreamDevicePhasor.Type, outputStreamDevicePhasor.Phase, outputStreamDevicePhasor.ScalingValue,
-                        outputStreamDevicePhasor.LoadOrder, CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                        outputStreamDevicePhasor.LoadOrder, CommonFunctions.CurrentUser, database.UtcNow, CommonFunctions.CurrentUser, database.UtcNow);
 
                     //    PhasorType, PhaseType @phasorName, @phaseType, OutputStreamDevicePhasor.PhasorType, OutputStreamDevicePhasor.PhaseType
                 }
@@ -471,7 +471,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, outputStreamDevicePhasor.NodeID, outputStreamDevicePhasor.OutputStreamDeviceID,
                         outputStreamDevicePhasor.Label, outputStreamDevicePhasor.Type, outputStreamDevicePhasor.Phase, outputStreamDevicePhasor.ScalingValue,
-                        outputStreamDevicePhasor.LoadOrder, CommonFunctions.CurrentUser, database.UtcNow(), outputStreamDevicePhasor.ID);
+                        outputStreamDevicePhasor.LoadOrder, CommonFunctions.CurrentUser, database.UtcNow, outputStreamDevicePhasor.ID);
 
                     //PhasorType = @typeName, PhaseType = @PhaseType" OutputStreamDevicePhasor.PhasorType, OutputStreamDevicePhasor.PhaseType,
                 }

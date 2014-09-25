@@ -603,12 +603,12 @@ namespace GSF.TimeSeries.UI.DataModels
                 if (applicationRole.ID == null || applicationRole.ID == Guid.Empty)
                 {
                     query = database.ParameterizedQueryString("INSERT INTO ApplicationRole (Name, Description, NodeID, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values ({0}, {1}, {2}, {3}, {4}, {5}, {6})", "name", "description", "nodeID", "updatedBy", "updatedBy", "createdBy", "createdOn");
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, applicationRole.Name, applicationRole.Description.ToNotNull(), database.CurrentNodeID(), CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, applicationRole.Name, applicationRole.Description.ToNotNull(), database.CurrentNodeID(), CommonFunctions.CurrentUser, database.UtcNow, CommonFunctions.CurrentUser, database.UtcNow);
                 }
                 else
                 {
                     query = database.ParameterizedQueryString("UPDATE ApplicationRole SET Name = {0}, Description = {1}, NodeID = {2}, UpdatedBy = {3}, UpdatedOn = {4} WHERE ID = {5}", "name", "description", "nodeID", "updatedBy", "updatedOn", "id");
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, applicationRole.Name, applicationRole.Description.ToNotNull(), applicationRole.NodeID, CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(applicationRole.ID));
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, applicationRole.Name, applicationRole.Description.ToNotNull(), applicationRole.NodeID, CommonFunctions.CurrentUser, database.UtcNow, database.Guid(applicationRole.ID));
                 }
 
                 return "Application role information saved successfully";

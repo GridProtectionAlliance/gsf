@@ -82,11 +82,11 @@ namespace GSF.Security
         /// <summary>
         /// Determines whether the user is a member of either of the specified <paramref name="roles"/>.
         /// </summary>
-        /// <param name="roles">Comma seperated list of roles to check.</param>
+        /// <param name="roles">Comma separated list of roles to check.</param>
         /// <returns>true if the user is a member of either of the specified <paramref name="roles"/>, otherwise false.</returns>
         public bool IsInRole(string roles)
         {
-            if (!m_identity.Provider.UserData.IsDefined || !m_identity.Provider.UserData.IsAuthenticated || 
+            if (!m_identity.Provider.UserData.IsDefined || !m_identity.Provider.UserData.IsAuthenticated ||
                 m_identity.Provider.UserData.IsDisabled || m_identity.Provider.UserData.IsLockedOut)
             {
                 // No need to check user roles.

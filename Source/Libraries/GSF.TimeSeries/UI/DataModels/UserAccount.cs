@@ -461,7 +461,7 @@ namespace GSF.TimeSeries.UI.DataModels
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, userAccountSID,
                         userAccount.Password.ToNotNull(), userAccount.FirstName.ToNotNull(), userAccount.LastName.ToNotNull(), database.CurrentNodeID(),
                         userAccount.Phone.ToNotNull(), userAccount.Email.ToNotNull(), database.Bool(userAccount.LockedOut), database.Bool(userAccount.UseADAuthentication),
-                        changePasswordOn, CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                        changePasswordOn, CommonFunctions.CurrentUser, database.UtcNow, CommonFunctions.CurrentUser, database.UtcNow);
 
                     CommonFunctions.LogEvent(string.Format("New user \"{0}\" created successfully by user \"{1}\".", userAccount.Name, CommonFunctions.CurrentUser), 2);
                 }
@@ -480,7 +480,7 @@ namespace GSF.TimeSeries.UI.DataModels
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, userAccountSID,
                             userAccount.Password.ToNotNull(), userAccount.FirstName.ToNotNull(), userAccount.LastName.ToNotNull(), database.Guid(userAccount.DefaultNodeID),
                             userAccount.Phone.ToNotNull(), userAccount.Email.ToNotNull(), database.Bool(userAccount.LockedOut), database.Bool(userAccount.UseADAuthentication),
-                            changePasswordOn, CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(userAccount.ID));
+                            changePasswordOn, CommonFunctions.CurrentUser, database.UtcNow, database.Guid(userAccount.ID));
 
                     CommonFunctions.LogEvent(string.Format("Information about user \"{0}\" updated successfully by user \"{1}\".", userAccount.Name, CommonFunctions.CurrentUser), 3);
                 }

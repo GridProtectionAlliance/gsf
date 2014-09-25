@@ -451,7 +451,7 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
                         "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})", "nodeID", "name", "description", "filterExpression", "updatedBy", "updatedOn", "createdBy", "createdOn");
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.CurrentNodeID(), measurementGroup.Name, measurementGroup.Description.ToNotNull(),
-                        measurementGroup.FilterExpression.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                        measurementGroup.FilterExpression.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow, CommonFunctions.CurrentUser, database.UtcNow);
                 }
                 else
                 {
@@ -459,7 +459,7 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
                         "UpdatedBy = {4}, UpdatedOn = {5} WHERE ID = {6}", "nodeID", "name", "description", "filterExpression", "updatedBy", "updatedOn", "id");
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.CurrentNodeID(), measurementGroup.Name, measurementGroup.Description.ToNotNull(),
-                        measurementGroup.FilterExpression.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow(), measurementGroup.ID);
+                        measurementGroup.FilterExpression.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow, measurementGroup.ID);
                 }
 
                 return "Measurement group information saved successfully";

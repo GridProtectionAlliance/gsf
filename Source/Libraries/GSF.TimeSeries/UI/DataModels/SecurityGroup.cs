@@ -463,7 +463,7 @@ namespace GSF.TimeSeries.UI.DataModels
                         "{2}, {3}, {4}, {5})", "name", "description", "updatedBy", "updatedOn", "createdBy", "createdOn");
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, groupSID, securityGroup.Description.ToNotNull(),
-                        CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                        CommonFunctions.CurrentUser, database.UtcNow, CommonFunctions.CurrentUser, database.UtcNow);
 
                     CommonFunctions.LogEvent(string.Format("Security group \"{0}\" created successfully by user \"{1}\".", securityGroup.Name, CommonFunctions.CurrentUser), 6);
                 }
@@ -478,7 +478,7 @@ namespace GSF.TimeSeries.UI.DataModels
                         "WHERE ID = {4}", "name", "description", "updatedBy", "updatedOn", "id");
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, groupSID, securityGroup.Description.ToNotNull(),
-                        CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(securityGroup.ID));
+                        CommonFunctions.CurrentUser, database.UtcNow, database.Guid(securityGroup.ID));
 
                     CommonFunctions.LogEvent(string.Format("Information about security group \"{0}\" updated successfully by user \"{1}\".", securityGroup.Name, CommonFunctions.CurrentUser), 7);
                 }

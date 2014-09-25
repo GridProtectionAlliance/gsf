@@ -384,8 +384,8 @@ namespace GSF.TimeSeries.UI.DataModels
                         "createdOn");
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, company.Acronym.Replace(" ", "").ToUpper(), company.MapAcronym.Replace(" ", "").ToUpper(),
-                        company.Name, company.URL.ToNotNull(), company.LoadOrder, CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser,
-                        database.UtcNow());
+                        company.Name, company.URL.ToNotNull(), company.LoadOrder, CommonFunctions.CurrentUser, database.UtcNow, CommonFunctions.CurrentUser,
+                        database.UtcNow);
                 }
                 else
                 {
@@ -394,7 +394,7 @@ namespace GSF.TimeSeries.UI.DataModels
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, company.Acronym.Replace(" ", "").ToUpper(),
                         company.MapAcronym.Replace(" ", "").ToUpper(), company.Name, company.URL.ToNotNull(), company.LoadOrder, CommonFunctions.CurrentUser,
-                        database.UtcNow(), company.ID);
+                        database.UtcNow, company.ID);
                 }
 
                 return "Company information saved successfully";
