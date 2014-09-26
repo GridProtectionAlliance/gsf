@@ -30,6 +30,13 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
     /// </summary>
     public partial class InternalSubscriptionUserControl
     {
+        #region [ Members ]
+
+        // Fields
+        private bool m_defaultsInitialized;
+
+        #endregion
+
         #region [ Constructors ]
 
         /// <summary>
@@ -58,10 +65,25 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
 
         private void InternalSubscriptionUserControl_Unloaded(object sender, System.Windows.RoutedEventArgs e)
         {
-            if ((object)ViewModel != null)
-                ViewModel.Dispose();
+            SubscriberRequestViewModel model = ViewModel;
+
+            if ((object)model != null)
+                model.Dispose();
         }
 
         #endregion
+
+        private void EnableDataGapRecovery_Checked(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (!m_defaultsInitialized && EnableDataGapRecovery.IsChecked.GetValueOrDefault())
+            {
+                SubscriberRequestViewModel model = ViewModel;
+
+                if ((object)model != null)
+                    model.InitializeDefaultInternalSubscriptionSettings();
+
+                m_defaultsInitialized = true;
+            }
+        }
     }
 }

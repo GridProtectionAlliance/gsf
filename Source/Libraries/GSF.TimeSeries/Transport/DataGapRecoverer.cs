@@ -55,7 +55,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Default value for <see cref="RecoveryStartDelay"/>.
         /// </summary>
-        public const double DefaultRecoveryStartDelay = 10.0D;
+        public const double DefaultRecoveryStartDelay = 20.0D;
 
         /// <summary>
         /// Default value for <see cref="DataMonitoringInterval"/>.
@@ -65,7 +65,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Default value for <see cref="MinimumRecoverySpan"/>.
         /// </summary>
-        public const double DefaultMinimumRecoverySpan = 1.0D / 30.0D;
+        public const double DefaultMinimumRecoverySpan = 30.0D;
 
         /// <summary>
         /// Default value for <see cref="MaximumRecoverySpan"/>.
@@ -80,7 +80,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Default value for <see cref="RecoveryProcessingInterval"/>.
         /// </summary>
-        public const int DefaultRecoveryProcessingInterval = 0;
+        public const int DefaultRecoveryProcessingInterval = 66;
 
         /// <summary>
         /// Default value for <see cref="UseMillisecondResolution"/>.

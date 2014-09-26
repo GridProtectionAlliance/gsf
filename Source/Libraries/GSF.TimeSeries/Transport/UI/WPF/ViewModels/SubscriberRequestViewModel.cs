@@ -64,6 +64,12 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         private bool m_receiveInternalMetadata;
         private bool m_useUdpDataChannel;
         private int m_udpDataChannelPort;
+        private bool m_enableDataGapRecovery;
+        private double m_recoveryStartDelay;
+        private double m_dataMonitoringInterval;
+        private double m_minimumRecoverySpan;
+        private double m_maximumRecoverySpan;
+        private int m_recoveryProcessingInterval;
         private bool m_disposed;
 
         private string m_subscriberAcronym;
@@ -290,6 +296,139 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             {
                 m_udpDataChannelPort = value;
                 OnPropertyChanged("UdpDataChannelPort");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if data gap recovery will be enabled.
+        /// </summary>
+        public bool EnableDataGapRecovery
+        {
+            get
+            {
+                return m_enableDataGapRecovery;
+            }
+            set
+            {
+                m_enableDataGapRecovery = value;
+                OnPropertyChanged("EnableDataGapRecovery");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the minimum time delay, in seconds, to wait before starting the data recovery for an <see cref="Outage"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// For some archiving systems it may take a few seconds for data to make it to disk and therefore be readily
+        /// available for a temporal subscription query. The <see cref="RecoveryStartDelay"/> should be adjusted based
+        /// on the nature of the system used to archive data. If the archival system makes data immediately available
+        /// because of internal caching or other means, this value can be zero.
+        /// </para>
+        /// <para>
+        /// Use of this value depends on the local clock, as such the value should be increased by the uncertainty of
+        /// accuracy of the local clock. For example, if it is know that the local clock floats +/-5 seconds from
+        /// real-time, then increase the desired value of the <see cref="RecoveryStartDelay"/> by 5 seconds.
+        /// </para>
+        /// </remarks>
+        public double RecoveryStartDelay
+        {
+            get
+            {
+                return m_recoveryStartDelay;
+            }
+            set
+            {
+                m_recoveryStartDelay = value;
+                OnPropertyChanged("RecoveryStartDelay");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the interval, in seconds, over which the data monitor will check for new data.
+        /// </summary>
+        /// <remarks>
+        /// Once a connection is established a timer is enabled to monitor for new incoming data. The data monitoring timer
+        /// exists to make sure data is being received so that the process of recovery does not wait endlessly for data that
+        /// may never come because of a possible error in the recovery process. The <see cref="DataMonitoringInterval"/>
+        /// allows the consumer to adjust the interval over which the timer will check for new incoming data.
+        /// <para>
+        /// It will take some time, perhaps a couple of seconds, to start the temporal subscription and begin the process
+        /// of recovering data for an <see cref="Outage"/>. Make sure the value for <see cref="DataMonitoringInterval"/> is
+        /// sufficiently large enough to handle any initial delays in data transmission.
+        /// </para>
+        /// </remarks>
+        public double DataMonitoringInterval
+        {
+            get
+            {
+                return m_dataMonitoringInterval;
+            }
+            set
+            {
+                m_dataMonitoringInterval = value;
+                OnPropertyChanged("DataMonitoringInterval");
+            }
+        }
+
+        /// <summary>
+        /// Gets to sets the minimum time span, in seconds, for which a data recovery will be attempted.
+        /// Set to zero for no minimum.
+        /// </summary>
+        public double MinimumRecoverySpan
+        {
+            get
+            {
+                return m_minimumRecoverySpan;
+            }
+            set
+            {
+                m_minimumRecoverySpan = value;
+                OnPropertyChanged("MinimumRecoverySpan");
+            }
+        }
+
+        /// <summary>
+        /// Gets to sets the maximum time span, in seconds, for which a data recovery will be attempted.
+        /// Set to <see cref="Double.MaxValue"/> for no maximum.
+        /// </summary>
+        public double MaximumRecoverySpan
+        {
+            get
+            {
+                return m_maximumRecoverySpan;
+            }
+            set
+            {
+                m_maximumRecoverySpan = value;
+                OnPropertyChanged("MaximumRecoverySpan");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the data recovery processing interval, in whole milliseconds, to use in the temporal data
+        /// subscription when recovering data for an <see cref="Outage"/>.<br/>
+        /// A value of <c>-1</c> indicates the default processing interval will be requested.<br/>
+        /// A value of <c>0</c> indicates data will be processed as fast as possible.
+        /// </summary>
+        /// <remarks>
+        /// With the exception of the values of -1 and 0, the <see cref="RecoveryProcessingInterval"/> value specifies
+        /// the desired historical data playback processing interval in milliseconds. This is basically a delay, or timer
+        /// interval, over which to process data. Setting this value to -1 means to use the default processing interval
+        /// while setting the value to 0 means to process data as fast as possible, i.e., as fast as the historian can
+        /// query the data. Depending on the available bandwidth, this parameter may need to be adjusted such that the
+        /// data being recovered does not adversely interfere with the ongoing transmission of real-time data.
+        /// </remarks>
+        public int RecoveryProcessingInterval
+        {
+            get
+            {
+                return m_recoveryProcessingInterval;
+            }
+            set
+            {
+                m_recoveryProcessingInterval = value;
+                OnPropertyChanged("RecoveryProcessingInterval");
             }
         }
 
@@ -717,6 +856,18 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Initializes default settings for internal subscription.
+        /// </summary>
+        public void InitializeDefaultInternalSubscriptionSettings()
+        {
+            RecoveryStartDelay = DataGapRecoverer.DefaultRecoveryStartDelay;
+            DataMonitoringInterval = DataGapRecoverer.DefaultDataMonitoringInterval;
+            MinimumRecoverySpan = DataGapRecoverer.DefaultMinimumRecoverySpan;
+            MaximumRecoverySpan = DataGapRecoverer.DefaultMaximumRecoverySpan;
+            RecoveryProcessingInterval = DataGapRecoverer.DefaultRecoveryProcessingInterval;
+        }
+
         private void Load()
         {
             string companyAcronym;
@@ -771,26 +922,27 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                     string[] splitServer;
                     int dataPublisherPort;
 
-                    IPAddress[] hostIPs = null;
-                    IEnumerable<IPAddress> localIPs;
+                    //IPAddress[] hostIPs = null;
+                    //IEnumerable<IPAddress> localIPs;
 
                     settings = database.DataPublisherConnectionString().ToNonNullString().ParseKeyValuePairs();
-                    localIPs = Dns.GetHostAddresses("localhost").Concat(Dns.GetHostAddresses(Dns.GetHostName()));
+                    //localIPs = Dns.GetHostAddresses("localhost").Concat(Dns.GetHostAddresses(Dns.GetHostName()));
 
                     if (settings.TryGetValue("server", out server))
                     {
                         splitServer = server.Split(':');
-                        hostIPs = Dns.GetHostAddresses(splitServer[0]);
+                        //hostIPs = Dns.GetHostAddresses(splitServer[0]);
 
                         if (splitServer.Length > 1 && int.TryParse(splitServer[1], out dataPublisherPort))
                             InternalDataPublisherPort = dataPublisherPort;
                     }
 
-                    // Check to see if entered host name corresponds to a local IP address
-                    if (hostIPs == null)
-                        MessageBox.Show("Failed to find service host address. If using Gateway security, secure key exchange may not succeed." + Environment.NewLine + "Please make sure to run manager application with administrative privileges on the server where service is hosted.", "Subscription Request", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    else if (!hostIPs.Any(ip => localIPs.Contains(ip)))
-                        MessageBox.Show("If using Gateway security, secure key exchange may not succeed." + Environment.NewLine + "Please make sure to run manager application with administrative privileges on the server where service is hosted.", "Subscription Request", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    // These messages show up when not desired and are not very useful anymore...
+                    //// Check to see if entered host name corresponds to a local IP address
+                    //if (hostIPs == null)
+                    //    MessageBox.Show("Failed to find service host address. If using Gateway security, secure key exchange may not succeed." + Environment.NewLine + "Please make sure to run manager application with administrative privileges on the server where service is hosted.", "Subscription Request", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    //else if (!hostIPs.Any(ip => localIPs.Contains(ip)))
+                    //    MessageBox.Show("If using Gateway security, secure key exchange may not succeed." + Environment.NewLine + "Please make sure to run manager application with administrative privileges on the server where service is hosted.", "Subscription Request", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
                 catch
                 {
@@ -1144,16 +1296,17 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         private void SaveDevice()
         {
             const string TcpConnectionStringFormat = "interface=0.0.0.0; compression=false; autoConnect=true; securityMode={0}; " +
-                "server={1}:{2}; {3}";
+                "server={1}:{2}; {3}{4}";
 
             const string UdpConnectionStringFormat = "interface=0.0.0.0; compression=false; autoConnect=true; securityMode={0}; " +
-                "localport={1}; transportprotocol=udp; commandChannel={{server={2}:{3}; interface=0.0.0.0}}; {4}";
+                "localport={1}; transportprotocol=udp; commandChannel={{server={2}:{3}; interface=0.0.0.0}}; {4}{5}";
 
             Device device;
 
             SslPolicyErrors validPolicyErrors;
             X509ChainStatusFlags validChainFlags;
             string securitySpecificSettings = string.Empty;
+            string dataGapRecoverySettings = string.Empty;
 
             if (SecurityMode == SecurityMode.None)
             {
@@ -1181,6 +1334,9 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                     GetLocalCertificateSetting(), RemoteCertificateFile, validPolicyErrors, validChainFlags, !m_isRemoteCertificateSelfSigned);
             }
 
+            if (m_enableDataGapRecovery)
+                dataGapRecoverySettings = string.Format("; dataGapRecovery={{enabled=true; recoveryStartDelay={0}; dataMonitoringInterval={1}; minimumRecoverySpan={2}; maximumRecoverySpan={3}; recoveryProcessingInterval={4}}}", m_recoveryStartDelay, m_dataMonitoringInterval, m_minimumRecoverySpan, m_maximumRecoverySpan, m_recoveryProcessingInterval);
+
             device = new Device();
             device.Acronym = PublisherAcronym.Replace(" ", "");
             device.Name = PublisherName;
@@ -1189,9 +1345,9 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             device.ProtocolID = GetGatewayProtocolID();
 
             if (UseUdpDataChannel)
-                device.ConnectionString = string.Format(UdpConnectionStringFormat, SecurityMode, UdpDataChannelPort, Hostname, PublisherPort, securitySpecificSettings);
+                device.ConnectionString = string.Format(UdpConnectionStringFormat, SecurityMode, UdpDataChannelPort, Hostname, PublisherPort, securitySpecificSettings, dataGapRecoverySettings);
             else
-                device.ConnectionString = string.Format(TcpConnectionStringFormat, SecurityMode, Hostname, PublisherPort, securitySpecificSettings);
+                device.ConnectionString = string.Format(TcpConnectionStringFormat, SecurityMode, Hostname, PublisherPort, securitySpecificSettings, dataGapRecoverySettings);
 
             try
             {
