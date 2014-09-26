@@ -142,6 +142,7 @@ namespace GSF.IO
         private readonly HashSet<string> m_processedFiles;
 
         private bool m_disposed;
+        private bool m_useTimer;
 
         #endregion
 
@@ -226,6 +227,27 @@ namespace GSF.IO
         }
 
         /// <summary>
+        /// Gets or sets a flag that determines whether the file processor should use a
+        /// timer in addition to the file watchers to track changes to the directories.
+        /// </summary>
+        public bool UseTimer
+        {
+            get
+            {
+                return m_useTimer;
+            }
+            set
+            {
+                m_useTimer = value;
+
+                if (value && m_fileWatchers.Count > 0)
+                    m_fileWatchTimer.Start();
+                else
+                    m_fileWatchTimer.Stop();
+            }
+        }
+
+        /// <summary>
         /// Gets the list of directories currently being tracked by the <see cref="FileProcessor"/>.
         /// </summary>
         public IList<string> TrackedDirectories
@@ -266,7 +288,9 @@ namespace GSF.IO
                 if (m_fileWatchers.Count == 0)
                 {
                     m_processingQueue.Start();
-                    m_fileWatchTimer.Start();
+
+                    if (m_useTimer)
+                        m_fileWatchTimer.Start();
                 }
 
                 m_fileWatchers.Add(watcher);
