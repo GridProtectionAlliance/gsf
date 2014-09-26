@@ -31,10 +31,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using GSF.Annotations;
 using GSF.Collections;
 using GSF.Threading;
 using GSF.Units;
-using JetBrains.Annotations;
 
 namespace GSF.TimeSeries.Adapters
 {

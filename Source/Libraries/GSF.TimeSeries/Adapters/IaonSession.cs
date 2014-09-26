@@ -29,9 +29,9 @@ using System.Data;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using GSF.Annotations;
 using GSF.Collections;
 using GSF.Configuration;
-using JetBrains.Annotations;
 
 namespace GSF.TimeSeries.Adapters
 {

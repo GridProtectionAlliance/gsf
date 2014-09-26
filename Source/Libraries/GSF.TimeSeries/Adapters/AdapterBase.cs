@@ -33,10 +33,10 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using GSF.Annotations;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Units;
-using JetBrains.Annotations;
 
 namespace GSF.TimeSeries.Adapters
 {

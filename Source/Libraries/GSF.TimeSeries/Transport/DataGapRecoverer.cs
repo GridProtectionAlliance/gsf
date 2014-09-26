@@ -28,9 +28,9 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using GSF.Annotations;
 using GSF.IO;
 using GSF.Units;
-using JetBrains.Annotations;
 using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries.Transport

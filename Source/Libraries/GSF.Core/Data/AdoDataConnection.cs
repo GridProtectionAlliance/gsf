@@ -33,8 +33,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
+using GSF.Annotations;
 using GSF.Configuration;
-using JetBrains.Annotations;
 
 namespace GSF.Data
 {

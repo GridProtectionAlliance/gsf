@@ -35,10 +35,10 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Timers;
+using GSF.Annotations;
 using GSF.Collections;
 using GSF.IO;
 using GSF.Units;
-using JetBrains.Annotations;
 using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries.Adapters
