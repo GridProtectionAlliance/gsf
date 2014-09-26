@@ -30,6 +30,7 @@ using System.Text;
 using System.Threading;
 using GSF.IO;
 using GSF.Units;
+using JetBrains.Annotations;
 using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries.Transport
@@ -848,6 +849,7 @@ namespace GSF.TimeSeries.Transport
         /// <remarks>
         /// This overload combines string.Format and SendStatusMessage for convenience.
         /// </remarks>
+        [StringFormatMethod("formattedStatus")]
         protected virtual void OnStatusMessage(string formattedStatus, params object[] args)
         {
             try

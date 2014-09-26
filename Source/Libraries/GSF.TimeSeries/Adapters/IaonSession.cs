@@ -31,6 +31,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using GSF.Collections;
 using GSF.Configuration;
+using JetBrains.Annotations;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -558,6 +559,7 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// This overload combines string.Format and SendStatusMessage for convenience.
         /// </remarks>
+        [StringFormatMethod("formattedStatus")]
         protected virtual void OnStatusMessage(object sender, string formattedStatus, UpdateType type, params object[] args)
         {
             if ((object)StatusMessage != null)

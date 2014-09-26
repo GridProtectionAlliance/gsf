@@ -34,6 +34,7 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 using GSF.Configuration;
+using JetBrains.Annotations;
 
 namespace GSF.Data
 {
@@ -447,6 +448,7 @@ namespace GSF.Data
         /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>The number of rows affected.</returns>
+        [StringFormatMethod("sqlFormat")]
         public int ExecuteNonQuery(string sqlFormat, params object[] parameters)
         {
             return ExecuteNonQuery(DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
@@ -459,11 +461,12 @@ namespace GSF.Data
         /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>The number of rows affected.</returns>
+        [StringFormatMethod("sqlFormat")]
         public int ExecuteNonQuery(int timeout, string sqlFormat, params object[] parameters)
         {
             string sql = GenericParameterizedQueryString(sqlFormat, parameters);
             FixParameters(parameters);
-            return Connection.ExecuteNonQuery(sql, timeout, parameters);
+            return m_connection.ExecuteNonQuery(sql, timeout, parameters);
         }
 
         /// <summary>
@@ -472,6 +475,7 @@ namespace GSF.Data
         /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>A <see cref="IDataReader"/> object.</returns>
+        [StringFormatMethod("sqlFormat")]
         public IDataReader ExecuteReader(string sqlFormat, params object[] parameters)
         {
             return ExecuteReader(DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
@@ -484,11 +488,12 @@ namespace GSF.Data
         /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>A <see cref="IDataReader"/> object.</returns>
+        [StringFormatMethod("sqlFormat")]
         public IDataReader ExecuteReader(int timeout, string sqlFormat, params object[] parameters)
         {
             string sql = GenericParameterizedQueryString(sqlFormat, parameters);
             FixParameters(parameters);
-            return Connection.ExecuteReader(sql, timeout, parameters);
+            return m_connection.ExecuteReader(sql, timeout, parameters);
         }
 
         /// <summary>
@@ -498,6 +503,7 @@ namespace GSF.Data
         /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>Value in the first column of the first row in the result set.</returns>
+        [StringFormatMethod("sqlFormat")]
         public T ExecuteScalar<T>(string sqlFormat, params object[] parameters)
         {
             return ExecuteScalar<T>(DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
@@ -511,6 +517,7 @@ namespace GSF.Data
         /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>Value in the first column of the first row in the result set.</returns>
+        [StringFormatMethod("sqlFormat")]
         public T ExecuteScalar<T>(int timeout, string sqlFormat, params object[] parameters)
         {
             return ExecuteScalar(default(T), timeout, sqlFormat, parameters);
@@ -525,6 +532,7 @@ namespace GSF.Data
         /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>Value in the first column of the first row in the result set.</returns>
+        [StringFormatMethod("sqlFormat")]
         public T ExecuteScalar<T>(T defaultValue, string sqlFormat, params object[] parameters)
         {
             return ExecuteScalar(defaultValue, DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
@@ -540,6 +548,7 @@ namespace GSF.Data
         /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>Value in the first column of the first row in the result set.</returns>
+        [StringFormatMethod("sqlFormat")]
         public T ExecuteScalar<T>(T defaultValue, int timeout, string sqlFormat, params object[] parameters)
         {
             object value = ExecuteScalar(timeout, sqlFormat, parameters);
@@ -557,6 +566,7 @@ namespace GSF.Data
         /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>Value in the first column of the first row in the result set.</returns>
+        [StringFormatMethod("sqlFormat")]
         public object ExecuteScalar(string sqlFormat, params object[] parameters)
         {
             return ExecuteScalar(DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
@@ -570,11 +580,12 @@ namespace GSF.Data
         /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>Value in the first column of the first row in the result set.</returns>
+        [StringFormatMethod("sqlFormat")]
         public object ExecuteScalar(int timeout, string sqlFormat, params object[] parameters)
         {
             string sql = GenericParameterizedQueryString(sqlFormat, parameters);
             FixParameters(parameters);
-            return Connection.ExecuteScalar(sql, timeout, parameters);
+            return m_connection.ExecuteScalar(sql, timeout, parameters);
         }
 
         /// <summary>
@@ -583,6 +594,7 @@ namespace GSF.Data
         /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
+        [StringFormatMethod("sqlFormat")]
         public DataRow RetrieveRow(string sqlFormat, params object[] parameters)
         {
             return RetrieveRow(DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
@@ -595,11 +607,12 @@ namespace GSF.Data
         /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
+        [StringFormatMethod("sqlFormat")]
         public DataRow RetrieveRow(int timeout, string sqlFormat, params object[] parameters)
         {
             string sql = GenericParameterizedQueryString(sqlFormat, parameters);
             FixParameters(parameters);
-            return Connection.RetrieveRow(m_adapterType, sql, timeout, parameters);
+            return m_connection.RetrieveRow(m_adapterType, sql, timeout, parameters);
         }
 
         /// <summary>
@@ -609,6 +622,7 @@ namespace GSF.Data
         /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>A <see cref="DataTable"/> object.</returns>
+        [StringFormatMethod("sqlFormat")]
         public DataTable RetrieveData(string sqlFormat, params object[] parameters)
         {
             return RetrieveData(DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
@@ -622,11 +636,12 @@ namespace GSF.Data
         /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>A <see cref="DataTable"/> object.</returns>
+        [StringFormatMethod("sqlFormat")]
         public DataTable RetrieveData(int timeout, string sqlFormat, params object[] parameters)
         {
             string sql = GenericParameterizedQueryString(sqlFormat, parameters);
             FixParameters(parameters);
-            return Connection.RetrieveData(m_adapterType, sql, timeout, parameters);
+            return m_connection.RetrieveData(m_adapterType, sql, timeout, parameters);
         }
 
         /// <summary>
@@ -636,6 +651,7 @@ namespace GSF.Data
         /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>A <see cref="DataSet"/> object.</returns>
+        [StringFormatMethod("sqlFormat")]
         public DataSet RetrieveDataSet(string sqlFormat, params object[] parameters)
         {
             return RetrieveDataSet(DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
@@ -649,11 +665,12 @@ namespace GSF.Data
         /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
         /// <returns>A <see cref="DataSet"/> object.</returns>
+        [StringFormatMethod("sqlFormat")]
         public DataSet RetrieveDataSet(int timeout, string sqlFormat, params object[] parameters)
         {
             string sql = GenericParameterizedQueryString(sqlFormat, parameters);
             FixParameters(parameters);
-            return Connection.RetrieveDataSet(m_adapterType, sql, timeout, parameters);
+            return m_connection.RetrieveDataSet(m_adapterType, sql, timeout, parameters);
         }
 
         /// <summary>
@@ -740,6 +757,7 @@ namespace GSF.Data
         /// <param name="format">A composite format string.</param>
         /// <param name="parameterNames">A string array that contains zero or more parameter names to format.</param>
         /// <returns>A parameterized query string based on the given format and parameter names.</returns>
+        [StringFormatMethod("format")]
         public string ParameterizedQueryString(string format, params string[] parameterNames)
         {
             char paramChar = IsOracle ? ':' : '@';
