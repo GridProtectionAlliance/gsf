@@ -162,9 +162,49 @@ namespace GSF.Diagnostics
             m_samplingWindow = DefaultSamplingWindow;
             m_samples = new List<float>();
             m_counter = new System.Diagnostics.PerformanceCounter(categoryName, counterName, instanceName);
-            m_counter.ReadOnly = readOnly;
+
+            if (!readOnly)
+                m_counter.ReadOnly = false;
 
             Reset();
+        }
+
+        // Create a combined performance counter from multiple similar sources
+        internal PerformanceCounter(PerformanceCounter[] sources)
+        {
+            if ((object)sources == null)
+                throw new ArgumentNullException("sources");
+
+            if (sources.Length < 1)
+                throw new ArgumentOutOfRangeException("sources");
+
+            PerformanceCounter initialCounter = sources[0];
+
+            if ((object)initialCounter == null)
+                throw new InvalidOperationException("No valid performance counters available");
+
+            m_aliasName = initialCounter.m_aliasName;
+            m_valueUnit = initialCounter.m_valueUnit;
+            m_valueDivisor = initialCounter.m_valueDivisor;
+            m_samplingWindow = initialCounter.m_samplingWindow;
+            m_counter = initialCounter.m_counter;
+
+            m_samples = new List<float>(sources.Max(c => c.m_samples.Count));
+
+            for (int i = 0; i < m_samples.Count; i++)
+            {
+                m_samples[i] = 0.0F;
+
+                for (int j = 1; j < sources.Length; j++)
+                {
+                    if (sources[j].m_samples.Count > i)
+                        m_samples[i] += sources[j].m_samples[i];
+                }
+            }
+
+            m_lifetimeMaximum = sources.Max(c => c.m_lifetimeMaximum);
+            m_lifetimeTotal = sources.Sum(c => c.m_lifetimeTotal);
+            m_lifetimeSampleCount = sources.Max(c => c.m_lifetimeSampleCount);
         }
 
         /// <summary>

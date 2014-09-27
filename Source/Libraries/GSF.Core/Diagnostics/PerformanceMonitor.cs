@@ -166,20 +166,18 @@ namespace GSF.Diagnostics
             {
                 // Add default process and .NET counters
                 AddCounter("Process", "% Processor Time", m_processName, "CPU Utilization", "Average % / CPU", Environment.ProcessorCount);
-
 #if !MONO
                 AddCounter("Process", "IO Data Bytes/sec", m_processName, "I/O Data Rate", "Kilobytes / sec", SI2.Kilo);
                 AddCounter("Process", "IO Data Operations/sec", m_processName, "I/O Activity Rate", "Operations / sec", 1);
                 AddCounter("Process", "Handle Count", m_processName, "Process Handle Count", "Total Handles", 1);
 #endif
-
                 AddCounter("Process", "Thread Count", m_processName, "Process Thread Count", "System Threads", 1);
                 AddCounter(".NET CLR LocksAndThreads", "# of current logical Threads", m_processName, "CLR Thread Count", "Managed Threads", 1);
 
 #if MONO
                 // Add Mono thread pool counters
-                AddCounter("Mono Threadpool", "# of Threads", m_processName, "Worker Threads", "Active in Pool", 1, false);
-                AddCounter("Mono Threadpool", "# of IO Threads", m_processName, "I/O Port Threads", "Active in Pool", 1, false);
+                AddCounter("Mono Threadpool", "# of Threads", m_processName, "Worker Threads", "Active in Pool", 1);
+                AddCounter("Mono Threadpool", "# of IO Threads", m_processName, "I/O Port Threads", "Active in Pool", 1);
 #else
                 if (PerformanceCounterCategory.Exists(ThreadPoolCountersCategoryName))
                 {
@@ -197,6 +195,7 @@ namespace GSF.Diagnostics
 
                 AddCounter(".NET CLR Memory", "# Bytes in all Heaps", m_processName, "CLR Memory Usage", "Megabytes", SI2.Mega);
                 AddCounter(".NET CLR Memory", "Large Object Heap size", m_processName, "Large Object Heap", "Megabytes", SI2.Mega);
+
                 //                                                                                         1234567890123456
                 AddCounter(".NET CLR Exceptions", "# of Exceps Thrown", m_processName, "Exception Count", "Total Exceptions", 1);
 
@@ -208,8 +207,16 @@ namespace GSF.Diagnostics
 
                 // Add default networking counters
 #if MONO
-                AddCounter("Network Interface", "Bytes Sent/sec", "", "IP Outgoing Rate", "Bytes / sec", 1);
-                AddCounter("Network Interface", "Bytes Received/sec", "", "IP Incoming Rate", "Bytes / sec", 1);
+                PerformanceCounterCategory category = new PerformanceCounterCategory("Network Interface");
+
+                foreach (string instance in category.GetInstanceNames())
+                {
+                    //  12345678901234567890
+                    // "IP Outgoing (eth0)"
+                    // "IP Incoming (eth0)"
+                    AddCounter("Network Interface", "Bytes Sent/sec", instance, string.Format("IP Outgoing ({0})", instance).TruncateRight(20), "Bytes / sec", 1);
+                    AddCounter("Network Interface", "Bytes Received/sec", instance, string.Format("IP Incoming ({0})", instance).TruncateRight(20), "Bytes / sec", 1);
+                }
 #else
                 if (PerformanceCounterCategory.Exists("IPv4"))
                 {
@@ -323,9 +330,9 @@ namespace GSF.Diagnostics
             get
             {
 #if MONO
-                return FindCounter("Bytes Sent/sec");
+                return new PerformanceCounter(FindCounters("Bytes Sent/sec"));
 #else
-                return FindCounter("Datagrams Sent/sec");
+                return new PerformanceCounter(FindCounters("Datagrams Sent/sec"));
 #endif
             }
         }
@@ -339,9 +346,9 @@ namespace GSF.Diagnostics
             get
             {
 #if MONO
-                return FindCounter("Bytes Received/sec");
+                return new PerformanceCounter(FindCounters("Bytes Received/sec"));
 #else
-                return FindCounter("Datagrams Received/sec");
+                return new PerformanceCounter(FindCounters("Datagrams Received/sec"));
 #endif
             }
         }
@@ -742,6 +749,49 @@ namespace GSF.Diagnostics
             }
 
             return null;    // No match found.
+        }
+
+        /// <summary>
+        /// Returns <see cref="PerformanceCounter"/> array matching the specified counter name.
+        /// </summary>
+        /// <param name="counterName">Name of the <see cref="PerformanceCounter"/> to be retrieved.</param>
+        /// <returns>A <see cref="PerformanceCounter"/> array of found matches, if any.</returns>
+        public PerformanceCounter[] FindCounters(string counterName)
+        {
+            List<PerformanceCounter> counters = new List<PerformanceCounter>();
+
+            lock (m_counters)
+            {
+                foreach (PerformanceCounter counter in m_counters)
+                {
+                    if (string.Compare(counter.BaseCounter.CounterName, counterName, true) == 0)
+                        counters.Add(counter);
+                }
+            }
+
+            return counters.ToArray();
+        }
+
+        /// <summary>
+        /// Returns <see cref="PerformanceCounter"/> array matching the specified counter name.
+        /// </summary>
+        /// <param name="categoryName">Category of the <see cref="PerformanceCounter"/> to be retrieved.</param>
+        /// <param name="counterName">Name of the <see cref="PerformanceCounter"/> to be retrieved.</param>
+        /// <returns>A <see cref="PerformanceCounter"/> array of found matches, if any.</returns>
+        public PerformanceCounter[] FindCounters(string categoryName, string counterName)
+        {
+            List<PerformanceCounter> counters = new List<PerformanceCounter>();
+
+            lock (m_counters)
+            {
+                foreach (PerformanceCounter counter in m_counters)
+                {
+                    if (string.Compare(counter.BaseCounter.CategoryName, categoryName, true) == 0 && string.Compare(counter.BaseCounter.CounterName, counterName, true) == 0)
+                        counters.Add(counter);
+                }
+            }
+
+            return counters.ToArray();
         }
 
         /// <summary>
