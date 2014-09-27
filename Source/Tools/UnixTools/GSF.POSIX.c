@@ -103,18 +103,18 @@ int ChangePasswordConveration(int num_msg, const struct pam_message** msg, struc
 			// PAM_PROMPT_ECHO_OFF requests are for passwords, starting with old password
 			switch (info->requestCount)
 			{
-			case 0:
-				reply[0].resp = info->oldPassword;
-				break;
-			case 1:
-				reply[0].resp = info->newPassword1;
-				break;
-			case 2:
-				reply[0].resp = info->newPassword2;
-				break;
-			default:
-				reply[0].resp = NULL;
-				break;
+				case 0:
+					reply[0].resp = info->oldPassword;
+					break;
+				case 1:
+					reply[0].resp = info->newPassword1;
+					break;
+				case 2:
+					reply[0].resp = info->newPassword2;
+					break;
+				default:
+					reply[0].resp = NULL;
+					break;
 			}
 
 			info->requestCount++;

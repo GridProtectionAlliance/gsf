@@ -23,7 +23,6 @@
 
 using System;
 using System.Data;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
 using GSF.Data;
@@ -98,6 +97,7 @@ namespace GSF.Core.Tests
             table.Columns.Add("col1", typeof(double));
             table.Columns.Add("col2", typeof(byte));
             table.Columns.Add("col3", typeof(char));
+            table.Columns.Add("col4", typeof(object));
 
             for (int i = 0; i < Random.Int32Between(100, 500); i++)
             {
@@ -115,6 +115,8 @@ namespace GSF.Core.Tests
                     row[3] = (char)Random.Int16Between(32, 1024);
                 else
                     row[3] = DBNull.Value;
+
+                row[4] = Guid.NewGuid().ToString();
 
                 table.Rows.Add(row);
             }
@@ -195,7 +197,8 @@ namespace GSF.Core.Tests
                     Assert.IsTrue(columnExists);
 
                     DataColumn destinationColumn = destinationTable.Columns[sourceColumn.ColumnName];
-                    Assert.IsTrue(sourceColumn.DataType == destinationColumn.DataType);
+                    Assert.IsTrue(sourceColumn.DataType == destinationColumn.DataType ||
+                        (sourceColumn.DataType == typeof(object) && destinationColumn.DataType == typeof(string)));
                 }
 
                 Assert.AreEqual(sourceTable.Rows.Count, destinationTable.Rows.Count);
@@ -211,7 +214,7 @@ namespace GSF.Core.Tests
                         {
                             byte[] bytes = sourceRow[j] as byte[];
 
-                            if (bytes != null)
+                            if ((object)bytes != null)
                                 Assert.IsTrue(bytes.CompareTo((byte[])destinationRow[j]) == 0);
                             else
                                 Assert.AreEqual(sourceRow[j], destinationRow[j]);
@@ -232,7 +235,7 @@ namespace GSF.Core.Tests
 
             results.AppendFormat("Size Improvement = {0:0.00%}\r\n", (xmlFile.Length - binFile.Length) / (double)xmlFile.Length);
 
-            Debug.WriteLine(results.ToString());
+            System.Console.WriteLine(results.ToString());
         }
     }
 }

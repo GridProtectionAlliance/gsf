@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using GSF.IO;
 
 namespace GSF.Data
 {
@@ -171,27 +172,35 @@ namespace GSF.Data
                 List<DataType> columnDataTypes = new List<DataType>();
                 DataType dataType;
 
-                // Serialize table name and column count
-                output.Write(table.TableName);
-                output.Write(table.Columns.Count);
-
                 // Serialize column metadata
-                foreach (DataColumn column in table.Columns)
+                using (BlockAllocatedMemoryStream columnMetaDataStream = new BlockAllocatedMemoryStream())
                 {
-                    // Get column data type, unknown types will be represented as object
-                    dataType = GetDataType(column.DataType, assumeStringForUnknownTypes);
+                    BinaryWriter columnMetaData = new BinaryWriter(columnMetaDataStream);
 
-                    // Only objects of a known type can be properly serialized
-                    if (dataType != DataType.Object)
+                    foreach (DataColumn column in table.Columns)
                     {
-                        // Serialize column name and type
-                        output.Write(column.ColumnName);
-                        output.Write((byte)dataType);
+                        // Get column data type, unknown types will be represented as object
+                        dataType = GetDataType(column.DataType, assumeStringForUnknownTypes);
 
-                        // Track data types and column indices in parallel lists for faster DataRow serialization
-                        columnIndices.Add(column.Ordinal);
-                        columnDataTypes.Add(dataType);
+                        // Only objects of a known type can be properly serialized
+                        if (dataType != DataType.Object)
+                        {
+                            // Serialize column name and type
+                            columnMetaData.Write(column.ColumnName);
+                            columnMetaData.Write((byte)dataType);
+
+                            // Track data types and column indices in parallel lists for faster DataRow serialization
+                            columnIndices.Add(column.Ordinal);
+                            columnDataTypes.Add(dataType);
+                        }
                     }
+
+                    // Serialize table name and column count
+                    output.Write(table.TableName);
+                    output.Write(columnIndices.Count);
+
+                    // Write column metadata
+                    output.Write(columnMetaDataStream.ToArray(), 0, (int)columnMetaDataStream.Length);
                 }
 
                 // Serialize row count
@@ -427,13 +436,15 @@ namespace GSF.Data
         /// <param name="assumeStringForUnknownTypes">Flag to determine if unknown column types should be serialized as strings.</param>
         public static DataType GetDataType(this Type objectType, bool assumeStringForUnknownTypes = true)
         {
+            DataType dataType = DataType.Object;
+
             for (int i = 0; i < s_supportedDataTypes.Length; i++)
             {
                 if (objectType == s_supportedDataTypes[i])
-                    return (DataType)i;
+                    dataType = (DataType)i;
             }
 
-            return DataType.Object;
+            return assumeStringForUnknownTypes ? (dataType == DataType.Object ? DataType.String : dataType) : dataType;
         }
 
         /// <summary>

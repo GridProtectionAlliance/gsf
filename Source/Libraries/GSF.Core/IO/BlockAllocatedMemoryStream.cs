@@ -66,17 +66,24 @@ namespace GSF.IO
     /// allocation of a large contiguous array of data in <see cref="MemoryStream"/> can fail when the requested amount of contiguous
     /// memory is unavailable - the <see cref="BlockAllocatedMemoryStream"/> prevents this; second, a <see cref="MemoryStream"/> will
     /// constantly reallocate the buffer size as the stream grows and shrinks and then copy all the data from the old buffer to the
-    /// new - the <see cref="BlockAllocatedMemoryStream"/> maintains its blocks over its lifecycle, unless manually cleared, thus
+    /// new - the <see cref="BlockAllocatedMemoryStream"/> maintains its blocks over its life cycle, unless manually cleared, thus
     /// eliminating unnecessary allocations and garbage collections when growing and reusing a stream; third, a managed buffer pool,
     /// <see cref="BufferPool"/>, is used for internal buffer management allowing the <see cref="BlockAllocatedMemoryStream"/> to
     /// reuse previously allocated buffers further eliminating allocations and garbage collections even for short lived instances.
     /// </para>
     /// <para>
-    /// Unlike <see cref="MemoryStream"/>, the <see cref="BlockAllocatedMemoryStream"/> will not use a user provided buffer as its
-    /// backing buffer. Any user provided buffers used to instantiate the class will be copied into internally managed reusable memory
-    /// buffers. Subsequently, the <see cref="BlockAllocatedMemoryStream"/> does not support the notion of a non-expandable stream.
-    /// In general, if you are using a <see cref="MemoryStream"/> with your own buffer, the <see cref="BlockAllocatedMemoryStream"/>
-    /// will not provide any immediate benefit.
+    /// Important: Unlike <see cref="MemoryStream"/>, the <see cref="BlockAllocatedMemoryStream"/> will not use a user provided buffer
+    /// as its backing buffer. Any user provided buffers used to instantiate the class will be copied into internally managed reusable
+    /// memory buffers. Subsequently, the <see cref="BlockAllocatedMemoryStream"/> does not support the notion of a non-expandable
+    /// stream. If you are using a <see cref="MemoryStream"/> with your own buffer, the <see cref="BlockAllocatedMemoryStream"/> will
+    /// not provide any immediate benefit.
+    /// </para>
+    /// <para>
+    /// Although disposing of a <see cref="MemoryStream"/> is generally not required since its actual dispose method performs no
+    /// action, the <see cref="BlockAllocatedMemoryStream"/> uses buffers obtained from a shared buffer pool. As a result, it is
+    /// optimal to make sure instances are properly disposed (e.g., wrapping instances in a "using(...)" statement) so that the
+    /// referenced buffers are returned to the pool as soon as possible instead of waiting for the destructor to be called from the
+    /// garbage collector.
     /// </para>
     /// <para>
     /// Note that the <see cref="BlockAllocatedMemoryStream"/> will maintain all allocated blocks for stream use until the
@@ -85,13 +92,6 @@ namespace GSF.IO
     /// <para>
     /// No members in the <see cref="BlockAllocatedMemoryStream"/> are guaranteed to be thread safe. Make sure any calls are
     /// synchronized when simultaneously accessed from different threads.
-    /// </para>
-    /// <para>
-    /// Disposing of a <see cref="MemoryStream"/> is generally not required since its actual dispose method doesn't do anything,
-    /// however, since the <see cref="BlockAllocatedMemoryStream"/> uses buffers obtained from a shared buffer pool, it is
-    /// optimal to make sure instances are properly disposed (e.g., wrapping instances in a "using(...)" statement) so that the
-    /// referenced buffers are returned to the pool as soon as possible instead of waiting for the destructor to be called from
-    /// the garbage collector.
     /// </para>
     /// </remarks>
     public class BlockAllocatedMemoryStream : Stream
