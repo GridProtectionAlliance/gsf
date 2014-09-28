@@ -177,6 +177,7 @@ namespace GSF.ServiceProcess
             m_password = DefaultPassword;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
+            m_serializationFormat = ServiceHelper.DefaultSerializationFormat;
         }
 
         /// <summary>
