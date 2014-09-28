@@ -112,7 +112,7 @@ namespace GSF.Collections
         {
             get
             {
-                return m_count;
+                return Interlocked.CompareExchange(ref m_count, 0, 0);
             }
         }
 

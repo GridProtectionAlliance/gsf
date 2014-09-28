@@ -266,7 +266,7 @@ namespace GSF.Collections
 
                 foreach (DoubleBufferedQueue<T> queue in m_queues)
                 {
-                    if (queue.TryDequeue(out dequeuedItems) <= 0 && dequeuedItems.Count > 0)
+                    if (queue.TryDequeue(out dequeuedItems) <= 0)
                     {
                         m_dequeuedItems.AddRange(dequeuedItems);
 
