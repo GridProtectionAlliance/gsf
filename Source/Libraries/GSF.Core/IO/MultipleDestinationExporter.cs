@@ -41,6 +41,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Configuration;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -193,7 +194,7 @@ namespace GSF.IO
             public AutoResetEvent WaitHandle
             {
                 get;
-                set;
+                private set;
             }
 
             /// <summary>
@@ -308,6 +309,7 @@ namespace GSF.IO
         private Encoding m_textEncoding;
         private List<ExportDestination> m_exportDestinations;
         private bool m_exportInProgress;
+        private readonly object m_exportDestinationsLock;
         private readonly object m_exportInProgressLock;
         private int m_maximumRetryAttempts;
         private int m_retryDelayInterval;
@@ -350,6 +352,7 @@ namespace GSF.IO
             m_maximumRetryAttempts = DefaultMaximumRetryAttempts;
             m_retryDelayInterval = DefaultRetryDelayInterval;
             m_textEncoding = Encoding.Default; // We use default ANSI page encoding for text based exports...
+            m_exportDestinationsLock = new object();
             m_exportInProgressLock = new object();
         }
 
@@ -517,7 +520,7 @@ namespace GSF.IO
         {
             get
             {
-                lock (this)
+                lock (m_exportDestinationsLock)
                 {
                     if ((object)m_exportDestinations != null)
                         return new ReadOnlyCollection<ExportDestination>(m_exportDestinations);
@@ -561,7 +564,8 @@ namespace GSF.IO
                 status.AppendLine();
                 status.AppendLine("       Export destinations: ");
                 status.AppendLine();
-                lock (this)
+
+                lock (m_exportDestinationsLock)
                 {
                     int count = 1;
 
@@ -571,6 +575,7 @@ namespace GSF.IO
                         count++;
                     }
                 }
+
                 status.AppendLine();
                 status.Append("       File export timeout: ");
                 status.Append(m_exportTimeout == Timeout.Infinite ? "Infinite" : m_exportTimeout + " milliseconds");
@@ -638,7 +643,7 @@ namespace GSF.IO
                 {
                     // Nothing needs to be done before component is initialized.
                 }
-                catch (Exception)
+                catch
                 {
                     // Prevent the IDE from crashing when component is in design mode.
                 }
@@ -661,7 +666,7 @@ namespace GSF.IO
                 {
                     Initialize();
                 }
-                catch (Exception)
+                catch
                 {
                     // Prevent the IDE from crashing when component is in design mode.
                 }
@@ -690,7 +695,7 @@ namespace GSF.IO
                 settings["MaximumRetryAttempts", true].Update(m_maximumRetryAttempts, "Maximum number of retries that will be attempted during an export if the export fails. Set to zero to only attempt export once.");
                 settings["RetryDelayInterval", true].Update(m_retryDelayInterval, "Interval to wait, in milliseconds, before retrying an export if the export fails.");
 
-                lock (this)
+                lock (m_exportDestinationsLock)
                 {
                     settings["ExportCount", true].Update(m_exportDestinations.Count, "Total number of export files to produce.");
                     for (int x = 0; x < m_exportDestinations.Count; x++)
@@ -703,6 +708,7 @@ namespace GSF.IO
                         settings[string.Format("ExportDestination{0}.FileName", x + 1), true].Update(m_exportDestinations[x].FileName, "Path and file name of data export (do not include drive letter or UNC share). Prefix with slash when using UNC paths (\\path\\filename.txt).");
                     }
                 }
+
                 config.Save();
             }
         }
@@ -736,7 +742,7 @@ namespace GSF.IO
                 m_retryDelayInterval = settings["RetryDelayInterval", true].ValueAs(m_retryDelayInterval);
                 count = settings["ExportCount", true].ValueAsInt32();
 
-                lock (this)
+                lock (m_exportDestinationsLock)
                 {
                     m_exportDestinations = new List<ExportDestination>(count);
 
@@ -800,7 +806,7 @@ namespace GSF.IO
             Shutdown();
 
             // Retrieve any specified default export destinations
-            lock (this)
+            lock (m_exportDestinationsLock)
             {
                 m_exportDestinations = state as List<ExportDestination>;
 
@@ -817,7 +823,7 @@ namespace GSF.IO
 
             ExportDestination[] destinations;
 
-            lock (this)
+            lock (m_exportDestinationsLock)
             {
                 // Cache a local copy of export destinations to reduce lock time,
                 // network share authentication may take some time
@@ -864,7 +870,7 @@ namespace GSF.IO
         {
             m_enabled = false;
 
-            lock (this)
+            lock (m_exportDestinationsLock)
             {
                 if ((object)m_exportDestinations != null)
                 {
@@ -981,7 +987,7 @@ namespace GSF.IO
                         // Export data to the temporary file
                         File.WriteAllBytes(filename, fileData);
 
-                        lock (this)
+                        lock (m_exportDestinationsLock)
                         {
                             // Cache a local copy of export destinations to reduce lock time
                             destinations = m_exportDestinations.ToArray();
@@ -1014,10 +1020,6 @@ namespace GSF.IO
                             OnStatusMessage("Timed out attempting export, waited for {0}.", Ticks.FromMilliseconds(m_exportTimeout).ToElapsedTimeString(2).ToLower());
                         }
                     }
-                    catch (ThreadAbortException)
-                    {
-                        throw;  // This exception is normal, we'll just rethrow this back up the try stack
-                    }
                     catch (Exception ex)
                     {
                         OnProcessException(new InvalidOperationException(string.Format("Exception encountered during export preparation: {0}", ex.Message), ex));
@@ -1048,6 +1050,7 @@ namespace GSF.IO
             }
         }
 
+        [SuppressMessage("Gendarme.Rules.Exceptions", "DoNotDestroyStackTraceRule")]
         private void CopyFileToDestination(object state)
         {
             ExportState exportState = null;
@@ -1068,10 +1071,6 @@ namespace GSF.IO
                         {
                             // Attempt to copy file to destination, overwriting if it already exists
                             File.Copy(exportState.SourceFileName, exportState.DestinationFileName, true);
-                        }
-                        catch (ThreadAbortException)
-                        {
-                            throw;  // This exception is normal, we'll just rethrow this back up the try stack
                         }
                         catch (Exception ex)
                         {
@@ -1094,10 +1093,6 @@ namespace GSF.IO
                     // Track successful exports
                     m_totalExports++;
                 }
-            }
-            catch (ThreadAbortException)
-            {
-                throw;  // This exception is normal, we'll just rethrow this back up the try stack
             }
             catch (Exception ex)
             {
@@ -1138,10 +1133,6 @@ namespace GSF.IO
                     // Delete the temporary file
                     if (File.Exists(filename))
                         File.Delete(filename);
-                }
-                catch (ThreadAbortException)
-                {
-                    throw;  // This exception is normal, we'll just rethrow this back up the try stack
                 }
                 catch (Exception ex)
                 {

@@ -39,12 +39,14 @@
 
 using System;
 using System.Configuration;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GSF.Configuration
 {
     /// <summary>
     /// Represents a collection of <see cref="CategorizedSettingsElement"/> objects.
     /// </summary>
+    [SuppressMessage("Microsoft.Design", "CA1010:CollectionsShouldImplementGenericInterface")]
     public class CategorizedSettingsElementCollection : ConfigurationElementCollection
     {
         #region [ Members ]

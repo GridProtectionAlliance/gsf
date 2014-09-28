@@ -65,6 +65,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -1112,6 +1113,7 @@ namespace GSF.Units
         /// <paramref name="minimumSubSecondResolution"/> is not less than or equal to <see cref="SI.Milli"/> or
         /// <paramref name="minimumSubSecondResolution"/> is not defined in <see cref="SI.Factors"/> array.
         /// </exception>
+        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         public static string ToElapsedTimeString(double seconds, int secondPrecision, string[] timeNames = null, double minimumSubSecondResolution = SI.Milli)
         {
             // One year of seconds estimated for display use as 365.2425 days, i.e., 31,556,952 seconds

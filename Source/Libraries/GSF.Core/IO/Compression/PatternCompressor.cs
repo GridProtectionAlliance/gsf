@@ -28,7 +28,6 @@
 //
 //******************************************************************************************************
 
-
 using System;
 using GSF.Parsing;
 
@@ -115,10 +114,11 @@ namespace GSF.IO.Compression
             {
                 if (m_maxCompressedBufferLength > 0)
                     return m_maxCompressedBufferLength;
-                else if (m_compressedBuffer != null)
+
+                if (m_compressedBuffer != null)
                     return m_compressedBuffer.Length;
-                else
-                    return 0;
+
+                return 0;
             }
             set
             {
@@ -173,7 +173,7 @@ namespace GSF.IO.Compression
             byte* iter, end;
 
             if ((object)value == null)
-                throw new ArgumentNullException("value cannot be null", "value");
+                throw new ArgumentNullException("value");
 
             bufferLength = value.BinaryLength.AlignDoubleWord();
             buffer = new byte[bufferLength];
@@ -554,6 +554,7 @@ namespace GSF.IO.Compression
         /// <remarks>
         /// As an optimization this function is using pointers to native structures, as such the endian order decoding and encoding of the values will always be in the native endian order of the operating system.
         /// </remarks>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         public unsafe static int CompressBuffer(byte[] source, int startIndex, int dataLength, int bufferLength, byte compressionStrength = 5)
         {
             const int SizeOf32Bits = sizeof(uint);
@@ -562,7 +563,7 @@ namespace GSF.IO.Compression
             // means minimal compression size of 4 total bytes would be 1 byte (i.e., 1 byte for decompression key), or max of 75% compression.
             // Compression algorithm is best suited for data that differs fractionally over time (e.g., 60.05, 60.08, 60.09, 60.11...)
 
-            if (source == null)
+            if ((object)source == null)
                 throw new ArgumentNullException("source");
 
             if (dataLength < 0)
@@ -592,7 +593,7 @@ namespace GSF.IO.Compression
             int maxQueueLength = compressionStrength + 1;
             uint* queue = stackalloc uint[maxQueueLength];
             int queueLength = 0;
-            int usedLength = 0;
+            int usedLength;
             int count = dataLength / SizeOf32Bits;
             int queueStartIndex = 0;
 

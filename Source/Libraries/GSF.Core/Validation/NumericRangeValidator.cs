@@ -64,17 +64,21 @@ namespace GSF.Validation
         public bool Validate(object value, out string validationError)
         {
             decimal numericValue;
-            decimal.TryParse(value.ToString(), out numericValue);
-            if (numericValue < m_rangeMinimum || numericValue > m_rangeMaximum)
+
+            if (decimal.TryParse(value.ToString(), out numericValue))
             {
-                validationError = string.Format("Value must be between {0} and {1}", m_rangeMinimum, m_rangeMaximum);
-                return false;
-            }
-            else
-            {
+                if (numericValue < m_rangeMinimum || numericValue > m_rangeMaximum)
+                {
+                    validationError = string.Format("Value must be between {0} and {1}", m_rangeMinimum, m_rangeMaximum);
+                    return false;
+                }
+
                 validationError = string.Empty;
                 return true;
             }
+
+            validationError = "Value cannot be parsed as a number.";
+            return false;
         }
 
         #endregion

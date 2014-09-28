@@ -93,12 +93,12 @@ namespace GSF.Media
             : base(preRead, RiffTypeID)
         {
             byte[] buffer = new byte[preRead.ChunkSize];
-            byte[] nullByte = new byte[] { 0 };
+            byte[] nullByte = { 0 };
             int bytesRead = source.Read(buffer, 0, buffer.Length);
             int length, index = 0;
             string key, value;
 
-            m_infoStrings = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            m_infoStrings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             if (bytesRead >= 4 && string.Compare(Encoding.ASCII.GetString(buffer, index, 4), "INFO", true) == 0)
             {

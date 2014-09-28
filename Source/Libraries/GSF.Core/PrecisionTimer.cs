@@ -105,7 +105,7 @@
 #endregion
 
 using System;
-using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Timers;
 
@@ -144,21 +144,13 @@ namespace GSF
     /// Represents a high-resolution timer and timestamp class.
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// For standard deployments, implementation is based on the Windows multimedia timer. For mono
-    /// deployments, implementation uses a basic timer for compatibility - this should have ~10ms
-    /// of resolution when used on standard Linux systems.
-    /// </para>
-    /// <para>
-    /// Future mono deployments may want to consider an implementation that uses OS specific timers:
-    ///     For Windows use of non-Mono style implementation below should be sufficient.
-    ///     For Linux see http://www.ittc.ku.edu/utime/ as an example.
-    /// Implememtation might depend on a platform specific P/Invokable wrapper DLL that exposed the
-    /// same methods on Windows and Linux for consumption from .NET but used the specific precision
-    /// timer implementations mentioned above. See the following for Mono interop details:
-    /// http://www.mono-project.com/Interop_with_Native_Libraries
-    /// </para>
+    /// For Windows deployments, implementation is based on the Windows multimedia timer. For other
+    /// deployments, e.g., POSIX, implementation uses a basic timer for compatibility - this should
+    /// have ~10ms of resolution when used on standard Linux systems.
     /// </remarks>
+    // Future deployments may want to consider an implementation that uses OS specific timers:
+    //     For Windows use of multimedia style implementation below should be sufficient.
+    //     For Linux see http://www.ittc.ku.edu/utime/ as an example.
     public class PrecisionTimer : IDisposable
     {
         #region [ Members ]
@@ -170,10 +162,8 @@ namespace GSF
             Periodic // Timer event occurs periodically.
         }
 
-#if !MONO
         // Represents the method that is called by Windows when a timer event occurs.
         private delegate void TimerProc(int id, int msg, int user, int param1, int param2);
-#endif
 
         /// <summary>
         /// Occurs when the <see cref="PrecisionTimer"/> has started.
@@ -191,19 +181,15 @@ namespace GSF
         public event EventHandler Tick;
 
         // Fields
-#if MONO
-        private Timer m_timer;              // Basic timer implementation for Mono deployments
-#else
-        private int m_timerID;              // Timer identifier.
-        private readonly TimerProc m_timeProc;       // Called by Windows when a timer periodic event occurs.
-#endif
-
-        private TimerMode m_mode;           // Timer mode.
-        private int m_period;               // Period between timer events in milliseconds.
-        private int m_resolution;           // Timer resolution in milliseconds.
-        private bool m_running;             // Indicates whether or not the timer is running.
-        private bool m_disposed;            // Indicates whether or not the timer has been disposed.
-        private EventArgs m_eventArgs;      // Private user event args to pass into Ticks call
+        private readonly Timer m_timer;         // Basic timer implementation for Mono deployments
+        private int m_timerID;                  // Timer identifier.
+        private readonly TimerProc m_timeProc;  // Called by Windows when a timer periodic event occurs.
+        private TimerMode m_mode;               // Timer mode.
+        private int m_period;                   // Period between timer events in milliseconds.
+        private int m_resolution;               // Timer resolution in milliseconds.
+        private bool m_running;                 // Indicates whether or not the timer is running.
+        private bool m_disposed;                // Indicates whether or not the timer has been disposed.
+        private EventArgs m_eventArgs;          // Private user event args to pass into Ticks call
 
         #endregion
 
@@ -217,16 +203,20 @@ namespace GSF
             // Initialize timer with default values.
             m_mode = TimerMode.Periodic;
             m_running = false;
-#if MONO
-            m_timer = new Timer();
-            m_timer.Elapsed += m_timer_Elapsed;
-            m_period = 10;
-            m_resolution = 10;
-#else
-            m_timeProc = TimerEventCallback;
-            m_period = Capabilities.PeriodMinimum;
-            m_resolution = 1;
-#endif
+
+            if (Common.IsPosixEnvironment)
+            {
+                m_timer = new Timer();
+                m_timer.Elapsed += m_timer_Elapsed;
+                m_period = 10;
+                m_resolution = 10;
+            }
+            else
+            {
+                m_timeProc = TimerEventCallback;
+                m_period = Capabilities.PeriodMinimum;
+                m_resolution = 1;
+            }
         }
 
         /// <summary>
@@ -403,6 +393,9 @@ namespace GSF
                     {
                         if (IsRunning)
                             Stop();
+
+                        if ((object)m_timer != null)
+                            m_timer.Dispose();
                     }
                 }
                 finally
@@ -444,42 +437,45 @@ namespace GSF
             if (m_running)
                 return;
 
-            // Cache user event args to pass into Ticks paramter
+            // Cache user event args to pass into Ticks parameter
             m_eventArgs = userArgs;
 
             // Create and start timer.
-#if MONO
-            try
+            if (Common.IsPosixEnvironment)
             {
-                m_timer.Interval = m_period;
-                m_timer.AutoReset = (m_mode == TimerMode.Periodic);
-                m_timer.Start();
+                try
+                {
+                    m_timer.Interval = m_period;
+                    m_timer.AutoReset = (m_mode == TimerMode.Periodic);
+                    m_timer.Start();
 
-                m_running = true;
+                    m_running = true;
 
-                if ((object)Started != null)
-                    Started(this, EventArgs.Empty);
-            }
-            catch (Exception ex)
-            {
-                throw new TimerStartException("Unable to start precision timer: " + ex.Message);
-            }
-#else
-            m_timerID = timeSetEvent(m_period, m_resolution, m_timeProc, IntPtr.Zero, m_mode);
-
-            // If the timer was created successfully.
-            if (m_timerID != 0)
-            {
-                m_running = true;
-
-                if ((object)Started != null)
-                    Started(this, EventArgs.Empty);
+                    if ((object)Started != null)
+                        Started(this, EventArgs.Empty);
+                }
+                catch (Exception ex)
+                {
+                    throw new TimerStartException("Unable to start precision timer: " + ex.Message);
+                }
             }
             else
             {
-                throw new TimerStartException("Unable to start precision timer");
+                m_timerID = timeSetEvent(m_period, m_resolution, m_timeProc, IntPtr.Zero, m_mode);
+
+                // If the timer was created successfully.
+                if (m_timerID != 0)
+                {
+                    m_running = true;
+
+                    if ((object)Started != null)
+                        Started(this, EventArgs.Empty);
+                }
+                else
+                {
+                    throw new TimerStartException("Unable to start precision timer");
+                }
             }
-#endif
         }
 
         /// <summary>
@@ -488,6 +484,7 @@ namespace GSF
         /// <exception cref="ObjectDisposedException">
         /// If the timer has already been disposed.
         /// </exception>
+        [SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults")]
         public void Stop()
         {
             if (m_disposed)
@@ -497,25 +494,28 @@ namespace GSF
                 return;
 
             // Stop and destroy timer.
-#if MONO
-            m_timer.Stop();
-#else
-            timeKillEvent(m_timerID);
-            m_timerID = 0;
-#endif
+            if (Common.IsPosixEnvironment)
+            {
+                m_timer.Stop();
+            }
+            else
+            {
+                timeKillEvent(m_timerID);
+                m_timerID = 0;
+            }
+
             m_running = false;
 
             if ((object)Stopped != null)
                 Stopped(this, EventArgs.Empty);
         }
 
-#if MONO
         private void m_timer_Elapsed(object sender, ElapsedEventArgs e)
         {
             if ((object)Tick != null)
                 Tick(this, m_eventArgs);
         }
-#else
+
         // Callback method called by the Win32 multimedia timer when a timer event occurs.
         private void TimerEventCallback(int id, int msg, int user, int param1, int param2)
         {
@@ -525,7 +525,6 @@ namespace GSF
             if (m_mode == TimerMode.OneShot)
                 Stop();
         }
-#endif
 
         #endregion
 
@@ -535,15 +534,19 @@ namespace GSF
         private static readonly TimerCapabilities s_capabilities;    // Multimedia timer capabilities.
 
         // Static Constructor
+        [SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults")]
         static PrecisionTimer()
         {
-#if MONO
-            s_capabilities.PeriodMinimum = 1;
-            s_capabilities.PeriodMaximum = int.MaxValue;
-#else
-            // Get multimedia timer capabilities
-            timeGetDevCaps(ref s_capabilities, Marshal.SizeOf(s_capabilities));
-#endif
+            if (Common.IsPosixEnvironment)
+            {
+                s_capabilities.PeriodMinimum = 1;
+                s_capabilities.PeriodMaximum = int.MaxValue;
+            }
+            else
+            {
+                // Get multimedia timer capabilities
+                timeGetDevCaps(ref s_capabilities, Marshal.SizeOf(s_capabilities));
+            }
         }
 
         // Static Properties
@@ -584,10 +587,11 @@ namespace GSF
         /// </remarks>
         public static void SetMinimumTimerResolution(int period)
         {
-#if !MONO
-            if (timeBeginPeriod(period) != 0)
-                throw new InvalidOperationException("Specified period resolution is out of range and is not supported.");
-#endif
+            if (!Common.IsPosixEnvironment)
+            {
+                if (timeBeginPeriod(period) != 0)
+                    throw new InvalidOperationException("Specified period resolution is out of range and is not supported.");
+            }
         }
 
         /// <summary>
@@ -609,13 +613,13 @@ namespace GSF
         /// </remarks>
         public static void ClearMinimumTimerResolution(int period)
         {
-#if !MONO
-            if (timeEndPeriod(period) != 0)
-                throw new InvalidOperationException("Specified period resolution is out of range and is not supported.");
-#endif
+            if (!Common.IsPosixEnvironment)
+            {
+                if (timeEndPeriod(period) != 0)
+                    throw new InvalidOperationException("Specified period resolution is out of range and is not supported.");
+            }
         }
 
-#if !MONO
         // Gets timer capabilities.
         [DllImport("winmm.dll")]
         private static extern int timeGetDevCaps(ref TimerCapabilities caps, int sizeOfTimerCaps);
@@ -635,7 +639,7 @@ namespace GSF
         // Clears a previously set minimum timer resolution.
         [DllImport("winmm.dll")]
         private static extern int timeEndPeriod(int period);
-#endif
+
         #endregion
 
         #region [ DateTimePrecise Adaptation ]
@@ -734,8 +738,8 @@ namespace GSF
         ///// precision of <see cref="Stopwatch"/>, and the absolute accuracy of <see cref="DateTime.UtcNow"/>.
         ///// </para>
         ///// <para>
-        ///// This property is useful for obtaining high-resolution accuarate timestamps for events that occur in the
-        ///// "sub-second" world (e.g., timestamping events happening hundreds or thousands of times per second).
+        ///// This property is useful for obtaining high-resolution accurate timestamps for events that occur in the
+        ///// "sub-second" world (e.g., time-stamping events happening hundreds or thousands of times per second).
         ///// Note that the normal <see cref="DateTime.UtcNow"/> property has a maximum resolution of ~16 milliseconds.
         ///// </para>
         ///// </remarks>
@@ -761,8 +765,8 @@ namespace GSF
         ///// precision of <see cref="Stopwatch"/>, and the absolute accuracy of <see cref="DateTime.Now"/>.
         ///// </para>
         ///// <para>
-        ///// This property is useful for obtaining high-resolution accuarate timestamps for events that occur in the
-        ///// "sub-second" world (e.g., timestamping events happening hundreds or thousands of times per second).
+        ///// This property is useful for obtaining high-resolution accurate timestamps for events that occur in the
+        ///// "sub-second" world (e.g., time-stamping events happening hundreds or thousands of times per second).
         ///// Note that the normal <see cref="DateTime.Now"/> property has a maximum resolution of ~16 milliseconds.
         ///// </para>
         ///// </remarks>
@@ -774,7 +778,7 @@ namespace GSF
         //    }
         //}
 
-        //// Initializes the the precise timing mechanism
+        //// Initializes the precise timing mechanism
         //private static void InitializePreciseTime()
         //{
         //    // We just use the recommended synchronization period for general purpose use

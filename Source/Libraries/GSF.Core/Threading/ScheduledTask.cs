@@ -30,6 +30,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
@@ -76,6 +77,7 @@ namespace GSF.Threading
     /// <summary>
     /// Represents a way to schedule a task to be executed on a separate thread immediately or after a given time delay.
     /// </summary>
+    [SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
     public class ScheduledTask : IDisposable
     {
         #region [ Members ]
@@ -139,6 +141,7 @@ namespace GSF.Threading
         /// <summary>
         /// Cleans up the <see cref="ThreadContainerBase"/> thread since that class likely will never be garbage collected.
         /// </summary>
+        [SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
         ~ScheduledTask()
         {
             //By starting the thread inside the finalizer, the ThreadContainer will exit because its weak reference will be set to null.
@@ -204,6 +207,7 @@ namespace GSF.Threading
         /// has successfully completed.
         /// </para>
         /// </remarks>
+        [SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly"), SuppressMessage("Microsoft.Usage", "CA1816:CallGCSuppressFinalizeCorrectly")]
         public void Dispose()
         {
             m_disposing = true;
@@ -215,6 +219,7 @@ namespace GSF.Threading
         }
 
         // Completes the disposal of the class.
+        [SuppressMessage("Microsoft.Usage", "CA1816:CallGCSuppressFinalizeCorrectly")]
         private void InternalDisposeAllResources()
         {
             lock (m_disposeSync)

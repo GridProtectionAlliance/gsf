@@ -24,6 +24,8 @@
 using System;
 
 // TODO: Please add comments to these classes
+using System.Diagnostics.CodeAnalysis;
+
 #pragma warning disable 1591
 
 namespace GSF.FuzzyStrings
@@ -37,6 +39,7 @@ namespace GSF.FuzzyStrings
             return Backtrack(C, source, target, source.Length, target.Length);
         }
 
+        [SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional")]
         private static int[,] LongestCommonSubsequenceLengthTable(string source, string target)
         {
             int[,] C = new int[source.Length + 1, target.Length + 1];
@@ -68,6 +71,7 @@ namespace GSF.FuzzyStrings
             return C;
         }
 
+        [SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional")]
         private static string Backtrack(int[,] C, string source, string target, int i, int j)
         {
             if (i == 0 || j == 0)

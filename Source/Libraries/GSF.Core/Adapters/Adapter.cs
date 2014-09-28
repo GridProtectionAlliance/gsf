@@ -242,9 +242,8 @@ namespace GSF.Adapters
                 if (!Domain.IsDefaultAppDomain() && AppDomain.MonitoringIsEnabled)
                     // Both app domain isolation and app domain resource monitoring is enabled.
                     return Domain.MonitoringSurvivedMemorySize;
-                else
 #endif
-                    return double.NaN;
+                return double.NaN;
             }
         }
 
@@ -262,9 +261,8 @@ namespace GSF.Adapters
                 if (!Domain.IsDefaultAppDomain() && AppDomain.MonitoringIsEnabled)
                     // Both app domain isolation and app domain resource monitoring is enabled.
                     return Domain.MonitoringTotalProcessorTime.TotalSeconds / Ticks.ToSeconds(DateTime.UtcNow.Ticks - m_created.Ticks) / Environment.ProcessorCount * 100;
-                else
 #endif
-                    return double.NaN;
+                return double.NaN;
             }
         }
 
@@ -277,8 +275,8 @@ namespace GSF.Adapters
             {
                 if (string.IsNullOrEmpty(m_hostFile))
                     return m_settingsCategory;
-                else
-                    return FilePath.GetFileNameWithoutExtension(m_hostFile);
+
+                return FilePath.GetFileNameWithoutExtension(m_hostFile);
             }
         }
 
@@ -297,10 +295,10 @@ namespace GSF.Adapters
                 status.Append(Enabled ? "Enabled" : "Disabled");
                 status.AppendLine();
                 status.Append("              Memory usage: ");
-                status.Append(MemoryUsage.Equals(double.NaN) ? "Not tracked" : MemoryUsage.ToString("0 bytes"));
+                status.Append(double.IsNaN(MemoryUsage) ? "Not tracked" : MemoryUsage.ToString("0 bytes"));
                 status.AppendLine();
                 status.Append("           Processor usage: ");
-                status.Append(ProcessorUsage.Equals(double.NaN) ? "Not tracked" : ProcessorUsage.ToString("0'%'"));
+                status.Append(double.IsNaN(ProcessorUsage) ? "Not tracked" : ProcessorUsage.ToString("0'%'"));
                 status.AppendLine();
 
                 return status.ToString();

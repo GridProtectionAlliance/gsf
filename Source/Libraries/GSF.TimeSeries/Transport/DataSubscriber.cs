@@ -3133,7 +3133,7 @@ namespace GSF.TimeSeries.Transport
 
                         // Prefix all children devices with the name of the parent since the same device names could appear in different connections (helps keep device names unique)
                         string sourcePrefix = Name + "!";
-                        Dictionary<string, int> deviceIDs = new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase);
+                        Dictionary<string, int> deviceIDs = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
                         string deviceAcronym, signalTypeAcronym;
                         decimal longitude, latitude;
                         decimal? location;
@@ -3359,7 +3359,7 @@ namespace GSF.TimeSeries.Transport
                             string deleteMeasurementSql = database.ParameterizedQueryString("DELETE FROM Measurement WHERE SignalID = {0}", "signalID");
 
                             // Load signal type ID's from local database associated with their acronym for proper signal type translation
-                            Dictionary<string, int> signalTypeIDs = new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase);
+                            Dictionary<string, int> signalTypeIDs = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
                             foreach (DataRow row in command.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM SignalType").Rows)
                             {

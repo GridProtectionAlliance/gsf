@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GSF.Collections
 {
@@ -69,6 +70,7 @@ namespace GSF.Collections
         /// <para>Used when creating a <see cref="ProcessDictionary{TKey,TValue}"/> to process one item at a time.</para>
         /// <para>Asynchronous <see cref="ProcessDictionary{TKey,TValue}"/> will process individual items on multiple threads</para>
         /// </remarks>
+        [SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
         public new delegate void ProcessItemFunctionSignature(TKey key, TValue value);
 
         /// <summary>
@@ -88,6 +90,7 @@ namespace GSF.Collections
         /// for processing must evaluate as "CanProcessItem = True" before any items are processed.
         /// </para>
         /// </remarks>
+        [SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
         public new delegate bool CanProcessItemFunctionSignature(TKey key, TValue value);
 
         // Fields

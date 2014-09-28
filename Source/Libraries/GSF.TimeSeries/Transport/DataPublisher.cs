@@ -2892,7 +2892,7 @@ namespace GSF.TimeSeries.Transport
                                 //startIndex += byteLength;
 
                                 // Validate the authentication ID - if it matches, connection is authenticated
-                                connection.Authenticated = (string.Compare(authenticationID, GetClientEncoding(clientID).GetString(bytes, CipherSaltLength, bytes.Length - CipherSaltLength), StringComparison.InvariantCulture) == 0);
+                                connection.Authenticated = (string.Compare(authenticationID, GetClientEncoding(clientID).GetString(bytes, CipherSaltLength, bytes.Length - CipherSaltLength), StringComparison.Ordinal) == 0);
 
                                 if (connection.Authenticated)
                                 {
@@ -3230,7 +3230,7 @@ namespace GSF.TimeSeries.Transport
             OnStatusMessage("Received meta-data refresh request from {0}, preparing response...", connection.ConnectionID);
 
             Guid clientID = connection.ClientID;
-            Dictionary<string, Tuple<string, string, int>> filterExpressions = new Dictionary<string, Tuple<string, string, int>>(StringComparer.InvariantCultureIgnoreCase);
+            Dictionary<string, Tuple<string, string, int>> filterExpressions = new Dictionary<string, Tuple<string, string, int>>(StringComparer.OrdinalIgnoreCase);
             string message, tableName, filterExpression, sortField;
             int takeCount;
             Ticks startTime = DateTime.UtcNow.Ticks;

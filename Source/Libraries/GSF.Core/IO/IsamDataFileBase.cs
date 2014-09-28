@@ -44,14 +44,14 @@
 //  09/17/2009 - Pinal C. Patel
 //       Added exception handling to event handlers.
 //  12/04/2009 - Pinal C. Patel
-//       Fixed thread synchronization bug in ReadFromDisk().
+//       Fixed thread synchronization issue in ReadFromDisk().
 //  04/07/2011 - Pinal C. Patel
 //       Removed inheritance from Component class to allow for serialization.
 //  11/23/2011 - J. Ritchie Carroll
 //       Modified to support buffer optimized ISupportBinaryImage.
 //  12/06/2011 - Pinal C. Patel
 //       Updated to instantiate a FileSystemWatcher object that watches for changes to the file content 
-//       only  if needed to avoid a bug introduced in .NET 4.0 that causes memory leak.
+//       only  if needed to avoid a issue introduced in .NET 4.0 that causes memory leak.
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
 //
@@ -344,6 +344,7 @@ namespace GSF.IO
         private List<T> m_fileRecords;
         private byte[] m_recordBuffer;
         private FileStream m_fileData;
+        private readonly object m_fileDataLock;
         private readonly ManualResetEvent m_loadWaitHandle;
         private readonly ManualResetEvent m_saveWaitHandle;
         private readonly Timer m_autoSaveTimer;
@@ -370,6 +371,7 @@ namespace GSF.IO
             m_settingsCategory = DefaultSettingsCategory;
             m_loadWaitHandle = new ManualResetEvent(true);
             m_saveWaitHandle = new ManualResetEvent(true);
+            m_fileDataLock = new object();
 
             m_autoSaveTimer = new Timer();
             m_autoSaveTimer.Elapsed += m_autoSaveTimer_Elapsed;
@@ -585,17 +587,15 @@ namespace GSF.IO
                 {
                     long fileLength;
 
-                    lock (m_fileData)
+                    lock (m_fileDataLock)
                     {
                         fileLength = m_fileData.Length;
                     }
 
                     return (fileLength % m_recordBuffer.Length != 0);
                 }
-                else
-                {
-                    throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
-                }
+
+                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
             }
         }
 
@@ -624,17 +624,15 @@ namespace GSF.IO
                 {
                     long fileLength;
 
-                    lock (m_fileData)
+                    lock (m_fileDataLock)
                     {
                         fileLength = m_fileData.Length;
                     }
 
                     return (int)(fileLength / (long)m_recordBuffer.Length);
                 }
-                else
-                {
-                    throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
-                }
+
+                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
             }
         }
 
@@ -772,7 +770,7 @@ namespace GSF.IO
                 // Watch for changes to the file content.
                 if (m_reloadOnModify)
                 {
-                    // Create watcher only if needed to avoid a bug in .NET 4.0 that causes memory leak.
+                    // Create watcher only if needed to avoid a issue in .NET 4.0 that causes memory leak.
                     // http://support.microsoft.com/kb/2628838
                     m_fileWatcher = new FileSystemWatcher();
                     m_fileWatcher.Path = FilePath.GetDirectoryName(FilePath.GetAbsolutePath(m_fileName));
@@ -898,7 +896,7 @@ namespace GSF.IO
                 // Close the file stream used for file I/O.
                 if ((object)m_fileData != null)
                 {
-                    lock (m_fileData)
+                    lock (m_fileDataLock)
                     {
                         m_fileData.Dispose();
                     }
@@ -1104,19 +1102,15 @@ namespace GSF.IO
                     // Reads persisted records if no records are in memory.
                     return ReadFromDisk();
                 }
-                else
+
+                // Reads records in memory.
+                lock (m_fileRecords)
                 {
-                    // Reads records in memory.
-                    lock (m_fileRecords)
-                    {
-                        return m_fileRecords;
-                    }
+                    return m_fileRecords;
                 }
             }
-            else
-            {
-                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
-            }
+
+            throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
         }
 
         /// <summary>
@@ -1150,10 +1144,8 @@ namespace GSF.IO
 
                 return record;
             }
-            else
-            {
-                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
-            }
+
+            throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
         }
 
         /// <summary>
@@ -1268,7 +1260,7 @@ namespace GSF.IO
             // Write all records to disk.
             int count = 0;
 
-            lock (m_fileData)
+            lock (m_fileDataLock)
             {
                 m_fileData.Seek(0L, SeekOrigin.Begin);
 
@@ -1280,7 +1272,7 @@ namespace GSF.IO
             }
 
             // Discard previously existing records that were not written.
-            lock (m_fileData)
+            lock (m_fileDataLock)
             {
                 m_fileData.SetLength(count * (long)m_recordBuffer.Length);
             }
@@ -1293,7 +1285,7 @@ namespace GSF.IO
         /// <param name="record">Record to be written to disk.</param>
         private void WriteToDisk(int recordIndex, T record)
         {
-            lock (m_fileData)
+            lock (m_fileDataLock)
             {
                 m_fileData.Seek((recordIndex - 1) * (long)record.BinaryLength, SeekOrigin.Begin);
                 record.CopyBinaryImageToStream(m_fileData);
@@ -1320,7 +1312,8 @@ namespace GSF.IO
         private T ReadFromDisk(int recordIndex)
         {
             T newRecord = CreateNewRecord(recordIndex);
-            lock (m_fileData)
+
+            lock (m_fileDataLock)
             {
                 m_fileData.Seek((recordIndex - 1) * (long)m_recordBuffer.Length, SeekOrigin.Begin);
                 m_fileData.Read(m_recordBuffer, 0, m_recordBuffer.Length);

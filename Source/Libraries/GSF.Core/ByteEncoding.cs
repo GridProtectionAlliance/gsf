@@ -61,6 +61,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -79,12 +80,12 @@ namespace GSF
         /// <summary>
         /// Handles conversion of byte buffers to and from a hexadecimal data format.
         /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
+        [SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible"), EditorBrowsable(EditorBrowsableState.Never)]
         public class HexadecimalEncoding : ByteEncoding
         {
             internal HexadecimalEncoding()
             {
-                // This class is meant for internal instatiation only.
+                // This class is meant for internal instantiation only.
             }
 
             /// <summary>Decodes given string back into a byte buffer.</summary>
@@ -119,15 +120,11 @@ namespace GSF
 
                         return bytes;
                     }
-                    else
-                    {
-                        throw new ArgumentException("Input string is not a valid hex encoded string - invalid characters encountered", "hexData");
-                    }
+
+                    throw new ArgumentException("Input string is not a valid hex encoded string - invalid characters encountered", "hexData");
                 }
-                else
-                {
-                    throw new ArgumentNullException("hexData", "Input string cannot be null or empty");
-                }
+
+                throw new ArgumentNullException("hexData", "Input string cannot be null or empty");
             }
 
             /// <summary>Encodes given buffer into a user presentable representation.</summary>
@@ -149,12 +146,12 @@ namespace GSF
         /// <summary>
         /// Handles conversion of byte buffers to and from a decimal data format.
         /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
+        [SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible"), EditorBrowsable(EditorBrowsableState.Never)]
         public class DecimalEncoding : ByteEncoding
         {
             internal DecimalEncoding()
             {
-                // This class is meant for internal instatiation only.
+                // This class is meant for internal instantiation only.
             }
 
             /// <summary>Decodes given string back into a byte buffer.</summary>
@@ -189,15 +186,11 @@ namespace GSF
 
                         return bytes;
                     }
-                    else
-                    {
-                        throw new ArgumentException("Input string is not a valid decimal encoded string - invalid characters encountered", "decData");
-                    }
+
+                    throw new ArgumentException("Input string is not a valid decimal encoded string - invalid characters encountered", "decData");
                 }
-                else
-                {
-                    throw new ArgumentNullException("decData", "Input string cannot be null or empty");
-                }
+
+                throw new ArgumentNullException("decData", "Input string cannot be null or empty");
             }
 
             /// <summary>Encodes given buffer into a user presentable representation.</summary>
@@ -219,7 +212,7 @@ namespace GSF
         /// <summary>
         /// Handles conversion of byte buffers to and from a binary (i.e., 0 and 1's) data format.
         /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
+        [SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible"), EditorBrowsable(EditorBrowsableState.Never)]
         public class BinaryEncoding : ByteEncoding
         {
             private string[] m_byteImages;
@@ -328,15 +321,11 @@ namespace GSF
 
                         return bytes;
                     }
-                    else
-                    {
-                        throw new ArgumentException("Input string is not a valid binary encoded string - invalid characters encountered", "binaryData");
-                    }
+
+                    throw new ArgumentException("Input string is not a valid binary encoded string - invalid characters encountered", "binaryData");
                 }
-                else
-                {
-                    throw new ArgumentNullException("binaryData", "Input string cannot be null or empty");
-                }
+
+                throw new ArgumentNullException("binaryData", "Input string cannot be null or empty");
             }
 
             /// <summary>Encodes given buffer into a user presentable representation.</summary>
@@ -456,7 +445,7 @@ namespace GSF
         /// <summary>
         /// Handles conversion of byte buffers to and from a base64 data format.
         /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
+        [SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible"), EditorBrowsable(EditorBrowsableState.Never)]
         public class Base64Encoding : ByteEncoding
         {
             internal Base64Encoding()
@@ -491,22 +480,18 @@ namespace GSF
                 string base64String = Convert.ToBase64String(bytes, offset, length);
 
                 if (spacingCharacter == NoSpacing)
-                {
                     return base64String;
-                }
-                else
+
+                StringBuilder base64Image = new StringBuilder();
+
+                for (int x = 0; x <= base64String.Length - 1; x++)
                 {
-                    StringBuilder base64Image = new StringBuilder();
-
-                    for (int x = 0; x <= base64String.Length - 1; x++)
-                    {
-                        if (x > 0)
-                            base64Image.Append(spacingCharacter);
-                        base64Image.Append(base64String[x]);
-                    }
-
-                    return base64Image.ToString();
+                    if (x > 0)
+                        base64Image.Append(spacingCharacter);
+                    base64Image.Append(base64String[x]);
                 }
+
+                return base64Image.ToString();
             }
         }
 
@@ -517,7 +502,7 @@ namespace GSF
         /// <summary>
         /// Handles conversion of byte buffers to and from a ASCII data format.
         /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
+        [SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible"), EditorBrowsable(EditorBrowsableState.Never)]
         public class ASCIIEncoding : ByteEncoding
         {
             internal ASCIIEncoding()
@@ -552,22 +537,18 @@ namespace GSF
                 string asciiString = Encoding.ASCII.GetString(bytes, offset, length);
 
                 if (spacingCharacter == NoSpacing)
-                {
                     return asciiString;
-                }
-                else
+
+                StringBuilder asciiImage = new StringBuilder();
+
+                for (int x = 0; x <= asciiString.Length - 1; x++)
                 {
-                    StringBuilder asciiImage = new StringBuilder();
-
-                    for (int x = 0; x <= asciiString.Length - 1; x++)
-                    {
-                        if (x > 0)
-                            asciiImage.Append(spacingCharacter);
-                        asciiImage.Append(asciiString[x]);
-                    }
-
-                    return asciiImage.ToString();
+                    if (x > 0)
+                        asciiImage.Append(spacingCharacter);
+                    asciiImage.Append(asciiString[x]);
                 }
+
+                return asciiImage.ToString();
             }
         }
 
@@ -737,7 +718,7 @@ namespace GSF
 
         /// <summary>Handles byte to string conversions for implementations that are available from Byte.ToString.</summary>
         /// <param name="bytes">Encoded string to decode.</param>
-        /// <param name="offset">Offset into byte array to begin decoding straing at.</param>
+        /// <param name="offset">Offset into byte array to begin decoding string.</param>
         /// <param name="length">Number of bytes to decode starting at <paramref name="offset"/></param>
         /// <param name="spacingCharacter">Character to insert between each byte</param>
         /// <param name="format">String decoding format.</param>

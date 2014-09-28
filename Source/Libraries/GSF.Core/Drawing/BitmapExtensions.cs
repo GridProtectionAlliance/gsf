@@ -75,7 +75,7 @@ namespace GSF.Drawing
         /// }
         /// </code>
         /// </example>
-        public static Bitmap Resize(this Bitmap originalImage, Size newSize)
+        public static Bitmap Resize(this Image originalImage, Size newSize)
         {
             return originalImage.Resize(newSize, false);
         }
@@ -110,9 +110,9 @@ namespace GSF.Drawing
         /// }
         /// </code>
         /// </example>
-        public static Bitmap Resize(this Bitmap originalImage, Size newSize, bool disposeOriginal)
+        public static Bitmap Resize(this Image originalImage, Size newSize, bool disposeOriginal)
         {
-            Bitmap resizedImage = null;
+            Bitmap resizedImage;
 
             if (!(originalImage.PixelFormat == PixelFormat.Format1bppIndexed ||
                   originalImage.PixelFormat == PixelFormat.Format4bppIndexed ||
@@ -201,7 +201,7 @@ namespace GSF.Drawing
         /// }        
         /// </code>
         /// </example>
-        public static Bitmap Crop(this Bitmap originalImage, Rectangle croppedArea)
+        public static Bitmap Crop(this Image originalImage, Rectangle croppedArea)
         {
             return Crop(originalImage, croppedArea, false);
         }
@@ -236,11 +236,13 @@ namespace GSF.Drawing
         /// }
         /// </code>
         /// </example>
-        public static Bitmap Crop(this Bitmap originalImage, Rectangle croppedArea, bool disposeOriginal)
+        public static Bitmap Crop(this Image originalImage, Rectangle croppedArea, bool disposeOriginal)
         {
             // Create a crop of the original image.
             Bitmap croppedImage = new Bitmap(croppedArea.Width, croppedArea.Height, originalImage.PixelFormat);
+
             croppedImage.SetResolution(originalImage.HorizontalResolution, originalImage.VerticalResolution);
+
             using (Graphics croppedImageGraphic = Graphics.FromImage(croppedImage))
             {
                 croppedImageGraphic.DrawImage(originalImage, 0, 0, croppedArea, GraphicsUnit.Pixel);
@@ -286,7 +288,7 @@ namespace GSF.Drawing
         /// }
         /// </code>
         /// </example>
-        public static Bitmap ConvertTo(this Bitmap originalImage, ImageFormat newFormat)
+        public static Bitmap ConvertTo(this Image originalImage, ImageFormat newFormat)
         {
             return originalImage.ConvertTo(newFormat, false);
         }
@@ -322,9 +324,9 @@ namespace GSF.Drawing
         /// }
         /// </code>
         /// </example>
-        public static Bitmap ConvertTo(this Bitmap originalImage, ImageFormat newFormat, bool disposeOriginal)
+        public static Bitmap ConvertTo(this Image originalImage, ImageFormat newFormat, bool disposeOriginal)
         {
-            Bitmap newImage = null;
+            Bitmap newImage;
 
             using (BlockAllocatedMemoryStream newImageStream = new BlockAllocatedMemoryStream())
             {

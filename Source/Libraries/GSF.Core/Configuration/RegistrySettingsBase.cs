@@ -226,7 +226,7 @@ namespace GSF.Configuration
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void CreateSetting(string name, string setting, string value)
         {
-            string keyName = GetKeyName(name);
+            string keyName = GetFieldKeyName(name);
 
             if ((object)Registry.GetValue(keyName, setting, null) == null)
                 Registry.SetValue(keyName, setting, value, RegistryValueKind.String);
@@ -242,7 +242,7 @@ namespace GSF.Configuration
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override string RetrieveSetting(string name, string setting)
         {
-            return (string)Registry.GetValue(GetKeyName(name), setting, "");
+            return (string)Registry.GetValue(GetFieldKeyName(name), setting, "");
         }
 
         /// <summary>
@@ -255,7 +255,7 @@ namespace GSF.Configuration
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void StoreSetting(string name, string setting, string value)
         {
-            Registry.SetValue(GetKeyName(name), setting, value, RegistryValueKind.String);
+            Registry.SetValue(GetFieldKeyName(name), setting, value, RegistryValueKind.String);
         }
 
         /// <summary>
@@ -278,7 +278,7 @@ namespace GSF.Configuration
         /// <see cref="CategoryAttribute.Category"/> will only be returned if <see cref="UseCategoryAttributes"/> is <c>true</c>; otherwise
         /// <see cref="KeyName"/> value will be returned.
         /// </remarks>
-        public string GetKeyName(string name)
+        public string GetFieldKeyName(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name cannot be null or empty");

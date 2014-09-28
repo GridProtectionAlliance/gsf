@@ -255,7 +255,7 @@ namespace GSF.Configuration
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void CreateSetting(string name, string setting, string value)
         {
-            m_configFile.Settings[GetCategoryName(name)].Add(setting, value, GetDescription(name), GetEncryptStatus(name), GetSettingScope(name));
+            m_configFile.Settings[GetFieldCategoryName(name)].Add(setting, value, GetFieldDescription(name), GetEncryptStatus(name), GetFieldSettingScope(name));
         }
 
         /// <summary>
@@ -268,7 +268,7 @@ namespace GSF.Configuration
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override string RetrieveSetting(string name, string setting)
         {
-            return m_configFile.Settings[GetCategoryName(name)][setting].Value;
+            return m_configFile.Settings[GetFieldCategoryName(name)][setting].Value;
         }
 
         /// <summary>
@@ -281,7 +281,7 @@ namespace GSF.Configuration
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void StoreSetting(string name, string setting, string value)
         {
-            m_configFile.Settings[GetCategoryName(name)][setting].Value = value;
+            m_configFile.Settings[GetFieldCategoryName(name)][setting].Value = value;
         }
 
         /// <summary>
@@ -304,7 +304,7 @@ namespace GSF.Configuration
         /// <see cref="CategoryAttribute.Category"/> will only be returned if <see cref="UseCategoryAttributes"/> is <c>true</c>; otherwise
         /// <see cref="CategoryName"/> value will be returned.
         /// </remarks>
-        public string GetCategoryName(string name)
+        public string GetFieldCategoryName(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name cannot be null or empty");
@@ -323,7 +323,7 @@ namespace GSF.Configuration
         /// <param name="name">Field or property name.</param>
         /// <returns>Description applied to specified field or property; or null if one does not exist.</returns>
         /// <exception cref="ArgumentException"><paramref name="name"/> cannot be null or empty.</exception>
-        public string GetDescription(string name)
+        public string GetFieldDescription(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name cannot be null or empty");
@@ -337,7 +337,7 @@ namespace GSF.Configuration
         /// <param name="name">Field or property name.</param>
         /// <returns>Description applied to specified field or property; or null if one does not exist.</returns>
         /// <exception cref="ArgumentException"><paramref name="name"/> cannot be null or empty.</exception>
-        public SettingScope GetSettingScope(string name)
+        public SettingScope GetFieldSettingScope(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name cannot be null or empty");

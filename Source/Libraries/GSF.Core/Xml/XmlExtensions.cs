@@ -38,7 +38,9 @@ using System.Xml;
 
 namespace GSF.Xml
 {
-    /// <summary>Defines extension functions related to Xml elements.</summary>
+    /// <summary>
+    /// Defines extension functions related to Xml elements.
+    /// </summary>
     public static class XmlExtensions
     {
         /// <summary>Gets an XML node from given path, creating the entire path if it does not exist.</summary>
@@ -188,12 +190,14 @@ namespace GSF.Xml
         public static DataSet GetDataSet(this string xmlData)
         {
             DataSet dataSet = new DataSet();
-            XmlTextReader xmlReader = new XmlTextReader(xmlData, XmlNodeType.Document, null);
 
-            xmlReader.ReadOuterXml();
+            using (XmlTextReader xmlReader = new XmlTextReader(xmlData, XmlNodeType.Document, null))
+            {
+                xmlReader.ReadOuterXml();
 
-            // Reads the outer XML into the Dataset.
-            dataSet.ReadXml(xmlReader);
+                // Reads the outer XML into the Dataset.
+                dataSet.ReadXml(xmlReader);
+            }
 
             return dataSet;
         }

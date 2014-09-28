@@ -141,7 +141,7 @@ namespace GSF.Units.EE
         /// <returns><c>true</c> if the current object is equal to the other parameter; otherwise, <c>false</c>.</returns>
         public bool Equals(SignalReference other)
         {
-            return (string.Compare(Acronym, other.Acronym, true) == 0 && Kind == other.Kind && Index == other.Index);
+            return (string.Compare(Acronym, other.Acronym, StringComparison.OrdinalIgnoreCase) == 0 && Kind == other.Kind && Index == other.Index);
         }
 
         /// <summary>
@@ -151,7 +151,7 @@ namespace GSF.Units.EE
         /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
         public int CompareTo(SignalReference other)
         {
-            int acronymCompare = string.Compare(Acronym, other.Acronym, true);
+            int acronymCompare = string.Compare(Acronym, other.Acronym, StringComparison.OrdinalIgnoreCase);
 
             if (acronymCompare == 0)
             {

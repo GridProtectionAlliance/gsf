@@ -73,6 +73,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -311,6 +312,7 @@ namespace GSF.Collections
         /// <para>Required unless <see cref="ProcessQueue{T}.ProcessItemsFunction"/> is implemented.</para>
         /// <para>Creates an asynchronous <see cref="ProcessQueue{T}"/> to process individual items - one item at a time - on multiple threads.</para>
         /// </remarks>
+        [SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
         public delegate void ProcessItemFunctionSignature(T item);
 
         /// <summary>
@@ -321,6 +323,7 @@ namespace GSF.Collections
         /// <para>Required unless <see cref="ProcessQueue{T}.ProcessItemFunction"/> is implemented.</para>
         /// <para>Creates an asynchronous <see cref="ProcessQueue{T}"/> to process groups of items simultaneously on multiple threads.</para>
         /// </remarks>
+        [SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
         public delegate void ProcessItemsFunctionSignature(T[] items);
 
         /// <summary>
@@ -339,6 +342,7 @@ namespace GSF.Collections
         /// processing must evaluate as "CanProcessItem = True" before any items are processed.
         /// </para>
         /// </remarks>
+        [SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
         public delegate bool CanProcessItemFunctionSignature(T item);
 
         // Events

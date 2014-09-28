@@ -31,6 +31,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using GSF.Annotations;
@@ -175,6 +176,7 @@ namespace GSF.Data
         /// Creates and opens a new <see cref="AdoDataConnection"/> based on connection settings in configuration file.
         /// </summary>
         /// <param name="settingsCategory">Settings category to use for connection settings.</param>
+        [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope")]
         public AdoDataConnection(string settingsCategory)
         {
             if (string.IsNullOrWhiteSpace(settingsCategory))
@@ -722,19 +724,19 @@ namespace GSF.Data
         /// <summary>
         /// Returns proper <see cref="System.Guid"/> implementation for connected <see cref="AdoDataConnection"/> database type.
         /// </summary>
-        /// <param name="guid"><see cref="System.Guid"/> to format per database type.</param>
+        /// <param name="value"><see cref="System.Guid"/> to format per database type.</param>
         /// <returns>Proper <see cref="System.Guid"/> implementation for connected <see cref="AdoDataConnection"/> database type.</returns>
-        public object Guid(Guid guid)
+        public object Guid(Guid value)
         {
             if (IsJetEngine)
-                return "{" + guid + "}";
+                return "{" + value + "}";
 
             if (IsSqlite || IsOracle)
-                return guid.ToString().ToLower();
+                return value.ToString().ToLower();
 
             //return "P" + guid.ToString();
 
-            return guid;
+            return value;
         }
 
         /// <summary>
@@ -765,6 +767,7 @@ namespace GSF.Data
             return string.Format(format, parameters);
         }
 
+        [SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase")]
         private DatabaseType GetDatabaseType()
         {
             DatabaseType type = DatabaseType.Other;
@@ -825,7 +828,7 @@ namespace GSF.Data
         // Static Constructor
         static AdoDataConnection()
         {
-            s_configuredConnections = new ConcurrentDictionary<string, AdoDataConnection>(StringComparer.InvariantCultureIgnoreCase);
+            s_configuredConnections = new ConcurrentDictionary<string, AdoDataConnection>(StringComparer.OrdinalIgnoreCase);
         }
 
         // Static Methods

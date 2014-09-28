@@ -220,7 +220,7 @@ namespace GSF.PhasorProtocols.UI.Modal
                 TabItemUdpServer.Visibility = Visibility.Collapsed;
             }
 
-            m_keyvaluepairs = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            m_keyvaluepairs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             ComboboxParity.ItemsSource = CommonFunctions.GetParities();
             ComboboxStopBits.ItemsSource = CommonFunctions.GetStopBits();

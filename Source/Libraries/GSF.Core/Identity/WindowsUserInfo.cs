@@ -41,7 +41,7 @@ using Microsoft.Win32;
 namespace GSF.Identity
 {
     // Windows implementation of key UserInfo class elements
-    internal class WindowsUserInfo : IUserInfo
+    internal sealed class WindowsUserInfo : IUserInfo
     {
         #region [ Members ]
 
@@ -194,6 +194,7 @@ namespace GSF.Identity
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Globalization", "CA1309:UseOrdinalStringComparison", MessageId = "System.String.LastIndexOf(System.String,System.StringComparison)")]
         public DateTime AccountCreationDate
         {
             get
@@ -211,7 +212,7 @@ namespace GSF.Identity
                                 // Remove any trailing directory separator character from the file path.
                                 string rootFolder = FilePath.AddPathSuffix(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
                                 string userFolder = FilePath.GetLastDirectoryName(rootFolder);
-                                int folderLocation = rootFolder.LastIndexOf(userFolder, StringComparison.InvariantCultureIgnoreCase);
+                                int folderLocation = rootFolder.LastIndexOf(userFolder, StringComparison.OrdinalIgnoreCase);
 
                                 // Remove user profile name for current user (this class may be for user other than owner of current thread)                            
                                 rootFolder = FilePath.AddPathSuffix(rootFolder.Substring(0, folderLocation));
@@ -433,6 +434,7 @@ namespace GSF.Identity
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope")]
         public string[] LocalGroups
         {
             get
@@ -729,6 +731,7 @@ namespace GSF.Identity
             return string.Empty;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope")]
         private DirectorySearcher CreateDirectorySearcher()
         {
             DirectorySearcher searcher;
@@ -741,6 +744,7 @@ namespace GSF.Identity
             return searcher;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
         private long ConvertToLong(object largeInteger)
         {
             Type type = largeInteger.GetType();
@@ -759,6 +763,7 @@ namespace GSF.Identity
         private static readonly string[] s_builtInLocalGroups;
 
         // Static constructor
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline")]
         static WindowsUserInfo()
         {
             // Determine built-in group list - this is not expected to change so it is statically cached
@@ -829,6 +834,7 @@ namespace GSF.Identity
             return s_builtInLocalGroups;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope")]
         public static IPrincipal AuthenticateUser(string domain, string userName, string password, out string errorMessage)
         {
             errorMessage = null;
@@ -1165,6 +1171,7 @@ namespace GSF.Identity
             return false;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Globalization", "CA1309:UseOrdinalStringComparison", MessageId = "System.String.Compare(System.String,System.String,System.StringComparison)")]
         public static bool UserIsInLocalGroup(string groupName, string userName)
         {
             // Create a directory entry for the local machine
@@ -1191,7 +1198,7 @@ namespace GSF.Identity
                     {
                         using (DirectoryEntry groupUserEntry = new DirectoryEntry(adsUser))
                         {
-                            if (string.Compare(groupUserEntry.Path, userPath, StringComparison.InvariantCultureIgnoreCase) == 0)
+                            if (string.Compare(groupUserEntry.Path, userPath, StringComparison.OrdinalIgnoreCase) == 0)
                                 return true;
                         }
                     }
@@ -1217,6 +1224,7 @@ namespace GSF.Identity
             return false;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Globalization", "CA1309:UseOrdinalStringComparison", MessageId = "System.String.Compare(System.String,System.String,System.StringComparison)")]
         public static bool AddUserToLocalGroup(string groupName, string userName)
         {
             // Create a directory entry for the local machine
@@ -1244,7 +1252,7 @@ namespace GSF.Identity
                         using (DirectoryEntry groupUserEntry = new DirectoryEntry(adsUser))
                         {
                             // If user already exists in group, exit and return false
-                            if (string.Compare(groupUserEntry.Path, userPath, StringComparison.InvariantCultureIgnoreCase) == 0)
+                            if (string.Compare(groupUserEntry.Path, userPath, StringComparison.OrdinalIgnoreCase) == 0)
                                 return false;
                         }
                     }
@@ -1272,6 +1280,7 @@ namespace GSF.Identity
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Globalization", "CA1309:UseOrdinalStringComparison", MessageId = "System.String.Compare(System.String,System.String,System.StringComparison)")]
         public static bool RemoveUserFromLocalGroup(string groupName, string userName)
         {
             // Create a directory entry for the local machine
@@ -1299,7 +1308,7 @@ namespace GSF.Identity
                         using (DirectoryEntry groupUserEntry = new DirectoryEntry(adsUser))
                         {
                             // If user exists in group, remove user and return true
-                            if (string.Compare(groupUserEntry.Path, userPath, StringComparison.InvariantCultureIgnoreCase) == 0)
+                            if (string.Compare(groupUserEntry.Path, userPath, StringComparison.OrdinalIgnoreCase) == 0)
                             {
                                 groupEntry.Invoke("Remove", new object[] { userPath });
                                 return true;
@@ -1463,6 +1472,7 @@ namespace GSF.Identity
             return IsSchemaSID(sid, "Group");
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Globalization", "CA1307:SpecifyStringComparison", MessageId = "System.String.StartsWith(System.String)")]
         private static bool IsSchemaSID(string sid, string schemaClassName)
         {
             try

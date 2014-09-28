@@ -88,6 +88,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -318,8 +319,9 @@ namespace GSF
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentException">All delimiters must be unique -or- all keys must be unique when
         /// <paramref name="ignoreDuplicateKeys"/> is set to <c>false</c>.</exception>
-        /// <exception cref="FormatException">Total nested key/value value pair expressions are mismatched -or- encountered
+        /// <exception cref="FormatException">Total nested key/value pair expressions are mismatched -or- encountered
         /// <paramref name="endValueDelimiter"/> before <paramref name="startValueDelimiter"/>.</exception>
+        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         public static Dictionary<string, string> ParseKeyValuePairs(this string value, char parameterDelimiter = ';', char keyValueDelimiter = '=', char startValueDelimiter = '{', char endValueDelimiter = '}', bool ignoreDuplicateKeys = true)
         {
             if (value == (string)null)
@@ -642,7 +644,7 @@ namespace GSF
 
             string duplicate = duplicatedValue + duplicatedValue;
 
-            while (value.IndexOf(duplicate) > -1)
+            while (value.IndexOf(duplicate, StringComparison.Ordinal) > -1)
             {
                 value = value.Replace(duplicate, duplicatedValue);
             }
@@ -756,7 +758,7 @@ namespace GSF
             if (value[value.Length - 1] != quoteChar)
                 value = string.Concat(value, quoteChar);
 
-            if (!value.StartsWith(quoteChar.ToString()))
+            if (!value.StartsWith(quoteChar.ToString(), StringComparison.Ordinal))
                 value = string.Concat(quoteChar, value);
 
             return value;
@@ -1204,7 +1206,7 @@ namespace GSF
             if (string.IsNullOrEmpty(startString))
                 return value;
 
-            if (value.IndexOf(startString) == 0)
+            if (value.IndexOf(startString, StringComparison.Ordinal) == 0)
                 return value;
 
             return string.Concat(startString, value);
@@ -1264,7 +1266,7 @@ namespace GSF
             if (string.IsNullOrEmpty(endString))
                 return value;
 
-            if (value.EndsWith(endString))
+            if (value.EndsWith(endString, StringComparison.Ordinal))
                 return value;
 
             return string.Concat(value, endString);
@@ -1423,7 +1425,7 @@ namespace GSF
         /// Places an ellipsis in the middle of a string as it is trimmed to length specified.
         /// </summary>
         /// <param name="value">The string to process.</param>
-        /// <param name="length">The maximum returned string length; mimimum value is 5.</param>
+        /// <param name="length">The maximum returned string length; minimum value is 5.</param>
         /// <returns>
         /// A trimmed string of the specified <paramref name="length"/> or empty string if <paramref name="value"/> is null or empty.
         /// </returns>
@@ -1452,7 +1454,7 @@ namespace GSF
         /// Places an ellipsis at the end of a string as it is trimmed to length specified.
         /// </summary>
         /// <param name="value">The string to process.</param>
-        /// <param name="length">The maximum returned string length; mimimum value is 5.</param>
+        /// <param name="length">The maximum returned string length; minimum value is 5.</param>
         /// <returns>
         /// A trimmed string of the specified <paramref name="length"/> or empty string if <paramref name="value"/> is null or empty.
         /// </returns>
@@ -1480,6 +1482,7 @@ namespace GSF
         /// </summary>
         /// <param name="value">The string to escape.</param>
         /// <returns>URL encoded string.</returns>
+        [SuppressMessage("Microsoft.Design", "CA1055:UriReturnValuesShouldNotBeStrings")]
         public static string UriEncode(this string value)
         {
             return Uri.EscapeDataString(value);

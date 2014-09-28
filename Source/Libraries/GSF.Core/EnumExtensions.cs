@@ -72,7 +72,7 @@ namespace GSF
 
             foreach (object value in Enum.GetValues(type))
             {
-                if (string.Compare(description, ((Enum)value).GetDescription(), ignoreCase) == 0)
+                if (string.Compare(description, ((Enum)value).GetDescription(), ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) == 0)
                     return value;
             }
 
@@ -94,7 +94,7 @@ namespace GSF
 
             foreach (object value in Enum.GetValues(type))
             {
-                if (string.Compare(name, ((Enum)value).ToString(), ignoreCase) == 0)
+                if (string.Compare(name, ((Enum)value).ToString(), ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) == 0)
                     return value;
             }
 

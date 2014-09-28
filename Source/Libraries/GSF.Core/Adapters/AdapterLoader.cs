@@ -41,7 +41,7 @@
 //       Updated AdapterLoadException event to not provide the adapter's type since it might not be 
 //       available when processing serialized adapter instances.
 //  04/05/2011 - Pinal C. Patel
-//       Modified Deserializer class to use TypeName property instead of Type property to get the type 
+//       Modified deserializer class to use TypeName property instead of Type property to get the type 
 //       of the object being deserialized when deserializing from an XML file.
 //  04/14/2011 - Pinal C. Patel
 //       Updated to use new serialization methods in GSF.Serialization class.
@@ -69,13 +69,15 @@ using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Threading;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.IO;
+#if !MONO
 using GSF.Units;
+using System.Threading;
+#endif
 
 namespace GSF.Adapters
 {
@@ -234,7 +236,7 @@ namespace GSF.Adapters
     /// </example>
     /// <seealso cref="Adapter"/>
     /// <seealso cref="IAdapter"/>
-    public class AdapterLoader<T> : ISupportLifecycle, IProvideStatus, IPersistSettings where T : IAdapter
+    public class AdapterLoader<T> : ISupportLifecycle, IProvideStatus, IPersistSettings where T : class, IAdapter
     {
         #region [ Members ]
 
@@ -244,31 +246,33 @@ namespace GSF.Adapters
         {
             public T Deserialize(string adapterFile, AdapterFileFormat adapterFormat)
             {
+                // Attempt binary deserialization.
                 if (adapterFormat == AdapterFileFormat.SerializedBin)
-                {
-                    // Attempt binary deserialization.
                     return Serialization.Deserialize<T>(File.ReadAllBytes(adapterFile), SerializationFormat.Binary);
-                }
-                else if (adapterFormat == AdapterFileFormat.SerializedXml)
+
+                if (adapterFormat != AdapterFileFormat.SerializedXml)
+                    throw new NotSupportedException();
+
+                // Attempt XML deserialization.
+                XDocument xml = XDocument.Parse(File.ReadAllText(adapterFile));
+
+                if ((object)xml.Root != null)
                 {
-                    // Attempt XML deserialization.
-                    XDocument xml = XDocument.Parse(File.ReadAllText(adapterFile));
                     XElement type = xml.Root.Element("TypeName");
+
                     if ((object)type != null)
                     {
                         // Type element required for looking up the adapter's type.
                         XmlSerializer serializer = new XmlSerializer(Type.GetType(type.Value));
-                        return (T)serializer.Deserialize(new StringReader(xml.ToString()));
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException("TypeName element is missing in the XML");
+
+                        using (StringReader reader = new StringReader(xml.ToString()))
+                        {
+                            return (T)serializer.Deserialize(reader);
+                        }
                     }
                 }
-                else
-                {
-                    throw new NotSupportedException();
-                }
+
+                throw new InvalidOperationException("TypeName element is missing in the XML");
             }
         }
 
@@ -868,7 +872,7 @@ namespace GSF.Adapters
                 // Watch for adapters.
                 if (m_watchForAdapters)
                 {
-                    // Create watcher only if needed to avoid a bug in .NET 4.0 that causes memory leak.
+                    // Create file watcher only if needed to avoid issue in .NET 4.0 that causes memory leak.
                     // http://support.microsoft.com/kb/2628838
                     m_adapterWatcher = new FileSystemWatcher();
                     m_adapterWatcher.Path = m_adapterDirectory;
@@ -1056,9 +1060,7 @@ namespace GSF.Adapters
         /// </remarks>
         protected virtual void MonitorAdapterResources()
         {
-#if MONO
-            return;
-#else
+#if !MONO
             // Enable individual application domain resource tracking if it is enabled.
             if (!AppDomain.MonitoringIsEnabled)
                 AppDomain.MonitoringIsEnabled = true;
@@ -1079,8 +1081,9 @@ namespace GSF.Adapters
                 {
                     try
                     {
-                        // Force a full blocking GC so the memory usage of adapters is updated.
-                        GC.Collect();
+                        // JRC - This is not a great idea...
+                        //// Force a full blocking GC so the memory usage of adapters is updated.
+                        //GC.Collect();
 
                         foreach (T adapter in m_adapters)
                         {
@@ -1295,8 +1298,8 @@ namespace GSF.Adapters
         {
             if ((object)adapter != null)
                 return adapter.HostFile;
-            else
-                return null;
+
+            return null;
         }
 
         private static bool SetAdapterFilePath(T adapter, string adapterFile)
@@ -1306,10 +1309,8 @@ namespace GSF.Adapters
                 adapter.HostFile = adapterFile;
                 return true;
             }
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
 
         private void SaveCurrentState()

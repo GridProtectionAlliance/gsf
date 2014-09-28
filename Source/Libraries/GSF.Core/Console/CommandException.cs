@@ -28,6 +28,7 @@ namespace GSF.Console
     /// <summary>
     /// Represents an exception that is thrown when <see cref="Command.Execute(string, string, int)"/> reports standard error output.
     /// </summary>
+    [Serializable]
     public class CommandException : Exception
     {
         #region [ Members ]

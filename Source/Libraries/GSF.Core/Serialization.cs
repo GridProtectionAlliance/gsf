@@ -40,6 +40,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -108,7 +109,7 @@ namespace GSF
         /// the InnerException property.
         /// </exception>
         /// <typeparam name="T">The type of the object to create from the serialized string <paramref name="serializedObject"/>.</typeparam>
-        /// <param name="serializedObject">A <see cref="string"/> representing the object (<paramref name="serializedObject"/>) to de-serialize.</param>
+        /// <param name="serializedObject">A <see cref="string"/> representing the object (<paramref name="serializedObject"/>) to deserialize.</param>
         /// <returns>A type T based on <paramref name="serializedObject"/>.</returns>
         [Obsolete("This method will be removed in future builds, use the Deserialize() method instead.")]
         public static T GetObject<T>(string serializedObject)
@@ -122,8 +123,8 @@ namespace GSF
         /// </summary>
         /// <typeparam name="T">The generic type T that is to be deserialized.</typeparam>
         /// <param name="serializedObject"><see cref="string"/> that contains the serialized representation of the object.</param>
-        /// <param name="deserializedObject">An object of type T that is passed in as the container to hold the de-serialized object from the string <paramref name="serializedObject"/>.</param>
-        /// <returns><see cref="bool"/> value indicating if the de-serialization was successful.</returns>
+        /// <param name="deserializedObject">An object of type T that is passed in as the container to hold the deserialized object from the string <paramref name="serializedObject"/>.</param>
+        /// <returns><see cref="bool"/> value indicating if the deserialization was successful.</returns>
         [Obsolete("This method will be removed in future builds, use the Deserialize() method instead.")]
         public static bool TryGetObject<T>(string serializedObject, out T deserializedObject)
         {
@@ -149,7 +150,7 @@ namespace GSF
         /// <exception cref="System.Runtime.Serialization.SerializationException">Serialized object data is invalid or length is 0.</exception>
         /// <exception cref="System.Security.SecurityException">The caller does not have the required permission. </exception>
         /// <typeparam name="T">The type of the object to create from the serialized byte array <paramref name="serializedObject"/>.</typeparam>
-        /// <param name="serializedObject">A <see cref="byte"/> array representing the object (<paramref name="serializedObject"/>) to de-serialize.</param>
+        /// <param name="serializedObject">A <see cref="byte"/> array representing the object (<paramref name="serializedObject"/>) to deserialize.</param>
         /// <returns>A type T based on <paramref name="serializedObject"/>.</returns>
         [Obsolete("This method will be removed in future builds, use the Deserialize() method instead.")]
         public static T GetObject<T>(byte[] serializedObject)
@@ -161,10 +162,10 @@ namespace GSF
         /// <summary>
         /// Attempts binary deserialization on the byte array and returns the typed object for it.
         /// </summary>
-        /// <param name="serializedObject">A <see cref="byte"/> array representing the object (<paramref name="serializedObject"/>) to de-serialize.</param>
-        /// <param name="deserializedObject">A type T object, passed by reference, that is used to be hold the de-serialized object.</param>
+        /// <param name="serializedObject">A <see cref="byte"/> array representing the object (<paramref name="serializedObject"/>) to deserialize.</param>
+        /// <param name="deserializedObject">A type T object, passed by reference, that is used to be hold the deserialized object.</param>
         /// <typeparam name="T">The generic type T that is to be deserialized.</typeparam>
-        /// <returns>A <see cref="bool"/> which indicates whether the de-serialization process was successful.</returns>
+        /// <returns>A <see cref="bool"/> which indicates whether the deserialization process was successful.</returns>
         [Obsolete("This method will be removed in future builds, use the Deserialize() method instead.")]
         public static bool TryGetObject<T>(byte[] serializedObject, out T deserializedObject)
         {
@@ -189,7 +190,7 @@ namespace GSF
         /// </remarks>
         /// <exception cref="System.Runtime.Serialization.SerializationException">Serialized object data is invalid or length is 0.</exception>
         /// <exception cref="System.Security.SecurityException">The caller does not have the required permission. </exception>
-        /// <param name="serializedObject">A <see cref="byte"/> array representing the object (<paramref name="serializedObject"/>) to de-serialize.</param>
+        /// <param name="serializedObject">A <see cref="byte"/> array representing the object (<paramref name="serializedObject"/>) to deserialize.</param>
         /// <returns>An <see cref="object"/> based on <paramref name="serializedObject"/>.</returns>
         [Obsolete("This method will be removed in future builds, use the Deserialize() method instead.")]
         public static object GetObject(byte[] serializedObject)
@@ -201,9 +202,9 @@ namespace GSF
         /// <summary>
         /// Attempts binary deserialization on the byte array and returns the typed object for it.
         /// </summary>
-        /// <param name="serializedObject">A <see cref="byte"/> array representing the object (<paramref name="serializedObject"/>) to de-serialize.</param>
-        /// <param name="deserializedObject">An <see cref="object"/>, passed by reference, that is used to be hold the de-serialized object.</param>
-        /// <returns>A <see cref="bool"/> which indicates whether the de-serialization process was successful.</returns>
+        /// <param name="serializedObject">A <see cref="byte"/> array representing the object (<paramref name="serializedObject"/>) to deserialize.</param>
+        /// <param name="deserializedObject">An <see cref="object"/>, passed by reference, that is used to be hold the deserialized object.</param>
+        /// <returns>A <see cref="bool"/> which indicates whether the deserialization process was successful.</returns>
         [Obsolete("This method will be removed in future builds, use the Deserialize() method instead.")]
         public static bool TryGetObject(byte[] serializedObject, out object deserializedObject)
         {
@@ -273,6 +274,7 @@ namespace GSF
         /// (TVA Code Library, Time Series Framework, TVA.PhasorProtocols, and PMU Connection Tester) into classes
         /// in the Grid Solutions Framework.
         /// </summary>
+        [SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly SerializationBinder LegacyBinder = new LegacySerializationBinder();
 
         // Serialization binder used to deserialize files that were serialized using the old library frameworks.
@@ -303,7 +305,8 @@ namespace GSF
                     .Replace("Ieee1344", "IEEE1344")                        // 2013 GSF uppercase phasor protocol namespace
                     .Replace("IeeeC37_118", "IEEEC37_118");                 // 2013 GSF uppercase phasor protocol namespace
 
-                if (newTypeName.StartsWith("PhasorProtocols"))              // 2009 TVA Code Library namespace
+                // Check for 2009 TVA Code Library namespace
+                if (newTypeName.StartsWith("PhasorProtocols", StringComparison.Ordinal))
                     newTypeName = "GSF." + newTypeName;
 
                 // Search each assembly in the current application

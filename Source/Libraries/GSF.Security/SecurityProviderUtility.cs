@@ -108,7 +108,7 @@ namespace GSF.Security
 
             // If an application is being launched from an installer it will have the NT AUTHORITY\System Identity which
             // will not have available user information - so we pickup username from Environment instead
-            if (username.StartsWith("NT AUTHORITY\\", StringComparison.InvariantCultureIgnoreCase))
+            if (username.StartsWith("NT AUTHORITY\\", StringComparison.OrdinalIgnoreCase))
                 username = Environment.UserDomainName + "\\" + Environment.UserName;
 
             // Instantiate the provider.

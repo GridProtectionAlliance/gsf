@@ -1275,7 +1275,7 @@ namespace PhasorProtocolAdapters
                     // See if this is the quality flags designation for this output stream 
                     if (signal.Kind == SignalKind.Quality)
                     {
-                        if (Name.Equals(signal.Acronym, StringComparison.InvariantCultureIgnoreCase))
+                        if (Name.Equals(signal.Acronym, StringComparison.OrdinalIgnoreCase))
                         {
                             if (foundQualityFlagsMeasurement)
                                 throw new Exception("Only one quality flags measurement can be assigned to an output stream - additional quality flags will be ignored.");

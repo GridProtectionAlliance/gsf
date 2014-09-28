@@ -29,6 +29,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -49,13 +50,14 @@ using Novell.Directory.Ldap;
 namespace GSF.Identity
 {
     // Unix implementation of key UserInfo class elements
-    internal class UnixUserInfo : IUserInfo
+    internal sealed class UnixUserInfo : IUserInfo
     {
         #region [ Members ]
 
         // Nested Types
 
         // ReSharper disable UnusedMember.Local
+        [Serializable]
         private class UnixIdentity : WindowsIdentity
         {
             #region [ Members ]
@@ -617,7 +619,7 @@ namespace GSF.Identity
                         dc = ParseDNTokens(dnGroup, "DC");
 
                         // If group domain matches LDAP root, assume this is a valid group
-                        if (dc.Equals(ldapRoot, StringComparison.InvariantCultureIgnoreCase))
+                        if (dc.Equals(ldapRoot, StringComparison.OrdinalIgnoreCase))
                             groups.Add(string.Format("{0}\\{1}", m_parent.Domain, cn));
                     }
 
@@ -752,7 +754,7 @@ namespace GSF.Identity
                             identity = principal.Identity as UnixIdentity;
 
                             // If domain user has already been authenticated, we should already have an active LDAP connection
-                            if ((object)identity != null && identity.LoginID.Equals(m_parent.LoginID, StringComparison.InvariantCultureIgnoreCase))
+                            if ((object)identity != null && identity.LoginID.Equals(m_parent.LoginID, StringComparison.OrdinalIgnoreCase))
                             {
                                 m_connection = identity.Connection;
                                 m_ldapRoot = identity.LdapRoot ?? m_parent.Domain;
@@ -781,7 +783,7 @@ namespace GSF.Identity
                         else
                         {
                             // If PAM authentication succeeded but no LDAP connection can be found, we attempt to treat this user as local
-                            if ((object)identity != null && identity.LoginID.Equals(m_parent.LoginID, StringComparison.InvariantCultureIgnoreCase))
+                            if ((object)identity != null && identity.LoginID.Equals(m_parent.LoginID, StringComparison.OrdinalIgnoreCase))
                             {
                                 m_isLocalAccount = true;
                                 m_enabled = true;
@@ -1006,6 +1008,7 @@ namespace GSF.Identity
             return principal;
         }
 
+        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         private static string GetLdapHost()
         {
             string ldapHost = null;
@@ -1094,7 +1097,9 @@ namespace GSF.Identity
                 {
                     string line;
 
-                    using (StreamReader ldapConf = new StreamReader(new MemoryStream(Encoding.Default.GetBytes(Command.Execute("adinfo").StandardOutput))))
+                    MemoryStream stream = new MemoryStream(Encoding.Default.GetBytes(Command.Execute("adinfo").StandardOutput));
+
+                    using (StreamReader ldapConf = new StreamReader(stream))
                     {
                         do
                         {
@@ -1131,7 +1136,9 @@ namespace GSF.Identity
                 {
                     string line;
 
-                    using (StreamReader ldapConf = new StreamReader(new MemoryStream(Encoding.Default.GetBytes(Command.Execute("lw-get-status").StandardOutput))))
+                    MemoryStream stream = new MemoryStream(Encoding.Default.GetBytes(Command.Execute("lw-get-status").StandardOutput));
+
+                    using (StreamReader ldapConf = new StreamReader(stream))
                     {
                         do
                         {
@@ -1471,7 +1478,7 @@ namespace GSF.Identity
             {
                 try
                 {
-                    return new HashSet<string>(PtrToStringArray(groupMembers), StringComparer.InvariantCulture);
+                    return new HashSet<string>(PtrToStringArray(groupMembers), StringComparer.Ordinal);
                 }
                 finally
                 {
@@ -1582,7 +1589,7 @@ namespace GSF.Identity
                 UnixIdentity identity = principal.Identity as UnixIdentity;
 
                 // If user has already been authenticated, we can load pre-parsed shadow information
-                if ((object)identity != null && identity.LoadedUserPasswordInformation && identity.UserName.Equals(userName, StringComparison.InvariantCultureIgnoreCase))
+                if ((object)identity != null && identity.LoadedUserPasswordInformation && identity.UserName.Equals(userName, StringComparison.OrdinalIgnoreCase))
                 {
                     userPasswordInformation = identity.UserPasswordInformation;
                     accountStatus = identity.AccountStatus;

@@ -41,6 +41,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -85,7 +86,7 @@ namespace GSF
         {
             // Recurse through types until you reach a base type of "System.Object" or "System.MarshalByRef".
 #if MONO
-            if ((object)type.BaseType == null || string.Compare(type.BaseType.FullName, "System.Object") == 0 || string.Compare(type.BaseType.FullName, "System.MarshalByRefObject") == 0)
+            if ((object)type.BaseType == null || type.BaseType.FullName.Equals("System.Object", StringComparison.Ordinal) || type.BaseType.FullName.Equals("System.MarshalByRefObject", StringComparison.Ordinal))
 #else
             if ((object)type.BaseType == null || type.BaseType == typeof(object) || type.BaseType == typeof(MarshalByRefObject))
 #endif
@@ -138,6 +139,7 @@ namespace GSF
         /// <param name="excludeAbstractTypes">true to exclude public types that are abstract; otherwise false.</param>
         /// <param name="validateReferences">True to validate references of loaded assemblies before attempting to instantiate types; false otherwise.</param>
         /// <returns>Public types that implement the specified <paramref name="type"/>.</returns>
+        [SuppressMessage("Microsoft.Reliability", "CA2001:AvoidCallingProblematicMethods", MessageId = "System.Reflection.Assembly.LoadFrom")]
         public static List<Type> LoadImplementations(this Type type, string binariesDirectory, bool excludeAbstractTypes, bool validateReferences = true)
         {
             Assembly asm;

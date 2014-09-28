@@ -19,13 +19,14 @@
 //  3/8/2014 - Steven E. Chisholm
 //       Generated original version of source code. 
 //       
-//
 //******************************************************************************************************
 
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 
 namespace GSF.Threading
 {
+    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable")]
     internal class ThreadContainerDedicated
         : ThreadContainerBase
     {

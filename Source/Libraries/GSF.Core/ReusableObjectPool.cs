@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GSF
 {
@@ -313,7 +314,8 @@ namespace GSF
         /// <summary>
         /// Default static instance which can be shared throughout the application.
         /// </summary>
-        public static readonly ReusableObjectPool<T> Default = new ReusableObjectPool<T>(); 
+        [SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
+        public static readonly ReusableObjectPool<T> Default = new ReusableObjectPool<T>();
     }
 
     /// <summary>
@@ -328,7 +330,7 @@ namespace GSF
     /// using reflection), otherwise you should use the generic <see cref="ReusableObjectPool{T}"/>.
     /// </para>
     /// </remarks>
-    public class ReusableObjectPool
+    public static class ReusableObjectPool
     {
         private static readonly ConcurrentDictionary<Type, ConcurrentQueue<object>> s_objectPools = new ConcurrentDictionary<Type, ConcurrentQueue<object>>();
 

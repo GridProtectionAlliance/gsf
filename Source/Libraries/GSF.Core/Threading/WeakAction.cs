@@ -44,6 +44,7 @@ namespace GSF.Threading
     /// object of the target method.
     /// </para>
     /// </remarks>
+    [Serializable]
     public class WeakAction : WeakReference
     {
         /// <summary>
@@ -101,6 +102,7 @@ namespace GSF.Threading
     /// object of the target method.
     /// </para>
     /// </remarks>
+    [Serializable]
     public class WeakAction<T> : WeakReference
     {
         /// <summary>

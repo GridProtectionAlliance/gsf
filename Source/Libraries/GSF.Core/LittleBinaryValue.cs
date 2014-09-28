@@ -60,6 +60,7 @@
 #endregion
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GSF
 {
@@ -138,6 +139,7 @@ namespace GSF
         /// <param name="typeCode">Desired <see cref="TypeCode"/> for destination value.</param>
         /// <returns>A <see cref="LittleBinaryValue"/> representation of source value converted to specified <see cref="TypeCode"/>.</returns>
         /// <exception cref="InvalidOperationException">Unable to convert binary value to specified type.</exception>
+        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity"), SuppressMessage("Microsoft.Maintainability", "CA1505:AvoidUnmaintainableCode")]
         public LittleBinaryValue ConvertToType(TypeCode typeCode)
         {
             switch (this.TypeCode)

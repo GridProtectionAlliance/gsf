@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using GSF.IO;
 
@@ -148,6 +149,7 @@ namespace GSF.Data
         /// <param name="source"><see cref="DataSet"/> to serialize.</param>
         /// <param name="destination"><see cref="Stream"/> to serialize <see cref="DataSet"/> on.</param>
         /// <param name="assumeStringForUnknownTypes">Flag to determine if unknown column types should be serialized as strings.</param>
+        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         public static void SerializeToStream(this DataSet source, Stream destination, bool assumeStringForUnknownTypes = true)
         {
             if ((object)source == null)
@@ -293,6 +295,7 @@ namespace GSF.Data
         /// Deserializes a <see cref="DataSet"/> from a <see cref="Stream"/>.
         /// </summary>
         /// <param name="source"><see cref="Stream"/> to deserialize <see cref="DataSet"/> from.</param>
+        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         public static DataSet DeserializeToDataSet(this Stream source)
         {
             if ((object)source == null)

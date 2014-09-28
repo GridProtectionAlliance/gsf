@@ -251,7 +251,7 @@ namespace GSF.Configuration
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void CreateSetting(string name, string setting, string value)
         {
-            string section = GetSectionName(name);
+            string section = GetFieldSectionName(name);
 
             if (string.IsNullOrEmpty(m_iniFile[section, setting]))
                 m_iniFile[section, setting] = value;
@@ -267,7 +267,7 @@ namespace GSF.Configuration
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override string RetrieveSetting(string name, string setting)
         {
-            return m_iniFile[GetSectionName(name), setting];
+            return m_iniFile[GetFieldSectionName(name), setting];
         }
 
         /// <summary>
@@ -280,7 +280,7 @@ namespace GSF.Configuration
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void StoreSetting(string name, string setting, string value)
         {
-            m_iniFile[GetSectionName(name), setting] = value;
+            m_iniFile[GetFieldSectionName(name), setting] = value;
         }
 
         /// <summary>
@@ -303,7 +303,7 @@ namespace GSF.Configuration
         /// <see cref="CategoryAttribute.Category"/> will only be returned if <see cref="UseCategoryAttributes"/> is <c>true</c>; otherwise
         /// <see cref="SectionName"/> value will be returned.
         /// </remarks>
-        public string GetSectionName(string name)
+        public string GetFieldSectionName(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name cannot be null or empty");

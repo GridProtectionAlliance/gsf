@@ -27,7 +27,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using GSF;
 using GSF.IO;
 
 namespace GSF.COMTRADE
@@ -207,7 +206,7 @@ namespace GSF.COMTRADE
 
             string[] fileNames = FilePath.GetFileList(Path.Combine(directory, rootFileName + extension))
                 .Where(fileName => Regex.IsMatch(fileName, FileRegex, RegexOptions.IgnoreCase))
-                .OrderBy(fileName => fileName, StringComparer.InvariantCultureIgnoreCase)
+                .OrderBy(fileName => fileName, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
 
             // Create a new file stream for each file
@@ -269,7 +268,7 @@ namespace GSF.COMTRADE
             {
                 m_fileReaders = new StreamReader[m_fileStreams.Length];
 
-                for(int i = 0; i < m_fileStreams.Length; i++)
+                for (int i = 0; i < m_fileStreams.Length; i++)
                     m_fileReaders[i] = new StreamReader(m_fileStreams[i]);
             }
 

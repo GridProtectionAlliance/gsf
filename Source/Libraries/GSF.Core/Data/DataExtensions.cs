@@ -70,6 +70,7 @@ using System.Data.Common;
 using System.Data.Odbc;
 using System.Data.OleDb;
 using System.Data.SqlClient;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -159,6 +160,7 @@ namespace GSF.Data
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>The number of rows affected.</returns>
+        [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
         public static int ExecuteNonQuery(this OleDbConnection connection, string sql, int timeout, params object[] parameters)
         {
             using (OleDbCommand command = new OleDbCommand(sql, connection))
@@ -189,6 +191,7 @@ namespace GSF.Data
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>The number of rows affected.</returns>
+        [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
         public static int ExecuteNonQuery(this OdbcConnection connection, string sql, int timeout, params object[] parameters)
         {
             using (OdbcCommand command = new OdbcCommand(sql, connection))
@@ -219,6 +222,7 @@ namespace GSF.Data
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>The number of rows affected.</returns>
+        [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
         public static int ExecuteNonQuery(this SqlConnection connection, string sql, int timeout, params object[] parameters)
         {
             using (SqlCommand command = new SqlCommand(sql, connection))
@@ -412,6 +416,7 @@ namespace GSF.Data
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="OleDbDataReader"/> object.</returns>
+        [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
         public static OleDbDataReader ExecuteReader(this OleDbConnection connection, string sql, CommandBehavior behavior, int timeout, params object[] parameters)
         {
             using (OleDbCommand command = new OleDbCommand(sql, connection))
@@ -443,6 +448,7 @@ namespace GSF.Data
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="OdbcDataReader"/> object.</returns>
+        [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
         public static OdbcDataReader ExecuteReader(this OdbcConnection connection, string sql, CommandBehavior behavior, int timeout, params object[] parameters)
         {
             using (OdbcCommand command = new OdbcCommand(sql, connection))
@@ -474,6 +480,7 @@ namespace GSF.Data
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="SqlDataReader"/> object.</returns>
+        [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
         public static SqlDataReader ExecuteReader(this SqlConnection connection, string sql, CommandBehavior behavior, int timeout, params object[] parameters)
         {
             using (SqlCommand command = new SqlCommand(sql, connection))
@@ -672,6 +679,7 @@ namespace GSF.Data
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>Value in the first column of the first row in the result set.</returns>
+        [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
         public static object ExecuteScalar(this OleDbConnection connection, string sql, int timeout, params object[] parameters)
         {
             using (OleDbCommand command = new OleDbCommand(sql, connection))
@@ -704,6 +712,7 @@ namespace GSF.Data
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>Value in the first column of the first row in the result set.</returns>
+        [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
         public static object ExecuteScalar(this OdbcConnection connection, string sql, int timeout, params object[] parameters)
         {
             using (OdbcCommand command = new OdbcCommand(sql, connection))
@@ -736,6 +745,7 @@ namespace GSF.Data
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>Value in the first column of the first row in the result set.</returns>
+        [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
         public static object ExecuteScalar(this SqlConnection connection, string sql, int timeout, params object[] parameters)
         {
             using (SqlCommand command = new SqlCommand(sql, connection))
@@ -1705,6 +1715,7 @@ namespace GSF.Data
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="DataSet"/> object.</returns>
+        [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
         public static DataSet RetrieveDataSet(this OleDbConnection connection, string sql, int startRow, int maxRows, int timeout, params object[] parameters)
         {
             using (OleDbCommand command = new OleDbCommand(sql, connection))
@@ -1769,6 +1780,7 @@ namespace GSF.Data
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="DataSet"/> object.</returns>
+        [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
         public static DataSet RetrieveDataSet(this OdbcConnection connection, string sql, int startRow, int maxRows, int timeout, params object[] parameters)
         {
             using (OdbcCommand command = new OdbcCommand(sql, connection))
@@ -1833,6 +1845,7 @@ namespace GSF.Data
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="DataSet"/> object.</returns>
+        [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
         public static DataSet RetrieveDataSet(this SqlConnection connection, string sql, int startRow, int maxRows, int timeout, params object[] parameters)
         {
             using (SqlCommand command = new SqlCommand(sql, connection))
@@ -2155,6 +2168,7 @@ namespace GSF.Data
         /// <param name="sourceSql">The SQL statement used initially to populate the <see cref="DataTable"/>.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for updating the underlying data source.</param>
         /// <returns>The number of rows successfully updated from the <see cref="DataTable"/>.</returns>
+        [SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults"), SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
         public static int UpdateData(this OleDbConnection connection, DataTable sourceData, string sourceSql)
         {
             OleDbDataAdapter dataAdapter = new OleDbDataAdapter(sourceSql, connection);
@@ -2170,6 +2184,7 @@ namespace GSF.Data
         /// <param name="sourceSql">The SQL statement used initially to populate the <see cref="DataTable"/>.</param>
         /// <param name="connection">The <see cref="OdbcConnection"/> to use for updating the underlying data source.</param>
         /// <returns>The number of rows successfully updated from the <see cref="DataTable"/>.</returns>
+        [SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults"), SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
         public static int UpdateData(this OdbcConnection connection, DataTable sourceData, string sourceSql)
         {
             OdbcDataAdapter dataAdapter = new OdbcDataAdapter(sourceSql, connection);
@@ -2185,6 +2200,7 @@ namespace GSF.Data
         /// <param name="sourceSql">The SQL statement used initially to populate the <see cref="DataTable"/>.</param>
         /// <param name="connection">The <see cref="SqlConnection"/> to use for updating the underlying data source.</param>
         /// <returns>The number of rows successfully updated from the <see cref="DataTable"/>.</returns>
+        [SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults"), SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
         public static int UpdateData(this SqlConnection connection, DataTable sourceData, string sourceSql)
         {
             SqlDataAdapter dataAdapter = new SqlDataAdapter(sourceSql, connection);
@@ -2291,10 +2307,10 @@ namespace GSF.Data
                     throw new ArgumentNullException("command", "command.CommandText is null");
 
                 // Add parameters for standard SQL expressions (i.e., non stored procedure expressions)
-                if (commandText.StartsWith("SELECT ", StringComparison.InvariantCultureIgnoreCase) ||
-                    commandText.StartsWith("INSERT ", StringComparison.InvariantCultureIgnoreCase) ||
-                    commandText.StartsWith("UPDATE ", StringComparison.InvariantCultureIgnoreCase) ||
-                    commandText.StartsWith("DELETE ", StringComparison.InvariantCultureIgnoreCase))
+                if (commandText.StartsWith("SELECT ", StringComparison.OrdinalIgnoreCase) ||
+                    commandText.StartsWith("INSERT ", StringComparison.OrdinalIgnoreCase) ||
+                    commandText.StartsWith("UPDATE ", StringComparison.OrdinalIgnoreCase) ||
+                    commandText.StartsWith("DELETE ", StringComparison.OrdinalIgnoreCase))
                 {
                     command.AddParametersWithValues(commandText, values);
                     return;
@@ -2396,6 +2412,7 @@ namespace GSF.Data
         /// </remarks>
         /// <returns>The fully populated parameterized command.</returns>
         /// <exception cref="ArgumentException">Number of <see cref="IDbDataParameter"/> arguments in <paramref name="sql"/> expression, identified by '@', do not match number of supplied parameter <paramref name="values"/>.</exception>
+        [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
         public static void AddParametersWithValues(this IDbCommand command, string sql, params object[] values)
         {
             if (values.FirstOrDefault(value => value is IDbDataParameter) != null)
@@ -2410,7 +2427,7 @@ namespace GSF.Data
             {
                 // Pick up all parameters that start with @ or : but skip key words such as @@IDENTITY
                 string[] tokens = sql.Split(' ', '(', ')', ',', '=')
-                    .Where(token => token.StartsWith(":") || token.StartsWith("@") && !token.StartsWith("@@"))
+                    .Where(token => token.StartsWith(":", StringComparison.Ordinal) || token.StartsWith("@", StringComparison.Ordinal) && !token.StartsWith("@@", StringComparison.Ordinal))
                     .Distinct()
                     .Where(IsValidToken)
                     .ToArray();

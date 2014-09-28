@@ -2036,7 +2036,7 @@ namespace GSF.TimeSeries
                                     typeName = parameter.ParameterType.ToString();
 
                                     // Assume namespace for basic System types...
-                                    if (typeName.StartsWith("System.", StringComparison.InvariantCultureIgnoreCase) && typeName.CharCount('.') == 1)
+                                    if (typeName.StartsWith("System.", StringComparison.OrdinalIgnoreCase) && typeName.CharCount('.') == 1)
                                         typeName = typeName.Substring(7);
 
                                     methodList.Append(typeName);

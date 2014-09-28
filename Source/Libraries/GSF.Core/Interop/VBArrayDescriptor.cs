@@ -46,7 +46,7 @@ namespace GSF.Interop
     /// into a file using older Visual Basic applications (VB 6 and prior), this way old VB apps
     /// can still deserialize an array stored in a file written by a .NET application and vice versa.
     /// </remarks>
-    public class VBArrayDescriptor : ISupportBinaryImage
+    public sealed class VBArrayDescriptor : ISupportBinaryImage
     {
         #region [ Members ]
 

@@ -31,6 +31,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Windows;
 
@@ -59,6 +60,7 @@ namespace GSF.NumericalAnalysis
         /// <param name="xValues">A list of <see cref="double"/> x-values.</param>
         /// <param name="yValues">A list of <see cref="double"/> y-values.</param>
         /// <returns>An array of <see cref="double"/> values.</returns>
+        [SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional")]
         public static double[] Compute(int polynomialOrder, IList<double> xValues, IList<double> yValues)
         {
             if ((object)xValues == null)
@@ -206,6 +208,7 @@ namespace GSF.NumericalAnalysis
         /// <param name="a">the out a coefficient</param>
         /// <param name="b">the out b coefficient</param>
         /// <param name="c">the out c coefficient</param>
+        [SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional")]
         public static void LeastSquares(double[] zValues, double[] xValues, double[] yValues, out double a, out double b, out double c)
         {
             double n = zValues.Length;

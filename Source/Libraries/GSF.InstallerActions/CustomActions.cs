@@ -86,11 +86,11 @@ namespace GSF.InstallerActions
             }
 
             isSystemAccount =
-                serviceAccount.Equals("LocalSystem", StringComparison.InvariantCultureIgnoreCase) ||
-                serviceAccount.StartsWith(@"NT AUTHORITY\", StringComparison.InvariantCultureIgnoreCase) ||
-                serviceAccount.StartsWith(@"NT SERVICE\", StringComparison.InvariantCultureIgnoreCase);
+                serviceAccount.Equals("LocalSystem", StringComparison.OrdinalIgnoreCase) ||
+                serviceAccount.StartsWith(@"NT AUTHORITY\", StringComparison.OrdinalIgnoreCase) ||
+                serviceAccount.StartsWith(@"NT SERVICE\", StringComparison.OrdinalIgnoreCase);
 
-            isManagedServiceAccount = serviceAccount.EndsWith("$", StringComparison.InvariantCulture);
+            isManagedServiceAccount = serviceAccount.EndsWith("$", StringComparison.Ordinal);
 
             if (isSystemAccount)
             {
@@ -283,7 +283,7 @@ namespace GSF.InstallerActions
 
             using (Process shell = Process.Start(psi))
             {
-                if (!shell.WaitForExit(5000))
+                if ((object)shell != null && !shell.WaitForExit(5000))
                     shell.Kill();
             }
         }
@@ -308,7 +308,7 @@ namespace GSF.InstallerActions
 
             using (Process shell = Process.Start(psi))
             {
-                if (!shell.WaitForExit(5000))
+                if ((object)shell != null && !shell.WaitForExit(5000))
                     shell.Kill();
             }
         }
@@ -343,10 +343,10 @@ namespace GSF.InstallerActions
         private static void UpdateServiceConfig(Session session)
         {
             // The failure actions to be defined for the service
-            List<WindowsApi.SC_ACTION> failureActionsList = new List<WindowsApi.SC_ACTION>()
+            List<WindowsApi.SC_ACTION> failureActionsList = new List<WindowsApi.SC_ACTION>
             {
-                new WindowsApi.SC_ACTION() { Type = (WindowsApi.SC_ACTION_TYPE)(uint)RecoverAction.Restart, Delay = 2000 },
-                new WindowsApi.SC_ACTION() { Type = (WindowsApi.SC_ACTION_TYPE)(uint)RecoverAction.None, Delay = 2000 }
+                new WindowsApi.SC_ACTION { Type = (WindowsApi.SC_ACTION_TYPE)(uint)RecoverAction.Restart, Delay = 2000 },
+                new WindowsApi.SC_ACTION { Type = (WindowsApi.SC_ACTION_TYPE)(uint)RecoverAction.None, Delay = 2000 }
             };
 
             // We've got work to do
@@ -497,7 +497,7 @@ namespace GSF.InstallerActions
         {
             bool grantSuccess = false;
             IntPtr processToken = IntPtr.Zero;
-            IntPtr processHandle = IntPtr.Zero;
+            IntPtr processHandle;
             WindowsApi.TOKEN_PRIVILEGES tokenPrivileges = new WindowsApi.TOKEN_PRIVILEGES();
             long luid = 0;
             int returnLen = 0;
@@ -509,7 +509,7 @@ namespace GSF.InstallerActions
                 bool result = WindowsApi.OpenProcessToken(processHandle, WindowsApi.TOKEN_ADJUST_PRIVILEGES | WindowsApi.TOKEN_QUERY, ref processToken);
 
                 if (!result)
-                    return grantSuccess;
+                    return false;
 
                 WindowsApi.LookupPrivilegeValue(null, WindowsApi.SE_SHUTDOWN_NAME, ref luid);
 
@@ -517,7 +517,7 @@ namespace GSF.InstallerActions
                 tokenPrivileges.Privileges.Luid = luid;
                 tokenPrivileges.Privileges.Attributes = WindowsApi.SE_PRIVILEGE_ENABLED;
 
-                result = WindowsApi.AdjustTokenPrivileges(processToken, false, ref tokenPrivileges, 0, IntPtr.Zero, ref returnLen);
+                WindowsApi.AdjustTokenPrivileges(processToken, false, ref tokenPrivileges, 0, IntPtr.Zero, ref returnLen);
 
                 if (WindowsApi.GetLastError() != 0)
                     throw new Exception("Failed to grant shutdown privilege");
@@ -563,7 +563,7 @@ namespace GSF.InstallerActions
             // Look up SID for the account
             if (WindowsApi.LookupAccountName(string.Empty, account, sid, ref sidSize, domainName, ref nameSize, ref accountType))
             {
-                // Initialize an empty unicode-string
+                // Initialize an empty Unicode-string
                 WindowsApi.LSA_UNICODE_STRING systemName = new WindowsApi.LSA_UNICODE_STRING();
 
                 // Initialize a pointer for the policy handle
@@ -577,7 +577,7 @@ namespace GSF.InstallerActions
 
                 if (result == 0)
                 {
-                    // Initialize a unicode-string for the privilege name
+                    // Initialize a Unicode-string for the privilege name
                     WindowsApi.LSA_UNICODE_STRING[] userRights = new WindowsApi.LSA_UNICODE_STRING[1];
 
                     userRights[0] = new WindowsApi.LSA_UNICODE_STRING();

@@ -60,6 +60,7 @@
 #endregion
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GSF
 {
@@ -68,7 +69,7 @@ namespace GSF
     /// <summary>
     /// Represents bits in a signed or unsigned integer value.
     /// </summary>
-    [Flags]
+    [SuppressMessage("Microsoft.Design", "CA1008:EnumsShouldHaveZeroValue"), Flags]
     public enum Bits : ulong
     {
         /// <summary>No bits set (0x0000000000000000)</summary>
@@ -296,6 +297,7 @@ namespace GSF
         /// <param name="bit">Bit index (0 - 63)</param>
         /// <returns>Value of the specified <paramref name="bit"/>.</returns>
         /// <exception cref="ArgumentOutOfRangeException">Parameter must be between 0 and 63.</exception>
+        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         public static Bits BitVal(int bit)
         {
             switch (bit)

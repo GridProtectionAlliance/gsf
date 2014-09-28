@@ -1357,7 +1357,7 @@ namespace GSF.TimeSeries.Adapters
                         keys.Add(key);
                 }
             }
-            else if (allowSelect && value.StartsWith("SELECT ", StringComparison.InvariantCultureIgnoreCase))
+            else if (allowSelect && value.StartsWith("SELECT ", StringComparison.OrdinalIgnoreCase))
             {
                 try
                 {
@@ -1508,7 +1508,7 @@ namespace GSF.TimeSeries.Adapters
                     measurements.Add(measurement);
                 }
             }
-            else if (allowSelect && value.StartsWith("SELECT ", StringComparison.InvariantCultureIgnoreCase))
+            else if (allowSelect && value.StartsWith("SELECT ", StringComparison.OrdinalIgnoreCase))
             {
                 try
                 {

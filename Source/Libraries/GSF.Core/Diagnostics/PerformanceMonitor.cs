@@ -45,7 +45,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Text;
+#if !MONO
 using System.Threading;
+#endif
 using System.Timers;
 using GSF.Units;
 using Timer = System.Timers.Timer;
@@ -723,7 +725,7 @@ namespace GSF.Diagnostics
             {
                 foreach (PerformanceCounter counter in m_counters)
                 {
-                    if (string.Compare(counter.BaseCounter.CounterName, counterName, true) == 0)
+                    if (string.Compare(counter.BaseCounter.CounterName, counterName, StringComparison.OrdinalIgnoreCase) == 0)
                         return counter; // Return the match.
                 }
             }
@@ -743,7 +745,7 @@ namespace GSF.Diagnostics
             {
                 foreach (PerformanceCounter counter in m_counters)
                 {
-                    if (string.Compare(counter.BaseCounter.CategoryName, categoryName, true) == 0 && string.Compare(counter.BaseCounter.CounterName, counterName, true) == 0)
+                    if (string.Compare(counter.BaseCounter.CategoryName, categoryName, StringComparison.OrdinalIgnoreCase) == 0 && string.Compare(counter.BaseCounter.CounterName, counterName, StringComparison.OrdinalIgnoreCase) == 0)
                         return counter; // Return the match.
                 }
             }
@@ -764,7 +766,7 @@ namespace GSF.Diagnostics
             {
                 foreach (PerformanceCounter counter in m_counters)
                 {
-                    if (string.Compare(counter.BaseCounter.CounterName, counterName, true) == 0)
+                    if (string.Compare(counter.BaseCounter.CounterName, counterName, StringComparison.OrdinalIgnoreCase) == 0)
                         counters.Add(counter);
                 }
             }
@@ -786,7 +788,7 @@ namespace GSF.Diagnostics
             {
                 foreach (PerformanceCounter counter in m_counters)
                 {
-                    if (string.Compare(counter.BaseCounter.CategoryName, categoryName, true) == 0 && string.Compare(counter.BaseCounter.CounterName, counterName, true) == 0)
+                    if (string.Compare(counter.BaseCounter.CategoryName, categoryName, StringComparison.OrdinalIgnoreCase) == 0 && string.Compare(counter.BaseCounter.CounterName, counterName, StringComparison.OrdinalIgnoreCase) == 0)
                         counters.Add(counter);
                 }
             }

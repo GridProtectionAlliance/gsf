@@ -326,7 +326,7 @@ namespace GSF.IO
             {
                 // Path wildcard pattern is used to specify the option to include subdirectories.
                 options = SearchOption.AllDirectories;
-                directory = directory.Remove(directory.LastIndexOf("*", StringComparison.InvariantCultureIgnoreCase));
+                directory = directory.Remove(directory.LastIndexOf("*", StringComparison.OrdinalIgnoreCase));
             }
 
             return Directory.GetFiles(directory, filePattern, options);
@@ -423,7 +423,7 @@ namespace GSF.IO
         /// <returns><c>true</c> if the specified <paramref name="filePath"/> is contained with the current executable path; otherwise <c>false</c>.</returns>
         public static bool InApplicationPath(string filePath)
         {
-            return GetAbsolutePath(filePath).StartsWith(GetAbsolutePath(""), StringComparison.InvariantCultureIgnoreCase);
+            return GetAbsolutePath(filePath).StartsWith(GetAbsolutePath(""), StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>

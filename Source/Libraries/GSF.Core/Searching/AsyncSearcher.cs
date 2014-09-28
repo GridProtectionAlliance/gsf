@@ -269,7 +269,7 @@ namespace GSF.Searching
                 foreach (string token in m_tokens)
                 {
                     // Determine whether this token is being used for normal matching or inverse matching
-                    inverse = m_usingWildcards && token.StartsWith("-");
+                    inverse = m_usingWildcards && token.StartsWith("-", StringComparison.Ordinal);
                     pattern = inverse ? token.Substring(1) : token;
 
                     // If any of the properties that we are searching

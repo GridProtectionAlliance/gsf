@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 // TODO: Please add comments to these classes
@@ -31,6 +32,7 @@ namespace GSF.FuzzyStrings
 {
     public static partial class ComparisonMetrics
     {
+        [SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional")]
         public static string LongestCommonSubstring(this string source, string target)
         {
             if (String.IsNullOrEmpty(source) || String.IsNullOrEmpty(target))

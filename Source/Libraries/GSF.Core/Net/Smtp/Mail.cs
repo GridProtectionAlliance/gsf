@@ -325,10 +325,8 @@ namespace GSF.Net.Smtp
                     if (disposing)
                     {
                         // This will be done only when the object is disposed by calling Dispose().
-#if !MONO
                         if ((object)m_smtpClient != null)
                             m_smtpClient.Dispose();
-#endif
                     }
                 }
                 finally

@@ -175,6 +175,7 @@ namespace GSF.IO
         private bool m_persistSettings;
         private string m_settingsCategory;
         private FileStream m_fileStream;
+        private readonly object m_fileStreamLock;
         private ManualResetEvent m_operationWaitHandle;
         private ProcessQueue<string> m_logEntryQueue;
         private Timer m_flushTimer;
@@ -207,6 +208,7 @@ namespace GSF.IO
             m_logEntryQueue.SynchronizedOperationType = SynchronizedOperationType.Long;
             m_flushTimer = new Timer();
             m_flushTimerInterval = 10.0D;
+            m_fileStreamLock = new object();
 
             this.FileFull += LogFile_FileFull;
             m_logEntryQueue.ProcessException += ProcessExceptionHandler;
@@ -685,7 +687,7 @@ namespace GSF.IO
         /// </remarks>
         public void WriteLine(string text)
         {
-            Write(text + "\r\n");
+            Write(text + Environment.NewLine);
         }
 
         /// <summary>
@@ -697,7 +699,7 @@ namespace GSF.IO
         /// </remarks>
         public void WriteTimestampedLine(string text)
         {
-            Write("[" + DateTime.Now.ToString() + "] " + text + "\r\n");
+            WriteLine(string.Format("[{0}] {1}", DateTime.Now, text));
         }
 
         /// <summary>
@@ -713,7 +715,7 @@ namespace GSF.IO
             {
                 byte[] buffer;
 
-                lock (m_fileStream)
+                lock (m_fileStreamLock)
                 {
                     buffer = new byte[m_fileStream.Length];
                     m_fileStream.Seek(0, SeekOrigin.Begin);
@@ -828,7 +830,7 @@ namespace GSF.IO
             if ((object)m_flushTimer != null)
                 m_flushTimer.Stop();
 
-            lock (m_fileStream)
+            lock (m_fileStreamLock)
             {
                 currentFileSize = m_fileStream.Length;
             }
@@ -843,7 +845,7 @@ namespace GSF.IO
                     if (currentFileSize + buffer.Length <= maximumFileSize)
                     {
                         // Writes the entry.
-                        lock (m_fileStream)
+                        lock (m_fileStreamLock)
                         {
                             m_fileStream.Write(buffer, 0, buffer.Length);
                         }

@@ -852,7 +852,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                             string configFileDataString = (new StreamReader(fileData)).ReadToEnd();
                             string leftPart = configFileDataString.Substring(0, configFileDataString.IndexOf("</configurationFileName>"));
                             string rightPart = configFileDataString.Substring(configFileDataString.IndexOf("</configurationFileName>"));
-                            leftPart = leftPart.Substring(0, leftPart.LastIndexOf(">", StringComparison.InvariantCulture) + 1);
+                            leftPart = leftPart.Substring(0, leftPart.LastIndexOf(">", StringComparison.Ordinal) + 1);
                             configFileDataString = leftPart + m_iniFileName + rightPart;
 
                             Byte[] fileBytes = Encoding.UTF8.GetBytes(configFileDataString);

@@ -25,13 +25,14 @@
 //
 //******************************************************************************************************
 
-// These functions are strictly for Windows, so we don't even have the class show up in Mono
+// These functions are strictly for Windows, so we don't even have the class show up in Mono for now
 // TODO: Can test if this works under Mono on Windows then just exit code when not POSIX
-#if !MONO
 
+#if !MONO
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using GSF.Interop;
@@ -44,8 +45,8 @@ namespace GSF.Identity
     /// </summary>
     public static class UserAccountControl
     {
-        private static string UacRegistryKey = "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System";
-        private static string UacRegistryValue = "EnableLUA";
+        private const string UacRegistryKey = "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System";
+        private const string UacRegistryValue = "EnableLUA";
 
         /// <summary>
         /// Creates a process under the elevated token, regardless of UAC settings or the manifest associated with that process.
@@ -78,6 +79,7 @@ namespace GSF.Identity
         /// executed the installer; this can wreak havoc if the spawned application needs to authenticate the local user.
         /// </para>
         /// </remarks>
+        [SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults")]
         public static Process CreateProcessAsStandardUser(string fileName, string arguments = "")
         {
             // The following implementation is roughly based on Aaron Margosis' post:
@@ -329,7 +331,9 @@ namespace GSF.Identity
         private static void SetUacRegistryValue(bool enabled)
         {
             RegistryKey key = Registry.LocalMachine.OpenSubKey(UacRegistryKey, true);
-            key.SetValue(UacRegistryValue, enabled ? 1 : 0);
+
+            if ((object)key != null)
+                key.SetValue(UacRegistryValue, enabled ? 1 : 0);
         }
 
         private static void RestartWindows()

@@ -65,6 +65,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -72,7 +73,9 @@ using System.Threading;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.IO;
+#if !MONO
 using Microsoft.Win32;
+#endif
 
 namespace GSF.Security.Cryptography
 {
@@ -81,6 +84,7 @@ namespace GSF.Security.Cryptography
     /// <summary>
     /// Cryptographic strength enumeration.
     /// </summary>
+    [SuppressMessage("Microsoft.Design", "CA1027:MarkEnumsWithFlags")]
     public enum CipherStrength
     {
         /// <summary>Uses no encryption.</summary>
@@ -240,6 +244,7 @@ namespace GSF.Security.Cryptography
             /// <param name="password">User password used for key lookups.</param>
             /// <param name="keySize">Specifies the desired key size.</param>
             /// <returns><c>true</c> if a key and initialization vector exists for the given <paramref name="password"/>; otherwise <c>false</c>.</returns>
+            // ReSharper disable once MemberHidesStaticFromOuterClass
             public bool KeyIVExists(string password, int keySize)
             {
                 string hash = GetPasswordHash(password, keySize);
@@ -264,6 +269,7 @@ namespace GSF.Security.Cryptography
             /// <remarks>
             /// This method is used to manually import a key created on another computer.
             /// </remarks>
+            // ReSharper disable once MemberHidesStaticFromOuterClass
             public void ImportKeyIV(string password, int keySize, string keyIVText)
             {
                 string hash = GetPasswordHash(password, keySize);
@@ -295,6 +301,7 @@ namespace GSF.Security.Cryptography
             /// <remarks>
             /// This method is used to manually export a key to be installed on another computer. 
             /// </remarks>
+            // ReSharper disable once MemberHidesStaticFromOuterClass
             public string ExportKeyIV(string password, int keySize)
             {
                 byte[][] keyIV = GetCryptoKeyIV(password, keySize);
@@ -893,7 +900,6 @@ namespace GSF.Security.Cryptography
 
                 destFileStream.Flush();
                 destFileStream.Close();
-                sourceFileStream.Close();
             }
         }
 
@@ -1108,8 +1114,6 @@ namespace GSF.Security.Cryptography
                 sourceFileStream.Decrypt(destFileStream, keyIV[KeyIndex], keyIV[IVIndex], strength, progressHandler);
 
                 destFileStream.Flush();
-                destFileStream.Close();
-                sourceFileStream.Close();
             }
         }
     }

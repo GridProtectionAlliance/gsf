@@ -433,7 +433,7 @@ namespace GSF.Security
                         // Assign all groups the user is a member of
                         foreach (string groupName in user.Groups)
                         {
-                            if (!groupCollection.Contains(groupName, StringComparer.InvariantCultureIgnoreCase))
+                            if (!groupCollection.Contains(groupName, StringComparer.OrdinalIgnoreCase))
                                 groupCollection.Add(groupName);
                         }
 

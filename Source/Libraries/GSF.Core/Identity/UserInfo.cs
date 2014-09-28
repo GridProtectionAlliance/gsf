@@ -167,7 +167,7 @@ namespace GSF.Identity
     /// Some methods in this class may not behave as expected when running on under Mono deployments.
     /// </para>
     /// </example>
-    public class UserInfo : ISupportLifecycle, IPersistSettings
+    public sealed class UserInfo : ISupportLifecycle, IPersistSettings
     {
         #region [ Members ]
 
@@ -845,7 +845,7 @@ namespace GSF.Identity
         /// Releases the unmanaged resources used by the <see cref="UserInfo"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (!m_disposed)
             {
@@ -1027,7 +1027,7 @@ namespace GSF.Identity
         }
 
         // Split a string into first name and last name
-        private string[] GetNameElements(string displayName)
+        private static string[] GetNameElements(string displayName)
         {
             displayName = displayName.Trim();
 
@@ -1093,7 +1093,7 @@ namespace GSF.Identity
                 {
                     if ((object)s_currentUserInfo == null ||
                         string.IsNullOrEmpty(m_lastUserID) ||
-                        !currentUserID.Equals(m_lastUserID, StringComparison.InvariantCultureIgnoreCase))
+                        !currentUserID.Equals(m_lastUserID, StringComparison.OrdinalIgnoreCase))
                     {
                         try
                         {
@@ -1378,7 +1378,7 @@ namespace GSF.Identity
             // Remove any irrelevant white space
             userName = userName.Trim();
 
-            if (userName == string.Empty)
+            if (userName.Length == 0)
                 throw new ArgumentException("No user name was specified.", "userName");
 
             if (Common.IsPosixEnvironment)
@@ -1408,7 +1408,7 @@ namespace GSF.Identity
             // Remove any irrelevant white space
             userName = userName.Trim();
 
-            if (userName == string.Empty)
+            if (userName.Length == 0)
                 throw new ArgumentException("Cannot create local user: no user name was specified.", "userName");
 
             if (Common.IsPosixEnvironment)
@@ -1436,7 +1436,7 @@ namespace GSF.Identity
             // Remove any irrelevant white space
             userName = userName.Trim();
 
-            if (userName == string.Empty)
+            if (userName.Length == 0)
                 throw new ArgumentException("Cannot set password for local user: no user name was specified.", "userName");
 
             if (Common.IsPosixEnvironment)
@@ -1461,7 +1461,7 @@ namespace GSF.Identity
             // Remove any irrelevant white space
             userName = userName.Trim();
 
-            if (userName == string.Empty)
+            if (userName.Length == 0)
                 throw new ArgumentException("Cannot remove local user: no user name was specified.", "userName");
 
             if (Common.IsPosixEnvironment)
@@ -1485,7 +1485,7 @@ namespace GSF.Identity
             // Remove any irrelevant white space
             groupName = groupName.Trim();
 
-            if (groupName == string.Empty)
+            if (groupName.Length == 0)
                 throw new ArgumentException("No group name was specified.", "groupName");
 
             groupName = ValidateGroupName(groupName);
@@ -1513,7 +1513,7 @@ namespace GSF.Identity
             // Remove any irrelevant white space
             groupName = groupName.Trim();
 
-            if (groupName == string.Empty)
+            if (groupName.Length == 0)
                 throw new ArgumentException("Cannot create local group: no group name was specified.", "groupName");
 
             groupName = ValidateGroupName(groupName);
@@ -1540,7 +1540,7 @@ namespace GSF.Identity
             // Remove any irrelevant white space
             groupName = groupName.Trim();
 
-            if (groupName == string.Empty)
+            if (groupName.Length == 0)
                 throw new ArgumentException("Cannot remove local group: no group name was specified.", "groupName");
 
             groupName = ValidateGroupName(groupName);
@@ -1578,10 +1578,10 @@ namespace GSF.Identity
             groupName = groupName.Trim();
             userName = userName.Trim();
 
-            if (groupName == string.Empty)
+            if (groupName.Length == 0)
                 throw new ArgumentException("Cannot determine if user is in local group: no group name was specified.", "groupName");
 
-            if (userName == string.Empty)
+            if (userName.Length == 0)
                 throw new ArgumentException("Cannot determine if user is in local group: no user name was specified.", "userName");
 
             groupName = ValidateGroupName(groupName);
@@ -1619,10 +1619,10 @@ namespace GSF.Identity
             groupName = groupName.Trim();
             userName = userName.Trim();
 
-            if (groupName == string.Empty)
+            if (groupName.Length == 0)
                 throw new ArgumentException("Cannot add user to local group: no group name was specified.", "groupName");
 
-            if (userName == string.Empty)
+            if (userName.Length == 0)
                 throw new ArgumentException("Cannot add user to local group: no user name was specified.", "userName");
 
             groupName = ValidateGroupName(groupName);
@@ -1660,10 +1660,10 @@ namespace GSF.Identity
             groupName = groupName.Trim();
             userName = userName.Trim();
 
-            if (groupName == string.Empty)
+            if (groupName.Length == 0)
                 throw new ArgumentException("Cannot remove user from local group: no group name was specified.", "groupName");
 
-            if (userName == string.Empty)
+            if (userName.Length == 0)
                 throw new ArgumentException("Cannot remove user from local group: no user name was specified.", "userName");
 
             groupName = ValidateGroupName(groupName);
@@ -1690,7 +1690,7 @@ namespace GSF.Identity
             // Remove any irrelevant white space
             groupName = groupName.Trim();
 
-            if (groupName == string.Empty)
+            if (groupName.Length == 0)
                 throw new ArgumentException("Cannot get members for local group: no group name was specified.", "groupName");
 
             groupName = ValidateGroupName(groupName);

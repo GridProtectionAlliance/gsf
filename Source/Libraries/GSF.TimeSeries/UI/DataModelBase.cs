@@ -114,7 +114,7 @@ namespace GSF.TimeSeries.UI
 
             };
 
-            m_propertyErrors = new ConcurrentDictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            m_propertyErrors = new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             m_memberAccessBindingFlags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly;
             m_requireEntityPropertyAttribute = requireEntityPropertyAttribute;
 
@@ -424,8 +424,8 @@ namespace GSF.TimeSeries.UI
                     return false;
                 }
             }
-            else
-                return false;
+
+            return false;
         }
 
         #endregion

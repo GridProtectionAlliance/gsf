@@ -33,7 +33,7 @@
 //       to deal with entry assembly not being available in non-default application domains.
 //       Changed GetCustomAttribute() to return CustomAttributeData instead of Object to deal with
 //       possible reflection only load being performed in EntryAssembly.
-//       Removed Debuggable property since it was not very useful and added complexity when extracting.
+//       Removed debuggable property since it was not very useful and added complexity when extracting.
 //  09/21/2011 - J. Ritchie Carroll
 //       Added Mono implementation exception regions.
 //  12/14/2012 - Starlynn Danyelle Gilliam
@@ -46,11 +46,13 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
+#if !MONO
 using System.Linq;
+#endif
 using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
-using System.Security.Permissions;
+using System.Security;
 using GSF.IO;
 
 namespace GSF.Reflection
@@ -627,7 +629,7 @@ namespace GSF.Reflection
         /// <summary>Loads the specified assembly that is embedded as a resource in the assembly.</summary>
         /// <param name="assemblyName">Name of the assembly to load.</param>
         /// <remarks>This cannot be used to load GSF.Core itself.</remarks>
-        [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.ControlAppDomain)]
+        [SecurityCritical]
         public static void LoadAssemblyFromResource(string assemblyName)
         {
             // Hooks into assembly resolve event for current domain so it can load assembly from embedded resource.
@@ -657,7 +659,7 @@ namespace GSF.Reflection
                 foreach (string name in Assembly.GetEntryAssembly().GetManifestResourceNames())
                 {
                     // Sees if the embedded resource name matches the assembly it is trying to load.
-                    if (string.Compare(FilePath.GetFileNameWithoutExtension(name), EntryAssembly.RootNamespace + "." + shortName, true) == 0)
+                    if (string.Compare(FilePath.GetFileNameWithoutExtension(name), EntryAssembly.RootNamespace + "." + shortName, StringComparison.OrdinalIgnoreCase) == 0)
                     {
                         // If so, loads embedded resource assembly into a binary buffer.
                         Stream resourceStream = Assembly.GetEntryAssembly().GetManifestResourceStream(name);

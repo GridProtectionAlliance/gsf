@@ -271,35 +271,31 @@ namespace GSF
         public unsafe static decimal ToDecimal(byte* buffer)
         {
             if (BitConverter.IsLittleEndian)
-            {
                 return *(decimal*)(buffer);
-            }
-            else
-            {
-                decimal returnValue;
-                byte* destination = (byte*)&returnValue;
-                //int flags
-                destination[0] = buffer[3];
-                destination[1] = buffer[2];
-                destination[2] = buffer[1];
-                destination[3] = buffer[0];
-                //int high
-                destination[4] = buffer[7];
-                destination[5] = buffer[6];
-                destination[6] = buffer[5];
-                destination[7] = buffer[4];
-                //int low
-                destination[8] = buffer[11];
-                destination[9] = buffer[10];
-                destination[10] = buffer[9];
-                destination[11] = buffer[8];
-                //int mid
-                destination[12] = buffer[15];
-                destination[13] = buffer[14];
-                destination[14] = buffer[13];
-                destination[15] = buffer[12];
-                return returnValue;
-            }
+
+            decimal returnValue;
+            byte* destination = (byte*)&returnValue;
+            //int flags
+            destination[0] = buffer[3];
+            destination[1] = buffer[2];
+            destination[2] = buffer[1];
+            destination[3] = buffer[0];
+            //int high
+            destination[4] = buffer[7];
+            destination[5] = buffer[6];
+            destination[6] = buffer[5];
+            destination[7] = buffer[4];
+            //int low
+            destination[8] = buffer[11];
+            destination[9] = buffer[10];
+            destination[10] = buffer[9];
+            destination[11] = buffer[8];
+            //int mid
+            destination[12] = buffer[15];
+            destination[13] = buffer[14];
+            destination[14] = buffer[13];
+            destination[15] = buffer[12];
+            return returnValue;
         }
 
         #endregion
@@ -520,35 +516,31 @@ namespace GSF
             fixed (byte* ptr = &buffer[startIndex])
             {
                 if (BitConverter.IsLittleEndian)
-                {
                     return *(decimal*)(ptr);
-                }
-                else
-                {
-                    decimal returnValue;
-                    byte* destination = (byte*)&returnValue;
-                    //int flags
-                    destination[0] = ptr[3];
-                    destination[1] = ptr[2];
-                    destination[2] = ptr[1];
-                    destination[3] = ptr[0];
-                    //int high
-                    destination[4] = ptr[7];
-                    destination[5] = ptr[6];
-                    destination[6] = ptr[5];
-                    destination[7] = ptr[4];
-                    //int low
-                    destination[8] = ptr[11];
-                    destination[9] = ptr[10];
-                    destination[10] = ptr[9];
-                    destination[11] = ptr[8];
-                    //int mid
-                    destination[12] = ptr[15];
-                    destination[13] = ptr[14];
-                    destination[14] = ptr[13];
-                    destination[15] = ptr[12];
-                    return returnValue;
-                }
+
+                decimal returnValue;
+                byte* destination = (byte*)&returnValue;
+                //int flags
+                destination[0] = ptr[3];
+                destination[1] = ptr[2];
+                destination[2] = ptr[1];
+                destination[3] = ptr[0];
+                //int high
+                destination[4] = ptr[7];
+                destination[5] = ptr[6];
+                destination[6] = ptr[5];
+                destination[7] = ptr[4];
+                //int low
+                destination[8] = ptr[11];
+                destination[9] = ptr[10];
+                destination[10] = ptr[9];
+                destination[11] = ptr[8];
+                //int mid
+                destination[12] = ptr[15];
+                destination[13] = ptr[14];
+                destination[14] = ptr[13];
+                destination[15] = ptr[12];
+                return returnValue;
             }
         }
 

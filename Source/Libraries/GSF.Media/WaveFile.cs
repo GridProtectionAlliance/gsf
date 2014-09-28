@@ -697,7 +697,7 @@ namespace GSF.Media
                 if ((object)m_listInfo != null)
                     return m_listInfo.InfoStrings;
 
-                return new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+                return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             }
         }
 

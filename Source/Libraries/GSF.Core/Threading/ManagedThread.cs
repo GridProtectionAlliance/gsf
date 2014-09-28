@@ -32,6 +32,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using GSF.Units;
 
@@ -199,6 +200,7 @@ namespace GSF.Threading
         /// <summary>
         /// Returns the managed thread type (either StandardThread or QueuedThread)
         /// </summary>
+        [SuppressMessage("Microsoft.Naming", "CA1721:PropertyNamesShouldNotMatchGetMethods")]
         public ThreadType Type
         {
             get

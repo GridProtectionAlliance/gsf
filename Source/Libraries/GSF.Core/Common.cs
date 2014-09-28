@@ -526,8 +526,10 @@ namespace GSF
                 return string.Empty;
 
             // If value is already a string, no need to attempt conversion
-            if (value is string)
-                return value as string;
+            string valueAsString = value as string;
+
+            if ((object)valueAsString != null)
+                return valueAsString;
 
             // Initialize culture info if not specified.
             if ((object)culture == null)

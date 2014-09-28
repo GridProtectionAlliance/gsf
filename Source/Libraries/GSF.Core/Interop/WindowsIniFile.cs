@@ -81,6 +81,7 @@ namespace GSF.Interop
         /// <param name="defaultValue">Default value of key.</param>
         /// <returns>Value of key.</returns>
         /// <remarks>This is the default member of this class.</remarks>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults", MessageId = "GSF.Interop.WindowsIniFile.GetPrivateProfileString(System.String,System.String,System.String,System.Text.StringBuilder,System.Int32,System.String)")]
         public string this[string section, string entry, string defaultValue]
         {
             get
@@ -104,6 +105,7 @@ namespace GSF.Interop
         /// <value>The new key value to store in the INI file.</value>
         /// <returns>Value of key.</returns>
         /// <remarks>This is the default member of this class.</remarks>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults", MessageId = "GSF.Interop.WindowsIniFile.WritePrivateProfileString(System.String,System.String,System.String,System.String)")]
         public string this[string section, string entry]
         {
             get

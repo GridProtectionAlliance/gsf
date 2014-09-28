@@ -466,7 +466,7 @@ namespace PhasorProtocolAdapters
             // It is expected that when a point tag is needing to be created that the database will be available
             using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
             {
-                signalTypes = new Dictionary<string, DataRow>(StringComparer.InvariantCultureIgnoreCase);
+                signalTypes = new Dictionary<string, DataRow>(StringComparer.OrdinalIgnoreCase);
 
                 foreach (DataRow row in database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM SignalType").AsEnumerable())
                 {
@@ -920,7 +920,7 @@ namespace PhasorProtocolAdapters
                     deviceAcronyms.Add(outputStream.Field<string>("Acronym"));
 
                     // Sort list so binary search can be used to speed lookups
-                    deviceAcronyms.Sort(StringComparer.InvariantCultureIgnoreCase);
+                    deviceAcronyms.Sort(StringComparer.OrdinalIgnoreCase);
 
                     // Validate measurements associated with this output stream
                     foreach (DataRow outputStreamMeasurement in database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM OutputStreamMeasurement WHERE AdapterID = {0} AND NodeID = {1}", adapterID, nodeIDQueryString)).Rows)
@@ -929,7 +929,7 @@ namespace PhasorProtocolAdapters
                         deviceSignalReference = new SignalReference(outputStreamMeasurement.Field<string>("SignalReference"));
 
                         // Validate that the signal reference is associated with one of the output stream's devices
-                        if (deviceAcronyms.BinarySearch(deviceSignalReference.Acronym, StringComparer.InvariantCultureIgnoreCase) < 0)
+                        if (deviceAcronyms.BinarySearch(deviceSignalReference.Acronym, StringComparer.OrdinalIgnoreCase) < 0)
                         {
                             // This measurement has a signal reference for a device that is not part of the associated output stream, so we mark it for deletion
                             measurementIDsToDelete.Add(outputStreamMeasurement.ConvertField<int>("ID"));

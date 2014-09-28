@@ -176,7 +176,7 @@ namespace GSF.Interop
                             throw new InvalidOperationException("INI file did not begin with a [section]");
 
                         // Check for key/value pair
-                        int equalsIndex = line.IndexOf("=");
+                        int equalsIndex = line.IndexOf("=", StringComparison.Ordinal);
 
                         if (equalsIndex > 0)
                         {
@@ -213,7 +213,7 @@ namespace GSF.Interop
 
         private ConcurrentDictionary<string, string> CreateNewSection(string sectionName)
         {
-            return new ConcurrentDictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            return new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         }
 
         #endregion

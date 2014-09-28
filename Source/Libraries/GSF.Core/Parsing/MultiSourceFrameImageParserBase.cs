@@ -31,8 +31,8 @@
 //
 //******************************************************************************************************
 
+using System.Diagnostics.CodeAnalysis;
 #pragma warning disable 0809
-
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -63,6 +63,7 @@ namespace GSF.Parsing
     /// <typeparam name="TSourceIdentifier">Type of identifier for the data source.</typeparam>
     /// <typeparam name="TTypeIdentifier">Type of identifier used to distinguish output types.</typeparam>
     /// <typeparam name="TOutputType">Type of the interface or class used to represent outputs.</typeparam>
+    [SuppressMessage("Microsoft.Design", "CA1005:AvoidExcessiveParametersOnGenericTypes")]
     public abstract class MultiSourceFrameImageParserBase<TSourceIdentifier, TTypeIdentifier, TOutputType> : FrameImageParserBase<TTypeIdentifier, TOutputType> where TOutputType : ISupportSourceIdentifiableFrameImage<TSourceIdentifier, TTypeIdentifier>
     {
         #region [ Members ]
@@ -76,6 +77,7 @@ namespace GSF.Parsing
         /// This class implements <see cref="ISupportLifecycle"/> such that it will support
         /// automatic object pool handling, e.g., returning object to pool when disposed.
         /// </remarks>
+        [SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
         public class SourceIdentifiableBuffer : ISupportLifecycle
         {
             #region [ Members ]

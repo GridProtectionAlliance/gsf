@@ -74,6 +74,7 @@ namespace GSF.Collections
     /// </code>
     /// </example>
     /// <seealso cref="ValidationService"/>
+    [Serializable]
     public class SettingsCollection : Dictionary<string, string>
     {
         #region [ Members ]

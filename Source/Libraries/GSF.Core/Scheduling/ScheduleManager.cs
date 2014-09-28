@@ -596,26 +596,23 @@ namespace GSF.Scheduling
                 {
                     m_schedules.Add(new Schedule(scheduleName, scheduleRule, scheduleDescription));
                 }
+
                 return true;
             }
-            else
-            {
-                // Schedule exists, we'll update if specified.
-                if (updateExisting)
-                {
-                    // Update existing schedule.
-                    existingSchedule.Name = scheduleName;
-                    existingSchedule.Rule = scheduleRule;
-                    existingSchedule.Description = scheduleDescription;
 
-                    return true;
-                }
-                else
-                {
-                    // Leave existing schedule alone.
-                    return false;
-                }
+            // Schedule exists, we'll update if specified.
+            if (updateExisting)
+            {
+                // Update existing schedule.
+                existingSchedule.Name = scheduleName;
+                existingSchedule.Rule = scheduleRule;
+                existingSchedule.Description = scheduleDescription;
+
+                return true;
             }
+
+            // Leave existing schedule alone.
+            return false;
         }
 
         /// <summary>
@@ -635,11 +632,9 @@ namespace GSF.Scheduling
                 }
                 return true;
             }
-            else
-            {
-                // Can't remove schedule, since it doesn't exist.
-                return false;
-            }
+
+            // Can't remove schedule, since it doesn't exist.
+            return false;
         }
 
         /// <summary>
@@ -654,7 +649,7 @@ namespace GSF.Scheduling
             {
                 foreach (Schedule schedule in m_schedules)
                 {
-                    if (string.Compare(schedule.Name, scheduleName, true) == 0)
+                    if (string.Compare(schedule.Name, scheduleName, StringComparison.OrdinalIgnoreCase) == 0)
                     {
                         match = schedule;
                         break;
@@ -692,10 +687,14 @@ namespace GSF.Scheduling
             if ((object)ScheduleDue != null)
             {
                 EventArgs<Schedule> args = new EventArgs<Schedule>(schedule);
-                foreach (EventHandler<EventArgs<Schedule>> handler in ScheduleDue.GetInvocationList())
+
+                foreach (Delegate invocationFunction in ScheduleDue.GetInvocationList())
                 {
+                    EventHandler<EventArgs<Schedule>> handler = invocationFunction as EventHandler<EventArgs<Schedule>>;
+
                     // Asynchronously invoke handlers...
-                    handler.BeginInvoke(this, args, null, null);
+                    if ((object)handler != null)
+                        handler.BeginInvoke(this, args, null, null);
                 }
             }
         }

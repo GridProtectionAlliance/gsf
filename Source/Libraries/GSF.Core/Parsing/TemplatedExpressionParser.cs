@@ -328,7 +328,7 @@ namespace GSF.Parsing
                                     comparer = Comparer<double>.Default;
                                     break;
                                 case TypeCode.String:
-                                    comparer = ignoreCase ? StringComparer.InvariantCultureIgnoreCase : StringComparer.InvariantCulture;
+                                    comparer = ignoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
                                     break;
                                 default:
                                     throw new ArgumentOutOfRangeException();

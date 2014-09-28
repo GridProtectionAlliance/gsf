@@ -428,7 +428,7 @@ namespace EpriExport
                         columnMappings[index] = mapping.Value;
                 }
 
-                if (!m_simulateTimestamp && !columnMappings.Values.Contains("Timestamp", StringComparer.InvariantCultureIgnoreCase))
+                if (!m_simulateTimestamp && !columnMappings.Values.Contains("Timestamp", StringComparer.OrdinalIgnoreCase))
                     throw new InvalidOperationException("One of the column mappings must be defined as a \"Timestamp\": e.g., columnMappings={0=Timestamp; 1=PPA:12; 2=PPA13}.");
 
                 // In transverse mode, maximum measurements per interval is set to maximum columns in input file

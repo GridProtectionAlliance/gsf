@@ -484,7 +484,7 @@ namespace GSF.Configuration
 
             if ((object)configFilePath != null)
             {
-                if (string.IsNullOrEmpty(configFilePath) || string.Compare(FilePath.GetExtension(configFilePath), ".config", true) == 0)
+                if (string.IsNullOrEmpty(configFilePath) || string.Compare(FilePath.GetExtension(configFilePath), ".config", StringComparison.OrdinalIgnoreCase) == 0)
                 {
                     // PCP - 12/12/2006: Using the TrimEnd function to get the correct value that needs to be passed
                     // to the method call for getting the Configuration object. The previous method (String.TrimEnd())
