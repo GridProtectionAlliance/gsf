@@ -122,7 +122,7 @@ namespace GSF.Communication
         private ManualResetEvent m_connectWaitHandle;
         private NetworkCredential m_networkCredential;
         private readonly ConcurrentQueue<TlsClientPayload> m_sendQueue;
-        private SpinLock m_sendLock;
+        private readonly object m_sendLock;
         private int m_maxSendQueueSize;
         private int m_sending;
         private int m_receiving;
@@ -169,7 +169,7 @@ namespace GSF.Communication
             m_maxSendQueueSize = DefaultMaxSendQueueSize;
             m_sslClient = new TransportProvider<SslStream>();
             m_sendQueue = new ConcurrentQueue<TlsClientPayload>();
-            m_sendLock = new SpinLock();
+            m_sendLock = new object();
 
             m_connectHandler = (sender, args) => ProcessConnect(args);
         }
@@ -859,7 +859,6 @@ namespace GSF.Communication
             TlsClientPayload payload;
             TlsClientPayload dequeuedPayload;
             ManualResetEventSlim handle;
-            bool lockTaken = false;
 
             try
             {
@@ -896,10 +895,8 @@ namespace GSF.Communication
                 // Queue payload for sending.
                 m_sendQueue.Enqueue(payload);
 
-                try
+                lock (m_sendLock)
                 {
-                    m_sendLock.Enter(ref lockTaken);
-
                     // Send the next queued payload.
                     if (Interlocked.CompareExchange(ref m_sending, 1, 0) == 0)
                     {
@@ -908,11 +905,6 @@ namespace GSF.Communication
                         else
                             Interlocked.Exchange(ref m_sending, 0);
                     }
-                }
-                finally
-                {
-                    if (lockTaken)
-                        m_sendLock.Exit();
                 }
 
                 // Notify that the send operation has started.
@@ -1185,7 +1177,6 @@ namespace GSF.Communication
         {
             TlsClientPayload payload = null;
             ManualResetEventSlim handle = null;
-            bool lockTaken = false;
 
             try
             {
@@ -1206,9 +1197,9 @@ namespace GSF.Communication
             }
             finally
             {
-                try
+                if ((object)payload != null)
                 {
-                    if ((object)payload != null)
+                    try
                     {
                         payload.WaitHandle = null;
 
@@ -1223,28 +1214,21 @@ namespace GSF.Communication
                         }
                         else
                         {
-                            try
+                            lock (m_sendLock)
                             {
-                                m_sendLock.Enter(ref lockTaken);
-
                                 if (m_sendQueue.TryDequeue(out payload))
                                     ThreadPool.QueueUserWorkItem(state => SendPayload((TlsClientPayload)state), payload);
                                 else
                                     Interlocked.Exchange(ref m_sending, 0);
                             }
-                            finally
-                            {
-                                if (lockTaken)
-                                    m_sendLock.Exit();
-                            }
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    string errorMessage = string.Format("Exception encountered while attempting to send next payload: {0}", ex.Message);
-                    OnSendDataException(new Exception(errorMessage, ex));
-                    Interlocked.Exchange(ref m_sending, 0);
+                    catch (Exception ex)
+                    {
+                        string errorMessage = string.Format("Exception encountered while attempting to send next payload: {0}", ex.Message);
+                        OnSendDataException(new Exception(errorMessage, ex));
+                        Interlocked.Exchange(ref m_sending, 0);
+                    }
                 }
             }
         }

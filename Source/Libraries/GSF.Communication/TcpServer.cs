@@ -152,7 +152,7 @@ namespace GSF.Communication
         {
             public TransportProvider<Socket> Client;
             public SocketAsyncEventArgs SendArgs;
-            public SpinLock SendLock;
+            public object SendLock;
             public ConcurrentQueue<TcpServerPayload> SendQueue;
             public int Sending;
 
@@ -717,8 +717,6 @@ namespace GSF.Communication
             TcpServerPayload payload;
             ManualResetEventSlim handle;
 
-            bool lockTaken = false;
-
             if (!m_clientInfoLookup.TryGetValue(clientID, out clientInfo))
                 throw new InvalidOperationException(string.Format("No client found for ID {0}.", clientID));
 
@@ -758,10 +756,8 @@ namespace GSF.Communication
             // Queue payload for sending.
             sendQueue.Enqueue(payload);
 
-            try
+            lock (clientInfo.SendLock)
             {
-                clientInfo.SendLock.Enter(ref lockTaken);
-
                 // Send next queued payload.
                 if (Interlocked.CompareExchange(ref clientInfo.Sending, 1, 0) == 0)
                 {
@@ -770,11 +766,6 @@ namespace GSF.Communication
                     else
                         Interlocked.Exchange(ref clientInfo.Sending, 0);
                 }
-            }
-            finally
-            {
-                if (lockTaken)
-                    clientInfo.SendLock.Exit();
             }
 
             // Notify that the send operation has started.
@@ -901,7 +892,7 @@ namespace GSF.Communication
                     {
                         Client = client,
                         SendArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction(),
-                        SendLock = new SpinLock(),
+                        SendLock = new object(),
                         SendQueue = new ConcurrentQueue<TcpServerPayload>(),
                         ClientPrincipal = clientPrincipal
                     };
@@ -1004,7 +995,6 @@ namespace GSF.Communication
             TransportProvider<Socket> client = null;
             ConcurrentQueue<TcpServerPayload> sendQueue = null;
             ManualResetEventSlim handle = null;
-            bool lockTaken = false;
 
             try
             {
@@ -1038,55 +1028,51 @@ namespace GSF.Communication
             }
             finally
             {
-                try
+                if ((object)payload != null)
                 {
-                    if (payload.Length > 0)
+                    try
                     {
-                        // Still more to send for this payload.
-                        ThreadPool.QueueUserWorkItem(state => SendPayload((TcpServerPayload)state), payload);
-                    }
-                    else
-                    {
-                        payload.WaitHandle = null;
-                        payload.ClientInfo = null;
-
-                        // Return payload and wait handle to their respective object pools.
-                        ReusableObjectPool<TcpServerPayload>.Default.ReturnObject(payload);
-                        ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
-
-                        // Begin sending next client payload.
-                        if (sendQueue.TryDequeue(out payload))
+                        if (payload.Length > 0)
                         {
+                            // Still more to send for this payload.
                             ThreadPool.QueueUserWorkItem(state => SendPayload((TcpServerPayload)state), payload);
                         }
-                        else
+                        else if ((object)sendQueue != null)
                         {
-                            try
-                            {
-                                clientInfo.SendLock.Enter(ref lockTaken);
+                            payload.WaitHandle = null;
+                            payload.ClientInfo = null;
 
-                                if (sendQueue.TryDequeue(out payload))
-                                    ThreadPool.QueueUserWorkItem(state => SendPayload((TcpServerPayload)state), payload);
-                                else
-                                    Interlocked.Exchange(ref clientInfo.Sending, 0);
-                            }
-                            finally
+                            // Return payload and wait handle to their respective object pools.
+                            ReusableObjectPool<TcpServerPayload>.Default.ReturnObject(payload);
+                            ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
+
+                            // Begin sending next client payload.
+                            if (sendQueue.TryDequeue(out payload))
                             {
-                                if (lockTaken)
-                                    clientInfo.SendLock.Exit();
+                                ThreadPool.QueueUserWorkItem(state => SendPayload((TcpServerPayload)state), payload);
+                            }
+                            else if ((object)clientInfo != null)
+                            {
+                                lock (clientInfo.SendLock)
+                                {
+                                    if (sendQueue.TryDequeue(out payload))
+                                        ThreadPool.QueueUserWorkItem(state => SendPayload((TcpServerPayload)state), payload);
+                                    else
+                                        Interlocked.Exchange(ref clientInfo.Sending, 0);
+                                }
                             }
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    string errorMessage = string.Format("Exception encountered while attempting to send next payload: {0}", ex.Message);
+                    catch (Exception ex)
+                    {
+                        string errorMessage = string.Format("Exception encountered while attempting to send next payload: {0}", ex.Message);
 
-                    if ((object)client != null)
-                        OnSendClientDataException(client.ID, new Exception(errorMessage, ex));
+                        if ((object)client != null)
+                            OnSendClientDataException(client.ID, new Exception(errorMessage, ex));
 
-                    if ((object)clientInfo != null)
-                        Interlocked.Exchange(ref clientInfo.Sending, 0);
+                        if ((object)clientInfo != null)
+                            Interlocked.Exchange(ref clientInfo.Sending, 0);
+                    }
                 }
             }
         }

@@ -87,7 +87,7 @@ namespace GSF.Communication
         private class TlsClientInfo
         {
             public TransportProvider<TlsSocket> Client;
-            public SpinLock SendLock;
+            public object SendLock;
             public ConcurrentQueue<TlsServerPayload> SendQueue;
             public int Sending;
 
@@ -906,8 +906,6 @@ namespace GSF.Communication
             TlsServerPayload payload;
             ManualResetEventSlim handle;
 
-            bool lockTaken = false;
-
             if (!m_clientInfoLookup.TryGetValue(clientID, out clientInfo))
                 throw new InvalidOperationException(string.Format("No client found for ID {0}.", clientID));
 
@@ -947,10 +945,8 @@ namespace GSF.Communication
             // Queue payload for sending.
             sendQueue.Enqueue(payload);
 
-            try
+            lock (clientInfo.SendLock)
             {
-                clientInfo.SendLock.Enter(ref lockTaken);
-
                 // Send next queued payload.
                 if (Interlocked.CompareExchange(ref clientInfo.Sending, 1, 0) == 0)
                 {
@@ -959,11 +955,6 @@ namespace GSF.Communication
                     else
                         Interlocked.Exchange(ref clientInfo.Sending, 0);
                 }
-            }
-            finally
-            {
-                if (lockTaken)
-                    clientInfo.SendLock.Exit();
             }
 
             // Notify that the send operation has started.
@@ -1078,7 +1069,7 @@ namespace GSF.Communication
                     m_clientInfoLookup.TryAdd(client.ID, new TlsClientInfo
                     {
                         Client = client,
-                        SendLock = new SpinLock(),
+                        SendLock = new object(),
                         SendQueue = new ConcurrentQueue<TlsServerPayload>()
                     });
 
@@ -1127,7 +1118,7 @@ namespace GSF.Communication
                 m_clientInfoLookup.TryAdd(client.ID, new TlsClientInfo
                 {
                     Client = client,
-                    SendLock = new SpinLock(),
+                    SendLock = new object(),
                     SendQueue = new ConcurrentQueue<TlsServerPayload>(),
                     ClientPrincipal = clientPrincipal
                 });
@@ -1201,7 +1192,6 @@ namespace GSF.Communication
             TransportProvider<TlsSocket> client = null;
             ConcurrentQueue<TlsServerPayload> sendQueue = null;
             ManualResetEventSlim handle = null;
-            bool lockTaken = false;
 
             try
             {
@@ -1224,47 +1214,43 @@ namespace GSF.Communication
             }
             finally
             {
-                try
+                if ((object)payload != null && (object)sendQueue != null)
                 {
-                    payload.WaitHandle = null;
-                    payload.ClientInfo = null;
-
-                    // Return payload and wait handle to their respective object pools.
-                    ReusableObjectPool<TlsServerPayload>.Default.ReturnObject(payload);
-                    ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
-
-                    // Begin sending next client payload.
-                    if (sendQueue.TryDequeue(out payload))
+                    try
                     {
-                        ThreadPool.QueueUserWorkItem(state => SendPayload((TlsServerPayload)state), payload);
-                    }
-                    else
-                    {
-                        try
+                        payload.WaitHandle = null;
+                        payload.ClientInfo = null;
+
+                        // Return payload and wait handle to their respective object pools.
+                        ReusableObjectPool<TlsServerPayload>.Default.ReturnObject(payload);
+                        ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
+
+                        // Begin sending next client payload.
+                        if (sendQueue.TryDequeue(out payload))
                         {
-                            clientInfo.SendLock.Enter(ref lockTaken);
-
-                            if (sendQueue.TryDequeue(out payload))
-                                ThreadPool.QueueUserWorkItem(state => SendPayload((TlsServerPayload)state), payload);
-                            else
-                                Interlocked.Exchange(ref clientInfo.Sending, 0);
+                            ThreadPool.QueueUserWorkItem(state => SendPayload((TlsServerPayload)state), payload);
                         }
-                        finally
+                        else if ((object)clientInfo != null)
                         {
-                            if (lockTaken)
-                                clientInfo.SendLock.Exit();
+                            lock (clientInfo.SendLock)
+                            {
+                                if (sendQueue.TryDequeue(out payload))
+                                    ThreadPool.QueueUserWorkItem(state => SendPayload((TlsServerPayload)state), payload);
+                                else
+                                    Interlocked.Exchange(ref clientInfo.Sending, 0);
+                            }
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    string errorMessage = string.Format("Exception encountered while attempting to send next payload: {0}", ex.Message);
+                    catch (Exception ex)
+                    {
+                        string errorMessage = string.Format("Exception encountered while attempting to send next payload: {0}", ex.Message);
 
-                    if ((object)client != null)
-                        OnSendClientDataException(client.ID, new Exception(errorMessage, ex));
+                        if ((object)client != null)
+                            OnSendClientDataException(client.ID, new Exception(errorMessage, ex));
 
-                    if ((object)clientInfo != null)
-                        Interlocked.Exchange(ref clientInfo.Sending, 0);
+                        if ((object)clientInfo != null)
+                            Interlocked.Exchange(ref clientInfo.Sending, 0);
+                    }
                 }
             }
         }

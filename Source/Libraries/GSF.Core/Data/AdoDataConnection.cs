@@ -498,7 +498,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="Connection"/>, and returns the value in the first column 
-        /// of the first row in the result set as type <see cref="T"/>.
+        /// of the first row in the result set as type <typeparamref name="T"/>.
         /// </summary>
         /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
@@ -511,7 +511,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="Connection"/>, and returns the value in the first column 
-        /// of the first row in the result set as type <see cref="T"/>.
+        /// of the first row in the result set as type <typeparamref name="T"/>.
         /// </summary>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
@@ -525,7 +525,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="Connection"/>, and returns the value in the first column 
-        /// of the first row in the result set as type <see cref="T"/>, substituting <paramref name="defaultValue"/>
+        /// of the first row in the result set as type <typeparamref name="T"/>, substituting <paramref name="defaultValue"/>
         /// if <see cref="DBNull.Value"/> is retrieved.
         /// </summary>
         /// <param name="defaultValue">The value to be substituted if <see cref="DBNull.Value"/> is retrieved.</param>
@@ -540,7 +540,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="Connection"/>, and returns the value in the first column 
-        /// of the first row in the result set as type <see cref="T"/>, substituting <paramref name="defaultValue"/>
+        /// of the first row in the result set as type <typeparamref name="T"/>, substituting <paramref name="defaultValue"/>
         /// if <see cref="DBNull.Value"/> is retrieved.
         /// </summary>
         /// <param name="defaultValue">The value to be substituted if <see cref="DBNull.Value"/> is retrieved.</param>

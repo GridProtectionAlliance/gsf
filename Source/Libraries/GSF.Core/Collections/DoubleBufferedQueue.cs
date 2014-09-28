@@ -55,12 +55,16 @@ namespace GSF.Collections
 
         // Fields
         private int m_listIndex;
-        private List<T>[] m_lists;
+        private readonly List<T>[] m_lists;
+#if MONO
+        private readonly object m_swapLock;
+#else
         private SpinLock m_swapLock;
+#endif
         private int m_count;
 
         private Action<IList<T>> m_processItemsFunction;
-        private ISynchronizedOperation m_processItemsOperation;
+        private readonly ISynchronizedOperation m_processItemsOperation;
 
         #endregion
 
@@ -74,7 +78,11 @@ namespace GSF.Collections
             m_lists = new List<T>[2];
             m_lists[0] = new List<T>();
             m_lists[1] = new List<T>();
+#if MONO
+            m_swapLock = new object();
+#else
             m_swapLock = new SpinLock();
+#endif
             m_processItemsOperation = new ShortSynchronizedOperation(TryProcessItems, OnProcessException);
         }
 
@@ -104,7 +112,7 @@ namespace GSF.Collections
         {
             get
             {
-                return Interlocked.CompareExchange(ref m_count, 0, 0);
+                return m_count;
             }
         }
 
@@ -118,20 +126,26 @@ namespace GSF.Collections
         /// <param name="items">The collection of items to be enqueued.</param>
         public void Enqueue(IEnumerable<T> items)
         {
+#if MONO
+            lock (m_swapLock)
+            {
+#else
             bool lockTaken = false;
 
             try
             {
                 m_swapLock.Enter(ref lockTaken);
+#endif
                 m_lists[m_listIndex].AddRange(items);
                 m_count = m_lists[m_listIndex].Count;
             }
+#if !MONO
             finally
             {
                 if (lockTaken)
                     m_swapLock.Exit();
             }
-
+#endif
             if ((object)ProcessItemsFunction != null)
                 m_processItemsOperation.RunOnceAsync();
         }
@@ -145,13 +159,20 @@ namespace GSF.Collections
         /// </returns>
         public IList<T> Dequeue()
         {
-            bool lockTaken = false;
+            if (m_count == 0)
+                return EmptyList;
+
             int listIndex;
+#if MONO
+            lock (m_swapLock)
+            {
+#else
+            bool lockTaken = false;
 
             try
             {
                 m_swapLock.Enter(ref lockTaken);
-
+#endif
                 listIndex = m_listIndex;
                 m_listIndex = 1 - m_listIndex;
                 m_lists[m_listIndex].Clear();
@@ -159,11 +180,13 @@ namespace GSF.Collections
 
                 return m_lists[listIndex];
             }
+#if !MONO
             finally
             {
                 if (lockTaken)
                     m_swapLock.Exit();
             }
+#endif
         }
 
         /// <summary>
@@ -172,19 +195,26 @@ namespace GSF.Collections
         /// </summary>
         public void Clear()
         {
+#if MONO
+            lock (m_swapLock)
+            {
+#else
             bool lockTaken = false;
 
             try
             {
                 m_swapLock.Enter(ref lockTaken);
+#endif
                 m_lists[m_listIndex].Clear();
                 m_count = 0;
             }
+#if !MONO
             finally
             {
                 if (lockTaken)
                     m_swapLock.Exit();
             }
+#endif
         }
 
         /// <summary>
@@ -197,7 +227,21 @@ namespace GSF.Collections
         public bool TryEnqueue(IEnumerable<T> items)
         {
             bool lockTaken = false;
-
+#if MONO
+            if (Monitor.TryEnter(m_swapLock))
+            {
+                try
+                {
+                    lockTaken = true;
+                    m_lists[m_listIndex].AddRange(items);
+                    m_count = m_lists[m_listIndex].Count;
+                }
+                finally
+                {
+                    Monitor.Exit(m_swapLock);
+                }
+            }
+#else
             try
             {
                 m_swapLock.TryEnter(ref lockTaken);
@@ -213,7 +257,7 @@ namespace GSF.Collections
                 if (lockTaken)
                     m_swapLock.Exit();
             }
-
+#endif
             if (lockTaken && (object)ProcessItemsFunction != null)
                 m_processItemsOperation.RunOnceAsync();
 
@@ -231,8 +275,36 @@ namespace GSF.Collections
         /// </returns>
         public int TryDequeue(out IList<T> items)
         {
-            bool lockTaken = false;
+            if (m_count == 0)
+            {
+                items = EmptyList;
+                return 0;
+            }
+
             int listIndex;
+#if MONO
+            if (Monitor.TryEnter(m_swapLock))
+            {
+                try
+                {
+                    listIndex = m_listIndex;
+                    m_listIndex = 1 - m_listIndex;
+                    m_lists[m_listIndex].Clear();
+                    m_count = 0;
+
+                    items = m_lists[listIndex];
+                    return 0;
+                }
+                finally
+                {
+                    Monitor.Exit(m_swapLock);
+                }
+            }
+
+            items = EmptyList;
+            return m_count;
+#else
+            bool lockTaken = false;
 
             try
             {
@@ -259,6 +331,7 @@ namespace GSF.Collections
                 if (lockTaken)
                     m_swapLock.Exit();
             }
+#endif
         }
 
         /// <summary>
@@ -270,7 +343,21 @@ namespace GSF.Collections
         public bool TryClear()
         {
             bool lockTaken = false;
-
+#if MONO
+            if (Monitor.TryEnter(m_swapLock))
+            {
+                try
+                {
+                    lockTaken = true;
+                    m_lists[m_listIndex].Clear();
+                    m_count = 0;
+                }
+                finally
+                {
+                    Monitor.Exit(m_swapLock);
+                }
+            }
+#else
             try
             {
                 m_swapLock.TryEnter(ref lockTaken);
@@ -286,7 +373,7 @@ namespace GSF.Collections
                 if (lockTaken)
                     m_swapLock.Exit();
             }
-
+#endif
             return lockTaken;
         }
 

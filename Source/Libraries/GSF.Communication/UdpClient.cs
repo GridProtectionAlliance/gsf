@@ -39,7 +39,7 @@
 //  10/30/2009 - Pinal C. Patel
 //       Added true multicast support by allowing for socket level subscription to a multicast group.
 //  11/17/2009 - Pinal C. Patel
-//       Fixed a bug in the creation of random server endpoint when server endpoint information is 
+//       Fixed a issue in the creation of random server endpoint when server endpoint information is 
 //       omitted from the ConnectionString.
 //  03/24/2010 - Pinal C. Patel
 //       Updated the interpretation of server property in ConnectionString to correctly interpret 
@@ -47,7 +47,7 @@
 //  11/29/2010 - Pinal C. Patel
 //       Corrected the implementation of ConnectAsync() method.
 //  02/13/2011 - Pinal C. Patel
-//       Modified ConnectAsync() to handle loopback address resolution failure on IPv6 enabled OSes.
+//       Modified ConnectAsync() to handle loop-back address resolution failure on IPv6 enabled OSes.
 //  07/23/2012 - Stephen C. Wills
 //       Performed a full refactor to use the SocketAsyncEventArgs API calls.
 //  10/31/2012 - Stephen C. Wills
@@ -57,8 +57,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
-using GSF.IO;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -68,6 +66,8 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using GSF.Configuration;
+using GSF.IO;
 
 namespace GSF.Communication
 {
@@ -151,6 +151,7 @@ namespace GSF.Communication
     /// }
     /// </code>
     /// </example>
+    // ReSharper disable UnusedVariable
     public class UdpClient : ClientBase
     {
         #region [ Members ]
@@ -249,7 +250,7 @@ namespace GSF.Communication
 
         private int m_sending;
         private int m_receiving;
-        private SpinLock m_sendLock;
+        private readonly object m_sendLock;
         private readonly ConcurrentQueue<UdpClientPayload> m_sendQueue;
         private SocketAsyncEventArgs m_sendArgs;
         private SocketAsyncEventArgs m_receiveArgs;
@@ -283,7 +284,7 @@ namespace GSF.Communication
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_maxSendQueueSize = DefaultMaxSendQueueSize;
 
-            m_sendLock = new SpinLock();
+            m_sendLock = new object();
             m_sendQueue = new ConcurrentQueue<UdpClientPayload>();
             m_sendHandler += (sender, args) => ProcessSend();
             m_receiveHandler += (sender, args) => ProcessReceive();
@@ -831,7 +832,6 @@ namespace GSF.Communication
             UdpClientPayload payload;
             UdpClientPayload dequeuedPayload;
             ManualResetEventSlim handle;
-            bool lockTaken = false;
 
             if (CurrentState != ClientState.Connected)
                 throw new InvalidOperationException("Client is not connected");
@@ -866,10 +866,8 @@ namespace GSF.Communication
             // Queue payload for sending.
             m_sendQueue.Enqueue(payload);
 
-            try
+            lock (m_sendLock)
             {
-                m_sendLock.Enter(ref lockTaken);
-
                 // Send the next queued payload.
                 if (Interlocked.CompareExchange(ref m_sending, 1, 0) == 0)
                 {
@@ -878,11 +876,6 @@ namespace GSF.Communication
                     else
                         Interlocked.Exchange(ref m_sending, 0);
                 }
-            }
-            finally
-            {
-                if (lockTaken)
-                    m_sendLock.Exit();
             }
 
             // Notify that the send operation has started.
@@ -966,7 +959,6 @@ namespace GSF.Communication
         {
             UdpClientPayload payload = null;
             ManualResetEventSlim handle = null;
-            bool lockTaken = false;
 
             try
             {
@@ -997,50 +989,46 @@ namespace GSF.Communication
             }
             finally
             {
-                try
+                if ((object)payload != null)
                 {
-                    if (payload.Length > 0)
+                    try
                     {
-                        // Still more to send for this payload.
-                        ThreadPool.QueueUserWorkItem(state => SendPayload((UdpClientPayload)state), payload);
-                    }
-                    else
-                    {
-                        payload.WaitHandle = null;
-
-                        // Return payload and wait handle to their respective object pools.
-                        ReusableObjectPool<UdpClientPayload>.Default.ReturnObject(payload);
-                        ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
-
-                        // Begin sending next client payload.
-                        if (m_sendQueue.TryDequeue(out payload))
+                        if (payload.Length > 0)
                         {
+                            // Still more to send for this payload.
                             ThreadPool.QueueUserWorkItem(state => SendPayload((UdpClientPayload)state), payload);
                         }
                         else
                         {
-                            try
-                            {
-                                m_sendLock.Enter(ref lockTaken);
+                            payload.WaitHandle = null;
 
-                                if (m_sendQueue.TryDequeue(out payload))
-                                    ThreadPool.QueueUserWorkItem(state => SendPayload((UdpClientPayload)state), payload);
-                                else
-                                    Interlocked.Exchange(ref m_sending, 0);
-                            }
-                            finally
+                            // Return payload and wait handle to their respective object pools.
+                            ReusableObjectPool<UdpClientPayload>.Default.ReturnObject(payload);
+                            ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
+
+                            // Begin sending next client payload.
+                            if (m_sendQueue.TryDequeue(out payload))
                             {
-                                if (lockTaken)
-                                    m_sendLock.Exit();
+                                ThreadPool.QueueUserWorkItem(state => SendPayload((UdpClientPayload)state), payload);
+                            }
+                            else
+                            {
+                                lock (m_sendLock)
+                                {
+                                    if (m_sendQueue.TryDequeue(out payload))
+                                        ThreadPool.QueueUserWorkItem(state => SendPayload((UdpClientPayload)state), payload);
+                                    else
+                                        Interlocked.Exchange(ref m_sending, 0);
+                                }
                             }
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    string errorMessage = string.Format("Exception encountered while attempting to send next payload: {0}", ex.Message);
-                    OnSendDataException(new Exception(errorMessage, ex));
-                    Interlocked.Exchange(ref m_sending, 0);
+                    catch (Exception ex)
+                    {
+                        string errorMessage = string.Format("Exception encountered while attempting to send next payload: {0}", ex.Message);
+                        OnSendDataException(new Exception(errorMessage, ex));
+                        Interlocked.Exchange(ref m_sending, 0);
+                    }
                 }
             }
         }
@@ -1175,7 +1163,7 @@ namespace GSF.Communication
             }
             catch (SocketException ex)
             {
-                // TODO: Explain why this is necessary...
+                // TODO: Need to add comment as to why this is necessary...
                 if (ex.SocketErrorCode != SocketError.InvalidArgument)
                     throw;
             }

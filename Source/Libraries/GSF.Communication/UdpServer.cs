@@ -51,8 +51,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
-using GSF.IO;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -63,6 +61,8 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using GSF.Configuration;
+using GSF.IO;
 
 namespace GSF.Communication
 {
@@ -182,7 +182,7 @@ namespace GSF.Communication
         {
             public TransportProvider<EndPoint> Client;
             public SocketAsyncEventArgs SendArgs;
-            public SpinLock SendLock;
+            public object SendLock;
             public ConcurrentQueue<UdpServerPayload> SendQueue;
             public int Sending;
         }
@@ -730,7 +730,6 @@ namespace GSF.Communication
             ManualResetEventSlim handle;
 
             UdpServerPayload dequeuedPayload;
-            bool lockTaken = false;
 
             if (!m_clientInfoLookup.TryGetValue(clientID, out clientInfo))
                 throw new InvalidOperationException(string.Format("No client found for ID {0}.", clientID));
@@ -767,10 +766,8 @@ namespace GSF.Communication
             // Queue payload for sending.
             sendQueue.Enqueue(payload);
 
-            try
+            lock (clientInfo.SendLock)
             {
-                clientInfo.SendLock.Enter(ref lockTaken);
-
                 // Send next queued payload.
                 if (Interlocked.CompareExchange(ref clientInfo.Sending, 1, 0) == 0)
                 {
@@ -779,11 +776,6 @@ namespace GSF.Communication
                     else
                         Interlocked.Exchange(ref clientInfo.Sending, 0);
                 }
-            }
-            finally
-            {
-                if (lockTaken)
-                    clientInfo.SendLock.Exit();
             }
 
             // Notify that the send operation has started.
@@ -815,9 +807,9 @@ namespace GSF.Communication
                 base.OnReceiveClientDataException(clientID, ex);
         }
 
-        private TransportProvider<EndPoint> AddUdpClient(string host, int port)
+        private void AddUdpClient(string host, int port)
         {
-            return AddUdpClient(Transport.CreateEndPoint(host, port, m_ipStack));
+            AddUdpClient(Transport.CreateEndPoint(host, port, m_ipStack));
         }
 
         private TransportProvider<EndPoint> AddUdpClient(EndPoint udpClientEndPoint)
@@ -875,12 +867,12 @@ namespace GSF.Communication
 
             // Create client info object
             udpClientInfo = new UdpClientInfo
-                {
-                    Client = udpClient,
-                    SendArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction(),
-                    SendLock = new SpinLock(),
-                    SendQueue = new ConcurrentQueue<UdpServerPayload>()
-                };
+            {
+                Client = udpClient,
+                SendArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction(),
+                SendLock = new object(),
+                SendQueue = new ConcurrentQueue<UdpServerPayload>()
+            };
 
             // Set up SocketAsyncEventArgs
             udpClientInfo.SendArgs.RemoteEndPoint = udpClient.Provider;
@@ -952,7 +944,6 @@ namespace GSF.Communication
             TransportProvider<EndPoint> client = null;
             ConcurrentQueue<UdpServerPayload> sendQueue = null;
             ManualResetEventSlim handle = null;
-            bool lockTaken = false;
 
             try
             {
@@ -986,55 +977,51 @@ namespace GSF.Communication
             }
             finally
             {
-                try
+                if ((object)payload != null)
                 {
-                    if (payload.Length > 0)
+                    try
                     {
-                        // Still more to send for this payload.
-                        ThreadPool.QueueUserWorkItem(state => SendPayload((UdpServerPayload)state), payload);
-                    }
-                    else
-                    {
-                        payload.WaitHandle = null;
-                        payload.ClientInfo = null;
-
-                        // Return payload and wait handle to their respective object pools.
-                        ReusableObjectPool<UdpServerPayload>.Default.ReturnObject(payload);
-                        ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
-
-                        // Begin sending next client payload.
-                        if (sendQueue.TryDequeue(out payload))
+                        if (payload.Length > 0)
                         {
+                            // Still more to send for this payload.
                             ThreadPool.QueueUserWorkItem(state => SendPayload((UdpServerPayload)state), payload);
                         }
-                        else
+                        else if ((object)sendQueue != null)
                         {
-                            try
-                            {
-                                clientInfo.SendLock.Enter(ref lockTaken);
+                            payload.WaitHandle = null;
+                            payload.ClientInfo = null;
 
-                                if (sendQueue.TryDequeue(out payload))
-                                    ThreadPool.QueueUserWorkItem(state => SendPayload((UdpServerPayload)state), payload);
-                                else
-                                    Interlocked.Exchange(ref clientInfo.Sending, 0);
-                            }
-                            finally
+                            // Return payload and wait handle to their respective object pools.
+                            ReusableObjectPool<UdpServerPayload>.Default.ReturnObject(payload);
+                            ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
+
+                            // Begin sending next client payload.
+                            if (sendQueue.TryDequeue(out payload))
                             {
-                                if (lockTaken)
-                                    clientInfo.SendLock.Exit();
+                                ThreadPool.QueueUserWorkItem(state => SendPayload((UdpServerPayload)state), payload);
+                            }
+                            else if ((object)clientInfo != null)
+                            {
+                                lock (clientInfo.SendLock)
+                                {
+                                    if (sendQueue.TryDequeue(out payload))
+                                        ThreadPool.QueueUserWorkItem(state => SendPayload((UdpServerPayload)state), payload);
+                                    else
+                                        Interlocked.Exchange(ref clientInfo.Sending, 0);
+                                }
                             }
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    string errorMessage = string.Format("Exception encountered while attempting to send next payload: {0}", ex.Message);
+                    catch (Exception ex)
+                    {
+                        string errorMessage = string.Format("Exception encountered while attempting to send next payload: {0}", ex.Message);
 
-                    if ((object)client != null)
-                        OnSendClientDataException(client.ID, new Exception(errorMessage, ex));
+                        if ((object)client != null)
+                            OnSendClientDataException(client.ID, new Exception(errorMessage, ex));
 
-                    if ((object)clientInfo != null)
-                        Interlocked.Exchange(ref clientInfo.Sending, 0);
+                        if ((object)clientInfo != null)
+                            Interlocked.Exchange(ref clientInfo.Sending, 0);
+                    }
                 }
             }
         }

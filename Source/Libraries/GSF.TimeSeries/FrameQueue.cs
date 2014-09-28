@@ -51,7 +51,11 @@ namespace GSF.TimeSeries
         private CreateNewFrameFunction m_createNewFrame;                // IFrame creation function
         private LinkedList<TrackingFrame> m_frameList;                  // We keep this list sorted by timestamp so frames are processed in order
         private ConcurrentDictionary<long, TrackingFrame> m_frameHash;  // Fast frame lookup dictionary
+#if MONO
+        private readonly object m_queueLock;                            // Lock used for synchronizing access to frame list
+#else
         private SpinLock m_queueLock;                                   // Spinning lock used for synchronizing access to frame list
+#endif
         private long m_publishedTicks;                                  // Timestamp of last published frame
         private volatile TrackingFrame m_head;                          // Reference to current top of the frame collection
         private volatile TrackingFrame m_last;                          // Reference to last published frame
@@ -72,8 +76,12 @@ namespace GSF.TimeSeries
             m_createNewFrame = createNewFrame;
             m_frameList = new LinkedList<TrackingFrame>();
             m_frameHash = new ConcurrentDictionary<long, TrackingFrame>();
-            m_queueLock = new SpinLock();
             m_downsamplingMethod = DownsamplingMethod.LastReceived;
+#if MONO
+            m_queueLock = new object();
+#else
+            m_queueLock = new SpinLock();
+#endif
         }
 
         /// <summary>
@@ -230,12 +238,16 @@ namespace GSF.TimeSeries
         public string ExamineQueueState(int expectedMeasurements)
         {
             StringBuilder status = new StringBuilder();
+#if MONO
+            lock (m_queueLock)
+            {
+#else
             bool locked = false;
 
             try
             {
                 m_queueLock.Enter(ref locked);
-
+#endif
                 status.AppendLine("Concentrator frame queue detail:");
                 status.AppendLine();
                 status.AppendLine();
@@ -285,11 +297,13 @@ namespace GSF.TimeSeries
 
                 return status.ToString();
             }
+#if !MONO
             finally
             {
                 if (locked)
                     m_queueLock.Exit();
             }
+#endif
         }
 
         /// <summary>
@@ -297,23 +311,29 @@ namespace GSF.TimeSeries
         /// </summary>
         public void Clear()
         {
+#if MONO
+            lock (m_queueLock)
+            {
+#else
             bool locked = false;
 
             try
             {
                 m_queueLock.Enter(ref locked);
-
+#endif
                 if (m_frameList != null)
                     m_frameList.Clear();
 
                 if (m_frameHash != null)
                     m_frameHash.Clear();
             }
+#if !MONO
             finally
             {
                 if (locked)
                     m_queueLock.Exit();
             }
+#endif
         }
 
         /// <summary>
@@ -322,20 +342,25 @@ namespace GSF.TimeSeries
         public void Pop()
         {
             // We track latest published ticks - don't want to allow slow moving measurements
-            // to inject themselves after a certain publication timeframe has passed - this
+            // to inject themselves after a certain publication time frame has passed - this
             // avoids any possible out-of-sequence frame publication...
             m_last = m_head;
             m_head = null;
             long publishedTicks = m_last.Timestamp;
             Thread.VolatileWrite(ref m_publishedTicks, publishedTicks);
-            bool locked = false;
 
             // Assign next node, if any, as quickly as possible. Still have to wait for queue
             // lock - tick-tock, time's-a-wastin' and user function needs a frame to publish.
+#if MONO
+            lock (m_queueLock)
+            {
+#else
+            bool locked = false;
+
             try
             {
                 m_queueLock.Enter(ref locked);
-
+#endif
                 if (m_frameList.Count > 0)
                 {
                     LinkedListNode<TrackingFrame> nextNode = m_frameList.First.Next;
@@ -348,12 +373,13 @@ namespace GSF.TimeSeries
                     m_frameList.RemoveFirst();
                 }
             }
+#if !MONO
             finally
             {
                 if (locked)
                     m_queueLock.Exit();
             }
-
+#endif
             TrackingFrame frame;
             m_frameHash.TryRemove(publishedTicks, out frame);
         }
@@ -372,7 +398,7 @@ namespace GSF.TimeSeries
         public TrackingFrame GetFrame(long ticks)
         {
             TrackingFrame frame = null;
-            bool locked = false, nodeAdded = false;
+            bool nodeAdded = false;
             long destinationTicks;
 
             // Calculate destination ticks for this frame
@@ -386,10 +412,16 @@ namespace GSF.TimeSeries
                     return frame;
 
                 // Didn't find frame for this timestamp so we need to add a new one to the queue
+#if MONO
+                lock (m_queueLock)
+                {
+#else
+                bool locked = false;
+
                 try
                 {
                     m_queueLock.Enter(ref locked);
-
+#endif
                     // Another thread may have gotten to this task already, so check for this contingency...
                     if (m_frameHash.TryGetValue(destinationTicks, out frame))
                         return frame;
@@ -432,11 +464,13 @@ namespace GSF.TimeSeries
                     // a hash table for quick frame lookups by timestamp
                     m_frameHash[destinationTicks] = frame;
                 }
+#if !MONO
                 finally
                 {
                     if (locked)
                         m_queueLock.Exit();
                 }
+#endif
             }
 
             return frame;

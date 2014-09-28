@@ -43,7 +43,7 @@ namespace GSF.TimeSeries
         // Fields
         private PrecisionTimer m_timer;
         private bool m_useWaitHandleA;
-        private SpinLock m_timerTickLock;
+        private readonly object m_timerTickLock;
         private ManualResetEventSlim m_frameWaitHandleA;
         private ManualResetEventSlim m_frameWaitHandleB;
         private readonly int m_framesPerSecond;
@@ -69,7 +69,7 @@ namespace GSF.TimeSeries
         internal PrecisionInputTimer(int framesPerSecond)
         {
             // Create synchronization objects
-            m_timerTickLock = new SpinLock();
+            m_timerTickLock = new object();
             m_frameWaitHandleA = new ManualResetEventSlim(false);
             m_frameWaitHandleB = new ManualResetEventSlim(false);
             m_useWaitHandleA = true;
@@ -263,13 +263,9 @@ namespace GSF.TimeSeries
         {
             // Slower systems or systems under stress may have trouble keeping up with a 1-ms timer, so
             // we only process this code if it's not already processing...
-            bool locked = false;
-
-            try
+            if (Monitor.TryEnter(m_timerTickLock, 2))
             {
-                m_timerTickLock.TryEnter(2, ref locked);
-
-                if (locked)
+                try
                 {
                     DateTime now = DateTime.UtcNow;
                     int frameMilliseconds, milliseconds = now.Millisecond;
@@ -351,16 +347,15 @@ namespace GSF.TimeSeries
                         }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                if ((object)m_exceptionHandler != null)
-                    m_exceptionHandler(new InvalidOperationException("Exception thrown by precision input timer: " + ex.Message, ex));
-            }
-            finally
-            {
-                if (locked)
-                    m_timerTickLock.Exit(true);
+                catch (Exception ex)
+                {
+                    if ((object)m_exceptionHandler != null)
+                        m_exceptionHandler(new InvalidOperationException("Exception thrown by precision input timer: " + ex.Message, ex));
+                }
+                finally
+                {
+                    Monitor.Exit(m_timerTickLock);
+                }
             }
         }
 

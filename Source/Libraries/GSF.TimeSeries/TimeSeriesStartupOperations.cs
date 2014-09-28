@@ -36,6 +36,8 @@ namespace GSF.TimeSeries
     /// <summary>
     /// Defines a data operations to be performed at startup.
     /// </summary>
+    // ReSharper disable UnusedParameter.Local
+    // ReSharper disable NotAccessedField.Local
     public static class TimeSeriesStartupOperations
     {
         // Messaging to the service
@@ -204,16 +206,16 @@ namespace GSF.TimeSeries
             const string DeviceStatCountFormat = "SELECT COUNT(*) FROM Statistic WHERE Source = 'Device' AND AssemblyName = 'GSF.TimeSeries.dll'";
             const string SubscriberStatCountFormat = "SELECT COUNT(*) FROM Statistic WHERE Source = 'Subscriber' AND AssemblyName = 'GSF.TimeSeries.dll'";
             const string PublisherStatCountFormat = "SELECT COUNT(*) FROM Statistic WHERE Source = 'Publisher' AND AssemblyName = 'GSF.TimeSeries.dll'";
-            const string RuntimeDeviceCountFormat = "SELECT COUNT(*) FROM Runtime WHERE ID = {0} AND SourceTable = 'Device'";
+            //const string RuntimeDeviceCountFormat = "SELECT COUNT(*) FROM Runtime WHERE ID = {0} AND SourceTable = 'Device'";
 
-            const string StatHistorianIDFormat = "SELECT ID FROM Historian WHERE Acronym = 'STAT' AND NodeID = {0}";
-            const string StatSignalTypeIDFormat = "SELECT ID FROM SignalType WHERE Acronym = 'STAT'";
-            const string StatMeasurementCountFormat = "SELECT COUNT(*) FROM Measurement WHERE SignalReference = '{0}' AND HistorianID = {1}";
+            //const string StatHistorianIDFormat = "SELECT ID FROM Historian WHERE Acronym = 'STAT' AND NodeID = {0}";
+            //const string StatSignalTypeIDFormat = "SELECT ID FROM SignalType WHERE Acronym = 'STAT'";
+            //const string StatMeasurementCountFormat = "SELECT COUNT(*) FROM Measurement WHERE SignalReference = '{0}' AND HistorianID = {1}";
 
-            const string SubscriberRowsFormat = "SELECT * FROM IaonInputAdapter WHERE TypeName = 'GSF.TimeSeries.Transport.DataSubscriber' AND NodeID = {0}";
-            const string DeviceRowsFormat = "SELECT * FROM Device WHERE ParentID = {0}";
-            const string PublisherRowsFormat = "SELECT * FROM IaonActionadapter WHERE TypeName = 'GSF.TimeSeries.Transport.DataPublisher' AND NodeID = {0}";
-            const string RuntimeSourceIDFormat = "SELECT SourceID FROM Runtime WHERE ID = {0}";
+            //const string SubscriberRowsFormat = "SELECT * FROM IaonInputAdapter WHERE TypeName = 'GSF.TimeSeries.Transport.DataSubscriber' AND NodeID = {0}";
+            //const string DeviceRowsFormat = "SELECT * FROM Device WHERE ParentID = {0}";
+            //const string PublisherRowsFormat = "SELECT * FROM IaonActionadapter WHERE TypeName = 'GSF.TimeSeries.Transport.DataPublisher' AND NodeID = {0}";
+            //const string RuntimeSourceIDFormat = "SELECT SourceID FROM Runtime WHERE ID = {0}";
 
             // INSERT queries
             const string StatConfigEntityInsertFormat = "INSERT INTO ConfigurationEntity(SourceName, RuntimeName, Description, LoadOrder, Enabled) VALUES('RuntimeStatistic', 'Statistics', 'Defines statistics that are monitored for the system, devices, and output streams', 11, 1)";
