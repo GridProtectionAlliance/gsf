@@ -114,6 +114,11 @@ namespace GSF.IO
         /// </summary>
         public static readonly string DefaultCachePath = Path.Combine(FilePath.GetCommonApplicationDataFolder(), "FileProcessors");
 
+        /// <summary>
+        /// Default value for the <see cref="UseTimer"/> property.
+        /// </summary>
+        public const bool DefaultUseTimer = false;
+
         // Events
 
         /// <summary>
@@ -159,6 +164,7 @@ namespace GSF.IO
             m_filter = DefaultFilter;
             m_trackChanges = DefaultTrackChanges;
             m_cachePath = DefaultCachePath;
+            m_useTimer = DefaultUseTimer;
 
             m_fileWatchers = new List<FileSystemWatcher>();
             m_processingQueue = ProcessQueue<Action>.CreateRealTimeQueue(action => action());
