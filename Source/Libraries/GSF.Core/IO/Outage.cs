@@ -33,8 +33,8 @@ namespace GSF.IO
         #region [ Members ]
 
         // Fields
-        private Ticks m_startTime;
-        private Ticks m_endTime;
+        private DateTime m_startTime;
+        private DateTime m_endTime;
 
         #endregion
 
@@ -52,7 +52,7 @@ namespace GSF.IO
         /// </summary>
         /// <param name="startTime">Start time for outage.</param>
         /// <param name="endTime">End time for outage.</param>
-        public Outage(Ticks startTime, Ticks endTime)
+        public Outage(DateTime startTime, DateTime endTime)
         {
             StartTime = startTime;
             EndTime = endTime;
@@ -65,7 +65,7 @@ namespace GSF.IO
         /// <summary>
         /// Gets or sets start time for <see cref="Outage"/>.
         /// </summary>
-        public Ticks StartTime
+        public DateTime StartTime
         {
             get
             {
@@ -73,7 +73,7 @@ namespace GSF.IO
             }
             set
             {
-                if (m_endTime > 0 && value > m_endTime)
+                if (m_endTime > DateTime.MinValue && value > m_endTime)
                     throw new ArgumentOutOfRangeException("value", "Outage start time is past end time");
 
                 m_startTime = value;
@@ -83,7 +83,7 @@ namespace GSF.IO
         /// <summary>
         /// Gets or sets end time for <see cref="Outage"/>.
         /// </summary>
-        public Ticks EndTime
+        public DateTime EndTime
         {
             get
             {

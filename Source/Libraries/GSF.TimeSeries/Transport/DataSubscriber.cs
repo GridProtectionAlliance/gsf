@@ -1435,6 +1435,8 @@ namespace GSF.TimeSeries.Transport
                     Dictionary<string, string> connectionSettings = m_commandChannel.ConnectionString.ParseKeyValuePairs();
                     connectionSettings.Remove("dataGapRecovery");
                     connectionSettings.Remove("autoConnect");
+                    connectionSettings.Remove("synchronizeMetadata");
+                    connectionSettings.Remove("outputMeasurements");
 
                     // Note that the data gap recoverer will connect on the same command channel port as
                     // the real-time subscriber (TCP only)
@@ -1442,7 +1444,8 @@ namespace GSF.TimeSeries.Transport
                     m_dataGapRecoverer = new DataGapRecoverer();
                     m_dataGapRecoverer.SourceConnectionName = Name;
                     m_dataGapRecoverer.DataSource = DataSource;
-                    m_dataGapRecoverer.ConnectionString = string.Join("; ", dataGapSettings.JoinKeyValuePairs(), connectionSettings.JoinKeyValuePairs(), "autoConnect=false");
+                    m_dataGapRecoverer.ConnectionString = string.Join("; ", "autoConnect=false; synchronizeMetadata=false", dataGapSettings.JoinKeyValuePairs(), connectionSettings.JoinKeyValuePairs());
+                    m_dataGapRecoverer.FilterExpression = this.OutputMeasurementKeys().Select(key => key.SignalID.ToString()).ToDelimitedString(';');
                     m_dataGapRecoverer.RecoveredMeasurements += m_dataGapRecoverer_RecoveredMeasurements;
                     m_dataGapRecoverer.StatusMessage += m_dataGapRecoverer_StatusMessage;
                     m_dataGapRecoverer.ProcessException += m_dataGapRecoverer_ProcessException;
@@ -1842,7 +1845,7 @@ namespace GSF.TimeSeries.Transport
         /// <para>
         /// When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing constraints are defined (i.e., not <c>null</c>), this
         /// specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <paramref name="startTime"/>
-        /// and <paramref name="stopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
+        /// and <paramref name="stopTime"/> specifies the subscriber session will process data in standard, i.e., real-time, operation.
         /// </para>
         /// <para>
         /// With the exception of the values of -1 and 0, the <paramref name="processingInterval"/> value specifies the desired historical playback data
@@ -1946,7 +1949,7 @@ namespace GSF.TimeSeries.Transport
         /// <para>
         /// When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing constraints are defined (i.e., not <c>null</c>), this
         /// specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <paramref name="startTime"/>
-        /// and <paramref name="stopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
+        /// and <paramref name="stopTime"/> specifies the subscriber session will process data in standard, i.e., real-time, operation.
         /// </para>
         /// <para>
         /// With the exception of the values of -1 and 0, the <paramref name="processingInterval"/> value specifies the desired historical playback data
@@ -2080,7 +2083,7 @@ namespace GSF.TimeSeries.Transport
         /// <para>
         /// When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing constraints are defined (i.e., not <c>null</c>), this
         /// specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <paramref name="startTime"/>
-        /// and <paramref name="stopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
+        /// and <paramref name="stopTime"/> specifies the subscriber session will process data in standard, i.e., real-time, operation.
         /// </para>
         /// <para>
         /// With the exception of the values of -1 and 0, the <paramref name="processingInterval"/> value specifies the desired historical playback data
@@ -2627,17 +2630,21 @@ namespace GSF.TimeSeries.Transport
                                         m_runTimeLog = new RunTimeLog();
                                         m_runTimeLog.FileName = Name + "_RunTimeLog.txt";
                                         m_runTimeLog.ProcessException += m_runTimeLog_ProcessException;
+                                        m_runTimeLog.Initialize();
                                     }
-
-                                    // Mark the start of any data transmissions
-                                    m_runTimeLog.Initialize();
+                                    else
+                                    {
+                                        // Mark the start of any data transmissions
+                                        m_runTimeLog.StartTime = DateTime.UtcNow;
+                                        m_runTimeLog.Enabled = true;
+                                    }
                                 }
 
                                 // The duration between last disconnection and start of data transmissions
                                 // represents a gap in data - if data gap recovery is enabled, we log
                                 // this as a gap for recovery:
                                 if (m_dataGapRecoveryEnabled && (object)m_dataGapRecoverer != null)
-                                    m_dataGapRecoverer.LogDataGap(m_runTimeLog.StopTime, m_runTimeLog.StartTime);
+                                    m_dataGapRecoverer.LogDataGap(m_runTimeLog.StopTime, DateTime.UtcNow);
                             }
 
                             // Track total data packet bytes received from any channel
@@ -3827,12 +3834,11 @@ namespace GSF.TimeSeries.Transport
         // Disconnect client, restarting if disconnect was not intentional
         private void DisconnectClient()
         {
-            // Dispose of run-time log - this marks the end of any data transmissions
-            if ((object)m_runTimeLog != null)
+            // Mark end of any data transmission in run-time log
+            if ((object)m_runTimeLog != null && m_runTimeLog.Enabled)
             {
-                m_runTimeLog.Dispose();
-                m_runTimeLog.ProcessException -= m_runTimeLog_ProcessException;
-                m_runTimeLog = null;
+                m_runTimeLog.StopTime = DateTime.UtcNow;
+                m_runTimeLog.Enabled = false;
             }
 
             // Stop data gap recovery operations

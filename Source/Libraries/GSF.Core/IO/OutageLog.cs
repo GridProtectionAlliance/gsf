@@ -161,6 +161,17 @@ namespace GSF.IO
         }
 
         /// <summary>
+        /// Gets locking object for <see cref="OutageLog"/>.
+        /// </summary>
+        protected internal object ReaderWriterLock
+        {
+            get
+            {
+                return m_readerWriterLock;
+            }
+        }
+
+        /// <summary>
         /// Gets the current status details about <see cref="OutageLog"/>.
         /// </summary>
         public virtual string Status
@@ -441,7 +452,7 @@ namespace GSF.IO
                             // Add base outage to overlaps so full minimum and maximum range can be determined
                             overlaps.Add(overlap.Key);
 
-                            Outage combinedOutage = new Outage(overlaps.Min(o => o.StartTime.Value), overlaps.Max(o => o.EndTime.Value));
+                            Outage combinedOutage = new Outage(overlaps.Min(o => o.StartTime), overlaps.Max(o => o.EndTime));
                             bool outagesRemoved = false;
 
                             // Remove each overlapping outage

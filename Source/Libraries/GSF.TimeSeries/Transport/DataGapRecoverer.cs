@@ -137,6 +137,7 @@ namespace GSF.TimeSeries.Transport
         private long m_measurementsRecoveredOverLastInterval;
         private volatile bool m_abnormalTermination;
         private volatile bool m_enabled;
+        private volatile bool m_connected;
         private bool m_disposed;
 
         #endregion
@@ -505,7 +506,7 @@ namespace GSF.TimeSeries.Transport
                 status.AppendLine();
                 status.AppendFormat("Maximum data recovery span: {0} seconds", MaximumRecoverySpan.ToString(2));
                 status.AppendLine();
-                status.AppendFormat("Recovery filter expression: {0}", FilterExpression);
+                status.AppendFormat("Recovery filter expression: {0}", FilterExpression.TruncateRight(51));
                 status.AppendLine();
                 status.AppendFormat(" Recovery processing speed: {0}", RecoveryProcessingInterval < 0 ? "Default" : (RecoveryProcessingInterval == 0 ? "As fast as possible" : RecoveryProcessingInterval.ToString("N0") + " milliseconds"));
                 status.AppendLine();
@@ -526,14 +527,6 @@ namespace GSF.TimeSeries.Transport
                     status.AppendLine("Data Gap Log Status".CenterText(50));
                     status.AppendLine("-------------------".CenterText(50));
                     status.AppendFormat(m_dataGapLog.Status);
-
-                    if ((object)m_dataGapLogProcessor != null)
-                    {
-                        status.AppendLine();
-                        status.AppendLine("Data Gap Log Processor Status".CenterText(50));
-                        status.AppendLine("-----------------------------".CenterText(50));
-                        status.AppendFormat(m_dataGapLogProcessor.Status);
-                    }
                 }
 
                 return status.ToString();
@@ -583,7 +576,6 @@ namespace GSF.TimeSeries.Transport
 
                         if ((object)m_dataGapLogProcessor != null)
                         {
-                            m_dataGapLogProcessor.ProcessException -= Common_ProcessException;
                             m_dataGapLogProcessor.Dispose();
                             m_dataGapLogProcessor = null;
                         }
@@ -671,17 +663,14 @@ namespace GSF.TimeSeries.Transport
             m_temporalSubscription.NewMeasurements += TemporalSubscription_NewMeasurements;
             m_temporalSubscription.Initialize();
 
-            // Setup data gap outage log to persist unprocessed outages between class lifecycles
+            // Setup data gap outage log to persist unprocessed outages between class life-cycles
             m_dataGapLog = new OutageLog();
             m_dataGapLog.FileName = m_sourceConnectionName + "_OutageLog.txt";
             m_dataGapLog.ProcessException += Common_ProcessException;
             m_dataGapLog.Initialize();
 
             // Setup data gap processor to process items one at a time, a 5-second minimum period is established between each gap processing
-            m_dataGapLogProcessor = new OutageLogProcessor(m_dataGapLog, ProcessDataGap, CanProcessDataGap, GSF.Common.Max(5000.0D, (double)m_recoveryStartDelay * 1000.0D), 1);
-            m_dataGapLogProcessor.RequeueOnException = true;
-            m_dataGapLogProcessor.ProcessException += Common_ProcessException;
-            m_dataGapLogProcessor.Start();
+            m_dataGapLogProcessor = new OutageLogProcessor(m_dataGapLog, ProcessDataGap, CanProcessDataGap, OnProcessException, GSF.Common.Max(5000, (int)(m_recoveryStartDelay * SI.Milli)));
         }
 
         /// <summary>
@@ -694,22 +683,41 @@ namespace GSF.TimeSeries.Transport
         /// Data gap will not be logged for processing if the <paramref name="startTime"/> and <paramref name="endTime"/> do not represent
         /// a valid time span for recovery according to <see cref="MinimumRecoverySpan"/> and <see cref="MaximumRecoverySpan"/>.
         /// </remarks>
-        public bool LogDataGap(Ticks startTime, Ticks endTime)
+        public bool LogDataGap(DateTime startTime, DateTime endTime)
         {
             if (m_disposed)
                 throw new InvalidOperationException("Data gap recoverer has been disposed. Cannot log data gap for processing.");
 
-            if ((object)m_dataGapLogProcessor == null)
+            if ((object)m_dataGapLog == null)
                 throw new InvalidOperationException("Data gap recoverer has not been initialized. Cannot log data gap for processing.");
 
-            Time dataGapSpan = (endTime - startTime).ToSeconds();
+            OnStatusMessage("Data gap recovery requested for period \"{0}\" - \"{1}\"...", startTime.ToString(OutageLog.DateTimeFormat, CultureInfo.InvariantCulture), endTime.ToString(OutageLog.DateTimeFormat, CultureInfo.InvariantCulture));
+
+            Time dataGapSpan = (endTime - startTime).TotalSeconds;
 
             // Only log data gap for processing if it is in an acceptable time span for recovery
             if (dataGapSpan >= m_minimumRecoverySpan && dataGapSpan <= m_maximumRecoverySpan)
             {
-                m_dataGapLogProcessor.Add(new Outage(startTime, endTime));
+                // Since local clock may float we add some buffer around recovery window
+                m_dataGapLog.Add(new Outage(startTime.AddSeconds(-10.0D), endTime.AddSeconds(10.0D)));
                 return true;
             }
+
+            Time rangeLimit;
+            string rangeLimitText;
+
+            if (dataGapSpan < m_minimumRecoverySpan)
+            {
+                rangeLimit = m_minimumRecoverySpan;
+                rangeLimitText = "minimum";
+            }
+            else
+            {
+                rangeLimit = m_maximumRecoverySpan;
+                rangeLimitText = "maximum";
+            }
+
+            OnStatusMessage("Skipped data gap recovery for {0} of missed data - outside configured {1} range of {2}.", Time.ToElapsedTimeString(dataGapSpan, 2), rangeLimitText, Time.ToElapsedTimeString(rangeLimit, 2));
 
             return false;
         }
@@ -756,30 +764,35 @@ namespace GSF.TimeSeries.Transport
         // Can only start data gap processing when end time of recovery range is beyond recovery start delay
         private bool CanProcessDataGap(Outage dataGap)
         {
-            return Enabled && (DateTime.UtcNow.Ticks - dataGap.EndTime).ToSeconds() > m_recoveryStartDelay;
+            return m_connected && Enabled && (DateTime.UtcNow - dataGap.EndTime).TotalSeconds > m_recoveryStartDelay;
         }
 
         // Any exceptions in this handler will be exposed through ProcessException event and cause OutageLogProcessor
-        // to requeue the the data gap outage so it will be processed again (could be that remote system is offline).
+        // to requeue the data gap outage so it will be processed again (could be that remote system is offline).
         private void ProcessDataGap(Outage dataGap)
         {
             // Establish start and stop time for temporal session
             m_subscriptionInfo.StartTime = dataGap.StartTime.ToString(OutageLog.DateTimeFormat, CultureInfo.InvariantCulture);
             m_subscriptionInfo.StopTime = dataGap.EndTime.ToString(OutageLog.DateTimeFormat, CultureInfo.InvariantCulture);
 
+            OnStatusMessage("Starting data gap recovery for period \"{0}\" - \"{1}\"...", m_subscriptionInfo.StartTime, m_subscriptionInfo.StopTime);
+
+            // Enable data monitor            
+            m_dataStreamMonitor.Enabled = true;
+
             // Reset measurement counters
             m_measurementsRecoveredForDataGap = 0;
             m_measurementsRecoveredOverLastInterval = 0;
 
             // Reset processing fields
-            m_mostRecentRecoveredTime = dataGap.StartTime;
+            m_mostRecentRecoveredTime = dataGap.StartTime.Ticks;
             m_abnormalTermination = false;
 
             // Reset process completion wait handle
             m_dataGapRecoveryCompleted.Reset();
 
-            // Connect temporal session
-            m_temporalSubscription.Start();
+            // Start temporal data recovery session
+            m_temporalSubscription.Subscribe(m_subscriptionInfo);
 
             // Wait for process completion - success or fail
             m_dataGapRecoveryCompleted.Wait();
@@ -788,10 +801,10 @@ namespace GSF.TimeSeries.Transport
             if (m_abnormalTermination)
             {
                 // Make sure any data recovered so far doesn't get unnecessarily re-recovered, this requires that source historian report data in time-sorted order
-                dataGap.StartTime = GSF.Common.Max(dataGap.StartTime, m_mostRecentRecoveredTime - (m_subscriptionInfo.UseMillisecondResolution ? Ticks.PerMillisecond : 1L));
+                dataGap.StartTime = new DateTime(GSF.Common.Max((Ticks)dataGap.StartTime.Ticks, m_mostRecentRecoveredTime - (m_subscriptionInfo.UseMillisecondResolution ? Ticks.PerMillisecond : 1L)), DateTimeKind.Utc);
 
                 // Re-insert adjusted data gap at the top of the processing queue
-                m_dataGapLogProcessor.Insert(0, dataGap);
+                m_dataGapLog.Insert(0, dataGap);
                 FlushLogAsync();
 
                 if (m_measurementsRecoveredForDataGap == 0)
@@ -802,6 +815,9 @@ namespace GSF.TimeSeries.Transport
 
             // Disconnect temporal session
             m_temporalSubscription.Stop();
+
+            // Disable data monitor            
+            m_dataStreamMonitor.Enabled = false;
 
             OnStatusMessage("{0}Recovered {1} measurements for period \"{2}\" - \"{3}\".", m_measurementsRecoveredForDataGap == 0 ? "WARNING: " : "", m_measurementsRecoveredForDataGap, m_subscriptionInfo.StartTime, m_subscriptionInfo.StopTime);
         }
@@ -876,30 +892,21 @@ namespace GSF.TimeSeries.Transport
 
         private void TemporalSubscription_ConnectionEstablished(object sender, EventArgs e)
         {
-            // Connection established, start temporal data subscription
-            m_temporalSubscription.Subscribe(m_subscriptionInfo);
-
-            // Enable data monitor            
-            m_dataStreamMonitor.Enabled = true;
+            m_connected = true;
         }
 
         private void TemporalSubscription_ConnectionTerminated(object sender, EventArgs e)
         {
+            m_connected = false;
+
             try
             {
                 // Disable data monitor            
                 m_dataStreamMonitor.Enabled = false;
 
+                // If temporal subscription is currently enabled - connection termination was not expected
                 if ((object)m_temporalSubscription != null)
-                {
-                    // If temporal subscription is currently enabled - connection termination was not expected
                     m_abnormalTermination = m_temporalSubscription.Enabled;
-
-                    // Disable temporal subscription so it doesn't attempt an auto-reconnection - we will
-                    // simply requeue data gap so it will be processed again. This is safer since the gap
-                    // we be re-serialized for processing in case system is shut down in the mean while.
-                    m_temporalSubscription.Enabled = false;
-                }
             }
             finally
             {
@@ -910,8 +917,12 @@ namespace GSF.TimeSeries.Transport
 
         private void TemporalSubscription_ProcessingComplete(object sender, EventArgs<string> e)
         {
+            OnStatusMessage("Temporal data recovery processing completed.");
+
             if ((object)m_dataGapRecoveryCompleted != null)
                 m_dataGapRecoveryCompleted.Set();
+
+            m_dataStreamMonitor.Enabled = false;
         }
 
         private void TemporalSubscription_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
@@ -937,10 +948,14 @@ namespace GSF.TimeSeries.Transport
             // See if consumer has requested to stop recovery operations
             if (!m_enabled)
             {
+                OnStatusMessage("Data gap recovery has been canceled.");
+
                 m_abnormalTermination = true;
 
                 if ((object)m_dataGapRecoveryCompleted != null)
                     m_dataGapRecoveryCompleted.Set();
+
+                m_dataStreamMonitor.Enabled = false;
             }
         }
 

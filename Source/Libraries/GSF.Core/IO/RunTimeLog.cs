@@ -49,17 +49,17 @@ namespace GSF.IO
         /// <summary>
         /// Log file key name for last start time used by <see cref="RunTimeLog"/>.
         /// </summary>
-        public const string LastStartTimeKey = "Last Start Time";
+        public const string LastStartTimeKey = "LastStartTime";
 
         /// <summary>
         /// Log file key name for last stop time used by <see cref="RunTimeLog"/>.
         /// </summary>
-        public const string LastStopTimeKey = "Last Stop Time";
+        public const string LastStopTimeKey = "LastStopTime";
 
         /// <summary>
         /// Log file key name for last running time used by <see cref="RunTimeLog"/>.
         /// </summary>
-        public const string LastRunningTimeKey = "Last Running Time";
+        public const string LastRunningTimeKey = "LastRunningTime";
 
         // Events
 
@@ -80,9 +80,9 @@ namespace GSF.IO
         private readonly Timer m_flushTimer;
         private readonly object m_readerWriterLock;
         private string m_fileName;
-        private Ticks m_startTime;
-        private Ticks m_stopTime;
-        private Ticks m_runningTime;
+        private DateTime m_startTime;
+        private DateTime m_stopTime;
+        private DateTime m_runningTime;
         private bool m_disposed;
 
         #endregion
@@ -137,13 +137,13 @@ namespace GSF.IO
         /// <summary>
         /// Gets last known start-time.
         /// </summary>
-        public Ticks StartTime
+        public DateTime StartTime
         {
             get
             {
                 return m_startTime;
             }
-            protected set
+            set
             {
                 m_startTime = value;
             }
@@ -152,13 +152,13 @@ namespace GSF.IO
         /// <summary>
         /// Gets last known stop-time.
         /// </summary>
-        public Ticks StopTime
+        public DateTime StopTime
         {
             get
             {
                 return m_stopTime;
             }
-            protected set
+            set
             {
                 m_stopTime = value;
             }
@@ -167,13 +167,13 @@ namespace GSF.IO
         /// <summary>
         /// Gets last known running-time (10-second resolution).
         /// </summary>
-        public Ticks RunningTime
+        public DateTime RunningTime
         {
             get
             {
                 return m_runningTime;
             }
-            protected set
+            set
             {
                 m_runningTime = value;
             }
@@ -265,7 +265,7 @@ namespace GSF.IO
 
                     lock (m_readerWriterLock)
                     {
-                        m_stopTime = DateTime.UtcNow.Ticks;
+                        m_stopTime = DateTime.UtcNow;
                         WriteLog();
                     }
                 }
@@ -302,13 +302,16 @@ namespace GSF.IO
                 throw new NullReferenceException("No run-time log file name was specified");
 
             ReadLog();
-            m_startTime = DateTime.UtcNow.Ticks;
-            m_flushTimer.Start();
+
+            m_startTime = DateTime.UtcNow;
 
             // Validate stop time - the point of keeping a running time is so that if host application fails to
             // flush log during shutdown - the last known running time can become the assumed stop time.
             if (m_runningTime > m_stopTime)
                 m_stopTime = m_runningTime;
+
+            if ((object)m_flushTimer != null && !m_flushTimer.Enabled)
+                m_flushTimer.Start();
         }
 
         /// <summary>
@@ -338,33 +341,33 @@ namespace GSF.IO
                                 if (settings.TryGetValue(LastStartTimeKey, out setting) && DateTime.TryParseExact(setting, DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out startTime))
                                     m_startTime = startTime;
                                 else
-                                    m_startTime = DateTime.UtcNow.Ticks;
+                                    m_startTime = DateTime.UtcNow;
 
                                 if (settings.TryGetValue(LastStopTimeKey, out setting) && DateTime.TryParseExact(setting, DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out stopTime))
                                     m_stopTime = stopTime;
                                 else
-                                    m_stopTime = DateTime.UtcNow.Ticks;
+                                    m_stopTime = DateTime.UtcNow;
 
                                 if (settings.TryGetValue(LastRunningTimeKey, out setting) && DateTime.TryParseExact(setting, DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out runningTime))
                                     m_runningTime = runningTime;
                                 else
-                                    m_runningTime = DateTime.UtcNow.Ticks;
+                                    m_runningTime = DateTime.UtcNow;
                             }
                             else
                             {
-                                m_startTime = m_stopTime = m_runningTime = DateTime.UtcNow.Ticks;
+                                m_startTime = m_stopTime = m_runningTime = DateTime.UtcNow;
                             }
                         }
                     }
                     else
                     {
-                        m_startTime = m_stopTime = m_runningTime = DateTime.UtcNow.Ticks;
+                        m_startTime = m_stopTime = m_runningTime = DateTime.UtcNow;
                     }
                 }
             }
             catch (Exception ex)
             {
-                m_startTime = m_stopTime = m_runningTime = DateTime.UtcNow.Ticks;
+                m_startTime = m_stopTime = m_runningTime = DateTime.UtcNow;
                 OnProcessException(new InvalidOperationException("Failed to read run-time log: " + ex.Message, ex));
             }
         }
@@ -388,6 +391,7 @@ namespace GSF.IO
                             writer.WriteLine("{0}={1}", LastStartTimeKey, m_startTime.ToString(DateTimeFormat, CultureInfo.InvariantCulture));
                             writer.WriteLine("{0}={1}", LastStopTimeKey, m_stopTime.ToString(DateTimeFormat, CultureInfo.InvariantCulture));
                             writer.WriteLine("{0}={1}", LastRunningTimeKey, m_runningTime.ToString(DateTimeFormat, CultureInfo.InvariantCulture));
+                            writer.Flush();
                         }
                     }
                     finally
@@ -414,7 +418,7 @@ namespace GSF.IO
 
         private void m_flushTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            m_runningTime = DateTime.UtcNow.Ticks;
+            m_runningTime = DateTime.UtcNow;
             WriteLog();
         }
 

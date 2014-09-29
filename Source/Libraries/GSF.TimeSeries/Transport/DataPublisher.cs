@@ -3158,7 +3158,10 @@ namespace GSF.TimeSeries.Transport
                             // Send success response
                             if (subscription.TemporalConstraintIsDefined())
                             {
-                                message = string.Format("Client subscribed as {0}compact {1}synchronized with a temporal constraint.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
+                                if ((object)subscription.InputMeasurementKeys != null)
+                                    message = string.Format("Client subscribed as {0}compact {1}synchronized with a temporal constraint and {2} signals.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un", subscription.InputMeasurementKeys.Length);
+                                else
+                                    message = string.Format("Client subscribed as {0}compact {1}synchronized with a temporal constraint, but no signals were specified. Make sure \"inputMeasurementKeys\" setting is properly defined.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
                             }
                             else
                             {

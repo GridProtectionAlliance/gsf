@@ -21,28 +21,27 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Specialized;
-using GSF.Collections;
+using System.Threading;
+using GSF.Threading;
 
 namespace GSF.IO
 {
     /// <summary>
     /// Represents a thread-safe <see cref="OutageLog"/> processor that will operate on each <see cref="Outage"/> with a consumer provided function on independent threads.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// This class is simply a <see cref="ProcessQueue{Outage}"/> that uses a pre-initialized <see cref="OutageLog"/> as its base collection.
-    /// </para>
-    /// <para>
-    /// The <see cref="OutageLogProcessor"/> encapsulates the <see cref="OutageLog"/> in a thread-safe wrapper with full access to list operations.
-    /// As a result, operations should generally be executed against the <see cref="OutageLogProcessor"/> rather than the <see cref="OutageLog"/>.
-    /// </para>
-    /// </remarks>
-    public class OutageLogProcessor : ProcessQueue<Outage>
+    public class OutageLogProcessor : IDisposable
     {
         #region [ Members ]
 
         // Fields
+        private readonly OutageLog m_outageLog;
+        private readonly Action<Outage> m_processOutageFunction;
+        private readonly Func<Outage, bool> m_canProcessOutageFunction;
+        private readonly int m_processInterval;
+        private readonly LongSynchronizedOperation m_operation;
+        private bool m_enabled;
         private bool m_disposed;
 
         #endregion
@@ -53,64 +52,65 @@ namespace GSF.IO
         /// Creates a <see cref="OutageLogProcessor"/> using a pre-initialized <see cref="OutageLog"/>.
         /// </summary>
         /// <param name="outageLog">Pre-initialized <see cref="OutageLog"/> to process.</param>
-        /// <param name="processItemFunction">A delegate <see cref="ProcessQueue{Outage}.ProcessItemFunctionSignature"/> that defines a function signature to process a key and value one at a time.</param>
-        /// <param name="processInterval">a <see cref="double"/> value which represents the process interval in milliseconds.</param>
-        /// <param name="maximumThreads">The maximum number of threads for the queue to use.</param>
-        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
-        /// <param name="requeueOnTimeout">A <see cref="bool"/> value that indicates whether a process should requeue an item on timeout.</param>
-        /// <param name="requeueOnException">A <see cref="bool"/> value that indicates whether a process should requeue after an exception.</param>
-        public OutageLogProcessor(OutageLog outageLog, ProcessItemFunctionSignature processItemFunction, double processInterval = DefaultProcessInterval, int maximumThreads = DefaultMaximumThreads, int processTimeout = DefaultProcessTimeout, bool requeueOnTimeout = DefaultRequeueOnTimeout, bool requeueOnException = DefaultRequeueOnException)
-            : this(outageLog, processItemFunction, null, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+        /// <param name="processOutageFunction">A delegate that defines a processing function for an <see cref="Outage"/>.</param>
+        /// <param name="canProcessOutageFunction">A delegate that determines if an <see cref="Outage"/> can currently be processed.</param>
+        /// <param name="processExceptionHandler">Delegate to handle any exceptions encountered while processing as <see cref="Outage"/>.</param>
+        /// <param name="processingInterval">Processing interval, in milliseconds.</param>
+        public OutageLogProcessor(OutageLog outageLog, Action<Outage> processOutageFunction, Func<Outage, bool> canProcessOutageFunction, Action<Exception> processExceptionHandler, int processingInterval)
         {
+            if ((object)outageLog == null)
+                throw new ArgumentNullException("outageLog");
+
+            if ((object)processOutageFunction == null)
+                throw new ArgumentNullException("processOutageFunction");
+
+            if ((object)canProcessOutageFunction == null)
+                throw new ArgumentNullException("canProcessOutageFunction");
+
+            if ((object)processExceptionHandler == null)
+                throw new ArgumentNullException("processExceptionHandler");
+
+            m_outageLog = outageLog;
+            m_outageLog.CollectionChanged += outageLog_CollectionChanged;
+
+            m_processOutageFunction = processOutageFunction;
+            m_canProcessOutageFunction = canProcessOutageFunction;
+            m_processInterval = processingInterval;
+            m_enabled = true;
+
+            m_operation = new LongSynchronizedOperation(ProcessNextItem, processExceptionHandler);
+            m_operation.IsBackground = true;
+            m_operation.RunOnceAsync();
         }
 
         /// <summary>
-        /// Creates a <see cref="OutageLogProcessor"/> using a pre-initialized <see cref="OutageLog"/>.
+        /// Releases the unmanaged resources before the <see cref="OutageLogProcessor"/> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        /// <param name="outageLog">Pre-initialized <see cref="OutageLog"/> to process.</param>
-        /// <param name="processItemFunction">A delegate <see cref="ProcessQueue{Outage}.ProcessItemFunctionSignature"/> that defines a function signature to process a key and value one at a time.</param>
-        /// <param name="canProcessItemFunction">Optional delegate <see cref="ProcessQueue{Outage}.CanProcessItemFunctionSignature"/> that determines of a key and value can currently be processed.</param>
-        /// <param name="processInterval">a <see cref="double"/> value which represents the process interval in milliseconds.</param>
-        /// <param name="maximumThreads">The maximum number of threads for the queue to use.</param>
-        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
-        /// <param name="requeueOnTimeout">A <see cref="bool"/> value that indicates whether a process should requeue an item on timeout.</param>
-        /// <param name="requeueOnException">A <see cref="bool"/> value that indicates whether a process should requeue after an exception.</param>
-        public OutageLogProcessor(OutageLog outageLog, ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction = null, double processInterval = DefaultProcessInterval, int maximumThreads = DefaultMaximumThreads, int processTimeout = DefaultProcessTimeout, bool requeueOnTimeout = DefaultRequeueOnTimeout, bool requeueOnException = DefaultRequeueOnException)
-            : base(processItemFunction, null, canProcessItemFunction, outageLog, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+        ~OutageLogProcessor()
         {
-            outageLog.CollectionChanged += outageLog_CollectionChanged;
+            Dispose(false);
         }
 
-        /// <summary>
-        /// Creates a bulk-item <see cref="OutageLogProcessor"/> using a pre-initialized <see cref="OutageLog"/>.
-        /// </summary>
-        /// <param name="outageLog">Pre-initialized <see cref="OutageLog"/> to process.</param>
-        /// <param name="processItemsFunction">A delegate <see cref="ProcessQueue{Outage}.ProcessItemsFunctionSignature"/> that defines a function signature to process multiple items at once.</param>
-        /// <param name="processInterval">a <see cref="double"/> value which represents the process interval in milliseconds.</param>
-        /// <param name="maximumThreads">The maximum number of threads for the queue to use.</param>
-        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
-        /// <param name="requeueOnTimeout">A <see cref="bool"/> value that indicates whether a process should requeue an item on timeout.</param>
-        /// <param name="requeueOnException">A <see cref="bool"/> value that indicates whether a process should requeue after an exception.</param>
-        public OutageLogProcessor(OutageLog outageLog, ProcessItemsFunctionSignature processItemsFunction, double processInterval = DefaultProcessInterval, int maximumThreads = DefaultMaximumThreads, int processTimeout = DefaultProcessTimeout, bool requeueOnTimeout = DefaultRequeueOnTimeout, bool requeueOnException = DefaultRequeueOnException)
-            : this(outageLog, processItemsFunction, null, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
-        {
-        }
+        #endregion
+
+        #region [ Properties ]
 
         /// <summary>
-        /// Creates a bulk-item <see cref="OutageLogProcessor"/> using a pre-initialized <see cref="OutageLog"/>.
+        /// Enables or disables the <see cref="OutageLogProcessor"/>.
         /// </summary>
-        /// <param name="outageLog">Pre-initialized <see cref="OutageLog"/> to process.</param>
-        /// <param name="processItemsFunction">A delegate <see cref="ProcessQueue{Outage}.ProcessItemsFunctionSignature"/> that defines a function signature to process multiple items at once.</param>
-        /// <param name="canProcessItemFunction">Optional delegate <see cref="ProcessQueue{Outage}.CanProcessItemFunctionSignature"/> that determines of a key and value can currently be processed.</param>
-        /// <param name="processInterval">a <see cref="double"/> value which represents the process interval in milliseconds.</param>
-        /// <param name="maximumThreads">The maximum number of threads for the queue to use.</param>
-        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
-        /// <param name="requeueOnTimeout">A <see cref="bool"/> value that indicates whether a process should requeue an item on timeout.</param>
-        /// <param name="requeueOnException">A <see cref="bool"/> value that indicates whether a process should requeue after an exception.</param>
-        public OutageLogProcessor(OutageLog outageLog, ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction = null, double processInterval = DefaultProcessInterval, int maximumThreads = DefaultMaximumThreads, int processTimeout = DefaultProcessTimeout, bool requeueOnTimeout = DefaultRequeueOnTimeout, bool requeueOnException = DefaultRequeueOnException)
-            : base(null, processItemsFunction, canProcessItemFunction, outageLog, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+        public bool Enabled
         {
-            outageLog.CollectionChanged += outageLog_CollectionChanged;
+            get
+            {
+                return m_enabled;
+            }
+            set
+            {
+                m_enabled = value;
+
+                if (m_enabled)
+                    m_operation.RunOnceAsync();
+            }
         }
 
         #endregion
@@ -118,10 +118,19 @@ namespace GSF.IO
         #region [ Methods ]
 
         /// <summary>
+        /// Releases all the resources used by the <see cref="OutageLogProcessor"/> object.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
         /// Releases the unmanaged resources used by the <see cref="OutageLogProcessor"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
+        protected virtual void Dispose(bool disposing)
         {
             if (!m_disposed)
             {
@@ -129,25 +138,67 @@ namespace GSF.IO
                 {
                     if (disposing)
                     {
-                        OutageLog outageLog = InternalList as OutageLog;
-
-                        if ((object)outageLog != null)
-                            outageLog.CollectionChanged -= outageLog_CollectionChanged;
+                        if ((object)m_outageLog != null)
+                            m_outageLog.CollectionChanged -= outageLog_CollectionChanged;
                     }
                 }
                 finally
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;  // Prevent duplicate dispose.
                 }
             }
         }
 
-        // Since base outage log collection may be independently modified outside purview of process queue wrapper,
-        // we need to let process queue know when things have changed
         private void outageLog_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            SignalDataModified();
+            // Outage log has changed, kick off next processing
+            m_operation.RunOnceAsync();
+        }
+
+        private void ProcessNextItem()
+        {
+            if (m_disposed || !m_enabled)
+                return;
+
+            try
+            {
+                Outage nextOutage = null;
+
+                // Get next outage for processing, if any
+                lock (m_outageLog.ReaderWriterLock)
+                {
+                    if (m_outageLog.Count > 0)
+                        nextOutage = m_outageLog[0];
+                }
+
+                if ((object)nextOutage != null)
+                {
+                    try
+                    {
+                        // See if we can process the outage
+                        if (m_canProcessOutageFunction(nextOutage))
+                        {
+                            m_processOutageFunction(nextOutage);
+
+                            // Outage processed successfully, attempt to clear it from the log
+                            lock (m_outageLog.ReaderWriterLock)
+                            {
+                                m_outageLog.Remove(nextOutage);
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        // Process next item
+                        m_operation.RunOnceAsync();
+                    }
+                }
+            }
+            finally
+            {
+                // Make sure not to process items any faster than the processing interval
+                Thread.Sleep(m_processInterval);
+            }
         }
 
         #endregion
