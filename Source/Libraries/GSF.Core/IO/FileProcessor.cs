@@ -142,6 +142,7 @@ namespace GSF.IO
         private readonly List<FileSystemWatcher> m_fileWatchers;
         private ProcessQueue<Action> m_processingQueue;
         private Timer m_fileWatchTimer;
+        private Mutex m_waitObject;
 
         private readonly Dictionary<string, DateTime> m_touchedFiles;
         private readonly HashSet<string> m_processedFiles;
@@ -172,6 +173,7 @@ namespace GSF.IO
             m_processingQueue.ProcessException += (sender, args) => OnError(args.Argument);
             m_fileWatchTimer = new Timer(15000);
             m_fileWatchTimer.Elapsed += FileWatchTimer_Elapsed;
+            m_waitObject = new Mutex(true);
 
             m_touchedFiles = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
             m_processedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -312,6 +314,13 @@ namespace GSF.IO
                             m_fileWatchTimer.Dispose();
                             m_fileWatchTimer = null;
                         }
+
+                        if ((object)m_waitObject != null)
+                        {
+                            m_waitObject.ReleaseMutex();
+                            m_waitObject.Dispose();
+                            m_waitObject = null;
+                        }
                     }
                 }
                 finally
@@ -432,13 +441,19 @@ namespace GSF.IO
         // Otherwise, waits 250 milliseconds and tries again.
         private void LockAndQueue(string filePath)
         {
+            WaitOrTimerCallback callback = (state, timeout) =>
+            {
+                if (timeout)
+                    LockAndQueue(filePath);
+            };
+
             if (m_disposed || !File.Exists(filePath))
                 return;
 
             if (FilePath.TryGetReadLock(filePath))
                 m_processingQueue.Add(() => ProcessFile(filePath));
             else
-                ThreadPool.RegisterWaitForSingleObject(new Mutex(true), (state, timeout) => LockAndQueue(filePath), null, 250, true);
+                ThreadPool.RegisterWaitForSingleObject(m_waitObject, callback, null, 250, true);
         }
 
         // Processes the given file.
