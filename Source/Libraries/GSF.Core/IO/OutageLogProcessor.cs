@@ -151,7 +151,7 @@ namespace GSF.IO
 
         private void outageLog_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            // Outage log has changed, kick off next processing
+            // Outage log has changed, kick off processing of next outage
             m_operation.RunOnceAsync();
         }
 
@@ -175,7 +175,7 @@ namespace GSF.IO
                 {
                     try
                     {
-                        // See if we can process the outage
+                        // See if we can process the outage at this time
                         if (m_canProcessOutageFunction(nextOutage))
                         {
                             m_processOutageFunction(nextOutage);

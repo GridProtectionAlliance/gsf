@@ -45,6 +45,7 @@ using GSF.Security.Cryptography;
 using GSF.ServiceProcess;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.Commands;
+using GSF.Units;
 using Microsoft.Win32;
 using Random = GSF.Security.Cryptography.Random;
 
@@ -389,7 +390,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         }
 
         /// <summary>
-        /// Gets to sets the maximum time span, in seconds, for which a data recovery will be attempted.
+        /// Gets to sets the maximum time span, in days for UI - API is seconds, for which a data recovery will be attempted.
         /// Set to <see cref="Double.MaxValue"/> for no maximum.
         /// </summary>
         public double MaximumRecoverySpan
@@ -864,7 +865,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             RecoveryStartDelay = DataGapRecoverer.DefaultRecoveryStartDelay;
             DataMonitoringInterval = DataGapRecoverer.DefaultDataMonitoringInterval;
             MinimumRecoverySpan = DataGapRecoverer.DefaultMinimumRecoverySpan;
-            MaximumRecoverySpan = DataGapRecoverer.DefaultMaximumRecoverySpan;
+            MaximumRecoverySpan = DataGapRecoverer.DefaultMaximumRecoverySpan / Time.SecondsPerDay;
             RecoveryProcessingInterval = DataGapRecoverer.DefaultRecoveryProcessingInterval;
         }
 
@@ -1335,7 +1336,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             }
 
             if (m_enableDataGapRecovery)
-                dataGapRecoverySettings = string.Format("; dataGapRecovery={{enabled=true; recoveryStartDelay={0}; dataMonitoringInterval={1}; minimumRecoverySpan={2}; maximumRecoverySpan={3}; recoveryProcessingInterval={4}}}", m_recoveryStartDelay, m_dataMonitoringInterval, m_minimumRecoverySpan, m_maximumRecoverySpan, m_recoveryProcessingInterval);
+                dataGapRecoverySettings = string.Format("; dataGapRecovery={{enabled=true; recoveryStartDelay={0}; dataMonitoringInterval={1}; minimumRecoverySpan={2}; maximumRecoverySpan={3}; recoveryProcessingInterval={4}}}", m_recoveryStartDelay, m_dataMonitoringInterval, m_minimumRecoverySpan, m_maximumRecoverySpan * Time.SecondsPerDay, m_recoveryProcessingInterval);
 
             device = new Device();
             device.Acronym = PublisherAcronym.Replace(" ", "");

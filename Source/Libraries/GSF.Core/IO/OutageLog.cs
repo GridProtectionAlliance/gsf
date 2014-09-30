@@ -41,7 +41,7 @@ namespace GSF.IO
     /// <remarks>
     /// <para>
     /// This class serializes a list of outages (e.g., a connection outage or data loss) where each outage
-    /// consists of start and end time. The outages are persisted in a log file so that the log can be
+    /// consists of a start and end time. The outages are persisted in a log file so that the log can be
     /// operated on even through host application restarts until the outages are processed.
     /// </para>
     /// <para>
@@ -336,8 +336,8 @@ namespace GSF.IO
                             times = line.Split(';');
 
                             if (times.Length == 2 &&
-                                DateTime.TryParseExact(times[0].Trim(), DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out startTime) &&
-                                DateTime.TryParseExact(times[1].Trim(), DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out endTime))
+                                DateTime.TryParseExact(times[0].Trim(), DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out startTime) &&
+                                DateTime.TryParseExact(times[1].Trim(), DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out endTime))
                             {
                                 try
                                 {

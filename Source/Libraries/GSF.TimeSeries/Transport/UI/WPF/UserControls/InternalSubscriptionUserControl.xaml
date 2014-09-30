@@ -104,7 +104,7 @@
         <Label Margin="30,0,0,0" Grid.Row="2" Grid.Column="2" Content="Maximum Recovery Span" ToolTip="Defines the maximum time span, in seconds, for which a data recovery will be attempted" />
         <StackPanel Grid.Row="2" Grid.Column="3" Orientation="Horizontal">
           <TextBox Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=MaximumRecoverySpan}" />
-          <Label Content="seconds" />
+          <Label Content="days" />
         </StackPanel>
         <Label Grid.Row="3" Grid.Column="0" Content="Recovery Processing Interval" ToolTip="Defines the data recovery processing interval, in whole milliseconds, to use when recovering data - set to zero to recover as fast as possible" />
         <StackPanel Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal">

@@ -336,21 +336,14 @@ namespace GSF.IO
                             {
                                 Dictionary<string, string> settings = fileData.Replace(Environment.NewLine, ";").ParseKeyValuePairs();
                                 string setting;
-                                DateTime startTime, stopTime, runningTime;
 
-                                if (settings.TryGetValue(LastStartTimeKey, out setting) && DateTime.TryParseExact(setting, DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out startTime))
-                                    m_startTime = startTime;
-                                else
+                                if (!settings.TryGetValue(LastStartTimeKey, out setting) || !DateTime.TryParseExact(setting.Trim(), DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out m_startTime))
                                     m_startTime = DateTime.UtcNow;
 
-                                if (settings.TryGetValue(LastStopTimeKey, out setting) && DateTime.TryParseExact(setting, DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out stopTime))
-                                    m_stopTime = stopTime;
-                                else
+                                if (!settings.TryGetValue(LastStopTimeKey, out setting) || !DateTime.TryParseExact(setting.Trim(), DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out m_stopTime))
                                     m_stopTime = DateTime.UtcNow;
 
-                                if (settings.TryGetValue(LastRunningTimeKey, out setting) && DateTime.TryParseExact(setting, DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out runningTime))
-                                    m_runningTime = runningTime;
-                                else
+                                if (!settings.TryGetValue(LastRunningTimeKey, out setting) || !DateTime.TryParseExact(setting.Trim(), DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out m_runningTime))
                                     m_runningTime = DateTime.UtcNow;
                             }
                             else

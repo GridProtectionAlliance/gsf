@@ -71,7 +71,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Default value for <see cref="MaximumRecoverySpan"/>.
         /// </summary>
-        public const double DefaultMaximumRecoverySpan = Time.SecondsPerHour * 6;
+        public const double DefaultMaximumRecoverySpan = Time.SecondsPerDay * 10;
 
         /// <summary>
         /// Default value for <see cref="FilterExpression"/>.
