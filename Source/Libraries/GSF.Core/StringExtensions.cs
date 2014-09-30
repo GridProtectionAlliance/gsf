@@ -91,6 +91,8 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -1013,6 +1015,61 @@ namespace GSF
         public static string Base64Decode(this string value)
         {
             return Encoding.Unicode.GetString(Convert.FromBase64String(value));
+        }
+
+        /// <summary>
+        /// Converts the given string into a <see cref="SecureString"/>.
+        /// </summary>
+        /// <param name="value">The string to be converted.</param>
+        /// <returns>The given string as a <see cref="SecureString"/>.</returns>
+        public static SecureString ToSecureString(this string value)
+        {
+            SecureString secureString;
+
+            if ((object)value == null)
+                return null;
+
+            unsafe
+            {
+                fixed (char* chars = value)
+                {
+                    secureString = new SecureString(chars, value.Length);
+                    secureString.MakeReadOnly();
+                    return secureString;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Converts the given <see cref="SecureString"/> into a <see cref="String"/>.
+        /// </summary>
+        /// <param name="value">The <see cref="SecureString"/> to be converted.</param>
+        /// <returns>The given <see cref="SecureString"/> as a <see cref="String"/>.</returns>
+        /// <remarks>
+        /// This method is UNSAFE, as it stores your secure string data in clear text in memory.
+        /// Since strings are immutable, that memory cannot be cleaned up until all references to
+        /// the string are removed and the garbage collector deallocates it. Only use this method
+        /// to interface with APIs that do not support the use of <see cref="SecureString"/> for
+        /// sensitive text data.
+        /// </remarks>
+        public static string ToUnsecureString(this SecureString value)
+        {
+            IntPtr intPtr;
+
+            if ((object)value == null)
+                return null;
+
+            intPtr = IntPtr.Zero;
+
+            try
+            {
+                intPtr = Marshal.SecureStringToGlobalAllocUnicode(value);
+                return Marshal.PtrToStringUni(intPtr);
+            }
+            finally
+            {
+                Marshal.ZeroFreeGlobalAllocUnicode(intPtr);
+            }
         }
 
         /// <summary>

@@ -286,41 +286,15 @@ namespace GSF.Security
         /// <summary>
         /// Gets or sets <see cref="SecurePassword"/> as clear text password.
         /// </summary>
-        public unsafe string Password
+        public string Password
         {
             get
             {
-                string result;
-                SecureString securePassword = SecurePassword;
-                IntPtr intPtr;
-
-                if ((object)securePassword == null)
-                    return null;
-
-                intPtr = Marshal.SecureStringToBSTR(securePassword);
-
-                try
-                {
-                    result = new string((char*)((void*)intPtr));
-                }
-                finally
-                {
-                    Marshal.ZeroFreeBSTR(intPtr);
-                }
-
-                return result;
+                return SecurePassword.ToUnsecureString();
             }
             set
             {
-                SecureString securePassword = new SecureString();
-
-                if ((object)value == null)
-                    value = string.Empty;
-
-                foreach (char c in value)
-                    securePassword.AppendChar(c);
-
-                SecurePassword = securePassword;
+                SecurePassword = value.ToSecureString();
             }
         }
 
