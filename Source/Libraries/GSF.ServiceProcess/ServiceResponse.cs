@@ -31,6 +31,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.Security;
 
 namespace GSF.ServiceProcess
 {
@@ -41,7 +43,7 @@ namespace GSF.ServiceProcess
     /// <seealso cref="ClientHelper"/>
     /// <seealso cref="ClientRequest"/>
     [Serializable]
-    public class ServiceResponse
+    public class ServiceResponse : ISerializable
     {
         #region [ Members ]
 
@@ -53,6 +55,26 @@ namespace GSF.ServiceProcess
         #endregion
 
         #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="ClientRequest"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected ServiceResponse(SerializationInfo info, StreamingContext context)
+        {
+            // Deserialize client request fields
+            m_type = info.GetOrDefault("type", "");
+            m_message = info.GetOrDefault("message", "");
+            m_attachments = new List<object>();
+
+            int attachmentCount = info.GetOrDefault("attachmentCount", 0);
+
+            for (int i = 0; i < attachmentCount; i++)
+            {
+                m_attachments.Add(info.GetOrDefault("attachment" + i, null as object));
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ServiceResponse"/> class.
@@ -107,7 +129,7 @@ namespace GSF.ServiceProcess
         }
 
         /// <summary>
-        /// Gets or sets the palin-text message associated with the <see cref="ServiceResponse"/>.
+        /// Gets or sets the plain-text message associated with the <see cref="ServiceResponse"/>.
         /// </summary>
         public string Message
         {
@@ -129,6 +151,29 @@ namespace GSF.ServiceProcess
             get
             {
                 return m_attachments;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination (see <see cref="StreamingContext"/>) for this serialization.</param>
+        /// <exception cref="SecurityException">The caller does not have the required permission.</exception>
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            // Serialize client request fields
+            info.AddValue("type", m_type);
+            info.AddValue("message", m_message);
+            info.AddValue("attachmentCount", m_attachments.Count);
+
+            for (int i = 0; i < m_attachments.Count; i++)
+            {
+                info.AddValue("attachment" + i, m_attachments[i]);
             }
         }
 

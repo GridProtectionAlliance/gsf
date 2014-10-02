@@ -21,7 +21,7 @@
 //  03/28/2006 - Pinal C. Patel
 //       Migrated 2.0 version of source code from 1.1 source (GSF.Console).
 //  10/09/2007 - J. Ritchie Carroll / Pinal C. Patel
-//       Fixed stand-alone argument bug at end of line and changed class to use generic Dictionary class.
+//       Fixed stand-alone argument issue at end of line and changed to use generic Dictionary class.
 //  09/15/2008 - J. Ritchie Carroll
 //      Converted to C#.
 //  09/26/2008 - Pinal C. Patel
@@ -41,6 +41,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
 using GSF.Collections;
@@ -93,9 +95,16 @@ namespace GSF.Console
     /// </code>
     /// </example>
     [Serializable]
-    public class Arguments : IEnumerable, IEnumerable<KeyValuePair<string, string>>
+    public class Arguments : IEnumerable<KeyValuePair<string, string>>, ISerializable
     {
         #region [ Members ]
+
+        // Constants
+
+        /// <summary>
+        /// Default value for <see cref="OrderedArgID"/>.
+        /// </summary>
+        public const string DefaultOrderedArgID = "OrderedArg";
 
         // Fields
         private readonly string m_commandLine;
@@ -250,6 +259,30 @@ namespace GSF.Console
                 m_arguments.Add(parameter, null);
         }
 
+        /// <summary>
+        /// Creates a new <see cref="Arguments"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected Arguments(SerializationInfo info, StreamingContext context)
+        {
+            // Deserialize argument fields
+            m_commandLine = info.GetOrDefault("commandLine", "");
+            m_orderedArgID = info.GetOrDefault("orderedArgID", DefaultOrderedArgID);
+            m_orderedArgCount = info.GetOrDefault("orderedArgCount", 0);
+            m_arguments = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
+
+            int argumentCount = info.GetOrDefault("argumentCount", 0);
+
+            for (int i = 0; i < argumentCount; i++)
+            {
+                string key = info.GetOrDefault("argumentKey" + i, null as string);
+
+                if (!string.IsNullOrEmpty(key))
+                    m_arguments.Add(key, info.GetOrDefault("argumentValue" + i, null as string));
+            }
+        }
+
         #endregion
 
         #region [ Properties ]
@@ -387,6 +420,30 @@ namespace GSF.Console
         IEnumerator IEnumerable.GetEnumerator()
         {
             return ((IEnumerable)m_arguments).GetEnumerator();
+        }
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination (see <see cref="StreamingContext"/>) for this serialization.</param>
+        /// <exception cref="SecurityException">The caller does not have the required permission.</exception>
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            // Serialize argument fields
+            info.AddValue("commandLine", m_commandLine);
+            info.AddValue("orderedArgID", m_orderedArgID);
+            info.AddValue("orderedArgCount", m_orderedArgCount);
+            info.AddValue("argumentCount", m_arguments.Count);
+
+            int i = 0;
+
+            foreach (KeyValuePair<string, string> argument in m_arguments)
+            {
+                info.AddValue("argumentKey" + i, argument.Key);
+                info.AddValue("argumentValue" + i, argument.Value);
+                i++;
+            }
         }
 
         #endregion

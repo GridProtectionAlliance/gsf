@@ -38,6 +38,8 @@
 //******************************************************************************************************
 
 using System;
+using System.Runtime.Serialization;
+using System.Security;
 using System.Security.Principal;
 using System.Web.Hosting;
 using GSF.Identity;
@@ -54,7 +56,7 @@ namespace GSF.ServiceProcess
     /// <seealso cref="ClientHelper"/>
     /// <seealso cref="ServiceHelper"/>
     [Serializable]
-    public class ClientInfo
+    public class ClientInfo : ISerializable
     {
         #region [ Members ]
 
@@ -119,6 +121,42 @@ namespace GSF.ServiceProcess
             {
                 m_clientName = AssemblyInfo.EntryAssembly.Name;
             }
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="ClientInfo"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected ClientInfo(SerializationInfo info, StreamingContext context)
+        {
+            // Deserialize client request fields
+            m_clientID = info.GetOrDefault("clientID", Guid.Empty);
+            m_clientType = info.GetOrDefault("clientType", ApplicationType.Unknown);
+            m_clientName = info.GetOrDefault("clientName", "__undefined");
+            m_clientUserCredentials = info.GetOrDefault("clientUserCredentials", "");
+
+            string clientUserName = null;
+
+            if (!string.IsNullOrEmpty(m_clientUserCredentials))
+            {
+                string[] parts = m_clientUserCredentials.Split(':');
+
+                if (parts.Length == 2)
+                    clientUserName = parts[0].Trim();
+
+                if (string.IsNullOrEmpty(clientUserName))
+                    clientUserName = null;
+            }
+
+            // Initialize user principal.
+            if (m_clientType == ApplicationType.Web)
+                m_clientUser = new GenericPrincipal(new GenericIdentity(clientUserName ?? UserInfo.RemoteUserID), new string[] { });
+            else
+                m_clientUser = new GenericPrincipal(new GenericIdentity(clientUserName ?? UserInfo.CurrentUserID), new string[] { });
+
+            m_machineName = info.GetOrDefault("machineName", "__unknown");
+            m_connectedAt = info.GetOrDefault("connectedAt", DateTime.UtcNow);
         }
 
         #endregion
@@ -224,6 +262,23 @@ namespace GSF.ServiceProcess
                 throw new ArgumentNullException("user");
 
             m_clientUser = user;
+        }
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination (see <see cref="StreamingContext"/>) for this serialization.</param>
+        /// <exception cref="SecurityException">The caller does not have the required permission.</exception>
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            // Serialize client request fields
+            info.AddValue("clientID", m_clientID);
+            info.AddValue("clientType", m_clientType, typeof(ApplicationType));
+            info.AddValue("clientName", m_clientName);
+            info.AddValue("clientUserCredentials", m_clientUserCredentials);
+            info.AddValue("machineName", m_machineName);
+            info.AddValue("connectedAt", m_connectedAt);
         }
 
         #endregion

@@ -38,6 +38,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.Security;
 using GSF.Console;
 
 namespace GSF.ServiceProcess
@@ -48,7 +50,7 @@ namespace GSF.ServiceProcess
     /// <seealso cref="ClientHelper"/>
     /// <seealso cref="ServiceHelper"/>
     [Serializable]
-    public class ClientRequest
+    public class ClientRequest : ISerializable
     {
         #region [ Members ]
 
@@ -88,6 +90,26 @@ namespace GSF.ServiceProcess
             m_command = command.ToUpper();
             m_arguments = arguments;
             m_attachments = new List<object>();
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="ClientRequest"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected ClientRequest(SerializationInfo info, StreamingContext context)
+        {
+            // Deserialize client request fields
+            m_command = info.GetOrDefault("command", "");
+            m_arguments = info.GetOrDefault("arguments", new Arguments(""));
+            m_attachments = new List<object>();
+
+            int attachmentCount = info.GetOrDefault("attachmentCount", 0);
+
+            for (int i = 0; i < attachmentCount; i++)
+            {
+                m_attachments.Add(info.GetOrDefault("attachment" + i, null as object));
+            }
         }
 
         #endregion
@@ -150,6 +172,25 @@ namespace GSF.ServiceProcess
         public override string ToString()
         {
             return string.Format("{0} {1}", m_command, m_arguments).Trim();
+        }
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination (see <see cref="StreamingContext"/>) for this serialization.</param>
+        /// <exception cref="SecurityException">The caller does not have the required permission.</exception>
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            // Serialize client request fields
+            info.AddValue("command", m_command);
+            info.AddValue("arguments", m_arguments, typeof(Arguments));
+            info.AddValue("attachmentCount", m_attachments.Count);
+
+            for (int i = 0; i < m_attachments.Count; i++)
+            {
+                info.AddValue("attachment" + i, m_attachments[i]);
+            }
         }
 
         #endregion
