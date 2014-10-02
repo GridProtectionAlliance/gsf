@@ -44,6 +44,7 @@ namespace GSF.IO
         // Fields
         private readonly string m_fullPath;
         private readonly bool m_alreadyProcessed;
+        private bool m_requeue;
 
         #endregion
 
@@ -83,6 +84,22 @@ namespace GSF.IO
             get
             {
                 return m_alreadyProcessed;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a flag that indicates whether the
+        /// file should be requeued by the file processor.
+        /// </summary>
+        public bool Requeue
+        {
+            get
+            {
+                return m_requeue;
+            }
+            set
+            {
+                m_requeue = value;
             }
         }
 
@@ -441,19 +458,25 @@ namespace GSF.IO
         // Otherwise, waits 250 milliseconds and tries again.
         private void LockAndQueue(string filePath)
         {
+            if (m_disposed || !File.Exists(filePath))
+                return;
+
+            if (FilePath.TryGetReadLockExclusive(filePath))
+                m_processingQueue.Add(() => ProcessFile(filePath));
+            else
+                DelayLockAndQueue(filePath);
+        }
+
+        // Waits 250 milliseconds, then calls LockAndQueue.
+        private void DelayLockAndQueue(string filePath)
+        {
             WaitOrTimerCallback callback = (state, timeout) =>
             {
                 if (timeout)
                     LockAndQueue(filePath);
             };
 
-            if (m_disposed || !File.Exists(filePath))
-                return;
-
-            if (FilePath.TryGetReadLock(filePath))
-                m_processingQueue.Add(() => ProcessFile(filePath));
-            else
-                ThreadPool.RegisterWaitForSingleObject(m_waitObject, callback, null, 250, true);
+            ThreadPool.RegisterWaitForSingleObject(m_waitObject, callback, null, 250, true);
         }
 
         // Processes the given file.
@@ -473,9 +496,14 @@ namespace GSF.IO
 
             // Process the file at the given file path
             alreadyProcessed = m_processedFiles.Contains(filePath);
-            OnProcessing(filePath, alreadyProcessed);
 
-            if (!alreadyProcessed)
+            if (OnProcessing(filePath, alreadyProcessed))
+            {
+                // If the handler requeuests a requeue,
+                // requeue the file after a 250 millisecond delay.
+                DelayLockAndQueue(filePath);
+            }
+            else if (!alreadyProcessed)
             {
                 // Update the list of processed files
                 // and save it back to the cache
@@ -578,10 +606,18 @@ namespace GSF.IO
         }
 
         // Triggers the processing event for the given file.
-        private void OnProcessing(string fullPath, bool alreadyProcessed)
+        private bool OnProcessing(string fullPath, bool alreadyProcessed)
         {
+            FileProcessorEventArgs args;
+
             if ((object)Processing != null)
-                Processing(this, new FileProcessorEventArgs(fullPath, alreadyProcessed));
+            {
+                args = new FileProcessorEventArgs(fullPath, alreadyProcessed);
+                Processing(this, args);
+                return args.Requeue;
+            }
+
+            return false;
         }
 
         // Triggers the error event with the given exception.
