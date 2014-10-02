@@ -328,7 +328,7 @@ namespace GSF.Configuration
 
                 if ((object)key != null)
                     property.PropertyInfo.SetValue(settingsObject, ConvertToPropertyType(value, property));
-                if (!property.Required)
+                else if (!property.Required)
                     property.PropertyInfo.SetValue(settingsObject, property.DefaultValue);
                 else
                     throw new ArgumentException("Unable to parse required connection string parameter because it does not exist in the connection string.", property.Names.First());

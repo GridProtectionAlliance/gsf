@@ -517,21 +517,26 @@ namespace GSF.IO
         {
             try
             {
-                // Set up the stream reader to read the list of processed files
-                using (FileStream stream = File.OpenRead(Path.Combine(m_cachePath, m_processorID.ToString())))
-                using (StreamReader reader = new StreamReader(stream, Encoding.Unicode))
+                string cachePath = Path.Combine(m_cachePath, m_processorID.ToString());
+
+                if (File.Exists(cachePath))
                 {
-                    // Clear the existing list of processed files
-                    m_processedFiles.Clear();
-
-                    while (!reader.EndOfStream)
+                    // Set up the stream reader to read the list of processed files
+                    using (FileStream stream = File.OpenRead(cachePath))
+                    using (StreamReader reader = new StreamReader(stream, Encoding.Unicode))
                     {
-                        // Each path is on its own line
-                        string fullPath = reader.ReadLine();
+                        // Clear the existing list of processed files
+                        m_processedFiles.Clear();
 
-                        // Add the path to the list of processed files
-                        if (!string.IsNullOrEmpty(fullPath))
-                            m_processedFiles.Add(fullPath);
+                        while (!reader.EndOfStream)
+                        {
+                            // Each path is on its own line
+                            string fullPath = reader.ReadLine();
+
+                            // Add the path to the list of processed files
+                            if (!string.IsNullOrEmpty(fullPath))
+                                m_processedFiles.Add(fullPath);
+                        }
                     }
                 }
             }
