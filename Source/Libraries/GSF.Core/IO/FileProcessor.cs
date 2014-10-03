@@ -371,6 +371,7 @@ namespace GSF.IO
                 if (m_fileWatchers.Count == 0)
                 {
                     m_processingQueue.Start();
+                    m_processingQueue.Add(LoadProcessedFiles);
 
                     if (m_useTimer)
                         m_fileWatchTimer.Start();
@@ -379,17 +380,14 @@ namespace GSF.IO
                 m_fileWatchers.Add(watcher);
                 watcher.EnableRaisingEvents = true;
 
-                listedFiles = new HashSet<string>(Directory.GetFiles(fullPath, "*.*", SearchOption.AllDirectories));
+                listedFiles = new HashSet<string>(Directory.GetFiles(fullPath, "*.*", SearchOption.AllDirectories), StringComparer.OrdinalIgnoreCase);
 
                 m_processingQueue.Add(() =>
                 {
                     foreach (string filePath in listedFiles)
                         QueueFileForProcessing(filePath);
 
-                    if (m_processedFiles.Count == 0)
-                        LoadProcessedFiles();
-
-                    if (m_processedFiles.RemoveWhere(filePath => !listedFiles.Contains(filePath, StringComparer.OrdinalIgnoreCase) && filePath.StartsWith(path, StringComparison.OrdinalIgnoreCase)) > 0)
+                    if (m_processedFiles.RemoveWhere(filePath => !listedFiles.Contains(filePath) && filePath.StartsWith(fullPath, StringComparison.OrdinalIgnoreCase)) > 0)
                         SaveProcessedFiles();
                 });
             }
@@ -488,11 +486,6 @@ namespace GSF.IO
             // file no longer exists, return immediately
             if (m_disposed || !File.Exists(filePath))
                 return;
-
-            // Load processed files from the cache
-            // before the first file is processed
-            if (m_processedFiles.Count == 0)
-                LoadProcessedFiles();
 
             // Process the file at the given file path
             alreadyProcessed = m_processedFiles.Contains(filePath);
