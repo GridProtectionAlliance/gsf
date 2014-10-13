@@ -764,7 +764,7 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 try
                 {
-                    CommonFunctions.SendCommandToService("INITIALIZE /a ALARM!SERVICES");
+                    CommonFunctions.SendCommandToService("ReloadConfig");
                 }
                 catch (Exception ex)
                 {
@@ -842,7 +842,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 historian = Historian.GetHistorian(database, string.Format("WHERE Acronym = 'STAT' AND NodeID = '{0}'", nodeID));
                 signalTypeId = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym = 'ALRM'", DefaultTimeout));
 
-                alarmMeasurement = new Measurement
+                alarmMeasurement = new Measurement()
                 {
                     HistorianID = historian.ID,
                     PointTag = alarm.TagName,

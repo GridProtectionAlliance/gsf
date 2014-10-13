@@ -92,6 +92,19 @@ namespace GSF.Threading
             }
         }
 
+        /// <summary>
+        /// Gets a value to indiate whether the synchronized operation
+        /// has an additional operation that is pending execution after
+        /// the currently running action has completed.
+        /// </summary>
+        public bool IsPending
+        {
+            get
+            {
+                return Interlocked.CompareExchange(ref m_state, NotRunning, NotRunning) == Pending;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]

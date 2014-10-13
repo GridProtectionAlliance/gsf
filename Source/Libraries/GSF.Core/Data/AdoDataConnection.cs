@@ -811,7 +811,9 @@ namespace GSF.Data
         {
             for (int i = 0; i < parameters.Length; i++)
             {
-                if (parameters[i] is bool)
+                if (parameters[i] == null)
+                    parameters[i] = DBNull.Value;
+                else if (parameters[i] is bool)
                     parameters[i] = Bool((bool)parameters[i]);
                 else if (parameters[i] is Guid)
                     parameters[i] = Guid((Guid)parameters[i]);

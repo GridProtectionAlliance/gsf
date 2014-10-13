@@ -369,6 +369,7 @@
     <Compile Include="Threading\ManagedThread.cs" />
     <Compile Include="Threading\ManagedThreadPool.cs" />
     <Compile Include="Threading\ManagedThreads.cs" />
+    <Compile Include="Threading\MixedSynchronizedOperation.cs" />
     <Compile Include="Threading\NamespaceDoc.cs" />
     <Compile Include="Threading\ReaderWriterSpinLock.cs" />
     <Compile Include="Threading\ScheduledTask.cs" />

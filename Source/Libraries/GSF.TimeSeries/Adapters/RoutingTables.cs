@@ -178,9 +178,7 @@ namespace GSF.TimeSeries.Adapters
                     if ((object)outputAdapter != null)
                         Manager = new DoubleBufferedQueueManager<IMeasurement>(measurements => outputAdapter.QueueMeasurementsForProcessing(new List<IMeasurement>(measurements)), exceptionAction);
                     else
-                        Manager = new DoubleBufferedQueueManager<IMeasurement>(() =>
-                        {
-                        });
+                        Manager = new DoubleBufferedQueueManager<IMeasurement>(() => { });
                 }
             }
         }

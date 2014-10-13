@@ -1370,6 +1370,10 @@ namespace GSF.Collections
                             IsBackground = true
                         };
                         break;
+
+                    case SynchronizedOperationType.Mixed:
+                        m_synchronizedOperation = new MixedSynchronizedOperation(RealTimeThreadProc, OnProcessException);
+                        break;
                 }
             }
             else

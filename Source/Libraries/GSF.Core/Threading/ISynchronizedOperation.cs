@@ -41,7 +41,12 @@ namespace GSF.Threading
         /// <summary>
         /// <see cref="LongSynchronizedOperation"/> with IsBackground set to <c>true</c>
         /// </summary>
-        LongBackground
+        LongBackground,
+
+        /// <summary>
+        /// <see cref="MixedSynchronizedOperation"/>
+        /// </summary>
+        Mixed
     }
 
     /// <summary>
@@ -54,6 +59,16 @@ namespace GSF.Threading
         /// operation is currently executing its action.
         /// </summary>
         bool IsRunning
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets a value to indiate whether the synchronized operation
+        /// has an additional operation that is pending execution after
+        /// the currently running action has completed.
+        /// </summary>
+        bool IsPending
         {
             get;
         }

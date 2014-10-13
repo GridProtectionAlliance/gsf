@@ -147,7 +147,7 @@ namespace GSF.TimeSeries
     /// an incoming signal to determine the state of alarm.
     /// </summary>
     [Serializable]
-    public class Alarm
+    public class Alarm : ICloneable
     {
         #region [ Members ]
 
@@ -492,6 +492,30 @@ namespace GSF.TimeSeries
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Creates a new alarm that is a copy of the current instance.
+        /// </summary>
+        /// <returns>
+        /// A new alarm that is a copy of this instance.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        public Alarm Clone()
+        {
+            return (Alarm)MemberwiseClone();
+        }
+
+        /// <summary>
+        /// Creates a new object that is a copy of the current instance.
+        /// </summary>
+        /// <returns>
+        /// A new object that is a copy of this instance.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        object ICloneable.Clone()
+        {
+            return MemberwiseClone();
         }
 
         // Returns the function used to determine when the alarm is raised.
