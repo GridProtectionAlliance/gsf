@@ -589,10 +589,24 @@ namespace HistorianAdapters
         {
             foreach (IMeasurement measurement in measurements)
             {
+                if (WriteData(measurement))
+                    m_archivedMeasurements++;
+            }
+        }
+
+        private bool WriteData(IMeasurement measurement)
+        {
+            try
+            {
                 m_archive.WriteData(new ArchiveDataPoint(measurement));
+                return true;
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(ex);
             }
 
-            m_archivedMeasurements += measurements.Length;
+            return false;
         }
 
         private void m_archive_RolloverStart(object sender, EventArgs e)
