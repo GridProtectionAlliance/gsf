@@ -258,5 +258,31 @@ namespace GSF.Console
 
             return string.IsNullOrWhiteSpace(standardError);
         }
+
+        /// <summary>
+        /// Shell encodes a command line parameter by converting "\" to "\\".
+        /// </summary>
+        /// <param name="parameter">Parameter to shell encode.</param>
+        /// <returns>Shell encoded <paramref name="parameter"/>.</returns>
+        public static string ShellEncode(this string parameter)
+        {
+            if ((object)parameter == null)
+                throw new ArgumentNullException("parameter");
+
+            return parameter.Replace("\\", "\\\\");
+        }
+
+        /// <summary>
+        /// Decodes a command line parameter previously encoded by <see cref="ShellEncode"/>.
+        /// </summary>
+        /// <param name="parameter">Parameter to decode.</param>
+        /// <returns>Decoded <paramref name="parameter"/>.</returns>
+        public static string ShellDecode(this string parameter)
+        {
+            if ((object)parameter == null)
+                throw new ArgumentNullException("parameter");
+
+            return parameter.Replace("\\\\", "\\");
+        }
     }
 }

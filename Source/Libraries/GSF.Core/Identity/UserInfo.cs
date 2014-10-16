@@ -201,12 +201,12 @@ namespace GSF.Identity
         private IUserInfo m_userInfo;
         private string m_domain;
         private readonly string m_userName;
-        private readonly string m_ldapPath;
         private bool m_persistSettings;
         private string m_settingsCategory;
         private int m_userAccountControl;
         private bool m_disposed;
 
+        internal string m_ldapPath;
         internal string m_privilegedDomain;
         internal string m_privilegedUserName;
         internal string m_privilegedPassword;
@@ -1350,13 +1350,13 @@ namespace GSF.Identity
             if (Common.IsPosixEnvironment)
                 return
                     string.IsNullOrEmpty(domain) ||
-                    domain.Equals(".", StringComparison.OrdinalIgnoreCase) ||
+                    domain.Equals(".", StringComparison.Ordinal) ||
                     domain.Equals(Environment.MachineName, StringComparison.OrdinalIgnoreCase);
 
             // TODO: NT AUTHORITY and such groups can be localized to the OS language, these groups won't be recognized as local domains on non EN-US machines in this code
             return
                 string.IsNullOrEmpty(domain) ||
-                domain.Equals(".", StringComparison.OrdinalIgnoreCase) ||
+                domain.Equals(".", StringComparison.Ordinal) ||
                 domain.Equals(Environment.MachineName, StringComparison.OrdinalIgnoreCase) ||
                 domain.Equals("NT SERVICE", StringComparison.OrdinalIgnoreCase) ||
                 domain.Equals("NT AUTHORITY", StringComparison.OrdinalIgnoreCase) ||

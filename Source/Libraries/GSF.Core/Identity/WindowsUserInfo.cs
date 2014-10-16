@@ -194,7 +194,6 @@ namespace GSF.Identity
             }
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Globalization", "CA1309:UseOrdinalStringComparison", MessageId = "System.String.LastIndexOf(System.String,System.StringComparison)")]
         public DateTime AccountCreationDate
         {
             get
@@ -370,7 +369,7 @@ namespace GSF.Identity
         {
             get
             {
-                HashSet<string> groups = new HashSet<string>();
+                HashSet<string> groups = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
                 string groupName;
 
                 if (m_enabled)
@@ -1472,13 +1471,11 @@ namespace GSF.Identity
             return IsSchemaSID(sid, "Group");
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Globalization", "CA1307:SpecifyStringComparison", MessageId = "System.String.StartsWith(System.String)")]
         private static bool IsSchemaSID(string sid, string schemaClassName)
         {
             try
             {
                 string accountName;
-                DirectoryEntry entry;
 
                 if ((object)sid == null)
                     throw new ArgumentNullException("sid");
@@ -1489,9 +1486,11 @@ namespace GSF.Identity
                     return false;
 
                 accountName = SIDToAccountName(sid);
-                entry = new DirectoryEntry(string.Format("WinNT://{0}", UserInfo.ValidateGroupName(accountName).Replace('\\', '/')));
 
-                return entry.SchemaClassName.Equals(schemaClassName, StringComparison.OrdinalIgnoreCase);
+                using (DirectoryEntry entry = new DirectoryEntry(string.Format("WinNT://{0}", UserInfo.ValidateGroupName(accountName).Replace('\\', '/'))))
+                {
+                    return entry.SchemaClassName.Equals(schemaClassName, StringComparison.OrdinalIgnoreCase);
+                }
             }
             catch (COMException)
             {

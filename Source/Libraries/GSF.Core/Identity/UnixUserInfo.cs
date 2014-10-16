@@ -208,7 +208,6 @@ namespace GSF.Identity
             {
                 uint userID;
 
-                // TODO: What to do if Linux stores mapped LDAP users as userName@domain? Format setting in config file?
                 if (!UserInfo.IsLocalDomain(domain))
                     userName = string.Format("{0}\\{1}", domain, userName);
 
@@ -413,21 +412,19 @@ namespace GSF.Identity
                 {
                     try
                     {
-                        if (m_isLocalAccount)
+                        CommandResponse response = Command.Execute("lastlog", "-u " + EncodeAccountName(m_isLocalAccount ? m_parent.UserName : m_parent.LoginID));
+
+                        if (response.ExitCode == 0)
                         {
-                            CommandResponse response = Command.Execute("lastlog", "-u " + m_parent.UserName);
+                            string[] lines = response.StandardOutput.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 
-                            if (response.ExitCode == 0)
-                            {
-                                string[] lines = response.StandardOutput.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-
-                                if (lines.Length < 2 || lines[1].Length < 44 || !DateTime.TryParseExact(lines[1].Substring(43), "ddd MMM d HH:mm:ss zzff yyyy", CultureInfo.InvariantCulture, DateTimeStyles.AllowInnerWhite, out lastLogon))
-                                    lastLogon = DateTime.MinValue;
-                            }
-                            else
-                            {
+                            if (lines.Length < 2 || lines[1].Length < 44 || !DateTime.TryParseExact(lines[1].Substring(43), "ddd MMM d HH:mm:ss zzff yyyy", CultureInfo.InvariantCulture, DateTimeStyles.AllowInnerWhite, out lastLogon))
+                                lastLogon = DateTime.MinValue;
+                        }
+                        else
+                        {
+                            if (!m_isLocalAccount)
                                 lastLogon = DateTime.FromFileTime(long.Parse(GetUserPropertyValue("lastLogon")));
-                            }
                         }
                     }
                     catch
@@ -450,19 +447,12 @@ namespace GSF.Identity
                 {
                     try
                     {
-                        if (m_isLocalAccount)
-                        {
-                            creationDate = Directory.GetCreationTime("/home/" + m_parent.UserName);
-                        }
-                        else
-                        {
-                            if (!DateTime.TryParseExact(GetUserPropertyValue("whenCreated"), "yyyyMMddHHmmss.fZ", CultureInfo.InvariantCulture, DateTimeStyles.AllowInnerWhite | DateTimeStyles.AssumeUniversal, out creationDate))
-                                creationDate = DateTime.MinValue;
-                        }
+                        creationDate = Directory.GetCreationTime(Environment.GetEnvironmentVariable("HOME") ?? "/home/" + m_parent.UserName);
                     }
                     catch
                     {
-                        creationDate = DateTime.MinValue;
+                        if (!m_isLocalAccount || !DateTime.TryParseExact(GetUserPropertyValue("whenCreated"), "yyyyMMddHHmmss.fZ", CultureInfo.InvariantCulture, DateTimeStyles.AllowInnerWhite | DateTimeStyles.AssumeUniversal, out creationDate))
+                            creationDate = DateTime.MinValue;
                     }
                 }
 
@@ -603,25 +593,48 @@ namespace GSF.Identity
             {
                 if (!m_isLocalAccount)
                 {
-                    List<string> groups = new List<string>();
+                    // Domain accounts are not case sensitive even though local account names are
+                    HashSet<string> groups = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
                     string[] dnGroups = GetUserPropertyValueCollection("memberOf");
-                    string ldapRoot, cn, dc;
 
-                    if (string.IsNullOrEmpty(m_ldapRoot))
-                        ldapRoot = m_parent.Domain;
-                    else
-                        ldapRoot = ParseDNTokens(m_ldapRoot, "DC");
-
-                    // Convert LDAP distinguished names to AD style group names
-                    foreach (string dnGroup in dnGroups)
+                    if ((object)dnGroups != null && dnGroups.Length > 0)
                     {
-                        cn = ParseDNTokens(dnGroup, "CN");
-                        dc = ParseDNTokens(dnGroup, "DC");
+                        string ldapRoot, cn, dc;
 
-                        // If group domain matches LDAP root, assume this is a valid group
-                        if (dc.Equals(ldapRoot, StringComparison.OrdinalIgnoreCase))
-                            groups.Add(string.Format("{0}\\{1}", m_parent.Domain, cn));
+                        if (string.IsNullOrEmpty(m_ldapRoot))
+                            ldapRoot = m_parent.Domain;
+                        else
+                            ldapRoot = ParseDNTokens(m_ldapRoot, "DC");
+
+                        // Convert LDAP distinguished names to AD style group names
+                        foreach (string dnGroup in dnGroups)
+                        {
+                            try
+                            {
+                                // Lookup group entry by its distinguished name
+                                LdapEntry groupEntry = m_connection.Read(dnGroup);
+
+                                // Read the SAMAccountName attribute value
+                                string group = groupEntry.getAttributeSet().getAttribute("sAMAccountName").StringValue;
+
+                                if (!string.IsNullOrEmpty(group))
+                                    groups.Add(string.Format("{0}\\{1}", m_parent.Domain, group));
+                            }
+                            catch
+                            {
+                                // This option is not as accurate
+                                cn = ParseDNTokens(dnGroup, "CN");
+                                dc = ParseDNTokens(dnGroup, "DC");
+
+                                // If group domain matches LDAP root, assume this is a valid group
+                                if (dc.Equals(ldapRoot, StringComparison.OrdinalIgnoreCase))
+                                    groups.Add(string.Format("{0}\\{1}", m_parent.Domain, cn));
+                            }
+                        }
                     }
+
+                    groups.UnionWith(LocalGroups);
 
                     return groups.ToArray();
                 }
@@ -634,11 +647,11 @@ namespace GSF.Identity
         {
             get
             {
-                return GetLocalUserGroups(m_parent.UserName);
+                return GetLocalUserGroups(m_isLocalAccount ? m_parent.UserName : m_parent.LoginID);
 
                 #region [ Possible Alternate Implementation ]
 
-                //CommandResponse response = Command.Execute("groups", m_parent.UserName);
+                //CommandResponse response = Command.Execute("groups", EncodeAccountName(m_isLocalAccount ? m_parent.UserName : m_parent.LoginID));
 
                 //if (response.ExitCode == 0)
                 //    return response.StandardOutput.Substring(m_parent.UserName.Length + 3).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -653,7 +666,7 @@ namespace GSF.Identity
         {
             get
             {
-                string userName = PtrToString(GetLocalUserGecos(m_parent.UserName));
+                string userName = PtrToString(GetLocalUserGecos(m_isLocalAccount ? m_parent.UserName : m_parent.LoginID));
 
                 if (string.IsNullOrWhiteSpace(userName))
                     return m_parent.UserName;
@@ -712,6 +725,58 @@ namespace GSF.Identity
                 // Handle initialization
                 m_enabled = false;
 
+                // Attempt to pick up current user or impersonated user principal
+                WindowsPrincipal principal = Thread.CurrentPrincipal as WindowsPrincipal;
+                UnixIdentity unixIdentity = null;
+
+                if ((object)principal != null)
+                    unixIdentity = principal.Identity as UnixIdentity;
+
+                // Attempt do derive the domain if one is not specified
+                if (string.IsNullOrEmpty(m_parent.Domain))
+                {
+                    if (!string.IsNullOrEmpty(m_parent.m_privilegedDomain))
+                    {
+                        // Use domain specified for privileged account
+                        m_parent.Domain = m_parent.m_privilegedDomain;
+                    }
+                    else
+                    {
+                        if ((object)unixIdentity != null)
+                        {
+                            // Use domain of user authenticated on current thread
+                            m_parent.Domain = unixIdentity.Domain;
+                        }
+                        else
+                        {
+                            // Attempt to use the current user's logon domain
+                            WindowsIdentity identity = WindowsIdentity.GetCurrent();
+
+                            if ((object)identity != null)
+                            {
+                                string accountName = identity.Name;
+
+                                if (accountName.Contains('\\'))
+                                {
+                                    string[] accountParts = accountName.Split('\\');
+
+                                    // User name is specified in 'domain\accountname' format
+                                    if (accountParts.Length == 2)
+                                        m_parent.Domain = accountParts[0];
+                                }
+                                else if (accountName.Contains('@'))
+                                {
+                                    string[] accountParts = accountName.Split('@');
+
+                                    // User name is specified in 'accountname@domain' format
+                                    if (accountParts.Length == 2)
+                                        m_parent.Domain = accountParts[1];
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Set the domain as the local machine if one is not specified
                 if (string.IsNullOrEmpty(m_parent.Domain))
                     m_parent.Domain = Environment.MachineName;
@@ -745,20 +810,14 @@ namespace GSF.Identity
                         // Impersonate to the privileged account if specified
                         currentContext = m_parent.ImpersonatePrivilegedAccount();
 
-                        // Pick up current user or impersonated user principal
-                        WindowsPrincipal principal = Thread.CurrentPrincipal as WindowsPrincipal;
-                        UnixIdentity identity = null;
-
-                        if ((object)principal != null)
+                        // If domain user has already been authenticated, we should already have an active LDAP connection
+                        if ((object)unixIdentity != null && unixIdentity.LoginID.Equals(m_parent.LoginID, StringComparison.OrdinalIgnoreCase))
                         {
-                            identity = principal.Identity as UnixIdentity;
+                            m_connection = unixIdentity.Connection;
+                            m_ldapRoot = unixIdentity.LdapRoot ?? m_parent.Domain;
 
-                            // If domain user has already been authenticated, we should already have an active LDAP connection
-                            if ((object)identity != null && identity.LoginID.Equals(m_parent.LoginID, StringComparison.OrdinalIgnoreCase))
-                            {
-                                m_connection = identity.Connection;
-                                m_ldapRoot = identity.LdapRoot ?? m_parent.Domain;
-                            }
+                            if (string.IsNullOrEmpty(m_parent.m_ldapPath))
+                                m_parent.m_ldapPath = m_ldapRoot;
                         }
 
                         if ((object)m_connection != null)
@@ -782,17 +841,30 @@ namespace GSF.Identity
                         }
                         else
                         {
-                            // If PAM authentication succeeded but no LDAP connection can be found, we attempt to treat this user as local
-                            if ((object)identity != null && identity.LoginID.Equals(m_parent.LoginID, StringComparison.OrdinalIgnoreCase))
+                            // If PAM authentication succeeded but no LDAP connection can be found, we will attempt to only use PAM
+                            if ((object)unixIdentity != null && unixIdentity.LoginID.Equals(m_parent.LoginID, StringComparison.OrdinalIgnoreCase))
                             {
-                                m_isLocalAccount = true;
+                                m_isLocalAccount = false;
                                 m_enabled = true;
-                                m_domainRespondsForUser = false;
+                                m_domainRespondsForUser = true; // PAM may be enough...
                                 m_parent.UserAccountControl = -1;
                             }
                             else
                             {
-                                throw new InvalidOperationException("No valid LDAP connection was found or user is not authenticated");
+                                // See if initialization is for current user
+                                WindowsIdentity identity = WindowsIdentity.GetCurrent();
+
+                                if ((object)identity != null && identity.IsAuthenticated && (identity.Name.Equals(m_parent.LoginID, StringComparison.OrdinalIgnoreCase) || identity.Name.Equals(m_parent.UserName, StringComparison.OrdinalIgnoreCase)))
+                                {
+                                    m_isLocalAccount = !identity.Name.Contains('\\');
+                                    m_enabled = true;
+                                    m_domainRespondsForUser = true;
+                                    m_parent.UserAccountControl = -1;
+                                }
+                                else
+                                {
+                                    throw new InvalidOperationException("No valid LDAP connection was found or user is not authenticated");
+                                }
                             }
                         }
                     }
@@ -964,7 +1036,7 @@ namespace GSF.Identity
                 // Try really hard to find a configured LDAP host
                 string ldapHost = GetLdapHost();
 
-                // If LDAP host cannot be determined, no LdapConnection can be established  - if authentication
+                // If LDAP host cannot be determined, no LdapConnection can be established - if authentication
                 // succeeded, user will be treated as a local user
                 if ((object)ldapHost == null)
                 {
@@ -972,38 +1044,42 @@ namespace GSF.Identity
                         errorMessage = string.Format("Failed to authenticate \"{0}\": {1}", domainUserName, GetPAMErrorMessage(responseCode));
                     else
                         errorMessage = string.Format("User authentication succeeded, but no LDAP path could be derived.");
-
-                    return principal;
                 }
-
-                try
+                else
                 {
-                    // Attempt LDAP account authentication                    
-                    LdapConnection connection = new LdapConnection();
-
-                    if (ldapHost.StartsWith("LDAP", StringComparison.OrdinalIgnoreCase))
+                    try
                     {
-                        Uri ldapURI = new Uri(ldapHost);
-                        ldapHost = ldapURI.Host + (ldapURI.Port == 0 ? "" : ":" + ldapURI.Port);
+                        // Attempt LDAP account authentication                    
+                        LdapConnection connection = new LdapConnection();
+
+                        if (ldapHost.StartsWith("LDAP", StringComparison.OrdinalIgnoreCase))
+                        {
+                            Uri ldapURI = new Uri(ldapHost);
+                            ldapHost = ldapURI.Host + (ldapURI.Port == 0 ? "" : ":" + ldapURI.Port);
+                        }
+
+                        // If host LDAP path contains suffixed port number (e.g., host:port), this will be preferred over specified 389 default
+                        connection.Connect(ldapHost, 389);
+                        connection.Bind(string.Format("{0}@{1}", userName, domain), password);
+
+                        if ((object)principal == null)
+                            principal = new WindowsPrincipal(new UnixIdentity(domain, userName, connection));
+                        else
+                            ((UnixIdentity)principal.Identity).Connection = connection;
                     }
-
-                    // If host LDAP path contains suffixed port number, this will be preferred over specified 389 default
-                    connection.Connect(ldapHost, 389);
-                    connection.Bind(string.Format("{0}@{1}", userName, domain), password);
-
-                    if ((object)principal == null)
-                        principal = new WindowsPrincipal(new UnixIdentity(domain, userName, connection));
-                    else
-                        ((UnixIdentity)principal.Identity).Connection = connection;
-                }
-                catch (Exception ex)
-                {
-                    if (responseCode == 0)
-                        errorMessage = string.Format("User authentication succeeded, but LDAP connection failed. LDAP response: {0}", ex.Message);
-                    else
-                        errorMessage = string.Format("LDAP response: {0}{1}PAM response: {2}", ex.Message, Environment.NewLine, GetPAMErrorMessage(responseCode));
+                    catch (Exception ex)
+                    {
+                        if (responseCode == 0)
+                            errorMessage = string.Format("User authentication succeeded, but LDAP connection failed. LDAP response: {0}", ex.Message);
+                        else
+                            errorMessage = string.Format("LDAP response: {0}{1}PAM response: {2}", ex.Message, Environment.NewLine, GetPAMErrorMessage(responseCode));
+                    }
                 }
             }
+
+            // Set current thread principal to authenticated user principal - this will allow access to
+            // needed LdapConnection information on the current thread...
+            Thread.CurrentPrincipal = principal;
 
             return principal;
         }
@@ -1228,7 +1304,6 @@ namespace GSF.Identity
                 {
                     uint userID;
 
-                    // TODO: What to do if Linux stores mapped LDAP users as userName@domain? Format setting in config file?
                     if (!UserInfo.IsLocalDomain(domain))
                         userName = string.Format("{0}\\{1}", domain, userName);
 
@@ -1252,11 +1327,6 @@ namespace GSF.Identity
                 {
                     context = null;
                 }
-
-                // Set current thread principal to authenticated user principal - this creates a viable
-                // impersonation with needed LdapConnection information available for the current thread,
-                // but not the entire application domain:
-                Thread.CurrentPrincipal = principal;
             }
 
             return context;
@@ -1265,7 +1335,7 @@ namespace GSF.Identity
         public static bool LocalUserExists(string userName)
         {
             uint userID;
-            return GetLocalUserID(userName, out userID) == 0;
+            return GetLocalUserID(ValidateAccountName(userName), out userID) == 0;
         }
 
         public static bool CreateLocalUser(string userName, string password, string userDescription)
@@ -1278,7 +1348,7 @@ namespace GSF.Identity
                     Command.Execute("useradd", string.Format("-c \"{0}\" -m -U -p {1} {2}",
                         userDescription ?? "Local account for " + userName,
                         PtrToString(GetPasswordHash(password, GetRandomSalt())),
-                        userName));
+                        EncodeAccountName(userName)));
 
                     return true;
                 }
@@ -1297,7 +1367,7 @@ namespace GSF.Identity
             if (!LocalUserExists(userName))
                 throw new InvalidOperationException(string.Format("Cannot set password for local user \"{0}\": user does not exist.", userName));
 
-            int response = SetLocalUserPassword(userName, password, GetRandomSalt());
+            int response = SetLocalUserPassword(ValidateAccountName(userName), password, GetRandomSalt());
 
             if (response != 0)
                 throw new InvalidOperationException(string.Format("Cannot set password for local user \"{0}\": {1}", userName, response));
@@ -1332,7 +1402,7 @@ namespace GSF.Identity
             {
                 try
                 {
-                    Command.Execute("userdel", string.Format("-f -r -Z {0}", userName));
+                    Command.Execute("userdel", string.Format("-f -r -Z {0}", EncodeAccountName(userName)));
                     return true;
                 }
                 catch (Exception ex)
@@ -1347,7 +1417,7 @@ namespace GSF.Identity
         public static bool LocalGroupExists(string groupName)
         {
             uint groupID;
-            return GetLocalGroupID(groupName, out groupID) == 0;
+            return GetLocalGroupID(ValidateAccountName(groupName), out groupID) == 0;
         }
 
         public static bool CreateLocalGroup(string groupName)
@@ -1356,7 +1426,7 @@ namespace GSF.Identity
             {
                 try
                 {
-                    Command.Execute("groupadd", groupName);
+                    Command.Execute("groupadd", EncodeAccountName(groupName));
                     return true;
                 }
                 catch (Exception ex)
@@ -1374,7 +1444,7 @@ namespace GSF.Identity
             {
                 try
                 {
-                    Command.Execute("groupdel", groupName);
+                    Command.Execute("groupdel", EncodeAccountName(groupName));
                     return true;
                 }
                 catch (Exception ex)
@@ -1398,6 +1468,9 @@ namespace GSF.Identity
 
             try
             {
+                groupName = ValidateAccountName(groupName);
+                userName = ValidateAccountName(userName);
+
                 // See if user is in group
                 return GetLocalGroupUserSet(groupName).Contains(userName);
             }
@@ -1419,12 +1492,15 @@ namespace GSF.Identity
 
             try
             {
+                groupName = ValidateAccountName(groupName);
+                userName = ValidateAccountName(userName);
+
                 // If user already exists in group, exit and return false
                 if (GetLocalGroupUserSet(groupName).Contains(userName))
                     return false;
 
                 // Add new user to group
-                Command.Execute("gpasswd ", string.Format("-a {0} {1}", userName, groupName));
+                Command.Execute("gpasswd ", string.Format("-a {0} {1}", EncodeAccountName(userName), EncodeAccountName(groupName)));
                 return true;
             }
             catch (Exception ex)
@@ -1445,10 +1521,13 @@ namespace GSF.Identity
 
             try
             {
+                groupName = ValidateAccountName(groupName);
+                userName = ValidateAccountName(userName);
+
                 // If user exists in group, remove user and return true
                 if (GetLocalGroupUserSet(groupName).Contains(userName))
                 {
-                    Command.Execute("gpasswd ", string.Format("-d {0} {1}", userName, groupName));
+                    Command.Execute("gpasswd ", string.Format("-d {0} {1}", EncodeAccountName(userName), EncodeAccountName(groupName)));
                     return true;
                 }
             }
@@ -1466,7 +1545,7 @@ namespace GSF.Identity
             if (!LocalGroupExists(groupName))
                 throw new InvalidOperationException(string.Format("Cannot get members for local group \"{0}\": group does not exist.", groupName));
 
-            return GetLocalGroupUserSet(groupName).ToArray();
+            return GetLocalGroupUserSet(ValidateAccountName(groupName)).Select(DecodeAccountName).ToArray();
         }
 
         // A HashSet is used to ensure a unique list since there can be membership overlap in primary and secondary groups
@@ -1496,12 +1575,7 @@ namespace GSF.Identity
             if ((object)userName == null)
                 throw new ArgumentNullException("userName");
 
-            if (GetLocalUserID(userName, out userID) == 0)
-                return "user:" + userID;
-
-            string[] accountParts = userName.Split('\\');
-
-            if (accountParts.Length == 2 && UserInfo.IsLocalDomain(accountParts[0]) && GetLocalUserID(accountParts[1], out userID) == 0)
+            if (GetLocalUserID(ValidateAccountName(userName), out userID) == 0)
                 return "user:" + userID;
 
             return userName.EnsureStart("user:");
@@ -1514,12 +1588,7 @@ namespace GSF.Identity
             if ((object)groupName == null)
                 throw new ArgumentNullException("groupName");
 
-            if (GetLocalGroupID(groupName, out groupID) == 0)
-                return "group:" + groupID;
-
-            string[] accountParts = groupName.Split('\\');
-
-            if (accountParts.Length == 2 && UserInfo.IsLocalDomain(accountParts[0]) && GetLocalGroupID(accountParts[1], out groupID) == 0)
+            if (GetLocalGroupID(ValidateAccountName(groupName), out groupID) == 0)
                 return "group:" + groupID;
 
             return groupName.EnsureStart("group:");
@@ -1530,11 +1599,9 @@ namespace GSF.Identity
             StringBuilder accountName = new StringBuilder(MaxAccountNameLength);
             uint accountID;
 
-            if (IsUserSID(sid) && TryExtractAccountID(sid, out accountID) && GetLocalUserName(accountID, accountName) == 0)
-                return accountName.ToString();
-
-            if (IsGroupSID(sid) && TryExtractAccountID(sid, out accountID) && GetLocalGroupName(accountID, accountName) == 0)
-                return accountName.ToString();
+            if ((IsUserSID(sid) && TryExtractAccountID(sid, out accountID) && GetLocalUserName(accountID, accountName) == 0) ||
+                (IsGroupSID(sid) && TryExtractAccountID(sid, out accountID) && GetLocalGroupName(accountID, accountName) == 0))
+                return DecodeAccountName(accountName.ToString());
 
             return sid;
         }
@@ -1554,6 +1621,7 @@ namespace GSF.Identity
             return uint.TryParse(sid.Substring(sid.IndexOf(':') + 1), out accountID);
         }
 
+        // User name expected to be pre-validated
         private static string[] GetLocalUserGroups(string userName)
         {
             List<string> groups = new List<string>();
@@ -1570,7 +1638,7 @@ namespace GSF.Identity
                         StringBuilder groupName = new StringBuilder(MaxAccountNameLength);
 
                         if (GetLocalGroupName(groupID, groupName) == 0)
-                            groups.Add(groupName.ToString());
+                            groups.Add(DecodeAccountName(groupName.ToString()));
                     }
                 }
             }
@@ -1669,6 +1737,62 @@ namespace GSF.Identity
             }
 
             return responseCode.ToString();
+        }
+
+        // Returns a decoded account name for use by API user
+        private static string DecodeAccountName(string accountName)
+        {
+            accountName = accountName.ShellDecode().Replace('^', ' ');
+
+            if (!accountName.Contains('\\'))
+                accountName = Environment.MachineName + "\\" + accountName;
+
+            return accountName;
+        }
+
+        // Return an encoded account name valid for shell commands
+        private static string EncodeAccountName(string accountName)
+        {
+            return accountName.ShellEncode().Replace(' ', '^');
+        }
+
+        // Return valid account name for machine name prefixed local accounts
+        private static string ValidateAccountName(string accountName)
+        {
+            if (accountName.Contains('\\'))
+            {
+                // POSIX functions do not recognize machinename\accountname - but UserInfo allows this format for local accounts
+                string[] accountParts = accountName.Split('\\');
+
+                if (accountParts.Length == 2)
+                {
+                    // groupName is specified in 'domain\accountname' format
+                    string domain = accountParts[0];
+                    accountName = accountParts[1];
+
+                    // For local users we just want accountname; otherwise, domain\accountname
+                    if (!UserInfo.IsLocalDomain(domain))
+                        accountName = string.Format("{0}\\{1}", domain, accountName);
+                }
+            }
+            else if (accountName.Contains('@'))
+            {
+                // POSIX functions do not recognize accountname@machinename - but UserInfo allows this format for local accounts
+                string[] accountParts = accountName.Split('@');
+
+                if (accountParts.Length == 2)
+                {
+                    // groupName is specified in 'accountname@domain' format
+                    string domain = accountParts[1];
+                    accountName = accountParts[0];
+
+                    // For local users we just want accountname; otherwise, domain\accountname
+                    if (!UserInfo.IsLocalDomain(domain))
+                        accountName = string.Format("{0}\\{1}", domain, accountName);
+                }
+            }
+
+            return accountName;
         }
 
         // Parse LDAP distinguished name tokens
