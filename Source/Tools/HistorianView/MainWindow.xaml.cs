@@ -63,7 +63,7 @@ namespace HistorianView
         /// <summary>
         /// Defines a comparison class to property sort metadata.
         /// </summary>
-        public class MetadataSorter : IComparer<MetadataRecord>
+        public class MetadataSorter : IComparer<MetadataWrapper>
         {
             /// <summary>
             /// Compares one metadata record to another.
@@ -71,14 +71,14 @@ namespace HistorianView
             /// <param name="left">Left metadata record to compare.</param>
             /// <param name="right">Right metadata record to compare.</param>
             /// <returns>Comparison sort order of metadata record.</returns>
-            public int Compare(MetadataRecord left, MetadataRecord right)
+            public int Compare(MetadataWrapper left, MetadataWrapper right)
             {
                 // Perform initial sort based on analogs followed by status flags, then digitals
                 int result = ChannelMetadataSorter.Default.Compare(ConvertToChannelMetadata(left), ConvertToChannelMetadata(right));
 
                 // Fall back on historian ID for secondary sort order
                 if (result == 0)
-                    result = left.HistorianID.CompareTo(right.HistorianID);
+                    result = left.PointNumber.CompareTo(right.PointNumber);
 
                 return result;
             }
@@ -122,9 +122,6 @@ namespace HistorianView
             {
                 metadata.Synonym2 = ValidateSynonym2(metadata.Synonym2);
 
-                // This formats name in accordance with COMTRADE standard Annex H (may need to make this optional)
-                metadata.Name = FormatName(metadata.Name, metadata.Synonym1, metadata.Synonym2);
-
                 m_archiveReader = archiveReader;
                 m_metadata = metadata;
             }
@@ -165,6 +162,18 @@ namespace HistorianView
             /// Gets the name of the measurement.
             /// </summary>
             public string Name
+            {
+                get
+                {
+                    // This formats name in accordance with COMTRADE standard Annex H (may need to make this optional)
+                    return FormatName(m_metadata.Name, m_metadata.Synonym1, m_metadata.Synonym2);
+                }
+            }
+
+            /// <summary>
+            /// Gets the point tag of the measurement.
+            /// </summary>
+            public string PointTag
             {
                 get
                 {
@@ -324,14 +333,18 @@ namespace HistorianView
                     {
                         case "FLAG":
                             return name;
+
                         case "DIGI":
                         case "ALOG":
+                        case "STAT":
+                        case "ALRM":
                             lastIndexOf = synonym1.LastIndexOf('-');
 
                             if (lastIndexOf > 0)
                                 return name + ':' + synonym1.Substring(lastIndexOf + 1);
 
                             return name + ':' + synonym2;
+
                         default:
                             lastIndexOf = name.LastIndexOf('-');
 
@@ -971,7 +984,7 @@ namespace HistorianView
 
                         Dictionary<MetadataWrapper, ArchiveReader> metadata = m_metadata
                             .Where(wrapper => wrapper.Export)
-                            .OrderBy(wrapper => wrapper.GetMetadata(), MetadataSorter.Default)
+                            .OrderBy(wrapper => wrapper, MetadataSorter.Default)
                             .ToDictionary(
                                 wrapper => wrapper,
                                 wrapper => m_archiveReaders.Single(archive => archive.MetadataFile.Read().Any(record => wrapper.GetMetadata().CompareTo(record) == 0))
@@ -1114,7 +1127,6 @@ namespace HistorianView
         {
             // Convert openHistorian metadata to COMTRADE channel metadata
             IEnumerable<ChannelMetadata> channelMetadata = metadata.Keys
-                .Select(wrapper => wrapper.GetMetadata())
                 .Select(ConvertToChannelMetadata);
 
             // Create new COMTRADE configuration schema
@@ -1538,6 +1550,7 @@ namespace HistorianView
                     break;
 
                 case "Name":
+                case "Point Tag":
                 case "Description":
                 case "Pt.#":
                     if (!m_visibleColumns.Contains(header))
@@ -1708,12 +1721,12 @@ namespace HistorianView
         // Static Methods
 
         // Converts an openHistorian metadata record to a COMTRADE metadata record
-        private static ChannelMetadata ConvertToChannelMetadata(MetadataRecord historianRecord)
+        private static ChannelMetadata ConvertToChannelMetadata(MetadataWrapper historianRecord)
         {
             ChannelMetadata channelRecord = new ChannelMetadata
             {
                 Name = historianRecord.Name,
-                IsDigital = historianRecord.GeneralFlags.DataType == DataType.Digital
+                IsDigital = historianRecord.GetMetadata().GeneralFlags.DataType == DataType.Digital
             };
 
             if (!Enum.TryParse(historianRecord.Synonym2, true, out channelRecord.SignalType))

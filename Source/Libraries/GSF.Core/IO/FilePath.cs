@@ -355,7 +355,7 @@ namespace GSF.IO
         /// <returns>Directory information.</returns>
         public static string GetDirectoryName(string filePath)
         {
-            return AddPathSuffix(Path.GetDirectoryName(filePath));
+            return AddPathSuffix(Path.GetDirectoryName(filePath) ?? filePath);
         }
 
         /// <summary>

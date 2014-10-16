@@ -421,7 +421,10 @@ namespace GSF.TimeSeries.Statistics
 
         private readonly PerformanceMonitor m_performanceMonitor;
 
+        private double m_reportingInterval;
+
         private int m_lastStatisticCalculationCount;
+        private DateTime m_lastStatisticCalculationTime;
 
         private bool m_disposed;
 
@@ -529,25 +532,48 @@ namespace GSF.TimeSeries.Statistics
         {
             Dictionary<string, string> settings;
             string setting;
-            double reportingInterval;
 
             base.Initialize();
             settings = Settings;
 
             // Load the statistic reporting interval
             if (settings.TryGetValue("reportingInterval", out setting))
-                reportingInterval = double.Parse(setting) * 1000.0;
+                m_reportingInterval = double.Parse(setting) * 1000.0;
             else
-                reportingInterval = 10000.0;
+                m_reportingInterval = 10000.0;
 
-            // Set up the statistic calculation timer
-            m_statisticCalculationTimer.Elapsed += StatisticCalculationTimer_Elapsed;
-            m_statisticCalculationTimer.Interval = reportingInterval;
-            m_statisticCalculationTimer.AutoReset = true;
-            m_statisticCalculationTimer.Enabled = false;
+            if (UseLocalClockAsRealTime || !TrackLatestMeasurements)
+            {
+                // Set up the statistic calculation timer
+                m_statisticCalculationTimer.Elapsed += StatisticCalculationTimer_Elapsed;
+                m_statisticCalculationTimer.Interval = m_reportingInterval;
+                m_statisticCalculationTimer.AutoReset = true;
+                m_statisticCalculationTimer.Enabled = false;
+            }
 
             // Register system as a statistics source
             Register(m_performanceMonitor, GetSystemName(), "System", "SYSTEM");
+        }
+
+        /// <summary>
+        /// Queues a collection of measurements for processing.
+        /// </summary>
+        /// <param name="measurements">Measurements to queue for processing.</param>
+        public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
+        {
+            foreach (IMeasurement measurement in measurements)
+            {
+                if (m_lastStatisticCalculationTime == default(DateTime))
+                    m_lastStatisticCalculationTime = measurement.Timestamp;
+
+                base.QueueMeasurementForProcessing(measurement);
+
+                if (!UseLocalClockAsRealTime && TrackLatestMeasurements)
+                {
+                    if (RealTime >= m_lastStatisticCalculationTime.AddMilliseconds(m_reportingInterval).Ticks)
+                        CalculateStatistics();
+                }
+            }
         }
 
         /// <summary>
@@ -558,8 +584,11 @@ namespace GSF.TimeSeries.Statistics
         {
             base.Start();
 
-            m_statisticCalculationTimer.Start();
-            OnStatusMessage("Started statistics calculation timer.");
+            if (UseLocalClockAsRealTime || !TrackLatestMeasurements)
+            {
+                m_statisticCalculationTimer.Start();
+                OnStatusMessage("Started statistics calculation timer.");
+            }
         }
 
         /// <summary>
@@ -866,7 +895,7 @@ namespace GSF.TimeSeries.Statistics
                 }
 
                 OnBeforeCalculate();
-                serverTime = DateTime.UtcNow;
+                serverTime = RealTime;
 
                 foreach (StatisticSource source in sources)
                     calculatedStatistics.AddRange(CalculateStatistics(statistics, serverTime, source));
@@ -879,6 +908,9 @@ namespace GSF.TimeSeries.Statistics
 
                 // Update value used when displaying short status
                 m_lastStatisticCalculationCount = calculatedStatistics.Count;
+
+                // Update last statistic calculation time
+                m_lastStatisticCalculationTime = serverTime;
             }
             catch (Exception ex)
             {

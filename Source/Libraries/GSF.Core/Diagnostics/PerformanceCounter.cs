@@ -189,16 +189,14 @@ namespace GSF.Diagnostics
             m_samplingWindow = initialCounter.m_samplingWindow;
             m_counter = initialCounter.m_counter;
 
-            m_samples = new List<float>(sources.Max(c => c.m_samples.Count));
+            m_samples = new List<float>(Enumerable.Repeat(0.0F, sources.Max(c => c.m_samples.Count)));
 
             for (int i = 0; i < m_samples.Count; i++)
             {
-                m_samples[i] = 0.0F;
-
-                for (int j = 1; j < sources.Length; j++)
+                foreach (PerformanceCounter source in sources)
                 {
-                    if (sources[j].m_samples.Count > i)
-                        m_samples[i] += sources[j].m_samples[i];
+                    if (source.m_samples.Count > i)
+                        m_samples[i] += source.m_samples[i];
                 }
             }
 
