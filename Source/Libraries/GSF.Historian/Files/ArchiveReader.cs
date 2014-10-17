@@ -199,6 +199,20 @@ namespace GSF.Historian.Files
             }
         }
 
+        /// <summary>
+        /// Gets the descriptive status of the internal <see cref="ArchiveFile"/>.
+        /// </summary>
+        public string Status
+        {
+            get
+            {
+                if ((object)m_archiveFile == null)
+                    return "";
+
+                return m_archiveFile.Status;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]

@@ -1918,6 +1918,7 @@ namespace GSF.Identity
         [DllImport(ImportFileName)]
         private static extern int ChangeUserPassword(string userName, string oldPassword, string newPassword);
 
+        // This function may return ID for non-local users if nsswitch.conf is configured to do so
         [DllImport(ImportFileName)]
         private static extern int GetLocalUserID(string userName, out uint userID);
 

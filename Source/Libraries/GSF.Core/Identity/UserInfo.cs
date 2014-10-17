@@ -113,7 +113,7 @@ using GSF.Configuration;
 namespace GSF.Identity
 {
     /// <summary>
-    /// Represents information about a domain user retrieved from Active Directory.
+    /// Represents information about a local user or a domain user (e.g., from Active Directory).
     /// </summary>
     /// <remarks>
     /// See <a href="http://msdn.microsoft.com/en-us/library/ms677980.aspx" target="_blank">http://msdn.microsoft.com/en-us/library/ms677980.aspx</a> for more information on active directory properties.
@@ -163,9 +163,6 @@ namespace GSF.Identity
     /// </configuration>
     /// ]]>
     /// </code>
-    /// <para>
-    /// Some methods in this class may not behave as expected when running on under Mono deployments.
-    /// </para>
     /// </example>
     public sealed class UserInfo : ISupportLifecycle, IPersistSettings
     {

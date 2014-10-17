@@ -55,7 +55,8 @@ namespace HistorianAdapters
         // Fields
         private Timer m_readTimer;
         private string m_archiveLocation;
-        private ArchiveFile m_archiveFile;
+        private string m_archiveOffloadLocation;
+        private ArchiveReader m_archiveReader;
         private IEnumerator<IDataPoint> m_dataReader;
         private string m_instanceName;
         private long m_publicationInterval;
@@ -120,10 +121,31 @@ namespace HistorianAdapters
             }
             set
             {
-                if (string.IsNullOrWhiteSpace(m_archiveLocation))
+                if (string.IsNullOrWhiteSpace(value))
                     throw new ArgumentNullException("value", "The archiveLocation setting must be specified.");
 
-                m_archiveLocation = FilePath.GetDirectoryName(m_archiveLocation);
+                m_archiveLocation = FilePath.GetDirectoryName(value);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets archive offload path for this <see cref="LocalInputAdapter"/>.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the archive offload location (i.e., the file system path) of offloaded historical data."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.FolderBrowserEditor")]
+        public string ArchiveOffloadLocation
+        {
+            get
+            {
+                return m_archiveOffloadLocation;
+            }
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    m_archiveOffloadLocation = null;
+                else
+                    m_archiveOffloadLocation = FilePath.GetDirectoryName(value);
             }
         }
 
@@ -267,13 +289,14 @@ namespace HistorianAdapters
 
                 status.AppendFormat("             Instance name: {0}\r\n", m_instanceName);
                 status.AppendFormat("          Archive location: {0}\r\n", FilePath.TrimFileName(m_archiveLocation, 51));
+                status.AppendFormat("  Archive offload location: {0}\r\n", FilePath.TrimFileName(m_archiveOffloadLocation.ToNonNullString(), 51));
                 status.AppendFormat("      Publication interval: {0}\r\n", m_publicationInterval);
                 status.AppendFormat("               Auto-repeat: {0}\r\n", m_autoRepeat);
                 status.AppendFormat("            Start time-tag: {0}\r\n", m_startTime);
                 status.AppendFormat("             Stop time-tag: {0}\r\n", m_stopTime);
 
-                if (m_archiveFile != null)
-                    status.Append(m_archiveFile.Status);
+                if ((object)m_archiveReader != null)
+                    status.Append(m_archiveReader.Status);
 
                 return status.ToString();
             }
@@ -295,19 +318,23 @@ namespace HistorianAdapters
                 {
                     if (disposing)
                     {
-                        if (m_readTimer != null)
+                        if ((object)m_readTimer != null)
                         {
                             m_readTimer.Elapsed -= m_readTimer_Elapsed;
                             m_readTimer.Dispose();
+                            m_readTimer = null;
                         }
-                        m_readTimer = null;
 
-                        if (m_archiveFile != null)
+                        if ((object)m_archiveReader != null)
                         {
-                            m_archiveFile.Close();
-                            m_archiveFile.Dispose();
+                            m_archiveReader.HistoricFileListBuildStart -= m_archiveReader_HistoricFileListBuildStart;
+                            m_archiveReader.HistoricFileListBuildComplete -= m_archiveReader_HistoricFileListBuildComplete;
+                            m_archiveReader.HistoricFileListBuildException -= m_archiveReader_HistoricFileListBuildException;
+                            m_archiveReader.DataReadException -= m_archiveReader_DataReadException;
+                            m_archiveReader.Dispose();
+                            m_archiveReader.Dispose();
+                            m_archiveReader = null;
                         }
-                        m_archiveFile = null;
                     }
                 }
                 finally
@@ -338,6 +365,8 @@ namespace HistorianAdapters
             if (!settings.TryGetValue("archiveLocation", out m_archiveLocation))
                 throw new ArgumentException(string.Format(errorMessage, "archiveLocation"));
 
+            settings.TryGetValue("archiveOffloadLocation", out m_archiveOffloadLocation);
+
             if (!(settings.TryGetValue("publicationInterval", out setting) && long.TryParse(setting, out m_publicationInterval)))
                 m_publicationInterval = DefaultPublicationInterval;
 
@@ -350,8 +379,9 @@ namespace HistorianAdapters
             // Define output measurements this input adapter can support based on the instance name
             OutputSourceIDs = new[] { m_instanceName };
 
-            // Validate path name by assignment
+            // Validate path names by assignment
             ArchiveLocation = m_archiveLocation;
+            ArchiveOffloadLocation = m_archiveOffloadLocation;
         }
 
         /// <summary>
@@ -379,46 +409,25 @@ namespace HistorianAdapters
                 m_readTimer.Enabled = false;
 
                 // Attempt to open historian files
-                const string StateFileName = "{0}{1}_startup.dat";
-                const string IntercomFileName = "{0}scratch.dat";
-                const string MetadataFileName = "{0}{1}_dbase.dat";
-
                 if (Directory.Exists(m_archiveLocation))
                 {
                     // Specified directory is a valid one.
-                    string[] matches = Directory.GetFiles(m_archiveLocation, "*_archive.d");
+                    string[] matches = Directory.GetFiles(m_archiveLocation, "*_archive*.d");
 
                     if (matches.Length > 0)
                     {
                         // Capture the instance name
-                        string folder = FilePath.GetDirectoryName(matches[0]);
-                        string instance = FilePath.GetFileName(matches[0]).Split('_')[0];
+                        string fileName = matches[0].Remove(matches[0].IndexOf("_archive")) + "_archive.d";
 
                         // Setup historian reader
-                        m_archiveFile = new ArchiveFile();
-                        m_archiveFile.StateFile = new StateFile();
-                        m_archiveFile.StateFile.FileAccessMode = FileAccess.Read;
-                        m_archiveFile.StateFile.FileName = string.Format(StateFileName, folder, instance);
-
-                        m_archiveFile.IntercomFile = new IntercomFile();
-                        m_archiveFile.IntercomFile.FileAccessMode = FileAccess.Read;
-                        m_archiveFile.IntercomFile.FileName = string.Format(IntercomFileName, folder);
-
-                        m_archiveFile.MetadataFile = new MetadataFile();
-                        m_archiveFile.MetadataFile.FileAccessMode = FileAccess.Read;
-                        m_archiveFile.MetadataFile.FileName = string.Format(MetadataFileName, folder, instance);
-
-                        // Capture active archive
-                        m_archiveFile.FileAccessMode = FileAccess.Read;
-                        m_archiveFile.FileName = matches[0];
-
-                        m_archiveFile.HistoricFileListBuildStart += m_archiveFile_HistoricFileListBuildStart;
-                        m_archiveFile.HistoricFileListBuildComplete += m_archiveFile_HistoricFileListBuildComplete;
-                        m_archiveFile.HistoricFileListBuildException += m_archiveFile_HistoricFileListBuildException;
-                        m_archiveFile.DataReadException += m_archiveFile_DataReadException;
+                        m_archiveReader = new ArchiveReader();
+                        m_archiveReader.HistoricFileListBuildStart += m_archiveReader_HistoricFileListBuildStart;
+                        m_archiveReader.HistoricFileListBuildComplete += m_archiveReader_HistoricFileListBuildComplete;
+                        m_archiveReader.HistoricFileListBuildException += m_archiveReader_HistoricFileListBuildException;
+                        m_archiveReader.DataReadException += m_archiveReader_DataReadException;
 
                         // Open the active archive
-                        m_archiveFile.Open();
+                        m_archiveReader.Open(fileName, m_archiveLocation);
 
                         try
                         {
@@ -444,7 +453,7 @@ namespace HistorianAdapters
         /// </summary>
         protected override void AttemptDisconnection()
         {
-            if (m_readTimer != null)
+            if ((object)m_readTimer != null)
             {
                 m_readTimer.Enabled = false;
 
@@ -454,12 +463,16 @@ namespace HistorianAdapters
                 }
             }
 
-            if (m_archiveFile != null)
+            if ((object)m_archiveReader != null)
             {
-                m_archiveFile.Close();
-                m_archiveFile.Dispose();
+                m_archiveReader.HistoricFileListBuildStart -= m_archiveReader_HistoricFileListBuildStart;
+                m_archiveReader.HistoricFileListBuildComplete -= m_archiveReader_HistoricFileListBuildComplete;
+                m_archiveReader.HistoricFileListBuildException -= m_archiveReader_HistoricFileListBuildException;
+                m_archiveReader.DataReadException -= m_archiveReader_DataReadException;
+                m_archiveReader.Dispose();
             }
-            m_archiveFile = null;
+
+            m_archiveReader = null;
         }
 
         // Kick start read process for historian
@@ -467,7 +480,7 @@ namespace HistorianAdapters
         {
             MeasurementKey[] requestedKeys = SupportsTemporalProcessing ? RequestedOutputMeasurementKeys : OutputMeasurements.MeasurementKeys().ToArray();
 
-            if (Enabled && m_archiveFile != null && requestedKeys != null && requestedKeys.Length > 0)
+            if (Enabled && (object)m_archiveReader != null && (object)requestedKeys != null && requestedKeys.Length > 0)
             {
                 m_historianIDs = requestedKeys.Select(key => unchecked((int)key.ID)).ToArray();
                 m_publicationTime = 0;
@@ -478,7 +491,7 @@ namespace HistorianAdapters
                     m_startTime = base.StartTimeConstraint < TimeTag.MinValue ? TimeTag.MinValue : base.StartTimeConstraint > TimeTag.MaxValue ? TimeTag.MaxValue : new TimeTag(base.StartTimeConstraint);
                     m_stopTime = base.StopTimeConstraint < TimeTag.MinValue ? TimeTag.MinValue : base.StopTimeConstraint > TimeTag.MaxValue ? TimeTag.MaxValue : new TimeTag(base.StopTimeConstraint);
 
-                    m_dataReader = m_archiveFile.ReadData(m_historianIDs, m_startTime, m_stopTime).GetEnumerator();
+                    m_dataReader = m_archiveReader.ReadData(m_historianIDs, m_startTime, m_stopTime).GetEnumerator();
                     m_readTimer.Enabled = m_dataReader.MoveNext();
 
                     if (m_readTimer.Enabled)
@@ -548,7 +561,7 @@ namespace HistorianAdapters
                                 // Could be attempting read with a future end time - in these cases attempt to re-read current data
                                 // from now to end time in case any new data as been archived in the mean-time
                                 m_startTime = new TimeTag(timestamp + Ticks.PerMillisecond);
-                                m_dataReader = m_archiveFile.ReadData(m_historianIDs, m_startTime, m_stopTime).GetEnumerator();
+                                m_dataReader = m_archiveReader.ReadData(m_historianIDs, m_startTime, m_stopTime).GetEnumerator();
 
                                 if (!m_dataReader.MoveNext())
                                 {
@@ -593,22 +606,22 @@ namespace HistorianAdapters
                 OnNewMeasurements(measurements);
         }
 
-        private void m_archiveFile_DataReadException(object sender, EventArgs<Exception> e)
+        private void m_archiveReader_DataReadException(object sender, EventArgs<Exception> e)
         {
             OnProcessException(e.Argument);
         }
 
-        private void m_archiveFile_HistoricFileListBuildException(object sender, EventArgs<Exception> e)
+        private void m_archiveReader_HistoricFileListBuildException(object sender, EventArgs<Exception> e)
         {
             OnProcessException(e.Argument);
         }
 
-        private void m_archiveFile_HistoricFileListBuildStart(object sender, EventArgs e)
+        private void m_archiveReader_HistoricFileListBuildStart(object sender, EventArgs e)
         {
             OnStatusMessage("Building list of historic archive files...");
         }
 
-        private void m_archiveFile_HistoricFileListBuildComplete(object sender, EventArgs e)
+        private void m_archiveReader_HistoricFileListBuildComplete(object sender, EventArgs e)
         {
             OnStatusMessage("Completed building list of historic archive files.");
         }
