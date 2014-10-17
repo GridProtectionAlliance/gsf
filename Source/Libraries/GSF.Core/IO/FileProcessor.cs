@@ -159,7 +159,7 @@ namespace GSF.IO
         private readonly List<FileSystemWatcher> m_fileWatchers;
         private ProcessQueue<Action> m_processingQueue;
         private Timer m_fileWatchTimer;
-        private Mutex m_waitObject;
+        private ManualResetEvent m_waitObject;
 
         private readonly Dictionary<string, DateTime> m_touchedFiles;
         private readonly HashSet<string> m_processedFiles;
@@ -190,7 +190,7 @@ namespace GSF.IO
             m_processingQueue.ProcessException += (sender, args) => OnError(args.Argument);
             m_fileWatchTimer = new Timer(15000);
             m_fileWatchTimer.Elapsed += FileWatchTimer_Elapsed;
-            m_waitObject = new Mutex(true);
+            m_waitObject = new ManualResetEvent(false);
 
             m_touchedFiles = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
             m_processedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -334,7 +334,7 @@ namespace GSF.IO
 
                         if ((object)m_waitObject != null)
                         {
-                            m_waitObject.ReleaseMutex();
+                            m_waitObject.Set();
                             m_waitObject.Dispose();
                             m_waitObject = null;
                         }
