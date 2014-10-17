@@ -131,7 +131,7 @@ namespace GSF.Identity
                         exists =
                             (object)windowsPrincipal != null &&
                             !string.IsNullOrEmpty(m_parent.LoginID) &&
-                            string.Compare(windowsPrincipal.Identity.Name, m_parent.LoginID, StringComparison.OrdinalIgnoreCase) == 0 &&
+                            windowsPrincipal.Identity.Name.Equals(m_parent.LoginID, StringComparison.OrdinalIgnoreCase) &&
                             windowsPrincipal.Identity.IsAuthenticated;
                     }
                 }
@@ -452,7 +452,7 @@ namespace GSF.Identity
                 // See if identity for current thread matches user information login ID - when this is true we can check 
                 // if the current user is authenticated. When a user is authenticated we will also need to validate if
                 // the local groups that contain the local "NT AUTHORITY\Authenticated Users" group.
-                if (string.Compare(Thread.CurrentPrincipal.Identity.Name, m_parent.LoginID, StringComparison.OrdinalIgnoreCase) == 0)
+                if (Thread.CurrentPrincipal.Identity.Name.Equals(m_parent.LoginID, StringComparison.OrdinalIgnoreCase))
                     userIsAuthenticated = Thread.CurrentPrincipal.Identity.IsAuthenticated;
 
                 // Only enumerate groups

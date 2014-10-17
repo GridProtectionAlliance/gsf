@@ -490,6 +490,8 @@ namespace GSF.Identity
         /// <summary>
         /// Gets the account control information of the user.
         /// </summary>
+        /// <exception cref="SecurityException">User account control information cannot be obtained, may not have needed rights.</exception>
+        /// <exception cref="InvalidOperationException">Unknown error. Invalid value returned when querying user account control.</exception>
         public int UserAccountControl
         {
             get
@@ -523,6 +525,8 @@ namespace GSF.Identity
         /// <summary>
         /// Gets flag that determines if account is locked-out for this user.
         /// </summary>
+        /// <exception cref="SecurityException">User account control information cannot be obtained, may not have needed rights.</exception>
+        /// <exception cref="InvalidOperationException">Unknown error. Invalid value returned when querying user account control.</exception>
         public bool AccountIsLockedOut
         {
             get
@@ -534,6 +538,8 @@ namespace GSF.Identity
         /// <summary>
         /// Gets flag that determines if account is disabled for this user.
         /// </summary>
+        /// <exception cref="SecurityException">User account control information cannot be obtained, may not have needed rights.</exception>
+        /// <exception cref="InvalidOperationException">Unknown error. Invalid value returned when querying user account control.</exception>
         public bool AccountIsDisabled
         {
             get
@@ -545,6 +551,8 @@ namespace GSF.Identity
         /// <summary>
         /// Gets flag that determines if account password cannot change for this user.
         /// </summary>
+        /// <exception cref="SecurityException">User account control information cannot be obtained, may not have needed rights.</exception>
+        /// <exception cref="InvalidOperationException">Unknown error. Invalid value returned when querying user account control.</exception>
         public bool PasswordCannotChange
         {
             get
@@ -556,6 +564,8 @@ namespace GSF.Identity
         /// <summary>
         /// Gets flag that determines if account password does not expire for this user.
         /// </summary>
+        /// <exception cref="SecurityException">User account control information cannot be obtained, may not have needed rights.</exception>
+        /// <exception cref="InvalidOperationException">Unknown error. Invalid value returned when querying user account control.</exception>
         public bool PasswordDoesNotExpire
         {
             get

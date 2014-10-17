@@ -361,8 +361,8 @@ namespace GSF.Identity
 
                         exists =
                             (object)windowsPrincipal != null &&
-                            !string.IsNullOrEmpty(m_parent.UserName) &&
-                            string.Compare(windowsPrincipal.Identity.Name, m_parent.UserName, StringComparison.OrdinalIgnoreCase) == 0 &&
+                            ((!string.IsNullOrEmpty(m_parent.LoginID) && windowsPrincipal.Identity.Name.Equals(m_parent.LoginID, StringComparison.OrdinalIgnoreCase)) ||
+                            (!string.IsNullOrEmpty(m_parent.UserName) && windowsPrincipal.Identity.Name.Equals(m_parent.UserName, StringComparison.OrdinalIgnoreCase))) &&
                             windowsPrincipal.Identity.IsAuthenticated;
                     }
                 }
@@ -815,9 +815,53 @@ namespace GSF.Identity
                         {
                             m_connection = unixIdentity.Connection;
                             m_ldapRoot = unixIdentity.LdapRoot ?? m_parent.Domain;
+                        }
 
-                            if (string.IsNullOrEmpty(m_parent.m_ldapPath))
-                                m_parent.m_ldapPath = m_ldapRoot;
+                        // If no LDAP connection is available, attempt anonymous binding - note that this has to be enabled on AD as it is not enabled by default
+                        if ((object)m_connection == null)
+                        {
+                            try
+                            {
+                                // Try really hard to find a configured LDAP host
+                                string ldapHost = string.IsNullOrEmpty(m_parent.m_ldapPath) ? GetLdapHost() : m_parent.m_ldapPath;
+
+                                // If LDAP host cannot be determined, no LdapConnection can be established
+                                if (!string.IsNullOrEmpty(ldapHost))
+                                {
+                                    // Attempt LDAP account authentication                    
+                                    LdapConnection connection = new LdapConnection();
+
+                                    if (ldapHost.StartsWith("LDAP", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        Uri ldapURI = new Uri(ldapHost);
+                                        ldapHost = ldapURI.Host + (ldapURI.Port == 0 ? "" : ":" + ldapURI.Port);
+                                    }
+
+                                    // If host LDAP path contains suffixed port number (e.g., host:port), this will be preferred over specified 389 default
+                                    connection.Connect(ldapHost, 389);
+                                    connection.Bind(null, null);
+
+                                    if ((object)unixIdentity == null)
+                                    {
+                                        unixIdentity = new UnixIdentity(m_parent.Domain, m_parent.UserName, connection);
+                                        Thread.CurrentPrincipal = new WindowsPrincipal(unixIdentity);
+                                    }
+                                    else
+                                    {
+                                        unixIdentity.Connection = connection;
+                                    }
+
+                                    m_connection = connection;
+                                    m_ldapRoot = unixIdentity.LdapRoot ?? m_parent.Domain;
+
+                                    if (string.IsNullOrEmpty(m_parent.m_ldapPath))
+                                        m_parent.m_ldapPath = ldapHost;
+                                }
+                            }
+                            catch
+                            {
+                                m_connection = null;
+                            }
                         }
 
                         if ((object)m_connection != null)

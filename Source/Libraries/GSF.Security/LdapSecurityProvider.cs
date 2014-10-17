@@ -318,8 +318,8 @@ namespace GSF.Security
 
                 UserData.IsAuthenticated =
                     (object)m_windowsPrincipal != null &&
-                    !string.IsNullOrEmpty(UserData.LoginID) &&
-                    string.Compare(m_windowsPrincipal.Identity.Name, UserData.LoginID, StringComparison.OrdinalIgnoreCase) == 0 &&
+                    ((!string.IsNullOrEmpty(UserData.LoginID) && m_windowsPrincipal.Identity.Name.Equals(UserData.LoginID, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(UserData.Username) && m_windowsPrincipal.Identity.Name.Equals(UserData.Username, StringComparison.OrdinalIgnoreCase))) &&
                     m_windowsPrincipal.Identity.IsAuthenticated;
             }
             else
@@ -425,8 +425,19 @@ namespace GSF.Security
                         UserData.CompanyName = user.Company;
                         UserData.PhoneNumber = user.Telephone;
                         UserData.EmailAddress = user.Email;
-                        UserData.IsLockedOut = user.AccountIsLockedOut;
-                        UserData.IsDisabled = user.AccountIsDisabled;
+
+                        try
+                        {
+                            UserData.IsLockedOut = user.AccountIsLockedOut;
+                            UserData.IsDisabled = user.AccountIsDisabled;
+                        }
+                        catch (SecurityException)
+                        {
+                            // AD may restrict information on account availability, if so, have to make a safe assumption:
+                            UserData.IsLockedOut = true;
+                            UserData.IsDisabled = true;
+                        }
+
                         UserData.PasswordChangeDateTime = user.NextPasswordChangeDate;
                         UserData.AccountCreatedDateTime = user.AccountCreationDate;
 
