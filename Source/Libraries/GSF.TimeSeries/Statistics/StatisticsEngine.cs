@@ -37,6 +37,7 @@ using GSF.Configuration;
 using GSF.Data;
 using GSF.Diagnostics;
 using GSF.IO;
+using GSF.Parsing;
 using GSF.Threading;
 using GSF.TimeSeries.Adapters;
 using Timer = System.Timers.Timer;
@@ -60,6 +61,8 @@ namespace GSF.TimeSeries.Statistics
             public string SourceName;
             public string SourceCategory;
             public string SourceAcronym;
+            public string StatisticMeasurementNameFormat;
+
             public DataRow[] StatisticMeasurements;
         }
 
@@ -99,6 +102,7 @@ namespace GSF.TimeSeries.Statistics
             private StatisticSource m_source;
             private DataRow m_statistic;
 
+            private string m_name;
             private int? m_historianID;
             private object m_deviceID;
             private string m_pointTag;
@@ -135,6 +139,7 @@ namespace GSF.TimeSeries.Statistics
                 set
                 {
                     m_source = value;
+                    m_name = null;
                     m_deviceID = null;
                     m_company = null;
                 }
@@ -149,9 +154,18 @@ namespace GSF.TimeSeries.Statistics
                 set
                 {
                     m_statistic = value;
+                    m_name = null;
                     m_pointTag = null;
                     m_signalReference = null;
                     m_description = null;
+                }
+            }
+
+            public string Name
+            {
+                get
+                {
+                    return m_name ?? (m_name = GetName());
                 }
             }
 
@@ -235,14 +249,6 @@ namespace GSF.TimeSeries.Statistics
                 }
             }
 
-            private string Name
-            {
-                get
-                {
-                    return m_source.SourceName;
-                }
-            }
-
             private string Category
             {
                 get
@@ -278,6 +284,31 @@ namespace GSF.TimeSeries.Statistics
             #endregion
 
             #region [ Methods ]
+
+            private string GetName()
+            {
+                string arguments;
+                Dictionary<string, string> substitutions;
+                TemplatedExpressionParser parser;
+
+                arguments = m_statistic.Field<string>("Arguments");
+                substitutions = arguments.ParseKeyValuePairs();
+                parser = new TemplatedExpressionParser();
+                parser.TemplatedExpression = m_source.StatisticMeasurementNameFormat;
+
+                if (substitutions.Count == 0)
+                {
+                    substitutions = arguments
+                        .Split(',')
+                        .Select((arg, index) => Tuple.Create(index.ToString(), arg))
+                        .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
+                }
+
+                substitutions = substitutions.ToDictionary(kvp => string.Concat("{", kvp.Key, "}"), kvp => kvp.Value);
+                substitutions["{}"] = m_source.SourceName;
+
+                return parser.Execute(substitutions);
+            }
 
             private int GetHistorianID()
             {
@@ -674,8 +705,8 @@ namespace GSF.TimeSeries.Statistics
 
         private void UpdateStatisticMeasurements()
         {
-            const string StatisticSelectFormat = "SELECT Source, SignalIndex, Description FROM Statistic WHERE Enabled <> 0";
-            const string StatisticMeasurementSelectFormat = "SELECT SignalReference FROM ActiveMeasurement WHERE SignalType = 'STAT' AND SignalReference LIKE {0}";
+            const string StatisticSelectFormat = "SELECT Source, SignalIndex, Arguments, Description FROM Statistic WHERE Enabled <> 0";
+            const string StatisticMeasurementSelectFormat = "SELECT SignalReference FROM ActiveMeasurement WHERE SignalReference IN ({0})";
             const string StatisticMeasurementInsertFormat = "INSERT INTO Measurement(HistorianID, DeviceID, PointTag, SignalTypeID, SignalReference, Description, Enabled) VALUES({0}, {1}, {2}, {3}, {4}, {5}, 1)";
 
             StatisticSource[] sources;
@@ -713,22 +744,35 @@ namespace GSF.TimeSeries.Statistics
                 // Make sure the full set of statistic measurements are defined for each source
                 foreach (StatisticSource source in sources)
                 {
+                    List<string> signalReferences;
+                    string args;
+
                     // If no statistics exist for this category,
                     // there are no statistics that can be created for this source
                     if (!statisticsLookup.TryGetValue(source.SourceCategory, out statistics))
                         continue;
-                    
-                    // Get the statistic measurements from the database which have already been defined for this source
-                    signalReferencePattern = string.Format("{0}!{1}-ST%", source.SourceName, source.SourceAcronym);
-                    statisticMeasurements = helper.RetrieveData(StatisticMeasurementSelectFormat, signalReferencePattern).Select().ToList();
 
+                    // Build a list of signal references for this source
+                    // based on the statistics in this category
+                    signalReferences = new List<string>();
+
+                    helper.Source = source;
+
+                    foreach (DataRow statistic in statistics)
+                    {
+                        helper.Statistic = statistic;
+                        signalReferences.Add(helper.SignalReference);
+                    }
+
+                    // Get the statistic measurements from the database which have already been defined for this source
+                    args = string.Join(",", signalReferences.Select((signalReference, index) => string.Concat("{", index, "}")));
+                    statisticMeasurements = helper.RetrieveData(string.Format(StatisticMeasurementSelectFormat, args), signalReferences.ToArray<object>()).Select().ToList();
+                    
                     // If the number of statistics for the source category matches
                     // the number of statistic measurements for the source, assume
                     // all is well and move to the next source
                     if (statistics.Count == statisticMeasurements.Count)
                         continue;
-
-                    helper.Source = source;
 
                     // Get a collection of signal indexes already have statistic measurements
                     existingIndexes = new HashSet<int>(statisticMeasurements
@@ -1090,9 +1134,10 @@ namespace GSF.TimeSeries.Statistics
         /// <param name="adapter">The source of the statistics.</param>
         /// <param name="sourceCategory">The category of the statistics.</param>
         /// <param name="sourceAcronym">The acronym used in signal references.</param>
-        public static void Register(IAdapter adapter, string sourceCategory, string sourceAcronym)
+        /// <param name="statisticMeasurementNameFormat">Format string used to name statistic measurements for this source.</param>
+        public static void Register(IAdapter adapter, string sourceCategory, string sourceAcronym, string statisticMeasurementNameFormat = "{}")
         {
-            Register(adapter, adapter.Name, sourceCategory, sourceAcronym);
+            Register(adapter, adapter.Name, sourceCategory, sourceAcronym, statisticMeasurementNameFormat);
         }
 
         /// <summary>
@@ -1102,7 +1147,8 @@ namespace GSF.TimeSeries.Statistics
         /// <param name="sourceName">The name of the source.</param>
         /// <param name="sourceCategory">The category of the statistics.</param>
         /// <param name="sourceAcronym">The acronym used in signal references.</param>
-        public static void Register(object source, string sourceName, string sourceCategory, string sourceAcronym)
+        /// <param name="statisticMeasurementNameFormat">Format string used to name statistic measurements for this source.</param>
+        public static void Register(object source, string sourceName, string sourceCategory, string sourceAcronym, string statisticMeasurementNameFormat = "{}")
         {
             StatisticSource sourceInfo;
             IAdapter adapter;
@@ -1112,7 +1158,8 @@ namespace GSF.TimeSeries.Statistics
                 Source = source,
                 SourceName = sourceName,
                 SourceCategory = sourceCategory,
-                SourceAcronym = sourceAcronym
+                SourceAcronym = sourceAcronym,
+                StatisticMeasurementNameFormat = statisticMeasurementNameFormat
             };
 
             lock (StatisticSources)

@@ -398,7 +398,7 @@ namespace GSF.TimeSeries
         /// Data operation to validate and ensure that certain records
         /// that are required for alarming exist in the database.
         /// </summary>
-        private static void ValidateAlarming(AdoDataConnection database, string nodeIDQueryString)
+        private static void ValidateAlarming(AdoDataConnection connection, string nodeIDQueryString)
         {
             // SELECT queries
             const string AlarmCountFormat = "SELECT COUNT(*) FROM Alarm";
@@ -412,6 +412,8 @@ namespace GSF.TimeSeries
             const string AlarmSignalTypeInsertFormat = "INSERT INTO SignalType(Name, Acronym, Suffix, Abbreviation, Source, EngineeringUnits) VALUES('Alarm', 'ALRM', 'AL', 'AL', 'Any', '')";
 
             bool alarmTableExists;
+
+            Guid nodeID;
             int alarmAdapterCount;
             int alarmConfigEntityCount;
             int alarmSignalTypeCount;
@@ -420,7 +422,7 @@ namespace GSF.TimeSeries
             {
                 // Determine whether the alarm table exists
                 // before inserting records related to alarming
-                database.Connection.ExecuteScalar(AlarmCountFormat);
+                connection.Connection.ExecuteScalar(AlarmCountFormat);
                 alarmTableExists = true;
             }
             catch
@@ -430,71 +432,76 @@ namespace GSF.TimeSeries
 
             if (alarmTableExists)
             {
+                nodeID = Guid.Parse(nodeIDQueryString.Trim('\''));
+
                 // Ensure that the alarm adapter is defined.
-                alarmAdapterCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(AlarmAdapterCountFormat, nodeIDQueryString)));
+                alarmAdapterCount = connection.ExecuteScalar<int>(AlarmAdapterCountFormat, nodeID);
 
                 if (alarmAdapterCount == 0)
-                    database.Connection.ExecuteNonQuery(string.Format(AlarmAdapterInsertFormat, nodeIDQueryString));
+                    connection.ExecuteNonQuery(AlarmAdapterInsertFormat, nodeID);
 
                 // Ensure that the alarm record is defined in the ConfigurationEntity table.
-                alarmConfigEntityCount = Convert.ToInt32(database.Connection.ExecuteScalar(AlarmConfigEntityCountFormat));
+                alarmConfigEntityCount = connection.ExecuteScalar<int>(AlarmConfigEntityCountFormat);
 
                 if (alarmConfigEntityCount == 0)
-                    database.Connection.ExecuteNonQuery(AlarmConfigEntityInsertFormat);
+                    connection.ExecuteNonQuery(AlarmConfigEntityInsertFormat);
 
                 // Ensure that the alarm record is defined in the SignalType table.
-                alarmSignalTypeCount = Convert.ToInt32(database.Connection.ExecuteScalar(AlarmSignalTypeCountFormat));
+                alarmSignalTypeCount = connection.ExecuteScalar<int>(AlarmSignalTypeCountFormat);
 
                 if (alarmSignalTypeCount == 0)
-                    database.Connection.ExecuteNonQuery(AlarmSignalTypeInsertFormat);
+                    connection.ExecuteNonQuery(AlarmSignalTypeInsertFormat);
+
+                ValidateAlarmStatistics(connection, nodeID, "Point");
             }
         }
 
-        // Gets the name of the node identified by the given node ID query string.
-        private static string GetNodeName(AdoDataConnection database, string nodeIDQueryString)
+        private static void ValidateAlarmStatistics(AdoDataConnection connection, Guid nodeID, string source)
         {
-            const string NodeNameFormat = "SELECT Name FROM Node WHERE ID = {0}";
-            return database.Connection.ExecuteScalar(string.Format(NodeNameFormat, nodeIDQueryString)).ToString();
-        }
+            const string TotalAlarmStatisticCountFormat = "SELECT COUNT(*) FROM Statistic WHERE Source = {0} AND MethodName = {1}";
 
-        // Attempts to get company acronym from device table in database
-        private static bool TryGetCompanyAcronymFromDevice(AdoDataConnection database, int deviceID, out string companyAcronym)
-        {
-            const string CompanyIDFormat = "SELECT CompanyID FROM Device WHERE ID = {0}";
-            const string CompanyAcronymFormat = "SELECT MapAcronym FROM Company WHERE ID = {0}";
-            int companyID;
+            const string MissingStatisticsFormat = "SELECT Severity FROM Alarm WHERE Severity NOT IN (SELECT Arguments FROM Statistic WHERE Source = {0} AND MethodName = {1})";
+            const string MaxSignalIndexFormat = "SELECT COALESCE(MAX(SignalIndex), 0) FROM Statistic WHERE Source = {0}";
+            const string InsertAlarmStatisticFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12})";
 
-            try
+            string methodName;
+
+            int totalAlarmStatisticCount;
+            DataTable missingStatistics;
+
+            int signalIndex;
+            int severity;
+            string name;
+            string description;
+
+            // Ensure that the total alarm count statistic exists in the database.
+            methodName = string.Format("Get{0}Statistic_TotalAlarmCount", source);
+            totalAlarmStatisticCount = connection.ExecuteScalar<int>(TotalAlarmStatisticCountFormat, source, methodName);
+
+            if (totalAlarmStatisticCount == 0)
             {
-                companyID = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(CompanyIDFormat, deviceID)));
-                companyAcronym = database.Connection.ExecuteScalar(string.Format(CompanyAcronymFormat, companyID)).ToNonNullString();
-                return true;
+                signalIndex = connection.ExecuteScalar<int>(MaxSignalIndexFormat, source) + 1;
+                connection.ExecuteNonQuery(InsertAlarmStatisticFormat, source, signalIndex, "Total Alarm Count", "Number of alarms that were raised during the last reporting interval.", "DataQualityMonitoring.dll", "DataQualityMonitoring.AlarmStatistics", methodName, "TOTAL", 1, "System.Int32", "{0:N0}", 0, 0);
             }
-            catch
+
+            // Add statistics for the alarms defined in the Alarm table.
+            methodName = string.Format("Get{0}Statistic_AlarmCountForSeverity", source);
+            missingStatistics = connection.RetrieveData(MissingStatisticsFormat, source, methodName);
+
+            if (missingStatistics.Rows.Count > 0)
             {
-                companyAcronym = string.Empty;
-                return false;
+                signalIndex = connection.ExecuteScalar<int>(MaxSignalIndexFormat, source);
+
+                foreach (DataRow missingStatistic in missingStatistics.Rows)
+                {
+                    signalIndex++;
+                    severity = missingStatistic.ConvertField<int>("Severity");
+                    name = string.Format("Alarm Severity {0}", severity);
+                    description = string.Format("Number of alarms of severity {0} that were raised during the last reporting interval.", severity);
+
+                    connection.ExecuteNonQuery(InsertAlarmStatisticFormat, source, signalIndex, name, description, "DataQualityMonitoring.dll", "DataQualityMonitoring.AlarmStatistics", methodName, severity, 1, "System.Int32", "{0:N0}", 0, 1001 - severity);
+                }
             }
-        }
-
-        // Attempts to get company acronym from database and, failing
-        // that, attempts to get it from the configuration file.
-        private static string GetCompanyAcronym(AdoDataConnection database, string nodeIDQueryString)
-        {
-            const string NodeCompanyIDFormat = "SELECT CompanyID FROM Node WHERE ID = {0}";
-            const string CompanyAcronymFormat = "SELECT MapAcronym FROM Company WHERE ID = {0}";
-
-            int nodeCompanyID;
-            string companyAcronym;
-
-            nodeCompanyID = int.Parse(database.Connection.ExecuteScalar(string.Format(NodeCompanyIDFormat, nodeIDQueryString)).ToNonNullString("0"));
-
-            if (nodeCompanyID > 0)
-                companyAcronym = database.Connection.ExecuteScalar(string.Format(CompanyAcronymFormat, nodeCompanyID)).ToNonNullString();
-            else
-                companyAcronym = ConfigurationFile.Current.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
-
-            return companyAcronym;
         }
     }
 }

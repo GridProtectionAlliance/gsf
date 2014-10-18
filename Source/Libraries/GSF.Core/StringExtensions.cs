@@ -1209,7 +1209,7 @@ namespace GSF
         /// <returns>A string with replacements.</returns>
         public static string ReplaceCaseInsensitive(this string value, string fromText, string toText)
         {
-            return (new Regex(fromText, RegexOptions.IgnoreCase | RegexOptions.Multiline)).Replace(value, toText);
+            return (new Regex(Regex.Escape(fromText), RegexOptions.IgnoreCase | RegexOptions.Multiline)).Replace(value, toText);
         }
 
         /// <summary>

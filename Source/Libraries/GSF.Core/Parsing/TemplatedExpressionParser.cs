@@ -111,7 +111,7 @@ namespace GSF.Parsing
             m_expressionParser = new Regex(string.Format(ExpressionParser, startExpressionDelimiter, endExpressionDelimiter), RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
             // Reserved symbols include all expression operators and delimiters (hashset keeps symbol list unique)
-            HashSet<string> escapedReservedSymbols = new HashSet<string>(new[] { "\\<", "\\>", "\\=", "\\!", "\\" + startTokenDelimiter, "\\" + endTokenDelimiter, "\\" + startExpressionDelimiter, "\\" + endExpressionDelimiter });
+            HashSet<string> escapedReservedSymbols = new HashSet<string>(new[] { "\\\\", "\\<", "\\>", "\\=", "\\!", "\\" + startTokenDelimiter, "\\" + endTokenDelimiter, "\\" + startExpressionDelimiter, "\\" + endExpressionDelimiter });
             m_escapedReservedSymbols = escapedReservedSymbols.ToArray();
             m_encodedReservedSymbols = new string[m_escapedReservedSymbols.Length];
 
@@ -158,7 +158,7 @@ namespace GSF.Parsing
         /// Gets the reserved symbols - this includes all delimiters and expression operators.
         /// </summary>
         /// <remarks>
-        /// The default reserved symbol list is: &lt;, &gt;, =, !, {, }, [ and ]
+        /// The default reserved symbol list is: \, &lt;, &gt;, =, !, {, }, [ and ]
         /// </remarks>
         public char[] ReservedSymbols
         {
