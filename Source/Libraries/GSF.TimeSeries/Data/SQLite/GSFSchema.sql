@@ -1465,8 +1465,8 @@ END;
 CREATE TRIGGER Alarm_InsertDefault AFTER INSERT ON Alarm
 FOR EACH ROW
 BEGIN
-    UPDATE OutputStreamMeasurement SET CreatedOn = strftime('%Y-%m-%d %H:%M:%f') WHERE ROWID = NEW.ROWID AND CreatedOn = '';
-    UPDATE OutputStreamMeasurement SET UpdatedOn = strftime('%Y-%m-%d %H:%M:%f') WHERE ROWID = NEW.ROWID AND UpdatedOn = '';
+    UPDATE Alarm SET CreatedOn = strftime('%Y-%m-%d %H:%M:%f') WHERE ROWID = NEW.ROWID AND CreatedOn = '';
+    UPDATE Alarm SET UpdatedOn = strftime('%Y-%m-%d %H:%M:%f') WHERE ROWID = NEW.ROWID AND UpdatedOn = '';
 END;
 
 CREATE TRIGGER Phasor_InsertDefault AFTER INSERT ON Phasor
