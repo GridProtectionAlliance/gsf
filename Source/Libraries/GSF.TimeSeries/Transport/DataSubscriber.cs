@@ -1593,8 +1593,10 @@ namespace GSF.TimeSeries.Transport
             {
                 if ((object)OutputMeasurements != null && (object)DataSource != null && DataSource.Tables.Contains("ActiveMeasurements"))
                 {
+                    // Have to use a Convert expression for DeviceID column in Select function
+                    // here since SQLite doesn't report data types for COALESCE based columns
                     measurementIDs = DataSource.Tables["ActiveMeasurements"]
-                        .Select(string.Format("DeviceID = {0}", ID))
+                        .Select(string.Format("Convert(DeviceID, 'System.String') = '{0}'", ID))
                         .Where(row => Guid.TryParse(row["SignalID"].ToNonNullString(), out signalID))
                         .Select(row => signalID);
 
