@@ -497,6 +497,10 @@ namespace GSF.TimeSeries.Statistics
                 OnProcessException(new InvalidOperationException(message, ex));
             });
 
+            m_updateStatisticMeasurementsOperation.IsBackground = true;
+            m_loadStatisticsOperation.IsBackground = true;
+            m_calculateStatisticsOperation.IsBackground = true;
+
             m_performanceMonitor = new PerformanceMonitor();
             m_dataSourceCache = new Dictionary<string, List<DataRow>>(StringComparer.OrdinalIgnoreCase);
 
@@ -597,7 +601,7 @@ namespace GSF.TimeSeries.Statistics
                 if (m_lastStatisticCalculationTime == default(DateTime))
                     m_lastStatisticCalculationTime = measurement.Timestamp;
 
-                base.QueueMeasurementForProcessing(measurement);
+                base.QueueMeasurementsForProcessing(new IMeasurement[] { measurement });
 
                 if (!UseLocalClockAsRealTime && TrackLatestMeasurements)
                 {
@@ -713,8 +717,6 @@ namespace GSF.TimeSeries.Statistics
 
             Dictionary<string, List<DataRow>> statisticsLookup;
             List<DataRow> statistics;
-
-            string signalReferencePattern;
             List<DataRow> statisticMeasurements;
 
             DBUpdateHelper helper;

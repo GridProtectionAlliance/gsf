@@ -459,6 +459,7 @@ namespace GSF.TimeSeries.Transport
 
         private Timer m_subscribedDevicesTimer;
 
+        private bool m_useLocalClockForStatistics;
         private long m_lifetimeMeasurements;
         private long m_minimumMeasurementsPerSecond;
         private long m_maximumMeasurementsPerSecond;
@@ -519,6 +520,7 @@ namespace GSF.TimeSeries.Transport
             DataLossInterval = 10.0D;
 
             m_bufferBlockCache = new List<BufferBlockMeasurement>();
+            m_useLocalClockForStatistics = true;
         }
 
         #endregion
@@ -1358,6 +1360,9 @@ namespace GSF.TimeSeries.Transport
             // Define buffer size
             if (!settings.TryGetValue("bufferSize", out setting) || !int.TryParse(setting, out bufferSize))
                 bufferSize = ClientBase.DefaultReceiveBufferSize;
+
+            if (!settings.TryGetValue("useLocalClockForStatistics", out setting))
+                m_useLocalClockForStatistics = setting.ParseBoolean();
 
             if (m_autoConnect)
             {
@@ -2822,15 +2827,19 @@ namespace GSF.TimeSeries.Transport
                                 OnNewMeasurements(measurements);
 
                             // Gather statistics on received data
-                            long timeReceived = DateTime.UtcNow.Ticks;
-                            int measurementCount = measurements.Count();
+                            DateTime timeReceived;
 
-                            m_lifetimeMeasurements += measurementCount;
-                            UpdateMeasurementsPerSecond(measurementCount);
+                            if (m_useLocalClockForStatistics)
+                                timeReceived = DateTime.UtcNow;
+                            else
+                                timeReceived = measurements.Max(measurement => measurement.Timestamp);
+
+                            m_lifetimeMeasurements += measurements.Count;
+                            UpdateMeasurementsPerSecond(timeReceived, measurements.Count);
 
                             for (int x = 0; x < measurements.Count; x++)
                             {
-                                long latency = timeReceived - (long)measurements[x].Timestamp;
+                                long latency = timeReceived.Ticks - (long)measurements[x].Timestamp;
 
                                 if (m_lifetimeMinimumLatency > latency || m_lifetimeMinimumLatency == 0)
                                     m_lifetimeMinimumLatency = latency;
@@ -2908,7 +2917,7 @@ namespace GSF.TimeSeries.Transport
                             }
 
                             m_lifetimeMeasurements += 1;
-                            UpdateMeasurementsPerSecond(1);
+                            UpdateMeasurementsPerSecond(DateTime.UtcNow, 1);
                             break;
                         case ServerResponse.DataStartTime:
                             // Raise data start time event
@@ -4251,9 +4260,9 @@ namespace GSF.TimeSeries.Transport
         }
 
         // Updates the measurements per second counters after receiving another set of measurements.
-        private void UpdateMeasurementsPerSecond(int measurementCount)
+        private void UpdateMeasurementsPerSecond(DateTime now, int measurementCount)
         {
-            long secondsSinceEpoch = DateTime.UtcNow.Ticks / Ticks.PerSecond;
+            long secondsSinceEpoch = now.Ticks / Ticks.PerSecond;
 
             if (secondsSinceEpoch > m_lastSecondsSinceEpoch)
             {

@@ -460,7 +460,7 @@ namespace GSF.TimeSeries
         {
             const string TotalAlarmStatisticCountFormat = "SELECT COUNT(*) FROM Statistic WHERE Source = {0} AND MethodName = {1}";
 
-            const string MissingStatisticsFormat = "SELECT Severity FROM Alarm WHERE Severity NOT IN (SELECT Arguments FROM Statistic WHERE Source = {0} AND MethodName = {1})";
+            const string MissingStatisticsFormat = "SELECT DISTINCT Severity FROM Alarm WHERE Severity NOT IN (SELECT Arguments FROM Statistic WHERE Source = {0} AND MethodName = {1})";
             const string MaxSignalIndexFormat = "SELECT COALESCE(MAX(SignalIndex), 0) FROM Statistic WHERE Source = {0}";
             const string InsertAlarmStatisticFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12})";
 

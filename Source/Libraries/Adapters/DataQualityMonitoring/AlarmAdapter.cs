@@ -57,6 +57,15 @@ namespace DataQualityMonitoring
             public AlarmStatistics Statistics;
         }
 
+        private class StateChange
+        {
+            public Guid SignalID;
+            public int? OldStateID;
+            public int? NewStateID;
+            public DateTime Timestamp;
+            public double Value;
+        }
+
         // Constants
         private const int UpToDate = 0;
         private const int Modified = 1;
@@ -72,6 +81,12 @@ namespace DataQualityMonitoring
         private Dictionary<Guid, SignalAlarms> m_alarmLookup;
         private AlarmService m_alarmService;
         private long m_eventCount;
+
+        private LongSynchronizedOperation m_alarmLogOperation;
+        private DoubleBufferedQueue<StateChange> m_stateChanges;
+        private bool m_useAlarmLog;
+        private int m_bulkInsertLimit;
+        private int m_logProcessingDelay;
 
         private bool m_supportsTemporalProcessing;
         private bool m_disposed;
@@ -90,6 +105,10 @@ namespace DataQualityMonitoring
 
             m_measurementQueue = new DoubleBufferedQueue<IMeasurement>();
             m_processMeasurementsOperation = new MixedSynchronizedOperation(ProcessMeasurements, OnProcessException);
+
+            m_alarmLogOperation = new LongSynchronizedOperation(LogStateChanges, OnProcessException);
+            m_stateChanges = new DoubleBufferedQueue<StateChange>();
+            m_alarmLogOperation.IsBackground = true;
         }
 
         #endregion
@@ -132,6 +151,61 @@ namespace DataQualityMonitoring
         }
 
         /// <summary>
+        /// Gets or sets the flag indicating whether the alarm adapter should
+        /// use the alarm log to track recently modified alarm states.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the flag indicating whether to use the alarm log to track recently modified alarm states."),
+        DefaultValue(true)]
+        public bool UseAlarmLog
+        {
+            get
+            {
+                return m_useAlarmLog;
+            }
+            set
+            {
+                m_useAlarmLog = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum number of alarm state changes to pack into one alarm log insert query.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the maximum number of alarm state changes to pack into one alarm log insert query."),
+        DefaultValue(300)]
+        public int BulkInsertLimit
+        {
+            get
+            {
+                return m_bulkInsertLimit;
+            }
+            set
+            {
+                m_bulkInsertLimit = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the amount of time, in seconds, to wait for alarm log state changes between bulk inserts.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the amount of time, in seconds, to wait for alarm log state changes between bulk inserts."),
+        DefaultValue(1.0D)]
+        public double LogProcessingDelay
+        {
+            get
+            {
+                return m_logProcessingDelay / 1000.0D;
+            }
+            set
+            {
+                m_logProcessingDelay = (int)(value * 1000.0D);
+            }
+        }
+
+        /// <summary>
         /// Returns the detailed status of the data input source.
         /// </summary>
         public override string Status
@@ -155,6 +229,7 @@ namespace DataQualityMonitoring
         {
             Dictionary<string, string> settings;
             string setting;
+            double logProcessingDelay;
 
             // Run base class initialization
             base.Initialize();
@@ -165,6 +240,19 @@ namespace DataQualityMonitoring
                 m_supportsTemporalProcessing = setting.ParseBoolean();
             else
                 m_supportsTemporalProcessing = false;
+
+            if (settings.TryGetValue("useAlarmLog", out setting))
+                m_useAlarmLog = setting.ParseBoolean();
+            else
+                m_useAlarmLog = true;
+
+            if (!settings.TryGetValue("bulkInsertLimit", out setting) || !int.TryParse(setting, out m_bulkInsertLimit))
+                m_bulkInsertLimit = 300;
+
+            if (settings.TryGetValue("logProcessingDelay", out setting) && double.TryParse(setting, out logProcessingDelay))
+                m_logProcessingDelay = (int)(logProcessingDelay * 1000.0D);
+            else
+                m_logProcessingDelay = 1000;
 
             try
             {
@@ -357,8 +445,6 @@ namespace DataQualityMonitoring
             Dictionary<Guid, SignalAlarms> newAlarmLookup;
             List<IMeasurement> alarmEvents;
 
-            AdoDataConnection connection;
-
             // Get the current time in case we need
             // to generate alarm events for cleared alarms
             now = DateTime.UtcNow;
@@ -429,62 +515,40 @@ namespace DataQualityMonitoring
                         .ToList()
                 });
 
-            // Initialize the database connection variable
-            // in case we need to generate alarm log entries
-            connection = null;
-
-            try
+            // Check for changes to alarms that need to go in the alarm log
+            foreach (KeyValuePair<Guid, SignalAlarms> kvp in m_alarmLookup)
             {
-                // Check for changes to alarms that need to go in the alarm log
-                foreach (KeyValuePair<Guid, SignalAlarms> kvp in m_alarmLookup)
+                SignalAlarms existingAlarms = kvp.Value;
+                SignalAlarms definedAlarms;
+
+                // Get the active alarms from both before and after the configuration changes were applied
+                Alarm existingActiveAlarm = existingAlarms.Alarms.FirstOrDefault(alarm => alarm.State == AlarmState.Raised);
+                Alarm definedActiveAlarm = null;
+
+                if (newAlarmLookup.TryGetValue(kvp.Key, out definedAlarms))
                 {
-                    SignalAlarms existingAlarms = kvp.Value;
-                    SignalAlarms definedAlarms;
-
-                    // Get the active alarms from both before and after the configuration changes were applied
-                    Alarm existingActiveAlarm = existingAlarms.Alarms.FirstOrDefault(alarm => alarm.State == AlarmState.Raised);
-                    Alarm definedActiveAlarm = null;
-
-                    if (newAlarmLookup.TryGetValue(kvp.Key, out definedAlarms))
-                    {
-                        definedAlarms.Statistics = existingAlarms.Statistics;
-                        definedActiveAlarm = definedAlarms.Alarms.FirstOrDefault(alarm => alarm.State == AlarmState.Raised);
-                    }
-                    else
-                    {
-                        StatisticsEngine.Unregister(existingAlarms.Statistics);
-                    }
-
-                    if ((object)definedActiveAlarm != null && (object)existingActiveAlarm != null)
-                    {
-                        // If the active alarm has changed as a result
-                        // of the configuration change, log the change
-                        if (definedActiveAlarm.ID != existingActiveAlarm.ID)
-                        {
-                            if ((object)connection == null)
-                                connection = new AdoDataConnection("systemSettings");
-
-                            LogStateChange(connection, kvp.Key, existingActiveAlarm, definedActiveAlarm, now, double.NaN);
-                        }
-                    }
-                    else if ((object)existingActiveAlarm != null)
-                    {
-                        // If alarms were raised before the configuration change,
-                        // but have all been cleared as a result of the
-                        // configuration change, log the change
-                        if ((object)connection == null)
-                            connection = new AdoDataConnection("systemSettings");
-
-                        LogStateChange(connection, kvp.Key, existingActiveAlarm, null, now, double.NaN);
-                    }
+                    definedAlarms.Statistics = existingAlarms.Statistics;
+                    definedActiveAlarm = definedAlarms.Alarms.FirstOrDefault(alarm => alarm.State == AlarmState.Raised);
                 }
-            }
-            finally
-            {
-                // If we created a connection object to log
-                // alarm state changes, dispose of it now
-                if ((object)connection != null)
-                    connection.Dispose();
+                else
+                {
+                    StatisticsEngine.Unregister(existingAlarms.Statistics);
+                }
+
+                if ((object)definedActiveAlarm != null && (object)existingActiveAlarm != null)
+                {
+                    // If the active alarm has changed as a result
+                    // of the configuration change, log the change
+                    if (definedActiveAlarm.ID != existingActiveAlarm.ID)
+                        LogStateChange(kvp.Key, existingActiveAlarm, definedActiveAlarm, now, double.NaN);
+                }
+                else if ((object)existingActiveAlarm != null)
+                {
+                    // If alarms were raised before the configuration change,
+                    // but have all been cleared as a result of the
+                    // configuration change, log the change
+                    LogStateChange(kvp.Key, existingActiveAlarm, null, now, double.NaN);
+                }
             }
 
             // Use SignalReference as the name of the signal when creating statistic source
@@ -533,48 +597,34 @@ namespace DataQualityMonitoring
             Alarm firstRaisedAlarm;
             List<IMeasurement> alarmEvents;
 
-            AdoDataConnection connection;
-
             alarmEvents = new List<IMeasurement>();
-            connection = null;
 
-            try
+            foreach (IMeasurement measurement in measurements)
             {
-                foreach (IMeasurement measurement in measurements)
+                lock (m_alarmLock)
                 {
-                    lock (m_alarmLock)
-                    {
-                        // Get alarms that apply to the measurement being processed
-                        if (!m_alarmLookup.TryGetValue(measurement.ID, out alarms))
-                            continue;
+                    // Get alarms that apply to the measurement being processed
+                    if (!m_alarmLookup.TryGetValue(measurement.ID, out alarms))
+                        continue;
 
-                        // Get the currently active alarm
-                        activeAlarm = alarms.Alarms.FirstOrDefault(alarm => alarm.State == AlarmState.Raised);
+                    // Get the currently active alarm
+                    activeAlarm = alarms.Alarms.FirstOrDefault(alarm => alarm.State == AlarmState.Raised);
 
-                        // Test each alarm to determine whether their states have changed
-                        alarmEvents.AddRange(alarms.Alarms.Where(alarm => alarm.Test(measurement)).Select(alarm => CreateAlarmEvent(measurement.Timestamp, alarm)));
+                    // Test each alarm to determine whether their states have changed
+                    alarmEvents.AddRange(alarms.Alarms.Where(alarm => alarm.Test(measurement)).Select(alarm => CreateAlarmEvent(measurement.Timestamp, alarm)));
 
-                        // Get the alarm that will become the currently active alarm
-                        firstRaisedAlarm = alarms.Alarms.FirstOrDefault(alarm => alarm.State == AlarmState.Raised);
-                    }
-
-                    // Update alarm log to show changes in state of active alarms
-                    if (firstRaisedAlarm != activeAlarm)
-                    {
-                        if (connection == null)
-                            connection = new AdoDataConnection("systemSettings");
-
-                        LogStateChange(connection, measurement.ID, activeAlarm, firstRaisedAlarm, measurement.Timestamp, measurement.Value);
-
-                        if ((object)firstRaisedAlarm != null && ((object)activeAlarm == null || firstRaisedAlarm.Severity > activeAlarm.Severity))
-                            alarms.Statistics.IncrementCounters(firstRaisedAlarm);
-                    }
+                    // Get the alarm that will become the currently active alarm
+                    firstRaisedAlarm = alarms.Alarms.FirstOrDefault(alarm => alarm.State == AlarmState.Raised);
                 }
-            }
-            finally
-            {
-                if ((object)connection != null)
-                    connection.Dispose();
+
+                // Update alarm log to show changes in state of active alarms
+                if (firstRaisedAlarm != activeAlarm)
+                {
+                    LogStateChange(measurement.ID, activeAlarm, firstRaisedAlarm, measurement.Timestamp, measurement.Value);
+
+                    if ((object)firstRaisedAlarm != null && ((object)activeAlarm == null || firstRaisedAlarm.Severity > activeAlarm.Severity))
+                        alarms.Statistics.IncrementCounters(firstRaisedAlarm);
+                }
             }
 
             if (alarmEvents.Count > 0)
@@ -621,12 +671,103 @@ namespace DataQualityMonitoring
         }
 
         // Writes an entry to the alarm log when the alarm state changes.
-        private void LogStateChange(AdoDataConnection connection, Guid signalID, Alarm oldState, Alarm newState, DateTime timestamp, double value)
+        private void LogStateChange(Guid signalID, Alarm oldState, Alarm newState, DateTime timestamp, double value)
         {
-            int? oldStateID = ((object)oldState != null) ? oldState.ID : (int?)null;
-            int? newStateID = ((object)newState != null) ? newState.ID : (int?)null;
-            connection.ExecuteNonQuery("INSERT INTO AlarmLog(SignalID, PreviousState, NewState, Ticks, Timestamp, Value) VALUES({0}, {1}, {2}, {3}, {4}, {5})", signalID, oldStateID, newStateID, timestamp.Ticks, timestamp, value);
-            connection.ExecuteNonQuery("DELETE FROM AlarmLog WHERE SignalID = {0} AND Timestamp < {1}", signalID, timestamp.AddHours(-24.0D));
+            int? oldStateID;
+            int? newStateID;
+
+            if (m_useAlarmLog)
+            {
+                oldStateID = ((object)oldState != null) ? oldState.ID : (int?)null;
+                newStateID = ((object)newState != null) ? newState.ID : (int?)null;
+
+                StateChange stateChange = new StateChange()
+                {
+                    SignalID = signalID,
+                    OldStateID = oldStateID,
+                    NewStateID = newStateID,
+                    Timestamp = timestamp,
+                    Value = value
+                };
+
+                m_stateChanges.Enqueue(new StateChange[] { stateChange });
+                m_alarmLogOperation.RunOnceAsync();
+            }
+        }
+
+        private void LogStateChanges()
+        {
+            IList<StateChange> stateChanges;
+
+            StringBuilder insertQuery;
+            List<object> insertParameters;
+            StringBuilder deleteQuery;
+            List<object> deleteParameters;
+
+            int count;
+
+            Thread.Sleep(m_logProcessingDelay);
+
+            stateChanges = m_stateChanges.Dequeue();
+            insertQuery = new StringBuilder();
+            insertParameters = new List<object>();
+            deleteQuery = new StringBuilder();
+            deleteParameters = new List<object>();
+            count = 0;
+
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                foreach (StateChange stateChange in stateChanges)
+                {
+                    if (insertQuery.Length == 0)
+                    {
+                        insertQuery.Append("INSERT INTO AlarmLog(SignalID, PreviousState, NewState, Ticks, Timestamp, Value) ");
+                        insertQuery.Append("SELECT {0} AS SignalID, {1} AS PreviousState, {2} AS NewState, {3} AS Ticks, {4} AS Timestamp, {5} AS Value");
+
+                        deleteQuery.Append("DELETE FROM AlarmLog WHERE ");
+                        deleteQuery.Append("(SignalID = {0} AND Ticks < {1})");
+                    }
+                    else
+                    {
+                        insertQuery.Append(" UNION ALL ");
+                        insertQuery.AppendFormat("SELECT {{{0}}}, {{{1}}}, {{{2}}}, {{{3}}}, {{{4}}}, {{{5}}}", Enumerable.Range(count * 6, 6).Cast<object>().ToArray());
+
+                        deleteQuery.Append(" OR ");
+                        deleteQuery.AppendFormat("(SignalID = {{{0}}} AND Ticks < {{{1}}})", Enumerable.Range(count * 2, 2).Cast<object>().ToArray());
+                    }
+
+                    insertParameters.Add(stateChange.SignalID);
+                    insertParameters.Add(stateChange.OldStateID);
+                    insertParameters.Add(stateChange.NewStateID);
+                    insertParameters.Add(stateChange.Timestamp.Ticks);
+                    insertParameters.Add(stateChange.Timestamp);
+                    insertParameters.Add(stateChange.Value);
+
+                    deleteParameters.Add(stateChange.SignalID);
+                    deleteParameters.Add(stateChange.Timestamp.AddHours(-24.0D).Ticks);
+
+                    count++;
+
+                    if (count == m_bulkInsertLimit)
+                    {
+                        connection.ExecuteNonQuery(insertQuery.ToString(), insertParameters.ToArray());
+                        connection.ExecuteNonQuery(deleteQuery.ToString(), deleteParameters.ToArray());
+
+                        insertQuery.Clear();
+                        insertParameters.Clear();
+                        deleteQuery.Clear();
+                        deleteParameters.Clear();
+
+                        count = 0;
+                    }
+                }
+
+                if (count > 0)
+                {
+                    connection.ExecuteNonQuery(insertQuery.ToString(), insertParameters.ToArray());
+                    connection.ExecuteNonQuery(deleteQuery.ToString(), deleteParameters.ToArray());
+                }
+            }
         }
 
         // Processes excpetions thrown by the alarm service.
