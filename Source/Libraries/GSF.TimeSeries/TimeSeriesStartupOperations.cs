@@ -458,15 +458,12 @@ namespace GSF.TimeSeries
 
         private static void ValidateAlarmStatistics(AdoDataConnection connection, Guid nodeID, string source)
         {
-            const string TotalAlarmStatisticCountFormat = "SELECT COUNT(*) FROM Statistic WHERE Source = {0} AND MethodName = {1}";
-
-            const string MissingStatisticsFormat = "SELECT DISTINCT Severity FROM Alarm WHERE Severity NOT IN (SELECT Arguments FROM Statistic WHERE Source = {0} AND MethodName = {1})";
+            const string MissingStatisticsFormat = "SELECT DISTINCT Severity FROM Alarm WHERE Severity <> 0 AND Severity NOT IN (SELECT Arguments FROM Statistic WHERE Source = {0} AND MethodName = {1})";
             const string MaxSignalIndexFormat = "SELECT COALESCE(MAX(SignalIndex), 0) FROM Statistic WHERE Source = {0}";
             const string InsertAlarmStatisticFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12})";
 
             string methodName;
 
-            int totalAlarmStatisticCount;
             DataTable missingStatistics;
 
             int signalIndex;
@@ -474,18 +471,8 @@ namespace GSF.TimeSeries
             string name;
             string description;
 
-            // Ensure that the total alarm count statistic exists in the database.
-            methodName = string.Format("Get{0}Statistic_TotalAlarmCount", source);
-            totalAlarmStatisticCount = connection.ExecuteScalar<int>(TotalAlarmStatisticCountFormat, source, methodName);
-
-            if (totalAlarmStatisticCount == 0)
-            {
-                signalIndex = connection.ExecuteScalar<int>(MaxSignalIndexFormat, source) + 1;
-                connection.ExecuteNonQuery(InsertAlarmStatisticFormat, source, signalIndex, "Total Alarm Count", "Number of alarms that were raised during the last reporting interval.", "DataQualityMonitoring.dll", "DataQualityMonitoring.AlarmStatistics", methodName, "TOTAL", 1, "System.Int32", "{0:N0}", 0, 0);
-            }
-
             // Add statistics for the alarms defined in the Alarm table.
-            methodName = string.Format("Get{0}Statistic_AlarmCountForSeverity", source);
+            methodName = string.Format("Get{0}Statistic_MeasurementCountForSeverity", source);
             missingStatistics = connection.RetrieveData(MissingStatisticsFormat, source, methodName);
 
             if (missingStatistics.Rows.Count > 0)
@@ -497,7 +484,7 @@ namespace GSF.TimeSeries
                     signalIndex++;
                     severity = missingStatistic.ConvertField<int>("Severity");
                     name = string.Format("Alarm Severity {0}", severity);
-                    description = string.Format("Number of alarms of severity {0} that were raised during the last reporting interval.", severity);
+                    description = string.Format("Number of measurements received while alarm with severity {0} was raised during the last reporting interval.", severity);
 
                     connection.ExecuteNonQuery(InsertAlarmStatisticFormat, source, signalIndex, name, description, "DataQualityMonitoring.dll", "DataQualityMonitoring.AlarmStatistics", methodName, severity, 1, "System.Int32", "{0:N0}", 0, 1001 - severity);
                 }

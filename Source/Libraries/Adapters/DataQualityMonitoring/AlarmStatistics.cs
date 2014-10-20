@@ -36,7 +36,6 @@ namespace DataQualityMonitoring
         #region [ Members ]
 
         // Fields
-        private long m_totalCount;
         private Dictionary<int, long> m_countBySeverity;
 
         #endregion
@@ -56,12 +55,11 @@ namespace DataQualityMonitoring
         #region [ Methods ]
 
         /// <summary>
-        /// Increments counters for the given alarm.
+        /// Increments the counter for the given alarm.
         /// </summary>
         /// <param name="alarm">The alarm that was raised.</param>
-        public void IncrementCounters(Alarm alarm)
+        public void IncrementCounter(Alarm alarm)
         {
-            m_totalCount++;
             m_countBySeverity.AddOrUpdate((int)alarm.Severity, severity => 1L, (severity, count) => count + 1L);
         }
 
@@ -74,20 +72,8 @@ namespace DataQualityMonitoring
 
         // Static Methods
 
-        // Gets the total alarm count for a specific signal.
-        private static double GetPointStatistic_TotalAlarmCount(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            AlarmStatistics alarmStatistics = source as AlarmStatistics;
-
-            if ((object)alarmStatistics != null)
-                statistic = s_statisticValueCache.GetDifference(alarmStatistics, alarmStatistics.m_totalCount, "TotalAlarmCount");
-
-            return statistic;
-        }
-
         // Gets the alarm count for a specific signal at a specific severity.
-        private static double GetPointStatistic_AlarmCountForSeverity(object source, string arguments)
+        private static double GetPointStatistic_MeasurementCountForSeverity(object source, string arguments)
         {
             double statistic = 0.0D;
 
