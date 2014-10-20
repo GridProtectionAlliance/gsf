@@ -620,9 +620,12 @@ namespace DataQualityMonitoring
                 // Update alarm log to show changes in state of active alarms
                 if (firstRaisedAlarm != activeAlarm)
                 {
+                    AlarmSeverity firstRaisedSeverity = ((object)firstRaisedAlarm != null) ? firstRaisedAlarm.Severity : AlarmSeverity.None;
+                    AlarmSeverity activeSeverity = ((object)activeAlarm != null) ? activeAlarm.Severity : AlarmSeverity.None;
+
                     LogStateChange(measurement.ID, activeAlarm, firstRaisedAlarm, measurement.Timestamp, measurement.Value);
 
-                    if ((object)firstRaisedAlarm != null && ((object)activeAlarm == null || firstRaisedAlarm.Severity > activeAlarm.Severity))
+                    if (firstRaisedSeverity > activeSeverity)
                         alarms.Statistics.IncrementCounters(firstRaisedAlarm);
                 }
             }
