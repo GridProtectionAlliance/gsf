@@ -968,6 +968,7 @@ namespace GSF.TimeSeries.Statistics
         private ICollection<IMeasurement> CalculateStatistics(Statistic[] statistics, DateTime serverTime, StatisticSource source)
         {
             List<IMeasurement> calculatedStatistics = new List<IMeasurement>();
+            HashSet<string> signalReferences;
             IMeasurement calculatedStatistic;
             DataRow[] measurements;
 
@@ -985,12 +986,20 @@ namespace GSF.TimeSeries.Statistics
                         m_dataSourceCache.TryGetValue(string.Format("{0}!{1}", source.SourceName, source.SourceAcronym), out dataRows);
                     }
 
-                    // It is expected that the statistics source will exist in the data source cache, but just in case
-                    // it's not we fall back on the slower LIKE expression against the active measurements table
+                    // It is expected that the statistics source will exist in the data source cache,
+                    // but just in case it's not we fall back on the slower signal reference lookup table
                     if ((object)dataRows != null)
+                    {
                         measurements = dataRows.ToArray();
+                    }
                     else
-                        measurements = DataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalReference LIKE '{0}!{1}-ST%'", source.SourceName, source.SourceAcronym));
+                    {
+                        signalReferences = new HashSet<string>(statistics.Where(statistic => statistic.Source == source.SourceCategory).Select(statistic => GetSignalReference(statistic, source)));
+
+                        measurements = DataSource.Tables["ActiveMeasurements"].Select()
+                            .Where(row => signalReferences.Contains(row["SignalReference"].ToNonNullString()))
+                            .ToArray();
+                    }
 
                     source.StatisticMeasurements = measurements;
                 }
@@ -1017,6 +1026,8 @@ namespace GSF.TimeSeries.Statistics
         {
             Guid signalID;
             string signalReference;
+            int signalIndex;
+
             Statistic statistic;
 
             try
@@ -1024,9 +1035,10 @@ namespace GSF.TimeSeries.Statistics
                 // Get the signal ID and signal reference of the current measurement
                 signalID = Guid.Parse(measurement["SignalID"].ToString());
                 signalReference = measurement["SignalReference"].ToString();
+                signalIndex = Convert.ToInt32(signalReference.Substring(signalReference.LastIndexOf("-ST", StringComparison.Ordinal) + 3));
 
                 // Find the statistic corresponding to the current measurement
-                statistic = statistics.FirstOrDefault(stat => (source.SourceCategory == stat.Source) && (signalReference == string.Format("{0}!{1}-ST{2}", source.SourceName, source.SourceAcronym, stat.Index)));
+                statistic = statistics.FirstOrDefault(stat => (source.SourceCategory == stat.Source) && (signalIndex == stat.Index));
 
                 if ((object)statistic != null)
                 {
@@ -1226,6 +1238,32 @@ namespace GSF.TimeSeries.Statistics
         {
             string regex = string.Format(@"!{0}-ST\d+$", suffix);
             return Regex.IsMatch(signalReference, regex);
+        }
+
+        // Gets the signal reference of the measurement associated with the given statistic and source pair.
+        private static string GetSignalReference(Statistic statistic, StatisticSource source)
+        {
+            string arguments;
+            Dictionary<string, string> substitutions;
+            TemplatedExpressionParser parser;
+
+            arguments = statistic.Arguments;
+            substitutions = arguments.ParseKeyValuePairs();
+            parser = new TemplatedExpressionParser();
+            parser.TemplatedExpression = source.StatisticMeasurementNameFormat;
+
+            if (substitutions.Count == 0)
+            {
+                substitutions = arguments
+                    .Split(',')
+                    .Select((arg, index) => Tuple.Create(index.ToString(), arg))
+                    .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
+            }
+
+            substitutions = substitutions.ToDictionary(kvp => string.Concat("{", kvp.Key, "}"), kvp => kvp.Value);
+            substitutions["{}"] = source.SourceName;
+
+            return string.Format("{0}!{1}-ST{2}", parser.Execute(substitutions), source.SourceAcronym, statistic.Index);
         }
 
         // Triggered when a source registers with the statistics engine.
