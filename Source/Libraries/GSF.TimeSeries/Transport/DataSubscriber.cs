@@ -440,6 +440,7 @@ namespace GSF.TimeSeries.Transport
         private bool m_includeTime;
         private bool m_autoSynchronizeMetadata;
         private bool m_useTransactionForMetadata;
+        private bool m_useLocalClockAsRealTime;
         private int m_metadataSynchronizationTimeout;
         private readonly LongSynchronizedOperation m_synchronizeMetadataOperation;
         private volatile DataSet m_receivedMetadata;
@@ -457,9 +458,10 @@ namespace GSF.TimeSeries.Transport
         private readonly List<BufferBlockMeasurement> m_bufferBlockCache;
         private uint m_expectedBufferBlockSequenceNumber;
 
+        private Ticks m_realTime;
+        private Ticks m_lastStatisticsHelperUpdate;
         private Timer m_subscribedDevicesTimer;
 
-        private bool m_useLocalClockForStatistics;
         private long m_lifetimeMeasurements;
         private long m_minimumMeasurementsPerSecond;
         private long m_maximumMeasurementsPerSecond;
@@ -520,7 +522,7 @@ namespace GSF.TimeSeries.Transport
             DataLossInterval = 10.0D;
 
             m_bufferBlockCache = new List<BufferBlockMeasurement>();
-            m_useLocalClockForStatistics = true;
+            m_useLocalClockAsRealTime = true;
         }
 
         #endregion
@@ -932,6 +934,21 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Gets or sets flag that determines whether to use the local clock when calculating statistics.
+        /// </summary>
+        public bool UseLocalClockAsRealTime
+        {
+            get
+            {
+                return m_useLocalClockAsRealTime;
+            }
+            set
+            {
+                m_useLocalClockAsRealTime = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets <see cref="DataSet"/> based data source available to this <see cref="DataSubscriber"/>.
         /// </summary>
         public override DataSet DataSource
@@ -1197,6 +1214,17 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
+        /// <summary>
+        /// Gets real-time as determined by either the local clock or the latest measurement received.
+        /// </summary>
+        protected Ticks RealTime
+        {
+            get
+            {
+                return m_useLocalClockAsRealTime ? (Ticks)DateTime.UtcNow.Ticks : m_realTime;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -1361,8 +1389,8 @@ namespace GSF.TimeSeries.Transport
             if (!settings.TryGetValue("bufferSize", out setting) || !int.TryParse(setting, out bufferSize))
                 bufferSize = ClientBase.DefaultReceiveBufferSize;
 
-            if (!settings.TryGetValue("useLocalClockForStatistics", out setting))
-                m_useLocalClockForStatistics = setting.ParseBoolean();
+            if (!settings.TryGetValue("useLocalClockAsRealTime", out setting))
+                m_useLocalClockAsRealTime = setting.ParseBoolean();
 
             if (m_autoConnect)
             {
@@ -2426,7 +2454,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         protected override void AttemptConnection()
         {
-            long now = DateTime.UtcNow.Ticks;
+            long now = m_useLocalClockAsRealTime ? DateTime.UtcNow.Ticks : 0L;
             List<DeviceStatisticsHelper<SubscribedDevice>> statisticsHelpers = m_statisticsHelpers;
 
             m_registerStatisticsOperation.RunOnceAsync();
@@ -2443,7 +2471,7 @@ namespace GSF.TimeSeries.Transport
 
             m_commandChannel.ConnectAsync();
 
-            if ((object)m_subscribedDevicesTimer == null)
+            if (m_useLocalClockAsRealTime && (object)m_subscribedDevicesTimer == null)
             {
                 m_subscribedDevicesTimer = new Timer(1000.0D);
                 m_subscribedDevicesTimer.Elapsed += SubscribedDevicesTimer_Elapsed;
@@ -2451,11 +2479,15 @@ namespace GSF.TimeSeries.Transport
 
             if ((object)statisticsHelpers != null)
             {
+                m_realTime = 0L;
+                m_lastStatisticsHelperUpdate = 0L;
+
                 foreach (DeviceStatisticsHelper<SubscribedDevice> statisticsHelper in statisticsHelpers)
                     statisticsHelper.Reset(now);
             }
 
-            m_subscribedDevicesTimer.Start();
+            if (m_useLocalClockAsRealTime)
+                m_subscribedDevicesTimer.Start();
         }
 
         /// <summary>
@@ -2777,6 +2809,10 @@ namespace GSF.TimeSeries.Transport
                                         IMeasurement frequency = null;
                                         IMeasurement deltaFrequency = null;
 
+                                        // Attempt to update real-time
+                                        if (!m_useLocalClockAsRealTime && frame.Key > m_realTime)
+                                            m_realTime = frame.Key;
+
                                         // Search the frame for status flags, frequency, and delta frequency
                                         foreach (IMeasurement measurement in frame)
                                         {
@@ -2829,12 +2865,13 @@ namespace GSF.TimeSeries.Transport
                                 OnNewMeasurements(measurements);
 
                             // Gather statistics on received data
-                            DateTime timeReceived;
+                            DateTime timeReceived = RealTime;
 
-                            if (m_useLocalClockForStatistics)
-                                timeReceived = DateTime.UtcNow;
-                            else
-                                timeReceived = measurements.Max(measurement => measurement.Timestamp);
+                            if (!m_useLocalClockAsRealTime && timeReceived.Ticks - m_lastStatisticsHelperUpdate > Ticks.PerSecond)
+                            {
+                                UpdateStatisticsHelpers();
+                                m_lastStatisticsHelperUpdate = m_realTime;
+                            }
 
                             m_lifetimeMeasurements += measurements.Count;
                             UpdateMeasurementsPerSecond(timeReceived, measurements.Count);
@@ -3883,7 +3920,7 @@ namespace GSF.TimeSeries.Transport
 
         private void RegisterDeviceStatistics()
         {
-            long now = DateTime.UtcNow.Ticks;
+            long now = m_useLocalClockAsRealTime ? DateTime.UtcNow.Ticks : 0L;
 
             Dictionary<Guid, DeviceStatisticsHelper<SubscribedDevice>> subscribedDevicesLookup;
             List<DeviceStatisticsHelper<SubscribedDevice>> subscribedDevices;
@@ -4293,9 +4330,9 @@ namespace GSF.TimeSeries.Transport
             m_measurementsPerSecondCount = 0L;
         }
 
-        private void SubscribedDevicesTimer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
+        private void UpdateStatisticsHelpers()
         {
-            long now = DateTime.UtcNow.Ticks;
+            long now = RealTime;
             List<DeviceStatisticsHelper<SubscribedDevice>> statisticsHelpers = m_statisticsHelpers;
 
             foreach (DeviceStatisticsHelper<SubscribedDevice> statisticsHelper in statisticsHelpers)
@@ -4310,6 +4347,11 @@ namespace GSF.TimeSeries.Transport
             }
 
             //m_lastMeasurementCheck = now;
+        }
+
+        private void SubscribedDevicesTimer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
+        {
+            UpdateStatisticsHelpers();
         }
 
         private bool SynchronizedMetadataChanged(DataSet newSynchronizedMetadata)

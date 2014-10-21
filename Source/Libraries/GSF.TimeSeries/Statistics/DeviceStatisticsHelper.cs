@@ -135,14 +135,18 @@ namespace GSF.TimeSeries.Statistics
             long expectedMeasurementsInSecond;
             double diff;
 
-            diff = (nowTicks - m_lastUpdateTicks) / (double)Ticks.PerSecond;
-            m_expectedMeasurements += diff * m_expectedMeasurementsPerSecond;
-            expectedMeasurementsInSecond = (long)m_expectedMeasurements;
+            if (m_lastUpdateTicks > 0L)
+            {
+                diff = (nowTicks - m_lastUpdateTicks) / (double)Ticks.PerSecond;
+                m_expectedMeasurements += diff * m_expectedMeasurementsPerSecond;
+                expectedMeasurementsInSecond = (long)m_expectedMeasurements;
 
-            m_device.MeasurementsReceived += measurementsInSecond;
-            m_device.MeasurementsExpected += expectedMeasurementsInSecond;
+                m_device.MeasurementsReceived += measurementsInSecond;
+                m_device.MeasurementsExpected += expectedMeasurementsInSecond;
 
-            m_expectedMeasurements -= expectedMeasurementsInSecond;
+                m_expectedMeasurements -= expectedMeasurementsInSecond;
+            }
+
             m_lastUpdateTicks = nowTicks;
         }
 
