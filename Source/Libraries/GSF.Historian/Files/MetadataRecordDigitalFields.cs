@@ -34,6 +34,7 @@
 //******************************************************************************************************
 
 using System;
+using System.IO;
 using System.Text;
 using GSF.Parsing;
 
@@ -70,6 +71,7 @@ namespace GSF.Historian.Files
         private string m_clearDescription;
         private int m_alarmState;
         private float m_alarmDelay;
+        private readonly MetadataFileLegacyMode m_legacyMode;
 
         #endregion
 
@@ -78,10 +80,21 @@ namespace GSF.Historian.Files
         /// <summary>
         /// Initializes a new instance of the <see cref="MetadataRecordDigitalFields"/> class.
         /// </summary>
-        internal MetadataRecordDigitalFields()
+        /// <param name="legacyMode">Legacy mode of <see cref="MetadataFile"/>.</param>
+        internal MetadataRecordDigitalFields(MetadataFileLegacyMode legacyMode)
         {
             m_setDescription = string.Empty;
             m_clearDescription = string.Empty;
+            m_legacyMode = legacyMode;
+        }
+
+        internal MetadataRecordDigitalFields(BinaryReader reader)
+        {
+            m_legacyMode = MetadataFileLegacyMode.Disabled;
+            m_setDescription = reader.ReadString();
+            m_clearDescription = reader.ReadString();
+            m_alarmState = reader.ReadInt32();
+            m_alarmDelay = reader.ReadSingle();
         }
 
         #endregion
@@ -102,7 +115,13 @@ namespace GSF.Historian.Files
             }
             set
             {
-                m_setDescription = value.TruncateRight(24);
+                if ((object)value == null)
+                    throw new ArgumentNullException("value");
+
+                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
+                    m_setDescription = value.TruncateRight(24);
+                else
+                    m_setDescription = value;
             }
         }
 
@@ -120,7 +139,13 @@ namespace GSF.Historian.Files
             }
             set
             {
-                m_clearDescription = value.TruncateRight(24);
+                if ((object)value == null)
+                    throw new ArgumentNullException("value");
+
+                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
+                    m_clearDescription = value.TruncateRight(24);
+                else
+                    m_clearDescription = value;
             }
         }
 
@@ -193,11 +218,9 @@ namespace GSF.Historian.Files
 
                 return FixedLength;
             }
-            else
-            {
-                // Binary image does not have sufficient data.
-                return 0;
-            }
+
+            // Binary image does not have sufficient data.
+            return 0;
         }
 
         /// <summary>
@@ -217,12 +240,20 @@ namespace GSF.Historian.Files
 
             buffer.ValidateParameters(startIndex, length);
 
-            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_setDescription.PadRight(24)), 0, buffer, startIndex, 24);
-            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_clearDescription.PadRight(24)), 0, buffer, startIndex + 24, 24);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_setDescription.PadRight(24).TruncateRight(24)), 0, buffer, startIndex, 24);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_clearDescription.PadRight(24).TruncateRight(24)), 0, buffer, startIndex + 24, 24);
             Buffer.BlockCopy(LittleEndian.GetBytes(m_alarmState), 0, buffer, startIndex + 48, 4);
             Buffer.BlockCopy(LittleEndian.GetBytes(m_alarmDelay), 0, buffer, startIndex + 52, 4);
 
             return length;
+        }
+
+        internal void WriteImage(BinaryWriter writer)
+        {
+            writer.Write(m_setDescription);
+            writer.Write(m_clearDescription);
+            writer.Write(m_alarmState);
+            writer.Write(m_alarmDelay);
         }
 
         #endregion

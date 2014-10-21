@@ -345,8 +345,8 @@ namespace GSF.IO
         private byte[] m_recordBuffer;
         private FileStream m_fileData;
         private readonly object m_fileDataLock;
-        private readonly ManualResetEvent m_loadWaitHandle;
-        private readonly ManualResetEvent m_saveWaitHandle;
+        private readonly ManualResetEventSlim m_loadWaitHandle;
+        private readonly ManualResetEventSlim m_saveWaitHandle;
         private readonly Timer m_autoSaveTimer;
         private FileSystemWatcher m_fileWatcher;
         private bool m_disposed;
@@ -369,8 +369,8 @@ namespace GSF.IO
             m_reloadOnModify = DefaultReloadOnModify;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
-            m_loadWaitHandle = new ManualResetEvent(true);
-            m_saveWaitHandle = new ManualResetEvent(true);
+            m_loadWaitHandle = new ManualResetEventSlim(true);
+            m_saveWaitHandle = new ManualResetEventSlim(true);
             m_fileDataLock = new object();
 
             m_autoSaveTimer = new Timer();
@@ -395,7 +395,7 @@ namespace GSF.IO
         /// <remarks>
         /// Changing the <see cref="FileName"/> when the file is open will cause the file to be re-opened.
         /// </remarks>
-        public string FileName
+        public virtual string FileName
         {
             get
             {
@@ -579,7 +579,7 @@ namespace GSF.IO
         /// <summary>
         /// Gets a boolean value that indicates whether the file data on disk is corrupt.
         /// </summary>
-        public bool IsCorrupt
+        public virtual bool IsCorrupt
         {
             get
             {
@@ -592,7 +592,7 @@ namespace GSF.IO
                         fileLength = m_fileData.Length;
                     }
 
-                    return (fileLength % m_recordBuffer.Length != 0);
+                    return (fileLength % GetRecordSize() != 0);
                 }
 
                 throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
@@ -609,14 +609,14 @@ namespace GSF.IO
         {
             get
             {
-                return RecordsInMemory * m_recordBuffer.Length / 1024;
+                return RecordsInMemory * GetRecordSize() / 1024;
             }
         }
 
         /// <summary>
         /// Gets the number of file records on the disk.
         /// </summary>
-        public int RecordsOnDisk
+        public virtual int RecordsOnDisk
         {
             get
             {
@@ -629,7 +629,7 @@ namespace GSF.IO
                         fileLength = m_fileData.Length;
                     }
 
-                    return (int)(fileLength / (long)m_recordBuffer.Length);
+                    return (int)(fileLength / (long)GetRecordSize());
                 }
 
                 throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
@@ -639,7 +639,7 @@ namespace GSF.IO
         /// <summary>
         /// Gets the number of file records loaded in memory.
         /// </summary>
-        public int RecordsInMemory
+        public virtual int RecordsInMemory
         {
             get
             {
@@ -671,7 +671,7 @@ namespace GSF.IO
         /// <summary>
         /// Gets the descriptive status of the file.
         /// </summary>
-        public string Status
+        public virtual string Status
         {
             get
             {
@@ -721,6 +721,39 @@ namespace GSF.IO
             get
             {
                 return m_fileData;
+            }
+        }
+
+        /// <summary>
+        /// Gets the locking object for the <see cref="FileData"/> stream.
+        /// </summary>
+        protected object FileDataLock
+        {
+            get
+            {
+                return m_fileDataLock;
+            }
+        }
+
+        /// <summary>
+        /// Gets wait handle for loading data.
+        /// </summary>
+        protected ManualResetEventSlim LoadWaitHandle
+        {
+            get
+            {
+                return m_loadWaitHandle;
+            }
+        }
+
+        /// <summary>
+        /// Gets wait handle for saving data.
+        /// </summary>
+        protected ManualResetEventSlim SaveWaitHandle
+        {
+            get
+            {
+                return m_saveWaitHandle;
             }
         }
 
@@ -787,7 +820,7 @@ namespace GSF.IO
         /// Saves settings of the file to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
-        public void SaveSettings()
+        public virtual void SaveSettings()
         {
             if (m_persistSettings)
             {
@@ -812,7 +845,7 @@ namespace GSF.IO
         /// Loads saved settings of the file from the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
-        public void LoadSettings()
+        public virtual void LoadSettings()
         {
             if (m_persistSettings)
             {
@@ -841,7 +874,7 @@ namespace GSF.IO
         /// <summary>
         /// Opens the file.
         /// </summary>
-        public void Open()
+        public virtual void Open()
         {
             if (!IsOpen)
             {
@@ -878,7 +911,7 @@ namespace GSF.IO
         /// <summary>
         /// Closes the file.
         /// </summary>
-        public void Close()
+        public virtual void Close()
         {
             if (IsOpen)
             {
@@ -918,15 +951,15 @@ namespace GSF.IO
         /// <summary>
         /// Loads records from disk into memory.
         /// </summary>
-        public void Load()
+        public virtual void Load()
         {
             if (IsOpen)
             {
                 // Waits for any pending request to save records before completing.
-                m_saveWaitHandle.WaitOne();
+                m_saveWaitHandle.Wait();
 
                 // Waits for any prior request to load records before completing.
-                m_loadWaitHandle.WaitOne();
+                m_loadWaitHandle.Wait();
                 m_loadWaitHandle.Reset();
 
                 try
@@ -962,15 +995,15 @@ namespace GSF.IO
         /// <remarks>
         /// <see cref="Save()"/> is equivalent to <see cref="FileStream.Flush()"/> when records are not loaded in memory.
         /// </remarks>
-        public void Save()
+        public virtual void Save()
         {
             if (IsOpen)
             {
                 // Waits for any pending request to save records before completing.
-                m_saveWaitHandle.WaitOne();
+                m_saveWaitHandle.Wait();
 
                 // Waits for any prior request to load records before completing.
-                m_loadWaitHandle.WaitOne();
+                m_loadWaitHandle.Wait();
                 m_saveWaitHandle.Reset();
 
                 try
@@ -1211,10 +1244,10 @@ namespace GSF.IO
                         SaveSettings();
 
                         if ((object)m_loadWaitHandle != null)
-                            m_loadWaitHandle.Close();
+                            m_loadWaitHandle.Dispose();
 
                         if ((object)m_saveWaitHandle != null)
-                            m_saveWaitHandle.Close();
+                            m_saveWaitHandle.Dispose();
 
                         if ((object)m_autoSaveTimer != null)
                         {
@@ -1274,7 +1307,7 @@ namespace GSF.IO
             // Discard previously existing records that were not written.
             lock (m_fileDataLock)
             {
-                m_fileData.SetLength(count * (long)m_recordBuffer.Length);
+                m_fileData.SetLength(count * (long)GetRecordSize());
             }
         }
 
@@ -1315,6 +1348,12 @@ namespace GSF.IO
 
             lock (m_fileDataLock)
             {
+                // Although not recommended, users may use class and forget to initialize, we will
+                // attempt to still support this by making sure the shared record buffer is
+                // initialized - it is only used in this function.
+                if ((object)m_recordBuffer == null)
+                    m_recordBuffer = new byte[GetRecordSize()];
+
                 m_fileData.Seek((recordIndex - 1) * (long)m_recordBuffer.Length, SeekOrigin.Begin);
                 m_fileData.Read(m_recordBuffer, 0, m_recordBuffer.Length);
                 newRecord.ParseBinaryImage(m_recordBuffer, 0, m_recordBuffer.Length);

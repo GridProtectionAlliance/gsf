@@ -152,7 +152,7 @@ namespace GSF.Historian.DataServices
 
                 // Ensure that data archive is available.
                 if (Archive == null)
-                    throw new ArgumentNullException("Archive");
+                    throw new NullReferenceException("Archive");
 
                 // Write all metadata records to the archive.
                 foreach (SerializableMetadataRecord record in metadata.MetadataRecords)
@@ -178,11 +178,11 @@ namespace GSF.Historian.DataServices
 
                 // Ensure that data archive is available.
                 if (Archive == null)
-                    throw new ArgumentNullException("Archive");
+                    throw new NullReferenceException("Archive");
 
                 // Read all metadata records from the archive.
                 int id = 0;
-                byte[] buffer = null;
+                byte[] buffer;
                 SerializableMetadata metadata = new SerializableMetadata();
                 List<SerializableMetadataRecord> records = new List<SerializableMetadataRecord>();
                 while (true)
@@ -191,9 +191,8 @@ namespace GSF.Historian.DataServices
                     if ((object)buffer == null)
                         // No more records.
                         break;
-                    else
-                        // Add to resultset.
-                        records.Add(new SerializableMetadataRecord(new MetadataRecord(id, buffer, 0, buffer.Length)));
+
+                    records.Add(new SerializableMetadataRecord(new MetadataRecord(id, MetadataFileLegacyMode.Enabled, buffer, 0, buffer.Length)));
                 }
                 metadata.MetadataRecords = records.ToArray();
 
@@ -217,11 +216,11 @@ namespace GSF.Historian.DataServices
 
                 // Ensure that data archive is available.
                 if (Archive == null)
-                    throw new ArgumentNullException("Archive");
+                    throw new NullReferenceException("Archive");
 
                 // Read specified metadata records from the archive.
-                int id = 0;
-                byte[] buffer = null;
+                int id;
+                byte[] buffer;
                 SerializableMetadata metadata = new SerializableMetadata();
                 List<SerializableMetadataRecord> records = new List<SerializableMetadataRecord>();
                 foreach (string singleID in idList.Split(',', ';'))
@@ -230,9 +229,8 @@ namespace GSF.Historian.DataServices
                     if ((object)buffer == null)
                         // ID is invalid.
                         continue;
-                    else
-                        // Add to resultset.
-                        records.Add(new SerializableMetadataRecord(new MetadataRecord(id, buffer, 0, buffer.Length)));
+
+                    records.Add(new SerializableMetadataRecord(new MetadataRecord(id, MetadataFileLegacyMode.Enabled, buffer, 0, buffer.Length)));
                 }
                 metadata.MetadataRecords = records.ToArray();
 
@@ -256,10 +254,10 @@ namespace GSF.Historian.DataServices
 
                 // Ensure that data archive is available.
                 if (Archive == null)
-                    throw new ArgumentNullException("Archive");
+                    throw new NullReferenceException("Archive");
 
                 // Read specified metadata records from the archive.
-                byte[] buffer = null;
+                byte[] buffer;
                 SerializableMetadata metadata = new SerializableMetadata();
                 List<SerializableMetadataRecord> records = new List<SerializableMetadataRecord>();
                 for (int id = int.Parse(fromID); id <= int.Parse(toID); id++)
@@ -268,9 +266,8 @@ namespace GSF.Historian.DataServices
                     if ((object)buffer == null)
                         // ID is invalid.
                         continue;
-                    else
-                        // Add to resultset.
-                        records.Add(new SerializableMetadataRecord(new MetadataRecord(id, buffer, 0, buffer.Length)));
+
+                    records.Add(new SerializableMetadataRecord(new MetadataRecord(id, MetadataFileLegacyMode.Enabled, buffer, 0, buffer.Length)));
                 }
                 metadata.MetadataRecords = records.ToArray();
 

@@ -417,7 +417,7 @@ namespace HistorianAdapters
                     if (matches.Length > 0)
                     {
                         // Capture the instance name
-                        string fileName = matches[0].Remove(matches[0].IndexOf("_archive")) + "_archive.d";
+                        string fileName = matches[0].Remove(matches[0].IndexOf("_archive", StringComparison.OrdinalIgnoreCase)) + "_archive.d";
 
                         // Setup historian reader
                         m_archiveReader = new ArchiveReader();

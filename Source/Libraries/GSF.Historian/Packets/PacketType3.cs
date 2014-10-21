@@ -91,9 +91,8 @@ namespace GSF.Historian.Packets
                     if (data == null)
                         // No more records.
                         break;
-                    else
-                        // Yield retrieved data.
-                        yield return data;
+
+                    yield return data;
                 }
             }
             else
@@ -105,12 +104,11 @@ namespace GSF.Historian.Packets
                     if (data == null)
                         // ID is invalid.
                         continue;
-                    else
-                        // Yield retrieved data.
-                        yield return data;
+
+                    yield return data;
                 }
             }
-            yield return new MetadataRecord(-1).Summary.BinaryImage();    // To indicate EOT.
+            yield return new MetadataRecord(-1, MetadataFileLegacyMode.Enabled).Summary.BinaryImage();    // To indicate EOT.
         }
 
         #endregion

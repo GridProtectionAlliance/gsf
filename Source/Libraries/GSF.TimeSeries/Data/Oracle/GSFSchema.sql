@@ -1494,8 +1494,8 @@ FROM
             Log1.Timestamp,
             Log1.Value
         FROM
-			AlarmLog Log1 LEFT OUTER JOIN
-			AlarmLog Log2 ON Log1.SignalID = Log2.SignalID AND Log1.Ticks < Log2.Ticks
+            AlarmLog Log1 LEFT OUTER JOIN
+            AlarmLog Log2 ON Log1.SignalID = Log2.SignalID AND Log1.Ticks < Log2.Ticks
         WHERE
             Log2.ID IS NULL
     ) CurrentState

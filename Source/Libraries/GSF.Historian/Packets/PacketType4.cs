@@ -94,19 +94,17 @@ namespace GSF.Historian.Packets
                         // No more records.
                         break;
                     }
-                    else
+
+                    record = new MetadataRecord(id, MetadataFileLegacyMode.Enabled, data, 0, data.Length);
+
+                    // Only send information that has changed.
+                    if (record.GeneralFlags.Changed)
                     {
-                        record = new MetadataRecord(id, data, 0, data.Length);
+                        // Reset the "changed" field.
+                        record.GeneralFlags.Changed = false;
+                        Archive.WriteMetaData(id, record.BinaryImage());
 
-                        // Only send information that has changed.
-                        if (record.GeneralFlags.Changed)
-                        {
-                            // Reset the "changed" field.
-                            record.GeneralFlags.Changed = false;
-                            Archive.WriteMetaData(id, record.BinaryImage());
-
-                            yield return record.Summary.BinaryImage();
-                        }
+                        yield return record.Summary.BinaryImage();
                     }
                 }
             }
@@ -121,23 +119,21 @@ namespace GSF.Historian.Packets
                         // ID is invalid.
                         continue;
                     }
-                    else
+
+                    record = new MetadataRecord(id, MetadataFileLegacyMode.Enabled, data, 0, data.Length);
+
+                    // Only send information that has changed.
+                    if (record.GeneralFlags.Changed)
                     {
-                        record = new MetadataRecord(id, data, 0, data.Length);
+                        // Reset the "changed" field.
+                        record.GeneralFlags.Changed = false;
+                        Archive.WriteMetaData(id, record.BinaryImage());
 
-                        // Only send information that has changed.
-                        if (record.GeneralFlags.Changed)
-                        {
-                            // Reset the "changed" field.
-                            record.GeneralFlags.Changed = false;
-                            Archive.WriteMetaData(id, record.BinaryImage());
-
-                            yield return record.Summary.BinaryImage();
-                        }
+                        yield return record.Summary.BinaryImage();
                     }
                 }
             }
-            yield return new MetadataRecord(-1).Summary.BinaryImage();    // To indicate EOT.
+            yield return new MetadataRecord(-1, MetadataFileLegacyMode.Enabled).Summary.BinaryImage();    // To indicate EOT.
         }
         #endregion
     }

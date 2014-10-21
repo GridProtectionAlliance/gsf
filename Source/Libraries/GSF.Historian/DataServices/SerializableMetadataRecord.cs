@@ -256,259 +256,431 @@ namespace GSF.Historian.DataServices
         /// Gets or sets the <see cref="MetadataRecord.HistorianID"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 0)]
-        public int HistorianID { get; set; }
+        public int HistorianID
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordGeneralFlags.DataType"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 1)]
-        public int DataType { get; set; }
+        public int DataType
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecord.Name"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 2)]
-        public string Name { get; set; }
+        public string Name
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecord.Synonym1"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 3)]
-        public string Synonym1 { get; set; }
+        public string Synonym1
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecord.Synonym2"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 4)]
-        public string Synonym2 { get; set; }
+        public string Synonym2
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecord.Synonym3"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 5)]
-        public string Synonym3 { get; set; }
+        public string Synonym3
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecord.Description"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 6)]
-        public string Description { get; set; }
+        public string Description
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecord.HardwareInfo"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 7)]
-        public string HardwareInfo { get; set; }
+        public string HardwareInfo
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecord.Remarks"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 8)]
-        public string Remarks { get; set; }
+        public string Remarks
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecord.PlantCode"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 9)]
-        public string PlantCode { get; set; }
+        public string PlantCode
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecord.UnitNumber"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 10)]
-        public int UnitNumber { get; set; }
+        public int UnitNumber
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecord.SystemName"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 11)]
-        public string SystemName { get; set; }
+        public string SystemName
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecord.SourceID"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 12)]
-        public int SourceID { get; set; }
+        public int SourceID
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordGeneralFlags.Enabled"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 13)]
-        public bool Enabled { get; set; }
+        public bool Enabled
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecord.ScanRate"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 14)]
-        public float ScanRate { get; set; }
+        public float ScanRate
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecord.CompressionMinTime"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 15)]
-        public int CompressionMinTime { get; set; }
+        public int CompressionMinTime
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecord.CompressionMaxTime"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 16)]
-        public int CompressionMaxTime { get; set; }
+        public int CompressionMaxTime
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordAnalogFields.EngineeringUnits"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 17)]
-        public string EngineeringUnits { get; set; }
+        public string EngineeringUnits
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordAnalogFields.LowWarning"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 18)]
-        public float LowWarning { get; set; }
+        public float LowWarning
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordAnalogFields.HighWarning"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 19)]
-        public float HighWarning { get; set; }
+        public float HighWarning
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordAnalogFields.LowAlarm"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 20)]
-        public float LowAlarm { get; set; }
+        public float LowAlarm
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordAnalogFields.HighAlarm"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 21)]
-        public float HighAlarm { get; set; }
+        public float HighAlarm
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordAnalogFields.LowRange"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 22)]
-        public float LowRange { get; set; }
+        public float LowRange
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordAnalogFields.HighRange"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 23)]
-        public float HighRange { get; set; }
+        public float HighRange
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordAnalogFields.CompressionLimit"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 24)]
-        public float CompressionLimit { get; set; }
+        public float CompressionLimit
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordAnalogFields.ExceptionLimit"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 25)]
-        public float ExceptionLimit { get; set; }
+        public float ExceptionLimit
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordAnalogFields.DisplayDigits"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 26)]
-        public int DisplayDigits { get; set; }
+        public int DisplayDigits
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordDigitalFields.SetDescription"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 27)]
-        public string SetDescription { get; set; }
+        public string SetDescription
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordDigitalFields.ClearDescription"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 28)]
-        public string ClearDescription { get; set; }
+        public string ClearDescription
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordDigitalFields.AlarmState"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 29)]
-        public int AlarmState { get; set; }
+        public int AlarmState
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordSecurityFlags.ChangeSecurity"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 30)]
-        public int ChangeSecurity { get; set; }
+        public int ChangeSecurity
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordSecurityFlags.AccessSecurity"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 31)]
-        public int AccessSecurity { get; set; }
+        public int AccessSecurity
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordGeneralFlags.StepCheck"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 32)]
-        public bool StepCheck { get; set; }
+        public bool StepCheck
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordGeneralFlags.AlarmEnabled"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 33)]
-        public bool AlarmEnabled { get; set; }
+        public bool AlarmEnabled
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordAlarmFlags.Value"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 33)]
-        public int AlarmFlags { get; set; }
+        public int AlarmFlags
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordAnalogFields.AlarmDelay"/> or <see cref="MetadataRecordDigitalFields.AlarmDelay"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 34)]
-        public float AlarmDelay { get; set; }
+        public float AlarmDelay
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordGeneralFlags.AlarmToFile"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 35)]
-        public bool AlarmToFile { get; set; }
+        public bool AlarmToFile
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordGeneralFlags.AlarmByEmail"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 36)]
-        public bool AlarmByEmail { get; set; }
+        public bool AlarmByEmail
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordGeneralFlags.AlarmByPager"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 37)]
-        public bool AlarmByPager { get; set; }
+        public bool AlarmByPager
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordGeneralFlags.AlarmByPhone"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 38)]
-        public bool AlarmByPhone { get; set; }
+        public bool AlarmByPhone
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecord.AlarmEmails"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 39)]
-        public string AlarmEmails { get; set; }
+        public string AlarmEmails
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecord.AlarmPagers"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 40)]
-        public string AlarmPagers { get; set; }
+        public string AlarmPagers
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecord.AlarmPhones"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 41)]
-        public string AlarmPhones { get; set; }
+        public string AlarmPhones
+        {
+            get;
+            set;
+        }
 
         #endregion
 
@@ -520,7 +692,7 @@ namespace GSF.Historian.DataServices
         /// <returns>An <see cref="MetadataRecord"/> object.</returns>
         public MetadataRecord Deflate()
         {
-            MetadataRecord metadataRecord = new MetadataRecord(HistorianID);
+            MetadataRecord metadataRecord = new MetadataRecord(HistorianID, MetadataFileLegacyMode.Enabled);
             metadataRecord.GeneralFlags.DataType = (DataType)DataType;
             metadataRecord.Name = Name;
             metadataRecord.Synonym1 = Synonym1;

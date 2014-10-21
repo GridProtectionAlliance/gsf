@@ -1825,7 +1825,7 @@ namespace GSF.Historian.Files
         /// <param name="metadata"><see cref="MetadataRecord"/> data.</param>
         public void WriteMetaData(int historianID, byte[] metadata)
         {
-            MetadataFile.Write(historianID, new MetadataRecord(historianID, metadata, 0, metadata.Length));
+            MetadataFile.Write(historianID, new MetadataRecord(historianID, MetadataFile.LegacyMode, metadata, 0, metadata.Length));
             MetadataFile.Save();
         }
 

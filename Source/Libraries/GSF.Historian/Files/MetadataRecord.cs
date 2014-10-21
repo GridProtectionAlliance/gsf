@@ -32,6 +32,7 @@
 //******************************************************************************************************
 
 using System;
+using System.IO;
 using System.Text;
 using GSF.Parsing;
 
@@ -124,6 +125,7 @@ namespace GSF.Historian.Files
         private MetadataRecordDigitalFields m_digitalFields;
         private MetadataRecordComposedFields m_composedFields;
         private MetadataRecordConstantFields m_constantFields;
+        private readonly MetadataFileLegacyMode m_legacyMode;
 
         #endregion
 
@@ -133,7 +135,8 @@ namespace GSF.Historian.Files
         /// Initializes a new instance of the <see cref="MetadataRecord"/> class.
         /// </summary>
         /// <param name="historianID">Historian identifier of <see cref="MetadataRecord"/>.</param>
-        public MetadataRecord(int historianID)
+        /// <param name="legacyMode">Legacy mode of <see cref="MetadataFile"/>.</param>
+        public MetadataRecord(int historianID, MetadataFileLegacyMode legacyMode)
         {
             m_historianID = historianID;
             m_remarks = string.Empty;
@@ -153,23 +156,95 @@ namespace GSF.Historian.Files
             m_securityFlags = new MetadataRecordSecurityFlags();
             m_generalFlags = new MetadataRecordGeneralFlags();
             m_alarmFlags = new MetadataRecordAlarmFlags();
-            m_analogFields = new MetadataRecordAnalogFields();
-            m_digitalFields = new MetadataRecordDigitalFields();
-            m_composedFields = new MetadataRecordComposedFields();
+            m_analogFields = new MetadataRecordAnalogFields(legacyMode);
+            m_digitalFields = new MetadataRecordDigitalFields(legacyMode);
+            m_composedFields = new MetadataRecordComposedFields(legacyMode);
             m_constantFields = new MetadataRecordConstantFields();
+            m_legacyMode = legacyMode;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MetadataRecord"/> class.
         /// </summary>
         /// <param name="historianID">Historian identifier of <see cref="MetadataRecord"/>.</param>
+        /// <param name="legacyMode">Legacy mode of <see cref="MetadataFile"/>.</param>
         /// <param name="buffer">Binary image to be used for initializing <see cref="MetadataRecord"/>.</param>
         /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
         /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
-        public MetadataRecord(int historianID, byte[] buffer, int startIndex, int length)
-            : this(historianID)
+        public MetadataRecord(int historianID, MetadataFileLegacyMode legacyMode, byte[] buffer, int startIndex, int length)
+            : this(historianID, legacyMode)
         {
             ParseBinaryImage(buffer, startIndex, length);
+        }
+
+        internal MetadataRecord(BinaryReader reader)
+        {
+            m_historianID = reader.ReadInt32();
+            m_remarks = reader.ReadString();
+            m_hardwareInfo = reader.ReadString();
+            m_emailAddresses = reader.ReadString();
+            m_description = reader.ReadString();
+            m_currentData = reader.ReadString();
+            m_name = reader.ReadString();
+            m_synonym1 = reader.ReadString();
+            m_synonym2 = reader.ReadString();
+            m_synonym3 = reader.ReadString();
+            m_pagerNumbers = reader.ReadString();
+            m_phoneNumbers = reader.ReadString();
+            m_plantCode = reader.ReadString();
+            m_system = reader.ReadString();
+            m_emailTime = reader.ReadString();
+            m_scanRate = reader.ReadSingle();
+            m_unitNumber = reader.ReadInt32();
+
+            m_securityFlags = new MetadataRecordSecurityFlags
+            {
+                Value = reader.ReadInt32()
+            };
+
+            m_generalFlags = new MetadataRecordGeneralFlags
+            {
+                Value = reader.ReadInt32()
+            };
+
+            m_alarmFlags = new MetadataRecordAlarmFlags
+            {
+                Value = reader.ReadInt32()
+            };
+
+            m_compressionMinTime = reader.ReadInt32();
+            m_compressionMaxTime = reader.ReadInt32();
+            m_sourceID = reader.ReadInt32();
+
+            switch (m_generalFlags.DataType)
+            {
+                case DataType.Analog:
+                    m_analogFields = new MetadataRecordAnalogFields(reader);
+                    m_digitalFields = new MetadataRecordDigitalFields(MetadataFileLegacyMode.Disabled);
+                    m_composedFields = new MetadataRecordComposedFields(MetadataFileLegacyMode.Disabled);
+                    m_constantFields = new MetadataRecordConstantFields();
+                    break;
+                case DataType.Digital:
+                    m_digitalFields = new MetadataRecordDigitalFields(reader);
+                    m_analogFields = new MetadataRecordAnalogFields(MetadataFileLegacyMode.Disabled);
+                    m_composedFields = new MetadataRecordComposedFields(MetadataFileLegacyMode.Disabled);
+                    m_constantFields = new MetadataRecordConstantFields();
+                    break;
+                case DataType.Composed:
+                    m_composedFields = new MetadataRecordComposedFields(reader);
+                    m_analogFields = new MetadataRecordAnalogFields(MetadataFileLegacyMode.Disabled);
+                    m_digitalFields = new MetadataRecordDigitalFields(MetadataFileLegacyMode.Disabled);
+                    m_constantFields = new MetadataRecordConstantFields();
+                    break;
+                case DataType.Constant:
+                    m_constantFields = new MetadataRecordConstantFields(reader);
+                    m_analogFields = new MetadataRecordAnalogFields(MetadataFileLegacyMode.Disabled);
+                    m_digitalFields = new MetadataRecordDigitalFields(MetadataFileLegacyMode.Disabled);
+                    m_composedFields = new MetadataRecordComposedFields(MetadataFileLegacyMode.Disabled);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         #endregion
@@ -194,7 +269,10 @@ namespace GSF.Historian.Files
                 if ((object)value == null)
                     throw new ArgumentNullException("value");
 
-                m_remarks = value.TruncateRight(512);
+                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
+                    m_remarks = value.TruncateRight(512);
+                else
+                    m_remarks = value;
             }
         }
 
@@ -216,12 +294,15 @@ namespace GSF.Historian.Files
                 if ((object)value == null)
                     throw new ArgumentNullException("value");
 
-                m_hardwareInfo = value.TruncateRight(512);
+                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
+                    m_hardwareInfo = value.TruncateRight(512);
+                else
+                    m_hardwareInfo = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets a comma-seperated list of email addresses that will receive alarm notification email messages based 
+        /// Gets or sets a comma-separated list of email addresses that will receive alarm notification email messages based 
         /// on the <see cref="AlarmFlags"/> settings for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
@@ -239,7 +320,10 @@ namespace GSF.Historian.Files
                 if ((object)value == null)
                     throw new ArgumentNullException("value");
 
-                m_emailAddresses = value.TruncateRight(512);
+                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
+                    m_emailAddresses = value.TruncateRight(512);
+                else
+                    m_emailAddresses = value;
             }
         }
 
@@ -261,7 +345,10 @@ namespace GSF.Historian.Files
                 if ((object)value == null)
                     throw new ArgumentNullException("value");
 
-                m_description = value.TruncateRight(80);
+                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
+                    m_description = value.TruncateRight(80);
+                else
+                    m_description = value;
             }
         }
 
@@ -283,7 +370,10 @@ namespace GSF.Historian.Files
                 if ((object)value == null)
                     throw new ArgumentNullException("value");
 
-                m_currentData = value.TruncateRight(80);
+                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
+                    m_currentData = value.TruncateRight(80);
+                else
+                    m_currentData = value;
             }
         }
 
@@ -305,7 +395,10 @@ namespace GSF.Historian.Files
                 if ((object)value == null)
                     throw new ArgumentNullException("value");
 
-                m_name = value.TruncateRight(40);
+                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
+                    m_name = value.TruncateRight(40);
+                else
+                    m_name = value;
             }
         }
 
@@ -327,7 +420,10 @@ namespace GSF.Historian.Files
                 if ((object)value == null)
                     throw new ArgumentNullException("value");
 
-                m_synonym1 = value.TruncateRight(40);
+                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
+                    m_synonym1 = value.TruncateRight(40);
+                else
+                    m_synonym1 = value;
             }
         }
 
@@ -349,7 +445,10 @@ namespace GSF.Historian.Files
                 if ((object)value == null)
                     throw new ArgumentNullException("value");
 
-                m_synonym2 = value.TruncateRight(40);
+                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
+                    m_synonym2 = value.TruncateRight(40);
+                else
+                    m_synonym2 = value;
             }
         }
 
@@ -371,12 +470,15 @@ namespace GSF.Historian.Files
                 if ((object)value == null)
                     throw new ArgumentNullException("value");
 
-                m_synonym3 = value.TruncateRight(40);
+                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
+                    m_synonym3 = value.TruncateRight(40);
+                else
+                    m_synonym3 = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets a comma-seperated list of pager numbers that will receive alarm notification text messages based 
+        /// Gets or sets a comma-separated list of pager numbers that will receive alarm notification text messages based 
         /// on the <see cref="AlarmFlags"/> settings for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
@@ -394,12 +496,15 @@ namespace GSF.Historian.Files
                 if ((object)value == null)
                     throw new ArgumentNullException("value");
 
-                m_pagerNumbers = value.TruncateRight(40);
+                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
+                    m_pagerNumbers = value.TruncateRight(40);
+                else
+                    m_pagerNumbers = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets a comma-seperated list of phone numbers that will receive alarm notification voice messages based 
+        /// Gets or sets a comma-separated list of phone numbers that will receive alarm notification voice messages based 
         /// on the <see cref="AlarmFlags"/> settings for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
@@ -417,7 +522,10 @@ namespace GSF.Historian.Files
                 if ((object)value == null)
                     throw new ArgumentNullException("value");
 
-                m_phoneNumbers = value.TruncateRight(40);
+                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
+                    m_phoneNumbers = value.TruncateRight(40);
+                else
+                    m_pagerNumbers = value;
             }
         }
 
@@ -439,7 +547,10 @@ namespace GSF.Historian.Files
                 if ((object)value == null)
                     throw new ArgumentNullException("value");
 
-                m_plantCode = value.TruncateRight(24);
+                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
+                    m_plantCode = value.TruncateRight(24);
+                else
+                    m_plantCode = value;
             }
         }
 
@@ -461,7 +572,10 @@ namespace GSF.Historian.Files
                 if ((object)value == null)
                     throw new ArgumentNullException("value");
 
-                m_system = value.TruncateRight(24);
+                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
+                    m_system = value.TruncateRight(24);
+                else
+                    m_system = value;
             }
         }
 
@@ -480,7 +594,10 @@ namespace GSF.Historian.Files
             }
             set
             {
-                m_emailTime = value.TruncateRight(40);
+                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
+                    m_emailTime = value.TruncateRight(40);
+                else
+                    m_emailTime = value;
             }
         }
 
@@ -488,7 +605,7 @@ namespace GSF.Historian.Files
         /// Gets or sets the rate at which the source device scans and sends data for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
-        /// <see cref="ScanRate"/> is used by data aquisition components for polling data from the actual device.
+        /// <see cref="ScanRate"/> is used by data acquisition components for polling data from the actual device.
         /// </remarks>
         public float ScanRate
         {
@@ -782,6 +899,7 @@ namespace GSF.Historian.Files
                 CompressionMinTime = LittleEndian.ToInt32(buffer, startIndex + 2124);
                 CompressionMaxTime = LittleEndian.ToInt32(buffer, startIndex + 2128);
                 SourceID = LittleEndian.ToInt32(buffer, startIndex + 2132);
+
                 switch (GeneralFlags.DataType)
                 {
                     case DataType.Analog:
@@ -800,11 +918,9 @@ namespace GSF.Historian.Files
 
                 return FixedLength;
             }
-            else
-            {
-                // Binary image does not have sufficient data.
-                return 0;
-            }
+
+            // Binary image does not have sufficient data.
+            return 0;
         }
 
         /// <summary>
@@ -825,20 +941,20 @@ namespace GSF.Historian.Files
             buffer.ValidateParameters(startIndex, length);
 
             // Construct the binary IP buffer for this event
-            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_remarks.PadRight(512)), 0, buffer, startIndex, 512);
-            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_hardwareInfo.PadRight(512)), 0, buffer, startIndex + 512, 512);
-            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_emailAddresses.PadRight(512)), 0, buffer, startIndex + 1024, 512);
-            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_description.PadRight(80)), 0, buffer, startIndex + 1536, 80);
-            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_currentData.PadRight(80)), 0, buffer, startIndex + 1616, 80);
-            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_name.PadRight(40)), 0, buffer, startIndex + 1696, 40);
-            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_synonym1.PadRight(40)), 0, buffer, startIndex + 1736, 40);
-            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_synonym2.PadRight(40)), 0, buffer, startIndex + 1776, 40);
-            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_synonym3.PadRight(40)), 0, buffer, startIndex + 1816, 40);
-            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_pagerNumbers.PadRight(40)), 0, buffer, startIndex + 1856, 40);
-            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_phoneNumbers.PadRight(40)), 0, buffer, startIndex + 1896, 40);
-            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_plantCode.PadRight(24)), 0, buffer, startIndex + 1936, 24);
-            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_system.PadRight(24)), 0, buffer, startIndex + 1960, 24);
-            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_emailTime.PadRight(40)), 0, buffer, startIndex + 1984, 40);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_remarks.PadRight(512).TruncateRight(512)), 0, buffer, startIndex, 512);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_hardwareInfo.PadRight(512).TruncateRight(512)), 0, buffer, startIndex + 512, 512);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_emailAddresses.PadRight(512).TruncateRight(512)), 0, buffer, startIndex + 1024, 512);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_description.PadRight(80).TruncateRight(80)), 0, buffer, startIndex + 1536, 80);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_currentData.PadRight(80).TruncateRight(80)), 0, buffer, startIndex + 1616, 80);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_name.PadRight(40).TruncateRight(40)), 0, buffer, startIndex + 1696, 40);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_synonym1.PadRight(40).TruncateRight(40)), 0, buffer, startIndex + 1736, 40);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_synonym2.PadRight(40).TruncateRight(40)), 0, buffer, startIndex + 1776, 40);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_synonym3.PadRight(40).TruncateRight(40)), 0, buffer, startIndex + 1816, 40);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_pagerNumbers.PadRight(40).TruncateRight(40)), 0, buffer, startIndex + 1856, 40);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_phoneNumbers.PadRight(40).TruncateRight(40)), 0, buffer, startIndex + 1896, 40);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_plantCode.PadRight(24).TruncateRight(24)), 0, buffer, startIndex + 1936, 24);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_system.PadRight(24).TruncateRight(24)), 0, buffer, startIndex + 1960, 24);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_emailTime.PadRight(40).TruncateRight(40)), 0, buffer, startIndex + 1984, 40);
             Buffer.BlockCopy(LittleEndian.GetBytes(m_scanRate), 0, buffer, startIndex + 2104, 4);
             Buffer.BlockCopy(LittleEndian.GetBytes(m_unitNumber), 0, buffer, startIndex + 2108, 4);
             Buffer.BlockCopy(LittleEndian.GetBytes(m_securityFlags.Value), 0, buffer, startIndex + 2112, 4);
@@ -847,6 +963,7 @@ namespace GSF.Historian.Files
             Buffer.BlockCopy(LittleEndian.GetBytes(m_compressionMinTime), 0, buffer, startIndex + 2124, 4);
             Buffer.BlockCopy(LittleEndian.GetBytes(m_compressionMaxTime), 0, buffer, startIndex + 2128, 4);
             Buffer.BlockCopy(LittleEndian.GetBytes(m_sourceID), 0, buffer, startIndex + 2132, 4);
+
             switch (m_generalFlags.DataType)
             {
                 case DataType.Analog:
@@ -878,10 +995,11 @@ namespace GSF.Historian.Files
         public virtual int CompareTo(object obj)
         {
             MetadataRecord other = obj as MetadataRecord;
+
             if (other == null)
                 return 1;
-            else
-                return m_historianID.CompareTo(other.HistorianID);
+
+            return m_historianID.CompareTo(other.HistorianID);
         }
 
         /// <summary>
@@ -910,6 +1028,51 @@ namespace GSF.Historian.Files
         public override int GetHashCode()
         {
             return m_historianID.GetHashCode();
+        }
+
+        internal void WriteImage(BinaryWriter writer)
+        {
+            writer.Write(m_historianID);
+            writer.Write(m_remarks);
+            writer.Write(m_hardwareInfo);
+            writer.Write(m_emailAddresses);
+            writer.Write(m_description);
+            writer.Write(m_currentData);
+            writer.Write(m_name);
+            writer.Write(m_synonym1);
+            writer.Write(m_synonym2);
+            writer.Write(m_synonym3);
+            writer.Write(m_pagerNumbers);
+            writer.Write(m_phoneNumbers);
+            writer.Write(m_plantCode);
+            writer.Write(m_system);
+            writer.Write(m_emailTime);
+            writer.Write(m_scanRate);
+            writer.Write(m_unitNumber);
+            writer.Write(m_securityFlags.Value);
+            writer.Write(m_generalFlags.Value);
+            writer.Write(m_alarmFlags.Value);
+            writer.Write(m_compressionMinTime);
+            writer.Write(m_compressionMaxTime);
+            writer.Write(m_sourceID);
+
+            switch (m_generalFlags.DataType)
+            {
+                case DataType.Analog:
+                    m_analogFields.WriteImage(writer);
+                    break;
+                case DataType.Digital:
+                    m_digitalFields.WriteImage(writer);
+                    break;
+                case DataType.Composed:
+                    m_composedFields.WriteImage(writer);
+                    break;
+                case DataType.Constant:
+                    m_constantFields.WriteImage(writer);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         #endregion

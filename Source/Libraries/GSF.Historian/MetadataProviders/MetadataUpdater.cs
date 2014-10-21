@@ -154,7 +154,7 @@ namespace GSF.Historian.MetadataProviders
 
             foreach (DataRow row in tableData.Rows)
             {
-                newMetadataRecord = new MetadataRecord(Convert.ToInt32(row[0]));
+                newMetadataRecord = new MetadataRecord(Convert.ToInt32(row[0]), MetadataFileLegacyMode.Enabled);
                 if (!Convert.IsDBNull(row[1]))
                     newMetadataRecord.GeneralFlags.DataType = (DataType)Convert.ToInt32(row[1]);
                 if (!Convert.IsDBNull(row[2]))
@@ -274,7 +274,7 @@ namespace GSF.Historian.MetadataProviders
 
             while (readerData.Read())
             {
-                newMetadataRecord = new MetadataRecord(Convert.ToInt32(readerData[0]));
+                newMetadataRecord = new MetadataRecord(Convert.ToInt32(readerData[0]), MetadataFileLegacyMode.Enabled);
 
                 if (!Convert.IsDBNull(readerData[1]))
                     newMetadataRecord.GeneralFlags.DataType = (DataType)Convert.ToInt32(readerData[1]);

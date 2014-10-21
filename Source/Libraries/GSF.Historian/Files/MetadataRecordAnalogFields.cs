@@ -34,6 +34,7 @@
 //******************************************************************************************************
 
 using System;
+using System.IO;
 using System.Text;
 using GSF.Parsing;
 
@@ -84,6 +85,7 @@ namespace GSF.Historian.Files
         private float m_compressionLimit;
         private float m_alarmDelay;
         private int m_displayDigits;
+        private readonly MetadataFileLegacyMode m_legacyMode;
 
         #endregion
 
@@ -92,9 +94,27 @@ namespace GSF.Historian.Files
         /// <summary>
         /// Initializes a new instance of the <see cref="MetadataRecordAnalogFields"/> class.
         /// </summary>
-        internal MetadataRecordAnalogFields()
+        /// <param name="legacyMode">Legacy mode of <see cref="MetadataFile"/>.</param>
+        internal MetadataRecordAnalogFields(MetadataFileLegacyMode legacyMode)
         {
             m_engineeringUnits = string.Empty;
+            m_legacyMode = legacyMode;
+        }
+
+        internal MetadataRecordAnalogFields(BinaryReader reader)
+        {
+            m_legacyMode = MetadataFileLegacyMode.Disabled;
+            m_engineeringUnits = reader.ReadString();
+            m_highAlarm = reader.ReadSingle();
+            m_lowAlarm = reader.ReadSingle();
+            m_highRange = reader.ReadSingle();
+            m_lowRange = reader.ReadSingle();
+            m_highWarning = reader.ReadSingle();
+            m_lowWarning = reader.ReadSingle();
+            m_exceptionLimit = reader.ReadSingle();
+            m_compressionLimit = reader.ReadSingle();
+            m_alarmDelay = reader.ReadSingle();
+            m_displayDigits = reader.ReadInt32();
         }
 
         #endregion
@@ -119,7 +139,10 @@ namespace GSF.Historian.Files
                 if ((object)value == null)
                     throw new ArgumentNullException("value");
 
-                m_engineeringUnits = value.TruncateRight(24);
+                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
+                    m_engineeringUnits = value.TruncateRight(24);
+                else
+                    m_engineeringUnits = value;
             }
         }
 
@@ -314,11 +337,9 @@ namespace GSF.Historian.Files
 
                 return FixedLength;
             }
-            else
-            {
-                // Binary image does not have sufficient data.
-                return 0;
-            }
+
+            // Binary image does not have sufficient data.
+            return 0;
         }
 
         /// <summary>
@@ -338,7 +359,7 @@ namespace GSF.Historian.Files
 
             buffer.ValidateParameters(startIndex, length);
 
-            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_engineeringUnits.PadRight(24)), 0, buffer, startIndex, 24);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_engineeringUnits.PadRight(24).TruncateRight(24)), 0, buffer, startIndex, 24);
             Buffer.BlockCopy(LittleEndian.GetBytes(m_highAlarm), 0, buffer, startIndex + 24, 4);
             Buffer.BlockCopy(LittleEndian.GetBytes(m_lowAlarm), 0, buffer, startIndex + 28, 4);
             Buffer.BlockCopy(LittleEndian.GetBytes(m_highRange), 0, buffer, startIndex + 32, 4);
@@ -351,6 +372,21 @@ namespace GSF.Historian.Files
             Buffer.BlockCopy(LittleEndian.GetBytes(m_displayDigits), 0, buffer, startIndex + 60, 4);
 
             return length;
+        }
+
+        internal void WriteImage(BinaryWriter writer)
+        {
+            writer.Write(m_engineeringUnits);
+            writer.Write(m_highAlarm);
+            writer.Write(m_lowAlarm);
+            writer.Write(m_highRange);
+            writer.Write(m_lowRange);
+            writer.Write(m_highWarning);
+            writer.Write(m_lowWarning);
+            writer.Write(m_exceptionLimit);
+            writer.Write(m_compressionLimit);
+            writer.Write(m_alarmDelay);
+            writer.Write(m_displayDigits);
         }
 
         #endregion

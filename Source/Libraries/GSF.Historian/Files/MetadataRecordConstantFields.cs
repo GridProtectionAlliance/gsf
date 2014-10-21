@@ -32,6 +32,7 @@
 //******************************************************************************************************
 
 using System;
+using System.IO;
 using GSF.Parsing;
 
 namespace GSF.Historian.Files
@@ -73,6 +74,12 @@ namespace GSF.Historian.Files
         /// </summary>
         internal MetadataRecordConstantFields()
         {
+        }
+
+        internal MetadataRecordConstantFields(BinaryReader reader)
+        {
+            m_value = reader.ReadSingle();
+            m_displayDigits = reader.ReadInt32();
         }
 
         #endregion
@@ -141,11 +148,9 @@ namespace GSF.Historian.Files
 
                 return FixedLength;
             }
-            else
-            {
-                // Binary image does not have sufficient data.
-                return 0;
-            }
+
+            // Binary image does not have sufficient data.
+            return 0;
         }
 
         /// <summary>
@@ -169,6 +174,12 @@ namespace GSF.Historian.Files
             Buffer.BlockCopy(LittleEndian.GetBytes(m_displayDigits), 0, buffer, startIndex + 4, 4);
 
             return length;
+        }
+
+        internal void WriteImage(BinaryWriter writer)
+        {
+            writer.Write(m_value);
+            writer.Write(m_displayDigits);
         }
 
         #endregion

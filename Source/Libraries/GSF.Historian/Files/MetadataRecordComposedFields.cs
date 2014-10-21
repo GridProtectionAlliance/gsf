@@ -33,6 +33,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using GSF.Parsing;
 
@@ -83,6 +84,7 @@ namespace GSF.Historian.Files
         private string m_engineeringUnits;
         private string m_equation;
         private float m_compressionLimit;
+        private readonly MetadataFileLegacyMode m_legacyMode;
 
         #endregion
 
@@ -91,15 +93,43 @@ namespace GSF.Historian.Files
         /// <summary>
         /// Initializes a new instance of the <see cref="MetadataRecordComposedFields"/> class.
         /// </summary>
-        internal MetadataRecordComposedFields()
+        /// <param name="legacyMode">Legacy mode of <see cref="MetadataFile"/>.</param>
+        internal MetadataRecordComposedFields(MetadataFileLegacyMode legacyMode)
         {
             m_engineeringUnits = string.Empty;
             m_equation = string.Empty;
             m_inputPointers = new List<int>();
+
             for (int i = 0; i < 12; i++)
             {
                 m_inputPointers.Add(default(int));
             }
+
+            m_legacyMode = legacyMode;
+        }
+
+        internal MetadataRecordComposedFields(BinaryReader reader)
+        {
+            m_legacyMode = MetadataFileLegacyMode.Disabled;
+            m_highAlarm = reader.ReadSingle();
+            m_lowAlarm = reader.ReadSingle();
+            m_highRange = reader.ReadSingle();
+            m_lowRange = reader.ReadSingle();
+            m_lowWarning = reader.ReadSingle();
+            m_highWarning = reader.ReadSingle();
+            m_displayDigits = reader.ReadInt32();
+            m_inputPointers = new List<int>();
+
+            int count = reader.ReadInt32();
+
+            for (int i = 0; i < count; i++)
+            {
+                m_inputPointers.Add(reader.ReadInt32());
+            }
+
+            m_engineeringUnits = reader.ReadString();
+            m_equation = reader.ReadString();
+            m_compressionLimit = reader.ReadSingle();
         }
 
         #endregion
@@ -237,7 +267,10 @@ namespace GSF.Historian.Files
                 if ((object)value == null)
                     throw new ArgumentNullException("value");
 
-                m_engineeringUnits = value.TruncateRight(24);
+                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
+                    m_engineeringUnits = value.TruncateRight(24);
+                else
+                    m_engineeringUnits = value;
             }
         }
 
@@ -256,7 +289,10 @@ namespace GSF.Historian.Files
                 if ((object)value == null)
                     throw new ArgumentNullException("value");
 
-                m_equation = value.TruncateRight(256);
+                if (m_legacyMode == MetadataFileLegacyMode.Enabled)
+                    m_equation = value.TruncateRight(256);
+                else
+                    m_equation = value;
             }
         }
 
@@ -309,21 +345,21 @@ namespace GSF.Historian.Files
                 LowWarning = LittleEndian.ToSingle(buffer, startIndex + 16);
                 HighWarning = LittleEndian.ToSingle(buffer, startIndex + 20);
                 DisplayDigits = LittleEndian.ToInt32(buffer, startIndex + 24);
+
                 for (int i = 0; i < m_inputPointers.Count; i++)
                 {
                     m_inputPointers[i] = LittleEndian.ToInt32(buffer, startIndex + 28 + (i * 4));
                 }
+
                 EngineeringUnits = Encoding.ASCII.GetString(buffer, startIndex + 76, 24).Trim();
                 Equation = Encoding.ASCII.GetString(buffer, startIndex + 100, 256).Trim();
                 CompressionLimit = LittleEndian.ToSingle(buffer, startIndex + 356);
 
                 return FixedLength;
             }
-            else
-            {
-                // Binary image does not have sufficient data.
-                return 0;
-            }
+
+            // Binary image does not have sufficient data.
+            return 0;
         }
 
         /// <summary>
@@ -350,15 +386,38 @@ namespace GSF.Historian.Files
             Buffer.BlockCopy(LittleEndian.GetBytes(m_lowWarning), 0, buffer, startIndex + 16, 4);
             Buffer.BlockCopy(LittleEndian.GetBytes(m_highWarning), 0, buffer, startIndex + 20, 4);
             Buffer.BlockCopy(LittleEndian.GetBytes(m_displayDigits), 0, buffer, startIndex + 24, 4);
+
             for (int i = 0; i < m_inputPointers.Count; i++)
             {
                 Buffer.BlockCopy(LittleEndian.GetBytes(m_inputPointers[i]), 0, buffer, startIndex + 28 + (i * 4), 4);
             }
-            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_engineeringUnits.PadRight(24)), 0, buffer, startIndex + 76, 24);
-            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_equation.PadRight(256)), 0, buffer, startIndex + 100, 256);
+
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_engineeringUnits.PadRight(24).TruncateRight(24)), 0, buffer, startIndex + 76, 24);
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_equation.PadRight(256).TruncateRight(256)), 0, buffer, startIndex + 100, 256);
             Buffer.BlockCopy(LittleEndian.GetBytes(m_compressionLimit), 0, buffer, startIndex + 356, 4);
 
             return length;
+        }
+
+        internal void WriteImage(BinaryWriter writer)
+        {
+            writer.Write(m_highAlarm);
+            writer.Write(m_lowAlarm);
+            writer.Write(m_highRange);
+            writer.Write(m_lowRange);
+            writer.Write(m_lowWarning);
+            writer.Write(m_highWarning);
+            writer.Write(m_displayDigits);
+            writer.Write(m_inputPointers.Count);
+
+            foreach (int inputPointer in m_inputPointers)
+            {
+                writer.Write(inputPointer);
+            }
+
+            writer.Write(m_engineeringUnits);
+            writer.Write(m_equation);
+            writer.Write(m_compressionLimit);
         }
 
         #endregion
