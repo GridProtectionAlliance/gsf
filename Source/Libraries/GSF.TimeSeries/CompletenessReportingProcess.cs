@@ -40,7 +40,7 @@ namespace GSF.TimeSeries
     /// <summary>
     /// Represents the process that generates reports for the time-series service.
     /// </summary>
-    public class DataQualityReportingProcess : IPersistSettings
+    public class CompletenessReportingProcess : IPersistSettings
     {
         #region [ Members ]
 
@@ -66,16 +66,16 @@ namespace GSF.TimeSeries
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new instance of the <see cref="DataQualityReportingProcess"/> class.
+        /// Creates a new instance of the <see cref="CompletenessReportingProcess"/> class.
         /// </summary>
-        public DataQualityReportingProcess()
+        public CompletenessReportingProcess()
         {
             m_reportGenerationQueue = new ConcurrentQueue<DateTime>();
             m_executeOperation = new LongSynchronizedOperation(Execute) { IsBackground = true };
 
             m_archiveFilePath = "Eval(statArchiveFile.FileName)";
             m_reportLocation = "Reports";
-            m_title = "Eval(securityProvider.ApplicationName) Data Quality Report";
+            m_title = "Eval(securityProvider.ApplicationName) Completeness Report";
             m_company = "Eval(systemSettings.CompanyName)";
             m_level4Threshold = 99.0D;
             m_level3Threshold = 90.0D;

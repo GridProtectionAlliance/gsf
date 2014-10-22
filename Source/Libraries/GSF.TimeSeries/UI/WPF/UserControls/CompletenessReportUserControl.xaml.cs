@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  DataQualityReportUserControl.xaml.cs - Gbtc
+//  CompletenessReportUserControl.xaml.cs - Gbtc
 //
 //  Copyright © 2014, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -31,16 +31,16 @@ using GSF.TimeSeries.UI.ViewModels;
 namespace GSF.TimeSeries.UI.UserControls
 {
     /// <summary>
-    /// Interaction logic for DataQualityReportUserControl.xaml
+    /// Interaction logic for CompletenessReportUserControl.xaml
     /// </summary>
-    public partial class DataQualityReportUserControl : UserControl
+    public partial class CompletenessReportUserControl : UserControl
     {
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new instance of the <see cref="DataQualityReportUserControl"/> class.
+        /// Creates a new instance of the <see cref="CompletenessReportUserControl"/> class.
         /// </summary>
-        public DataQualityReportUserControl()
+        public CompletenessReportUserControl()
         {
             InitializeComponent();
         }
@@ -49,11 +49,11 @@ namespace GSF.TimeSeries.UI.UserControls
 
         #region [ Properties ]
 
-        private DataQualityReportViewModel ViewModel
+        private CompletenessReportViewModel ViewModel
         {
             get
             {
-                return Resources["ViewModel"] as DataQualityReportViewModel;
+                return Resources["ViewModel"] as CompletenessReportViewModel;
             }
         }
 
@@ -61,7 +61,7 @@ namespace GSF.TimeSeries.UI.UserControls
 
         #region [ Methods ]
 
-        private void DataQualityReportUserControl_Loaded(object sender, RoutedEventArgs e)
+        private void CompletenessReportUserControl_Loaded(object sender, RoutedEventArgs e)
         {
             // Attach to service connected events
             CommonFunctions.ServiceConnectionRefreshed += CommonFunctions_ServiceConnectionRefreshed;
@@ -70,7 +70,7 @@ namespace GSF.TimeSeries.UI.UserControls
             UpdateServiceConnectivity();
         }
 
-        private void DataQualityReportUserControl_Unloaded(object sender, RoutedEventArgs e)
+        private void CompletenessReportUserControl_Unloaded(object sender, RoutedEventArgs e)
         {
             // Detach from service connected events
             CommonFunctions.ServiceConnectionRefreshed -= CommonFunctions_ServiceConnectionRefreshed;

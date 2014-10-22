@@ -118,7 +118,7 @@ namespace GSF.TimeSeries
         private bool m_preferCachedConfiguration;
         private MultipleDestinationExporter m_healthExporter;
         private MultipleDestinationExporter m_statusExporter;
-        private DataQualityReportingProcess m_dataQualityReportingProcess;
+        private CompletenessReportingProcess m_completenessReportingProcess;
         private ProcessQueue<Tuple<string, Action<bool>>> m_reloadConfigQueue;
         private LongSynchronizedOperation m_configurationCacheOperation;
         private volatile DataSet m_latestConfiguration;
@@ -546,11 +546,11 @@ namespace GSF.TimeSeries
             m_serviceHelper.ServiceComponents.Add(m_statusExporter);
 
             // Create reporting process
-            m_dataQualityReportingProcess = new DataQualityReportingProcess();
-            m_dataQualityReportingProcess.SettingsCategory = "DataQualityReporting";
-            m_dataQualityReportingProcess.PersistSettings = true;
-            m_dataQualityReportingProcess.LoadSettings();
-            m_serviceHelper.ServiceComponents.Add(m_dataQualityReportingProcess);
+            m_completenessReportingProcess = new CompletenessReportingProcess();
+            m_completenessReportingProcess.SettingsCategory = "CompletenessReporting";
+            m_completenessReportingProcess.PersistSettings = true;
+            m_completenessReportingProcess.LoadSettings();
+            m_serviceHelper.ServiceComponents.Add(m_completenessReportingProcess);
 
             // Define scheduled service processes
             m_serviceHelper.AddScheduledProcess(HealthMonitorProcessHandler, "HealthMonitor", "* * * * *");    // Every minute
@@ -626,10 +626,10 @@ namespace GSF.TimeSeries
             }
 
             // Dispose reporting process
-            if ((object)m_dataQualityReportingProcess != null)
+            if ((object)m_completenessReportingProcess != null)
             {
-                m_serviceHelper.ServiceComponents.Remove(m_dataQualityReportingProcess);
-                m_dataQualityReportingProcess = null;
+                m_serviceHelper.ServiceComponents.Remove(m_completenessReportingProcess);
+                m_completenessReportingProcess = null;
             }
 
             // Dispose Iaon session
@@ -1522,12 +1522,12 @@ namespace GSF.TimeSeries
         /// <param name="parameters">Scheduled event parameters.</param>
         protected virtual void ReportingProcessHandler(string name, object[] parameters)
         {
-            DataQualityReportingProcess dataQualityReportingProcess = m_dataQualityReportingProcess;
+            CompletenessReportingProcess completenessReportingProcess = m_completenessReportingProcess;
 
-            if ((object)dataQualityReportingProcess != null)
+            if ((object)completenessReportingProcess != null)
             {
-                dataQualityReportingProcess.CleanReportLocation();
-                dataQualityReportingProcess.GenerateReport(DateTime.Today - TimeSpan.FromDays(1));
+                completenessReportingProcess.CleanReportLocation();
+                completenessReportingProcess.GenerateReport(DateTime.Today - TimeSpan.FromDays(1));
             }
         }
 
@@ -2216,7 +2216,7 @@ namespace GSF.TimeSeries
             }
             else
             {
-                DataQualityReportingProcess dataQualityReportingProcess;
+                CompletenessReportingProcess completenessReportingProcess;
 
                 StringBuilder listBuilder;
                 List<string> reportsList;
@@ -2227,14 +2227,14 @@ namespace GSF.TimeSeries
                 FileInfo info;
                 TimeSpan expiration;
 
-                dataQualityReportingProcess = m_dataQualityReportingProcess;
+                completenessReportingProcess = m_completenessReportingProcess;
 
-                if ((object)dataQualityReportingProcess != null)
+                if ((object)completenessReportingProcess != null)
                 {
-                    dataQualityReportingProcess.CleanReportLocation();
+                    completenessReportingProcess.CleanReportLocation();
 
-                    reportsList = dataQualityReportingProcess.GetReportsList();
-                    pendingReportsList = dataQualityReportingProcess.GetPendingReportsList();
+                    reportsList = completenessReportingProcess.GetReportsList();
+                    pendingReportsList = completenessReportingProcess.GetPendingReportsList();
                     fileColumnWidth = Math.Max(6, reportsList.Concat(pendingReportsList).Select(report => report.Length).DefaultIfEmpty(0).Max()) / 4 * 4 + 4;
 
                     listBuilder = new StringBuilder();
@@ -2245,11 +2245,11 @@ namespace GSF.TimeSeries
 
                     foreach (string report in reportsList)
                     {
-                        reportPath = FilePath.GetAbsolutePath(Path.Combine(dataQualityReportingProcess.ReportLocation, report));
+                        reportPath = FilePath.GetAbsolutePath(Path.Combine(completenessReportingProcess.ReportLocation, report));
                         listBuilder.Append(report.PadRight(fileColumnWidth));
 
                         info = new FileInfo(reportPath);
-                        expiration = TimeSpan.FromDays(dataQualityReportingProcess.IdleReportLifetime) - (DateTime.UtcNow - info.LastAccessTimeUtc);
+                        expiration = TimeSpan.FromDays(completenessReportingProcess.IdleReportLifetime) - (DateTime.UtcNow - info.LastAccessTimeUtc);
 
                         if (expiration.TotalSeconds <= 0.0D)
                             listBuilder.Append("Expired");
@@ -2310,22 +2310,22 @@ namespace GSF.TimeSeries
                 DateTime now = DateTime.Now;
                 DateTime today = DateTime.Parse(now.ToString("yyyy-MM-dd"));
 
-                DataQualityReportingProcess dataQualityReportingProcess;
+                CompletenessReportingProcess completenessReportingProcess;
                 DateTime reportDate;
                 string reportPath;
 
                 try
                 {
-                    dataQualityReportingProcess = m_dataQualityReportingProcess;
+                    completenessReportingProcess = m_completenessReportingProcess;
 
-                    if ((object)dataQualityReportingProcess != null)
+                    if ((object)completenessReportingProcess != null)
                     {
                         if (!requestInfo.Request.Arguments.Exists("OrderedArg1") || !DateTime.TryParse(requestInfo.Request.Arguments["OrderedArg1"], out reportDate))
                             reportDate = today - TimeSpan.FromDays(1);
 
                         if (reportDate < today)
                         {
-                            reportPath = FilePath.GetAbsolutePath(Path.Combine(dataQualityReportingProcess.ReportLocation, string.Format("{0} {1:yyyy-MM-dd}.pdf", dataQualityReportingProcess.Title, reportDate)));
+                            reportPath = FilePath.GetAbsolutePath(Path.Combine(completenessReportingProcess.ReportLocation, string.Format("{0} {1:yyyy-MM-dd}.pdf", completenessReportingProcess.Title, reportDate)));
 
                             if (File.Exists(reportPath))
                             {
@@ -2380,21 +2380,21 @@ namespace GSF.TimeSeries
                 DateTime now = DateTime.Now;
                 DateTime today = DateTime.Parse(now.ToString("yyyy-MM-dd"));
 
-                DataQualityReportingProcess dataQualityReportingProcess;
+                CompletenessReportingProcess completenessReportingProcess;
                 DateTime reportDate;
 
                 try
                 {
-                    dataQualityReportingProcess = m_dataQualityReportingProcess;
+                    completenessReportingProcess = m_completenessReportingProcess;
 
-                    if ((object)dataQualityReportingProcess != null)
+                    if ((object)completenessReportingProcess != null)
                     {
                         if (!requestInfo.Request.Arguments.Exists("OrderedArg1") || !DateTime.TryParse(requestInfo.Request.Arguments["OrderedArg1"], out reportDate))
                             reportDate = today - TimeSpan.FromDays(1);
 
                         if (reportDate < today)
                         {
-                            dataQualityReportingProcess.GenerateReport(reportDate);
+                            completenessReportingProcess.GenerateReport(reportDate);
                             SendResponse(requestInfo, true, "Report was successfully queued for generation.");
                         }
                         else
@@ -2440,12 +2440,12 @@ namespace GSF.TimeSeries
             }
             else
             {
-                DataQualityReportingProcess dataQualityReportingProcess = m_dataQualityReportingProcess;
+                CompletenessReportingProcess completenessReportingProcess = m_completenessReportingProcess;
 
                 string arg;
                 double argValue;
 
-                if ((object)dataQualityReportingProcess == null)
+                if ((object)completenessReportingProcess == null)
                     return;
 
                 if (requestInfo.Request.Arguments.Exists("get") || !requestInfo.Request.Arguments.Exists("set"))
@@ -2454,11 +2454,11 @@ namespace GSF.TimeSeries
                     {
                         string configuration = string.Format("--archiveLocation=\" {0} \" --reportLocation=\" {1} \" --title=\" {2} \" --company=\" {3} \" " +
                             "--level4threshold=\" {4} \" --level3threshold=\" {5} \" --level4alias=\" {6} \" --level3alias=\" {7} \" --idleReportLifetime=\" {8} \"",
-                            FilePath.GetDirectoryName(dataQualityReportingProcess.ArchiveFilePath).Replace("\"", "\\\""),
-                            dataQualityReportingProcess.ReportLocation.Replace("\"", "\\\""), dataQualityReportingProcess.Title.Replace("\"", "\\\""),
-                            dataQualityReportingProcess.Company.Replace("\"", "\\\""), dataQualityReportingProcess.Level4Threshold,
-                            dataQualityReportingProcess.Level3Threshold, dataQualityReportingProcess.Level4Alias.Replace("\"", "\\\""),
-                            dataQualityReportingProcess.Level3Alias.Replace("\"", "\\\""), dataQualityReportingProcess.IdleReportLifetime);
+                            FilePath.GetDirectoryName(completenessReportingProcess.ArchiveFilePath).Replace("\"", "\\\""),
+                            completenessReportingProcess.ReportLocation.Replace("\"", "\\\""), completenessReportingProcess.Title.Replace("\"", "\\\""),
+                            completenessReportingProcess.Company.Replace("\"", "\\\""), completenessReportingProcess.Level4Threshold,
+                            completenessReportingProcess.Level3Threshold, completenessReportingProcess.Level4Alias.Replace("\"", "\\\""),
+                            completenessReportingProcess.Level3Alias.Replace("\"", "\\\""), completenessReportingProcess.IdleReportLifetime);
 
                         SendResponse(requestInfo, true, configuration);
                     }
@@ -2471,49 +2471,49 @@ namespace GSF.TimeSeries
                 {
                     try
                     {
-                        lock (dataQualityReportingProcess)
+                        lock (completenessReportingProcess)
                         {
                             arg = requestInfo.Request.Arguments["reportLocation"];
 
                             if ((object)arg != null)
-                                dataQualityReportingProcess.ReportLocation = arg.Trim();
+                                completenessReportingProcess.ReportLocation = arg.Trim();
 
                             arg = requestInfo.Request.Arguments["titleText"];
 
                             if ((object)arg != null)
-                                dataQualityReportingProcess.Title = arg.Trim();
+                                completenessReportingProcess.Title = arg.Trim();
 
                             arg = requestInfo.Request.Arguments["companyText"];
 
                             if ((object)arg != null)
-                                dataQualityReportingProcess.Company = arg.Trim();
+                                completenessReportingProcess.Company = arg.Trim();
 
                             arg = requestInfo.Request.Arguments["level4Threshold"];
 
                             if ((object)arg != null && double.TryParse(arg.Trim(), out argValue))
-                                dataQualityReportingProcess.Level4Threshold = argValue;
+                                completenessReportingProcess.Level4Threshold = argValue;
 
                             arg = requestInfo.Request.Arguments["level3Threshold"];
 
                             if ((object)arg != null && double.TryParse(arg.Trim(), out argValue))
-                                dataQualityReportingProcess.Level3Threshold = argValue;
+                                completenessReportingProcess.Level3Threshold = argValue;
 
                             arg = requestInfo.Request.Arguments["level4Alias"];
 
                             if ((object)arg != null)
-                                dataQualityReportingProcess.Level4Alias = arg.Trim();
+                                completenessReportingProcess.Level4Alias = arg.Trim();
 
                             arg = requestInfo.Request.Arguments["level3Alias"];
 
                             if ((object)arg != null)
-                                dataQualityReportingProcess.Level3Alias = arg.Trim();
+                                completenessReportingProcess.Level3Alias = arg.Trim();
 
                             arg = requestInfo.Request.Arguments["idleReportLifetime"];
 
                             if ((object)arg != null && double.TryParse(arg.Trim(), out argValue))
-                                dataQualityReportingProcess.IdleReportLifetime = argValue;
+                                completenessReportingProcess.IdleReportLifetime = argValue;
 
-                            dataQualityReportingProcess.SaveSettings();
+                            completenessReportingProcess.SaveSettings();
                             SendResponse(requestInfo, true, "Reporting configuration saved successfully.");
                         }
                     }

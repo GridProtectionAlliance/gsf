@@ -91,7 +91,7 @@
             this.TitleTextTextBox.Name = "TitleTextTextBox";
             this.TitleTextTextBox.Size = new System.Drawing.Size(142, 20);
             this.TitleTextTextBox.TabIndex = 0;
-            this.TitleTextTextBox.Text = "GSF Data Quality Report";
+            this.TitleTextTextBox.Text = "GSF Completeness Report";
             // 
             // CompanyTextTextBox
             // 

@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  DataQualityReportViewModel.cs - Gbtc
+//  CompletenessReportViewModel.cs - Gbtc
 //
 //  Copyright © 2014, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -42,9 +42,9 @@ using Microsoft.Win32;
 namespace GSF.TimeSeries.UI.ViewModels
 {
     /// <summary>
-    /// View model for the <see cref="DataQualityReportUserControl"/>.
+    /// View model for the <see cref="CompletenessReportUserControl"/>.
     /// </summary>
-    public class DataQualityReportViewModel : ViewModelBase, IDisposable
+    public class CompletenessReportViewModel : ViewModelBase, IDisposable
     {
         #region [ Members ]
 
@@ -58,7 +58,7 @@ namespace GSF.TimeSeries.UI.ViewModels
             #region [ Members ]
 
             // Fields
-            private DataQualityReportViewModel m_parent;
+            private CompletenessReportViewModel m_parent;
 
             private string m_date;
             private string m_status;
@@ -71,7 +71,7 @@ namespace GSF.TimeSeries.UI.ViewModels
             /// <summary>
             /// Creates a new instance of the <see cref="AvailableReport"/> class.
             /// </summary>
-            internal AvailableReport(DataQualityReportViewModel parent)
+            internal AvailableReport(CompletenessReportViewModel parent)
             {
                 m_parent = parent;
             }
@@ -171,9 +171,9 @@ namespace GSF.TimeSeries.UI.ViewModels
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new instance of the <see cref="DataQualityReportViewModel"/> class.
+        /// Creates a new instance of the <see cref="CompletenessReportViewModel"/> class.
         /// </summary>
-        public DataQualityReportViewModel()
+        public CompletenessReportViewModel()
         {
             ReportGenerationTime = new DateTime(1, 1, 1, 2, 0, 0);
             m_originalReportGenerationTime = m_reportGenerationTime;
@@ -471,7 +471,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         #region [ Methods ]
 
         /// <summary>
-        /// Releases all the resources used by the <see cref="DataQualityReportViewModel"/> object.
+        /// Releases all the resources used by the <see cref="CompletenessReportViewModel"/> object.
         /// </summary>
         public void Dispose()
         {
