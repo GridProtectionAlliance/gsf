@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  ReportGenerator.cs - Gbtc
+//  CompletenessReportGenerator.cs - Gbtc
 //
 //  Copyright © 2014, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -37,9 +37,9 @@ using Encoder = System.Drawing.Imaging.Encoder;
 namespace StatHistorianReportGenerator
 {
     /// <summary>
-    /// Generates GSF Data Quality Report for a specified date.
+    /// Generates GSF Data Completeness Report for a specified date.
     /// </summary>
-    public class ReportGenerator
+    public class CompletenessReportGenerator
     {
         #region [ Members ]
 
@@ -85,11 +85,11 @@ namespace StatHistorianReportGenerator
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new instance of the <see cref="ReportGenerator"/> class.
+        /// Creates a new instance of the <see cref="CompletenessReportGenerator"/> class.
         /// </summary>
-        public ReportGenerator()
+        public CompletenessReportGenerator()
         {
-            m_titleText = "GSF Data Quality Report";
+            m_titleText = "GSF Data Completeness Report";
             m_companyText = "Grid Protection Alliance";
             m_reportDate = ToDate(DateTime.Now);
             m_level4Threshold = 99.0D;
@@ -161,7 +161,7 @@ namespace StatHistorianReportGenerator
         }
 
         /// <summary>
-        /// Gets or sets the availability threshold at which devices will be considered to be in Level 4.
+        /// Gets or sets the completeness threshold at which devices will be considered to be in Level 4.
         /// </summary>
         public double Level4Threshold
         {
@@ -185,7 +185,7 @@ namespace StatHistorianReportGenerator
         }
 
         /// <summary>
-        /// Gets or sets the availability threshold at which devices will be considered to be in Level 3.
+        /// Gets or sets the completeness threshold at which devices will be considered to be in Level 3.
         /// </summary>
         public double Level3Threshold
         {
@@ -262,7 +262,7 @@ namespace StatHistorianReportGenerator
             verticalMillimeters += InsertTitle(fontDefinition, pageOne, verticalMillimeters) + SpacingMillimeters;
             verticalMillimeters += InsertReportDate(fontDefinition, pageOne, verticalMillimeters) + 2.0D * SpacingMillimeters;
 
-            verticalMillimeters += InsertSectionHeader(fontDefinition, pageOne, verticalMillimeters, "5-day Device Data Quality");
+            verticalMillimeters += InsertSectionHeader(fontDefinition, pageOne, verticalMillimeters, "5-day Device Data Completeness");
             verticalMillimeters += InsertFiveDaySummary(report, fontDefinition, pageOne, verticalMillimeters) + SpacingMillimeters;
 
             verticalMillimeters += InsertSectionHeader(fontDefinition, pageOne, verticalMillimeters, "Percent of Devices with Acceptable Quality (30 days)");
@@ -276,7 +276,7 @@ namespace StatHistorianReportGenerator
             verticalMillimeters = PageMarginMillimeters;
             verticalMillimeters += InsertReportDate(fontDefinition, pageTwo, verticalMillimeters) + SpacingMillimeters;
 
-            verticalMillimeters += InsertSectionHeader(fontDefinition, pageTwo, verticalMillimeters, "Data Quality Breakdown");
+            verticalMillimeters += InsertSectionHeader(fontDefinition, pageTwo, verticalMillimeters, "Data Completeness Breakdown");
             verticalMillimeters += InsertPieChart(fontDefinition, pageTwo, verticalMillimeters) + SpacingMillimeters;
 
             InsertDetailsList(report, fontDefinition, pageTwo, verticalMillimeters, now, 2);
@@ -696,12 +696,12 @@ namespace StatHistorianReportGenerator
             int lengthWithoutWord;
             double lineHeightMillimeters;
 
-            string definitionsText = string.Format("Level 4: {0} - Devices which are reporting as expected, with an availability of at least {1:0.##}% on the report date.", m_level4Alias, m_level4Threshold) + Environment.NewLine +
-                string.Format("Level 3: {0} - Devices with an availability of at least {1:0.##}% on the report date.", m_level3Alias, m_level3Threshold) + Environment.NewLine +
-                string.Format("Level 2: Poor - Devices which reported on the report date, but had an availability below {0:0.##}%.", m_level3Threshold) + Environment.NewLine +
+            string definitionsText = string.Format("Level 4: {0} - Devices which are reporting as expected, with a completeness of at least {1:0.##}% on the report date.", m_level4Alias, m_level4Threshold) + Environment.NewLine +
+                string.Format("Level 3: {0} - Devices with a completeness of at least {1:0.##}% on the report date.", m_level3Alias, m_level3Threshold) + Environment.NewLine +
+                string.Format("Level 2: Poor - Devices which reported on the report date, but had an completeness below {0:0.##}%.", m_level3Threshold) + Environment.NewLine +
                 "Level 1: Offline - Devices which did not report on the report date, but have reported at some time during the 30 days prior to the report date." + Environment.NewLine +
                 "Level 0: Failed - Devices which have not reported during the 30 days prior to the report date." + Environment.NewLine +
-                "Availability: Percentage of measurements received over total measurements expected, per device." + Environment.NewLine +
+                "Completeness: Percentage of measurements received over total measurements expected, per device." + Environment.NewLine +
                 "Acceptable Quality: Devices which are in Level 4 or Level 3.";
 
             // Break the definitions text into lines
@@ -865,7 +865,7 @@ namespace StatHistorianReportGenerator
             columnHeaderFont.bBold = true;
 
             // Set up the column header and the initial values for the column widths
-            columnHeaders = new string[] { "Name", "Availability", "Data Errors", "Time Errors" };
+            columnHeaders = new string[] { "Name", "Completeness", "Data Errors", "Time Errors" };
             columnWidthMillimeters = columnHeaders.Select(columnHeaderFont.rGetTextWidthMM).ToArray();
 
             for (int level = 0; level < levels.Length; level++)

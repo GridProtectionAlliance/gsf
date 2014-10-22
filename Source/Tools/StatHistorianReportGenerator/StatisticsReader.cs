@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using GSF.Historian;
 using GSF.Historian.Files;
 
@@ -52,6 +53,17 @@ namespace StatHistorianReportGenerator
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Metadata records scanned from the metadata file.
+        /// </summary>
+        public IReadOnlyCollection<MetadataRecord> MetadataRecords
+        {
+            get
+            {
+                return m_metadataRecords.AsReadOnly();
+            }
+        }
 
         /// <summary>
         /// Path to the archive file (*_archive.d).
@@ -132,6 +144,20 @@ namespace StatHistorianReportGenerator
             return m_metadataRecords
                 .Where(record => record.Synonym1.EndsWith(signalReferenceEnding))
                 .ToDictionary(record => record, record => m_archiveReader.ReadData(record.HistorianID, StartTime, EndTime));
+        }
+
+        /// <summary>
+        /// Reads data for a group of historian IDs.
+        /// </summary>
+        /// <param name="historianIDs">The historian IDs.</param>
+        /// <returns>Collection of data points read from the archive.</returns>
+        /// <remarks>
+        /// All parameters--<see cref="ArchiveFilePath"/>, <see cref="StartTime"/>, and <see cref="EndTime"/>--must
+        /// be set manually before attempting to read statistics from the archive.
+        /// </remarks>
+        public IEnumerable<IDataPoint> Read(IEnumerable<int> historianIDs)
+        {
+            return m_archiveReader.ReadData(historianIDs, StartTime, EndTime);
         }
 
         /// <summary>

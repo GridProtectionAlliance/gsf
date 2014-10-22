@@ -1,8 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
+﻿//******************************************************************************************************
+//  Program.cs - Gbtc
+//
+//  Copyright © 2014, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  02/10/2014 - Stephen C. Wills
+//       Generated original version of source code.
+//
+//******************************************************************************************************
+
+using System;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using GSF.Console;
 using GSF.IO;
@@ -17,7 +37,7 @@ namespace StatHistorianReportGenerator
         [STAThread]
         static void Main()
         {
-            ReportGenerator reportGenerator;
+            CompletenessReportGenerator completenessReportGenerator;
             Arguments args;
             string arg;
 
@@ -28,11 +48,11 @@ namespace StatHistorianReportGenerator
 
             if (Environment.GetCommandLineArgs().Length > 1)
             {
-                reportGenerator = new ReportGenerator();
+                completenessReportGenerator = new CompletenessReportGenerator();
                 args = new Arguments(Environment.CommandLine, true);
 
                 if (TryGetValue(args, "archiveLocation", out arg))
-                    reportGenerator.ArchiveLocation = arg;
+                    completenessReportGenerator.ArchiveLocation = arg;
 
                 if (TryGetValue(args, "reportLocation", out arg))
                     reportLocation = arg;
@@ -41,35 +61,35 @@ namespace StatHistorianReportGenerator
                     reportFileName = arg;
 
                 if (TryGetValue(args, "title", out arg))
-                    reportGenerator.TitleText = arg;
+                    completenessReportGenerator.TitleText = arg;
 
                 if (TryGetValue(args, "company", out arg))
-                    reportGenerator.CompanyText = arg;
+                    completenessReportGenerator.CompanyText = arg;
 
                 if (TryGetValue(args, "reportDate", out arg) && DateTime.TryParse(arg, out reportDate))
-                    reportGenerator.ReportDate = reportDate;
+                    completenessReportGenerator.ReportDate = reportDate;
 
                 if (TryGetValue(args, "level4Threshold", out arg) && double.TryParse(arg, out threshold))
-                    reportGenerator.Level4Threshold = threshold;
+                    completenessReportGenerator.Level4Threshold = threshold;
 
                 if (TryGetValue(args, "level3Threshold", out arg) && double.TryParse(arg, out threshold))
-                    reportGenerator.Level3Threshold = threshold;
+                    completenessReportGenerator.Level3Threshold = threshold;
 
                 if (TryGetValue(args, "level4Alias", out arg))
-                    reportGenerator.Level4Alias = arg;
+                    completenessReportGenerator.Level4Alias = arg;
 
                 if (TryGetValue(args, "level3Alias", out arg))
-                    reportGenerator.Level3Alias = arg;
+                    completenessReportGenerator.Level3Alias = arg;
 
                 if (string.IsNullOrEmpty(reportFileName))
-                    reportFileName = string.Format("{0} {1:yyyy-MM-dd}.pdf", reportGenerator.TitleText, reportGenerator.ReportDate);
+                    reportFileName = string.Format("{0} {1:yyyy-MM-dd}.pdf", completenessReportGenerator.TitleText, completenessReportGenerator.ReportDate);
 
                 reportLocation = FilePath.GetAbsolutePath(reportLocation);
 
                 if (!Directory.Exists(reportLocation))
                     Directory.CreateDirectory(reportLocation);
 
-                reportGenerator.GenerateReport().Save(Path.Combine(reportLocation, reportFileName));
+                completenessReportGenerator.GenerateReport().Save(Path.Combine(reportLocation, reportFileName));
             }
             else
             {

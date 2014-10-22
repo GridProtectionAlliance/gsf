@@ -64,7 +64,7 @@ namespace StatHistorianReportGenerator
 
         private void GenerateReportButton_Click(object sender, EventArgs e)
         {
-            ReportGenerator reportGenerator;
+            CompletenessReportGenerator completenessReportGenerator;
             double level4Threshold;
             double level3Threshold;
 
@@ -75,7 +75,7 @@ namespace StatHistorianReportGenerator
 
                 if (fileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    reportGenerator = new ReportGenerator
+                    completenessReportGenerator = new CompletenessReportGenerator()
                     {
                         TitleText = TitleTextTextBox.Text,
                         CompanyText = CompanyTextTextBox.Text,
@@ -85,12 +85,12 @@ namespace StatHistorianReportGenerator
                     };
 
                     if (double.TryParse(Level4ThresholdTextBox.Text, out level4Threshold))
-                        reportGenerator.Level4Threshold = level4Threshold;
+                        completenessReportGenerator.Level4Threshold = level4Threshold;
 
                     if (double.TryParse(Level3ThresholdTextBox.Text, out level3Threshold))
-                        reportGenerator.Level3Threshold = level3Threshold;
+                        completenessReportGenerator.Level3Threshold = level3Threshold;
 
-                    reportGenerator.GenerateReport().Save(fileDialog.FileName);
+                    completenessReportGenerator.GenerateReport().Save(fileDialog.FileName);
                 }
             }
         }
