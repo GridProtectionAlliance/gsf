@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Drawing.Text;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -63,7 +64,7 @@ namespace GSF.TimeSeries.Statistics
             public string SourceAcronym;
             public string StatisticMeasurementNameFormat;
 
-            public DataRow[] StatisticMeasurements;
+            public List<DataRow> StatisticMeasurements;
         }
 
         // Represents a signal reference
@@ -441,7 +442,6 @@ namespace GSF.TimeSeries.Statistics
         // Fields
         private readonly object m_statisticsLock;
         private readonly List<Statistic> m_statistics;
-        private readonly Dictionary<string, List<DataRow>> m_dataSourceCache;
 
         private Timer m_reloadStatisticsTimer;
         private Timer m_statisticCalculationTimer;
@@ -502,7 +502,6 @@ namespace GSF.TimeSeries.Statistics
             m_calculateStatisticsOperation.IsBackground = true;
 
             m_performanceMonitor = new PerformanceMonitor();
-            m_dataSourceCache = new Dictionary<string, List<DataRow>>(StringComparer.OrdinalIgnoreCase);
 
             SourceRegistered += HandleSourceRegistered;
         }
@@ -805,46 +804,21 @@ namespace GSF.TimeSeries.Statistics
 
         private void LoadStatistics()
         {
+            StatisticSource[] sources;
+            StatisticSource source;
             Statistic statistic;
+
             Assembly assembly;
             Type type;
             MethodInfo method;
             string assemblyName, typeName, methodName;
+
+            Dictionary<string, StatisticSource> sourceLookup;
+            Dictionary<StatisticSource, List<DataRow>> activeMeasurementsLookup;
+            List<DataRow> statisticMeasurements;
+            long statisticMeasurementCount = 0L;
+
             bool reenable;
-
-            lock (StatisticSources)
-            {
-                // Clear the statistic measurements for each source
-                // so that they will reload on next calculation
-                foreach (StatisticSource source in StatisticSources)
-                {
-                    source.StatisticMeasurements = null;
-                }
-
-                // Reload data source cache - we do this within existing StatisticSources lock
-                // such that if contending with lock in CalculateStatistics it will wait for
-                // this updated data source cache as well before running calculations.
-                lock (m_dataSourceCache)
-                {
-                    SignalReference signal;
-                    List<DataRow> dataRows;
-
-                    m_dataSourceCache.Clear();
-
-                    // Create a measurement row cache for each statistic measurement keyed to statistic source (i.e., SourceName!SourceAcronym).
-                    // Using a preprocessed dictionary is much faster than processing a LIKE expression in the Select method later.
-                    foreach (DataRow row in DataSource.Tables["ActiveMeasurements"].Select("SignalType = 'STAT'"))
-                    {
-                        signal = new SignalReference(row["SignalReference"].ToNonNullString());
-
-                        if (signal.IsStatistic)
-                        {
-                            dataRows = m_dataSourceCache.GetOrAdd(signal.Acronym, source => new List<DataRow>());
-                            dataRows.Add(row);
-                        }
-                    }
-                }
-            }
 
             lock (m_statisticsLock)
             {
@@ -909,7 +883,44 @@ namespace GSF.TimeSeries.Statistics
                 }
             }
 
-            OnStatusMessage("Loaded {0} statistic calculation definitions...", m_statistics.Count);
+            lock (StatisticSources)
+            {
+                // Obtain a snapshot of the sources that are
+                // currently registered with the statistics engine
+                sources = StatisticSources.ToArray();
+            }
+
+            // Create a lookup table from signal reference to statistic source
+            sourceLookup = new Dictionary<string, StatisticSource>();
+
+            foreach (Tuple<StatisticSource, IEnumerable<Statistic>> mapping in sources.GroupJoin(m_statistics, src => src.SourceCategory, stat => stat.Source, Tuple.Create))
+            {
+                foreach (Statistic stat in mapping.Item2)
+                    sourceLookup.Add(GetSignalReference(stat, mapping.Item1), mapping.Item1);
+            }
+
+            // Create a lookup table from statistic source to a
+            // list of data rows from the ActiveMeasurements table
+            activeMeasurementsLookup = new Dictionary<StatisticSource, List<DataRow>>();
+
+            foreach (DataRow row in DataSource.Tables["ActiveMeasurements"].Select("SignalType = 'STAT'"))
+            {
+                if (sourceLookup.TryGetValue(row.Field<string>("SignalReference"), out source))
+                {
+                    statisticMeasurements = activeMeasurementsLookup.GetOrAdd(source, statisticSource => new List<DataRow>());
+                    statisticMeasurements.Add(row);
+                    statisticMeasurementCount++;
+                }
+            }
+
+            // Update StatisticMeasurements collections for all sources
+            foreach (StatisticSource src in sources)
+            {
+                if (activeMeasurementsLookup.TryGetValue(src, out statisticMeasurements))
+                    src.StatisticMeasurements = statisticMeasurements;
+            }
+
+            OnStatusMessage("Loaded {0} statistic calculation definitions and {1} statistic measurement definitions.", m_statistics.Count, statisticMeasurementCount);
 
             if (reenable)
             {
@@ -968,49 +979,23 @@ namespace GSF.TimeSeries.Statistics
         private ICollection<IMeasurement> CalculateStatistics(Statistic[] statistics, DateTime serverTime, StatisticSource source)
         {
             List<IMeasurement> calculatedStatistics = new List<IMeasurement>();
-            HashSet<string> signalReferences;
             IMeasurement calculatedStatistic;
-            DataRow[] measurements;
+            List<DataRow> measurements;
 
             try
             {
                 measurements = source.StatisticMeasurements;
 
-                // Load statistic measurements for this source if none are currently loaded
-                if ((object)measurements == null)
-                {
-                    List<DataRow> dataRows;
-
-                    lock (m_dataSourceCache)
-                    {
-                        m_dataSourceCache.TryGetValue(string.Format("{0}!{1}", source.SourceName, source.SourceAcronym), out dataRows);
-                    }
-
-                    // It is expected that the statistics source will exist in the data source cache,
-                    // but just in case it's not we fall back on the slower signal reference lookup table
-                    if ((object)dataRows != null)
-                    {
-                        measurements = dataRows.ToArray();
-                    }
-                    else
-                    {
-                        signalReferences = new HashSet<string>(statistics.Where(statistic => statistic.Source == source.SourceCategory).Select(statistic => GetSignalReference(statistic, source)));
-
-                        measurements = DataSource.Tables["ActiveMeasurements"].Select()
-                            .Where(row => signalReferences.Contains(row["SignalReference"].ToNonNullString()))
-                            .ToArray();
-                    }
-
-                    source.StatisticMeasurements = measurements;
-                }
-
                 // Calculate statistics
-                foreach (DataRow measurement in measurements)
+                if ((object)measurements != null)
                 {
-                    calculatedStatistic = CalculateStatistic(statistics, serverTime, source, measurement);
+                    foreach (DataRow measurement in measurements)
+                    {
+                        calculatedStatistic = CalculateStatistic(statistics, serverTime, source, measurement);
 
-                    if ((object)calculatedStatistic != null)
-                        calculatedStatistics.Add(calculatedStatistic);
+                        if ((object)calculatedStatistic != null)
+                            calculatedStatistics.Add(calculatedStatistic);
+                    }
                 }
             }
             catch (Exception ex)
