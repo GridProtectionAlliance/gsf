@@ -280,14 +280,14 @@ namespace GSF.Historian.Files
             {
                 base.LoadSettings();
 
-                // Define new file name for non-legacy implementations
-                if (m_legacyMode != MetadataFileLegacyMode.Enabled && !FileName.EndsWith("2"))
-                    FileName += "2";
-
                 // Load settings from the specified category.
                 CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[SettingsCategory];
                 settings.Add("LegacyMode", m_legacyMode, "Metadata file legacy format mode. Value is one of \"Disabled\", \"Compatible\" or \"Enabled\" where \"Disabled\" means only use new format, \"Compatible\" means use new format and also write a legacy format file for compatibility and \"Enabled\" means only use the legacy format.");
                 LegacyMode = settings["LegacyMode"].ValueAs(m_legacyMode);
+
+                // Define new file name for non-legacy implementations
+                if (m_legacyMode != MetadataFileLegacyMode.Enabled && !FileName.EndsWith("2"))
+                    FileName += "2";
 
                 // By design of the new metadata file format, data is always loaded into memory - regardless of configuration setting
                 if (m_legacyMode != MetadataFileLegacyMode.Enabled)
@@ -361,7 +361,10 @@ namespace GSF.Historian.Files
         public override void Load()
         {
             if (m_legacyMode == MetadataFileLegacyMode.Enabled)
+            {
                 base.Load();
+                return;
+            }
 
             if (!IsOpen)
                 throw new InvalidOperationException(string.Format("MetadataFile \"{0}\" is not open", FileName));
@@ -379,14 +382,17 @@ namespace GSF.Historian.Files
 
                 lock (FileDataLock)
                 {
-                    FileData.Seek(0, SeekOrigin.Begin);
-                    BinaryReader reader = new BinaryReader(FileData);
-                    int count = reader.ReadInt32();
-
-                    for (int i = 0; i < count; i++)
+                    if (FileData.Length > 0)
                     {
-                        MetadataRecord record = new MetadataRecord(reader);
-                        m_records[record.HistorianID] = record;
+                        FileData.Seek(0, SeekOrigin.Begin);
+                        BinaryReader reader = new BinaryReader(FileData);
+                        int count = reader.ReadInt32();
+
+                        for (int i = 0; i < count; i++)
+                        {
+                            MetadataRecord record = new MetadataRecord(reader);
+                            m_records[record.HistorianID] = record;
+                        }
                     }
                 }
 
