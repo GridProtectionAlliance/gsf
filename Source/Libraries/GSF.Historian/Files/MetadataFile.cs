@@ -227,7 +227,7 @@ namespace GSF.Historian.Files
                 if (m_legacyMode == MetadataFileLegacyMode.Enabled)
                     return base.RecordsInMemory;
 
-                return m_records.Count;
+                return m_records.Keys.DefaultIfEmpty(0).Max();
             }
         }
 

@@ -274,7 +274,7 @@ namespace GSF.Historian.MetadataProviders
 
             while (readerData.Read())
             {
-                newMetadataRecord = new MetadataRecord(Convert.ToInt32(readerData[0]), MetadataFileLegacyMode.Enabled);
+                newMetadataRecord = new MetadataRecord(Convert.ToInt32(readerData[0]), m_metadata.LegacyMode);
 
                 if (!Convert.IsDBNull(readerData[1]))
                     newMetadataRecord.GeneralFlags.DataType = (DataType)Convert.ToInt32(readerData[1]);
