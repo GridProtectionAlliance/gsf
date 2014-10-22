@@ -1389,7 +1389,7 @@ namespace GSF.TimeSeries.Transport
             if (!settings.TryGetValue("bufferSize", out setting) || !int.TryParse(setting, out bufferSize))
                 bufferSize = ClientBase.DefaultReceiveBufferSize;
 
-            if (!settings.TryGetValue("useLocalClockAsRealTime", out setting))
+            if (settings.TryGetValue("useLocalClockAsRealTime", out setting))
                 m_useLocalClockAsRealTime = setting.ParseBoolean();
 
             if (m_autoConnect)
