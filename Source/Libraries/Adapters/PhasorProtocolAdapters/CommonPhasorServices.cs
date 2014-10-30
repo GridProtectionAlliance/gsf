@@ -71,6 +71,7 @@ namespace PhasorProtocolAdapters
         private ManualResetEvent m_configurationWaitHandle;
         private MultiProtocolFrameParser m_frameParser;
         private IConfigurationFrame m_configurationFrame;
+        private bool m_cancelConfigurationFrameRequest;
         private bool m_disposed;
 
         #endregion
@@ -189,6 +190,8 @@ namespace PhasorProtocolAdapters
         [AdapterCommand("Connects to a phasor device and requests its configuration frame.", "Administrator", "Editor")]
         public IConfigurationFrame RequestDeviceConfiguration(string connectionString)
         {
+            m_cancelConfigurationFrameRequest = false;
+
             if (string.IsNullOrEmpty(connectionString))
             {
                 OnStatusMessage("ERROR: No connection string was specified, request for configuration canceled.");
@@ -224,7 +227,7 @@ namespace PhasorProtocolAdapters
                     m_configurationFrame = null;
 
                     // Inform user of temporary loss of command access
-                    OnStatusMessage("\r\n{0}\r\n\r\nAttempting to request remote device configuration.\r\n\r\nThis request could take up to sixty seconds to complete.\r\n\r\nOther CPS config requests will not be accepted until request succeeds or fails.\r\n\r\n{0}", stars, stars);
+                    OnStatusMessage("\r\n{0}\r\n\r\nAttempting to request remote device configuration.\r\n\r\nThis request could take up to sixty seconds to complete.\r\n\r\nOther CPS config requests will not be accepted until request succeeds or fails.\r\n\r\n{0}", stars);
 
                     // Make sure the wait handle is not set
                     m_configurationWaitHandle.Reset();
@@ -244,7 +247,11 @@ namespace PhasorProtocolAdapters
                     if (m_configurationFrame == null)
                     {
                         m_configurationFrame = new ConfigurationErrorFrame();
-                        OnStatusMessage("Failed to retrieve remote device configuration.");
+
+                        if (m_cancelConfigurationFrameRequest)
+                            OnStatusMessage("Configuration frame request canceled by user.");
+                        else
+                            OnStatusMessage("Failed to retrieve remote device configuration.");
                     }
 
                     return m_configurationFrame;
@@ -255,11 +262,13 @@ namespace PhasorProtocolAdapters
                 }
                 finally
                 {
+                    m_cancelConfigurationFrameRequest = false;
+
                     // Release the lock
                     Monitor.Exit(m_frameParser);
 
                     // Inform user of restoration of command access
-                    OnStatusMessage("\r\n{0}\r\n\r\nRemote device configuration request completed.\r\n\r\nCPS config requests have been restored.\r\n\r\n{0}", stars, stars);
+                    OnStatusMessage("\r\n{0}\r\n\r\nRemote device configuration request completed.\r\n\r\nCPS config requests have been restored.\r\n\r\n{0}", stars);
                 }
             }
             else
@@ -268,6 +277,16 @@ namespace PhasorProtocolAdapters
             }
 
             return new ConfigurationErrorFrame();
+        }
+
+        /// <summary>
+        /// Cancels a configuration frame request
+        /// </summary>
+        [AdapterCommand("Cancels the currently executing configuration frame request.", "Administrator", "Editor")]
+        public void CancelConfigurationFrameRequest()
+        {
+            m_cancelConfigurationFrameRequest = true;
+            m_configurationWaitHandle.Set();
         }
 
         /// <summary>

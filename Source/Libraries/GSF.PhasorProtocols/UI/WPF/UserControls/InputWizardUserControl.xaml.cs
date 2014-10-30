@@ -23,10 +23,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using GSF.PhasorProtocols.UI.DataModels;
 using GSF.PhasorProtocols.UI.ViewModels;
 using GSF.TimeSeries.UI;
@@ -56,8 +54,6 @@ namespace GSF.PhasorProtocols.UI.UserControls
             m_dataContext = new InputWizardDevices(1);
             StackPanelRoot.DataContext = m_dataContext;
         }
-
-
 
         /// <summary>
         /// Creates an instance of <see cref="InputWizardUserControl"/> class for the specified <see cref="Device"/>.
@@ -104,6 +100,9 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 CommonFunctions.SendCommandToService("Connect " + m_dataContext.CurrentDeviceRuntimeID);
 
             m_dataContext.CurrentDeviceRuntimeID = 0;
+
+            if (m_dataContext.RequestConfigurationPopupIsOpen)
+                m_dataContext.CancelConfigurationRequestCommand.Execute(null);
         }
 
         /// <summary>

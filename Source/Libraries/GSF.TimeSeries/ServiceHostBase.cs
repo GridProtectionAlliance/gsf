@@ -1846,101 +1846,107 @@ namespace GSF.TimeSeries
             }
             else
             {
-                IAdapter adapter = null;
-                string command = null;
-
-                // See if specific ID for an adapter was requested
-                if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
+                Thread invocationThread = new Thread(() =>
                 {
-                    if (requestInfo.Request.Arguments.Exists("OrderedArg2"))
+                    IAdapter adapter = null;
+                    string command = null;
+
+                    // See if specific ID for an adapter was requested
+                    if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
                     {
-                        adapter = GetRequestedAdapter(requestInfo);
-                        command = requestInfo.Request.Arguments["OrderedArg2"];
+                        if (requestInfo.Request.Arguments.Exists("OrderedArg2"))
+                        {
+                            adapter = GetRequestedAdapter(requestInfo);
+                            command = requestInfo.Request.Arguments["OrderedArg2"];
+                        }
+                        else
+                        {
+                            adapter = GetRequestedCollection(requestInfo);
+                            command = requestInfo.Request.Arguments["OrderedArg1"];
+                        }
                     }
                     else
-                    {
-                        adapter = GetRequestedCollection(requestInfo);
-                        command = requestInfo.Request.Arguments["OrderedArg1"];
-                    }
-                }
-                else
-                    SendResponse(requestInfo, false, "No command was specified to invoke.");
+                        SendResponse(requestInfo, false, "No command was specified to invoke.");
 
-                if (adapter != null)
-                {
-                    try
+                    if (adapter != null)
                     {
-                        // See if method exists with specified name using reflection
-                        MethodInfo method = adapter.GetType().GetMethod(command, BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.IgnoreCase);
-
-                        // Invoke method
-                        if (method != null)
+                        try
                         {
-                            AdapterCommandAttribute commandAttribute;
+                            // See if method exists with specified name using reflection
+                            MethodInfo method = adapter.GetType().GetMethod(command, BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.IgnoreCase);
 
-                            // Make sure method is marked as invokable (i.e., AdapterCommandAttribute exists on method)
-                            if (method.TryGetAttribute(out commandAttribute) && (!m_serviceHelper.SecureRemoteInteractions || commandAttribute.AllowedRoles.Any(role => Thread.CurrentPrincipal.IsInRole(role))))
+                            // Invoke method
+                            if (method != null)
                             {
-                                ParameterInfo[] parameterInfo = method.GetParameters();
-                                object returnValue = null;
-                                bool success = true;
+                                AdapterCommandAttribute commandAttribute;
 
-                                if (parameterInfo.Length == 0)
+                                // Make sure method is marked as invokable (i.e., AdapterCommandAttribute exists on method)
+                                if (method.TryGetAttribute(out commandAttribute) && (!m_serviceHelper.SecureRemoteInteractions || commandAttribute.AllowedRoles.Any(role => Thread.CurrentPrincipal.IsInRole(role))))
                                 {
-                                    // Invoke parameterless adapter command
-                                    returnValue = method.Invoke(adapter, null);
+                                    ParameterInfo[] parameterInfo = method.GetParameters();
+                                    object returnValue = null;
+                                    bool success = true;
+
+                                    if (parameterInfo.Length == 0)
+                                    {
+                                        // Invoke parameterless adapter command
+                                        returnValue = method.Invoke(adapter, null);
+                                    }
+                                    else
+                                    {
+                                        int argCount = requestInfo.Request.Arguments.Count - 2;
+                                        int attachmentCount = requestInfo.Request.Attachments.Count;
+
+                                        // Create typed parameters for method and invoke
+                                        if (argCount + attachmentCount >= parameterInfo.Length)
+                                        {
+                                            // Attempt to convert command parameters to the method parameter types
+                                            object[] parameters = requestInfo.Request.Arguments.Skip(2)
+                                                .Select((arg, i) => arg.Value.ConvertToType<object>(parameterInfo[i].ParameterType))
+                                                .Concat(requestInfo.Request.Attachments)
+                                                .Take(parameterInfo.Length)
+                                                .ToArray();
+
+                                            // Invoke adapter command with specified parameters
+                                            returnValue = method.Invoke(adapter, parameters);
+                                        }
+                                        else
+                                        {
+                                            success = false;
+                                            SendResponse(requestInfo, false, "Parameter count mismatch, \"{0}\" command expects {1} parameters.", command, parameterInfo.Length);
+                                        }
+                                    }
+
+                                    // If invoke was successful, return actionable response
+                                    if (success)
+                                    {
+                                        // Return value, if any, will be returned to requesting client as a response attachment
+                                        if ((object)returnValue == null)
+                                            SendResponse(requestInfo, true, "Command \"{0}\" successfully invoked.", command);
+                                        else
+                                            SendResponseWithAttachment(requestInfo, true, returnValue, "Command \"{0}\" successfully invoked, return value = {1}", command, returnValue.ToNonNullString("null"));
+                                    }
                                 }
                                 else
                                 {
-                                    int argCount = requestInfo.Request.Arguments.Count - 2;
-                                    int attachmentCount = requestInfo.Request.Attachments.Count;
-
-                                    // Create typed parameters for method and invoke
-                                    if (argCount + attachmentCount >= parameterInfo.Length)
-                                    {
-                                        // Attempt to convert command parameters to the method parameter types
-                                        object[] parameters = requestInfo.Request.Arguments.Skip(2)
-                                            .Select((arg, i) => arg.Value.ConvertToType<object>(parameterInfo[i].ParameterType))
-                                            .Concat(requestInfo.Request.Attachments)
-                                            .Take(parameterInfo.Length)
-                                            .ToArray();
-
-                                        // Invoke adapter command with specified parameters
-                                        returnValue = method.Invoke(adapter, parameters);
-                                    }
-                                    else
-                                    {
-                                        success = false;
-                                        SendResponse(requestInfo, false, "Parameter count mismatch, \"{0}\" command expects {1} parameters.", command, parameterInfo.Length);
-                                    }
-                                }
-
-                                // If invoke was successful, return actionable response
-                                if (success)
-                                {
-                                    // Return value, if any, will be returned to requesting client as a response attachment
-                                    if ((object)returnValue == null)
-                                        SendResponse(requestInfo, true, "Command \"{0}\" successfully invoked.", command);
-                                    else
-                                        SendResponseWithAttachment(requestInfo, true, returnValue, "Command \"{0}\" successfully invoked, return value = {1}", command, returnValue.ToNonNullString("null"));
+                                    SendResponse(requestInfo, false, "Specified command \"{0}\" is not marked as invokable for adapter \"{1}\" [Type = {2}].", command, adapter.Name, adapter.GetType().Name);
                                 }
                             }
                             else
                             {
-                                SendResponse(requestInfo, false, "Specified command \"{0}\" is not marked as invokable for adapter \"{1}\" [Type = {2}].", command, adapter.Name, adapter.GetType().Name);
+                                SendResponse(requestInfo, false, "Specified command \"{0}\" does not exist for adapter \"{1}\" [Type = {2}].", command, adapter.Name, adapter.GetType().Name);
                             }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            SendResponse(requestInfo, false, "Specified command \"{0}\" does not exist for adapter \"{1}\" [Type = {2}].", command, adapter.Name, adapter.GetType().Name);
+                            SendResponse(requestInfo, false, "Failed to invoke command: {0}", ex.Message);
+                            LogException(ex);
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        SendResponse(requestInfo, false, "Failed to invoke command: {0}", ex.Message);
-                        LogException(ex);
-                    }
-                }
+                });
+
+                invocationThread.IsBackground = true;
+                invocationThread.Start();
             }
         }
 
