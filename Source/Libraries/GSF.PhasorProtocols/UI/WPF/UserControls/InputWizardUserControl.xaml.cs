@@ -66,8 +66,6 @@ namespace GSF.PhasorProtocols.UI.UserControls
             {
                 m_dataContext.SkipDisableRealTimeData = device.SkipDisableRealTimeData;
 
-                Dictionary<string, string> connectionSettings = device.ConnectionString.ToLower().ParseKeyValuePairs();
-
                 m_dataContext.ConnectionString = device.ConnectionString;
                 m_dataContext.AlternateCommandChannel = device.AlternateCommandChannel;
                 m_dataContext.AccessID = device.AccessID;
@@ -84,7 +82,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
                     m_dataContext.PdcVendorDeviceID = device.VendorDeviceID ?? 0;
                 }
 
-                ExpanderStep2.IsExpanded = true;
+                m_dataContext.StepTwoExpanded = true;
                 m_dataContext.CurrentDeviceRuntimeID = Convert.ToInt32(CommonFunctions.GetRuntimeID("Device", device.ID));
                 m_dataContext.NewDeviceConfiguration = false;
             }
@@ -93,6 +91,17 @@ namespace GSF.PhasorProtocols.UI.UserControls
         #endregion
 
         #region [ Methods ]
+
+        private void InputWizardUserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            bool showWalkthrough = true;
+
+            if (IsolatedStorageManager.SettingExists("ShowWalkthroughAtStartup"))
+                showWalkthrough = Convert.ToBoolean(IsolatedStorageManager.ReadFromIsolatedStorage("ShowWalkthroughAtStartup"));
+
+            if (showWalkthrough)
+                m_dataContext.LaunchWalkthroughCommand.Execute(null);
+        }
 
         private void InputWizardUserControl_Unloaded(object sender, RoutedEventArgs e)
         {
@@ -149,23 +158,23 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
         private void ButtonPrevious_Click(object sender, RoutedEventArgs e)
         {
-            if (ExpanderStep2.IsExpanded)
-                ExpanderStep1.IsExpanded = true;
-            else if (ExpanderStep3.IsExpanded)
-                ExpanderStep2.IsExpanded = true;
+            if (m_dataContext.StepTwoExpanded)
+                m_dataContext.StepOneExpanded = true;
+            else if (m_dataContext.StepThreeExpanded)
+                m_dataContext.StepTwoExpanded = true;
         }
 
         private void ButtonNext_Click(object sender, RoutedEventArgs e)
         {
-            if (ExpanderStep1.IsExpanded)
+            if (m_dataContext.StepOneExpanded)
             {
-                ExpanderStep2.IsExpanded = true;
+                m_dataContext.StepTwoExpanded = true;
             }
-            else if (ExpanderStep2.IsExpanded)
+            else if (m_dataContext.StepTwoExpanded)
             {
-                ExpanderStep3.IsExpanded = true;
+                m_dataContext.StepThreeExpanded = true;
             }
-            else if (ExpanderStep3.IsExpanded)
+            else if (m_dataContext.StepThreeExpanded)
             {
                 m_dataContext.SavePDC();
                 m_dataContext.SaveConfiguration();
@@ -176,8 +185,8 @@ namespace GSF.PhasorProtocols.UI.UserControls
         {
             if (IsLoaded)
             {
-                ExpanderStep2.IsExpanded = false;
-                ExpanderStep3.IsExpanded = false;
+                m_dataContext.StepTwoExpanded = false;
+                m_dataContext.StepThreeExpanded = false;
                 ButtonNext.Content = "Next";
                 ButtonPrevious.IsEnabled = false;
             }
@@ -185,8 +194,8 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
         private void ExpanderStep2_Expanded(object sender, RoutedEventArgs e)
         {
-            ExpanderStep1.IsExpanded = false;
-            ExpanderStep3.IsExpanded = false;
+            m_dataContext.StepOneExpanded = false;
+            m_dataContext.StepThreeExpanded = false;
             ButtonNext.Content = "Next";
             ButtonPrevious.IsEnabled = true;
         }
@@ -198,12 +207,12 @@ namespace GSF.PhasorProtocols.UI.UserControls
             if (!m_dataContext.ValidatePDCDetails(out errorMessage))
             {
                 MessageBox.Show(errorMessage, "PDC Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                ExpanderStep3.IsExpanded = false;
+                m_dataContext.StepThreeExpanded = false;
             }
             else
             {
-                ExpanderStep1.IsExpanded = false;
-                ExpanderStep2.IsExpanded = false;
+                m_dataContext.StepOneExpanded = false;
+                m_dataContext.StepTwoExpanded = false;
                 ButtonNext.Content = "Finish";
                 ButtonPrevious.IsEnabled = true;
             }

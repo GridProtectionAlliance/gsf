@@ -97,7 +97,7 @@ namespace GSF.TimeSeries.UI
         {
             TsfPopup tsfPopup = obj as TsfPopup;
 
-            if ((object)tsfPopup != null)
+            if ((object)tsfPopup != null && tsfPopup.IsOpen)
                 tsfPopup.UpdateWindow();
         }
 

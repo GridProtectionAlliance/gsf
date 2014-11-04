@@ -61,6 +61,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         #region [ Members ]
 
         // Fields
+        private RelayCommand m_launchWalkthroughCommand;
         private RelayCommand m_browseConnectionFileCommand;
         private RelayCommand m_buildConnectionStringCommand;
         private RelayCommand m_buildAlternateCommandChannelCommand;
@@ -71,6 +72,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         private RelayCommand m_manualConfigurationCommand;
         private RelayCommand m_cancelConfigurationRequestCommand;
         private bool m_stepsEnabled;
+        private bool m_stepOneExpanded;
+        private bool m_stepTwoExpanded;
+        private bool m_stepThreeExpanded;
         private string m_connectionString;
         private string m_alternateCommandChannel;
         private int m_accessID;
@@ -87,6 +91,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         private bool m_skipDisableRealTimeData;
         private bool m_requestConfigurationPopupIsOpen;
         private string m_requestConfigurationPopupText;
+        private bool m_requestConfigurationSuccess;
         private readonly Dictionary<int, string> m_companyLookupList;
         private readonly Dictionary<int, string> m_historianLookupList;
         private readonly Dictionary<int, string> m_interconnectionLookupList;
@@ -126,6 +131,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             m_vendorDeviceLookupList = VendorDevice.GetLookupList(null, true);
             m_protocolList = Protocol.Load(null);
             StepsEnabled = true;
+            StepOneExpanded = true;
             NewDeviceConfiguration = true;
 
             if (m_companyLookupList.Count > 0)
@@ -176,6 +182,54 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             {
                 m_stepsEnabled = value;
                 OnPropertyChanged("StepsEnabled");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines whether step 1 is expanded.
+        /// </summary>
+        public bool StepOneExpanded
+        {
+            get
+            {
+                return m_stepOneExpanded;
+            }
+            set
+            {
+                m_stepOneExpanded = value;
+                OnPropertyChanged("StepOneExpanded");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines whether step 2 is expanded.
+        /// </summary>
+        public bool StepTwoExpanded
+        {
+            get
+            {
+                return m_stepTwoExpanded;
+            }
+            set
+            {
+                m_stepTwoExpanded = value;
+                OnPropertyChanged("StepTwoExpanded");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines whether step 3 is expanded.
+        /// </summary>
+        public bool StepThreeExpanded
+        {
+            get
+            {
+                return m_stepThreeExpanded;
+            }
+            set
+            {
+                m_stepThreeExpanded = value;
+                OnPropertyChanged("StepThreeExpanded");
             }
         }
 
@@ -591,7 +645,34 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         }
 
         /// <summary>
-        /// Gets or sets <see cref="ICommand"/> to browse to connection file.
+        /// Gets a boolean flag that indicates whether the last configuration request operation was successful.
+        /// </summary>
+        public bool RequestConfigurationSuccess
+        {
+            get
+            {
+                return m_requestConfigurationSuccess;
+            }
+            set
+            {
+                m_requestConfigurationSuccess = value;
+                OnPropertyChanged("RequestConfigurationSuccess");
+            }
+        }
+
+        /// <summary>
+        /// Gets <see cref="ICommand"/> to launch the wizard walkthrough.
+        /// </summary>
+        public ICommand LaunchWalkthroughCommand
+        {
+            get
+            {
+                return m_launchWalkthroughCommand ?? (m_launchWalkthroughCommand = new RelayCommand(LaunchWalkthrough));
+            }
+        }
+
+        /// <summary>
+        /// Gets <see cref="ICommand"/> to browse to connection file.
         /// </summary>
         public ICommand BrowseConnectionFileCommand
         {
@@ -602,7 +683,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         }
 
         /// <summary>
-        /// Gets or sets <see cref="ICommand"/> to build connection string.
+        /// Gets <see cref="ICommand"/> to build connection string.
         /// </summary>
         public ICommand BuildConnectionStringCommand
         {
@@ -613,7 +694,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         }
 
         /// <summary>
-        /// Gets or sets <see cref="ICommand"/> to build alternate command channel.
+        /// Gets <see cref="ICommand"/> to build alternate command channel.
         /// </summary>
         public ICommand BuildAlternateCommandChannelCommand
         {
@@ -624,7 +705,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         }
 
         /// <summary>
-        /// Gets or sets <see cref="ICommand"/> to browse to INI file.
+        /// Gets <see cref="ICommand"/> to browse to INI file.
         /// </summary>
         public ICommand BrowseIniFileCommand
         {
@@ -635,7 +716,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         }
 
         /// <summary>
-        /// Gets or sets <see cref="ICommand"/> to browse to configuration file.
+        /// Gets <see cref="ICommand"/> to browse to configuration file.
         /// </summary>
         public ICommand BrowseConfigurationFileCommand
         {
@@ -959,40 +1040,43 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         private void ParseConfiguration(bool displayPopup = true)
         {
             ObservableCollection<InputWizardDevice> wizardDeviceList = new ObservableCollection<InputWizardDevice>();
+            bool isConcentrator = false;
 
-            if (m_configurationFrame != null)
+            if ((object)m_configurationFrame != null)
             {
                 foreach (IConfigurationCell cell in m_configurationFrame.Cells)
                 {
                     Device existingDevice = Device.GetDevice(null, "WHERE Acronym = '" + cell.StationName.Replace(" ", "").Replace("'", "").ToUpper() + "'");
 
-                    wizardDeviceList.Add(new InputWizardDevice
-                        {
-                            Acronym = cell.StationName.Replace(" ", "").Replace("'", "").ToUpper(),
-                            Name = CultureInfo.CurrentUICulture.TextInfo.ToTitleCase(cell.StationName.ToLower()),
-                            Longitude = existingDevice == null ? -98.6m : existingDevice.Longitude == null ? -98.6m : (decimal)existingDevice.Longitude,
-                            Latitude = existingDevice == null ? 37.5m : existingDevice.Latitude == null ? 37.5m : (decimal)existingDevice.Latitude,
-                            VendorDeviceID = existingDevice == null ? (int?)null : existingDevice.VendorDeviceID,
-                            AccessID = cell.IDCode,
-                            ParentAccessID = m_configurationFrame.IDCode,
-                            Include = true,
-                            DigitalCount = cell.DigitalDefinitions.Count,
-                            AnalogCount = cell.AnalogDefinitions.Count,
-                            AddDigitals = cell.DigitalDefinitions.Count > 0,
-                            AddAnalogs = cell.AnalogDefinitions.Count > 0,
-                            Existing = (object)existingDevice != null,
-                            DigitalLabels = GetAnalogOrDigitalLables(cell.DigitalDefinitions),
-                            AnalogLabels = GetAnalogOrDigitalLables(cell.AnalogDefinitions),
-                            PhasorList = new ObservableCollection<InputWizardDevicePhasor>((from phasor in cell.PhasorDefinitions
-                                                                                            select new InputWizardDevicePhasor
-                                                                                                {
-                                                                                                    Label = phasor.Label,
-                                                                                                    Type = phasor.PhasorType == PhasorType.Current ? "I" : "V",
-                                                                                                    Phase = "+",
-                                                                                                    //DestinationLabel = "",
-                                                                                                    Include = true
-                                                                                                }).ToList())
-                        });
+                    wizardDeviceList.Add(new InputWizardDevice()
+                    {
+                        Acronym = cell.StationName.Replace(" ", "").Replace("'", "").ToUpper(),
+                        Name = CultureInfo.CurrentUICulture.TextInfo.ToTitleCase(cell.StationName.ToLower()),
+                        Longitude = existingDevice == null ? -98.6m : existingDevice.Longitude == null ? -98.6m : (decimal)existingDevice.Longitude,
+                        Latitude = existingDevice == null ? 37.5m : existingDevice.Latitude == null ? 37.5m : (decimal)existingDevice.Latitude,
+                        VendorDeviceID = existingDevice == null ? (int?)null : existingDevice.VendorDeviceID,
+                        AccessID = cell.IDCode,
+                        ParentAccessID = m_configurationFrame.IDCode,
+                        Include = true,
+                        DigitalCount = cell.DigitalDefinitions.Count,
+                        AnalogCount = cell.AnalogDefinitions.Count,
+                        AddDigitals = cell.DigitalDefinitions.Count > 0,
+                        AddAnalogs = cell.AnalogDefinitions.Count > 0,
+                        Existing = (object)existingDevice != null,
+                        DigitalLabels = GetAnalogOrDigitalLables(cell.DigitalDefinitions),
+                        AnalogLabels = GetAnalogOrDigitalLables(cell.AnalogDefinitions),
+                        PhasorList = new ObservableCollection<InputWizardDevicePhasor>((from phasor in cell.PhasorDefinitions
+                                                                                        select new InputWizardDevicePhasor()
+                                                                                        {
+                                                                                            Label = phasor.Label,
+                                                                                            Type = phasor.PhasorType == PhasorType.Current ? "I" : "V",
+                                                                                            Phase = "+",
+                                                                                            //DestinationLabel = "",
+                                                                                            Include = true
+                                                                                        }).ToList())
+                    });
+
+                    isConcentrator = wizardDeviceList.Count > 1 || (wizardDeviceList.Count == 1 && m_configurationFrame.IDCode != m_configurationFrame.Cells.First().IDCode);
                 }
             }
 
@@ -1000,7 +1084,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
             ConfigurationSummary = "Current Configuration Summary: " + wizardDeviceList.Count;
 
-            if (wizardDeviceList.Count > 1)
+            if (isConcentrator)
             {
                 ConfigurationSummary += " Devices. Please provide PDC information below.";
                 ConnectToConcentrator = true;
@@ -1099,6 +1183,20 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         }
 
         /// <summary>
+        /// Pops up another window to assist in filling out the fields on the input wizard.
+        /// </summary>
+        private void LaunchWalkthrough()
+        {
+            InputWizardWalkthrough walkthrough = new InputWizardWalkthrough();
+
+            walkthrough.Owner = Application.Current.MainWindow;
+            walkthrough.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            walkthrough.DataContext = this;
+
+            walkthrough.ShowDialog();
+        }
+
+        /// <summary>
         /// Pops up another window to build or modify connection string.
         /// </summary>
         private void BuildConnectionString()
@@ -1160,10 +1258,11 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 AdoDataConnection database = null;
                 WindowsServiceClient windowsServiceClient = null;
 
-                m_requestConfigurationError = string.Empty;
-
                 try
                 {
+                    m_requestConfigurationError = string.Empty;
+                    m_dispatcher.BeginInvoke(new Action(() => RequestConfigurationSuccess = false));
+
                     if (m_currentDeviceRuntimeID > 0)
                     {
                         CommonFunctions.SendCommandToService("Disconnect " + m_currentDeviceRuntimeID);
@@ -1210,31 +1309,16 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
                                 Thread.Sleep(3000);
 
-                                m_dispatcher.BeginInvoke(new Action(() =>
-                                {
-                                    Mouse.OverrideCursor = null;
-                                    StepsEnabled = true;
-                                    RequestConfigurationPopupIsOpen = false;
-                                    timer.Stop();
-                                }));
-
                                 m_requestConfigurationError = "Received configuration error frame." + Environment.NewLine + m_requestConfigurationError;
 
                                 throw new ApplicationException(m_requestConfigurationError);
                             }
 
-                            m_dispatcher.BeginInvoke(new Action(() =>
-                            {
-                                Mouse.OverrideCursor = null;
-                                StepsEnabled = true;
-                                RequestConfigurationPopupIsOpen = false;
-                                timer.Stop();
-                            }));
-
                             if (m_requestConfigurationAttachment is IConfigurationFrame)
                             {
                                 m_configurationFrame = m_requestConfigurationAttachment as IConfigurationFrame;
                                 ParseConfiguration();
+                                m_dispatcher.BeginInvoke(new Action(() => RequestConfigurationSuccess = true));
                             }
                             else
                             {
@@ -1243,14 +1327,6 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         }
                         else
                         {
-                            m_dispatcher.BeginInvoke(new Action(() =>
-                            {
-                                Mouse.OverrideCursor = null;
-                                StepsEnabled = true;
-                                RequestConfigurationPopupIsOpen = false;
-                                timer.Stop();
-                            }));
-
                             throw new ApplicationException("Response timeout occurred. Waited 60 seconds for Configuration Frame to arrive.");
                         }
                     }
@@ -1258,13 +1334,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     {
                         throw new ApplicationException("Connection timeout occurred. Tried 10 times to connect to windows service.");
                     }
-                }
-                catch (Exception ex)
-                {
-                    DisplayPopup("ERROR: " + ex.Message, "Request Configuration", MessageBoxImage.Error);
-                }
-                finally
-                {
+
                     m_dispatcher.BeginInvoke(new Action(() =>
                     {
                         Mouse.OverrideCursor = null;
@@ -1272,8 +1342,22 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         RequestConfigurationPopupIsOpen = false;
                         timer.Stop();
                     }));
+                }
+                catch (Exception ex)
+                {
+                    m_dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        Mouse.OverrideCursor = null;
+                        StepsEnabled = true;
+                        RequestConfigurationPopupIsOpen = false;
+                        timer.Stop();
 
-                    if (database != null)
+                        DisplayPopup("ERROR: " + ex.Message, "Request Configuration", MessageBoxImage.Error);
+                    }));
+                }
+                finally
+                {
+                    if ((object)database != null)
                         database.Dispose();
 
                     if ((object)windowsServiceClient != null && (object)windowsServiceClient.Helper != null && (object)windowsServiceClient.Helper.RemotingClient != null)

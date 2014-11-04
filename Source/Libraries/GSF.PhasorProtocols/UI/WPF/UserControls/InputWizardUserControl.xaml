@@ -4,10 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" d:DesignHeight="650" d:DesignWidth="850"
-             xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation"             
+             xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:vm="clr-namespace:GSF.PhasorProtocols.UI.ViewModels"
              xmlns:tsfBinding="clr-namespace:GSF.TimeSeries.UI.Binding;assembly=GSF.TimeSeries.UI"
              xmlns:tsfui="clr-namespace:GSF.TimeSeries.UI;assembly=GSF.TimeSeries.UI.WPF"
-             Background="Transparent">
+             Background="Transparent" d:DataContext="{d:DesignInstance vm:InputWizardDevices}"
+             Loaded="InputWizardUserControl_Loaded">
     
     <UserControl.Resources>
         <ResourceDictionary>
@@ -26,7 +28,7 @@
             <CollectionViewSource Source="{Binding Path=VendorDeviceLookupList}" x:Key="VendorDeviceLookupList"/>
         </StackPanel.Resources>
             
-        <tsfui:TsfPopup Placement="Center" Topmost="False" IsOpen="{Binding RequestConfigurationPopupIsOpen}">
+        <tsfui:TsfPopup Placement="Center" Topmost="True" IsOpen="{Binding RequestConfigurationPopupIsOpen}">
             <Border Width="324" Height="200" CornerRadius="5" BorderThickness="2" Background="White" BorderBrush="Gray">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -41,7 +43,20 @@
         </tsfui:TsfPopup>
 
         <StackPanel Orientation="Vertical" IsEnabled="{Binding StepsEnabled}">
-            <Expander x:Name="ExpanderStep1" IsExpanded="True" Header="Step 1: Configure Connection Settings" Expanded="ExpanderStep1_Expanded">
+            <Button Width="Auto" Foreground="Blue" FontSize="18" FontWeight="Bold" Command="{Binding LaunchWalkthroughCommand}">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Image Source="/GSF.TimeSeries.UI;component/Images/Wand.png" />
+                            <TextBlock Text="{TemplateBinding Content}" TextDecorations="Underline" Cursor="Hand"
+                                               VerticalAlignment="Center" Width="Auto" Height="Auto" Foreground="{TemplateBinding Foreground}"/>
+                        </StackPanel>
+                    </ControlTemplate>
+                </Button.Template>
+                Launch Walkthrough
+            </Button>
+            
+            <Expander x:Name="ExpanderStep1" IsExpanded="{Binding StepOneExpanded}" Header="Step 1: Configure Connection Settings" Expanded="ExpanderStep1_Expanded">
                 <Grid HorizontalAlignment="Center" IsEnabled="{Binding NewDeviceConfiguration}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -128,7 +143,7 @@
                 </Grid>
             </Expander>
 
-            <Expander x:Name="ExpanderStep2" IsExpanded="False" Header="Step 2: Select Device Configuration Settings" Expanded="ExpanderStep2_Expanded">
+            <Expander x:Name="ExpanderStep2" IsExpanded="{Binding StepTwoExpanded}" Header="Step 2: Select Device Configuration Settings" Expanded="ExpanderStep2_Expanded">
                 <Grid HorizontalAlignment="Center">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="2*" />
@@ -224,7 +239,7 @@
                 </Grid>
             </Expander>
 
-            <Expander x:Name="ExpanderStep3" IsExpanded="False" Expanded="ExpanderStep3_Expanded">
+            <Expander x:Name="ExpanderStep3" IsExpanded="{Binding StepThreeExpanded}" Expanded="ExpanderStep3_Expanded">
                 <Expander.HeaderTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
@@ -238,7 +253,7 @@
                 </Expander.HeaderTemplate>
 
                 <sdk:DataGrid x:Name="DataGridDevices" ItemsSource="{tsfBinding:Column Path=DataContext.ItemsSource, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=1}}"
-                    RowDetailsVisibilityMode="VisibleWhenSelected" Height="500" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" VirtualizingPanel.ScrollUnit="Pixel">
+                    RowDetailsVisibilityMode="VisibleWhenSelected" Height="450" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" VirtualizingPanel.ScrollUnit="Pixel">
 
                     <sdk:DataGrid.Columns>
                         <!--<sdk:DataGridCheckBoxColumn Width="*" Binding="{tsfBinding:Column Path=Include}" CellStyle="{StaticResource CenterAlignCellStyle}"-->
