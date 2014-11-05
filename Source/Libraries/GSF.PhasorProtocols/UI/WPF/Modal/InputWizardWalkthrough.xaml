@@ -559,7 +559,7 @@
                         </Grid>
                     </StackPanel>
 
-                    <Button Grid.Row="1" Margin="0,10,0,0" Content="OK" Tag="" />
+                    <Button Grid.Row="1" Margin="0,10,0,0" Content="OK" Tag="HistorianInput" />
                 </Grid>
             </TabItem>
 
