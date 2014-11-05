@@ -1075,28 +1075,31 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                                                                                             Include = true
                                                                                         }).ToList())
                     });
-
-                    isConcentrator = wizardDeviceList.Count > 1 || (wizardDeviceList.Count == 1 && m_configurationFrame.IDCode != m_configurationFrame.Cells.First().IDCode);
                 }
+
+                isConcentrator = wizardDeviceList.Count > 1 || (wizardDeviceList.Count == 1 && m_configurationFrame.IDCode != m_configurationFrame.Cells.First().IDCode);
             }
 
-            ItemsSource = wizardDeviceList;
-
-            ConfigurationSummary = "Current Configuration Summary: " + wizardDeviceList.Count;
-
-            if (isConcentrator)
+            m_dispatcher.BeginInvoke(new Action(() =>
             {
-                ConfigurationSummary += " Devices. Please provide PDC information below.";
-                ConnectToConcentrator = true;
-            }
-            else
-            {
-                ConfigurationSummary += " Device";
-                ConnectToConcentrator = false;
-            }
+                ItemsSource = wizardDeviceList;
 
-            if (displayPopup)
-                DisplayPopup(ConfigurationSummary, "Parsed Configuration Successfully.", MessageBoxImage.Information);
+                ConfigurationSummary = "Current Configuration Summary: " + wizardDeviceList.Count;
+
+                if (isConcentrator)
+                {
+                    ConfigurationSummary += " Devices. Please provide PDC information below.";
+                    ConnectToConcentrator = true;
+                }
+                else
+                {
+                    ConfigurationSummary += " Device";
+                    ConnectToConcentrator = false;
+                }
+
+                if (displayPopup)
+                    DisplayPopup(ConfigurationSummary, "Parsed Configuration Successfully.", MessageBoxImage.Information);
+            }));
         }
 
         private List<string> GetAnalogOrDigitalLables(object analogOrDigitalCollection)
