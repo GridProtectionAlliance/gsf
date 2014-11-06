@@ -355,9 +355,8 @@ namespace GSF.IO
         {
             string fullPath = FilePath.GetAbsolutePath(path);
             FileSystemWatcher watcher;
-            HashSet<string> listedFiles;
 
-            if (!TrackedDirectories.Contains(fullPath))
+            if (!TrackedDirectories.Contains(fullPath, StringComparer.OrdinalIgnoreCase))
             {
                 watcher = new FileSystemWatcher(fullPath);
                 watcher.IncludeSubdirectories = true;
@@ -378,16 +377,30 @@ namespace GSF.IO
                 }
 
                 m_fileWatchers.Add(watcher);
-                watcher.EnableRaisingEvents = true;
-
-                listedFiles = new HashSet<string>(Directory.GetFiles(fullPath, "*.*", SearchOption.AllDirectories), StringComparer.OrdinalIgnoreCase);
 
                 m_processingQueue.Add(() =>
                 {
-                    foreach (string filePath in listedFiles)
-                        QueueFileForProcessing(filePath);
+                    HashSet<string> enumeratedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-                    if (m_processedFiles.RemoveWhere(filePath => !listedFiles.Contains(filePath) && filePath.StartsWith(fullPath, StringComparison.OrdinalIgnoreCase)) > 0)
+                    watcher.EnableRaisingEvents = true;
+
+                    foreach (string filePath in Directory.EnumerateFiles(fullPath, "*.*", SearchOption.AllDirectories))
+                    {
+                        if (m_disposed)
+                            return;
+
+                        if (!File.Exists(filePath) || !MatchesFilter(filePath))
+                            continue;
+
+                        if (FilePath.TryGetReadLockExclusive(filePath))
+                            ProcessFile(filePath);
+                        else
+                            DelayLockAndQueue(filePath);
+
+                        enumeratedFiles.Add(filePath);
+                    }
+
+                    if (m_processedFiles.RemoveWhere(filePath => !enumeratedFiles.Contains(filePath) && filePath.StartsWith(fullPath, StringComparison.OrdinalIgnoreCase)) > 0)
                         SaveProcessedFiles();
                 });
             }
