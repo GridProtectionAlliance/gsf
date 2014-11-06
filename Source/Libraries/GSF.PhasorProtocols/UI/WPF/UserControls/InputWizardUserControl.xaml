@@ -211,7 +211,7 @@
                     <TextBlock Grid.Row="9" Grid.Column="0" Text="PDC Acronym" Visibility="{Binding ElementName=CheckBoxConnectToConcentrator, Path=IsChecked, Converter={StaticResource ObjectToVisibilityConverter}}"/>
                     <StackPanel Orientation="Horizontal" Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="3" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="2"
                         Visibility="{Binding ElementName=CheckBoxConnectToConcentrator, Path=IsChecked, Converter={StaticResource ObjectToVisibilityConverter}}">
-                        <TextBox Text="{tsfBinding:Column Path=DataContext.PdcAcronym, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}"  Width="{StaticResource SmallItemSize}" />
+                        <TextBox Name="PdcAcronymTextBox" Text="{tsfBinding:Column Path=DataContext.PdcAcronym, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}" Width="{StaticResource SmallItemSize}" />
                         <TextBlock Text="{tsfBinding:Column Path=DataContext.PdcMessage, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}" Width="Auto" TextWrapping="Wrap"/>
                     </StackPanel>
 

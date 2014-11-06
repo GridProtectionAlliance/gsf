@@ -516,51 +516,53 @@
             </TabItem>
 
             <TabItem Header="PDCNameInput" Selector.Selected="ExpandStepTwo">
-                <Grid>
-                    <Grid.Resources>
-                        <CollectionViewSource Source="{Binding Path=VendorDeviceLookupList}" x:Key="VendorDeviceLookupList"/>
-                    </Grid.Resources>
-                    
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="6*" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
+                <AdornerDecorator>
+                    <Grid>
+                        <Grid.Resources>
+                            <CollectionViewSource Source="{Binding Path=VendorDeviceLookupList}" x:Key="VendorDeviceLookupList"/>
+                        </Grid.Resources>
 
-                    <!-- Many TextBoxes, CheckBoxes, and ComboBoxes are included but hidden through the walkthrough,
-                    in order to bind to the properties in the view model and use their values in the code behind -->
-                    <CheckBox Name="ConnectionIsToConcentratorCheckBox" Visibility="Collapsed" IsChecked="{Binding ConnectToConcentrator}" />
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="6*" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
 
-                    <StackPanel Grid.Row="0" VerticalAlignment="Center">
-                        <TextBlock>
-                            The wizard has detected that the device you are connecting to is a PDC.
-                            Please enter some information about your PDC.
-                        </TextBlock>
-                        
-                        <Grid Margin="0,20" HorizontalAlignment="Center">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
+                        <!-- Many TextBoxes, CheckBoxes, and ComboBoxes are included but hidden through the walkthrough,
+                        in order to bind to the properties in the view model and use their values in the code behind -->
+                        <CheckBox Name="ConnectionIsToConcentratorCheckBox" Visibility="Collapsed" IsChecked="{Binding ConnectToConcentrator}" />
 
-                            <TextBlock Grid.Row="0" Grid.Column="0">PDC Acronym</TextBlock>
-                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding PdcAcronym}" Width="{StaticResource SmallItemSize}" />
+                        <StackPanel Grid.Row="0" VerticalAlignment="Center">
+                            <TextBlock>
+                                The wizard has detected that the device you are connecting to is a PDC.
+                                Please enter some information about your PDC.
+                            </TextBlock>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0">PDC Name</TextBlock>
-                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding PdcName}" />
-                            
-                            <TextBlock Grid.Row="2" Grid.Column="0">PDC Vendor</TextBlock>
-                            <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding VendorDeviceLookupList}" DisplayMemberPath="Value" SelectedItem="{Binding Path=PdcVendorDeviceID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource VendorDeviceLookupList}}" />
-                        </Grid>
-                    </StackPanel>
+                            <Grid Margin="0,20" HorizontalAlignment="Center">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
 
-                    <Button Grid.Row="1" Margin="0,10,0,0" Content="OK" Tag="HistorianInput" />
-                </Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0">PDC Acronym</TextBlock>
+                                <TextBox Name="PdcAcronymTextBox" Grid.Row="0" Grid.Column="1" Text="{Binding PdcAcronym, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Width="{StaticResource SmallItemSize}" />
+
+                                <TextBlock Grid.Row="1" Grid.Column="0">PDC Name</TextBlock>
+                                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding PdcName}" />
+
+                                <TextBlock Grid.Row="2" Grid.Column="0">PDC Vendor</TextBlock>
+                                <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding VendorDeviceLookupList}" DisplayMemberPath="Value" SelectedItem="{Binding Path=PdcVendorDeviceID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource VendorDeviceLookupList}}" />
+                            </Grid>
+                        </StackPanel>
+
+                        <Button Grid.Row="1" Margin="0,10,0,0" Content="OK" Click="PDCNameInput_OK" />
+                    </Grid>
+                </AdornerDecorator>
             </TabItem>
 
             <TabItem Header="HistorianInput" Selector.Selected="ExpandStepTwo">

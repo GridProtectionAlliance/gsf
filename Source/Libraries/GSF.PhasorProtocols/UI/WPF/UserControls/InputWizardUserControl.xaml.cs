@@ -23,6 +23,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using GSF.PhasorProtocols.UI.DataModels;
@@ -202,12 +204,16 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
         private void ExpanderStep3_Expanded(object sender, RoutedEventArgs e)
         {
-            string errorMessage;
-
-            if (!m_dataContext.ValidatePDCDetails(out errorMessage))
+            if (System.Windows.Controls.Validation.GetHasError(PdcAcronymTextBox))
             {
-                MessageBox.Show(errorMessage, "PDC Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ReadOnlyObservableCollection<ValidationError> errors = System.Windows.Controls.Validation.GetErrors(PdcAcronymTextBox);
+                IEnumerable<string> errorMessages = errors.Select(error => error.ErrorContent).OfType<string>();
+                string errorMessage = string.Join(Environment.NewLine, errorMessages);
+
+                MessageBox.Show(errorMessage, "PDC Acronym Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 m_dataContext.StepThreeExpanded = false;
+                m_dataContext.StepTwoExpanded = true;
+                PdcAcronymTextBox.Focus();
             }
             else
             {

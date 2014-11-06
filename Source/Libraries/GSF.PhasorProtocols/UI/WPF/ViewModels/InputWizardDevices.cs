@@ -24,12 +24,14 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters;
 using System.Runtime.Serialization.Formatters.Soap;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
 using System.Windows.Forms;
@@ -56,7 +58,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
     /// <summary>
     /// Bindable class to hold collection of <see cref="InputWizardDevice"/>.
     /// </summary>
-    internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string>
+    internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string>, IDataErrorInfo
     {
         #region [ Members ]
 
@@ -111,6 +113,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         private bool m_disconnectedCurrentDevice;
         private bool m_newDeviceConfiguration;
         private Dispatcher m_dispatcher;
+        private Dictionary<string, string> m_errorMessages;
 
         #endregion
 
@@ -152,6 +155,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 PdcVendorDeviceID = m_vendorDeviceLookupList.First().Key;
 
             m_dispatcher = Dispatcher.CurrentDispatcher;
+            m_errorMessages = new Dictionary<string, string>();
         }
 
         #endregion
@@ -446,6 +450,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             {
                 m_connectToConcentrator = value;
                 OnPropertyChanged("ConnectToConcentrator");
+                ValidatePdcAcronym();
             }
         }
 
@@ -477,26 +482,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_pdcAcronym = value.Replace(" ", "").Replace("'", "").ToUpper();
-                OnPropertyChanged("PdcAcronym");
-
-                // Every time acronym changes, check in the database to see if it already exists.
-                // Checks if the Acronym is duplicated or No, If no then assigns that to zero.
-                PdcMessage = "";
-                Device device = Device.GetDevice(null, " WHERE Acronym = '" + m_pdcAcronym.ToUpper() + "'");
-                if (device != null)
-                {
-                    if (device.IsConcentrator)
-                    {
-                        PdcID = device.ID;
-                        PdcMessage = "PDC already exists in the database. All devices will be assigned to this PDC.";
-                    }
-                    else
-                    {
-                        PdcMessage = "A non-PDC device with the same acronym exists in the database. Please change acronym.";
-                    }
-                }
-                else
-                    PdcID = 0;
+                ValidatePdcAcronym();
             }
         }
 
@@ -837,6 +823,43 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             {
                 m_newDeviceConfiguration = value;
                 OnPropertyChanged("NewDeviceConfiguration");
+            }
+        }
+
+        /// <summary>
+        /// Gets the error message for the property with the given name.
+        /// </summary>
+        /// <returns>
+        /// The error message for the property. The default is an empty string ("").
+        /// </returns>
+        /// <param name="propertyName">The name of the property whose error message to get. </param>
+        public string this[string propertyName]
+        {
+            get
+            {
+                string errorMessage;
+
+                if (m_errorMessages.TryGetValue(propertyName, out errorMessage))
+                    return errorMessage;
+
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Gets an error message indicating what is wrong with this object.
+        /// </summary>
+        /// <returns>
+        /// An error message indicating what is wrong with this object. The default is an empty string ("").
+        /// </returns>
+        public string Error
+        {
+            get
+            {
+                IEnumerable<string> errorMessages = m_errorMessages
+                    .Select(kvp => string.Format("{0}: {1}", kvp.Key, kvp.Value));
+
+                return string.Join(Environment.NewLine, errorMessages);
             }
         }
 
@@ -1695,22 +1718,64 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         }
 
         /// <summary>
-        /// Determines whether PDC acronym is required to
-        /// save the configuration, and also determines
-        /// whether the user has entered it.
+        /// Determines whether the PDC acronym is valid.
         /// </summary>
-        /// <param name="errorMessage">Error message to be displayed when validation fails.</param>
-        /// <returns>True if the PDC details are valid; false otherwise.</returns>
-        public bool ValidatePDCDetails(out string errorMessage)
+        private void ValidatePdcAcronym()
         {
-            if (ItemsSource.Count > 1 && string.IsNullOrEmpty(PdcAcronym))
+            const string Pattern = "^[A-Z0-9-'!'_''.' @#\\$]+$";
+
+            Device device;
+            string errorMessage;
+
+            PdcID = 0;
+            PdcMessage = "";
+            errorMessage = "";
+
+            // If the connection is not to a concentrator,
+            // there is no need to validate the PDC acronym
+            if (m_connectToConcentrator)
             {
-                errorMessage = "PDC Acronym required before proceeding to the next step.";
-                return false;
+                if (string.IsNullOrEmpty(m_pdcAcronym))
+                {
+                    // If the connection is to a concentrator,
+                    // the PDC acronym must be specified
+                    errorMessage = "PDC acronym must not be empty.";
+                }
+                else if (!Regex.IsMatch(m_pdcAcronym, Pattern))
+                {
+                    // Check if the acronym is formatted properly
+                    errorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' , '.'and '$' are allowed.";
+                }
+                else
+                {
+                    // If the acronym is formatted properly, check in the database to see if it already exists
+                    device = Device.GetDevice(null, " WHERE Acronym = '" + m_pdcAcronym.ToUpper() + "'");
+
+                    if ((object)device != null)
+                    {
+                        if (device.IsConcentrator)
+                        {
+                            PdcID = device.ID;
+                            PdcMessage = "PDC already exists in the database. All devices will be assigned to this PDC.";
+                        }
+                        else
+                        {
+                            errorMessage = "A non-PDC device with the same acronym exists in the database. Please change acronym.";
+                        }
+                    }
+                }
+
+                // If an error occurred during validation,
+                // set the PdcMessage to that error message as well
+                if (!string.IsNullOrEmpty(errorMessage))
+                    PdcMessage = errorMessage;
             }
 
-            errorMessage = string.Empty;
-            return true;
+            // Update the error message
+            m_errorMessages["PdcAcronym"] = errorMessage;
+
+            // Notify of changes in validation state
+            OnPropertyChanged("PdcAcronym");
         }
 
         /// <summary>

@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -491,6 +492,30 @@ namespace GSF.PhasorProtocols.UI.Modal
                 TraverseDecisionTree("PDCNameInput");
             else
                 TraverseDecisionTree("HistorianInput");
+        }
+
+        /// <summary>
+        /// Validates the PDC Acronym text box before continuing to the next page.
+        /// </summary>
+        private void PDCNameInput_OK(object sender, RoutedEventArgs e)
+        {
+            ReadOnlyObservableCollection<ValidationError> errors;
+            IEnumerable<string> errorMessages;
+            string errorMessage;
+
+            if (System.Windows.Controls.Validation.GetHasError(PdcAcronymTextBox))
+            {
+                errors = System.Windows.Controls.Validation.GetErrors(PdcAcronymTextBox);
+                errorMessages = errors.Select(error => error.ErrorContent).OfType<string>();
+                errorMessage = string.Join(Environment.NewLine, errorMessages);
+
+                MessageBox.Show(errorMessage, "PDC Acronym Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                PdcAcronymTextBox.Focus();
+            }
+            else
+            {
+                TraverseDecisionTree("HistorianInput");
+            }
         }
 
         /// <summary>
