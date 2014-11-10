@@ -290,7 +290,7 @@ namespace GSF.COMTRADE
         {
             get
             {
-                return m_phaseDesignation.ToString();
+                return m_phaseDesignation.ToString().RemoveNull();
             }
             set
             {
