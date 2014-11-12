@@ -309,6 +309,10 @@ namespace GSF
                 if (newTypeName.StartsWith("PhasorProtocols", StringComparison.Ordinal))
                     newTypeName = "GSF." + newTypeName;
 
+                // Check for 2014 LineFrequency type in the GSF phasor protocol namespace
+                if (newTypeName.Equals("GSF.PhasorProtocols.LineFrequency", StringComparison.Ordinal))
+                    newTypeName = "GSF.Units.EE.LineFrequency";
+
                 // Search each assembly in the current application
                 // domain for the type with the transformed name
                 foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
