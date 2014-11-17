@@ -369,7 +369,7 @@ namespace GSF.Identity
         {
             get
             {
-                HashSet<string> groups = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+                HashSet<string> groups = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 string groupName;
 
                 if (m_enabled)
@@ -1482,7 +1482,7 @@ namespace GSF.Identity
 
                 sid = CleanSid(sid);
 
-                if (!sid.StartsWith("S-"))
+                if (!sid.StartsWith("S-", StringComparison.OrdinalIgnoreCase))
                     return false;
 
                 accountName = SIDToAccountName(sid);

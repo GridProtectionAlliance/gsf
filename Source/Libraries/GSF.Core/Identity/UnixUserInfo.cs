@@ -594,7 +594,7 @@ namespace GSF.Identity
                 if (!m_isLocalAccount)
                 {
                     // Domain accounts are not case sensitive even though local account names are
-                    HashSet<string> groups = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+                    HashSet<string> groups = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                     string[] dnGroups = GetUserPropertyValueCollection("memberOf");
 
@@ -725,57 +725,7 @@ namespace GSF.Identity
                 // Handle initialization
                 m_enabled = false;
 
-                // Attempt to pick up current user or impersonated user principal
-                WindowsPrincipal principal = Thread.CurrentPrincipal as WindowsPrincipal;
-                UnixIdentity unixIdentity = null;
-
-                if ((object)principal != null)
-                    unixIdentity = principal.Identity as UnixIdentity;
-
-                // Attempt do derive the domain if one is not specified
-                if (string.IsNullOrEmpty(m_parent.Domain))
-                {
-                    if (!string.IsNullOrEmpty(m_parent.m_privilegedDomain))
-                    {
-                        // Use domain specified for privileged account
-                        m_parent.Domain = m_parent.m_privilegedDomain;
-                    }
-                    else
-                    {
-                        if ((object)unixIdentity != null)
-                        {
-                            // Use domain of user authenticated on current thread
-                            m_parent.Domain = unixIdentity.Domain;
-                        }
-                        else
-                        {
-                            // Attempt to use the current user's logon domain
-                            WindowsIdentity identity = WindowsIdentity.GetCurrent();
-
-                            if ((object)identity != null)
-                            {
-                                string accountName = identity.Name;
-
-                                if (accountName.Contains('\\'))
-                                {
-                                    string[] accountParts = accountName.Split('\\');
-
-                                    // User name is specified in 'domain\accountname' format
-                                    if (accountParts.Length == 2)
-                                        m_parent.Domain = accountParts[0];
-                                }
-                                else if (accountName.Contains('@'))
-                                {
-                                    string[] accountParts = accountName.Split('@');
-
-                                    // User name is specified in 'accountname@domain' format
-                                    if (accountParts.Length == 2)
-                                        m_parent.Domain = accountParts[1];
-                                }
-                            }
-                        }
-                    }
-                }
+                UnixIdentity unixIdentity = GetUnixIdentity();
 
                 // Set the domain as the local machine if one is not specified
                 if (string.IsNullOrEmpty(m_parent.Domain))
@@ -819,50 +769,7 @@ namespace GSF.Identity
 
                         // If no LDAP connection is available, attempt anonymous binding - note that this has to be enabled on AD as it is not enabled by default
                         if ((object)m_connection == null)
-                        {
-                            try
-                            {
-                                // Try really hard to find a configured LDAP host
-                                string ldapHost = string.IsNullOrEmpty(m_parent.m_ldapPath) ? GetLdapHost() : m_parent.m_ldapPath;
-
-                                // If LDAP host cannot be determined, no LdapConnection can be established
-                                if (!string.IsNullOrEmpty(ldapHost))
-                                {
-                                    // Attempt LDAP account authentication                    
-                                    LdapConnection connection = new LdapConnection();
-
-                                    if (ldapHost.StartsWith("LDAP", StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        Uri ldapURI = new Uri(ldapHost);
-                                        ldapHost = ldapURI.Host + (ldapURI.Port == 0 ? "" : ":" + ldapURI.Port);
-                                    }
-
-                                    // If host LDAP path contains suffixed port number (e.g., host:port), this will be preferred over specified 389 default
-                                    connection.Connect(ldapHost, 389);
-                                    connection.Bind(null, null);
-
-                                    if ((object)unixIdentity == null)
-                                    {
-                                        unixIdentity = new UnixIdentity(m_parent.Domain, m_parent.UserName, connection);
-                                        Thread.CurrentPrincipal = new WindowsPrincipal(unixIdentity);
-                                    }
-                                    else
-                                    {
-                                        unixIdentity.Connection = connection;
-                                    }
-
-                                    m_connection = connection;
-                                    m_ldapRoot = unixIdentity.LdapRoot ?? m_parent.Domain;
-
-                                    if (string.IsNullOrEmpty(m_parent.m_ldapPath))
-                                        m_parent.m_ldapPath = ldapHost;
-                                }
-                            }
-                            catch
-                            {
-                                m_connection = null;
-                            }
-                        }
+                            unixIdentity = AttemptAnonymousBinding(unixIdentity);
 
                         if ((object)m_connection != null)
                         {
@@ -931,6 +838,110 @@ namespace GSF.Identity
             }
 
             return m_initialized;
+        }
+
+        private UnixIdentity GetUnixIdentity()
+        {
+            // Attempt to pick up current user or impersonated user principal
+            WindowsPrincipal principal = Thread.CurrentPrincipal as WindowsPrincipal;
+            UnixIdentity unixIdentity = null;
+
+            if ((object)principal != null)
+                unixIdentity = principal.Identity as UnixIdentity;
+
+            // Attempt do derive the domain if one is not specified
+            if (string.IsNullOrEmpty(m_parent.Domain))
+            {
+                if (!string.IsNullOrEmpty(m_parent.m_privilegedDomain))
+                {
+                    // Use domain specified for privileged account
+                    m_parent.Domain = m_parent.m_privilegedDomain;
+                }
+                else
+                {
+                    if ((object)unixIdentity != null)
+                    {
+                        // Use domain of user authenticated on current thread
+                        m_parent.Domain = unixIdentity.Domain;
+                    }
+                    else
+                    {
+                        // Attempt to use the current user's logon domain
+                        WindowsIdentity identity = WindowsIdentity.GetCurrent();
+
+                        if ((object)identity != null)
+                        {
+                            string accountName = identity.Name;
+
+                            if (accountName.Contains('\\'))
+                            {
+                                string[] accountParts = accountName.Split('\\');
+
+                                // User name is specified in 'domain\accountname' format
+                                if (accountParts.Length == 2)
+                                    m_parent.Domain = accountParts[0];
+                            }
+                            else if (accountName.Contains('@'))
+                            {
+                                string[] accountParts = accountName.Split('@');
+
+                                // User name is specified in 'accountname@domain' format
+                                if (accountParts.Length == 2)
+                                    m_parent.Domain = accountParts[1];
+                            }
+                        }
+                    }
+                }
+            }
+
+            return unixIdentity;
+        }
+
+        private UnixIdentity AttemptAnonymousBinding(UnixIdentity unixIdentity)
+        {
+            try
+            {
+                // Try really hard to find a configured LDAP host
+                string ldapHost = string.IsNullOrEmpty(m_parent.m_ldapPath) ? GetLdapHost() : m_parent.m_ldapPath;
+
+                // If LDAP host cannot be determined, no LdapConnection can be established
+                if (!string.IsNullOrEmpty(ldapHost))
+                {
+                    // Attempt LDAP account authentication                    
+                    LdapConnection connection = new LdapConnection();
+
+                    if (ldapHost.StartsWith("LDAP", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Uri ldapURI = new Uri(ldapHost);
+                        ldapHost = ldapURI.Host + (ldapURI.Port == 0 ? "" : ":" + ldapURI.Port);
+                    }
+
+                    // If host LDAP path contains suffixed port number (e.g., host:port), this will be preferred over specified 389 default
+                    connection.Connect(ldapHost, 389);
+                    connection.Bind(null, null);
+
+                    if ((object)unixIdentity == null)
+                    {
+                        unixIdentity = new UnixIdentity(m_parent.Domain, m_parent.UserName, connection);
+                        Thread.CurrentPrincipal = new WindowsPrincipal(unixIdentity);
+                    }
+                    else
+                    {
+                        unixIdentity.Connection = connection;
+                    }
+
+                    m_connection = connection;
+                    m_ldapRoot = unixIdentity.LdapRoot ?? m_parent.Domain;
+
+                    if (string.IsNullOrEmpty(m_parent.m_ldapPath))
+                        m_parent.m_ldapPath = ldapHost;
+                }
+            }
+            catch
+            {
+                m_connection = null;
+            }
+            return unixIdentity;
         }
 
         public void ChangePassword(string oldPassword, string newPassword)

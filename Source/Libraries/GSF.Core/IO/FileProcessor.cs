@@ -110,7 +110,7 @@ namespace GSF.IO
     /// Tracks files processed in a list of directories, and
     /// notifies when new files become available to be processed.
     /// </summary>
-    public class FileProcessor : IDisposable
+    public sealed class FileProcessor : IDisposable
     {
         #region [ Members ]
 
@@ -194,14 +194,6 @@ namespace GSF.IO
 
             m_touchedFiles = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
             m_processedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources before the <see cref="FileProcessor"/> object is reclaimed by <see cref="GC"/>.
-        /// </summary>
-        ~FileProcessor()
-        {
-            Dispose(false);
         }
 
         #endregion
@@ -298,56 +290,6 @@ namespace GSF.IO
         #region [ Methods ]
 
         /// <summary>
-        /// Releases all the resources used by the <see cref="FileProcessor"/> object.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="FileProcessor"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        ClearTrackedDirectories();
-
-                        if ((object)m_processingQueue != null)
-                        {
-                            m_processingQueue.Dispose();
-                            m_processingQueue = null;
-                        }
-
-                        if ((object)m_fileWatchTimer != null)
-                        {
-                            m_fileWatchTimer.Dispose();
-                            m_fileWatchTimer = null;
-                        }
-
-                        if ((object)m_waitObject != null)
-                        {
-                            m_waitObject.Set();
-                            m_waitObject.Dispose();
-                            m_waitObject = null;
-                        }
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;  // Prevent duplicate dispose.
-                }
-            }
-        }
-
-        /// <summary>
         /// Adds a directory to the list of directories tracked by this <see cref="FileProcessor"/>.
         /// </summary>
         /// <param name="path">The path to the directory to be tracked.</param>
@@ -435,6 +377,43 @@ namespace GSF.IO
         {
             while (m_fileWatchers.Count > 0)
                 RemoveFileWatcher(m_fileWatchers[0]);
+        }
+
+        /// <summary>
+        /// Releases all the resources used by the <see cref="FileProcessor"/> object.
+        /// </summary>
+        public void Dispose()
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    ClearTrackedDirectories();
+
+                    if ((object)m_processingQueue != null)
+                    {
+                        m_processingQueue.Dispose();
+                        m_processingQueue = null;
+                    }
+
+                    if ((object)m_fileWatchTimer != null)
+                    {
+                        m_fileWatchTimer.Dispose();
+                        m_fileWatchTimer = null;
+                    }
+
+                    if ((object)m_waitObject != null)
+                    {
+                        m_waitObject.Set();
+                        m_waitObject.Dispose();
+                        m_waitObject = null;
+                    }
+                }
+                finally
+                {
+                    m_disposed = true; // Prevent duplicate dispose.
+                }
+            }
         }
 
         // Determines if the given file matches the file processor's filter.

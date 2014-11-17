@@ -2168,7 +2168,7 @@ namespace GSF.Data
         /// <param name="sourceSql">The SQL statement used initially to populate the <see cref="DataTable"/>.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for updating the underlying data source.</param>
         /// <returns>The number of rows successfully updated from the <see cref="DataTable"/>.</returns>
-        [SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults"), SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
+        [SuppressMessage("Microsoft.Performance", "CA1804:RemoveUnusedLocals", MessageId = "commandBuilder"), SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults"), SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
         public static int UpdateData(this OleDbConnection connection, DataTable sourceData, string sourceSql)
         {
             OleDbDataAdapter dataAdapter = new OleDbDataAdapter(sourceSql, connection);
@@ -2184,7 +2184,7 @@ namespace GSF.Data
         /// <param name="sourceSql">The SQL statement used initially to populate the <see cref="DataTable"/>.</param>
         /// <param name="connection">The <see cref="OdbcConnection"/> to use for updating the underlying data source.</param>
         /// <returns>The number of rows successfully updated from the <see cref="DataTable"/>.</returns>
-        [SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults"), SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
+        [SuppressMessage("Microsoft.Performance", "CA1804:RemoveUnusedLocals", MessageId = "commandBuilder"), SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults"), SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
         public static int UpdateData(this OdbcConnection connection, DataTable sourceData, string sourceSql)
         {
             OdbcDataAdapter dataAdapter = new OdbcDataAdapter(sourceSql, connection);
@@ -2200,7 +2200,7 @@ namespace GSF.Data
         /// <param name="sourceSql">The SQL statement used initially to populate the <see cref="DataTable"/>.</param>
         /// <param name="connection">The <see cref="SqlConnection"/> to use for updating the underlying data source.</param>
         /// <returns>The number of rows successfully updated from the <see cref="DataTable"/>.</returns>
-        [SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults"), SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
+        [SuppressMessage("Microsoft.Performance", "CA1804:RemoveUnusedLocals", MessageId = "commandBuilder"), SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults"), SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
         public static int UpdateData(this SqlConnection connection, DataTable sourceData, string sourceSql)
         {
             SqlDataAdapter dataAdapter = new SqlDataAdapter(sourceSql, connection);
