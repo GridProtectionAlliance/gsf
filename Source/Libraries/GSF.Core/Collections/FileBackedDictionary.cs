@@ -859,6 +859,9 @@ namespace GSF.Collections
                 if (collisions > MaximumCollisions)
                 {
                     Grow();
+
+                    emptyPointer = 0L;
+
                     position = GetPosition((uint)hashCode);
                     lookup1 = GetLookupPointer(position);
                     lookup2 = lookup1 + (m_headerNode.Capacity / 2L) * LookupNode.FixedSize;
