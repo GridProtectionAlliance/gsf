@@ -89,6 +89,26 @@ namespace GSF.Collections
             public TValue Value;
         }
 
+        private class KeysEnumerable : IEnumerable<TKey>
+        {
+            private Func<IEnumerator<TKey>> m_getEnumeratorFunc;
+
+            public KeysEnumerable(Func<IEnumerator<TKey>> getEnumeratorFunc)
+            {
+                m_getEnumeratorFunc = getEnumeratorFunc;
+            }
+
+            public IEnumerator<TKey> GetEnumerator()
+            {
+                return m_getEnumeratorFunc();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+        }
+
         // Constants
         private const long CollisionOffset = 4294967311L;
         private const double MaximumLoadFactor = 0.7D;
@@ -297,33 +317,7 @@ namespace GSF.Collections
         {
             get
             {
-                ICollection<TKey> collection = new List<TKey>();
-
-                long lookupPointer;
-                long itemPointer;
-                long count;
-
-                if ((object)m_fileStream == null)
-                    Open();
-
-                lookupPointer = HeaderNode.FixedSize + JournalNode.FixedSize;
-                count = 0L;
-
-                while (count < m_headerNode.Count)
-                {
-                    itemPointer = ReadItemPointer(lookupPointer);
-
-                    if (itemPointer >= m_headerNode.ItemSectionPointer)
-                    {
-                        m_fileStream.Seek(itemPointer + ItemNode.FixedSize, SeekOrigin.Begin);
-                        collection.Add(ReadKey());
-                    }
-
-                    lookupPointer += LookupNode.FixedSize;
-                    count++;
-                }
-
-                return collection;
+                return GetKeys().ToList();
             }
         }
 
@@ -337,7 +331,7 @@ namespace GSF.Collections
         {
             get
             {
-                return this.Select(kvp => kvp.Value).ToList();
+                return GetValues().ToList();
             }
         }
 
@@ -682,6 +676,24 @@ namespace GSF.Collections
 
                 lookupPointer += LookupNode.FixedSize;
             }
+        }
+
+        /// <summary>
+        /// Gets an enumerable used to iterate only the keys in the dictionary.
+        /// </summary>
+        /// <returns>An enumerable used to iterate only the keys in the dictionary.</returns>
+        public IEnumerable<TKey> GetKeys()
+        {
+            return new KeysEnumerable(GetKeysEnumerator);
+        }
+
+        /// <summary>
+        /// Gets an enumerable used to iterate only the values in the dictionary.
+        /// </summary>
+        /// <returns>An enumerable used to iterate only the values in the dictionary.</returns>
+        public IEnumerable<TValue> GetValues()
+        {
+            return this.Select(kvp => kvp.Value);
         }
 
         /// <summary>
@@ -1215,6 +1227,33 @@ namespace GSF.Collections
         private TValue ReadValue()
         {
             return (TValue)m_formatter.Deserialize(m_fileStream);
+        }
+
+        private IEnumerator<TKey> GetKeysEnumerator()
+        {
+            long lookupPointer;
+            long itemPointer;
+            long count;
+
+            if ((object)m_fileStream == null)
+                Open();
+
+            lookupPointer = HeaderNode.FixedSize + JournalNode.FixedSize;
+            count = 0L;
+
+            while (count < m_headerNode.Count)
+            {
+                itemPointer = ReadItemPointer(lookupPointer);
+
+                if (itemPointer >= m_headerNode.ItemSectionPointer)
+                {
+                    m_fileStream.Seek(itemPointer + ItemNode.FixedSize, SeekOrigin.Begin);
+                    yield return ReadKey();
+                }
+
+                lookupPointer += LookupNode.FixedSize;
+                count++;
+            }
         }
 
         /// <summary>
