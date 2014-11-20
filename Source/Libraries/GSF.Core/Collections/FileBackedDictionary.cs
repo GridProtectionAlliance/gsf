@@ -26,7 +26,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using GSF.IO.Checksums;
 
@@ -38,8 +37,6 @@ namespace GSF.Collections
     /// <typeparam name="TKey">The type of the keys in the lookup table.</typeparam>
     /// <typeparam name="TValue">The type of the values in the lookup table.</typeparam>
     public class FileBackedDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IDisposable
-        where TKey : ISerializable
-        where TValue : ISerializable
     {
         #region [ Members ]
 
@@ -117,6 +114,7 @@ namespace GSF.Collections
         /// <summary>
         /// Creates a new instance of the <see cref="FileBackedDictionary{TKey, TValue}"/> class.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> is not serializable.</exception>
         public FileBackedDictionary()
             : this(EqualityComparer<TKey>.Default)
         {
@@ -125,10 +123,58 @@ namespace GSF.Collections
         /// <summary>
         /// Creates a new instance of the <see cref="FileBackedDictionary{TKey, TValue}"/> class.
         /// </summary>
+        /// <param name="dictionary">The dictionary whose elements are copied to this dictionary.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="dictionary"/> is null.</exception>
+        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> is not serializable.</exception>
+        public FileBackedDictionary(IDictionary<TKey, TValue> dictionary)
+            : this(dictionary, EqualityComparer<TKey>.Default)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="FileBackedDictionary{TKey, TValue}"/> class.
+        /// </summary>
         /// <param name="keyComparer">The equality comparer used to compare keys in the dictionary.</param>
+        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> is not serializable.</exception>
         public FileBackedDictionary(IEqualityComparer<TKey> keyComparer)
         {
-            m_keyComparer = keyComparer;
+            if (!typeof(TKey).IsSerializable)
+                throw new InvalidOperationException("Unable to create FileBackedDictionary with keys that are not serializable");
+
+            if (!typeof(TValue).IsSerializable)
+                throw new InvalidOperationException("Unable to create FileBackedDictionary with values that are not serializable");
+
+            if ((object)keyComparer != null)
+                m_keyComparer = keyComparer;
+            else
+                m_keyComparer = EqualityComparer<TKey>.Default;
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="FileBackedDictionary{TKey, TValue}"/> class.
+        /// </summary>
+        /// <param name="dictionary">The dictionary whose elements are copied to this dictionary.</param>
+        /// <param name="keyComparer">The equality comparer used to compare keys in the dictionary.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="dictionary"/> is null.</exception>
+        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> is not serializable.</exception>
+        public FileBackedDictionary(IDictionary<TKey, TValue> dictionary, IEqualityComparer<TKey> keyComparer)
+        {
+            if ((object)dictionary == null)
+                throw new ArgumentNullException("dictionary");
+
+            if (!typeof(TKey).IsSerializable)
+                throw new InvalidOperationException("Unable to create FileBackedDictionary with keys that are not serializable");
+
+            if (!typeof(TValue).IsSerializable)
+                throw new InvalidOperationException("Unable to create FileBackedDictionary with values that are not serializable");
+
+            foreach (KeyValuePair<TKey, TValue> kvp in dictionary)
+                Add(kvp);
+
+            if ((object)keyComparer != null)
+                m_keyComparer = keyComparer;
+            else
+                m_keyComparer = EqualityComparer<TKey>.Default;
         }
 
         #endregion
@@ -844,26 +890,30 @@ namespace GSF.Collections
                 if (item2 == 0L)
                     break;
 
-                // Update the position using the collision offset
-                // to find the next lookup node in the chain
-                position = GetPosition(position + CollisionOffset);
-                lookup1 = GetLookupPointer(position);
-                lookup2 = lookup1 + (m_headerNode.Capacity / 2L) * LookupNode.FixedSize;
-                item1 = ReadItemPointer(lookup1);
-                item2 = ReadItemPointer(lookup2);
-
-                // Handle edge case where chains have grown too large
-                // because of frequent collisions and remove operations
+                // Track the number of collisions that
+                // have occurred during this Find operation
                 collisions++;
 
                 if (collisions > MaximumCollisions)
                 {
+                    // Handle edge case where chains have grown too large
+                    // because of frequent collisions and remove operations
                     Grow();
 
                     emptyPointer = 0L;
                     collisions = 0;
 
                     position = GetPosition((uint)hashCode);
+                    lookup1 = GetLookupPointer(position);
+                    lookup2 = lookup1 + (m_headerNode.Capacity / 2L) * LookupNode.FixedSize;
+                    item1 = ReadItemPointer(lookup1);
+                    item2 = ReadItemPointer(lookup2);
+                }
+                else
+                {
+                    // Update the position using the collision offset
+                    // to find the next lookup node in the chain
+                    position = GetPosition(position + CollisionOffset);
                     lookup1 = GetLookupPointer(position);
                     lookup2 = lookup1 + (m_headerNode.Capacity / 2L) * LookupNode.FixedSize;
                     item1 = ReadItemPointer(lookup1);
