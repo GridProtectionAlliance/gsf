@@ -451,7 +451,7 @@ namespace GSF.Collections
 
             Find(key, out lookupPointer, out itemPointer);
 
-            if (itemPointer > m_headerNode.ItemSectionPointer)
+            if (itemPointer >= m_headerNode.ItemSectionPointer)
                 throw new ArgumentException("An element with the same key already exists");
 
             if (m_headerNode.Count + 1 > m_headerNode.Capacity * MaximumLoadFactor)
@@ -950,6 +950,8 @@ namespace GSF.Collections
 
         private void Set(long lookupPointer, long itemPointer, long count)
         {
+            long nextItemPointer;
+
             if ((count == m_headerNode.Count + 1 || count == m_headerNode.Count) && itemPointer >= m_headerNode.ItemSectionPointer && IsValidLookupPointer(lookupPointer))
             {
                 if (m_journalNode.Operation != JournalNode.Set)
@@ -964,8 +966,15 @@ namespace GSF.Collections
 
                 // Perform the set operation
                 WriteItemPointer(lookupPointer, itemPointer);
+
+                m_fileStream.Seek(itemPointer + sizeof(long), SeekOrigin.Begin);
+                nextItemPointer = m_fileReader.ReadInt64();
+
+                if (nextItemPointer > m_headerNode.EndOfFilePointer)
+                    m_headerNode.EndOfFilePointer = nextItemPointer;
+
                 m_headerNode.Count = count;
-                m_headerNode.EndOfFilePointer = m_fileStream.Length;
+
                 Write(m_headerNode);
             }
 
