@@ -861,6 +861,7 @@ namespace GSF.Collections
                     Grow();
 
                     emptyPointer = 0L;
+                    collisions = 0;
 
                     position = GetPosition((uint)hashCode);
                     lookup1 = GetLookupPointer(position);
