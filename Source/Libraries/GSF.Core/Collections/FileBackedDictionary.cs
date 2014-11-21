@@ -61,6 +61,8 @@ namespace GSF.Collections
             public const int Delete = 2;
             public const int GrowLookupSection = 3;
             public const int GrowCapacity = 4;
+            public const int WriteItemNodePointers = 5;
+            public const int Truncate = 6;
 
             public int Operation;
             public long LookupPointer;
@@ -143,6 +145,18 @@ namespace GSF.Collections
         /// <summary>
         /// Creates a new instance of the <see cref="FileBackedDictionary{TKey, TValue}"/> class.
         /// </summary>
+        /// <param name="filePath"></param>
+        /// <exception cref="ArgumentException"><paramref name="filePath"/> is a zero-length string, contains only white space, or contains one or more invalid characters as defined by <see cref="Path.GetInvalidPathChars"/>.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="filePath"/> is null.</exception>
+        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> is not serializable.</exception>
+        public FileBackedDictionary(string filePath)
+            : this(filePath, EqualityComparer<TKey>.Default)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="FileBackedDictionary{TKey, TValue}"/> class.
+        /// </summary>
         /// <param name="dictionary">The dictionary whose elements are copied to this dictionary.</param>
         /// <exception cref="ArgumentNullException"><paramref name="dictionary"/> is null.</exception>
         /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> is not serializable.</exception>
@@ -157,12 +171,43 @@ namespace GSF.Collections
         /// <param name="keyComparer">The equality comparer used to compare keys in the dictionary.</param>
         /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> is not serializable.</exception>
         public FileBackedDictionary(IEqualityComparer<TKey> keyComparer)
+            : this(Path.GetTempFileName(), keyComparer)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="FileBackedDictionary{TKey, TValue}"/> class.
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="dictionary">The dictionary whose elements are copied to this dictionary.</param>
+        /// <exception cref="ArgumentException"><paramref name="filePath"/> is a zero-length string, contains only white space, or contains one or more invalid characters as defined by <see cref="Path.GetInvalidPathChars"/>.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="filePath"/> is null or <paramref name="dictionary"/> is null.</exception>
+        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> is not serializable.</exception>
+        public FileBackedDictionary(string filePath, IDictionary<TKey, TValue> dictionary)
+            : this(filePath, dictionary, EqualityComparer<TKey>.Default)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="FileBackedDictionary{TKey, TValue}"/> class.
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="keyComparer">The equality comparer used to compare keys in the dictionary.</param>
+        /// <exception cref="ArgumentException"><paramref name="filePath"/> is a zero-length string, contains only white space, or contains one or more invalid characters as defined by <see cref="Path.GetInvalidPathChars"/>.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="filePath"/> is null.</exception>
+        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> is not serializable.</exception>
+        public FileBackedDictionary(string filePath, IEqualityComparer<TKey> keyComparer)
         {
             if (!typeof(TKey).IsSerializable)
                 throw new InvalidOperationException("Unable to create FileBackedDictionary with keys that are not serializable");
 
             if (!typeof(TValue).IsSerializable)
                 throw new InvalidOperationException("Unable to create FileBackedDictionary with values that are not serializable");
+
+            if ((object)filePath == null)
+                throw new ArgumentNullException("filePath");
+
+            FilePath = filePath;
 
             if ((object)keyComparer != null)
                 m_keyComparer = keyComparer;
@@ -178,15 +223,34 @@ namespace GSF.Collections
         /// <exception cref="ArgumentNullException"><paramref name="dictionary"/> is null.</exception>
         /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> is not serializable.</exception>
         public FileBackedDictionary(IDictionary<TKey, TValue> dictionary, IEqualityComparer<TKey> keyComparer)
+            : this(Path.GetTempFileName(), dictionary, keyComparer)
         {
-            if ((object)dictionary == null)
-                throw new ArgumentNullException("dictionary");
+        }
 
+        /// <summary>
+        /// Creates a new instance of the <see cref="FileBackedDictionary{TKey, TValue}"/> class.
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="dictionary">The dictionary whose elements are copied to this dictionary.</param>
+        /// <param name="keyComparer">The equality comparer used to compare keys in the dictionary.</param>
+        /// <exception cref="ArgumentException"><paramref name="filePath"/> is a zero-length string, contains only white space, or contains one or more invalid characters as defined by <see cref="Path.GetInvalidPathChars"/>.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="filePath"/> is null or <paramref name="dictionary"/> is null.</exception>
+        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> is not serializable.</exception>
+        public FileBackedDictionary(string filePath, IDictionary<TKey, TValue> dictionary, IEqualityComparer<TKey> keyComparer)
+        {
             if (!typeof(TKey).IsSerializable)
                 throw new InvalidOperationException("Unable to create FileBackedDictionary with keys that are not serializable");
 
             if (!typeof(TValue).IsSerializable)
                 throw new InvalidOperationException("Unable to create FileBackedDictionary with values that are not serializable");
+
+            if ((object)filePath == null)
+                throw new ArgumentNullException("filePath");
+
+            if ((object)dictionary == null)
+                throw new ArgumentNullException("dictionary");
+
+            FilePath = filePath;
 
             foreach (KeyValuePair<TKey, TValue> kvp in dictionary)
                 Add(kvp);
@@ -204,6 +268,7 @@ namespace GSF.Collections
         /// <summary>
         /// Gets or sets the path to the file backing this dictionary.
         /// </summary>
+        /// <exception cref="ArgumentException">FilePath is set and is a zero-length string, contains only white space, or contains one or more invalid characters as defined by <see cref="Path.GetInvalidPathChars"/>.</exception>
         public string FilePath
         {
             get
@@ -212,7 +277,24 @@ namespace GSF.Collections
             }
             set
             {
-                m_filePath = value;
+                char[] invalidPathChars;
+
+                if (m_filePath != value)
+                {
+                    if ((object)value != null)
+                    {
+                        if (value == string.Empty || value.All(char.IsWhiteSpace))
+                            throw new ArgumentException("Path is zero-length or contains only whitespace", "value");
+
+                        invalidPathChars = Path.GetInvalidPathChars();
+
+                        if (value.Any(invalidPathChars.Contains))
+                            throw new ArgumentException("Path contains one or more invalid characters", "value");
+                    }
+
+                    Close();
+                    m_filePath = value;
+                }
             }
         }
 
@@ -297,7 +379,7 @@ namespace GSF.Collections
 
                 itemNode = new ItemNode();
                 itemNode.LookupPointer = lookupPointer;
-                itemNode.HashCode = key.GetHashCode();
+                itemNode.HashCode = m_keyComparer.GetHashCode(key);
                 itemNode.Key = key;
                 itemNode.Value = value;
 
@@ -389,6 +471,14 @@ namespace GSF.Collections
                         case JournalNode.GrowCapacity:
                             GrowCapacity(m_journalNode.Sync);
                             break;
+
+                        case JournalNode.WriteItemNodePointers:
+                            WriteItemNodePointers(m_journalNode.LookupPointer, m_journalNode.ItemPointer, m_journalNode.Sync);
+                            break;
+
+                        case JournalNode.Truncate:
+                            Truncate(m_journalNode.ItemPointer);
+                            break;
                     }
                 }
                 else
@@ -462,7 +552,7 @@ namespace GSF.Collections
 
             itemNode = new ItemNode();
             itemNode.LookupPointer = lookupPointer;
-            itemNode.HashCode = key.GetHashCode();
+            itemNode.HashCode = m_keyComparer.GetHashCode(key);
             itemNode.Key = key;
             itemNode.Value = value;
 
@@ -616,6 +706,8 @@ namespace GSF.Collections
 
                 lookupPointer += LookupNode.FixedSize;
             }
+
+            Truncate(m_headerNode.ItemSectionPointer);
         }
 
         /// <summary>
@@ -668,6 +760,7 @@ namespace GSF.Collections
 
                 if (itemPointer >= m_headerNode.ItemSectionPointer)
                 {
+                    // ReSharper disable once PossibleNullReferenceException
                     m_fileStream.Seek(itemPointer, SeekOrigin.Begin);
                     Read(itemNode);
                     yield return new KeyValuePair<TKey, TValue>(itemNode.Key, itemNode.Value);
@@ -694,6 +787,130 @@ namespace GSF.Collections
         public IEnumerable<TValue> GetValues()
         {
             return this.Select(kvp => kvp.Value);
+        }
+
+        /// <summary>
+        /// Defragments the item section of the dictionary,
+        /// which gets fragmented after removing keys or updating values.
+        /// </summary>
+        public void Compact()
+        {
+            byte[] bytes = null;
+
+            long item1;
+            long lookup1;
+            int length1;
+            bool orphan1;
+
+            long item2;
+            long lookup2;
+            int length2;
+            bool orphan2;
+
+            long item3;
+
+            if (IsReadOnly)
+                throw new NotSupportedException("Unable to modify read-only dictionary");
+
+            if (m_headerNode.ItemSectionPointer == m_headerNode.EndOfFilePointer)
+                return;
+
+            // Initialize item1, lookup1, and item2 pointers
+            item1 = m_headerNode.ItemSectionPointer;
+            lookup1 = ReadLookupPointer(item1);
+            item2 = m_fileReader.ReadInt64();
+
+            // Determine whether item1 is an orphaned node
+            orphan1 = ReadItemPointer(lookup1) != item1;
+
+            while (item2 < m_headerNode.EndOfFilePointer)
+            {
+                // Update lookup2 and item3 pointers
+                lookup2 = ReadLookupPointer(item2);
+                item3 = m_fileReader.ReadInt64();
+
+                // Determine whether item2 is an orphaned node
+                orphan2 = ReadItemPointer(lookup2) != item2;
+
+                if (!orphan1)
+                {
+                    // Skip nodes that are not orphaned at
+                    // the beginning of the item section
+                    item1 = item2;
+                    lookup1 = lookup2;
+                    orphan1 = orphan2;
+                }
+                else
+                {
+                    if (orphan2)
+                    {
+                        // Combine the orphaned nodes
+                        WriteItemNodePointers(lookup1, item1, item3);
+                    }
+                    else
+                    {
+                        // Determine the length of the two nodes
+                        length1 = (int)(item2 - item1);
+                        length2 = (int)(item3 - item2);
+
+                        // Allocate enough memory to move item2
+                        if ((object)bytes == null || bytes.Length < length2)
+                            bytes = new byte[length2];
+
+                        // Read item2 into memory
+                        m_fileStream.Seek(item2, SeekOrigin.Begin);
+                        m_fileStream.Read(bytes, 0, length2);
+
+                        // Check to see if item1 is at least large enough
+                        // to fully contain item2 plus an orphaned node
+                        if (length2 + 2 * sizeof(long) < length1)
+                        {
+                            // Write data to the body of the orphaned node
+                            m_fileStream.Seek(item1 + 2 * sizeof(long), SeekOrigin.Begin);
+                            m_fileStream.Write(bytes, 2 * sizeof(long), length2 - 2 * sizeof(long));
+
+                            // Position nextItemPointer of the soon
+                            // to be orphaned node, pointing at item2
+                            m_fileWriter.Write(lookup1);
+                            m_fileWriter.Write(item2);
+
+                            // Update the pointers in the orphaned item node,
+                            // then point the lookup node to the orphaned node
+                            WriteItemNodePointers(lookup2, item1, item1 + length2);
+                            Set(lookup2, item1, m_headerNode.Count);
+
+                            // The left over empty space and the node at item2
+                            // have become orphaned nodes so combine them
+                            WriteItemNodePointers(lookup1, item1 + length2, item3);
+
+                            // Update item1 for the next iteration
+                            item1 += length2;
+                        }
+                        else
+                        {
+                            // Write item2 beyond the end of the item section
+                            m_fileStream.Seek(m_headerNode.EndOfFilePointer, SeekOrigin.Begin);
+                            m_fileStream.Write(bytes, 0, length2);
+                            
+                            // Fix the nextItemPointer
+                            m_fileStream.Seek(m_headerNode.EndOfFilePointer + sizeof(long), SeekOrigin.Begin);
+                            m_fileWriter.Write(m_headerNode.EndOfFilePointer + length2);
+
+                            // Update the lookup node to point to the new location for item2
+                            Set(lookup2, m_headerNode.EndOfFilePointer, m_headerNode.Count);
+
+                            // Combine the orphaned item1 and the newly orphaned item2
+                            WriteItemNodePointers(lookup1, item1, item3);
+                        }
+                    }
+                }
+
+                // Update item2 for the next iteration
+                item2 = item3;
+            }
+
+            if (!orphan1)
+                Truncate(item1);
         }
 
         /// <summary>
@@ -793,7 +1010,7 @@ namespace GSF.Collections
 
             // Use the GrowLookupSection operation to move the item section pointer,
             // then clear the data in the new half of the lookup section
-            GrowLookupSection(minimumItemSectionPointer);
+            GrowLookupSection(itemPointer);
 
             m_fileStream.Seek(HeaderNode.FixedSize + JournalNode.FixedSize + LookupNode.FixedSize * m_headerNode.Capacity, SeekOrigin.Begin);
 
@@ -966,9 +1183,7 @@ namespace GSF.Collections
 
                 // Perform the set operation
                 WriteItemPointer(lookupPointer, itemPointer);
-
-                m_fileStream.Seek(itemPointer + sizeof(long), SeekOrigin.Begin);
-                nextItemPointer = m_fileReader.ReadInt64();
+                nextItemPointer = ReadNextItemPointer(itemPointer);
 
                 if (nextItemPointer > m_headerNode.EndOfFilePointer)
                     m_headerNode.EndOfFilePointer = nextItemPointer;
@@ -1081,6 +1296,60 @@ namespace GSF.Collections
             m_journalNode.LookupPointer = 0L;
             m_journalNode.ItemPointer = 0L;
             m_journalNode.Sync = 0;
+            Write(m_journalNode);
+        }
+
+        private void WriteItemNodePointers(long lookupPointer, long itemPointer, long nextItemPointer)
+        {
+            if (itemPointer >= m_headerNode.ItemSectionPointer && nextItemPointer > itemPointer)
+            {
+                if (m_journalNode.Operation != JournalNode.WriteItemNodePointers)
+                {
+                    // Write the grow operation to the journal node
+                    m_journalNode.Operation = JournalNode.WriteItemNodePointers;
+                    m_journalNode.LookupPointer = lookupPointer;
+                    m_journalNode.ItemPointer = itemPointer;
+                    m_journalNode.Sync = nextItemPointer;
+                    Write(m_journalNode);
+                }
+
+                // Perform the write operation
+                m_fileStream.Seek(itemPointer, SeekOrigin.Begin);
+                m_fileWriter.Write(lookupPointer);
+                m_fileWriter.Write(nextItemPointer);
+            }
+
+            // Clear the journal node
+            m_journalNode.Operation = JournalNode.None;
+            m_journalNode.LookupPointer = 0L;
+            m_journalNode.ItemPointer = 0L;
+            m_journalNode.Sync = 0L;
+            Write(m_journalNode);
+        }
+
+        private void Truncate(long itemPointer)
+        {
+            if (itemPointer >= m_headerNode.ItemSectionPointer && itemPointer < m_headerNode.EndOfFilePointer)
+            {
+                if (m_journalNode.Operation != JournalNode.Truncate)
+                {
+                    // Write the grow operation to the journal node
+                    m_journalNode.Operation = JournalNode.Truncate;
+                    m_journalNode.ItemPointer = itemPointer;
+                    Write(m_journalNode);
+                }
+
+                // Perform the truncate operation
+                m_headerNode.EndOfFilePointer = itemPointer;
+                Write(m_headerNode);
+                m_fileStream.SetLength(itemPointer);
+            }
+
+            // Clear the journal node
+            m_journalNode.Operation = JournalNode.None;
+            m_journalNode.LookupPointer = 0L;
+            m_journalNode.ItemPointer = 0L;
+            m_journalNode.Sync = 0L;
             Write(m_journalNode);
         }
 
@@ -1228,6 +1497,18 @@ namespace GSF.Collections
             return m_fileReader.ReadInt64();
         }
 
+        private long ReadLookupPointer(long itemPointer)
+        {
+            m_fileStream.Seek(itemPointer, SeekOrigin.Begin);
+            return m_fileReader.ReadInt64();
+        }
+
+        private long ReadNextItemPointer(long itemPointer)
+        {
+            m_fileStream.Seek(itemPointer + sizeof(long), SeekOrigin.Begin);
+            return m_fileReader.ReadInt64();
+        }
+
         private TKey ReadKey()
         {
             return (TKey)m_formatter.Deserialize(m_fileStream);
@@ -1256,6 +1537,7 @@ namespace GSF.Collections
 
                 if (itemPointer >= m_headerNode.ItemSectionPointer)
                 {
+                    // ReSharper disable once PossibleNullReferenceException
                     m_fileStream.Seek(itemPointer + ItemNode.FixedSize, SeekOrigin.Begin);
                     yield return ReadKey();
                 }
