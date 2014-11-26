@@ -191,15 +191,34 @@ namespace GSF.Historian.Files
                     // Publish all values at the current time
                     foreach (IEnumerator<IDataPoint> enumerator in enumerators)
                     {
+                        bool enumerationComplete = false;
                         dataPoint = enumerator.Current;
 
                         if (dataPoint.Time.CompareTo(publishTime) <= 0)
                         {
                             // Attempt to advance to next data point, tracking completed enumerators
                             if (!enumerator.MoveNext())
+                            {
+                                enumerationComplete = true;
                                 completed.Add(index);
+                            }
 
                             yield return dataPoint;
+
+                            // Make sure any point IDs with duplicated times directly follow
+                            if (!enumerationComplete)
+                            {
+                                while (enumerator.Current.Time.CompareTo(publishTime) <= 0)
+                                {
+                                    yield return enumerator.Current;
+
+                                    if (!enumerator.MoveNext())
+                                    {
+                                        completed.Add(index);
+                                        break;
+                                    }
+                                }
+                            }
                         }
 
                         index++;
