@@ -24,8 +24,8 @@
 using System;
 using System.Reflection;
 using System.Resources;
-using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 // Assembly identity attributes.
 [assembly: AssemblyVersion("2.0.230.0")]
@@ -45,7 +45,7 @@ using System.Runtime.CompilerServices;
 #endif
 
 [assembly: AssemblyDefaultAlias("GSF.Core")]
-[assembly: AssemblyDescription("Library of .NET extensions and components - adapter framework, process queue, configuration api, diagnostics, error handling, active directory, interop, checksums, ftp, mail, unit conversion, binary parsing, scheduler, ntp time, precision timer, int24, unit24, console extensions, database extensions, drawing extension, reflection extensions, xml extensions, bit extensions, buffer extensions, char extensions, data-time extensions, enum extensions, string extensions.")]
+[assembly: AssemblyDescription("Library of .NET functions, extensions and components including adapter framework, asynchronous processing queues, configuration APIs, diagnostics, error handling, active directory helpers, checksum algorithms, unit conversion, binary parsing, scheduler, Unix and NTP time classes, precision timer, Int24, UInt24, console extensions, database extensions and abstraction layer, drawing extensions, reflection extensions, XML extensions, bit-wise functionality extensions, buffer extensions, char extensions, data-time extensions, Enum extensions, string extensions, etc.")]
 [assembly: AssemblyTitle("GSF.Core")]
 
 // Other configuration attributes.

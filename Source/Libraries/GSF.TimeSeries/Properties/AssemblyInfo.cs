@@ -22,14 +22,14 @@
 //******************************************************************************************************
 
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("GSF.TimeSeries")]
-[assembly: AssemblyDescription("Framework for Enabling Time-series Data Processing Services")]
+[assembly: AssemblyDescription("Framework for enabling time-series data processing services including hosted input, action and output adapter implementations.")]
 [assembly: AssemblyCompany("Grid Protection Alliance")]
 [assembly: AssemblyProduct("Grid Solutions Framework")]
 [assembly: AssemblyCopyright("Copyright © GPA, 2013.  All Rights Reserved.")]

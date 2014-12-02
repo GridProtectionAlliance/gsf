@@ -4,7 +4,7 @@
 *******************************************************************************************************
 **  GSF.Core.nuspec - Gbtc
 **
-**  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
+**  Copyright © 2014, Grid Protection Alliance.  All Rights Reserved.
 **
 **  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 **  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -22,18 +22,22 @@
 **  ===================================================================================================
 **  05/31/2011 - Pinal C. Patel
 **       Generated original version of source code.
+**  12/02/2014 - J. Ritchie Carroll
+**       Updated NuGet package information.
 **
 *******************************************************************************************************
 -->
 
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
-    <id>GSF.Libraries.Core</id>
+    <id>GSF.Core</id>
+    <title>Grid Solutions Framework Core Functions Library</title>
     <version>$version$</version>
     <authors>$author$</authors>
     <description>$description$</description>
     <projectUrl>https://gsf.codeplex.com/</projectUrl>
-    <licenseUrl>https://gsf.codeplex.com/license</licenseUrl>
-    <iconUrl>https://download-codeplex.sec.s-msft.com/Download?ProjectName=gsf;DownloadId=487006;Build=20919</iconUrl>
+    <licenseUrl>http://opensource.org/licenses/EPL-1.0</licenseUrl>
+    <iconUrl>https://s3.amazonaws.com/cloud.ohloh.net/attachments/70294/GSF64x64_med.png</iconUrl>
+    <tags>Core Energy Utility Adapters Functions Extensions Queues Threads Serialization Checksums Endianness Units Diagnostics LDAP ActiveDirectory Configuration User Account ADO Database Abstraction Task Scheduling</tags>
   </metadata>
 </package>

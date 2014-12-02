@@ -41,7 +41,7 @@ using System.Runtime.InteropServices;
 #endif
 
 [assembly: AssemblyDefaultAlias("GSF.ServiceModel")]
-[assembly: AssemblyDescription("Library of base WCF service with self-hosting capability, and WCF Authorization Policy and Host Factories for implementing role-based security.")]
+[assembly: AssemblyDescription("Library of base WCF service with self-hosting capability. Includes WCF Authorization Policy and Host Factories for implementing role-based security.")]
 [assembly: AssemblyTitle("GSF.ServiceModel")]
 
 // Other configuration attributes.

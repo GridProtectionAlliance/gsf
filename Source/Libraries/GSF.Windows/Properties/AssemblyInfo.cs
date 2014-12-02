@@ -41,7 +41,7 @@ using System.Runtime.InteropServices;
 #endif
 
 [assembly: AssemblyDefaultAlias("GSF.Windows")]
-[assembly: AssemblyDescription("Library of property grid extensions, about dialog and base Windows Form and WPF Window for implementing role-based security.")]
+[assembly: AssemblyDescription("Library of base Windows Form and WPF Window extensions and dialogs, including those needed for implementing role-based security inside a Windows application.")]
 [assembly: AssemblyTitle("GSF.Windows")]
 
 // Other configuration attributes.

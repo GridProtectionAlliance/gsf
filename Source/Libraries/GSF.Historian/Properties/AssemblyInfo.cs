@@ -41,7 +41,7 @@ using System.Runtime.InteropServices;
 #endif
 
 [assembly: AssemblyDefaultAlias("GSF.Historian")]
-[assembly: AssemblyDescription("Core historian specific components.")]
+[assembly: AssemblyDescription("Library of time-series data historian archiving components.")]
 [assembly: AssemblyTitle("GSF.Historian")]
 
 // Other configuration attributes.

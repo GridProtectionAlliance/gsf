@@ -41,7 +41,7 @@ using System.Runtime.InteropServices;
 #endif
 
 [assembly: AssemblyDefaultAlias("GSF.ServiceProcess")]
-[assembly: AssemblyDescription("Library of components that facilitate remote interaction with a Windows Service from Console, Windows and Web application.")]
+[assembly: AssemblyDescription("Library of components that facilitate remote interaction with a Windows Service from Console, Windows and Web applications.")]
 [assembly: AssemblyTitle("GSF.ServiceProcess")]
 
 // Other configuration attributes.

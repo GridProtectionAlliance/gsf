@@ -200,6 +200,7 @@
     <Content Include="Data\SQLite\GSFSchema-SampleDataSet.db" />
     <Content Include="Data\SQLite\GSFSchema.db" />
     <None Include="Data\SerializedSchema.bin" />
+    <None Include="GSF.TimeSeries.nuspec" />
     <None Include="PostBuildSetup.bat" />
     <None Include="TimeSeriesFramework.ruleset" />
   </ItemGroup>

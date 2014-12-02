@@ -41,7 +41,7 @@ using System.Runtime.InteropServices;
 #endif
 
 [assembly: AssemblyDefaultAlias("GSF.Security")]
-[assembly: AssemblyDescription("Library of core security framework for implementing role-based security across various .NET application types.")]
+[assembly: AssemblyDescription("Library of core security framework for implementing role-based security with integrated Active Directory, local account and database style authentication across various .NET application types.")]
 [assembly: AssemblyTitle("GSF.Security")]
 
 // Other configuration attributes.

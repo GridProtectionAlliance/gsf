@@ -4,7 +4,7 @@
 *******************************************************************************************************
 **  GSF.Historian.nuspec - Gbtc
 **
-**  Copyright � 2012, Grid Protection Alliance.  All Rights Reserved.
+**  Copyright © 2014, Grid Protection Alliance.  All Rights Reserved.
 **
 **  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 **  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -21,23 +21,28 @@
 **  ===================================================================================================
 **  05/31/2011 - Pinal C. Patel
 **       Generated original version of source code.
+**  12/02/2014 - J. Ritchie Carroll
+**       Updated NuGet package information.
+**
 *******************************************************************************************************
 -->
 
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
-    <id>GSF.Libraries.Historian</id>
+    <id>GSF.Historian</id>
+    <title>Grid Solutions Framework Time-series Data Archiving Library</title>
     <version>$version$</version>
     <authors>$author$</authors>
     <description>$description$</description>
     <projectUrl>https://gsf.codeplex.com/</projectUrl>
-    <licenseUrl>https://gsf.codeplex.com/license</licenseUrl>
-    <iconUrl>https://download-codeplex.sec.s-msft.com/Download?ProjectName=gsf;DownloadId=487006;Build=20919</iconUrl>
+    <licenseUrl>http://opensource.org/licenses/EPL-1.0</licenseUrl>
+    <iconUrl>https://s3.amazonaws.com/cloud.ohloh.net/attachments/70294/GSF64x64_med.png</iconUrl>
+    <tags>Historian TimeSeries Data Archive Query Metadata Sorting</tags>
     <dependencies>
-      <dependency id="GSF.Libraries.Communication" version="" />
-      <dependency id="GSF.Libraries.Core" version="" />
-      <dependency id="GSF.Libraries.ServiceModel" version="" />
-      <dependency id="GSF.Libraries.TimeSeries" version="" />	
+      <dependency id="GSF.Communication" version="" />
+      <dependency id="GSF.Core" version="" />
+      <dependency id="GSF.ServiceModel" version="" />
+      <dependency id="GSF.TimeSeries" version="" />	
     </dependencies>
   </metadata>
 </package>

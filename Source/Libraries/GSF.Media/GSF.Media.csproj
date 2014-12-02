@@ -110,6 +110,7 @@
     <Compile Include="WaveFormatExtensible.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="GSF.Media.nuspec" />
     <None Include="Wavefile Information\IFF.txt" />
     <None Include="Wavefile Information\Waveform Audio Format.ppt" />
   </ItemGroup>

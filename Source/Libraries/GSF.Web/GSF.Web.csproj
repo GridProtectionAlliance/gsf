@@ -212,7 +212,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Embedded\Files\Help.pdf" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="GSF.Web.nuspec" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

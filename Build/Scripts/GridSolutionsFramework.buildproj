@@ -67,6 +67,8 @@
 **  02/08/2012 - Pinal C. Patel
 **       Updated to support creation of pre-release NuGet packages and publishing NuGet packages to
 **       the official NuGet.org packages feed.
+**  12/02/2014 - J. Ritchie Carroll
+**       Fixed NuGet version naming for pre-release roll-outs.
 **
 *******************************************************************************************************
 -->
@@ -167,14 +169,14 @@
     <ItemGroup>
       <NugetLibraries Include="$(LocalFolder)\Source\Libraries\**\*.nuspec"/>
     </ItemGroup>
-    <Exec Command="%22$(Nuget)%22 pack %22%(NugetLibraries.RootDir)%(NugetLibraries.Directory)%(NugetLibraries.Filename).csproj%22 /Version $(Major).$(Minor) /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'"/>
-    <Exec Command="%22$(Nuget)%22 pack %22%(NugetLibraries.RootDir)%(NugetLibraries.Directory)%(NugetLibraries.Filename).csproj%22 /Version $(Major).$(Minor)-beta$(Build) /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'"/>
+    <Exec Command="%22$(Nuget)%22 pack %22%(NugetLibraries.RootDir)%(NugetLibraries.Directory)%(NugetLibraries.Filename).csproj%22 /Version $(Major).$(Minor).$(Build) /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'"/>
+    <Exec Command="%22$(Nuget)%22 pack %22%(NugetLibraries.RootDir)%(NugetLibraries.Directory)%(NugetLibraries.Filename).csproj%22 /Version $(Major).$(Minor).$(Build)-beta /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'"/>
     <Message Text="Creating nuget samples packages..."/>
     <ItemGroup>
       <NugetSamples Include="$(LocalFolder)\Build\Scripts\**\*.nuspec"/>
     </ItemGroup>
-    <Exec Command="%22$(Nuget)%22 pack %22%(NugetSamples.FullPath)%22 /Version $(Major).$(Minor) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'"/>
-    <Exec Command="%22$(Nuget)%22 pack %22%(NugetSamples.FullPath)%22 /Version $(Major).$(Minor)-beta$(Build) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'"/>
+    <Exec Command="%22$(Nuget)%22 pack %22%(NugetSamples.FullPath)%22 /Version $(Major).$(Minor).$(Build) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'"/>
+    <Exec Command="%22$(Nuget)%22 pack %22%(NugetSamples.FullPath)%22 /Version $(Major).$(Minor).$(Build)-beta /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'"/>
 
     <!-- Publish nuget packages. -->
     <Message Text="Publishing nuget packages to NuGet.org..."/>

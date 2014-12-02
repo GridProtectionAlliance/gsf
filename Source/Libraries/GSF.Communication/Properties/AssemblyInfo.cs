@@ -41,7 +41,7 @@ using System.Runtime.InteropServices;
 #endif
 
 [assembly: AssemblyDefaultAlias("GSF.Communication")]
-[assembly: AssemblyDescription("Library of components for TCP, UDP, serial and file-based communication in an abstract fashion.")]
+[assembly: AssemblyDescription("Library of components for managing standard and TLS asynchronous TCP/UDP/Multicast client/server connections, as well as serial and file-based communication in a client/server interface based abstraction layer.")]
 [assembly: AssemblyTitle("GSF.Communication")]
 
 // Other configuration attributes.
