@@ -30,7 +30,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>GSF.Web.Security</id>
-    <title>Adds GSF role-based security layer to a Web application.</title>
+    <title>Grid Solutions Framework Web Application Security Template.</title>
     <version>1.0.0.0</version>
     <authors>Grid Protection Alliance</authors>
     <description>Enables role-based security using Grid Solutions Framework security layer in an ASP.NET application.</description>

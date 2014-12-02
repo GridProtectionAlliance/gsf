@@ -30,7 +30,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>GSF.TimeSeries</id>
-    <title>Grid Solutions Framework Time-series Framework</title>
+    <title>Grid Solutions Framework Time-series Library</title>
     <version>$version$</version>
     <authors>$author$</authors>
     <description>$description$</description>
