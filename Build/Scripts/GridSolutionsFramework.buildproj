@@ -54,13 +54,13 @@
 **       Updated to set the TftServer property.
 **       Updated to set versioning scheme settings.
 **  03/17/2011 - Pinal C. Patel
-**       Added the creation of nuget package.
+**       Added the creation of NuGet package.
 **  05/31/2011 - Pinal C. Patel
 **       Modified to create symbol packages to accompany NuGet library packages.
 **  06/02/2011 - Pinal C. Patel
 **       Modified to create NuGet sample packages.
 **  07/22/2011 - Pinal C. Patel
-**       Updated to skip NuGet package creation if versioning is skipped and added SkipNugetPackages
+**       Updated to skip NuGet package creation if versioning is skipped and added SkipNuGetPackages
 **       property to allow NuGet package creation to be skipped even when versioning is performed.
 **  12/01/2011 - Pinal C. Patel
 **       Updated to version and build setup packages.
@@ -78,12 +78,12 @@
   <Import Project="MasterBuild.buildproj"/>
 
   <PropertyGroup>
-    <SkipNugetPackages></SkipNugetPackages>
+    <SkipNuGetPackages></SkipNuGetPackages>
     <VersionSource>true</VersionSource>
   </PropertyGroup>
 
   <Target Name="BeforePrepareSettings">
-    <Error Condition="'$(NugetPackagesFolder)' == ''"  Text="Error: Location of Nuget Packages must be specified."/>
+    <Error Condition="'$(NuGetPackagesFolder)' == ''"  Text="Error: Location of NuGet Packages must be specified."/>
     <Error Condition="'$(BuildDeployFolder)' == ''" Text="Error: Drop location of the build content must be specified."/>
     <PropertyGroup>
       <!--Must-override setting(s).-->
@@ -102,15 +102,15 @@
       <!--Project specific settings.-->
       <ProjectSolution>$(LocalFolder)\Source\$(ProjectName).sln</ProjectSolution>
       <PreRelease Condition="'$(PreRelease)' == ''">true</PreRelease>
-      <Nuget>$(LocalFolder)\Build\Scripts\NuGet\NuGet.exe</Nuget>
-      <NugetPackagesFolder>$(NugetPackagesFolder)</NugetPackagesFolder>
+      <NuGet>$(LocalFolder)\Build\Scripts\NuGet\NuGet.exe</NuGet>
+      <NuGetPackagesFolder>$(NuGetPackagesFolder)</NuGetPackagesFolder>
       <BuildDeployFolder>$(BuildDeployFolder)</BuildDeployFolder>
     </PropertyGroup>
   </Target>
 
   <Target Name="BeforeVersionSource">
     <Message Text="VersionSource = --$(VersionSource)--"/>
-    <Message Text="SkipNugetPackages = --$(SkipNugetPackages)--"/>
+    <Message Text="SkipNuGetPackages = --$(SkipNuGetPackages)--"/>
     <ItemGroup>
       <!--List of files to be versioned.-->
       <FilesToVersion Include="$(LocalFolder)\Source\**\AssemblyInfo.*">
@@ -156,34 +156,34 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="AfterDeployBuild" Condition="'$(VersionSource)' == 'true' And '$(SkipNugetPackages)' == ''">
-    <!-- Delete existing nuget packages. -->
-    <Message Text="Deleting nuget packages..."/>
+  <Target Name="AfterDeployBuild" Condition="'$(VersionSource)' == 'true' And '$(SkipNuGetPackages)' == ''">
+    <!-- Delete existing NuGet packages. -->
+    <Message Text="Deleting NuGet packages..."/>
     <ItemGroup>
-      <NugetPackages Include="$(NugetPackagesFolder)\GSF.*.$(Major).$(Minor)*.nupkg"/>
+      <NuGetPackages Include="$(NuGetPackagesFolder)\GSF.*.$(Major).$(Minor)*.nupkg"/>
     </ItemGroup>
-    <Delete Files="@(NugetPackages)"/>
+    <Delete Files="@(NuGetPackages)"/>
 
-    <!-- Create nuget packages. -->
-    <Message Text="Creating nuget library packages..."/>
+    <!-- Create NuGet packages. -->
+    <Message Text="Creating NuGet library packages..."/>
     <ItemGroup>
-      <NugetLibraries Include="$(LocalFolder)\Source\Libraries\**\*.nuspec"/>
+      <NuGetLibraries Include="$(LocalFolder)\Source\Libraries\**\*.nuspec"/>
     </ItemGroup>
-    <Exec Command="%22$(Nuget)%22 pack %22%(NugetLibraries.RootDir)%(NugetLibraries.Directory)%(NugetLibraries.Filename).csproj%22 /Version $(Major).$(Minor).$(Build) /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'"/>
-    <Exec Command="%22$(Nuget)%22 pack %22%(NugetLibraries.RootDir)%(NugetLibraries.Directory)%(NugetLibraries.Filename).csproj%22 /Version $(Major).$(Minor).$(Build)-beta /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'"/>
-    <Message Text="Creating nuget samples packages..."/>
+    <Exec Command="%22$(NuGet)%22 pack %22%(NuGetLibraries.RootDir)%(NuGetLibraries.Directory)%(NuGetLibraries.Filename).csproj%22 /Version $(Major).$(Minor).$(Build) /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NuGetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'"/>
+    <Exec Command="%22$(NuGet)%22 pack %22%(NuGetLibraries.RootDir)%(NuGetLibraries.Directory)%(NuGetLibraries.Filename).csproj%22 /Version $(Major).$(Minor).$(Build)-beta /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NuGetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'"/>
+    <Message Text="Creating NuGet template packages..."/>
     <ItemGroup>
-      <NugetSamples Include="$(LocalFolder)\Build\Scripts\**\*.nuspec"/>
+      <NuGetTemplates Include="$(LocalFolder)\Source\Templates\NuGet\**\*.nuspec"/>
     </ItemGroup>
-    <Exec Command="%22$(Nuget)%22 pack %22%(NugetSamples.FullPath)%22 /Version $(Major).$(Minor).$(Build) /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'"/>
-    <Exec Command="%22$(Nuget)%22 pack %22%(NugetSamples.FullPath)%22 /Version $(Major).$(Minor).$(Build)-beta /OutputDirectory %22$(NugetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'"/>
+    <Exec Command="%22$(NuGet)%22 pack %22%(NuGetTemplates.FullPath)%22 /Version $(Major).$(Minor).$(Build) /OutputDirectory %22$(NuGetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'"/>
+    <Exec Command="%22$(NuGet)%22 pack %22%(NuGetTemplates.FullPath)%22 /Version $(Major).$(Minor).$(Build)-beta /OutputDirectory %22$(NuGetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'"/>
 
-    <!-- Publish nuget packages. -->
-    <Message Text="Publishing nuget packages to NuGet.org..."/>
+    <!-- Publish NuGet packages. -->
+    <Message Text="Publishing NuGet packages to NuGet.org..."/>
     <ItemGroup>
-      <NugetPackages Remove="@(NugetPackages)"/>
-      <NugetPackages Include="$(NugetPackagesFolder)\GSF.*.$(Major).$(Minor)*.nupkg" Exclude="$(NugetPackagesFolder)\GSF.*.$(Major).$(Minor)*.symbols.nupkg"/>
+      <NuGetPackages Remove="@(NuGetPackages)"/>
+      <NuGetPackages Include="$(NuGetPackagesFolder)\GSF.*.$(Major).$(Minor)*.nupkg" Exclude="$(NuGetPackagesFolder)\GSF.*.$(Major).$(Minor)*.symbols.nupkg"/>
     </ItemGroup>
-    <Exec Command="%22$(Nuget)%22 push %22%(NugetPackages.FullPath)%22 $(NugetApiKey)" Condition="'@(NugetPackages)' != ''"/>
+    <Exec Command="%22$(NuGet)%22 push %22%(NuGetPackages.FullPath)%22 $(NuGetApiKey)" Condition="'@(NuGetPackages)' != ''"/>
   </Target>
 </Project>

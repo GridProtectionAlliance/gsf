@@ -300,6 +300,32 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserInfoTest", "Tools\UserI
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigTest", "Tools\ConfigTest\ConfigTest.csproj", "{B38AC5E5-B880-43E9-8F88-107294F3E69F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{6E4D5584-C29F-4B93-AF70-6A1601F1519F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GSF.Web.Mvc.Security", "GSF.Web.Mvc.Security", "{F89AD5B9-895F-4706-B745-25D46A618668}"
+	ProjectSection(SolutionItems) = preProject
+		Templates\NuGet\GSF.Web.Mvc.Security\GSF.Web.Mvc.Security.nuspec = Templates\NuGet\GSF.Web.Mvc.Security\GSF.Web.Mvc.Security.nuspec
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{A2BD7076-5624-4068-B902-C0E428394BFF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GSF.Web.Security", "GSF.Web.Security", "{35E5B8CA-E7B1-47FB-9A79-1BA12985A170}"
+	ProjectSection(SolutionItems) = preProject
+		Templates\NuGet\GSF.Web.Security\GSF.Web.Security.nuspec = Templates\NuGet\GSF.Web.Security\GSF.Web.Security.nuspec
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Content", "Content", "{8B837A53-2A9F-4F39-8859-6D12F0618B4B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "App_Start", "App_Start", "{CD40DC84-1F8D-4815-9CDC-9F4B3DE9A7D1}"
+	ProjectSection(SolutionItems) = preProject
+		Templates\NuGet\GSF.Web.Mvc.Security\Content\App_Start\SecurityRoutes.cs.pp = Templates\NuGet\GSF.Web.Mvc.Security\Content\App_Start\SecurityRoutes.cs.pp
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Content", "Content", "{426112DF-A6A0-4773-A5E2-C8B58074C852}"
+	ProjectSection(SolutionItems) = preProject
+		Templates\NuGet\GSF.Web.Security\Content\Web.config.transform = Templates\NuGet\GSF.Web.Security\Content\Web.config.transform
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
 		SccNumberOfProjects = 87
@@ -1669,5 +1695,11 @@ Global
 		{BFD3BD23-FA08-4449-BEED-BDFEE0613291} = {F68BED5B-410C-4D02-87C0-8AC74E374821}
 		{7D17290A-2661-4D58-803E-676A1235CB57} = {B006EF23-CE75-47CB-A985-5087C5C94CBC}
 		{954399E1-542B-4CC1-BBF2-77FA3516EA68} = {B006EF23-CE75-47CB-A985-5087C5C94CBC}
+		{A2BD7076-5624-4068-B902-C0E428394BFF} = {6E4D5584-C29F-4B93-AF70-6A1601F1519F}
+		{8B837A53-2A9F-4F39-8859-6D12F0618B4B} = {F89AD5B9-895F-4706-B745-25D46A618668}
+		{F89AD5B9-895F-4706-B745-25D46A618668} = {A2BD7076-5624-4068-B902-C0E428394BFF}
+		{35E5B8CA-E7B1-47FB-9A79-1BA12985A170} = {A2BD7076-5624-4068-B902-C0E428394BFF}
+		{426112DF-A6A0-4773-A5E2-C8B58074C852} = {35E5B8CA-E7B1-47FB-9A79-1BA12985A170}
+		{CD40DC84-1F8D-4815-9CDC-9F4B3DE9A7D1} = {8B837A53-2A9F-4F39-8859-6D12F0618B4B}
 	EndGlobalSection
 EndGlobal
