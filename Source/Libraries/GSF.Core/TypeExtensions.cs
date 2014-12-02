@@ -36,6 +36,9 @@
 //       Updated LoadImplementations() method to add support for attributes.
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  06/30/2009 - Pinal C. Patel
+//       Update LoadImplementations to use FQN when checking if a Type implements a specific interface
+//       to avoid namespace collisions.
 //
 //******************************************************************************************************
 
@@ -190,7 +193,7 @@ namespace GSF
                                     types.Add(asmType);
                                 }
 
-                                if (type.IsInterface && (object)asmType.GetInterface(type.Name) != null)
+                                if (type.IsInterface && (object)asmType.GetInterface(type.FullName) != null)
                                 {
                                     // The type being tested is an interface and current type implements it.
                                     types.Add(asmType);
