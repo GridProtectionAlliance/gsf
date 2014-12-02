@@ -28,7 +28,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("GSF.Media")]
-[assembly: AssemblyDescription("Library of Media Components (e.g., WAV File Parser)")]
+[assembly: AssemblyDescription("Library of media components (e.g., WAV file parser, DTMF frequency generator, etc.)")]
 [assembly: AssemblyCompany("Grid Protection Alliance")]
 [assembly: AssemblyProduct("Grid Solutions Framework")]
 [assembly: AssemblyCopyright("Copyright © GPA, 2013.  All Rights Reserved.")]
