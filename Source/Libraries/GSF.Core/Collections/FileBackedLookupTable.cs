@@ -616,6 +616,8 @@ namespace GSF.Collections
 
                     if (lookupNode.ItemPointer >= m_headerNode.ItemSectionPointer && lookupNode.Marker == 0)
                         return false;
+
+                    lookupPointer += LookupNodeSize;
                 }
             }
 

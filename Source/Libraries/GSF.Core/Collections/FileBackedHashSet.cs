@@ -197,6 +197,15 @@ namespace GSF.Collections
         #region [ Methods ]
 
         /// <summary>
+        /// Opens the file backing this hash set.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">File is already open.</exception>
+        public void Open()
+        {
+            m_lookupTable.Open();
+        }
+
+        /// <summary>
         /// Adds an element to the current set and returns a value to indicate if the element was successfully added. 
         /// </summary>
         /// <param name="item">The element to add to the set.</param>

@@ -121,6 +121,8 @@
     </CodeAnalysisDependentAssemblyPaths>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GSF.Collections\FileBackedHashSetTest.cs" />
+    <Compile Include="GSF.Collections\FileBackedDictionaryTest.cs" />
     <Compile Include="GSF.Collections\ListCollectionTests.cs" />
     <Compile Include="DataSetSerializationTest.cs" />
     <Compile Include="DateTimeExtensionTest.cs" />
