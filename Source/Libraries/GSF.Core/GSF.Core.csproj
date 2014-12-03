@@ -171,6 +171,8 @@
     <Compile Include="BigEndian.cs" />
     <Compile Include="BinaryCodedDecimal.cs" />
     <Compile Include="Collections\FileBackedDictionary.cs" />
+    <Compile Include="Collections\FileBackedHashSet.cs" />
+    <Compile Include="Collections\FileBackedLookupTable.cs" />
     <Compile Include="Console\Command.cs" />
     <Compile Include="Console\CommandException.cs" />
     <Compile Include="Console\CommandResponse.cs" />
