@@ -30,7 +30,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>GSF.Net</id>
-    <title>Grid Solutions Framework Network Protocol Library (e.g., FTP)</title>
+    <title>Grid Solutions Framework Network Protocol Library</title>
     <version>$version$</version>
     <authors>$author$</authors>
     <description>$description$</description>

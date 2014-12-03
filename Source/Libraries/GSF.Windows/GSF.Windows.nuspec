@@ -31,6 +31,7 @@
   <metadata>
     <id>GSF.Windows</id>
     <title>Grid Solutions Framework Windows UI Library</title>
+    <summary>Library of base Windows Form and WPF Window extensions, common dialogs and security forms.</summary>
     <version>$version$</version>
     <authors>$author$</authors>
     <description>$description$</description>

@@ -41,7 +41,7 @@ using System.Runtime.InteropServices;
 #endif
 
 [assembly: AssemblyDefaultAlias("GSF.ServiceBus")]
-[assembly: AssemblyDescription("Library of lightweight WCF-based Service Bus with queue and topic support for secure event-driven messaging between disjointed systems.")]
+[assembly: AssemblyDescription("Library of lightweight WCF-based service bus with queue and topic support for secure event-driven messaging between disjointed systems.")]
 [assembly: AssemblyTitle("GSF.ServiceBus")]
 
 // Other configuration attributes.

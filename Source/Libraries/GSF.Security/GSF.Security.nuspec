@@ -31,6 +31,7 @@
   <metadata>
     <id>GSF.Security</id>
     <title>Grid Solutions Framework Security Library</title>
+    <summary>Library for implementing role-based security across various .NET application types.</summary>
     <version>$version$</version>
     <authors>$author$</authors>
     <description>$description$</description>

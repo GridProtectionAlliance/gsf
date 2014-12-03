@@ -30,7 +30,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>GSF.Historian</id>
-    <title>Grid Solutions Framework Time-series Data Archiving Library</title>
+    <title>Grid Solutions Framework Historian Library</title>
     <version>$version$</version>
     <authors>$author$</authors>
     <description>$description$</description>

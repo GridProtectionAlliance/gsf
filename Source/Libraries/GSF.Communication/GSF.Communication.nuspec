@@ -31,6 +31,7 @@
   <metadata>
     <id>GSF.Communication</id>
     <title>Grid Solutions Framework Communications Library</title>
+    <summary>Library of interface based client/server communication components for TLS, TCP, UDP, Multicast, serial and files.</summary>
     <version>$version$</version>
     <authors>$author$</authors>
     <description>$description$</description>

@@ -45,7 +45,7 @@ using System.Runtime.InteropServices;
 #endif
 
 [assembly: AssemblyDefaultAlias("GSF.Core")]
-[assembly: AssemblyDescription("Library of .NET functions, extensions and components including adapter framework, asynchronous processing queues, configuration APIs, diagnostics, error handling, active directory helpers, checksum algorithms, unit conversion, binary parsing, scheduler, Unix and NTP time classes, precision timer, Int24, UInt24, console extensions, database extensions and abstraction layer, drawing extensions, reflection extensions, XML extensions, bit-wise functionality extensions, buffer extensions, char extensions, data-time extensions, Enum extensions, string extensions, etc.")]
+[assembly: AssemblyDescription("Library of .NET functions, extensions and components including asynchronous processing queues, configuration APIs, diagnostics, error handling, console functions, adapter framework, active directory and local account functions, checksum algorithms, unit conversion, binary parsing, cron-style task scheduler, Unix and NTP time classes, precision timer, 24-bit signed and unsigned integers, database extensions and abstraction layer, extensions for drawing, reflection, XML, buffers, chars, date/times, enumerations, strings, etc.")]
 [assembly: AssemblyTitle("GSF.Core")]
 
 // Other configuration attributes.
