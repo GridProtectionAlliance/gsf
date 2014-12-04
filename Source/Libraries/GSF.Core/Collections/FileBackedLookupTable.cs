@@ -421,10 +421,6 @@ namespace GSF.Collections
                     m_headerNode.EndOfFilePointer = m_headerNode.ItemSectionPointer;
                     Write(m_headerNode);
 
-                    // Set the hash modifier to the largest prime
-                    // that is at most as large as half the capacity
-                    m_hashMod = 5u;
-
                     // Create a new journal node and write it after the header node
                     m_journalNode.Operation = JournalNode.None;
                     m_journalNode.LookupPointer = 0L;
@@ -437,6 +433,10 @@ namespace GSF.Collections
                     m_fileWriter.Write(0L);
                     m_fileWriter.Write(0L);
                 }
+
+                // Set the hash modifier to the largest prime
+                // that is at most as large as half the capacity
+                UpdateHashMod(m_headerNode.Capacity);
             }
             catch (UnauthorizedAccessException)
             {
@@ -1055,6 +1055,10 @@ namespace GSF.Collections
             for (int i = 0; i < m_headerNode.Capacity; i++)
                 Write(emptyNode);
 
+            // Set the hash modifier to the largest prime that
+            // is at most as large as half the new capacity
+            UpdateHashMod(newCapacity);
+
             // Copy lookup nodes from the existing half of the lookup
             // section into the new half of the lookup section
             lookupPointer = HeaderNode.FixedSize + JournalNode.FixedSize;
@@ -1327,10 +1331,6 @@ namespace GSF.Collections
 
                 m_headerNode.Capacity = capacity;
                 Write(m_headerNode);
-
-                // Set the hash modifier to the largest prime
-                // that is at most as large as half the capacity
-                UpdateHashMod();
             }
 
             // Clear the journal node
@@ -1494,7 +1494,7 @@ namespace GSF.Collections
 
             // Set the hash modifier to the largest prime
             // that is at most as large as half the capacity
-            UpdateHashMod();
+            UpdateHashMod(node.Capacity);
         }
 
         private void Read(JournalNode node)
@@ -1576,9 +1576,9 @@ namespace GSF.Collections
             return default(TValue);
         }
 
-        private void UpdateHashMod()
+        private void UpdateHashMod(long capacity)
         {
-            long lookupCapacity = m_headerNode.Capacity / 2L;
+            long lookupCapacity = capacity / 2L;
 
             if (lookupCapacity >= uint.MaxValue)
             {
