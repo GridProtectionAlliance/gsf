@@ -132,11 +132,11 @@ namespace GSF.Collections
         private BinaryReader m_fileReader;
         private BinaryFormatter m_formatter;
 
+        private string m_filePath;
         private IEqualityComparer<TKey> m_keyComparer;
 
-        private string m_filePath;
-
         private LookupTableType m_lookupTableType;
+        private uint m_hashMod;
 
         #endregion
 
@@ -420,6 +420,10 @@ namespace GSF.Collections
                     m_headerNode.ItemSectionPointer = HeaderNode.FixedSize + JournalNode.FixedSize + LookupNodeSize * m_headerNode.Capacity;
                     m_headerNode.EndOfFilePointer = m_headerNode.ItemSectionPointer;
                     Write(m_headerNode);
+
+                    // Set the hash modifier to the largest prime
+                    // that is at most as large as half the capacity
+                    m_hashMod = 5u;
 
                     // Create a new journal node and write it after the header node
                     m_journalNode.Operation = JournalNode.None;
@@ -1078,7 +1082,7 @@ namespace GSF.Collections
 
         private void SeekToNewLookupChainEnd(int hashCode)
         {
-            long position = (uint)hashCode % m_headerNode.Capacity;
+            long position = (uint)hashCode % m_hashMod;
             long lookupPointer = GetLookupPointer(position) + m_headerNode.Capacity * LookupNodeSize;
 
             while (ReadItemPointer(lookupPointer) >= m_headerNode.ItemSectionPointer)
@@ -1093,7 +1097,7 @@ namespace GSF.Collections
         private void Find(TKey key, out long lookupPointer, out long itemPointer)
         {
             int hashCode = m_keyComparer.GetHashCode(key);
-            long position = GetPosition((uint)hashCode);
+            long position = (uint)hashCode % m_hashMod;
             long lookup1 = GetLookupPointer(position);
             long lookup2 = lookup1 + (m_headerNode.Capacity / 2L) * LookupNodeSize;
             long item1 = ReadItemPointer(lookup1);
@@ -1166,7 +1170,7 @@ namespace GSF.Collections
                     emptyPointer = 0L;
                     collisions = 0;
 
-                    position = GetPosition((uint)hashCode);
+                    position = (uint)hashCode % m_hashMod;
                     lookup1 = GetLookupPointer(position);
                     lookup2 = lookup1 + (m_headerNode.Capacity / 2L) * LookupNodeSize;
                     item1 = ReadItemPointer(lookup1);
@@ -1323,6 +1327,10 @@ namespace GSF.Collections
 
                 m_headerNode.Capacity = capacity;
                 Write(m_headerNode);
+
+                // Set the hash modifier to the largest prime
+                // that is at most as large as half the capacity
+                UpdateHashMod();
             }
 
             // Clear the journal node
@@ -1483,6 +1491,10 @@ namespace GSF.Collections
             node.Capacity = m_fileReader.ReadInt64();
             node.ItemSectionPointer = m_fileReader.ReadInt64();
             node.EndOfFilePointer = m_fileReader.ReadInt64();
+
+            // Set the hash modifier to the largest prime
+            // that is at most as large as half the capacity
+            UpdateHashMod();
         }
 
         private void Read(JournalNode node)
@@ -1562,6 +1574,36 @@ namespace GSF.Collections
                 return (TValue)m_formatter.Deserialize(m_fileStream);
 
             return default(TValue);
+        }
+
+        private void UpdateHashMod()
+        {
+            long lookupCapacity = m_headerNode.Capacity / 2L;
+
+            if (lookupCapacity >= uint.MaxValue)
+            {
+                m_hashMod = 4294967291u;
+            }
+            else
+            {
+                m_hashMod = (uint)(lookupCapacity - 1L | 1L);
+
+                while (!IsPrime(m_hashMod))
+                    m_hashMod -= 2;
+            }
+        }
+
+        private bool IsPrime(long n)
+        {
+            long sqrt = (long)Math.Sqrt(n);
+
+            for (long i = 2; i <= sqrt; i++)
+            {
+                if (n % i == 0)
+                    return false;
+            }
+
+            return true;
         }
 
         private IEnumerator<TKey> GetKeysEnumerator()
