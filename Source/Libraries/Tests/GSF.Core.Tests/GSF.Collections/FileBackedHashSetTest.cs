@@ -65,7 +65,7 @@ namespace GSF.Core.Tests.GSF.Collections
                 hashSet.UnionWith(Enumerable.Range(5, 10));
 
                 for (int i = 0; i < 15; i++)
-                    Assert.IsTrue(hashSet.Contains(i));
+                    Assert.IsTrue(hashSet.Contains(i), i.ToString());
 
                 Assert.AreEqual(hashSet.Count, 15);
             }
@@ -82,7 +82,7 @@ namespace GSF.Core.Tests.GSF.Collections
                 hashSet.IntersectWith(Enumerable.Range(5, 10));
 
                 for (int i = 5; i < 10; i++)
-                    Assert.IsTrue(hashSet.Contains(i));
+                    Assert.IsTrue(hashSet.Contains(i), i.ToString());
 
                 Assert.AreEqual(hashSet.Count, 5);
             }
@@ -99,7 +99,7 @@ namespace GSF.Core.Tests.GSF.Collections
                 hashSet.ExceptWith(Enumerable.Range(5, 10));
 
                 for (int i = 0; i < 5; i++)
-                    Assert.IsTrue(hashSet.Contains(i));
+                    Assert.IsTrue(hashSet.Contains(i), i.ToString());
 
                 Assert.AreEqual(hashSet.Count, 5);
             }
@@ -116,10 +116,10 @@ namespace GSF.Core.Tests.GSF.Collections
                 hashSet.SymmetricExceptWith(Enumerable.Range(5, 10));
 
                 for (int i = 0; i < 5; i++)
-                    Assert.IsTrue(hashSet.Contains(i));
+                    Assert.IsTrue(hashSet.Contains(i), i.ToString());
 
                 for (int i = 10; i < 15; i++)
-                    Assert.IsTrue(hashSet.Contains(i));
+                    Assert.IsTrue(hashSet.Contains(i), i.ToString());
 
                 Assert.AreEqual(hashSet.Count, 10);
             }

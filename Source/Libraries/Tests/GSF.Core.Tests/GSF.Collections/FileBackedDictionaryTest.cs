@@ -98,7 +98,7 @@ namespace GSF.Core.Tests.GSF.Collections
 
                 foreach (KeyValuePair<int, int> kvp in array)
                 {
-                    Assert.IsTrue(dictionary.Contains(kvp));
+                    Assert.IsTrue(dictionary.Contains(kvp), kvp.Key.ToString());
                     Assert.AreEqual(dictionary[kvp.Key], kvp.Value);
                 }
             }
@@ -126,11 +126,11 @@ namespace GSF.Core.Tests.GSF.Collections
                     if (i % 400 == 0)
                         Assert.AreEqual(dictionary[i], 400);
                     else if (i % 100 == 0)
-                        Assert.IsFalse(dictionary.ContainsKey(i));
+                        Assert.IsFalse(dictionary.ContainsKey(i), i.ToString());
                     else if (i % 4 ==  0)
                         Assert.AreEqual(dictionary[i], 4);
                     else
-                        Assert.IsFalse(dictionary.ContainsKey(i));
+                        Assert.IsFalse(dictionary.ContainsKey(i), i.ToString());
                 }
             }
         }

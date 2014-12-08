@@ -48,7 +48,7 @@ namespace GSF.Collections
         /// <summary>
         /// Creates a new instance of the <see cref="FileBackedDictionary{TKey, TValue}"/> class.
         /// </summary>
-        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> is not serializable.</exception>
+        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> cannot be serialized.</exception>
         public FileBackedDictionary()
             : this(EqualityComparer<TKey>.Default)
         {
@@ -60,7 +60,7 @@ namespace GSF.Collections
         /// <param name="filePath">The path to the file used to store the lookup table.</param>
         /// <exception cref="ArgumentException"><paramref name="filePath"/> is a zero-length string, contains only white space, or contains one or more invalid characters as defined by <see cref="Path.GetInvalidPathChars"/>.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="filePath"/> is null.</exception>
-        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> is not serializable.</exception>
+        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> cannot be serialized.</exception>
         public FileBackedDictionary(string filePath)
             : this(filePath, EqualityComparer<TKey>.Default)
         {
@@ -71,7 +71,7 @@ namespace GSF.Collections
         /// </summary>
         /// <param name="dictionary">The dictionary whose elements are copied to this dictionary.</param>
         /// <exception cref="ArgumentNullException"><paramref name="dictionary"/> is null.</exception>
-        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> is not serializable.</exception>
+        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> cannot be serialized.</exception>
         public FileBackedDictionary(IDictionary<TKey, TValue> dictionary)
             : this(dictionary, EqualityComparer<TKey>.Default)
         {
@@ -81,7 +81,7 @@ namespace GSF.Collections
         /// Creates a new instance of the <see cref="FileBackedDictionary{TKey, TValue}"/> class.
         /// </summary>
         /// <param name="keyComparer">The equality comparer used to compare keys in the dictionary.</param>
-        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> is not serializable.</exception>
+        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> cannot be serialized.</exception>
         public FileBackedDictionary(IEqualityComparer<TKey> keyComparer)
             : this(Path.GetTempFileName(), keyComparer)
         {
@@ -94,7 +94,7 @@ namespace GSF.Collections
         /// <param name="dictionary">The dictionary whose elements are copied to this dictionary.</param>
         /// <exception cref="ArgumentException"><paramref name="filePath"/> is a zero-length string, contains only white space, or contains one or more invalid characters as defined by <see cref="Path.GetInvalidPathChars"/>.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="filePath"/> is null or <paramref name="dictionary"/> is null.</exception>
-        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> is not serializable.</exception>
+        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> cannot be serialized.</exception>
         public FileBackedDictionary(string filePath, IDictionary<TKey, TValue> dictionary)
             : this(filePath, dictionary, EqualityComparer<TKey>.Default)
         {
@@ -107,7 +107,7 @@ namespace GSF.Collections
         /// <param name="keyComparer">The equality comparer used to compare keys in the dictionary.</param>
         /// <exception cref="ArgumentException"><paramref name="filePath"/> is a zero-length string, contains only white space, or contains one or more invalid characters as defined by <see cref="Path.GetInvalidPathChars"/>.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="filePath"/> is null.</exception>
-        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> is not serializable.</exception>
+        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> cannot be serialized.</exception>
         public FileBackedDictionary(string filePath, IEqualityComparer<TKey> keyComparer)
         {
             m_lookupTable = new FileBackedLookupTable<TKey, TValue>(LookupTableType.Dictionary, filePath, keyComparer);
@@ -119,7 +119,7 @@ namespace GSF.Collections
         /// <param name="dictionary">The dictionary whose elements are copied to this dictionary.</param>
         /// <param name="keyComparer">The equality comparer used to compare keys in the dictionary.</param>
         /// <exception cref="ArgumentNullException"><paramref name="dictionary"/> is null.</exception>
-        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> is not serializable.</exception>
+        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> cannot be serialized.</exception>
         public FileBackedDictionary(IDictionary<TKey, TValue> dictionary, IEqualityComparer<TKey> keyComparer)
             : this(Path.GetTempFileName(), dictionary, keyComparer)
         {
@@ -133,7 +133,7 @@ namespace GSF.Collections
         /// <param name="keyComparer">The equality comparer used to compare keys in the dictionary.</param>
         /// <exception cref="ArgumentException"><paramref name="filePath"/> is a zero-length string, contains only white space, or contains one or more invalid characters as defined by <see cref="Path.GetInvalidPathChars"/>.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="filePath"/> is null or <paramref name="dictionary"/> is null.</exception>
-        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> is not serializable.</exception>
+        /// <exception cref="InvalidOperationException">Either <typeparamref name="TKey"/> or <typeparamref name="TValue"/> cannot be serialized.</exception>
         public FileBackedDictionary(string filePath, IDictionary<TKey, TValue> dictionary, IEqualityComparer<TKey> keyComparer)
         {
             m_lookupTable = new FileBackedLookupTable<TKey, TValue>(LookupTableType.Dictionary, filePath, keyComparer);
@@ -195,6 +195,24 @@ namespace GSF.Collections
         }
 
         /// <summary>
+        /// Gets or sets the signature of the file backing the lookup table.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">Attempt is made to set Signature to a null value.</exception>
+        /// <exception cref="ArgumentException">Attempt is made to set Signature to a value larger than the maximum allowed size.</exception>
+        /// <exception cref="NotSupportedException">Attempt is made to modify Signature of a read-only lookup table.</exception>
+        public byte[] Signature
+        {
+            get
+            {
+                return m_lookupTable.Signature;
+            }
+            set
+            {
+                m_lookupTable.Signature = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the element with the specified key.
         /// </summary>
         /// <returns>
@@ -241,6 +259,22 @@ namespace GSF.Collections
             get
             {
                 return GetValues().ToList();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the size of the cache used
+        /// to store data from the file in memory.
+        /// </summary>
+        public long CacheSize
+        {
+            get
+            {
+                return m_lookupTable.CacheSize;
+            }
+            set
+            {
+                m_lookupTable.CacheSize = value;
             }
         }
 

@@ -46,7 +46,7 @@ namespace GSF.Collections
         /// <summary>
         /// Creates a new instance of the <see cref="FileBackedHashSet{T}"/> class.
         /// </summary>
-        /// <exception cref="InvalidOperationException"><typeparamref name="T"/> is not serializable.</exception>
+        /// <exception cref="InvalidOperationException"><typeparamref name="T"/> cannot be serialized.</exception>
         public FileBackedHashSet()
             : this(Path.GetTempFileName(), EqualityComparer<T>.Default)
         {
@@ -58,7 +58,7 @@ namespace GSF.Collections
         /// <param name="filePath">The path to the file used to store the lookup table.</param>
         /// <exception cref="ArgumentException"><paramref name="filePath"/> is a zero-length string, contains only white space, or contains one or more invalid characters as defined by <see cref="Path.GetInvalidPathChars"/>.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="filePath"/> is null.</exception>
-        /// <exception cref="InvalidOperationException"><typeparamref name="T"/> is not serializable.</exception>
+        /// <exception cref="InvalidOperationException"><typeparamref name="T"/> cannot be serialized.</exception>
         public FileBackedHashSet(string filePath)
             : this(filePath, EqualityComparer<T>.Default)
         {
@@ -68,7 +68,7 @@ namespace GSF.Collections
         /// Creates a new instance of the <see cref="FileBackedHashSet{T}"/> class.
         /// </summary>
         /// <param name="comparer">The equality comparer used to compare items in the hash set.</param>
-        /// <exception cref="InvalidOperationException"><typeparamref name="T"/> is not serializable.</exception>
+        /// <exception cref="InvalidOperationException"><typeparamref name="T"/> cannot be serialized.</exception>
         public FileBackedHashSet(IEqualityComparer<T> comparer)
             : this(Path.GetTempFileName(), comparer)
         {
@@ -79,7 +79,7 @@ namespace GSF.Collections
         /// </summary>
         /// <param name="enumerable">The enumerable whose elements are copied to this hash set.</param>
         /// <exception cref="ArgumentNullException"><paramref name="enumerable"/> is null.</exception>
-        /// <exception cref="InvalidOperationException"><typeparamref name="T"/> is not serializable.</exception>
+        /// <exception cref="InvalidOperationException"><typeparamref name="T"/> cannot be serialized.</exception>
         public FileBackedHashSet(IEnumerable<T> enumerable)
             : this(Path.GetTempFileName(), enumerable, EqualityComparer<T>.Default)
         {
@@ -92,7 +92,7 @@ namespace GSF.Collections
         /// <param name="comparer">The equality comparer used to compare items in the hash set.</param>
         /// <exception cref="ArgumentException"><paramref name="filePath"/> is a zero-length string, contains only white space, or contains one or more invalid characters as defined by <see cref="Path.GetInvalidPathChars"/>.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="filePath"/> is null.</exception>
-        /// <exception cref="InvalidOperationException"><typeparamref name="T"/> is not serializable.</exception>
+        /// <exception cref="InvalidOperationException"><typeparamref name="T"/> cannot be serialized.</exception>
         public FileBackedHashSet(string filePath, IEqualityComparer<T> comparer)
         {
             m_lookupTable = new FileBackedLookupTable<T, object>(LookupTableType.HashSet, filePath, comparer);
@@ -105,7 +105,7 @@ namespace GSF.Collections
         /// <param name="enumerable">The enumerable whose elements are copied to this hash set.</param>
         /// <exception cref="ArgumentException"><paramref name="filePath"/> is a zero-length string, contains only white space, or contains one or more invalid characters as defined by <see cref="Path.GetInvalidPathChars"/>.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="filePath"/> is null or <paramref name="enumerable"/> is null.</exception>
-        /// <exception cref="InvalidOperationException"><typeparamref name="T"/> is not serializable.</exception>
+        /// <exception cref="InvalidOperationException"><typeparamref name="T"/> cannot be serialized.</exception>
         public FileBackedHashSet(string filePath, IEnumerable<T> enumerable)
             : this(filePath, enumerable, EqualityComparer<T>.Default)
         {
@@ -117,7 +117,7 @@ namespace GSF.Collections
         /// <param name="enumerable">The enumerable whose elements are copied to this hash set.</param>
         /// <param name="comparer">The equality comparer used to compare items in the hash set.</param>
         /// <exception cref="ArgumentNullException"><paramref name="enumerable"/> is null.</exception>
-        /// <exception cref="InvalidOperationException"><typeparamref name="T"/> is not serializable.</exception>
+        /// <exception cref="InvalidOperationException"><typeparamref name="T"/> cannot be serialized.</exception>
         public FileBackedHashSet(IEnumerable<T> enumerable, IEqualityComparer<T> comparer)
             : this(Path.GetTempFileName(), enumerable, comparer)
         {
@@ -131,7 +131,7 @@ namespace GSF.Collections
         /// <param name="comparer">The equality comparer used to compare items in the hash set.</param>
         /// <exception cref="ArgumentException"><paramref name="filePath"/> is a zero-length string, contains only white space, or contains one or more invalid characters as defined by <see cref="Path.GetInvalidPathChars"/>.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="filePath"/> is null or <paramref name="enumerable"/> is null.</exception>
-        /// <exception cref="InvalidOperationException"><typeparamref name="T"/> is not serializable.</exception>
+        /// <exception cref="InvalidOperationException"><typeparamref name="T"/> cannot be serialized.</exception>
         public FileBackedHashSet(string filePath, IEnumerable<T> enumerable, IEqualityComparer<T> comparer)
         {
             m_lookupTable = new FileBackedLookupTable<T, object>(LookupTableType.HashSet, filePath, comparer);
@@ -189,6 +189,40 @@ namespace GSF.Collections
             get
             {
                 return m_lookupTable.IsReadOnly;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signature of the file backing the lookup table.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">Attempt is made to set Signature to a null value.</exception>
+        /// <exception cref="ArgumentException">Attempt is made to set Signature to a value larger than the maximum allowed size.</exception>
+        /// <exception cref="NotSupportedException">Attempt is made to modify Signature of a read-only lookup table.</exception>
+        public byte[] Signature
+        {
+            get
+            {
+                return m_lookupTable.Signature;
+            }
+            set
+            {
+                m_lookupTable.Signature = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the size of the cache used
+        /// to store data from the file in memory.
+        /// </summary>
+        public long CacheSize
+        {
+            get
+            {
+                return m_lookupTable.CacheSize;
+            }
+            set
+            {
+                m_lookupTable.CacheSize = value;
             }
         }
 
@@ -482,7 +516,7 @@ namespace GSF.Collections
                 throw new ArgumentOutOfRangeException("arrayIndex");
 
             if (m_lookupTable.Count > array.Length - arrayIndex)
-                throw new ArgumentException("Not enough available space in array to copy elements from dictionary");
+                throw new ArgumentException("Not enough available space in array to copy elements from hash set");
 
             foreach (T item in this)
                 array[arrayIndex++] = item;

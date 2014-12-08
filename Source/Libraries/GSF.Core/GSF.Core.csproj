@@ -182,6 +182,7 @@
     <Compile Include="Interop\IIniFile.cs" />
     <Compile Include="Interop\WindowsIniFile.cs" />
     <Compile Include="Interop\UnixIniFile.cs" />
+    <Compile Include="IO\CachedFileStream.cs" />
     <Compile Include="IO\Outage.cs" />
     <Compile Include="IO\OutageLog.cs" />
     <Compile Include="IO\OutageLogProcessor.cs" />
