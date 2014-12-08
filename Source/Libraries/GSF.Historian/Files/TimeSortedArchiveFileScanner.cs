@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace GSF.Historian.Files
 {
@@ -260,11 +261,15 @@ namespace GSF.Historian.Files
             }
 
             // Create data point scanners for each historian ID
-            foreach (int historianID in m_historianIDs)
-            {
-                dataPointScanners.Add(new DataPointScanner(m_fileAllocationTable, historianID, startTime, m_endTime, includeStartTime, m_dataReadExceptionHandler));
+            List<int> historianIDs = m_historianIDs.ToList();
 
-                if (historianID == resumeFromHistorianID)
+            historianIDs.Sort();
+
+            for (int i = 0; i < historianIDs.Count; i++)
+            {
+                dataPointScanners.Add(new DataPointScanner(m_fileAllocationTable, historianIDs[i], startTime, m_endTime, includeStartTime, m_dataReadExceptionHandler));
+
+                if (historianIDs[i] == resumeFromHistorianID)
                     includeStartTime = true;
             }
 
