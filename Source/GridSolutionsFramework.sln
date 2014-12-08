@@ -326,9 +326,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Content", "Content", "{4261
 		Templates\NuGet\GSF.Web.Security\Content\Web.config.transform = Templates\NuGet\GSF.Web.Security\Content\Web.config.transform
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{D3215BAD-9EA1-463D-8035-181F9F60C2EE}"
+EndProject
+Project("{7CF6DF6D-3B04-46F8-A40B-537D21BCA0B4}") = "GridSolutionsFrameworkHelp", "Documentation\GridSolutionsFrameworkHelp\GridSolutionsFrameworkHelp.shfbproj", "{0505F4C3-FCF9-4533-9181-F712889071D8}"
+EndProject
+Project("{7CF6DF6D-3B04-46F8-A40B-537D21BCA0B4}") = "AdapterHelp", "Documentation\AdapterHelp\AdapterHelp.shfbproj", "{92B7FA59-4E8C-4CA8-A2EC-EBCD25AA49D2}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 87
+		SccNumberOfProjects = 89
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs07
 		SccLocalPath0 = .
@@ -676,6 +682,14 @@ Global
 		SccProjectTopLevelParentUniqueName86 = GridSolutionsFramework.sln
 		SccProjectName86 = Tools/ConfigTest
 		SccLocalPath86 = Tools\\ConfigTest
+		SccProjectUniqueName87 = Documentation\\GridSolutionsFrameworkHelp\\GridSolutionsFrameworkHelp.shfbproj
+		SccProjectTopLevelParentUniqueName87 = GridSolutionsFramework.sln
+		SccProjectName87 = Documentation/GridSolutionsFrameworkHelp
+		SccLocalPath87 = Documentation\\GridSolutionsFrameworkHelp
+		SccProjectUniqueName88 = Documentation\\AdapterHelp\\AdapterHelp.shfbproj
+		SccProjectTopLevelParentUniqueName88 = GridSolutionsFramework.sln
+		SccProjectName88 = Documentation/AdapterHelp
+		SccLocalPath88 = Documentation\\AdapterHelp
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = GSF.Core.Tests.vsmdi
@@ -1572,6 +1586,18 @@ Global
 		{B38AC5E5-B880-43E9-8F88-107294F3E69F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B38AC5E5-B880-43E9-8F88-107294F3E69F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B38AC5E5-B880-43E9-8F88-107294F3E69F}.Release|x86.ActiveCfg = Release|Any CPU
+		{0505F4C3-FCF9-4533-9181-F712889071D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0505F4C3-FCF9-4533-9181-F712889071D8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0505F4C3-FCF9-4533-9181-F712889071D8}.Mono|Any CPU.ActiveCfg = Release|Any CPU
+		{0505F4C3-FCF9-4533-9181-F712889071D8}.Mono|x86.ActiveCfg = Release|Any CPU
+		{0505F4C3-FCF9-4533-9181-F712889071D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0505F4C3-FCF9-4533-9181-F712889071D8}.Release|x86.ActiveCfg = Release|Any CPU
+		{92B7FA59-4E8C-4CA8-A2EC-EBCD25AA49D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92B7FA59-4E8C-4CA8-A2EC-EBCD25AA49D2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{92B7FA59-4E8C-4CA8-A2EC-EBCD25AA49D2}.Mono|Any CPU.ActiveCfg = Release|Any CPU
+		{92B7FA59-4E8C-4CA8-A2EC-EBCD25AA49D2}.Mono|x86.ActiveCfg = Release|Any CPU
+		{92B7FA59-4E8C-4CA8-A2EC-EBCD25AA49D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92B7FA59-4E8C-4CA8-A2EC-EBCD25AA49D2}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1696,10 +1722,12 @@ Global
 		{7D17290A-2661-4D58-803E-676A1235CB57} = {B006EF23-CE75-47CB-A985-5087C5C94CBC}
 		{954399E1-542B-4CC1-BBF2-77FA3516EA68} = {B006EF23-CE75-47CB-A985-5087C5C94CBC}
 		{A2BD7076-5624-4068-B902-C0E428394BFF} = {6E4D5584-C29F-4B93-AF70-6A1601F1519F}
-		{8B837A53-2A9F-4F39-8859-6D12F0618B4B} = {F89AD5B9-895F-4706-B745-25D46A618668}
 		{F89AD5B9-895F-4706-B745-25D46A618668} = {A2BD7076-5624-4068-B902-C0E428394BFF}
 		{35E5B8CA-E7B1-47FB-9A79-1BA12985A170} = {A2BD7076-5624-4068-B902-C0E428394BFF}
+		{8B837A53-2A9F-4F39-8859-6D12F0618B4B} = {F89AD5B9-895F-4706-B745-25D46A618668}
 		{426112DF-A6A0-4773-A5E2-C8B58074C852} = {35E5B8CA-E7B1-47FB-9A79-1BA12985A170}
 		{CD40DC84-1F8D-4815-9CDC-9F4B3DE9A7D1} = {8B837A53-2A9F-4F39-8859-6D12F0618B4B}
+		{0505F4C3-FCF9-4533-9181-F712889071D8} = {D3215BAD-9EA1-463D-8035-181F9F60C2EE}
+		{92B7FA59-4E8C-4CA8-A2EC-EBCD25AA49D2} = {D3215BAD-9EA1-463D-8035-181F9F60C2EE}
 	EndGlobalSection
 EndGlobal
