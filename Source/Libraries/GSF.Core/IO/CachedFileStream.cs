@@ -32,6 +32,41 @@ namespace GSF.IO
     /// <summary>
     /// Represents a file stream that caches recently used blocks in memory.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This class was developed as a wrapper around <see cref="System.IO.FileStream"/> with the same
+    /// basic functionality. This stream treats the file as a collection of contiguous blocks which can
+    /// be loaded into an in-memory lookup table to greatly improve seek times. This class generally
+    /// performs significantly better than the standard FileStream class when maintaining multiple
+    /// file pointers and frequently seeking back and forth between them. For an example of a good
+    /// use-case, consider copying a list of serialized objects from one location in the file to another
+    /// without loading the whole list into memory.
+    /// </para>
+    /// 
+    /// <para>
+    /// This class likely will not perform significantly better or worse than the standard FileStream
+    /// when performing strictly sequential reads or writes. For an example of a bad use-case, consider
+    /// reading a list of objects into memory or simply appending new data to the end of the file. In
+    /// both of these cases, it may be better to use the standard FileStream for less memory overhead
+    /// and more predictable flush behavior.
+    /// </para>
+    /// 
+    /// <para>
+    /// Blocks are loaded into memory as they are used (for read/write operations) and will be kept in
+    /// memory for as long as possible. Blocks can only be flushed from the cache by decreasing the
+    /// cache size or by accessing a non-cached block when the cache is already full. In these cases,
+    /// a least recently used algorithm is executed to determine which blocks should be removed from
+    /// the cache either to decrease the size of the cache or to make room for a new block.
+    /// </para>
+    /// 
+    /// <para>
+    /// Write operations are also cached such that they will not be committed to the file until the
+    /// block is removed from the cache or a call to <see cref="Flush()"/> has been made. This can
+    /// have some additional implications as compared to the standard FileStream. For instance,
+    /// write operations may not be committed to the file in the order in which they were executed.
+    /// Users of this class will need to be judicious about when and how often they call Flush.
+    /// </para>
+    /// </remarks>
     public class CachedFileStream : Stream
     {
         #region [ Members ]
@@ -105,6 +140,18 @@ namespace GSF.IO
 
             #endregion
         }
+
+        // Constants
+
+        /// <summary>
+        /// Default value for the <see cref="BlockSize"/> property.
+        /// </summary>
+        public const int DefaultBlockSize = 4096;
+
+        /// <summary>
+        /// Default value for the <see cref="CacheSize"/> property.
+        /// </summary>
+        public const long DefaultCacheSize = 262144L;
 
         // Fields
         private int m_blockSize;
@@ -182,7 +229,7 @@ namespace GSF.IO
         /// <exception cref="T:System.UnauthorizedAccessException">The <paramref name="access"/> requested is not permitted by the operating system for the specified <paramref name="path"/>, such as when <paramref name="access"/> is Write or ReadWrite and the file or directory is set for read-only access.</exception>
         /// <exception cref="T:System.IO.PathTooLongException">The specified path, file name, or both exceed the system-defined maximum length. For example, on Windows-based platforms, paths must be less than 248 characters, and file names must be less than 260 characters.</exception>
         public CachedFileStream(string path, FileMode mode, FileAccess access, FileShare share)
-            : this(path, mode, access, share, 4096)
+            : this(path, mode, access, share, DefaultBlockSize)
         {
         }
 
@@ -319,7 +366,7 @@ namespace GSF.IO
                 blockSize = 8;
 
             m_blockSize = blockSize;
-            m_cacheSize = 262144L;
+            m_cacheSize = DefaultCacheSize;
 
             m_blockLookup = new Dictionary<long, Block>();
             m_dirtyBlockLookup = new Dictionary<long, Block>();
