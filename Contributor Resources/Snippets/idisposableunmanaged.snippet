@@ -2,9 +2,9 @@
 <CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
     <CodeSnippet Format="1.0.0">
         <Header>
-            <Title>IDisposable Implementation</Title>
-            <Shortcut>idisposable</Shortcut>
-            <Description>Creates the canonical IDisposable implementation.</Description>
+            <Title>IDisposable With Finalizer Implementation</Title>
+            <Shortcut>idisposableunmanaged</Shortcut>
+            <Description>Creates the canonical IDisposable implementation with a finalizer for releasing unmanaged resources.</Description>
             <Author>Pinal Patel</Author>
             <SnippetTypes>
                 <SnippetType>Expansion</SnippetType>
@@ -19,6 +19,14 @@
             </Declarations>
             <Code Language="csharp">
                 <![CDATA[private bool m_disposed;
+
+        /// <summary>
+        /// Releases the unmanaged resources before the <see cref="$class$"/> object is reclaimed by <see cref="GC"/>.
+        /// </summary>
+        ~$class$()
+        {
+            Dispose(false);
+        }
 
         /// <summary>
         /// Releases all the resources used by the <see cref="$class$"/> object.
