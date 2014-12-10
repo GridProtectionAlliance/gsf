@@ -187,6 +187,7 @@ namespace GSF.Collections
             {
                 m_parent = parent;
                 m_item = item;
+                Thread.MemoryBarrier();
                 m_task = Task.Factory.StartNew(ProcessItem);
             }
 
@@ -194,6 +195,7 @@ namespace GSF.Collections
             {
                 m_parent = parent;
                 m_items = items;
+                Thread.MemoryBarrier();
                 m_task = Task.Factory.StartNew(ProcessItems);
             }
 
@@ -204,11 +206,31 @@ namespace GSF.Collections
 
             private void ProcessItem()
             {
+                // In rare cases, this method was throwing a NullReferenceException which seems
+                // to indicate that m_parent is null. At first glance, this should not be possible
+                // as m_parent is readonly and the constructor is invoked by m_parent itself.
+                // However, note that m_task is also assigned in the constructor by calling
+                // Task.Factory.StartNew, which executes this method on a separate thread. If we
+                // instead assume that the assignment operations in the constructor could be
+                // reordered, or if this method executes on a separate processor before the first
+                // processor's cache is flushed, then it should be possible for m_parent and even
+                // m_item to be null. The memory barriers should prevent this reordering of events.
+                Thread.MemoryBarrier();
                 m_parent.ProcessItem(m_item);
             }
 
             private void ProcessItems()
             {
+                // In rare cases, this method was throwing a NullReferenceException which seems
+                // to indicate that m_parent is null. At first glance, this should not be possible
+                // as m_parent is readonly and the constructor is invoked by m_parent itself.
+                // However, note that m_task is also assigned in the constructor by calling
+                // Task.Factory.StartNew, which executes this method on a separate thread. If we
+                // instead assume that the assignment operations in the constructor could be
+                // reordered, or if this method executes on a separate processor before the first
+                // processor's cache is flushed, then it should be possible for m_parent and even
+                // m_items to be null. The memory barriers should prevent this reordering of events.
+                Thread.MemoryBarrier();
                 m_parent.ProcessItems(m_items);
             }
 

@@ -47,7 +47,7 @@ namespace GSF.Collections
         HashSet
     }
 
-    internal class FileBackedLookupTable<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>> 
+    internal class FileBackedLookupTable<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, IDisposable
     {
         #region [ Members ]
 
