@@ -24,7 +24,6 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Text;
 
 // ReSharper disable FieldCanBeMadeReadOnly.Local
 // ReSharper disable MemberCanBePrivate.Local
@@ -32,8 +31,8 @@ using System.Text;
 // ReSharper disable UnusedField.Compiler
 namespace GSF.EMAX
 {
-    // TODO: Have to know if these control structures are big-endian or little-endian encoded... Cannot use marshaling functions if big-endian...
-    // TODO: Need to know which structures will be for multiple entries in the definition and which ones will be singletons
+    // All control structures are little-endian encoded
+    // All control structures only occur once within the control file
 
     public enum DataSize : byte
     {
@@ -108,8 +107,6 @@ namespace GSF.EMAX
                 type = StructureType.Unknown;
             else
                 type = (StructureType)ushortValue;
-
-            //throw new InvalidOperationException("Invalid EMAX control file structure type encountered: 0x" + ushortValue.ToString("X").PadLeft(4, '0'));
 
             offset = reader.ReadUInt32() >> 8;
 
@@ -231,6 +228,14 @@ namespace GSF.EMAX
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)]
         public string version_string;
         public TIME_ZONE_INFORMATION time_zone_information;
+
+        public DateTime FaultTime
+        {
+            get
+            {
+                return new UnixTimeTag(time_fault).ToDateTime();
+            }
+        }
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
@@ -294,13 +299,13 @@ namespace GSF.EMAX
 
         public A_E_RSLTS(BinaryReader reader, int channels, int analogGroups)
         {
-            sequence_r = reader.ReadInt16();            // BigEndian.ToInt16(reader.ReadBytes(2), 0);
-            flag_r = reader.ReadUInt16();               // BigEndian.ToUInt16(reader.ReadBytes(2), 0);
-            offset_r = reader.ReadUInt16();             // BigEndian.ToUInt16(reader.ReadBytes(2), 0);
-            channel_r = reader.ReadUInt16();            // BigEndian.ToUInt16(reader.ReadBytes(2), 0);
-            mSec_r = reader.ReadUInt16();               // BigEndian.ToUInt16(reader.ReadBytes(2), 0);
-            time_fault_r = reader.ReadUInt32();         // BigEndian.ToUInt32(reader.ReadBytes(4), 0);
-            rcd_sample_count_r = reader.ReadInt32();    // BigEndian.ToInt32(reader.ReadBytes(4), 0);
+            sequence_r = reader.ReadInt16();
+            flag_r = reader.ReadUInt16();
+            offset_r = reader.ReadUInt16();
+            channel_r = reader.ReadUInt16();
+            mSec_r = reader.ReadUInt16();
+            time_fault_r = reader.ReadUInt32();
+            rcd_sample_count_r = reader.ReadInt32();
 
             aer = new A_E_RESULTS[channels * analogGroups];
 
@@ -660,10 +665,9 @@ namespace GSF.EMAX
     [StructLayout(LayoutKind.Sequential)]
     public struct SENS_RSLTS
     {
-        // TODO: Constants must be defined properly before proper parse of SENS_RSLTS
-        private const int SEQUENCE_GROUPS = 1;      // <-- VALUE INCORRECT - NOT IN DEFINTION FILE
-        private const int SWING_CHANNELS_MAX = 1;   // <-- VALUE INCORRECT - NOT IN DEFINTION FILE
-        private const int MAX_FREQ_CHNLS = 1;       // <-- VALUE INCORRECT - NOT IN DEFINTION FILE
+        private const int SEQUENCE_GROUPS = 32;
+        private const int SWING_CHANNELS_MAX = 1;
+        private const int MAX_FREQ_CHNLS = 128;
 
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = SEQUENCE_GROUPS)]
         public SEQ_RSLTS[] seq_rslts;
@@ -697,8 +701,7 @@ namespace GSF.EMAX
     [StructLayout(LayoutKind.Sequential)]
     public struct TPwrRcd
     {
-        // TODO: Constant must be defined properly before proper parse of TPwrRcd
-        private const int MAX_PWR_TRIGS = 1;      // <-- VALUE INCORRECT - NOT IN DEFINTION FILE
+        private const int MAX_PWR_TRIGS = 16;
 
         [MarshalAs(UnmanagedType.I2)]
         public short vRcdSize;
@@ -740,12 +743,12 @@ namespace GSF.EMAX
     public struct E_GRP_SELECT
     {
         public short size;
-        public string value;
+        public byte[] value;
 
         public E_GRP_SELECT(BinaryReader reader)
         {
             size = reader.ReadInt16();
-            value = Encoding.ASCII.GetString(reader.ReadBytes(size));
+            value = reader.ReadBytes(size);
         }
     }
 
@@ -942,6 +945,21 @@ namespace GSF.EMAX
             for (int i = 0; i < channels.Length; i++)
             {
                 channels[i] = reader.ReadStructure<SEQUENCE_CHANNEL>();
+            }
+        }
+    }
+
+    public static class ControlFileStructureExtensions
+    {
+        public static TimeZoneInfo GetTimeZoneInfo(this SYSTEM_PARAMETERS systemParameters)
+        {
+            try
+            {
+                return TimeZoneInfo.FindSystemTimeZoneById(systemParameters.time_zone_information.StandardName);
+            }
+            catch
+            {
+                return TimeZoneInfo.Local;
             }
         }
     }

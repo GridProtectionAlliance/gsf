@@ -62,15 +62,29 @@ namespace GSF.EMAX
         public SEQUENCE_CHANNELS SequenceChannels;
         public BREAKER_TRIP_TIMES BreakerTripTimes;
 
+        private readonly List<StructureType> m_parsedSuccesses;
+        private readonly List<Tuple<StructureType, Exception>> m_parsedFailures;
+        private StructureType m_currentType;
+
         #endregion
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Creates a new <see cref="ControlFile"/>.
+        /// </summary>
         public ControlFile()
         {
+            m_parsedSuccesses = new List<StructureType>();
+            m_parsedFailures = new List<Tuple<StructureType, Exception>>();
         }
 
+        /// <summary>
+        /// Creates a new <see cref="ControlFile"/> for the specified <paramref name="fileName"/> and attempts to parse.
+        /// </summary>
+        /// <param name="fileName">Control file name.</param>
         public ControlFile(string fileName)
+            : this()
         {
             FileName = fileName;
             Parse();
@@ -80,6 +94,9 @@ namespace GSF.EMAX
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets the analog channel count for the <see cref="ControlFile"/>.
+        /// </summary>
         public int AnalogChannelCount
         {
             get
@@ -89,6 +106,9 @@ namespace GSF.EMAX
             }
         }
 
+        /// <summary>
+        /// Gets the event group count for the <see cref="ControlFile"/>.
+        /// </summary>
         public int EventGroupCount
         {
             get
@@ -100,11 +120,37 @@ namespace GSF.EMAX
             }
         }
 
+        /// <summary>
+        /// Gets the calculated frame length for the <see cref="ControlFile"/>.
+        /// </summary>
         public int FrameLength
         {
             get
             {
-                return 2 * (2 + AnalogChannelCount + 2 * EventGroupCount);
+                // Event group count is doubled to account for clock words
+                return sizeof(ushort) * (AnalogChannelCount + 2 * EventGroupCount);
+            }
+        }
+
+        /// <summary>
+        /// Gets <see cref="StructureType"/> instances that were parsed successfully.
+        /// </summary>
+        public IEnumerable<StructureType> ParsedSuccesses
+        {
+            get
+            {
+                return m_parsedSuccesses;
+            }
+        }
+
+        /// <summary>
+        /// Gets <see cref="StructureType"/> instances that failed to parse.
+        /// </summary>
+        public IEnumerable<Tuple<StructureType, Exception>> ParsedFailures
+        {
+            get
+            {
+                return m_parsedFailures;
             }
         }
 
@@ -112,7 +158,11 @@ namespace GSF.EMAX
 
         #region [ Methods ]
 
-        // ReSharper disable once LoopVariableIsNeverChangedInsideLoop
+        /// <summary>
+        /// Parses the <see cref="ControlFile"/>.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">"No EMAX control file name was specified.</exception>
+        /// <exception cref="FileNotFoundException">EMAX control file was not found.</exception>
         public void Parse()
         {
             if (string.IsNullOrEmpty(FileName))
@@ -120,6 +170,9 @@ namespace GSF.EMAX
 
             if (!File.Exists(FileName))
                 throw new FileNotFoundException(string.Format("EMAX control file {0} not found.", FileName));
+
+            m_parsedSuccesses.Clear();
+            m_parsedFailures.Clear();
 
             byte byteValue;
 
@@ -150,6 +203,7 @@ namespace GSF.EMAX
                         offset = Header.sp_offset
                     };
 
+                    // ReSharper disable once LoopVariableIsNeverChangedInsideLoop
                     do
                     {
                         if (fileStructure.type != StructureType.Unknown)
@@ -168,88 +222,111 @@ namespace GSF.EMAX
                     if (fileStructure.type == StructureType.Unknown)
                         continue;
 
+                    // Set current type
+                    m_currentType = fileStructure.type;
+
                     // Locate structure in the file
                     stream.Position = fileStructure.offset;
 
                     // Parse the structure type
                     using (BinaryReader reader = new BinaryReader(stream, Encoding.ASCII, true))
                     {
-                        switch (fileStructure.type)
+                        switch (m_currentType)
                         {
                             case StructureType.SYSTEM_PARAMETERS:
-                                SystemParameters = reader.ReadStructure<SYSTEM_PARAMETERS>();
+                                AttemptParse(() => SystemParameters = reader.ReadStructure<SYSTEM_PARAMETERS>());
                                 break;
                             case StructureType.SYS_SETTINGS:
-                                SystemSettings = reader.ReadStructure<SYS_SETTINGS>();
+                                AttemptParse(() => SystemSettings = reader.ReadStructure<SYS_SETTINGS>());
                                 break;
                             case StructureType.A_E_RSLTS:
-                                AnalogEventResults = new A_E_RSLTS(reader, ConfiguredAnalogChannels, SystemParameters.analog_groups);
+                                AttemptParse(() => AnalogEventResults = new A_E_RSLTS(reader, ConfiguredAnalogChannels, SystemParameters.analog_groups));
                                 break;
                             case StructureType.ANALOG_GROUP:
-                                AnalogGroup = new ANALOG_GROUP(reader, ConfiguredAnalogChannels);
+                                AttemptParse(() => AnalogGroup = new ANALOG_GROUP(reader, ConfiguredAnalogChannels));
                                 break;
                             case StructureType.EVENT_GROUP:
-                                EventGroup = reader.ReadStructure<EVENT_GROUP>();
+                                AttemptParse(() => EventGroup = reader.ReadStructure<EVENT_GROUP>());
                                 break;
                             case StructureType.ANLG_CHNL_NEW:
-                                AnalogChannelSettings = reader.ReadStructure<ANLG_CHNL_NEW>();
+                                AttemptParse(() => AnalogChannelSettings = reader.ReadStructure<ANLG_CHNL_NEW>());
                                 break;
                             case StructureType.EVNT_CHNL_NEW:
-                                EventChannelSettings = reader.ReadStructure<EVNT_CHNL_NEW>();
+                                AttemptParse(() => EventChannelSettings = reader.ReadStructure<EVNT_CHNL_NEW>());
                                 break;
                             case StructureType.ANLG_CHNLS:
+                                // TODO: Add decoder once structure definition is known...
+                                m_parsedFailures.Add(new Tuple<StructureType, Exception>(m_currentType, new NotImplementedException()));
                                 break;
                             case StructureType.SHORT_HEADER:
                                 // TODO: Add decoder once structure definition is known...
+                                m_parsedFailures.Add(new Tuple<StructureType, Exception>(m_currentType, new NotImplementedException()));
                                 break;
                             case StructureType.FAULT_HEADER:
                                 // TODO: Add decoder once structure definition is known...
+                                m_parsedFailures.Add(new Tuple<StructureType, Exception>(m_currentType, new NotImplementedException()));
                                 break;
                             case StructureType.EVENT_DISPLAY:
-                                EventDisplay = new EVENT_DISPLAY(reader, SystemParameters.event_groups);
+                                AttemptParse(() => EventDisplay = new EVENT_DISPLAY(reader, SystemParameters.event_groups));
                                 break;
                             case StructureType.IDENTSTRING:
-                                IdentityString = reader.ReadStructure<IDENTSTRING>();
-                                IdentityString.value.TruncateRight(IdentityString.length);
+                                AttemptParse(() =>
+                                {
+                                    IdentityString = reader.ReadStructure<IDENTSTRING>();
+                                    IdentityString.value.TruncateRight(IdentityString.length);
+                                });
                                 break;
                             case StructureType.A_SELECTION:
-                                AnalogSelection = new A_SELECTION(reader);
+                                AttemptParse(() => AnalogSelection = new A_SELECTION(reader));
                                 break;
                             case StructureType.E_GROUP_SELECT:
-                                EventGroupSelection = new E_GRP_SELECT(reader);
+                                AttemptParse(() => EventGroupSelection = new E_GRP_SELECT(reader));
                                 break;
                             case StructureType.PHASOR_GROUP:
-                                PhasorGroups = new PHASOR_GROUPS(reader);
+                                AttemptParse(() => PhasorGroups = new PHASOR_GROUPS(reader));
                                 break;
                             case StructureType.LINE_CONSTANTS:
-                                LineConstants = new LINE_CONSTANTS(reader);
+                                AttemptParse(() => LineConstants = new LINE_CONSTANTS(reader));
                                 break;
                             case StructureType.LINE_NAMES:
-                                LineNames = new LINE_NAMES(reader);
+                                AttemptParse(() => LineNames = new LINE_NAMES(reader));
                                 break;
                             case StructureType.FAULT_LOCATION:
-                                FaultLocations = new FAULT_LOCATIONS(reader);
+                                AttemptParse(() => FaultLocations = new FAULT_LOCATIONS(reader));
                                 break;
                             case StructureType.SENS_RSLTS:
-                                SensorResults = reader.ReadStructure<SENS_RSLTS>();
+                                AttemptParse(() => SensorResults = reader.ReadStructure<SENS_RSLTS>());
                                 break;
                             case StructureType.SEQUENCE_CHANNELS:
-                                SequenceChannels = new SEQUENCE_CHANNELS(reader);
+                                AttemptParse(() => SequenceChannels = new SEQUENCE_CHANNELS(reader));
                                 break;
                             case StructureType.TPwrRcd:
-                                PowerRecord = reader.ReadStructure<TPwrRcd>();
+                                AttemptParse(() => PowerRecord = reader.ReadStructure<TPwrRcd>());
                                 break;
                             case StructureType.BoardAnalogEventChannels:
-                                BoardAnalogEventChannels = reader.ReadStructure<BoardAnalogEventChannels>();
+                                AttemptParse(() => BoardAnalogEventChannels = reader.ReadStructure<BoardAnalogEventChannels>());
                                 break;
                             case StructureType.BREAKER_TRIP_TIMES:
-                                BreakerTripTimes = new BREAKER_TRIP_TIMES(reader, ConfiguredAnalogChannels, SystemParameters.analog_groups);
+                                AttemptParse(() => BreakerTripTimes = new BREAKER_TRIP_TIMES(reader, ConfiguredAnalogChannels, SystemParameters.analog_groups));
                                 break;
                             default:
                                 throw new ArgumentOutOfRangeException();
                         }
                     }
                 }
+            }
+        }
+
+        private void AttemptParse(Action parseAction)
+        {
+            try
+            {
+                parseAction();
+                m_parsedSuccesses.Add(m_currentType);
+            }
+            catch (Exception ex)
+            {
+                m_parsedFailures.Add(new Tuple<StructureType, Exception>(m_currentType, ex));
             }
         }
 
