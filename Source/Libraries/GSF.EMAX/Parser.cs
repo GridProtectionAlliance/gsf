@@ -47,7 +47,6 @@ namespace GSF.EMAX
         private ushort[] m_eventGroups;
         private DateTime m_baseTime;
         private TimeZoneInfo m_sourceTimeZone;
-        private double m_scalingFactor;
 
         #endregion
 
@@ -97,24 +96,6 @@ namespace GSF.EMAX
 
                     m_baseTime = systemParameters.FaultTime.BaselinedTimestamp(BaselineTimeInterval.Year);
                     m_sourceTimeZone = systemParameters.GetTimeZoneInfo();
-
-                    double cal_in, cal_ref, secondary, primary;
-
-                    ANLG_CHNL_NEW analogChannelSettings = m_controlFile.AnalogChannelSettings;
-
-                    if (!double.TryParse(analogChannelSettings.cal_in, out cal_in))
-                        cal_in = 1.0D;
-
-                    if (!double.TryParse(analogChannelSettings.cal_ref, out cal_ref) || cal_ref == 0.0D)
-                        cal_ref = 1.0D;
-
-                    if (!double.TryParse(analogChannelSettings.secondary, out secondary))
-                        secondary = 1.0D;
-
-                    if (!double.TryParse(analogChannelSettings.primary, out primary))
-                        primary = 1.0D;
-
-                    m_scalingFactor = 5 * cal_in / cal_ref * secondary * primary;
                 }
                 else
                 {
@@ -142,13 +123,27 @@ namespace GSF.EMAX
         }
 
         /// <summary>
-        /// Gets timestamp of current record.
+        /// Gets timestamp of current record in the timezone of provided IRIG signal.
         /// </summary>
         public DateTime Timestamp
         {
             get
             {
                 return m_timestamp;
+            }
+        }
+
+        /// <summary>
+        /// Attempts to get current timestamp converted to UTC.
+        /// </summary>
+        /// <remarks>
+        /// This will only be accurate if timezone configured in device matches IRIG clock.
+        /// </remarks>
+        public DateTime TimestampAsUtc
+        {
+            get
+            {
+                return TimeZoneInfo.ConvertTimeToUtc(m_timestamp, m_sourceTimeZone);
             }
         }
 
@@ -313,6 +308,7 @@ namespace GSF.EMAX
                 ushort[] clockWords = new ushort[4];
                 ushort value;
                 int index = 0;
+                double scalingFactor;
 
                 buffer = BufferPool.TakeBuffer(recordLength);
 
@@ -339,10 +335,17 @@ namespace GSF.EMAX
                         if (ControlFile.DataSize == DataSize.Bits12)
                             value >>= 4;
 
-                        if (value < 32768)
-                            m_values[i] = (value - 32767) / 32768.0D * m_scalingFactor;
+                        if (m_controlFile.ScalingFactors.TryGetValue(i, out scalingFactor))
+                        {
+                            if (value < 32768)
+                                m_values[i] = (value - 32767) / 32768.0D * scalingFactor;
+                            else
+                                m_values[i] = value / 32768.0D * scalingFactor;
+                        }
                         else
-                            m_values[i] = value / 32768.0D * m_scalingFactor;
+                        {
+                            m_values[i] = value;
+                        }
 
                         index += 2;
                     }
@@ -429,15 +432,13 @@ namespace GSF.EMAX
             if (microseconds > 999)
                 microseconds = 0;
 
-            return TimeZoneInfo.ConvertTimeToUtc(
-                m_baseTime
+            return m_baseTime
                     .AddDays(days - 1) // Base time starts at day one, so we subtract one for target day
                     .AddHours(hours)
                     .AddMinutes(minutes)
                     .AddSeconds(seconds)
                     .AddMilliseconds(milliseconds)
-                    .AddTicks(Ticks.FromMicroseconds(microseconds)),
-                m_sourceTimeZone);
+                    .AddTicks(Ticks.FromMicroseconds(microseconds));
         }
 
         #endregion

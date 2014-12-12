@@ -38,7 +38,6 @@ namespace GSF.EMAX
         // Fields
         public string FileName;
         public DataSize DataSize;
-        public int ConfiguredAnalogChannels;
         public CTL_HEADER Header;
         public CTL_FILE_STRUCT[] FileStructures;
         public SYSTEM_PARAMETERS SystemParameters;
@@ -47,8 +46,9 @@ namespace GSF.EMAX
         public EVENT_GROUP EventGroup;
         public A_E_RSLTS AnalogEventResults;
         public IDENTSTRING IdentityString;
-        public ANLG_CHNL_NEW AnalogChannelSettings;
-        public EVNT_CHNL_NEW EventChannelSettings;
+        public Dictionary<int, ANLG_CHNL_NEW> AnalogChannelSettings;
+        public Dictionary<int, EVNT_CHNL_NEW> EventChannelSettings;
+        public Dictionary<int, double> ScalingFactors;
         public EVENT_DISPLAY EventDisplay;
         public SENS_RSLTS SensorResults;
         public TPwrRcd PowerRecord;
@@ -62,6 +62,7 @@ namespace GSF.EMAX
         public SEQUENCE_CHANNELS SequenceChannels;
         public BREAKER_TRIP_TIMES BreakerTripTimes;
 
+        private int m_configuredAnalogChannels;
         private readonly List<StructureType> m_parsedSuccesses;
         private readonly List<Tuple<StructureType, Exception>> m_parsedFailures;
         private StructureType m_currentType;
@@ -95,6 +96,28 @@ namespace GSF.EMAX
         #region [ Properties ]
 
         /// <summary>
+        /// Gets configured analog channels.
+        /// </summary>
+        public int ConfiguredAnalogChannels
+        {
+            get
+            {
+                return m_configuredAnalogChannels;
+            }
+        }
+
+        /// <summary>
+        /// Gets the digital channel count for the <see cref="ControlFile"/>.
+        /// </summary>
+        public int ConfiguredDigitalChannels
+        {
+            get
+            {
+                return EventGroupCount * 8;
+            }
+        }
+
+        /// <summary>
         /// Gets the analog channel count for the <see cref="ControlFile"/>.
         /// </summary>
         public int AnalogChannelCount
@@ -102,7 +125,7 @@ namespace GSF.EMAX
             get
             {
                 ushort samplesPerSecond = SystemParameters.samples_per_second;
-                return ConfiguredAnalogChannels * (samplesPerSecond > 5760 ? samplesPerSecond / 5760 : 1);
+                return m_configuredAnalogChannels * (samplesPerSecond > 5760 ? samplesPerSecond / 5760 : 1);
             }
         }
 
@@ -116,7 +139,7 @@ namespace GSF.EMAX
                 if (SystemParameters.samples_per_second > 5760)
                     return 4;
 
-                return 4 * (ConfiguredAnalogChannels > 32 ? 2 : 1);
+                return 4 * (m_configuredAnalogChannels > 32 ? 2 : 1);
             }
         }
 
@@ -181,37 +204,32 @@ namespace GSF.EMAX
                 // Read in header and file structure definitions
                 using (BinaryReader reader = new BinaryReader(stream, Encoding.ASCII, true))
                 {
+                    // Read control header
+                    Header = reader.ReadStructure<CTL_HEADER>();
+
                     // Read byte that defines number of analog channels
-                    ConfiguredAnalogChannels = BinaryCodedDecimal.Decode((ushort)reader.ReadByte());
+                    m_configuredAnalogChannels = BinaryCodedDecimal.Decode(Header.id.LowByte());
 
                     // Read byte that defines data size (i.e., 12 or 16 bits)
-                    byteValue = reader.ReadByte();
+                    byteValue = Header.id.HighByte();
 
                     if (!Enum.IsDefined(typeof(DataSize), byteValue))
                         throw new InvalidOperationException("Invalid EMAX data size code encountered: 0x" + byteValue.ToString("X").PadLeft(2, '0'));
 
                     DataSize = (DataSize)byteValue;
 
-                    // Read control header
-                    Header = new CTL_HEADER(reader);
-
                     // Create array of file structures
                     List<CTL_FILE_STRUCT> fileStructures = new List<CTL_FILE_STRUCT>();
-                    CTL_FILE_STRUCT fileStructure = new CTL_FILE_STRUCT
-                    {
-                        type = StructureType.SYSTEM_PARAMETERS,
-                        offset = Header.sp_offset
-                    };
+                    CTL_FILE_STRUCT fileStructure = new CTL_FILE_STRUCT(reader);
 
                     // ReSharper disable once LoopVariableIsNeverChangedInsideLoop
-                    do
+                    while (fileStructure.type != StructureType.EndOfStructures)
                     {
                         if (fileStructure.type != StructureType.Unknown)
                             fileStructures.Add(fileStructure);
 
                         fileStructure = new CTL_FILE_STRUCT(reader);
                     }
-                    while (fileStructure.type != StructureType.EndOfStructures);
 
                     FileStructures = fileStructures.ToArray();
                 }
@@ -240,19 +258,41 @@ namespace GSF.EMAX
                                 AttemptParse(() => SystemSettings = reader.ReadStructure<SYS_SETTINGS>());
                                 break;
                             case StructureType.A_E_RSLTS:
-                                AttemptParse(() => AnalogEventResults = new A_E_RSLTS(reader, ConfiguredAnalogChannels, SystemParameters.analog_groups));
+                                AttemptParse(() => AnalogEventResults = new A_E_RSLTS(reader, m_configuredAnalogChannels, SystemParameters.analog_groups));
                                 break;
                             case StructureType.ANALOG_GROUP:
-                                AttemptParse(() => AnalogGroup = new ANALOG_GROUP(reader, ConfiguredAnalogChannels));
+                                AttemptParse(() => AnalogGroup = new ANALOG_GROUP(reader, m_configuredAnalogChannels));
                                 break;
                             case StructureType.EVENT_GROUP:
                                 AttemptParse(() => EventGroup = reader.ReadStructure<EVENT_GROUP>());
                                 break;
                             case StructureType.ANLG_CHNL_NEW:
-                                AttemptParse(() => AnalogChannelSettings = reader.ReadStructure<ANLG_CHNL_NEW>());
+                                AttemptParse(() =>
+                                {
+                                    AnalogChannelSettings = new Dictionary<int, ANLG_CHNL_NEW>();
+                                    ScalingFactors = new Dictionary<int, double>();
+                                    ANLG_CHNL_NEW settings;
+
+                                    for (int i = 0; i < ConfiguredAnalogChannels; i++)
+                                    {
+                                        settings = reader.ReadStructure<ANLG_CHNL_NEW>();
+                                        AnalogChannelSettings.Add(settings.ChannelNumber, settings);
+                                        ScalingFactors.Add(settings.ChannelNumber, settings.ScalingFactor);
+                                    }
+                                });
                                 break;
                             case StructureType.EVNT_CHNL_NEW:
-                                AttemptParse(() => EventChannelSettings = reader.ReadStructure<EVNT_CHNL_NEW>());
+                                AttemptParse(() =>
+                                {
+                                    EventChannelSettings = new Dictionary<int, EVNT_CHNL_NEW>();
+                                    EVNT_CHNL_NEW settings;
+
+                                    for (int i = 0; i < ConfiguredDigitalChannels; i++)
+                                    {
+                                        settings = reader.ReadStructure<EVNT_CHNL_NEW>();
+                                        EventChannelSettings.Add(settings.EventNumber, settings);
+                                    }
+                                });
                                 break;
                             case StructureType.ANLG_CHNLS:
                                 // TODO: Add decoder once structure definition is known...
@@ -307,7 +347,7 @@ namespace GSF.EMAX
                                 AttemptParse(() => BoardAnalogEventChannels = reader.ReadStructure<BoardAnalogEventChannels>());
                                 break;
                             case StructureType.BREAKER_TRIP_TIMES:
-                                AttemptParse(() => BreakerTripTimes = new BREAKER_TRIP_TIMES(reader, ConfiguredAnalogChannels, SystemParameters.analog_groups));
+                                AttemptParse(() => BreakerTripTimes = new BREAKER_TRIP_TIMES(reader, m_configuredAnalogChannels, SystemParameters.analog_groups));
                                 break;
                             default:
                                 throw new ArgumentOutOfRangeException();

@@ -24,13 +24,13 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-// Assembly identity attributes.
-[assembly: AssemblyVersion("2.0.235.0")]
-
 // Informational attributes.
 [assembly: AssemblyCompany("Grid Protection Alliance")]
-[assembly: AssemblyCopyright("Copyright © GPA, 2013.  All Rights Reserved.")]
+[assembly: AssemblyCopyright("Copyright © GPA, 2014.  All Rights Reserved.")]
 [assembly: AssemblyProduct("Grid Solutions Framework")]
+
+[assembly: AssemblyTitle("GSF.SELEventParser")]
+[assembly: AssemblyDescription("Library for parsing SEL (Schweitzer Engineering Laboratories) event files")]
 
 // Assembly manifest attributes.
 #if DEBUG
@@ -39,10 +39,10 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("Release Build")]
 #endif
 
-[assembly: AssemblyDefaultAlias("GSF.SELEventParser")]
-[assembly: AssemblyDescription("SEL File Format Parsers / Generators")]
-[assembly: AssemblyTitle("GSF.SELEventParser")]
-
 // Other configuration attributes.
 [assembly: ComVisible(false)]
 [assembly: Guid("ee39b8ec-2b03-46f8-9ea8-25bba8e33032")]
+
+// Assembly identity attributes.
+[assembly: AssemblyVersion("2.0.235.0")]
+[assembly: AssemblyFileVersion("2.0.235.0")]

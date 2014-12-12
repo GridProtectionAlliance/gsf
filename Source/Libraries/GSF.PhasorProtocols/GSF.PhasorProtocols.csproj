@@ -350,6 +350,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="GSF.PhasorProtocols.ruleset" />
+    <None Include="GSF.PhasorProtocols.nuspec" />
   </ItemGroup>
   <ItemGroup>
     <CodeAnalysisDictionary Include="CodeAnalysisDictionary.xml" />

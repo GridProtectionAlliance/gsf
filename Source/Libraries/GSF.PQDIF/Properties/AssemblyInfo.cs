@@ -27,13 +27,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("GSF.PQDIF")]
-[assembly: AssemblyDescription("PQDIF File Format Parsers / Generators")]
 [assembly: AssemblyCompany("Grid Protection Alliance")]
 [assembly: AssemblyProduct("Grid Solutions Framework")]
-[assembly: AssemblyCopyright("Copyright © GPA, 2013.  All Rights Reserved.")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
+[assembly: AssemblyCopyright("Copyright © GPA, 2014.  All Rights Reserved.")]
+
+[assembly: AssemblyTitle("GSF.PQDIF")]
+[assembly: AssemblyDescription("Library for parsing PQDIF (Power Quality Data Interchange Format) files")]
 
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug Build")]

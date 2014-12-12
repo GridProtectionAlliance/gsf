@@ -29,10 +29,10 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 [assembly: AssemblyCompany("Grid Protection Alliance")]
 [assembly: AssemblyProduct("Grid Solutions Framework")]
-[assembly: AssemblyCopyright("Copyright © GPA, 2013.  All Rights Reserved.")]
+[assembly: AssemblyCopyright("Copyright © GPA, 2014.  All Rights Reserved.")]
 
 [assembly: AssemblyTitle("EMAX")]
-[assembly: AssemblyDescription("EMAX format for transient data exchange for file format encoding and decoding")]
+[assembly: AssemblyDescription("Library for parsing E-MAX Director control and record data files used for transient data exchange")]
 
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug Build")]

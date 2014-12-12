@@ -69,27 +69,21 @@ namespace GSF.EMAX
         Unknown = 0xFFFF
     }
 
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct CTL_HEADER
     {
-        public UInt24 id;               // System ID
-        public uint time;               // Time of CTL file creation
-        public ushort sp_offset;        // System parameters offset
-
-        public CTL_HEADER(BinaryReader reader)
-        {
-            id = BigEndian.ToUInt24(reader.ReadBytes(3), 0);
-            time = BigEndian.ToUInt32(reader.ReadBytes(4), 0);
-            sp_offset = BigEndian.ToUInt16(reader.ReadBytes(2), 0);
-
-            // Skip padding
-            reader.ReadBytes(2);
-        }
+        [MarshalAs(UnmanagedType.U2)]
+        public ushort id;                   // System ID
+        [MarshalAs(UnmanagedType.U4)]
+        public uint time;                   // Time of CTL file creation
+        [MarshalAs(UnmanagedType.U1)]
+        public byte num_of_structs;         // Number of Structures in CTL file
 
         public DateTime Timestamp
         {
             get
             {
-                return (new UnixTimeTag(time)).ToDateTime();
+                return new UnixTimeTag(time).ToDateTime();
             }
         }
     }
@@ -109,11 +103,6 @@ namespace GSF.EMAX
                 type = (StructureType)ushortValue;
 
             offset = reader.ReadUInt32() >> 8;
-
-            //Debug.WriteLine("{0} [0x{1}] => Offset = 0x{2}",
-            //    type,
-            //    ushortValue.ToString("X").PadLeft(4, '0'),
-            //    offset.ToString("X").PadLeft(8, '0'));
         }
     }
 
@@ -553,6 +542,46 @@ namespace GSF.EMAX
         public string peak_cal;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 3)]
         public string cr_lf;
+
+        public int ChannelNumber
+        {
+            get
+            {
+                int number;
+
+                if (!int.TryParse(chanlnum, out number))
+                    return -1;
+
+                return number - 1;  // Prefer zero based indexes
+            }
+        }
+
+        public double ScalingFactor
+        {
+            get
+            {
+                double d_cal_in, d_cal_ref, d_secondary, d_primary;
+
+                if (!double.TryParse(cal_in, out d_cal_in))
+                    d_cal_in = 1.0D;
+
+                if (!double.TryParse(cal_ref, out d_cal_ref) || d_cal_ref == 0.0D)
+                    d_cal_ref = 1.0D;
+
+                if (!double.TryParse(secondary, out d_secondary))
+                    d_secondary = 1.0D;
+
+                if (!double.TryParse(primary, out d_primary))
+                    d_primary = 1.0D;
+
+                return 5.0D * d_cal_in / d_cal_ref * d_secondary * d_primary;
+            }
+        }
+
+        public override string ToString()
+        {
+            return title.ToNonNullString().Trim();
+        }
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -575,6 +604,24 @@ namespace GSF.EMAX
         public string rtn_on_off;
         [MarshalAs(UnmanagedType.I2)]
         public ushort eveentdebouncems;
+
+        public int EventNumber
+        {
+            get
+            {
+                int number;
+
+                if (!int.TryParse(eventnum, out number))
+                    return -1;
+
+                return number - 1;  // Prefer zero based indexes
+            }
+        }
+
+        public override string ToString()
+        {
+            return e_title.ToNonNullString().Trim();
+        }
     }
 
     // Since this structure includes dynamically sized arrays, we manually parse structure

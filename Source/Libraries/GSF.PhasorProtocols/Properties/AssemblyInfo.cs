@@ -25,13 +25,14 @@ using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-// Assembly identity attributes.
-[assembly: AssemblyVersion("2.0.235.0")]
-
 // Informational attributes.
 [assembly: AssemblyCompany("Grid Protection Alliance")]
-[assembly: AssemblyCopyright("Copyright © GPA, 2013.  All Rights Reserved.")]
+[assembly: AssemblyCopyright("Copyright © GPA, 2014.  All Rights Reserved.")]
 [assembly: AssemblyProduct("Grid Solutions Framework")]
+
+[assembly: AssemblyDefaultAlias("PhasorProtocols")]
+[assembly: AssemblyDescription("Library for parsing and generating standard synchrophasor protocol data streams")]
+[assembly: AssemblyTitle("PhasorProtocols")]
 
 // Assembly manifest attributes.
 #if DEBUG
@@ -40,11 +41,11 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("Release Build")]
 #endif
 
-[assembly: AssemblyDefaultAlias("PhasorProtocols")]
-[assembly: AssemblyDescription("Standard Phasor Protocol Implementations.")]
-[assembly: AssemblyTitle("PhasorProtocols")]
-
 // Other configuration attributes.
 [assembly: CLSCompliant(false)]
 [assembly: ComVisible(false)]
 [assembly: Guid("6d59b0ed-1991-4f12-a739-2cf8543dd9b2")]
+
+// Assembly identity attributes.
+[assembly: AssemblyVersion("2.0.235.0")]
+[assembly: AssemblyFileVersion("2.0.235.0")]
