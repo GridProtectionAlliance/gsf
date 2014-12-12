@@ -47,6 +47,7 @@ namespace GSF.EMAX
         private ushort[] m_eventGroups;
         private DateTime m_baseTime;
         private TimeZoneInfo m_sourceTimeZone;
+        private double m_scalingFactor;
 
         #endregion
 
@@ -93,8 +94,27 @@ namespace GSF.EMAX
                         throw new InvalidOperationException("Invalid control file: total event groups defined in control file is zero.");
 
                     SYSTEM_PARAMETERS systemParameters = m_controlFile.SystemParameters;
+
                     m_baseTime = systemParameters.FaultTime.BaselinedTimestamp(BaselineTimeInterval.Year);
                     m_sourceTimeZone = systemParameters.GetTimeZoneInfo();
+
+                    double cal_in, cal_ref, secondary, primary;
+
+                    ANLG_CHNL_NEW analogChannelSettings = m_controlFile.AnalogChannelSettings;
+
+                    if (!double.TryParse(analogChannelSettings.cal_in, out cal_in))
+                        cal_in = 1.0D;
+
+                    if (!double.TryParse(analogChannelSettings.cal_ref, out cal_ref) || cal_ref == 0.0D)
+                        cal_ref = 1.0D;
+
+                    if (!double.TryParse(analogChannelSettings.secondary, out secondary))
+                        secondary = 1.0D;
+
+                    if (!double.TryParse(analogChannelSettings.primary, out primary))
+                        primary = 1.0D;
+
+                    m_scalingFactor = 5 * cal_in / cal_ref * secondary * primary;
                 }
                 else
                 {
@@ -319,8 +339,11 @@ namespace GSF.EMAX
                         if (ControlFile.DataSize == DataSize.Bits12)
                             value >>= 4;
 
-                        // TODO: Determine proper scalar
-                        m_values[i] = value; // * m_controlFile.AnalogChannelSettings.
+                        if (value < 32768)
+                            m_values[i] = (value - 32767) / 32768.0D * m_scalingFactor;
+                        else
+                            m_values[i] = value / 32768.0D * m_scalingFactor;
+
                         index += 2;
                     }
 
