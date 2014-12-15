@@ -54,7 +54,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -68,6 +67,8 @@ using System.Threading;
 using System.Net.Security;
 using System.Security.Authentication;
 #endif
+using GSF.Configuration;
+using GSF.Threading;
 
 namespace GSF.Communication
 {
@@ -195,6 +196,7 @@ namespace GSF.Communication
         // Fields
         private readonly object m_sendLock;
         private readonly ConcurrentQueue<TcpClientPayload> m_sendQueue;
+        private readonly ShortSynchronizedOperation m_dumpPayloadsOperation;
         private int m_sending;
         private int m_receiving;
         private bool m_payloadAware;
@@ -241,6 +243,7 @@ namespace GSF.Communication
         {
             m_sendLock = new object();
             m_sendQueue = new ConcurrentQueue<TcpClientPayload>();
+            m_dumpPayloadsOperation = new ShortSynchronizedOperation(DumpPayloads, OnSendDataException);
             m_payloadAware = DefaultPayloadAware;
             m_payloadMarker = Payload.DefaultMarker;
             m_integratedSecurity = DefaultIntegratedSecurity;
@@ -459,11 +462,6 @@ namespace GSF.Communication
                     statusBuilder.AppendFormat("           Queued payloads: {0}", m_sendQueue.Count);
                     statusBuilder.AppendLine();
                 }
-
-                statusBuilder.AppendFormat("     Wait handle pool size: {0}", ReusableObjectPool<ManualResetEventSlim>.Default.GetPoolSize());
-                statusBuilder.AppendLine();
-                statusBuilder.AppendFormat("         Payload pool size: {0}", ReusableObjectPool<TcpClientPayload>.Default.GetPoolSize());
-                statusBuilder.AppendLine();
 
                 return statusBuilder.ToString();
             }
@@ -753,29 +751,16 @@ namespace GSF.Communication
 
             try
             {
-                // Check to see if the client has reached the maximum send queue size.
-                if (m_maxSendQueueSize > 0 && m_sendQueue.Count >= m_maxSendQueueSize)
-                {
-                    for (int i = 0; i < m_maxSendQueueSize; i++)
-                    {
-                        if (m_sendQueue.TryDequeue(out payload))
-                        {
-                            payload.WaitHandle.Set();
-                            payload.WaitHandle.Dispose();
-                            payload.WaitHandle = null;
-                        }
-                    }
-
-                    throw new InvalidOperationException(string.Format("TCP client reached maximum send queue size. {0} payloads dumped from the queue.", m_maxSendQueueSize));
-                }
+                // Execute operation to see if the client has reached the maximum send queue size.
+                m_dumpPayloadsOperation.TryRun();
 
                 // Prepare for payload-aware transmission.
                 if (m_payloadAware)
                     Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker);
 
                 // Create payload and wait handle.
-                payload = ReusableObjectPool<TcpClientPayload>.Default.TakeObject();
-                handle = ReusableObjectPool<ManualResetEventSlim>.Default.TakeObject();
+                payload = FastObjectFactory<TcpClientPayload>.CreateObjectFunction();
+                handle = FastObjectFactory<ManualResetEventSlim>.CreateObjectFunction();
 
                 payload.Data = data;
                 payload.Offset = offset;
@@ -1020,10 +1005,6 @@ namespace GSF.Communication
                         {
                             payload.WaitHandle = null;
 
-                            // Return payload and wait handle to their respective object pools.
-                            ReusableObjectPool<TcpClientPayload>.Default.ReturnObject(payload);
-                            ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
-
                             // Begin sending next client payload.
                             if (m_sendQueue.TryDequeue(out payload))
                             {
@@ -1236,6 +1217,30 @@ namespace GSF.Communication
                     // Terminate connection if resuming receiving fails.
                     TerminateConnection();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Dumps payloads from the send queue when the send queue grows too large.
+        /// </summary>
+        private void DumpPayloads()
+        {
+            TcpClientPayload payload;
+
+            // Check to see if the client has reached the maximum send queue size.
+            if (m_maxSendQueueSize > 0 && m_sendQueue.Count >= m_maxSendQueueSize)
+            {
+                for (int i = 0; i < m_maxSendQueueSize; i++)
+                {
+                    if (m_sendQueue.TryDequeue(out payload))
+                    {
+                        payload.WaitHandle.Set();
+                        payload.WaitHandle.Dispose();
+                        payload.WaitHandle = null;
+                    }
+                }
+
+                OnSendDataException(new InvalidOperationException(string.Format("TCP client reached maximum send queue size. {0} payloads dumped from the queue.", m_maxSendQueueSize)));
             }
         }
 

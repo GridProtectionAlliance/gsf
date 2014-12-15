@@ -32,9 +32,7 @@ using System;
 namespace GSF
 {
     /// <summary>
-    /// Specifies that this object provides support for performing tasks during the key stages of object lifecycle. This interface
-    /// also allows objects to declare themselves as reusable such that their lifecycle can be automatically managed when pooled via
-    /// the <see cref="ReusableObjectPool{T}"/>.
+    /// Specifies that this object provides support for performing tasks during the key stages of object lifecycle.
     /// </summary>
     /// <remarks>
     /// <list type="table">
@@ -61,10 +59,6 @@ namespace GSF
         /// <summary>
         /// Raised after the source object has been properly disposed.
         /// </summary>
-        /// <remarks>
-        /// Proper implementation of this event will allow objects to be automatically returned to the
-        /// <see cref="ReusableObjectPool{T}"/>,in this mode sender event parameter should always be <c>this</c>.
-        /// </remarks>
         event EventHandler Disposed;
 
         /// <summary>
@@ -80,10 +74,6 @@ namespace GSF
         /// gets initialized automatically when consumed through the IDE designer surface. In addition to this 
         /// <see cref="Initialize()"/> should also be called from key or mandatory methods of the object, like 'Start()'
         /// or 'Connect()', so that the object gets initialized even when not consumed through the IDE designer surface.
-        /// </para>
-        /// <para>
-        /// Proper implementation of this method will allow objects to be automatically reinitialized when taken from
-        /// the <see cref="ReusableObjectPool{T}"/>.
         /// </para>
         /// </remarks>
         void Initialize();

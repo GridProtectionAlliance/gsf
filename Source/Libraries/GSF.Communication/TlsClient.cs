@@ -40,6 +40,7 @@ using System.Threading;
 using GSF.Configuration;
 using GSF.IO;
 using GSF.Net.Security;
+using GSF.Threading;
 
 namespace GSF.Communication
 {
@@ -122,6 +123,7 @@ namespace GSF.Communication
         private ManualResetEvent m_connectWaitHandle;
         private NetworkCredential m_networkCredential;
         private readonly ConcurrentQueue<TlsClientPayload> m_sendQueue;
+        private readonly ShortSynchronizedOperation m_dumpPayloadsOperation;
         private readonly object m_sendLock;
         private int m_maxSendQueueSize;
         private int m_sending;
@@ -169,6 +171,7 @@ namespace GSF.Communication
             m_maxSendQueueSize = DefaultMaxSendQueueSize;
             m_sslClient = new TransportProvider<SslStream>();
             m_sendQueue = new ConcurrentQueue<TlsClientPayload>();
+            m_dumpPayloadsOperation = new ShortSynchronizedOperation(DumpPayloads, OnSendDataException);
             m_sendLock = new object();
 
             m_connectHandler = (sender, args) => ProcessConnect(args);
@@ -863,28 +866,15 @@ namespace GSF.Communication
             try
             {
                 // Check to see if the client has reached the maximum send queue size.
-                if (m_maxSendQueueSize > 0 && m_sendQueue.Count >= m_maxSendQueueSize)
-                {
-                    for (int i = 0; i < m_maxSendQueueSize; i++)
-                    {
-                        if (m_sendQueue.TryDequeue(out payload))
-                        {
-                            payload.WaitHandle.Set();
-                            payload.WaitHandle.Dispose();
-                            payload.WaitHandle = null;
-                        }
-                    }
-
-                    throw new InvalidOperationException(string.Format("TCP client reached maximum send queue size. {0} payloads dumped from the queue.", m_maxSendQueueSize));
-                }
+                m_dumpPayloadsOperation.TryRun();
 
                 // Prepare for payload-aware transmission.
                 if (m_payloadAware)
                     Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker);
 
                 // Create payload and wait handle.
-                payload = ReusableObjectPool<TlsClientPayload>.Default.TakeObject();
-                handle = ReusableObjectPool<ManualResetEventSlim>.Default.TakeObject();
+                payload = FastObjectFactory<TlsClientPayload>.CreateObjectFunction();
+                handle = FastObjectFactory<ManualResetEventSlim>.CreateObjectFunction();
 
                 payload.Data = data;
                 payload.Offset = offset;
@@ -1203,10 +1193,6 @@ namespace GSF.Communication
                     {
                         payload.WaitHandle = null;
 
-                        // Return payload and wait handle to their respective object pools.
-                        ReusableObjectPool<TlsClientPayload>.Default.ReturnObject(payload);
-                        ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
-
                         // Begin sending next client payload.
                         if (m_sendQueue.TryDequeue(out payload))
                         {
@@ -1410,6 +1396,30 @@ namespace GSF.Communication
                     // Terminate connection if resuming receiving fails.
                     TerminateConnection();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Dumps payloads from the send queue when the send queue grows too large.
+        /// </summary>
+        private void DumpPayloads()
+        {
+            TlsClientPayload payload;
+
+            // Check to see if the client has reached the maximum send queue size.
+            if (m_maxSendQueueSize > 0 && m_sendQueue.Count >= m_maxSendQueueSize)
+            {
+                for (int i = 0; i < m_maxSendQueueSize; i++)
+                {
+                    if (m_sendQueue.TryDequeue(out payload))
+                    {
+                        payload.WaitHandle.Set();
+                        payload.WaitHandle.Dispose();
+                        payload.WaitHandle = null;
+                    }
+                }
+
+                OnSendDataException(new InvalidOperationException(string.Format("TCP client reached maximum send queue size. {0} payloads dumped from the queue.", m_maxSendQueueSize)));
             }
         }
 

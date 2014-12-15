@@ -40,6 +40,7 @@ using System.Threading;
 using GSF.Configuration;
 using GSF.IO;
 using GSF.Net.Security;
+using GSF.Threading;
 
 #if MONO
 #pragma warning disable 649
@@ -89,6 +90,7 @@ namespace GSF.Communication
             public TransportProvider<TlsSocket> Client;
             public object SendLock;
             public ConcurrentQueue<TlsServerPayload> SendQueue;
+            public ShortSynchronizedOperation DumpPayloadsOperation;
             public int Sending;
 
             public WindowsPrincipal ClientPrincipal;
@@ -911,29 +913,16 @@ namespace GSF.Communication
 
             sendQueue = clientInfo.SendQueue;
 
-            // Check to see if the client has reached the maximum send queue size.
-            if (m_maxSendQueueSize > 0 && sendQueue.Count >= m_maxSendQueueSize)
-            {
-                for (int i = 0; i < m_maxSendQueueSize; i++)
-                {
-                    if (sendQueue.TryDequeue(out payload))
-                    {
-                        payload.WaitHandle.Set();
-                        payload.WaitHandle.Dispose();
-                        payload.WaitHandle = null;
-                    }
-                }
-
-                throw new InvalidOperationException(string.Format("Client {0} connected to TCP server reached maximum send queue size. {1} payloads dumped from the queue.", clientID, m_maxSendQueueSize));
-            }
+            // Execute operation to see if the client has reached the maximum send queue size.
+            clientInfo.DumpPayloadsOperation.TryRun();
 
             // Prepare for payload-aware transmission.
             if (m_payloadAware)
                 Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker);
 
             // Create payload and wait handle.
-            payload = ReusableObjectPool<TlsServerPayload>.Default.TakeObject();
-            handle = ReusableObjectPool<ManualResetEventSlim>.Default.TakeObject();
+            payload = FastObjectFactory<TlsServerPayload>.CreateObjectFunction();
+            handle = FastObjectFactory<ManualResetEventSlim>.CreateObjectFunction();
 
             payload.Data = data;
             payload.Offset = offset;
@@ -1065,13 +1054,37 @@ namespace GSF.Communication
                 }
                 else
                 {
-                    // We can proceed further with receiving data from the client.
-                    m_clientInfoLookup.TryAdd(client.ID, new TlsClientInfo
+                    TlsClientInfo clientInfo = new TlsClientInfo
                     {
                         Client = client,
                         SendLock = new object(),
                         SendQueue = new ConcurrentQueue<TlsServerPayload>()
-                    });
+                    };
+
+                    // Create operation to dump send queue payloads when the queue grows too large.
+                    clientInfo.DumpPayloadsOperation = new ShortSynchronizedOperation(() =>
+                    {
+                        TlsServerPayload payload;
+
+                        // Check to see if the client has reached the maximum send queue size.
+                        if (m_maxSendQueueSize > 0 && clientInfo.SendQueue.Count >= m_maxSendQueueSize)
+                        {
+                            for (int i = 0; i < m_maxSendQueueSize; i++)
+                            {
+                                if (clientInfo.SendQueue.TryDequeue(out payload))
+                                {
+                                    payload.WaitHandle.Set();
+                                    payload.WaitHandle.Dispose();
+                                    payload.WaitHandle = null;
+                                }
+                            }
+
+                            throw new InvalidOperationException(string.Format("Client {0} connected to TCP server reached maximum send queue size. {1} payloads dumped from the queue.", clientInfo.Client.ID, m_maxSendQueueSize));
+                        }
+                    }, ex => OnSendClientDataException(clientInfo.Client.ID, ex));
+
+                    // We can proceed further with receiving data from the client.
+                    m_clientInfoLookup.TryAdd(client.ID, clientInfo);
 
                     OnClientConnected(client.ID);
                     ReceivePayloadAsync(client);
@@ -1114,14 +1127,38 @@ namespace GSF.Communication
                         throw;
                 }
 
-                // We can proceed further with receiving data from the client.
-                m_clientInfoLookup.TryAdd(client.ID, new TlsClientInfo
+                TlsClientInfo clientInfo = new TlsClientInfo
                 {
                     Client = client,
                     SendLock = new object(),
                     SendQueue = new ConcurrentQueue<TlsServerPayload>(),
                     ClientPrincipal = clientPrincipal
-                });
+                };
+
+                // Create operation to dump send queue payloads when the queue grows too large.
+                clientInfo.DumpPayloadsOperation = new ShortSynchronizedOperation(() =>
+                {
+                    TlsServerPayload payload;
+
+                    // Check to see if the client has reached the maximum send queue size.
+                    if (m_maxSendQueueSize > 0 && clientInfo.SendQueue.Count >= m_maxSendQueueSize)
+                    {
+                        for (int i = 0; i < m_maxSendQueueSize; i++)
+                        {
+                            if (clientInfo.SendQueue.TryDequeue(out payload))
+                            {
+                                payload.WaitHandle.Set();
+                                payload.WaitHandle.Dispose();
+                                payload.WaitHandle = null;
+                            }
+                        }
+
+                        throw new InvalidOperationException(string.Format("Client {0} connected to TCP server reached maximum send queue size. {1} payloads dumped from the queue.", clientInfo.Client.ID, m_maxSendQueueSize));
+                    }
+                }, ex => OnSendClientDataException(clientInfo.Client.ID, ex));
+
+                // We can proceed further with receiving data from the client.
+                m_clientInfoLookup.TryAdd(client.ID, clientInfo);
 
                 OnClientConnected(client.ID);
                 ReceivePayloadAsync(client);
@@ -1220,10 +1257,6 @@ namespace GSF.Communication
                     {
                         payload.WaitHandle = null;
                         payload.ClientInfo = null;
-
-                        // Return payload and wait handle to their respective object pools.
-                        ReusableObjectPool<TlsServerPayload>.Default.ReturnObject(payload);
-                        ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
 
                         // Begin sending next client payload.
                         if (sendQueue.TryDequeue(out payload))

@@ -68,6 +68,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using GSF.Configuration;
 using GSF.IO;
+using GSF.Threading;
 
 namespace GSF.Communication
 {
@@ -252,6 +253,7 @@ namespace GSF.Communication
         private int m_receiving;
         private readonly object m_sendLock;
         private readonly ConcurrentQueue<UdpClientPayload> m_sendQueue;
+        private readonly ShortSynchronizedOperation m_dumpPayloadsOperation;
         private SocketAsyncEventArgs m_sendArgs;
         private SocketAsyncEventArgs m_receiveArgs;
         private readonly EventHandler<SocketAsyncEventArgs> m_sendHandler;
@@ -286,6 +288,7 @@ namespace GSF.Communication
 
             m_sendLock = new object();
             m_sendQueue = new ConcurrentQueue<UdpClientPayload>();
+            m_dumpPayloadsOperation = new ShortSynchronizedOperation(DumpPayloads, OnSendDataException);
             m_sendHandler += (sender, args) => ProcessSend();
             m_receiveHandler += (sender, args) => ProcessReceive();
         }
@@ -443,11 +446,6 @@ namespace GSF.Communication
                     statusBuilder.AppendFormat("           Queued payloads: {0}", m_sendQueue.Count);
                     statusBuilder.AppendLine();
                 }
-
-                statusBuilder.AppendFormat("     Wait handle pool size: {0}", ReusableObjectPool<ManualResetEventSlim>.Default.GetPoolSize());
-                statusBuilder.AppendLine();
-                statusBuilder.AppendFormat("         Payload pool size: {0}", ReusableObjectPool<UdpClientPayload>.Default.GetPoolSize());
-                statusBuilder.AppendLine();
 
                 return statusBuilder.ToString();
             }
@@ -836,25 +834,12 @@ namespace GSF.Communication
             if (CurrentState != ClientState.Connected)
                 throw new InvalidOperationException("Client is not connected");
 
-            // Check to see if the client has reached the maximum send queue size.
-            if (m_maxSendQueueSize > 0 && m_sendQueue.Count >= m_maxSendQueueSize)
-            {
-                for (int i = 0; i < m_maxSendQueueSize; i++)
-                {
-                    if (m_sendQueue.TryDequeue(out payload))
-                    {
-                        payload.WaitHandle.Set();
-                        payload.WaitHandle.Dispose();
-                        payload.WaitHandle = null;
-                    }
-                }
-
-                throw new InvalidOperationException(string.Format("UDP client reached maximum send queue size. {0} payloads dumped from the queue.", m_maxSendQueueSize));
-            }
+            // Execute operation to see if the client has reached the maximum send queue size.
+            m_dumpPayloadsOperation.TryRun();
 
             // Create payload and wait handle.
-            payload = ReusableObjectPool<UdpClientPayload>.Default.TakeObject();
-            handle = ReusableObjectPool<ManualResetEventSlim>.Default.TakeObject();
+            payload = FastObjectFactory<UdpClientPayload>.CreateObjectFunction();
+            handle = FastObjectFactory<ManualResetEventSlim>.CreateObjectFunction();
 
             payload.Destination = destination;
             payload.Data = data;
@@ -1001,10 +986,6 @@ namespace GSF.Communication
                         else
                         {
                             payload.WaitHandle = null;
-
-                            // Return payload and wait handle to their respective object pools.
-                            ReusableObjectPool<UdpClientPayload>.Default.ReturnObject(payload);
-                            ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
 
                             // Begin sending next client payload.
                             if (m_sendQueue.TryDequeue(out payload))
@@ -1215,6 +1196,30 @@ namespace GSF.Communication
             {
                 if (ex.SocketErrorCode != SocketError.InvalidArgument)
                     throw;
+            }
+        }
+
+        /// <summary>
+        /// Dumps payloads from the send queue when the send queue grows too large.
+        /// </summary>
+        private void DumpPayloads()
+        {
+            UdpClientPayload payload;
+
+            // Check to see if the client has reached the maximum send queue size.
+            if (m_maxSendQueueSize > 0 && m_sendQueue.Count >= m_maxSendQueueSize)
+            {
+                for (int i = 0; i < m_maxSendQueueSize; i++)
+                {
+                    if (m_sendQueue.TryDequeue(out payload))
+                    {
+                        payload.WaitHandle.Set();
+                        payload.WaitHandle.Dispose();
+                        payload.WaitHandle = null;
+                    }
+                }
+
+                throw new InvalidOperationException(string.Format("UDP client reached maximum send queue size. {0} payloads dumped from the queue.", m_maxSendQueueSize));
             }
         }
 

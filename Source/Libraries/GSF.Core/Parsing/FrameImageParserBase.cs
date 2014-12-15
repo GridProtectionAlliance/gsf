@@ -133,21 +133,6 @@ namespace GSF.Parsing
         #region [ Properties ]
 
         /// <summary>
-        /// Gets flag that determines if object pooling is allowed.
-        /// </summary>
-        /// <remarks>
-        /// Object pooling is allowed by default for <typeparamref name="TOutputType"/>'s that implement <see cref="ISupportLifecycle"/>,
-        /// override and return <c>false</c> if you do not want your frame image parser to use object pooling.
-        /// </remarks>
-        public virtual bool AllowObjectPooling
-        {
-            get
-            {
-                return true;
-            }
-        }
-
-        /// <summary>
         /// Gets the total number of parsed outputs that are currently queued for publication, if any.
         /// </summary>
         public virtual int QueuedOutputs
@@ -279,17 +264,9 @@ namespace GSF.Parsing
                         RuntimeType = type
                     };
 
-                    // If object pooling is allowed and class implementation supports life cycle, use object pool instead of creating an object each time one is parsed
-                    if (AllowObjectPooling && (object)type.GetInterface("GSF.ISupportLifecycle") != null)
-                    {
-                        outputType.SupportsLifecycle = true;
-                        outputType.CreateNew = () => ReusableObjectPool.TakeObject<TOutputType>(type);
-                    }
-                    else
-                    {
-                        outputType.SupportsLifecycle = false;
-                        outputType.CreateNew = FastObjectFactory.GetCreateObjectFunction<TOutputType>(type);
-                    }
+                    // If class implementation supports life cycle, automatically dispose of objects when we are done with them
+                    outputType.SupportsLifecycle = (object)type.GetInterface("GSF.ISupportLifecycle") != null;
+                    outputType.CreateNew = FastObjectFactory.GetCreateObjectFunction<TOutputType>(type);
 
                     // We'll hold all of the matching types in this list temporarily until their IDs are determined.
                     outputTypes.Add(outputType);
@@ -308,7 +285,7 @@ namespace GSF.Parsing
                 else
                     OnDuplicateTypeHandlerEncountered(outputType.RuntimeType, outputType.TypeID);
 
-                // Return object to the pool if it supports lifecycle management
+                // Dispose of the object if it supports lifecycle management
                 if (outputType.SupportsLifecycle)
                     ((IDisposable)instance).Dispose();
             }
@@ -407,7 +384,7 @@ namespace GSF.Parsing
             if ((object)DataParsed != null)
             {
                 // Get a reusable event args object to publish output
-                EventArgs<TOutputType> outputArgs = ReusableObjectPool<EventArgs<TOutputType>>.Default.TakeObject();
+                EventArgs<TOutputType> outputArgs = FastObjectFactory<EventArgs<TOutputType>>.CreateObjectFunction();
                 outputArgs.Argument = output;
 
                 if (output.AllowQueuedPublication)
@@ -418,15 +395,7 @@ namespace GSF.Parsing
                 else
                 {
                     // Publish parsed output immediately
-                    try
-                    {
-                        DataParsed(this, outputArgs);
-                    }
-                    finally
-                    {
-                        outputArgs.Argument = default(TOutputType);
-                        ReusableObjectPool<EventArgs<TOutputType>>.Default.ReturnObject(outputArgs);
-                    }
+                    DataParsed(this, outputArgs);
                 }
             }
         }
@@ -437,16 +406,8 @@ namespace GSF.Parsing
         /// <param name="outputArgs">Event args containing new output to publish.</param>
         protected virtual void PublishParsedOutput(EventArgs<TOutputType> outputArgs)
         {
-            try
-            {
-                if ((object)DataParsed != null)
-                    DataParsed(this, outputArgs);
-            }
-            finally
-            {
-                outputArgs.Argument = default(TOutputType);
-                ReusableObjectPool<EventArgs<TOutputType>>.Default.ReturnObject(outputArgs);
-            }
+            if ((object)DataParsed != null)
+                DataParsed(this, outputArgs);
         }
 
         /// <summary>

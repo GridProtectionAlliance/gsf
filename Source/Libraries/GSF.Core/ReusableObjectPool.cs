@@ -199,6 +199,7 @@ namespace GSF
     /// </para>
     /// </remarks>
     /// <typeparam name="T">Type of object to pool.</typeparam>
+    [Obsolete("It is not recommended to use this class because the need for pooling is rare and implementations of pooling can be dangerous.")]
     public class ReusableObjectPool<T> where T : class, new()
     {
         private readonly ConcurrentQueue<T> m_objectPool = new ConcurrentQueue<T>();
@@ -330,6 +331,7 @@ namespace GSF
     /// using reflection), otherwise you should use the generic <see cref="ReusableObjectPool{T}"/>.
     /// </para>
     /// </remarks>
+    [Obsolete("It is not recommended to use this class because the need for pooling is rare and implementations of pooling can be dangerous.")]
     public static class ReusableObjectPool
     {
         private static readonly ConcurrentDictionary<Type, ConcurrentQueue<object>> s_objectPools = new ConcurrentDictionary<Type, ConcurrentQueue<object>>();

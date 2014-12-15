@@ -328,7 +328,7 @@ namespace GSF.Parsing
                 if (count > 0)
                 {
                     // Get an identifiable buffer object
-                    identifiableBuffer = ReusableObjectPool<SourceIdentifiableBuffer>.Default.TakeObject();
+                    identifiableBuffer = FastObjectFactory<SourceIdentifiableBuffer>.CreateObjectFunction();
                     identifiableBuffer.Source = source;
                     identifiableBuffer.Count = count;
 
@@ -343,7 +343,7 @@ namespace GSF.Parsing
             }
             catch
             {
-                // Return source buffer to object pool if we failed to queue it for processing
+                // Properly dispose of the source buffer if we failed to queue it for processing
                 if ((object)identifiableBuffer != null)
                     identifiableBuffer.Dispose();
 
@@ -430,7 +430,7 @@ namespace GSF.Parsing
                 }
                 finally
                 {
-                    // Dispose of source buffers - this returns buffers to pool
+                    // Dispose of source buffers
                     if ((object)buffers != null)
                     {
                         foreach (SourceIdentifiableBuffer buffer in buffers)

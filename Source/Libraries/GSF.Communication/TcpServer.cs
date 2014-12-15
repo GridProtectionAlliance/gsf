@@ -47,7 +47,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -62,6 +61,8 @@ using System.Threading;
 using System.Net.Security;
 using System.Security.Authentication;
 #endif
+using GSF.Configuration;
+using GSF.Threading;
 
 namespace GSF.Communication
 {
@@ -154,6 +155,7 @@ namespace GSF.Communication
             public SocketAsyncEventArgs SendArgs;
             public object SendLock;
             public ConcurrentQueue<TcpServerPayload> SendQueue;
+            public ShortSynchronizedOperation DumpPayloadsOperation;
             public int Sending;
 
             public WindowsPrincipal ClientPrincipal;
@@ -433,11 +435,6 @@ namespace GSF.Communication
                     statusBuilder.AppendFormat("           Queued payloads: {0} for client {1}", sendQueue.Count, ++count);
                     statusBuilder.AppendLine();
                 }
-
-                statusBuilder.AppendFormat("     Wait handle pool size: {0}", ReusableObjectPool<ManualResetEventSlim>.Default.GetPoolSize());
-                statusBuilder.AppendLine();
-                statusBuilder.AppendFormat("         Payload pool size: {0}", ReusableObjectPool<TcpServerPayload>.Default.GetPoolSize());
-                statusBuilder.AppendLine();
 
                 return statusBuilder.ToString();
             }
@@ -722,29 +719,16 @@ namespace GSF.Communication
 
             sendQueue = clientInfo.SendQueue;
 
-            // Check to see if the client has reached the maximum send queue size.
-            if (m_maxSendQueueSize > 0 && sendQueue.Count >= m_maxSendQueueSize)
-            {
-                for (int i = 0; i < m_maxSendQueueSize; i++)
-                {
-                    if (sendQueue.TryDequeue(out payload))
-                    {
-                        payload.WaitHandle.Set();
-                        payload.WaitHandle.Dispose();
-                        payload.WaitHandle = null;
-                    }
-                }
-
-                throw new InvalidOperationException(string.Format("Client {0} connected to TCP server reached maximum send queue size. {1} payloads dumped from the queue.", clientID, m_maxSendQueueSize));
-            }
+            // Execute operation to see if the client has reached the maximum send queue size.
+            clientInfo.DumpPayloadsOperation.TryRun();
 
             // Prepare for payload-aware transmission.
             if (m_payloadAware)
                 Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker);
 
             // Create payload and wait handle.
-            payload = ReusableObjectPool<TcpServerPayload>.Default.TakeObject();
-            handle = ReusableObjectPool<ManualResetEventSlim>.Default.TakeObject();
+            payload = FastObjectFactory<TcpServerPayload>.CreateObjectFunction();
+            handle = FastObjectFactory<ManualResetEventSlim>.CreateObjectFunction();
 
             payload.Data = data;
             payload.Offset = offset;
@@ -897,6 +881,28 @@ namespace GSF.Communication
                         ClientPrincipal = clientPrincipal
                     };
 
+                    // Create operation to dump send queue payloads when the queue grows too large.
+                    clientInfo.DumpPayloadsOperation = new ShortSynchronizedOperation(() =>
+                    {
+                        TcpServerPayload payload;
+
+                        // Check to see if the client has reached the maximum send queue size.
+                        if (m_maxSendQueueSize > 0 && clientInfo.SendQueue.Count >= m_maxSendQueueSize)
+                        {
+                            for (int i = 0; i < m_maxSendQueueSize; i++)
+                            {
+                                if (clientInfo.SendQueue.TryDequeue(out payload))
+                                {
+                                    payload.WaitHandle.Set();
+                                    payload.WaitHandle.Dispose();
+                                    payload.WaitHandle = null;
+                                }
+                            }
+
+                            throw new InvalidOperationException(string.Format("Client {0} connected to TCP server reached maximum send queue size. {1} payloads dumped from the queue.", clientInfo.Client.ID, m_maxSendQueueSize));
+                        }
+                    }, ex => OnSendClientDataException(clientInfo.Client.ID, ex));
+
                     // Set up socket args.
                     client.SetSendBuffer(SendBufferSize);
                     clientInfo.SendArgs.Completed += m_sendHandler;
@@ -912,7 +918,7 @@ namespace GSF.Communication
                     }
                     else
                     {
-                        EventArgs<TransportProvider<Socket>, bool> userToken = ReusableObjectPool<EventArgs<TransportProvider<Socket>, bool>>.Default.TakeObject();
+                        EventArgs<TransportProvider<Socket>, bool> userToken = FastObjectFactory<EventArgs<TransportProvider<Socket>, bool>>.CreateObjectFunction();
                         userToken.Argument1 = client;
                         receiveArgs.UserToken = userToken;
                     }
@@ -1041,10 +1047,6 @@ namespace GSF.Communication
                         {
                             payload.WaitHandle = null;
                             payload.ClientInfo = null;
-
-                            // Return payload and wait handle to their respective object pools.
-                            ReusableObjectPool<TcpServerPayload>.Default.ReturnObject(payload);
-                            ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
 
                             // Begin sending next client payload.
                             if (sendQueue.TryDequeue(out payload))
@@ -1287,22 +1289,7 @@ namespace GSF.Communication
             }
             finally
             {
-                DisposeReceiveArgs(args);
-            }
-        }
-
-        /// <summary>
-        /// Returns the <see cref="SocketAsyncEventArgs"/> used for receiving data on the socket.
-        /// </summary>
-        private void DisposeReceiveArgs(SocketAsyncEventArgs receiveArgs)
-        {
-            EventArgs<TransportProvider<Socket>, bool> userToken = receiveArgs.UserToken as EventArgs<TransportProvider<Socket>, bool>;
-
-            receiveArgs.Dispose();
-
-            if ((object)userToken != null)
-            {
-                ReusableObjectPool<EventArgs<TransportProvider<Socket>, bool>>.Default.ReturnObject(userToken);
+                args.Dispose();
             }
         }
 
