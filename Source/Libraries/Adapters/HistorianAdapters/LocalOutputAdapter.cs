@@ -864,6 +864,9 @@ namespace HistorianAdapters
                 IEnumerable<DataRow> historians = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT AdapterName FROM RuntimeHistorian WHERE NodeID = {0} AND TypeName = 'HistorianAdapters.LocalOutputAdapter'", nodeIDQueryString)).AsEnumerable();
                 IEnumerable<DataRow> readers = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM CustomInputAdapter WHERE NodeID = {0} AND TypeName = 'HistorianAdapters.LocalInputAdapter'", nodeIDQueryString)).AsEnumerable();
 
+                // Also check for local historian adapters loaded into CustomOutputAdapters
+                historians = historians.Concat(database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT AdapterName, ConnectionString FROM RuntimeCustomOutputAdapter WHERE NodeID = {0} AND TypeName = 'HistorianAdapters.LocalOutputAdapter'", nodeIDQueryString)).AsEnumerable());
+
                 List<string> validHistorians = new List<string>();
                 string name, acronym, currentPath, archivePath, fileName, defaultFileName, instanceName;
 
@@ -1116,6 +1119,9 @@ namespace HistorianAdapters
             // Load the defined local PI historians
             IEnumerable<DataRow> historians = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT AdapterName, ConnectionString FROM RuntimeHistorian WHERE NodeID = {0} AND TypeName = 'PIAdapters.PIOutputAdapter'", nodeIDQueryString)).AsEnumerable();
             IEnumerable<DataRow> readers = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM CustomInputAdapter WHERE NodeID = {0} AND TypeName = 'PIAdapters.PIPBInputAdapter'", nodeIDQueryString)).AsEnumerable();
+
+            // Also check for PI adapters loaded into CustomOutputAdapters
+            historians = historians.Concat(database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT AdapterName, ConnectionString FROM RuntimeCustomOutputAdapter WHERE NodeID = {0} AND TypeName = 'PIAdapters.PIOutputAdapter'", nodeIDQueryString)).AsEnumerable());
 
             // Make sure a temporal reader is defined for each OSI-PI historian
             foreach (DataRow row in historians)

@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  06/18/2014 - J. Ritchie Carroll
 //       Updated code to use PIConnection instance.
+//  12/17/2014 - J. Ritchie Carroll
+//       Updated to use AF-SDK
 //
 //******************************************************************************************************
 
@@ -35,7 +37,10 @@ using System.Timers;
 using GSF;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
-using PISDK;
+using OSIsoft.AF.Asset;
+using OSIsoft.AF.Data;
+using OSIsoft.AF.PI;
+using OSIsoft.AF.Time;
 
 namespace PIAdapters
 {
@@ -54,8 +59,8 @@ namespace PIAdapters
         private string m_userName;                                            // Username for PI connection string
         private string m_password;                                            // Password for PI connection string
         private int m_connectTimeout;                                         // PI connection timeout
-        private PointList m_points;                                           // PI point list of points to which subscription should be made
-        private EventPipe m_pipe;                                             // event pipe object raises an event when a subscribed point is updated
+        private PIPointList m_points;                                         // PI point list of points to which subscription should be made
+        private AFDataPipe m_pipe;                                            // event pipe object raises an event when a subscribed point is updated
         private int m_processedMeasurements;                                  // processed measurements for short status
         private bool m_autoAddOutput;                                         // whether or not to automatically add PI points
         private DateTime m_lastReceivedTimestamp;                             // last received timestamp from PI event pipe
@@ -407,47 +412,48 @@ namespace PIAdapters
                 tagFilter.Append(string.Format("tag='{0}'", tagname));
             }
 
-            m_connection.Execute(server => m_points = server.GetPoints(tagFilter.ToString()));
+            m_points = new PIPointList(PIPoint.FindPIPoints(m_connection.Server, tagFilter.ToString(), true));
 
-            // event pipes are only applicable if enabled in connection string and this is a real time session, not playback
-            bool useEventPipes = m_useEventPipes && StartTimeConstraint == DateTime.MinValue && StopTimeConstraint == DateTime.MaxValue;
+            // TODO: Re-enable event pipe functionality in AF-SDK
+            //bool useEventPipes;
 
-            if (useEventPipes)
-            {
-                try
-                {
-                    // ReSharper disable SuspiciousTypeConversion.Global
-                    if (m_pipe != null)
-                        ((_DEventPipeEvents_Event)m_pipe).OnNewValue -= (_DEventPipeEvents_OnNewValueEventHandler)PipeOnOnNewValue;
+            //// event pipes are only applicable if enabled in connection string and this is a real time session, not playback
+            //useEventPipes = m_useEventPipes && StartTimeConstraint == DateTime.MinValue && StopTimeConstraint == DateTime.MaxValue;
 
-                    m_connection.Execute(server => m_pipe = m_points.Data.EventPipe);
+            //if (useEventPipes)
+            //{
+            //    try
+            //    {
+            //        if (m_pipe != null)
+            //            ((_DEventPipeEvents_Event)m_pipe).OnNewValue -= (_DEventPipeEvents_OnNewValueEventHandler)PipeOnOnNewValue;
 
-                    ((_DEventPipeEvents_Event)m_pipe).OnNewValue += (_DEventPipeEvents_OnNewValueEventHandler)PipeOnOnNewValue;
-                    // ReSharper restore SuspiciousTypeConversion.Global
-                }
-                catch (ThreadAbortException)
-                {
-                    throw;
-                }
-                catch (Exception e)
-                {
-                    useEventPipes = false; // try to run with polling instead of event pipes;
-                    OnProcessException(e);
-                }
-            }
+            //        m_connection.Execute(server => m_pipe = m_points.Data.EventPipe);
 
-            if (!useEventPipes)
-            {
-                // warn that we are going to use a different configuration here...
-                if (m_useEventPipes)
-                    OnStatusMessage("WARNING: PI adapter switching from event pipes to polling due to error or start/stop time constraints.");
+            //        ((_DEventPipeEvents_Event)m_pipe).OnNewValue += (_DEventPipeEvents_OnNewValueEventHandler)PipeOnOnNewValue;
+            //    }
+            //    catch (ThreadAbortException)
+            //    {
+            //        throw;
+            //    }
+            //    catch (Exception e)
+            //    {
+            //        useEventPipes = false; // try to run with polling instead of event pipes;
+            //        OnProcessException(e);
+            //    }
+            //}
 
-                // set up a new thread to do some long calls to PI and set up threads, timers, etc for polling
-                StopGettingData();
-                ThreadPool.QueueUserWorkItem(StartGettingData, tagFilter);
-            }
+            //if (!useEventPipes)
+            //{
+            // warn that we are going to use a different configuration here...
+            if (m_useEventPipes)
+                OnStatusMessage("WARNING: PI adapter switching from event pipes to polling due to error or start/stop time constraints.");
 
-            m_useEventPipes = useEventPipes;
+            // set up a new thread to do some long calls to PI and set up threads, timers, etc for polling
+            StopGettingData();
+            ThreadPool.QueueUserWorkItem(StartGettingData, tagFilter);
+            //}
+
+            //m_useEventPipes = useEventPipes;
         }
 
         /// <summary>
@@ -459,7 +465,8 @@ namespace PIAdapters
             try
             {
                 string tagFilter = state.ToString();
-                m_connection.Execute(server => m_points = server.GetPoints(tagFilter));
+
+                m_points = new PIPointList(PIPoint.FindPIPoints(m_connection.Server, tagFilter, true));
 
                 m_dataThread = new Thread(QueryData);
                 m_dataThread.IsBackground = true;
@@ -531,25 +538,19 @@ namespace PIAdapters
                         DateTime localEndTime = endTime.ToLocalTime();
                         List<IMeasurement> measToAdd = new List<IMeasurement>();
 
-                        m_connection.Execute(server =>
+                        foreach (PIPoint point in m_points)
                         {
-                            foreach (PIPoint point in m_points)
-                            {
-                                PIValues values = point.Data.RecordedValues(localCurrentTime, localEndTime);
+                            AFValues values = point.RecordedValues(new AFTimeRange(new AFTime(localCurrentTime), new AFTime(localEndTime)), AFBoundaryType.Inside, null, false);
 
-                                foreach (PIValue value in values)
-                                {
-                                    if (!value.Value.GetType().IsCOMObject)
-                                    {
-                                        Measurement measurement = new Measurement();
-                                        measurement.Key = m_tagKeyMap[point.Name];
-                                        measurement.Value = Convert.ToDouble(value.Value);
-                                        measurement.Timestamp = value.TimeStamp.LocalDate.ToUniversalTime();
-                                        measToAdd.Add(measurement);
-                                    }
-                                }
+                            foreach (AFValue value in values)
+                            {
+                                Measurement measurement = new Measurement();
+                                measurement.Key = m_tagKeyMap[point.Name];
+                                measurement.Value = Convert.ToDouble(value.Value);
+                                measurement.Timestamp = value.Timestamp.UtcTime;
+                                measToAdd.Add(measurement);
                             }
-                        });
+                        }
 
                         if (measToAdd.Any())
                         {
@@ -620,54 +621,55 @@ namespace PIAdapters
             }
         }
 
-        private void PipeOnOnNewValue()
-        {
-            List<IMeasurement> measurements = new List<IMeasurement>();
+        // TODO: Updated code for handling piped-events in AF-SDK
+        //private void PipeOnOnNewValue()
+        //{
+        //    List<IMeasurement> measurements = new List<IMeasurement>();
 
-            m_connection.Execute(server =>
-            {
-                PIEventObject eventobject;
-                PointValue pointvalue;
+        //    m_connection.Execute(server =>
+        //    {
+        //        PIEventObject eventobject;
+        //        PointValue pointvalue;
 
-                for (int i = 0; i < m_pipe.Count; i++)
-                {
-                    eventobject = m_pipe.Take();
+        //        for (int i = 0; i < m_pipe.Count; i++)
+        //        {
+        //            eventobject = m_pipe.Take();
 
-                    // we will publish measurements for every action except deleted (possible dupes on updates)
-                    if (eventobject.Action != EventActionConstants.eaDelete)
-                    {
-                        try
-                        {
-                            pointvalue = (PointValue)eventobject.EventData;
+        //            // we will publish measurements for every action except deleted (possible dupes on updates)
+        //            if (eventobject.Action != EventActionConstants.eaDelete)
+        //            {
+        //                try
+        //                {
+        //                    pointvalue = (PointValue)eventobject.EventData;
 
-                            double value = Convert.ToDouble(pointvalue.PIValue.Value);
-                            MeasurementKey key = m_tagKeyMap[pointvalue.PIPoint.Name];
+        //                    double value = Convert.ToDouble(pointvalue.PIValue.Value);
+        //                    MeasurementKey key = m_tagKeyMap[pointvalue.PIPoint.Name];
 
-                            Measurement measurement = new Measurement();
-                            measurement.Key = key;
-                            measurement.Timestamp = pointvalue.PIValue.TimeStamp.LocalDate.ToUniversalTime();
-                            measurement.Value = value;
-                            measurement.StateFlags = MeasurementStateFlags.Normal;
+        //                    Measurement measurement = new Measurement();
+        //                    measurement.Key = key;
+        //                    measurement.Timestamp = pointvalue.PIValue.TimeStamp.LocalDate.ToUniversalTime();
+        //                    measurement.Value = value;
+        //                    measurement.StateFlags = MeasurementStateFlags.Normal;
 
-                            if (measurement.Timestamp > m_lastReceivedTimestamp.Ticks)
-                                m_lastReceivedTimestamp = measurement.Timestamp;
+        //                    if (measurement.Timestamp > m_lastReceivedTimestamp.Ticks)
+        //                        m_lastReceivedTimestamp = measurement.Timestamp;
 
-                            measurements.Add(measurement);
-                        }
-                        catch
-                        {
-                            /* squelch any errors on digital state data that can't be converted to a double */
-                        }
-                    }
-                }
-            });
+        //                    measurements.Add(measurement);
+        //                }
+        //                catch
+        //                {
+        //                    /* squelch any errors on digital state data that can't be converted to a double */
+        //                }
+        //            }
+        //        }
+        //    });
 
-            if (measurements.Any())
-            {
-                OnNewMeasurements(measurements);
-                m_processedMeasurements += measurements.Count;
-            }
-        }
+        //    if (measurements.Any())
+        //    {
+        //        OnNewMeasurements(measurements);
+        //        m_processedMeasurements += measurements.Count;
+        //    }
+        //}
 
         /// <summary>
         /// Disposes members for garbage collection

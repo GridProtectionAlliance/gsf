@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  06/18/2014 - J. Ritchie Carroll
 //       Updated code to use PIConnection instance.
+//  12/17/2014 - J. Ritchie Carroll
+//       Updated to use AF-SDK
 //
 //******************************************************************************************************
 
@@ -30,11 +32,15 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Timers;
 using GSF;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
-using PISDK;
+using OSIsoft.AF.Asset;
+using OSIsoft.AF.Data;
+using OSIsoft.AF.PI;
+using OSIsoft.AF.Time;
 
 namespace PIAdapters
 {
@@ -56,7 +62,7 @@ namespace PIAdapters
         private string m_password;                                  // password for PI connection string
         private int m_connectTimeout;                               // PI connection timeout
         private string m_tagFilter;                                 // caching the string used to filter down to PI points that can be provided from this adapter
-        private PointList m_points;                                 // List of points this adapter queries from PI
+        private PIPointList m_points;                               // List of points this adapter queries from PI
         private Dictionary<string, MeasurementKey> m_tagKeyMap;     // Provides quick look ups of GSFSchema keys by PI point tag
         private List<IMeasurement> m_measurements;                  // Queried measurements that are prepared to be published  
         private int m_processedMeasurements;                        // Track number of measurements queried from PI for statistics
@@ -371,7 +377,7 @@ namespace PIAdapters
         {
             try
             {
-                m_connection.Execute(server => m_points = server.GetPoints(m_tagFilter));
+                m_points = new PIPointList(PIPoint.FindPIPoints(m_connection.Server, m_tagFilter, true));
 
                 m_dataThread = new Thread(QueryData);
                 m_dataThread.IsBackground = true;
@@ -436,23 +442,17 @@ namespace PIAdapters
                     DateTime localEndTime = endTime.ToLocalTime();
                     List<IMeasurement> measToAdd = new List<IMeasurement>();
 
-                    m_connection.Execute(server =>
-                    {
-                        foreach (PIPoint point in m_points)
-                        {
-                            PIValues values = point.Data.RecordedValues(localCurrentTime, localEndTime);
+                    IEnumerable<AFValues> valueSets = m_points.RecordedValues(new AFTimeRange(new AFTime(localCurrentTime), new AFTime(localEndTime)), AFBoundaryType.Inside, null, false, new PIPagingConfiguration(PIPageType.EventCount, 10000));
 
-                            foreach (PIValue value in values)
-                            {
-                                if (!value.Value.GetType().IsCOMObject)
-                                {
-                                    Measurement measurement = new Measurement();
-                                    measurement.Key = m_tagKeyMap[point.Name];
-                                    measurement.Value = (double)value.Value;
-                                    measurement.Timestamp = value.TimeStamp.LocalDate.ToUniversalTime();
-                                    measToAdd.Add(measurement);
-                                }
-                            }
+                    Parallel.ForEach(valueSets, values =>
+                    {
+                        foreach (AFValue value in values)
+                        {
+                            Measurement measurement = new Measurement();
+                            measurement.Key = m_tagKeyMap[value.PIPoint.Name];
+                            measurement.Value = (double)value.Value;
+                            measurement.Timestamp = value.Timestamp.UtcTime;
+                            measToAdd.Add(measurement);
                         }
                     });
 
