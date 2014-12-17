@@ -574,7 +574,7 @@ namespace GSF.EMAX
                 if (!double.TryParse(primary, out d_primary))
                     d_primary = 1.0D;
 
-                return 5.0D * d_cal_in / d_cal_ref * d_secondary * d_primary;
+                return 5.0D * d_cal_in / d_cal_ref * d_primary / d_secondary;
             }
         }
 

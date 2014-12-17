@@ -150,8 +150,12 @@ namespace GSF.EMAX
         {
             get
             {
-                // Event group count is doubled to account for clock words
-                return sizeof(ushort) * (AnalogChannelCount + 2 * EventGroupCount);
+                // 32 data words + 4 event group words + 4 clock words
+                if (AnalogChannelCount <= 32)
+                    return sizeof(ushort) * 40;
+
+                // 64 data words + 8 event group words + 8 clock words
+                return sizeof(ushort) * 80;
             }
         }
 

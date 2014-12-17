@@ -332,15 +332,16 @@ namespace GSF.EMAX
                         // Read next value
                         value = LittleEndian.ToUInt16(buffer, index);
 
-                        if (ControlFile.DataSize == DataSize.Bits12)
-                            value >>= 4;
-
                         if (m_controlFile.ScalingFactors.TryGetValue(i, out scalingFactor))
                         {
-                            if (value < 32768)
-                                m_values[i] = (value - 32767) / 32768.0D * scalingFactor;
+                            if (value >= 32768)
+                                m_values[i] = (65535 - value) / 32768.0D * scalingFactor;
                             else
-                                m_values[i] = value / 32768.0D * scalingFactor;
+                                m_values[i] = -value / 32768.0D * scalingFactor;
+                        }
+                        else if (m_controlFile.DataSize == DataSize.Bits12)
+                        {
+                            m_values[i] = value >> 4;
                         }
                         else
                         {
@@ -349,6 +350,10 @@ namespace GSF.EMAX
 
                         index += 2;
                     }
+
+                    // There are always either 32 or 64 data words depending on the number of configured channels
+                    index = (m_controlFile.AnalogChannelCount <= 32) ? 32 : 64;
+                    index *= sizeof(ushort);
 
                     // Read event group values (first set)
                     for (int i = 0; i < 4; i++)
