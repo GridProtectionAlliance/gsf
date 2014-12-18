@@ -30,7 +30,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
@@ -61,7 +60,7 @@ namespace PIAdapters
         private string m_userName;                                  // username for PI connection string
         private string m_password;                                  // password for PI connection string
         private int m_connectTimeout;                               // PI connection timeout
-        private string m_tagFilter;                                 // caching the string used to filter down to PI points that can be provided from this adapter
+        private HashSet<string> m_tagFilter;                        // caching the string used to filter down to PI points that can be provided from this adapter
         private PIPointList m_points;                               // List of points this adapter queries from PI
         private Dictionary<string, MeasurementKey> m_tagKeyMap;     // Provides quick look ups of GSFSchema keys by PI point tag
         private List<IMeasurement> m_measurements;                  // Queried measurements that are prepared to be published  
@@ -81,6 +80,7 @@ namespace PIAdapters
         /// </summary>
         public PIPBInputAdapter()
         {
+            m_tagFilter = new HashSet<string>();
             m_tagKeyMap = new Dictionary<string, MeasurementKey>();
             m_measurements = new List<IMeasurement>();
         }
@@ -341,7 +341,7 @@ namespace PIAdapters
             {
                 var query = from row in DataSource.Tables["ActiveMeasurements"].AsEnumerable()
                             from key in keys
-                            where row["ID"].ToString().Split(':')[1] == key.ID.ToString() && row["PROTOCOL"].ToString() == "PI"
+                            where row["ID"].ToString() == key.ToString()
                             select new
                             {
                                 Key = key,
@@ -349,25 +349,18 @@ namespace PIAdapters
                                 PointTag = row["POINTTAG"].ToString()
                             };
 
-                StringBuilder whereClause = new StringBuilder();
+                string tagName;
 
                 foreach (var result in query)
                 {
-                    string tagname = result.PointTag;
+                    tagName = result.PointTag;
+
                     if (!String.IsNullOrWhiteSpace(result.AlternateTag))
-                        tagname = result.AlternateTag;
+                        tagName = result.AlternateTag;
 
-                    if (!m_tagKeyMap.ContainsKey(tagname))
-                        m_tagKeyMap.Add(tagname, result.Key);
-
-                    if (whereClause.Length > 0)
-                        whereClause.Append(" OR ");
-
-                    whereClause.Append(string.Format("tag='{0}'", tagname));
+                    m_tagFilter.Add(tagName);
+                    m_tagKeyMap.Add(tagName, result.Key);
                 }
-
-                // Store this filtering string for when the PointList is created during query
-                m_tagFilter = whereClause.ToString();
 
                 ThreadPool.QueueUserWorkItem(StartGettingData);
             }
@@ -377,7 +370,7 @@ namespace PIAdapters
         {
             try
             {
-                m_points = new PIPointList(PIPoint.FindPIPoints(m_connection.Server, m_tagFilter, true));
+                m_points = new PIPointList(PIPoint.FindPIPoints(m_connection.Server, m_tagFilter));
 
                 m_dataThread = new Thread(QueryData);
                 m_dataThread.IsBackground = true;
@@ -442,7 +435,7 @@ namespace PIAdapters
                     DateTime localEndTime = endTime.ToLocalTime();
                     List<IMeasurement> measToAdd = new List<IMeasurement>();
 
-                    IEnumerable<AFValues> valueSets = m_points.RecordedValues(new AFTimeRange(new AFTime(localCurrentTime), new AFTime(localEndTime)), AFBoundaryType.Inside, null, false, new PIPagingConfiguration(PIPageType.EventCount, 10000));
+                    IEnumerable<AFValues> valueSets = m_points.RecordedValues(new AFTimeRange(new AFTime(localCurrentTime), new AFTime(localEndTime)), AFBoundaryType.Inside, null, false, new PIPagingConfiguration(PIPageType.EventCount, 100));
 
                     Parallel.ForEach(valueSets, values =>
                     {

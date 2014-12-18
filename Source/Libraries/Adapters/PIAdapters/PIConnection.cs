@@ -209,15 +209,26 @@ namespace PIAdapters
 
             m_connected = false;
 
-            // Locate configured PI server
-            m_server = PIServers.GetPIServers()[m_serverName];
-            m_server.ConnectChanged += PIConnection_ConnectChanged;
+            try
+            {
+                // Locate configured PI server
+                PIServers servers = new PIServers();
+                m_server = servers[m_serverName];
+                m_server.ConnectChanged += PIConnection_ConnectChanged;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(string.Format("Failed to connect to PI server \"{0}\": {1}", m_serverName, ex.Message));
+            }
 
-            // Attempt to open OSI-PI connection
-            if (!string.IsNullOrEmpty(m_userName) && !string.IsNullOrEmpty(m_password))
-                m_server.Connect(new NetworkCredential(m_userName, m_password));
-            else
-                m_server.Connect();
+            if (!m_server.ConnectionInfo.IsConnected)
+            {
+                // Attempt to open OSI-PI connection
+                if (!string.IsNullOrEmpty(m_userName) && !string.IsNullOrEmpty(m_password))
+                    m_server.Connect(new NetworkCredential(m_userName, m_password));
+                else
+                    m_server.Connect();
+            }
 
             m_connected = true;
         }
