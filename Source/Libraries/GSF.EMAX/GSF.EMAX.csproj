@@ -89,6 +89,7 @@
     <Compile Include="ControlFileStructures.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="CorrectiveParser.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GSF.Core\GSF.Core.csproj">
