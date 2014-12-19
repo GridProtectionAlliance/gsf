@@ -264,11 +264,6 @@ namespace GSF.IO
             set
             {
                 m_useTimer = value;
-
-                if (value && m_fileWatchers.Count > 0)
-                    m_fileWatchTimer.Start();
-                else
-                    m_fileWatchTimer.Stop();
             }
         }
 
@@ -313,9 +308,7 @@ namespace GSF.IO
                 {
                     m_processingQueue.Start();
                     m_processingQueue.Add(LoadProcessedFiles);
-
-                    if (m_useTimer)
-                        m_fileWatchTimer.Start();
+                    m_fileWatchTimer.Start();
                 }
 
                 m_fileWatchers.Add(watcher);
@@ -674,37 +667,51 @@ namespace GSF.IO
             IList<string> trackedDirectories = null;
             HashSet<string> listedFiles;
 
-            // Loop until we get the list of tracked directories
-            while ((object)trackedDirectories == null)
+            try
             {
-                try
-                {
-                    trackedDirectories = TrackedDirectories;
-                }
-                catch (InvalidOperationException)
-                {
-                    // Collection was modified on another thread,
-                    // so we'll loop around and try again
-                }
+                foreach (FileSystemWatcher fileWatcher in m_fileWatchers)
+                    fileWatcher.EnableRaisingEvents = true;
+            }
+            catch (InvalidOperationException)
+            {
+                // Collection was modified on another thread,
+                // so we'll try again the next time the timer elapses
             }
 
-            // Gets the list of all files in all the directories tracked by this file processor
-            listedFiles = new HashSet<string>(trackedDirectories.SelectMany(directory => Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)));
-
-            // Now queue an operation to remove files
-            // from lists that are no longer tracked
-            m_processingQueue.Add(() =>
+            if (m_useTimer)
             {
-                // Queue these files for processing
-                foreach (string file in listedFiles)
-                    QueueFileForProcessing(file);
+                // Loop until we get the list of tracked directories
+                while ((object)trackedDirectories == null)
+                {
+                    try
+                    {
+                        trackedDirectories = TrackedDirectories;
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // Collection was modified on another thread,
+                        // so we'll loop around and try again
+                    }
+                }
 
-                foreach (string file in m_touchedFiles.Keys.Where(file => !listedFiles.Contains(file)).ToList())
-                    m_touchedFiles.Remove(file);
+                // Gets the list of all files in all the directories tracked by this file processor
+                listedFiles = new HashSet<string>(trackedDirectories.SelectMany(directory => Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)));
 
-                if (m_processedFiles.RemoveWhere(file => !listedFiles.Contains(file)) > 0)
-                    SaveProcessedFiles();
-            });
+                // Now queue an operation to remove files
+                // from lists that are no longer tracked
+                m_processingQueue.Add(() =>
+                {
+                    // Queue these files for processing
+                    foreach (string file in listedFiles)
+                        QueueFileForProcessing(file);
+
+                    foreach (string file in m_touchedFiles.Keys.Where(file => !listedFiles.Contains(file)).ToList())
+                        m_touchedFiles.Remove(file);
+
+                    if (m_processedFiles.RemoveWhere(file => !listedFiles.Contains(file)) > 0)
+                        SaveProcessedFiles();
+                });
+            }
         }
 
         #endregion
