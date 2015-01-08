@@ -18,9 +18,14 @@
 //  ----------------------------------------------------------------------------------------------------
 //  03/31/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  01/08/2015 - Pinal C. Patel
+//       Update to get WCF services path from config file rather than assuming services will have .svc 
+//       extension.
 //
 //******************************************************************************************************
 
+using GSF.Configuration;
+using GSF.Security;
 using System.Web;
 
 namespace GSF.Web
@@ -30,6 +35,15 @@ namespace GSF.Web
     /// </summary>
     public class IgnoreServicesSecurityModule : SecurityModule
     {
+        #region [ Members ]
+
+        //Constants
+        private const string WebServicesPath = "*.svc";
+
+        #endregion
+
+        #region [ Methods ]
+
         /// <summary>
         /// Determines if access to the requested <paramref name="resource"/> is to be secured.
         /// </summary>
@@ -37,12 +51,32 @@ namespace GSF.Web
         /// <returns>True if access to the resource is to be secured, otherwise False.</returns>
         protected override bool IsAccessSecured(string resource)
         {
-            if (resource.Contains(".svc"))
+            if (SecurityProviderUtility.IsRegexMatch(s_webServicesPath, resource))
                 // Don't secure WCF services.
                 return false;
             else
                 // Fallback to the base class for everything else.
                 return base.IsAccessSecured(resource);
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static string s_webServicesPath;
+
+        // Static Constructor
+        static IgnoreServicesSecurityModule()
+        {
+            // Load settings from the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[SecurityProviderBase.DefaultSettingsCategory];
+            settings.Add("WebServicesPath", WebServicesPath, "Path to WCF web services that are to be ignored by the security module and secured by downstream WCF Authorization Policy.");
+
+            s_webServicesPath = settings["WebServicesPath"].ValueAs(WebServicesPath);
+        }
+
+        #endregion
     }
 }
