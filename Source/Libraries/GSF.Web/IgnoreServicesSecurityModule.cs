@@ -38,7 +38,7 @@ namespace GSF.Web
         #region [ Members ]
 
         //Constants
-        private const string WebServicesPath = "*.svc";
+        private const string DefaultWebServicesPath = "*.svc";
 
         #endregion
 
@@ -72,9 +72,9 @@ namespace GSF.Web
             // Load settings from the specified category.
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[SecurityProviderBase.DefaultSettingsCategory];
-            settings.Add("WebServicesPath", WebServicesPath, "Path to WCF web services that are to be ignored by the security module and secured by downstream WCF Authorization Policy.");
+            settings.Add("WebServicesPath", DefaultWebServicesPath, "Path to WCF web services that are to be ignored by the security module and secured by downstream WCF Authorization Policy.");
 
-            s_webServicesPath = settings["WebServicesPath"].ValueAs(WebServicesPath);
+            s_webServicesPath = settings["WebServicesPath"].ValueAs(DefaultWebServicesPath);
         }
 
         #endregion

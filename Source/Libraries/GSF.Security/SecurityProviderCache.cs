@@ -92,7 +92,7 @@ namespace GSF.Security
         /// <summary>
         /// Number of minutes up to which <see cref="ISecurityProvider"/>s are to be cached.
         /// </summary>
-        private const int UserCacheTimeout = 5;
+        private const int DefaultUserCacheTimeout = 5;
 
         #endregion
 
@@ -109,9 +109,9 @@ namespace GSF.Security
             // Load settings from the specified category.
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[SecurityProviderBase.DefaultSettingsCategory];
-            settings.Add("UserCacheTimeout", UserCacheTimeout, "Defines the timeout, in whole minutes, for a user's provider cache. Any value less than 1 will cause cache reset every minute.");
+            settings.Add("UserCacheTimeout", DefaultUserCacheTimeout, "Defines the timeout, in whole minutes, for a user's provider cache. Any value less than 1 will cause cache reset every minute.");
 
-            s_userCacheTimeout = settings["UserCacheTimeout"].ValueAs(UserCacheTimeout);
+            s_userCacheTimeout = settings["UserCacheTimeout"].ValueAs(DefaultUserCacheTimeout);
 
             // Initialize static variables.
             s_cache = new Dictionary<string, CacheContext>(StringComparer.CurrentCultureIgnoreCase);
