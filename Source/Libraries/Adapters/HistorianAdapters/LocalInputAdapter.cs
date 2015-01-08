@@ -346,7 +346,7 @@ namespace HistorianAdapters
         }
 
         /// <summary>
-        /// Initializes this <see cref="RemoteInputAdapter"/>.
+        /// Initializes this <see cref="LocalInputAdapter"/>.
         /// </summary>
         /// <exception cref="ArgumentException"><b>HistorianID</b>, <b>Server</b>, <b>Port</b>, <b>Protocol</b>, or <b>InitiateConnection</b> is missing from the <see cref="AdapterBase.Settings"/>.</exception>
         public override void Initialize()
@@ -359,7 +359,9 @@ namespace HistorianAdapters
             string setting;
 
             // Validate settings.
-            if (!settings.TryGetValue("instanceName", out m_instanceName))
+            settings.TryGetValue("instanceName", out m_instanceName);
+
+            if (((object)OutputSourceIDs == null || OutputSourceIDs.Length == 0) && string.IsNullOrEmpty(m_instanceName))
                 throw new ArgumentException(string.Format(errorMessage, "instanceName"));
 
             if (!settings.TryGetValue("archiveLocation", out m_archiveLocation))
@@ -376,8 +378,16 @@ namespace HistorianAdapters
             if (settings.TryGetValue("autoRepeat", out setting))
                 m_autoRepeat = setting.ParseBoolean();
 
-            // Define output measurements this input adapter can support based on the instance name
-            OutputSourceIDs = new[] { m_instanceName };
+            // Define output measurements this input adapter can support based on the instance name (if not already defined)
+            if (string.IsNullOrEmpty(m_instanceName))
+            {
+                if ((object)OutputSourceIDs != null && OutputSourceIDs.Length > 0)
+                    m_instanceName = OutputSourceIDs[0];
+            }
+            else
+            {
+                OutputSourceIDs = new[] { m_instanceName };
+            }
 
             // Validate path names by assignment
             ArchiveLocation = m_archiveLocation;
@@ -385,7 +395,7 @@ namespace HistorianAdapters
         }
 
         /// <summary>
-        /// Gets a short one-line status of this <see cref="RemoteInputAdapter"/>.
+        /// Gets a short one-line status of this <see cref="LocalInputAdapter"/>.
         /// </summary>
         /// <param name="maxLength">Maximum length of the status message.</param>
         /// <returns>Text of the status message.</returns>

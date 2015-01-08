@@ -1138,14 +1138,14 @@ namespace GSF.TimeSeries.Adapters
                     else
                     {
                         // Expression match failed, attempt to parse absolute time specification.
-                        dateTime = DateTime.Parse(timetag, CultureInfo.InvariantCulture);
+                        dateTime = DateTime.Parse(timetag, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);
                     }
                 }
             }
             else
             {
                 // Absolute time is specified.
-                dateTime = DateTime.Parse(timetag, CultureInfo.InvariantCulture);
+                dateTime = DateTime.Parse(timetag, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);
             }
 
             return dateTime;

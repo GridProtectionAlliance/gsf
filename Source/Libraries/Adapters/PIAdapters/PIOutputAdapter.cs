@@ -41,7 +41,6 @@ using GSF.IO;
 using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
-using GSF.Units;
 using OSIsoft.AF.Asset;
 using OSIsoft.AF.Data;
 using OSIsoft.AF.PI;
@@ -80,7 +79,6 @@ namespace PIAdapters
         private long m_processedMappings;                                   // Total number of mappings processed so far
         private long m_processedMeasurements;                               // Total number of measurements processed so far
         private long m_totalProcessingTime;                                 // Total point processing time 
-        private long m_totalWaitingTime;                                    // Total time waiting to archive
         private volatile bool m_refreshingMetadata;                         // Flag that determines if meta-data is currently refreshing
         private double m_metadataRefreshProgress;                           // Current meta-data refresh progress
         private bool m_disposed;                                            // Flag that determines if class is disposed
@@ -326,9 +324,6 @@ namespace PIAdapters
                     status.AppendLine();
                 }
 
-                status.AppendLine();
-                status.AppendFormat("  Total queue waiting time: {0}", Time.ToElapsedTimeString(Interlocked.Read(ref m_totalWaitingTime) / SI.Milli, 2));
-                status.AppendLine();
                 status.AppendFormat("    Points archived/second: {0:#,##0.00}", Interlocked.Read(ref m_processedMeasurements) / (Interlocked.Read(ref m_totalProcessingTime) / (double)Ticks.PerSecond));
                 status.AppendLine();
 
@@ -570,13 +565,6 @@ namespace PIAdapters
             }
 
             Interlocked.Add(ref m_processedMeasurements, values.Count);
-
-            // Pause archiving activity if the system is falling behind
-            while (m_archiveQueue.ThreadCount >= m_archiveQueue.MaximumThreads)
-            {
-                Interlocked.Add(ref m_totalWaitingTime, 100);
-                Thread.Sleep(100);
-            }
 
             // Queue up insert operations for parallel processing
             m_archiveQueue.AddRange(values);
@@ -873,11 +861,11 @@ namespace PIAdapters
                             {
                                 List<string> updatedAttributes = new List<string>();
 
-                                Action<string, string> updateAttribute = (attribute, newValue) =>
+                                Action<string, object> updateAttribute = (attribute, newValue) =>
                                 {
-                                    string oldValue = point.GetAttribute(attribute) as string;
+                                    string oldValue = point.GetAttribute(attribute).ToString();
 
-                                    if (string.IsNullOrEmpty(oldValue) || string.CompareOrdinal(oldValue, newValue) != 0)
+                                    if (string.IsNullOrEmpty(oldValue) || string.CompareOrdinal(oldValue, newValue.ToString()) != 0)
                                     {
                                         point.SetAttribute(attribute, newValue);
                                         updatedAttributes.Add(attribute);
@@ -890,6 +878,7 @@ namespace PIAdapters
                                     PICommonPointAttributes.Descriptor,
                                     PICommonPointAttributes.ExtendedDescriptor,
                                     PICommonPointAttributes.Tag,
+                                    PICommonPointAttributes.Compressing,
                                     PICommonPointAttributes.EngineeringUnits);
 
                                 // Update tag meta-data if it has changed
@@ -897,6 +886,7 @@ namespace PIAdapters
                                 updateAttribute(PICommonPointAttributes.Descriptor, measurementRow["Description"].ToString());
                                 updateAttribute(PICommonPointAttributes.ExtendedDescriptor, measurementRow["SignalID"].ToString());
                                 updateAttribute(PICommonPointAttributes.Tag, tagName);
+                                updateAttribute(PICommonPointAttributes.Compressing, UseCompression ? 1 : 0);
 
                                 // Engineering units is a new field for this view -- handle the case that it's not there
                                 if (measurements.Columns.Contains("EngineeringUnits"))

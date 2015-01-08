@@ -47,7 +47,7 @@ namespace PIAdapters
     /// <summary>
     /// Uses PI event pipes to deliver real-time PI data to GSF host
     /// </summary>
-    [Description("OSI-PI: Reads real-time measurements from an OSI-PI server using PI SDK.")]
+    [Description("OSI-PI: Reads real-time measurements from an OSI-PI server using AF-SDK.")]
     public class PIRTInputAdapter : InputAdapterBase
     {
         #region [ Members ]
