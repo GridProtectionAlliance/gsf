@@ -157,6 +157,9 @@
     <Compile Include="UserControls\CompanyUserControl.xaml.cs">
       <DependentUpon>CompanyUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\CorrectnessReportUserControl.xaml.cs">
+      <DependentUpon>CorrectnessReportUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\CustomActionAdapterUserControl.xaml.cs">
       <DependentUpon>CustomActionAdapterUserControl.xaml</DependentUpon>
     </Compile>
@@ -218,6 +221,7 @@
     <Compile Include="ViewModels\Adapters.cs" />
     <Compile Include="ViewModels\Companies.cs" />
     <Compile Include="ViewModels\CompletenessReportViewModel.cs" />
+    <Compile Include="ViewModels\CorrectnessReportViewModel.cs" />
     <Compile Include="ViewModels\ErrorLogViewModel.cs" />
     <Compile Include="ViewModels\Historians.cs" />
     <Compile Include="ViewModels\IaonTrees.cs" />
@@ -308,6 +312,10 @@
     <Page Include="UserControls\AlarmUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\CorrectnessReportUserControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="UserControls\CustomActionAdapterUserControl.xaml">
       <SubType>Designer</SubType>
