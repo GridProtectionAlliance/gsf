@@ -45,15 +45,15 @@
 //
 //******************************************************************************************************
 
+using GSF.Configuration;
+using GSF.Security;
+using GSF.Web.Hosting;
 using System;
 using System.Net;
 using System.Web;
 using System.Web.Configuration;
 using System.Web.Hosting;
 using System.Web.SessionState;
-using GSF.Configuration;
-using GSF.Security;
-using GSF.Web.Hosting;
 
 namespace GSF.Web
 {
@@ -176,7 +176,7 @@ namespace GSF.Web
         /// Initializes the <see cref="SecurityModule"/>.
         /// </summary>
         /// <param name="context">An <see cref="HttpApplication"/> object.</param>
-        public void Init(HttpApplication context)
+        public virtual void Init(HttpApplication context)
         {
             m_application = context;
             m_application.PostMapRequestHandler += Application_PostMapRequestHandler;
@@ -190,7 +190,7 @@ namespace GSF.Web
         /// <summary>
         /// Releases the resources used by <see cref="SecurityModule"/>.
         /// </summary>
-        public void Dispose()
+        public virtual void Dispose()
         {
             m_application.PostMapRequestHandler -= Application_PostMapRequestHandler;
             m_application.PostAcquireRequestState -= Application_PostAcquireRequestState;
