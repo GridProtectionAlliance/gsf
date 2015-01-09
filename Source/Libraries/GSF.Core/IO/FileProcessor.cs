@@ -156,6 +156,7 @@ namespace GSF.IO
         private bool m_trackChanges;
         private string m_cachePath;
 
+        private readonly object m_fileWatchersLock;
         private readonly List<FileSystemWatcher> m_fileWatchers;
         private ProcessQueue<Action> m_processingQueue;
         private Timer m_fileWatchTimer;
@@ -184,6 +185,7 @@ namespace GSF.IO
             m_cachePath = DefaultCachePath;
             m_useTimer = DefaultUseTimer;
 
+            m_fileWatchersLock = new object();
             m_fileWatchers = new List<FileSystemWatcher>();
             m_processingQueue = ProcessQueue<Action>.CreateRealTimeQueue(action => action());
             m_processingQueue.SynchronizedOperationType = SynchronizedOperationType.LongBackground;
@@ -241,13 +243,16 @@ namespace GSF.IO
             }
             set
             {
-                if (m_fileWatchers.Count > 0)
-                    throw new InvalidOperationException("File processor is already tracking directories - modification of the cache path would be unsafe.");
+                lock (m_fileWatchers)
+                {
+                    if (m_fileWatchers.Count > 0)
+                        throw new InvalidOperationException("File processor is already tracking directories - modification of the cache path would be unsafe.");
 
-                if ((object)m_cachePath != null)
-                    m_cachePath = FilePath.GetAbsolutePath(value);
-                else
-                    m_cachePath = DefaultCachePath;
+                    if ((object)m_cachePath != null)
+                        m_cachePath = FilePath.GetAbsolutePath(value);
+                    else
+                        m_cachePath = DefaultCachePath;
+                }
             }
         }
 
@@ -274,9 +279,12 @@ namespace GSF.IO
         {
             get
             {
-                return m_fileWatchers
-                    .Select(watcher => watcher.Path)
-                    .ToList();
+                lock (m_fileWatchers)
+                {
+                    return m_fileWatchers
+                        .Select(watcher => watcher.Path)
+                        .ToList();
+                }
             }
         }
 
@@ -304,14 +312,17 @@ namespace GSF.IO
                 watcher.Deleted += Watcher_Deleted;
                 watcher.Error += Watcher_Error;
 
-                if (m_fileWatchers.Count == 0)
+                lock (m_fileWatchersLock)
                 {
-                    m_processingQueue.Start();
-                    m_processingQueue.Add(LoadProcessedFiles);
-                    m_fileWatchTimer.Start();
-                }
+                    if (m_fileWatchers.Count == 0)
+                    {
+                        m_processingQueue.Start();
+                        m_processingQueue.Add(LoadProcessedFiles);
+                        m_fileWatchTimer.Start();
+                    }
 
-                m_fileWatchers.Add(watcher);
+                    m_fileWatchers.Add(watcher);
+                }
 
                 m_processingQueue.Add(() =>
                 {
@@ -349,17 +360,22 @@ namespace GSF.IO
         {
             string fullPath = FilePath.GetAbsolutePath(path);
 
-            List<FileSystemWatcher> fileWatchersToRemove = m_fileWatchers
-                .Where(w => fullPath.Equals(w.Path, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            List<FileSystemWatcher> fileWatchersToRemove;
 
-            foreach (FileSystemWatcher watcher in fileWatchersToRemove)
-                RemoveFileWatcher(watcher);
-
-            if (m_fileWatchers.Count == 0)
+            lock (m_fileWatchers)
             {
-                m_processingQueue.Stop();
-                m_fileWatchTimer.Stop();
+                fileWatchersToRemove = m_fileWatchers
+                    .Where(w => fullPath.Equals(w.Path, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                foreach (FileSystemWatcher watcher in fileWatchersToRemove)
+                    RemoveFileWatcher(watcher);
+
+                if (m_fileWatchers.Count == 0)
+                {
+                    m_processingQueue.Stop();
+                    m_fileWatchTimer.Stop();
+                }
             }
         }
 
@@ -368,8 +384,11 @@ namespace GSF.IO
         /// </summary>
         public void ClearTrackedDirectories()
         {
-            while (m_fileWatchers.Count > 0)
-                RemoveFileWatcher(m_fileWatchers[0]);
+            lock (m_fileWatchers)
+            {
+                while (m_fileWatchers.Count > 0)
+                    RemoveFileWatcher(m_fileWatchers[0]);
+            }
         }
 
         /// <summary>
@@ -664,38 +683,77 @@ namespace GSF.IO
         // Picks up files that were missed by the file watchers.
         private void FileWatchTimer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
         {
-            IList<string> trackedDirectories = null;
             HashSet<string> listedFiles;
 
-            try
+            // Check each of the existing file watchers to determine whether an
+            // error occurred that forced the file watcher to stop raising events
+            lock (m_fileWatchers)
             {
-                foreach (FileSystemWatcher fileWatcher in m_fileWatchers)
-                    fileWatcher.EnableRaisingEvents = true;
-            }
-            catch (InvalidOperationException)
-            {
-                // Collection was modified on another thread,
-                // so we'll try again the next time the timer elapses
+                for (int i = 0; i < m_fileWatchers.Count; i++)
+                {
+                    if (!m_fileWatchers[i].EnableRaisingEvents)
+                    {
+                        try
+                        {
+                            // This file watcher is no longer raising events so
+                            // attempt to create a new file watcher for that file path
+                            FileSystemWatcher newWatcher = new FileSystemWatcher(m_fileWatchers[i].Path);
+
+                            newWatcher.IncludeSubdirectories = true;
+                            newWatcher.Created += Watcher_Created;
+                            newWatcher.Changed += Watcher_Changed;
+                            newWatcher.Renamed += Watcher_Renamed;
+                            newWatcher.Deleted += Watcher_Deleted;
+                            newWatcher.Error += Watcher_Error;
+
+                            m_fileWatchers[i].Created -= Watcher_Created;
+                            m_fileWatchers[i].Changed -= Watcher_Changed;
+                            m_fileWatchers[i].Renamed -= Watcher_Renamed;
+                            m_fileWatchers[i].Deleted -= Watcher_Deleted;
+                            m_fileWatchers[i].Error -= Watcher_Error;
+                            m_fileWatchers[i].Dispose();
+
+                            m_fileWatchers[i] = newWatcher;
+                            newWatcher.EnableRaisingEvents = true;
+
+                            // Files may have been dropped or removed while the file watcher
+                            // was disconnected so we need to enumerate the files again
+                            m_processingQueue.Add(() =>
+                            {
+                                HashSet<string> enumeratedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                                foreach (string filePath in Directory.EnumerateFiles(newWatcher.Path, "*.*", SearchOption.AllDirectories))
+                                {
+                                    if (m_disposed)
+                                        return;
+
+                                    if (!File.Exists(filePath) || !MatchesFilter(filePath))
+                                        continue;
+
+                                    if (FilePath.TryGetReadLockExclusive(filePath))
+                                        ProcessFile(filePath);
+                                    else
+                                        DelayLockAndQueue(filePath);
+
+                                    enumeratedFiles.Add(filePath);
+                                }
+
+                                if (m_processedFiles.RemoveWhere(filePath => !enumeratedFiles.Contains(filePath) && filePath.StartsWith(newWatcher.Path, StringComparison.OrdinalIgnoreCase)) > 0)
+                                    SaveProcessedFiles();
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            OnError(ex);
+                        }
+                    }
+                }
             }
 
             if (m_useTimer)
             {
-                // Loop until we get the list of tracked directories
-                while ((object)trackedDirectories == null)
-                {
-                    try
-                    {
-                        trackedDirectories = TrackedDirectories;
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        // Collection was modified on another thread,
-                        // so we'll loop around and try again
-                    }
-                }
-
                 // Gets the list of all files in all the directories tracked by this file processor
-                listedFiles = new HashSet<string>(trackedDirectories.SelectMany(directory => Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)));
+                listedFiles = new HashSet<string>(TrackedDirectories.SelectMany(directory => Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)));
 
                 // Now queue an operation to remove files
                 // from lists that are no longer tracked
