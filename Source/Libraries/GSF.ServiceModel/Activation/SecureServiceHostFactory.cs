@@ -24,6 +24,9 @@
 //       Added PublishMetadata and DisableSecurity properties.
 //  12/20/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  01/12/2015 - Pinal C. Patel
+//       Added AuthorizationPolicy property to allow customization of IAuthorizationPolicy used for 
+//       enabling security.
 //
 //******************************************************************************************************
 
@@ -41,7 +44,7 @@ using System.ServiceModel.Description;
 namespace GSF.ServiceModel.Activation
 {
     /// <summary>
-    /// A service host factory for WCF Services that enables role-based security using <see cref="SecurityPolicy"/>.
+    /// A service host factory for WCF Services that enables role-based security using <see cref="IAuthorizationPolicy"/>.
     /// </summary>
     /// <see cref="SecurityPolicy"/>
     public class SecureServiceHostFactory : ServiceHostFactory
@@ -53,6 +56,7 @@ namespace GSF.ServiceModel.Activation
         private readonly string m_address;
         private bool m_publishMetadata;
         private bool m_disableSecurity;
+        private Type m_authorizationPolicy;
 
         #endregion
 
@@ -85,6 +89,7 @@ namespace GSF.ServiceModel.Activation
             m_protocol = protocol;
             m_address = address;
             m_publishMetadata = true;
+            m_authorizationPolicy = typeof(SecurityPolicy);
         }
 
         #endregion
@@ -118,6 +123,24 @@ namespace GSF.ServiceModel.Activation
             set
             {
                 m_disableSecurity = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IAuthorizationPolicy"/> used for securing the service.
+        /// </summary>
+        public Type AuthorizationPolicy
+        {
+            get
+            {
+                return m_authorizationPolicy;
+            }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+
+                m_authorizationPolicy = value;
             }
         }
 
@@ -169,7 +192,7 @@ namespace GSF.ServiceModel.Activation
 
                 authorizationBehavior.PrincipalPermissionMode = PrincipalPermissionMode.Custom;
                 List<IAuthorizationPolicy> policies = new List<IAuthorizationPolicy>();
-                policies.Add((IAuthorizationPolicy)Activator.CreateInstance(typeof(SecurityPolicy)));
+                policies.Add((IAuthorizationPolicy)Activator.CreateInstance(m_authorizationPolicy));
                 authorizationBehavior.ExternalAuthorizationPolicies = policies.AsReadOnly();
             }
 

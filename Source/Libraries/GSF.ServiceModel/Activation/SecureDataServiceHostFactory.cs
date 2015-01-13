@@ -20,6 +20,9 @@
 //       Generated original version of source code.
 //  12/20/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  01/12/2015 - Pinal C. Patel
+//       Added AuthorizationPolicy property to allow customization of IAuthorizationPolicy used for 
+//       enabling security.
 //
 //******************************************************************************************************
 
@@ -33,11 +36,52 @@ using System.ServiceModel.Description;
 namespace GSF.ServiceModel.Activation
 {
     /// <summary>
-    /// A service host factory for WCF Data Services that enables role-based security using <see cref="SecurityPolicy"/>.
+    /// A service host factory for WCF Data Services that enables role-based security using <see cref="IAuthorizationPolicy"/>.
     /// </summary>
     /// <see cref="SecurityPolicy"/>
     public class SecureDataServiceHostFactory : DataServiceHostFactory
     {
+        #region [ Members ]
+
+        // Fields
+        private Type m_authorizationPolicy;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SecureDataServiceHostFactory"/> class.
+        /// </summary>
+        public SecureDataServiceHostFactory()
+        {
+            m_authorizationPolicy = typeof(SecurityPolicy);
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the <see cref="IAuthorizationPolicy"/> used for securing the service.
+        /// </summary>
+        public Type AuthorizationPolicy
+        {
+            get
+            {
+                return m_authorizationPolicy;
+            }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+
+                m_authorizationPolicy = value;
+            }
+        }
+
+        #endregion
+
         #region [ Methods ]
 
         /// <summary>
@@ -60,7 +104,7 @@ namespace GSF.ServiceModel.Activation
             }
             serviceBehavior.PrincipalPermissionMode = PrincipalPermissionMode.Custom;
             List<IAuthorizationPolicy> policies = new List<IAuthorizationPolicy>();
-            policies.Add((IAuthorizationPolicy)Activator.CreateInstance(typeof(SecurityPolicy)));
+            policies.Add((IAuthorizationPolicy)Activator.CreateInstance(m_authorizationPolicy));
             serviceBehavior.ExternalAuthorizationPolicies = policies.AsReadOnly();
 
             return host;
