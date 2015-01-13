@@ -336,7 +336,6 @@
     <!-- Create a temporary workspace for the build. -->
     <Message Text="Creating temporary workspace..."/>
 
-
     <PropertyGroup>
       <Workspace Condition="'$(Workspace)' == ''">$(COMPUTERNAME)_$(ProjectName)</Workspace>
     </PropertyGroup>
@@ -355,10 +354,16 @@
   <Target Name="BeforePopulateWorkspace"/>
 
   <Target Name="CorePopulateWorkspace">
+    <!-- Get version file for the most recent version. -->
+    <Message Condition="'$(ForceBuild)' != 'true'" Text="Checking for changes to project since last build..."/>
+    <Exec Condition="'$(ForceBuild)' != 'true' And '$(TfsUserName)' == ''" Command="%22$(TfsClient)%22 get %22$(VersionFile)%22 /force /recursive /noprompt"/>
+    <Exec Condition="'$(ForceBuild)' != 'true' And '$(TfsUserName)' != ''" Command="%22$(TfsClient)%22 get %22$(VersionFile)%22 /force /recursive /noprompt /login:$(TfsUserName),$(TfsPassword)"/>
+    <CallTarget Targets="CheckForChanges"/>
+  
     <!-- Get source code for the specified version. -->
-    <Message Text="Getting source code..."/>
-    <Exec Condition="'$(TfsUserName)' == ''" Command="%22$(TfsClient)%22 get %22$(LocalFolder)%22 /version:$(SourceVersion) /force /recursive /noprompt"/>
-    <Exec Condition="'$(TfsUserName)' != ''" Command="%22$(TfsClient)%22 get %22$(LocalFolder)%22 /version:$(SourceVersion) /force /recursive /noprompt /login:$(TfsUserName),$(TfsPassword)"/>
+    <Message Condition="'$(ForceBuild)' == 'true'" Text="Getting source code..."/>
+    <Exec Condition="'$(ForceBuild)' == 'true' And '$(TfsUserName)' == ''" Command="%22$(TfsClient)%22 get %22$(LocalFolder)%22 /version:$(SourceVersion) /force /recursive /noprompt"/>
+    <Exec Condition="'$(ForceBuild)' == 'true' And '$(TfsUserName)' != ''" Command="%22$(TfsClient)%22 get %22$(LocalFolder)%22 /version:$(SourceVersion) /force /recursive /noprompt /login:$(TfsUserName),$(TfsPassword)"/>
   </Target>
 
   <Target Name="CheckForChanges" Condition="'$(ForceBuild)' != 'true'">
@@ -372,6 +377,7 @@
     </TfsHistory>
     <PropertyGroup>
       <ForceBuild Condition="'$(TotalChanges)' == '-1' Or '$(TotalChanges)' &gt; '1'">true</ForceBuild>
+      <SkipVersioning Condition="'$(ForceBuild)' != 'true'">true</SkipVersioning>
     </PropertyGroup>
     <Message Text="Build is skipped - No new changes." Condition="'$(ForceBuild)' != 'true'"/>
   </Target>

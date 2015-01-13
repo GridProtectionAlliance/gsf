@@ -21,9 +21,8 @@
 ::
 ::*******************************************************************************************************
 
-echo off
+@echo off
 
-EnableDelayedExpansion
 set show_help=0
 if [%1]==[] set show_help=1
 if "%1"=="/?" set show_help=1
@@ -34,10 +33,10 @@ echo Explain Parameters
 echo.
 echo 	/u = TFS User Name
 echo 	/p = TFS Password
-echo 	/d = Build Deploy Location (required)
-echo 	/o = Nuget Package Location (required)
+echo 	/d = Build Deploy Location (required^)
+echo 	/o = Nuget Package Location (required^)
 echo 	/l = Logger
-echo    /f = Force Build (booleen)
+echo    /f = Force Build (booleen^)
 echo    /k = nuget.org API Key	
 )
 set tfs_user_name=""

@@ -22,19 +22,20 @@
 ::		 Change Framework path from v3.5 to v4.0
 ::  10/03/2010 - Pinal C. Patel
 ::       Updated to use MSBuild 4.0.
-::  08/25 - Gavin E. Holden
-::       Modified to call CommonBuild.bat
+::  08/25/2014 - Gavin E. Holden
+::       Modified to call CommonBuild.bat.
+::  01/13/2015 - Stephen C. Wills
+::       Modified to match BuildBetaNoHelp.bat.
 ::
 ::*******************************************************************************************************
 
-echo off
+@ECHO OFF
 
-setlocal enabledelayedexpansion
-set parameter_list=
-for %%y in (%*) do (
-	set parameter_list=!parameter_list! %%y
-)
-echo %parameter_list%
-call CommonBuild.bat  %parameter_list%
+SetLocal EnableDelayedExpansion
+
+ECHO BuildNightly: CALL CommonBuild.bat %*
+CALL CommonBuild.bat %*
+
+ECHO BuildNightly: C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe GridSolutionsFramework.buildproj /p:BuildDeployFolder=%deploy%;NugetApiKey=%api_key%;NugetPackagesFolder=%package%;TfsUserName=%tfs_user_name%;TfsPassword=%tfs_password%;ForceBuild=false /l:FileLogger,Microsoft.Build.Engine;logfile=%logger%
 C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe GridSolutionsFramework.buildproj /p:BuildDeployFolder=%deploy%;NugetApiKey=%api_key%;NugetPackagesFolder=%package%;TfsUserName=%tfs_user_name%;TfsPassword=%tfs_password%;ForceBuild=false /l:FileLogger,Microsoft.Build.Engine;logfile=%logger%  
 endlocal
