@@ -354,9 +354,9 @@
   
   <Target Name="BeforePopulateWorkspace" Condition="'$(ForceBuild)' != 'true'">
     <!-- Get version file for the most recent version. -->
-    <Message Condition="'$(ForceBuild)' != 'true'" Text="Checking for changes to project since last build..."/>
-    <Exec Condition="'$(ForceBuild)' != 'true' And '$(TfsUserName)' == ''" Command="%22$(TfsClient)%22 get %22$(VersionFile)%22 /force /recursive /noprompt"/>
-    <Exec Condition="'$(ForceBuild)' != 'true' And '$(TfsUserName)' != ''" Command="%22$(TfsClient)%22 get %22$(VersionFile)%22 /force /recursive /noprompt /login:$(TfsUserName),$(TfsPassword)"/>
+    <Message Text="Checking for changes to project since last build..."/>
+    <Exec Condition="'$(TfsUserName)' == ''" Command="%22$(TfsClient)%22 get %22$(VersionFile)%22 /force /recursive /noprompt"/>
+    <Exec Condition="'$(TfsUserName)' != ''" Command="%22$(TfsClient)%22 get %22$(VersionFile)%22 /force /recursive /noprompt /login:$(TfsUserName),$(TfsPassword)"/>
     
     <!-- Check for new changes since the last build. -->
     <ReadLinesFromFile File="$(VersionFile)">
