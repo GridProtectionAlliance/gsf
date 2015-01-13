@@ -351,24 +351,14 @@
   </Target>
 
   <Target Name="AfterCreateWorkspace"/>
-  <Target Name="BeforePopulateWorkspace"/>
-
-  <Target Name="CorePopulateWorkspace">
+  
+  <Target Name="BeforePopulateWorkspace" Condition="'$(ForceBuild)' != 'true'">
     <!-- Get version file for the most recent version. -->
     <Message Condition="'$(ForceBuild)' != 'true'" Text="Checking for changes to project since last build..."/>
     <Exec Condition="'$(ForceBuild)' != 'true' And '$(TfsUserName)' == ''" Command="%22$(TfsClient)%22 get %22$(VersionFile)%22 /force /recursive /noprompt"/>
     <Exec Condition="'$(ForceBuild)' != 'true' And '$(TfsUserName)' != ''" Command="%22$(TfsClient)%22 get %22$(VersionFile)%22 /force /recursive /noprompt /login:$(TfsUserName),$(TfsPassword)"/>
-    <CallTarget Targets="CheckForChanges"/>
-  
-    <!-- Get source code for the specified version. -->
-    <Message Condition="'$(ForceBuild)' == 'true'" Text="Getting source code..."/>
-    <Exec Condition="'$(ForceBuild)' == 'true' And '$(TfsUserName)' == ''" Command="%22$(TfsClient)%22 get %22$(LocalFolder)%22 /version:$(SourceVersion) /force /recursive /noprompt"/>
-    <Exec Condition="'$(ForceBuild)' == 'true' And '$(TfsUserName)' != ''" Command="%22$(TfsClient)%22 get %22$(LocalFolder)%22 /version:$(SourceVersion) /force /recursive /noprompt /login:$(TfsUserName),$(TfsPassword)"/>
-  </Target>
-
-  <Target Name="CheckForChanges" Condition="'$(ForceBuild)' != 'true'">
+    
     <!-- Check for new changes since the last build. -->
-    <Message Text="Checking for changes..."/>
     <ReadLinesFromFile File="$(VersionFile)">
       <Output TaskParameter="Lines" ItemName="VersionNumber"/>
     </ReadLinesFromFile>
@@ -380,6 +370,13 @@
       <SkipVersioning Condition="'$(ForceBuild)' != 'true'">true</SkipVersioning>
     </PropertyGroup>
     <Message Text="Build is skipped - No new changes." Condition="'$(ForceBuild)' != 'true'"/>
+  </Target>
+
+  <Target Name="CorePopulateWorkspace" Condition="'$(ForceBuild)' == 'true'">
+    <!-- Get source code for the specified version. -->
+    <Message Text="Getting source code..."/>
+    <Exec Condition="'$(TfsUserName)' == ''" Command="%22$(TfsClient)%22 get %22$(LocalFolder)%22 /version:$(SourceVersion) /force /recursive /noprompt"/>
+    <Exec Condition="'$(TfsUserName)' != ''" Command="%22$(TfsClient)%22 get %22$(LocalFolder)%22 /version:$(SourceVersion) /force /recursive /noprompt /login:$(TfsUserName),$(TfsPassword)"/>
   </Target>
 
   <Target Name="AfterPopulateWorkspace"/>
