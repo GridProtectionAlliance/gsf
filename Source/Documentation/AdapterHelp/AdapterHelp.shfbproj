@@ -14,7 +14,7 @@
     <Name>AdapterHelp</Name>
     <!-- SHFB properties -->
     <FrameworkVersion>.NET Framework 4.0</FrameworkVersion>
-    <OutputPath>..\..\..\Build\Help\</OutputPath>
+    <OutputPath>..\..\..\Build\Help\Adapters\</OutputPath>
     <HtmlHelpName>AdapterHelp</HtmlHelpName>
     <Language>en-US</Language>
     <TransformComponentArguments>
