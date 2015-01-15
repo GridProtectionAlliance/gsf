@@ -78,8 +78,7 @@
   <Import Project="MasterBuild.buildproj"/>
 
   <PropertyGroup>
-    <SkipNuGetPackages></SkipNuGetPackages>
-    <VersionSource>true</VersionSource>
+    <SkipNuGetPackages>false</SkipNuGetPackages>
   </PropertyGroup>
 
   <Target Name="BeforePrepareSettings">
@@ -109,7 +108,7 @@
   </Target>
 
   <Target Name="BeforeVersionSource">
-    <Message Text="VersionSource = --$(VersionSource)--"/>
+    <Message Text="SkipVersioning = --$(SkipVersioning)--"/>
     <Message Text="SkipNuGetPackages = --$(SkipNuGetPackages)--"/>
     <ItemGroup>
       <!--List of files to be versioned.-->
@@ -128,6 +127,7 @@
     <ItemGroup>
       <!--List of projects to build.-->
       <ProjectsToBuild Include="$(ProjectSolution)"/>
+      <ProjectsToBuild Include="$(LocalFolder)\Source\Documentation\**\*.shfbproj" Condition="'$(SkipHelpFiles)' != 'true'"/>
     </ItemGroup>
   </Target>
 
@@ -156,7 +156,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="AfterDeployBuild" Condition="'$(VersionSource)' == 'true' And '$(SkipNuGetPackages)' == ''">
+  <Target Name="AfterDeployBuild" Condition="'$(SkipVersioning)' != 'true' And '$(SkipNuGetPackages)' != 'true'">
     <!-- Delete existing NuGet packages. -->
     <Message Text="Deleting NuGet packages..."/>
     <ItemGroup>
