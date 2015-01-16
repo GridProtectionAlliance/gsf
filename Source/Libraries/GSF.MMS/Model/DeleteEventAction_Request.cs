@@ -13,7 +13,7 @@ using GSF.ASN1.Types;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Choice(Name = "DeleteEventAction_Request")]
     public class DeleteEventAction_Request : IASN1PreparedElement

@@ -12,7 +12,7 @@ using GSF.ASN1.Types;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "GetNameList_Request", IsSet = false)]
     public class GetNameList_Request : IASN1PreparedElement

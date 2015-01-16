@@ -11,7 +11,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1BoxedType(Name = "Conclude_ErrorPDU")]
     public class Conclude_ErrorPDU : IASN1PreparedElement

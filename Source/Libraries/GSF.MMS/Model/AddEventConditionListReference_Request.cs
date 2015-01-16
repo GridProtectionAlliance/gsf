@@ -12,7 +12,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "AddEventConditionListReference_Request", IsSet = false)]
     public class AddEventConditionListReference_Request : IASN1PreparedElement

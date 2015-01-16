@@ -11,7 +11,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "Initiate_ResponsePDU", IsSet = false)]
     public class Initiate_ResponsePDU : IASN1PreparedElement

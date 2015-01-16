@@ -12,7 +12,7 @@ using GSF.ASN1.Types;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Choice(Name = "TakeControl_Response")]
     public class TakeControl_Response : IASN1PreparedElement

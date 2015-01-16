@@ -12,7 +12,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "Journal_Entry_instance", IsSet = false)]
     public class Journal_Entry_instance : IASN1PreparedElement

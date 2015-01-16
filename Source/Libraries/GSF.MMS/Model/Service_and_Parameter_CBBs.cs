@@ -11,7 +11,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "Service_and_Parameter_CBBs", IsSet = false)]
     public class Service_and_Parameter_CBBs : IASN1PreparedElement

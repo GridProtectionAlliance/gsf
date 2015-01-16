@@ -11,7 +11,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "Stop_Request", IsSet = false)]
     public class Stop_Request : IASN1PreparedElement

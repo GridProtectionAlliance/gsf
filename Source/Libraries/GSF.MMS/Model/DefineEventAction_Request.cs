@@ -12,7 +12,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "DefineEventAction_Request", IsSet = false)]
     public class DefineEventAction_Request : IASN1PreparedElement

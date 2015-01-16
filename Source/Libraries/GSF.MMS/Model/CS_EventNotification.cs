@@ -12,7 +12,7 @@ using GSF.ASN1.Types;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1BoxedType(Name = "CS_EventNotification")]
     public class CS_EventNotification : IASN1PreparedElement

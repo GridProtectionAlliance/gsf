@@ -12,7 +12,7 @@ using GSF.ASN1.Types;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Choice(Name = "Unconfirmed_Detail")]
     public class Unconfirmed_Detail : IASN1PreparedElement

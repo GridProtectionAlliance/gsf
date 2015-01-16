@@ -11,7 +11,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "OperatorCommunicationParameters", IsSet = false)]
     public class OperatorCommunicationParameters : IASN1PreparedElement

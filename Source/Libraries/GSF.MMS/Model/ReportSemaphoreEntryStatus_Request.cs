@@ -11,7 +11,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "ReportSemaphoreEntryStatus_Request", IsSet = false)]
     public class ReportSemaphoreEntryStatus_Request : IASN1PreparedElement

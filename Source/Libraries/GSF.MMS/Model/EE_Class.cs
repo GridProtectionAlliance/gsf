@@ -11,7 +11,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1BoxedType(Name = "EE_Class")]
     public class EE_Class : IASN1PreparedElement

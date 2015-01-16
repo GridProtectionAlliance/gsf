@@ -1,55 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
 <topic id="1218d5aa-0d5c-42fe-a65e-d0a1b30bba41" revisionNumber="1">
-	<developerConceptualDocument xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink">
-		<introduction>
-			<para>This is a sample conceptual topic.  You can use this as a starting point for adding more conceptual
-content to your help project.</para>
-		</introduction>
+  <developerConceptualDocument xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <introduction>
+      <para>
+        The time-series data processing library of the Grid Solutions Framework is a core collection of classes used
+        to manage, process and respond to dynamic changes in fast moving streaming time-series data in real-time.
+        The library components allow applications to be architected as measurement routing systems. Any application can
+        host the library which will allow the system become a "measurement router" that can host a variety of pluggable
+        adapters. More information about the time-series adapters that are available as part of the Grid Solutions Framework
+        can be found in this documentation.
+      </para>        
+      <para>
+        The open Phasor Data Concentrator, Secure Information Exchange Gateway (SIEGate) and the open Historian are examples
+        of projects based on this time-series adapter library.
+      </para>
+      <para>
+        See the following for documentation for core components of the Grid Solutions Framework:
+        <externalLink>
+          <linkText>GSF Core Framework</linkText>
+          <linkUri>https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/</linkUri>
+        </externalLink>
+      </para>
+    </introduction>
 
-		<section>
-			<title>Getting Started</title>
-			<content>
-				<para>To get started, add a documentation source to the project (a Visual Studio solution, project, or
-assembly and XML comments file).  See the <legacyBold>Getting Started</legacyBold> topics in the Sandcastle Help
-File Builder's help file for more information.  The following default items are included in this project:</para>
+    <section>
+      <title>About</title>
+      <content>
+        <para>
+          The time-series adapter library can be molded to route measurements in any fashion, but the system defines three fundamental
+          measurement processing categorizations to kick start most any time-series processing architecture; these are the 
+          <legacyItalic>Input</legacyItalic>, <legacyItalic>Action</legacyItalic> and <legacyItalic>Output</legacyItalic> interface
+          adapters. These base level adapters are called Iaon Adapters (pronounced "yo-wan" if you want to speak it). Each adapter
+          type performs a basic time-series data operation:
+        </para>
 
-				<list class="bullet">
-					<listItem>
-						<para><localUri>ContentLayout.content</localUri> - Use the content layout file to manage the
-conceptual content in the project and define its layout in the table of contents.</para>
-					</listItem>
+        <list class="bullet">
+          <listItem>
+            <para>
+              <legacyBold>Input Adapters</legacyBold>: Typically "maps" measurements from a data source (i.e., assigns a 
+              timestamp and an ID to measured values parsed from a stream of data), new measurements are presented to the system
+              by calling "void OnNewMeasurements(ICollection&lt;IMeasurement&gt; measurements)" method.
+            </para>
+            <para>
+              Interface: IInputAdapter, base class: InputAdapterBase
+            </para>
+          </listItem>
 
-					<listItem>
-						<para>The <localUri>.\Media</localUri> folder - Place images in this folder that you will reference
-from conceptual content using <codeInline>medialLink</codeInline> or <codeInline>mediaLinkInline</codeInline>
-elements.  If you will not have any images in the file, you may remove this folder.</para>
-					</listItem>
+          <listItem>
+            <para>
+              <legacyBold>Action Adapters</legacyBold>: Typically filters and sorts measurements by time allowing adapter to take
+              action on a synchronized set of data provided in the "abstract void PublishFrame(IFrame frame, int index)" method which
+              adapter overrides (note that frame contains a collection of measurements all collected into the same time-indexed
+              frame bucket). If the action causes the creation of new measurements, new measurements are presented to the system by
+              calling "void OnNewMeasurements(ICollection&lt;IMeasurement&gt; measurements)” method.              
+            </para>
+            <para>
+              Interface: IActionAdapter, base class: ActionAdapterBase
+            </para>
+          </listItem>
 
-					<listItem>
-						<para>The <localUri>.\icons</localUri> folder - This contains a default logo for the help file.  You
-may replace it or remove it and the folder if not wanted.  If removed or if you change the file name, update
-the <ui>Transform Args</ui> project properties page by removing or changing the filename in the
-<codeInline>logoFile</codeInline> transform argument.  Note that unlike images referenced from conceptual topics,
-the logo file should have its <legacyBold>BuildAction</legacyBold> property set to <codeInline>Content</codeInline>.</para>
-					</listItem>
+          <listItem>
+            <para>
+              <legacyBold>Output Adapters</legacyBold>: Typically queues all measurements (no sorting) for processing. Queued
+              measurements are presented to the adapter for processing in the "void ProcessMeasurements(IMeasurement[] measurements)"
+              method – if measurements continue to build up in memory and are not processed in a timely manner they will be removed
+              from the queue as protective measure to prevent catastrophic out-of-memory failures. Since output adapters are used to
+              archive data this is often the slowest part in the system (disks tend to be a bottleneck), outputs can optionally be
+              set to filter based on a measurement's defined "Source" property – this allows multiple outputs to be targeted to several
+              different distributed outputs which allows large systems to stay ahead of the incoming data stream.
+            </para>
+            <para>
+              Interface: IOutputAdapter, base class: OutputAdapterBase
+            </para>
+          </listItem>
+        </list>
 
-					<listItem>
-						<para>The <localUri>.\Content</localUri> folder - Use this to store your conceptual topics.  You may
-name the files and organize them however you like.  One suggestion is to lay the files out on disk as you have
-them in the content layout file as shown in this project but the choice is yours.  Files can be added via the
-Solution Explorer or from within the content layout file editor.  Files must appear in the content layout file
-in order to be compiled into the help file.</para>
-					</listItem>
-				</list>
+        <para>
+          <markup>
+            <p style="text-align:center">
+              <img title="IaonAdapters.png" src="http://i3.codeplex.com/Download?ProjectName=timeseriesframework&amp;DownloadId=147719" alt="IaonAdapters.png" />
+            </p>
+          </markup>
+        </para>
+      </content>
+    </section>
 
-				<para>See the <legacyBold>Conceptual Content</legacyBold> topics in the Sandcastle Help File Builder's
-help file for more information.  See the <legacyBold> Sandcastle MAML Guide</legacyBold> for details on Microsoft
-Assistance Markup Language (MAML) which is used to create these topics.</para>
-			</content>
-		</section>
+    <relatedTopics>
 
-		<relatedTopics>
-			<link xlink:href="5129d757-97ef-468d-befd-a53d20459b8b" />
-		</relatedTopics>
-	</developerConceptualDocument>
+    </relatedTopics>
+  </developerConceptualDocument>
 </topic>

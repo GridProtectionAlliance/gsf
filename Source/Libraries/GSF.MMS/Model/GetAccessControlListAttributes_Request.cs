@@ -12,7 +12,7 @@ using GSF.ASN1.Types;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Choice(Name = "GetAccessControlListAttributes_Request")]
     public class GetAccessControlListAttributes_Request : IASN1PreparedElement

@@ -12,7 +12,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "InitiateUploadSequence_Response", IsSet = false)]
     public class InitiateUploadSequence_Response : IASN1PreparedElement

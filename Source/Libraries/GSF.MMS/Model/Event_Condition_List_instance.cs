@@ -13,7 +13,7 @@ using GSF.ASN1.Types;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "Event_Condition_List_instance", IsSet = false)]
     public class Event_Condition_List_instance : IASN1PreparedElement

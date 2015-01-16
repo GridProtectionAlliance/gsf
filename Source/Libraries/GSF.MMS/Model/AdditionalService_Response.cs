@@ -11,7 +11,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Choice(Name = "AdditionalService_Response")]
     public class AdditionalService_Response : IASN1PreparedElement

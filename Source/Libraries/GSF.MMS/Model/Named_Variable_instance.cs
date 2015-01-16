@@ -12,7 +12,7 @@ using GSF.ASN1.Types;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "Named_Variable_instance", IsSet = false)]
     public class Named_Variable_instance : IASN1PreparedElement

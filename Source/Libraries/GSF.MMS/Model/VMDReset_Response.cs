@@ -11,7 +11,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1BoxedType(Name = "VMDReset_Response")]
     public class VMDReset_Response : IASN1PreparedElement

@@ -12,7 +12,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1BoxedType(Name = "Integer16")]
     public class Integer16 : IASN1PreparedElement

@@ -5,7 +5,6 @@
 //
 
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using GSF.ASN1;
 using GSF.ASN1.Attributes;
 using GSF.ASN1.Coders;
@@ -13,7 +12,7 @@ using GSF.ASN1.Types;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "Access_Control_List_instance", IsSet = false)]
     public class Access_Control_List_instance : IASN1PreparedElement

@@ -13,7 +13,7 @@ using GSF.ASN1.Types;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "VMD_File", IsSet = false)]
     public class VMD_File : IASN1PreparedElement

@@ -11,7 +11,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "Confirmed_ErrorPDU", IsSet = false)]
     public class Confirmed_ErrorPDU : IASN1PreparedElement

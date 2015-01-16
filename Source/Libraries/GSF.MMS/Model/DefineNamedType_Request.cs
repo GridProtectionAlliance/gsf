@@ -11,7 +11,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "DefineNamedType_Request", IsSet = false)]
     public class DefineNamedType_Request : IASN1PreparedElement

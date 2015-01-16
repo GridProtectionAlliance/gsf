@@ -11,7 +11,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Null(Name = "StoreDomainContent-Response")]
     public class StoreDomainContent_Response : IASN1PreparedElement

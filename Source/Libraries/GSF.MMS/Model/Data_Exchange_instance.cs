@@ -13,7 +13,7 @@ using GSF.ASN1.Types;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "Data_Exchange_instance", IsSet = false)]
     public class Data_Exchange_instance : IASN1PreparedElement

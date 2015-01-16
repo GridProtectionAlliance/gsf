@@ -13,7 +13,7 @@ using GSF.ASN1.Types;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "ProgramInvocationManagementParameters", IsSet = false)]
     public class ProgramInvocationManagementParameters : IASN1PreparedElement

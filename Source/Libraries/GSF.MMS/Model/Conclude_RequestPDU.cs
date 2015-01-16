@@ -11,7 +11,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Null(Name = "Conclude-RequestPDU")]
     public class Conclude_RequestPDU : IASN1PreparedElement

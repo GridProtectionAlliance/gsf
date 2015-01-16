@@ -12,7 +12,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "GetCapabilityList_Response", IsSet = false)]
     public class GetCapabilityList_Response : IASN1PreparedElement

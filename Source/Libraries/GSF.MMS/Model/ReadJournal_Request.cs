@@ -12,7 +12,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "ReadJournal_Request", IsSet = false)]
     public class ReadJournal_Request : IASN1PreparedElement

@@ -13,7 +13,7 @@ using GSF.ASN1.Types;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "Unit_Control_instance", IsSet = false)]
     public class Unit_Control_instance : IASN1PreparedElement

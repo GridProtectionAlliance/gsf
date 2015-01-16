@@ -564,8 +564,6 @@ namespace PIAdapters
                 }
             }
 
-            Interlocked.Add(ref m_processedMeasurements, values.Count);
-
             // Queue up insert operations for parallel processing
             m_archiveQueue.AddRange(values);
         }
@@ -573,8 +571,11 @@ namespace PIAdapters
         private void ArchiveAFValues(AFValue[] values)
         {
             Ticks startTime = DateTime.UtcNow.Ticks;
+
             m_connection.Server.UpdateValues(values, UseCompression ? AFUpdateOption.Insert : AFUpdateOption.InsertNoCompression);
+
             Interlocked.Add(ref m_totalProcessingTime, DateTime.UtcNow.Ticks - startTime);
+            Interlocked.Add(ref m_processedMeasurements, values.Length);
         }
 
         private void EstablishPIPointMappings(MeasurementKey[] keys)

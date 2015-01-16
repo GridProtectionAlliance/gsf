@@ -11,7 +11,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1BoxedType(Name = "DefineEventConditionList_Error")]
     public class DefineEventConditionList_Error : IASN1PreparedElement

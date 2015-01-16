@@ -9,7 +9,7 @@ using GSF.ASN1.Attributes;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1Module(Name = "ISO_9506_MMS_1", IsImplicitTags = true)]
     public class ISO_9506_MMS_1
     {

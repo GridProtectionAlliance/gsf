@@ -11,7 +11,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "StopUnitControl_Error", IsSet = false)]
     public class StopUnitControl_Error : IASN1PreparedElement

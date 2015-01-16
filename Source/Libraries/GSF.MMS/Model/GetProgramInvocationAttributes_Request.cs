@@ -11,7 +11,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1BoxedType(Name = "GetProgramInvocationAttributes_Request")]
     public class GetProgramInvocationAttributes_Request : IASN1PreparedElement

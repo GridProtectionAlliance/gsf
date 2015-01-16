@@ -12,7 +12,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Choice(Name = "DeleteEventEnrollment_Request")]
     public class DeleteEventEnrollment_Request : IASN1PreparedElement

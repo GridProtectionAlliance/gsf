@@ -1,55 +1,97 @@
 <?xml version="1.0" encoding="utf-8"?>
 <topic id="48e4686b-c63d-405c-ad8e-04f95f6e87fe" revisionNumber="1">
-	<developerConceptualDocument xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink">
-		<introduction>
-			<para>This is a sample conceptual topic.  You can use this as a starting point for adding more conceptual
-content to your help project.</para>
-		</introduction>
+  <developerConceptualDocument xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <introduction>
+      <para>
+        The Grid Solutions Framework (GSF) is an open source collection of .NET code used by electric power utilities
+        and various open source projects. GSF contains a large variety of code useful for any .NET project consisting
+        of hundreds of class libraries that extend the functionality included in the .NET Framework. It makes many of
+        the more complex .NET features (e.g., sockets and encryption) easier to use and adds functions not included
+        in the .NET.
+      </para>
+      <para>
+        See the following for documentation for time-series adapters that are available as part of the Grid Solutions Framework:
+        <externalLink>
+          <linkText>Time-series Adapters</linkText>
+          <linkUri>https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/Adapters/</linkUri>
+        </externalLink>        
+      </para>
+      <para>
+        NuGet Download:
+        <externalLink>
+          <linkText>https://www.nuget.org/packages/GSF.Core/</linkText>
+          <linkUri>https://www.nuget.org/packages/GSF.Core/</linkUri>
+        </externalLink>
+      </para>
+      <para>
+        <externalLink>
+          <linkText>Product components in Grid Solutions Framework for developing time-series applications.</linkText>
+          <linkUri>http://download-codeplex.sec.s-msft.com/Download?ProjectName=gsf&amp;DownloadId=917968</linkUri>
+        </externalLink>
+        The open Phasor Data Concentrator (openPDC), Secure Information Exchange Gateway (SIEGate) and
+        open Historian (openHistorian) are examples of time-series applications that use the Grid Solutions Framework.
+        <markup>
+          <p style="text-align:center">
+            <img src="http://download-codeplex.sec.s-msft.com/Download?ProjectName=gsf&amp;DownloadId=696537" />
+          </p>
+        </markup>
+      </para>
+    </introduction>
 
-		<section>
-			<title>Getting Started</title>
-			<content>
-				<para>To get started, add a documentation source to the project (a Visual Studio solution, project, or
-assembly and XML comments file).  See the <legacyBold>Getting Started</legacyBold> topics in the Sandcastle Help
-File Builder's help file for more information.  The following default items are included in this project:</para>
+    <section>
+      <title>Getting Started</title>
+      <content>
+        <para>
+          Example Components:
+        </para>
 
-				<list class="bullet">
-					<listItem>
-						<para><localUri>ContentLayout.content</localUri> - Use the content layout file to manage the
-conceptual content in the project and define its layout in the table of contents.</para>
-					</listItem>
+        <list class="bullet">
+          <listItem>
+            <para>Adapter based time-series processing and data exchange library with WPF UI configuration screens for managing real-time data</para>
+          </listItem>
+          <listItem>
+            <para>Various utility protocol libraries, e.g., PQDIF, COMTRADE, IEEE C37.118, IEEE 1344, IEC 61850-90-5, UTK F-NET, SEL Fast Message, BPA PDCstream, Macrodyne, MMS</para>
+          </listItem>
+          <listItem>
+            <para>Configuration API for easy and secure access to application settings</para>
+          </listItem>
+          <listItem>
+            <para>High-speed binary parsing framework for implementing protocol parsing</para>
+          </listItem>
+          <listItem>
+            <para>Well vetted abstract asynchronous communications framework (IServer / IClient) for socket (TCP, UDP including Multicast all over IPv6 or IPv4), serial and file based communications</para>
+          </listItem>
+          <listItem>
+            <para>Security framework for implementing role-based security in ASP.NET, WCF, WPF, Windows Forms and Windows Services</para>
+          </listItem>
+          <listItem>
+            <para>Windows Service Template for quickly developing windows services with remoting capability</para>
+          </listItem>
+          <listItem>
+            <para>Base WCF service for creating WCF services that can be self-hosted in Windows Service, Console, WPF or Windows Forms application</para>
+          </listItem>
+          <listItem>
+            <para>WCF-based Message Bus that can be hosted inside ASP.NET, Windows Service, Console, WPF or Windows Forms application</para>
+          </listItem>
+        </list>
 
-					<listItem>
-						<para>The <localUri>.\Media</localUri> folder - Place images in this folder that you will reference
-from conceptual content using <codeInline>medialLink</codeInline> or <codeInline>mediaLinkInline</codeInline>
-elements.  If you will not have any images in the file, you may remove this folder.</para>
-					</listItem>
+        <para>
+          Library Overview:
+        </para>
+        <para>
+          <markup>
+            <p style="text-align:center">
+              <a title="Full size GSF poster (4 x 3 feet)" href="https://www.gridprotectionalliance.org/images/GSF%20Poster%20(4x3).png" target="_blank">
+                <img src="https://www.codeplex.com/Download?ProjectName=gsf&amp;DownloadId=890652" alt="GSF Poster (4x3)" width="461" height="346" />
+              </a>
+            </p>
+          </markup>
+        </para>
+      </content>
+    </section>
 
-					<listItem>
-						<para>The <localUri>.\icons</localUri> folder - This contains a default logo for the help file.  You
-may replace it or remove it and the folder if not wanted.  If removed or if you change the file name, update
-the <ui>Transform Args</ui> project properties page by removing or changing the filename in the
-<codeInline>logoFile</codeInline> transform argument.  Note that unlike images referenced from conceptual topics,
-the logo file should have its <legacyBold>BuildAction</legacyBold> property set to <codeInline>Content</codeInline>.</para>
-					</listItem>
-
-					<listItem>
-						<para>The <localUri>.\Content</localUri> folder - Use this to store your conceptual topics.  You may
-name the files and organize them however you like.  One suggestion is to lay the files out on disk as you have
-them in the content layout file as shown in this project but the choice is yours.  Files can be added via the
-Solution Explorer or from within the content layout file editor.  Files must appear in the content layout file
-in order to be compiled into the help file.</para>
-					</listItem>
-				</list>
-
-				<para>See the <legacyBold>Conceptual Content</legacyBold> topics in the Sandcastle Help File Builder's
-help file for more information.  See the <legacyBold> Sandcastle MAML Guide</legacyBold> for details on Microsoft
-Assistance Markup Language (MAML) which is used to create these topics.</para>
-			</content>
-		</section>
-
-		<relatedTopics>
-			<link xlink:href="45cfeac2-e4ee-4337-9703-6e7ce55ef8ca" />
-		</relatedTopics>
-	</developerConceptualDocument>
+    <relatedTopics>
+      
+    </relatedTopics>
+  </developerConceptualDocument>
 </topic>

@@ -11,7 +11,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "Variable_List_Item_instance", IsSet = false)]
     public class Variable_List_Item_instance : IASN1PreparedElement

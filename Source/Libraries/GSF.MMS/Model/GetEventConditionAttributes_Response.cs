@@ -12,7 +12,7 @@ using GSF.ASN1.Types;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "GetEventConditionAttributes_Response", IsSet = false)]
     public class GetEventConditionAttributes_Response : IASN1PreparedElement

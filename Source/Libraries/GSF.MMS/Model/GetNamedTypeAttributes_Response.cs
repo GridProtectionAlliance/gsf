@@ -11,7 +11,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "GetNamedTypeAttributes_Response", IsSet = false)]
     public class GetNamedTypeAttributes_Response : IASN1PreparedElement

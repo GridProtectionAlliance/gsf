@@ -11,7 +11,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
-    [CompilerGenerated]
+    
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "AlterProgramInvocationAttributes_Request", IsSet = false)]
     public class AlterProgramInvocationAttributes_Request : IASN1PreparedElement
