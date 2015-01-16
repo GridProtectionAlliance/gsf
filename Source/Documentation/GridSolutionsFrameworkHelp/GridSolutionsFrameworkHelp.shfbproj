@@ -54,6 +54,8 @@
       <DocumentationSource sourceFile="..\..\Libraries\GSF.PhasorProtocols\UI\WPF\GSF.PhasorProtocols.UI.WPF.csproj" />
       <DocumentationSource sourceFile="..\..\Libraries\GSF.TimeSeries\UI\GSF.TimeSeries.UI.csproj" />
       <DocumentationSource sourceFile="..\..\Libraries\GSF.TimeSeries\UI\WPF\GSF.TimeSeries.UI.WPF.csproj" />
+      <DocumentationSource sourceFile="..\..\Libraries\GSF.TimeSeries\Transport\UI\GSF.TimeSeries.Transport.UI.csproj" />
+      <DocumentationSource sourceFile="..\..\Libraries\GSF.TimeSeries\Transport\UI\WPF\GSF.TimeSeries.Transport.UI.WPF.csproj" />
     </DocumentationSources>
     <BuildAssemblerVerbosity>OnlyWarningsAndErrors</BuildAssemblerVerbosity>
     <HelpFileFormat>HtmlHelp1, Website</HelpFileFormat>
@@ -160,10 +162,10 @@
     <Content Include="icons\Help.png" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="icons\GSF64x64.png">
-      <ImageId>GSF64x64_med</ImageId>
-      <AlternateText>GSF 64x 64 med</AlternateText>
-    </Image>
+    <Content Include="icons\GSF64x64.png">
+      <ImageId>GSF64x64</ImageId>
+      <AlternateText>GSF</AlternateText>
+    </Content>
   </ItemGroup>
   <!-- Import the SHFB build targets -->
   <Import Project="$(SHFBROOT)\SandcastleHelpFileBuilder.targets" />

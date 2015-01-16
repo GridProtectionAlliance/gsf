@@ -39,12 +39,8 @@
     </introduction>
 
     <section>
-      <title>Getting Started</title>
+      <title>Example Components</title>
       <content>
-        <para>
-          Example Components:
-        </para>
-
         <list class="bullet">
           <listItem>
             <para>Adapter based time-series processing and data exchange library with WPF UI configuration screens for managing real-time data</para>
@@ -76,7 +72,7 @@
         </list>
 
         <para>
-          Library Overview:
+          Click Library Overview below for larger image:
         </para>
         <para>
           <markup>
