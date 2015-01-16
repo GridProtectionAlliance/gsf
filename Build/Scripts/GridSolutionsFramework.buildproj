@@ -144,6 +144,12 @@
   </Target>
 
   <Target Name="BeforeDeployBuild">
+    <!--Directories containing help files.-->
+    <PropertyGroup>
+      <HelpOutputFolder>$(BuildOutputFolder)\..\..\Help\</HelpOutputFolder>
+      <HelpDeployFolder>$(BuildDeployFolder)\..\Help\</HelpDeployFolder>
+    </PropertyGroup>
+      
     <ItemGroup>
       <!--List of binaries to archive.-->
       <BinariesToArchive Include="$(BuildOutputFolder)\**\*.*" Exclude="$(BuildOutputFolder)\**\*.msi"/>
@@ -153,12 +159,6 @@
 
       <!--Destinations of archive files (*.zip).-->
       <ArchiveDestinations Include="$(BuildDeployFolder)"/>
-      
-      <!--Directories containing help files.-->
-      <PropertyGroup>
-        <HelpOutputFolder>$(BuildOutputFolder)\..\..\Help\</HelpOutputFolder>
-        <HelpDeployFolder>$(BuildDeployFolder)\..\Help\</HelpDeployFolder>
-      </PropertyGroup>
     </ItemGroup>
   </Target>
 
