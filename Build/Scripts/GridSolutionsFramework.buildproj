@@ -153,10 +153,31 @@
 
       <!--Destinations of archive files (*.zip).-->
       <ArchiveDestinations Include="$(BuildDeployFolder)"/>
+      
+      <!--Directories containing help files.-->
+      <PropertyGroup>
+        <HelpOutputFolder>$(BuildOutputFolder)\..\..\Help\</HelpOutputFolder>
+        <HelpDeployFolder>$(BuildDeployFolder)\..\Help\</HelpDeployFolder>
+      </PropertyGroup>
     </ItemGroup>
   </Target>
 
-  <Target Name="AfterDeployBuild" Condition="'$(SkipVersioning)' != 'true' And '$(SkipNuGetPackages)' != 'true'">
+  <Target Name="AfterDeployBuild">
+    <CallTarget Targets="DeployHelpFiles"/>
+    <CallTarget Targets="PublishNuGetPackages"/>
+  </Target>
+  
+  <Target Name="DeployHelpFiles" Condition="'$(SkipHelpFiles)' != 'true' And '$(BuildOutputFolder)' != '' And '$(BuildDeployFolder)' != ''">
+    <!-- Copy help files to the deploy folder. -->
+    <Message Text="Deploying help files..."/>
+    <ItemGroup>
+      <HelpFilesToDeploy Include="$(HelpOutputFolder)\**\*.*"/>
+    </ItemGroup>
+    <MakeDir Directories="$(HelpDeployFolder)" Condition="!Exists('$(HelpDeployFolder)')"/>
+    <Copy SourceFiles="@(HelpFilesToDeploy)" DestinationFolder="$(HelpDeployFolder)\%(HelpFilesToDeploy.RecursiveDir)"/>
+  </Target>
+  
+  <Target Name="PublishNuGetPackages" Condition="'$(SkipVersioning)' != 'true' And '$(SkipNuGetPackages)' != 'true'">
     <!-- Delete existing NuGet packages. -->
     <Message Text="Deleting NuGet packages..."/>
     <ItemGroup>
