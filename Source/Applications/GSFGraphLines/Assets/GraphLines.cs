@@ -56,13 +56,12 @@ public class GraphLines : MonoBehaviour
         private const float ShrinkStopThreshold = 0.9F;
         private const float ShrinkDelay = 1.0F;
 
-        private List<DataLine> m_lines;
+        private readonly List<DataLine> m_lines;
 
         private float m_scaleMin = float.NaN;
         private float m_scaleMax = float.NaN;
-        private float m_graphScale;
-
-        private bool m_autoShrinkScale;
+        private readonly float m_graphScale;
+        private readonly bool m_autoShrinkScale;
         private float m_timeUntilShrink;
 
         public Scale(float graphScale, bool autoShrinkScale)
@@ -133,6 +132,7 @@ public class GraphLines : MonoBehaviour
         private void ScaleLinePoints()
         {
             float unscaledValue;
+            Vector3 point;
 
             foreach (DataLine line in m_lines)
             {
@@ -143,7 +143,9 @@ public class GraphLines : MonoBehaviour
                     if (float.IsNaN(unscaledValue))
                         unscaledValue = MidPoint;
 
-                    line.LinePoints[x].z = -ScaleValue(unscaledValue);
+                    point = line.LinePoints[x];
+                    point.z = -ScaleValue(unscaledValue);
+                    line.LinePoints[x] = point;
                 }
             }
         }
@@ -173,11 +175,10 @@ public class GraphLines : MonoBehaviour
     // Creates a dynamically scaled 3D line using Vectrosity asset to draw line for data
     private class DataLine : ILine
     {
-        private Guid m_id;
-        private int m_index;
-        private float[] m_unscaledData;
-        private Vector3[] m_linePoints;
-        private VectorLine m_vector;
+        private readonly Guid m_id;
+        private readonly int m_index;
+        private readonly float[] m_unscaledData;
+        private readonly VectorLine m_vector;
 
         public DataLine(GraphLines parent, Guid id, int index)
         {
@@ -185,17 +186,16 @@ public class GraphLines : MonoBehaviour
             m_index = index;
 
             m_unscaledData = new float[parent.m_pointsInLine];
-            m_linePoints = new Vector3[parent.m_pointsInLine];
 
-            m_vector = new VectorLine("DataLine" + index, m_linePoints, parent.m_lineMaterial, parent.m_lineWidth, LineType.Continuous);
+            m_vector = new VectorLine("DataLine" + index, new Vector3[parent.m_pointsInLine], parent.m_lineMaterial, parent.m_lineWidth, LineType.Continuous);
             m_vector.SetColor(parent.m_lineColors[index % parent.m_lineColors.Length]);
             m_vector.drawTransform = parent.m_target;
             m_vector.Draw3DAuto();
 
-            for (int x = 0; x < m_linePoints.Length; x++)
+            for (int x = 0; x < m_vector.points3.Count; x++)
             {
                 m_unscaledData[x] = float.NaN;
-                m_linePoints[x] = new Vector3(Mathf.Lerp(-5.0F, 5.0F, x / (float)m_linePoints.Length), -((index + 1) * parent.m_lineDepthOffset + 0.05F), 0.0F);
+                m_vector.points3[x] = new Vector3(Mathf.Lerp(-5.0F, 5.0F, x / (float)m_vector.points3.Count), -((index + 1) * parent.m_lineDepthOffset + 0.05F), 0.0F);
             }
         }
 
@@ -235,11 +235,11 @@ public class GraphLines : MonoBehaviour
             }
         }
 
-        public Vector3[] LinePoints
+        public List<Vector3> LinePoints
         {
             get
             {
-                return m_linePoints;
+                return m_vector.points3; // m_linePoints;
             }
         }
 
@@ -254,7 +254,7 @@ public class GraphLines : MonoBehaviour
             int x;
 
             // Move y position of all points to the left by one
-            for (x = 0; x < m_linePoints.Length - 1; x++)
+            for (x = 0; x < m_vector.points3.Count - 1; x++)
                 m_unscaledData[x] = m_unscaledData[x + 1];
 
             m_unscaledData[x] = newValue;
@@ -264,17 +264,16 @@ public class GraphLines : MonoBehaviour
     // Creates a fixed 3D line using Vectrosity asset to draw line for legend
     private class LegendLine : ILine
     {
-        private VectorLine m_vector;
-        private Guid m_id;
+        private readonly VectorLine m_vector;
+        private readonly Guid m_id;
 
         public LegendLine(GraphLines parent, Guid id, int index, Color color)
         {
-            Vector3[] linePoints = new Vector3[2];
             Transform transform = parent.m_legendMesh.transform;
             Vector3 position = transform.position;
 
             m_id = id;
-            m_vector = new VectorLine("LegendLine" + index, linePoints, parent.m_lineMaterial, parent.m_lineWidth, LineType.Discrete);
+            m_vector = new VectorLine("LegendLine" + index, new Vector3[2], parent.m_lineMaterial, parent.m_lineWidth, LineType.Discrete);
             m_vector.SetColor(color);
             m_vector.drawTransform = transform;
             m_vector.Draw3DAuto();
@@ -285,8 +284,8 @@ public class GraphLines : MonoBehaviour
             Vector3 point1 = new Vector3(-2.0F, -(spacing / 2.0F + index * spacing), -position.z);
             Vector3 point2 = new Vector3(-0.5F, point1.y, point1.z);
 
-            linePoints[0] = point1;
-            linePoints[1] = point2;
+            m_vector.points3[0] = point1;
+            m_vector.points3[1] = point2;
         }
 
         public Guid ID
@@ -307,7 +306,7 @@ public class GraphLines : MonoBehaviour
     // Exposes DataRow field value in a string.Format expression
     private class RowFormatProvider : IFormattable
     {
-        private DataRow m_row;
+        private readonly DataRow m_row;
 
         public RowFormatProvider(DataRow row)
         {
@@ -351,7 +350,7 @@ public class GraphLines : MonoBehaviour
     private string m_startTime = "*-5M";
     private string m_stopTime = "*";
     private int m_processInterval = 33;
-    private bool m_historicalSubscription = false;
+    private bool m_historicalSubscription;
     private Vector2 m_scrollPosition;
     private int m_guiSize = 1;
 
@@ -452,6 +451,9 @@ public class GraphLines : MonoBehaviour
         m_controlWindowTexture = new Texture2D(1, 1);
         m_controlWindowTexture.SetPixel(0, 0, new Color32(10, 25, 70, 255));
         m_controlWindowTexture.Apply();
+
+        VectorLine.SetCanvasCamera(Camera.main);
+        VectorLine.canvas3D.hideFlags = HideFlags.HideInHierarchy;
     }
 
     protected void Start()
@@ -687,12 +689,12 @@ public class GraphLines : MonoBehaviour
         m_subscriber.Start();
     }
 
-    private void subscriber_StatusMessage(object sender, GSF.EventArgs<string> e)
+    private void subscriber_StatusMessage(object sender, EventArgs<string> e)
     {
         UpdateStatus(e.Argument);
     }
 
-    private void subscriber_ProcessException(object sender, GSF.EventArgs<Exception> e)
+    private void subscriber_ProcessException(object sender, EventArgs<Exception> e)
     {
         UpdateStatus("ERROR: {0}", e.Argument.Message);
     }
