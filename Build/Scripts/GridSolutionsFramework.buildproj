@@ -104,6 +104,9 @@
       <NuGet>$(LocalFolder)\Build\Scripts\NuGet\NuGet.exe</NuGet>
       <NuGetPackagesFolder>$(NuGetPackagesFolder)</NuGetPackagesFolder>
       <BuildDeployFolder>$(BuildDeployFolder)</BuildDeployFolder>
+      
+      <SourceArchiveFileName Condition="'$(SourceArchiveFileName)' == ''">$(LocalFolder)\Source.zip</SourceArchiveFileName>
+      <SourceArchiveWorkingDirectory Condition="'$(SourceArchiveWorkingDirectory)' == ''">$(LocalFolder)\Archives\Source</SourceArchiveWorkingDirectory>
     </PropertyGroup>
   </Target>
 
@@ -151,6 +154,9 @@
     </PropertyGroup>
       
     <ItemGroup>
+      <!--List of source code files to archive.-->
+      <SourcesToArchive Include="$(LocalFolder)\**\*.*" Exclude="$(BuildOutputFolder)\**\*.*"/>
+    
       <!--List of binaries to archive.-->
       <BinariesToArchive Include="$(BuildOutputFolder)\**\*.*" Exclude="$(BuildOutputFolder)\**\*.msi"/>
 
@@ -163,8 +169,25 @@
   </Target>
 
   <Target Name="AfterDeployBuild">
+    <CallTarget Targets="DeploySource"/>
     <CallTarget Targets="DeployHelpFiles"/>
     <CallTarget Targets="PublishNuGetPackages"/>
+  </Target>
+  
+  <Target Name="DeploySource" Condition="'$(ForceBuild)' == 'true' And '$(BuildDeployFolder)' != ''">
+    <!-- Create archive of source tree. -->
+    <Message Text="Archiving source code..."/>
+    <Copy SourceFiles="@(SourcesToArchive)" DestinationFolder="$(SourceArchiveWorkingDirectory)\%(BinariesToArchive.RecursiveDir)"/>
+    <ItemGroup>
+      <SourcesToArchive Remove="@(SourcesToArchive)"/>
+      <SourcesToArchive Include="$(SourceArchiveWorkingDirectory)\**\*.*"/>
+    </ItemGroup>
+    <MSBuild.Community.Tasks.Zip Files="@(SourcesToArchive)" ZipFileName="$(SourceArchiveFileName)" WorkingDirectory="$(SourceArchiveWorkingDirectory)" Condition="'@(SourcesToArchive)' != ''"/>
+    <ItemGroup>
+      <SourceArchive Include="$(SourceArchiveFileName)"/>
+      <SourceArchiveDestination Include="$(BuildDeployFolder)\..\"/>
+    </ItemGroup>
+    <Copy SourceFiles="@(SourceArchive)" DestinationFolder="%(SourceArchiveDestination.FullPath)" ContinueOnError="true"/>
   </Target>
   
   <Target Name="DeployHelpFiles" Condition="'$(SkipHelpFiles)' != 'true' And '$(BuildOutputFolder)' != '' And '$(BuildDeployFolder)' != ''">
