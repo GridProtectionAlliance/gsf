@@ -155,7 +155,7 @@
       
     <ItemGroup>
       <!--List of source code files to archive.-->
-      <SourcesToArchive Include="$(LocalFolder)\**\*.*" Exclude="$(BuildOutputFolder)\**\*.*"/>
+      <SourcesToArchive Include="$(LocalFolder)\Source\**\*.*" Exclude="$(LocalFolder)\Source\**\obj\**\*.*"/>
     
       <!--List of binaries to archive.-->
       <BinariesToArchive Include="$(BuildOutputFolder)\**\*.*" Exclude="$(BuildOutputFolder)\**\*.msi"/>
@@ -177,7 +177,7 @@
   <Target Name="DeploySource" Condition="'$(ForceBuild)' == 'true' And '$(BuildDeployFolder)' != ''">
     <!-- Create archive of source tree. -->
     <Message Text="Archiving source code..."/>
-    <Copy SourceFiles="@(SourcesToArchive)" DestinationFolder="$(SourceArchiveWorkingDirectory)\%(BinariesToArchive.RecursiveDir)"/>
+    <Copy SourceFiles="@(SourcesToArchive)" DestinationFolder="$(SourceArchiveWorkingDirectory)\%(SourcesToArchive.RecursiveDir)"/>
     <ItemGroup>
       <SourcesToArchive Remove="@(SourcesToArchive)"/>
       <SourcesToArchive Include="$(SourceArchiveWorkingDirectory)\**\*.*"/>
