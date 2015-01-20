@@ -130,7 +130,8 @@
     <ItemGroup>
       <!--List of projects to build.-->
       <ProjectsToBuild Include="$(ProjectSolution)"/>
-      <ProjectsToBuild Include="$(LocalFolder)\Source\Documentation\**\*.shfbproj" Condition="'$(SkipHelpFiles)' != 'true'"/>
+      <ProjectsToBuild Include="$(LocalFolder)\Source\Documentation\GridSolutionsFrameworkHelp\GridSolutionsFrameworkHelp.shfbproj" Condition="'$(SkipHelpFiles)' != 'true'"/>
+      <ProjectsToBuild Include="$(LocalFolder)\Source\Documentation\AdapterHelp\AdapterHelp.shfbproj" Condition="'$(SkipHelpFiles)' != 'true'"/>
     </ItemGroup>
   </Target>
 
