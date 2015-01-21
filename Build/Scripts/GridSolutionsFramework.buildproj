@@ -130,8 +130,12 @@
     <ItemGroup>
       <!--List of projects to build.-->
       <ProjectsToBuild Include="$(ProjectSolution)"/>
-      <ProjectsToBuild Include="$(LocalFolder)\Source\Documentation\GridSolutionsFrameworkHelp\GridSolutionsFrameworkHelp.shfbproj" Condition="'$(SkipHelpFiles)' != 'true'"/>
-      <ProjectsToBuild Include="$(LocalFolder)\Source\Documentation\AdapterHelp\AdapterHelp.shfbproj" Condition="'$(SkipHelpFiles)' != 'true'"/>
+      <ProjectsToBuild Include="$(LocalFolder)\Source\Documentation\GridSolutionsFrameworkHelp\GridSolutionsFrameworkHelp.shfbproj" Condition="'$(SkipHelpFiles)' != 'true'">
+        <AdditionalProperties>BuildAssemblerVerbosity=OnlyErrors</AdditionalProperties>
+      </ProjectsToBuild>
+      <ProjectsToBuild Include="$(LocalFolder)\Source\Documentation\AdapterHelp\AdapterHelp.shfbproj" Condition="'$(SkipHelpFiles)' != 'true'">
+        <AdditionalProperties>BuildAssemblerVerbosity=OnlyErrors</AdditionalProperties>
+      </ProjectsToBuild>
     </ItemGroup>
   </Target>
 
@@ -183,7 +187,7 @@
       <SourcesToArchive Remove="@(SourcesToArchive)"/>
       <SourcesToArchive Include="$(SourceArchiveWorkingDirectory)\**\*.*"/>
     </ItemGroup>
-    <MSBuild.Community.Tasks.Zip Files="@(SourcesToArchive)" ZipFileName="$(SourceArchiveFileName)" WorkingDirectory="$(SourceArchiveWorkingDirectory)" Condition="'@(SourcesToArchive)' != ''"/>
+    <MSBuild.Community.Tasks.Zip Files="@(SourcesToArchive)" ZipFileName="$(SourceArchiveFileName)" WorkingDirectory="$(SourceArchiveWorkingDirectory)\.." Condition="'@(SourcesToArchive)' != ''"/>
     <ItemGroup>
       <SourceArchive Include="$(SourceArchiveFileName)"/>
       <SourceArchiveDestination Include="$(BuildDeployFolder)\..\"/>

@@ -50,12 +50,6 @@
       <DocumentationSource sourceFile="..\..\Libraries\GSF.TimeSeries\GSF.TimeSeries.csproj" />
       <DocumentationSource sourceFile="..\..\Libraries\GSF.Web\GSF.Web.csproj" />
       <DocumentationSource sourceFile="..\..\Libraries\GSF.Windows\GSF.Windows.csproj" />
-      <DocumentationSource sourceFile="..\..\Libraries\GSF.PhasorProtocols\UI\GSF.PhasorProtocols.UI.csproj" />
-      <DocumentationSource sourceFile="..\..\Libraries\GSF.PhasorProtocols\UI\WPF\GSF.PhasorProtocols.UI.WPF.csproj" />
-      <DocumentationSource sourceFile="..\..\Libraries\GSF.TimeSeries\UI\GSF.TimeSeries.UI.csproj" />
-      <DocumentationSource sourceFile="..\..\Libraries\GSF.TimeSeries\UI\WPF\GSF.TimeSeries.UI.WPF.csproj" />
-      <DocumentationSource sourceFile="..\..\Libraries\GSF.TimeSeries\Transport\UI\GSF.TimeSeries.Transport.UI.csproj" />
-      <DocumentationSource sourceFile="..\..\Libraries\GSF.TimeSeries\Transport\UI\WPF\GSF.TimeSeries.Transport.UI.WPF.csproj" />
     </DocumentationSources>
     <BuildAssemblerVerbosity>OnlyWarningsAndErrors</BuildAssemblerVerbosity>
     <HelpFileFormat>HtmlHelp1, Website</HelpFileFormat>

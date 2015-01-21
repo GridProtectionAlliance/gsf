@@ -410,7 +410,7 @@
   <Target Name="CoreBuildProjects">
     <!-- Build all of the specified projects. -->
     <Message Text="Compiling projects..."/>
-    <MSBuild Projects="@(ProjectsToBuild)" Properties="Configuration=$(BuildFlavor);Platform=$(BuildTarget);%(ProjectsToBuild.Properties)"/>
+    <MSBuild Projects="@(ProjectsToBuild)" Properties="Configuration=$(BuildFlavor);Platform=$(BuildTarget)"/>
 
     <!-- Build all of the specified installs. -->
     <Message Text="Compiling installs..."/>
