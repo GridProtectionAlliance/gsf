@@ -324,15 +324,13 @@ namespace GSF.Security
                 }
 
                 // Validate that needed security tables exist in the data set
-                const string securityContextError = "Failed to load a valid security context - missing table '{0}'. Cannot proceed with user authentication.";
-
                 if ((object)securityContext == null)
-                    throw new SecurityException(securityContextError);
+                    throw new SecurityException("Failed to load a valid security context. Cannot proceed with user authentication.");
 
                 foreach (string securityTable in s_securityTables)
                 {
                     if (!securityContext.Tables.Contains(securityTable))
-                        throw new SecurityException(string.Format(securityContextError, securityTable));
+                        throw new SecurityException(string.Format("Failed to load a valid security context - missing table '{0}'. Cannot proceed with user authentication.", securityTable));
                 }
 
                 if (securityContext.Tables[ApplicationRoleTable].Rows.Count == 0)
@@ -344,6 +342,10 @@ namespace GSF.Security
 
                 // Filter user account data for the current user
                 DataRow[] userAccounts = securityContext.Tables[UserAccountTable].Select(string.Format("Name = '{0}'", userSID));
+
+                // Also check if user was entered into the security context by name instead of SID
+                if (userAccounts.Length == 0)
+                    userAccounts = securityContext.Tables[UserAccountTable].Select(string.Format("Name = '{0}'", UserData.Username));
 
                 if (userAccounts.Length == 0)
                 {
@@ -413,6 +415,12 @@ namespace GSF.Security
                 // member of. Users can be explicitly assigned to any group, database or NT/AD group. This allows flexibility for
                 // local database users to be assigned to an NT/AD group (in the database) as well as NT/AD users to be a member of
                 // local database groups - allowing customizable role assignments to be fully managed via groups.
+
+                // Note: some groups, such as "Everyone" (S-1-1-0), will not be automatically returned as valid groups by the base
+                // LdapSecurityProvider (see UserInfo class for details). If the security provider needs to support such groups,
+                // these groups will need to be manually added to the groups list here before testing to see if the user is a
+                // member of these groups. Since these types of groups could be considered a security risk by some applications,
+                // it is recommended that if this type of functionality is enabled, that it can be disabled in the configuration.
 
                 if (userAccountID != Guid.Empty)
                 {

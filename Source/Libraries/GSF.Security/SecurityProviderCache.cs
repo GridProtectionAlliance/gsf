@@ -29,6 +29,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Security.Policy;
 using System.Security.Principal;
 using System.Threading;
 using System.Timers;
@@ -302,7 +303,15 @@ namespace GSF.Security
 
             if (!s_threadPolicySet)
             {
-                AppDomain.CurrentDomain.SetThreadPrincipal(Thread.CurrentPrincipal);
+                try
+                {
+                    AppDomain.CurrentDomain.SetThreadPrincipal(Thread.CurrentPrincipal);
+                }
+                catch (PolicyException)
+                {
+                    // Can't set default domain thread principal twice
+                }
+
                 s_threadPolicySet = true;
             }
 
