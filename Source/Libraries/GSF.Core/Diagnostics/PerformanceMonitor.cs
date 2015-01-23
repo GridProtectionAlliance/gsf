@@ -331,11 +331,24 @@ namespace GSF.Diagnostics
         {
             get
             {
+                try
+                {
+                    PerformanceCounter[] sources;
 #if MONO
-                return new PerformanceCounter(FindCounters("Bytes Sent/sec"));
+                    sources = FindCounters("Bytes Sent/sec");
 #else
-                return new PerformanceCounter(FindCounters("Datagrams Sent/sec"));
+                    sources = FindCounters("Datagrams Sent/sec");
 #endif
+                    if ((object)sources != null && sources.Length > 0)
+                        return new PerformanceCounter(sources);
+
+                    return null;
+                }
+                catch
+                {
+                    // Not failing if performance counter cannot be created
+                    return null;
+                }
             }
         }
 
@@ -347,11 +360,24 @@ namespace GSF.Diagnostics
         {
             get
             {
+                try
+                {
+                    PerformanceCounter[] sources;
 #if MONO
-                return new PerformanceCounter(FindCounters("Bytes Received/sec"));
+                    sources = FindCounters("Bytes Received/sec");
 #else
-                return new PerformanceCounter(FindCounters("Datagrams Received/sec"));
+                    sources = FindCounters("Datagrams Received/sec");
 #endif
+                    if ((object)sources != null && sources.Length > 0)
+                        return new PerformanceCounter(sources);
+
+                    return null;
+                }
+                catch
+                {
+                    // Not failing if performance counter cannot be created
+                    return null;
+                }
             }
         }
 

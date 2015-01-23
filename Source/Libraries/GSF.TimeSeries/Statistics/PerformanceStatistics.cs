@@ -212,7 +212,7 @@ namespace GSF.TimeSeries.Statistics
 
             if ((object)perfMon != null)
             {
-                if (perfMon.IPDataSendRate != null)
+                if ((object)perfMon.IPDataSendRate != null)
                     statistic = perfMon.IPDataSendRate.AverageValue;
             }
 

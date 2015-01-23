@@ -297,41 +297,8 @@ namespace GSF
             switch (Environment.OSVersion.Platform)
             {
                 case PlatformID.Unix:
-                    // Try some common ways to get product name on Linux
-                    try
-                    {
-                        StringBuilder content = new StringBuilder();
-
-                        foreach (string fileName in FilePath.GetFileList("/etc/*release*"))
-                        {
-                            using (StreamReader reader = new StreamReader(fileName))
-                            {
-                                content.AppendLine(reader.ReadToEnd());
-                            }
-                        }
-
-                        Dictionary<string, string> kvps = content.ToString().ParseKeyValuePairs('\n');
-                        if (kvps.TryGetValue("PRETTY_NAME", out s_osPlatformName) && !string.IsNullOrEmpty(s_osPlatformName))
-                            s_osPlatformName = s_osPlatformName.Replace("\"", "");
-                    }
-                    catch
-                    {
-                        try
-                        {
-                            string output = Command.Execute("lsb_release", "-a").StandardOutput;
-                            Dictionary<string, string> kvps = output.ParseKeyValuePairs('\n', ':');
-                            if (kvps.TryGetValue("Description", out s_osPlatformName) && !string.IsNullOrEmpty(s_osPlatformName))
-                                s_osPlatformName = s_osPlatformName.Trim();
-
-                        }
-                        catch
-                        {
-                            s_osPlatformName = null;
-                        }
-                    }
-                    break;
                 case PlatformID.MacOSX:
-                    // Call sw_vers on Mac to get product name and version information
+                    // Call sw_vers on Mac to get product name and version information, Linux could have this
                     try
                     {
                         string output = Command.Execute("sw_vers").StandardOutput;
@@ -342,6 +309,50 @@ namespace GSF
                     catch
                     {
                         s_osPlatformName = null;
+                    }
+
+                    if (string.IsNullOrEmpty(s_osPlatformName))
+                    {
+                        // Try some common ways to get product name on Linux, some might work on Mac
+                        try
+                        {
+                            StringBuilder content = new StringBuilder();
+
+                            // Get file names ordered by time
+                            string[] filenames =
+                                FilePath.GetFileList("/etc/*release*").
+                                Select(file => new FileInfo(file)).
+                                OrderBy(info => info.CreationTimeUtc.Ticks).
+                                Select(info => info.FullName).
+                                ToArray();
+
+                            foreach (string fileName in filenames)
+                            {
+                                using (StreamReader reader = new StreamReader(fileName))
+                                {
+                                    content.AppendLine(reader.ReadToEnd());
+                                }
+                            }
+
+                            Dictionary<string, string> kvps = content.ToString().ParseKeyValuePairs('\n');
+                            if (kvps.TryGetValue("PRETTY_NAME", out s_osPlatformName) && !string.IsNullOrEmpty(s_osPlatformName))
+                                s_osPlatformName = s_osPlatformName.Replace("\"", "");
+                        }
+                        catch
+                        {
+                            try
+                            {
+                                string output = Command.Execute("lsb_release", "-a").StandardOutput;
+                                Dictionary<string, string> kvps = output.ParseKeyValuePairs('\n', ':');
+                                if (kvps.TryGetValue("Description", out s_osPlatformName) && !string.IsNullOrEmpty(s_osPlatformName))
+                                    s_osPlatformName = s_osPlatformName.Trim();
+
+                            }
+                            catch
+                            {
+                                s_osPlatformName = null;
+                            }
+                        }
                     }
                     break;
                 default:

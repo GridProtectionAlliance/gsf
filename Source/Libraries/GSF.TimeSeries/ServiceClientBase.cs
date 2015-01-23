@@ -156,80 +156,103 @@ namespace GSF.TimeSeries
             {
                 string serviceName = arguments["OrderedArg1"];
 
-                // Attempt to access service controller for the specified Windows service
-                ServiceController serviceController = ServiceController.GetServices().SingleOrDefault(svc => string.Compare(svc.ServiceName, serviceName, StringComparison.OrdinalIgnoreCase) == 0);
-
-                if (serviceController != null)
+                if (Common.IsPosixEnvironment)
                 {
                     try
                     {
-                        if (serviceController.Status == ServiceControllerStatus.Running)
+                        Command.Execute("kill", string.Format("`cat /tmp/{0}.exe.lock`", serviceName));
+
+                        try
                         {
-                            WriteLine("Attempting to stop the {0} Windows service...", serviceName);
+                            Command.Execute("mono-service", string.Format("{0}.exe -RunAsService", serviceName));
+                        }
+                        catch (Exception ex)
+                        {
+                            WriteLine("Failed to restart the {0} daemon: {1}\r\n", serviceName, ex.Message);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteLine("Failed to stop the {0} daemon: {1}\r\n", serviceName, ex.Message);
+                    }
+                }
+                else
+                {
+                    // Attempt to access service controller for the specified Windows service
+                    ServiceController serviceController = ServiceController.GetServices().SingleOrDefault(svc => string.Compare(svc.ServiceName, serviceName, StringComparison.OrdinalIgnoreCase) == 0);
 
-                            serviceController.Stop();
+                    if (serviceController != null)
+                    {
+                        try
+                        {
+                            if (serviceController.Status == ServiceControllerStatus.Running)
+                            {
+                                WriteLine("Attempting to stop the {0} Windows service...", serviceName);
 
-                            // Can't wait forever for service to stop, so we time-out after 20 seconds
-                            serviceController.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(20.0D));
+                                serviceController.Stop();
 
-                            if (serviceController.Status == ServiceControllerStatus.Stopped)
-                                WriteLine("Successfully stopped the {0} Windows service.", serviceName);
-                            else
-                                WriteLine("Failed to stop the {0} Windows service after trying for 20 seconds...", serviceName);
+                                // Can't wait forever for service to stop, so we time-out after 20 seconds
+                                serviceController.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(20.0D));
 
-                            // Add an extra line for visual separation of service termination status
+                                if (serviceController.Status == ServiceControllerStatus.Stopped)
+                                    WriteLine("Successfully stopped the {0} Windows service.", serviceName);
+                                else
+                                    WriteLine("Failed to stop the {0} Windows service after trying for 20 seconds...", serviceName);
+
+                                // Add an extra line for visual separation of service termination status
+                                WriteLine("");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            WriteLine("Failed to stop the {0} Windows service: {1}\r\n", serviceName, ex.Message);
+                        }
+                    }
+
+                    // If the service failed to stop or it is installed as stand-alone debug application, we try to forcibly stop any remaining running instances
+                    try
+                    {
+                        Process[] instances = Process.GetProcessesByName(serviceName);
+
+                        if (instances.Length > 0)
+                        {
+                            int total = 0;
+                            WriteLine("Attempting to stop running instances of the {0}...", serviceName);
+
+                            // Terminate all instances of service running on the local computer
+                            foreach (Process process in instances)
+                            {
+                                process.Kill();
+                                total++;
+                            }
+
+                            if (total > 0)
+                                WriteLine("Stopped {0} {1} instance{2}.", total, serviceName, total > 1 ? "s" : "");
+
+                            // Add an extra line for visual separation of process termination status
                             WriteLine("");
                         }
                     }
                     catch (Exception ex)
                     {
-                        WriteLine("Failed to stop the {0} Windows service: {1}\r\n", serviceName, ex.Message);
+                        WriteLine("Failed to terminate running instances of the {0}: {1}\r\n", serviceName, ex.Message);
                     }
-                }
 
-                // If the service failed to stop or it is installed as stand-alone debug application, we try to forcibly stop any remaining running instances
-                try
-                {
-                    Process[] instances = Process.GetProcessesByName(serviceName);
-
-                    if (instances.Length > 0)
+                    // Attempt to restart Windows service...
+                    if (serviceController != null)
                     {
-                        int total = 0;
-                        WriteLine("Attempting to stop running instances of the {0}...", serviceName);
-
-                        // Terminate all instances of service running on the local computer
-                        foreach (Process process in instances)
+                        try
                         {
-                            process.Kill();
-                            total++;
+                            // Refresh state in case service process was forcibly stopped
+                            serviceController.Refresh();
+
+                            if (serviceController.Status != ServiceControllerStatus.Running)
+                                serviceController.Start();
                         }
-
-                        if (total > 0)
-                            WriteLine("Stopped {0} {1} instance{2}.", total, serviceName, total > 1 ? "s" : "");
-
-                        // Add an extra line for visual separation of process termination status
-                        WriteLine("");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    WriteLine("Failed to terminate running instances of the {0}: {1}\r\n", serviceName, ex.Message);
-                }
-
-                // Attempt to restart Windows service...
-                if (serviceController != null)
-                {
-                    try
-                    {
-                        // Refresh state in case service process was forcibly stopped
-                        serviceController.Refresh();
-
-                        if (serviceController.Status != ServiceControllerStatus.Running)
-                            serviceController.Start();
-                    }
-                    catch (Exception ex)
-                    {
-                        WriteLine("Failed to restart the {0} Windows service: {1}\r\n", serviceName, ex.Message);
+                        catch (Exception ex)
+                        {
+                            WriteLine("Failed to restart the {0} Windows service: {1}\r\n", serviceName, ex.Message);
+                        }
                     }
                 }
             }
