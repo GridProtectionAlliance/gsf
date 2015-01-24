@@ -298,7 +298,9 @@ namespace GSF.TimeSeries
                                 // Capture the password.
                                 Write("Enter password: ");
 
-                                while ((key = System.Console.ReadKey(true)).KeyChar != '\r')
+                                char endOfLine = Common.IsPosixEnvironment ? '\n' : '\r';
+
+                                while ((key = System.Console.ReadKey(true)).KeyChar != endOfLine)
                                 {
                                     switch (key.Key)
                                     {
@@ -321,14 +323,23 @@ namespace GSF.TimeSeries
                                 WriteLine();
                             }
 
-                            // Set network credentials used when attempting AD authentication
-                            userInfo = new UserInfo(username);
-                            userInfo.Initialize();
-                            SetNetworkCredential(new NetworkCredential(userInfo.LoginID, passwordBuilder.ToString()));
+                            // Attempt to set network credentials used when attempting AD authentication
+                            try
+                            {
+                                userInfo = new UserInfo(username);
+                                userInfo.Initialize();
+                                SetNetworkCredential(new NetworkCredential(userInfo.LoginID, passwordBuilder.ToString()));
 
-                            // Set the user name on the client helper.
-                            m_clientHelper.Username = username;
-                            m_clientHelper.Password = SecurityProviderUtility.EncryptPassword(passwordBuilder.ToString());
+                                // Set the user name on the client helper.
+                                m_clientHelper.Username = username;
+                                m_clientHelper.Password = SecurityProviderUtility.EncryptPassword(passwordBuilder.ToString());
+                            }
+                            catch
+                            {
+                                // Even if this fails, we can still pass along user credentials
+                                m_clientHelper.Username = username;
+                                m_clientHelper.Password = passwordBuilder.ToString();
+                            }
                         }
 
                         while (m_authenticated && m_clientHelper.Enabled && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
@@ -470,21 +481,21 @@ namespace GSF.TimeSeries
 
         private void SetNetworkCredential(NetworkCredential credential)
         {
-            TcpClient tcpClient;
             TlsClient tlsClient;
+            TcpClient tcpClient;
 
-            tcpClient = m_remotingClient as TcpClient;
+            tlsClient = m_remotingClient as TlsClient;
 
-            if ((object)tcpClient != null)
+            if ((object)tlsClient != null)
             {
-                tcpClient.NetworkCredential = credential;
+                tlsClient.NetworkCredential = credential;
             }
             else
             {
-                tlsClient = m_remotingClient as TlsClient;
+                tcpClient = m_remotingClient as TcpClient;
 
-                if ((object)tlsClient != null)
-                    tlsClient.NetworkCredential = credential;
+                if ((object)tcpClient != null)
+                    tcpClient.NetworkCredential = credential;
             }
         }
 

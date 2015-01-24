@@ -341,11 +341,7 @@ namespace GSF.Security
                 string userSID = UserInfo.UserNameToSID(UserData.Username);
 
                 // Filter user account data for the current user
-                DataRow[] userAccounts = securityContext.Tables[UserAccountTable].Select(string.Format("Name = '{0}'", userSID));
-
-                // Also check if user was entered into the security context by name instead of SID
-                if (userAccounts.Length == 0)
-                    userAccounts = securityContext.Tables[UserAccountTable].Select(string.Format("Name = '{0}'", UserData.Username));
+                DataRow[] userAccounts = securityContext.Tables[UserAccountTable].Select(string.Format("Name = '{0}' OR Name = '{1}' OR Name = 'user:{0}' OR Name = 'user:{1}'", userSID, UserData.Username));
 
                 if (userAccounts.Length == 0)
                 {
@@ -478,7 +474,7 @@ namespace GSF.Security
                         string groupSID = UserInfo.GroupNameToSID(groupName);
 
                         // Locate associated security group record
-                        DataRow[] securityGroups = securityContext.Tables[SecurityGroupTable].Select(string.Format("Name = '{0}'", groupSID));
+                        DataRow[] securityGroups = securityContext.Tables[SecurityGroupTable].Select(string.Format("Name = '{0}' OR Name = '{1}' OR Name = 'group:{0}' OR Name = 'group:{1}'", groupSID, groupName));
 
                         if (securityGroups.Length > 0)
                         {
@@ -575,7 +571,7 @@ namespace GSF.Security
                     {
                         // Authenticate against active directory (via LDAP base class) - in context of ADO security
                         // provisions, you are only authenticated if you are in a role!
-                        UserData.IsAuthenticated = (base.Authenticate(password));
+                        UserData.IsAuthenticated = base.Authenticate(password);
                     }
                     else
                     {

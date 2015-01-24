@@ -1933,7 +1933,7 @@ namespace GSF.ServiceProcess
             {
                 if ((object)clientPrincipal != null)
                     Thread.CurrentPrincipal = clientPrincipal;
-                else
+                else if ((object)client.ClientUser != null)
                     Thread.CurrentPrincipal = client.ClientUser;
 
                 return true;
@@ -1944,8 +1944,11 @@ namespace GSF.ServiceProcess
 
         private bool VerifySecurity(ClientInfo client)
         {
+            if ((object)client == null)
+                throw new ArgumentNullException("client");
+
             // Set current thread principal to remote client's user principal.
-            if (!(Thread.CurrentPrincipal is WindowsPrincipal))
+            if (!(Thread.CurrentPrincipal is WindowsPrincipal) && (object)client.ClientUser != null)
                 Thread.CurrentPrincipal = client.ClientUser;
 
             // Retrieve previously initialized security provider of the remote client's user.
@@ -1953,7 +1956,7 @@ namespace GSF.ServiceProcess
                 SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
 
             // Initialize security provider for the remote client's user from specified credentials.
-            if (!Thread.CurrentPrincipal.Identity.IsAuthenticated && !string.IsNullOrEmpty(client.ClientUserCredentials))
+            if ((!Thread.CurrentPrincipal.Identity.IsAuthenticated || (object)client.ClientUser == null) && !string.IsNullOrEmpty(client.ClientUserCredentials))
             {
                 string[] credentialParts = client.ClientUserCredentials.Split(':');
 
@@ -2198,7 +2201,7 @@ namespace GSF.ServiceProcess
                             }
                             else
                             {
-                                throw new SecurityException(string.Format("Failed to authenticate '{0}'", Thread.CurrentPrincipal.Identity.Name));
+                                throw new SecurityException(string.Format("Failed to authenticate '{0}' - thread principal identity was '{1}'", client.ClientName, Thread.CurrentPrincipal.Identity.Name));
                             }
                         }
                         else
@@ -2224,7 +2227,7 @@ namespace GSF.ServiceProcess
                             m_remotingServer.DisconnectOne(e.Argument1);
 
                         if ((object)client != null)
-                            UpdateStatus(UpdateType.Warning, "Remote client connection rejected - {0} from {1}.\r\n\r\n", client.ClientUser.Identity.Name, client.MachineName);
+                            UpdateStatus(UpdateType.Warning, "Remote client connection rejected - {0} [{1}] from {2}\r\n\r\n", client.ClientName, client.ClientUser.Identity.Name, client.MachineName);
                     }
                     catch (Exception ex2)
                     {

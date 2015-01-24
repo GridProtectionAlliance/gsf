@@ -677,17 +677,28 @@ namespace GSF.ServiceProcess
         private void RemotingClient_ConnectionException(object sender, EventArgs<Exception> e)
         {
             StringBuilder status = new StringBuilder();
-            TlsClient remotingClient;
+            TcpClient tcpClient;
+            TlsClient tlsClient;
 
             status.AppendFormat("Exception during connection attempt: {0}", e.Argument.Message);
             status.AppendLine();
             status.AppendLine();
             UpdateStatus(UpdateType.Alarm, status.ToString());
 
-            remotingClient = m_remotingClient as TlsClient;
 
-            if ((object)remotingClient != null)
-                remotingClient.NetworkCredential = null;
+            tlsClient = m_remotingClient as TlsClient;
+
+            if ((object)tlsClient != null)
+            {
+                tlsClient.NetworkCredential = null;
+            }
+            else
+            {
+                tcpClient = m_remotingClient as TcpClient;
+
+                if ((object)tcpClient != null)
+                    tcpClient.NetworkCredential = null;
+            }
         }
 
         private void RemotingClient_ConnectionTerminated(object sender, EventArgs e)
