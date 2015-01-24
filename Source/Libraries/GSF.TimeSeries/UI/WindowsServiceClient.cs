@@ -227,13 +227,19 @@ namespace GSF.TimeSeries.UI
             // See if the user has explicitly defined the set of enabled SslProtocols
             if (settings.TryGetValue("enabledSslProtocols", out setting) && Enum.TryParse(setting, true, out enabledSslProtocols))
                 remotingClient.EnabledSslProtocols = enabledSslProtocols;
+            else
+                remotingClient.EnabledSslProtocols = SslProtocols.Tls | SslProtocols.Tls12;
 
             // See if the user has explicitly defined valid policy errors or valid chain flags
             if (settings.TryGetValue("validPolicyErrors", out setting) && Enum.TryParse(setting, true, out validPolicyErrors))
                 certificateChecker.ValidPolicyErrors = validPolicyErrors;
+            else
+                certificateChecker.ValidPolicyErrors = SslPolicyErrors.RemoteCertificateChainErrors;
 
             if (settings.TryGetValue("validChainFlags", out setting) && Enum.TryParse(setting, true, out validChainFlags))
                 certificateChecker.ValidChainFlags = validChainFlags;
+            else
+                certificateChecker.ValidChainFlags = X509ChainStatusFlags.UntrustedRoot;
 
             // See if the user has explicitly defined whether to execute revocation checks on server certificates
             if (settings.TryGetValue("checkCertificateRevocation", out setting) && !string.IsNullOrWhiteSpace(setting))
