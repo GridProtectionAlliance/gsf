@@ -1633,7 +1633,8 @@ namespace GSF.Identity
             if (GetLocalUserID(ValidateAccountName(userName), out userID) == 0)
                 return "user:" + userID;
 
-            return userName.EnsureStart("user:");
+            // Do not prefix unknown accounts, could be an account name for another platform 
+            return userName;
         }
 
         public static string GroupNameToSID(string groupName)
@@ -1646,7 +1647,8 @@ namespace GSF.Identity
             if (GetLocalGroupID(ValidateAccountName(groupName), out groupID) == 0)
                 return "group:" + groupID;
 
-            return groupName.EnsureStart("group:");
+            // Do not prefix unknown accounts, could be an account name for another platform 
+            return groupName;
         }
 
         public static string SIDToAccountName(string sid)

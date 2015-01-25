@@ -42,7 +42,6 @@ using System.Linq;
 using System.Security;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Web.Security;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
@@ -340,8 +339,13 @@ namespace GSF.Security
                 Guid userAccountID = Guid.Empty;
                 string userSID = UserInfo.UserNameToSID(UserData.Username);
 
-                // Filter user account data for the current user
-                DataRow[] userAccounts = securityContext.Tables[UserAccountTable].Select(string.Format("Name = '{0}' OR Name = '{1}' OR Name = 'user:{0}' OR Name = 'user:{1}'", userSID, UserData.Username));
+                // Filter user account data for the current user.
+                DataRow[] userAccounts = securityContext.Tables[UserAccountTable].Select(string.Format("Name = '{0}'", userSID));
+
+                // If SID based lookup failed, try lookup by user name.  Note that is critical that SID based lookup
+                // take precedence over name based lookup for proper cross-platform authentication.
+                if (userAccounts.Length == 0)
+                    userAccounts = securityContext.Tables[UserAccountTable].Select(string.Format("Name = '{0}'", UserData.Username));
 
                 if (userAccounts.Length == 0)
                 {
@@ -426,24 +430,19 @@ namespace GSF.Security
                     foreach (DataRow row in userGroups)
                     {
                         // Locate associated security group record
-                        DataRow[] securityGroups = securityContext.Tables[SecurityGroupTable].Select(string.Format("ID = '{0}'", row["SecurityGroupID"]));
+                        DataRow securityGroup = securityContext.Tables[SecurityGroupTable].Rows.Find(row["SecurityGroupID"]);
 
-                        if (securityGroups.Length > 0)
-                        {
-                            DataRow securityGroup = securityGroups[0];
+                        if ((object)securityGroup == null || Convert.IsDBNull(securityGroup["Name"]))
+                            continue;
 
-                            if (!Convert.IsDBNull(securityGroup["Name"]))
-                            {
-                                // Just in case a database user was manually assigned to an NT/AD group, make sure to convert
-                                // the group name back to it's human readable name (from a SID). The UserInfo.SIDToAccountName
-                                // function will return the original parameter value if name cannot be converted - this allows
-                                // the function to work for database group names as well.
-                                string groupName = UserInfo.SIDToAccountName(Convert.ToString(securityGroup["Name"]));
+                        // Just in case a database user was manually assigned to an NT/AD group, make sure to convert
+                        // the group name back to it's human readable name (from a SID). The UserInfo.SIDToAccountName
+                        // function will return the original parameter value if name cannot be converted - this allows
+                        // the function to work for database group names as well.
+                        string groupName = UserInfo.SIDToAccountName(Convert.ToString(securityGroup["Name"]));
 
-                                if (!UserData.Groups.Contains(groupName, StringComparer.OrdinalIgnoreCase))
-                                    UserData.Groups.Add(groupName);
-                            }
-                        }
+                        if (!UserData.Groups.Contains(groupName, StringComparer.OrdinalIgnoreCase))
+                            UserData.Groups.Add(groupName);
                     }
                 }
 
@@ -474,7 +473,12 @@ namespace GSF.Security
                         string groupSID = UserInfo.GroupNameToSID(groupName);
 
                         // Locate associated security group record
-                        DataRow[] securityGroups = securityContext.Tables[SecurityGroupTable].Select(string.Format("Name = '{0}' OR Name = '{1}' OR Name = 'group:{0}' OR Name = 'group:{1}'", groupSID, groupName));
+                        DataRow[] securityGroups = securityContext.Tables[SecurityGroupTable].Select(string.Format("Name = '{0}'", groupSID));
+
+                        // If SID based lookup failed, try lookup by group name.  Note that is critical that SID based lookup
+                        // take precedence over name based lookup for proper cross-platform authentication.
+                        if (securityGroups.Length == 0)
+                            securityGroups = securityContext.Tables[SecurityGroupTable].Select(string.Format("Name = '{0}'", groupName));
 
                         if (securityGroups.Length > 0)
                         {
@@ -492,25 +496,20 @@ namespace GSF.Security
                 // Populate user roles collection - both ApplicationRoleUserAccount and ApplicationRoleSecurityGroup tables contain ApplicationRoleID column
                 foreach (DataRow role in userApplicationRoles)
                 {
-                    if (!Convert.IsDBNull(role["ApplicationRoleID"]))
-                    {
-                        // Locate associated application role record
-                        DataRow[] applicationRoles = securityContext.Tables[ApplicationRoleTable].Select(string.Format("ID = '{0}'", role["ApplicationRoleID"]));
+                    if (Convert.IsDBNull(role["ApplicationRoleID"]))
+                        continue;
 
-                        if (applicationRoles.Length > 0)
-                        {
-                            // Found application role by ID, add role name to user roles if not already defined
-                            DataRow applicationRole = applicationRoles[0];
+                    // Locate associated application role record
+                    DataRow applicationRole = securityContext.Tables[ApplicationRoleTable].Rows.Find(role["ApplicationRoleID"]);
 
-                            if (!Convert.IsDBNull(applicationRole["Name"]))
-                            {
-                                string roleName = Convert.ToString(applicationRole["Name"]);
+                    if ((object)applicationRole == null || Convert.IsDBNull(applicationRole["Name"]))
+                        continue;
 
-                                if (!UserData.Roles.Contains(roleName, StringComparer.OrdinalIgnoreCase))
-                                    UserData.Roles.Add(roleName);
-                            }
-                        }
-                    }
+                    // Found application role by ID, add role name to user roles if not already defined
+                    string roleName = Convert.ToString(applicationRole["Name"]);
+
+                    if (!string.IsNullOrEmpty(roleName) && !UserData.Roles.Contains(roleName, StringComparer.OrdinalIgnoreCase))
+                        UserData.Roles.Add(roleName);
                 }
 
                 // Cache last user roles
@@ -580,8 +579,7 @@ namespace GSF.Security
                         // Authenticate against backend data store
                         UserData.IsAuthenticated =
                             UserData.Password == password ||
-                            UserData.Password == SecurityProviderUtility.EncryptPassword(password) ||
-                            UserData.Password == EncryptBackwardsCompatible(password);
+                            UserData.Password == SecurityProviderUtility.EncryptPassword(password);
                     }
                 }
                 catch (Exception ex)
@@ -887,13 +885,6 @@ namespace GSF.Security
             {
                 LogError(ex.Source, ex.ToString());
             }
-        }
-
-        // This will be removed from future builds
-        private string EncryptBackwardsCompatible(string password)
-        {
-#pragma warning disable 612, 618
-            return FormsAuthentication.HashPasswordForStoringInConfigFile(@"O3990\P78f9E66b:a35_V©6M13©6~2&[" + password, "SHA1");
         }
 
         #endregion
