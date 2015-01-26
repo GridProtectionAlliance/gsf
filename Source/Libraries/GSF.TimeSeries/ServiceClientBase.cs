@@ -160,7 +160,11 @@ namespace GSF.TimeSeries
                 {
                     try
                     {
-                        Command.Execute("kill", string.Format("`cat /tmp/{0}.exe.lock`", serviceName));
+                        // Note that a "cat" command from process execute does not work, so we manually read lock file with PID
+                        using (StreamReader reader = new StreamReader(string.Format("/tmp/{0}.exe.lock", serviceName)))
+                        {
+                            Command.Execute("kill", reader.ReadLine());
+                        }
 
                         try
                         {
