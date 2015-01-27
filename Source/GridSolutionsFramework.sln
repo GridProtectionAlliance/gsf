@@ -384,9 +384,11 @@ Project("{7CF6DF6D-3B04-46F8-A40B-537D21BCA0B4}") = "AdapterHelp", "Documentatio
 		{26F261F8-8660-46D3-8090-BCDA9EFF5427} = {26F261F8-8660-46D3-8090-BCDA9EFF5427}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGenCert", "Tools\MonoGenCert\MonoGenCert.csproj", "{CD5A5BA7-BD0A-4C9F-9403-C58B5862EBE2}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 89
+		SccNumberOfProjects = 90
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs07
 		SccLocalPath0 = .
@@ -742,6 +744,10 @@ Global
 		SccProjectTopLevelParentUniqueName88 = GridSolutionsFramework.sln
 		SccProjectName88 = Documentation/AdapterHelp
 		SccLocalPath88 = Documentation\\AdapterHelp
+		SccProjectUniqueName89 = Tools\\MonoGenCert\\MonoGenCert.csproj
+		SccProjectTopLevelParentUniqueName89 = GridSolutionsFramework.sln
+		SccProjectName89 = Tools/MonoGenCert
+		SccLocalPath89 = Tools\\MonoGenCert
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = GSF.Core.Tests.vsmdi
@@ -1651,6 +1657,13 @@ Global
 		{92B7FA59-4E8C-4CA8-A2EC-EBCD25AA49D2}.Mono|x86.ActiveCfg = Release|Any CPU
 		{92B7FA59-4E8C-4CA8-A2EC-EBCD25AA49D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{92B7FA59-4E8C-4CA8-A2EC-EBCD25AA49D2}.Release|x86.ActiveCfg = Release|Any CPU
+		{CD5A5BA7-BD0A-4C9F-9403-C58B5862EBE2}.Debug|Any CPU.ActiveCfg = Mono|Any CPU
+		{CD5A5BA7-BD0A-4C9F-9403-C58B5862EBE2}.Debug|x86.ActiveCfg = Mono|Any CPU
+		{CD5A5BA7-BD0A-4C9F-9403-C58B5862EBE2}.Mono|Any CPU.ActiveCfg = Mono|Any CPU
+		{CD5A5BA7-BD0A-4C9F-9403-C58B5862EBE2}.Mono|Any CPU.Build.0 = Mono|Any CPU
+		{CD5A5BA7-BD0A-4C9F-9403-C58B5862EBE2}.Mono|x86.ActiveCfg = Mono|Any CPU
+		{CD5A5BA7-BD0A-4C9F-9403-C58B5862EBE2}.Release|Any CPU.ActiveCfg = Mono|Any CPU
+		{CD5A5BA7-BD0A-4C9F-9403-C58B5862EBE2}.Release|x86.ActiveCfg = Mono|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1694,6 +1707,7 @@ Global
 		{3029C3DC-E302-46E5-8126-8082B6EC1C1A} = {1B63485E-46C7-4185-B968-216A02396B88}
 		{35027A69-1A76-4312-B57B-F5826F0B87AF} = {1B63485E-46C7-4185-B968-216A02396B88}
 		{63AF9800-2CDE-41F7-9706-76EF0AE181CE} = {1B63485E-46C7-4185-B968-216A02396B88}
+		{CD5A5BA7-BD0A-4C9F-9403-C58B5862EBE2} = {1B63485E-46C7-4185-B968-216A02396B88}
 		{1C4124EF-0F9C-47B9-B1CB-B2CA39AB0E57} = {B15B1BEF-7631-43C0-B048-AD51692FD0C7}
 		{C00E78E4-081D-409A-ABB2-EA9FC50EE51E} = {B15B1BEF-7631-43C0-B048-AD51692FD0C7}
 		{216C7D13-CB2B-4E98-87D5-D8CA53FE97F7} = {1C4124EF-0F9C-47B9-B1CB-B2CA39AB0E57}
