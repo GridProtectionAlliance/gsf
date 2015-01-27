@@ -322,7 +322,7 @@ namespace GSF
                             string[] filenames =
                                 FilePath.GetFileList("/etc/*release*").
                                 Select(file => new FileInfo(file)).
-                                OrderBy(info => info.CreationTimeUtc.Ticks).
+                                OrderByDescending(info => info.CreationTimeUtc.Ticks).
                                 Select(info => info.FullName).
                                 ToArray();
 
