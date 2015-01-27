@@ -592,6 +592,7 @@ namespace GSF.Communication
                     if ((object)m_connectWaitHandle != null)
                         m_connectWaitHandle.Set();
 
+                    m_connectingCancellationToken.Cancelled = true;
                     m_tcpClient.Reset();
                 }
             }
