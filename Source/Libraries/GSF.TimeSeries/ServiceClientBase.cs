@@ -283,6 +283,7 @@ namespace GSF.TimeSeries
                         // but only when transport is secured
                         if (!m_authenticated && !string.IsNullOrEmpty(password) && m_clientHelper.RemotingClient is TlsClient)
                         {
+                            m_clientHelper.Disconnect();
                             m_clientHelper.Password = password;
                             m_clientHelper.Connect();
                         }

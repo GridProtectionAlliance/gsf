@@ -61,6 +61,23 @@ namespace GSF.Communication
             public ManualResetEventSlim WaitHandle;
         }
 
+        private class CancellationToken
+        {
+            private int m_cancelled;
+
+            public bool Cancelled
+            {
+                get
+                {
+                    return Interlocked.CompareExchange(ref m_cancelled, 0, 0) != 0;
+                }
+                set
+                {
+                    Interlocked.Exchange(ref m_cancelled, value ? 1 : 0);
+                }
+            }
+        }
+
         // Constants
 
         /// <summary>
@@ -126,8 +143,11 @@ namespace GSF.Communication
         private readonly ShortSynchronizedOperation m_dumpPayloadsOperation;
         private readonly object m_sendLock;
         private int m_maxSendQueueSize;
+
+        private CancellationToken m_connectingCancellationToken;
         private int m_sending;
         private int m_receiving;
+
         private bool m_disposed;
 
         private readonly EventHandler<SocketAsyncEventArgs> m_connectHandler;
@@ -147,7 +167,7 @@ namespace GSF.Communication
         /// <summary>
         /// Initializes a new instance of the <see cref="TlsClient"/> class.
         /// </summary>
-        /// <param name="connectString">Connect string of the <see cref="TcpClient"/>. See <see cref="DefaultConnectionString"/> for format.</param>
+        /// <param name="connectString">Connect string of the <see cref="TlsClient"/>. See <see cref="DefaultConnectionString"/> for format.</param>
         public TlsClient(string connectString)
             : base(TransportProtocol.Tcp, connectString)
         {
@@ -180,7 +200,7 @@ namespace GSF.Communication
         /// <summary>
         /// Initializes a new instance of the <see cref="TlsClient"/> class.
         /// </summary>
-        /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="TcpClient"/>.</param>
+        /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="TlsClient"/>.</param>
         public TlsClient(IContainer container)
             : this()
         {
@@ -317,7 +337,7 @@ namespace GSF.Communication
         }
 
         /// <summary>
-        /// Gets the <see cref="Socket"/> object for the <see cref="TcpClient"/>.
+        /// Gets the <see cref="Socket"/> object for the <see cref="TlsClient"/>.
         /// </summary>
         [Browsable(false)]
         public Socket Client
@@ -631,7 +651,7 @@ namespace GSF.Communication
         }
 
         /// <summary>
-        /// Saves <see cref="TcpClient"/> settings to the config file if the <see cref="ClientBase.PersistSettings"/> property is set to true.
+        /// Saves <see cref="TlsClient"/> settings to the config file if the <see cref="ClientBase.PersistSettings"/> property is set to true.
         /// </summary>
         public override void SaveSettings()
         {
@@ -657,7 +677,7 @@ namespace GSF.Communication
         }
 
         /// <summary>
-        /// Loads saved <see cref="TcpClient"/> settings from the config file if the <see cref="ClientBase.PersistSettings"/> property is set to true.
+        /// Loads saved <see cref="TlsClient"/> settings from the config file if the <see cref="ClientBase.PersistSettings"/> property is set to true.
         /// </summary>
         public override void LoadSettings()
         {
@@ -707,8 +727,13 @@ namespace GSF.Communication
                 {
                     base.Disconnect();
 
-                    if ((object)m_socket != null && m_socket.Connected)
-                        m_socket.Disconnect(false);
+                    if ((object)m_socket != null)
+                    {
+                        if (m_socket.Connected)
+                            m_socket.Disconnect(false);
+
+                        m_socket.Dispose();
+                    }
 
                     if ((object)m_connectWaitHandle != null)
                         m_connectWaitHandle.Set();
@@ -723,74 +748,39 @@ namespace GSF.Communication
         }
 
         /// <summary>
-        /// Connects the <see cref="TcpClient"/> to the server asynchronously.
+        /// Connects the <see cref="TlsClient"/> to the server asynchronously.
         /// </summary>
-        /// <exception cref="InvalidOperationException">Attempt is made to connect the <see cref="TcpClient"/> when it is not disconnected.</exception>
+        /// <exception cref="InvalidOperationException">Attempt is made to connect the <see cref="TlsClient"/> when it is not disconnected.</exception>
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         public override WaitHandle ConnectAsync()
         {
-            string integratedSecuritySetting;
-
-            try
+            if (CurrentState == ClientState.Disconnected && !m_disposed)
             {
-                if (CurrentState == ClientState.Disconnected && !m_disposed)
+                try
                 {
-                    try
-                    {
-                        // Client may still be attempting to receive data from a prior connection
-                        if (Interlocked.CompareExchange(ref m_receiving, 0, 0) != 0)
-                            throw new InvalidOperationException("Client is not yet fully disconnected");
+                    if ((object)m_connectWaitHandle == null)
+                        m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
 
-                        if (m_connectWaitHandle == null)
-                            m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
+                    OnConnectionAttempt();
+                    m_connectWaitHandle.Reset();
 
-                        OnConnectionAttempt();
-                        m_connectWaitHandle.Reset();
-
-                        // Overwrite config file if integrated security exists in connection string
-                        if (m_connectData.TryGetValue("integratedSecurity", out integratedSecuritySetting))
-                            m_integratedSecurity = integratedSecuritySetting.ParseBoolean();
-
-#if MONO
-                        // Force integrated security to be False under Mono since it's not supported
-                        m_integratedSecurity = false;
-#endif
-
-                        // Create client socket to establish presence
-                        Socket socket = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
-                        Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
-
-                        // Begin asynchronous connect operation and return wait handle for the asynchronous operation
-                        SocketAsyncEventArgs args = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
-
-                        args.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
-                        args.SocketFlags = SocketFlags.None;
-                        args.UserToken = socket;
-                        args.Completed += m_connectHandler;
-
-                        if (!socket.ConnectAsync(args))
-                            ThreadPool.QueueUserWorkItem(state => ProcessConnect((SocketAsyncEventArgs)state), args);
-                    }
-                    catch (Exception ex)
-                    {
-                        if ((object)m_connectWaitHandle != null)
-                            m_connectWaitHandle.Set();
-
-                        OnConnectionException(ex);
-                    }
+                    m_connectingCancellationToken = new CancellationToken();
+                    LoopUntilConnected(m_connectingCancellationToken);
                 }
+                catch (Exception ex)
+                {
+                    if ((object)m_connectWaitHandle != null)
+                        m_connectWaitHandle.Set();
 
-                return m_connectWaitHandle;
+                    OnConnectionException(ex);
+                }
             }
-            catch
-            {
-                Interlocked.Exchange(ref m_receiving, 0);
-                throw;
-            }
+
+            return m_connectWaitHandle;
         }
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="TcpClient"/> and optionally releases the managed resources.
+        /// Releases the unmanaged resources used by the <see cref="TlsClient"/> and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
@@ -942,6 +932,76 @@ namespace GSF.Communication
         }
 
         /// <summary>
+        /// Continues a 250-millisecond delayed asynchronous loop until the client has been connected.
+        /// </summary>
+        private void LoopUntilConnected(CancellationToken cancellationToken)
+        {
+            string integratedSecuritySetting;
+
+            try
+            {
+                // If the connect loop was cancelled,
+                // stop attempting to connect
+                if (cancellationToken.Cancelled)
+                    return;
+
+                // If the receive loop has yet to finish from the last connection attempt,
+                // call this method again on the thread pool after a 250 millisecond delay
+                if (Interlocked.CompareExchange(ref m_receiving, 0, 0) != 0)
+                {
+                    RegisteredWaitHandle[] registeredWaitHandle = new RegisteredWaitHandle[1];
+
+                    WaitOrTimerCallback callback = (state, timedOut) =>
+                    {
+                        if (timedOut)
+                            LoopUntilConnected(cancellationToken);
+
+                        while ((object)registeredWaitHandle[0] == null)
+                        {
+                        }
+
+                        registeredWaitHandle[0].Unregister(null);
+                    };
+
+                    registeredWaitHandle[0] = ThreadPool.RegisterWaitForSingleObject(m_connectWaitHandle, callback, null, 250, true);
+
+                    return;
+                }
+
+                // Overwrite config file if integrated security exists in connection string
+                if (m_connectData.TryGetValue("integratedSecurity", out integratedSecuritySetting))
+                    m_integratedSecurity = integratedSecuritySetting.ParseBoolean();
+
+#if MONO
+                // Force integrated security to be False under Mono since it's not supported
+                m_integratedSecurity = false;
+#endif
+
+                // Create client socket to establish presence
+                Socket socket = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
+                Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
+
+                // Begin asynchronous connect operation and return wait handle for the asynchronous operation
+                SocketAsyncEventArgs args = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
+
+                args.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
+                args.SocketFlags = SocketFlags.None;
+                args.UserToken = socket;
+                args.Completed += m_connectHandler;
+
+                if (!socket.ConnectAsync(args))
+                    ThreadPool.QueueUserWorkItem(state => ProcessConnect((SocketAsyncEventArgs)state), args);
+            }
+            catch (Exception ex)
+            {
+                if ((object)m_connectWaitHandle != null)
+                    m_connectWaitHandle.Set();
+
+                OnConnectionException(ex);
+            }
+        }
+
+        /// <summary>
         /// Callback method for asynchronous connect operation.
         /// </summary>
         private void ProcessConnect(SocketAsyncEventArgs args)
@@ -1048,6 +1108,7 @@ namespace GSF.Communication
                     // Server is unavailable, so keep retrying connection to the server.
                     try
                     {
+                        Interlocked.Exchange(ref m_receiving, 0);
                         ConnectAsync();
                     }
                     catch
@@ -1106,6 +1167,7 @@ namespace GSF.Communication
                     // Server is unavailable, so keep retrying connection to the server.
                     try
                     {
+                        Interlocked.Exchange(ref m_receiving, 0);
                         ConnectAsync();
                     }
                     catch
@@ -1432,6 +1494,9 @@ namespace GSF.Communication
             {
                 if (CurrentState != ClientState.Disconnected)
                 {
+                    if ((object)m_socket != null)
+                        m_socket.Dispose();
+
                     if ((object)m_connectWaitHandle != null)
                         m_connectWaitHandle.Set();
 

@@ -80,6 +80,9 @@ namespace GSF.Communication
             /// </summary>
             public void Dispose()
             {
+                if ((object)Socket != null)
+                    Socket.Dispose();
+
                 if ((object)SslStream != null)
                     SslStream.Dispose();
             }

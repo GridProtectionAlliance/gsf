@@ -487,7 +487,10 @@ namespace GSF.ServiceProcess
             if ((object)m_remotingClient == null)
                 throw new InvalidOperationException("RemotingClient property of ClientHelper component is not set");
 
-            m_attemptReconnection = true;
+            // Nothing to do if remoting client is already connected
+            if (m_remotingClient.Enabled)
+                return;
+
             m_authenticationComplete = false;
 
             // Wait for connection.
@@ -498,6 +501,9 @@ namespace GSF.ServiceProcess
                 // Wait for authentication.
                 Thread.Sleep(100);
             }
+
+            if (m_remotingClient.Enabled)
+                m_attemptReconnection = true;
         }
 
         /// <summary>
@@ -684,7 +690,6 @@ namespace GSF.ServiceProcess
             status.AppendLine();
             status.AppendLine();
             UpdateStatus(UpdateType.Alarm, status.ToString());
-
 
             tlsClient = m_remotingClient as TlsClient;
 

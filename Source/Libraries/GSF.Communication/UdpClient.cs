@@ -575,49 +575,41 @@ namespace GSF.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         public override WaitHandle ConnectAsync()
         {
-            try
+            // Client may still be attempting to receive data from a prior connection
+            if (Interlocked.CompareExchange(ref m_receiving, 0, 0) != 0)
+                throw new InvalidOperationException("Client is not yet fully disconnected");
+
+            m_connectionHandle = (ManualResetEvent)base.ConnectAsync();
+
+            m_udpClient = new TransportProvider<Socket>();
+            m_udpClient.SetReceiveBuffer(m_maxPacketSize);
+
+            // Create a server endpoint.
+            if (m_connectData.ContainsKey("server"))
             {
-                // Client may still be attempting to receive data from a prior connection
-                if (Interlocked.CompareExchange(ref m_receiving, 0, 0) != 0)
-                    throw new InvalidOperationException("Client is not yet fully disconnected");
+                // Client has a server endpoint specified.
+                Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
 
-                m_connectionHandle = (ManualResetEvent)base.ConnectAsync();
-
-                m_udpClient = new TransportProvider<Socket>();
-                m_udpClient.SetReceiveBuffer(m_maxPacketSize);
-
-                // Create a server endpoint.
-                if (m_connectData.ContainsKey("server"))
-                {
-                    // Client has a server endpoint specified.
-                    Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
-
-                    if (endpoint != Match.Empty)
-                        m_udpServer = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
-                    else
-                        throw new FormatException(string.Format("Server property in ConnectionString is invalid (Example: {0})", DefaultConnectionString));
-                }
+                if (endpoint != Match.Empty)
+                    m_udpServer = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
                 else
-                {
-                    // Create a random server endpoint since one is not specified.
-                    m_udpServer = Transport.CreateEndPoint(m_connectData["interface"], 0, m_ipStack);
-                }
+                    throw new FormatException(string.Format("Server property in ConnectionString is invalid (Example: {0})", DefaultConnectionString));
+            }
+            else
+            {
+                // Create a random server endpoint since one is not specified.
+                m_udpServer = Transport.CreateEndPoint(m_connectData["interface"], 0, m_ipStack);
+            }
 
 #if ThreadTracking
-                m_connectionThread = new ManagedThread(OpenPort);
-                m_connectionThread.Name = "GSF.Communication.UdpClient.OpenPort()";
+            m_connectionThread = new ManagedThread(OpenPort);
+            m_connectionThread.Name = "GSF.Communication.UdpClient.OpenPort()";
 #else
-                m_connectionThread = new Thread(OpenPort);
+            m_connectionThread = new Thread(OpenPort);
 #endif
-                m_connectionThread.Start();
+            m_connectionThread.Start();
 
-                return m_connectionHandle;
-            }
-            catch
-            {
-                Interlocked.Exchange(ref m_receiving, 0);
-                throw;
-            }
+            return m_connectionHandle;
         }
 
         /// <summary>
@@ -787,9 +779,17 @@ namespace GSF.Communication
                             m_receiveArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
                         }
 
-                        Interlocked.Exchange(ref m_receiving, 1);
-                        m_receiveArgs.Completed += m_receiveHandler;
-                        ReceivePayloadAsync();
+                        try
+                        {
+                            Interlocked.Exchange(ref m_receiving, 1);
+                            m_receiveArgs.Completed += m_receiveHandler;
+                            ReceivePayloadAsync();
+                        }
+                        catch
+                        {
+                            Interlocked.Exchange(ref m_receiving, 0);
+                            throw;
+                        }
                     }
                     break;
                 }
