@@ -270,12 +270,22 @@ namespace GSF.TimeSeries
                     m_remotingClient.ConnectionString = string.Format("Server={0}", arguments["server"]);
                 }
 
+                string password = null;
+
                 // Connect to service and send commands.
                 while (!string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
                 {
                     try
                     {
                         m_clientHelper.Connect();
+
+                        // If connection attempt failed with provided credentials, try once more with direct authentication
+                        // but only when transport is secured
+                        if (!m_authenticated && !string.IsNullOrEmpty(password) && m_clientHelper.RemotingClient is TlsClient)
+                        {
+                            m_clientHelper.Password = password;
+                            m_clientHelper.Connect();
+                        }
 
                         if (!m_authenticated)
                         {
@@ -328,22 +338,14 @@ namespace GSF.TimeSeries
                             }
 
                             // Attempt to set network credentials used when attempting AD authentication
-                            try
-                            {
-                                userInfo = new UserInfo(username);
-                                userInfo.Initialize();
-                                SetNetworkCredential(new NetworkCredential(userInfo.LoginID, passwordBuilder.ToString()));
+                            password = passwordBuilder.ToString();
+                            userInfo = new UserInfo(username);
+                            userInfo.Initialize();
+                            SetNetworkCredential(new NetworkCredential(userInfo.LoginID, password));
 
-                                // Set the user name on the client helper.
-                                m_clientHelper.Username = username;
-                                m_clientHelper.Password = SecurityProviderUtility.EncryptPassword(passwordBuilder.ToString());
-                            }
-                            catch
-                            {
-                                // Even if this fails, we can still pass along user credentials
-                                m_clientHelper.Username = username;
-                                m_clientHelper.Password = passwordBuilder.ToString();
-                            }
+                            // Set the user name on the client helper.
+                            m_clientHelper.Username = username;
+                            m_clientHelper.Password = SecurityProviderUtility.EncryptPassword(password);
                         }
 
                         while (m_authenticated && m_clientHelper.Enabled && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
