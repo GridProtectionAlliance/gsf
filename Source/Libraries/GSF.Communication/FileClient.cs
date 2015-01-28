@@ -783,6 +783,16 @@ namespace GSF.Communication
             ReadData();
         }
 
+        /// <summary>
+        /// Raises the <see cref="ClientBase.ConnectionException"/> event.
+        /// </summary>
+        /// <param name="ex">Exception to send to <see cref="ClientBase.ConnectionException"/> event.</param>
+        protected override void OnConnectionException(Exception ex)
+        {
+            base.Disconnect();
+            base.OnConnectionException(ex);
+        }
+
         #endregion
     }
 }

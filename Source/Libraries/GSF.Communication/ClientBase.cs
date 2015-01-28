@@ -885,8 +885,6 @@ namespace GSF.Communication
         {
             try
             {
-                m_currentState = ClientState.Disconnected;
-
                 if (!(ex is ObjectDisposedException) && ConnectionException != null)
                     ConnectionException(this, new EventArgs<Exception>(ex));
             }

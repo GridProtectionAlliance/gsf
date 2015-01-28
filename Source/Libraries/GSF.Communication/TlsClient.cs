@@ -40,7 +40,6 @@ using System.Threading;
 using GSF.Configuration;
 using GSF.IO;
 using GSF.Net.Security;
-using GSF.Threading;
 
 namespace GSF.Communication
 {
@@ -53,12 +52,101 @@ namespace GSF.Communication
         #region [ Members ]
 
         // Nested Types
+        private sealed class ConnectState : IDisposable
+        {
+            public Socket Socket;
+            public NetworkStream NetworkStream;
+            public SslStream SslStream;
+            public NegotiateStream NegotiateStream;
+
+            public SocketAsyncEventArgs ConnectArgs = new SocketAsyncEventArgs();
+            public int ConnectionAttempts;
+            
+            public CancellationToken Token = new CancellationToken();
+
+            public void Dispose()
+            {
+                Dispose(ConnectArgs);
+
+                Dispose(Socket);
+                Dispose(NetworkStream);
+                Dispose(SslStream);
+                Dispose(NegotiateStream);
+            }
+
+            private static void Dispose(IDisposable obj)
+            {
+                if ((object)obj != null)
+                    obj.Dispose();
+            }
+        }
+
+        private sealed class ReceiveState : IDisposable
+        {
+            public Socket Socket;
+            public NetworkStream NetworkStream;
+            public SslStream SslStream;
+
+            public byte[] Buffer;
+            public int Offset;
+            public int PayloadLength = -1;
+
+            public CancellationToken Token;
+
+            public void Dispose()
+            {
+                Dispose(Socket);
+                Dispose(NetworkStream);
+                Dispose(SslStream);
+            }
+
+            private static void Dispose(IDisposable obj)
+            {
+                if ((object)obj != null)
+                    obj.Dispose();
+            }
+        }
+
+        private sealed class SendState : IDisposable
+        {
+            public Socket Socket;
+            public NetworkStream NetworkStream;
+            public SslStream SslStream;
+
+            public ConcurrentQueue<TlsClientPayload> SendQueue = new ConcurrentQueue<TlsClientPayload>();
+            public TlsClientPayload Payload;
+            public int Sending;
+
+            public CancellationToken Token;
+
+            public void Dispose()
+            {
+                TlsClientPayload payload;
+
+                Dispose(Socket);
+                Dispose(NetworkStream);
+                Dispose(SslStream);
+
+                while (SendQueue.TryDequeue(out payload))
+                {
+                    payload.WaitHandle.Set();
+                    payload.WaitHandle.Dispose();
+                }
+            }
+
+            private static void Dispose(IDisposable obj)
+            {
+                if ((object)obj != null)
+                    obj.Dispose();
+            }
+        }
+
         private class TlsClientPayload
         {
             public byte[] Data;
             public int Offset;
             public int Length;
-            public ManualResetEventSlim WaitHandle;
+            public ManualResetEvent WaitHandle;
         }
 
         private class CancellationToken
@@ -71,10 +159,11 @@ namespace GSF.Communication
                 {
                     return Interlocked.CompareExchange(ref m_cancelled, 0, 0) != 0;
                 }
-                set
-                {
-                    Interlocked.Exchange(ref m_cancelled, value ? 1 : 0);
-                }
+            }
+
+            public bool Cancel()
+            {
+                return Interlocked.Exchange(ref m_cancelled, 1) != 0;
             }
         }
 
@@ -133,24 +222,16 @@ namespace GSF.Communication
         private bool m_ignoreInvalidCredentials;
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
-        private int m_connectionAttempts;
-        private Socket m_socket;
-        private readonly TransportProvider<SslStream> m_sslClient;
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectWaitHandle;
         private NetworkCredential m_networkCredential;
-        private readonly ConcurrentQueue<TlsClientPayload> m_sendQueue;
-        private readonly ShortSynchronizedOperation m_dumpPayloadsOperation;
-        private readonly object m_sendLock;
         private int m_maxSendQueueSize;
 
-        private CancellationToken m_connectingCancellationToken;
-        private int m_sending;
-        private int m_receiving;
+        private ConnectState m_connectState;
+        private ReceiveState m_receiveState;
+        private SendState m_sendState;
 
         private bool m_disposed;
-
-        private readonly EventHandler<SocketAsyncEventArgs> m_connectHandler;
 
         #endregion
 
@@ -189,12 +270,6 @@ namespace GSF.Communication
             m_ignoreInvalidCredentials = DefaultIgnoreInvalidCredentials;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_maxSendQueueSize = DefaultMaxSendQueueSize;
-            m_sslClient = new TransportProvider<SslStream>();
-            m_sendQueue = new ConcurrentQueue<TlsClientPayload>();
-            m_dumpPayloadsOperation = new ShortSynchronizedOperation(DumpPayloads, OnSendDataException);
-            m_sendLock = new object();
-
-            m_connectHandler = (sender, args) => ProcessConnect(args);
         }
 
         /// <summary>
@@ -344,7 +419,12 @@ namespace GSF.Communication
         {
             get
             {
-                return m_socket;
+                ConnectState connectState = m_connectState;
+
+                if ((object)connectState != null)
+                    return connectState.Socket;
+
+                return null;
             }
         }
 
@@ -618,39 +698,6 @@ namespace GSF.Communication
         #region [ Methods ]
 
         /// <summary>
-        /// When overridden in a derived class, reads a number of bytes from the current received data buffer and writes those bytes into a byte array at the specified offset.
-        /// </summary>
-        /// <param name="buffer">Destination buffer used to hold copied bytes.</param>
-        /// <param name="startIndex">0-based starting index into destination <paramref name="buffer"/> to begin writing data.</param>
-        /// <param name="length">The number of bytes to read from current received data buffer and write into <paramref name="buffer"/>.</param>
-        /// <returns>The number of bytes read.</returns>
-        /// <remarks>
-        /// This function should only be called from within the <see cref="ClientBase.ReceiveData"/> event handler. Calling this method outside this event
-        /// will have unexpected results.
-        /// </remarks>
-        public override int Read(byte[] buffer, int startIndex, int length)
-        {
-            buffer.ValidateParameters(startIndex, length);
-
-            if ((object)m_sslClient.ReceiveBuffer != null)
-            {
-                int sourceLength = m_sslClient.BytesReceived - ReadIndex;
-                int readBytes = length > sourceLength ? sourceLength : length;
-                Buffer.BlockCopy(m_sslClient.ReceiveBuffer, ReadIndex, buffer, startIndex, readBytes);
-
-                // Update read index for next call
-                ReadIndex += readBytes;
-
-                if (ReadIndex >= m_sslClient.BytesReceived)
-                    ReadIndex = 0;
-
-                return readBytes;
-            }
-
-            throw new InvalidOperationException("No received data buffer has been defined to read.");
-        }
-
-        /// <summary>
         /// Saves <see cref="TlsClient"/> settings to the config file if the <see cref="ClientBase.PersistSettings"/> property is set to true.
         /// </summary>
         public override void SaveSettings()
@@ -717,67 +764,960 @@ namespace GSF.Communication
         }
 
         /// <summary>
-        /// When overridden in a derived class, disconnects client from the server synchronously.
-        /// </summary>
-        public override void Disconnect()
-        {
-            try
-            {
-                if (CurrentState != ClientState.Disconnected)
-                {
-                    base.Disconnect();
-
-                    if ((object)m_socket != null)
-                    {
-                        if (m_socket.Connected)
-                            m_socket.Disconnect(false);
-
-                        m_socket.Dispose();
-                    }
-
-                    if ((object)m_connectWaitHandle != null)
-                        m_connectWaitHandle.Set();
-
-                    m_connectingCancellationToken.Cancelled = true;
-                    m_sslClient.Reset();
-                }
-            }
-            catch (Exception ex)
-            {
-                OnSendDataException(new InvalidOperationException(string.Format("Disconnect exception: {0}", ex.Message), ex));
-            }
-        }
-
-        /// <summary>
         /// Connects the <see cref="TlsClient"/> to the server asynchronously.
         /// </summary>
         /// <exception cref="InvalidOperationException">Attempt is made to connect the <see cref="TlsClient"/> when it is not disconnected.</exception>
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         public override WaitHandle ConnectAsync()
         {
+            ConnectState connectState = null;
+
+            Match endpoint;
+            string integratedSecuritySetting;
+
+            // If the client is already connecting or connected, there is nothing to do
             if (CurrentState == ClientState.Disconnected && !m_disposed)
             {
                 try
                 {
+                    // If we do not already have a wait handle to use
+                    // for connections, get one from the base class
                     if ((object)m_connectWaitHandle == null)
                         m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
 
+                    // Create state object for the asynchronous connection loop
+                    connectState = new ConnectState();
+
+                    // Store connectState in m_connectState so that calls to Disconnect
+                    // and Dispose can dispose resources and cancel asynchronous loops
+                    m_connectState = connectState;
+
+                    // Prepare for connection attempt
                     OnConnectionAttempt();
                     m_connectWaitHandle.Reset();
 
-                    m_connectingCancellationToken = new CancellationToken();
-                    LoopUntilConnected(m_connectingCancellationToken);
+                    // Overwrite setting from the config file if integrated security exists in connection string
+                    if (m_connectData.TryGetValue("integratedSecurity", out integratedSecuritySetting))
+                        m_integratedSecurity = integratedSecuritySetting.ParseBoolean();
+
+#if MONO
+                    // Force integrated security to be False under Mono since it's not supported
+                    m_integratedSecurity = false;
+#endif
+
+                    // Initialize state object for the asynchronous connection loop
+                    endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
+                    connectState.ConnectArgs.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
+                    connectState.ConnectArgs.SocketFlags = SocketFlags.None;
+                    connectState.ConnectArgs.UserToken = connectState;
+                    connectState.ConnectArgs.Completed += (sender, args) => ProcessConnect((ConnectState)args.UserToken);
+
+                    // Create client socket
+                    connectState.Socket = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
+
+                    // Initiate the asynchronous connection loop
+                    ConnectAsync(connectState);
                 }
                 catch (Exception ex)
                 {
+                    // Log exception during connection attempt
+                    OnConnectionException(ex);
+
+                    // Terminate the connection
+                    if ((object)connectState != null)
+                        TerminateConnection(connectState.Token);
+
+                    // Ensure that the wait handle is set so that operations waiting
+                    // for completion of the asynchronous connection loop can continue
                     if ((object)m_connectWaitHandle != null)
                         m_connectWaitHandle.Set();
-
-                    OnConnectionException(ex);
+                }
+                finally
+                {
+                    // If the operation was cancelled during execution,
+                    // make sure to dispose of erroneously allocated resources
+                    if ((object)connectState != null && connectState.Token.Cancelled)
+                        connectState.Dispose();
                 }
             }
 
+            // Return the wait handle that signals completion
+            // of the asynchronous connection loop
             return m_connectWaitHandle;
+        }
+
+        /// <summary>
+        /// Initiates an asynchronous connection attempt.
+        /// </summary>
+        private void ConnectAsync(ConnectState connectState)
+        {
+            if (!connectState.Token.Cancelled)
+            {
+                if (!connectState.Socket.ConnectAsync(connectState.ConnectArgs))
+                    ThreadPool.QueueUserWorkItem(state => ProcessConnect(connectState));
+            }
+        }
+
+        private void ProcessConnect(ConnectState connectState)
+        {
+            Match endpoint;
+
+            try
+            {
+                // Quit if this connection loop has been cancelled
+                if (connectState.Token.Cancelled)
+                    return;
+
+                // Increment the number of connection attempts that
+                // have occurred in this asynchronous connection loop
+                connectState.ConnectionAttempts++;
+
+                // Check the SocketAsyncEventArgs for errors during the asynchronous connection attempt
+                if (connectState.ConnectArgs.SocketError != SocketError.Success)
+                    throw new SocketException((int)connectState.ConnectArgs.SocketError);
+
+                // Set the size of the buffer used by the socket to store incoming data from the server
+                connectState.Socket.ReceiveBufferSize = ReceiveBufferSize;
+
+                // Create the SslStream object used to perform
+                // send and receive operations on the socket
+                connectState.NetworkStream = new NetworkStream(connectState.Socket, true);
+                connectState.SslStream = new SslStream(connectState.NetworkStream, false, m_remoteCertificateValidationCallback ?? CertificateChecker.ValidateRemoteCertificate, m_localCertificateSelectionCallback);
+
+                // Load trusted certificates from
+                // the trusted certificates directory
+                LoadTrustedCertificates();
+
+                // Begin authentication with the TlsServer
+                endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
+
+                if (!connectState.Token.Cancelled)
+                    connectState.SslStream.BeginAuthenticateAsClient(endpoint.Groups["host"].Value, m_clientCertificates, m_enabledSslProtocols, m_checkCertificateRevocation, ProcessTlsAuthentication, connectState);
+            }
+            catch (SocketException ex)
+            {
+                // Log exception during connection attempt
+                OnConnectionException(ex);
+
+                // If the connection is refused by the server,
+                // keep trying until we reach our maximum connection attempts
+                if (ex.SocketErrorCode == SocketError.ConnectionRefused &&
+                    (MaxConnectionAttempts == -1 || connectState.ConnectionAttempts < MaxConnectionAttempts))
+                {
+                    try
+                    {
+                        ConnectAsync(connectState);
+                    }
+                    catch
+                    {
+                        TerminateConnection(connectState.Token);
+                    }
+                }
+                else
+                {
+                    // For any other socket exception,
+                    // terminate the connection
+                    TerminateConnection(connectState.Token);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log exception during connection attempt
+                OnConnectionException(ex);
+
+                // Terminate the connection
+                TerminateConnection(connectState.Token);
+            }
+            finally
+            {
+                // If the operation was cancelled during execution,
+                // make sure to dispose of erroneously allocated resources
+                if (connectState.Token.Cancelled)
+                    connectState.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Callback method for asynchronous authenticate operation.
+        /// </summary>
+        private void ProcessTlsAuthentication(IAsyncResult asyncResult)
+        {
+            ConnectState connectState = null;
+            ReceiveState receiveState = null;
+            SendState sendState = null;
+
+            try
+            {
+                // Get the connect state from the async result
+                connectState = (ConnectState)asyncResult.AsyncState;
+
+                // Quit if this connection loop has been cancelled
+                if (connectState.Token.Cancelled)
+                    return;
+
+                // Complete the operation to authenticate with the server
+                connectState.SslStream.EndAuthenticateAsClient(asyncResult);
+
+                // Ensure that this client is authenticated and encrypted
+                if (EnabledSslProtocols != SslProtocols.None)
+                {
+                    if (!connectState.SslStream.IsAuthenticated)
+                        throw new InvalidOperationException("Connection could not be established because we could not authenticate with the server.");
+
+                    if (!connectState.SslStream.IsEncrypted)
+                        throw new InvalidOperationException("Connection could not be established because the data stream is not encrypted.");
+                }
+
+                if (m_integratedSecurity)
+                {
+#if !MONO
+                    // Check the state of cancellation one more time before
+                    // proceeding to the next step of the connection loop
+                    if (connectState.Token.Cancelled)
+                        return;
+
+                    // Create the NegotiateStream to begin authentication of the user's Windows credentials
+                    connectState.NegotiateStream = new NegotiateStream(connectState.SslStream, true);
+                    connectState.NegotiateStream.BeginAuthenticateAsClient(m_networkCredential ?? (NetworkCredential)CredentialCache.DefaultCredentials, string.Empty, ProcessIntegratedSecurityAuthentication, connectState);
+#endif
+                }
+                else
+                {
+                    // Initialize state object for the asynchronous send loop
+                    sendState = new SendState();
+
+                    sendState.Socket = connectState.Socket;
+                    sendState.NetworkStream = connectState.NetworkStream;
+                    sendState.SslStream = connectState.SslStream;
+                    sendState.Token = connectState.Token;
+
+                    // Store sendState in m_sendState so that calls to Disconnect
+                    // and Dispose can dispose resources and cancel asynchronous loops
+                    m_sendState = sendState;
+
+                    // Check the state of cancellation one more time before
+                    // proceeding to the next step of the connection loop
+                    if (connectState.Token.Cancelled)
+                        return;
+
+                    // Notify of established connection
+                    m_connectWaitHandle.Set();
+                    OnConnectionEstablished();
+
+                    // Initialize state object for the asynchronous receive loop
+                    receiveState = new ReceiveState();
+
+                    receiveState.Socket = connectState.Socket;
+                    receiveState.NetworkStream = connectState.NetworkStream;
+                    receiveState.SslStream = connectState.SslStream;
+                    receiveState.Buffer = new byte[m_payloadMarker.Length + Payload.LengthSegment];
+                    receiveState.Token = connectState.Token;
+
+                    // Store receiveState in m_receiveState so that calls to Disconnect
+                    // and Dispose can dispose resources and cancel asynchronous loops
+                    m_receiveState = receiveState;
+
+                    // Start receiving data
+                    if (m_payloadAware)
+                        ReceivePayloadAwareAsync(receiveState);
+                    else
+                        ReceivePayloadUnawareAsync(receiveState);
+
+                    // Further socket interactions are handled through the SslStream
+                    // object, so the SocketAsyncEventArgs is no longer needed
+                    connectState.ConnectArgs.Dispose();
+                }
+            }
+            catch (SocketException ex)
+            {
+                // Log exception during connection attempt
+                OnConnectionException(ex);
+
+                // If connectState is null, we cannot proceed
+                if ((object)connectState == null)
+                    return;
+
+                // If the connection is refused by the server,
+                // keep trying until we reach our maximum connection attempts
+                if (ex.SocketErrorCode == SocketError.ConnectionRefused &&
+                    (MaxConnectionAttempts == -1 || connectState.ConnectionAttempts < MaxConnectionAttempts))
+                {
+                    try
+                    {
+                        ConnectAsync(connectState);
+                    }
+                    catch
+                    {
+                        TerminateConnection(connectState.Token);
+                    }
+                }
+                else
+                {
+                    // For any other socket exception,
+                    // terminate the connection
+                    TerminateConnection(connectState.Token);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log exception during connection attempt
+                string errorMessage = string.Format("Unable to authenticate connection to server: {0}", CertificateChecker.ReasonForFailure ?? ex.Message);
+                OnConnectionException(new Exception(errorMessage, ex));
+
+                // Terminate the connection
+                if ((object)connectState != null)
+                    TerminateConnection(connectState.Token);
+            }
+            finally
+            {
+                // If the operation was cancelled during execution,
+                // make sure to dispose of erroneously allocated resources
+                if ((object)connectState != null && connectState.Token.Cancelled)
+                    connectState.Dispose();
+
+                if ((object)receiveState != null && receiveState.Token.Cancelled)
+                    receiveState.Dispose();
+
+                if ((object)sendState != null && sendState.Token.Cancelled)
+                    sendState.Dispose();
+            }
+        }
+
+#if !MONO
+        private void ProcessIntegratedSecurityAuthentication(IAsyncResult asyncResult)
+        {
+            ConnectState connectState = null;
+            ReceiveState receiveState = null;
+            SendState sendState = null;
+
+            try
+            {
+                // Get the connect state from the async result
+                connectState = (ConnectState)asyncResult.AsyncState;
+
+                // Quit if this connection loop has been cancelled
+                if (connectState.Token.Cancelled)
+                    return;
+
+                try
+                {
+                    // Complete the operation to authenticate with the server
+                    connectState.NegotiateStream.EndAuthenticateAsClient(asyncResult);
+                }
+                catch (InvalidCredentialException)
+                {
+                    if (!m_ignoreInvalidCredentials)
+                        throw;
+                }
+
+                // Initialize state object for the asynchronous send loop
+                sendState = new SendState();
+
+                sendState.Socket = connectState.Socket;
+                sendState.NetworkStream = connectState.NetworkStream;
+                sendState.SslStream = connectState.SslStream;
+                sendState.Token = connectState.Token;
+
+                // Store sendState in m_sendState so that calls to Disconnect
+                // and Dispose can dispose resources and cancel asynchronous loops
+                m_sendState = sendState;
+
+                // Check the state of cancellation one more time before
+                // proceeding to the next step of the connection loop
+                if (connectState.Token.Cancelled)
+                    return;
+
+                // Notify of established connection
+                // and begin receiving data.
+                m_connectWaitHandle.Set();
+                OnConnectionEstablished();
+
+                // Initialize state object for the asynchronous receive loop
+                receiveState = new ReceiveState();
+
+                receiveState.Socket = connectState.Socket;
+                receiveState.NetworkStream = connectState.NetworkStream;
+                receiveState.SslStream = connectState.SslStream;
+                receiveState.Buffer = new byte[m_payloadMarker.Length + Payload.LengthSegment];
+                receiveState.Token = connectState.Token;
+
+                // Store receiveState in m_receiveState so that calls to Disconnect
+                // and Dispose can dispose resources and cancel asynchronous loops
+                m_receiveState = receiveState;
+
+                // Start receiving data
+                if (m_payloadAware)
+                    ReceivePayloadAwareAsync(receiveState);
+                else
+                    ReceivePayloadUnawareAsync(receiveState);
+
+                // Further socket interactions are handled through the SslStream
+                // object, so the SocketAsyncEventArgs is no longer needed
+                connectState.ConnectArgs.Dispose();
+            }
+            catch (SocketException ex)
+            {
+                // Log exception during connection attempt
+                OnConnectionException(ex);
+
+                // If connectState is null, we cannot proceed
+                if ((object)connectState == null)
+                    return;
+
+                // If the connection is refused by the server,
+                // keep trying until we reach our maximum connection attempts
+                if (ex.SocketErrorCode == SocketError.ConnectionRefused &&
+                    (MaxConnectionAttempts == -1 || connectState.ConnectionAttempts < MaxConnectionAttempts))
+                {
+                    try
+                    {
+                        ConnectAsync(connectState);
+                    }
+                    catch
+                    {
+                        TerminateConnection(connectState.Token);
+                    }
+                }
+                else
+                {
+                    // For any other socket exception,
+                    // terminate the connection
+                    TerminateConnection(connectState.Token);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log exception during connection attempt
+                string errorMessage = string.Format("Unable to authenticate connection to server: {0}", CertificateChecker.ReasonForFailure ?? ex.Message);
+                OnConnectionException(new Exception(errorMessage, ex));
+
+                // Terminate the connection
+                if ((object)connectState != null)
+                    TerminateConnection(connectState.Token);
+            }
+            finally
+            {
+                if ((object)connectState != null)
+                {
+                    // If the operation was cancelled during execution,
+                    // make sure to dispose of erroneously allocated resources;
+                    // otherwise, dispose of the NegotiateStream which is only used for authentication
+                    if (connectState.Token.Cancelled)
+                        connectState.Dispose();
+                    else
+                        connectState.NegotiateStream.Dispose();
+                }
+
+                if ((object)receiveState != null && receiveState.Token.Cancelled)
+                    receiveState.Dispose();
+
+                if ((object)sendState != null && sendState.Token.Cancelled)
+                    sendState.Dispose();
+            }
+        }
+#endif
+
+        /// <summary>
+        /// Initiate method for asynchronous receive operation of payload data in "payload-aware" mode.
+        /// </summary>
+        private void ReceivePayloadAwareAsync(ReceiveState receiveState)
+        {
+            int length;
+
+            if (!receiveState.Token.Cancelled)
+            {
+                if (receiveState.PayloadLength < 0)
+                    length = m_payloadMarker.Length + Payload.LengthSegment;
+                else
+                    length = receiveState.PayloadLength;
+
+                receiveState.SslStream.BeginRead(receiveState.Buffer,
+                    receiveState.Offset,
+                    length - receiveState.Offset,
+                    ProcessReceivePayloadAware,
+                    receiveState);
+            }
+        }
+
+        /// <summary>
+        /// Callback method for asynchronous receive operation of payload data in "payload-aware" mode.
+        /// </summary>
+        private void ProcessReceivePayloadAware(IAsyncResult asyncResult)
+        {
+            ReceiveState receiveState = null;
+            int bytesReceived;
+
+            try
+            {
+                // Get the receive state from the async result
+                receiveState = (ReceiveState)asyncResult.AsyncState;
+
+                // Quit if this receive loop has been cancelled
+                if (receiveState.Token.Cancelled)
+                    return;
+
+                // Determine if the server disconnected gracefully
+                if (!receiveState.Socket.Connected)
+                    throw new SocketException((int)SocketError.Disconnecting);
+
+                // Update statistics and bytes received
+                bytesReceived = receiveState.SslStream.EndRead(asyncResult);
+                receiveState.Offset += bytesReceived;
+
+                // Sanity check to determine if the server disconnected gracefully
+                if (bytesReceived == 0)
+                    throw new SocketException((int)SocketError.Disconnecting);
+
+                if (receiveState.PayloadLength < 0)
+                {
+                    // If we haven't parsed the length of the payload yet, attempt to parse it
+                    receiveState.PayloadLength = Payload.ExtractLength(receiveState.Buffer, receiveState.Offset, m_payloadMarker);
+
+                    if (receiveState.PayloadLength > 0)
+                    {
+                        receiveState.Offset = 0;
+
+                        if (receiveState.Buffer.Length < receiveState.PayloadLength)
+                            receiveState.Buffer = new byte[receiveState.PayloadLength];
+                    }
+                }
+                else if (receiveState.Offset == receiveState.PayloadLength)
+                {
+                    // We've received the entire payload so notify the user
+                    OnReceiveDataComplete(receiveState.Buffer, receiveState.PayloadLength);
+
+                    // Reset payload length
+                    receiveState.Offset = 0;
+                    receiveState.PayloadLength = -1;
+                }
+
+                // Continue asynchronous loop
+                ReceivePayloadAwareAsync(receiveState);
+            }
+            catch (ObjectDisposedException)
+            {
+                // Make sure connection is terminated when client is disposed
+                if ((object)receiveState != null)
+                    TerminateConnection(receiveState.Token);
+            }
+            catch (SocketException ex)
+            {
+                // Log exception during receive operation
+                OnReceiveDataException(ex);
+
+                // Terminate connection when socket exception is encountered
+                if ((object)receiveState != null)
+                    TerminateConnection(receiveState.Token);
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    // For any other exception, notify and resume
+                    OnReceiveDataException(ex);
+                    ReceivePayloadAwareAsync(receiveState);
+                }
+                catch
+                {
+                    // Terminate connection if resume fails
+                    if ((object)receiveState != null)
+                        TerminateConnection(receiveState.Token);
+                }
+            }
+            finally
+            {
+                // If the operation was cancelled during execution,
+                // make sure to dispose of allocated resources
+                if ((object)receiveState != null && receiveState.Token.Cancelled)
+                    receiveState.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Initiate method for asynchronous receive operation of payload data in "payload-unaware" mode.
+        /// </summary>
+        private void ReceivePayloadUnawareAsync(ReceiveState receiveState)
+        {
+            if (!receiveState.Token.Cancelled)
+            {
+                receiveState.SslStream.BeginRead(receiveState.Buffer,
+                    0,
+                    receiveState.Buffer.Length,
+                    ProcessReceivePayloadUnaware,
+                    receiveState);
+            }
+        }
+
+        /// <summary>
+        /// Callback method for asynchronous receive operation of payload data in "payload-unaware" mode.
+        /// </summary>
+        private void ProcessReceivePayloadUnaware(IAsyncResult asyncResult)
+        {
+            ReceiveState receiveState = null;
+            int bytesReceived;
+
+            try
+            {
+                // Get the receive state from the async result
+                receiveState = (ReceiveState)asyncResult.AsyncState;
+
+                // Quit if this receive loop has been cancelled
+                if (receiveState.Token.Cancelled)
+                    return;
+
+                // Determine if the server disconnected gracefully
+                if (!receiveState.Socket.Connected)
+                    throw new SocketException((int)SocketError.Disconnecting);
+
+                // Update statistics and bytes received
+                bytesReceived = receiveState.SslStream.EndRead(asyncResult);
+                receiveState.Offset += bytesReceived;
+
+                // Sanity check to determine if the server disconnected gracefully
+                if (bytesReceived == 0)
+                    throw new SocketException((int)SocketError.Disconnecting);
+
+                // Notify of received data and resume the asynchronous loop
+                OnReceiveDataComplete(receiveState.Buffer, bytesReceived);
+                ReceivePayloadUnawareAsync(receiveState);
+            }
+            catch (ObjectDisposedException)
+            {
+                // Make sure connection is terminated when client is disposed
+                if ((object)receiveState != null)
+                    TerminateConnection(receiveState.Token);
+            }
+            catch (SocketException ex)
+            {
+                // Log exception during receive operation
+                OnReceiveDataException(ex);
+
+                // Terminate connection when socket exception is encountered
+                if ((object)receiveState != null)
+                    TerminateConnection(receiveState.Token);
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    // For any other exception, notify and resume
+                    OnReceiveDataException(ex);
+                    ReceivePayloadUnawareAsync(receiveState);
+                }
+                catch
+                {
+                    // Terminate connection if resume fails
+                    if ((object)receiveState != null)
+                        TerminateConnection(receiveState.Token);
+                }
+            }
+            finally
+            {
+                // If the operation was cancelled during execution,
+                // make sure to dispose of allocated resources
+                if ((object)receiveState != null && receiveState.Token.Cancelled)
+                    receiveState.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// When overridden in a derived class, reads a number of bytes from the current received data buffer and writes those bytes into a byte array at the specified offset.
+        /// </summary>
+        /// <param name="buffer">Destination buffer used to hold copied bytes.</param>
+        /// <param name="startIndex">0-based starting index into destination <paramref name="buffer"/> to begin writing data.</param>
+        /// <param name="length">The number of bytes to read from current received data buffer and write into <paramref name="buffer"/>.</param>
+        /// <returns>The number of bytes read.</returns>
+        /// <remarks>
+        /// This function should only be called from within the <see cref="ClientBase.ReceiveData"/> event handler. Calling this method outside this event
+        /// will have unexpected results.
+        /// </remarks>
+        public override int Read(byte[] buffer, int startIndex, int length)
+        {
+            ReceiveState receiveState = m_receiveState;
+
+            if ((object)receiveState == null || receiveState.Token.Cancelled)
+                return 0;
+
+            buffer.ValidateParameters(startIndex, length);
+
+            if ((object)receiveState.Buffer != null)
+            {
+                int sourceLength = receiveState.PayloadLength - ReadIndex;
+                int readBytes = length > sourceLength ? sourceLength : length;
+                Buffer.BlockCopy(receiveState.Buffer, ReadIndex, buffer, startIndex, readBytes);
+
+                // Update read index for next call
+                ReadIndex += readBytes;
+
+                if (ReadIndex >= receiveState.PayloadLength)
+                    ReadIndex = 0;
+
+                return readBytes;
+            }
+
+            throw new InvalidOperationException("No received data buffer has been defined to read.");
+        }
+
+        /// <summary>
+        /// When overridden in a derived class, sends data to the server asynchronously.
+        /// </summary>
+        /// <param name="data">The buffer that contains the binary data to be sent.</param>
+        /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
+        /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
+        /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
+        protected override WaitHandle SendDataAsync(byte[] data, int offset, int length)
+        {
+            SendState sendState = null;
+
+            TlsClientPayload payload;
+            TlsClientPayload dequeuedPayload;
+            ManualResetEvent handle;
+
+            try
+            {
+                // Get the current send state
+                sendState = m_sendState;
+
+                // Quit if the send loop has been cancelled
+                if (sendState.Token.Cancelled)
+                    return null;
+
+                // Prepare for payload-aware transmission
+                if (m_payloadAware)
+                    Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker);
+
+                // Create payload and wait handle.
+                payload = FastObjectFactory<TlsClientPayload>.CreateObjectFunction();
+                handle = new ManualResetEvent(false);
+
+                payload.Data = data;
+                payload.Offset = offset;
+                payload.Length = length;
+                payload.WaitHandle = handle;
+
+                // If the send queue has reached its maximum size,
+                // make room for the new payload
+                if (sendState.SendQueue.Count == m_maxSendQueueSize && sendState.SendQueue.TryDequeue(out dequeuedPayload))
+                {
+                    dequeuedPayload.WaitHandle.Set();
+                    dequeuedPayload.WaitHandle.Dispose();
+                }
+
+                // Queue payload for sending
+                sendState.SendQueue.Enqueue(payload);
+
+                // If the send loop is not already running, start the send loop
+                if (!sendState.Token.Cancelled)
+                {
+                    if (Interlocked.CompareExchange(ref sendState.Sending, 1, 0) == 0)
+                        SendPayloadAsync(m_sendState);
+
+                    // Notify that the send operation has started.
+                    OnSendDataStart();
+
+                    // Return the async handle that can be used to wait for the async operation to complete
+                    return handle;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log exception during send operation
+                OnSendDataException(ex);
+            }
+            finally
+            {
+                // If the operation was cancelled during execution,
+                // make sure to dispose of allocated resources
+                if ((object)sendState != null && sendState.Token.Cancelled)
+                    sendState.Dispose();
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Sends a payload on the socket.
+        /// </summary>
+        private void SendPayloadAsync(SendState sendState)
+        {
+            TlsClientPayload payload;
+
+            byte[] data;
+            int offset;
+            int length;
+
+            try
+            {
+                // Quit if this send loop has been cancelled
+                if (sendState.Token.Cancelled)
+                    return;
+
+                if (sendState.SendQueue.TryDequeue(out payload))
+                {
+                    // Save the payload currently
+                    // being sent to the send state
+                    sendState.Payload = payload;
+
+                    data = payload.Data;
+                    offset = payload.Offset;
+                    length = payload.Length;
+
+                    // Send payload to the client asynchronously.
+                    sendState.SslStream.BeginWrite(data, offset, length, ProcessSend, sendState);
+                }
+                else
+                {
+                    // No more payloads to send, so stop sending payloads
+                    Interlocked.Exchange(ref sendState.Sending, 0);
+
+                    // Double-check to ensure that a new payload didn't appear before exiting the send loop
+                    if (!sendState.SendQueue.IsEmpty && Interlocked.CompareExchange(ref sendState.Sending, 1, 0) == 0)
+                        ThreadPool.QueueUserWorkItem(state => SendPayloadAsync((SendState)state), sendState);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log exception during send operation
+                OnSendDataException(ex);
+
+                // Continue asynchronous send loop
+                ThreadPool.QueueUserWorkItem(state => SendPayloadAsync((SendState)state), sendState);
+            }
+            finally
+            {
+                // If the operation was cancelled during execution,
+                // make sure to dispose of allocated resources
+                if (sendState.Token.Cancelled)
+                    sendState.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Callback method for asynchronous send operation.
+        /// </summary>
+        private void ProcessSend(IAsyncResult asyncResult)
+        {
+            SendState sendState = null;
+            TlsClientPayload payload;
+            ManualResetEvent handle = null;
+
+            try
+            {
+                // Get the send state from the async result
+                sendState = (SendState)asyncResult.AsyncState;
+
+                // Get the current payload and its wait handle
+                payload = sendState.Payload;
+                handle = payload.WaitHandle;
+
+                // Quit if this send loop has been cancelled
+                if (sendState.Token.Cancelled)
+                    return;
+
+                // Determine if the server disconnected gracefully
+                if (!sendState.Socket.Connected)
+                    throw new SocketException((int)SocketError.Disconnecting);
+
+                // Complete the send operation
+                sendState.SslStream.EndWrite(asyncResult);
+
+                try
+                {
+                    // Set the wait handle to indicate
+                    // the send operation has finished
+                    handle.Set();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Ignore if the consumer has
+                    // disposed of the wait handle
+                }
+
+                // Notify that the send operation is complete
+                OnSendDataComplete();
+            }
+            catch (ObjectDisposedException)
+            {
+                // Make sure connection is terminated when client is disposed
+                if ((object)sendState != null)
+                    TerminateConnection(sendState.Token);
+            }
+            catch (SocketException ex)
+            {
+                // Log exception during send operation
+                OnSendDataException(ex);
+
+                // Terminate connection when socket exception is encountered
+                if ((object)sendState != null)
+                    TerminateConnection(sendState.Token);
+            }
+            catch (Exception ex)
+            {
+                // For any other exception, notify and resume
+                OnSendDataException(ex);
+            }
+            finally
+            {
+                // If the operation was cancelled during execution,
+                // make sure to dispose of allocated resources
+                if ((object)sendState != null && sendState.Token.Cancelled)
+                    sendState.Dispose();
+
+                try
+                {
+                    // Make sure to set the wait handle
+                    // even if an exception occurs
+                    if ((object)handle != null)
+                        handle.Set();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Ignore if the consumer has
+                    // disposed of the wait handle
+                }
+
+                // Attempt to send the next payload
+                SendPayloadAsync(sendState);
+            }
+        }
+
+        /// <summary>
+        /// When overridden in a derived class, disconnects client from the server synchronously.
+        /// </summary>
+        public override void Disconnect()
+        {
+            ConnectState connectState;
+            ReceiveState receiveState;
+            SendState sendState;
+
+            try
+            {
+                if (CurrentState != ClientState.Disconnected)
+                {
+                    connectState = m_connectState;
+                    receiveState = m_receiveState;
+                    sendState = m_sendState;
+
+                    if ((object)connectState != null)
+                    {
+                        TerminateConnection(connectState.Token);
+                        connectState.Dispose();
+                    }
+
+                    if ((object)receiveState != null)
+                        receiveState.Dispose();
+
+                    if ((object)sendState != null)
+                        sendState.Dispose();
+
+                    if ((object)m_connectWaitHandle != null)
+                        m_connectWaitHandle.Set();
+                }
+            }
+            catch (Exception ex)
+            {
+                OnSendDataException(new InvalidOperationException(string.Format("Disconnect exception: {0}", ex.Message), ex));
+            }
         }
 
         /// <summary>
@@ -790,10 +1730,27 @@ namespace GSF.Communication
             {
                 try
                 {
-                    // This will be done regardless of whether the object is finalized or disposed.
                     if (disposing)
                     {
-                        // This will be done only when the object is disposed by calling Dispose().
+                        if ((object)m_connectState != null)
+                        {
+                            TerminateConnection(m_connectState.Token);
+                            m_connectState.Dispose();
+                            m_connectState = null;
+                        }
+
+                        if ((object)m_receiveState != null)
+                        {
+                            m_receiveState.Dispose();
+                            m_receiveState = null;
+                        }
+
+                        if ((object)m_sendState != null)
+                        {
+                            m_sendState.Dispose();
+                            m_sendState = null;
+                        }
+
                         if ((object)m_connectWaitHandle != null)
                         {
                             m_connectWaitHandle.Set();
@@ -842,67 +1799,6 @@ namespace GSF.Communication
         }
 
         /// <summary>
-        /// When overridden in a derived class, sends data to the server asynchronously.
-        /// </summary>
-        /// <param name="data">The buffer that contains the binary data to be sent.</param>
-        /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
-        /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
-        /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
-        protected override WaitHandle SendDataAsync(byte[] data, int offset, int length)
-        {
-            TlsClientPayload payload;
-            TlsClientPayload dequeuedPayload;
-            ManualResetEventSlim handle;
-
-            try
-            {
-                // Check to see if the client has reached the maximum send queue size.
-                m_dumpPayloadsOperation.TryRun();
-
-                // Prepare for payload-aware transmission.
-                if (m_payloadAware)
-                    Payload.AddHeader(ref data, ref offset, ref length, m_payloadMarker);
-
-                // Create payload and wait handle.
-                payload = FastObjectFactory<TlsClientPayload>.CreateObjectFunction();
-                handle = FastObjectFactory<ManualResetEventSlim>.CreateObjectFunction();
-
-                payload.Data = data;
-                payload.Offset = offset;
-                payload.Length = length;
-                payload.WaitHandle = handle;
-                handle.Reset();
-
-                // Queue payload for sending.
-                m_sendQueue.Enqueue(payload);
-
-                lock (m_sendLock)
-                {
-                    // Send the next queued payload.
-                    if (Interlocked.CompareExchange(ref m_sending, 1, 0) == 0)
-                    {
-                        if (m_sendQueue.TryDequeue(out dequeuedPayload))
-                            ThreadPool.QueueUserWorkItem(state => SendPayload((TlsClientPayload)state), dequeuedPayload);
-                        else
-                            Interlocked.Exchange(ref m_sending, 0);
-                    }
-                }
-
-                // Notify that the send operation has started.
-                OnSendDataStart();
-
-                // Return the async handle that can be used to wait for the async operation to complete.
-                return handle.WaitHandle;
-            }
-            catch (Exception ex)
-            {
-                OnSendDataException(ex);
-            }
-
-            return null;
-        }
-
-        /// <summary>
         /// Raises the <see cref="ClientBase.SendDataException"/> event.
         /// </summary>
         /// <param name="ex">Exception to send to <see cref="ClientBase.SendDataException"/> event.</param>
@@ -933,579 +1829,16 @@ namespace GSF.Communication
         }
 
         /// <summary>
-        /// Continues a 250-millisecond delayed asynchronous loop until the client has been connected.
-        /// </summary>
-        private void LoopUntilConnected(CancellationToken cancellationToken)
-        {
-            string integratedSecuritySetting;
-
-            try
-            {
-                // If the connect loop was cancelled,
-                // stop attempting to connect
-                if (cancellationToken.Cancelled)
-                    return;
-
-                // If the receive loop has yet to finish from the last connection attempt,
-                // call this method again on the thread pool after a 250 millisecond delay
-                if (Interlocked.CompareExchange(ref m_receiving, 0, 0) != 0)
-                {
-                    RegisteredWaitHandle[] registeredWaitHandle = new RegisteredWaitHandle[1];
-
-                    WaitOrTimerCallback callback = (state, timedOut) =>
-                    {
-                        if (timedOut)
-                            LoopUntilConnected(cancellationToken);
-
-                        while ((object)registeredWaitHandle[0] == null)
-                        {
-                        }
-
-                        registeredWaitHandle[0].Unregister(null);
-                    };
-
-                    registeredWaitHandle[0] = ThreadPool.RegisterWaitForSingleObject(m_connectWaitHandle, callback, null, 250, true);
-
-                    return;
-                }
-
-                // Overwrite config file if integrated security exists in connection string
-                if (m_connectData.TryGetValue("integratedSecurity", out integratedSecuritySetting))
-                    m_integratedSecurity = integratedSecuritySetting.ParseBoolean();
-
-#if MONO
-                // Force integrated security to be False under Mono since it's not supported
-                m_integratedSecurity = false;
-#endif
-
-                // Create client socket to establish presence
-                Socket socket = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
-                Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
-
-                // Begin asynchronous connect operation and return wait handle for the asynchronous operation
-                SocketAsyncEventArgs args = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
-
-                args.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
-                args.SocketFlags = SocketFlags.None;
-                args.UserToken = socket;
-                args.Completed += m_connectHandler;
-
-                if (!socket.ConnectAsync(args))
-                    ThreadPool.QueueUserWorkItem(state => ProcessConnect((SocketAsyncEventArgs)state), args);
-            }
-            catch (Exception ex)
-            {
-                if ((object)m_connectWaitHandle != null)
-                    m_connectWaitHandle.Set();
-
-                OnConnectionException(ex);
-            }
-        }
-
-        /// <summary>
-        /// Callback method for asynchronous connect operation.
-        /// </summary>
-        private void ProcessConnect(SocketAsyncEventArgs args)
-        {
-            try
-            {
-                Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
-                NetworkStream netStream;
-
-                // Perform post-connect operations.
-                m_connectionAttempts++;
-
-                if (args.SocketError != SocketError.Success)
-                    throw new SocketException((int)args.SocketError);
-
-                LoadTrustedCertificates();
-                m_socket = (Socket)args.UserToken;
-                m_socket.ReceiveBufferSize = ReceiveBufferSize;
-                netStream = new NetworkStream(m_socket, true);
-                m_sslClient.Provider = new SslStream(netStream, false, m_remoteCertificateValidationCallback ?? CertificateChecker.ValidateRemoteCertificate, m_localCertificateSelectionCallback);
-
-                // Authenticate.
-                m_sslClient.Provider.BeginAuthenticateAsClient(endpoint.Groups["host"].Value, m_clientCertificates, m_enabledSslProtocols, m_checkCertificateRevocation, ProcessTlsAuthentication, null);
-            }
-            catch (SocketException ex)
-            {
-                OnConnectionException(ex);
-
-                if (ex.SocketErrorCode == SocketError.ConnectionRefused &&
-                    (MaxConnectionAttempts == -1 || m_connectionAttempts < MaxConnectionAttempts))
-                {
-                    // Server is unavailable, so keep retrying connection to the server.
-                    try
-                    {
-                        ConnectAsync();
-                    }
-                    catch
-                    {
-                        TerminateConnection();
-                    }
-                }
-                else
-                {
-                    // For any other reason, clean-up as if the client was disconnected.
-                    TerminateConnection();
-                }
-            }
-            catch (Exception ex)
-            {
-                OnConnectionException(ex);
-                TerminateConnection();
-            }
-            finally
-            {
-                args.Dispose();
-            }
-        }
-
-        /// <summary>
-        /// Callback method for asynchronous authenticate operation.
-        /// </summary>
-        private void ProcessTlsAuthentication(IAsyncResult asyncResult)
-        {
-            try
-            {
-                // Finish authentication.
-                m_sslClient.Provider.EndAuthenticateAsClient(asyncResult);
-
-                if (EnabledSslProtocols != SslProtocols.None)
-                {
-                    if (!m_sslClient.Provider.IsAuthenticated)
-                        throw new InvalidOperationException("Connection could not be established because we could not authenticate with the server.");
-
-                    if (!m_sslClient.Provider.IsEncrypted)
-                        throw new InvalidOperationException("Connection could not be established because the data stream is not encrypted.");
-                }
-
-                if (m_integratedSecurity)
-                {
-#if !MONO
-                    NegotiateStream negotiateStream = new NegotiateStream(m_sslClient.Provider, true);
-                    negotiateStream.BeginAuthenticateAsClient(m_networkCredential ?? (NetworkCredential)CredentialCache.DefaultCredentials, string.Empty, ProcessIntegratedSecurityAuthentication, negotiateStream);
-#endif
-                }
-                else
-                {
-                    // Notify of established connection
-                    // and begin receiving data.
-                    m_connectWaitHandle.Set();
-                    OnConnectionEstablished();
-
-                    // Start receiving data
-                    Interlocked.Exchange(ref m_receiving, 1);
-                    ReceivePayloadAsync();
-                }
-            }
-            catch (SocketException ex)
-            {
-                OnConnectionException(ex);
-
-                if (ex.SocketErrorCode == SocketError.ConnectionRefused &&
-                    (MaxConnectionAttempts == -1 || m_connectionAttempts < MaxConnectionAttempts))
-                {
-                    // Server is unavailable, so keep retrying connection to the server.
-                    try
-                    {
-                        Interlocked.Exchange(ref m_receiving, 0);
-                        ConnectAsync();
-                    }
-                    catch
-                    {
-                        TerminateConnection();
-                    }
-                }
-                else
-                {
-                    // For any other reason, clean-up as if the client was disconnected.
-                    TerminateConnection();
-                }
-            }
-            catch (Exception ex)
-            {
-                string errorMessage = string.Format("Unable to authenticate connection to server: {0}", CertificateChecker.ReasonForFailure ?? ex.Message);
-                OnConnectionException(new Exception(errorMessage, ex));
-                TerminateConnection();
-            }
-        }
-
-#if !MONO
-        private void ProcessIntegratedSecurityAuthentication(IAsyncResult asyncResult)
-        {
-            NegotiateStream negotiateStream = (NegotiateStream)asyncResult.AsyncState;
-
-            try
-            {
-                try
-                {
-                    // Finish authentication.
-                    negotiateStream.EndAuthenticateAsClient(asyncResult);
-                }
-                catch (InvalidCredentialException)
-                {
-                    if (!m_ignoreInvalidCredentials)
-                        throw;
-                }
-
-                // Notify of established connection
-                // and begin receiving data.
-                m_connectWaitHandle.Set();
-                OnConnectionEstablished();
-
-                // Start receiving data
-                Interlocked.Exchange(ref m_receiving, 1);
-                ReceivePayloadAsync();
-            }
-            catch (SocketException ex)
-            {
-                OnConnectionException(ex);
-
-                if (ex.SocketErrorCode == SocketError.ConnectionRefused &&
-                    (MaxConnectionAttempts == -1 || m_connectionAttempts < MaxConnectionAttempts))
-                {
-                    // Server is unavailable, so keep retrying connection to the server.
-                    try
-                    {
-                        Interlocked.Exchange(ref m_receiving, 0);
-                        ConnectAsync();
-                    }
-                    catch
-                    {
-                        TerminateConnection();
-                    }
-                }
-                else
-                {
-                    // For any other reason, clean-up as if the client was disconnected.
-                    TerminateConnection();
-                }
-            }
-            catch (Exception ex)
-            {
-                string errorMessage = string.Format("Unable to authenticate connection to server: {0}", ex.Message);
-                OnConnectionException(new Exception(errorMessage, ex));
-                TerminateConnection();
-            }
-            finally
-            {
-                negotiateStream.Dispose();
-            }
-        }
-#endif
-
-        /// <summary>
-        /// Sends a payload on the socket.
-        /// </summary>
-        private void SendPayload(TlsClientPayload payload)
-        {
-            byte[] data;
-            int offset;
-            int length;
-
-            try
-            {
-                data = payload.Data;
-                offset = payload.Offset;
-                length = payload.Length;
-
-                // Send payload to the client asynchronously.
-                m_sslClient.Provider.BeginWrite(data, offset, length, ProcessSend, payload);
-            }
-            catch (Exception ex)
-            {
-                OnSendDataException(ex);
-
-                // Assume process send was not able
-                // to continue the asynchronous loop.
-                Interlocked.Exchange(ref m_sending, 0);
-            }
-        }
-
-        /// <summary>
-        /// Callback method for asynchronous send operation.
-        /// </summary>
-        private void ProcessSend(IAsyncResult asyncResult)
-        {
-            TlsClientPayload payload = null;
-            ManualResetEventSlim handle = null;
-
-            try
-            {
-                payload = (TlsClientPayload)asyncResult.AsyncState;
-                handle = payload.WaitHandle;
-
-                handle.Set();
-
-                // Send operation is complete.
-                m_sslClient.Provider.EndWrite(asyncResult);
-                m_sslClient.Statistics.UpdateBytesSent(payload.Length);
-                OnSendDataComplete();
-            }
-            catch (Exception ex)
-            {
-                // Send operation failed to complete.
-                OnSendDataException(ex);
-            }
-            finally
-            {
-                if ((object)payload != null)
-                {
-                    try
-                    {
-                        payload.WaitHandle = null;
-
-                        // Begin sending next client payload.
-                        if (m_sendQueue.TryDequeue(out payload))
-                        {
-                            ThreadPool.QueueUserWorkItem(state => SendPayload((TlsClientPayload)state), payload);
-                        }
-                        else
-                        {
-                            lock (m_sendLock)
-                            {
-                                if (m_sendQueue.TryDequeue(out payload))
-                                    ThreadPool.QueueUserWorkItem(state => SendPayload((TlsClientPayload)state), payload);
-                                else
-                                    Interlocked.Exchange(ref m_sending, 0);
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        string errorMessage = string.Format("Exception encountered while attempting to send next payload: {0}", ex.Message);
-                        OnSendDataException(new Exception(errorMessage, ex));
-                        Interlocked.Exchange(ref m_sending, 0);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Initiate method for asynchronous receive operation of payload data.
-        /// </summary>
-        private void ReceivePayloadAsync()
-        {
-            // Initialize bytes received.
-            m_sslClient.BytesReceived = 0;
-
-            // Initiate receiving.
-            if (m_payloadAware)
-            {
-                // Payload boundaries are to be preserved.
-                m_sslClient.SetReceiveBuffer(m_payloadMarker.Length + Payload.LengthSegment);
-                ReceivePayloadAwareAsync(true);
-            }
-            else
-            {
-                // Payload boundaries are not to be preserved.
-                m_sslClient.SetReceiveBuffer(ReceiveBufferSize);
-                ReceivePayloadUnawareAsync();
-            }
-        }
-
-        /// <summary>
-        /// Initiate method for asynchronous receive operation of payload data in "payload-aware" mode.
-        /// </summary>
-        private void ReceivePayloadAwareAsync(bool waitingForHeader)
-        {
-            m_sslClient.Provider.BeginRead(m_sslClient.ReceiveBuffer,
-                                           m_sslClient.BytesReceived,
-                                           m_sslClient.ReceiveBufferSize - m_sslClient.BytesReceived,
-                                           ProcessReceivePayloadAware,
-                                           waitingForHeader);
-        }
-
-        /// <summary>
-        /// Callback method for asynchronous receive operation of payload data in "payload-aware" mode.
-        /// </summary>
-        private void ProcessReceivePayloadAware(IAsyncResult asyncResult)
-        {
-            try
-            {
-                bool waitingForHeader = (bool)asyncResult.AsyncState;
-
-                // Update statistics and bytes received.
-                m_sslClient.Statistics.UpdateBytesReceived(m_sslClient.Provider.EndRead(asyncResult));
-                m_sslClient.BytesReceived += m_sslClient.Statistics.LastBytesReceived;
-
-                // Client disconnected gracefully.
-                if (!m_socket.Connected)
-                    throw new SocketException((int)SocketError.Disconnecting);
-
-                if (m_sslClient.Statistics.LastBytesReceived == 0)
-                    throw new SocketException((int)SocketError.Disconnecting);
-
-                if (waitingForHeader)
-                {
-                    // We're waiting on the payload length, so we'll check if the received data has this information.
-                    int payloadLength = Payload.ExtractLength(m_sslClient.ReceiveBuffer, m_sslClient.BytesReceived, m_payloadMarker);
-
-                    // We have the payload length.
-                    // If it is set to zero, there is no payload; wait for another header.
-                    // Otherwise we'll create a buffer that's big enough to hold the entire payload.
-                    if (payloadLength == 0)
-                    {
-                        m_sslClient.BytesReceived = 0;
-                    }
-                    else if (payloadLength != -1)
-                    {
-                        m_sslClient.BytesReceived = 0;
-                        m_sslClient.SetReceiveBuffer(payloadLength);
-                        waitingForHeader = false;
-                    }
-
-                    ReceivePayloadAwareAsync(waitingForHeader);
-                }
-                else
-                {
-                    // We're accumulating the payload in the receive buffer until the entire payload is received.
-                    if (m_sslClient.BytesReceived == m_sslClient.ReceiveBufferSize)
-                    {
-                        // We've received the entire payload.
-                        OnReceiveDataComplete(m_sslClient.ReceiveBuffer, m_sslClient.BytesReceived);
-                        ReceivePayloadAsync();
-                    }
-                    else
-                    {
-                        // We've not yet received the entire payload.
-                        ReceivePayloadAwareAsync(false);
-                    }
-                }
-            }
-            catch (ObjectDisposedException)
-            {
-                // Make sure connection is terminated when client is disposed.
-                TerminateConnection();
-            }
-            catch (SocketException ex)
-            {
-                // Terminate connection when socket exception is encountered.
-                OnReceiveDataException(ex);
-                TerminateConnection();
-            }
-            catch (Exception ex)
-            {
-                try
-                {
-                    // For any other exception, notify and resume receive.
-                    OnReceiveDataException(ex);
-                    ReceivePayloadAsync();
-                }
-                catch
-                {
-                    // Terminate connection if resuming receiving fails.
-                    TerminateConnection();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Initiate method for asynchronous receive operation of payload data in "payload-unaware" mode.
-        /// </summary>
-        private void ReceivePayloadUnawareAsync()
-        {
-            m_sslClient.Provider.BeginRead(m_sslClient.ReceiveBuffer,
-                                           0,
-                                           m_sslClient.ReceiveBufferSize,
-                                           ProcessReceivePayloadUnaware,
-                                           null);
-        }
-
-        /// <summary>
-        /// Callback method for asynchronous receive operation of payload data in "payload-unaware" mode.
-        /// </summary>
-        private void ProcessReceivePayloadUnaware(IAsyncResult asyncResult)
-        {
-            try
-            {
-                // Update statistics and pointers.
-                m_sslClient.Statistics.UpdateBytesReceived(m_sslClient.Provider.EndRead(asyncResult));
-                m_sslClient.BytesReceived = m_sslClient.Statistics.LastBytesReceived;
-
-                // Client disconnected gracefully.
-                if (!m_socket.Connected)
-                    throw new SocketException((int)SocketError.Disconnecting);
-
-                if (m_sslClient.Statistics.LastBytesReceived == 0)
-                    throw new SocketException((int)SocketError.Disconnecting);
-
-                // Notify of received data and resume receive operation.
-                OnReceiveDataComplete(m_sslClient.ReceiveBuffer, m_sslClient.BytesReceived);
-                ReceivePayloadUnawareAsync();
-            }
-            catch (ObjectDisposedException)
-            {
-                // Make sure connection is terminated when client is disposed.
-                TerminateConnection();
-            }
-            catch (SocketException ex)
-            {
-                // Terminate connection when socket exception is encountered.
-                OnReceiveDataException(ex);
-                TerminateConnection();
-            }
-            catch (Exception ex)
-            {
-                try
-                {
-                    // For any other exception, notify and resume receive.
-                    OnReceiveDataException(ex);
-                    ReceivePayloadAsync();
-                }
-                catch
-                {
-                    // Terminate connection if resuming receiving fails.
-                    TerminateConnection();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Dumps payloads from the send queue when the send queue grows too large.
-        /// </summary>
-        private void DumpPayloads()
-        {
-            TlsClientPayload payload;
-
-            // Check to see if the client has reached the maximum send queue size.
-            if (m_maxSendQueueSize > 0 && m_sendQueue.Count >= m_maxSendQueueSize)
-            {
-                for (int i = 0; i < m_maxSendQueueSize; i++)
-                {
-                    if (m_sendQueue.TryDequeue(out payload))
-                    {
-                        payload.WaitHandle.Set();
-                        payload.WaitHandle.Dispose();
-                        payload.WaitHandle = null;
-                    }
-                }
-
-                OnSendDataException(new InvalidOperationException(string.Format("TCP client reached maximum send queue size. {0} payloads dumped from the queue.", m_maxSendQueueSize)));
-            }
-        }
-
-        /// <summary>
         /// Processes the termination of client.
         /// </summary>
-        private void TerminateConnection()
+        private void TerminateConnection(CancellationToken cancellationToken)
         {
             try
             {
-                if (CurrentState != ClientState.Disconnected)
-                {
-                    if ((object)m_socket != null)
-                        m_socket.Dispose();
-
-                    if ((object)m_connectWaitHandle != null)
-                        m_connectWaitHandle.Set();
-
-                    m_sslClient.Reset();
-                }
-
-                Interlocked.Exchange(ref m_receiving, 0);
-                OnConnectionTerminated();
+                // Cancel all asynchronous loops associated with the cancellation token and notify user
+                // of terminated connection if the connection had not previously been terminated
+                if (!cancellationToken.Cancel())
+                    OnConnectionTerminated();
             }
             catch (ThreadAbortException)
             {
@@ -1514,7 +1847,8 @@ namespace GSF.Communication
             }
             catch
             {
-                // Other exceptions can happen (e.g., NullReferenceException) if thread resumes and the class is disposed middle way through this method
+                // Other exceptions can happen (e.g., NullReferenceException) if thread
+                // resumes and the class is disposed middle way through this method
             }
         }
 
