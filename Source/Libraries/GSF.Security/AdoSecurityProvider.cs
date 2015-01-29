@@ -928,10 +928,15 @@ namespace GSF.Security
         {
             DataSet securityContext = new DataSet("AdoSecurityContext");
 
+            // Read the security context tables from the database connection
             foreach (string securityTable in s_securityTables)
             {
                 AddSecurityContextTable(connection, securityContext, securityTable, securityTable == ApplicationRoleTable ? s_nodeID : default(Guid));
             }
+
+            // Make sure primary keys were defined on tables that we use "Find" function on later...
+            UpdatePrimaryKey(securityContext.Tables[SecurityGroupTable], "SecurityGroupID");
+            UpdatePrimaryKey(securityContext.Tables[ApplicationRoleTable], "ApplicationRoleID");
 
             // Always cache security context after successful extraction
             Thread cacheSecurityContext = new Thread(() => AdoSecurityCache.GetCurrentCache().DataSet = securityContext);
@@ -939,6 +944,12 @@ namespace GSF.Security
             cacheSecurityContext.Start();
 
             return securityContext;
+        }
+
+        private static void UpdatePrimaryKey(DataTable table, string columnName)
+        {
+            if (table.PrimaryKey.Length == 0)
+                table.PrimaryKey = new[] { table.Columns[columnName] };
         }
 
         private static void AddSecurityContextTable(IDbConnection connection, DataSet securityContext, string tableName, Guid nodeID)
