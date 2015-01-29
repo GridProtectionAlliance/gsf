@@ -111,6 +111,9 @@ namespace GSF.TimeSeries.UI
             }
             set
             {
+                if ((object)value == null || (object)value.Identity == null || string.IsNullOrEmpty(value.Identity.Name))
+                    return;
+
                 ISecurityProvider cachedProvider;
                 ISecurityProvider provider;
 
@@ -731,12 +734,33 @@ namespace GSF.TimeSeries.UI
             {
                 try
                 {
-                    if (s_windowsServiceClient != null && s_retryServiceConnection)
+                    if ((object)s_windowsServiceClient != null && s_retryServiceConnection)
+                    {
                         s_windowsServiceClient.Helper.Connect();
+
+                        if (!s_windowsServiceClient.Helper.RemotingClient.Enabled)
+                            return;
+
+                        // If connection attempt failed with provided credentials, try once more with direct authentication
+                        // but only when transport is secured
+                        if (!s_windowsServiceClient.Authenticated && s_windowsServiceClient.Helper.RemotingClient is TlsClient)
+                        {
+                            ISecurityProvider provider;
+
+                            if ((object)CurrentPrincipal != null && (object)CurrentPrincipal.Identity != null &&
+                                SecurityProviderCache.TryGetCachedProvider(CurrentPrincipal.Identity.Name, out provider) &&
+                                !string.IsNullOrEmpty(provider.Password))
+                            {
+                                s_windowsServiceClient.Helper.Disconnect();
+                                s_windowsServiceClient.Helper.Password = provider.Password;
+                                s_windowsServiceClient.Helper.Connect();
+                            }
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
-                    Application.Current.Dispatcher.BeginInvoke(Popup, "The IP address is not Valid,Please Re-check your IP address." + ex.Message + Environment.NewLine, " Exception:", MessageBoxImage.Error);
+                    LogException(null, "RemoteConsoleConnection", ex);
                 }
             });
         }

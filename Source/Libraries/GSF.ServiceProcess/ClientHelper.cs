@@ -487,10 +487,6 @@ namespace GSF.ServiceProcess
             if ((object)m_remotingClient == null)
                 throw new InvalidOperationException("RemotingClient property of ClientHelper component is not set");
 
-            // Nothing to do if remoting client is already connected
-            if (m_remotingClient.Enabled)
-                return;
-
             m_authenticationComplete = false;
 
             // Wait for connection.
@@ -500,6 +496,10 @@ namespace GSF.ServiceProcess
             {
                 // Wait for authentication.
                 Thread.Sleep(100);
+
+                // If remoting client has been disposed (and set to null) while sleeping, go ahead and exit...
+                if ((object)m_remotingClient == null)
+                    return;
             }
 
             if (m_remotingClient.Enabled)
@@ -718,17 +718,7 @@ namespace GSF.ServiceProcess
 
             // Attempt reconnection on a separate thread.
             if (m_attemptReconnection)
-            {
-                new Thread(state =>
-                {
-                    // Wait at least one second between reconnect attempts...
-                    if (Common.IsPosixEnvironment)
-                        Thread.Sleep(1000);
-
-                    Connect();
-
-                }).Start();
-            }
+                new Thread(Connect).Start();
         }
 
         private void RemotingClient_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)

@@ -32,6 +32,7 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.ServiceProcess;
 using System.Text;
+using System.Threading;
 using GSF.Communication;
 using GSF.Configuration;
 using GSF.Console;
@@ -271,13 +272,22 @@ namespace GSF.TimeSeries
                 }
 
                 string password = null;
+                long lastConnectAttempt = 0;
 
                 // Connect to service and send commands.
                 while (!string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
                 {
                     try
                     {
+                        // Do not reattempt connection too quickly
+                        while (DateTime.UtcNow.Ticks - lastConnectAttempt < Ticks.PerSecond)
+                            Thread.Sleep(200);
+
+                        lastConnectAttempt = DateTime.UtcNow.Ticks;
                         m_clientHelper.Connect();
+
+                        if (!m_clientHelper.RemotingClient.Enabled)
+                            continue;
 
                         // If connection attempt failed with provided credentials, try once more with direct authentication
                         // but only when transport is secured

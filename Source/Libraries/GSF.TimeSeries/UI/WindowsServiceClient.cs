@@ -48,6 +48,7 @@ namespace GSF.TimeSeries.UI
         private ClientHelper m_clientHelper;
         private string m_cachedStatus;
         private readonly int m_statusBufferSize;
+        private bool m_authenticated;
         private bool m_disposed;
 
         #endregion
@@ -87,6 +88,18 @@ namespace GSF.TimeSeries.UI
             m_clientHelper.SerializationFormat = serializationFormat;
             m_clientHelper.RemotingClient = m_remotingClient;
             m_clientHelper.ReceivedServiceUpdate += ClientHelper_ReceivedServiceUpdate;
+            m_clientHelper.AuthenticationSuccess += ClientHelper_AuthenticationSuccess;
+            m_clientHelper.AuthenticationFailure += ClientHelper_AuthenticationFailure;
+        }
+
+        private void ClientHelper_AuthenticationSuccess(object sender, EventArgs e)
+        {
+            m_authenticated = true;
+        }
+
+        private void ClientHelper_AuthenticationFailure(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            m_authenticated = false;
         }
 
         /// <summary>
@@ -123,6 +136,21 @@ namespace GSF.TimeSeries.UI
             }
         }
 
+        /// <summary>
+        /// Gets or sets authenticated state for service client.
+        /// </summary>
+        public bool Authenticated
+        {
+            get
+            {
+                return m_authenticated;
+            }
+            set
+            {
+                m_authenticated = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -148,11 +176,16 @@ namespace GSF.TimeSeries.UI
                 {
                     if (disposing)
                     {
-                        if (m_clientHelper != null)
+                        if ((object)m_clientHelper != null)
+                        {
                             m_clientHelper.ReceivedServiceUpdate -= ClientHelper_ReceivedServiceUpdate;
-                        m_clientHelper = null;
+                            m_clientHelper.AuthenticationSuccess -= ClientHelper_AuthenticationSuccess;
+                            m_clientHelper.AuthenticationFailure -= ClientHelper_AuthenticationFailure;
+                            m_clientHelper.Dispose();
+                            m_clientHelper = null;
+                        }
 
-                        if (m_remotingClient != null)
+                        if ((object)m_remotingClient != null)
                         {
                             m_remotingClient.MaxConnectionAttempts = 0;
 
@@ -160,8 +193,8 @@ namespace GSF.TimeSeries.UI
                                 m_remotingClient.Disconnect();
 
                             m_remotingClient.Dispose();
+                            m_remotingClient = null;
                         }
-                        m_remotingClient = null;
                     }
                 }
                 finally

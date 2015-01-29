@@ -322,6 +322,17 @@ namespace GSF.Security
                     securityContext = AdoSecurityCache.GetCurrentCache().DataSet;
                 }
 
+                try
+                {
+                    // Make sure primary keys are defined on tables that we use "Find" function on later...
+                    UpdatePrimaryKey(securityContext.Tables[SecurityGroupTable], "SecurityGroupID");
+                    UpdatePrimaryKey(securityContext.Tables[ApplicationRoleTable], "ApplicationRoleID");
+                }
+                catch
+                {
+                    // Just going to fall back on slower "Select" function if this fails...
+                }
+
                 // Validate that needed security tables exist in the data set
                 if ((object)securityContext == null)
                     throw new SecurityException("Failed to load a valid security context. Cannot proceed with user authentication.");
@@ -340,12 +351,12 @@ namespace GSF.Security
                 string userSID = UserInfo.UserNameToSID(UserData.Username);
 
                 // Filter user account data for the current user.
-                DataRow[] userAccounts = securityContext.Tables[UserAccountTable].Select(string.Format("Name = '{0}'", userSID));
+                DataRow[] userAccounts = securityContext.Tables[UserAccountTable].Select(string.Format("Name = '{0}'", EncodeEscapeSequences(userSID)));
 
                 // If SID based lookup failed, try lookup by user name.  Note that is critical that SID based lookup
                 // take precedence over name based lookup for proper cross-platform authentication.
                 if (userAccounts.Length == 0)
-                    userAccounts = securityContext.Tables[UserAccountTable].Select(string.Format("Name = '{0}'", UserData.Username));
+                    userAccounts = securityContext.Tables[UserAccountTable].Select(string.Format("Name = '{0}'", EncodeEscapeSequences(UserData.Username)));
 
                 if (userAccounts.Length == 0)
                 {
@@ -425,12 +436,24 @@ namespace GSF.Security
                 if (userAccountID != Guid.Empty)
                 {
                     // Filter explicitly assigned security groups for current user
-                    DataRow[] userGroups = securityContext.Tables[SecurityGroupUserAccountTable].Select(string.Format("UserAccountID = '{0}'", userAccountID));
+                    DataRow[] userGroups = securityContext.Tables[SecurityGroupUserAccountTable].Select(string.Format("UserAccountID = '{0}'", EncodeEscapeSequences(userAccountID.ToString())));
 
                     foreach (DataRow row in userGroups)
                     {
                         // Locate associated security group record
-                        DataRow securityGroup = securityContext.Tables[SecurityGroupTable].Rows.Find(row["SecurityGroupID"]);
+                        DataRow securityGroup = null;
+
+                        if (securityContext.Tables[SecurityGroupTable].PrimaryKey.Length > 0)
+                        {
+                            securityGroup = securityContext.Tables[SecurityGroupTable].Rows.Find(row["SecurityGroupID"]);
+                        }
+                        else
+                        {
+                            DataRow[] securityGroups = securityContext.Tables[SecurityGroupTable].Select(string.Format("ID = '{0}'", EncodeEscapeSequences(row["SecurityGroupID"].ToString())));
+
+                            if (securityGroups.Length > 0)
+                                securityGroup = securityGroups[0];
+                        }
 
                         if ((object)securityGroup == null || Convert.IsDBNull(securityGroup["Name"]))
                             continue;
@@ -456,7 +479,7 @@ namespace GSF.Security
 
                 // Filter explicitly assigned application roles for current user - this will return an empty set if no
                 // explicitly defined roles exist for the user -or- user doesn't exist in the database.
-                DataRow[] userApplicationRoles = securityContext.Tables[ApplicationRoleUserAccountTable].Select(string.Format("UserAccountID = '{0}'", userAccountID));
+                DataRow[] userApplicationRoles = securityContext.Tables[ApplicationRoleUserAccountTable].Select(string.Format("UserAccountID = '{0}'", EncodeEscapeSequences(userAccountID.ToString())));
 
                 // If no explicitly assigned application roles are found for the current user, we check for implicitly assigned
                 // application roles based on the role assignments of the groups the user is a member of.
@@ -473,12 +496,12 @@ namespace GSF.Security
                         string groupSID = UserInfo.GroupNameToSID(groupName);
 
                         // Locate associated security group record
-                        DataRow[] securityGroups = securityContext.Tables[SecurityGroupTable].Select(string.Format("Name = '{0}'", groupSID));
+                        DataRow[] securityGroups = securityContext.Tables[SecurityGroupTable].Select(string.Format("Name = '{0}'", EncodeEscapeSequences(groupSID)));
 
                         // If SID based lookup failed, try lookup by group name.  Note that is critical that SID based lookup
                         // take precedence over name based lookup for proper cross-platform authentication.
                         if (securityGroups.Length == 0)
-                            securityGroups = securityContext.Tables[SecurityGroupTable].Select(string.Format("Name = '{0}'", groupName));
+                            securityGroups = securityContext.Tables[SecurityGroupTable].Select(string.Format("Name = '{0}'", EncodeEscapeSequences(groupName)));
 
                         if (securityGroups.Length > 0)
                         {
@@ -486,7 +509,7 @@ namespace GSF.Security
                             DataRow securityGroup = securityGroups[0];
 
                             if (!Convert.IsDBNull(securityGroup["ID"]))
-                                implicitRoles.AddRange(securityContext.Tables[ApplicationRoleSecurityGroupTable].Select(string.Format("SecurityGroupID = '{0}'", securityGroup["ID"])));
+                                implicitRoles.AddRange(securityContext.Tables[ApplicationRoleSecurityGroupTable].Select(string.Format("SecurityGroupID = '{0}'", EncodeEscapeSequences(securityGroup["ID"].ToString()))));
                         }
                     }
 
@@ -500,7 +523,19 @@ namespace GSF.Security
                         continue;
 
                     // Locate associated application role record
-                    DataRow applicationRole = securityContext.Tables[ApplicationRoleTable].Rows.Find(role["ApplicationRoleID"]);
+                    DataRow applicationRole = null;
+
+                    if (securityContext.Tables[ApplicationRoleTable].PrimaryKey.Length > 0)
+                    {
+                        applicationRole = securityContext.Tables[ApplicationRoleTable].Rows.Find(role["ApplicationRoleID"]);
+                    }
+                    else
+                    {
+                        DataRow[] applicationRoles = securityContext.Tables[ApplicationRoleTable].Select(string.Format("ID = '{0}'", EncodeEscapeSequences(role["ApplicationRoleID"].ToString())));
+
+                        if (applicationRoles.Length > 0)
+                            applicationRole = applicationRoles[0];
+                    }
 
                     if ((object)applicationRole == null || Convert.IsDBNull(applicationRole["Name"]))
                         continue;
@@ -934,10 +969,6 @@ namespace GSF.Security
                 AddSecurityContextTable(connection, securityContext, securityTable, securityTable == ApplicationRoleTable ? s_nodeID : default(Guid));
             }
 
-            // Make sure primary keys were defined on tables that we use "Find" function on later...
-            UpdatePrimaryKey(securityContext.Tables[SecurityGroupTable], "SecurityGroupID");
-            UpdatePrimaryKey(securityContext.Tables[ApplicationRoleTable], "ApplicationRoleID");
-
             // Always cache security context after successful extraction
             Thread cacheSecurityContext = new Thread(() => AdoSecurityCache.GetCurrentCache().DataSet = securityContext);
             cacheSecurityContext.IsBackground = true;
@@ -965,6 +996,11 @@ namespace GSF.Security
             {
                 securityContext.Tables.Add(tableName).Load(reader);
             }
+        }
+
+        private static string EncodeEscapeSequences(string value)
+        {
+            return value.ToNonNullString().Replace("\\", "\\\\");
         }
 
         #endregion

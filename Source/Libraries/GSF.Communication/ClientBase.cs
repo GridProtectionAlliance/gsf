@@ -692,7 +692,8 @@ namespace GSF.Communication
             do
             {
                 Thread.Sleep(100);
-            } while (m_currentState == ClientState.Connecting);
+            }
+            while (m_currentState == ClientState.Connecting);
         }
 
         /// <summary>
