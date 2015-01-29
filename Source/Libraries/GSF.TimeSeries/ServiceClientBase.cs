@@ -348,15 +348,24 @@ namespace GSF.TimeSeries
                                 WriteLine();
                             }
 
-                            // Attempt to set network credentials used when attempting AD authentication
-                            password = passwordBuilder.ToString();
-                            userInfo = new UserInfo(username);
-                            userInfo.Initialize();
-                            SetNetworkCredential(new NetworkCredential(userInfo.LoginID, password));
+                            try
+                            {
+                                // Attempt to set network credentials used when attempting AD authentication
+                                password = passwordBuilder.ToString();
+                                userInfo = new UserInfo(username);
+                                userInfo.Initialize();
+                                SetNetworkCredential(new NetworkCredential(userInfo.LoginID, password));
 
-                            // Set the user name on the client helper.
-                            m_clientHelper.Username = username;
-                            m_clientHelper.Password = SecurityProviderUtility.EncryptPassword(password);
+                                // Set the user name on the client helper
+                                m_clientHelper.Username = username;
+                                m_clientHelper.Password = SecurityProviderUtility.EncryptPassword(password);
+                            }
+                            catch
+                            {
+                                // Even if this fails, we can still pass along user credentials
+                                m_clientHelper.Username = username;
+                                m_clientHelper.Password = SecurityProviderUtility.EncryptPassword(password);
+                            }
                         }
 
                         while (m_authenticated && m_clientHelper.Enabled && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
