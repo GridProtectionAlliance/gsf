@@ -644,7 +644,16 @@ namespace GSF.ServiceProcess
                         // This will be done only when the object is disposed by calling Dispose().
                         Disconnect();
                         SaveSettings();
-                        RemotingClient = null;
+
+                        if ((object)m_remotingClient != null)
+                        {
+                            // Detach events from any existing instance
+                            m_remotingClient.ConnectionEstablished -= RemotingClient_ConnectionEstablished;
+                            m_remotingClient.ConnectionAttempt -= RemotingClient_ConnectionAttempt;
+                            m_remotingClient.ConnectionException -= RemotingClient_ConnectionException;
+                            m_remotingClient.ConnectionTerminated -= RemotingClient_ConnectionTerminated;
+                            m_remotingClient.ReceiveDataComplete -= RemotingClient_ReceiveDataComplete;
+                        }
                     }
                 }
                 finally
