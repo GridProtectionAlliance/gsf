@@ -222,10 +222,10 @@ namespace GSF.Communication
         private bool m_ignoreInvalidCredentials;
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
+        private int m_maxSendQueueSize;
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectWaitHandle;
         private NetworkCredential m_networkCredential;
-        private int m_maxSendQueueSize;
 
         private ConnectState m_connectState;
         private ReceiveState m_receiveState;
@@ -1134,12 +1134,12 @@ namespace GSF.Communication
 
                 // Initialize state object for the asynchronous receive loop
                 receiveState = new ReceiveState();
+                receiveState.Token = connectState.Token;
 
                 receiveState.Socket = connectState.Socket;
                 receiveState.NetworkStream = connectState.NetworkStream;
                 receiveState.SslStream = connectState.SslStream;
-                receiveState.Buffer = new byte[m_payloadMarker.Length + Payload.LengthSegment];
-                receiveState.Token = connectState.Token;
+                receiveState.Buffer = new byte[ReceiveBufferSize];
 
                 // Store receiveState in m_receiveState so that calls to Disconnect
                 // and Dispose can dispose resources and cancel asynchronous loops
@@ -1369,9 +1369,9 @@ namespace GSF.Communication
                 if (!receiveState.Socket.Connected)
                     throw new SocketException((int)SocketError.Disconnecting);
 
-                // Update statistics and bytes received
+                // Update bytes received
                 bytesReceived = receiveState.SslStream.EndRead(asyncResult);
-                receiveState.Offset += bytesReceived;
+                receiveState.PayloadLength = bytesReceived;
 
                 // Sanity check to determine if the server disconnected gracefully
                 if (bytesReceived == 0)
@@ -1510,7 +1510,7 @@ namespace GSF.Communication
                 if (!sendState.Token.Cancelled)
                 {
                     if (Interlocked.CompareExchange(ref sendState.Sending, 1, 0) == 0)
-                        SendPayloadAsync(m_sendState);
+                        SendPayloadAsync(sendState);
 
                     // Notify that the send operation has started.
                     OnSendDataStart();
@@ -1701,6 +1701,7 @@ namespace GSF.Communication
                     if ((object)connectState != null)
                     {
                         TerminateConnection(connectState.Token);
+                        connectState.Socket.Disconnect(false);
                         connectState.Dispose();
                     }
 
