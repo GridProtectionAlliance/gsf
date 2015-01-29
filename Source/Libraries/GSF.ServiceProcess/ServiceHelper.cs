@@ -3765,11 +3765,20 @@ namespace GSF.ServiceProcess
                 else
                     serviceName = AppDomain.CurrentDomain.FriendlyName;
 
+                // Get current process memory usage
+                long processMemory = Common.GetProcessMemory();
+
                 versionInfo.AppendFormat("{0} Service Version:\r\n\r\n", serviceName);
-                versionInfo.AppendFormat("  App Domain: {0}, running on .NET {1}\r\n", AppDomain.CurrentDomain.FriendlyName, Environment.Version);
-                versionInfo.AppendFormat("   Code Base: {0}\r\n", serviceAssembly.CodeBase);
-                versionInfo.AppendFormat("  Build Date: {0}\r\n", serviceAssembly.BuildDate.ToString());
-                versionInfo.AppendFormat("     Version: {0}", serviceAssembly.Version);
+                versionInfo.AppendFormat("      App Domain: {0}, running on .NET {1}\r\n", AppDomain.CurrentDomain.FriendlyName, Environment.Version);
+                versionInfo.AppendFormat("    Machine Name: {0}", Environment.MachineName);
+                versionInfo.AppendFormat("      OS Version: {0}", Environment.OSVersion.VersionString);
+                versionInfo.AppendFormat("    Product Name: {0}", Common.GetOSProductName());
+                versionInfo.AppendFormat("  Working Memory: {0}", processMemory > 0 ? SI2.ToScaledString(processMemory, 4, "B", SI2.IECSymbols) : "Undetermined");
+                versionInfo.AppendFormat("  Execution Mode: {0}-bit", IntPtr.Size * 8);
+                versionInfo.AppendFormat("      Processors: {0}", Environment.ProcessorCount);
+                versionInfo.AppendFormat("       Code Base: {0}\r\n", serviceAssembly.CodeBase);
+                versionInfo.AppendFormat("      Build Date: {0}\r\n", serviceAssembly.BuildDate);
+                versionInfo.AppendFormat("         Version: {0}", serviceAssembly.Version);
 
                 string message = versionInfo.ToString();
                 UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message + "\r\n\r\n");

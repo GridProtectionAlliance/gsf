@@ -182,7 +182,6 @@ namespace GSF.TimeSeries.UI
                             m_clientHelper.AuthenticationSuccess -= ClientHelper_AuthenticationSuccess;
                             m_clientHelper.AuthenticationFailure -= ClientHelper_AuthenticationFailure;
                             m_clientHelper.Dispose();
-                            m_clientHelper = null;
                         }
 
                         if ((object)m_remotingClient != null)
@@ -193,7 +192,6 @@ namespace GSF.TimeSeries.UI
                                 m_remotingClient.Disconnect();
 
                             m_remotingClient.Dispose();
-                            m_remotingClient = null;
                         }
                     }
                 }

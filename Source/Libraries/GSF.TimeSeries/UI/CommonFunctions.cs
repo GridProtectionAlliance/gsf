@@ -738,9 +738,6 @@ namespace GSF.TimeSeries.UI
                     {
                         s_windowsServiceClient.Helper.Connect();
 
-                        if (!s_windowsServiceClient.Helper.RemotingClient.Enabled)
-                            return;
-
                         // If connection attempt failed with provided credentials, try once more with direct authentication
                         // but only when transport is secured
                         if (!s_windowsServiceClient.Authenticated && s_windowsServiceClient.Helper.RemotingClient is TlsClient)

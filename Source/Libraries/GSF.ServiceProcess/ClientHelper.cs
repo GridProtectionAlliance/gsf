@@ -727,7 +727,14 @@ namespace GSF.ServiceProcess
 
             // Attempt reconnection on a separate thread.
             if (m_attemptReconnection)
-                new Thread(Connect).Start();
+            {
+                new Thread(state =>
+                {
+                    Thread.Sleep(1000);
+                    Connect();
+                })
+                .Start();
+            }
         }
 
         private void RemotingClient_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
