@@ -68,7 +68,6 @@ using System.Net.Security;
 using System.Security.Authentication;
 #endif
 using GSF.Configuration;
-using GSF.Threading;
 
 namespace GSF.Communication
 {
@@ -155,8 +154,10 @@ namespace GSF.Communication
         private sealed class ConnectState : IDisposable
         {
             public Socket Socket;
+#if !MONO
             public NetworkStream NetworkStream;
             public NegotiateStream NegotiateStream;
+#endif
 
             public SocketAsyncEventArgs ConnectArgs = new SocketAsyncEventArgs();
             public SocketAsyncEventArgs ReceiveArgs;
@@ -172,8 +173,10 @@ namespace GSF.Communication
                 Dispose(SendArgs);
 
                 Dispose(Socket);
+#if !MONO
                 Dispose(NetworkStream);
                 Dispose(NegotiateStream);
+#endif
             }
 
             private static void Dispose(IDisposable obj)
