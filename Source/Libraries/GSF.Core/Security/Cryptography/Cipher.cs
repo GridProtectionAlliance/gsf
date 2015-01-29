@@ -474,7 +474,7 @@ namespace GSF.Security.Cryptography
                 RetryDelayInterval = retryDelayInterval,
                 MaximumRetryAttempts = maximumRetryAttempts,
                 ManagedEncryption = s_managedEncryption,
-#if DNF45
+#if DNF45 && !MONO
                 ReloadOnChange = true,
 #else
                 // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
@@ -523,7 +523,7 @@ namespace GSF.Security.Cryptography
                     FileName = userCacheFileName,
                     RetryDelayInterval = retryDelayInterval,
                     MaximumRetryAttempts = maximumRetryAttempts,
-#if DNF45
+#if DNF45 && !MONO
                     ReloadOnChange = true,
 #else
                     // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents

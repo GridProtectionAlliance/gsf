@@ -235,7 +235,7 @@ namespace GSF.Security
                 localSecurityCache = new AdoSecurityCache
                 {
                     FileName = localCacheFileName,
-#if DNF45
+#if DNF45 && !MONO
                     ReloadOnChange = true,
 #else
                     // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
@@ -281,7 +281,7 @@ namespace GSF.Security
                 currentCache = new AdoSecurityCache
                 {
                     FileName = userCacheFileName,
-#if DNF45
+#if DNF45 && !MONO
                     ReloadOnChange = true,
 #else
                     // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
