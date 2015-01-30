@@ -961,6 +961,16 @@ namespace GSF.TimeSeries.Transport
             {
                 base.DataSource = value;
                 m_registerStatisticsOperation.RunOnce();
+
+                // For automatic connections, when meta-data refresh is complete, update output measurements to see if any
+                // points for subscription have changed after re-application of filter expressions and if so, resubscribe
+                if ((object)m_commandChannel != null && m_commandChannel.Enabled && m_autoConnect && UpdateOutputMeasurements())
+                {
+                    OnStatusMessage("Meta-data received from publisher modified measurement availability, adjusting active subscription...");
+
+                    // Updating subscription will restart data stream monitor upon successful resubscribe
+                    SubscribeToOutputMeasurements(true);
+                }
             }
         }
 
@@ -3673,21 +3683,9 @@ namespace GSF.TimeSeries.Transport
                 // Send notification that system configuration has changed
                 OnConfigurationChanged();
 
-                // For automatic connections, when meta-data refresh is complete, update output measurements to see if any
-                // points for subscription have changed after re-application of filter expressions and if so, resubscribe
-                if (m_autoConnect && UpdateOutputMeasurements())
-                {
-                    OnStatusMessage("Meta-data received from publisher modified measurement availability, adjusting active subscription...");
-
-                    // Updating subscription will restart data stream monitor upon successful resubscribe
-                    SubscribeToOutputMeasurements(true);
-                }
-                else
-                {
-                    // Restart data stream monitor after meta-data synchronization if it was originally enabled
-                    if (dataMonitoringEnabled && (object)m_dataStreamMonitor != null)
-                        m_dataStreamMonitor.Enabled = true;
-                }
+                // Restart data stream monitor after meta-data synchronization if it was originally enabled
+                if (dataMonitoringEnabled && (object)m_dataStreamMonitor != null)
+                    m_dataStreamMonitor.Enabled = true;
             }
             catch (Exception ex)
             {
