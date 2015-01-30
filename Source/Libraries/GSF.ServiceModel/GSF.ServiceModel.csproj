@@ -112,6 +112,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Activation\FormatSpecificationBehavior.cs" />
+    <Compile Include="Activation\FormatSpecificationInspector.cs" />
     <Compile Include="Activation\SecureServiceHostFactory.cs" />
     <Compile Include="IPolicyRetriever.cs" />
     <Compile Include="ISelfHostingService.cs" />

@@ -250,6 +250,7 @@ namespace GSF.ServiceModel.Activation
                             restBehavior.HelpEnabled = true;
                         //#endif
                         serviceEndpoint.Behaviors.Add(restBehavior);
+                        serviceEndpoint.Behaviors.Add(new FormatSpecificationBehavior());
                     }
                 }
             }
