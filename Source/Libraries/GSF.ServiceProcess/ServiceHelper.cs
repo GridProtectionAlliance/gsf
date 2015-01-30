@@ -3768,20 +3768,20 @@ namespace GSF.ServiceProcess
                 // Get current process memory usage
                 long processMemory = Common.GetProcessMemory();
 
-                versionInfo.AppendFormat("{0} Service Version:\r\n\r\n", serviceName);
-                versionInfo.AppendFormat("      App Domain: {0}, running on .NET {1}\r\n", AppDomain.CurrentDomain.FriendlyName, Environment.Version);
-                versionInfo.AppendFormat("    Machine Name: {0}", Environment.MachineName);
-                versionInfo.AppendFormat("      OS Version: {0}", Environment.OSVersion.VersionString);
-                versionInfo.AppendFormat("    Product Name: {0}", Common.GetOSProductName());
-                versionInfo.AppendFormat("  Working Memory: {0}", processMemory > 0 ? SI2.ToScaledString(processMemory, 4, "B", SI2.IECSymbols) : "Undetermined");
-                versionInfo.AppendFormat("  Execution Mode: {0}-bit", IntPtr.Size * 8);
-                versionInfo.AppendFormat("      Processors: {0}", Environment.ProcessorCount);
-                versionInfo.AppendFormat("       Code Base: {0}\r\n", serviceAssembly.CodeBase);
-                versionInfo.AppendFormat("      Build Date: {0}\r\n", serviceAssembly.BuildDate);
+                versionInfo.AppendFormat("{0} Service Version:{1}{1}", serviceName, Environment.NewLine);
+                versionInfo.AppendFormat("      App Domain: {0}, running on .NET {1}{2}", AppDomain.CurrentDomain.FriendlyName, Environment.Version, Environment.NewLine);
+                versionInfo.AppendFormat("    Machine Name: {0}{1}", Environment.MachineName, Environment.NewLine);
+                versionInfo.AppendFormat("      OS Version: {0}{1}", Environment.OSVersion.VersionString, Environment.NewLine);
+                versionInfo.AppendFormat("    Product Name: {0}{1}", Common.GetOSProductName(), Environment.NewLine);
+                versionInfo.AppendFormat("  Working Memory: {0}{1}", processMemory > 0 ? SI2.ToScaledString(processMemory, 4, "B", SI2.IECSymbols) : "Undetermined", Environment.NewLine);
+                versionInfo.AppendFormat("  Execution Mode: {0}-bit{1}", IntPtr.Size * 8, Environment.NewLine);
+                versionInfo.AppendFormat("      Processors: {0}{1}", Environment.ProcessorCount, Environment.NewLine);
+                versionInfo.AppendFormat("       Code Base: {0}{1}", serviceAssembly.CodeBase, Environment.NewLine);
+                versionInfo.AppendFormat("      Build Date: {0}{1}", serviceAssembly.BuildDate, Environment.NewLine);
                 versionInfo.AppendFormat("         Version: {0}", serviceAssembly.Version);
 
                 string message = versionInfo.ToString();
-                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message + "\r\n\r\n");
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message + "{0}{0}", Environment.NewLine);
 
                 // Also allow consumers to directly consume message via event in response to a version request
                 if (requestInfo.Request.Arguments.Exists("actionable"))
