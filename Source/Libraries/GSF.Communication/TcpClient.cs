@@ -1057,7 +1057,7 @@ namespace GSF.Communication
                             receiveState.Buffer = new byte[receiveState.PayloadLength];
                     }
                 }
-                else
+                else if (receiveState.Offset == receiveState.PayloadLength)
                 {
                     // We've received the entire payload so notify the user
                     OnReceiveDataComplete(receiveState.Buffer, receiveState.PayloadLength);
