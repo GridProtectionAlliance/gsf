@@ -97,6 +97,7 @@ namespace GSF.Diagnostics
         private float m_valueDivisor;
         private int m_samplingWindow;
         private System.Diagnostics.PerformanceCounter m_counter;
+        private readonly object m_samplesLock;
         private readonly List<float> m_samples;
         private float m_lifetimeMaximum;
         private decimal m_lifetimeTotal;
@@ -155,11 +156,12 @@ namespace GSF.Diagnostics
         /// <param name="readOnly">Flag that determines if this counter is read-only.</param>
         public PerformanceCounter(string categoryName, string counterName, string instanceName, string aliasName, string valueUnit, float valueDivisor, bool readOnly = true)
         {
-            this.AliasName = aliasName;
-            this.ValueUnit = valueUnit;
-            this.ValueDivisor = valueDivisor;
+            AliasName = aliasName;
+            ValueUnit = valueUnit;
+            ValueDivisor = valueDivisor;
 
             m_samplingWindow = DefaultSamplingWindow;
+            m_samplesLock = new object();
             m_samples = new List<float>();
             m_counter = new System.Diagnostics.PerformanceCounter(categoryName, counterName, instanceName);
 
@@ -189,6 +191,7 @@ namespace GSF.Diagnostics
             m_samplingWindow = initialCounter.m_samplingWindow;
             m_counter = initialCounter.m_counter;
 
+            m_samplesLock = new object();
             m_samples = new List<float>(Enumerable.Repeat(0.0F, sources.Max(c => c.m_samples.Count)));
 
             for (int i = 0; i < m_samples.Count; i++)
@@ -298,15 +301,14 @@ namespace GSF.Diagnostics
         /// <summary>
         /// Gets a list of sampled values from the <see cref="BaseCounter"/>
         /// </summary>
-        /// <remarks>
-        /// Thread-safety Warning: Due to the asynchronous nature of <see cref="PerformanceCounter"/>, a lock must be 
-        /// obtained on <see cref="Samples"/> before accessing it.
-        /// </remarks>
         public List<float> Samples
         {
             get
             {
-                return m_samples;
+                lock (m_samplesLock)
+                {
+                    return new List<float>(m_samples);
+                }
             }
         }
 
@@ -317,10 +319,13 @@ namespace GSF.Diagnostics
         {
             get
             {
-                if (m_samples.Count <= 0)
-                    return float.NaN;
+                lock (m_samplesLock)
+                {
+                    if (m_samples.Count <= 0)
+                        return float.NaN;
 
-                return m_samples[m_samples.Count - 1] / m_valueDivisor;
+                    return m_samples[m_samples.Count - 1] / m_valueDivisor;
+                }
             }
         }
 
@@ -331,10 +336,13 @@ namespace GSF.Diagnostics
         {
             get
             {
-                if (m_samples.Count <= 0)
-                    return float.NaN;
+                lock (m_samplesLock)
+                {
+                    if (m_samples.Count <= 0)
+                        return float.NaN;
 
-                return m_samples.Min() / m_valueDivisor;
+                    return m_samples.Min() / m_valueDivisor;
+                }
             }
         }
 
@@ -345,10 +353,13 @@ namespace GSF.Diagnostics
         {
             get
             {
-                if (m_samples.Count <= 0)
-                    return float.NaN;
+                lock (m_samplesLock)
+                {
+                    if (m_samples.Count <= 0)
+                        return float.NaN;
 
-                return m_samples.Max() / m_valueDivisor;
+                    return m_samples.Max() / m_valueDivisor;
+                }
             }
         }
 
@@ -359,10 +370,13 @@ namespace GSF.Diagnostics
         {
             get
             {
-                if (m_samples.Count <= 0)
-                    return float.NaN;
+                lock (m_samplesLock)
+                {
+                    if (m_samples.Count <= 0)
+                        return float.NaN;
 
-                return m_samples.Average() / m_valueDivisor;
+                    return m_samples.Average() / m_valueDivisor;
+                }
             }
         }
 
@@ -467,13 +481,14 @@ namespace GSF.Diagnostics
                 {
                     float currentSample = m_counter.NextValue();
 
-                    // Update counter sample set
-                    m_samples.Add(currentSample);
-
-                    // Maintain counter samples rolling window size
-                    while (m_samples.Count > m_samplingWindow)
+                    lock (m_samplesLock)
                     {
-                        m_samples.RemoveAt(0);
+                        // Update counter sample set
+                        m_samples.Add(currentSample);
+
+                        // Maintain counter samples rolling window size
+                        while (m_samples.Count > m_samplingWindow)
+                            m_samples.RemoveAt(0);
                     }
 
                     // Track lifetime maximum value
@@ -508,7 +523,10 @@ namespace GSF.Diagnostics
         /// </summary>
         public void Reset()
         {
-            m_samples.Clear();
+            lock (m_samplesLock)
+            {
+                m_samples.Clear();
+            }
         }
 
         #endregion
