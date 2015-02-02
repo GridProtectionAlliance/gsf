@@ -40,6 +40,7 @@ using System.Threading;
 using GSF.Configuration;
 using GSF.IO;
 using GSF.Net.Security;
+using GSF.Threading;
 
 namespace GSF.Communication
 {
@@ -223,6 +224,7 @@ namespace GSF.Communication
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
         private int m_maxSendQueueSize;
+        private ShortSynchronizedOperation m_dumpPayloadsOperation;
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectWaitHandle;
         private NetworkCredential m_networkCredential;
@@ -270,6 +272,7 @@ namespace GSF.Communication
             m_ignoreInvalidCredentials = DefaultIgnoreInvalidCredentials;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_maxSendQueueSize = DefaultMaxSendQueueSize;
+            m_dumpPayloadsOperation = new ShortSynchronizedOperation(DumpPayloads, OnSendDataException);
         }
 
         /// <summary>
@@ -1470,7 +1473,6 @@ namespace GSF.Communication
             SendState sendState = null;
 
             TlsClientPayload payload;
-            TlsClientPayload dequeuedPayload;
             ManualResetEvent handle;
 
             try
@@ -1495,13 +1497,9 @@ namespace GSF.Communication
                 payload.Length = length;
                 payload.WaitHandle = handle;
 
-                // If the send queue has reached its maximum size,
-                // make room for the new payload
-                if (sendState.SendQueue.Count == m_maxSendQueueSize && sendState.SendQueue.TryDequeue(out dequeuedPayload))
-                {
-                    dequeuedPayload.WaitHandle.Set();
-                    dequeuedPayload.WaitHandle.Dispose();
-                }
+                // Execute operation to take action if the client
+                // has reached the maximum send queue size
+                m_dumpPayloadsOperation.TryRun();
 
                 // Queue payload for sending
                 sendState.SendQueue.Enqueue(payload);
@@ -1827,6 +1825,37 @@ namespace GSF.Communication
         {
             if (CurrentState != ClientState.Disconnected)
                 base.OnReceiveDataException(ex);
+        }
+
+        /// <summary>
+        /// Dumps payloads from the send queue when the send queue grows too large.
+        /// </summary>
+        private void DumpPayloads()
+        {
+            SendState sendState = m_sendState;
+            TlsClientPayload payload;
+
+            // Quit if this send loop has been cancelled
+            if ((object)sendState == null || sendState.Token.Cancelled)
+                return;
+
+            // Check to see if the client has reached the maximum send queue size.
+            if (m_maxSendQueueSize > 0 && sendState.SendQueue.Count >= m_maxSendQueueSize)
+            {
+                for (int i = 0; i < m_maxSendQueueSize; i++)
+                {
+                    if (sendState.Token.Cancelled)
+                        return;
+
+                    if (sendState.SendQueue.TryDequeue(out payload))
+                    {
+                        payload.WaitHandle.Set();
+                        payload.WaitHandle.Dispose();
+                    }
+                }
+
+                throw new InvalidOperationException(string.Format("UDP client reached maximum send queue size. {0} payloads dumped from the queue.", m_maxSendQueueSize));
+            }
         }
 
         /// <summary>
