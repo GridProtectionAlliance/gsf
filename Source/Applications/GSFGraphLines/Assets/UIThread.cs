@@ -21,35 +21,36 @@
 //
 //******************************************************************************************************
 
-using UnityEngine;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using UnityEngine;
 
 // Generally you should only apply this class to a single game object (e.g., Main Camera),
 // multiple instances would simply compete to process queued method calls
+// ReSharper disable once CheckNamespace
 public class UIThread : MonoBehaviour
-{		
+{
     #region [ Methods ]
-	
-	// Execute any queued methods on UI thread...
-	protected void FixedUpdate()
-	{
-		Tuple<Action<object[]>, object[], ManualResetEventSlim> methodCall;
-		Action<object[]> method;
-		ManualResetEventSlim resetEvent;
-		object[] args;
-		
-		while (m_methodCalls.TryDequeue(out methodCall))
-		{
-			method = methodCall.Item1;
-			args = methodCall.Item2;
-			resetEvent = methodCall.Item3;
-			
-			method(args);
-			resetEvent.Set();
-		}
-	}
+
+    // Execute any queued methods on UI thread...
+    protected void FixedUpdate()
+    {
+        Tuple<Action<object[]>, object[], ManualResetEventSlim> methodCall;
+        Action<object[]> method;
+        ManualResetEventSlim resetEvent;
+        object[] args;
+
+        while (m_methodCalls.TryDequeue(out methodCall))
+        {
+            method = methodCall.Item1;
+            args = methodCall.Item2;
+            resetEvent = methodCall.Item3;
+
+            method(args);
+            resetEvent.Set();
+        }
+    }
 
     #endregion
 
@@ -57,45 +58,45 @@ public class UIThread : MonoBehaviour
 
     // Static Fields
 
-	// Queue of methods and parameters
-	private static ConcurrentQueue<Tuple<Action<object[]>, object[], ManualResetEventSlim>> m_methodCalls;
+    // Queue of methods and parameters
+    private static readonly ConcurrentQueue<Tuple<Action<object[]>, object[], ManualResetEventSlim>> m_methodCalls;
 
     // Static Constructor
-	static UIThread()
-	{
-		m_methodCalls = new ConcurrentQueue<Tuple<Action<object[]>, object[], ManualResetEventSlim>>();
-	}
+    static UIThread()
+    {
+        m_methodCalls = new ConcurrentQueue<Tuple<Action<object[]>, object[], ManualResetEventSlim>>();
+    }
 
     // Static Methods
-	
-	/// <summary>
-	/// Invokes the specified method on the main UI thread.
-	/// </summary>
-	/// <param name="method">Delegate of method to invoke on main thread.</param>
-	/// <returns>WaitHandle that can be used to wait for queued method to execute.</returns>
-	public static WaitHandle Invoke(Action<object[]> method)
-	{
-		ManualResetEventSlim resetEvent = new ManualResetEventSlim(false);
-		
-		m_methodCalls.Enqueue(new Tuple<Action<object[]>, object[], ManualResetEventSlim>(method, null, resetEvent));
-		
-		return resetEvent.WaitHandle;
-	}
 
-	/// <summary>
-	/// Invokes the specified method on the main UI thread.
-	/// </summary>
-	/// <param name="method">Delegate of method to invoke on main thread.</param>
-	/// <param name="args">Method parameters, if any.</param>
-	/// <returns>WaitHandle that can be used to wait for queued method to execute.</returns>
-	public static WaitHandle Invoke(Action<object[]> method, params object[] args)
-	{
-		ManualResetEventSlim resetEvent = new ManualResetEventSlim(false);
-		
-		m_methodCalls.Enqueue(new Tuple<Action<object[]>, object[], ManualResetEventSlim>(method, args, resetEvent));
-		
-		return resetEvent.WaitHandle;
-	}
+    /// <summary>
+    /// Invokes the specified method on the main UI thread.
+    /// </summary>
+    /// <param name="method">Delegate of method to invoke on main thread.</param>
+    /// <returns>WaitHandle that can be used to wait for queued method to execute.</returns>
+    public static WaitHandle Invoke(Action<object[]> method)
+    {
+        ManualResetEventSlim resetEvent = new ManualResetEventSlim(false);
 
-    #endregion	
+        m_methodCalls.Enqueue(new Tuple<Action<object[]>, object[], ManualResetEventSlim>(method, null, resetEvent));
+
+        return resetEvent.WaitHandle;
+    }
+
+    /// <summary>
+    /// Invokes the specified method on the main UI thread.
+    /// </summary>
+    /// <param name="method">Delegate of method to invoke on main thread.</param>
+    /// <param name="args">Method parameters, if any.</param>
+    /// <returns>WaitHandle that can be used to wait for queued method to execute.</returns>
+    public static WaitHandle Invoke(Action<object[]> method, params object[] args)
+    {
+        ManualResetEventSlim resetEvent = new ManualResetEventSlim(false);
+
+        m_methodCalls.Enqueue(new Tuple<Action<object[]>, object[], ManualResetEventSlim>(method, args, resetEvent));
+
+        return resetEvent.WaitHandle;
+    }
+
+    #endregion
 }

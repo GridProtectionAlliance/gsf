@@ -34,6 +34,9 @@ using GSF.TimeSeries.Transport;
 using UnityEngine;
 using Vectrosity;
 
+// ReSharper disable once CheckNamespace
+// ReSharper disable UnusedMember.Local
+// ReSharper disable IntroduceOptionalParameters.Local
 public class GraphLines : MonoBehaviour
 {
     #region [ Members ]
@@ -178,7 +181,7 @@ public class GraphLines : MonoBehaviour
         private readonly Guid m_id;
         private readonly int m_index;
         private readonly float[] m_unscaledData;
-        private readonly VectorLine m_vector;
+        private VectorLine m_vector;
 
         public DataLine(GraphLines parent, Guid id, int index)
         {
@@ -188,7 +191,7 @@ public class GraphLines : MonoBehaviour
             m_unscaledData = new float[parent.m_pointsInLine];
 
             m_vector = new VectorLine("DataLine" + index, new Vector3[parent.m_pointsInLine], parent.m_lineMaterial, parent.m_lineWidth, LineType.Continuous);
-            m_vector.SetColor(parent.m_lineColors[index % parent.m_lineColors.Length]);
+            m_vector.color = parent.m_lineColors[index % parent.m_lineColors.Length];
             m_vector.drawTransform = parent.m_target;
             m_vector.Draw3DAuto();
 
@@ -223,7 +226,7 @@ public class GraphLines : MonoBehaviour
             }
             set
             {
-                m_vector.SetColor(value);
+                m_vector.color = value;
             }
         }
 
@@ -246,7 +249,10 @@ public class GraphLines : MonoBehaviour
         public void Stop()
         {
             if ((object)m_vector != null)
+            {
                 m_vector.StopDrawing3DAuto();
+                VectorLine.Destroy(ref m_vector);
+            }
         }
 
         public void UpdateValue(float newValue)
@@ -264,8 +270,8 @@ public class GraphLines : MonoBehaviour
     // Creates a fixed 3D line using Vectrosity asset to draw line for legend
     private class LegendLine : ILine
     {
-        private readonly VectorLine m_vector;
         private readonly Guid m_id;
+        private VectorLine m_vector;
 
         public LegendLine(GraphLines parent, Guid id, int index, Color color)
         {
@@ -274,7 +280,7 @@ public class GraphLines : MonoBehaviour
 
             m_id = id;
             m_vector = new VectorLine("LegendLine" + index, new Vector3[2], parent.m_lineMaterial, parent.m_lineWidth, LineType.Discrete);
-            m_vector.SetColor(color);
+            m_vector.color = color;
             m_vector.drawTransform = transform;
             m_vector.Draw3DAuto();
 
@@ -299,7 +305,10 @@ public class GraphLines : MonoBehaviour
         public void Stop()
         {
             if ((object)m_vector != null)
+            {
                 m_vector.StopDrawing3DAuto();
+                VectorLine.Destroy(ref m_vector);
+            }
         }
     }
 
@@ -364,7 +373,7 @@ public class GraphLines : MonoBehaviour
     public int m_pointsInLine = 50;
     public Transform m_target;
     public float m_graphScale = 5.0F;
-    public Color[] m_lineColors = new Color[] { Color.blue, Color.yellow, Color.red, Color.white, Color.cyan, Color.magenta, Color.black, Color.gray };
+    public Color[] m_lineColors = { Color.blue, Color.yellow, Color.red, Color.white, Color.cyan, Color.magenta, Color.black, Color.gray };
     public TextMesh m_legendMesh;
     public TextMesh m_statusMesh;
     public int m_statusRows = 4;
@@ -661,7 +670,7 @@ public class GraphLines : MonoBehaviour
     // is important that unity application be set to "run in background" to avoid running out of memory
     private void subscriber_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
     {
-        // At the moment we first receive data we know that we've sucessfully subscribed,
+        // At the moment we first receive data we know that we've successfully subscribed,
         // so we go ahead an cache list of measurement signal IDs (we may not know what
         // these are in advance if we used a FILTER expression to subscribe to points)
         if (!m_subscribed)
@@ -998,9 +1007,7 @@ public class GraphLines : MonoBehaviour
         if ((object)m_dataLines != null)
         {
             foreach (DataLine dataLine in m_dataLines.Values)
-            {
                 UIThread.Invoke(EraseLine, dataLine);
-            }
 
             m_dataLines.Clear();
         }
@@ -1009,9 +1016,7 @@ public class GraphLines : MonoBehaviour
         if ((object)m_legendLines != null)
         {
             foreach (LegendLine legendLine in m_legendLines)
-            {
                 UIThread.Invoke(EraseLine, legendLine);
-            }
 
             m_legendLines.Clear();
         }
@@ -1027,8 +1032,10 @@ public class GraphLines : MonoBehaviour
 
         ILine line = args[0] as ILine;
 
-        if ((object)line != null)
-            line.Stop();
+        if ((object)line == null)
+            return;
+
+        line.Stop();
     }
 
     private void OnScreenResize()

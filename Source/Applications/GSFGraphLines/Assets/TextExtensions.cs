@@ -22,31 +22,31 @@
 //******************************************************************************************************
 
 using UnityEngine;
-using System.Collections;
 
 // Defines extension functions for text objects
+// ReSharper disable once CheckNamespace
 public static class TextExtensions
 {
-	/// <summary>
-	/// Updates the text of a 3D Text object, even from a non-UI thread.
-	/// </summary>
-	/// <param name='mesh'>The text mesh to update.</param>
-	/// <param name='text'>The new text to apply to the mesh.</param>
-	public static void UpdateText(this TextMesh mesh, string text)
-	{
-		UIThread.Invoke(UpdateText, mesh, text);
-	}
+    /// <summary>
+    /// Updates the text of a 3D Text object, even from a non-UI thread.
+    /// </summary>
+    /// <param name='mesh'>The text mesh to update.</param>
+    /// <param name='text'>The new text to apply to the mesh.</param>
+    public static void UpdateText(this TextMesh mesh, string text)
+    {
+        UIThread.Invoke(UpdateText, mesh, text);
+    }
 
-	// Text updates must occur on main UI thread
-	private static void UpdateText(object[] args)
-	{
-		if ((object)args == null || args.Length < 2)
-			return;
-		
-		TextMesh mesh = args[0] as TextMesh;
-		string text = args[1] as string;
-		
-		if ((object)mesh != null && (object)text != null)
-			mesh.text = text;
-	}
+    // Text updates must occur on main UI thread
+    private static void UpdateText(object[] args)
+    {
+        if ((object)args == null || args.Length < 2)
+            return;
+
+        TextMesh mesh = args[0] as TextMesh;
+        string text = args[1] as string;
+
+        if ((object)mesh != null && (object)text != null)
+            mesh.text = text;
+    }
 }
