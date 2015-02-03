@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Security;
+using System.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using GSF.Communication;
@@ -256,10 +257,17 @@ namespace GSF.TimeSeries.UI
                 remotingClient.IntegratedSecurity = setting.ParseBoolean();
 
             // See if the user has explicitly defined the set of enabled SslProtocols
-            if (settings.TryGetValue("enabledSslProtocols", out setting) && Enum.TryParse(setting, true, out enabledSslProtocols))
-                remotingClient.EnabledSslProtocols = enabledSslProtocols;
-            else
-                remotingClient.EnabledSslProtocols = SslProtocols.Tls | SslProtocols.Tls12;
+            try
+            {
+                if (settings.TryGetValue("enabledSslProtocols", out setting) && Enum.TryParse(setting, true, out enabledSslProtocols))
+                    remotingClient.EnabledSslProtocols = enabledSslProtocols;
+                else
+                    remotingClient.EnabledSslProtocols = SslProtocols.Tls | SslProtocols.Tls12;
+            }
+            catch (SecurityException)
+            {
+                // Security exception can occur when user forces use of older TLS protocol through configuration but event log warning entry cannot be written
+            }
 
             // See if the user has explicitly defined valid policy errors or valid chain flags
             if (settings.TryGetValue("validPolicyErrors", out setting) && Enum.TryParse(setting, true, out validPolicyErrors))

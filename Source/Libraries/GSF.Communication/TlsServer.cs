@@ -472,6 +472,7 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets a set of flags which determine the enabled <see cref="SslProtocols"/>.
         /// </summary>
+        /// <exception cref="SecurityException">Failed to write event log entry for security warning about use of less secure TLS/SSL protocols.</exception>
         [Category("Settings"),
         DefaultValue(SslProtocols.Tls12),
         Description("The set of SSL protocols that are enabled for this server.")]
@@ -723,7 +724,18 @@ namespace GSF.Communication
                 settings.Add("IntegratedSecurity", m_integratedSecurity, "True if the client Windows account credentials are used for authentication, otherwise False.");
                 settings.Add("AllowDualStackSocket", m_allowDualStackSocket, "True if dual-mode socket is allowed when IP address is IPv6, otherwise False.");
                 settings.Add("MaxSendQueueSize", m_maxSendQueueSize, "The maximum size of the send queue before payloads are dumped from the queue.");
-                EnabledSslProtocols = settings["EnabledSslProtocols"].ValueAs(m_enabledSslProtocols);
+
+                try
+                {
+                    // Attempt to set desired transport security protocols
+                    EnabledSslProtocols = settings["EnabledSslProtocols"].ValueAs(m_enabledSslProtocols);
+                }
+                catch (SecurityException ex)
+                {
+                    // Security exception can occur when user forces use of older TLS protocol through configuration but event log warning entry cannot be written
+                    OnClientConnectingException(new SecurityException(string.Format("Transport layer security protocols assigned as configured: \"{0}\", however, event log entry for security exception could not be written: {1}", EnabledSslProtocols, ex.Message), ex));
+                }
+
                 RequireClientCertificate = settings["RequireClientCertificate"].ValueAs(m_requireClientCertificate);
                 CheckCertificateRevocation = settings["CheckCertificateRevocation"].ValueAs(m_checkCertificateRevocation);
                 CertificateFile = settings["CertificateFile"].ValueAs(m_certificateFile);
@@ -735,11 +747,9 @@ namespace GSF.Communication
                 AllowDualStackSocket = settings["AllowDualStackSocket"].ValueAs(m_allowDualStackSocket);
                 MaxSendQueueSize = settings["MaxSendQueueSize"].ValueAs(m_maxSendQueueSize);
             }
-            if (!FilePath.InApplicationPath(TrustedCertificatesPath))
-            {
-                OnClientConnectingException(new SecurityException(string.Format("Trusted Certificates Path ({0}) is not in Application Path", TrustedCertificatesPath)));
-            }
 
+            if (!FilePath.InApplicationPath(TrustedCertificatesPath))
+                OnClientConnectingException(new SecurityException(string.Format("Trusted certificates path \"{0}\" is not in application path", TrustedCertificatesPath)));
         }
 
         /// <summary>
