@@ -34,6 +34,41 @@ namespace GSF.NumericalAnalysis
     public static class Euclidean
     {
         /// <summary>
+        /// Implementation of the modulo operator using Euclidean division.
+        /// </summary>
+        /// <param name="numerator">The number to be divided.</param>
+        /// <param name="denominator">The number to divide by.</param>
+        /// <returns></returns>
+        public static double Mod(double numerator, double denominator)
+        {
+            double quotient = Math.Floor(numerator / denominator);
+            return numerator - quotient * denominator;
+        }
+
+        /// <summary>
+        /// Wraps a value to a range of values defined
+        /// by the given minimum value and range.
+        /// </summary>
+        /// <param name="value">The value to be wrapped.</param>
+        /// <param name="minimum">The minimum value of the range.</param>
+        /// <param name="range">The size of the range.</param>
+        /// <returns>The given value wrapped to the given range.</returns>
+        /// <remarks>
+        /// This method wraps the given value based on the assumption that
+        /// for every pair of values x and y where x-y=range, the values are
+        /// equivalent. This is probably most widely understood in terms of
+        /// angles, where 0, 360, 720, etc. are all equivalent angles. If
+        /// you wanted to wrap an angle such that it is between 120 and 480,
+        /// for instance, you could call Euclidean.Wrap(angle, 120, 360).
+        /// </remarks>
+        public static double Wrap(double value, double minimum, double range)
+        {
+            double transform = value - minimum;
+            double remainder = Mod(transform, range);
+            return remainder + minimum;
+        }
+
+        /// <summary>
         /// Gets the greatest common denominator of all the integers in the source collection.
         /// </summary>
         /// <param name="source">The collection of integers.</param>

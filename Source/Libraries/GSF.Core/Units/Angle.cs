@@ -67,6 +67,7 @@ using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using GSF.NumericalAnalysis;
 
 namespace GSF.Units
 {
@@ -178,9 +179,10 @@ namespace GSF.Units
         public Angle ToRange(Angle minValue, bool inclusive = true)
         {
             const double TwoPI = 2.0D * Math.PI;
-            Angle diff = this - minValue;
-            double factor = inclusive ? Math.Floor(diff / TwoPI) : (Math.Ceiling(diff / TwoPI) - 1.0D);
-            return this - (TwoPI * factor);
+
+            return inclusive
+                ? Euclidean.Wrap(this, minValue, TwoPI)
+                : Euclidean.Wrap(this, -minValue, -TwoPI);
         }
 
         #region [ Numeric Interface Implementations ]
