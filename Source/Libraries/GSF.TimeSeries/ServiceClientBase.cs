@@ -159,26 +159,31 @@ namespace GSF.TimeSeries
 
                 if (Common.IsPosixEnvironment)
                 {
-                    try
+                    if (Environment.OSVersion.Platform == PlatformID.MacOSX)
                     {
-                        // Note that a "cat" command from process execute does not work, so we manually read lock file with PID
-                        using (StreamReader reader = new StreamReader(string.Format("/tmp/{0}.exe.lock", serviceName)))
+                        // TODO: Determine Mac service stop / start commands
+                    }
+                    else
+                    {
+                        string serviceCommand = string.Format("/etc/init.d/{0}", serviceName);
+
+                        try
                         {
-                            Command.Execute("kill", reader.ReadLine());
+                            Command.Execute(serviceCommand, "stop");
+                        }
+                        catch (Exception ex)
+                        {
+                            WriteLine("Failed to stop the {0} daemon: {1}\r\n", serviceName, ex.Message);
                         }
 
                         try
                         {
-                            Command.Execute("mono-service", string.Format("{0}.exe -RunAsService", serviceName));
+                            Command.Execute(serviceCommand, "start");
                         }
                         catch (Exception ex)
                         {
                             WriteLine("Failed to restart the {0} daemon: {1}\r\n", serviceName, ex.Message);
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        WriteLine("Failed to stop the {0} daemon: {1}\r\n", serviceName, ex.Message);
                     }
                 }
                 else
