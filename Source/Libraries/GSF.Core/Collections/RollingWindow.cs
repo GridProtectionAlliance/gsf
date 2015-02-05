@@ -244,10 +244,14 @@ namespace GSF.Collections
         /// <param name="item">The object to locate in the <see cref="RollingWindow{T}"/>.</param>
         public int IndexOf(T item)
         {
-            for (int i = 0; i < m_count; i++)
+            int i = 0;
+
+            foreach (T obj in this)
             {
-                if (Equals(this[i], item))
+                if (Equals(obj, item))
                     return i;
+
+                i++;
             }
 
             return -1;
@@ -270,8 +274,8 @@ namespace GSF.Collections
         /// </summary>
         public void Clear()
         {
-            for (int i = 0; i < m_count; i++)
-                this[i] = default(T);
+            for (int i = 0; i < m_windowSize; i++)
+                m_window[i] = default(T);
 
             m_count = 0;
         }
@@ -286,6 +290,8 @@ namespace GSF.Collections
         /// <exception cref="ArgumentException">The number of elements in the source <see cref="RollingWindow{T}"/> is greater than the available space from <paramref name="arrayIndex"/> to the end of the destination <paramref name="array"/>.</exception>
         public void CopyTo(T[] array, int arrayIndex)
         {
+            int i;
+
             if ((object)array == null)
                 throw new ArgumentNullException("array");
 
@@ -295,8 +301,13 @@ namespace GSF.Collections
             if (m_count > array.Length - arrayIndex)
                 throw new ArgumentException("Not enough available space in array to copy elements from rolling window");
 
-            for (int i = 0; i < m_count; i++)
-                array[i] = this[i];
+            i = 0;
+
+            foreach (T item in this)
+            {
+                array[i] = item;
+                i++;
+            }
         }
 
         /// <summary>
@@ -309,13 +320,32 @@ namespace GSF.Collections
         public IEnumerator<T> GetEnumerator()
         {
             int version = m_version;
+            int count = 0;
 
-            for (int i = 0; i < m_count; i++)
+            for (int i = m_start; i < m_windowSize; i++)
             {
                 if (version != m_version)
                     throw new InvalidOperationException("Collection was modified; enumeration operation may not execute");
 
-                yield return this[i];
+                if (count >= m_count)
+                    break;
+
+                count++;
+
+                yield return m_window[i];
+            }
+
+            for (int i = 0; i < m_start; i++)
+            {
+                if (version != m_version)
+                    throw new InvalidOperationException("Collection was modified; enumeration operation may not execute");
+
+                if (count >= m_count)
+                    break;
+
+                count++;
+
+                yield return m_window[i];
             }
         }
 

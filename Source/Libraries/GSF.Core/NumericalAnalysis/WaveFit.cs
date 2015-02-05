@@ -84,9 +84,18 @@ namespace GSF.NumericalAnalysis
         public static SineWave SineFit(double[] yValues, double[] tValues, double frequency)
         {
             double[] z = yValues;
-            double[] x = tValues.Select(t => Math.Sin(2.0 * Math.PI * frequency * t)).ToArray();
-            double[] y = tValues.Select(t => Math.Cos(2.0 * Math.PI * frequency * t)).ToArray();
+            double[] x = new double[tValues.Length];
+            double[] y = new double[tValues.Length];
             double a, b, d;
+
+            double rad = 2.0D * Math.PI * frequency;
+
+            for (int i = 0; i < tValues.Length; i++)
+            {
+                double angle = rad * tValues[i];
+                x[i] = Math.Sin(angle);
+                y[i] = Math.Cos(angle);
+            }
 
             CurveFit.LeastSquares(z, x, y, out d, out a, out b);
 

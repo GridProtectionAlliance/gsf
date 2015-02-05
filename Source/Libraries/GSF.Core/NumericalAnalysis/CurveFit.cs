@@ -208,7 +208,6 @@ namespace GSF.NumericalAnalysis
         /// <param name="a">the out a coefficient</param>
         /// <param name="b">the out b coefficient</param>
         /// <param name="c">the out c coefficient</param>
-        [SuppressMessage("Microsoft.Performance", "CA1814:PreferJaggedArraysOverMultidimensional")]
         public static void LeastSquares(double[] zValues, double[] xValues, double[] yValues, out double a, out double b, out double c)
         {
             double n = zValues.Length;
@@ -224,7 +223,17 @@ namespace GSF.NumericalAnalysis
             double xxSum = 0;
             double yySum = 0;
 
-            double[,] coeff = new double[3, 4];
+            double coeff00;
+            double coeff01;
+            double coeff02;
+            double coeff03;
+
+            double coeff10;
+            double coeff12;
+            double coeff13;
+
+            double coeff20;
+            double coeff23;
 
             for (int i = 0; i < n; i++)
             {
@@ -244,24 +253,21 @@ namespace GSF.NumericalAnalysis
                 yySum += y * y;
             }
 
-            coeff[0, 0] = zSum;
-            coeff[0, 1] = n;
-            coeff[0, 2] = xSum;
-            coeff[0, 3] = ySum;
+            coeff00 = zSum;
+            coeff01 = n;
+            coeff02 = xSum;
+            coeff03 = ySum;
 
-            coeff[1, 0] = xzSum - (xSum * zSum) / n;
-            coeff[1, 1] = 0;
-            coeff[1, 2] = xxSum - (xSum * xSum) / n;
-            coeff[1, 3] = xySum - (xSum * ySum) / n;
+            coeff10 = xzSum - (xSum * zSum) / n;
+            coeff12 = xxSum - (xSum * xSum) / n;
+            coeff13 = xySum - (xSum * ySum) / n;
 
-            coeff[2, 0] = yzSum - (ySum * zSum) / n - (coeff[1, 0] * coeff[1, 3]) / coeff[1, 2];
-            coeff[2, 1] = 0;
-            coeff[2, 2] = 0;
-            coeff[2, 3] = yySum - (ySum * ySum) / n - (coeff[1, 3] * coeff[1, 3]) / coeff[1, 2];
+            coeff20 = yzSum - (ySum * zSum) / n - (coeff10 * coeff13) / coeff12;
+            coeff23 = yySum - (ySum * ySum) / n - (coeff13 * coeff13) / coeff12;
 
-            c = coeff[2, 0] / coeff[2, 3];
-            b = (coeff[1, 0] - c * coeff[1, 3]) / coeff[1, 2];
-            a = (coeff[0, 0] - b * coeff[0, 2] - c * coeff[0, 3]) / coeff[0, 1];
+            c = coeff20 / coeff23;
+            b = (coeff10 - c * coeff13) / coeff12;
+            a = (coeff00 - b * coeff02 - c * coeff03) / coeff01;
         }
     }
 }
