@@ -515,7 +515,7 @@ namespace PIAdapters
 
                 // Lookup connection point mapping for this measurement, if it wasn't found - go ahead and exit
                 if (!m_mappedPIPoints.TryGetValue(measurement.Key, out point))
-                    return;
+                    continue;
 
                 if ((object)point == null)
                 {
