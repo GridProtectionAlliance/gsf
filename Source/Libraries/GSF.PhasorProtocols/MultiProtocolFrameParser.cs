@@ -1771,7 +1771,6 @@ namespace GSF.PhasorProtocols
         private int m_allowedParsingExceptions;
         private Ticks m_parsingExceptionWindow;
         private IConnectionParameters m_connectionParameters;
-        private ManualResetEventSlim m_streamStopDataHandle;
         private int m_connectionAttempts;
         private bool m_enabled;
         private bool m_disposed;
@@ -1796,13 +1795,12 @@ namespace GSF.PhasorProtocols
             m_trustHeaderLength = true;
             m_keepCommandChannelOpen = true;
             m_rateCalcTimer = new Timer();
-            m_streamStopDataHandle = new ManualResetEventSlim(false);
 
             m_phasorProtocol = PhasorProtocol.IEEEC37_118V1;
             m_transportProtocol = TransportProtocol.Tcp;
 
             // Set default frame rate, this calculates milliseconds for each frame
-            this.DefinedFrameRate = DefaultDefinedFrameRate;
+            DefinedFrameRate = DefaultDefinedFrameRate;
 
             m_rateCalcTimer.Elapsed += m_rateCalcTimer_Elapsed;
             m_rateCalcTimer.Interval = 5000;
@@ -2730,11 +2728,6 @@ namespace GSF.PhasorProtocols
                         }
                         m_rateCalcTimer = null;
 
-                        if ((object)m_streamStopDataHandle != null)
-                            m_streamStopDataHandle.Dispose();
-
-                        m_streamStopDataHandle = null;
-
                         // Clear minimum timer resolution.
                         PrecisionTimer.ClearMinimumTimerResolution(1);
                     }
@@ -3091,7 +3084,7 @@ namespace GSF.PhasorProtocols
                     m_dataChannel = new FileClient();
 
                     // For file based playback, we allow the option of auto-repeat
-                    FileClient fileClient = m_dataChannel as FileClient;
+                    FileClient fileClient = (FileClient)m_dataChannel;
                     fileClient.FileOpenMode = FileMode.Open;
                     fileClient.FileAccessMode = FileAccess.Read;
                     fileClient.FileShareMode = FileShare.Read;
@@ -3560,16 +3553,33 @@ namespace GSF.PhasorProtocols
         }
 
         // Starts data parsing sequence.
-        private void StartDataParsingSequence(object state)
+        private void StartDataParsingSequence()
         {
             try
             {
                 // Attempt to stop real-time data, waiting a maximum of three seconds for this activity
                 if (!m_skipDisableRealTimeData && m_phasorProtocol != PhasorProtocol.IEC61850_90_5)
                 {
-                    m_streamStopDataHandle.Reset();
-                    ThreadPool.QueueUserWorkItem(AttemptToStopRealTimeData);
-                    m_streamStopDataHandle.Wait(3000);
+                    // Some devices will only send a config frame once data streaming has been disabled, so
+                    // we use this code to disable real-time data and wait for data to stop streaming...
+                    int attempts = 0;
+
+                    // Make sure data stream is disabled
+                    SendDeviceCommand(DeviceCommand.DisableRealTimeData);
+
+                    Thread.Sleep(1000);
+
+                    // Wait for real-time data stream to cease for up to two seconds
+                    while (m_initialBytesReceived > 0)
+                    {
+                        m_initialBytesReceived = 0;
+                        Thread.Sleep(100);
+
+                        attempts++;
+
+                        if (attempts >= 20)
+                            break;
+                    }
                 }
 
                 m_initiatingDataStream = false;
@@ -3612,45 +3622,6 @@ namespace GSF.PhasorProtocols
             }
         }
 
-        private void AttemptToStopRealTimeData(object state)
-        {
-            try
-            {
-                // Some devices will only send a config frame once data streaming has been disabled, so
-                // we use this code to disable real-time data and wait for data to stop streaming...
-                int attempts = 0;
-
-                // Make sure data stream is disabled
-                SendDeviceCommand(DeviceCommand.DisableRealTimeData);
-
-                Thread.Sleep(1000);
-
-                // Wait for real-time data stream to cease for up to two seconds
-                while (m_initialBytesReceived > 0)
-                {
-                    m_initialBytesReceived = 0;
-                    Thread.Sleep(100);
-
-                    attempts++;
-                    if (attempts >= 20)
-                        break;
-                }
-            }
-            catch (ThreadAbortException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                OnParsingException(ex);
-            }
-            finally
-            {
-                if ((object)m_streamStopDataHandle != null)
-                    m_streamStopDataHandle.Set();
-            }
-        }
-
         // Calculate frame and data rates
         private void m_rateCalcTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
@@ -3685,6 +3656,8 @@ namespace GSF.PhasorProtocols
         {
             try
             {
+                Thread startDataParsingThread;
+
                 if ((object)ConnectionEstablished != null)
                     ConnectionEstablished(this, EventArgs.Empty);
 
@@ -3693,7 +3666,10 @@ namespace GSF.PhasorProtocols
                 {
                     m_initialBytesReceived = 0;
                     m_initiatingDataStream = true;
-                    ThreadPool.QueueUserWorkItem(StartDataParsingSequence);
+
+                    startDataParsingThread = new Thread(StartDataParsingSequence);
+                    startDataParsingThread.IsBackground = true;
+                    startDataParsingThread.Start();
                 }
             }
             catch (ThreadAbortException)
