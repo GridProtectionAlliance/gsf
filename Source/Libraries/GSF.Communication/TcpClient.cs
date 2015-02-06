@@ -297,7 +297,7 @@ namespace GSF.Communication
         /// <summary>
         /// Specifies the default value for the <see cref="MaxSendQueueSize"/> property.
         /// </summary>
-        public const int DefaultMaxSendQueueSize = -1;
+        public const int DefaultMaxSendQueueSize = 500000;
 
         /// <summary>
         /// Specifies the default value for the <see cref="ClientBase.ConnectionString"/> property.
