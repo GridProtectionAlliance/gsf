@@ -1178,7 +1178,7 @@ namespace HistorianAdapters
                         string connectionString;
 
                         if (string.IsNullOrEmpty(userName))
-                            connectionString = string.Format("ServerName={0}; ConnectTimeout={1}; sourceIDs={2}", serverName, connectTimeout, instanceName);
+                            connectionString = string.Format("ServerName={0}; ConnectTimeout={1}; sourceIDs={2}; connectOnDemand=true", serverName, connectTimeout, instanceName);
                         else
                             connectionString = string.Format("ServerName={0}; UserName={1}; Password={2}; ConnectTimeout={3}; sourceIDs={4}; connectOnDemand=true", serverName, userName, password.ToNonNullString(), connectTimeout, instanceName);
 
