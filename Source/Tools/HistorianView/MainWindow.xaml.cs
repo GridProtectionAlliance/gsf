@@ -391,8 +391,6 @@ namespace HistorianView
         /// </summary>
         public MainWindow()
         {
-            string[] defaultArchivePaths = new string[0];
-
             m_archiveReaders = new List<ArchiveReader>();
             m_metadata = new List<MetadataWrapper>();
             m_contextMenuItems = new List<MenuItem>();
@@ -407,29 +405,6 @@ namespace HistorianView
             m_alignTimestampsInExport = true;
 
             m_currentTimeCheckBox.IsChecked = true;
-
-            OpenSessionFile(Path.Combine(FilePath.GetApplicationDataFolder(), "LastSession.hdv"), false);
-
-            if (m_archiveReaders.Count == 0)
-            {
-                // See if a local archive folder exists with a valid archive
-                string defaultArchiveLocation = FilePath.GetAbsolutePath("Archive");
-
-                if (Directory.Exists(defaultArchiveLocation))
-                    defaultArchivePaths = Directory.GetFiles(defaultArchiveLocation, "*_archive.d");
-
-                if (defaultArchivePaths.Length == 0)
-                {
-                    // See if a local statistics folder exists with a valid archive
-                    defaultArchiveLocation = FilePath.GetAbsolutePath("Statistics");
-
-                    if (Directory.Exists(defaultArchiveLocation))
-                        defaultArchivePaths = Directory.GetFiles(defaultArchiveLocation, "*_archive.d");
-                }
-
-                if (defaultArchivePaths.Length > 0)
-                    OpenArchives(defaultArchivePaths);
-            }
         }
 
         #endregion
@@ -1376,6 +1351,35 @@ namespace HistorianView
 
             m_archiveReaders.Clear();
             m_metadata.Clear();
+        }
+
+        // Occurs when the main window is loaded at applicatoin startup.
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            string[] defaultArchivePaths = new string[0];
+
+            OpenSessionFile(Path.Combine(FilePath.GetApplicationDataFolder(), "LastSession.hdv"), false);
+
+            if (m_archiveReaders.Count == 0)
+            {
+                // See if a local archive folder exists with a valid archive
+                string defaultArchiveLocation = FilePath.GetAbsolutePath("Archive");
+
+                if (Directory.Exists(defaultArchiveLocation))
+                    defaultArchivePaths = Directory.GetFiles(defaultArchiveLocation, "*_archive.d");
+
+                if (defaultArchivePaths.Length == 0)
+                {
+                    // See if a local statistics folder exists with a valid archive
+                    defaultArchiveLocation = FilePath.GetAbsolutePath("Statistics");
+
+                    if (Directory.Exists(defaultArchiveLocation))
+                        defaultArchivePaths = Directory.GetFiles(defaultArchiveLocation, "*_archive.d");
+                }
+
+                if (defaultArchivePaths.Length > 0)
+                    OpenArchives(defaultArchivePaths);
+            }
         }
 
         // Occurs when the starting date is changed.
