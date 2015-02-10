@@ -38,6 +38,7 @@ using GSF.Configuration;
 using GSF.Console;
 using GSF.ErrorManagement;
 using GSF.Identity;
+using GSF.IO;
 using GSF.Net.Security;
 using GSF.Reflection;
 using GSF.Security;
@@ -159,31 +160,24 @@ namespace GSF.TimeSeries
 
                 if (Common.IsPosixEnvironment)
                 {
-                    if (Environment.OSVersion.Platform == PlatformID.MacOSX)
+                    string serviceCommand = FilePath.GetAbsolutePath(serviceName);
+
+                    try
                     {
-                        // TODO: Determine Mac service stop / start commands
+                        Command.Execute(serviceCommand, "stop");
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        string serviceCommand = string.Format("/etc/init.d/{0}", serviceName);
+                        WriteLine("Failed to stop the {0} daemon: {1}\r\n", serviceName, ex.Message);
+                    }
 
-                        try
-                        {
-                            Command.Execute(serviceCommand, "stop");
-                        }
-                        catch (Exception ex)
-                        {
-                            WriteLine("Failed to stop the {0} daemon: {1}\r\n", serviceName, ex.Message);
-                        }
-
-                        try
-                        {
-                            Command.Execute(serviceCommand, "start");
-                        }
-                        catch (Exception ex)
-                        {
-                            WriteLine("Failed to restart the {0} daemon: {1}\r\n", serviceName, ex.Message);
-                        }
+                    try
+                    {
+                        Command.Execute(serviceCommand, "start");
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteLine("Failed to restart the {0} daemon: {1}\r\n", serviceName, ex.Message);
                     }
                 }
                 else
