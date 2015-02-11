@@ -9,7 +9,7 @@ namespace UserInfoTest
     {
         static int Main(string[] args)
         {
-            Console.WriteLine("Current user = " + WindowsIdentity.GetCurrent().Name);
+            Console.WriteLine("Current user = " + UserInfo.CurrentUserInfo.LoginID);
             string domain = "", userName, password, errorMessage;
 
             Console.Write("Enter user name: ");
