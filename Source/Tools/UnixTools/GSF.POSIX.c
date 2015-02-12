@@ -145,7 +145,7 @@ int AuthenticateUser(const char* userName, const char* password)
     int retval;
 
     // Start PAM
-    retval = pam_start("gsf", userName, &pamc, &pamh);
+    retval = pam_start("login", userName, &pamc, &pamh);
 
     if (retval == PAM_SUCCESS)
     {
@@ -180,7 +180,7 @@ int ChangeUserPassword(const char* userName, const char* oldPassword, const char
     int retval;
 
     // Start PAM
-    retval = pam_start("gsf", userName, &pamc, &pamh);
+    retval = pam_start("login", userName, &pamc, &pamh);
 
     if (retval == PAM_SUCCESS)
     {
