@@ -65,7 +65,6 @@ namespace GSF.IO
         private LongSynchronizedOperation m_loadOperation;  // Synchronized operation to asynchronously load data from the file
         private LongSynchronizedOperation m_saveOperation;  // Synchronized operation to asynchronously save data to the file
         private InterprocessReaderWriterLock m_fileLock;    // Inter-process reader/writer lock used to synchronize file access
-        private ReaderWriterLockSlim m_dataLock;            // Thread level reader/writer lock used to synchronize file data access
         private ManualResetEventSlim m_loadIsReady;         // Wait handle used so that system will wait for file data load
         private ManualResetEventSlim m_saveIsReady;         // Wait handle used so that system will wait for file data save
         private FileSystemWatcher m_fileWatcher;            // Optional file watcher used to reload changes
@@ -99,7 +98,6 @@ namespace GSF.IO
             // Initialize field values
             m_loadOperation = new LongSynchronizedOperation(SynchronizedRead) { IsBackground = true };
             m_saveOperation = new LongSynchronizedOperation(SynchronizedWrite);
-            m_dataLock = new ReaderWriterLockSlim();
             m_loadIsReady = new ManualResetEventSlim(false);
             m_saveIsReady = new ManualResetEventSlim(true);
             m_maximumConcurrentLocks = maximumConcurrentLocks;
@@ -160,23 +158,14 @@ namespace GSF.IO
         {
             get
             {
+                byte[] fileData;
+
                 // Calls to this property are blocked until data is available
                 WaitForLoad();
 
-                m_dataLock.EnterReadLock();
+                fileData = Interlocked.CompareExchange(ref m_fileData, null, null);
 
-                try
-                {
-                    // Make a copy of the file data for external use
-                    if ((object)m_fileData != null)
-                        return m_fileData.Copy(0, m_fileData.Length);
-                }
-                finally
-                {
-                    m_dataLock.ExitReadLock();
-                }
-
-                return null;
+                return fileData.Copy(0, fileData.Length);
             }
             set
             {
@@ -184,24 +173,16 @@ namespace GSF.IO
                     throw new NullReferenceException("FileName property must be defined before setting FileData");
 
                 bool dataChanged = false;
+                byte[] fileData;
 
                 // If value is null, assume user means zero-length file
                 if ((object)value == null)
                     value = new byte[0];
 
-                m_dataLock.EnterWriteLock();
+                fileData = Interlocked.Exchange(ref m_fileData, value);
 
-                try
-                {
-                    if (m_autoSave)
-                        dataChanged = (m_fileData.CompareTo(value) != 0);
-
-                    m_fileData = value;
-                }
-                finally
-                {
-                    m_dataLock.ExitWriteLock();
-                }
+                if (m_autoSave)
+                    dataChanged = (fileData.CompareTo(value) != 0);
 
                 // Initiate save if data has changed
                 if (dataChanged)
@@ -352,12 +333,6 @@ namespace GSF.IO
                             m_saveIsReady = null;
                         }
 
-                        if ((object)m_dataLock != null)
-                        {
-                            m_dataLock.Dispose();
-                            m_dataLock = null;
-                        }
-
                         if ((object)m_fileLock != null)
                         {
                             m_fileLock.Dispose();
@@ -496,36 +471,29 @@ namespace GSF.IO
                 if (m_fileLock.TryEnterWriteLock((int)m_retryTimer.Interval))
                 {
                     FileStream fileStream = null;
+                    byte[] fileData;
 
                     try
                     {
                         fileStream = new FileStream(m_fileName, FileMode.Create, FileAccess.Write, FileShare.None);
 
-                        if (m_dataLock.TryEnterReadLock((int)m_retryTimer.Interval))
+                        try
                         {
-                            try
-                            {
-                                // Disable file watch notification before update
-                                if ((object)m_fileWatcher != null)
-                                    m_fileWatcher.EnableRaisingEvents = false;
+                            // Disable file watch notification before update
+                            if ((object)m_fileWatcher != null)
+                                m_fileWatcher.EnableRaisingEvents = false;
 
-                                SaveFileData(fileStream, m_fileData);
+                            fileData = Interlocked.CompareExchange(ref m_fileData, null, null);
+                            SaveFileData(fileStream, fileData);
 
-                                // Release any threads waiting for file save
-                                m_saveIsReady.Set();
-                            }
-                            finally
-                            {
-                                m_dataLock.ExitReadLock();
-
-                                // Re-enable file watch notification
-                                if ((object)m_fileWatcher != null)
-                                    m_fileWatcher.EnableRaisingEvents = true;
-                            }
+                            // Release any threads waiting for file save
+                            m_saveIsReady.Set();
                         }
-                        else
+                        finally
                         {
-                            RetrySynchronizedEvent(new TimeoutException("Timeout waiting to acquire read lock for local cache"), WriteEvent);
+                            // Re-enable file watch notification
+                            if ((object)m_fileWatcher != null)
+                                m_fileWatcher.EnableRaisingEvents = true;
                         }
                     }
                     catch (IOException ex)
@@ -587,25 +555,10 @@ namespace GSF.IO
                         try
                         {
                             fileStream = new FileStream(m_fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+                            Interlocked.Exchange(ref m_fileData, LoadFileData(fileStream));
 
-                            if (m_dataLock.TryEnterWriteLock((int)m_retryTimer.Interval))
-                            {
-                                try
-                                {
-                                    m_fileData = LoadFileData(fileStream);
-                                }
-                                finally
-                                {
-                                    m_dataLock.ExitWriteLock();
-                                }
-
-                                // Release any threads waiting for file data
-                                m_loadIsReady.Set();
-                            }
-                            else
-                            {
-                                RetrySynchronizedEvent(new TimeoutException("Timeout waiting to acquire write lock for local cache"), ReadEvent);
-                            }
+                            // Release any threads waiting for file data
+                            m_loadIsReady.Set();
                         }
                         catch (IOException ex)
                         {
