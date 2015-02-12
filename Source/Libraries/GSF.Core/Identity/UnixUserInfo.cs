@@ -383,6 +383,19 @@ namespace GSF.Identity
                     else
                     {
                         exists = ((object)m_userEntry != null);
+
+                        if (!exists)
+                        {
+                            // Attempt to test for user as a local account
+                            try
+                            {
+                                exists = LocalUserExists(m_parent.LoginID);
+                            }
+                            catch
+                            {
+                                exists = false;
+                            }
+                        }
                     }
                 }
 
