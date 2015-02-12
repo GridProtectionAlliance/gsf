@@ -62,6 +62,8 @@ namespace GSF.IO
         private string m_fileName;                          // Path and file name of file needing inter-process synchronization
         private byte[] m_fileData;                          // Data loaded or to be saved
         private bool m_autoSave;                            // Flag to auto save when file data has changed
+        private LongSynchronizedOperation m_loadOperation;  // Synchronized operation to asynchronously load data from the file
+        private LongSynchronizedOperation m_saveOperation;  // Synchronized operation to asynchronously save data to the file
         private InterprocessReaderWriterLock m_fileLock;    // Inter-process reader/writer lock used to synchronize file access
         private ReaderWriterLockSlim m_dataLock;            // Thread level reader/writer lock used to synchronize file data access
         private ManualResetEventSlim m_loadIsReady;         // Wait handle used so that system will wait for file data load
@@ -95,6 +97,8 @@ namespace GSF.IO
         public InterprocessCache(int maximumConcurrentLocks)
         {
             // Initialize field values
+            m_loadOperation = new LongSynchronizedOperation(SynchronizedRead) { IsBackground = true };
+            m_saveOperation = new LongSynchronizedOperation(SynchronizedWrite);
             m_dataLock = new ReaderWriterLockSlim();
             m_loadIsReady = new ManualResetEventSlim(false);
             m_saveIsReady = new ManualResetEventSlim(true);
@@ -203,7 +207,7 @@ namespace GSF.IO
                 if (dataChanged)
                 {
                     m_saveIsReady.Reset();
-                    ThreadPool.QueueUserWorkItem(SynchronizedWrite);
+                    m_saveOperation.RunOnceAsync();
                 }
             }
         }
@@ -388,7 +392,7 @@ namespace GSF.IO
                 throw new NullReferenceException("FileData is null, cannot initiate save");
 
             m_saveIsReady.Reset();
-            ThreadPool.QueueUserWorkItem(SynchronizedWrite);
+            m_saveOperation.RunOnceAsync();
         }
 
         /// <summary>
@@ -406,7 +410,7 @@ namespace GSF.IO
                 throw new NullReferenceException("FileName is null, cannot initiate load");
 
             m_loadIsReady.Reset();
-            ThreadPool.QueueUserWorkItem(SynchronizedRead);
+            m_loadOperation.RunOnceAsync();
         }
 
         /// <summary>
@@ -482,7 +486,7 @@ namespace GSF.IO
         /// <summary>
         /// Synchronously writes file data when no reads are active.
         /// </summary>
-        private void SynchronizedWrite(object state)
+        private void SynchronizedWrite()
         {
             try
             {
@@ -567,7 +571,7 @@ namespace GSF.IO
         /// <summary>
         /// Synchronously reads file data when no writes are active.
         /// </summary>
-        private void SynchronizedRead(object state)
+        private void SynchronizedRead()
         {
             try
             {
@@ -695,7 +699,7 @@ namespace GSF.IO
             if (m_disposed)
                 return;
 
-            WaitCallback callBackEvent = null;
+            LongSynchronizedOperation operation = null;
 
             lock (m_retryQueue)
             {
@@ -704,12 +708,12 @@ namespace GSF.IO
                 // load and save behavior to "merge" data sets if needed.
                 if (m_retryQueue[ReadEvent])
                 {
-                    callBackEvent = SynchronizedRead;
+                    operation = m_loadOperation;
                     m_retryQueue[ReadEvent] = false;
                 }
                 else if (m_retryQueue[WriteEvent])
                 {
-                    callBackEvent = SynchronizedWrite;
+                    operation = m_saveOperation;
                     m_retryQueue[WriteEvent] = false;
                 }
 
@@ -718,8 +722,8 @@ namespace GSF.IO
                     m_retryTimer.Start();
             }
 
-            if ((object)callBackEvent != null)
-                ThreadPool.QueueUserWorkItem(callBackEvent);
+            if ((object)operation != null)
+                operation.TryRunOnceAsync();
         }
 
         /// <summary>
