@@ -218,14 +218,14 @@
     <ItemGroup>
       <NuGetLibraries Include="$(LocalFolder)\Source\Libraries\**\*.nuspec"/>
     </ItemGroup>
-    <Exec Command="%22$(NuGet)%22 pack %22%(NuGetLibraries.RootDir)%(NuGetLibraries.Directory)%(NuGetLibraries.Filename).csproj%22 /Version $(Major).$(Minor).$(Build) /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NuGetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'"/>
-    <Exec Command="%22$(NuGet)%22 pack %22%(NuGetLibraries.RootDir)%(NuGetLibraries.Directory)%(NuGetLibraries.Filename).csproj%22 /Version $(Major).$(Minor).$(Build)-beta /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NuGetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'"/>
+    <Exec Command="%22$(NuGet)%22 pack %22%(NuGetLibraries.RootDir)%(NuGetLibraries.Directory)%(NuGetLibraries.Filename).csproj%22 /Version $(Major).$(Minor).$(Build) /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NuGetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'" ContinueOnError="true"/>
+    <Exec Command="%22$(NuGet)%22 pack %22%(NuGetLibraries.RootDir)%(NuGetLibraries.Directory)%(NuGetLibraries.Filename).csproj%22 /Version $(Major).$(Minor).$(Build)-beta /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NuGetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'" ContinueOnError="true"/>
     <Message Text="Creating NuGet template packages..."/>
     <ItemGroup>
       <NuGetTemplates Include="$(LocalFolder)\Source\Templates\NuGet\**\*.nuspec"/>
     </ItemGroup>
-    <Exec Command="%22$(NuGet)%22 pack %22%(NuGetTemplates.FullPath)%22 /Version $(Major).$(Minor).$(Build) /OutputDirectory %22$(NuGetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'"/>
-    <Exec Command="%22$(NuGet)%22 pack %22%(NuGetTemplates.FullPath)%22 /Version $(Major).$(Minor).$(Build)-beta /OutputDirectory %22$(NuGetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'"/>
+    <Exec Command="%22$(NuGet)%22 pack %22%(NuGetTemplates.FullPath)%22 /Version $(Major).$(Minor).$(Build) /OutputDirectory %22$(NuGetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'" ContinueOnError="true"/>
+    <Exec Command="%22$(NuGet)%22 pack %22%(NuGetTemplates.FullPath)%22 /Version $(Major).$(Minor).$(Build)-beta /OutputDirectory %22$(NuGetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'" ContinueOnError="true"/>
 
     <!-- Publish NuGet packages. -->
     <Message Text="Publishing NuGet packages to NuGet.org..."/>
@@ -233,6 +233,6 @@
       <NuGetPackages Remove="@(NuGetPackages)"/>
       <NuGetPackages Include="$(NuGetPackagesFolder)\GSF.*.$(Major).$(Minor)*.nupkg" Exclude="$(NuGetPackagesFolder)\GSF.*.$(Major).$(Minor)*.symbols.nupkg"/>
     </ItemGroup>
-    <Exec Command="%22$(NuGet)%22 push %22%(NuGetPackages.FullPath)%22 $(NuGetApiKey)" Condition="'@(NuGetPackages)' != ''"/>
+    <Exec Command="%22$(NuGet)%22 push %22%(NuGetPackages.FullPath)%22 $(NuGetApiKey)" Condition="'@(NuGetPackages)' != ''" ContinueOnError="true"/>
   </Target>
 </Project>
