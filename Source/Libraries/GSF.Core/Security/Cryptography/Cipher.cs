@@ -113,10 +113,10 @@ namespace GSF.Security.Cryptography
         private const string DefaultCacheFileName = "KeyIVCache.bin";
 
         // Default maximum retry attempts allowed for loading cryptographic key and initialization vector cache
-        private const int DefaultMaximumRetryAttempts = 10;
+        private const int DefaultMaximumRetryAttempts = 5;
 
         // Default wait interval, in milliseconds, before retrying load of cryptographic key and initialization vector cache
-        private const double DefaultRetryDelayInterval = 200.0D;
+        private const double DefaultRetryDelayInterval = 1000.0D;
 
         // The standard settings category for cryptography information
         private const string CryptoServicesSettingsCategory = "CryptographyServices";

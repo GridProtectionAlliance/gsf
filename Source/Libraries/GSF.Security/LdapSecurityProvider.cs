@@ -122,12 +122,12 @@ namespace GSF.Security
         /// <summary>
         /// Specifies the default value for the <see cref="CacheRetryDelayInterval"/> property.
         /// </summary>
-        public const double DefaultCacheRetryDelayInterval = 200.0D;
+        public const double DefaultCacheRetryDelayInterval = 1000.0D;
 
         /// <summary>
         /// Specifies the default value for the <see cref="CacheMaximumRetryAttempts"/> property.
         /// </summary>
-        public const int DefaultCacheMaximumRetryAttempts = 10;
+        public const int DefaultCacheMaximumRetryAttempts = 5;
 
         // Fields
         private bool m_enableOfflineCaching;

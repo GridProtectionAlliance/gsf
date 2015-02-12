@@ -51,12 +51,12 @@ namespace GSF.IO
         /// <summary>
         /// Default maximum retry attempts allowed for loading <see cref="InterprocessCache"/>.
         /// </summary>
-        public const int DefaultMaximumRetryAttempts = 10;
+        public const int DefaultMaximumRetryAttempts = 5;
 
         /// <summary>
         /// Default wait interval, in milliseconds, before retrying load of <see cref="InterprocessCache"/>.
         /// </summary>
-        public const double DefaultRetryDelayInterval = 200.0D;
+        public const double DefaultRetryDelayInterval = 1000.0D;
 
         // Fields
         private string m_fileName;                          // Path and file name of file needing inter-process synchronization
