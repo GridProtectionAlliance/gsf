@@ -167,10 +167,10 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+        /// Gets the number of elements contained in the <see cref="FileBackedDictionary{TKey, TValue}"/>.
         /// </summary>
         /// <returns>
-        /// The number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+        /// The number of elements contained in the <see cref="FileBackedDictionary{TKey, TValue}"/>.
         /// </returns>
         public int Count
         {
@@ -181,16 +181,28 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Gets a value indicating whether the <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only.
+        /// Gets a value indicating whether the <see cref="FileBackedDictionary{TKey, TValue}"/> is read-only.
         /// </summary>
         /// <returns>
-        /// true if the <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only; otherwise, false.
+        /// true if the <see cref="FileBackedDictionary{TKey, TValue}"/> is read-only; otherwise, false.
         /// </returns>
         public bool IsReadOnly
         {
             get
             {
                 return m_lookupTable.IsReadOnly;
+            }
+        }
+
+        /// <summary>
+        /// Gets the default signature used by the <see cref="FileBackedDictionary{TKey, TValue}"/>
+        /// if no user-defined signature is supplied.
+        /// </summary>
+        public byte[] DefaultSignature
+        {
+            get
+            {
+                return new Guid(FileBackedLookupTable<TKey, TValue>.DictionarySignature).ToRfcBytes();
             }
         }
 
@@ -219,9 +231,9 @@ namespace GSF.Collections
         /// The element with the specified key.
         /// </returns>
         /// <param name="key">The key of the element to get or set.</param>
-        /// <exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.</exception>
-        /// <exception cref="T:System.Collections.Generic.KeyNotFoundException">The property is retrieved and <paramref name="key"/> is not found.</exception>
-        /// <exception cref="T:System.NotSupportedException">The property is set and the <see cref="T:System.Collections.Generic.IDictionary`2"/> is read-only.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="key"/> is null.</exception>
+        /// <exception cref="KeyNotFoundException">The property is retrieved and <paramref name="key"/> is not found.</exception>
+        /// <exception cref="NotSupportedException">The property is set and the <see cref="FileBackedDictionary{TKey, TValue}"/> is read-only.</exception>
         public TValue this[TKey key]
         {
             get
@@ -235,10 +247,10 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the keys of the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// Gets an <see cref="FileBackedDictionary{TKey, TValue}"/> containing the keys of the <see cref="FileBackedDictionary{TKey, TValue}"/>.
         /// </summary>
         /// <returns>
-        /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the keys of the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// An <see cref="FileBackedDictionary{TKey, TValue}"/> containing the keys of the object that implements <see cref="FileBackedDictionary{TKey, TValue}"/>.
         /// </returns>
         public ICollection<TKey> Keys
         {
@@ -249,10 +261,10 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// Gets an <see cref="FileBackedDictionary{TKey, TValue}"/> containing the values in the <see cref="FileBackedDictionary{TKey, TValue}"/>.
         /// </summary>
         /// <returns>
-        /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// An <see cref="FileBackedDictionary{TKey, TValue}"/> containing the values in the object that implements <see cref="FileBackedDictionary{TKey, TValue}"/>.
         /// </returns>
         public ICollection<TValue> Values
         {
@@ -292,78 +304,78 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Adds an element with the provided key and value to the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// Adds an element with the provided key and value to the <see cref="FileBackedDictionary{TKey, TValue}"/>.
         /// </summary>
         /// <param name="key">The object to use as the key of the element to add.</param>
         /// <param name="value">The object to use as the value of the element to add.</param>
-        /// <exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.</exception>
-        /// <exception cref="T:System.ArgumentException">An element with the same key already exists in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.</exception>
-        /// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.IDictionary`2"/> is read-only.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="key"/> is null.</exception>
+        /// <exception cref="ArgumentException">An element with the same key already exists in the <see cref="FileBackedDictionary{TKey, TValue}"/>.</exception>
+        /// <exception cref="NotSupportedException">The <see cref="FileBackedDictionary{TKey, TValue}"/> is read-only.</exception>
         public void Add(TKey key, TValue value)
         {
             m_lookupTable.Add(key, value);
         }
 
         /// <summary>
-        /// Adds an item to the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+        /// Adds an item to the <see cref="FileBackedDictionary{TKey, TValue}"/>.
         /// </summary>
-        /// <param name="item">The object to add to the <see cref="T:System.Collections.Generic.ICollection`1"/>.</param>
-        /// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only.</exception>
+        /// <param name="item">The object to add to the <see cref="FileBackedDictionary{TKey, TValue}"/>.</param>
+        /// <exception cref="NotSupportedException">The <see cref="FileBackedDictionary{TKey, TValue}"/> is read-only.</exception>
         public void Add(KeyValuePair<TKey, TValue> item)
         {
             Add(item.Key, item.Value);
         }
 
         /// <summary>
-        /// Removes the element with the specified key from the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// Removes the element with the specified key from the <see cref="FileBackedDictionary{TKey, TValue}"/>.
         /// </summary>
         /// <returns>
         /// true if the element is successfully removed; otherwise, false.
         /// This method also returns false if <paramref name="key"/> was not
-        /// found in the original <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// found in the original <see cref="FileBackedDictionary{TKey, TValue}"/>.
         /// </returns>
         /// <param name="key">The key of the element to remove.</param>
-        /// <exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.</exception>
-        /// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.IDictionary`2"/> is read-only.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="key"/> is null.</exception>
+        /// <exception cref="NotSupportedException">The <see cref="FileBackedDictionary{TKey, TValue}"/> is read-only.</exception>
         public bool Remove(TKey key)
         {
             return m_lookupTable.Remove(key);
         }
 
         /// <summary>
-        /// Removes the first occurrence of a specific object from the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+        /// Removes the first occurrence of a specific object from the <see cref="FileBackedDictionary{TKey, TValue}"/>.
         /// </summary>
         /// <returns>
-        /// true if <paramref name="item"/> was successfully removed from the <see cref="T:System.Collections.Generic.ICollection`1"/>;
-        /// otherwise, false. This method also returns false if <paramref name="item"/> is not found in the original <see cref="T:System.Collections.Generic.ICollection`1"/>.
+        /// true if <paramref name="item"/> was successfully removed from the <see cref="FileBackedDictionary{TKey, TValue}"/>;
+        /// otherwise, false. This method also returns false if <paramref name="item"/> is not found in the original <see cref="FileBackedDictionary{TKey, TValue}"/>.
         /// </returns>
-        /// <param name="item">The object to remove from the <see cref="T:System.Collections.Generic.ICollection`1"/>.</param>
-        /// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only.</exception>
+        /// <param name="item">The object to remove from the <see cref="FileBackedDictionary{TKey, TValue}"/>.</param>
+        /// <exception cref="NotSupportedException">The <see cref="FileBackedDictionary{TKey, TValue}"/> is read-only.</exception>
         public bool Remove(KeyValuePair<TKey, TValue> item)
         {
             return Remove(item.Key);
         }
 
         /// <summary>
-        /// Determines whether the <see cref="T:System.Collections.Generic.IDictionary`2"/> contains an element with the specified key.
+        /// Determines whether the <see cref="FileBackedDictionary{TKey, TValue}"/> contains an element with the specified key.
         /// </summary>
         /// <returns>
-        /// true if the <see cref="T:System.Collections.Generic.IDictionary`2"/> contains an element with the key; otherwise, false.
+        /// true if the <see cref="FileBackedDictionary{TKey, TValue}"/> contains an element with the key; otherwise, false.
         /// </returns>
-        /// <param name="key">The key to locate in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.</param>
-        /// <exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.</exception>
+        /// <param name="key">The key to locate in the <see cref="FileBackedDictionary{TKey, TValue}"/>.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="key"/> is null.</exception>
         public bool ContainsKey(TKey key)
         {
             return m_lookupTable.ContainsKey(key);
         }
 
         /// <summary>
-        /// Determines whether the <see cref="T:System.Collections.Generic.ICollection`1"/> contains a specific value.
+        /// Determines whether the <see cref="FileBackedDictionary{TKey, TValue}"/> contains a specific value.
         /// </summary>
         /// <returns>
-        /// true if <paramref name="item"/> is found in the <see cref="T:System.Collections.Generic.ICollection`1"/>; otherwise, false.
+        /// true if <paramref name="item"/> is found in the <see cref="FileBackedDictionary{TKey, TValue}"/>; otherwise, false.
         /// </returns>
-        /// <param name="item">The object to locate in the <see cref="T:System.Collections.Generic.ICollection`1"/>.</param>
+        /// <param name="item">The object to locate in the <see cref="FileBackedDictionary{TKey, TValue}"/>.</param>
         public bool Contains(KeyValuePair<TKey, TValue> item)
         {
             return ContainsKey(item.Key);
@@ -373,32 +385,32 @@ namespace GSF.Collections
         /// Gets the value associated with the specified key.
         /// </summary>
         /// <returns>
-        /// true if the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/> contains an element with the specified key; otherwise, false.
+        /// true if the object that implements <see cref="FileBackedDictionary{TKey, TValue}"/> contains an element with the specified key; otherwise, false.
         /// </returns>
         /// <param name="key">The key whose value to get.</param>
         /// <param name="value">When this method returns, the value associated with the specified key, if the key is found; otherwise, the default value for the type of the <paramref name="value"/> parameter. This parameter is passed uninitialized.</param>
-        /// <exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="key"/> is null.</exception>
         public bool TryGetValue(TKey key, out TValue value)
         {
             return m_lookupTable.TryGetValue(key, out value);
         }
 
         /// <summary>
-        /// Removes all items from the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+        /// Removes all items from the <see cref="FileBackedDictionary{TKey, TValue}"/>.
         /// </summary>
-        /// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only. </exception>
+        /// <exception cref="NotSupportedException">The <see cref="FileBackedDictionary{TKey, TValue}"/> is read-only. </exception>
         public void Clear()
         {
             m_lookupTable.Clear();
         }
 
         /// <summary>
-        /// Copies the elements of the <see cref="T:System.Collections.Generic.ICollection`1"/> to an <see cref="T:System.Array"/>, starting at a particular <see cref="T:System.Array"/> index.
+        /// Copies the elements of the <see cref="FileBackedDictionary{TKey, TValue}"/> to an <see cref="Array"/>, starting at a particular <see cref="Array"/> index.
         /// </summary>
-        /// <param name="array">The one-dimensional <see cref="T:System.Array"/> that is the destination of the elements copied from <see cref="T:System.Collections.Generic.ICollection`1"/>. The <see cref="T:System.Array"/> must have zero-based indexing.</param><param name="arrayIndex">The zero-based index in <paramref name="array"/> at which copying begins.</param>
-        /// <exception cref="T:System.ArgumentNullException"><paramref name="array"/> is null.</exception>
-        /// <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="arrayIndex"/> is less than 0.</exception>
-        /// <exception cref="T:System.ArgumentException">The number of elements in the source <see cref="T:System.Collections.Generic.ICollection`1"/> is greater than the available space from <paramref name="arrayIndex"/> to the end of the destination <paramref name="array"/>.</exception>
+        /// <param name="array">The one-dimensional <see cref="Array"/> that is the destination of the elements copied from <see cref="FileBackedDictionary{TKey, TValue}"/>. The <see cref="Array"/> must have zero-based indexing.</param><param name="arrayIndex">The zero-based index in <paramref name="array"/> at which copying begins.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="array"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="arrayIndex"/> is less than 0.</exception>
+        /// <exception cref="ArgumentException">The number of elements in the source <see cref="FileBackedDictionary{TKey, TValue}"/> is greater than the available space from <paramref name="arrayIndex"/> to the end of the destination <paramref name="array"/>.</exception>
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
             if ((object)array == null)
@@ -418,7 +430,7 @@ namespace GSF.Collections
         /// Returns an enumerator that iterates through the collection.
         /// </summary>
         /// <returns>
-        /// A <see cref="T:System.Collections.Generic.IEnumerator`1"/> that can be used to iterate through the collection.
+        /// A <see cref="IEnumerator{T}"/> that can be used to iterate through the collection.
         /// </returns>
         /// <filterpriority>1</filterpriority>
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
@@ -484,7 +496,7 @@ namespace GSF.Collections
         /// Returns an enumerator that iterates through a collection.
         /// </summary>
         /// <returns>
-        /// An <see cref="T:System.Collections.IEnumerator"/> object that can be used to iterate through the collection.
+        /// An <see cref="IEnumerator"/> object that can be used to iterate through the collection.
         /// </returns>
         /// <filterpriority>2</filterpriority>
         IEnumerator IEnumerable.GetEnumerator()

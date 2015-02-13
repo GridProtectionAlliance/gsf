@@ -158,7 +158,7 @@ namespace GSF.IO
         private ManualResetEvent m_waitObject;
 
         private readonly Dictionary<string, DateTime> m_touchedFiles;
-        private readonly HashSet<string> m_processedFiles;
+        private readonly FileBackedHashSet<string> m_processedFiles;
 
         private bool m_disposed;
 
@@ -188,7 +188,7 @@ namespace GSF.IO
             m_waitObject = new ManualResetEvent(false);
 
             m_touchedFiles = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
-            m_processedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            m_processedFiles = new FileBackedHashSet<string>(Path.Combine(m_cachePath, m_processorID.ToString()), StringComparer.OrdinalIgnoreCase);
         }
 
         #endregion
@@ -241,10 +241,15 @@ namespace GSF.IO
                     if (m_fileWatchers.Count > 0)
                         throw new InvalidOperationException("File processor is already tracking directories - modification of the cache path would be unsafe.");
 
-                    if ((object)m_cachePath != null)
-                        m_cachePath = FilePath.GetAbsolutePath(value);
-                    else
-                        m_cachePath = DefaultCachePath;
+                    if (m_cachePath != value)
+                    {
+                        if ((object)m_cachePath != null)
+                            m_cachePath = FilePath.GetAbsolutePath(value);
+                        else
+                            m_cachePath = DefaultCachePath;
+
+                        m_processedFiles.FilePath = Path.Combine(m_cachePath, m_processorID.ToString());
+                    }
                 }
             }
         }
@@ -332,8 +337,7 @@ namespace GSF.IO
                             return !enumerated && !touched && isInWatchPath;
                         };
 
-                        if (m_processedFiles.RemoveWhere(predicate) > 0)
-                            SaveProcessedFiles();
+                        m_processedFiles.RemoveWhere(predicate);
                     });
                 });
 
@@ -365,6 +369,7 @@ namespace GSF.IO
                 {
                     m_processingQueue.Stop();
                     m_fileWatchTimer.Stop();
+                    m_processedFiles.Close();
                 }
             }
         }
@@ -402,6 +407,12 @@ namespace GSF.IO
                     {
                         m_fileWatchTimer.Dispose();
                         m_fileWatchTimer = null;
+                    }
+
+                    if ((object)m_processingQueue != null)
+                    {
+                        m_processingQueue.Dispose();
+                        m_processingQueue = null;
                     }
 
                     if ((object)m_waitObject != null)
@@ -498,7 +509,6 @@ namespace GSF.IO
                 // Update the list of processed files
                 // and save it back to the cache
                 m_processedFiles.Add(filePath);
-                AppendProcessedFile(filePath);
             }
         }
 
@@ -508,80 +518,55 @@ namespace GSF.IO
             try
             {
                 string cachePath = Path.Combine(m_cachePath, m_processorID.ToString());
+                List<string> processedFilesList;
+                byte[] signature;
 
                 if (File.Exists(cachePath))
                 {
-                    // Set up the stream reader to read the list of processed files
+                    processedFilesList = new List<string>();
+                    signature = m_processedFiles.DefaultSignature;
+
                     using (FileStream stream = File.OpenRead(cachePath))
-                    using (StreamReader reader = new StreamReader(stream, Encoding.Unicode))
                     {
-                        // Clear the existing list of processed files
-                        m_processedFiles.Clear();
+                        // Read the signature from the start of the file
+                        if (stream.Read(signature, 0, signature.Length) <= 0)
+                            return;
 
-                        while (!reader.EndOfStream)
+                        // Compare the signature to the default signature of the processedFiles hash set
+                        if (signature.SequenceEqual(m_processedFiles.DefaultSignature))
+                            return;
+
+                        // Signature of the file does not match that of the m_processedFiles hash set so
+                        // assume this is a text file with a list of the files that have been processed
+                        stream.Position = 0;
+
+                        // Read each line of the file into a list to
+                        // be consumed by the m_processedFiles hash set
+                        using (StreamReader reader = new StreamReader(stream, Encoding.Unicode))
                         {
-                            // Each path is on its own line
-                            string fullPath = reader.ReadLine();
+                            while (!reader.EndOfStream)
+                            {
+                                string fullPath = reader.ReadLine();
 
-                            // Add the path to the list of processed files
-                            if (!string.IsNullOrEmpty(fullPath))
-                                m_processedFiles.Add(fullPath);
+                                if (!string.IsNullOrEmpty(fullPath))
+                                    processedFilesList.Add(fullPath);
+                            }
                         }
                     }
+
+                    // Delete the existing file since it
+                    // does not have the right signature
+                    File.Delete(cachePath);
+
+                    // Copy files that we read from the text file
+                    // into the m_processedFiles hash set
+                    foreach (string fullPath in processedFilesList)
+                        m_processedFiles.Add(fullPath);
                 }
             }
             catch (Exception ex)
             {
                 string message = string.Format("Unable to load processed files cache due to exception: {0}", ex.Message);
-                OnError(new InvalidOperationException(message, ex));
-            }
-        }
-
-        // Saves the list of processed files to the cache.
-        private void SaveProcessedFiles()
-        {
-            try
-            {
-                // Ensure that the directory to store the cache exists
-                if (!Directory.Exists(m_cachePath))
-                    Directory.CreateDirectory(m_cachePath);
-
-                // Set up the stream writer to write the list of processed files
-                using (FileStream stream = File.Open(Path.Combine(m_cachePath, m_processorID.ToString()), FileMode.Create))
-                using (StreamWriter writer = new StreamWriter(stream, Encoding.Unicode))
-                {
-                    // Write each processed file path to the writer
-                    foreach (string filePath in m_processedFiles)
-                        writer.WriteLine(filePath);
-                }
-            }
-            catch (Exception ex)
-            {
-                string message = string.Format("Unable to save processed files cache due to exception: {0}", ex.Message);
-                OnError(new InvalidOperationException(message, ex));
-            }
-        }
-
-        // Appends the given file path to the end of the list of processed files.
-        private void AppendProcessedFile(string filePath)
-        {
-            try
-            {
-                // Ensure that the directory to store the cache exists
-                if (!Directory.Exists(m_cachePath))
-                    Directory.CreateDirectory(m_cachePath);
-
-                // Set up the stream writer to write the list of processed files
-                using (FileStream stream = File.Open(Path.Combine(m_cachePath, m_processorID.ToString()), FileMode.Append))
-                using (StreamWriter writer = new StreamWriter(stream, Encoding.Unicode))
-                {
-                    // Write processed file path to the writer
-                    writer.WriteLine(filePath);
-                }
-            }
-            catch (Exception ex)
-            {
-                string message = string.Format("Unable to save processed files cache due to exception: {0}", ex.Message);
                 OnError(new InvalidOperationException(message, ex));
             }
         }
@@ -656,10 +641,7 @@ namespace GSF.IO
                     m_touchedFiles.Add(args.FullPath, File.GetLastWriteTimeUtc(args.FullPath));
 
                 if (oldMatch && m_processedFiles.Remove(args.OldFullPath))
-                {
                     m_processedFiles.Add(args.FullPath);
-                    SaveProcessedFiles();
-                }
 
                 if (!oldMatch && newMatch)
                     TouchLockAndProcess(args.FullPath);
@@ -675,9 +657,7 @@ namespace GSF.IO
             m_processingQueue.Add(() =>
             {
                 m_touchedFiles.Remove(args.FullPath);
-
-                if (m_processedFiles.Remove(args.FullPath))
-                    SaveProcessedFiles();
+                m_processedFiles.Remove(args.FullPath);
             });
         }
 
@@ -753,8 +733,7 @@ namespace GSF.IO
                                         return !enumerated && !touched && isInWatchPath;
                                     };
 
-                                    if (m_processedFiles.RemoveWhere(predicate) > 0)
-                                        SaveProcessedFiles();
+                                    m_processedFiles.RemoveWhere(predicate);
                                 });
                             });
 
