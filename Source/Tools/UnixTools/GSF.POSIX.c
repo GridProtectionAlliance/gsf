@@ -269,6 +269,31 @@ char* GetLocalUserGecos(const char* userName)
     return pwd->pw_gecos;
 }
 
+#ifdef __APPLE__
+
+int GetLocalUserPasswordInformation(const char* userName, /*out*/ int* lastChangeDate, /*out*/ int* maxDaysForChange, /*out*/ int* accountExpirationDate)
+{
+    struct passwd* pwd = getpwnam(userName);
+
+    if (pwd == NULL)
+        return 1;
+
+    *lastChangeDate = pwd->pw_change;
+    *maxDaysForChange = 0;
+    *accountExpirationDate = pwd->pw_expire;
+
+    if (*lastChangeDate == 0 && *accountExpirationDate == 0)
+    {
+        // Apple account has password aging disabled, apply Linux style defaults
+        *maxDaysForChange = 99999;
+        *accountExpirationDate = -1;
+    }
+
+    return 0;
+}
+
+#else
+
 // Values for status parameter:
 //      1 -- "*"        Account is disabled
 //      2 -- "!<...>"   The account locked out (e.g., with passwd -l <username>)
@@ -278,29 +303,6 @@ char* GetLocalUserGecos(const char* userName)
 //      0 -- "<else>"   Account assumed normal (encrypted password)
 int GetLocalUserPasswordInformation(const char* userName, struct UserPasswordInformation* userPasswordInfo, /*out*/ int* status)
 {
-#ifdef __APPLE__
-    struct passwd* pwd = getpwnam(userName);
-
-    if (pwd == NULL)
-        return 1;
-
-    userPasswordInfo->lastChangeDate = pwd->pw_change;
-    userPasswordInfo->minDaysForChange = 0;
-    userPasswordInfo->maxDaysForChange = 0;
-    userPasswordInfo->warningDays = 0;
-    userPasswordInfo->inactivityDays = 0;
-    userPasswordInfo->accountExpirationDate = pwd->pw_expire;
-
-    if (userPasswordInfo->lastChangeDate == 0 && userPasswordInfo->accountExpirationDate == 0)
-    {
-        // Apple account has password aging disabled, apply Linux style defaults
-        userPasswordInfo->maxDaysForChange = 99999;
-        userPasswordInfo->accountExpirationDate = -1;
-    }
-
-    // Have to assume account is OK, authentication will handle the rest
-    *status = 0;
-#else
     struct spwd* sp = getspnam(userName);
 
     if (sp == NULL)
@@ -338,10 +340,11 @@ int GetLocalUserPasswordInformation(const char* userName, struct UserPasswordInf
             *status = 3;
         }
     }
-#endif
 
     return 0;
 }
+
+#endif
 
 int SetLocalUserPassword(const char* userName, const char* password, const char* salt)
 {

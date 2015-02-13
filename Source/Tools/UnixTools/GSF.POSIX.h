@@ -49,6 +49,12 @@ char* GetLocalUserHomeDirectory(const char* userName);
 
 char* GetLocalUserGecos(const char* userName);
 
+#ifdef __APPLE__
+
+int GetLocalUserPasswordInformation(const char* userName, /*out*/ int* lastChangeDate, /*out*/ int* maxDaysForChange, /*out*/ int* accountExpirationDate);
+
+#else
+
 // Values for status parameter:
 //      1 -- "*"        Account is disabled
 //      2 -- "!<...>"   The account locked out (e.g., with passwd -l <username>)
@@ -57,6 +63,8 @@ char* GetLocalUserGecos(const char* userName);
 //      3 -- ""         No password defined
 //      0 -- "<else>"   Account assumed normal (encrypted password)
 int GetLocalUserPasswordInformation(const char* userName, struct UserPasswordInformation* userPasswordInfo, /*out*/ int* status);
+
+#endif
 
 int SetLocalUserPassword(const char* userName, const char* password, const char* salt);
 

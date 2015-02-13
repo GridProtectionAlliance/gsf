@@ -63,7 +63,7 @@ namespace UserInfoTest
                 if (string.IsNullOrEmpty(errorMessage))
                     Console.WriteLine("Authentication succeeded!");
                 else
-                    Console.WriteLine("Authentication succeed, error message reported: " + errorMessage);
+                    Console.WriteLine("Authentication succeeded, error message reported: " + errorMessage);
             }
 
             Console.WriteLine();

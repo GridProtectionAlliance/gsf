@@ -86,7 +86,7 @@ namespace GSF.Identity
                 if (UserInfo.IsLocalDomain(domain))
                 {
                     // Cache shadow information for local user before possible reduction in privileges
-                    if (GetLocalUserPasswordInformation(userName, ref m_userPasswordInformation, out m_accountStatus) == 0)
+                    if (GetLocalUserPasswordInformation(userName, out m_userPasswordInformation, out m_accountStatus) == 0)
                         m_loadedUserPasswordInformation = true;
                     else
                         m_accountStatus = AccountStatus.Disabled;
@@ -369,7 +369,7 @@ namespace GSF.Identity
 
                 if (!exists)
                 {
-                    if (m_isLocalAccount)
+                    if (IsLocalAccount)
                     {
                         try
                         {
@@ -383,19 +383,6 @@ namespace GSF.Identity
                     else
                     {
                         exists = ((object)m_userEntry != null);
-
-                        if (!exists)
-                        {
-                            // Attempt to test for user as a local account
-                            try
-                            {
-                                exists = LocalUserExists(m_parent.LoginID);
-                            }
-                            catch
-                            {
-                                exists = false;
-                            }
-                        }
                     }
                 }
 
@@ -460,7 +447,7 @@ namespace GSF.Identity
                 {
                     try
                     {
-                        creationDate = Directory.GetCreationTime(Environment.GetEnvironmentVariable("HOME") ?? "/home/" + m_parent.UserName);
+                        creationDate = Directory.GetCreationTime(Environment.GetEnvironmentVariable("HOME") ?? EncodeAccountName("/home/" + m_parent.UserName));
                     }
                     catch
                     {
@@ -481,12 +468,12 @@ namespace GSF.Identity
 
                 if (m_enabled)
                 {
-                    if (m_isLocalAccount)
+                    if (IsLocalAccount)
                     {
                         UserPasswordInformation userPasswordInfo;
                         AccountStatus status;
 
-                        if (GetCachedLocalUserPasswordInformation(m_parent.UserName, out userPasswordInfo, out status) == 0)
+                        if (GetCachedLocalUserPasswordInformation(m_isLocalAccount ? m_parent.UserName : m_parent.LoginID, out userPasswordInfo, out status) == 0)
                         {
                             if (userPasswordInfo.maxDaysForChange >= 99999)
                             {
@@ -540,7 +527,7 @@ namespace GSF.Identity
             {
                 int userAccountControl = -1;
 
-                if (m_enabled && m_isLocalAccount)
+                if (m_enabled && IsLocalAccount)
                 {
                     UserPasswordInformation userPasswordInfo;
                     AccountStatus status;
@@ -574,7 +561,7 @@ namespace GSF.Identity
 
                 if (m_enabled)
                 {
-                    if (m_isLocalAccount)
+                    if (IsLocalAccount)
                     {
                         UserPasswordInformation userPasswordInfo;
                         AccountStatus status;
@@ -695,7 +682,7 @@ namespace GSF.Identity
         {
             get
             {
-                return m_isLocalAccount;
+                return (m_isLocalAccount || (object)m_userEntry == null);
             }
         }
 
@@ -954,6 +941,7 @@ namespace GSF.Identity
             {
                 m_connection = null;
             }
+
             return unixIdentity;
         }
 
@@ -1716,7 +1704,7 @@ namespace GSF.Identity
             return groups.ToArray();
         }
 
-        private static int GetCachedLocalUserPasswordInformation(string userName, out UserPasswordInformation userPasswordInformation, out AccountStatus accountStatus)
+        private static int GetCachedLocalUserPasswordInformation(string userName, out UserPasswordInformation userPasswordInfo, out AccountStatus accountStatus)
         {
             // Attempt to retrieve Unix user principal identity in case shadow information has already been parsed, in most
             // cases we will have already reduced rights needed to read this information so we pick up pre-parsed info
@@ -1729,39 +1717,58 @@ namespace GSF.Identity
                 // If user has already been authenticated, we can load pre-parsed shadow information
                 if ((object)identity != null && identity.LoadedUserPasswordInformation && identity.UserName.Equals(userName, StringComparison.OrdinalIgnoreCase))
                 {
-                    userPasswordInformation = identity.UserPasswordInformation;
+                    userPasswordInfo = identity.UserPasswordInformation;
                     accountStatus = identity.AccountStatus;
                     return 0;
                 }
             }
 
-            userPasswordInformation = new UserPasswordInformation();
-            return GetLocalUserPasswordInformation(userName, ref userPasswordInformation, out accountStatus);
+            return GetLocalUserPasswordInformation(userName, out userPasswordInfo, out accountStatus);
         }
 
-        // Bit-size inter-mediator for getting user password information structure 
-        private static int GetLocalUserPasswordInformation(string userName, ref UserPasswordInformation userPasswordInformation, out AccountStatus accountStatus)
+        // Bit-size/platform inter-mediator for getting user password information
+        private static int GetLocalUserPasswordInformation(string userName, out UserPasswordInformation userPasswordInfo, out AccountStatus accountStatus)
         {
-            if (IntPtr.Size == 4)
-            {
-                // 32-bit OS call
-                UserPasswordInformation32 userPasswordInformation32 = new UserPasswordInformation32();
+            userPasswordInfo = new UserPasswordInformation();
 
-                if (GetLocalUserPasswordInformation32(userName, ref userPasswordInformation32, out accountStatus) == 0)
+            if (Common.GetOSPlatformID() == PlatformID.MacOSX)
+            {
+                int lastChangeDate, maxDaysForChange, accountExpirationDate;
+
+                accountStatus = AccountStatus.Normal;
+
+                // Mac OS X call
+                if (GetLocalUserPasswordInformationMac(userName, out lastChangeDate, out maxDaysForChange, out accountExpirationDate) == 0)
                 {
-                    userPasswordInformation.lastChangeDate = userPasswordInformation32.lastChangeDate;
-                    userPasswordInformation.minDaysForChange = userPasswordInformation32.minDaysForChange;
-                    userPasswordInformation.maxDaysForChange = userPasswordInformation32.maxDaysForChange;
-                    userPasswordInformation.warningDays = userPasswordInformation32.warningDays;
-                    userPasswordInformation.inactivityDays = userPasswordInformation32.inactivityDays;
-                    userPasswordInformation.accountExpirationDate = userPasswordInformation32.accountExpirationDate;
+                    userPasswordInfo.lastChangeDate = lastChangeDate;
+                    userPasswordInfo.maxDaysForChange = maxDaysForChange;
+                    userPasswordInfo.accountExpirationDate = accountExpirationDate;
                     return 0;
                 }
             }
             else
             {
-                // 64-bit OS call
-                return GetLocalUserPasswordInformation64(userName, ref userPasswordInformation, out accountStatus);
+                if (IntPtr.Size == 4)
+                {
+                    // 32-bit OS call
+                    UserPasswordInformation32 userPasswordInfo32 = new UserPasswordInformation32();
+
+                    if (GetLocalUserPasswordInformation32(userName, ref userPasswordInfo32, out accountStatus) == 0)
+                    {
+                        userPasswordInfo.lastChangeDate = userPasswordInfo32.lastChangeDate;
+                        userPasswordInfo.minDaysForChange = userPasswordInfo32.minDaysForChange;
+                        userPasswordInfo.maxDaysForChange = userPasswordInfo32.maxDaysForChange;
+                        userPasswordInfo.warningDays = userPasswordInfo32.warningDays;
+                        userPasswordInfo.inactivityDays = userPasswordInfo32.inactivityDays;
+                        userPasswordInfo.accountExpirationDate = userPasswordInfo32.accountExpirationDate;
+                        return 0;
+                    }
+                }
+                else
+                {
+                    // 64-bit OS call
+                    return GetLocalUserPasswordInformation64(userName, ref userPasswordInfo, out accountStatus);
+                }
             }
 
             return 1;
@@ -1961,6 +1968,9 @@ namespace GSF.Identity
 
         [DllImport(ImportFileName, EntryPoint = "GetLocalUserPasswordInformation")] // 32-bit version
         private static extern int GetLocalUserPasswordInformation32(string userName, ref UserPasswordInformation32 userPasswordInfo, out AccountStatus status);
+
+        [DllImport(ImportFileName, EntryPoint = "GetLocalUserPasswordInformation")] // Mac OS X version (Mono on Mac doesn't want to return struct values :-p)
+        private static extern int GetLocalUserPasswordInformationMac(string userName, out int lastChangeDate, out int maxDaysForChange, out int accountExpirationDate);
 
         [DllImport(ImportFileName)]
         private static extern int SetLocalUserPassword(string userName, string password, string salt);

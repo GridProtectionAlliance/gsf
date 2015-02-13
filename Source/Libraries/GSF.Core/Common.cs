@@ -139,6 +139,7 @@ namespace GSF
     {
         private static ApplicationType? s_applicationType;
         private static string s_osPlatformName;
+        private static PlatformID s_osPlatformID = PlatformID.Win32S;
 
         /// <summary>
         /// Determines if the current system is a POSIX style environment.
@@ -286,6 +287,38 @@ namespace GSF
         }
 
         /// <summary>
+        /// Gets the operating system <see cref="PlatformID"/>
+        /// </summary>
+        /// <returns>The operating system <see cref="PlatformID"/>.</returns>
+        /// <remarks>
+        /// This function will properly detect the platform ID, even if running on Mac.
+        /// </remarks>
+        public static PlatformID GetOSPlatformID()
+        {
+            if (s_osPlatformID != PlatformID.Win32S)
+                return s_osPlatformID;
+
+            s_osPlatformID = Environment.OSVersion.Platform;
+
+            if (s_osPlatformID == PlatformID.Unix)
+            {
+                // Environment.OSVersion.Platform can report Unix when running on Mac OS X
+                try
+                {
+                    s_osPlatformID = Command.Execute("uname").StandardOutput.StartsWith("Darwin", StringComparison.OrdinalIgnoreCase) ? PlatformID.MacOSX : PlatformID.Unix;
+                }
+                catch
+                {
+                    // Fall back on looking for Mac specific root folders:
+                    if (Directory.Exists("/Applications") && Directory.Exists("/System") && Directory.Exists("/Users") && Directory.Exists("/Volumes"))
+                        s_osPlatformID = PlatformID.MacOSX;
+                }
+            }
+
+            return s_osPlatformID;
+        }
+
+        /// <summary>
         /// Gets the operating system product name.
         /// </summary>
         /// <returns>Operating system product name.</returns>
@@ -294,7 +327,7 @@ namespace GSF
             if ((object)s_osPlatformName != null)
                 return s_osPlatformName;
 
-            switch (Environment.OSVersion.Platform)
+            switch (GetOSPlatformID())
             {
                 case PlatformID.Unix:
                 case PlatformID.MacOSX:
@@ -369,7 +402,7 @@ namespace GSF
             }
 
             if (string.IsNullOrWhiteSpace(s_osPlatformName))
-                s_osPlatformName = Environment.OSVersion.Platform.ToString();
+                s_osPlatformName = GetOSPlatformID().ToString();
 
             if (IsMono)
                 s_osPlatformName += " using Mono";

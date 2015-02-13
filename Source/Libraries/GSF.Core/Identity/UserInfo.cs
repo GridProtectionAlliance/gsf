@@ -887,6 +887,9 @@ namespace GSF.Identity
         public void Initialize()
         {
             m_userInfo.Initialize();
+
+            if (string.IsNullOrEmpty(m_domain))
+                m_domain = Environment.MachineName;
         }
 
         /// <summary>
