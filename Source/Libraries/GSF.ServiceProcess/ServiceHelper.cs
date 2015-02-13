@@ -1194,8 +1194,8 @@ namespace GSF.ServiceProcess
                 m_clientRequestHandlers.Add(new ClientRequestHandler("Processes", "Displays list of service or system processes", ShowProcesses));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("Schedules", "Displays list of process schedules defined in the service", ShowSchedules));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("History", "Displays list of requests received from the clients", ShowRequestHistory));
-                m_clientRequestHandlers.Add(new ClientRequestHandler("Help", "Displays list of commands supported by the service", ShowRequestHelp));
-                m_clientRequestHandlers.Add(new ClientRequestHandler("Status", "Displays the current service status", ShowServiceStatus));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Help", "Displays list of commands supported by the service", ShowRequestHelp, new[] { "?" }));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Status", "Displays the current service status", ShowServiceStatus, new[] { "stat" }));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("Start", "Start a service or system process", StartProcess));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("Abort", "Aborts a service or system process", AbortProcess));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("ReloadCryptoCache", "Reloads local cryptography cache", ReloadCryptoCache));
@@ -1205,8 +1205,9 @@ namespace GSF.ServiceProcess
                 m_clientRequestHandlers.Add(new ClientRequestHandler("Unschedule", "Unschedules a process defined in the service", UnscheduleProcess));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("SaveSchedules", "Saves process schedules to the config file", SaveSchedules));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("LoadSchedules", "Loads process schedules from the config file", LoadSchedules));
-                m_clientRequestHandlers.Add(new ClientRequestHandler("Version", "Displays current service version", ShowVersion));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Version", "Displays current service version", ShowVersion, new[] { "ver" }));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("Time", "Displays current system time", ShowTime));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("User", "Displays current user information", ShowUser, new[] { "whoami" }));
 
                 // Enable telnet support if requested.
                 if (m_supportTelnetSessions)
@@ -1656,7 +1657,9 @@ namespace GSF.ServiceProcess
         {
             lock (m_clientRequestHandlers)
             {
-                return m_clientRequestHandlers.Find(handler => string.Compare(handler.Command, handlerCommand, StringComparison.OrdinalIgnoreCase) == 0);
+                return m_clientRequestHandlers.Find(
+                    handler => handler.Command.Equals(handlerCommand, StringComparison.OrdinalIgnoreCase) ||
+                    ((object)handler.Aliases != null && handler.Aliases.Any(alias => alias.Equals(handlerCommand, StringComparison.OrdinalIgnoreCase))));
             }
         }
 
@@ -1973,7 +1976,7 @@ namespace GSF.ServiceProcess
             if (client.ClientUser != Thread.CurrentPrincipal)
                 client.SetClientUser(Thread.CurrentPrincipal);
 
-            return client.ClientUser.Identity.IsAuthenticated;
+            return (object)client.ClientUser != null && client.ClientUser.Identity.IsAuthenticated;
         }
 
         // Curtail response message size if needed
@@ -3823,13 +3826,69 @@ namespace GSF.ServiceProcess
                 //  Current system time: yyyy-MM-dd HH:mm:ss.fff, yyyy-MM-dd HH:mm:ss.fff UTC
                 // Total system runtime: xx days yy hours zz minutes ii seconds
                 if ((object)m_remotingServer != null)
-                    message = string.Format(" Current system time: {0}, {1} UTC\r\nTotal system runtime: {2}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"), m_remotingServer.RunTime.ToString());
+                    message = string.Format(" Current system time: {0}, {1} UTC\r\nTotal system runtime: {2}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"), m_remotingServer.RunTime);
                 else
                     message = string.Format("Current system time: {0}, {1} UTC", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"));
 
                 UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message + "\r\n\r\n");
 
                 // Also allow consumers to directly consume message via event in response to a time request
+                if (requestInfo.Request.Arguments.Exists("actionable"))
+                    SendActionableResponse(requestInfo, true, null, message);
+            }
+        }
+
+        private void ShowUser(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Shows the current user information.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       User -options");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -actionable".PadRight(20));
+                helpMessage.Append("Returns results via an actionable event");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
+            }
+            else
+            {
+                //          1         2         3         4         5         6         7         8
+                // 12345678901234567890123456789012345678901234567890123456789012345678901234567890
+                //   Current user: ABC\john
+                // Connected time: xx days yy hours zz minutes ii seconds
+                //  Authenticated: true
+
+                ClientInfo info = requestInfo.Sender;
+                string authenticated = "Undetermined";
+
+                if ((object)info.ClientUser != null && (object)info.ClientUser.Identity != null)
+                    authenticated = info.ClientUser.Identity.IsAuthenticated.ToString();
+
+                string message = string.Format(
+                    "  Current user: {0}\r\n" +
+                    "Connected time: {1}\r\n" +
+                    " Authenticated: {2}",
+                    info.ClientName,
+                    (DateTime.UtcNow - info.ConnectedAt).ToElapsedTimeString(),
+                    authenticated);
+
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message + "\r\n\r\n");
+
+                // Also allow consumers to directly consume message via event in response to a user info request
                 if (requestInfo.Request.Arguments.Exists("actionable"))
                     SendActionableResponse(requestInfo, true, null, message);
             }

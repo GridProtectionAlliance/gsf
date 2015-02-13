@@ -59,7 +59,7 @@
 #include "GSF.POSIX.h"
 
 // Define custom PAM conversation function for authentication
-int AuthenticateConveration(int num_msg, const struct pam_message** msg, struct pam_response** resp, void* appdata_ptr)
+int AuthenticateConversation(int num_msg, const struct pam_message** msg, struct pam_response** resp, void* appdata_ptr)
 {
     const struct pam_message* message = *msg;
 
@@ -88,7 +88,7 @@ struct ChangePasswordInformation
 };
 
 // Define custom PAM conversation function for changing a password
-int ChangePasswordConveration(int num_msg, const struct pam_message** msg, struct pam_response** resp, void* appdata_ptr)
+int ChangePasswordConversation(int num_msg, const struct pam_message** msg, struct pam_response** resp, void* appdata_ptr)
 {
     const struct pam_message* message = *msg;
 
@@ -140,7 +140,7 @@ int AuthenticateUser(const char* userName, const char* password)
 {
     // Set up a custom PAM conversation passing in authentication password
     char* appdata = strdup(password);
-    struct pam_conv pamc = { AuthenticateConveration, appdata };
+    struct pam_conv pamc = { AuthenticateConversation, appdata };
     pam_handle_t* pamh; 
     int retval;
 
@@ -175,7 +175,7 @@ int ChangeUserPassword(const char* userName, const char* oldPassword, const char
     appdata.newPassword2 = strdup(newPassword);
     appdata.requestCount = 0;
 
-    struct pam_conv pamc = { ChangePasswordConveration, &appdata };
+    struct pam_conv pamc = { ChangePasswordConversation, &appdata };
     pam_handle_t* pamh; 
     int retval;
 

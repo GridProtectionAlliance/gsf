@@ -57,7 +57,6 @@ using GSF.Collections;
 using GSF.Console;
 using GSF.IO;
 using GSF.Reflection;
-using GSF.Units;
 using Microsoft.Win32;
 
 namespace GSF
@@ -422,11 +421,19 @@ namespace GSF
             {
                 try
                 {
-                    double kiloBytesOfMemory;
+                    double percentOfTotal;
+                    long totalMemory;
+
+                    // Get total system memory
+                    using (PerformanceCounter counter = new PerformanceCounter("Mono Memory", "Total Physical Memory"))
+                        totalMemory = counter.RawValue;
+
+                    // Get percent of total memory used by current process
                     string output = Command.Execute("ps", string.Format("-p {0} -o %mem", Process.GetCurrentProcess().Id)).StandardOutput;
                     string[] lines = output.Split('\n');
-                    if (lines.Length > 1 && double.TryParse(lines[1].Trim(), out kiloBytesOfMemory))
-                        processMemory = (long)Math.Round(kiloBytesOfMemory * SI2.Kilo);
+
+                    if (lines.Length > 1 && double.TryParse(lines[1].Trim(), out percentOfTotal))
+                        processMemory = (long)Math.Round(percentOfTotal / 100.0D * totalMemory);
                 }
                 catch
                 {

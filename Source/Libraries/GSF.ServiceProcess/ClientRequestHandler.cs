@@ -49,8 +49,9 @@ namespace GSF.ServiceProcess
         /// <param name="requestCommand">Command text that the <see cref="ClientRequestHandler"/> will process.</param>
         /// <param name="requestDescription">Description of the <see cref="ClientRequestHandler"/>.</param>
         /// <param name="handlerMethod"><see cref="Delegate"/> method that will be invoked for processing the <paramref name="requestCommand"/>.</param>
-        public ClientRequestHandler(string requestCommand, string requestDescription, Action<ClientRequestInfo> handlerMethod)
-            : this(requestCommand, requestDescription, handlerMethod, true)
+        /// <param name="aliases">Optional alias names to command.</param>
+        public ClientRequestHandler(string requestCommand, string requestDescription, Action<ClientRequestInfo> handlerMethod, string[] aliases = null)
+            : this(requestCommand, requestDescription, handlerMethod, true, aliases)
         {
         }
 
@@ -61,12 +62,14 @@ namespace GSF.ServiceProcess
         /// <param name="requestDescription">Description of the <see cref="ClientRequestHandler"/>.</param>
         /// <param name="handlerMethod"><see cref="Delegate"/> method that will be invoked for processing the <paramref name="requestCommand"/>.</param>
         /// <param name="isAdvertised">true if the <see cref="ClientRequestHandler"/> is to be published by the <see cref="ServiceHelper"/>; otherwise false.</param>
-        public ClientRequestHandler(string requestCommand, string requestDescription, Action<ClientRequestInfo> handlerMethod, bool isAdvertised)
+        /// <param name="aliases">Optional alias names to command.</param>
+        public ClientRequestHandler(string requestCommand, string requestDescription, Action<ClientRequestInfo> handlerMethod, bool isAdvertised, string[] aliases = null)
         {
             Command = requestCommand;
             CommandDescription = requestDescription;
             HandlerMethod = handlerMethod;
             IsAdvertised = isAdvertised;
+            Aliases = aliases;
         }
 
         #endregion
@@ -76,22 +79,47 @@ namespace GSF.ServiceProcess
         /// <summary>
         /// Gets the command text that the <see cref="ClientRequestHandler"/> will process.
         /// </summary>
-        public string Command { get; private set; }
+        public string Command
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Gets any aliases for the command.
+        /// </summary>
+        public string[] Aliases
+        {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// Gets the description of the <see cref="ClientRequestHandler"/>.
         /// </summary>
-        public string CommandDescription { get; private set; }
+        public string CommandDescription
+        {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// Gets the <see cref="Delegate"/> method that gets invoked for processing the <see cref="Command"/>.
         /// </summary>
-        public Action<ClientRequestInfo> HandlerMethod { get; private set; }
+        public Action<ClientRequestInfo> HandlerMethod
+        {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// Gets a boolean value that indicates whether the <see cref="ClientRequestHandler"/> will be published by the <see cref="ServiceHelper"/>.
         /// </summary>
-        public bool IsAdvertised { get; private set; }
+        public bool IsAdvertised
+        {
+            get;
+            private set;
+        }
 
         #endregion
     }
