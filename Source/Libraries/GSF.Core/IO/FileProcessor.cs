@@ -131,11 +131,6 @@ namespace GSF.IO
         /// </summary>
         public static readonly string DefaultCachePath = Path.Combine(FilePath.GetCommonApplicationDataFolder(), "FileProcessors");
 
-        /// <summary>
-        /// Default value for the <see cref="UseTimer"/> property.
-        /// </summary>
-        public const bool DefaultUseTimer = false;
-
         // Events
 
         /// <summary>
@@ -166,7 +161,6 @@ namespace GSF.IO
         private readonly HashSet<string> m_processedFiles;
 
         private bool m_disposed;
-        private bool m_useTimer;
 
         #endregion
 
@@ -183,7 +177,6 @@ namespace GSF.IO
             m_filter = DefaultFilter;
             m_trackChanges = DefaultTrackChanges;
             m_cachePath = DefaultCachePath;
-            m_useTimer = DefaultUseTimer;
 
             m_fileWatchersLock = new object();
             m_fileWatchers = new List<FileSystemWatcher>();
@@ -257,22 +250,6 @@ namespace GSF.IO
         }
 
         /// <summary>
-        /// Gets or sets a flag that determines whether the file processor should use a
-        /// timer in addition to the file watchers to track changes to the directories.
-        /// </summary>
-        public bool UseTimer
-        {
-            get
-            {
-                return m_useTimer;
-            }
-            set
-            {
-                m_useTimer = value;
-            }
-        }
-
-        /// <summary>
         /// Gets the list of directories currently being tracked by the <see cref="FileProcessor"/>.
         /// </summary>
         public IList<string> TrackedDirectories
@@ -300,6 +277,7 @@ namespace GSF.IO
         {
             string fullPath = FilePath.GetAbsolutePath(path);
             FileSystemWatcher watcher;
+            Thread fileEnumerationThread;
 
             if (!TrackedDirectories.Contains(fullPath, StringComparer.OrdinalIgnoreCase))
             {
@@ -324,11 +302,12 @@ namespace GSF.IO
                     m_fileWatchers.Add(watcher);
                 }
 
-                m_processingQueue.Add(() =>
+                watcher.EnableRaisingEvents = true;
+
+                fileEnumerationThread = new Thread(() =>
                 {
                     HashSet<string> enumeratedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-                    watcher.EnableRaisingEvents = true;
+                    DateTime enumerationStart = DateTime.UtcNow;
 
                     foreach (string filePath in Directory.EnumerateFiles(fullPath, "*.*", SearchOption.AllDirectories))
                     {
@@ -338,17 +317,28 @@ namespace GSF.IO
                         if (!File.Exists(filePath) || !MatchesFilter(filePath))
                             continue;
 
-                        if (FilePath.TryGetReadLockExclusive(filePath))
-                            ProcessFile(filePath);
-                        else
-                            DelayLockAndQueue(filePath);
-
+                        QueueFileForProcessing(filePath);
                         enumeratedFiles.Add(filePath);
                     }
 
-                    if (m_processedFiles.RemoveWhere(filePath => !enumeratedFiles.Contains(filePath) && filePath.StartsWith(fullPath, StringComparison.OrdinalIgnoreCase)) > 0)
-                        SaveProcessedFiles();
+                    m_processingQueue.Add(() =>
+                    {
+                        Predicate<string> predicate = filePath =>
+                        {
+                            DateTime lastWriteTime;
+                            bool enumerated = enumeratedFiles.Contains(filePath);
+                            bool touched = m_touchedFiles.TryGetValue(filePath, out lastWriteTime) && (lastWriteTime > enumerationStart);
+                            bool isInWatchPath = filePath.StartsWith(fullPath, StringComparison.OrdinalIgnoreCase);
+                            return !enumerated && !touched && isInWatchPath;
+                        };
+
+                        if (m_processedFiles.RemoveWhere(predicate) > 0)
+                            SaveProcessedFiles();
+                    });
                 });
+
+                fileEnumerationThread.IsBackground = true;
+                fileEnumerationThread.Start();
             }
         }
 
@@ -442,43 +432,46 @@ namespace GSF.IO
             if (!MatchesFilter(filePath))
                 return;
 
-            m_processingQueue.Add(() =>
-            {
-                DateTime lastWriteTime = File.GetLastWriteTime(filePath);
-                DateTime lastKnownWriteTime;
-
-                if (!m_touchedFiles.TryGetValue(filePath, out lastKnownWriteTime) || lastKnownWriteTime < lastWriteTime)
-                {
-                    m_touchedFiles[filePath] = lastWriteTime;
-                    LockAndQueue(filePath);
-                }
-            });
+            m_processingQueue.Add(() => TouchLockAndProcess(filePath));
         }
 
         // Attempts to obtain a read lock on the file and,
-        // if successful, queues the file.
+        // if successful, processes the file.
         // Otherwise, waits 250 milliseconds and tries again.
-        private void LockAndQueue(string filePath)
+        private void LockAndProcess(string filePath)
         {
             if (m_disposed || !File.Exists(filePath))
                 return;
 
             if (FilePath.TryGetReadLockExclusive(filePath))
-                m_processingQueue.Add(() => ProcessFile(filePath));
+                ProcessFile(filePath);
             else
-                DelayLockAndQueue(filePath);
+                DelayLockAndProcess(filePath);
         }
 
-        // Waits 250 milliseconds, then calls LockAndQueue.
-        private void DelayLockAndQueue(string filePath)
+        // Waits 250 milliseconds, then calls LockAndProcess.
+        private void DelayLockAndProcess(string filePath)
         {
             WaitOrTimerCallback callback = (state, timeout) =>
             {
                 if (timeout)
-                    LockAndQueue(filePath);
+                    m_processingQueue.Add(() => LockAndProcess(filePath));
             };
 
             ThreadPool.RegisterWaitForSingleObject(m_waitObject, callback, null, 250, true);
+        }
+
+        // Checks and updates the touchedFiles lookup table, then calls LockAndProcess.
+        private void TouchLockAndProcess(string filePath)
+        {
+            DateTime lastWriteTime = File.GetLastWriteTimeUtc(filePath);
+            DateTime lastKnownWriteTime;
+
+            if (!m_touchedFiles.TryGetValue(filePath, out lastKnownWriteTime) || lastKnownWriteTime < lastWriteTime)
+            {
+                m_touchedFiles[filePath] = lastWriteTime;
+                LockAndProcess(filePath);
+            }
         }
 
         // Processes the given file.
@@ -498,7 +491,7 @@ namespace GSF.IO
             {
                 // If the handler requeuests a requeue,
                 // requeue the file after a 250 millisecond delay.
-                DelayLockAndQueue(filePath);
+                DelayLockAndProcess(filePath);
             }
             else if (!alreadyProcessed)
             {
@@ -638,32 +631,47 @@ namespace GSF.IO
         // If the watcher tracks changes, queues the changed file for processing.
         private void Watcher_Changed(object sender, FileSystemEventArgs args)
         {
-            if (m_trackChanges)
+            if (m_trackChanges && MatchesFilter(args.FullPath))
             {
-                m_processingQueue.Add(() => m_touchedFiles.Remove(args.FullPath));
-                QueueFileForProcessing(args.FullPath);
+                m_processingQueue.Add(() =>
+                {
+                    m_touchedFiles.Remove(args.FullPath);
+                    TouchLockAndProcess(args.FullPath);
+                });
             }
         }
 
         // Track renames so that files whose names are changed can be updated in the processed files list.
         private void Watcher_Renamed(object sender, RenamedEventArgs args)
         {
+            bool oldMatch = MatchesFilter(args.OldFullPath);
+            bool newMatch = MatchesFilter(args.FullPath);
+
+            if (!oldMatch && !newMatch)
+                return;
+
             m_processingQueue.Add(() =>
             {
-                if (m_touchedFiles.Remove(args.OldFullPath))
+                if (oldMatch && m_touchedFiles.Remove(args.OldFullPath) && newMatch)
                     m_touchedFiles.Add(args.FullPath, File.GetLastWriteTimeUtc(args.FullPath));
 
-                if (m_processedFiles.Remove(args.OldFullPath))
+                if (oldMatch && m_processedFiles.Remove(args.OldFullPath))
                 {
                     m_processedFiles.Add(args.FullPath);
                     SaveProcessedFiles();
                 }
+
+                if (!oldMatch && newMatch)
+                    TouchLockAndProcess(args.FullPath);
             });
         }
 
         // Track deletes so that files can be removed from the processed files list.
         private void Watcher_Deleted(object sender, FileSystemEventArgs args)
         {
+            if (!MatchesFilter(args.FullPath))
+                return;
+
             m_processingQueue.Add(() =>
             {
                 m_touchedFiles.Remove(args.FullPath);
@@ -683,8 +691,6 @@ namespace GSF.IO
         // Picks up files that were missed by the file watchers.
         private void FileWatchTimer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
         {
-            HashSet<string> listedFiles;
-
             // Check each of the existing file watchers to determine whether an
             // error occurred that forced the file watcher to stop raising events
             lock (m_fileWatchers)
@@ -698,6 +704,7 @@ namespace GSF.IO
                             // This file watcher is no longer raising events so
                             // attempt to create a new file watcher for that file path
                             FileSystemWatcher newWatcher = new FileSystemWatcher(m_fileWatchers[i].Path);
+                            Thread fileEnumerationThread;
 
                             newWatcher.IncludeSubdirectories = true;
                             newWatcher.Created += Watcher_Created;
@@ -718,9 +725,10 @@ namespace GSF.IO
 
                             // Files may have been dropped or removed while the file watcher
                             // was disconnected so we need to enumerate the files again
-                            m_processingQueue.Add(() =>
+                            fileEnumerationThread = new Thread(() =>
                             {
                                 HashSet<string> enumeratedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                                DateTime enumerationStart = DateTime.UtcNow;
 
                                 foreach (string filePath in Directory.EnumerateFiles(newWatcher.Path, "*.*", SearchOption.AllDirectories))
                                 {
@@ -730,17 +738,28 @@ namespace GSF.IO
                                     if (!File.Exists(filePath) || !MatchesFilter(filePath))
                                         continue;
 
-                                    if (FilePath.TryGetReadLockExclusive(filePath))
-                                        ProcessFile(filePath);
-                                    else
-                                        DelayLockAndQueue(filePath);
-
+                                    QueueFileForProcessing(filePath);
                                     enumeratedFiles.Add(filePath);
                                 }
 
-                                if (m_processedFiles.RemoveWhere(filePath => !enumeratedFiles.Contains(filePath) && filePath.StartsWith(newWatcher.Path, StringComparison.OrdinalIgnoreCase)) > 0)
-                                    SaveProcessedFiles();
+                                m_processingQueue.Add(() =>
+                                {
+                                    Predicate<string> predicate = filePath =>
+                                    {
+                                        DateTime lastWriteTime;
+                                        bool enumerated = enumeratedFiles.Contains(filePath);
+                                        bool touched = m_touchedFiles.TryGetValue(filePath, out lastWriteTime) && lastWriteTime > enumerationStart;
+                                        bool isInWatchPath = filePath.StartsWith(newWatcher.Path, StringComparison.OrdinalIgnoreCase);
+                                        return !enumerated && !touched && isInWatchPath;
+                                    };
+
+                                    if (m_processedFiles.RemoveWhere(predicate) > 0)
+                                        SaveProcessedFiles();
+                                });
                             });
+
+                            fileEnumerationThread.IsBackground = true;
+                            fileEnumerationThread.Start();
                         }
                         catch (Exception ex)
                         {
@@ -748,27 +767,6 @@ namespace GSF.IO
                         }
                     }
                 }
-            }
-
-            if (m_useTimer)
-            {
-                // Gets the list of all files in all the directories tracked by this file processor
-                listedFiles = new HashSet<string>(TrackedDirectories.SelectMany(directory => Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)));
-
-                // Now queue an operation to remove files
-                // from lists that are no longer tracked
-                m_processingQueue.Add(() =>
-                {
-                    // Queue these files for processing
-                    foreach (string file in listedFiles)
-                        QueueFileForProcessing(file);
-
-                    foreach (string file in m_touchedFiles.Keys.Where(file => !listedFiles.Contains(file)).ToList())
-                        m_touchedFiles.Remove(file);
-
-                    if (m_processedFiles.RemoveWhere(file => !listedFiles.Contains(file)) > 0)
-                        SaveProcessedFiles();
-                });
             }
         }
 

@@ -92,7 +92,6 @@ namespace GSF.IO
         /// Creates a new instance of the <see cref="InterprocessCache"/> with the specified number of <paramref name="maximumConcurrentLocks"/>.
         /// </summary>
         /// <param name="maximumConcurrentLocks">Maximum concurrent reader locks to allow.</param>
-        [SuppressMessage("Microsoft.Mobility", "CA1601:DoNotUseTimersThatPreventPowerStateChanges")]
         public InterprocessCache(int maximumConcurrentLocks)
         {
             // Initialize field values
