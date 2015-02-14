@@ -3869,22 +3869,24 @@ namespace GSF.ServiceProcess
                 //          1         2         3         4         5         6         7         8
                 // 12345678901234567890123456789012345678901234567890123456789012345678901234567890
                 //   Current user: ABC\john
+                //    Client name: openPDCConsole
+                //   From machine: JohnPC
                 // Connected time: xx days yy hours zz minutes ii seconds
                 //  Authenticated: true
 
                 ClientInfo info = requestInfo.Sender;
-                string authenticated = "Undetermined";
-
-                if ((object)info.ClientUser != null && (object)info.ClientUser.Identity != null)
-                    authenticated = info.ClientUser.Identity.IsAuthenticated.ToString();
 
                 string message = string.Format(
                     "  Current user: {0}\r\n" +
-                    "Connected time: {1}\r\n" +
-                    " Authenticated: {2}",
-                    info.ClientName,
-                    (DateTime.UtcNow - info.ConnectedAt).ToElapsedTimeString(),
-                    authenticated);
+                    "   Client name: {1}\r\n" +
+                    "  From machine: {2}\r\n" +
+                    "Connected time: {3}\r\n" +
+                    " Authenticated: {4}",
+                    info.ClientUser.Identity.Name.ToNonNullNorEmptyString("Undetermined"),
+                    info.ClientName.ToNonNullNorEmptyString("Undetermined"),
+                    info.MachineName.ToNonNullNorEmptyString("Undetermined"),
+                    info.ConnectedAt > DateTime.MinValue ? (DateTime.UtcNow - info.ConnectedAt).ToElapsedTimeString() : m_remotingServer.RunTime.ToString(),
+                    info.ClientUser.Identity.IsAuthenticated);
 
                 UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message + "\r\n\r\n");
 

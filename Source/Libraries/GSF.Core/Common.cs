@@ -51,7 +51,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Web.Hosting;
 using GSF.Collections;
 using GSF.Console;
@@ -348,27 +347,32 @@ namespace GSF
                         // Try some common ways to get product name on Linux, some might work on Mac
                         try
                         {
-                            StringBuilder content = new StringBuilder();
-
-                            // Get file names ordered by time
-                            string[] filenames =
-                                FilePath.GetFileList("/etc/*release*").
-                                Select(file => new FileInfo(file)).
-                                OrderByDescending(info => info.CreationTimeUtc.Ticks).
-                                Select(info => info.FullName).
-                                ToArray();
-
-                            foreach (string fileName in filenames)
+                            foreach (string fileName in FilePath.GetFileList("/etc/*release*"))
                             {
                                 using (StreamReader reader = new StreamReader(fileName))
                                 {
-                                    content.AppendLine(reader.ReadToEnd());
-                                }
-                            }
+                                    string line = reader.ReadLine();
 
-                            Dictionary<string, string> kvps = content.ToString().ParseKeyValuePairs('\n');
-                            if (kvps.TryGetValue("PRETTY_NAME", out s_osPlatformName) && !string.IsNullOrEmpty(s_osPlatformName))
-                                s_osPlatformName = s_osPlatformName.Replace("\"", "");
+                                    while ((object)line != null)
+                                    {
+                                        if (line.StartsWith("PRETTY_NAME", StringComparison.OrdinalIgnoreCase) && !line.Contains('#'))
+                                        {
+                                            string[] parts = line.Split('=');
+
+                                            if (parts.Length == 2)
+                                            {
+                                                s_osPlatformName = parts[1].Replace("\"", "");
+                                                break;
+                                            }
+                                        }
+
+                                        line = reader.ReadLine();
+                                    }
+                                }
+
+                                if (!string.IsNullOrEmpty(s_osPlatformName))
+                                    break;
+                            }
                         }
                         catch
                         {
