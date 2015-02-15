@@ -359,7 +359,9 @@ namespace GSF.Security
                 if (reader.ReadBytes(CacheHeaderBytes.Length).CompareTo(CacheHeaderBytes) != 0)
                     throw new InvalidDataException("Unexpected data read from UserDataCache - file possibly corrupted.");
 
-                for (int i = 0; i < reader.ReadInt32(); i++)
+                int listLength, cacheLength = reader.ReadInt32();
+
+                for (int i = 0; i < cacheLength; i++)
                 {
                     UserData userData = new UserData();
                     string loginID;
@@ -377,13 +379,15 @@ namespace GSF.Security
                     userData.AccountCreatedDateTime = new DateTime(reader.ReadInt64());
 
                     userData.Roles = new List<string>();
+                    listLength = reader.ReadInt32();
 
-                    for (int j = 0; j < reader.ReadInt32(); j++)
+                    for (int j = 0; j < listLength; j++)
                         userData.Roles.Add(reader.ReadString());
 
                     userData.Groups = new List<string>();
+                    listLength = reader.ReadInt32();
 
-                    for (int j = 0; j < reader.ReadInt32(); j++)
+                    for (int j = 0; j < listLength; j++)
                         userData.Groups.Add(reader.ReadString());
 
                     cache.Add(loginID, userData);
