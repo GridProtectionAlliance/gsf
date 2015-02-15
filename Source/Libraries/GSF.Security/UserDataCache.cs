@@ -38,6 +38,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
+using System.Text;
 using GSF.Collections;
 using GSF.IO;
 using GSF.Security.Cryptography;
@@ -68,6 +69,9 @@ namespace GSF.Security
         // Default user AD group data cache file name
         private const string DefaultCacheFileName = "UserDataCache.bin";
 
+        // Expected cache header bytes
+        private static readonly byte[] CacheHeaderBytes = { (byte)0x55, (byte)0x44, (byte)0x43 };
+
         // Fields
         private Dictionary<string, UserData> m_userDataTable;   // Internal dictionary of serialized user data
         private readonly object m_userDataTableLock;            // Lock object for internal dictionary
@@ -93,7 +97,7 @@ namespace GSF.Security
             : base(maximumConcurrentLocks)
         {
             m_providerID = providerID;
-            m_userDataTable = new Dictionary<string, UserData>();
+            m_userDataTable = new Dictionary<string, UserData>(StringComparer.OrdinalIgnoreCase);
             m_userDataTableLock = new object();
         }
 
@@ -203,7 +207,7 @@ namespace GSF.Security
             // Wait for thread level lock on key table
             lock (m_userDataTableLock)
             {
-                serializedUserDataTable = Serialization.Serialize(m_userDataTable, SerializationFormat.Binary);
+                serializedUserDataTable = SerializeCache(m_userDataTable);
             }
 
             // File data is the serialized user data table, assignment will initiate auto-save if needed
@@ -236,7 +240,7 @@ namespace GSF.Security
         {
             // Decrypt data that was encrypted local to this machine
             byte[] serializedUserDataTable = ProtectedData.Unprotect(fileStream.ReadStream(), null, DataProtectionScope.LocalMachine);
-            Dictionary<string, UserData> userDataTable = Serialization.Deserialize<Dictionary<string, UserData>>(serializedUserDataTable, SerializationFormat.Binary);
+            Dictionary<string, UserData> userDataTable = DeserializeCache(serializedUserDataTable);
 
             // Wait for thread level lock on user data table
             lock (m_userDataTableLock)
@@ -304,6 +308,89 @@ namespace GSF.Security
             userDataCache.FileName = userCacheFileName;
 
             return userDataCache;
+        }
+
+        private static byte[] SerializeCache(Dictionary<string, UserData> cache)
+        {
+            using (BlockAllocatedMemoryStream stream = new BlockAllocatedMemoryStream())
+            using (BinaryWriter writer = new BinaryWriter(stream, Encoding.Default))
+            {
+                writer.Write(CacheHeaderBytes);
+                writer.Write(cache.Count);
+
+                foreach (KeyValuePair<string, UserData> data in cache)
+                {
+                    UserData userData = data.Value;
+
+                    writer.Write(data.Key);
+                    writer.Write(userData.Username);
+                    writer.Write(userData.FirstName);
+                    writer.Write(userData.LastName);
+                    writer.Write(userData.CompanyName);
+                    writer.Write(userData.PhoneNumber);
+                    writer.Write(userData.EmailAddress);
+                    writer.Write(userData.IsLockedOut);
+                    writer.Write(userData.IsDisabled);
+                    writer.Write(userData.PasswordChangeDateTime.Ticks);
+                    writer.Write(userData.AccountCreatedDateTime.Ticks);
+
+                    writer.Write(userData.Roles.Count);
+
+                    foreach (string role in userData.Roles)
+                        writer.Write(role);
+
+                    writer.Write(userData.Groups.Count);
+
+                    foreach (string group in userData.Groups)
+                        writer.Write(group);
+                }
+
+                return stream.ToArray();
+            }
+        }
+
+        private Dictionary<string, UserData> DeserializeCache(byte[] data)
+        {
+            Dictionary<string, UserData> cache = new Dictionary<string, UserData>(StringComparer.OrdinalIgnoreCase);
+
+            using (MemoryStream stream = new MemoryStream(data))
+            using (BinaryReader reader = new BinaryReader(stream, Encoding.Default))
+            {
+                if (reader.ReadBytes(CacheHeaderBytes.Length).CompareTo(CacheHeaderBytes) != 0)
+                    throw new InvalidDataException("Unexpected data read from UserDataCache - file possibly corrupted.");
+
+                for (int i = 0; i < reader.ReadInt32(); i++)
+                {
+                    UserData userData = new UserData();
+                    string loginID;
+
+                    loginID = reader.ReadString();
+                    userData.Username = reader.ReadString();
+                    userData.FirstName = reader.ReadString();
+                    userData.LastName = reader.ReadString();
+                    userData.CompanyName = reader.ReadString();
+                    userData.PhoneNumber = reader.ReadString();
+                    userData.EmailAddress = reader.ReadString();
+                    userData.IsLockedOut = reader.ReadBoolean();
+                    userData.IsDisabled = reader.ReadBoolean();
+                    userData.PasswordChangeDateTime = new DateTime(reader.ReadInt64());
+                    userData.AccountCreatedDateTime = new DateTime(reader.ReadInt64());
+
+                    userData.Roles = new List<string>();
+
+                    for (int j = 0; j < reader.ReadInt32(); j++)
+                        userData.Roles.Add(reader.ReadString());
+
+                    userData.Groups = new List<string>();
+
+                    for (int j = 0; j < reader.ReadInt32(); j++)
+                        userData.Groups.Add(reader.ReadString());
+
+                    cache.Add(loginID, userData);
+                }
+            }
+
+            return cache;
         }
 
         #endregion
