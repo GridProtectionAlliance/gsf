@@ -282,7 +282,10 @@ namespace GSF.IO
         {
             string fullPath = FilePath.GetAbsolutePath(path);
             FileSystemWatcher watcher;
-            Thread fileEnumerationThread;
+
+            DateTime enumerationStart;
+            HashSet<string> enumeratedFiles;
+            IEnumerator<string> enumerator;
 
             if (!TrackedDirectories.Contains(fullPath, StringComparer.OrdinalIgnoreCase))
             {
@@ -309,40 +312,10 @@ namespace GSF.IO
 
                 watcher.EnableRaisingEvents = true;
 
-                fileEnumerationThread = new Thread(() =>
-                {
-                    HashSet<string> enumeratedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                    DateTime enumerationStart = DateTime.UtcNow;
-
-                    foreach (string filePath in Directory.EnumerateFiles(fullPath, "*.*", SearchOption.AllDirectories))
-                    {
-                        if (m_disposed)
-                            return;
-
-                        if (!File.Exists(filePath) || !MatchesFilter(filePath))
-                            continue;
-
-                        QueueFileForProcessing(filePath);
-                        enumeratedFiles.Add(filePath);
-                    }
-
-                    m_processingQueue.Add(() =>
-                    {
-                        Predicate<string> predicate = filePath =>
-                        {
-                            DateTime lastWriteTime;
-                            bool enumerated = enumeratedFiles.Contains(filePath);
-                            bool touched = m_touchedFiles.TryGetValue(filePath, out lastWriteTime) && (lastWriteTime > enumerationStart);
-                            bool isInWatchPath = filePath.StartsWith(fullPath, StringComparison.OrdinalIgnoreCase);
-                            return !enumerated && !touched && isInWatchPath;
-                        };
-
-                        m_processedFiles.RemoveWhere(predicate);
-                    });
-                });
-
-                fileEnumerationThread.IsBackground = true;
-                fileEnumerationThread.Start();
+                enumerationStart = DateTime.UtcNow;
+                enumeratedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                enumerator = Directory.EnumerateFiles(fullPath, "*.*", SearchOption.AllDirectories).GetEnumerator();
+                m_processingQueue.Add(() => EnumerateNextFile(fullPath, enumerationStart, enumeratedFiles, enumerator));
             }
         }
 
@@ -509,6 +482,40 @@ namespace GSF.IO
                 // Update the list of processed files
                 // and save it back to the cache
                 m_processedFiles.Add(filePath);
+            }
+        }
+
+        // Advances the enumerator to the next file to be processed and attempts to process it.
+        private void EnumerateNextFile(string watchDirectory, DateTime enumerationStart, HashSet<string> enumeratedFiles, IEnumerator<string> enumerator)
+        {
+            // If the file processor has been
+            // disposed, return immediately
+            if (m_disposed)
+                return;
+
+            if (enumerator.MoveNext())
+            {
+                // Attempt to process this file
+                if (File.Exists(enumerator.Current) && MatchesFilter(enumerator.Current))
+                    TouchLockAndProcess(enumerator.Current);
+
+                // Move to the next file
+                m_processingQueue.Add(() => EnumerateNextFile(watchDirectory, enumerationStart, enumeratedFiles, enumerator));
+            }
+            else
+            {
+                // No more files to process, so we use the enumeratedFiles hash set
+                // to clean up files that have been removed from the watch directory
+                Predicate<string> predicate = filePath =>
+                {
+                    DateTime lastWriteTime;
+                    bool enumerated = enumeratedFiles.Contains(filePath);
+                    bool touched = m_touchedFiles.TryGetValue(filePath, out lastWriteTime) && (lastWriteTime > enumerationStart);
+                    bool isInWatchPath = filePath.StartsWith(watchDirectory, StringComparison.OrdinalIgnoreCase);
+                    return !enumerated && !touched && isInWatchPath;
+                };
+
+                m_processedFiles.RemoveWhere(predicate);
             }
         }
 
@@ -684,7 +691,10 @@ namespace GSF.IO
                             // This file watcher is no longer raising events so
                             // attempt to create a new file watcher for that file path
                             FileSystemWatcher newWatcher = new FileSystemWatcher(m_fileWatchers[i].Path);
-                            Thread fileEnumerationThread;
+
+                            DateTime enumerationStart;
+                            HashSet<string> enumeratedFiles;
+                            IEnumerator<string> enumerator;
 
                             newWatcher.IncludeSubdirectories = true;
                             newWatcher.Created += Watcher_Created;
@@ -705,40 +715,11 @@ namespace GSF.IO
 
                             // Files may have been dropped or removed while the file watcher
                             // was disconnected so we need to enumerate the files again
-                            fileEnumerationThread = new Thread(() =>
-                            {
-                                HashSet<string> enumeratedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                                DateTime enumerationStart = DateTime.UtcNow;
+                            enumerationStart = DateTime.UtcNow;
+                            enumeratedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                            enumerator = Directory.EnumerateFiles(newWatcher.Path, "*.*", SearchOption.AllDirectories).GetEnumerator();
+                            m_processingQueue.Add(() => EnumerateNextFile(newWatcher.Path, enumerationStart, enumeratedFiles, enumerator));
 
-                                foreach (string filePath in Directory.EnumerateFiles(newWatcher.Path, "*.*", SearchOption.AllDirectories))
-                                {
-                                    if (m_disposed)
-                                        return;
-
-                                    if (!File.Exists(filePath) || !MatchesFilter(filePath))
-                                        continue;
-
-                                    QueueFileForProcessing(filePath);
-                                    enumeratedFiles.Add(filePath);
-                                }
-
-                                m_processingQueue.Add(() =>
-                                {
-                                    Predicate<string> predicate = filePath =>
-                                    {
-                                        DateTime lastWriteTime;
-                                        bool enumerated = enumeratedFiles.Contains(filePath);
-                                        bool touched = m_touchedFiles.TryGetValue(filePath, out lastWriteTime) && lastWriteTime > enumerationStart;
-                                        bool isInWatchPath = filePath.StartsWith(newWatcher.Path, StringComparison.OrdinalIgnoreCase);
-                                        return !enumerated && !touched && isInWatchPath;
-                                    };
-
-                                    m_processedFiles.RemoveWhere(predicate);
-                                });
-                            });
-
-                            fileEnumerationThread.IsBackground = true;
-                            fileEnumerationThread.Start();
                         }
                         catch (Exception ex)
                         {
