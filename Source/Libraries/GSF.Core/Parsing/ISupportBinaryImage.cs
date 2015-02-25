@@ -110,22 +110,14 @@ namespace GSF.Parsing
                 throw new ArgumentNullException("imageSource");
 
             int length = imageSource.BinaryLength;
-            byte[] buffer = BufferPool.TakeBuffer(length);
+            byte[] buffer = new byte[length];
 
-            try
-            {
-                // Copy generated binary image to buffer
-                int writeCount = imageSource.GenerateBinaryImage(buffer, 0);
+            // Copy generated binary image to buffer
+            int writeCount = imageSource.GenerateBinaryImage(buffer, 0);
 
-                // Write buffer bytes to stream, if any were generated
-                if (writeCount > 0)
-                    stream.Write(buffer, 0, writeCount);
-            }
-            finally
-            {
-                if ((object)buffer != null)
-                    BufferPool.ReturnBuffer(buffer);
-            }
+            // Write buffer bytes to stream, if any were generated
+            if (writeCount > 0)
+                stream.Write(buffer, 0, writeCount);
         }
 
         /// <summary>
@@ -141,21 +133,13 @@ namespace GSF.Parsing
                 throw new ArgumentNullException("imageSource");
 
             int length = imageSource.BinaryLength;
-            byte[] buffer = BufferPool.TakeBuffer(length);
+            byte[] buffer = new byte[length];
 
-            try
-            {
-                // Read buffer bytes from stream
-                int readCount = stream.Read(buffer, 0, length);
+            // Read buffer bytes from stream
+            int readCount = stream.Read(buffer, 0, length);
 
-                // Parse binary image from buffer bytes read from stream
-                return imageSource.ParseBinaryImage(buffer, 0, readCount);
-            }
-            finally
-            {
-                if ((object)buffer != null)
-                    BufferPool.ReturnBuffer(buffer);
-            }
+            // Parse binary image from buffer bytes read from stream
+            return imageSource.ParseBinaryImage(buffer, 0, readCount);
         }
     }
 }

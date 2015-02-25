@@ -333,85 +333,77 @@ namespace GSF.COMTRADE
             int recordLength = m_schema.BinaryRecordLength;
             byte[] buffer = null;
 
-            try
+            buffer = new byte[recordLength];
+
+            // Read next record from file
+            int bytesRead = currentFile.Read(buffer, 0, recordLength);
+
+            // See if we have reached the end of this file
+            if (bytesRead == 0)
             {
-                buffer = BufferPool.TakeBuffer(recordLength);
+                m_streamIndex++;
 
-                // Read next record from file
-                int bytesRead = currentFile.Read(buffer, 0, recordLength);
+                // There is more to read if there is another file
+                return m_streamIndex < m_fileStreams.Length && ReadNext();
+            }
 
-                // See if we have reached the end of this file
-                if (bytesRead == 0)
+            if (bytesRead == recordLength)
+            {
+                int index = 0;
+
+                // Read sample index
+                uint sample = LittleEndian.ToUInt32(buffer, index);
+                index += 4;
+
+                // Get timestamp of this record
+                m_timestamp = DateTime.MinValue;
+
+                // If sample rates are defined, this is the preferred method for timestamp resolution
+                if (m_inferTimeFromSampleRates && m_schema.SampleRates.Length > 0)
                 {
-                    m_streamIndex++;
+                    // Find rate for given sample
+                    SampleRate sampleRate = m_schema.SampleRates.LastOrDefault(sr => sample <= sr.EndSample);
 
-                    // There is more to read if there is another file
-                    return m_streamIndex < m_fileStreams.Length && ReadNext();
+                    if (sampleRate.Rate > 0.0D)
+                        m_timestamp = new DateTime(Ticks.FromSeconds(1.0D / sampleRate.Rate * sample) + m_schema.StartTime.Value);
                 }
 
-                if (bytesRead == recordLength)
+                // Read microsecond timestamp
+                uint microseconds = LittleEndian.ToUInt32(buffer, index);
+                index += 4;
+
+                // Fall back on specified microsecond time
+                if (m_timestamp == DateTime.MinValue)
+                    m_timestamp = new DateTime(Ticks.FromMicroseconds(microseconds * m_schema.TimeFactor) + m_schema.StartTime.Value);
+
+                // Parse all analog record values
+                for (int i = 0; i < m_schema.AnalogChannels.Length; i++)
                 {
-                    int index = 0;
-
-                    // Read sample index
-                    uint sample = LittleEndian.ToUInt32(buffer, index);
-                    index += 4;
-
-                    // Get timestamp of this record
-                    m_timestamp = DateTime.MinValue;
-
-                    // If sample rates are defined, this is the preferred method for timestamp resolution
-                    if (m_inferTimeFromSampleRates && m_schema.SampleRates.Length > 0)
-                    {
-                        // Find rate for given sample
-                        SampleRate sampleRate = m_schema.SampleRates.LastOrDefault(sr => sample <= sr.EndSample);
-
-                        if (sampleRate.Rate > 0.0D)
-                            m_timestamp = new DateTime(Ticks.FromSeconds(1.0D / sampleRate.Rate * sample) + m_schema.StartTime.Value);
-                    }
-
-                    // Read microsecond timestamp
-                    uint microseconds = LittleEndian.ToUInt32(buffer, index);
-                    index += 4;
-
-                    // Fall back on specified microsecond time
-                    if (m_timestamp == DateTime.MinValue)
-                        m_timestamp = new DateTime(Ticks.FromMicroseconds(microseconds * m_schema.TimeFactor) + m_schema.StartTime.Value);
-
-                    // Parse all analog record values
-                    for (int i = 0; i < m_schema.AnalogChannels.Length; i++)
-                    {
-                        // Read next value
-                        m_values[i] = LittleEndian.ToInt16(buffer, index) * m_schema.AnalogChannels[i].Multiplier + m_schema.AnalogChannels[i].Adder;
-                        index += 2;
-                    }
-
-                    int valueIndex = m_schema.AnalogChannels.Length;
-                    int digitalWords = m_schema.DigitalWords;
-                    ushort digitalWord;
-
-                    for (int i = 0; i < digitalWords; i++)
-                    {
-                        // Read next digital word
-                        digitalWord = LittleEndian.ToUInt16(buffer, index);
-                        index += 2;
-
-                        // Distribute each bit of digital word through next 16 digital values
-                        for (int j = 0; j < 16 && valueIndex < m_values.Length; j++, valueIndex++)
-                        {
-                            m_values[valueIndex] = digitalWord.CheckBits(BitExtensions.BitVal(j)) ? 1.0D : 0.0D;
-                        }
-                    }
+                    // Read next value
+                    m_values[i] = LittleEndian.ToInt16(buffer, index) * m_schema.AnalogChannels[i].Multiplier + m_schema.AnalogChannels[i].Adder;
+                    index += 2;
                 }
-                else
+
+                int valueIndex = m_schema.AnalogChannels.Length;
+                int digitalWords = m_schema.DigitalWords;
+                ushort digitalWord;
+
+                for (int i = 0; i < digitalWords; i++)
                 {
-                    throw new InvalidOperationException("Failed to read enough bytes from COMTRADE file for a record as defined by schema - possible schema/data file mismatch or file corruption.");
+                    // Read next digital word
+                    digitalWord = LittleEndian.ToUInt16(buffer, index);
+                    index += 2;
+
+                    // Distribute each bit of digital word through next 16 digital values
+                    for (int j = 0; j < 16 && valueIndex < m_values.Length; j++, valueIndex++)
+                    {
+                        m_values[valueIndex] = digitalWord.CheckBits(BitExtensions.BitVal(j)) ? 1.0D : 0.0D;
+                    }
                 }
             }
-            finally
+            else
             {
-                if ((object)buffer != null)
-                    BufferPool.ReturnBuffer(buffer);
+                throw new InvalidOperationException("Failed to read enough bytes from COMTRADE file for a record as defined by schema - possible schema/data file mismatch or file corruption.");
             }
 
             return true;

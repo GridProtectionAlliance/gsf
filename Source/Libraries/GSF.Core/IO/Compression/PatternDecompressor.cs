@@ -538,7 +538,7 @@ namespace GSF.IO.Compression
         /// be in the native endian order of the operating system.
         /// </para>
         /// </remarks>
-        public unsafe static int DecompressBuffer(byte[] source, int startIndex, int dataLength, int bufferLength)
+        public static unsafe int DecompressBuffer(byte[] source, int startIndex, int dataLength, int bufferLength)
         {
             const int SizeOf32Bits = sizeof(uint);
             const int BackReferenceMask = 0x1F;
@@ -580,91 +580,82 @@ namespace GSF.IO.Compression
             int usedLength = 0;
             int queueStartIndex = 0;
 
-            try
+            // Initialize a buffer large enough to fit maximum possible decompressed size
+            buffer = new byte[maxSize];
+
+            // Pin buffers to be navigated so that .NET doesn't move them around
+            fixed (byte* pSource = source, pBuffer = buffer)
             {
-                // Grab a working buffer from the pool large enough to fit maximum possible decompressed size
-                buffer = BufferPool.TakeBuffer(maxSize);
+                byte* sourceIndex = pSource + 1;
+                byte* bufferIndex = pBuffer;
 
-                // Pin buffers to be navigated so that .NET doesn't move them around
-                fixed (byte* pSource = source, pBuffer = buffer)
+                uint firstValue = *(uint*)sourceIndex;
+
+                // Always add first value to the buffer and the back buffer as-is
+                *(uint*)bufferIndex = firstValue;
+                queue[0] = firstValue;
+                queueLength++;
+
+                // Advance pointers
+                bufferIndex += SizeOf32Bits;
+                sourceIndex += SizeOf32Bits;
+
+                // Starting with second item, begin decompression sequence
+                while ((int)(sourceIndex - pSource) < dataLength)
                 {
-                    byte* sourceIndex = pSource + 1;
-                    byte* bufferIndex = pBuffer;
+                    byte* workingIndex = bufferIndex;
+                    byte decompressionKey = 0;
+                    byte backReferenceIndex = 0;
+                    int smallestDifference = 0;
 
-                    uint firstValue = *(uint*)sourceIndex;
+                    // Get decompression key for the next value
+                    decompressionKey = *sourceIndex;
+                    sourceIndex++;
 
-                    // Always add first value to the buffer and the back buffer as-is
-                    *(uint*)bufferIndex = firstValue;
-                    queue[0] = firstValue;
-                    queueLength++;
+                    // Obtain smallest difference from bits 5 through 7 and back reference index from bits 0 through 4
+                    smallestDifference = decompressionKey >> 5;
+                    backReferenceIndex = (byte)(decompressionKey & BackReferenceMask);
 
-                    // Advance pointers
-                    bufferIndex += SizeOf32Bits;
-                    sourceIndex += SizeOf32Bits;
+                    // Ensure that we have enough remaining data in the source buffer to decompress the next value
+                    if ((int)(sourceIndex - pSource) + smallestDifference > dataLength)
+                        throw new IndexOutOfRangeException("Source buffer does not end on a value boundary");
 
-                    // Starting with second item, begin decompression sequence
-                    while ((int)(sourceIndex - pSource) < dataLength)
+                    // Copy value from back buffer
+                    *(uint*)workingIndex = queue[backReferenceIndex];
+
+                    // If bytes are in big endian order, then low order bytes are right most in memory so skip ahead
+                    if (!BitConverter.IsLittleEndian)
+                        workingIndex += SizeOf32Bits - smallestDifference;
+
+                    // Add only needed bytes to the output buffer (maybe none!)
+                    for (int j = 0; j < smallestDifference; j++, workingIndex++, sourceIndex++)
                     {
-                        byte* workingIndex = bufferIndex;
-                        byte decompressionKey = 0;
-                        byte backReferenceIndex = 0;
-                        int smallestDifference = 0;
-
-                        // Get decompression key for the next value
-                        decompressionKey = *sourceIndex;
-                        sourceIndex++;
-
-                        // Obtain smallest difference from bits 5 through 7 and back reference index from bits 0 through 4
-                        smallestDifference = decompressionKey >> 5;
-                        backReferenceIndex = (byte)(decompressionKey & BackReferenceMask);
-
-                        // Ensure that we have enough remaining data in the source buffer to decompress the next value
-                        if ((int)(sourceIndex - pSource) + smallestDifference > dataLength)
-                            throw new IndexOutOfRangeException("Source buffer does not end on a value boundary");
-
-                        // Copy value from back buffer
-                        *(uint*)workingIndex = queue[backReferenceIndex];
-
-                        // If bytes are in big endian order, then low order bytes are right most in memory so skip ahead
-                        if (!BitConverter.IsLittleEndian)
-                            workingIndex += SizeOf32Bits - smallestDifference;
-
-                        // Add only needed bytes to the output buffer (maybe none!)
-                        for (int j = 0; j < smallestDifference; j++, workingIndex++, sourceIndex++)
-                        {
-                            *workingIndex = *sourceIndex;
-                        }
-
-                        // Place decompressed value into the queue
-                        if (queueLength < maxQueueLength)
-                        {
-                            queue[queueLength] = *(uint*)bufferIndex;
-                            queueLength++;
-                        }
-                        else
-                        {
-                            queue[queueStartIndex] = *(uint*)bufferIndex;
-                            queueStartIndex++;
-
-                            if (queueStartIndex >= queueLength)
-                                queueStartIndex = 0;
-                        }
-
-                        // Setup to decompress the next value
-                        bufferIndex += SizeOf32Bits;
+                        *workingIndex = *sourceIndex;
                     }
 
-                    usedLength = (int)(bufferIndex - pBuffer);
+                    // Place decompressed value into the queue
+                    if (queueLength < maxQueueLength)
+                    {
+                        queue[queueLength] = *(uint*)bufferIndex;
+                        queueLength++;
+                    }
+                    else
+                    {
+                        queue[queueStartIndex] = *(uint*)bufferIndex;
+                        queueStartIndex++;
 
-                    // Overwrite source buffer with new compressed buffer
-                    Buffer.BlockCopy(buffer, 0, source, startIndex, usedLength);
+                        if (queueStartIndex >= queueLength)
+                            queueStartIndex = 0;
+                    }
+
+                    // Setup to decompress the next value
+                    bufferIndex += SizeOf32Bits;
                 }
-            }
-            finally
-            {
-                // Return buffer to queue so it can be reused
-                if ((object)buffer != null)
-                    BufferPool.ReturnBuffer(buffer);
+
+                usedLength = (int)(bufferIndex - pBuffer);
+
+                // Overwrite source buffer with new compressed buffer
+                Buffer.BlockCopy(buffer, 0, source, startIndex, usedLength);
             }
 
             return usedLength;

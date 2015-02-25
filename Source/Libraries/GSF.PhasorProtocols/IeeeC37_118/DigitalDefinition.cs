@@ -355,45 +355,33 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             else
             {
                 int parseLength = MaximumLabelLength;
+                byte[] labelBuffer = new byte[16];
+                string[] labels = new string[16];
 
-                byte[] labelBuffer = null;
-
-                try
+                for (int i = 0; i < 16; i++)
                 {
-                    string[] labels = new string[16];
+                    // Get next label buffer
+                    Buffer.BlockCopy(buffer, startIndex + i * 16, labelBuffer, 0, 16);
 
-                    labelBuffer = BufferPool.TakeBuffer(16);
+                    bool foundNull = false;
 
-                    for (int i = 0; i < 16; i++)
+                    // Replace null characters with spaces; since characters after null
+                    // are usually invalid garbage, blank these out with spaces as well
+                    for (int j = 0; j < 16; j++)
                     {
-                        // Get next label buffer
-                        Buffer.BlockCopy(buffer, startIndex + i * 16, labelBuffer, 0, 16);
-
-                        bool foundNull = false;
-
-                        // Replace null characters with spaces; since characters after null
-                        // are usually invalid garbage, blank these out with spaces as well
-                        for (int j = 0; j < 16; j++)
+                        if (foundNull || labelBuffer[j] == 0)
                         {
-                            if (foundNull || labelBuffer[j] == 0)
-                            {
-                                foundNull = true;
-                                labelBuffer[j] = 32;
-                            }
+                            foundNull = true;
+                            labelBuffer[j] = 32;
                         }
-
-                        // Interpret bytes as an ASCII string
-                        labels[i] = Encoding.ASCII.GetString(labelBuffer, 0, 16);
                     }
 
-                    // Concatenate all labels together into one large string
-                    Label = string.Concat(labels);
+                    // Interpret bytes as an ASCII string
+                    labels[i] = Encoding.ASCII.GetString(labelBuffer, 0, 16);
                 }
-                finally
-                {
-                    if (labelBuffer != null)
-                        BufferPool.ReturnBuffer(labelBuffer);
-                }
+
+                // Concatenate all labels together into one large string
+                Label = string.Concat(labels);
 
                 return parseLength;
             }

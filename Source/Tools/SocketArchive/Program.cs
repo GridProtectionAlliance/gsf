@@ -131,22 +131,14 @@ namespace SocketArchive
             Console.WriteLine("  SocketArchive MULTICAST 6015 host.dns.org:997 ANY Capture.bin ::0\r\n");
         }
 
-        static void socket_ReceiveData(object sender, EventArgs<int> e)
+        private static void socket_ReceiveData(object sender, EventArgs<int> e)
         {
             int length = e.Argument;
-            byte[] buffer = BufferPool.TakeBuffer(length);
+            byte[] buffer = new byte[length];
 
-            try
-            {
-                length = socket.Read(buffer, 0, length);
-                stream.Write(buffer, 0, length);
-                buffers++;
-            }
-            finally
-            {
-                if ((object)buffer != null)
-                    BufferPool.ReturnBuffer(buffer);
-            }
+            length = socket.Read(buffer, 0, length);
+            stream.Write(buffer, 0, length);
+            buffers++;
 
             if (buffers % 120 == 0)
                 Console.WriteLine("{0} buffers received...", buffers);

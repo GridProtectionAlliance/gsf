@@ -35,8 +35,7 @@ namespace GSF
     /// <para>
     /// The buffer pool is statically created at application startup and is available for all components and classes
     /// within an application domain. Every time you need to use a buffer, you take one from the pool, use it, and
-    /// return it to the pool when done. This process is much faster than creating and destroying a buffer every
-    /// time you need to use one.
+    /// return it to the pool when done.
     /// </para>
     /// <para>
     /// It is very important to return the buffer to the pool when you are finished using it. If you are using a buffer
@@ -48,6 +47,7 @@ namespace GSF
     /// Internally this class simply wraps a static instance of the WCF <see cref="BufferManager"/>.
     /// </para>
     /// </remarks>
+    [Obsolete("It is not recommended to use this class because the need for pooling is rare and implementations of pooling can be dangerous.")]
     public static class BufferPool
     {
         // Note that the buffer manager will create an queue buffers as needed during run-time, the default maximum

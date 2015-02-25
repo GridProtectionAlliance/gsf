@@ -3733,7 +3733,7 @@ namespace GSF.PhasorProtocols
             IPEndPoint remoteEndPoint = e.Argument1 as IPEndPoint;
             IPAddress destinationAddress = e.Argument2.Address;
             int length = e.Argument3;
-            byte[] buffer = null;
+            byte[] buffer;
 
             if ((object)remoteEndPoint == null)
                 return;
@@ -3744,35 +3744,17 @@ namespace GSF.PhasorProtocols
             if ((object)destinationAddress != null && (object)m_multicastServerAddress != null && !destinationAddress.Equals(m_multicastServerAddress))
                 return;
 
-            try
-            {
-                buffer = BufferPool.TakeBuffer(length);
-                length = m_dataChannel.Read(buffer, 0, length);
-                Parse(SourceChannel.Data, buffer, 0, length);
-            }
-            finally
-            {
-                if ((object)buffer != null)
-                    BufferPool.ReturnBuffer(buffer);
-            }
+            buffer = new byte[length];
+            length = m_dataChannel.Read(buffer, 0, length);
+            Parse(SourceChannel.Data, buffer, 0, length);
         }
 
         private void m_dataChannel_ReceiveData(object sender, EventArgs<int> e)
         {
             int length = e.Argument;
-            byte[] buffer = null;
-
-            try
-            {
-                buffer = BufferPool.TakeBuffer(length);
-                length = m_dataChannel.Read(buffer, 0, length);
-                Parse(SourceChannel.Data, buffer, 0, length);
-            }
-            finally
-            {
-                if ((object)buffer != null)
-                    BufferPool.ReturnBuffer(buffer);
-            }
+            byte[] buffer = new byte[length];
+            length = m_dataChannel.Read(buffer, 0, length);
+            Parse(SourceChannel.Data, buffer, 0, length);
         }
 
         private void m_dataChannel_ConnectionEstablished(object sender, EventArgs e)
@@ -3854,19 +3836,10 @@ namespace GSF.PhasorProtocols
         {
             Guid clientID = e.Argument1;
             int length = e.Argument2;
-            byte[] buffer = null;
+            byte[] buffer = new byte[length];
 
-            try
-            {
-                buffer = BufferPool.TakeBuffer(length);
-                length = m_serverBasedDataChannel.Read(clientID, buffer, 0, length);
-                Parse(SourceChannel.Data, buffer, 0, length);
-            }
-            finally
-            {
-                if ((object)buffer != null)
-                    BufferPool.ReturnBuffer(buffer);
-            }
+            length = m_serverBasedDataChannel.Read(clientID, buffer, 0, length);
+            Parse(SourceChannel.Data, buffer, 0, length);
         }
 
         private void m_serverBasedDataChannel_ClientConnected(object sender, EventArgs<Guid> e)
@@ -3931,19 +3904,9 @@ namespace GSF.PhasorProtocols
         private void m_commandChannel_ReceiveData(object sender, EventArgs<int> e)
         {
             int length = e.Argument;
-            byte[] buffer = null;
-
-            try
-            {
-                buffer = BufferPool.TakeBuffer(length);
-                length = m_commandChannel.Read(buffer, 0, length);
-                Parse(SourceChannel.Command, buffer, 0, length);
-            }
-            finally
-            {
-                if ((object)buffer != null)
-                    BufferPool.ReturnBuffer(buffer);
-            }
+            byte[] buffer = new byte[length];
+            length = m_commandChannel.Read(buffer, 0, length);
+            Parse(SourceChannel.Command, buffer, 0, length);
         }
 
         private void m_commandChannel_ConnectionEstablished(object sender, EventArgs e)

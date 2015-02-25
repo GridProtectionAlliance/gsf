@@ -123,26 +123,18 @@ namespace GSF.Media
             if (format.Length != 4)
                 throw new ArgumentOutOfRangeException("value", "Format must be exactly 4 characters in length");
 
-            byte[] buffer = BufferPool.TakeBuffer(4);
+            byte[] buffer = new byte[4];
 
-            try
-            {
-                int bytesRead = source.Read(buffer, 0, 4);
+            int bytesRead = source.Read(buffer, 0, 4);
 
-                if (bytesRead < 4)
-                    throw new InvalidOperationException("RIFF format section too small, media file corrupted");
+            if (bytesRead < 4)
+                throw new InvalidOperationException("RIFF format section too small, media file corrupted");
 
-                // Read format stored in RIFF section
-                m_format = Encoding.ASCII.GetString(buffer, 0, 4);
+            // Read format stored in RIFF section
+            m_format = Encoding.ASCII.GetString(buffer, 0, 4);
 
-                if (m_format != format)
-                    throw new InvalidDataException(string.Format("{0} format expected but got {1}, this does not appear to be a valid {0} file", format, m_format));
-            }
-            finally
-            {
-                if ((object)buffer != null)
-                    BufferPool.ReturnBuffer(buffer);
-            }
+            if (m_format != format)
+                throw new InvalidDataException(string.Format("{0} format expected but got {1}, this does not appear to be a valid {0} file", format, m_format));
         }
 
         #endregion

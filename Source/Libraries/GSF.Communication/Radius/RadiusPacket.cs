@@ -394,21 +394,13 @@ namespace GSF.Communication.Radius
             //   Shared Secret is the shared secret key
             int length = responsePacket.BinaryLength;
             byte[] sharedSecretBytes = Encoding.GetBytes(sharedSecret);
-            byte[] buffer = BufferPool.TakeBuffer(length + sharedSecretBytes.Length);
+            byte[] buffer = new byte[length + sharedSecretBytes.Length];
 
-            try
-            {
-                responsePacket.GenerateBinaryImage(buffer, 0);
-                Buffer.BlockCopy(requestPacket.BinaryImage(), 4, buffer, 4, 16);
-                Buffer.BlockCopy(sharedSecretBytes, 0, buffer, length, sharedSecretBytes.Length);
+            responsePacket.GenerateBinaryImage(buffer, 0);
+            Buffer.BlockCopy(requestPacket.BinaryImage(), 4, buffer, 4, 16);
+            Buffer.BlockCopy(sharedSecretBytes, 0, buffer, length, sharedSecretBytes.Length);
 
-                return new MD5CryptoServiceProvider().ComputeHash(buffer);
-            }
-            finally
-            {
-                if ((object)buffer != null)
-                    BufferPool.ReturnBuffer(buffer);
-            }
+            return new MD5CryptoServiceProvider().ComputeHash(buffer);
         }
 
         /// <summary>

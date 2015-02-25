@@ -63,21 +63,12 @@ namespace GSF.TimeSeries
             // Validate buffer parameters
             buffer.ValidateParameters(startIndex, length);
 
-            // We don't hold on to source buffer (we don't own it), so we grab one from the buffer pool
-            m_buffer = BufferPool.TakeBuffer(length);
+            // We don't hold on to source buffer (we don't own it), so we instantiate a new one
+            m_buffer = new byte[length];
 
             // Copy buffer contents onto our local buffer
             System.Buffer.BlockCopy(buffer, startIndex, m_buffer, 0, length);
             m_length = length;
-
-        }
-
-        /// <summary>
-        /// Finalizer for <see cref="BufferBlockMeasurement"/>.
-        /// </summary>
-        ~BufferBlockMeasurement()
-        {
-            ReturnBufferToPool(true);
         }
 
         #endregion
@@ -87,38 +78,11 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Cached buffer image.
         /// </summary>
-        /// <remarks>
-        /// <para>
-        /// Use the <see cref="Length"/> property to determine the valid number of bytes in the
-        /// buffer. The actual length of the <see cref="Buffer"/> byte array may exceed the value
-        /// of <see cref="Length"/>, however any bytes in the buffer beyond <see cref="Length"/>
-        /// are considered unavailable and accessing these bytes may result in an exception.
-        /// </para>
-        /// <para>
-        /// Do not cache <see cref="Buffer"/> for your own use, copy data from this buffer onto
-        /// your own buffer as this buffer is from the buffer pool and will be returned back to
-        /// the pool by this class.
-        /// </para>
-        /// <para>
-        /// Set <see cref="Buffer"/> property to <c>null</c> when operations on buffer are complete
-        /// to return buffer to pool and unregister measurement instance from the finalizer queue.
-        /// If measurement has multiple destinations, it is recommended that queue and notify be
-        /// implemented so that final user of <see cref="BufferBlockMeasurement"/> instance can
-        /// return buffer back to the buffer pool.
-        /// </para>
-        /// </remarks>
         public byte[] Buffer
         {
             get
             {
                 return m_buffer;
-            }
-            set
-            {
-                if ((object)value == null)
-                    ReturnBufferToPool();
-                else
-                    throw new InvalidOperationException("Cannot override internal buffer. Set property to null to return buffer to pool.");
             }
         }
 
@@ -130,23 +94,6 @@ namespace GSF.TimeSeries
             get
             {
                 return m_length;
-            }
-        }
-
-        #endregion
-
-        #region [ Methods ]
-
-        // Return local buffer back to the buffer pool
-        private void ReturnBufferToPool(bool destructorCall = false)
-        {
-            if (!destructorCall)
-                GC.SuppressFinalize(this);
-
-            if ((object)m_buffer != null)
-            {
-                BufferPool.ReturnBuffer(m_buffer);
-                m_buffer = null;
             }
         }
 

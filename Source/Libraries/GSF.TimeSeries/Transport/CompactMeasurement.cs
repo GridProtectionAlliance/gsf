@@ -555,75 +555,65 @@ namespace GSF.TimeSeries.Transport
         /// </remarks>
         public static bool CompressPayload(this IEnumerable<CompactMeasurement> compactMeasurements, BlockAllocatedMemoryStream destination, byte compressionStrength, bool includeTime, ref DataPacketFlags flags)
         {
-            byte[] buffer = null;
+            // Instantiate a buffer that is larger than we'll need
+            byte[] buffer = new byte[ushort.MaxValue];
 
-            try
+            // Go ahead an enumerate all the measurements - this will cast all values to compact measurements
+            CompactMeasurement[] measurements = compactMeasurements.ToArray();
+            int measurementCount = measurements.Length;
+            int sizeToBeat = measurementCount * measurements[0].BinaryLength;
+            int index = 0;
+
+            // Encode compact state flags and runtime IDs together --
+            // Together these are three bytes, so we pad with a zero byte.
+            // The zero byte and state flags are considered to be more compressible
+            // than the runtime ID, so these are stored in the higher order bytes.
+            for (int i = 0; i < measurementCount; i++)
             {
-                // Get a buffer that is larger than we'll need
-                buffer = BufferPool.TakeBuffer(ushort.MaxValue);
+                uint value = ((uint)measurements[i].CompactStateFlags << 16) | measurements[i].RuntimeID;
+                index += NativeEndianOrder.Default.CopyBytes(value, buffer, index);
+            }
 
-                // Go ahead an enumerate all the measurements - this will cast all values to compact measurements
-                CompactMeasurement[] measurements = compactMeasurements.ToArray();
-                int measurementCount = measurements.Length;
-                int sizeToBeat = measurementCount * measurements[0].BinaryLength;
-                int index = 0;
+            // Encode values
+            for (int i = 0; i < measurementCount; i++)
+            {
+                // Encode using adjusted value (accounts for adder and multiplier)
+                index += NativeEndianOrder.Default.CopyBytes((float)measurements[i].AdjustedValue, buffer, index);
+            }
 
-                // Encode compact state flags and runtime IDs together --
-                // Together these are three bytes, so we pad with a zero byte.
-                // The zero byte and state flags are considered to be more compressible
-                // than the runtime ID, so these are stored in the higher order bytes.
+            if (includeTime)
+            {
+                // Encode timestamps
                 for (int i = 0; i < measurementCount; i++)
                 {
-                    uint value = ((uint)measurements[i].CompactStateFlags << 16) | measurements[i].RuntimeID;
-                    index += NativeEndianOrder.Default.CopyBytes(value, buffer, index);
+                    // Since large majority of 8-byte tick values will be repeated, they should compress well
+                    index += NativeEndianOrder.Default.CopyBytes((long)measurements[i].Timestamp, buffer, index);
                 }
-
-                // Encode values
-                for (int i = 0; i < measurementCount; i++)
-                {
-                    // Encode using adjusted value (accounts for adder and multiplier)
-                    index += NativeEndianOrder.Default.CopyBytes((float)measurements[i].AdjustedValue, buffer, index);
-                }
-
-                if (includeTime)
-                {
-                    // Encode timestamps
-                    for (int i = 0; i < measurementCount; i++)
-                    {
-                        // Since large majority of 8-byte tick values will be repeated, they should compress well
-                        index += NativeEndianOrder.Default.CopyBytes((long)measurements[i].Timestamp, buffer, index);
-                    }
-                }
-
-                // Attempt to compress buffer
-                int compressedSize = PatternCompressor.CompressBuffer(buffer, 0, index, ushort.MaxValue, compressionStrength);
-
-                // Only encode compressed buffer if compression actually helped payload size
-                if (compressedSize <= sizeToBeat)
-                {
-                    // Set payload compression flag
-                    flags |= DataPacketFlags.Compressed;
-
-                    // Make sure decompressor knows original endian encoding order
-                    if (BitConverter.IsLittleEndian)
-                        flags |= DataPacketFlags.LittleEndianCompression;
-                    else
-                        flags &= ~DataPacketFlags.LittleEndianCompression;
-
-                    // Copy compressed payload onto destination stream
-                    destination.Write(buffer, 0, compressedSize);
-                    return true;
-                }
-
-                // Clear payload compression flag
-                flags &= ~DataPacketFlags.Compressed;
-                return false;
             }
-            finally
+
+            // Attempt to compress buffer
+            int compressedSize = PatternCompressor.CompressBuffer(buffer, 0, index, ushort.MaxValue, compressionStrength);
+
+            // Only encode compressed buffer if compression actually helped payload size
+            if (compressedSize <= sizeToBeat)
             {
-                if ((object)buffer != null)
-                    BufferPool.ReturnBuffer(buffer);
+                // Set payload compression flag
+                flags |= DataPacketFlags.Compressed;
+
+                // Make sure decompressor knows original endian encoding order
+                if (BitConverter.IsLittleEndian)
+                    flags |= DataPacketFlags.LittleEndianCompression;
+                else
+                    flags &= ~DataPacketFlags.LittleEndianCompression;
+
+                // Copy compressed payload onto destination stream
+                destination.Write(buffer, 0, compressedSize);
+                return true;
             }
+
+            // Clear payload compression flag
+            flags &= ~DataPacketFlags.Compressed;
+            return false;
         }
 
         /// <summary>
@@ -640,69 +630,60 @@ namespace GSF.TimeSeries.Transport
         public static CompactMeasurement[] DecompressPayload(this byte[] source, SignalIndexCache signalIndexCache, int index, int dataLength, int measurementCount, bool includeTime, DataPacketFlags flags)
         {
             CompactMeasurement[] measurements = new CompactMeasurement[measurementCount];
-            byte[] buffer = null;
 
-            try
+            // Actual data length has to take into account response byte and in-response-to server command byte in the payload header
+            //int dataLength = length - index - 2;
+            int bufferLength = PatternDecompressor.MaximumSizeDecompressed(dataLength);
+
+            // Copy source data into a decompression buffer
+            byte[] buffer = new byte[bufferLength];
+            Buffer.BlockCopy(source, index, buffer, 0, dataLength);
+
+            // Check that OS endian-order matches endian-order of compressed data
+            if (!(BitConverter.IsLittleEndian && (flags & DataPacketFlags.LittleEndianCompression) > 0))
             {
-                // Actual data length has to take into account response byte and in-response-to server command byte in the payload header
-                //int dataLength = length - index - 2;
-                int bufferLength = PatternDecompressor.MaximumSizeDecompressed(dataLength);
-
-                // Copy source data into a decompression buffer
-                buffer = BufferPool.TakeBuffer(bufferLength);
-                Buffer.BlockCopy(source, index, buffer, 0, dataLength);
-
-                // Check that OS endian-order matches endian-order of compressed data
-                if (!(BitConverter.IsLittleEndian && (flags & DataPacketFlags.LittleEndianCompression) > 0))
-                {
-                    // TODO: Set a flag, e.g., Endianness decompressAs, to pass into pattern decompressor so it
-                    // can be modified to decompress a payload that is in a non-native Endian order
-                    throw new NotImplementedException("Cannot currently decompress payload that is not in native endian-order.");
-                }
-
-                // Attempt to decompress buffer
-                int uncompressedSize = PatternDecompressor.DecompressBuffer(buffer, 0, dataLength, bufferLength);
-
-                if (uncompressedSize == 0)
-                    throw new InvalidOperationException("Failed to decompress payload buffer - possible data corruption.");
-
-                index = 0;
-
-                // Decode ID and state flags
-                for (int i = 0; i < measurementCount; i++)
-                {
-                    uint value = NativeEndianOrder.Default.ToUInt32(buffer, index);
-
-                    measurements[i] = new CompactMeasurement(signalIndexCache, includeTime)
-                    {
-                        CompactStateFlags = (byte)(value >> 16),
-                        RuntimeID = (ushort)value
-                    };
-
-                    index += 4;
-                }
-
-                // Decode values
-                for (int i = 0; i < measurementCount; i++)
-                {
-                    measurements[i].Value = NativeEndianOrder.Default.ToSingle(buffer, index);
-                    index += 4;
-                }
-
-                if (includeTime)
-                {
-                    // Decode timestamps
-                    for (int i = 0; i < measurementCount; i++)
-                    {
-                        measurements[i].Timestamp = NativeEndianOrder.Default.ToInt64(buffer, index);
-                        index += 8;
-                    }
-                }
+                // TODO: Set a flag, e.g., Endianness decompressAs, to pass into pattern decompressor so it
+                // can be modified to decompress a payload that is in a non-native Endian order
+                throw new NotImplementedException("Cannot currently decompress payload that is not in native endian-order.");
             }
-            finally
+
+            // Attempt to decompress buffer
+            int uncompressedSize = PatternDecompressor.DecompressBuffer(buffer, 0, dataLength, bufferLength);
+
+            if (uncompressedSize == 0)
+                throw new InvalidOperationException("Failed to decompress payload buffer - possible data corruption.");
+
+            index = 0;
+
+            // Decode ID and state flags
+            for (int i = 0; i < measurementCount; i++)
             {
-                if ((object)buffer != null)
-                    BufferPool.ReturnBuffer(buffer);
+                uint value = NativeEndianOrder.Default.ToUInt32(buffer, index);
+
+                measurements[i] = new CompactMeasurement(signalIndexCache, includeTime)
+                {
+                    CompactStateFlags = (byte)(value >> 16),
+                    RuntimeID = (ushort)value
+                };
+
+                index += 4;
+            }
+
+            // Decode values
+            for (int i = 0; i < measurementCount; i++)
+            {
+                measurements[i].Value = NativeEndianOrder.Default.ToSingle(buffer, index);
+                index += 4;
+            }
+
+            if (includeTime)
+            {
+                // Decode timestamps
+                for (int i = 0; i < measurementCount; i++)
+                {
+                    measurements[i].Timestamp = NativeEndianOrder.Default.ToInt64(buffer, index);
+                    index += 8;
+                }
             }
 
             return measurements;

@@ -71,7 +71,6 @@ namespace GSF.Communication
         // Internally managed I/O buffers
         private byte[] m_sendBuffer;
         private byte[] m_receiveBuffer;
-        private int m_receiveBufferSize;
 
         #endregion
 
@@ -136,7 +135,7 @@ namespace GSF.Communication
         {
             get
             {
-                return m_receiveBufferSize;
+                return (object)m_receiveBuffer != null ? m_receiveBuffer.Length : 0;
             }
         }
 
@@ -162,18 +161,7 @@ namespace GSF.Communication
         /// <returns>New receive buffer.</returns>
         public byte[] SetReceiveBuffer(int size)
         {
-            if (size != m_receiveBufferSize)
-            {
-                if (m_receiveBuffer != null)
-                    BufferPool.ReturnBuffer(m_receiveBuffer);
-
-                // Take a buffer from the pool of the desired size
-                m_receiveBuffer = BufferPool.TakeBuffer(size);
-
-                // The buffer returned may be bigger than the requested size, but only the specified size will be usable
-                m_receiveBufferSize = size;
-            }
-
+            m_receiveBuffer = new byte[size];
             return m_receiveBuffer;
         }
 
@@ -182,10 +170,7 @@ namespace GSF.Communication
         /// </summary>
         public void Reset()
         {
-            if (m_receiveBuffer != null)
-                BufferPool.ReturnBuffer(m_receiveBuffer);
             m_receiveBuffer = null;
-            m_receiveBufferSize = 0;
             m_sendBuffer = null;
 
             BytesReceived = -1;

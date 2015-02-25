@@ -125,30 +125,22 @@ namespace GSF.Media
             : base(preRead, RiffTypeID)
         {
             int length = ChunkSize;
-            byte[] buffer = BufferPool.TakeBuffer(length);
+            byte[] buffer = new byte[length];
 
-            try
+            int bytesRead = source.Read(buffer, 0, length);
+
+            // Initialize class from buffer
+            ParseBinaryImage(buffer, 0, bytesRead);
+
+            // Read extra parameters, if any
+            if (m_extraParametersSize > 0)
             {
-                int bytesRead = source.Read(buffer, 0, length);
+                m_extraParameters = new byte[m_extraParametersSize];
 
-                // Initialize class from buffer
-                ParseBinaryImage(buffer, 0, bytesRead);
+                bytesRead = source.Read(m_extraParameters, 0, m_extraParametersSize);
 
-                // Read extra parameters, if any
-                if (m_extraParametersSize > 0)
-                {
-                    m_extraParameters = new byte[m_extraParametersSize];
-
-                    bytesRead = source.Read(m_extraParameters, 0, m_extraParametersSize);
-
-                    if (bytesRead < m_extraParametersSize)
-                        throw new InvalidOperationException("WAVE extra parameters section too small, wave file corrupted");
-                }
-            }
-            finally
-            {
-                if ((object)buffer != null)
-                    BufferPool.ReturnBuffer(buffer);
+                if (bytesRead < m_extraParametersSize)
+                    throw new InvalidOperationException("WAVE extra parameters section too small, wave file corrupted");
             }
         }
 

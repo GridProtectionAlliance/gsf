@@ -480,80 +480,72 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             byte[] asduImage = null;
             int index = 0;
 
-            try
+            // Get a buffer with extra room for variable length tags to hold new image 
+            asduImage = new byte[100 + configurationFrame.GetCalculatedSampleLength() + m_msvID.Length];
+
+            //
+            // Generate current ASDU image
+            //
+
+            // Encode place holder for ASDU sequence tag
+            ushort asduSequence = (ushort)(header.AsduLength - 8);
+            asduSequence.EncodeTagLength(SampledValueTag.AsduSequence, asduImage, ref index);
+
+            // Encode MSVID value
+            m_msvID.EncodeTagValue(SampledValueTag.MsvID, asduImage, ref index);
+
+            // Encode sample count
+            m_sampleCount.EncodeTagValue(SampledValueTag.SmpCnt, asduImage, ref index);
+
+            // Encode configuration revision
+            m_configurationRevision.EncodeTagValue(SampledValueTag.ConfRev, asduImage, ref index);
+
+            // Encode timestamp
+            ulong timestamp = Word.MakeQuadWord(header.SecondOfCentury, (uint)(((uint)header.FractionOfSecond << 8) | (uint)header.TimeQualityFlags));
+            timestamp.EncodeTagValue(SampledValueTag.RefrTm, asduImage, ref index);
+
+            // Defaulting sample synchronization state to true - not sure what value this has
+            m_sampleSynchronization = 0x01;
+            m_sampleSynchronization.EncodeTagValue(SampledValueTag.SmpSynch, asduImage, ref index);
+
+            // Can optionally encode sample rate here - seems like a waste of space so we skip this
+            //m_sampleRate.EncodeTagValue(SampledValueTag.SmpRate, bodyImage, ref index);
+
+            // Encode sample length
+            ushort sampleLength = (ushort)configurationFrame.GetCalculatedSampleLength();
+            sampleLength.EncodeTagLength(SampledValueTag.Samples, asduImage, ref index);
+
+            // Copy in base image
+            Cells.BinaryImage().CopyImage(asduImage, ref index, sampleLength);
+
+            // Update actual ASDU length in header for proper tag size encoding
+            header.AsduLength = (ushort)index;
+
+            // Encode actual ASDU sequence length - wireshark uses this value to locate ASDU data
+            index = 0;
+            asduSequence = (ushort)(header.AsduLength - 4);
+            asduSequence.EncodeTagLength(SampledValueTag.AsduSequence, asduImage, ref index);
+
+            // Next two tags, sample mod and UTC timestamp, are optional so we skip them to conserve bandwidth
+
+            //
+            // Manage ASDU image queue
+            //
+
+            // Cascade old ASDU images up one in buffer (newest last)
+            for (int i = 0; i < m_asduCount - 1; i++)
             {
-                // Get a buffer with extra room for variable length tags to hold new image 
-                asduImage = BufferPool.TakeBuffer(100 + configurationFrame.GetCalculatedSampleLength() + m_msvID.Length);
-
-                //
-                // Generate current ASDU image
-                //
-
-                // Encode place holder for ASDU sequence tag
-                ushort asduSequence = (ushort)(header.AsduLength - 8);
-                asduSequence.EncodeTagLength(SampledValueTag.AsduSequence, asduImage, ref index);
-
-                // Encode MSVID value
-                m_msvID.EncodeTagValue(SampledValueTag.MsvID, asduImage, ref index);
-
-                // Encode sample count
-                m_sampleCount.EncodeTagValue(SampledValueTag.SmpCnt, asduImage, ref index);
-
-                // Encode configuration revision
-                m_configurationRevision.EncodeTagValue(SampledValueTag.ConfRev, asduImage, ref index);
-
-                // Encode timestamp
-                ulong timestamp = Word.MakeQuadWord(header.SecondOfCentury, (uint)(((uint)header.FractionOfSecond << 8) | (uint)header.TimeQualityFlags));
-                timestamp.EncodeTagValue(SampledValueTag.RefrTm, asduImage, ref index);
-
-                // Defaulting sample synchronization state to true - not sure what value this has
-                m_sampleSynchronization = 0x01;
-                m_sampleSynchronization.EncodeTagValue(SampledValueTag.SmpSynch, asduImage, ref index);
-
-                // Can optionally encode sample rate here - seems like a waste of space so we skip this
-                //m_sampleRate.EncodeTagValue(SampledValueTag.SmpRate, bodyImage, ref index);
-
-                // Encode sample length
-                ushort sampleLength = (ushort)configurationFrame.GetCalculatedSampleLength();
-                sampleLength.EncodeTagLength(SampledValueTag.Samples, asduImage, ref index);
-
-                // Copy in base image
-                Cells.BinaryImage().CopyImage(asduImage, ref index, sampleLength);
-
-                // Update actual ASDU length in header for proper tag size encoding
-                header.AsduLength = (ushort)index;
-
-                // Encode actual ASDU sequence length - wireshark uses this value to locate ASDU data
-                index = 0;
-                asduSequence = (ushort)(header.AsduLength - 4);
-                asduSequence.EncodeTagLength(SampledValueTag.AsduSequence, asduImage, ref index);
-
-                // Next two tags, sample mod and UTC timestamp, are optional so we skip them to conserve bandwidth
-
-                //
-                // Manage ASDU image queue
-                //
-
-                // Cascade old ASDU images up one in buffer (newest last)
-                for (int i = 0; i < m_asduCount - 1; i++)
-                {
-                    m_asduImages[i] = m_asduImages[i + 1];
-                }
-
-                // Cache current ASDU image into image cache
-                m_asduImages[m_asduCount - 1] = asduImage.BlockCopy(0, header.AsduLength);
-
-                // Make sure ASDU image buffers are initialized (first time through they will all be null)
-                for (int i = 0; i < m_asduCount - 1; i++)
-                {
-                    if ((object)m_asduImages[i] == null)
-                        m_asduImages[i] = m_asduImages[m_asduCount - 1];
-                }
+                m_asduImages[i] = m_asduImages[i + 1];
             }
-            finally
+
+            // Cache current ASDU image into image cache
+            m_asduImages[m_asduCount - 1] = asduImage.BlockCopy(0, header.AsduLength);
+
+            // Make sure ASDU image buffers are initialized (first time through they will all be null)
+            for (int i = 0; i < m_asduCount - 1; i++)
             {
-                if ((object)asduImage != null)
-                    BufferPool.ReturnBuffer(asduImage);
+                if ((object)m_asduImages[i] == null)
+                    m_asduImages[i] = m_asduImages[m_asduCount - 1];
             }
 
             //

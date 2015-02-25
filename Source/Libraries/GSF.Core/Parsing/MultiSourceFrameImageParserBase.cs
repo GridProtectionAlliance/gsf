@@ -78,16 +78,9 @@ namespace GSF.Parsing
         /// automatic object pool handling, e.g., returning object to pool when disposed.
         /// </remarks>
         [SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
-        public class SourceIdentifiableBuffer : ISupportLifecycle
+        public class SourceIdentifiableBuffer
         {
             #region [ Members ]
-
-            // Events
-
-            /// <summary>
-            /// Occurs when <see cref="SourceIdentifiableBuffer"/> is disposed.
-            /// </summary>
-            public event EventHandler Disposed;
 
             // Fields
 
@@ -102,19 +95,6 @@ namespace GSF.Parsing
             public byte[] Buffer;
 
             private int m_count;
-            private bool m_disposed;
-
-            #endregion
-
-            #region [ Constructors ]
-
-            /// <summary>
-            /// Releases the unmanaged resources before the <see cref="SourceIdentifiableBuffer"/> object is reclaimed by <see cref="GC"/>.
-            /// </summary>
-            ~SourceIdentifiableBuffer()
-            {
-                Dispose(false);
-            }
 
             #endregion
 
@@ -144,63 +124,7 @@ namespace GSF.Parsing
                 set
                 {
                     m_count = value;
-
-                    if ((object)Buffer != null)
-                        BufferPool.ReturnBuffer(Buffer);
-
-                    if (m_count > 0)
-                        Buffer = BufferPool.TakeBuffer(m_count);
-                    else
-                        Buffer = null;
-                }
-            }
-
-            #endregion
-
-            #region [ Methods ]
-
-            /// <summary>
-            /// Releases all the resources used by the <see cref="SourceIdentifiableBuffer"/> object.
-            /// </summary>
-            public void Dispose()
-            {
-                Dispose(true);
-                GC.SuppressFinalize(this);
-            }
-
-            /// <summary>
-            /// Releases the unmanaged resources used by the <see cref="SourceIdentifiableBuffer"/> object and optionally releases the managed resources.
-            /// </summary>
-            /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-            protected virtual void Dispose(bool disposing)
-            {
-                if (!m_disposed)
-                {
-                    try
-                    {
-                        // Return any existing buffer to the pool
-                        Count = 0;
-                    }
-                    finally
-                    {
-                        m_disposed = true;  // Prevent duplicate dispose.
-
-                        if (Disposed != null)
-                            Disposed(this, EventArgs.Empty);
-                    }
-                }
-            }
-
-            /// <summary>
-            /// Initializes (or reinitializes) <see cref="SourceIdentifiableBuffer"/> state.
-            /// </summary>
-            public void Initialize()
-            {
-                // Un-dispose class instance if it is being reused
-                if (m_disposed)
-                {
-                    m_disposed = false;
-                    GC.ReRegisterForFinalize(this);
+                    Buffer = new byte[m_count];
                 }
             }
 
@@ -323,31 +247,20 @@ namespace GSF.Parsing
 
             buffer.ValidateParameters(offset, count);
 
-            try
+            if (count > 0)
             {
-                if (count > 0)
-                {
-                    // Get an identifiable buffer object
-                    identifiableBuffer = FastObjectFactory<SourceIdentifiableBuffer>.CreateObjectFunction();
-                    identifiableBuffer.Source = source;
-                    identifiableBuffer.Count = count;
+                // Get an identifiable buffer object
+                identifiableBuffer = FastObjectFactory<SourceIdentifiableBuffer>.CreateObjectFunction();
+                identifiableBuffer.Source = source;
+                identifiableBuffer.Count = count;
 
-                    // Copy buffer data for processing (destination buffer pre-allocated from buffer pool)
-                    Buffer.BlockCopy(buffer, offset, identifiableBuffer.Buffer, 0, count);
+                // Copy buffer data for processing
+                Buffer.BlockCopy(buffer, offset, identifiableBuffer.Buffer, 0, count);
 
-                    // Add buffer to the queue for parsing. Note that buffer is queued for parsing instead 
-                    // of handling parse on this thread - this has become necessary to reduce UDP data loss
-                    // that can happen in-process when system has UDP buffers building up for processing.
-                    m_bufferQueue.Enqueue(new[] { identifiableBuffer });
-                }
-            }
-            catch
-            {
-                // Properly dispose of the source buffer if we failed to queue it for processing
-                if ((object)identifiableBuffer != null)
-                    identifiableBuffer.Dispose();
-
-                throw;
+                // Add buffer to the queue for parsing. Note that buffer is queued for parsing instead 
+                // of handling parse on this thread - this has become necessary to reduce UDP data loss
+                // that can happen in-process when system has UDP buffers building up for processing.
+                m_bufferQueue.Enqueue(new[] { identifiableBuffer });
             }
         }
 
@@ -430,16 +343,6 @@ namespace GSF.Parsing
                 }
                 finally
                 {
-                    // Dispose of source buffers
-                    if ((object)buffers != null)
-                    {
-                        foreach (SourceIdentifiableBuffer buffer in buffers)
-                        {
-                            if ((object)buffer != null)
-                                buffer.Dispose();
-                        }
-                    }
-
                     // If user has attached to SourceDataParsed event, expose list of parsed data per source
                     if ((object)SourceDataParsed != null)
                     {

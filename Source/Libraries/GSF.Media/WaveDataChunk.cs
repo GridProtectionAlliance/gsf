@@ -118,31 +118,23 @@ namespace GSF.Media
             int channels = waveFormat.Channels;
             TypeCode sampleTypeCode = m_waveFormat.GetSampleTypeCode();
             LittleBinaryValue[] sampleBlock;
-            byte[] buffer = BufferPool.TakeBuffer(blockSize);
+            byte[] buffer = new byte[blockSize];
 
-            try
+            int bytesRead = source.Read(buffer, 0, blockSize);
+
+            while (bytesRead == blockSize)
             {
-                int bytesRead = source.Read(buffer, 0, blockSize);
+                // Create a new sample block, one little-endian formatted binary sample value for each channel
+                sampleBlock = new LittleBinaryValue[channels];
 
-                while (bytesRead == blockSize)
+                for (int x = 0; x < channels; x++)
                 {
-                    // Create a new sample block, one little-endian formatted binary sample value for each channel
-                    sampleBlock = new LittleBinaryValue[channels];
-
-                    for (int x = 0; x < channels; x++)
-                    {
-                        sampleBlock[x] = new LittleBinaryValue(sampleTypeCode, buffer, x * sampleSize, sampleSize);
-                    }
-
-                    m_sampleBlocks.Add(sampleBlock);
-
-                    bytesRead = source.Read(buffer, 0, blockSize);
+                    sampleBlock[x] = new LittleBinaryValue(sampleTypeCode, buffer, x * sampleSize, sampleSize);
                 }
-            }
-            finally
-            {
-                if ((object)buffer != null)
-                    BufferPool.ReturnBuffer(buffer);
+
+                m_sampleBlocks.Add(sampleBlock);
+
+                bytesRead = source.Read(buffer, 0, blockSize);
             }
         }
 

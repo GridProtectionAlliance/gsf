@@ -264,25 +264,17 @@ namespace GSF.Media
             RiffChunk riffChunk = new RiffChunk();
             int length = riffChunk.BinaryLength;
 
-            byte[] buffer = BufferPool.TakeBuffer(length);
+            byte[] buffer = new byte[length];
 
-            try
-            {
-                int bytesRead = source.Read(buffer, 0, length);
+            int bytesRead = source.Read(buffer, 0, length);
 
-                if (bytesRead < length)
-                    throw new InvalidOperationException("RIFF chunk too small, media file corrupted");
+            if (bytesRead < length)
+                throw new InvalidOperationException("RIFF chunk too small, media file corrupted");
 
-                riffChunk.TypeID = Encoding.ASCII.GetString(buffer, 0, 4);
-                riffChunk.ChunkSize = LittleEndian.ToInt32(buffer, 4);
+            riffChunk.TypeID = Encoding.ASCII.GetString(buffer, 0, 4);
+            riffChunk.ChunkSize = LittleEndian.ToInt32(buffer, 4);
 
-                return riffChunk;
-            }
-            finally
-            {
-                if ((object)buffer != null)
-                    BufferPool.ReturnBuffer(buffer);
-            }
+            return riffChunk;
         }
 
         #endregion

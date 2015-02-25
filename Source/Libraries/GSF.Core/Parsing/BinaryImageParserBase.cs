@@ -322,21 +322,13 @@ namespace GSF.Parsing
         public virtual void Parse(ISupportBinaryImage image)
         {
             int length = image.BinaryLength;
-            byte[] buffer = BufferPool.TakeBuffer(length);
+            byte[] buffer = new byte[length];
 
-            try
-            {
-                // Generate the binary image
-                image.GenerateBinaryImage(buffer, 0);
+            // Generate the binary image
+            image.GenerateBinaryImage(buffer, 0);
 
-                // Write the buffer to the parsing queue
-                Write(buffer, 0, length);
-            }
-            finally
-            {
-                if ((object)buffer != null)
-                    BufferPool.ReturnBuffer(buffer);
-            }
+            // Write the buffer to the parsing queue
+            Write(buffer, 0, length);
         }
 
         // Stream implementation overrides

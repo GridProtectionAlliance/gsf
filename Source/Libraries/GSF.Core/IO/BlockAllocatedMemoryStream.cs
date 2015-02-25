@@ -62,14 +62,12 @@ namespace GSF.IO
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The <see cref="BlockAllocatedMemoryStream"/> has three primary benefits over a normal <see cref="MemoryStream"/>, first, the
+    /// The <see cref="BlockAllocatedMemoryStream"/> has two primary benefits over a normal <see cref="MemoryStream"/>, first, the
     /// allocation of a large contiguous array of data in <see cref="MemoryStream"/> can fail when the requested amount of contiguous
     /// memory is unavailable - the <see cref="BlockAllocatedMemoryStream"/> prevents this; second, a <see cref="MemoryStream"/> will
     /// constantly reallocate the buffer size as the stream grows and shrinks and then copy all the data from the old buffer to the
     /// new - the <see cref="BlockAllocatedMemoryStream"/> maintains its blocks over its life cycle, unless manually cleared, thus
-    /// eliminating unnecessary allocations and garbage collections when growing and reusing a stream; third, a managed buffer pool,
-    /// <see cref="BufferPool"/>, is used for internal buffer management allowing the <see cref="BlockAllocatedMemoryStream"/> to
-    /// reuse previously allocated buffers further eliminating allocations and garbage collections even for short lived instances.
+    /// eliminating unnecessary allocations and garbage collections when growing and reusing a stream.
     /// </para>
     /// <para>
     /// Important: Unlike <see cref="MemoryStream"/>, the <see cref="BlockAllocatedMemoryStream"/> will not use a user provided buffer
@@ -77,13 +75,6 @@ namespace GSF.IO
     /// memory buffers. Subsequently, the <see cref="BlockAllocatedMemoryStream"/> does not support the notion of a non-expandable
     /// stream. If you are using a <see cref="MemoryStream"/> with your own buffer, the <see cref="BlockAllocatedMemoryStream"/> will
     /// not provide any immediate benefit.
-    /// </para>
-    /// <para>
-    /// Although disposing of a <see cref="MemoryStream"/> is generally not required since its actual dispose method performs no
-    /// action, the <see cref="BlockAllocatedMemoryStream"/> uses buffers obtained from a shared buffer pool. As a result, it is
-    /// optimal to make sure instances are properly disposed (e.g., wrapping instances in a "using(...)" statement) so that the
-    /// referenced buffers are returned to the pool as soon as possible instead of waiting for the destructor to be called from the
-    /// garbage collector.
     /// </para>
     /// <para>
     /// Note that the <see cref="BlockAllocatedMemoryStream"/> will maintain all allocated blocks for stream use until the
@@ -235,7 +226,7 @@ namespace GSF.IO
 
             // Pre-allocate memory at desired capacity
             while (m_blocks.Count <= (int)(capacity / blockSize))
-                m_blocks.Add(BufferPool.TakeBuffer(blockSize));
+                m_blocks.Add(new byte[blockSize]);
         }
 
         #endregion
@@ -342,7 +333,7 @@ namespace GSF.IO
             get
             {
                 while (m_blocks.Count <= BlockIndex)
-                    m_blocks.Add(BufferPool.TakeBuffer(m_blockSize));
+                    m_blocks.Add(new byte[m_blockSize]);
 
                 return m_blocks[BlockIndex];
             }
@@ -405,13 +396,6 @@ namespace GSF.IO
         {
             m_position = 0;
             m_length = 0;
-
-            // Return buffer blocks to the pool
-            foreach (byte[] buffer in m_blocks)
-            {
-                BufferPool.ReturnBuffer(buffer);
-            }
-
             m_blocks.Clear();
         }
 
@@ -646,24 +630,16 @@ namespace GSF.IO
 
             const int bufferSize = 8192;
 
-            byte[] buffer = BufferPool.TakeBuffer(bufferSize);
+            byte[] buffer = new byte[bufferSize];
             int read;
 
-            try
+            do
             {
-                do
-                {
-                    read = source.Read(buffer, 0, (int)Math.Min(bufferSize, length));
-                    length -= read;
-                    Write(buffer, 0, read);
-                }
-                while (length > 0);
+                read = source.Read(buffer, 0, (int)Math.Min(bufferSize, length));
+                length -= read;
+                Write(buffer, 0, read);
             }
-            finally
-            {
-                if ((object)buffer != null)
-                    BufferPool.ReturnBuffer(buffer);
-            }
+            while (length > 0);
         }
 
         /// <summary>
