@@ -102,6 +102,7 @@ using System.Security.Principal;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
+using GSF.Annotations;
 using GSF.Collections;
 using GSF.Communication;
 using GSF.Configuration;
@@ -1425,6 +1426,7 @@ namespace GSF.ServiceProcess
         /// <param name="message">Text message to be transmitted to all <see cref="RemoteClients"/>.</param>
         /// <param name="type">One of the <see cref="UpdateType"/> values.</param>
         /// <param name="args">Arguments to be used for formatting the <paramref name="message"/>.</param>
+        [StringFormatMethod("message")]
         public void UpdateStatus(UpdateType type, string message, params object[] args)
         {
             UpdateStatus(Guid.Empty, type, message, args);
@@ -1437,6 +1439,7 @@ namespace GSF.ServiceProcess
         /// <param name="type">One of the <see cref="UpdateType"/> values.</param>
         /// <param name="message">Text message to be transmitted to the <paramref name="client"/>.</param>
         /// <param name="args">Arguments to be used for formatting the <paramref name="message"/>.</param>
+        [StringFormatMethod("message")]
         public void UpdateStatus(Guid client, UpdateType type, string message, params object[] args)
         {
             if (!m_suppressUpdates)
@@ -1452,6 +1455,7 @@ namespace GSF.ServiceProcess
         /// <param name="message">Text message to be transmitted to all <see cref="RemoteClients"/>.</param>
         /// <param name="type">One of the <see cref="UpdateType"/> values.</param>
         /// <param name="args">Arguments to be used for formatting the <paramref name="message"/>.</param>
+        [StringFormatMethod("message")]
         public void UpdateStatusAppendLine(UpdateType type, string message, params object[] args)
         {
             UpdateStatusAppendLine(Guid.Empty, type, message, args);
@@ -1464,6 +1468,7 @@ namespace GSF.ServiceProcess
         /// <param name="type">One of the <see cref="UpdateType"/> values.</param>
         /// <param name="message">Text message to be transmitted to the <paramref name="client"/>.</param>
         /// <param name="args">Arguments to be used for formatting the <paramref name="message"/>.</param>
+        [StringFormatMethod("message")]
         public void UpdateStatusAppendLine(Guid client, UpdateType type, string message, params object[] args)
         {
             UpdateStatus(type, message + "\r\n", args);
