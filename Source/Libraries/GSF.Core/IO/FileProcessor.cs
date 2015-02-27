@@ -495,6 +495,9 @@ namespace GSF.IO
 
             if (enumerator.MoveNext())
             {
+                // Add the file to the collection of enumerated files
+                enumeratedFiles.Add(enumerator.Current);
+
                 // Attempt to process this file
                 if (File.Exists(enumerator.Current) && MatchesFilter(enumerator.Current))
                     TouchLockAndProcess(enumerator.Current);
