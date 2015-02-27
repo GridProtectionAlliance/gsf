@@ -33,6 +33,10 @@ namespace GSF.TimeSeries
     /// <summary>
     /// Represents a primary key for a measurement.
     /// </summary>
+    /// <remarks>
+    /// In the Static section of this class, all edits to <see cref="IDCache"/> as well as the
+    /// ConcurrentDictionaries in <see cref="KeyCache"/> should occur within a lock on SyncEdits.
+    /// </remarks>
     [Serializable]
     public class MeasurementKey
     {
@@ -197,6 +201,14 @@ namespace GSF.TimeSeries
                 return key;
             };
 
+            // https://msdn.microsoft.com/en-us/library/ee378675(v=vs.110).aspx
+            //
+            //     If you call AddOrUpdate simultaneously on different threads,
+            //     addValueFactory may be called multiple times, but its key/value
+            //     pair might not be added to the dictionary for every call.
+            //
+            // This lock prevents race conditions that might occur in the addValueFactory that
+            // could cause different MeasurementKey objects to be written to the KeyCache and IDCache
             lock (SyncEdits)
             {
                 return IDCache.AddOrUpdate(signalID, addValueFactory, updateValueFactory);
