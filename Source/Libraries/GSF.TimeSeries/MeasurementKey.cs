@@ -125,6 +125,7 @@ namespace GSF.TimeSeries
         // Static Fields
         private static readonly ConcurrentDictionary<Guid, MeasurementKey> IDCache = new ConcurrentDictionary<Guid, MeasurementKey>();
         private static readonly ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>> KeyCache = new ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>>(StringComparer.OrdinalIgnoreCase);
+        private static readonly object SyncEdits = new object();
 
         /// <summary>
         /// Represents an undefined measurement key.
@@ -196,7 +197,10 @@ namespace GSF.TimeSeries
                 return key;
             };
 
-            return IDCache.AddOrUpdate(signalID, addValueFactory, updateValueFactory);
+            lock (SyncEdits)
+            {
+                return IDCache.AddOrUpdate(signalID, addValueFactory, updateValueFactory);
+            }
         }
 
         /// <summary>
@@ -465,6 +469,7 @@ namespace GSF.TimeSeries
         private static MeasurementKey CreateUndefinedMeasurementKey()
         {
             MeasurementKey key = new MeasurementKey(Guid.Empty, uint.MaxValue, "__");
+            //Note. No lock on SyncEdit is required since this method is only called by the static constructor.
             KeyCache.GetOrAdd(key.Source, kcf => new ConcurrentDictionary<uint, MeasurementKey>())[uint.MaxValue] = key;
             return key;
         }
