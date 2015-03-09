@@ -1204,15 +1204,12 @@ namespace GSF.Collections
         {
             long nextItemPointer;
 
-            if (m_journalNode.Operation != JournalNode.Set)
-            {
-                // Write the set operation to the journal node
-                m_journalNode.Operation = JournalNode.Set;
-                m_journalNode.LookupPointer = lookupPointer;
-                m_journalNode.ItemPointer = itemPointer;
-                m_journalNode.Sync = count;
-                Write(m_journalNode);
-            }
+            // Write the set operation to the journal node
+            m_journalNode.Operation = JournalNode.Set;
+            m_journalNode.LookupPointer = lookupPointer;
+            m_journalNode.ItemPointer = itemPointer;
+            m_journalNode.Sync = count;
+            Write(m_journalNode);
 
             // Perform the set operation
             WriteItemPointer(lookupPointer, itemPointer);
@@ -1228,14 +1225,11 @@ namespace GSF.Collections
 
         private void Delete(long lookupPointer, long count)
         {
-            if (m_journalNode.Operation != JournalNode.Delete)
-            {
-                // Write the delete operation to the journal node
-                m_journalNode.Operation = JournalNode.Delete;
-                m_journalNode.LookupPointer = lookupPointer;
-                m_journalNode.Sync = count;
-                Write(m_journalNode);
-            }
+            // Write the delete operation to the journal node
+            m_journalNode.Operation = JournalNode.Delete;
+            m_journalNode.LookupPointer = lookupPointer;
+            m_journalNode.Sync = count;
+            Write(m_journalNode);
 
             // Perform the delete operation
             WriteItemPointer(lookupPointer, 1L);
@@ -1334,15 +1328,12 @@ namespace GSF.Collections
 
         private void WriteItemNodePointers(long lookupPointer, long itemPointer, long nextItemPointer)
         {
-            if (m_journalNode.Operation != JournalNode.WriteItemNodePointers)
-            {
-                // Write the grow operation to the journal node
-                m_journalNode.Operation = JournalNode.WriteItemNodePointers;
-                m_journalNode.LookupPointer = lookupPointer;
-                m_journalNode.ItemPointer = itemPointer;
-                m_journalNode.Sync = nextItemPointer;
-                Write(m_journalNode);
-            }
+            // Write the grow operation to the journal node
+            m_journalNode.Operation = JournalNode.WriteItemNodePointers;
+            m_journalNode.LookupPointer = lookupPointer;
+            m_journalNode.ItemPointer = itemPointer;
+            m_journalNode.Sync = nextItemPointer;
+            Write(m_journalNode);
 
             // Perform the write operation
             m_fileStream.Seek(itemPointer, SeekOrigin.Begin);
@@ -1352,13 +1343,10 @@ namespace GSF.Collections
 
         private void Truncate(long itemPointer)
         {
-            if (m_journalNode.Operation != JournalNode.Truncate)
-            {
-                // Write the grow operation to the journal node
-                m_journalNode.Operation = JournalNode.Truncate;
-                m_journalNode.ItemPointer = itemPointer;
-                Write(m_journalNode);
-            }
+            // Write the grow operation to the journal node
+            m_journalNode.Operation = JournalNode.Truncate;
+            m_journalNode.ItemPointer = itemPointer;
+            Write(m_journalNode);
 
             // Perform the truncate operation
             m_headerNode.EndOfFilePointer = itemPointer;
@@ -1406,14 +1394,14 @@ namespace GSF.Collections
             checksum.Update((int)node.Sync);
             node.Checksum = (int)checksum.Value;
 
-            m_fileStream.Flush(true);
+            m_fileStream.Flush();
             m_fileStream.Seek(HeaderNode.FixedSize, SeekOrigin.Begin);
             m_fileWriter.Write(node.Operation);
             m_fileWriter.Write(node.LookupPointer);
             m_fileWriter.Write(node.ItemPointer);
             m_fileWriter.Write(node.Sync);
             m_fileWriter.Write(node.Checksum);
-            m_fileStream.Flush(true);
+            m_fileStream.Flush();
         }
 
         private void Write(LookupNode node)

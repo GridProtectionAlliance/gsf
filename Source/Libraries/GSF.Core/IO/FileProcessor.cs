@@ -158,7 +158,7 @@ namespace GSF.IO
         private ManualResetEvent m_waitObject;
 
         private readonly Dictionary<string, DateTime> m_touchedFiles;
-        private readonly FileBackedHashSet<string> m_processedFiles;
+        private FileBackedHashSet<string> m_processedFiles;
 
         private bool m_disposed;
 
@@ -382,10 +382,10 @@ namespace GSF.IO
                         m_fileWatchTimer = null;
                     }
 
-                    if ((object)m_processingQueue != null)
+                    if ((object)m_processedFiles != null)
                     {
-                        m_processingQueue.Dispose();
-                        m_processingQueue = null;
+                        m_processedFiles.Dispose();
+                        m_processedFiles = null;
                     }
 
                     if ((object)m_waitObject != null)
