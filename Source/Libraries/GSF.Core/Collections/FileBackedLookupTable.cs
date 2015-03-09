@@ -56,7 +56,7 @@ namespace GSF.Collections
         protected class HeaderNode
         {
             public const int SignatureSize = 16;
-            public const int FixedSize = SignatureSize + 5 * sizeof(long);
+            public const int FixedSize = SignatureSize + 4 * sizeof(long);
 
             public HeaderNode(LookupTableType type)
             {
@@ -69,7 +69,6 @@ namespace GSF.Collections
             public byte[] Signature;
             public long Count;
             public long Capacity;
-            public long HashMod;
             public long ItemSectionPointer;
             public long EndOfFilePointer;
         }
@@ -82,7 +81,7 @@ namespace GSF.Collections
             public const int Set = 1;
             public const int Delete = 2;
             public const int GrowLookupSection = 3;
-            public const int GrowCapacity = 4;
+            public const int RebuildLookupTable = 4;
             public const int WriteItemNodePointers = 5;
             public const int Truncate = 6;
             public const int Clear = 7;
@@ -136,10 +135,8 @@ namespace GSF.Collections
         // Constants
         public const string DictionarySignature = "3165E4F9-203B-4741-A186-EA34659A94B7";
         public const string HashSetSignature = "6527713F-78AE-43DA-8E37-718AFED99927";
-
-        private const long CollisionOffset = 4294967311L;
-        private const double MaximumLoadFactor = 0.5D;
-        private const int MaximumCollisions = 3;
+        private const double MaximumLoadFactor = 0.7D;
+        private const int MaximumChainedEmptyNodes = 3;
 
         // Fields
         private HeaderNode m_headerNode;
@@ -471,11 +468,11 @@ namespace GSF.Collections
                             break;
 
                         case JournalNode.GrowLookupSection:
-                            GrowLookupSection(m_journalNode.ItemPointer);
+                            GrowLookupSection(m_journalNode.LookupPointer, m_journalNode.ItemPointer, m_journalNode.Sync);
                             break;
 
-                        case JournalNode.GrowCapacity:
-                            GrowCapacity(m_journalNode.LookupPointer, m_journalNode.Sync);
+                        case JournalNode.RebuildLookupTable:
+                            RebuildLookupTable(m_journalNode.LookupPointer);
                             break;
 
                         case JournalNode.WriteItemNodePointers:
@@ -538,7 +535,7 @@ namespace GSF.Collections
             if (itemPointer >= m_headerNode.ItemSectionPointer)
                 throw new ArgumentException("An element with the same key already exists");
 
-            if (m_headerNode.Count + 1L > 2 * m_headerNode.HashMod * MaximumLoadFactor)
+            if (m_headerNode.Count + 1L > m_headerNode.Capacity * MaximumLoadFactor)
             {
                 Grow();
                 Find(key, out lookupPointer, out itemPointer);
@@ -578,7 +575,7 @@ namespace GSF.Collections
             if (itemPointer >= m_headerNode.ItemSectionPointer)
                 return false;
 
-            if (m_headerNode.Count + 1 > 2 * m_headerNode.HashMod * MaximumLoadFactor)
+            if (m_headerNode.Count + 1 > m_headerNode.Capacity * MaximumLoadFactor)
             {
                 Grow();
                 Find(key, out lookupPointer, out itemPointer);
@@ -831,8 +828,7 @@ namespace GSF.Collections
 
             // Create a new header node and write it to the start of the file
             m_headerNode.Count = 0L;
-            m_headerNode.Capacity = 10L;
-            m_headerNode.HashMod = 5L;
+            m_headerNode.Capacity = 16L;
             m_headerNode.ItemSectionPointer = HeaderNode.FixedSize + JournalNode.FixedSize + LookupNodeSize * m_headerNode.Capacity;
             m_headerNode.EndOfFilePointer = m_headerNode.ItemSectionPointer;
             Write(m_headerNode);
@@ -1009,7 +1005,7 @@ namespace GSF.Collections
                 item2 = item3;
             }
 
-            if (!orphan1)
+            if (orphan1)
                 Truncate(item1);
         }
 
@@ -1049,19 +1045,14 @@ namespace GSF.Collections
 
         private void Grow()
         {
-            LookupNode emptyNode = new LookupNode();
-            LookupNode lookupNode = new LookupNode();
             ItemNode itemNode = new ItemNode();
 
             long newCapacity = 2 * m_headerNode.Capacity;
             long lookupTableSize = newCapacity * LookupNodeSize;
             long minimumItemSectionPointer = HeaderNode.FixedSize + JournalNode.FixedSize + lookupTableSize;
 
-            long lookupPointer;
             long itemPointer = m_headerNode.ItemSectionPointer;
             long copyPointer = m_headerNode.EndOfFilePointer;
-
-            int collisions = MaximumCollisions + 1;
 
             // If the lookup table is growing beyond the end of the file,
             // save time by writing a nextItemPointer beyond the end of the file.
@@ -1075,8 +1066,8 @@ namespace GSF.Collections
                 copyPointer = minimumItemSectionPointer;
             }
 
-            // Begin copying item nodes to the end of the file while performing Set
-            // operations to update the lookup nodes to point to these new item nodes
+            // Begin copying item nodes to the end of the file
+            // to make room for the lookup table to grow
             while (itemPointer < minimumItemSectionPointer)
             {
                 // Read the two pointers at the start of the item node
@@ -1108,195 +1099,101 @@ namespace GSF.Collections
                 copyPointer = m_fileStream.Position;
             }
 
-            // Use Set operations to update the lookup nodes to point to
-            // the item nodes that have been moved to the end of the file
-            while (m_headerNode.EndOfFilePointer < copyPointer)
-            {
-                m_fileStream.Seek(m_headerNode.EndOfFilePointer, SeekOrigin.Begin);
-                Set(m_fileReader.ReadInt64(), m_headerNode.EndOfFilePointer, m_headerNode.Count);
-            }
+            // Use the GrowLookupSection operation to point lookup nodes
+            // to the copied item nodes and move the item section pointer
+            GrowLookupSection(itemPointer, m_headerNode.EndOfFilePointer, copyPointer);
 
-            // Use the GrowLookupSection operation to move the item section pointer,
-            // then clear the data in the new half of the lookup section
-            GrowLookupSection(itemPointer);
-
-            // Set the hash modifier to half the new capacity
-            m_headerNode.HashMod = m_headerNode.Capacity;
-
-            while (collisions > MaximumCollisions)
-            {
-                m_fileStream.Seek(HeaderNode.FixedSize + JournalNode.FixedSize + LookupNodeSize * m_headerNode.Capacity, SeekOrigin.Begin);
-
-                for (int i = 0; i < m_headerNode.Capacity; i++)
-                    Write(emptyNode);
-
-                // Update the hash modifier to be the largest
-                // prime number smaller than its current value
-                UpdateHashMod(m_headerNode.HashMod - 1);
-
-                // Copy lookup nodes from the existing half of the lookup
-                // section into the new half of the lookup section
-                lookupPointer = HeaderNode.FixedSize + JournalNode.FixedSize;
-
-                for (int i = 0; i < m_headerNode.Capacity; i++)
-                {
-                    m_fileStream.Seek(lookupPointer, SeekOrigin.Begin);
-                    Read(lookupNode);
-
-                    if (lookupNode.ItemPointer >= m_headerNode.ItemSectionPointer)
-                    {
-                        m_fileStream.Seek(lookupNode.ItemPointer + 2 * sizeof(long), SeekOrigin.Begin);
-                        collisions = SeekToNewLookupChainEnd(m_fileReader.ReadInt32());
-
-                        // If there are too many collisions,
-                        // break out of the inner loop so we
-                        // can change hashmod and start again
-                        if (collisions > MaximumCollisions)
-                            break;
-
-                        Write(lookupNode);
-                    }
-
-                    lookupPointer += LookupNodeSize;
-                }
-            }
-
-            // This will clear the existing half of the lookup section,
-            // update item nodes to point back to the new lookup section,
-            // and increase the capacity of the lookup tables
-            GrowCapacity(newCapacity, m_headerNode.HashMod);
+            // This will compact the item section, clear the existing
+            // lookup table, rebuild the lookup table from the lookup
+            // pointers in the item section, and increase the capacity
+            // of the lookup tables
+            RebuildLookupTable(newCapacity);
         }
 
-        private int SeekToNewLookupChainEnd(int hashCode)
+        private long FindEndOfChain(int hashCode, long capacity)
         {
-            long position = (uint)hashCode % m_headerNode.HashMod;
-            long lookupPointer = GetLookupPointer(position) + m_headerNode.Capacity * LookupNodeSize;
-            int collisions = 0;
+            long position = GetPosition(GetFirstHash(hashCode), capacity);
+            long collisionOffset = GetCollisionOffset(hashCode);
+            long lookupPointer = GetLookupPointer(position);
 
             while (ReadItemPointer(lookupPointer) >= m_headerNode.ItemSectionPointer)
             {
-                position = (position + CollisionOffset) % m_headerNode.HashMod;
-                lookupPointer = GetLookupPointer(position) + m_headerNode.Capacity * LookupNodeSize;
-                collisions++;
+                position = GetPosition(position + collisionOffset, capacity);
+                lookupPointer = GetLookupPointer(position);
             }
 
-            m_fileStream.Seek(lookupPointer, SeekOrigin.Begin);
-
-            return collisions;
+            return lookupPointer;
         }
 
         private void Find(TKey key, out long lookupPointer, out long itemPointer)
         {
             int hashCode = m_keyComparer.GetHashCode(key);
-            long position = GetPosition((uint)hashCode);
-            long lookup1 = GetLookupPointer(position);
-            long lookup2 = lookup1 + (m_headerNode.Capacity / 2L) * LookupNodeSize;
-            long item1 = ReadItemPointer(lookup1);
-            long item2 = ReadItemPointer(lookup2);
-
+            long firstHash = GetFirstHash(hashCode);
+            long collisionOffset = GetCollisionOffset(hashCode);
+            long position = GetPosition(firstHash);
             long emptyPointer = 0L;
-            int collisions = 0;
+            int emptyNodes = 0;
+
+            lookupPointer = GetLookupPointer(position);
+            itemPointer = ReadItemPointer(lookupPointer);
 
             // Loop until the item pointer
             // is pointing to the header node
-            while (item1 > 0L || item2 > 0L)
+            while (itemPointer > 0L)
             {
-                if (item1 >= m_headerNode.ItemSectionPointer)
+                if (itemPointer >= m_headerNode.ItemSectionPointer)
                 {
                     // Determine if the item pointed to by
-                    // lookup1 is the one we are trying to find
-                    m_fileStream.Seek(item1 + ItemNode.FixedSize, SeekOrigin.Begin);
+                    // lookupPointer is the one we are trying to find
+                    m_fileStream.Seek(itemPointer + ItemNode.FixedSize, SeekOrigin.Begin);
 
                     if (m_keyComparer.Equals(key, ReadKey()))
-                    {
-                        lookupPointer = lookup1;
-                        itemPointer = item1;
                         return;
-                    }
                 }
                 else if (emptyPointer == 0L)
                 {
                     // Because the item pointer is not pointing to the
                     // item section of the file, this is an empty slot
                     // that may be used for a new item
-                    emptyPointer = lookup1;
+                    emptyPointer = lookupPointer;
+                    emptyNodes++;
                 }
-
-                if (item2 >= m_headerNode.ItemSectionPointer)
+                else
                 {
-                    // Determine if the item pointed to by
-                    // lookup2 is the one we are trying to find
-                    m_fileStream.Seek(item2 + ItemNode.FixedSize, SeekOrigin.Begin);
-
-                    if (m_keyComparer.Equals(key, ReadKey()))
-                    {
-                        lookupPointer = lookup2;
-                        itemPointer = item2;
-                        return;
-                    }
-                }
-                else if (emptyPointer == 0L)
-                {
-                    // Because the item pointer is not pointing to the
-                    // item section of the file, this is an empty slot
-                    // that may be used for a new item
-                    emptyPointer = lookup2;
+                    // Track the number of empty nodes in the chain to
+                    // determine whether the lookup tables need to be rebuilt
+                    emptyNodes++;
                 }
 
-                // If the second lookup has never been occupied,
+                // If the lookup node has never been occupied,
                 // it is the end of the chain
-                if (item2 == 0L)
+                if (itemPointer == 0L)
                     break;
 
-                // Track the number of collisions that
-                // have occurred during this Find operation
-                collisions++;
-
-                // Because removal of items can create empty nodes in
-                // a chain that must still be treated as collisions,
-                // use a maximum number of collisions to ensure chains
-                // don't grow too large
-                if (collisions > MaximumCollisions)
+                if (emptyNodes > MaximumChainedEmptyNodes)
                 {
-                    // If there was an empty node in the chain,
-                    // stop searching and use that
-                    if (emptyPointer > 0L)
-                        break;
-
-                    // There's no more space in the chain so force the
-                    // lookup table to grow in order to reduce collisions
-                    Grow();
-
-                    // Reset pointers to start again from the beginning
-                    position = GetPosition((uint)hashCode);
-                    lookup1 = GetLookupPointer(position);
-                    lookup2 = lookup1 + (m_headerNode.Capacity / 2L) * LookupNodeSize;
-                    item1 = ReadItemPointer(lookup1);
-                    item2 = ReadItemPointer(lookup2);
-
-                    emptyPointer = 0L;
-                    collisions = 0;
+                    // Rebuild the lookup table and begin searching
+                    // again from the beginning of the chain
+                    RebuildLookupTable(m_headerNode.Capacity);
+                    position = GetPosition(firstHash);
                 }
                 else
                 {
                     // Update the position using the collision offset
                     // to find the next lookup node in the chain
-                    position = GetPosition(position + CollisionOffset);
-                    lookup1 = GetLookupPointer(position);
-                    lookup2 = lookup1 + (m_headerNode.Capacity / 2L) * LookupNodeSize;
-                    item1 = ReadItemPointer(lookup1);
-                    item2 = ReadItemPointer(lookup2);
+                    position = GetPosition(position + collisionOffset);
                 }
+
+                lookupPointer = GetLookupPointer(position);
+                itemPointer = ReadItemPointer(lookupPointer);
             }
 
             // If we made it here, it means that the item wasn't found in the lookup tables
             //
             // If the chain is not empty, an empty node should have been found in it;
-            // otherwise, set lookupPointer to lookup1 as the first node in the chain
+            // otherwise, lookupPointer should already be pointing to the first node in the chain
             if (emptyPointer > 0L)
                 lookupPointer = emptyPointer;
-            else
-                lookupPointer = lookup1;
 
             // Set itemPointer to point to the header
             // node to indicate the item was not found
@@ -1346,33 +1243,59 @@ namespace GSF.Collections
             Write(m_headerNode);
         }
 
-        private void GrowLookupSection(long itemPointer)
+        private void GrowLookupSection(long itemSectionPointer, long endOfFilePointer, long newEndOfFilePointer)
         {
+            long lookupPointer;
+            long itemPointer;
+
             if (m_journalNode.Operation != JournalNode.GrowLookupSection)
             {
                 // Write the grow operation to the journal node
                 m_journalNode.Operation = JournalNode.GrowLookupSection;
-                m_journalNode.ItemPointer = itemPointer;
+                m_journalNode.ItemPointer = itemSectionPointer;
                 Write(m_journalNode);
             }
 
             // Perform the grow operation
-            m_headerNode.ItemSectionPointer = itemPointer;
+            itemPointer = endOfFilePointer;
+
+            while (itemPointer < newEndOfFilePointer)
+            {
+                lookupPointer = ReadLookupPointer(itemPointer);
+                WriteItemPointer(lookupPointer, itemPointer);
+                m_fileStream.Seek(itemPointer + sizeof(long), SeekOrigin.Begin);
+                itemPointer = m_fileReader.ReadInt64();
+            }
+
+            m_headerNode.ItemSectionPointer = itemSectionPointer;
+            m_headerNode.EndOfFilePointer = newEndOfFilePointer;
             Write(m_headerNode);
+
+            // Clear the journal node
+            m_journalNode.Operation = JournalNode.None;
+            m_journalNode.LookupPointer = 0L;
+            m_journalNode.ItemPointer = 0L;
+            m_journalNode.Sync = 0;
+            Write(m_journalNode);
         }
 
-        private void GrowCapacity(long capacity, long hashMod)
+        private void RebuildLookupTable(long capacity)
         {
             LookupNode emptyNode;
             long lookupPointer;
             long itemPointer;
+            long nextItemPointer;
+            int hashCode;
 
-            if (m_journalNode.Operation != JournalNode.GrowCapacity)
+            if (m_journalNode.Operation != JournalNode.RebuildLookupTable)
             {
+                // Item section needs to be compacted
+                // before this operation can work
+                Compact();
+
                 // Write the grow operation to the journal node
-                m_journalNode.Operation = JournalNode.GrowCapacity;
+                m_journalNode.Operation = JournalNode.RebuildLookupTable;
                 m_journalNode.LookupPointer = capacity;
-                m_journalNode.Sync = hashMod;
                 Write(m_journalNode);
             }
 
@@ -1380,23 +1303,25 @@ namespace GSF.Collections
             emptyNode = new LookupNode();
             m_fileStream.Seek(HeaderNode.FixedSize + JournalNode.FixedSize, SeekOrigin.Begin);
 
-            for (int i = 0; i < capacity / 2; i++)
+            for (int i = 0; i < capacity; i++)
                 Write(emptyNode);
 
-            lookupPointer = m_fileStream.Position;
+            itemPointer = m_headerNode.ItemSectionPointer;
 
-            for (int i = 0; i < capacity / 2; i++)
+            while (itemPointer < m_headerNode.EndOfFilePointer)
             {
-                itemPointer = ReadItemPointer(lookupPointer);
+                m_fileStream.Seek(itemPointer + sizeof(long), SeekOrigin.Begin);
+                nextItemPointer = m_fileReader.ReadInt64();
+                hashCode = m_fileReader.ReadInt32();
 
-                if (itemPointer >= m_headerNode.ItemSectionPointer)
-                    WriteLookupPointer(lookupPointer, itemPointer);
+                lookupPointer = FindEndOfChain(hashCode, capacity);
+                WriteLookupPointer(lookupPointer, itemPointer);
+                WriteItemPointer(lookupPointer, itemPointer);
 
-                lookupPointer += LookupNodeSize;
+                itemPointer = nextItemPointer;
             }
 
             m_headerNode.Capacity = capacity;
-            m_headerNode.HashMod = hashMod;
             Write(m_headerNode);
 
             // Clear the journal node
@@ -1443,7 +1368,12 @@ namespace GSF.Collections
 
         private long GetPosition(long hashCode)
         {
-            return hashCode % m_headerNode.HashMod;
+            return GetPosition(hashCode, m_headerNode.Capacity);
+        }
+
+        private long GetPosition(long hashCode, long capacity)
+        {
+            return hashCode % capacity;
         }
 
         private long GetLookupPointer(long position)
@@ -1459,7 +1389,6 @@ namespace GSF.Collections
             m_fileStream.Write(m_headerNode.Signature, 0, HeaderNode.SignatureSize);
             m_fileWriter.Write(node.Count);
             m_fileWriter.Write(node.Capacity);
-            m_fileWriter.Write(node.HashMod);
             m_fileWriter.Write(node.ItemSectionPointer);
             m_fileWriter.Write(node.EndOfFilePointer);
         }
@@ -1532,7 +1461,6 @@ namespace GSF.Collections
             m_fileStream.Read(node.Signature, 0, HeaderNode.SignatureSize);
             node.Count = m_fileReader.ReadInt64();
             node.Capacity = m_fileReader.ReadInt64();
-            node.HashMod = m_fileReader.ReadInt64();
             node.ItemSectionPointer = m_fileReader.ReadInt64();
             node.EndOfFilePointer = m_fileReader.ReadInt64();
         }
@@ -1616,25 +1544,32 @@ namespace GSF.Collections
             return default(TValue);
         }
 
-        private void UpdateHashMod(long maxHashMod)
+        private long GetFirstHash(int hashCode)
         {
-            m_headerNode.HashMod = (uint)(maxHashMod - 1L | 1L);
+            uint i = (uint)hashCode;
+            long hash = 17L;
 
-            while (!IsPrime(m_headerNode.HashMod))
-                m_headerNode.HashMod -= 2;
-        }
-
-        private bool IsPrime(long n)
-        {
-            long sqrt = (long)Math.Sqrt(n);
-
-            for (long i = 2; i <= sqrt; i++)
+            while (i > 0)
             {
-                if (n % i == 0)
-                    return false;
+                hash = hash * 23L + (i & 0xF);
+                i >>= 4;
             }
 
-            return true;
+            return hash;
+        }
+
+        private long GetCollisionOffset(int hashCode)
+        {
+            uint i = (uint)hashCode;
+            long hash = 13L;
+
+            while (i > 0)
+            {
+                hash = hash * 29L + (i & 0xF);
+                i >>= 4;
+            }
+
+            return hash | 1L;
         }
 
         private IEnumerator<TKey> GetKeysEnumerator()
