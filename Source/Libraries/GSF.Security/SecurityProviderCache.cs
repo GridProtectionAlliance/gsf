@@ -115,7 +115,7 @@ namespace GSF.Security
             s_userCacheTimeout = settings["UserCacheTimeout"].ValueAs(DefaultUserCacheTimeout);
 
             // Initialize static variables.
-            s_cache = new Dictionary<string, CacheContext>(StringComparer.CurrentCultureIgnoreCase);
+            s_cache = new Dictionary<string, CacheContext>(StringComparer.OrdinalIgnoreCase);
 
             Timer cacheMonitorTimer = new Timer(60000);
             cacheMonitorTimer.Elapsed += CacheMonitorTimer_Elapsed;
