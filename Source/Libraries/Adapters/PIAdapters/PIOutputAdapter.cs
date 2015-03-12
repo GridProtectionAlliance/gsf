@@ -61,7 +61,7 @@ namespace PIAdapters
         // Define cached mapping between GSFSchema measurements and PI points
         private readonly ConcurrentDictionary<MeasurementKey, PIPoint> m_mappedPIPoints;
 
-        private readonly ProcessQueue<AFValue> m_archiveQueue;              // Points queued for archival
+        private readonly ProcessQueue<AFValue>[] m_archiveQueues;           // Collection of point archival queues
         private readonly ProcessQueue<MeasurementKey> m_mapRequestQueue;    // Requested measurement to PI point mapping queue
         private readonly ShortSynchronizedOperation m_restartConnection;    // Restart connection operation
         private readonly ConcurrentDictionary<Guid, string> m_tagMap;       // Tag name to measurement Guid lookup
@@ -93,7 +93,12 @@ namespace PIAdapters
         public PIOutputAdapter()
         {
             m_mappedPIPoints = new ConcurrentDictionary<MeasurementKey, PIPoint>();
-            m_archiveQueue = ProcessQueue<AFValue>.CreateAsynchronousQueue(ArchiveAFValues, 1.0D, Environment.ProcessorCount, Timeout.Infinite, false, false);
+
+            m_archiveQueues = new ProcessQueue<AFValue>[Environment.ProcessorCount];
+
+            for (int i = 0; i < m_archiveQueues.Length; i++)
+                m_archiveQueues[i] = ProcessQueue<AFValue>.CreateRealTimeQueue(ArchiveAFValues, Timeout.Infinite, false, false);
+
             m_mapRequestQueue = ProcessQueue<MeasurementKey>.CreateAsynchronousQueue(EstablishPIPointMappings, Environment.ProcessorCount);
             m_restartConnection = new ShortSynchronizedOperation(Start);
             m_tagMap = new ConcurrentDictionary<Guid, string>();
@@ -315,12 +320,12 @@ namespace PIAdapters
                     status.AppendLine();
                 }
 
-                if ((object)m_archiveQueue != null)
+                if ((object)m_archiveQueues != null && m_archiveQueues.Length > 0)
                 {
                     status.AppendLine();
-                    status.AppendLine(">> Archive Queue Status");
+                    status.AppendFormat(">> Archive Queue Status (1 of {0}){1}", m_archiveQueues.Length, Environment.NewLine);
                     status.AppendLine();
-                    status.Append(m_archiveQueue.Status);
+                    status.Append(m_archiveQueues[0].Status);
                     status.AppendLine();
                 }
 
@@ -350,8 +355,11 @@ namespace PIAdapters
                         if ((object)m_mapRequestQueue != null)
                             m_mapRequestQueue.Dispose();
 
-                        if ((object)m_archiveQueue != null)
-                            m_archiveQueue.Dispose();
+                        if ((object)m_archiveQueues != null)
+                        {
+                            foreach (ProcessQueue<AFValue> archiveQueue in m_archiveQueues)
+                                archiveQueue.Dispose();
+                        }
 
                         if ((object)m_connection != null)
                         {
@@ -463,7 +471,9 @@ namespace PIAdapters
 
             m_mapRequestQueue.Clear();
             m_mapRequestQueue.Start();
-            m_archiveQueue.Start();
+
+            foreach (ProcessQueue<AFValue> archiveQueue in m_archiveQueues)
+                archiveQueue.Start();
 
             // Kick off meta-data refresh
             RefreshMetadata();
@@ -474,7 +484,8 @@ namespace PIAdapters
         /// </summary>
         protected override void AttemptDisconnection()
         {
-            m_archiveQueue.Stop();
+            foreach (ProcessQueue<AFValue> archiveQueue in m_archiveQueues)
+                archiveQueue.Stop();
 
             m_mapRequestQueue.Stop();
             m_mapRequestQueue.Clear();
@@ -502,8 +513,6 @@ namespace PIAdapters
         {
             if ((object)measurements == null || measurements.Length <= 0 || (object)m_connection == null)
                 return;
-
-            List<AFValue> values = new List<AFValue>(measurements.Length);
 
             foreach (IMeasurement measurement in measurements)
             {
@@ -552,10 +561,12 @@ namespace PIAdapters
                 {
                     try
                     {
-                        values.Add(new AFValue((float)measurement.AdjustedValue, new AFTime(new DateTime(measurement.Timestamp, DateTimeKind.Utc)))
-                        {
-                            PIPoint = point
-                        });
+                        // Queue up insert operations for parallel processing
+                        m_archiveQueues[point.ID % m_archiveQueues.Length].Add(
+                            new AFValue((float)measurement.AdjustedValue, new AFTime(new DateTime(measurement.Timestamp, DateTimeKind.Utc)))
+                            {
+                                PIPoint = point
+                            });
                     }
                     catch (Exception ex)
                     {
@@ -563,9 +574,6 @@ namespace PIAdapters
                     }
                 }
             }
-
-            // Queue up insert operations for parallel processing
-            m_archiveQueue.AddRange(values);
         }
 
         private void ArchiveAFValues(AFValue[] values)
