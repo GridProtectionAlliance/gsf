@@ -214,6 +214,10 @@ namespace PIAdapters
                 // Locate configured PI server
                 PIServers servers = new PIServers();
                 m_server = servers[m_serverName];
+
+                if ((object)m_server == null)
+                    throw new InvalidOperationException("Server not found in the PI servers collection.");
+
                 m_server.ConnectChanged += PIConnection_ConnectChanged;
             }
             catch (Exception ex)
@@ -227,7 +231,7 @@ namespace PIAdapters
                 if (!string.IsNullOrEmpty(m_userName) && !string.IsNullOrEmpty(m_password))
                     m_server.Connect(new NetworkCredential(m_userName, m_password));
                 else
-                    m_server.Connect();
+                    m_server.Connect(true);
             }
 
             m_connected = true;
