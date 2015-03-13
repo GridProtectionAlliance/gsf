@@ -631,7 +631,8 @@ namespace GSF.Collections
         /// Attempts to find the lookup node for the corresponding
         /// key and, if found, marks the lookup node.
         /// </summary>
-        /// <param name="key"></param>
+        /// <param name="key">The key used to find the lookup node to be marked.</param>
+        /// <exception cref="NotSupportedException">The <see cref="FileBackedLookupTable{TKey, TValue}"/> is read-only.</exception>
         public bool TryMark(TKey key)
         {
             long lookupPointer;
@@ -639,6 +640,9 @@ namespace GSF.Collections
 
             if (m_lookupTableType == LookupTableType.HashSet)
             {
+                if (IsReadOnly)
+                    throw new NotSupportedException("Unable to modify read-only lookup table");
+
                 Find(key, out lookupPointer, out itemPointer);
 
                 if (itemPointer >= m_headerNode.ItemSectionPointer)
@@ -656,6 +660,7 @@ namespace GSF.Collections
         /// Determines whether all occupied lookup nodes are marked.
         /// </summary>
         /// <returns>True if all occupied lookup nodes are marked; false otherwise.</returns>
+        /// <exception cref="NotSupportedException">The <see cref="FileBackedLookupTable{TKey, TValue}"/> is read-only.</exception>
         public bool AllMarked()
         {
             long lookupPointer;
@@ -663,6 +668,9 @@ namespace GSF.Collections
 
             if (m_lookupTableType == LookupTableType.HashSet)
             {
+                if (IsReadOnly)
+                    throw new NotSupportedException("Unable to modify read-only lookup table");
+
                 lookupPointer = HeaderNode.FixedSize + JournalNode.FixedSize;
                 lookupNode = new LookupNode();
 
@@ -684,6 +692,7 @@ namespace GSF.Collections
         /// <summary>
         /// Removes all unmarked nodes from the hash set.
         /// </summary>
+        /// <exception cref="NotSupportedException">The <see cref="FileBackedLookupTable{TKey, TValue}"/> is read-only.</exception>
         public void RemoveMarked()
         {
             long lookupPointer;
@@ -691,6 +700,9 @@ namespace GSF.Collections
 
             if (m_lookupTableType == LookupTableType.HashSet)
             {
+                if (IsReadOnly)
+                    throw new NotSupportedException("Unable to modify read-only lookup table");
+
                 lookupPointer = HeaderNode.FixedSize + JournalNode.FixedSize;
 
                 for (int i = 0; i < m_headerNode.Capacity; i++)
@@ -709,6 +721,7 @@ namespace GSF.Collections
         /// <summary>
         /// Removes all unmarked nodes from the hash set.
         /// </summary>
+        /// <exception cref="NotSupportedException">The <see cref="FileBackedLookupTable{TKey, TValue}"/> is read-only.</exception>
         public void RemoveUnmarked()
         {
             long lookupPointer;
@@ -716,6 +729,9 @@ namespace GSF.Collections
 
             if (m_lookupTableType == LookupTableType.HashSet)
             {
+                if (IsReadOnly)
+                    throw new NotSupportedException("Unable to modify read-only lookup table");
+
                 lookupPointer = HeaderNode.FixedSize + JournalNode.FixedSize;
                 lookupNode = new LookupNode();
 
@@ -735,12 +751,16 @@ namespace GSF.Collections
         /// <summary>
         /// Unmarks all lookup nodes in the hash set.
         /// </summary>
+        /// <exception cref="NotSupportedException">The <see cref="FileBackedLookupTable{TKey, TValue}"/> is read-only.</exception>
         public void UnmarkAll()
         {
             long lookupPointer;
 
             if (m_lookupTableType == LookupTableType.HashSet)
             {
+                if (IsReadOnly)
+                    throw new NotSupportedException("Unable to modify read-only lookup table");
+
                 lookupPointer = HeaderNode.FixedSize + JournalNode.FixedSize;
 
                 for (int i = 0; i < m_headerNode.Capacity; i++)

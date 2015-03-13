@@ -282,6 +282,7 @@ namespace GSF.Collections
         /// <param name="match">The <see cref="Predicate{T}"/> delegate that defines the conditions of the elements to remove.</param>
         /// <returns>The number of elements that were removed from the <see cref="FileBackedHashSet{T}"/> collection.</returns>
         /// <exception cref="ArgumentNullException">match is null</exception>
+        /// <exception cref="NotSupportedException">The <see cref="FileBackedHashSet{T}"/> is read-only.</exception>
         public int RemoveWhere(Predicate<T> match)
         {
             int removedCount;
@@ -323,6 +324,7 @@ namespace GSF.Collections
         /// </summary>
         /// <param name="other">The collection to compare to the current set.</param>
         /// <exception cref="ArgumentNullException"><paramref name="other"/> is null.</exception>
+        /// <exception cref="NotSupportedException">The <see cref="FileBackedHashSet{T}"/> is read-only.</exception>
         public void UnionWith(IEnumerable<T> other)
         {
             if ((object)other == null)
@@ -337,6 +339,7 @@ namespace GSF.Collections
         /// </summary>
         /// <param name="other">The collection to compare to the current set.</param>
         /// <exception cref="ArgumentNullException"><paramref name="other"/> is null.</exception>
+        /// <exception cref="NotSupportedException">The <see cref="FileBackedHashSet{T}"/> is read-only.</exception>
         public void IntersectWith(IEnumerable<T> other)
         {
             if ((object)other == null)
@@ -355,6 +358,7 @@ namespace GSF.Collections
         /// </summary>
         /// <param name="other">The collection of items to remove from the set.</param>
         /// <exception cref="ArgumentNullException"><paramref name="other"/> is null.</exception>
+        /// <exception cref="NotSupportedException">The <see cref="FileBackedHashSet{T}"/> is read-only.</exception>
         public void ExceptWith(IEnumerable<T> other)
         {
             if ((object)other == null)
@@ -370,6 +374,7 @@ namespace GSF.Collections
         /// </summary>
         /// <param name="other">The collection to compare to the current set.</param>
         /// <exception cref="ArgumentNullException"><paramref name="other"/> is null.</exception>
+        /// <exception cref="NotSupportedException">The <see cref="FileBackedHashSet{T}"/> is read-only.</exception>
         public void SymmetricExceptWith(IEnumerable<T> other)
         {
             List<T> list;
@@ -400,6 +405,7 @@ namespace GSF.Collections
         /// true if the current set is a subset of <paramref name="other"/>; otherwise, false.
         /// </returns>
         /// <exception cref="ArgumentNullException"><paramref name="other"/> is null.</exception>
+        /// <exception cref="NotSupportedException">The <see cref="FileBackedHashSet{T}"/> is read-only.</exception>
         public bool IsSubsetOf(IEnumerable<T> other)
         {
             if ((object)other == null)
@@ -443,6 +449,7 @@ namespace GSF.Collections
         /// true if the current set is a proper superset of <paramref name="other"/>; otherwise, false.
         /// </returns>
         /// <exception cref="ArgumentNullException"><paramref name="other"/> is null.</exception>
+        /// <exception cref="NotSupportedException">The <see cref="FileBackedHashSet{T}"/> is read-only.</exception>
         public bool IsProperSupersetOf(IEnumerable<T> other)
         {
             if ((object)other == null)
@@ -467,6 +474,7 @@ namespace GSF.Collections
         /// true if the current set is a proper subset of <paramref name="other"/>; otherwise, false.
         /// </returns>
         /// <exception cref="ArgumentNullException"><paramref name="other"/> is null.</exception>
+        /// <exception cref="NotSupportedException">The <see cref="FileBackedHashSet{T}"/> is read-only.</exception>
         public bool IsProperSubsetOf(IEnumerable<T> other)
         {
             bool canBeProperSubset;
@@ -516,6 +524,7 @@ namespace GSF.Collections
         /// true if the current set is equal to <paramref name="other"/>; otherwise, false.
         /// </returns>
         /// <exception cref="ArgumentNullException"><paramref name="other"/> is null.</exception>
+        /// <exception cref="NotSupportedException">The <see cref="FileBackedHashSet{T}"/> is read-only.</exception>
         public bool SetEquals(IEnumerable<T> other)
         {
             if ((object)other == null)
