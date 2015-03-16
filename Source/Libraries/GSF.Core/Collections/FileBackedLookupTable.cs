@@ -431,6 +431,8 @@ namespace GSF.Collections
         /// <exception cref="InvalidOperationException">File is already open.</exception>
         public void Open()
         {
+            string directory;
+
             if ((object)m_fileStream != null)
                 throw new InvalidOperationException("File is already open");
 
@@ -442,6 +444,12 @@ namespace GSF.Collections
 
             try
             {
+                directory = Path.GetDirectoryName(m_filePath);
+
+                // Attempt to create the directory if it doesn't already exist
+                if ((object)directory != null && !Directory.Exists(directory))
+                    Directory.CreateDirectory(directory);
+
                 // Open the file in read/write mode
                 m_fileStream = new CachedFileStream(m_filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
                 m_fileWriter = new BinaryWriter(m_fileStream);
