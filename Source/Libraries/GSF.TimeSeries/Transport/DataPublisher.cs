@@ -3223,6 +3223,158 @@ namespace GSF.TimeSeries.Transport
             OnStatusMessage(connection.ConnectionID + " unsubscribed.");
         }
 
+        /// <summary>
+        /// Gets meta-data to return to <see cref="DataSubscriber"/>.
+        /// </summary>
+        /// <param name="connection">Client connection requesting meta-data.</param>
+        /// <param name="filterExpressions">Any meta-data filter expressions requested by client.</param>
+        /// <returns>Meta-data to be returned to client.</returns>
+        protected virtual DataSet AquireMetadata(ClientConnection connection, Dictionary<string, Tuple<string, string, int>> filterExpressions)
+        {
+            using (AdoDataConnection adoDatabase = new AdoDataConnection("systemSettings"))
+            {
+                IDbConnection dbConnection = adoDatabase.Connection;
+                DataSet metadata = new DataSet();
+                DataTable table;
+                Tuple<string, string, int> filterParameters;
+                string sortField;
+                int takeCount;
+
+                // Initialize active node ID
+                Guid nodeID = Guid.Parse(dbConnection.ExecuteScalar(string.Format("SELECT NodeID FROM IaonActionAdapter WHERE ID = {0}", ID)).ToString());
+
+                // Determine whether we're sending internal and external meta-data
+                bool sendExternalMetadata = connection.OperationalModes.HasFlag(OperationalModes.ReceiveExternalMetadata);
+                bool sendInternalMetadata = connection.OperationalModes.HasFlag(OperationalModes.ReceiveInternalMetadata);
+
+                if (!sendExternalMetadata && !sendInternalMetadata)
+                {
+                    // Force the client to receive metadata if they have specified that they don't want any
+                    sendExternalMetadata = m_forceReceiveMetadataFlags.HasFlag(OperationalModes.ReceiveExternalMetadata);
+                    sendInternalMetadata = m_forceReceiveMetadataFlags.HasFlag(OperationalModes.ReceiveInternalMetadata);
+                }
+
+                // Copy key meta-data tables
+                foreach (string tableExpression in m_metadataTables.Split(';'))
+                {
+                    if (string.IsNullOrWhiteSpace(tableExpression))
+                        continue;
+
+                    // Query the table or view information from the database
+                    table = dbConnection.RetrieveData(adoDatabase.AdapterType, tableExpression);
+
+                    // Remove any expression from table name
+                    Match regexMatch = Regex.Match(tableExpression, @"FROM \w+");
+                    table.TableName = regexMatch.Value.Split(' ')[1];
+
+                    sortField = "";
+                    takeCount = int.MaxValue;
+
+                    // Build filter list
+                    List<string> filters = new List<string>();
+
+                    if (table.Columns.Contains("NodeID"))
+                        filters.Add(string.Format("NodeID = '{0}'", nodeID));
+
+                    if (table.Columns.Contains("Internal") && !(sendInternalMetadata && sendExternalMetadata))
+                        filters.Add(string.Format("Internal {0} 0", sendExternalMetadata ? "=" : "<>"));
+
+                    if (table.Columns.Contains("OriginalSource") && !(sendInternalMetadata && sendExternalMetadata))
+                        filters.Add(string.Format("OriginalSource IS {0} NULL", sendExternalMetadata ? "NOT" : ""));
+
+                    if (filterExpressions.TryGetValue(table.TableName, out filterParameters))
+                    {
+                        filters.Add("(" + filterParameters.Item1 + ")");
+                        sortField = filterParameters.Item2;
+                        takeCount = filterParameters.Item3;
+                    }
+
+                    // Determine whether we need to check subscriber for rights to the data
+                    bool checkSubscriberRights = RequireAuthentication && table.Columns.Contains("SignalID");
+
+                    if (m_sharedDatabase || (filters.Count == 0 && !checkSubscriberRights))
+                    {
+                        // Add a copy of the results to the dataset for meta-data exchange
+                        metadata.Tables.Add(table.Copy());
+                    }
+                    else
+                    {
+                        IEnumerable<DataRow> filteredRows;
+                        List<DataRow> filteredRowList;
+
+                        // Make a copy of the table structure
+                        metadata.Tables.Add(table.Clone());
+
+                        // Filter in-memory data table down to desired rows
+                        filteredRows = table.Select(string.Join(" AND ", filters), sortField);
+
+                        // Reduce data to only what the subscriber has rights to
+                        if (checkSubscriberRights)
+                            filteredRows = filteredRows.Where(row => SubscriberHasRights(connection.SubscriberID, adoDatabase.Guid(row, "SignalID")));
+
+                        // Apply any maximum row count that user may have specified
+                        filteredRowList = filteredRows.Take(takeCount).ToList();
+
+                        if (filteredRowList.Count > 0)
+                        {
+                            DataTable metadataTable = metadata.Tables[table.TableName];
+
+                            // Manually copy-in each row into table
+                            foreach (DataRow row in filteredRowList)
+                            {
+                                DataRow newRow = metadataTable.NewRow();
+
+                                // Copy each column of data in the current row
+                                for (int x = 0; x < table.Columns.Count; x++)
+                                {
+                                    newRow[x] = row[x];
+                                }
+
+                                metadataTable.Rows.Add(newRow);
+                            }
+                        }
+                    }
+                }
+
+                // TODO: Although protected against unprovided tables and columns, this post-analysis operation is schema specific. This may need to be moved to an external function and executed via delegate to allow this kind of work for other schemas.
+
+                // Do some post analysis on the meta-data to be delivered to the client, e.g., if a device exists with no associated measurements - don't send the device.
+                if (metadata.Tables.Contains("MeasurementDetail") && metadata.Tables["MeasurementDetail"].Columns.Contains("DeviceAcronym") && metadata.Tables.Contains("DeviceDetail") && metadata.Tables["DeviceDetail"].Columns.Contains("Acronym"))
+                {
+                    List<DataRow> rowsToRemove = new List<DataRow>();
+                    string deviceAcronym;
+
+                    // Remove device records where no associated measurements records exist
+                    foreach (DataRow row in metadata.Tables["DeviceDetail"].Rows)
+                    {
+                        deviceAcronym = row["Acronym"].ToNonNullString();
+
+                        if (!string.IsNullOrEmpty(deviceAcronym) && (int)metadata.Tables["MeasurementDetail"].Compute("Count(DeviceAcronym)", string.Format("DeviceAcronym = '{0}'", deviceAcronym)) == 0)
+                            rowsToRemove.Add(row);
+                    }
+
+                    if (metadata.Tables.Contains("PhasorDetail") && metadata.Tables["PhasorDetail"].Columns.Contains("DeviceAcronym"))
+                    {
+                        // Remove phasor records where no associated device records exist
+                        foreach (DataRow row in metadata.Tables["PhasorDetail"].Rows)
+                        {
+                            deviceAcronym = row["DeviceAcronym"].ToNonNullString();
+
+                            if (!string.IsNullOrEmpty(deviceAcronym) && (int)metadata.Tables["DeviceDetail"].Compute("Count(Acronym)", string.Format("Acronym = '{0}'", deviceAcronym)) == 0)
+                                rowsToRemove.Add(row);
+                        }
+                    }
+
+                    // Remove any unnecessary rows
+                    foreach (DataRow row in rowsToRemove)
+                        row.Delete();
+
+                }
+
+                return metadata;
+            }
+        }
+
         // Handles meta-data refresh request
         private void HandleMetadataRefresh(ClientConnection connection, byte[] buffer, int startIndex, int length)
         {
@@ -3270,160 +3422,21 @@ namespace GSF.TimeSeries.Transport
 
             try
             {
-                using (AdoDataConnection adoDatabase = new AdoDataConnection("systemSettings"))
+                DataSet metadata = AquireMetadata(connection, filterExpressions);
+                byte[] serializedMetadata = SerializeMetadata(clientID, metadata);
+                long rowCount = metadata.Tables.Cast<DataTable>().Select(dataTable => (long)dataTable.Rows.Count).Sum();
+
+                if (rowCount > 0)
                 {
-                    IDbConnection dbConnection = adoDatabase.Connection;
-                    DataSet metadata = new DataSet();
-                    DataTable table;
-                    byte[] serializedMetadata;
-                    Tuple<string, string, int> filterParameters;
-
-                    // Initialize active node ID
-                    Guid nodeID = Guid.Parse(dbConnection.ExecuteScalar(string.Format("SELECT NodeID FROM IaonActionAdapter WHERE ID = {0}", ID)).ToString());
-
-                    // Determine whether we're sending internal and external meta-data
-                    bool sendExternalMetadata = connection.OperationalModes.HasFlag(OperationalModes.ReceiveExternalMetadata);
-                    bool sendInternalMetadata = connection.OperationalModes.HasFlag(OperationalModes.ReceiveInternalMetadata);
-
-                    if (!sendExternalMetadata && !sendInternalMetadata)
-                    {
-                        // Force the client to receive metadata if they have specified that they don't want any
-                        sendExternalMetadata = m_forceReceiveMetadataFlags.HasFlag(OperationalModes.ReceiveExternalMetadata);
-                        sendInternalMetadata = m_forceReceiveMetadataFlags.HasFlag(OperationalModes.ReceiveInternalMetadata);
-                    }
-
-                    // Copy key meta-data tables
-                    foreach (string tableExpression in m_metadataTables.Split(';'))
-                    {
-                        if (string.IsNullOrWhiteSpace(tableExpression))
-                            continue;
-
-                        // Query the table or view information from the database
-                        table = dbConnection.RetrieveData(adoDatabase.AdapterType, tableExpression);
-
-                        // Remove any expression from table name
-                        Match regexMatch = Regex.Match(tableExpression, @"FROM \w+");
-                        table.TableName = regexMatch.Value.Split(' ')[1];
-
-                        sortField = "";
-                        takeCount = int.MaxValue;
-
-                        // Build filter list
-                        List<string> filters = new List<string>();
-
-                        if (table.Columns.Contains("NodeID"))
-                            filters.Add(string.Format("NodeID = '{0}'", nodeID));
-
-                        if (table.Columns.Contains("Internal") && !(sendInternalMetadata && sendExternalMetadata))
-                            filters.Add(string.Format("Internal {0} 0", sendExternalMetadata ? "=" : "<>"));
-
-                        if (table.Columns.Contains("OriginalSource") && !(sendInternalMetadata && sendExternalMetadata))
-                            filters.Add(string.Format("OriginalSource IS {0} NULL", sendExternalMetadata ? "NOT" : ""));
-
-                        if (filterExpressions.TryGetValue(table.TableName, out filterParameters))
-                        {
-                            filters.Add("(" + filterParameters.Item1 + ")");
-                            sortField = filterParameters.Item2;
-                            takeCount = filterParameters.Item3;
-                        }
-
-                        // Determine whether we need to check subscriber for rights to the data
-                        bool checkSubscriberRights = RequireAuthentication && table.Columns.Contains("SignalID");
-
-                        if (m_sharedDatabase || (filters.Count == 0 && !checkSubscriberRights))
-                        {
-                            // Add a copy of the results to the dataset for meta-data exchange
-                            metadata.Tables.Add(table.Copy());
-                        }
-                        else
-                        {
-                            IEnumerable<DataRow> filteredRows;
-                            List<DataRow> filteredRowList;
-
-                            // Make a copy of the table structure
-                            metadata.Tables.Add(table.Clone());
-
-                            // Filter in-memory data table down to desired rows
-                            filteredRows = table.Select(string.Join(" AND ", filters), sortField);
-
-                            // Reduce data to only what the subscriber has rights to
-                            if (checkSubscriberRights)
-                                filteredRows = filteredRows.Where(row => SubscriberHasRights(connection.SubscriberID, adoDatabase.Guid(row, "SignalID")));
-
-                            // Apply any maximum row count that user may have specified
-                            filteredRowList = filteredRows.Take(takeCount).ToList();
-
-                            if (filteredRowList.Count > 0)
-                            {
-                                DataTable metadataTable = metadata.Tables[table.TableName];
-
-                                // Manually copy-in each row into table
-                                foreach (DataRow row in filteredRowList)
-                                {
-                                    DataRow newRow = metadataTable.NewRow();
-
-                                    // Copy each column of data in the current row
-                                    for (int x = 0; x < table.Columns.Count; x++)
-                                    {
-                                        newRow[x] = row[x];
-                                    }
-
-                                    metadataTable.Rows.Add(newRow);
-                                }
-                            }
-                        }
-                    }
-
-                    // TODO: Although protected against unprovided tables and columns, this post-analysis operation is schema specific. This may need to be moved to an external function and executed via delegate to allow this kind of work for other schemas.
-
-                    // Do some post analysis on the meta-data to be delivered to the client, e.g., if a device exists with no associated measurements - don't send the device.
-                    if (metadata.Tables.Contains("MeasurementDetail") && metadata.Tables["MeasurementDetail"].Columns.Contains("DeviceAcronym") && metadata.Tables.Contains("DeviceDetail") && metadata.Tables["DeviceDetail"].Columns.Contains("Acronym"))
-                    {
-                        List<DataRow> rowsToRemove = new List<DataRow>();
-                        string deviceAcronym;
-
-                        // Remove device records where no associated measurements records exist
-                        foreach (DataRow row in metadata.Tables["DeviceDetail"].Rows)
-                        {
-                            deviceAcronym = row["Acronym"].ToNonNullString();
-
-                            if (!string.IsNullOrEmpty(deviceAcronym) && (int)metadata.Tables["MeasurementDetail"].Compute("Count(DeviceAcronym)", string.Format("DeviceAcronym = '{0}'", deviceAcronym)) == 0)
-                                rowsToRemove.Add(row);
-                        }
-
-                        if (metadata.Tables.Contains("PhasorDetail") && metadata.Tables["PhasorDetail"].Columns.Contains("DeviceAcronym"))
-                        {
-                            // Remove phasor records where no associated device records exist
-                            foreach (DataRow row in metadata.Tables["PhasorDetail"].Rows)
-                            {
-                                deviceAcronym = row["DeviceAcronym"].ToNonNullString();
-
-                                if (!string.IsNullOrEmpty(deviceAcronym) && (int)metadata.Tables["DeviceDetail"].Compute("Count(Acronym)", string.Format("Acronym = '{0}'", deviceAcronym)) == 0)
-                                    rowsToRemove.Add(row);
-                            }
-                        }
-
-                        // Remove any unnecessary rows
-                        foreach (DataRow row in rowsToRemove)
-                            row.Delete();
-                    }
-
-                    serializedMetadata = SerializeMetadata(clientID, metadata);
-
-                    long rowCount = metadata.Tables.Cast<DataTable>().Select(dataTable => (long)dataTable.Rows.Count).Sum();
-
-                    if (rowCount > 0)
-                    {
-                        Time elapsedTime = (DateTime.UtcNow.Ticks - startTime).ToSeconds();
-                        OnStatusMessage("{0:N0} records spanning {1:N0} tables of meta-data prepared in {2}, sending response to {3}...", rowCount, metadata.Tables.Count, elapsedTime.ToString(2), connection.ConnectionID);
-                    }
-                    else
-                    {
-                        OnStatusMessage("No meta-data is available, sending an empty response to {0}...", connection.ConnectionID);
-                    }
-
-                    SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.MetaDataRefresh, serializedMetadata);
+                    Time elapsedTime = (DateTime.UtcNow.Ticks - startTime).ToSeconds();
+                    OnStatusMessage("{0:N0} records spanning {1:N0} tables of meta-data prepared in {2}, sending response to {3}...", rowCount, metadata.Tables.Count, elapsedTime.ToString(2), connection.ConnectionID);
                 }
+                else
+                {
+                    OnStatusMessage("No meta-data is available, sending an empty response to {0}...", connection.ConnectionID);
+                }
+
+                SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.MetaDataRefresh, serializedMetadata);
             }
             catch (Exception ex)
             {
@@ -3484,7 +3497,7 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
-        // Handle confirmation of receipt of notification
+        // Handle confirmation of receipt of notification 
         private void HandleConfirmNotification(ClientConnection connection, byte[] buffer, int startIndex, int length)
         {
             int hash = BigEndian.ToInt32(buffer, startIndex);
