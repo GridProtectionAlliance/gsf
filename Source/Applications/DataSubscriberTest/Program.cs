@@ -5,10 +5,10 @@
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
-//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
 //  not use this file except in compliance with the License. You may obtain a copy of the License at:
 //
-//      http://www.opensource.org/licenses/eclipse-1.0.php
+//      http://www.opensource.org/licenses/MIT
 //
 //  Unless agreed to in writing, the subject software distributed under the License is distributed on an
 //  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
@@ -25,9 +25,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Text;
 using System.Timers;
 using GSF;
+using GSF.IO;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Transport;
 using Random = GSF.Security.Cryptography.Random;
@@ -56,6 +58,7 @@ namespace DataSubscriberTest
             subscriber.ConnectionEstablished += subscriber_ConnectionEstablished;
             subscriber.ConnectionTerminated += subscriber_ConnectionTerminated;
             subscriber.NewMeasurements += subscriber_NewMeasurements;
+            subscriber.MetaDataReceived += subscriber_MetaDataReceived;
 
             StringBuilder connectionString = new StringBuilder();
 
@@ -103,6 +106,13 @@ namespace DataSubscriberTest
 
             timer.Elapsed -= timer_Elapsed;
             timer.Stop();
+        }
+
+        static void subscriber_MetaDataReceived(object sender, EventArgs<System.Data.DataSet> e)
+        {
+            DataSet dataSet = e.Argument;
+            dataSet.WriteXml(FilePath.GetAbsolutePath("Metadata.xml"), XmlWriteMode.WriteSchema);
+            Console.WriteLine("Data set serialized with {0} tables...", dataSet.Tables.Count);
         }
 
         static void timer_Elapsed(object sender, ElapsedEventArgs e)
@@ -175,6 +185,9 @@ namespace DataSubscriberTest
 
         static void subscriber_ConnectionEstablished(object sender, EventArgs e)
         {
+
+            //subscriber.SendServerCommand(ServerCommand.MetaDataRefresh);
+
             //// Request cipher key rotation
             //subscriber.SendServerCommand(ServerCommand.RotateCipherKeys);
 
