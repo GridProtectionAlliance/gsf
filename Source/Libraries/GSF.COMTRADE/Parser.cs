@@ -200,8 +200,8 @@ namespace GSF.COMTRADE
 
                         if (i < m_schema.AnalogChannels.Length)
                         {
-                            if (char.ToUpper(m_schema.AnalogChannels[i].ScalingIdentifier) == 'S')
-                                value *= m_schema.AnalogChannels[i].PrimaryRatio / m_schema.AnalogChannels[i].SecondaryRatio;
+                            if (char.ToUpper(m_schema.AnalogChannels[i].ScalingIdentifier) == 'P')
+                                value *= m_schema.AnalogChannels[i].SecondaryRatio / m_schema.AnalogChannels[i].PrimaryRatio;
                         }
 
                         m_secondaryValues[i] = value;
