@@ -47,6 +47,8 @@ namespace GSF.COMTRADE
         private int m_streamIndex;
         private DateTime m_timestamp;
         private double[] m_values;
+        private double[] m_primaryValues;
+        private double[] m_secondaryValues;
         private bool m_inferTimeFromSampleRates;
 
         #endregion
@@ -149,6 +151,64 @@ namespace GSF.COMTRADE
             get
             {
                 return m_values;
+            }
+        }
+
+        /// <summary>
+        /// Gets values of current record with secondary analog channels scaled to primary values.
+        /// </summary>
+        public double[] PrimaryValues
+        {
+            get
+            {
+                if ((object)m_primaryValues == null)
+                {
+                    m_primaryValues = new double[m_values.Length];
+
+                    for (int i = 0; i < m_primaryValues.Length; i++)
+                    {
+                        double value = m_values[i];
+
+                        if (i < m_schema.AnalogChannels.Length)
+                        {
+                            if (char.ToUpper(m_schema.AnalogChannels[i].ScalingIdentifier) == 'S')
+                                value *= m_schema.AnalogChannels[i].PrimaryRatio / m_schema.AnalogChannels[i].SecondaryRatio;
+                        }
+
+                        m_primaryValues[i] = value;
+                    }
+                }
+
+                return m_primaryValues;
+            }
+        }
+
+        /// <summary>
+        /// Gets values of current record with primary analog channels scaled to secondary values.
+        /// </summary>
+        public double[] SecondaryValues
+        {
+            get
+            {
+                if ((object)m_secondaryValues == null)
+                {
+                    m_secondaryValues = new double[m_values.Length];
+
+                    for (int i = 0; i < m_secondaryValues.Length; i++)
+                    {
+                        double value = m_values[i];
+
+                        if (i < m_schema.AnalogChannels.Length)
+                        {
+                            if (char.ToUpper(m_schema.AnalogChannels[i].ScalingIdentifier) == 'S')
+                                value *= m_schema.AnalogChannels[i].PrimaryRatio / m_schema.AnalogChannels[i].SecondaryRatio;
+                        }
+
+                        m_secondaryValues[i] = value;
+                    }
+                }
+
+                return m_secondaryValues;
             }
         }
 
@@ -255,6 +315,9 @@ namespace GSF.COMTRADE
             if (m_streamIndex > m_fileStreams.Length)
                 throw new EndOfStreamException("All COMTRADE data has been read, cannot read more records.");
 
+            m_primaryValues = null;
+            m_secondaryValues = null;
+
             if (m_schema.FileType == FileType.Ascii)
                 return ReadNextAscii();
 
@@ -331,9 +394,7 @@ namespace GSF.COMTRADE
         {
             FileStream currentFile = m_fileStreams[m_streamIndex];
             int recordLength = m_schema.BinaryRecordLength;
-            byte[] buffer = null;
-
-            buffer = new byte[recordLength];
+            byte[] buffer = new byte[recordLength];
 
             // Read next record from file
             int bytesRead = currentFile.Read(buffer, 0, recordLength);
