@@ -449,11 +449,21 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="phasor">Information about <see cref="Phasor"/>.</param>
-        /// <param name="skipMeasurementUpdate">Skips associated measurement update if this is already being handled.</param>
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Save(AdoDataConnection database, Phasor phasor, bool skipMeasurementUpdate = false)
+        public static string Save(AdoDataConnection database, Phasor phasor)
         {
-            return SaveAndReorder(database, phasor, phasor.SourceIndex, skipMeasurementUpdate);
+            return SaveAndReorder(database, phasor, phasor.SourceIndex);
+        }
+
+        /// <summary>
+        /// Saves <see cref="Phasor"/> information to database and skips associated measurement update.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="phasor">Information about <see cref="Phasor"/>.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string SaveWithoutMeasurementUpdate(AdoDataConnection database, Phasor phasor)
+        {
+            return SaveAndReorder(database, phasor, phasor.SourceIndex, true);
         }
 
         /// <summary>

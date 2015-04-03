@@ -1442,7 +1442,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                         foreach (Phasor phasor in Phasor.Load(database, keys))
                         {
-                            Phasor.Save(database, phasor, true);
+                            Phasor.SaveWithoutMeasurementUpdate(database, phasor);
                         }
                     }
 
