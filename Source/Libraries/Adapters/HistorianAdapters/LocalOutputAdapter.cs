@@ -100,6 +100,8 @@ namespace HistorianAdapters
         private string m_archivePath;
         private long m_archivedMeasurements;
         private volatile int m_adapterLoadedCount;
+        private readonly Dictionary<int, ulong> m_badTimestampCounts;
+        private readonly ProcessQueue<IDataPoint> m_badTimestampQueue;
         private readonly Dictionary<int, ulong> m_outOfSequenceCounts;
         private readonly ProcessQueue<IDataPoint> m_outOfSequenceQueue;
         private bool m_disposed;
@@ -119,6 +121,8 @@ namespace HistorianAdapters
             m_archive.StateFile = new StateFile();
             m_archive.IntercomFile = new IntercomFile();
             MetadataRefreshOperation.IsBackground = false;
+            m_badTimestampCounts = new Dictionary<int, ulong>();
+            m_badTimestampQueue = ProcessQueue<IDataPoint>.CreateRealTimeQueue(HandleBadTimestampData);
             m_outOfSequenceCounts = new Dictionary<int, ulong>();
             m_outOfSequenceQueue = ProcessQueue<IDataPoint>.CreateRealTimeQueue(HandleOutOfSequenceData);
         }
@@ -651,7 +655,28 @@ namespace HistorianAdapters
 
         private void m_archive_FutureDataReceived(object sender, EventArgs<IDataPoint> e)
         {
-            OnStatusMessage("Received data for point {0}:{1} with an unreasonable future timestamp. Data with a timestamp beyond {2:0.00} minutes of the local clock will not be archived. Check local system clock and data source clock for accuracy.", m_instanceName, e.Argument.HistorianID, m_archive.LeadTimeTolerance);
+            // In case we are receiving many points with bad timestamps, we throttle user messages
+            if ((object)m_badTimestampQueue != null)
+                m_badTimestampQueue.Add(e.Argument);
+        }
+
+        private void HandleBadTimestampData(IDataPoint point)
+        {
+            if ((object)point == null)
+                return;
+
+            int id = point.HistorianID;
+            ulong total = m_badTimestampCounts.GetOrAdd(id, 0UL);
+
+            if (total % 100UL == 0UL)
+            {
+                if (total > 0UL)
+                    OnStatusMessage("Received {0} points of data for {1}:{2} with an unreasonable future timestamp. Data with a timestamp beyond {3:0.00} minutes of the local clock will not be archived. Check local system clock and data source clock for accuracy.", total, m_instanceName, id, m_archive.LeadTimeTolerance);
+                else
+                    OnStatusMessage("Received data for point {0}:{1} with an unreasonable future timestamp. Data with a timestamp beyond {2:0.00} minutes of the local clock will not be archived. Check local system clock and data source clock for accuracy.", m_instanceName, id, m_archive.LeadTimeTolerance);
+            }
+
+            m_badTimestampCounts[id] = total + 1UL;
         }
 
         private void m_archive_OutOfSequenceDataReceived(object sender, EventArgs<IDataPoint> e)
