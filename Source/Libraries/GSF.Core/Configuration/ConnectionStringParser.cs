@@ -28,6 +28,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Xml.Linq;
 using GSF.Reflection;
 
 namespace GSF.Configuration
@@ -402,6 +403,72 @@ namespace GSF.Configuration
                 .Select(property => new ConnectionStringProperty(property))
                 .ToArray();
         };
+
+        // Static Methods
+
+        /// <summary>
+        /// Converts XML to a connection string.
+        /// </summary>
+        /// <param name="element">The root element of the XML to be converted to a connection string.</param>
+        /// <returns>A connection string converted from XML.</returns>
+        public static string ToConnectionString(XElement element)
+        {
+            char[] reserved = { ';', '=', '{', '}' };
+
+            string name = element.Name.ToString();
+
+            string value = element.HasElements
+                ? string.Join("; ", element.Elements().Select(ToConnectionString))
+                : (string)element;
+
+            return value.Any(reserved.Contains)
+                ? string.Format("{0}={{{1}}}", name, value)
+                : string.Format("{0}={1}", name, value);
+        }
+
+        /// <summary>
+        /// Converts a connection string to XML.
+        /// </summary>
+        /// <param name="connectionString">The connection string to be converted to XML.</param>
+        /// <exception cref="InvalidOperationException">The connection string does not define exactly one root element.</exception>
+        /// <returns>The XML root element converted from the connection string.</returns>
+        public static XElement ToXML(string connectionString)
+        {
+            XElement root;
+            Dictionary<string, string> settings;
+
+            settings = connectionString.ParseKeyValuePairs();
+
+            if (settings.Count != 1)
+                throw new InvalidOperationException(string.Format("Connection string does not define exactly one root element: {0}", connectionString));
+
+            root = new XElement(settings.Keys.First());
+            SetXMLContent(root, settings.Values.First());
+
+            return root;
+        }
+
+        private static void SetXMLContent(XElement parent, string connectionStringValue)
+        {
+            Dictionary<string, string> settings;
+            XElement element;
+
+            settings = connectionStringValue.ParseKeyValuePairs();
+
+            if (!settings.Any())
+            {
+                parent.Value = connectionStringValue;
+            }
+            else
+            {
+                foreach (KeyValuePair<string, string> setting in settings)
+                {
+                    element = new XElement(setting.Key);
+                    SetXMLContent(element, setting.Value);
+                    parent.Add(element);
+                }
+            }
+        }
 
         #endregion
     }
