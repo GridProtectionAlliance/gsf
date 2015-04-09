@@ -343,6 +343,7 @@ namespace GSF
             string escapedKeyValueDelimiter = keyValueDelimiter.RegexEncode();
             string escapedStartValueDelimiter = startValueDelimiter.RegexEncode();
             string escapedEndValueDelimiter = endValueDelimiter.RegexEncode();
+            string backslashDelimiter = '\\'.RegexEncode();
             string[] elements;
             string key, unescapedValue;
             bool valueEscaped = false;
@@ -402,12 +403,17 @@ namespace GSF
                         escapedValue.Append(escapedStartValueDelimiter);
                     else if (character == endValueDelimiter)
                         escapedValue.Append(escapedEndValueDelimiter);
+                    else if (character == '\\')
+                        escapedValue.Append(backslashDelimiter);
                     else
                         escapedValue.Append(character);
                 }
                 else
                 {
-                    escapedValue.Append(character);
+                    if (character == '\\')
+                        escapedValue.Append(backslashDelimiter);
+                    else
+                        escapedValue.Append(character);
                 }
             }
 
@@ -436,7 +442,8 @@ namespace GSF
                         Replace(escapedParameterDelimiter, parameterDelimiter.ToString()).
                         Replace(escapedKeyValueDelimiter, keyValueDelimiter.ToString()).
                         Replace(escapedStartValueDelimiter, startValueDelimiter.ToString()).
-                        Replace(escapedEndValueDelimiter, endValueDelimiter.ToString());
+                        Replace(escapedEndValueDelimiter, endValueDelimiter.ToString()).
+                        Replace(backslashDelimiter, "\\");
 
                     // Add key/value pair to dictionary
                     if (ignoreDuplicateKeys)
