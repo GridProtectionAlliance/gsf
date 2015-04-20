@@ -46,6 +46,10 @@ namespace GSF.ServiceModel.Activation
         // Fields
         private Type m_authorizationPolicy;
 
+        private List<IEndpointBehavior> m_endpointBehaviors;
+
+        private List<IServiceBehavior> m_serviceBehaviors;
+
         #endregion
 
         #region [ Constructors ]
@@ -56,6 +60,36 @@ namespace GSF.ServiceModel.Activation
         public SecureDataServiceHostFactory()
         {
             m_authorizationPolicy = typeof(SecurityPolicy);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SecureDataServiceHostFactory"/> class.
+        /// </summary>
+        /// <param name="serviceBehaviors">A collection of service behaviors that will be applied to newly created services.</param>
+        /// <param name="endpointBehaviors">A collection of endpoint behaviors that will be applied to newly created endpoints.</param>
+        public SecureDataServiceHostFactory(List<IServiceBehavior> serviceBehaviors, List<IEndpointBehavior> endpointBehaviors)
+            : this()
+        {
+            m_endpointBehaviors = endpointBehaviors;
+            m_serviceBehaviors = serviceBehaviors;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SecureDataServiceHostFactory"/> class.
+        /// </summary>
+        /// <param name="behaviors">A collection of endpoint behaviors that will be applied to newly created endpoints.</param>
+        public SecureDataServiceHostFactory(List<IEndpointBehavior> behaviors)
+            : this(new List<IServiceBehavior>(), behaviors)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SecureDataServiceHostFactory"/> class.
+        /// </summary>
+        /// <param name="behaviors">A collection of service behaviors that will be applied to newly created services.</param>
+        public SecureDataServiceHostFactory(List<IServiceBehavior> behaviors)
+            : this(behaviors, new List<IEndpointBehavior>())
+        {
         }
 
         #endregion
@@ -77,6 +111,41 @@ namespace GSF.ServiceModel.Activation
                     throw new ArgumentNullException("value");
 
                 m_authorizationPolicy = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the list of endpoint behaviors applied to endpoints created for the service.
+        /// </summary>
+        public List<IEndpointBehavior> EndpointBehaviors
+        {
+            get
+            {
+                return m_endpointBehaviors;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("value");
+                }
+                m_endpointBehaviors = value;
+            }
+        }
+
+        public List<IServiceBehavior> ServiceBehaviors
+        {
+            get
+            {
+                return m_serviceBehaviors;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("value");
+                }
+                m_serviceBehaviors = value;
             }
         }
 
@@ -106,6 +175,19 @@ namespace GSF.ServiceModel.Activation
             List<IAuthorizationPolicy> policies = new List<IAuthorizationPolicy>();
             policies.Add((IAuthorizationPolicy)Activator.CreateInstance(m_authorizationPolicy));
             serviceBehavior.ExternalAuthorizationPolicies = policies.AsReadOnly();
+
+            foreach(var behavior in m_serviceBehaviors ?? new List<IServiceBehavior>())
+            {
+                host.Description.Behaviors.Add(behavior);
+            }
+
+            foreach(var endpoint in host.Description.Endpoints)
+            {
+                foreach(var behavior in m_endpointBehaviors ?? new List<IEndpointBehavior>())
+                {
+                    endpoint.EndpointBehaviors.Add(behavior);
+                }
+            }
 
             return host;
         }

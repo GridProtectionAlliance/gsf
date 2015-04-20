@@ -57,6 +57,8 @@ namespace GSF.ServiceModel.Activation
         private bool m_publishMetadata;
         private bool m_disableSecurity;
         private Type m_authorizationPolicy;
+        private List<IEndpointBehavior> m_endpointBehaviors;
+        private List<IServiceBehavior> m_serviceBehaviors;
 
         #endregion
 
@@ -85,11 +87,25 @@ namespace GSF.ServiceModel.Activation
         /// <param name="protocol">Protocol used by the service.</param>
         /// <param name="address">Address of the service.</param>
         public SecureServiceHostFactory(string protocol, string address)
+            : this(protocol, address, new List<IEndpointBehavior>(), new List<IServiceBehavior>())
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SecureServiceHostFactory"/> class.
+        /// </summary>
+        /// <param name="protocol">Protocol used by the service.</param>
+        /// <param name="address">Address of the service.</param>
+        /// <param name="endpointBehaviors">Endpoint behaviors to be added to the created service.</param>
+        /// <param name="serviceBehaviors">Service behaviors to be added to the created service.</param>
+        public SecureServiceHostFactory(string protocol, string address, List<IEndpointBehavior> endpointBehaviors, List<IServiceBehavior> serviceBehaviors)
         {
             m_protocol = protocol;
             m_address = address;
             m_publishMetadata = true;
             m_authorizationPolicy = typeof(SecurityPolicy);
+            m_endpointBehaviors = endpointBehaviors;
+            m_serviceBehaviors = serviceBehaviors;
         }
 
         #endregion
@@ -141,6 +157,44 @@ namespace GSF.ServiceModel.Activation
                     throw new ArgumentNullException("value");
 
                 m_authorizationPolicy = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the list of endpoint behaviors added to the services created
+        /// </summary>
+        public List<IEndpointBehavior> EndpointBehaviors
+        {
+            get
+            {
+                return m_endpointBehaviors;
+            }
+            set
+            {
+                if(value == null)
+                {
+                    throw new ArgumentNullException("Behaviors value");
+                }
+                m_endpointBehaviors = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the list of service behaviors added to the services created
+        /// </summary>
+        public List<IServiceBehavior> ServiceBehaviors
+        {
+            get
+            {
+                return m_serviceBehaviors;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("Behaviors value");
+                }
+                m_serviceBehaviors = value;
             }
         }
 
@@ -220,6 +274,10 @@ namespace GSF.ServiceModel.Activation
                             basicBinding.Security.Mode = BasicHttpSecurityMode.None;
                             basicBinding.Security.Transport.ClientCredentialType = HttpClientCredentialType.None;
                         }
+                        foreach(IEndpointBehavior behavior in m_endpointBehaviors ?? new List<IEndpointBehavior>())
+                        {
+                            endpoint.Behaviors.Add(behavior);
+                        }
                     }
                 }
             }
@@ -252,7 +310,17 @@ namespace GSF.ServiceModel.Activation
                         serviceEndpoint.Behaviors.Add(restBehavior);
                         serviceEndpoint.Behaviors.Add(new FormatSpecificationBehavior());
                     }
+
+                    foreach (IEndpointBehavior behavior in m_endpointBehaviors ?? new List<IEndpointBehavior>())
+                    {
+                        serviceEndpoint.Behaviors.Add(behavior);
+                    }
                 }
+            }
+
+            foreach(var behavior in ServiceBehaviors ?? new List<IServiceBehavior>())
+            {
+                host.Description.Behaviors.Add(behavior);
             }
 
             return host;
