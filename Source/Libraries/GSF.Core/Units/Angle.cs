@@ -182,7 +182,7 @@ namespace GSF.Units
 
             return inclusive
                 ? Euclidean.Wrap(this, minValue, TwoPI)
-                : Euclidean.Wrap(this, -minValue, -TwoPI);
+                : Euclidean.Wrap(this, minValue + TwoPI, -TwoPI);
         }
 
         #region [ Numeric Interface Implementations ]
