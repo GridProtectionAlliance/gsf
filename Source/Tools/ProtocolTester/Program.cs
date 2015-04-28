@@ -33,6 +33,7 @@ using GSF.IO;
 using GSF.PhasorProtocols;
 using GSF.PhasorProtocols.Anonymous;
 using GSF.TimeSeries;
+using GSF.Units;
 using GSF.Units.EE;
 
 namespace ProtocolTester
@@ -53,6 +54,7 @@ namespace ProtocolTester
         private static StreamWriter m_exportFile;
         private static uint measurementID;
         private static long frameCount;
+        private static long byteCount;
 
         public static void Main(string[] args)
         {
@@ -87,6 +89,8 @@ namespace ProtocolTester
             parser.ParsingException += parser_ParsingException;
             parser.ReceivedConfigurationFrame += parser_ReceivedConfigurationFrame;
             parser.ReceivedDataFrame += parser_ReceivedDataFrame;
+            parser.ReceivedFrameBufferImage += parser_ReceivedFrameBufferImage;
+            parser.ConnectionTerminated += parser_ConnectionTerminated;
 
             // Define the connection string
             //parser.ConnectionString = @"phasorProtocol=IeeeC37_118V1; transportProtocol=UDP; localport=5000; server=233.123.123.123:5000; interface=0.0.0.0";
@@ -97,17 +101,48 @@ namespace ProtocolTester
             //parser.ConnectionString = @"phasorProtocol=Macrodyne; transportProtocol=Serial; port=COM6; baudrate=38400; parity=None; stopbits=One; databits=8; dtrenable=False; rtsenable=False;";
             //parser.ConnectionString = @"phasorProtocol=SelFastMessage; transportProtocol=Serial; port=COM5; baudrate=57600; parity=None; stopbits=One; databits=8; dtrenable=False; rtsenable=False;";            
             //parser.ConnectionString = @"phasorProtocol=IEEEC37_118v1; transportProtocol=File; file=C:\Users\Ritchie\Desktop\MTI_Test_3phase.PmuCapture; checkSumValidationFrameTypes=DataFrame,HeaderFrame,CommandFrame";
-            parser.ConnectionString = @"phasorProtocol=IEEEC37_118V1; transportProtocol=tcp; server=172.21.4.100:4001; interface=0.0.0.0; isListener=false";
+            parser.ConnectionString = @"phasorProtocol=IEEEC37_118V1; transportProtocol=tcp; accessID=105; server=172.31.105.135:4712; interface=0.0.0.0; isListener=false";
+
+            Dictionary<string, string> settings = parser.ConnectionString.ParseKeyValuePairs();
+            string setting;
+
+            // TODO: These should be optional picked up from connection string inside of MPFP
+            // Apply other settings as needed
+            if (settings.TryGetValue("accessID", out setting))
+                parser.DeviceID = ushort.Parse(setting);
+
+            if (settings.TryGetValue("simulateTimestamp", out setting))
+                parser.InjectSimulatedTimestamp = setting.ParseBoolean();
+
+            if (settings.TryGetValue("allowedParsingExceptions", out setting))
+                parser.AllowedParsingExceptions = int.Parse(setting);
+
+            if (settings.TryGetValue("parsingExceptionWindow", out setting))
+                parser.ParsingExceptionWindow = Ticks.FromSeconds(double.Parse(setting));
+
+            if (settings.TryGetValue("autoStartDataParsingSequence", out setting))
+                parser.AutoStartDataParsingSequence = setting.ParseBoolean();
+
+            if (settings.TryGetValue("skipDisableRealTimeData", out setting))
+                parser.SkipDisableRealTimeData = setting.ParseBoolean();
 
             // When connecting to a file based resource you may want to loop the data
             parser.AutoRepeatCapturedPlayback = true;
 
             // Start frame parser
             parser.AutoStartDataParsingSequence = true;
+
+            Console.WriteLine("ConnectionString: {0}", parser.ConnectionString);
+
             parser.Start();
 
             // To keep the console open while receiving live data with AutoRepeatCapturedPlayback = false, uncomment the following line of code:
+
+            Console.WriteLine("Press <enter> to terminate application...");
+
             Console.ReadLine();
+
+            parser.Stop();
 
             // Stop concentrator
             if (TestConcentrator)
@@ -115,6 +150,18 @@ namespace ProtocolTester
 
             if (WriteLogs)
                 m_exportFile.Close();
+        }
+
+        static void parser_ReceivedFrameBufferImage(object sender, EventArgs<FundamentalFrameType, byte[], int, int> e)
+        {
+            const int interval = (int)SI.Kilo * 2;
+
+            bool showMessage = byteCount + e.Argument4 >= (byteCount / interval + 1) * interval;
+
+            byteCount += e.Argument4;
+
+            if (showMessage)
+                Console.WriteLine("{0:N0} bytes of data have been processed so far...", byteCount);
         }
 
         private static void parser_ReceivedDataFrame(object sender, EventArgs<IDataFrame> e)
@@ -136,19 +183,23 @@ namespace ProtocolTester
 
             // Print information each time we receive 60 frames (every 2 seconds for 30 frames per second)
             // Also check to assure the DataFrame has at least one Cell
-            if ((frameCount % 60 == 0) && (dataFrame.Cells.Count > 0))
+            if (frameCount % 60 == 0)
             {
-                IDataCell device = dataFrame.Cells[0];
                 Console.WriteLine("Received {0} data frames so far...", frameCount);
-                Console.WriteLine("    Last frequency: {0}Hz", device.FrequencyValue.Frequency);
 
-                for (int x = 0; x < device.PhasorValues.Count; x++)
+                if (dataFrame.Cells.Count > 0)
                 {
-                    Console.WriteLine("PMU {0} Phasor {1} Angle = {2}", device.IDCode, x, device.PhasorValues[x].Angle);
-                    Console.WriteLine("PMU {0} Phasor {1} Magnitude = {2}", device.IDCode, x, device.PhasorValues[x].Magnitude);
-                }
+                    IDataCell device = dataFrame.Cells[0];
+                    Console.WriteLine("    Last frequency: {0}Hz", device.FrequencyValue.Frequency);
 
-                Console.WriteLine("    Last Timestamp: {0}", device.GetStatusFlagsMeasurement().Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                    for (int x = 0; x < device.PhasorValues.Count; x++)
+                    {
+                        Console.WriteLine("PMU {0} Phasor {1} Angle = {2}", device.IDCode, x, device.PhasorValues[x].Angle);
+                        Console.WriteLine("PMU {0} Phasor {1} Magnitude = {2}", device.IDCode, x, device.PhasorValues[x].Magnitude);
+                    }
+
+                    Console.WriteLine("    Last Timestamp: {0}", device.GetStatusFlagsMeasurement().Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                }
 
                 if ((object)concentrator != null)
                     Console.WriteLine(concentrator.Status);
@@ -177,9 +228,14 @@ namespace ProtocolTester
         private static void parser_ConnectionEstablished(object sender, EventArgs e)
         {
             // Notify the user when the connection is established
-            Console.WriteLine("Initiating {0} {1} based connection...",
+            Console.WriteLine("Established {0} {1} based connection...",
                 parser.PhasorProtocol.GetFormattedProtocolName(),
                 parser.TransportProtocol.ToString().ToUpper());
+        }
+
+        static void parser_ConnectionTerminated(object sender, EventArgs e)
+        {
+            Console.WriteLine("Connection terminated.");
         }
 
         private static void parser_ConnectionAttempt(object sender, EventArgs e)
