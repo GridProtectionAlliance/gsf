@@ -2473,13 +2473,10 @@ namespace GSF.TimeSeries
                 {
                     try
                     {
-                        string configuration = string.Format("--archiveLocation=\" {0} \" --reportLocation=\" {1} \" --title=\" {2} \" --company=\" {3} \" " +
-                            "--level4threshold=\" {4} \" --level3threshold=\" {5} \" --level4alias=\" {6} \" --level3alias=\" {7} \" --idleReportLifetime=\" {8} \"",
-                            FilePath.GetDirectoryName(completenessReportingProcess.ArchiveFilePath).Replace("\"", "\\\""),
-                            completenessReportingProcess.ReportLocation.Replace("\"", "\\\""), completenessReportingProcess.Title.Replace("\"", "\\\""),
-                            completenessReportingProcess.Company.Replace("\"", "\\\""), completenessReportingProcess.Level4Threshold,
-                            completenessReportingProcess.Level3Threshold, completenessReportingProcess.Level4Alias.Replace("\"", "\\\""),
-                            completenessReportingProcess.Level3Alias.Replace("\"", "\\\""), completenessReportingProcess.IdleReportLifetime);
+                        string configuration = string.Format(
+                            "{0} --idleReportLifetime=\" {1} \"",
+                            completenessReportingProcess.GetArguments(),
+                            completenessReportingProcess.IdleReportLifetime);
 
                         SendResponse(requestInfo, true, configuration);
                     }

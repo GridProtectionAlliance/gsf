@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  03/05/2014 - Stephen C. Wills
 //       Generated original version of source code.
+//  04/29/2015 - J. Ritchie Carroll
+//       Added report e-mail parameters.
 //
 //******************************************************************************************************
 
@@ -60,6 +62,10 @@ namespace GSF.TimeSeries
         private string m_level4Alias;
         private string m_level3Alias;
         private double m_idleReportLifetime;
+        private bool m_enableReportEmail;
+        private string m_smtpServer;
+        private string m_fromAddress;
+        private string m_toAddresses;
 
         #endregion
 
@@ -82,6 +88,10 @@ namespace GSF.TimeSeries
             m_level4Alias = "Good";
             m_level3Alias = "Fair";
             m_idleReportLifetime = 14.0D;
+            m_enableReportEmail = false;
+            m_smtpServer = "localhost";
+            m_fromAddress = "reports@acme.com";
+            m_toAddresses = "wile.e.coyote@acme.com";
         }
 
         #endregion
@@ -255,6 +265,66 @@ namespace GSF.TimeSeries
             }
         }
 
+        /// <summary>
+        /// Gets or sets flag to enable e-mailing of reports.
+        /// </summary>
+        public bool EnableReportEmail
+        {
+            get
+            {
+                return m_enableReportEmail;
+            }
+            set
+            {
+                m_enableReportEmail = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets SMTP server to use when e-mailing reports.
+        /// </summary>
+        public string SmtpServer
+        {
+            get
+            {
+                return m_smtpServer;
+            }
+            set
+            {
+                m_smtpServer = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the "from" address to use when e-mailing reports.
+        /// </summary>
+        public string FromAddress
+        {
+            get
+            {
+                return m_fromAddress;
+            }
+            set
+            {
+                m_fromAddress = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the comma separated "to" addresses to use when e-mailing reports. 
+        /// </summary>
+        public string ToAddresses
+        {
+            get
+            {
+                return m_toAddresses;
+            }
+            set
+            {
+                m_toAddresses = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -351,6 +421,10 @@ namespace GSF.TimeSeries
             settings.Add("Level4Alias", m_level4Alias, "Alias for the level 4 category.");
             settings.Add("Level3Alias", m_level3Alias, "Alias for the level 3 category.");
             settings.Add("IdleReportLifetime", m_idleReportLifetime, "The minimum lifetime of a report since the last time it was accessed, in days.");
+            settings.Add("EnableReportEmail", m_enableReportEmail, "Set to true to enable daily e-mailing of reports.");
+            settings.Add("SmtpServer", m_smtpServer, "The SMTP relay server from which to send e-mails.");
+            settings.Add("FromAddress", m_fromAddress, "The from address for the report e-mails.");
+            settings.Add("ToAddresses", m_toAddresses, "Comma separated list of destination addresses for the report e-mails.");
 
             ArchiveFilePath = settings["ArchiveFilePath"].ValueAs(m_archiveFilePath);
             ReportLocation = settings["ReportLocation"].ValueAs(m_reportLocation);
@@ -361,6 +435,10 @@ namespace GSF.TimeSeries
             Level4Alias = settings["Level4Alias"].ValueAs(m_level4Alias);
             Level3Alias = settings["Level3Alias"].ValueAs(m_level3Alias);
             IdleReportLifetime = settings["IdleReportLifetime"].ValueAs(m_idleReportLifetime);
+            EnableReportEmail = settings["EnableReportEmail"].ValueAsBoolean();
+            SmtpServer = settings["SmtpServer"].ValueAs(m_smtpServer);
+            FromAddress = settings["FromAddress"].ValueAs(m_fromAddress);
+            ToAddresses = settings["ToAddresses"].ValueAs(m_toAddresses);
         }
 
         /// <summary>
@@ -387,6 +465,10 @@ namespace GSF.TimeSeries
             settings["Level4Alias", true].Update(m_level4Alias);
             settings["Level3Alias", true].Update(m_level3Alias);
             settings["IdleReportLifetime", true].Update(m_idleReportLifetime);
+            settings["EnableReportEmail", true].Update(m_enableReportEmail);
+            settings["SmtpServer", true].Update(m_smtpServer);
+            settings["FromAddress", true].Update(m_fromAddress);
+            settings["ToAddresses", true].Update(m_toAddresses);
             config.Save();
         }
 
@@ -430,13 +512,50 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets the command line arguments for the reporting process.
         /// </summary>
-        private string GetArguments(DateTime reportDate)
+        public string GetArguments()
         {
-            return string.Format("--archiveLocation=\" {0} \" --reportLocation=\" {1} \" --title=\" {2} \" --company=\" {3} \" " +
-                "--reportDate=\" {4:yyyy-MM-dd} \" --level4threshold=\" {5} \" --level3threshold=\" {6} \" --level4alias=\" {7} \" " +
-                "--level3alias=\" {8} \"", FilePath.GetDirectoryName(m_archiveFilePath).Replace("\"", "\\\""),
-                m_reportLocation.Replace("\"", "\\\""), m_title.Replace("\"", "\\\""), m_company.Replace("\"", "\\\""), reportDate,
-                m_level4Threshold, m_level3Threshold, m_level4Alias.Replace("\"", "\\\""), m_level3Alias.Replace("\"", "\\\""));
+            return string.Format(
+                 "--archiveLocation=\" {0} \" " +
+                 "--reportLocation=\" {1} \" " +
+                 "--title=\" {2} \" " +
+                 "--company=\" {3} \" " +
+                 "--level4threshold=\" {4} \" " +
+                 "--level3threshold=\" {5} \" " +
+                 "--level4alias=\" {6} \" " +
+                 "--level3alias=\" {7} \"",
+                 FilePath.GetDirectoryName(ArchiveFilePath).Replace("\"", "\\\""),
+                 ReportLocation.Replace("\"", "\\\""),
+                 Title.Replace("\"", "\\\""),
+                 Company.Replace("\"", "\\\""),
+                 Level4Threshold,
+                 Level3Threshold,
+                 Level4Alias.Replace("\"", "\\\""),
+                 Level3Alias.Replace("\"", "\\\""));
+        }
+
+        /// <summary>
+        /// Gets the command line arguments for the reporting process for a given report date.
+        /// </summary>
+        public string GetArguments(DateTime reportDate)
+        {
+            string arguments = string.Format(
+                "{0} " +
+                "--reportDate=\" {1:yyyy-MM-dd} \"",
+                GetArguments(),
+                reportDate);
+
+            if (EnableReportEmail)
+                arguments = string.Format(
+                    "{0} " +
+                    "--smtpServer=\" {1} \" " +
+                    "--fromAddress=\" {2} \" " +
+                    "--toAddresses=\" {3} \"",
+                    arguments,
+                    SmtpServer,
+                    FromAddress,
+                    ToAddresses);
+
+            return arguments;
         }
 
         /// <summary>

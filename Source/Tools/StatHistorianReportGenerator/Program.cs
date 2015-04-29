@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  02/10/2014 - Stephen C. Wills
 //       Generated original version of source code.
+//  04/29/2015 - J. Ritchie Carroll
+//       Added report e-mailing options.
 //
 //******************************************************************************************************
 
@@ -26,6 +28,7 @@ using System.IO;
 using System.Windows.Forms;
 using GSF.Console;
 using GSF.IO;
+using GSF.Net.Smtp;
 
 namespace StatHistorianReportGenerator
 {
@@ -73,7 +76,7 @@ namespace StatHistorianReportGenerator
 
             string reportLocation = "";
             string reportFileName = "";
-            DateTime reportDate;
+            DateTime reportDate = DateTime.Now;
             double threshold;
 
             if (TryGetValue(args, "archiveLocation", out arg))
@@ -114,7 +117,13 @@ namespace StatHistorianReportGenerator
             if (!Directory.Exists(reportLocation))
                 Directory.CreateDirectory(reportLocation);
 
-            completenessReportGenerator.GenerateReport().Save(Path.Combine(reportLocation, reportFileName));
+            string reportFilePath = Path.Combine(reportLocation, reportFileName);
+
+            // Generate PDF report
+            completenessReportGenerator.GenerateReport().Save(reportFilePath);
+
+            // E-mail PDF report if parameters were provided
+            EmailReport(args, string.Format("{0} {1} for {2:MMMM dd, yyyy}", completenessReportGenerator.CompanyText, completenessReportGenerator.TitleText, reportDate), reportFilePath);
         }
 
         private static void GenerateCorrectnessReport()
@@ -125,7 +134,7 @@ namespace StatHistorianReportGenerator
 
             string reportLocation = "";
             string reportFileName = "";
-            DateTime reportDate;
+            DateTime reportDate = DateTime.Now;
 
             if (TryGetValue(args, "archiveLocation", out arg))
                 correctnessReportGenerator.ArchiveLocation = arg;
@@ -153,7 +162,42 @@ namespace StatHistorianReportGenerator
             if (!Directory.Exists(reportLocation))
                 Directory.CreateDirectory(reportLocation);
 
-            correctnessReportGenerator.GenerateReport().Save(Path.Combine(reportLocation, reportFileName));
+            string reportFilePath = Path.Combine(reportLocation, reportFileName);
+
+            // Generate PDF report
+            correctnessReportGenerator.GenerateReport().Save(reportFilePath);
+
+            // E-mail PDF report if parameters were provided
+            EmailReport(args, string.Format("{0} {1} for {2:MMMM dd, yyyy}", correctnessReportGenerator.CompanyText, correctnessReportGenerator.TitleText, reportDate), reportFilePath);
+        }
+
+        private static void EmailReport(Arguments args, string subject, string reportFilePath)
+        {
+            string smtpServer, fromAddress, toAddresses;
+
+            if (TryGetValue(args, "smtpServer", out smtpServer) &&
+                TryGetValue(args, "fromAddress", out fromAddress) &&
+                TryGetValue(args, "toAddresses", out toAddresses))
+            {
+                using (Mail message = new Mail(fromAddress, toAddresses, smtpServer))
+                {
+                    message.Subject = subject;
+                    message.Attachments = reportFilePath;
+                    message.IsBodyHtml = true;
+                    message.Body = string.Format(
+                        "<div>\r\n" +
+                        "The attached report requires a portable document format (PDF) reader, such as the " +
+                        "<a href=\"http://get.adobe.com/reader/\">Adobe Acrobat PDF Reader</a>.\r\n" +
+                        "</div>\r\n" +
+                        "<br><br>\r\n" +
+                        "<div>\r\n" +
+                        "<i>E-mail generated at {0:yyyy-MM-dd HH:mm:ss.fff} UTC.</i>\r\n" +
+                        "</div>",
+                        DateTime.UtcNow);
+
+                    message.Send();
+                }
+            }
         }
 
         private static bool TryGetValue(Arguments args, string arg, out string value)
