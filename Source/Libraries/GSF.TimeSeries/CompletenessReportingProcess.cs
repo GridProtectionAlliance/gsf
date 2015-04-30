@@ -77,7 +77,10 @@ namespace GSF.TimeSeries
         public CompletenessReportingProcess()
         {
             m_reportGenerationQueue = new ConcurrentQueue<DateTime>();
-            m_executeOperation = new LongSynchronizedOperation(Execute) { IsBackground = true };
+            m_executeOperation = new LongSynchronizedOperation(Execute)
+            {
+                IsBackground = true
+            };
 
             m_archiveFilePath = "Eval(statArchiveFile.FileName)";
             m_reportLocation = "Reports";
@@ -514,6 +517,9 @@ namespace GSF.TimeSeries
         /// </summary>
         public string GetArguments()
         {
+            // Because we may have a archive location like "C:\Program Files\MyPath" with quotes,
+            // the arguments below have an extra leading and trailing space around quoted values
+            // for proper parsing.
             return string.Format(
                  "--archiveLocation=\" {0} \" " +
                  "--reportLocation=\" {1} \" " +

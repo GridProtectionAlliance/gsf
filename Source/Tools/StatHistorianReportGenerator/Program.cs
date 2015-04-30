@@ -177,7 +177,10 @@ namespace StatHistorianReportGenerator
 
             if (TryGetValue(args, "smtpServer", out smtpServer) &&
                 TryGetValue(args, "fromAddress", out fromAddress) &&
-                TryGetValue(args, "toAddresses", out toAddresses))
+                TryGetValue(args, "toAddresses", out toAddresses) &&
+                smtpServer.Length > 0 &&
+                fromAddress.Length > 0 &&
+                toAddresses.Length > 0)
             {
                 using (Mail message = new Mail(fromAddress, toAddresses, smtpServer))
                 {
