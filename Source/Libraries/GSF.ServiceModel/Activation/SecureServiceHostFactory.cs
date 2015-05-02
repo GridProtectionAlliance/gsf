@@ -57,8 +57,10 @@ namespace GSF.ServiceModel.Activation
         private bool m_publishMetadata;
         private bool m_disableSecurity;
         private Type m_authorizationPolicy;
+#if !MONO
         private List<IEndpointBehavior> m_endpointBehaviors;
         private List<IServiceBehavior> m_serviceBehaviors;
+#endif
 
         #endregion
 
@@ -87,6 +89,7 @@ namespace GSF.ServiceModel.Activation
         /// <param name="protocol">Protocol used by the service.</param>
         /// <param name="address">Address of the service.</param>
         public SecureServiceHostFactory(string protocol, string address)
+#if !MONO
             : this(protocol, address, new List<IEndpointBehavior>(), new List<IServiceBehavior>())
         {
         }
@@ -99,13 +102,16 @@ namespace GSF.ServiceModel.Activation
         /// <param name="endpointBehaviors">Endpoint behaviors to be added to the created service.</param>
         /// <param name="serviceBehaviors">Service behaviors to be added to the created service.</param>
         public SecureServiceHostFactory(string protocol, string address, List<IEndpointBehavior> endpointBehaviors, List<IServiceBehavior> serviceBehaviors)
+#endif
         {
             m_protocol = protocol;
             m_address = address;
             m_publishMetadata = true;
             m_authorizationPolicy = typeof(SecurityPolicy);
+#if !MONO
             m_endpointBehaviors = endpointBehaviors;
             m_serviceBehaviors = serviceBehaviors;
+#endif
         }
 
         #endregion
@@ -160,6 +166,8 @@ namespace GSF.ServiceModel.Activation
             }
         }
 
+#if !MONO
+
         /// <summary>
         /// Gets or sets the list of endpoint behaviors added to the services created
         /// </summary>
@@ -197,6 +205,8 @@ namespace GSF.ServiceModel.Activation
                 m_serviceBehaviors = value;
             }
         }
+
+#endif
 
         #endregion
 
