@@ -44,6 +44,7 @@ using System.Windows;
 using System.Windows.Input;
 using GSF;
 using Microsoft.Win32;
+using WavSubscriptionDemo;
 
 namespace NAudioWpfDemo
 {
@@ -221,6 +222,7 @@ namespace NAudioWpfDemo
         {
             if (!isPlaying || songName != currentSong)
             {
+                Application.Current.MainWindow.Title = "Wave Subscriber - " + songName;
                 currentSong = songName;
                 waveFormRenderer.Reset();
                 audioGraph.PlayStream(songName);
