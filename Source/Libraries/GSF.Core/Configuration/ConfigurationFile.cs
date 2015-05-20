@@ -415,8 +415,8 @@ namespace GSF.Configuration
         private void ExecuteConfigurationSave()
         {
             ConfigurationSaveMode saveMode = m_saveMode;
-            m_configuration.Save(saveMode, m_forceSave);
             m_userConfiguration.Save(saveMode == ConfigurationSaveMode.Full);
+            m_configuration.Save(saveMode, m_forceSave);
             m_forceSave = false;
 
             try
