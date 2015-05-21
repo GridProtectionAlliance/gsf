@@ -212,7 +212,17 @@ namespace GSF.Configuration
             set
             {
                 // Continue only if values are different.
-                string currentValue = DecryptValue(GetRawValue());
+                string currentValue;
+
+                try
+                {
+                    currentValue = DecryptValue(GetRawValue());
+                }
+                catch (ConfigurationErrorsException)
+                {
+                    // Clear value if it fails to decrypt, updating anyway
+                    currentValue = string.Empty;
+                }
 
                 if (value.ToNonNullString().Equals(currentValue))
                     return;
@@ -337,7 +347,18 @@ namespace GSF.Configuration
             {
                 // Re-encrypt the existing value with the new key. This is done because the value gets encrypted,
                 // if specified, with the default crypto key when the value is set during instantiation.
-                string decryptedValue = Value;
+                string decryptedValue;
+
+                try
+                {
+                    decryptedValue = Value;
+                }
+                catch (ConfigurationErrorsException)
+                {
+                    // Clear value if it fails to decrypt
+                    decryptedValue = string.Empty;
+                }
+
                 m_cryptoKey = cryptoKey;
                 Value = decryptedValue;
                 Modified = true;
