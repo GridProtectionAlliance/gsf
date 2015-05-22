@@ -46,6 +46,7 @@ namespace UpdateWAVMetaData
             CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
             systemSettings.Add("NodeID", Guid.NewGuid().ToString(), "Unique Node ID");
             Guid nodeID = systemSettings["NodeID"].ValueAs<Guid>();
+            bool useMemoryCache = systemSettings["UseMemoryCache"].ValueAsBoolean(false);
             string connectionString = systemSettings["ConnectionString"].Value;
             string nodeIDQueryString = null;
             string parameterizedQuery;
@@ -91,7 +92,7 @@ namespace UpdateWAVMetaData
                 {
                     WaveFile sourceWave;
                     string fileName = FilePath.GetFileName(sourceFileName);
-                    char[] invalidChars = new[] { '\'', '[', ']', '(', ')', ',', '-', '.' };
+                    char[] invalidChars = { '\'', '[', ']', '(', ')', ',', '-', '.' };
 
                     Console.WriteLine("Loading metadata for \"{0}\"...\r\n", fileName);
                     sourceWave = WaveFile.Load(sourceFileName, false);
@@ -113,7 +114,7 @@ namespace UpdateWAVMetaData
                             "connectionString", "enabled");
 
                         // Insert new device record
-                        connection.ExecuteNonQuery(parameterizedQuery, acronym, name, protocolID, sourceWave.SampleRate, 1000000, string.Format("wavFileName={0}; connectOnDemand=true; outputSourceIDs={1}", FilePath.GetAbsolutePath(sourceFileName), acronym), database.Bool(true));
+                        connection.ExecuteNonQuery(parameterizedQuery, acronym, name, protocolID, sourceWave.SampleRate, 1000000, string.Format("wavFileName={0}; connectOnDemand=true; outputSourceIDs={1}; memoryCache={2}", FilePath.GetAbsolutePath(sourceFileName), acronym, useMemoryCache), database.Bool(true));
                         int deviceID = Convert.ToInt32(connection.ExecuteScalar(database.ParameterizedQueryString("SELECT ID FROM Device WHERE Acronym = {0}", "acronym"), acronym));
                         string pointTag;
 

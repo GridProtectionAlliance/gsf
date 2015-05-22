@@ -23,6 +23,8 @@
 //       into TimeSeriesFramework.
 //  12/13/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  05/21/2015 - J. Ritchie Carroll
+//       Added ability to cache WAV file into memory for tests with disk I/O limitations
 //
 //******************************************************************************************************
 
@@ -33,6 +35,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using GSF;
+using GSF.IO;
 using GSF.Media;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -53,11 +56,11 @@ namespace WavInputAdapter
         private const long GapThreshold = Ticks.PerSecond;
 
         // Fields
-        private WaveDataReader m_data;
+        private WaveDataReader m_dataReader;
+        private BlockAllocatedMemoryStream m_dataCache;
         private long m_dataIndex;
         private int m_channels;
         private int m_sampleRate;
-        private int m_numSamples;
         private TimeSpan m_audioLength;
         private long m_startTime;
         private bool m_disposed;
@@ -83,6 +86,21 @@ namespace WavInputAdapter
         Description("The amount of time, in seconds, needed to recover from a back log."),
         DefaultValue(DefaultRecoveryDelay)]
         public double RecoveryDelay
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if WAV file should be cached in memory.
+        /// </summary>
+        /// <remarks>
+        /// Useful for situations where disk I/O can be a bottleneck.
+        /// </remarks>
+        [ConnectionStringParameter,
+        Description("Flag that determines if WAV file should be cached in memory. This can be useful for situations where disk I/O can be a bottleneck. Note that this will occupy RAM for entire file size - be cautious."),
+        DefaultValue(false)]
+        public bool MemoryCache
         {
             get;
             set;
@@ -160,6 +178,21 @@ namespace WavInputAdapter
                 throw new ArgumentException("wavFileName is missing from settings - Example: wavFileName=Bohemian Rhapsody.wav");
 
             WavFileName = setting;
+
+            if (settings.TryGetValue("memoryCache", out setting))
+                MemoryCache = setting.ParseBoolean();
+
+            // Attempt to parse WAV file info during initialization, if this fails - no need to load adapter
+            WaveFile fileInfo = WaveFile.Load(WavFileName, false);
+
+            m_channels = fileInfo.Channels;
+            m_sampleRate = fileInfo.SampleRate;
+            m_audioLength = fileInfo.AudioLength;
+
+            if (m_channels > OutputMeasurements.Length)
+                throw new ArgumentException(string.Format("Not enough output measurements ({0}) defined for the number of channels in the WAV file ({1})", OutputMeasurements.Length, m_channels));
+
+            OnStatusMessage("Ready to play \"{0}\" with {1} channels...", Path.GetFileName(WavFileName), m_channels);
         }
 
         /// <summary>
@@ -167,18 +200,8 @@ namespace WavInputAdapter
         /// </summary>
         protected override void AttemptConnection()
         {
-            WaveFile fileInfo = WaveFile.Load(WavFileName, false);
-
-            m_channels = fileInfo.Channels;
-            m_sampleRate = fileInfo.SampleRate;
-            m_numSamples = fileInfo.DataChunk.ChunkSize / fileInfo.BlockAlignment;
-            m_audioLength = fileInfo.AudioLength;
-
-            m_data = WaveDataReader.FromFile(WavFileName);
+            m_dataReader = OpenWaveDataReader();
             m_dataIndex = 0;
-
-            //if (file.Channels != OutputMeasurements.Length)
-            //    throw new ArgumentException(string.Format("The number of channels in the WAV file must match the number of output measurements. Channels: {0}, Measurements: {1}", file.Channels, OutputMeasurements.Length));
 
             m_startTime = DateTime.UtcNow.Ticks;
 
@@ -192,12 +215,12 @@ namespace WavInputAdapter
         /// </summary>
         protected override void AttemptDisconnection()
         {
-            if (m_data != null)
+            if ((object)m_dataReader != null)
             {
-                m_data.Close();
-                m_data.Dispose();
+                m_dataReader.Close();
+                m_dataReader.Dispose();
+                m_dataReader = null;
             }
-            m_data = null;
         }
 
         /// <summary>
@@ -212,12 +235,15 @@ namespace WavInputAdapter
                 {
                     if (disposing)
                     {
-                        if (m_data != null)
+                        if ((object)m_dataReader != null)
                         {
-                            m_data.Close();
-                            m_data.Dispose();
+                            m_dataReader.Close();
+                            m_dataReader.Dispose();
+                            m_dataReader = null;
                         }
-                        m_data = null;
+
+                        if ((object)m_dataCache != null)
+                            m_dataCache.Dispose();
                     }
                 }
                 finally
@@ -235,14 +261,15 @@ namespace WavInputAdapter
         /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
         public override string GetShortStatus(int maxLength)
         {
+            if (!Enabled || !IsConnected)
+                return string.Format("Streaming for \"{0}\" is paused...", Path.GetFileName(WavFileName)).CenterText(maxLength);
+
             TimeSpan time = Ticks.FromSeconds(m_dataIndex / (double)m_sampleRate);
-            return string.Format("Streaming {0} at time {1} / {2} - {3:0.00%}.", Path.GetFileName(WavFileName), time.ToString(@"m\:ss"), m_audioLength.ToString(@"m\:ss"), time.TotalSeconds / m_audioLength.TotalSeconds);
+            return string.Format("Streaming \"{0}\" at time {1} / {2} - {3:0.00%}.", Path.GetFileName(WavFileName), time.ToString(@"m\:ss"), m_audioLength.ToString(@"m\:ss"), time.TotalSeconds / m_audioLength.TotalSeconds).CenterText(maxLength);
         }
 
-        // Generates new measurements since the last time this was called.
         private void ProcessMeasurements()
         {
-            // Declare the variables use in this method.
             List<IMeasurement> measurements = new List<IMeasurement>((int)(Ticks.ToSeconds(GapThreshold) * m_sampleRate * m_channels * 1.1D));
             LittleBinaryValue[] sample;
 
@@ -252,11 +279,11 @@ namespace WavInputAdapter
                 {
                     SpinWait spinner = new SpinWait();
 
-                    // Determine what time it is now.
+                    // Determine what time it is now
                     long now = DateTime.UtcNow.Ticks;
 
                     // Assign a timestamp to the next sample based on its location
-                    // in the file relative to the other samples in the file.
+                    // in the file relative to the other samples in the file
                     long timestamp = m_startTime + (m_dataIndex * Ticks.PerSecond / m_sampleRate);
 
                     if (now - timestamp > GapThreshold)
@@ -271,31 +298,27 @@ namespace WavInputAdapter
                     // we catch up to the current time.
                     while (timestamp < now)
                     {
-                        sample = m_data.GetNextSample();
+                        sample = m_dataReader.GetNextSample();
 
-                        // If the sample is null, we've reached the end of the file.
-                        // Close and reopen it, resetting the data index and start time.
+                        // If the sample is null, we've reached the end of the file - close and reopen,
+                        // resetting the data index and start time
                         if (sample == null)
                         {
-                            m_data.Close();
-                            m_data.Dispose();
+                            m_dataReader.Close();
+                            m_dataReader.Dispose();
 
-                            m_data = WaveDataReader.FromFile(WavFileName);
+                            m_dataReader = OpenWaveDataReader();
                             m_dataIndex = 0;
 
                             m_startTime = timestamp;
-                            sample = m_data.GetNextSample();
+                            sample = m_dataReader.GetNextSample();
                         }
 
-                        // Create new measurements, one for each channel,
-                        // and add them to the measurements list.
+                        // Create new measurements, one for each channel, and add them to the measurements list
                         for (int i = 0; i < m_channels; i++)
-                        {
                             measurements.Add(Measurement.Clone(OutputMeasurements[i], sample[i].ConvertToType(TypeCode.Double), timestamp));
-                        }
 
-                        // Update the data index and recalculate
-                        // the assigned timestamp for the next sample.
+                        // Update the data index and recalculate the assigned timestamp for the next sample
                         m_dataIndex++;
                         timestamp = m_startTime + (m_dataIndex * Ticks.PerSecond / m_sampleRate);
                     }
@@ -314,6 +337,27 @@ namespace WavInputAdapter
                     OnProcessException(ex);
                 }
             }
+        }
+
+        // Open wave reader - either from memory loaded WAV or directly from disk
+        private WaveDataReader OpenWaveDataReader()
+        {
+            if (MemoryCache)
+            {
+                if ((object)m_dataCache == null)
+                {
+                    m_dataCache = new BlockAllocatedMemoryStream();
+
+                    using (FileStream stream = File.OpenRead(WavFileName))
+                        stream.CopyTo(m_dataCache);
+                }
+
+                m_dataCache.Position = 0;
+
+                return WaveDataReader.FromStream(m_dataCache);
+            }
+
+            return WaveDataReader.FromFile(WavFileName);
         }
 
         #endregion

@@ -161,9 +161,7 @@ namespace GSF.Media
                 sample = new LittleBinaryValue[m_channels];
 
                 for (int i = 0; i < m_channels; i++)
-                {
                     sample[i] = new LittleBinaryValue(m_sampleType, buffer, i * m_sampleSize, m_sampleSize);
-                }
 
                 return sample;
             }
@@ -216,7 +214,7 @@ namespace GSF.Media
         /// <param name="waveStream">The WAV stream. The data in the stream must include all headers that would be present in a WAV file.</param>
         /// <returns>The WaveData instance created from a WAV stream.</returns>
         /// <remarks>
-        /// This method is similar to the <see cref="WaveDataReader.WaveDataReader(Stream)"/> constructor,
+        /// This method is similar to the <see cref="WaveDataReader(Stream)"/> constructor,
         /// however this method will first search the stream for a format chunk in order to set
         /// up the WaveData object with proper format info.
         /// </remarks>
@@ -233,6 +231,7 @@ namespace GSF.Media
                 switch (riffChunk.TypeID)
                 {
                     case RiffHeaderChunk.RiffTypeID:
+                        // ReSharper disable once ObjectCreationAsStatement
                         new RiffHeaderChunk(riffChunk, waveStream, "WAVE");
                         break;
                     case WaveFormatChunk.RiffTypeID:
