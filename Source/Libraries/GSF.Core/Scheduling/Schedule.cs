@@ -102,6 +102,7 @@ namespace GSF.Scheduling
         // Fields
         private string m_name;
         private string m_description;
+        private bool m_useLocalTime;
         private SchedulePart m_minutePart;
         private SchedulePart m_hourPart;
         private SchedulePart m_dayPart;
@@ -148,10 +149,23 @@ namespace GSF.Scheduling
         /// <param name="rule">Rule formated in UNIX crontab syntax.</param>
         /// <param name="description">Description of defined schedule.</param>
         public Schedule(string name, string rule, string description)
+            : this(name, rule, description, false)
         {
-            this.Name = name;
-            this.Rule = rule;
-            this.Description = description;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Schedule"/> class.
+        /// </summary>
+        /// <param name="name">Name of the schedule.</param>
+        /// <param name="rule">Rule formated in UNIX crontab syntax.</param>
+        /// <param name="description">Description of defined schedule.</param>
+        /// <param name="useLocalTime">Flag that determines whether to use local time for schedule.</param>
+        public Schedule(string name, string rule, string description, bool useLocalTime)
+        {
+            Name = name;
+            Rule = rule;
+            Description = description;
+            UseLocalTime = useLocalTime;
         }
 
         #endregion
@@ -235,6 +249,21 @@ namespace GSF.Scheduling
             {
                 if (!string.IsNullOrEmpty(value))
                     m_description = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a flag that determines whether the scheduler uses local time or UTC time for scheduling.
+        /// </summary>
+        public bool UseLocalTime
+        {
+            get
+            {
+                return m_useLocalTime;
+            }
+            set
+            {
+                m_useLocalTime = value;
             }
         }
 
@@ -344,7 +373,7 @@ namespace GSF.Scheduling
         /// <returns>true if the <see cref="Schedule"/> is due at the present system time; otherwise false.</returns>
         public bool IsDue()
         {
-            DateTime currentDateTime = DateTime.Now;
+            DateTime currentDateTime = m_useLocalTime ? DateTime.Now : DateTime.UtcNow;
 
             if (m_minutePart.Matches(currentDateTime) &&
                 m_hourPart.Matches(currentDateTime) &&

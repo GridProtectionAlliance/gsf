@@ -57,6 +57,7 @@ using System.Drawing;
 using System.Text;
 using System.Threading;
 using System.Timers;
+using GSF.Collections;
 using GSF.Configuration;
 using Timer = System.Timers.Timer;
 
@@ -427,14 +428,20 @@ namespace GSF.Scheduling
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+
                 settings.Clear();
+
                 lock (m_schedules)
                 {
                     foreach (Schedule schedule in m_schedules)
                     {
-                        settings[schedule.Name, true].Update(schedule.Rule, schedule.Description);
+                        if (schedule.UseLocalTime)
+                            settings[schedule.Name, true].Update(string.Format("rule={0}; useLocalTime={1}", schedule.Rule, schedule.UseLocalTime), schedule.Description);
+                        else
+                            settings[schedule.Name, true].Update(schedule.Rule, schedule.Description);
                     }
                 }
+
                 config.Save();
             }
         }
@@ -460,6 +467,9 @@ namespace GSF.Scheduling
                 {
                     if ((object)setting != null && !string.IsNullOrWhiteSpace(setting.Name))
                     {
+                        string value = setting.Value.ToNonNullNorWhiteSpace("* * * * *");
+                        Dictionary<string, string> lookup = value.ParseKeyValuePairs();
+
                         // Add the schedule if it doesn't exist or update it otherwise with data from the config file.
                         Schedule existingSchedule = FindSchedule(setting.Name);
 
@@ -468,15 +478,16 @@ namespace GSF.Scheduling
                             // Schedule doesn't exist, so we'll add it.
                             lock (m_schedules)
                             {
-                                m_schedules.Add(new Schedule(setting.Name, setting.Value.ToNonNullNorWhiteSpace("* * * * *"), setting.Description.ToNonNullString()));
+                                m_schedules.Add(new Schedule(setting.Name, lookup.GetOrDefault("rule", key => value), setting.Description.ToNonNullString(), lookup.GetOrDefault("useLocalTime").ParseBoolean()));
                             }
                         }
                         else
                         {
                             // Schedule exists, so we'll update it.
                             existingSchedule.Name = setting.Name;
-                            existingSchedule.Rule = setting.Value.ToNonNullNorWhiteSpace("* * * * *");
+                            existingSchedule.Rule = lookup.GetOrDefault("rule", key => value);
                             existingSchedule.Description = setting.Description.ToNonNullString();
+                            existingSchedule.UseLocalTime = lookup.GetOrDefault("useLocalTime").ParseBoolean();
                         }
                     }
                 }

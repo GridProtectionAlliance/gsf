@@ -2328,7 +2328,7 @@ namespace GSF.TimeSeries
             }
             else
             {
-                DateTime now = DateTime.Now;
+                DateTime now = DateTime.UtcNow;
                 DateTime today = DateTime.Parse(now.ToString("yyyy-MM-dd"));
 
                 CompletenessReportingProcess completenessReportingProcess;
@@ -2398,7 +2398,7 @@ namespace GSF.TimeSeries
             }
             else
             {
-                DateTime now = DateTime.Now;
+                DateTime now = DateTime.UtcNow;
                 DateTime today = DateTime.Parse(now.ToString("yyyy-MM-dd"));
 
                 CompletenessReportingProcess completenessReportingProcess;

@@ -122,6 +122,38 @@ namespace GSF.Collections
         }
 
         /// <summary>
+        /// Attempts to get the value for the given key and returns the default value instead if the key does not exist in the <see cref="IDictionary{TKey, TValue}"/>.
+        /// </summary>
+        /// <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
+        /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
+        /// <param name="dictionary">The dictionary to check for the given key.</param>
+        /// <param name="key">The key to be checked for the existence of a value.</param>
+        /// <returns>The value of the key in the dictionary or the default value if no such value exists.</returns>
+        public static TValue GetOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key)
+        {
+            return dictionary.GetOrDefault(key, k => default(TValue));
+        }
+
+        /// <summary>
+        /// Attempts to get the value for the given key and returns the default value instead if the key does not exist in the <see cref="IDictionary{TKey, TValue}"/>.
+        /// </summary>
+        /// <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
+        /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
+        /// <param name="dictionary">The dictionary to check for the given key.</param>
+        /// <param name="key">The key to be checked for the existence of a value.</param>
+        /// <param name="defaultValueFactory">The function used to generate the default value if no value exists for the given key.</param>
+        /// <returns>The value of the key in the dictionary or the default value if no such value exists.</returns>
+        public static TValue GetOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, Func<TKey, TValue> defaultValueFactory)
+        {
+            TValue value;
+
+            if (!dictionary.TryGetValue(key, out value))
+                value = defaultValueFactory(key);
+
+            return value;
+        }
+
+        /// <summary>
         /// Adds a key/value pair to the <see cref="IDictionary{TKey, TValue}"/> if the key does not already exist.
         /// </summary>
         /// <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
