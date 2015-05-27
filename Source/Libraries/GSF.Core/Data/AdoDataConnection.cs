@@ -553,12 +553,19 @@ namespace GSF.Data
         [StringFormatMethod("sqlFormat")]
         public T ExecuteScalar<T>(T defaultValue, int timeout, string sqlFormat, params object[] parameters)
         {
-            object value = ExecuteScalar(timeout, sqlFormat, parameters);
+            Type type;
+            object value;
+
+            value = ExecuteScalar(timeout, sqlFormat, parameters);
 
             if (value == DBNull.Value)
                 return defaultValue;
 
-            return (T)Convert.ChangeType(value, typeof(T));
+            type = typeof(T);
+
+            // Nullable types cannot be used in type conversion, but we can use Nullable.GetUnderlyingType()
+            // to determine whether the type is nullable and convert to the underlying type instead
+            return (T)Convert.ChangeType(value, Nullable.GetUnderlyingType(type) ?? type);
         }
 
         /// <summary>

@@ -2134,8 +2134,12 @@ namespace GSF.Data
         /// <returns>The value, of type T, of the <see cref="DataColumn"/> specified by columnName.</returns>
         public static T ConvertField<T>(this DataRow row, string field)
         {
+            Type type = typeof(T);
             object value = row.Field<object>(field);
-            return (T)Convert.ChangeType(value, typeof(T));
+
+            // Nullable types cannot be used in type conversion, but we can use Nullable.GetUnderlyingType()
+            // to determine whether the type is nullable and convert to the underlying type instead
+            return (T)Convert.ChangeType(value, Nullable.GetUnderlyingType(type) ?? type);
         }
 
         /// <summary>
