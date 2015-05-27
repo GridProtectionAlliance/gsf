@@ -35,7 +35,7 @@
     <authors>$author$</authors>
     <description>$description$</description>
     <projectUrl>https://gsf.codeplex.com/</projectUrl>
-    <licenseUrl>http://opensource.org/licenses/EPL-1.0</licenseUrl>
+    <licenseUrl>http://www.opensource.org/licenses/MIT</licenseUrl>
     <iconUrl>https://s3.amazonaws.com/cloud.ohloh.net/attachments/70294/GSF64x64_med.png</iconUrl>
     <tags>Synchrophasor Streaming Data Exchange Protocol Parser Generator PMU PDC Phasor Concentrator IEEE C37118 1344 IEC 61850 FNET Macrodyne SELFastMessage Library</tags>
     <dependencies>
