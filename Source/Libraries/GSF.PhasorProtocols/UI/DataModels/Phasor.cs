@@ -483,6 +483,12 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
+                if (phasor.SourceIndex == 0)
+                    phasor.SourceIndex = database.ExecuteScalar<int>("SELECT MAX(SourceIndex) FROM Phasor WHERE DeviceID = {0}", phasor.DeviceID) + 1;
+
+                if (database.ExecuteScalar<int>("SELECT COUNT(*) FROM Phasor WHERE ID <> {0} AND DeviceID = {1} AND SourceIndex = {2}", phasor.ID, phasor.DeviceID, phasor.SourceIndex) > 0)
+                    throw new InvalidOperationException("Phasor source index must be unique per device.");
+
                 if (phasor.ID == 0)
                 {
                     query = database.ParameterizedQueryString("INSERT INTO Phasor (DeviceID, Label, Type, Phase, SourceIndex, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
