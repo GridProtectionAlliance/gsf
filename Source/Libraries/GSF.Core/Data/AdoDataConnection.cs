@@ -243,6 +243,39 @@ namespace GSF.Data
         {
         }
 
+        /// <summary>
+        /// Creates and opens a new <see cref="AdoDataConnection"/> from specified <paramref name="connectionString"/>,
+        /// <paramref name="connectionType"/>, and <paramref name="adapterType"/>.
+        /// </summary>
+        /// <param name="connectionString">Database specific ADO connection string.</param>
+        /// <param name="connectionType">The ADO type used to establish the database connection.</param>
+        /// <param name="adapterType">The ADO type used to load data into <see cref="DataTable"/>s.</param>
+        public AdoDataConnection(string connectionString, Type connectionType, Type adapterType)
+        {
+            if (!typeof(IDbConnection).IsAssignableFrom(connectionType))
+                throw new ArgumentException("Connection type must implement the IDbConnection interface", "connectionType");
+
+            if (!typeof(IDbDataAdapter).IsAssignableFrom(adapterType))
+                throw new ArgumentException("Adapter type must implement the IDbDataAdapter interface", "adapterType");
+
+            m_connectionString = connectionString;
+            m_connectionType = connectionType;
+            m_adapterType = adapterType;
+            m_databaseType = GetDatabaseType();
+
+            try
+            {
+                // Open ADO.NET provider connection
+                m_connection = (IDbConnection)Activator.CreateInstance(m_connectionType);
+                m_connection.ConnectionString = m_connectionString;
+                m_connection.Open();
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Failed to open ADO data connection, verify \"ConnectionString\": " + ex.Message, ex);
+            }
+        }
+
         // Creates a new AdoDataConnection, optionally opening connection.
         private AdoDataConnection(string connectionString, string dataProviderString, bool openConnection)
         {
@@ -849,6 +882,33 @@ namespace GSF.Data
         {
             if ((object)s_configuredConnections != null)
                 s_configuredConnections.Clear();
+        }
+
+        /// <summary>
+        /// Generates a data provider string for the given connection type and adapter type.
+        /// </summary>
+        /// <param name="connectionType">The type used to establish a connection to the database.</param>
+        /// <param name="adapterType">The type used to load data from the database into a data table.</param>
+        /// <returns></returns>
+        public static string ToDataProviderString(Type connectionType, Type adapterType)
+        {
+            Dictionary<string, string> settings;
+
+            if (!typeof(IDbConnection).IsAssignableFrom(connectionType))
+                throw new ArgumentException("Connection type must implement the IDbConnection interface", "connectionType");
+
+            if (!typeof(IDbDataAdapter).IsAssignableFrom(adapterType))
+                throw new ArgumentException("Adapter type must implement the IDbDataAdapter interface", "adapterType");
+
+            if (connectionType.Assembly != adapterType.Assembly)
+                throw new InvalidOperationException("Data provider string requires that connection type and adapter type reside in the same assembly");
+
+            settings = new Dictionary<string, string>();
+            settings["AssemblyName"] = connectionType.Assembly.FullName;
+            settings["ConnectionType"] = connectionType.FullName;
+            settings["AdapterType"] = adapterType.FullName;
+
+            return settings.JoinKeyValuePairs();
         }
 
         #endregion
