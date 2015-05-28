@@ -84,7 +84,7 @@ namespace DataSubscriberTest
             throttledInfo.FilterExpression = connectionString.ToString();
 
             // Initialize subscriber
-            subscriber.ConnectionString = "server=localhost:6177";
+            subscriber.ConnectionString = "server=tcp://127.0.0.1:9898; useZeroMQChannel=true";
             subscriber.OperationalModes |= OperationalModes.UseCommonSerializationFormat | OperationalModes.CompressMetadata | OperationalModes.CompressSignalIndexCache | OperationalModes.CompressPayloadData;
             subscriber.Initialize();
 

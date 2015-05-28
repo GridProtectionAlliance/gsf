@@ -129,9 +129,18 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="ZeroMQ">
+      <HintPath>..\..\Dependencies\ZeroMQ\ZeroMQ.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClientBase.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ZeroMQServer.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ZeroMQClient.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="FileClient.cs">
@@ -174,6 +183,7 @@
     <Compile Include="UdpServer.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="ZeroMQTransportProtocol.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ClientBase.bmp" />

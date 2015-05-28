@@ -405,6 +405,7 @@ namespace GSF.TimeSeries.Transport
         private readonly LongSynchronizedOperation m_registerStatisticsOperation;
         private IClient m_commandChannel;
         private UdpClient m_dataChannel;
+        private bool m_useZeroMQChannel;
         private LocalConcentrator m_localConcentrator;
         private Timer m_dataStreamMonitor;
         private long m_commandChannelConnectionAttempts;
@@ -556,6 +557,21 @@ namespace GSF.TimeSeries.Transport
             set
             {
                 m_securityMode = value ? SecurityMode.Gateway : SecurityMode.None;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if ZeroMQ should be used for command channel communications.
+        /// </summary>
+        public bool UseZeroMQChannel
+        {
+            get
+            {
+                return m_useZeroMQChannel;
+            }
+            set
+            {
+                m_useZeroMQChannel = value;
             }
         }
 
@@ -1311,6 +1327,13 @@ namespace GSF.TimeSeries.Transport
             if (settings.TryGetValue("securityMode", out setting))
                 m_securityMode = (SecurityMode)Enum.Parse(typeof(SecurityMode), setting);
 
+            if (settings.TryGetValue("useZeroMQChannel", out setting))
+                m_useZeroMQChannel = setting.ParseBoolean();
+
+            // TODO: Remove this exception when CURVE is enabled in GSF ZeroMQ library
+            if (m_useZeroMQChannel && m_securityMode == SecurityMode.TLS)
+                throw new ArgumentException("CURVE security settings are not yet available for GSF ZeroMQ client channel.");
+
             // Settings specific to Gateway security
             if (m_securityMode == SecurityMode.Gateway)
             {
@@ -1420,42 +1443,78 @@ namespace GSF.TimeSeries.Transport
 
             if (m_securityMode != SecurityMode.TLS)
             {
-                // Create a new TCP client
-                TcpClient commandChannel = new TcpClient();
+                if (m_useZeroMQChannel)
+                {
+                    // Create a new ZeroMQ Dealer
+                    ZeroMQClient commandChannel = new ZeroMQClient();
 
-                // Initialize default settings
-                commandChannel.PayloadAware = true;
-                commandChannel.PersistSettings = false;
-                commandChannel.MaxConnectionAttempts = 1;
-                commandChannel.ReceiveBufferSize = bufferSize;
-                commandChannel.SendBufferSize = bufferSize;
+                    // Initialize default settings
+                    commandChannel.PersistSettings = false;
+                    commandChannel.MaxConnectionAttempts = 1;
+                    commandChannel.ReceiveBufferSize = bufferSize;
+                    commandChannel.SendBufferSize = bufferSize;
 
-                // Assign command channel client reference and attach to needed events
-                CommandChannel = commandChannel;
+                    // Assign command channel client reference and attach to needed events
+                    CommandChannel = commandChannel;
+                }
+                else
+                {
+                    // Create a new TCP client
+                    TcpClient commandChannel = new TcpClient();
+
+                    // Initialize default settings
+                    commandChannel.PayloadAware = true;
+                    commandChannel.PersistSettings = false;
+                    commandChannel.MaxConnectionAttempts = 1;
+                    commandChannel.ReceiveBufferSize = bufferSize;
+                    commandChannel.SendBufferSize = bufferSize;
+
+                    // Assign command channel client reference and attach to needed events
+                    CommandChannel = commandChannel;
+                }
             }
             else
             {
-                // Create a new TLS client and certificate checker
-                TlsClient commandChannel = new TlsClient();
-                SimpleCertificateChecker certificateChecker = new SimpleCertificateChecker();
+                if (m_useZeroMQChannel)
+                {
+                    // Create a new ZeroMQ Dealer with CURVE security enabled
+                    ZeroMQClient commandChannel = new ZeroMQClient();
 
-                // Set up certificate checker
-                certificateChecker.TrustedCertificates.Add(new X509Certificate2(FilePath.GetAbsolutePath(m_remoteCertificate)));
-                certificateChecker.ValidPolicyErrors = m_validPolicyErrors;
-                certificateChecker.ValidChainFlags = m_validChainFlags;
+                    // Initialize default settings
+                    commandChannel.PersistSettings = false;
+                    commandChannel.MaxConnectionAttempts = 1;
+                    commandChannel.ReceiveBufferSize = bufferSize;
+                    commandChannel.SendBufferSize = bufferSize;
 
-                // Initialize default settings
-                commandChannel.PayloadAware = true;
-                commandChannel.PersistSettings = false;
-                commandChannel.MaxConnectionAttempts = 1;
-                commandChannel.CertificateFile = FilePath.GetAbsolutePath(m_localCertificate);
-                commandChannel.CheckCertificateRevocation = m_checkCertificateRevocation;
-                commandChannel.CertificateChecker = certificateChecker;
-                commandChannel.ReceiveBufferSize = bufferSize;
-                commandChannel.SendBufferSize = bufferSize;
+                    // TODO: Parse certificate and pass keys to ZeroMQClient for CURVE security
 
-                // Assign command channel client reference and attach to needed events
-                CommandChannel = commandChannel;
+                    // Assign command channel client reference and attach to needed events
+                    CommandChannel = commandChannel;
+                }
+                else
+                {
+                    // Create a new TLS client and certificate checker
+                    TlsClient commandChannel = new TlsClient();
+                    SimpleCertificateChecker certificateChecker = new SimpleCertificateChecker();
+
+                    // Set up certificate checker
+                    certificateChecker.TrustedCertificates.Add(new X509Certificate2(FilePath.GetAbsolutePath(m_remoteCertificate)));
+                    certificateChecker.ValidPolicyErrors = m_validPolicyErrors;
+                    certificateChecker.ValidChainFlags = m_validChainFlags;
+
+                    // Initialize default settings
+                    commandChannel.PayloadAware = true;
+                    commandChannel.PersistSettings = false;
+                    commandChannel.MaxConnectionAttempts = 1;
+                    commandChannel.CertificateFile = FilePath.GetAbsolutePath(m_localCertificate);
+                    commandChannel.CheckCertificateRevocation = m_checkCertificateRevocation;
+                    commandChannel.CertificateChecker = certificateChecker;
+                    commandChannel.ReceiveBufferSize = bufferSize;
+                    commandChannel.SendBufferSize = bufferSize;
+
+                    // Assign command channel client reference and attach to needed events
+                    CommandChannel = commandChannel;
+                }
             }
 
             // Get proper connection string - either from specified command channel or from base connection string

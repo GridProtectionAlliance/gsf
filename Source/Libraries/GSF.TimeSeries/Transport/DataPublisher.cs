@@ -639,6 +639,7 @@ namespace GSF.TimeSeries.Transport
 
         // Fields
         private IServer m_commandChannel;
+        private bool m_useZeroMQChannel;
         private CertificatePolicyChecker m_certificateChecker;
         private Dictionary<X509Certificate, DataRow> m_subscriberIdentities;
         private ConcurrentDictionary<Guid, ClientConnection> m_clientConnections;
@@ -780,6 +781,24 @@ namespace GSF.TimeSeries.Transport
             set
             {
                 m_securityMode = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if ZeroMQ should be used for command channel communications.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the flag that determines if command channel should use ZeroMQ."),
+        DefaultValue(false)]
+        public bool UseZeroMQChannel
+        {
+            get
+            {
+                return m_useZeroMQChannel;
+            }
+            set
+            {
+                m_useZeroMQChannel = value;
             }
         }
 
@@ -1402,6 +1421,13 @@ namespace GSF.TimeSeries.Transport
             if (settings.TryGetValue("securityMode", out setting))
                 m_securityMode = (SecurityMode)Enum.Parse(typeof(SecurityMode), setting);
 
+            if (settings.TryGetValue("useZeroMQChannel", out setting))
+                m_useZeroMQChannel = setting.ParseBoolean();
+
+            // TODO: Remove this exception when CURVE is enabled in GSF ZeroMQ library
+            if (m_useZeroMQChannel && m_securityMode == SecurityMode.TLS)
+                throw new ArgumentException("CURVE security settings are not yet available for GSF ZeroMQ server channel.");
+
             // Determine the type of metadata to force upon clients who do not specify
             if (settings.TryGetValue("forceReceiveMetadataFlags", out setting) && Enum.TryParse(setting, true, out m_forceReceiveMetadataFlags))
                 m_forceReceiveMetadataFlags &= (OperationalModes.ReceiveInternalMetadata | OperationalModes.ReceiveExternalMetadata);
@@ -1431,42 +1457,80 @@ namespace GSF.TimeSeries.Transport
 
             if (m_securityMode != SecurityMode.TLS)
             {
-                // Create a new TCP server
-                TcpServer commandChannel = new TcpServer();
+                if (m_useZeroMQChannel)
+                {
+                    // Create a new ZeroMQ Router
+                    ZeroMQServer commandChannel = new ZeroMQServer();
 
-                // Initialize default settings
-                commandChannel.SettingsCategory = Name.Replace("!", "").ToLower();
-                commandChannel.ConfigurationString = "port=6165";
-                commandChannel.PayloadAware = true;
-                commandChannel.PersistSettings = true;
+                    // Initialize default settings
+                    commandChannel.SettingsCategory = Name.Replace("!", "").ToLower();
+                    commandChannel.ConfigurationString = "server=tcp://*:6165";
+                    commandChannel.PersistSettings = true;
 
-                // Assign command channel client reference and attach to needed events
-                CommandChannel = commandChannel;
+                    // Assign command channel client reference and attach to needed events
+                    CommandChannel = commandChannel;
+                }
+                else
+                {
+                    // Create a new TCP server
+                    TcpServer commandChannel = new TcpServer();
+
+                    // Initialize default settings
+                    commandChannel.SettingsCategory = Name.Replace("!", "").ToLower();
+                    commandChannel.ConfigurationString = "port=6165";
+                    commandChannel.PayloadAware = true;
+                    commandChannel.PersistSettings = true;
+
+                    // Assign command channel client reference and attach to needed events
+                    CommandChannel = commandChannel;
+                }
             }
             else
             {
-                // Create a new TLS server
-                TlsServer commandChannel = new TlsServer();
+                if (m_useZeroMQChannel)
+                {
+                    // Create a new ZeroMQ Router with CURVE security enabled
+                    ZeroMQServer commandChannel = new ZeroMQServer();
 
-                // Create certificate checker
-                m_certificateChecker = new CertificatePolicyChecker();
-                m_subscriberIdentities = new Dictionary<X509Certificate, DataRow>();
-                UpdateCertificateChecker();
+                    // Initialize default settings
+                    commandChannel.SettingsCategory = Name.Replace("!", "").ToLower();
+                    commandChannel.ConfigurationString = "server=tcp://*:6165";
+                    commandChannel.PersistSettings = true;
 
-                // Initialize default settings
-                commandChannel.SettingsCategory = Name.Replace("!", "").ToLower();
-                commandChannel.ConfigurationString = "port=6165";
-                commandChannel.PayloadAware = true;
-                commandChannel.PersistSettings = true;
-                commandChannel.RequireClientCertificate = true;
-                commandChannel.CertificateChecker = m_certificateChecker;
+                    // TODO: Parse certificate and pass keys to ZeroMQServer for CURVE security
 
-                // Assign command channel client reference and attach to needed events
-                CommandChannel = commandChannel;
+                    // Assign command channel client reference and attach to needed events
+                    CommandChannel = commandChannel;
+                }
+                else
+                {
+                    // Create a new TLS server
+                    TlsServer commandChannel = new TlsServer();
+
+                    // Create certificate checker
+                    m_certificateChecker = new CertificatePolicyChecker();
+                    m_subscriberIdentities = new Dictionary<X509Certificate, DataRow>();
+                    UpdateCertificateChecker();
+
+                    // Initialize default settings
+                    commandChannel.SettingsCategory = Name.Replace("!", "").ToLower();
+                    commandChannel.ConfigurationString = "port=6165";
+                    commandChannel.PayloadAware = true;
+                    commandChannel.RequireClientCertificate = true;
+                    commandChannel.CertificateChecker = m_certificateChecker;
+                    commandChannel.PersistSettings = true;
+
+                    // Assign command channel client reference and attach to needed events
+                    CommandChannel = commandChannel;
+                }
             }
 
-            // Initialize TCP server (loads config file settings)
+            // Initialize TCP server - this will load persisted settings
             m_commandChannel.Initialize();
+
+            // Allow user to override persisted settings by specifying a command channel setting
+            if (settings.TryGetValue("commandChannel", out setting) && !string.IsNullOrWhiteSpace(setting))
+                m_commandChannel.ConfigurationString = setting;
 
             // Start cipher key rotation timer when encrypting payload
             if (m_encryptPayload && (object)m_cipherKeyRotationTimer != null)
@@ -1711,6 +1775,7 @@ namespace GSF.TimeSeries.Transport
         [AdapterCommand("Gets the local certificate currently in use by the data publisher.", "Administrator", "Editor")]
         public virtual byte[] GetLocalCertificate()
         {
+            // TODO: Also validate ZeroMQServer with CURVE security enabled
             TlsServer commandChannel;
 
             commandChannel = m_commandChannel as TlsServer;
@@ -1730,6 +1795,7 @@ namespace GSF.TimeSeries.Transport
         [AdapterCommand("Imports a certificate to the trusted certificates path.", "Administrator", "Editor")]
         public virtual string ImportCertificate(string fileName, byte[] certificateData)
         {
+            // TODO: Also validate ZeroMQServer with CURVE security enabled
             TlsServer commandChannel;
             string trustedCertificatesPath;
             string filePath;
@@ -2297,6 +2363,7 @@ namespace GSF.TimeSeries.Transport
         // Attempts to get the subscriber for the given client based on that client's X.509 certificate.
         private void TryFindClientDetails(ClientConnection connection)
         {
+            // TODO: Also validate ZeroMQServer with CURVE security enabled
             TlsServer commandChannel = m_commandChannel as TlsServer;
             TransportProvider<TlsServer.TlsSocket> client;
             X509Certificate remoteCertificate;
@@ -3815,6 +3882,7 @@ namespace GSF.TimeSeries.Transport
             Guid clientID = e.Argument;
             ClientConnection connection = new ClientConnection(this, clientID, m_commandChannel);
 
+            // TODO: Also validate ZeroMQServer with CURVE security enabled
             if (m_securityMode == SecurityMode.TLS)
             {
                 TryFindClientDetails(connection);

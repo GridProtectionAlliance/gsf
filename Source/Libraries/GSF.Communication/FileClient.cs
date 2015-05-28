@@ -538,6 +538,7 @@ namespace GSF.Communication
             m_connectionThread.Name = "GSF.Communication.FileClient.OpenFile()";
 #else
             m_connectionThread = new Thread(OpenFile);
+            m_connectionThread.IsBackground = true;
 #endif
             m_connectionThread.Start();
 

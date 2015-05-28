@@ -53,6 +53,8 @@ namespace DataPublisherTest
             publisher.UseBaseTimeOffsets = true;
             publisher.AllowPayloadCompression = true;
             publisher.AllowSynchronizedSubscription = true;
+            publisher.UseZeroMQChannel = true;
+            publisher.ConnectionString = "commandChannel={server=tcp://*:9898}";
             publisher.Initialize();
 
             // Start publisher

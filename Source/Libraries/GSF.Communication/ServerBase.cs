@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  ServerBase.cs - Gbtc
 //
-//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2015, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -49,6 +49,8 @@
 //       server instance using reflection.
 //  12/13/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  05/22/2015 - J. Ritchie Carroll
+//       Added ZeroMQ to the create IServer options.
 //
 //******************************************************************************************************
 
@@ -277,7 +279,7 @@ namespace GSF.Communication
             : this()
         {
             m_transportProtocol = transportProtocol;
-            this.ConfigurationString = configurationString;
+            ConfigurationString = configurationString;
         }
 
         #endregion
@@ -653,6 +655,9 @@ namespace GSF.Communication
         /// </remarks>
         public void Initialize()
         {
+            if (m_initialized)
+                return;
+
             LoadSettings();         // Load settings from the config file.
             m_initialized = true;   // Initialize only once.
         }
@@ -1270,6 +1275,9 @@ namespace GSF.Communication
                         break;
                     case "udp":
                         server = new UdpServer(settings.ToString());
+                        break;
+                    case "zeromq":
+                        server = new ZeroMQServer(settings.ToString());
                         break;
                     default:
                         throw new ArgumentException("Transport protocol \'" + protocol + "\' is not valid");

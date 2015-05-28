@@ -44,7 +44,6 @@ using System.Windows;
 using System.Windows.Input;
 using GSF;
 using Microsoft.Win32;
-using WavSubscriptionDemo;
 
 namespace NAudioWpfDemo
 {
@@ -90,12 +89,18 @@ namespace NAudioWpfDemo
 
         public AudioGraph AudioGraph
         {
-            get { return audioGraph; }
+            get
+            {
+                return audioGraph;
+            }
         }
 
         public string ConnectionUri
         {
-            get { return audioGraph.ConnectionUri; }
+            get
+            {
+                return audioGraph.ConnectionUri;
+            }
             set
             {
                 audioGraph.ConnectionUri = value;
@@ -107,7 +112,10 @@ namespace NAudioWpfDemo
 
         public List<string> SongList
         {
-            get { return songList; }
+            get
+            {
+                return songList;
+            }
             set
             {
                 songList = value;
@@ -119,7 +127,10 @@ namespace NAudioWpfDemo
 
         public string SongName
         {
-            get { return songName; }
+            get
+            {
+                return songName;
+            }
             set
             {
                 songName = value;
@@ -134,7 +145,10 @@ namespace NAudioWpfDemo
 
         public bool EnableCompression
         {
-            get { return audioGraph.EnableCompression; }
+            get
+            {
+                return audioGraph.EnableCompression;
+            }
             set
             {
                 if (audioGraph.EnableCompression != value)
@@ -149,7 +163,10 @@ namespace NAudioWpfDemo
 
         public bool EnableEncryption
         {
-            get { return audioGraph.EnableEncryption; }
+            get
+            {
+                return audioGraph.EnableEncryption;
+            }
             set
             {
                 if (audioGraph.EnableEncryption != value)
@@ -164,7 +181,10 @@ namespace NAudioWpfDemo
 
         public bool IPv6Enabled
         {
-            get { return audioGraph.IPv6Enabled; }
+            get
+            {
+                return audioGraph.IPv6Enabled;
+            }
             set
             {
                 if (audioGraph.IPv6Enabled != value)
@@ -173,6 +193,24 @@ namespace NAudioWpfDemo
 
                     if (PropertyChanged != null)
                         PropertyChanged(this, new PropertyChangedEventArgs("IPv6Enabled"));
+                }
+            }
+        }
+
+        public bool UseZeroMQChannel
+        {
+            get
+            {
+                return audioGraph.UseZeroMQChannel;
+            }
+            set
+            {
+                if (audioGraph.UseZeroMQChannel != value)
+                {
+                    audioGraph.UseZeroMQChannel = value;
+
+                    if (PropertyChanged != null)
+                        PropertyChanged(this, new PropertyChangedEventArgs("UseZeroMQChannel"));
                 }
             }
         }
@@ -207,11 +245,31 @@ namespace NAudioWpfDemo
             }
         }
 
-        public ICommand PlayStreamCommand { get; private set; }
-        public ICommand CaptureCommand { get; private set; }
-        public ICommand PlayCapturedAudioCommand { get; private set; }
-        public ICommand SaveCapturedAudioCommand { get; private set; }
-        public ICommand StopCommand { get; private set; }
+        public ICommand PlayStreamCommand
+        {
+            get;
+            private set;
+        }
+        public ICommand CaptureCommand
+        {
+            get;
+            private set;
+        }
+        public ICommand PlayCapturedAudioCommand
+        {
+            get;
+            private set;
+        }
+        public ICommand SaveCapturedAudioCommand
+        {
+            get;
+            private set;
+        }
+        public ICommand StopCommand
+        {
+            get;
+            private set;
+        }
 
         public void ConnectToStreamSource()
         {

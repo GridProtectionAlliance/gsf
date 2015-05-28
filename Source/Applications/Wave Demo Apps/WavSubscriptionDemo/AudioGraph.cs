@@ -54,26 +54,50 @@ namespace NAudioWpfDemo
 
         public event EventHandler<MaxSampleEventArgs> MaximumCalculated
         {
-            add { aggregator.MaximumCalculated += value; }
-            remove { aggregator.MaximumCalculated -= value; }
+            add
+            {
+                aggregator.MaximumCalculated += value;
+            }
+            remove
+            {
+                aggregator.MaximumCalculated -= value;
+            }
         }
 
         public event EventHandler<EventArgs<List<string>>> GotSongList
         {
-            add { playback.GotSongList += value; }
-            remove { playback.GotSongList -= value; }
+            add
+            {
+                playback.GotSongList += value;
+            }
+            remove
+            {
+                playback.GotSongList -= value;
+            }
         }
 
         public event EventHandler<EventArgs<int, int, float, double>> StatsUpdated
         {
-            add { playback.StatsUpdated += value; }
-            remove { playback.StatsUpdated -= value; }
+            add
+            {
+                playback.StatsUpdated += value;
+            }
+            remove
+            {
+                playback.StatsUpdated -= value;
+            }
         }
 
         public event EventHandler<EventArgs<PlaybackState, string>> PlaybackStateChanged
         {
-            add { playback.StateChanged += value; }
-            remove { playback.StateChanged -= value; }
+            add
+            {
+                playback.StateChanged += value;
+            }
+            remove
+            {
+                playback.StateChanged -= value;
+            }
         }
 
         public AudioGraph()
@@ -91,40 +115,89 @@ namespace NAudioWpfDemo
 
         public int NotificationsPerSecond
         {
-            get { return aggregator.NotificationCount; }
-            set { aggregator.NotificationCount = value; }
+            get
+            {
+                return aggregator.NotificationCount;
+            }
+            set
+            {
+                aggregator.NotificationCount = value;
+            }
         }
 
         public string ConnectionUri
         {
-            get { return playback.ConnectionUri; }
-            set { playback.ConnectionUri = value; }
+            get
+            {
+                return playback.ConnectionUri;
+            }
+            set
+            {
+                playback.ConnectionUri = value;
+            }
         }
 
         public bool EnableCompression
         {
-            get { return playback.EnableCompression;  }
-            set { playback.EnableCompression = value; }
+            get
+            {
+                return playback.EnableCompression;
+            }
+            set
+            {
+                playback.EnableCompression = value;
+            }
         }
 
         public bool EnableEncryption
         {
-            get { return playback.EnableEncryption; }
-            set { playback.EnableEncryption = value; }
+            get
+            {
+                return playback.EnableEncryption;
+            }
+            set
+            {
+                playback.EnableEncryption = value;
+            }
         }
 
         public bool IPv6Enabled
         {
-            get { return playback.IPv6Enabled; }
-            set { playback.IPv6Enabled = value; }
+            get
+            {
+                return playback.IPv6Enabled;
+            }
+            set
+            {
+                playback.IPv6Enabled = value;
+            }
+        }
+
+        public bool UseZeroMQChannel
+        {
+            get
+            {
+                return playback.UseZeroMQChannel;
+            }
+            set
+            {
+                playback.UseZeroMQChannel = value;
+            }
         }
 
         public int PlaybackSampleRate
         {
-            get { return playback.SampleRate; }
+            get
+            {
+                return playback.SampleRate;
+            }
         }
 
-        public bool HasCapturedAudio { get; private set; }
+        public bool HasCapturedAudio
+        {
+            get;
+            private set;
+        }
 
         public void ConnectToStreamSource()
         {

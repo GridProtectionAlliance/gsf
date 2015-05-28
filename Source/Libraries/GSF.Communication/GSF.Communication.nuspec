@@ -31,14 +31,14 @@
   <metadata>
     <id>GSF.Communication</id>
     <title>Grid Solutions Framework Communications Library</title>
-    <summary>Library of interface based client/server communication components for TLS, TCP, UDP, Multicast, serial and files.</summary>
+    <summary>Library of interface based client/server communication components for TLS, TCP, UDP, Multicast, serial, files and ZeroMQ.</summary>
     <version>$version$</version>
     <authors>$author$</authors>
     <description>$description$</description>
     <projectUrl>https://gsf.codeplex.com/</projectUrl>
-    <licenseUrl>http://opensource.org/licenses/EPL-1.0</licenseUrl>
+    <licenseUrl>http://www.opensource.org/licenses/MIT</licenseUrl>
     <iconUrl>https://s3.amazonaws.com/cloud.ohloh.net/attachments/70294/GSF64x64_med.png</iconUrl>
-    <tags>Communications TCP UDP Multicast TLS SSL Serial Client Server</tags>
+    <tags>Communications TCP UDP Multicast TLS SSL ZeroMQ Serial Client Server</tags>
     <dependencies>
       <dependency id="GSF.Core" version="" />
     </dependencies>

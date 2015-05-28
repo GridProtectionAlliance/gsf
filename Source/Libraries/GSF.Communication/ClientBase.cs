@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  ClientBase.cs - Gbtc
 //
-//  Copyright © 2013, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2015, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -54,6 +54,8 @@
 //  04/26/2012 - Pinal C. Patel
 //       Updated Create() static method to apply settings from the connection string to the created 
 //       client instance using reflection.
+//  05/22/2015 - J. Ritchie Carroll
+//       Added ZeroMQ to the create IClient options.
 //
 //******************************************************************************************************
 
@@ -252,7 +254,7 @@ namespace GSF.Communication
             : this()
         {
             m_transportProtocol = transportProtocol;
-            this.ConnectionString = connectionString;
+            ConnectionString = connectionString;
         }
 
         #endregion
@@ -583,6 +585,9 @@ namespace GSF.Communication
         /// </remarks>
         public void Initialize()
         {
+            if (m_initialized)
+                return;
+
             LoadSettings();         // Load settings from the config file.
             m_initialized = true;   // Initialize only once.
         }
@@ -1123,6 +1128,9 @@ namespace GSF.Communication
                         break;
                     case "serial":
                         client = new SerialClient(settings.ToString());
+                        break;
+                    case "zeromq":
+                        client = new ZeroMQClient(settings.ToString());
                         break;
                     default:
                         throw new ArgumentException(protocol + " is not a valid transport protocol");
