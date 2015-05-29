@@ -56,7 +56,7 @@ using ZeroMQ;
 namespace GSF.Communication
 {
     /// <summary>
-    /// Represents a ZeroMQ-based communication client.
+    /// Represents a ZeroMQ DEALER style socket as a communication client.
     /// </summary>
     public class ZeroMQClient : ClientBase
     {
@@ -92,7 +92,6 @@ namespace GSF.Communication
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectionHandle;
         private Thread m_connectionThread;
-        private IPStack m_ipStack;
         private int m_maxSendQueueSize;
         private int m_maxReceiveQueueSize;
         private readonly object m_sendLock;
@@ -375,7 +374,7 @@ namespace GSF.Communication
                     m_zeroMQClient.Provider.SetOption(ZSocketOption.RCVTIMEO, -1);
                     m_zeroMQClient.Provider.SetOption(ZSocketOption.LINGER, 0);
                     m_zeroMQClient.Provider.SetOption(ZSocketOption.RECONNECT_IVL, -1);
-                    m_zeroMQClient.Provider.IPv6 = (m_ipStack == IPStack.IPv6);
+                    m_zeroMQClient.Provider.IPv6 = (Transport.GetDefaultIPStack() == IPStack.IPv6);
                     m_zeroMQClient.Provider.Connect(ServerUri);
 
                     m_connectionHandle.Set();
@@ -593,8 +592,8 @@ namespace GSF.Communication
         {
             m_connectData = connectionString.ParseKeyValuePairs();
 
-            // Derive desired IP stack based on specified "interface" setting, adding setting if it's not defined
-            m_ipStack = Transport.GetInterfaceIPStack(m_connectData);
+            // Make sure "interface" setting exists
+            Transport.GetInterfaceIPStack(m_connectData);
 
             // Check if 'server' property is missing.
             if (!m_connectData.ContainsKey("server"))
@@ -660,14 +659,14 @@ namespace GSF.Communication
         /// <param name="ex">Exception to send to <see cref="ClientBase.SendDataException"/> event.</param>
         protected override void OnSendDataException(Exception ex)
         {
-            if (ex is ThreadAbortException)
+            if (ZeroMQServer.IsThreadAbortException(ex))
                 return;
 
             if (CurrentState != ClientState.Disconnected)
             {
-                ZException zex = ex as ZException;
+                ZException zmqex = ex as ZException;
 
-                if ((object)zex != null && zex.ErrNo == ZError.EAGAIN)
+                if ((object)zmqex != null && zmqex.ErrNo == ZError.EAGAIN)
                     ThreadPool.QueueUserWorkItem(state => Disconnect());
                 else
                     base.OnSendDataException(ex);
@@ -680,7 +679,7 @@ namespace GSF.Communication
         /// <param name="ex">Exception to send to <see cref="ClientBase.ReceiveDataException"/> event.</param>
         protected override void OnReceiveDataException(Exception ex)
         {
-            if (ex is ThreadAbortException)
+            if (ZeroMQServer.IsThreadAbortException(ex))
                 return;
 
             if (CurrentState != ClientState.Disconnected)
@@ -693,7 +692,7 @@ namespace GSF.Communication
         /// <param name="ex">Exception to send to <see cref="ClientBase.ConnectionException"/> event.</param>
         protected override void OnConnectionException(Exception ex)
         {
-            if (ex is ThreadAbortException)
+            if (ZeroMQServer.IsThreadAbortException(ex))
                 return;
 
             base.OnConnectionException(ex);
@@ -705,7 +704,7 @@ namespace GSF.Communication
         /// <param name="ex">Disconnect exception to send to <see cref="ClientBase.SendDataException"/> event.</param>
         protected virtual void OnDisconnectException(Exception ex)
         {
-            if (ex is ThreadAbortException)
+            if (ZeroMQServer.IsThreadAbortException(ex))
                 return;
 
             OnSendDataException(new InvalidOperationException(string.Format("Disconnect exception: {0}", ex.Message), ex));
@@ -717,8 +716,9 @@ namespace GSF.Communication
         /// <param name="ex">Exception to send to <see cref="ClientBase.UnhandledUserException"/> event.</param>
         protected override void OnUnhandledUserException(Exception ex)
         {
-            if (ex is ThreadAbortException)
+            if (ZeroMQServer.IsThreadAbortException(ex))
                 return;
+
             base.OnUnhandledUserException(ex);
         }
 

@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:demo="clr-namespace:WavSubscriptionDemo"
         xmlns:naudio="clr-namespace:NAudioWpfDemo"
-        Title="Wave Subscriber" Height="350" Width="600" MinHeight="350" MinWidth="500">
+        Title="Wave Subscriber" Height="350" Width="600" MinHeight="350" MinWidth="500" Icon="Resources/music_green.ico">
     
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />

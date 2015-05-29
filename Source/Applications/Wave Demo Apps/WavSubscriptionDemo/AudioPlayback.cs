@@ -399,7 +399,7 @@ namespace NAudioWpfDemo
             subscriber.DataStartTime += DataSubscriber_DataStartTime;
             subscriber.NewMeasurements += DataSubscriber_NewMeasurements;
 
-            subscriber.ConnectionString = string.Format("server={0}; interface={1};{2} localCertificate={3}; remoteCertificate={4}; validPolicyErrors={5}; validChainFlags={6}", server, IPv6Enabled ? "::0" : "0.0.0.0", UseZeroMQChannel ? " useZeroMQDataChannel=true;" : "", FilePath.GetAbsolutePath("Local.cer"), FilePath.GetAbsolutePath("Remote.cer"), ~SslPolicyErrors.None, ~X509ChainStatusFlags.NoError);
+            subscriber.ConnectionString = string.Format("server={0}; interface={1};{2} localCertificate={3}; remoteCertificate={4}; validPolicyErrors={5}; validChainFlags={6}", server, IPv6Enabled ? "::0" : "0.0.0.0", UseZeroMQChannel ? " useZeroMQChannel=true;" : "", FilePath.GetAbsolutePath("Local.cer"), FilePath.GetAbsolutePath("Remote.cer"), ~SslPolicyErrors.None, ~X509ChainStatusFlags.NoError);
             subscriber.SecurityMode = EnableEncryption ? SecurityMode.TLS : SecurityMode.None;
 
             if (!EnableCompression)

@@ -58,7 +58,7 @@ using ZeroMQ;
 namespace GSF.Communication
 {
     /// <summary>
-    /// Represents a TCP-based communication server.
+    /// Represents a ZeroMQ ROUTER style socket as a communication server.
     /// </summary>
     public class ZeroMQServer : ServerBase
     {
@@ -94,7 +94,7 @@ namespace GSF.Communication
         /// <para>
         /// Matches the following valid input:<br/>
         /// - tcp://127.0.0.1:5959<br/>
-        /// - tcp://[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:8186<br/>
+        /// - tcp://dnsname.org:8186<br/>
         /// - pgm://224.0.0.1:6565<br/>
         /// - inproc://pipe-name<br/>
         /// </para>
@@ -109,7 +109,6 @@ namespace GSF.Communication
         private readonly ConcurrentDictionary<Guid, TransportProvider<DateTime>> m_clientInfoLookup;
         private readonly Timer m_activeClientTimer;
         private Thread m_receiveDataThread;
-        private IPStack m_ipStack;
         private int m_maxSendQueueSize;
         private int m_maxReceiveQueueSize;
         private readonly object m_sendLock;
@@ -400,6 +399,13 @@ namespace GSF.Communication
                 settings.Add("MaxReceiveQueueSize", m_maxReceiveQueueSize, "The maximum size of the receive queue before payloads are dumped from the queue.");
                 MaxSendQueueSize = settings["MaxSendQueueSize"].ValueAs(m_maxSendQueueSize);
                 MaxReceiveQueueSize = settings["MaxReceiveQueueSize"].ValueAs(m_maxReceiveQueueSize);
+
+                // When transitioning from socket type to another, be sure to restore default values
+                if (MaxSendQueueSize == -1)
+                    MaxSendQueueSize = DefaultMaxSendQueueSize;
+
+                if (MaxReceiveQueueSize == -1)
+                    MaxReceiveQueueSize = DefaultMaxReceiveQueueSize;
             }
         }
 
@@ -463,7 +469,7 @@ namespace GSF.Communication
                 m_zeroMQServer.SetOption(ZSocketOption.RCVTIMEO, -1);
                 m_zeroMQServer.SetOption(ZSocketOption.LINGER, 0);
                 m_zeroMQServer.SetOption(ZSocketOption.RECONNECT_IVL, -1);
-                m_zeroMQServer.IPv6 = (m_ipStack == IPStack.IPv6);
+                m_zeroMQServer.IPv6 = (Transport.GetDefaultIPStack() == IPStack.IPv6);
                 m_zeroMQServer.Bind(m_configData["server"]);
 
                 // Notify that the server has been started successfully.
@@ -619,14 +625,11 @@ namespace GSF.Communication
 
                 if (m_zeroMQTransportProtocol != ZeroMQTransportProtocol.InProc && !Transport.IsPortNumberValid(port))
                     throw new ArgumentOutOfRangeException("configurationString", string.Format("Port number must be between {0} and {1}", Transport.PortRangeLow, Transport.PortRangeHigh));
-
-                // Derive desired IP stack based on any specified "interface" setting
-                m_ipStack = Transport.GetInterfaceIPStack(m_configData);
             }
             else
             {
                 // Fall back on traditional server configuration strings
-                m_ipStack = Transport.GetInterfaceIPStack(m_configData);
+                Transport.GetInterfaceIPStack(m_configData);
 
                 if (string.IsNullOrWhiteSpace(m_configData["interface"]) || m_configData["interface"].Equals("0.0.0.0", StringComparison.Ordinal))
                     m_configData["interface"] = "*";
@@ -703,14 +706,14 @@ namespace GSF.Communication
         /// <param name="ex">Exception to send to <see cref="ServerBase.SendClientDataException"/> event.</param>
         protected override void OnSendClientDataException(Guid clientID, Exception ex)
         {
-            if (ex is ThreadAbortException)
+            if (IsThreadAbortException(ex))
                 return;
 
             if (m_clientInfoLookup.ContainsKey(clientID) && CurrentState == ServerState.Running)
             {
-                ZException zex = ex as ZException;
+                ZException zmqex = ex as ZException;
 
-                if ((object)zex != null && zex.ErrNo == ZError.EAGAIN)
+                if ((object)zmqex != null && zmqex.ErrNo == ZError.EAGAIN)
                     ThreadPool.QueueUserWorkItem(state => DisconnectOne(clientID));
                 else
                     base.OnSendClientDataException(clientID, ex);
@@ -724,7 +727,7 @@ namespace GSF.Communication
         /// <param name="ex">Exception to send to <see cref="ServerBase.ReceiveClientDataException"/> event.</param>
         protected override void OnReceiveClientDataException(Guid clientID, Exception ex)
         {
-            if (ex is ThreadAbortException)
+            if (IsThreadAbortException(ex))
                 return;
 
             if (m_clientInfoLookup.ContainsKey(clientID) && CurrentState == ServerState.Running)
@@ -737,7 +740,7 @@ namespace GSF.Communication
         /// <param name="ex">The <see cref="Exception"/> encountered when connecting to the client.</param>
         protected override void OnClientConnectingException(Exception ex)
         {
-            if (ex is ThreadAbortException)
+            if (IsThreadAbortException(ex))
                 return;
 
             base.OnClientConnectingException(ex);
@@ -749,7 +752,7 @@ namespace GSF.Communication
         /// <param name="ex">Exception to send to <see cref="ServerBase.UnhandledUserException"/> event.</param>
         protected override void OnUnhandledUserException(Exception ex)
         {
-            if (ex is ThreadAbortException)
+            if (IsThreadAbortException(ex))
                 return;
 
             base.OnUnhandledUserException(ex);
@@ -775,6 +778,25 @@ namespace GSF.Communication
                 if (m_clientInfoLookup.TryRemove(client, out oldClient))
                     OnClientDisconnected(client);
             }
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        internal static bool IsThreadAbortException(Exception ex)
+        {
+            while ((object)ex != null)
+            {
+                if (ex is ThreadAbortException)
+                    return true;
+
+                ex = ex.InnerException;
+            }
+
+            return false;
         }
 
         #endregion
