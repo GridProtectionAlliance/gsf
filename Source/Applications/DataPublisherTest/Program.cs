@@ -48,7 +48,13 @@ namespace DataPublisherTest
             publisher.ProcessException += publisher_ProcessException;
             publisher.ClientConnected += publisher_ClientConnected;
 
+            //using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
+            //{
+            //    MeasurementKey.EstablishDefaultCache(database.Connection, database.AdapterType);
+
             // Initialize publisher
+            //publisher.DataMember = "ActiveMeasurements";
+            //publisher.DataSource = database.RetrieveDataSet("SELECT * FROM ActiveMeasurement");
             publisher.Name = "dataPublisher";
             publisher.UseBaseTimeOffsets = true;
             publisher.AllowPayloadCompression = true;
@@ -65,6 +71,7 @@ namespace DataPublisherTest
             Console.ReadLine();
 
             publisher.Stop();
+            //}
 
             publisher.StatusMessage -= publisher_StatusMessage;
             publisher.ProcessException -= publisher_ProcessException;
@@ -117,6 +124,7 @@ namespace DataPublisherTest
                 {
                     measurement = new Measurement
                     {
+                        //Key = MeasurementKey.LookUpOrCreate("PPA", (uint)i),
                         Key = MeasurementKey.LookUpOrCreate("DEVARCHIVE", (uint)i),
                         Value = Random.Between(-65535.0D, 65536.0D),
                         Timestamp = DateTime.UtcNow.Ticks

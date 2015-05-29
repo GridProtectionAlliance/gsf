@@ -258,7 +258,16 @@ namespace GSF.Communication
 
                 if ((object)m_zeroMQServer != null)
                 {
-                    statusBuilder.AppendFormat("              0MQ Identity: {0}", m_zeroMQServer.IdentityString);
+                    try
+                    {
+                        statusBuilder.AppendFormat("              0MQ Identity: {0}", new Guid(m_zeroMQServer.Identity));
+                    }
+                    catch
+                    {
+                        statusBuilder.AppendFormat("              0MQ Identity: {0}", m_zeroMQServer.IdentityString);
+                    }
+                    statusBuilder.AppendLine();
+                    statusBuilder.AppendFormat("         0MQ Last Endpoint: {0}", m_zeroMQServer.LastEndpoint);
                     statusBuilder.AppendLine();
                 }
 
@@ -465,9 +474,9 @@ namespace GSF.Communication
                 m_zeroMQServer.SendHighWatermark = m_maxSendQueueSize;
                 m_zeroMQServer.ReceiveHighWatermark = m_maxReceiveQueueSize;
                 m_zeroMQServer.Immediate = true;
+                m_zeroMQServer.SetOption(ZSocketOption.LINGER, 0);
                 m_zeroMQServer.SetOption(ZSocketOption.SNDTIMEO, 1000);
                 m_zeroMQServer.SetOption(ZSocketOption.RCVTIMEO, -1);
-                m_zeroMQServer.SetOption(ZSocketOption.LINGER, 0);
                 m_zeroMQServer.SetOption(ZSocketOption.RECONNECT_IVL, -1);
                 m_zeroMQServer.IPv6 = (Transport.GetDefaultIPStack() == IPStack.IPv6);
                 m_zeroMQServer.Bind(m_configData["server"]);
