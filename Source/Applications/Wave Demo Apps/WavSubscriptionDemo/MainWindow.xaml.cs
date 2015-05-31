@@ -107,6 +107,7 @@ namespace WavSubscriptionDemo
             string enableEncryption = ConfigurationManager.AppSettings["EnableEncryption"];
             string ipv6Enabled = ConfigurationManager.AppSettings["IPv6Enabled"];
             string visualization = ConfigurationManager.AppSettings["Visualization"];
+            string useZeroMQChannel = ConfigurationManager.AppSettings["UseZeroMQChannel"];
 
             if (connectionUri != null)
                 m_viewModel.ConnectionUri = connectionUri;
@@ -119,6 +120,9 @@ namespace WavSubscriptionDemo
 
             if (ipv6Enabled != null)
                 m_viewModel.IPv6Enabled = ipv6Enabled.ParseBoolean();
+
+            if (useZeroMQChannel != null)
+                m_viewModel.UseZeroMQChannel = useZeroMQChannel.ParseBoolean();
 
             SetSelectedVisualization(visualization);
         }
@@ -133,12 +137,14 @@ namespace WavSubscriptionDemo
             config.AppSettings.Settings.Remove("EnableEncryption");
             config.AppSettings.Settings.Remove("IPv6Enabled");
             config.AppSettings.Settings.Remove("Visualization");
+            config.AppSettings.Settings.Remove("UseZeroMQChannel");
 
             config.AppSettings.Settings.Add("ConnectionUri", m_viewModel.ConnectionUri);
             config.AppSettings.Settings.Add("EnableCompression", m_viewModel.EnableCompression.ToString());
             config.AppSettings.Settings.Add("EnableEncryption", m_viewModel.EnableEncryption.ToString());
             config.AppSettings.Settings.Add("IPv6Enabled", m_viewModel.IPv6Enabled.ToString());
             config.AppSettings.Settings.Add("Visualization", GetSelectedVisualizationHeaderName());
+            config.AppSettings.Settings.Add("UseZeroMQChannel", m_viewModel.UseZeroMQChannel.ToString());
             config.Save(ConfigurationSaveMode.Modified);
 
             m_viewModel.Dispose();
