@@ -92,14 +92,16 @@ namespace GSF.Communication
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Matches the following valid input:<br/>
+        /// Matches the following valid example input:<br/>
         /// - tcp://127.0.0.1:5959<br/>
+        /// - tcp://[::1]:5959<br/>
         /// - tcp://dnsname.org:8186<br/>
+        /// - pgm://[FF01:0:0:0:0:0:0:1]:6565<br/>
         /// - pgm://224.0.0.1:6565<br/>
         /// - inproc://pipe-name<br/>
         /// </para>
         /// </remarks>
-        public const string EndpointFormatRegex = @"(?<protocol>.+)\://(?<host>[^\:]+)(\:(?<port>\d+$))?";
+        public const string EndpointFormatRegex = @"(?<protocol>.+)\://(?<host>(\[.+\]|[^\:])+)(\:(?<port>\d+$))?";
 
         // Fields
         private ZSocket m_zeroMQServer;
@@ -722,7 +724,7 @@ namespace GSF.Communication
             {
                 ZException zmqex = ex as ZException;
 
-                if ((object)zmqex != null && zmqex.ErrNo == ZError.EAGAIN)
+                if ((object)zmqex != null && (zmqex.ErrNo == ZError.EAGAIN || zmqex.ErrNo == ZError.ETERM))
                     ThreadPool.QueueUserWorkItem(state => DisconnectOne(clientID));
                 else
                     base.OnSendClientDataException(clientID, ex);
