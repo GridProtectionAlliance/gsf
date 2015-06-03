@@ -355,6 +355,13 @@ namespace GSF.IO
         /// <returns>Directory information.</returns>
         public static string GetDirectoryName(string filePath)
         {
+            // Test for case where valid path does not end in directory separator, Path.GetDirectoryName assumes
+            // this is a file name - whether is exists or not :-(
+            string directoryName = AddPathSuffix(filePath);
+
+            if (Directory.Exists(directoryName))
+                return directoryName;
+
             return AddPathSuffix(Path.GetDirectoryName(filePath) ?? filePath);
         }
 
@@ -379,11 +386,10 @@ namespace GSF.IO
 
                 // Remove file name and trailing directory separator character from the file path.
                 filePath = RemovePathSuffix(GetDirectoryName(filePath));
+
                 // Keep going through the file path until all directory separator characters are removed.
                 while ((index = filePath.IndexOfAny(dirVolChars)) > -1)
-                {
                     filePath = filePath.Substring(index + 1);
-                }
 
                 return filePath;
             }
