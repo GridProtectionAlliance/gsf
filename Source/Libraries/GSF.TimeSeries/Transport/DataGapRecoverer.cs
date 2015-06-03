@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -127,6 +128,7 @@ namespace GSF.TimeSeries.Transport
         private OutageLog m_dataGapLog;
         private Timer m_dataStreamMonitor;
         private DataSet m_dataSource;
+        private string m_loggingPath;
         private string m_sourceConnectionName;
         private string m_connectionString;
         private Time m_recoveryStartDelay;
@@ -647,6 +649,17 @@ namespace GSF.TimeSeries.Transport
             if (settings.TryGetValue("useMillisecondResolution", out setting))
                 UseMillisecondResolution = setting.ParseBoolean();
 
+            // Get logging path, if any has been defined
+            if (settings.TryGetValue("loggingPath", out setting))
+            {
+                setting = FilePath.GetDirectoryName(setting);
+
+                if (Directory.Exists(setting))
+                    m_loggingPath = setting;
+                else
+                    OnStatusMessage("WARNING: Logging path \"{0}\" not found, defaulting to \"{1}\"...", setting, FilePath.GetAbsolutePath(""));
+            }
+
             if (string.IsNullOrEmpty(m_sourceConnectionName))
                 throw new NullReferenceException("Source connection name must defined - it is used to create outage log file name.");
 
@@ -665,7 +678,7 @@ namespace GSF.TimeSeries.Transport
 
             // Setup data gap outage log to persist unprocessed outages between class life-cycles
             m_dataGapLog = new OutageLog();
-            m_dataGapLog.FileName = m_sourceConnectionName + "_OutageLog.txt";
+            m_dataGapLog.FileName = GetLoggingPath(m_sourceConnectionName + "_OutageLog.txt");
             m_dataGapLog.ProcessException += Common_ProcessException;
             m_dataGapLog.Initialize();
 
@@ -888,6 +901,14 @@ namespace GSF.TimeSeries.Transport
         {
             if ((object)ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(ex));
+        }
+
+        private string GetLoggingPath(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(m_loggingPath))
+                return FilePath.GetAbsolutePath(filePath);
+
+            return Path.Combine(m_loggingPath, filePath);
         }
 
         private void TemporalSubscription_ConnectionEstablished(object sender, EventArgs e)

@@ -449,6 +449,7 @@ namespace GSF.TimeSeries.Transport
         private DateTime m_lastMetaDataRefreshTime;
         private OperationalModes m_operationalModes;
         private Encoding m_encoding;
+        private string m_loggingPath;
         private RunTimeLog m_runTimeLog;
         private bool m_dataGapRecoveryEnabled;
         private DataGapRecoverer m_dataGapRecoverer;
@@ -1523,6 +1524,17 @@ namespace GSF.TimeSeries.Transport
             else
                 m_commandChannel.ConnectionString = ConnectionString;
 
+            // Get logging path, if any has been defined
+            if (settings.TryGetValue("loggingPath", out setting))
+            {
+                setting = FilePath.GetDirectoryName(setting);
+
+                if (Directory.Exists(setting))
+                    m_loggingPath = setting;
+                else
+                    OnStatusMessage("WARNING: Logging path \"{0}\" not found, defaulting to \"{1}\"...", setting, FilePath.GetAbsolutePath(""));
+            }
+
             // Initialize data gap recovery processing, if requested
             if (settings.TryGetValue("dataGapRecovery", out setting))
             {
@@ -1546,7 +1558,7 @@ namespace GSF.TimeSeries.Transport
                     m_dataGapRecoverer = new DataGapRecoverer();
                     m_dataGapRecoverer.SourceConnectionName = Name;
                     m_dataGapRecoverer.DataSource = DataSource;
-                    m_dataGapRecoverer.ConnectionString = string.Join("; ", "autoConnect=false; synchronizeMetadata=false", dataGapSettings.JoinKeyValuePairs(), connectionSettings.JoinKeyValuePairs());
+                    m_dataGapRecoverer.ConnectionString = string.Join("; ", string.Format("autoConnect=false; synchronizeMetadata=false{0}", string.IsNullOrWhiteSpace(m_loggingPath) ? "" : "; loggingPath=" + m_loggingPath), dataGapSettings.JoinKeyValuePairs(), connectionSettings.JoinKeyValuePairs());
                     m_dataGapRecoverer.FilterExpression = this.OutputMeasurementKeys().Select(key => key.SignalID.ToString()).ToDelimitedString(';');
                     m_dataGapRecoverer.RecoveredMeasurements += m_dataGapRecoverer_RecoveredMeasurements;
                     m_dataGapRecoverer.StatusMessage += m_dataGapRecoverer_StatusMessage;
@@ -2736,7 +2748,7 @@ namespace GSF.TimeSeries.Transport
                                     if ((object)m_runTimeLog == null)
                                     {
                                         m_runTimeLog = new RunTimeLog();
-                                        m_runTimeLog.FileName = Name + "_RunTimeLog.txt";
+                                        m_runTimeLog.FileName = GetLoggingPath(Name + "_RunTimeLog.txt");
                                         m_runTimeLog.ProcessException += m_runTimeLog_ProcessException;
                                         m_runTimeLog.Initialize();
                                     }
@@ -4435,6 +4447,19 @@ namespace GSF.TimeSeries.Transport
             }
 
             m_localConcentrator = null;
+        }
+
+        /// <summary>
+        /// Gets file path for any defined logging path.
+        /// </summary>
+        /// <param name="filePath">Path to acquire within logging path.</param>
+        /// <returns>File path within any defined logging path.</returns>
+        protected string GetLoggingPath(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(m_loggingPath))
+                return FilePath.GetAbsolutePath(filePath);
+
+            return Path.Combine(m_loggingPath, filePath);
         }
 
         private void m_localConcentrator_ProcessException(object sender, EventArgs<Exception> e)
