@@ -29,6 +29,7 @@ using System.Reflection;
 using System.Text;
 using GSF;
 using GSF.Communication;
+
 //using GSF.EMAX;
 
 namespace LibraryTester
@@ -51,6 +52,23 @@ namespace LibraryTester
 
             Common.IsDefaultValue(true);            // Call to load GSF.Core
             Transport.GetDefaultIPStack();          // Call to load GSF.Communications
+
+            //Console.WriteLine(FilePath.GetAbsolutePath("Temp"));
+            //Console.WriteLine(FilePath.GetDirectoryName(FilePath.GetAbsolutePath("Temp")));
+            //Console.WriteLine(FilePath.GetDirectoryName(@"C:\"));
+            //Console.WriteLine(FilePath.GetDirectoryName(@"C:\Music"));
+            //Console.WriteLine(FilePath.GetDirectoryName(@"C:\Music\"));
+            //Console.WriteLine(FilePath.GetDirectoryName(@"C:\Music\Acrobat.wav"));
+            //Console.WriteLine(FilePath.GetDirectoryName(FilePath.GetAbsolutePath(@"C:\")));
+            //Console.WriteLine(FilePath.GetDirectoryName(FilePath.GetAbsolutePath(@"C:\Music")));
+            //Console.WriteLine(FilePath.GetDirectoryName(FilePath.GetAbsolutePath(@"C:\Music\")));
+            //Console.WriteLine(FilePath.GetDirectoryName(FilePath.GetAbsolutePath(@"C:\Music\Acrobat.wav")));
+            //Console.WriteLine(FilePath.GetValidFileName(@"C:\Music\Acrobat.wav:test~!:yadda`~'@#$%^&*()-=_+;,.<>?"".txt"));
+            //Console.WriteLine(FilePath.GetValidFilePath(@"C:\Music\Acrobat.wav:test~!:yadda`~'@#$%^&*()-=_+;,.<>?"".txt"));
+
+            //// Does song keep playing after dispose?
+            //using (SoundPlayer player = new SoundPlayer(@"C:\Music\Acrobat.wav"))
+            //    player.Play();
 
             //foreach (GetFormattedNameTest stage in Enum.GetValues(typeof(GetFormattedNameTest)).Cast<GetFormattedNameTest>())
             //{

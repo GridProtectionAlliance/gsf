@@ -245,15 +245,45 @@ namespace GSF.IO
         /// <summary>
         /// Gets a valid file name by replacing invalid file name characters with <paramref name="replaceWithCharacter"/>.
         /// </summary>
-        /// <param name="filePath">File path to validate.</param>
+        /// <param name="fileName">File name to validate.</param>
         /// <param name="replaceWithCharacter">Character to replace invalid file name characters with. Set to '\0' to remove invalid file name characters.</param>
         /// <returns>A valid file name with no invalid file name characters.</returns>
-        public static string GetValidFileName(string filePath, char replaceWithCharacter = '_')
+        /// <remarks>
+        /// This function expects a file name, not a file name with a path. To properly get a valid file path, where all directory
+        /// names and the file name are validated, use the <see cref="GetValidFilePath"/>. Calling the <see cref="GetValidFileName"/>
+        /// function will a full path will yield all directory separators replaced with the <paramref name="replaceWithCharacter"/>.
+        /// </remarks>
+        public static string GetValidFileName(string fileName, char replaceWithCharacter = '_')
         {
             if (replaceWithCharacter == '\0')
-                return filePath.RemoveInvalidFileNameCharacters();
+                return fileName.RemoveInvalidFileNameCharacters();
 
-            return filePath.ReplaceInvalidFileNameCharacters(replaceWithCharacter);
+            return fileName.ReplaceInvalidFileNameCharacters(replaceWithCharacter);
+        }
+
+        /// <summary>
+        /// Gets a valid file path by replacing invalid file or directory name characters with <paramref name="replaceWithCharacter"/>.
+        /// </summary>
+        /// <param name="filePath">File path to validate.</param>
+        /// <param name="replaceWithCharacter">Character to replace invalid file or directory name characters with. Set to '\0' to remove invalid file or directory name characters.</param>
+        /// <returns>A valid file path with no invalid file or directory name characters.</returns>
+        public static string GetValidFilePath(string filePath, char replaceWithCharacter = '_')
+        {
+            string[] fileParts = filePath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+            for (int i = 0; i < fileParts.Length; i++)
+            {
+                // Leave any volume specification alone
+                if (i == 0 && 
+                    Path.VolumeSeparatorChar != Path.DirectorySeparatorChar &&
+                    Path.VolumeSeparatorChar != Path.AltDirectorySeparatorChar &&
+                    fileParts[0].IndexOfAny(new[] { Path.VolumeSeparatorChar }) > 0)
+                        continue;
+
+                fileParts[i] = GetValidFileName(fileParts[i], replaceWithCharacter);
+            }
+
+            return string.Join(Path.DirectorySeparatorChar.ToString(), fileParts);
         }
 
         /// <summary>

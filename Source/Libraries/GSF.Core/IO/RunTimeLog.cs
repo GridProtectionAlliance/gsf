@@ -130,7 +130,7 @@ namespace GSF.IO
                 if (string.IsNullOrWhiteSpace(value))
                     throw new ArgumentNullException("value");
 
-                m_fileName = FilePath.GetAbsolutePath(FilePath.GetValidFileName(value));
+                m_fileName = FilePath.GetAbsolutePath(FilePath.GetValidFilePath(value));
             }
         }
 
