@@ -340,6 +340,11 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public const bool DefaultUseTransactionForMetadata = true;
 
+        /// <summary>
+        /// Default value for <see cref="LoggingPath"/>.
+        /// </summary>
+        public const string DefaultLoggingPath = "ConfigurationCache";
+
         private const int EvenKey = 0;      // Even key/IV index
         private const int OddKey = 1;       // Odd key/IV index
         private const int KeyIndex = 0;     // Index of cipher key component in keyIV array
@@ -508,6 +513,11 @@ namespace GSF.TimeSeries.Transport
             m_operationalModes = DefaultOperationalModes;
             m_metadataSynchronizationTimeout = DefaultMetadataSynchronizationTimeout;
 
+            string loggingPath = FilePath.GetDirectoryName(FilePath.GetAbsolutePath(DefaultLoggingPath));
+
+            if (Directory.Exists(loggingPath))
+                m_loggingPath = loggingPath;
+
             // Default to not using transactions for meta-data on SQL server (helps avoid deadlocks)
             try
             {
@@ -573,6 +583,35 @@ namespace GSF.TimeSeries.Transport
             set
             {
                 m_useZeroMQChannel = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets logging path to be used to be runtime and outage logs of the subscriber which are required for
+        /// automated data recovery.
+        /// </summary>
+        /// <remarks>
+        /// Leave value blank for default path, i.e., installation folder. Can be a fully qualified path or a path that
+        /// is relative to the installation folder, e.g., a value of "ConfigurationCache" might resolve to
+        /// "C:\Program Files\MyTimeSeriespPp\ConfigurationCache\".
+        /// </remarks>
+        public string LoggingPath
+        {
+            get
+            {
+                return m_loggingPath;
+            }
+            set
+            {
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    string loggingPath = FilePath.GetDirectoryName(FilePath.GetAbsolutePath(value));
+
+                    if (Directory.Exists(loggingPath))
+                        value = loggingPath;
+                }
+
+                m_loggingPath = value;
             }
         }
 
@@ -1014,6 +1053,8 @@ namespace GSF.TimeSeries.Transport
                 status.AppendFormat("      Data packet security: {0}", (object)m_keyIVs == null ? "Unencrypted" : "Encrypted");
                 status.AppendLine();
                 status.AppendFormat("      Data monitor enabled: {0}", (object)m_dataStreamMonitor != null && m_dataStreamMonitor.Enabled);
+                status.AppendLine();
+                status.AppendFormat("              Logging path: {0}", FilePath.TrimFileName(m_loggingPath.ToNonNullNorWhiteSpace(FilePath.GetAbsolutePath("")), 51));
                 status.AppendLine();
 
                 if (DataLossInterval > 0.0D)
@@ -1527,7 +1568,7 @@ namespace GSF.TimeSeries.Transport
             // Get logging path, if any has been defined
             if (settings.TryGetValue("loggingPath", out setting))
             {
-                setting = FilePath.GetDirectoryName(setting);
+                setting = FilePath.GetDirectoryName(FilePath.GetAbsolutePath(setting));
 
                 if (Directory.Exists(setting))
                     m_loggingPath = setting;

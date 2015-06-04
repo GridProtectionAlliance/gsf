@@ -8,191 +8,192 @@
              Background="Transparent"
              Unloaded="InternalSubscriptionUserControl_Unloaded">
 
-  <UserControl.Resources>
-    <ResourceDictionary>
-      <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
-      </ResourceDictionary.MergedDictionaries>
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
+            </ResourceDictionary.MergedDictionaries>
 
-      <vm:SubscriberRequestViewModel x:Key="ViewModel" SecurityMode="None" />
-    </ResourceDictionary>
-  </UserControl.Resources>
+            <vm:SubscriberRequestViewModel x:Key="ViewModel" SecurityMode="None" />
+        </ResourceDictionary>
+    </UserControl.Resources>
 
-  <StackPanel Orientation="Vertical" HorizontalAlignment="Center" DataContext="{StaticResource ViewModel}">
-    <GroupBox Header="Publisher Info">
-      <Grid HorizontalAlignment="Center">
-        <Grid.RowDefinitions>
-          <RowDefinition Height="Auto" />
-          <RowDefinition Height="Auto" />
-          <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+    <StackPanel Orientation="Vertical" HorizontalAlignment="Center" DataContext="{StaticResource ViewModel}">
+        <GroupBox Header="Publisher Info">
+            <Grid HorizontalAlignment="Center">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="Auto" />
-          <ColumnDefinition Width="Auto" />
-          <ColumnDefinition Width="Auto" />
-          <ColumnDefinition Width="Auto" />
-        </Grid.ColumnDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-        <Label Grid.Row="0" Grid.Column="0" Content="Acronym" />
-        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Mode=TwoWay, Path=PublisherAcronym}" CharacterCasing="Upper" />
-        <Label Grid.Row="0" Grid.Column="2" Content="Name" />
-        <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding Mode=TwoWay, Path=PublisherName}" />
+                <Label Grid.Row="0" Grid.Column="0" Content="Acronym" />
+                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Mode=TwoWay, Path=PublisherAcronym}" CharacterCasing="Upper" />
+                <Label Grid.Row="0" Grid.Column="2" Content="Name" />
+                <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding Mode=TwoWay, Path=PublisherName}" />
 
-        <Label Grid.Row="1" Grid.Column="0" Content="Hostname" />
-        <TextBox Grid.Row="1" Grid.Column="1" VerticalAlignment="Top" Text="{Binding Mode=TwoWay, Path=Hostname}" />
-        <Label Grid.Row="1" Grid.Column="2" Content="Port" />
-        <StackPanel Grid.Row="1" Grid.Column="3" Orientation="Horizontal">
-          <TextBox Width="{StaticResource XXSmallItemSize}" VerticalAlignment="Top" Text="{Binding Mode=TwoWay, Path=PublisherPort}" />
-          <TextBlock FontSize="10" FontStyle="Italic" TextAlignment="Left">
-            Common ports:<LineBreak />
-            openPDC - 6165<LineBreak />
-            SIEGate - 6170
-          </TextBlock>
-        </StackPanel>
+                <Label Grid.Row="1" Grid.Column="0" Content="Hostname" />
+                <TextBox Grid.Row="1" Grid.Column="1" VerticalAlignment="Top" Text="{Binding Mode=TwoWay, Path=Hostname}" />
+                <Label Grid.Row="1" Grid.Column="2" Content="Port" />
+                <StackPanel Grid.Row="1" Grid.Column="3" Orientation="Horizontal">
+                    <TextBox Width="{StaticResource XXSmallItemSize}" VerticalAlignment="Top" Text="{Binding Mode=TwoWay, Path=PublisherPort}" />
+                    <TextBlock FontSize="10" FontStyle="Italic" TextAlignment="Left">
+                        Common ports:<LineBreak />
+                        openPDC - 6165<LineBreak />
+                        SIEGate - 6170
+                    </TextBlock>
+                </StackPanel>
 
-        <StackPanel Grid.Row="2" Grid.Column="1">
-          <CheckBox Margin="5,5,5,0" Content="Receive Internal Metadata" IsChecked="{Binding Mode=TwoWay, Path=ReceiveInternalMetadata}" />
-          <CheckBox Margin="5,0,5,5" Content="Receive External Metadata" IsChecked="{Binding Mode=TwoWay, Path=ReceiveExternalMetadata}" />
-        </StackPanel>
+                <StackPanel Grid.Row="2" Grid.Column="1">
+                    <CheckBox Margin="5,5,5,0" Content="Receive Internal Metadata" IsChecked="{Binding Mode=TwoWay, Path=ReceiveInternalMetadata}" />
+                    <CheckBox Margin="5,0,5,5" Content="Receive External Metadata" IsChecked="{Binding Mode=TwoWay, Path=ReceiveExternalMetadata}" />
+                </StackPanel>
 
-        <Label Grid.Row="2" Grid.Column="2" Content="UDP Port" />
-        <StackPanel Grid.Row="2" Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Top">
-          <TextBox Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=UdpDataChannelPort}" IsEnabled="{Binding ElementName=UdpCheckBox, Path=IsChecked}" />
-          <CheckBox Name="UdpCheckBox" IsChecked="{Binding Mode=TwoWay, Path=UseUdpDataChannel}">
-            <TextBlock FontSize="10" FontStyle="Italic">
-              Leave unchecked for TCP only.
+                <Label Grid.Row="2" Grid.Column="2" Content="UDP Port" />
+                <StackPanel Grid.Row="2" Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Top">
+                    <TextBox Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=UdpDataChannelPort}" IsEnabled="{Binding ElementName=UdpCheckBox, Path=IsChecked}" />
+                    <CheckBox Name="UdpCheckBox" IsChecked="{Binding Mode=TwoWay, Path=UseUdpDataChannel}">
+                        <TextBlock FontSize="10" FontStyle="Italic">
+                            Leave unchecked for TCP only.
+                        </TextBlock>
+                    </CheckBox>
+                </StackPanel>
+            </Grid>
+        </GroupBox>
+
+        <CheckBox Name="EnableDataGapRecovery" StackPanel.ZIndex="2" Margin="10,10,0,-25" Content="Enable Automated Data Gap Recovery" VerticalContentAlignment="Center" IsChecked="{Binding Mode=TwoWay, Path=EnableDataGapRecovery}" Checked="EnableDataGapRecovery_Checked" />
+
+        <GroupBox StackPanel.ZIndex="1" IsEnabled="{Binding ElementName=EnableDataGapRecovery, Path=IsChecked}"  Header="                                                                   ">
+            <Grid HorizontalAlignment="Center">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="5" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" Content="Recovery Start Delay" ToolTip="Defines the minimum time delay, in seconds, to wait before starting a data gap recovery" Height="32" VerticalAlignment="Bottom" />
+                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
+                    <TextBox  Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=RecoveryStartDelay}" />
+                    <Label Content="seconds" />
+                </StackPanel>
+                <Label Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right" Content="Data Monitoring Interval" ToolTip="Defines the interval, in seconds, over which the data monitor will check for new data" />
+                <StackPanel Grid.Row="1" Grid.Column="3" Orientation="Horizontal">
+                    <TextBox Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=DataMonitoringInterval}" />
+                    <Label Content="seconds" />
+                </StackPanel>
+                <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right" Content="Minimum Recovery Span" ToolTip="Defines the minimum time span, in seconds, for which a data recovery will be attempted - set to zero for no minimum" />
+                <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal">
+                    <TextBox  Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=MinimumRecoverySpan}" />
+                    <Label Content="seconds" />
+                </StackPanel>
+                <Label Grid.Row="2" Grid.Column="2" HorizontalAlignment="Right" Content="Maximum Recovery Span" ToolTip="Defines the maximum time span, in seconds, for which a data recovery will be attempted" />
+                <StackPanel Grid.Row="2" Grid.Column="3" Orientation="Horizontal">
+                    <TextBox Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=MaximumRecoverySpan}" />
+                    <Label Content="days" />
+                </StackPanel>
+                <Label Grid.Row="3" Grid.Column="0" HorizontalAlignment="Right" Content="Recovery Processing Interval" ToolTip="Defines the data recovery processing interval, in whole milliseconds, to use when recovering data - set to zero to recover as fast as possible" />
+                <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal">
+                    <TextBox  Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=RecoveryProcessingInterval}" />
+                    <Label Content="milliseconds" />
+                </StackPanel>
+                <Label Grid.Row="3" Grid.Column="2" HorizontalAlignment="Right" Content="Logging Path" ToolTip="Defines the path for runtime and outage logs for this subscriber used for recovering data - leave blank for default folder. Can be a relative path to installation, e.g., ConfigurationCache" />
+                <TextBox Grid.Row="3" Grid.Column="3"  Width="{StaticResource LargeItemSize}" Text="{Binding Mode=TwoWay, Path=LoggingPath}" />
+            </Grid>
+        </GroupBox>
+
+        <Button Content="Save" HorizontalAlignment="Right" Margin="10,10,10,-25" Padding="2" Command="{Binding SaveCommand}" />
+
+        <StackPanel HorizontalAlignment="Center">
+            <TextBlock TextAlignment="Center" FontSize="14" FontWeight="Bold">
+                Common Subscriber<LineBreak />
+                "Receive Metadata" Settings:
             </TextBlock>
-          </CheckBox>
+
+            <Grid HorizontalAlignment="Center">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Image Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="2" Source="/GSF.TimeSeries.UI;component/images/ArrowCurved.png" />
+                <Label Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="2" HorizontalAlignment="Right" VerticalAlignment="Bottom" Padding="0,0,8,0" FontSize="10" Content="connecting to" >
+                    <Label.LayoutTransform>
+                        <RotateTransform Angle="-28" />
+                    </Label.LayoutTransform>
+                </Label>
+
+                <Border Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="2" BorderBrush="Black" BorderThickness="1,1,1,0">
+                    <Label FontWeight="Bold" HorizontalAlignment="Center" Content="Publisher" />
+                </Border>
+                <Border Grid.Row="1" Grid.Column="2" BorderBrush="Black" BorderThickness="1,0,0,1">
+                    <Label FontWeight="Bold" HorizontalContentAlignment="Center" Content="PDC" />
+                </Border>
+                <Border Grid.Row="1" Grid.Column="3" BorderBrush="Black" BorderThickness="0,0,1,1">
+                    <Label FontWeight="Bold" HorizontalContentAlignment="Center" Content="Gateway" />
+                </Border>
+
+                <Border Grid.Row="2" Grid.Column="0" Grid.RowSpan="3" BorderBrush="Black" BorderThickness="1,1,0,1">
+                    <Label FontWeight="Bold" VerticalAlignment="Center" Content="Subscriber">
+                        <Label.LayoutTransform>
+                            <RotateTransform Angle="-90" />
+                        </Label.LayoutTransform>
+                    </Label>
+                </Border>
+                <Border Grid.Row="2" Grid.Column="1" BorderBrush="Black" BorderThickness="0,1,1,0">
+                    <Label FontWeight="Bold" HorizontalContentAlignment="Right" Content="PDC" />
+                </Border>
+                <Border Grid.Row="3" Grid.Column="1" BorderBrush="Black" BorderThickness="0,0,1,0">
+                    <Label FontWeight="Bold" HorizontalContentAlignment="Right" Content="Gateway" />
+                </Border>
+                <Border Grid.Row="4" Grid.Column="1" BorderBrush="Black" BorderThickness="0,0,1,1">
+                    <Label FontWeight="Bold" HorizontalContentAlignment="Right" Content="Historian" />
+                </Border>
+
+                <Border Grid.Row="2" Grid.Column="2" BorderBrush="Black" BorderThickness="0,0,1,1" >
+                    <Label HorizontalContentAlignment="Center" Content="Internal" />
+                </Border>
+                <Border Grid.Row="3" Grid.Column="2" BorderBrush="Black" BorderThickness="0,0,1,1">
+                    <Label HorizontalContentAlignment="Center" Content="Internal" />
+                </Border>
+                <Border Grid.Row="4" Grid.Column="2" BorderBrush="Black" BorderThickness="0,0,1,1">
+                    <Label HorizontalContentAlignment="Center" Content="Both" />
+                </Border>
+
+                <Border Grid.Row="2" Grid.Column="3" BorderBrush="Black" BorderThickness="0,0,1,1">
+                    <Label HorizontalContentAlignment="Center" Content="External" />
+                </Border>
+                <Border Grid.Row="3" Grid.Column="3" BorderBrush="Black" BorderThickness="0,0,1,1">
+                    <Label HorizontalContentAlignment="Center" Content="Internal" />
+                </Border>
+                <Border Grid.Row="4" Grid.Column="3" BorderBrush="Black" BorderThickness="0,0,1,1">
+                    <Label HorizontalContentAlignment="Center" Content="Both" />
+                </Border>
+            </Grid>
         </StackPanel>
-      </Grid>
-    </GroupBox>
-
-    <CheckBox Name="EnableDataGapRecovery" StackPanel.ZIndex="2" Margin="10,10,0,-25" Content="Enable Automated Data Gap Recovery" VerticalContentAlignment="Center" IsChecked="{Binding Mode=TwoWay, Path=EnableDataGapRecovery}" Checked="EnableDataGapRecovery_Checked" />
-
-    <GroupBox StackPanel.ZIndex="1" IsEnabled="{Binding ElementName=EnableDataGapRecovery, Path=IsChecked}"  Header="                                                                   ">
-      <Grid HorizontalAlignment="Center">
-        <Grid.RowDefinitions>
-          <RowDefinition Height="5" />
-          <RowDefinition Height="Auto" />
-          <RowDefinition Height="Auto" />
-          <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
-
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="Auto" />
-          <ColumnDefinition Width="Auto" />
-          <ColumnDefinition Width="Auto" />
-          <ColumnDefinition Width="Auto" />
-        </Grid.ColumnDefinitions>
-
-        <Label Grid.Row="1" Grid.Column="0" Content="Recovery Start Delay" ToolTip="Defines the minimum time delay, in seconds, to wait before starting a data gap recovery" Height="32" VerticalAlignment="Bottom" />
-        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
-          <TextBox  Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=RecoveryStartDelay}" />
-          <Label Content="seconds" />
-        </StackPanel>
-        <Label Margin="30,0,0,0" Grid.Row="1" Grid.Column="2" Content="Data Monitoring Interval" ToolTip="Defines the interval, in seconds, over which the data monitor will check for new data" />
-        <StackPanel Grid.Row="1" Grid.Column="3" Orientation="Horizontal">
-          <TextBox Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=DataMonitoringInterval}" />
-          <Label Content="seconds" />
-        </StackPanel>
-        <Label Grid.Row="2" Grid.Column="0" Content="Minimum Recovery Span" ToolTip="Defines the minimum time span, in seconds, for which a data recovery will be attempted - set to zero for no minimum" />
-        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal">
-          <TextBox  Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=MinimumRecoverySpan}" />
-          <Label Content="seconds" />
-        </StackPanel>
-        <Label Margin="30,0,0,0" Grid.Row="2" Grid.Column="2" Content="Maximum Recovery Span" ToolTip="Defines the maximum time span, in seconds, for which a data recovery will be attempted" />
-        <StackPanel Grid.Row="2" Grid.Column="3" Orientation="Horizontal">
-          <TextBox Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=MaximumRecoverySpan}" />
-          <Label Content="days" />
-        </StackPanel>
-        <Label Grid.Row="3" Grid.Column="0" Content="Recovery Processing Interval" ToolTip="Defines the data recovery processing interval, in whole milliseconds, to use when recovering data - set to zero to recover as fast as possible" />
-        <StackPanel Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal">
-          <TextBox  Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=RecoveryProcessingInterval}" />
-          <Label Content="milliseconds" />
-        </StackPanel>
-
-      </Grid>
-    </GroupBox>
-
-    <Button Content="Save" HorizontalAlignment="Right" Margin="10,10,10,-25" Padding="2" Command="{Binding SaveCommand}" />
-
-    <StackPanel HorizontalAlignment="Center">
-      <TextBlock TextAlignment="Center" FontSize="14" FontWeight="Bold">
-        Common Subscriber<LineBreak />
-        "Receive Metadata" Settings:
-      </TextBlock>
-
-      <Grid HorizontalAlignment="Center">
-        <Grid.RowDefinitions>
-          <RowDefinition Height="Auto" />
-          <RowDefinition Height="Auto" />
-          <RowDefinition Height="Auto" />
-          <RowDefinition Height="Auto" />
-          <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
-
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="Auto" />
-          <ColumnDefinition Width="Auto" />
-          <ColumnDefinition Width="Auto" />
-          <ColumnDefinition Width="Auto" />
-        </Grid.ColumnDefinitions>
-
-        <Image Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="2" Source="/GSF.TimeSeries.UI;component/images/ArrowCurved.png" />
-        <Label Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="2" HorizontalAlignment="Right" VerticalAlignment="Bottom" Padding="0,0,8,0" FontSize="10" Content="connecting to" >
-          <Label.LayoutTransform>
-            <RotateTransform Angle="-28" />
-          </Label.LayoutTransform>
-        </Label>
-
-        <Border Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="2" BorderBrush="Black" BorderThickness="1,1,1,0">
-          <Label FontWeight="Bold" HorizontalAlignment="Center" Content="Publisher" />
-        </Border>
-        <Border Grid.Row="1" Grid.Column="2" BorderBrush="Black" BorderThickness="1,0,0,1">
-          <Label FontWeight="Bold" HorizontalContentAlignment="Center" Content="PDC" />
-        </Border>
-        <Border Grid.Row="1" Grid.Column="3" BorderBrush="Black" BorderThickness="0,0,1,1">
-          <Label FontWeight="Bold" HorizontalContentAlignment="Center" Content="Gateway" />
-        </Border>
-
-        <Border Grid.Row="2" Grid.Column="0" Grid.RowSpan="3" BorderBrush="Black" BorderThickness="1,1,0,1">
-          <Label FontWeight="Bold" VerticalAlignment="Center" Content="Subscriber">
-            <Label.LayoutTransform>
-              <RotateTransform Angle="-90" />
-            </Label.LayoutTransform>
-          </Label>
-        </Border>
-        <Border Grid.Row="2" Grid.Column="1" BorderBrush="Black" BorderThickness="0,1,1,0">
-          <Label FontWeight="Bold" HorizontalContentAlignment="Right" Content="PDC" />
-        </Border>
-        <Border Grid.Row="3" Grid.Column="1" BorderBrush="Black" BorderThickness="0,0,1,0">
-          <Label FontWeight="Bold" HorizontalContentAlignment="Right" Content="Gateway" />
-        </Border>
-        <Border Grid.Row="4" Grid.Column="1" BorderBrush="Black" BorderThickness="0,0,1,1">
-          <Label FontWeight="Bold" HorizontalContentAlignment="Right" Content="Historian" />
-        </Border>
-
-        <Border Grid.Row="2" Grid.Column="2" BorderBrush="Black" BorderThickness="0,0,1,1" >
-          <Label HorizontalContentAlignment="Center" Content="Internal" />
-        </Border>
-        <Border Grid.Row="3" Grid.Column="2" BorderBrush="Black" BorderThickness="0,0,1,1">
-          <Label HorizontalContentAlignment="Center" Content="Internal" />
-        </Border>
-        <Border Grid.Row="4" Grid.Column="2" BorderBrush="Black" BorderThickness="0,0,1,1">
-          <Label HorizontalContentAlignment="Center" Content="Both" />
-        </Border>
-
-        <Border Grid.Row="2" Grid.Column="3" BorderBrush="Black" BorderThickness="0,0,1,1">
-          <Label HorizontalContentAlignment="Center" Content="External" />
-        </Border>
-        <Border Grid.Row="3" Grid.Column="3" BorderBrush="Black" BorderThickness="0,0,1,1">
-          <Label HorizontalContentAlignment="Center" Content="Internal" />
-        </Border>
-        <Border Grid.Row="4" Grid.Column="3" BorderBrush="Black" BorderThickness="0,0,1,1">
-          <Label HorizontalContentAlignment="Center" Content="Both" />
-        </Border>
-      </Grid>
     </StackPanel>
-  </StackPanel>
 </UserControl>

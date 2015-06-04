@@ -71,6 +71,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         private double m_minimumRecoverySpan;
         private double m_maximumRecoverySpan;
         private int m_recoveryProcessingInterval;
+        private string m_loggingPath;
         private bool m_disposed;
 
         private string m_subscriberAcronym;
@@ -430,6 +431,28 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             {
                 m_recoveryProcessingInterval = value;
                 OnPropertyChanged("RecoveryProcessingInterval");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets logging path to be used to be runtime and outage logs of the subscriber which are required for
+        /// automated data recovery.
+        /// </summary>
+        /// <remarks>
+        /// Leave value blank for default path, i.e., installation folder. Can be a fully qualified path or a path that
+        /// is relative to the installation folder, e.g., a value of "ConfigurationCache" might resolve to
+        /// "C:\Program Files\MyTimeSeriespPp\ConfigurationCache\".
+        /// </remarks>
+        public string LoggingPath
+        {
+            get
+            {
+                return m_loggingPath;
+            }
+            set
+            {
+                m_loggingPath = value;
+                OnPropertyChanged("LoggingPath");
             }
         }
 
@@ -867,6 +890,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             MinimumRecoverySpan = DataGapRecoverer.DefaultMinimumRecoverySpan;
             MaximumRecoverySpan = DataGapRecoverer.DefaultMaximumRecoverySpan / Time.SecondsPerDay;
             RecoveryProcessingInterval = DataGapRecoverer.DefaultRecoveryProcessingInterval;
+            LoggingPath = DataSubscriber.DefaultLoggingPath;
         }
 
         private void Load()
@@ -1336,12 +1360,12 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             }
 
             if (m_enableDataGapRecovery)
-                dataGapRecoverySettings = string.Format("; dataGapRecovery={{enabled=true; recoveryStartDelay={0}; dataMonitoringInterval={1}; minimumRecoverySpan={2}; maximumRecoverySpan={3}; recoveryProcessingInterval={4}}}", m_recoveryStartDelay, m_dataMonitoringInterval, m_minimumRecoverySpan, m_maximumRecoverySpan * Time.SecondsPerDay, m_recoveryProcessingInterval);
+                dataGapRecoverySettings = string.Format("; dataGapRecovery={{enabled=true; recoveryStartDelay={0}; dataMonitoringInterval={1}; minimumRecoverySpan={2}; maximumRecoverySpan={3}; recoveryProcessingInterval={4}}}{5}", m_recoveryStartDelay, m_dataMonitoringInterval, m_minimumRecoverySpan, m_maximumRecoverySpan * Time.SecondsPerDay, m_recoveryProcessingInterval, string.IsNullOrWhiteSpace(m_loggingPath) ? "" : "; loggingPath=" + m_loggingPath);
 
             device = new Device();
             device.Acronym = PublisherAcronym.Replace(" ", "");
             device.Name = PublisherName;
-            device.Enabled = m_securityMode == SecurityMode.None;
+            device.Enabled = m_securityMode == SecurityMode.None;  // TODO: Is this good logic? What if I want to tweak my subscribed measurement filter before I synchronize metadata?
             device.IsConcentrator = true;
             device.ProtocolID = GetGatewayProtocolID();
 

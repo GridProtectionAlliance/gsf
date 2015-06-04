@@ -157,6 +157,11 @@ namespace GSF.TimeSeries.Transport
             m_minimumRecoverySpan = DefaultMinimumRecoverySpan;
             m_maximumRecoverySpan = DefaultMaximumRecoverySpan;
 
+            string loggingPath = FilePath.GetDirectoryName(FilePath.GetAbsolutePath(DataSubscriber.DefaultLoggingPath));
+
+            if (Directory.Exists(loggingPath))
+                m_loggingPath = loggingPath;
+
             m_subscriptionInfo = new UnsynchronizedSubscriptionInfo(false);
             m_subscriptionInfo.FilterExpression = DefaultFilterExpression;
             m_subscriptionInfo.ProcessingInterval = DefaultRecoveryProcessingInterval;
@@ -343,6 +348,35 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Gets or sets logging path to be used to be runtime and outage logs of the subscriber which are required for
+        /// automated data recovery.
+        /// </summary>
+        /// <remarks>
+        /// Leave value blank for default path, i.e., installation folder. Can be a fully qualified path or a path that
+        /// is relative to the installation folder, e.g., a value of "ConfigurationCache" might resolve to
+        /// "C:\Program Files\MyTimeSeriespPp\ConfigurationCache\".
+        /// </remarks>
+        public string LoggingPath
+        {
+            get
+            {
+                return m_loggingPath;
+            }
+            set
+            {
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    string loggingPath = FilePath.GetDirectoryName(FilePath.GetAbsolutePath(value));
+
+                    if (Directory.Exists(loggingPath))
+                        value = loggingPath;
+                }
+
+                m_loggingPath = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the filter expression used to define which measurements are being requested for data recovery during an <see cref="Outage"/>.
         /// </summary>
         public string FilterExpression
@@ -514,6 +548,8 @@ namespace GSF.TimeSeries.Transport
                 status.AppendLine();
                 status.AppendFormat("Use millisecond resolution: {0}", UseMillisecondResolution);
                 status.AppendLine();
+                status.AppendFormat("              Logging path: {0}", FilePath.TrimFileName(m_loggingPath.ToNonNullNorWhiteSpace(FilePath.GetAbsolutePath("")), 51));
+                status.AppendLine();
 
                 if ((object)m_temporalSubscription != null)
                 {
@@ -652,7 +688,7 @@ namespace GSF.TimeSeries.Transport
             // Get logging path, if any has been defined
             if (settings.TryGetValue("loggingPath", out setting))
             {
-                setting = FilePath.GetDirectoryName(setting);
+                setting = FilePath.GetDirectoryName(FilePath.GetAbsolutePath(setting));
 
                 if (Directory.Exists(setting))
                     m_loggingPath = setting;

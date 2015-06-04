@@ -353,6 +353,13 @@ namespace GSF.IO
         /// </summary>
         /// <param name="filePath">The file path from which the directory information is to be obtained.</param>
         /// <returns>Directory information.</returns>
+        /// <remarks>
+        /// This differs from <see cref="Path.GetDirectoryName"/> in that it will see if last name in path is
+        /// a directory and, if it exists, will properly treat that part of path as a directory. The .NET path
+        /// function always assumes last entry is a file name if path is not suffixed with a slash. For example:
+        ///     Path.GetDirectoryName(@"C:\Music") will return "C:\", however, 
+        /// FilePath.GetDirectoryName(@"C:\Music") will return "C:\Music\", so long as Music directory exists.
+        /// </remarks>
         public static string GetDirectoryName(string filePath)
         {
             // Test for case where valid path does not end in directory separator, Path.GetDirectoryName assumes
