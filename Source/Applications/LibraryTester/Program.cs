@@ -65,6 +65,7 @@ namespace LibraryTester
             //Console.WriteLine(FilePath.GetDirectoryName(FilePath.GetAbsolutePath(@"C:\Music\Acrobat.wav")));
             //Console.WriteLine(FilePath.GetValidFileName(@"C:\Music\Acrobat.wav:test~!:yadda`~'@#$%^&*()-=_+;,.<>?"".txt"));
             //Console.WriteLine(FilePath.GetValidFilePath(@"C:\Music\Acrobat.wav:test~!:yadda`~'@#$%^&*()-=_+;,.<>?"".txt"));
+            //Console.WriteLine(FilePath.GetFilePatternRegularExpression(@"?:\\Music*\*.wav"));
 
             //// Does song keep playing after dispose?
             //using (SoundPlayer player = new SoundPlayer(@"C:\Music\Acrobat.wav"))

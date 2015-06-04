@@ -159,8 +159,8 @@ namespace GSF
         /// Determines if the code base is currently running under Mono.
         /// </summary>
         /// <remarks>
-        /// This property can be used to make a run-time determination if Windows or Mono based .NET is being used. However, it is highly
-        /// recommended to use the MONO compiler directive be used wherever possible instead of determining this at run-time.
+        /// This property can be used to make a run-time determination if Windows or Mono based .NET is being used. However, it is
+        /// highly recommended to use the MONO compiler directive wherever possible instead of determining this at run-time.
         /// </remarks>
         public static bool IsMono = ((object)Type.GetType("Mono.Runtime") != null);
 
@@ -192,7 +192,7 @@ namespace GSF
         /// <para>
         /// The Array.CreateInstance provides better performance and more direct CLR access for array creation (not to
         /// mention less confusion on the matter of array lengths) in VB.NET, however the returned System.Array is not
-        /// typed properly. This function properly casts the return array based on the the type specification helping
+        /// typed properly. This function properly casts the return array based on the type specification helping
         /// when Option Strict is enabled.
         /// </para>
         /// </remarks>
@@ -754,42 +754,38 @@ namespace GSF
             return itemList.Max();
         }
 
-        /// <summary>Returns the largest item from a list of parameters.</summary>
+        /// <summary>Returns the value that is neither the largest nor the smallest.</summary>
         /// <typeparam name="T"><see cref="Type"/> of the objects passed to and returned from this method.</typeparam>
-        /// <param name="obj1">A variable number of parameters of the specified type .</param>
-        /// <param name="obj2">A variable number of parameters of the specified type .</param>
-        /// <param name="obj3">A variable number of parameters of the specified type .</param>
+        /// <param name="value1">Value 1.</param>
+        /// <param name="value2">Value 2.</param>
+        /// <param name="value3">Value 3.</param>
         /// <returns>Result is the value that is neither the largest nor the smallest.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T Mid<T>(T obj1, T obj2, T obj3) where T : IComparable<T>
+        public static T Mid<T>(T value1, T value2, T value3) where T : IComparable<T>
         {
-            int comp12;
-            int comp13;
-            int comp23;
+            if ((object)value1 == null)
+                throw new ArgumentNullException("value1");
 
-            if ((object)obj1 == null)
-                throw new ArgumentNullException("obj1");
+            if ((object)value2 == null)
+                throw new ArgumentNullException("value2");
 
-            if ((object)obj2 == null)
-                throw new ArgumentNullException("obj2");
+            if ((object)value3 == null)
+                throw new ArgumentNullException("value3");
 
-            if ((object)obj3 == null)
-                throw new ArgumentNullException("obj3");
-
-            comp12 = obj1.CompareTo(obj2);
-            comp13 = obj1.CompareTo(obj3);
-            comp23 = obj2.CompareTo(obj3);
+            int comp1to2 = value1.CompareTo(value2);
+            int comp1to3 = value1.CompareTo(value3);
+            int comp2to3 = value2.CompareTo(value3);
 
             // If 3 is the smallest, pick the smaller of 1 and 2
-            if (comp13 >= 0 && comp23 >= 0)
-                return (comp12 <= 0) ? obj1 : obj2;
+            if (comp1to3 >= 0 && comp2to3 >= 0)
+                return (comp1to2 <= 0) ? value1 : value2;
 
             // If 2 is the smallest, pick the smaller of 1 and 3
-            if (comp12 >= 0 && comp23 <= 0)
-                return (comp13 <= 0) ? obj1 : obj3;
+            if (comp1to2 >= 0 && comp2to3 <= 0)
+                return (comp1to3 <= 0) ? value1 : value3;
 
             // 1 is the smallest so pick the smaller of 2 and 3
-            return (comp23 <= 0) ? obj2 : obj3;
+            return (comp2to3 <= 0) ? value2 : value3;
         }
 
         #region [ Old Code ]

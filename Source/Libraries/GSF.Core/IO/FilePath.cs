@@ -52,6 +52,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -100,22 +101,26 @@ namespace GSF.IO
         static FilePath()
         {
             StringBuilder pattern = new StringBuilder();
+            HashSet<char> invalidPathChars = new HashSet<char>();
 
             // Defines a regular expression pattern for a valid file name character. We do this by
             // allowing any characters except those that would not be valid as part of a filename.
             // This essentially builds the "?" wildcard pattern match.
-            pattern.Append("[^");
-            pattern.Append(Path.DirectorySeparatorChar.RegexEncode());
-            pattern.Append(Path.AltDirectorySeparatorChar.RegexEncode());
-            pattern.Append(Path.PathSeparator.RegexEncode());
-            pattern.Append(Path.VolumeSeparatorChar.RegexEncode());
+            invalidPathChars.Add(Path.DirectorySeparatorChar);
+            invalidPathChars.Add(Path.AltDirectorySeparatorChar);
+            invalidPathChars.Add(Path.PathSeparator);
+            invalidPathChars.Add(Path.VolumeSeparatorChar);
 
             foreach (char c in Path.GetInvalidPathChars())
-            {
+                invalidPathChars.Add(c);
+
+            pattern.Append("[^");
+
+            foreach (char c in invalidPathChars)
                 pattern.Append(c.RegexEncode());
-            }
 
             pattern.Append("]");
+
             s_fileNameCharPattern = pattern.ToString();
         }
 
@@ -274,11 +279,11 @@ namespace GSF.IO
             for (int i = 0; i < fileParts.Length; i++)
             {
                 // Leave any volume specification alone
-                if (i == 0 && 
+                if (i == 0 &&
                     Path.VolumeSeparatorChar != Path.DirectorySeparatorChar &&
                     Path.VolumeSeparatorChar != Path.AltDirectorySeparatorChar &&
                     fileParts[0].IndexOfAny(new[] { Path.VolumeSeparatorChar }) > 0)
-                        continue;
+                    continue;
 
                 fileParts[i] = GetValidFileName(fileParts[i], replaceWithCharacter);
             }
@@ -371,7 +376,7 @@ namespace GSF.IO
         {
             // Replaces wildcard file patterns with their equivalent regular expression.
             fileSpec = fileSpec.Replace("\\", "\\u005C"); // Backslash in Regex means special sequence. Here, we really want a backslash.
-            fileSpec = fileSpec.Replace(".", "\\u002E"); // Dot in Regex means any character. Here, we really want a dot.
+            fileSpec = fileSpec.Replace(".", "\\u002E");  // Dot in Regex means any character. Here, we really want a dot.
             fileSpec = fileSpec.Replace("?", s_fileNameCharPattern);
             fileSpec = fileSpec.Replace("*", "(" + s_fileNameCharPattern + ")*");
 
@@ -635,32 +640,32 @@ namespace GSF.IO
         /// <summary>
         /// Returns a file name, for display purposes, of the specified length using "..." to indicate a longer name.
         /// </summary>
-        /// <param name="fileName">The file path to be trimmed.</param>
+        /// <param name="filePath">The file path to be trimmed.</param>
         /// <param name="length">The maximum length of the trimmed file path.</param>
         /// <returns>Trimmed file path.</returns>
         /// <remarks>
         /// Minimum value for the <paramref name="length" /> parameter is 12. 12 will be used for any value 
         /// specified as less than 12.
         /// </remarks>
-        public static string TrimFileName(string fileName, int length)
+        public static string TrimFileName(string filePath, int length)
         {
-            if (string.IsNullOrEmpty(fileName))
-                fileName = "";
+            if (string.IsNullOrEmpty(filePath))
+                filePath = "";
             else
-                fileName = fileName.Trim();
+                filePath = filePath.Trim();
 
             if (length < 12)
                 length = 12;
 
-            if (fileName.Length > length)
+            if (filePath.Length > length)
             {
-                string justName = GetFileName(fileName);
+                string justName = GetFileName(filePath);
 
-                if (justName.Length == fileName.Length)
+                if (justName.Length == filePath.Length)
                 {
                     // This is just a file name. Make sure extension shows.
-                    string justExtension = GetExtension(fileName);
-                    string trimName = GetFileNameWithoutExtension(fileName);
+                    string justExtension = GetExtension(filePath);
+                    string trimName = GetFileNameWithoutExtension(filePath);
 
                     if (trimName.Length > 8)
                     {
@@ -682,7 +687,7 @@ namespace GSF.IO
                     return TrimFileName(justName, length);
 
                 // File name contains path. Trims path before file name.
-                string justFilePath = GetDirectoryName(fileName);
+                string justFilePath = GetDirectoryName(filePath);
                 int offset = length - justName.Length - 4;
 
                 if (justFilePath.Length > offset && offset > 0)
@@ -693,7 +698,7 @@ namespace GSF.IO
             }
 
             // Full file name fits within requested length.
-            return fileName;
+            return filePath;
         }
 
         /// <summary>

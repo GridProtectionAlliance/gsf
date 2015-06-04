@@ -101,7 +101,7 @@
                     <TextBox  Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=MinimumRecoverySpan}" />
                     <Label Content="seconds" />
                 </StackPanel>
-                <Label Grid.Row="2" Grid.Column="2" HorizontalAlignment="Right" Content="Maximum Recovery Span" ToolTip="Defines the maximum time span, in seconds, for which a data recovery will be attempted" />
+                <Label Grid.Row="2" Grid.Column="2" HorizontalAlignment="Right" Content="Maximum Recovery Span" ToolTip="Defines the maximum time span, in days, for which a data recovery will be attempted" />
                 <StackPanel Grid.Row="2" Grid.Column="3" Orientation="Horizontal">
                     <TextBox Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=MaximumRecoverySpan}" />
                     <Label Content="days" />
