@@ -166,6 +166,7 @@ namespace GSF.Data
         private readonly string m_connectionString;
         private readonly Type m_connectionType;
         private readonly Type m_adapterType;
+        private bool m_disposeConnection;
         private bool m_disposed;
 
         #endregion
@@ -221,6 +222,7 @@ namespace GSF.Data
                 m_connectionString = configuredConnection.m_connectionString;
                 m_connectionType = configuredConnection.m_connectionType;
                 m_adapterType = configuredConnection.m_adapterType;
+                m_disposeConnection = true;
 
                 // Open ADO.NET provider connection
                 m_connection = (IDbConnection)Activator.CreateInstance(m_connectionType);
@@ -262,6 +264,7 @@ namespace GSF.Data
             m_connectionType = connectionType;
             m_adapterType = adapterType;
             m_databaseType = GetDatabaseType();
+            m_disposeConnection = true;
 
             try
             {
@@ -274,6 +277,25 @@ namespace GSF.Data
             {
                 throw new InvalidOperationException("Failed to open ADO data connection, verify \"ConnectionString\": " + ex.Message, ex);
             }
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="AdoDataConnection"/> from specified <paramref name="connection"/>
+        /// and <paramref name="adapterType"/>.
+        /// </summary>
+        /// <param name="connection">The database connection.</param>
+        /// <param name="adapterType">The ADO type used to load data into <see cref="DataTable"/>s.</param>
+        /// <param name="disposeConnection">True if the database connection should be closed when the <see cref="AdoDataConnection"/> is disposed; false otherwise.</param>
+        public AdoDataConnection(IDbConnection connection, Type adapterType, bool disposeConnection)
+        {
+            if (!typeof(IDbDataAdapter).IsAssignableFrom(adapterType))
+                throw new ArgumentException("Adapter type must implement the IDbDataAdapter interface", "adapterType");
+
+            m_connectionString = connection.ConnectionString;
+            m_connectionType = connection.GetType();
+            m_adapterType = adapterType;
+            m_databaseType = GetDatabaseType();
+            m_disposeConnection = disposeConnection;
         }
 
         // Creates a new AdoDataConnection, optionally opening connection.
@@ -310,6 +332,7 @@ namespace GSF.Data
                 m_connectionType = assembly.GetType(connectionTypeName);
                 m_adapterType = assembly.GetType(adapterTypeName);
                 m_databaseType = GetDatabaseType();
+                m_disposeConnection = true;
             }
             catch (Exception ex)
             {
@@ -736,9 +759,11 @@ namespace GSF.Data
                 {
                     if (disposing)
                     {
-                        if ((object)m_connection != null)
+                        if (m_disposeConnection && (object)m_connection != null)
+                        {
                             m_connection.Dispose();
-                        m_connection = null;
+                            m_connection = null;
+                        }
                     }
                 }
                 finally
