@@ -946,7 +946,7 @@ namespace GSF.Collections
             return comparison;
         }
 
-        private class DistinctByWrapper<TKey, TValue>
+        private class DistinctByWrapper<TKey, TValue> : IEquatable<DistinctByWrapper<TKey, TValue>>
         {
             #region [ Members ]
 
@@ -980,12 +980,17 @@ namespace GSF.Collections
 
             #region [ Methods ]
 
+            public bool Equals(DistinctByWrapper<TKey, TValue> other)
+            {
+                return Equals(m_key, other.m_key);
+            }
+
             public override bool Equals(object obj)
             {
                 DistinctByWrapper<TKey, TValue> wrapper = obj as DistinctByWrapper<TKey, TValue>;
 
                 if ((object)wrapper != null)
-                    return Equals(m_key, wrapper.m_key);
+                    return Equals(wrapper);
 
                 return false;
             }
