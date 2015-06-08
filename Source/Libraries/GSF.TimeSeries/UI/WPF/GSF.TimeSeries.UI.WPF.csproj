@@ -157,6 +157,9 @@
     <Compile Include="UserControls\CompanyUserControl.xaml.cs">
       <DependentUpon>CompanyUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\ReportUserControl.xaml.cs">
+      <DependentUpon>ReportUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\CorrectnessReportUserControl.xaml.cs">
       <DependentUpon>CorrectnessReportUserControl.xaml</DependentUpon>
     </Compile>
@@ -220,9 +223,7 @@
     <Compile Include="ViewModels\ApplicationRoles.cs" />
     <Compile Include="ViewModels\Adapters.cs" />
     <Compile Include="ViewModels\Companies.cs" />
-    <Compile Include="ViewModels\CompletenessReportViewModel.cs" />
-    <Compile Include="ViewModels\ReportViewModelBase.cs" />
-    <Compile Include="ViewModels\CorrectnessReportViewModel.cs" />
+    <Compile Include="ViewModels\ReportViewModel.cs" />
     <Compile Include="ViewModels\ErrorLogViewModel.cs" />
     <Compile Include="ViewModels\Historians.cs" />
     <Compile Include="ViewModels\IaonTrees.cs" />
@@ -313,6 +314,10 @@
     <Page Include="UserControls\AlarmUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\ReportUserControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="UserControls\CorrectnessReportUserControl.xaml">
       <Generator>MSBuild:Compile</Generator>

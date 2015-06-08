@@ -43,7 +43,7 @@ namespace GSF.TimeSeries.UI.ViewModels
     /// <summary>
     /// View model for reporting user controls.
     /// </summary>
-    public abstract class ReportViewModelBase : ViewModelBase, IDisposable
+    public class ReportViewModel : ViewModelBase, IDisposable
     {
         #region [ Members ]
 
@@ -57,7 +57,7 @@ namespace GSF.TimeSeries.UI.ViewModels
             #region [ Members ]
 
             // Fields
-            private readonly ReportViewModelBase m_parent;
+            private readonly ReportViewModel m_parent;
 
             private string m_date;
             private string m_status;
@@ -70,7 +70,7 @@ namespace GSF.TimeSeries.UI.ViewModels
             /// <summary>
             /// Creates a new instance of the <see cref="AvailableReport"/> class.
             /// </summary>
-            internal AvailableReport(ReportViewModelBase parent)
+            internal AvailableReport(ReportViewModel parent)
             {
                 m_parent = parent;
             }
@@ -172,9 +172,9 @@ namespace GSF.TimeSeries.UI.ViewModels
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new instance of the <see cref="ReportViewModelBase"/> class.
+        /// Creates a new instance of the <see cref="ReportViewModel"/> class.
         /// </summary>
-        protected ReportViewModelBase()
+        public ReportViewModel()
         {
             ReportGenerationTime = new DateTime(1, 1, 1, 0, 0, 0);
             m_originalReportGenerationTime = m_reportGenerationTime;
@@ -342,7 +342,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// <summary>
         /// Gets or sets the original report generation time.
         /// </summary>
-        protected DateTime OriginalReportGenerationTime
+        public DateTime OriginalReportGenerationTime
         {
             get
             {
@@ -519,7 +519,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         #region [ Methods ]
 
         /// <summary>
-        /// Releases all the resources used by the <see cref="ReportViewModelBase"/> object.
+        /// Releases all the resources used by the <see cref="ReportViewModel"/> object.
         /// </summary>
         public void Dispose()
         {

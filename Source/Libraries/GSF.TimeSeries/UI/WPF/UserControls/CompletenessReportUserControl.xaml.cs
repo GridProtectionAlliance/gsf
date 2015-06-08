@@ -18,14 +18,13 @@
 //  ----------------------------------------------------------------------------------------------------
 //  03/06/2014 - Stephen C. Wills
 //       Generated original version of source code.
+//  06/08/2015 - J. Ritchie Carroll
+//       Refactored to use common UI reporting control.
 //
 //******************************************************************************************************
 
 using System;
-using System.Windows;
 using System.Windows.Controls;
-using GSF.Communication;
-using GSF.ServiceProcess;
 using GSF.TimeSeries.UI.ViewModels;
 
 namespace GSF.TimeSeries.UI.UserControls
@@ -35,87 +34,22 @@ namespace GSF.TimeSeries.UI.UserControls
     /// </summary>
     public partial class CompletenessReportUserControl : UserControl
     {
-        #region [ Constructors ]
-
         /// <summary>
         /// Creates a new instance of the <see cref="CompletenessReportUserControl"/> class.
         /// </summary>
         public CompletenessReportUserControl()
         {
             InitializeComponent();
+
+            ReportUserControl userControl = new ReportUserControl();
+            ReportViewModel viewModel = userControl.ViewModel;
+
+            viewModel.ReportName = "CompletenessReport";
+            viewModel.ScheduledProcessName = "CompletenessReporting";
+            viewModel.ReportGenerationTime = new DateTime(1, 1, 1, 2, 0, 0);
+            viewModel.OriginalReportGenerationTime = viewModel.ReportGenerationTime;
+
+            this.AddChild(userControl);
         }
-
-        #endregion
-
-        #region [ Properties ]
-
-        private CompletenessReportViewModel ViewModel
-        {
-            get
-            {
-                return Resources["ViewModel"] as CompletenessReportViewModel;
-            }
-        }
-
-        #endregion
-
-        #region [ Methods ]
-
-        private void CompletenessReportUserControl_Loaded(object sender, RoutedEventArgs e)
-        {
-            // Attach to service connected events
-            CommonFunctions.ServiceConnectionRefreshed += CommonFunctions_ServiceConnectionRefreshed;
-
-            // Determine initial state of connectivity
-            UpdateServiceConnectivity();
-        }
-
-        private void CompletenessReportUserControl_Unloaded(object sender, RoutedEventArgs e)
-        {
-            // Detach from service connected events
-            CommonFunctions.ServiceConnectionRefreshed -= CommonFunctions_ServiceConnectionRefreshed;
-
-            if ((object)ViewModel != null)
-                ViewModel.Dispose();
-        }
-
-        private void CommonFunctions_ServiceConnectionRefreshed(object sender, EventArgs eventArgs)
-        {
-            // Determine new state of connectivity
-            UpdateServiceConnectivity();
-        }
-
-        private void RemotingClient_ConnectionTerminated(object sender, EventArgs eventArgs)
-        {
-            IClient remotingClient = sender as IClient;
-
-            // Attempt to detach from the event that just occurred
-            if ((object)remotingClient != null)
-                remotingClient.ConnectionTerminated -= RemotingClient_ConnectionTerminated;
-
-            // Determine new state of connectivity
-            UpdateServiceConnectivity();
-        }
-
-        private void UpdateServiceConnectivity()
-        {
-            WindowsServiceClient serviceClient = CommonFunctions.GetWindowsServiceClient();
-            ClientHelper clientHelper = ((object)serviceClient != null) ? serviceClient.Helper : null;
-            IClient remotingClient = ((object)clientHelper != null) ? clientHelper.RemotingClient : null;
-
-            if ((object)remotingClient == null || remotingClient.CurrentState != ClientState.Connected)
-            {
-                // If remoting client is not connected, make the message visible
-                Dispatcher.BeginInvoke(new Action(() => ViewModel.ServiceConnected = false));
-            }
-            else
-            {
-                // If remoting client is connected, hide the message and attach to connection terminated event
-                remotingClient.ConnectionTerminated += RemotingClient_ConnectionTerminated;
-                Dispatcher.BeginInvoke(new Action(() => ViewModel.ServiceConnected = true));
-            }
-        }
-
-        #endregion
     }
 }
