@@ -652,6 +652,22 @@ namespace GSF.Collections
             return source.Max(comparer.Compare);
         }
 
+        /// <summary>
+        /// Returns only the elements whose keys are distinct.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source objects in the collection.</typeparam>
+        /// <typeparam name="TKey">The type of the keys to be compared.</typeparam>
+        /// <param name="source">The collection of source objects.</param>
+        /// <param name="keySelector">The function used to access the keys of the source objects.</param>
+        /// <returns>The elements from <paramref name="source"/> whose keys are distinct.</returns>
+        public static IEnumerable<TSource> DistinctBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector)
+        {
+            return source
+                .Select(obj => new DistinctByWrapper<TKey, TSource>(keySelector(obj), obj))
+                .Distinct()
+                .Select(wrapper => wrapper.Value);
+        }
+
         /// <summary>Converts an enumeration to a string, using the default delimiter ("|") that can later be
         /// converted back to a list using LoadDelimitedString.</summary>
         /// <typeparam name="TSource">The generic type used.</typeparam>
@@ -928,6 +944,61 @@ namespace GSF.Collections
             }
 
             return comparison;
+        }
+
+        private class DistinctByWrapper<TKey, TValue>
+        {
+            #region [ Members ]
+
+            // Fields
+            private readonly TKey m_key;
+            private readonly TValue m_value;
+
+            #endregion
+
+            #region [ Constructors ]
+
+            public DistinctByWrapper(TKey key, TValue value)
+            {
+                m_key = key;
+                m_value = value;
+            }
+
+            #endregion
+
+            #region [ Properties ]
+
+            public TValue Value
+            {
+                get
+                {
+                    return m_value;
+                }
+            }
+
+            #endregion
+
+            #region [ Methods ]
+
+            public override bool Equals(object obj)
+            {
+                DistinctByWrapper<TKey, TValue> wrapper = obj as DistinctByWrapper<TKey, TValue>;
+
+                if ((object)wrapper != null)
+                    return Equals(m_key, wrapper.m_key);
+
+                return false;
+            }
+
+            public override int GetHashCode()
+            {
+                if ((object)m_key == null)
+                    return 0;
+
+                return m_key.GetHashCode();
+            }
+
+            #endregion
         }
     }
 }
