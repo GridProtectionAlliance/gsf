@@ -109,6 +109,7 @@
     <Compile Include="Configuration\WebServiceConfigurationLoader.cs" />
     <Compile Include="Configuration\XMLConfigurationLoader.cs" />
     <Compile Include="ConsoleHost.cs" />
+    <Compile Include="Reports\CorrectnessReportingProcess.cs" />
     <Compile Include="Frame.cs" />
     <Compile Include="FrameQueue.cs" />
     <Compile Include="IDevice.cs" />
@@ -141,7 +142,8 @@
     <Compile Include="Adapters\OutputAdapterCollection.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="PrecisionInputTimer.cs" />
-    <Compile Include="CompletenessReportingProcess.cs" />
+    <Compile Include="Reports\CompletenessReportingProcess.cs" />
+    <Compile Include="Reports\ReportingProcessBase.cs" />
     <Compile Include="ServiceClientBase.cs" />
     <Compile Include="Statistics\DeviceStatistics.cs" />
     <Compile Include="Statistics\DeviceStatisticsHelper.cs" />

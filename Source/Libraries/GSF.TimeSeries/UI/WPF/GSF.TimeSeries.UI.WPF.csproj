@@ -221,6 +221,7 @@
     <Compile Include="ViewModels\Adapters.cs" />
     <Compile Include="ViewModels\Companies.cs" />
     <Compile Include="ViewModels\CompletenessReportViewModel.cs" />
+    <Compile Include="ViewModels\ReportViewModelBase.cs" />
     <Compile Include="ViewModels\CorrectnessReportViewModel.cs" />
     <Compile Include="ViewModels\ErrorLogViewModel.cs" />
     <Compile Include="ViewModels\Historians.cs" />

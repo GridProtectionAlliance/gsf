@@ -58,6 +58,7 @@ using GSF.ServiceProcess;
 using GSF.Threading;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Configuration;
+using GSF.TimeSeries.Reports;
 using GSF.Units;
 
 namespace GSF.TimeSeries
@@ -120,6 +121,7 @@ namespace GSF.TimeSeries
         private MultipleDestinationExporter m_healthExporter;
         private MultipleDestinationExporter m_statusExporter;
         private CompletenessReportingProcess m_completenessReportingProcess;
+        private CorrectnessReportingProcess m_correctnessReportingProcess;
         private ProcessQueue<Tuple<string, Action<bool>>> m_reloadConfigQueue;
         private LongSynchronizedOperation m_configurationCacheOperation;
         private volatile DataSet m_latestConfiguration;
@@ -560,17 +562,20 @@ namespace GSF.TimeSeries
             m_statusExporter.ProcessException += m_iaonSession.ProcessExceptionHandler;
             m_serviceHelper.ServiceComponents.Add(m_statusExporter);
 
-            // Create reporting process
+            // Create reporting processes
             m_completenessReportingProcess = new CompletenessReportingProcess();
-            m_completenessReportingProcess.SettingsCategory = "CompletenessReporting";
-            m_completenessReportingProcess.PersistSettings = true;
             m_completenessReportingProcess.LoadSettings();
             m_serviceHelper.ServiceComponents.Add(m_completenessReportingProcess);
+
+            m_correctnessReportingProcess = new CorrectnessReportingProcess();
+            m_correctnessReportingProcess.LoadSettings();
+            m_serviceHelper.ServiceComponents.Add(m_correctnessReportingProcess);
 
             // Define scheduled service processes
             m_serviceHelper.AddScheduledProcess(HealthMonitorProcessHandler, "HealthMonitor", "* * * * *");    // Every minute
             m_serviceHelper.AddScheduledProcess(StatusExportProcessHandler, "StatusExport", "*/30 * * * *");   // Every 30 minutes
-            m_serviceHelper.AddProcess(ReportingProcessHandler, "Reporting");                                  // Unscheduled
+            m_serviceHelper.AddProcess(ReportingProcessHandler, "CompletenessReporting");                      // Unscheduled
+            m_serviceHelper.AddProcess(ReportingProcessHandler, "CorrectnessReporting");                       // Unscheduled
 
             // Add key Iaon collections as service components
             m_serviceHelper.ServiceComponents.Add(m_iaonSession.InputAdapters);
@@ -640,11 +645,17 @@ namespace GSF.TimeSeries
                 m_reloadConfigQueue = null;
             }
 
-            // Dispose reporting process
+            // Dispose reporting processes
             if ((object)m_completenessReportingProcess != null)
             {
                 m_serviceHelper.ServiceComponents.Remove(m_completenessReportingProcess);
                 m_completenessReportingProcess = null;
+            }
+
+            if ((object)m_correctnessReportingProcess != null)
+            {
+                m_serviceHelper.ServiceComponents.Remove(m_correctnessReportingProcess);
+                m_correctnessReportingProcess = null;
             }
 
             // Dispose Iaon session
@@ -938,7 +949,7 @@ namespace GSF.TimeSeries
             }
         }
 
-        // Load the the system configuration data set
+        // Load the system configuration data set
         private bool LoadStartupConfiguration()
         {
             DataSet configuration;
@@ -980,7 +991,7 @@ namespace GSF.TimeSeries
             return false;
         }
 
-        // Load the the system configuration data set
+        // Load the system configuration data set
         private bool LoadSystemConfiguration()
         {
             DatabaseConfigurationLoader dbConfigurationLoader = m_configurationLoader as DatabaseConfigurationLoader;
@@ -1537,12 +1548,26 @@ namespace GSF.TimeSeries
         /// <param name="parameters">Scheduled event parameters.</param>
         protected virtual void ReportingProcessHandler(string name, object[] parameters)
         {
-            CompletenessReportingProcess completenessReportingProcess = m_completenessReportingProcess;
-
-            if ((object)completenessReportingProcess != null)
+            switch (name.ToNonNullString().ToLowerInvariant())
             {
-                completenessReportingProcess.CleanReportLocation();
-                completenessReportingProcess.GenerateReport(DateTime.Today - TimeSpan.FromDays(1));
+                case "completenessreporting":
+                    CompletenessReportingProcess completenessReportingProcess = m_completenessReportingProcess;
+
+                    if ((object)completenessReportingProcess != null)
+                    {
+                        completenessReportingProcess.CleanReportLocation();
+                        completenessReportingProcess.GenerateReport(DateTime.Today - TimeSpan.FromDays(1));
+                    }
+                    break;
+                case "correctnessreporting":
+                    CorrectnessReportingProcess correctnessReportingProcess = m_correctnessReportingProcess;
+
+                    if ((object)correctnessReportingProcess != null)
+                    {
+                        correctnessReportingProcess.CleanReportLocation();
+                        correctnessReportingProcess.GenerateReport(DateTime.Today - TimeSpan.FromDays(1));
+                    }
+                    break;
             }
         }
 
@@ -2019,7 +2044,7 @@ namespace GSF.TimeSeries
                 {
                     try
                     {
-                        // Get public command methods of specified adpater using reflection
+                        // Get public command methods of specified adapter using reflection
                         MethodInfo[] methods = adapter.GetType().GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.IgnoreCase);
 
                         // Invoke method
@@ -2224,8 +2249,11 @@ namespace GSF.TimeSeries
                 helpMessage.AppendLine();
                 helpMessage.Append("   Usage:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       ListReports [Options]");
+                helpMessage.Append("       ListReports ReportName [Options]");
                 helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   ReportName:".PadRight(20));
+                helpMessage.Append("Name of the report (e.g., CompletenessReport)");
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
@@ -2237,7 +2265,15 @@ namespace GSF.TimeSeries
             }
             else
             {
-                CompletenessReportingProcess completenessReportingProcess;
+                ReportingProcessBase reportingProcess;
+
+                if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
+                    reportingProcess = GetReportingProcess(requestInfo.Request.Arguments["OrderedArg1"]);
+                else
+                    throw new ArgumentException("ReportName not specified.");
+
+                if ((object)reportingProcess == null)
+                    throw new ArgumentException(string.Format("ReportName \"{0}\" undefined.", requestInfo.Request.Arguments["OrderedArg1"]));
 
                 StringBuilder listBuilder;
                 List<string> reportsList;
@@ -2248,56 +2284,47 @@ namespace GSF.TimeSeries
                 FileInfo info;
                 TimeSpan expiration;
 
-                completenessReportingProcess = m_completenessReportingProcess;
+                reportingProcess.CleanReportLocation();
 
-                if ((object)completenessReportingProcess != null)
+                reportsList = reportingProcess.GetReportsList();
+                pendingReportsList = reportingProcess.GetPendingReportsList();
+                fileColumnWidth = Math.Max(6, reportsList.Concat(pendingReportsList).Select(report => report.Length).DefaultIfEmpty(0).Max()) / 4 * 4 + 4;
+
+                listBuilder = new StringBuilder();
+                listBuilder.Append("Report".PadRight(fileColumnWidth));
+                listBuilder.AppendLine("Status");
+                listBuilder.Append("------".PadRight(fileColumnWidth));
+                listBuilder.AppendLine("------");
+
+                foreach (string report in reportsList)
                 {
-                    completenessReportingProcess.CleanReportLocation();
+                    reportPath = FilePath.GetAbsolutePath(Path.Combine(reportingProcess.ReportLocation, report));
+                    listBuilder.Append(report.PadRight(fileColumnWidth));
 
-                    reportsList = completenessReportingProcess.GetReportsList();
-                    pendingReportsList = completenessReportingProcess.GetPendingReportsList();
-                    fileColumnWidth = Math.Max(6, reportsList.Concat(pendingReportsList).Select(report => report.Length).DefaultIfEmpty(0).Max()) / 4 * 4 + 4;
+                    info = new FileInfo(reportPath);
+                    expiration = TimeSpan.FromDays(reportingProcess.IdleReportLifetime) - (DateTime.UtcNow - info.LastAccessTimeUtc);
 
-                    listBuilder = new StringBuilder();
-                    listBuilder.Append("Report".PadRight(fileColumnWidth));
-                    listBuilder.AppendLine("Status");
-                    listBuilder.Append("------".PadRight(fileColumnWidth));
-                    listBuilder.AppendLine("------");
+                    if (expiration.TotalSeconds <= 0.0D)
+                        listBuilder.Append("Expired");
+                    if (expiration.TotalSeconds < 60.0D)
+                        listBuilder.AppendFormat("Expires in {0:0} seconds", expiration.TotalSeconds);
+                    else if (expiration.TotalMinutes < 60.0D)
+                        listBuilder.AppendFormat("Expires in {0:0} minutes", expiration.TotalMinutes);
+                    else if (expiration.TotalHours < 24.0D)
+                        listBuilder.AppendFormat("Expires in {0:0} hours", expiration.TotalHours);
+                    else
+                        listBuilder.AppendFormat("Expires in {0:0} days", expiration.TotalDays);
 
-                    foreach (string report in reportsList)
-                    {
-                        reportPath = FilePath.GetAbsolutePath(Path.Combine(completenessReportingProcess.ReportLocation, report));
-                        listBuilder.Append(report.PadRight(fileColumnWidth));
-
-                        info = new FileInfo(reportPath);
-                        expiration = TimeSpan.FromDays(completenessReportingProcess.IdleReportLifetime) - (DateTime.UtcNow - info.LastAccessTimeUtc);
-
-                        if (expiration.TotalSeconds <= 0.0D)
-                            listBuilder.Append("Expired");
-                        if (expiration.TotalSeconds < 60.0D)
-                            listBuilder.AppendFormat("Expires in {0:0} seconds", expiration.TotalSeconds);
-                        else if (expiration.TotalMinutes < 60.0D)
-                            listBuilder.AppendFormat("Expires in {0:0} minutes", expiration.TotalMinutes);
-                        else if (expiration.TotalHours < 24.0D)
-                            listBuilder.AppendFormat("Expires in {0:0} hours", expiration.TotalHours);
-                        else
-                            listBuilder.AppendFormat("Expires in {0:0} days", expiration.TotalDays);
-
-                        listBuilder.AppendLine();
-                    }
-
-                    foreach (string report in pendingReportsList)
-                    {
-                        listBuilder.Append(report.PadRight(fileColumnWidth));
-                        listBuilder.AppendLine("Pending");
-                    }
-
-                    SendResponse(requestInfo, true, listBuilder.ToString());
+                    listBuilder.AppendLine();
                 }
-                else
+
+                foreach (string report in pendingReportsList)
                 {
-                    SendResponse(requestInfo, false, "Unable to list reports while the system is shutting down.");
+                    listBuilder.Append(report.PadRight(fileColumnWidth));
+                    listBuilder.AppendLine("Pending");
                 }
+
+                SendResponse(requestInfo, true, listBuilder.ToString());
             }
         }
 
@@ -2312,8 +2339,11 @@ namespace GSF.TimeSeries
                 helpMessage.AppendLine();
                 helpMessage.Append("   Usage:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       GetReport [ReportDate] [Options]");
+                helpMessage.Append("       GetReport ReportName [ReportDate] [Options]");
                 helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   ReportName:".PadRight(20));
+                helpMessage.Append("Name of the report (e.g., CompletenessReport)");
                 helpMessage.AppendLine();
                 helpMessage.Append("   ReportDate:".PadRight(20));
                 helpMessage.Append("Date of the report to be generated (yyyy-MM-dd), or yesterday if not specified");
@@ -2328,40 +2358,43 @@ namespace GSF.TimeSeries
             }
             else
             {
+                ReportingProcessBase reportingProcess;
+
+                if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
+                    reportingProcess = GetReportingProcess(requestInfo.Request.Arguments["OrderedArg1"]);
+                else
+                    throw new ArgumentException("ReportName not specified.");
+
+                if ((object)reportingProcess == null)
+                    throw new ArgumentException(string.Format("ReportName \"{0}\" undefined.", requestInfo.Request.Arguments["OrderedArg1"]));
+
                 DateTime now = DateTime.UtcNow;
                 DateTime today = DateTime.Parse(now.ToString("yyyy-MM-dd"));
-
-                CompletenessReportingProcess completenessReportingProcess;
                 DateTime reportDate;
                 string reportPath;
 
                 try
                 {
-                    completenessReportingProcess = m_completenessReportingProcess;
+                    if (!requestInfo.Request.Arguments.Exists("OrderedArg2") || !DateTime.TryParse(requestInfo.Request.Arguments["OrderedArg2"], out reportDate))
+                        reportDate = today - TimeSpan.FromDays(1);
 
-                    if ((object)completenessReportingProcess != null)
+                    if (reportDate < today)
                     {
-                        if (!requestInfo.Request.Arguments.Exists("OrderedArg1") || !DateTime.TryParse(requestInfo.Request.Arguments["OrderedArg1"], out reportDate))
-                            reportDate = today - TimeSpan.FromDays(1);
+                        reportPath = FilePath.GetAbsolutePath(Path.Combine(reportingProcess.ReportLocation, string.Format("{0} {1:yyyy-MM-dd}.pdf", reportingProcess.Title, reportDate)));
 
-                        if (reportDate < today)
+                        if (File.Exists(reportPath))
                         {
-                            reportPath = FilePath.GetAbsolutePath(Path.Combine(completenessReportingProcess.ReportLocation, string.Format("{0} {1:yyyy-MM-dd}.pdf", completenessReportingProcess.Title, reportDate)));
-
-                            if (File.Exists(reportPath))
-                            {
-                                File.SetLastAccessTimeUtc(reportPath, DateTime.UtcNow);
-                                SendResponseWithAttachment(requestInfo, true, File.ReadAllBytes(reportPath), string.Format("Found and returned report for {0:yyyy-MM-dd}.", reportDate));
-                            }
-                            else
-                            {
-                                SendResponse(requestInfo, false, string.Format("Unable to find report for {0:yyyy-MM-dd}.", reportDate));
-                            }
+                            File.SetLastAccessTimeUtc(reportPath, DateTime.UtcNow);
+                            SendResponseWithAttachment(requestInfo, true, File.ReadAllBytes(reportPath), string.Format("Found and returned report for {0:yyyy-MM-dd}.", reportDate));
                         }
                         else
                         {
-                            SendResponse(requestInfo, false, string.Format("[{0:yyyy-MM-dd HH:mm:ss}] Unable to generate report for {1:yyyy-MM-dd} until {2:yyyy-MM-dd}. The statistics archive is not fully populated for that date.", now, reportDate, reportDate + TimeSpan.FromDays(1)));
+                            SendResponse(requestInfo, false, string.Format("Unable to find report for {0:yyyy-MM-dd}.", reportDate));
                         }
+                    }
+                    else
+                    {
+                        SendResponse(requestInfo, false, string.Format("[{0:yyyy-MM-dd HH:mm:ss}] Unable to generate report for {1:yyyy-MM-dd} until {2:yyyy-MM-dd}. The statistics archive is not fully populated for that date.", now, reportDate, reportDate + TimeSpan.FromDays(1)));
                     }
                 }
                 catch (Exception ex)
@@ -2382,8 +2415,11 @@ namespace GSF.TimeSeries
                 helpMessage.AppendLine();
                 helpMessage.Append("   Usage:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       GenerateReport [ReportDate] [Options]");
+                helpMessage.Append("       GenerateReport ReportName [ReportDate] [Options]");
                 helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   ReportName:".PadRight(20));
+                helpMessage.Append("Name of the report (e.g., CompletenessReport)");
                 helpMessage.AppendLine();
                 helpMessage.Append("   ReportDate:".PadRight(20));
                 helpMessage.Append("Date of the report to be generated (yyyy-MM-dd), or yesterday if not specified");
@@ -2398,30 +2434,33 @@ namespace GSF.TimeSeries
             }
             else
             {
+                ReportingProcessBase reportingProcess;
+
+                if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
+                    reportingProcess = GetReportingProcess(requestInfo.Request.Arguments["OrderedArg1"]);
+                else
+                    throw new ArgumentException("ReportName not specified.");
+
+                if ((object)reportingProcess == null)
+                    throw new ArgumentException(string.Format("ReportName \"{0}\" undefined.", requestInfo.Request.Arguments["OrderedArg1"]));
+
                 DateTime now = DateTime.UtcNow;
                 DateTime today = DateTime.Parse(now.ToString("yyyy-MM-dd"));
-
-                CompletenessReportingProcess completenessReportingProcess;
                 DateTime reportDate;
 
                 try
                 {
-                    completenessReportingProcess = m_completenessReportingProcess;
+                    if (!requestInfo.Request.Arguments.Exists("OrderedArg2") || !DateTime.TryParse(requestInfo.Request.Arguments["OrderedArg2"], out reportDate))
+                        reportDate = today - TimeSpan.FromDays(1);
 
-                    if ((object)completenessReportingProcess != null)
+                    if (reportDate < today)
                     {
-                        if (!requestInfo.Request.Arguments.Exists("OrderedArg1") || !DateTime.TryParse(requestInfo.Request.Arguments["OrderedArg1"], out reportDate))
-                            reportDate = today - TimeSpan.FromDays(1);
-
-                        if (reportDate < today)
-                        {
-                            completenessReportingProcess.GenerateReport(reportDate);
-                            SendResponse(requestInfo, true, "Report was successfully queued for generation.");
-                        }
-                        else
-                        {
-                            SendResponse(requestInfo, false, string.Format("[{0:yyyy-MM-dd HH:mm:ss}] Unable to generate report for {1:yyyy-MM-dd} until {2:yyyy-MM-dd}. The statistics archive is not fully populated for that date.", now, reportDate, reportDate + TimeSpan.FromDays(1)));
-                        }
+                        reportingProcess.GenerateReport(reportDate);
+                        SendResponse(requestInfo, true, "Report was successfully queued for generation.");
+                    }
+                    else
+                    {
+                        SendResponse(requestInfo, false, string.Format("[{0:yyyy-MM-dd HH:mm:ss}] Unable to generate report for {1:yyyy-MM-dd} until {2:yyyy-MM-dd}. The statistics archive is not fully populated for that date.", now, reportDate, reportDate + TimeSpan.FromDays(1)));
                     }
                 }
                 catch (Exception ex)
@@ -2442,8 +2481,11 @@ namespace GSF.TimeSeries
                 helpMessage.AppendLine();
                 helpMessage.Append("   Usage:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       ReportingConfig [Options]");
+                helpMessage.Append("       ReportingConfig ReportName [Options]");
                 helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   ReportName:".PadRight(20));
+                helpMessage.Append("Name of the report (e.g., CompletenessReport)");
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
@@ -2461,13 +2503,18 @@ namespace GSF.TimeSeries
             }
             else
             {
-                CompletenessReportingProcess completenessReportingProcess = m_completenessReportingProcess;
+                ReportingProcessBase reportingProcess;
+
+                if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
+                    reportingProcess = GetReportingProcess(requestInfo.Request.Arguments["OrderedArg1"]);
+                else
+                    throw new ArgumentException("ReportName not specified.");
+
+                if ((object)reportingProcess == null)
+                    throw new ArgumentException(string.Format("ReportName \"{0}\" undefined.", requestInfo.Request.Arguments["OrderedArg1"]));
 
                 string arg;
                 double argValue;
-
-                if ((object)completenessReportingProcess == null)
-                    return;
 
                 if (requestInfo.Request.Arguments.Exists("get") || !requestInfo.Request.Arguments.Exists("set"))
                 {
@@ -2475,8 +2522,8 @@ namespace GSF.TimeSeries
                     {
                         string configuration = string.Format(
                             "{0} --idleReportLifetime=\" {1} \"",
-                            completenessReportingProcess.GetArguments(),
-                            completenessReportingProcess.IdleReportLifetime);
+                            reportingProcess.GetArguments(),
+                            reportingProcess.IdleReportLifetime);
 
                         SendResponse(requestInfo, true, configuration);
                     }
@@ -2489,49 +2536,55 @@ namespace GSF.TimeSeries
                 {
                     try
                     {
-                        lock (completenessReportingProcess)
+                        lock (reportingProcess)
                         {
                             arg = requestInfo.Request.Arguments["reportLocation"];
 
                             if ((object)arg != null)
-                                completenessReportingProcess.ReportLocation = arg.Trim();
+                                reportingProcess.ReportLocation = arg.Trim();
 
-                            arg = requestInfo.Request.Arguments["titleText"];
-
-                            if ((object)arg != null)
-                                completenessReportingProcess.Title = arg.Trim();
-
-                            arg = requestInfo.Request.Arguments["companyText"];
+                            arg = requestInfo.Request.Arguments["title"];
 
                             if ((object)arg != null)
-                                completenessReportingProcess.Company = arg.Trim();
+                                reportingProcess.Title = arg.Trim();
 
-                            arg = requestInfo.Request.Arguments["level4Threshold"];
-
-                            if ((object)arg != null && double.TryParse(arg.Trim(), out argValue))
-                                completenessReportingProcess.Level4Threshold = argValue;
-
-                            arg = requestInfo.Request.Arguments["level3Threshold"];
-
-                            if ((object)arg != null && double.TryParse(arg.Trim(), out argValue))
-                                completenessReportingProcess.Level3Threshold = argValue;
-
-                            arg = requestInfo.Request.Arguments["level4Alias"];
+                            arg = requestInfo.Request.Arguments["company"];
 
                             if ((object)arg != null)
-                                completenessReportingProcess.Level4Alias = arg.Trim();
-
-                            arg = requestInfo.Request.Arguments["level3Alias"];
-
-                            if ((object)arg != null)
-                                completenessReportingProcess.Level3Alias = arg.Trim();
+                                reportingProcess.Company = arg.Trim();
 
                             arg = requestInfo.Request.Arguments["idleReportLifetime"];
 
                             if ((object)arg != null && double.TryParse(arg.Trim(), out argValue))
-                                completenessReportingProcess.IdleReportLifetime = argValue;
+                                reportingProcess.IdleReportLifetime = argValue;
 
-                            completenessReportingProcess.SaveSettings();
+                            // Apply any report specific parameters
+                            CompletenessReportingProcess completenessReportingProcess = reportingProcess as CompletenessReportingProcess;
+
+                            if ((object)completenessReportingProcess != null)
+                            {
+                                arg = requestInfo.Request.Arguments["level4Threshold"];
+
+                                if ((object)arg != null && double.TryParse(arg.Trim(), out argValue))
+                                    completenessReportingProcess.Level4Threshold = argValue;
+
+                                arg = requestInfo.Request.Arguments["level3Threshold"];
+
+                                if ((object)arg != null && double.TryParse(arg.Trim(), out argValue))
+                                    completenessReportingProcess.Level3Threshold = argValue;
+
+                                arg = requestInfo.Request.Arguments["level4Alias"];
+
+                                if ((object)arg != null)
+                                    completenessReportingProcess.Level4Alias = arg.Trim();
+
+                                arg = requestInfo.Request.Arguments["level3Alias"];
+
+                                if ((object)arg != null)
+                                    completenessReportingProcess.Level3Alias = arg.Trim();
+                            }
+
+                            reportingProcess.SaveSettings();
                             SendResponse(requestInfo, true, "Reporting configuration saved successfully.");
                         }
                     }
@@ -2541,6 +2594,19 @@ namespace GSF.TimeSeries
                     }
                 }
             }
+        }
+
+        private ReportingProcessBase GetReportingProcess(string reportName)
+        {
+            switch (reportName.ToNonNullString().ToLowerInvariant())
+            {
+                case "completenessreport":
+                    return m_completenessReportingProcess;
+                case "correctnessreport":
+                    return m_correctnessReportingProcess;
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -2982,7 +3048,7 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Attempts to authenticate or reauthenticate to network shares.
+        /// Attempts to authenticate or re-authenticate to network shares.
         /// </summary>
         /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
         protected virtual void AuthenticateRequestHandler(ClientRequestInfo requestInfo)
@@ -3008,7 +3074,7 @@ namespace GSF.TimeSeries
             }
             else
             {
-                DisplayStatusMessage("Attempting to reauthenticate network shares for health and status exports...", UpdateType.Information);
+                DisplayStatusMessage("Attempting to re-authenticate network shares for health and status exports...", UpdateType.Information);
 
                 try
                 {
@@ -3018,7 +3084,7 @@ namespace GSF.TimeSeries
                 }
                 catch (Exception ex)
                 {
-                    SendResponse(requestInfo, false, "Failed to reauthenticate network shares: {0}", ex.Message);
+                    SendResponse(requestInfo, false, "Failed to re-authenticate network shares: {0}", ex.Message);
                     LogException(ex);
                 }
             }
@@ -3156,7 +3222,7 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Displays a response message to client requestor.
+        /// Displays a response message to client requester.
         /// </summary>
         /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
         /// <param name="status">Formatted status message to send to client.</param>
