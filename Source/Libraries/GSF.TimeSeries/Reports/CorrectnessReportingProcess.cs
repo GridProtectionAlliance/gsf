@@ -32,9 +32,8 @@ namespace GSF.TimeSeries.Reports
         /// Creates a new instance of the <see cref="CorrectnessReportingProcess"/> class.
         /// </summary>
         public CorrectnessReportingProcess()
+            : base("Correctness")
         {
-            Title = "Eval(securityProvider.ApplicationName) Correctness Report";
-            SettingsCategory = "CorrectnessReporting";
         }
     }
 }

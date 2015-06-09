@@ -24,7 +24,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Windows.Controls;
 using GSF.TimeSeries.UI.ViewModels;
 
 namespace GSF.TimeSeries.UI.UserControls
@@ -32,7 +31,7 @@ namespace GSF.TimeSeries.UI.UserControls
     /// <summary>
     /// Interaction logic for CorrectnessReportUserControl.xaml
     /// </summary>
-    public partial class CorrectnessReportUserControl : UserControl
+    public partial class CorrectnessReportUserControl
     {
         /// <summary>
         /// Creates a new instance of the <see cref="CorrectnessReportUserControl"/> class.
@@ -44,12 +43,11 @@ namespace GSF.TimeSeries.UI.UserControls
             ReportUserControl userControl = new ReportUserControl();
             ReportViewModel viewModel = userControl.ViewModel;
 
-            viewModel.ReportName = "CorrectnessReport";
-            viewModel.ScheduledProcessName = "CorrectnessReporting";
+            viewModel.ReportType = "Correctness";
             viewModel.ReportGenerationTime = new DateTime(1, 1, 1, 4, 0, 0);
             viewModel.OriginalReportGenerationTime = viewModel.ReportGenerationTime;
 
-            this.AddChild(userControl);
+            AddChild(userControl);
         }
     }
 }

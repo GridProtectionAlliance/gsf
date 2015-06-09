@@ -143,7 +143,9 @@
     <Compile Include="NativeMethods.cs" />
     <Compile Include="PrecisionInputTimer.cs" />
     <Compile Include="Reports\CompletenessReportingProcess.cs" />
+    <Compile Include="Reports\IReportingProcess.cs" />
     <Compile Include="Reports\ReportingProcessBase.cs" />
+    <Compile Include="Reports\ReportingProcessCollection.cs" />
     <Compile Include="ServiceClientBase.cs" />
     <Compile Include="Statistics\DeviceStatistics.cs" />
     <Compile Include="Statistics\DeviceStatisticsHelper.cs" />

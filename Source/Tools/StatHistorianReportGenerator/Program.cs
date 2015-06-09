@@ -47,8 +47,10 @@ namespace StatHistorianReportGenerator
             {
                 args = new Arguments(Environment.CommandLine, true);
 
-                if (TryGetValue(args, "reportType", out arg))
+                if (TryGetValue(args, "reportType", out arg) && !string.IsNullOrWhiteSpace(arg))
                 {
+                    arg = arg.Trim();
+
                     if (arg.Equals("completeness", StringComparison.OrdinalIgnoreCase))
                         GenerateCompletenessReport();
                     else if (arg.Equals("correctness", StringComparison.OrdinalIgnoreCase))

@@ -25,7 +25,9 @@
 //
 //******************************************************************************************************
 
+using System.Text;
 using GSF.Configuration;
+using GSF.Console;
 
 namespace GSF.TimeSeries.Reports
 {
@@ -50,10 +52,8 @@ namespace GSF.TimeSeries.Reports
         /// Creates a new instance of the <see cref="CompletenessReportingProcess"/> class.
         /// </summary>
         public CompletenessReportingProcess()
+            : base("Completeness")
         {
-            Title = "Eval(securityProvider.ApplicationName) Completeness Report";
-            SettingsCategory = "CompletenessReporting";
-
             m_level4Threshold = 99.0D;
             m_level3Threshold = 90.0D;
             m_level4Alias = "Good";
@@ -124,6 +124,28 @@ namespace GSF.TimeSeries.Reports
             }
         }
 
+        /// <summary>
+        /// Gets the current status details about reporting process.
+        /// </summary>
+        public override string Status
+        {
+            get
+            {
+                StringBuilder status = new StringBuilder(base.Status);
+
+                status.AppendFormat("         Level 4 threshold: {0:N2}%", Level4Threshold);
+                status.AppendLine();
+                status.AppendFormat("         Level 3 threshold: {0:N2}%", Level3Threshold);
+                status.AppendLine();
+                status.AppendFormat("             Level 4 alias: {0}", Level4Alias ?? "undefined");
+                status.AppendLine();
+                status.AppendFormat("             Level 3 alias: {0}", Level3Alias ?? "undefined");
+                status.AppendLine();
+
+                return status.ToString();
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -187,6 +209,36 @@ namespace GSF.TimeSeries.Reports
                  Level3Threshold,
                  Level4Alias.Replace("\"", "\\\""),
                  Level3Alias.Replace("\"", "\\\""));
+        }
+
+        /// <summary>
+        /// Applies any received command line arguments for the reporting process.
+        /// </summary>
+        /// <param name="args">Received command line arguments.</param>
+        public override void SetArguments(Arguments args)
+        {
+            base.SetArguments(args);
+
+            double value;
+            string arg = args["level4Threshold"];
+
+            if ((object)arg != null && double.TryParse(arg.Trim(), out value))
+                Level4Threshold = value;
+
+            arg = args["level3Threshold"];
+
+            if ((object)arg != null && double.TryParse(arg.Trim(), out value))
+                Level3Threshold = value;
+
+            arg = args["level4Alias"];
+
+            if ((object)arg != null)
+                Level4Alias = arg.Trim();
+
+            arg = args["level3Alias"];
+
+            if ((object)arg != null)
+                Level3Alias = arg.Trim();
         }
 
         #endregion

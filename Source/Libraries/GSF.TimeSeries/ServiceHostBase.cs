@@ -120,8 +120,7 @@ namespace GSF.TimeSeries
         private bool m_preferCachedConfiguration;
         private MultipleDestinationExporter m_healthExporter;
         private MultipleDestinationExporter m_statusExporter;
-        private CompletenessReportingProcess m_completenessReportingProcess;
-        private CorrectnessReportingProcess m_correctnessReportingProcess;
+        private ReportingProcessCollection m_reportingProcesses;
         private ProcessQueue<Tuple<string, Action<bool>>> m_reloadConfigQueue;
         private LongSynchronizedOperation m_configurationCacheOperation;
         private volatile DataSet m_latestConfiguration;
@@ -563,13 +562,12 @@ namespace GSF.TimeSeries
             m_serviceHelper.ServiceComponents.Add(m_statusExporter);
 
             // Create reporting processes
-            m_completenessReportingProcess = new CompletenessReportingProcess();
-            m_completenessReportingProcess.LoadSettings();
-            m_serviceHelper.ServiceComponents.Add(m_completenessReportingProcess);
-
-            m_correctnessReportingProcess = new CorrectnessReportingProcess();
-            m_correctnessReportingProcess.LoadSettings();
-            m_serviceHelper.ServiceComponents.Add(m_correctnessReportingProcess);
+            m_reportingProcesses = ReportingProcessCollection.LoadImplementations(ex =>
+            {
+                DisplayStatusMessage("Failed to load reporting process: {0}", UpdateType.Warning, ex.Message);
+                LogException(ex);
+            });
+            m_serviceHelper.ServiceComponents.Add(m_reportingProcesses);
 
             // Define scheduled service processes
             m_serviceHelper.AddScheduledProcess(HealthMonitorProcessHandler, "HealthMonitor", "* * * * *");    // Every minute
@@ -646,16 +644,10 @@ namespace GSF.TimeSeries
             }
 
             // Dispose reporting processes
-            if ((object)m_completenessReportingProcess != null)
+            if ((object)m_reportingProcesses != null)
             {
-                m_serviceHelper.ServiceComponents.Remove(m_completenessReportingProcess);
-                m_completenessReportingProcess = null;
-            }
-
-            if ((object)m_correctnessReportingProcess != null)
-            {
-                m_serviceHelper.ServiceComponents.Remove(m_correctnessReportingProcess);
-                m_correctnessReportingProcess = null;
+                m_serviceHelper.ServiceComponents.Remove(m_reportingProcesses);
+                m_reportingProcesses = null;
             }
 
             // Dispose Iaon session
@@ -1548,26 +1540,19 @@ namespace GSF.TimeSeries
         /// <param name="parameters">Scheduled event parameters.</param>
         protected virtual void ReportingProcessHandler(string name, object[] parameters)
         {
-            switch (name.ToNonNullString().ToLowerInvariant())
+            // Report processing schedule names end with "Reporting", remove suffix
+            //                 123456789
+            if (name.EndsWith("Reporting", StringComparison.OrdinalIgnoreCase))
+                name = name.Substring(0, name.Length - 9);
+
+            // Lookup reporting process
+            IReportingProcess reportingProcess = m_reportingProcesses.FindReportType(name);
+
+            // Reporting process schedule is due, generate a new report
+            if ((object)reportingProcess != null)
             {
-                case "completenessreporting":
-                    CompletenessReportingProcess completenessReportingProcess = m_completenessReportingProcess;
-
-                    if ((object)completenessReportingProcess != null)
-                    {
-                        completenessReportingProcess.CleanReportLocation();
-                        completenessReportingProcess.GenerateReport(DateTime.Today - TimeSpan.FromDays(1));
-                    }
-                    break;
-                case "correctnessreporting":
-                    CorrectnessReportingProcess correctnessReportingProcess = m_correctnessReportingProcess;
-
-                    if ((object)correctnessReportingProcess != null)
-                    {
-                        correctnessReportingProcess.CleanReportLocation();
-                        correctnessReportingProcess.GenerateReport(DateTime.Today - TimeSpan.FromDays(1));
-                    }
-                    break;
+                reportingProcess.CleanReportLocation();
+                reportingProcess.GenerateReport(DateTime.Today - TimeSpan.FromDays(1));
             }
         }
 
@@ -2249,11 +2234,12 @@ namespace GSF.TimeSeries
                 helpMessage.AppendLine();
                 helpMessage.Append("   Usage:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       ListReports ReportName [Options]");
+                helpMessage.Append("       ListReports ReportType [Options]");
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
-                helpMessage.Append("   ReportName:".PadRight(20));
-                helpMessage.Append("Name of the report (e.g., CompletenessReport)");
+                helpMessage.Append("   ReportType:".PadRight(20));
+                helpMessage.Append("Type of the report to process (e.g., Completeness)");
+                helpMessage.AppendLine();
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
@@ -2265,15 +2251,15 @@ namespace GSF.TimeSeries
             }
             else
             {
-                ReportingProcessBase reportingProcess;
+                IReportingProcess reportingProcess;
 
                 if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
-                    reportingProcess = GetReportingProcess(requestInfo.Request.Arguments["OrderedArg1"]);
+                    reportingProcess = m_reportingProcesses.FindReportType(requestInfo.Request.Arguments["OrderedArg1"]);
                 else
-                    throw new ArgumentException("ReportName not specified.");
+                    throw new ArgumentException("ReportType not specified.");
 
                 if ((object)reportingProcess == null)
-                    throw new ArgumentException(string.Format("ReportName \"{0}\" undefined.", requestInfo.Request.Arguments["OrderedArg1"]));
+                    throw new ArgumentException(string.Format("ReportType \"{0}\" undefined.", requestInfo.Request.Arguments["OrderedArg1"]));
 
                 StringBuilder listBuilder;
                 List<string> reportsList;
@@ -2339,14 +2325,15 @@ namespace GSF.TimeSeries
                 helpMessage.AppendLine();
                 helpMessage.Append("   Usage:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       GetReport ReportName [ReportDate] [Options]");
+                helpMessage.Append("       GetReport ReportType [ReportDate] [Options]");
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
-                helpMessage.Append("   ReportName:".PadRight(20));
-                helpMessage.Append("Name of the report (e.g., CompletenessReport)");
+                helpMessage.Append("   ReportType:".PadRight(20));
+                helpMessage.Append("Type of the report to process (e.g., Completeness)");
                 helpMessage.AppendLine();
                 helpMessage.Append("   ReportDate:".PadRight(20));
                 helpMessage.Append("Date of the report to be generated (yyyy-MM-dd), or yesterday if not specified");
+                helpMessage.AppendLine();
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
@@ -2358,15 +2345,15 @@ namespace GSF.TimeSeries
             }
             else
             {
-                ReportingProcessBase reportingProcess;
+                IReportingProcess reportingProcess;
 
                 if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
-                    reportingProcess = GetReportingProcess(requestInfo.Request.Arguments["OrderedArg1"]);
+                    reportingProcess = m_reportingProcesses.FindReportType(requestInfo.Request.Arguments["OrderedArg1"]);
                 else
-                    throw new ArgumentException("ReportName not specified.");
+                    throw new ArgumentException("ReportType not specified.");
 
                 if ((object)reportingProcess == null)
-                    throw new ArgumentException(string.Format("ReportName \"{0}\" undefined.", requestInfo.Request.Arguments["OrderedArg1"]));
+                    throw new ArgumentException(string.Format("ReportType \"{0}\" undefined.", requestInfo.Request.Arguments["OrderedArg1"]));
 
                 DateTime now = DateTime.UtcNow;
                 DateTime today = DateTime.Parse(now.ToString("yyyy-MM-dd"));
@@ -2415,14 +2402,15 @@ namespace GSF.TimeSeries
                 helpMessage.AppendLine();
                 helpMessage.Append("   Usage:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       GenerateReport ReportName [ReportDate] [Options]");
+                helpMessage.Append("       GenerateReport ReportType [ReportDate] [Options]");
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
-                helpMessage.Append("   ReportName:".PadRight(20));
-                helpMessage.Append("Name of the report (e.g., CompletenessReport)");
+                helpMessage.Append("   ReportType:".PadRight(20));
+                helpMessage.Append("Type of the report to process (e.g., Completeness)");
                 helpMessage.AppendLine();
                 helpMessage.Append("   ReportDate:".PadRight(20));
                 helpMessage.Append("Date of the report to be generated (yyyy-MM-dd), or yesterday if not specified");
+                helpMessage.AppendLine();
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
@@ -2434,15 +2422,15 @@ namespace GSF.TimeSeries
             }
             else
             {
-                ReportingProcessBase reportingProcess;
+                IReportingProcess reportingProcess;
 
                 if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
-                    reportingProcess = GetReportingProcess(requestInfo.Request.Arguments["OrderedArg1"]);
+                    reportingProcess = m_reportingProcesses.FindReportType(requestInfo.Request.Arguments["OrderedArg1"]);
                 else
-                    throw new ArgumentException("ReportName not specified.");
+                    throw new ArgumentException("ReportType not specified.");
 
                 if ((object)reportingProcess == null)
-                    throw new ArgumentException(string.Format("ReportName \"{0}\" undefined.", requestInfo.Request.Arguments["OrderedArg1"]));
+                    throw new ArgumentException(string.Format("ReportType \"{0}\" undefined.", requestInfo.Request.Arguments["OrderedArg1"]));
 
                 DateTime now = DateTime.UtcNow;
                 DateTime today = DateTime.Parse(now.ToString("yyyy-MM-dd"));
@@ -2481,11 +2469,12 @@ namespace GSF.TimeSeries
                 helpMessage.AppendLine();
                 helpMessage.Append("   Usage:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       ReportingConfig ReportName [Options]");
+                helpMessage.Append("       ReportingConfig ReportType [Options]");
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
-                helpMessage.Append("   ReportName:".PadRight(20));
-                helpMessage.Append("Name of the report (e.g., CompletenessReport)");
+                helpMessage.Append("   ReportType:".PadRight(20));
+                helpMessage.Append("Type of the report to process (e.g., Completeness)");
+                helpMessage.AppendLine();
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
@@ -2503,18 +2492,15 @@ namespace GSF.TimeSeries
             }
             else
             {
-                ReportingProcessBase reportingProcess;
+                IReportingProcess reportingProcess;
 
                 if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
-                    reportingProcess = GetReportingProcess(requestInfo.Request.Arguments["OrderedArg1"]);
+                    reportingProcess = m_reportingProcesses.FindReportType(requestInfo.Request.Arguments["OrderedArg1"]);
                 else
-                    throw new ArgumentException("ReportName not specified.");
+                    throw new ArgumentException("ReportType not specified.");
 
                 if ((object)reportingProcess == null)
-                    throw new ArgumentException(string.Format("ReportName \"{0}\" undefined.", requestInfo.Request.Arguments["OrderedArg1"]));
-
-                string arg;
-                double argValue;
+                    throw new ArgumentException(string.Format("ReportType \"{0}\" undefined.", requestInfo.Request.Arguments["OrderedArg1"]));
 
                 if (requestInfo.Request.Arguments.Exists("get") || !requestInfo.Request.Arguments.Exists("set"))
                 {
@@ -2538,52 +2524,7 @@ namespace GSF.TimeSeries
                     {
                         lock (reportingProcess)
                         {
-                            arg = requestInfo.Request.Arguments["reportLocation"];
-
-                            if ((object)arg != null)
-                                reportingProcess.ReportLocation = arg.Trim();
-
-                            arg = requestInfo.Request.Arguments["title"];
-
-                            if ((object)arg != null)
-                                reportingProcess.Title = arg.Trim();
-
-                            arg = requestInfo.Request.Arguments["company"];
-
-                            if ((object)arg != null)
-                                reportingProcess.Company = arg.Trim();
-
-                            arg = requestInfo.Request.Arguments["idleReportLifetime"];
-
-                            if ((object)arg != null && double.TryParse(arg.Trim(), out argValue))
-                                reportingProcess.IdleReportLifetime = argValue;
-
-                            // Apply any report specific parameters
-                            CompletenessReportingProcess completenessReportingProcess = reportingProcess as CompletenessReportingProcess;
-
-                            if ((object)completenessReportingProcess != null)
-                            {
-                                arg = requestInfo.Request.Arguments["level4Threshold"];
-
-                                if ((object)arg != null && double.TryParse(arg.Trim(), out argValue))
-                                    completenessReportingProcess.Level4Threshold = argValue;
-
-                                arg = requestInfo.Request.Arguments["level3Threshold"];
-
-                                if ((object)arg != null && double.TryParse(arg.Trim(), out argValue))
-                                    completenessReportingProcess.Level3Threshold = argValue;
-
-                                arg = requestInfo.Request.Arguments["level4Alias"];
-
-                                if ((object)arg != null)
-                                    completenessReportingProcess.Level4Alias = arg.Trim();
-
-                                arg = requestInfo.Request.Arguments["level3Alias"];
-
-                                if ((object)arg != null)
-                                    completenessReportingProcess.Level3Alias = arg.Trim();
-                            }
-
+                            reportingProcess.SetArguments(requestInfo.Request.Arguments);
                             reportingProcess.SaveSettings();
                             SendResponse(requestInfo, true, "Reporting configuration saved successfully.");
                         }
@@ -2594,19 +2535,6 @@ namespace GSF.TimeSeries
                     }
                 }
             }
-        }
-
-        private ReportingProcessBase GetReportingProcess(string reportName)
-        {
-            switch (reportName.ToNonNullString().ToLowerInvariant())
-            {
-                case "completenessreport":
-                    return m_completenessReportingProcess;
-                case "correctnessreport":
-                    return m_correctnessReportingProcess;
-            }
-
-            return null;
         }
 
         /// <summary>
@@ -3288,7 +3216,7 @@ namespace GSF.TimeSeries
         }
 
         // Processes exceptions coming from the configuration loaders.
-        private void ConfigurationLoader_ProcessException(object o, EventArgs<Exception> args)
+        private void ConfigurationLoader_ProcessException(object sender, EventArgs<Exception> args)
         {
             DisplayStatusMessage(args.Argument.Message, UpdateType.Warning);
             LogException(args.Argument);

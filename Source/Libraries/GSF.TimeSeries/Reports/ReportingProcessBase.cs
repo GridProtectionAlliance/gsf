@@ -30,27 +30,28 @@ using System.IO;
 using System.Linq;
 using System.Management;
 using System.Security.Principal;
+using System.Text;
 using System.Text.RegularExpressions;
 using GSF.Configuration;
+using GSF.Console;
 using GSF.IO;
 using GSF.Threading;
 
 namespace GSF.TimeSeries.Reports
 {
     /// <summary>
-    /// Represent the base functionality for reporting processing.
+    /// Represents the base functionality for reporting processes.
     /// </summary>
-    public abstract class ReportingProcessBase
+    public abstract class ReportingProcessBase : IReportingProcess
     {
         #region [ Members ]
 
         // Fields
+        private readonly string m_reportType;
         private readonly ConcurrentQueue<DateTime> m_reportGenerationQueue;
         private readonly LongSynchronizedOperation m_executeOperation;
-
         private bool m_persistSettings;
         private string m_settingsCategory;
-
         private string m_archiveFilePath;
         private string m_reportLocation;
         private string m_title;
@@ -68,8 +69,10 @@ namespace GSF.TimeSeries.Reports
         /// <summary>
         /// Creates a new instance of the <see cref="ReportingProcessBase"/> class.
         /// </summary>
-        protected ReportingProcessBase()
+        /// <param name="reportType">Report type - passed into StatHistorianReportGenerator.</param>
+        protected ReportingProcessBase(string reportType)
         {
+            m_reportType = reportType;
             m_reportGenerationQueue = new ConcurrentQueue<DateTime>();
             m_executeOperation = new LongSynchronizedOperation(Execute)
             {
@@ -77,14 +80,15 @@ namespace GSF.TimeSeries.Reports
             };
 
             m_persistSettings = true;
+            m_settingsCategory = string.Format("{0}Reporting", m_reportType);
             m_archiveFilePath = "Eval(statArchiveFile.FileName)";
             m_reportLocation = "Reports";
-            m_title = "Eval(securityProvider.ApplicationName) Report";
+            m_title = string.Format("Eval(securityProvider.ApplicationName) {0} Report", m_reportType);
             m_company = "Eval(systemSettings.CompanyName)";
             m_idleReportLifetime = 14.0D;
             m_enableReportEmail = false;
             m_smtpServer = "localhost";
-            m_fromAddress = "reports@acme.com";
+            m_fromAddress = "reports@gridprotectionalliance.org";
             m_toAddresses = "wile.e.coyote@acme.com";
         }
 
@@ -104,6 +108,28 @@ namespace GSF.TimeSeries.Reports
             set
             {
                 m_persistSettings = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets report type, i.e., basically the report name associated with this reporting process.
+        /// </summary>
+        /// <remarks>
+        /// This value is passed to StatHistorianReportGenerator as "reportType" parameter.
+        /// </remarks>
+        public string ReportType
+        {
+            get
+            {
+                return m_reportType;
+            }
+        }
+
+        string IProvideStatus.Name
+        {
+            get
+            {
+                return GetType().Name;
             }
         }
 
@@ -256,6 +282,42 @@ namespace GSF.TimeSeries.Reports
             set
             {
                 m_toAddresses = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the current status details about reporting process.
+        /// </summary>
+        public virtual string Status
+        {
+            get
+            {
+                StringBuilder status = new StringBuilder();
+
+                status.AppendFormat("               Report type: {0}", ReportType ?? "undefined");
+                status.AppendLine();
+                status.AppendFormat("         Archive file path: {0}", FilePath.TrimFileName(ArchiveFilePath ?? "undefined", 51));
+                status.AppendLine();
+                status.AppendFormat("           Report location: {0}", FilePath.TrimFileName(ReportLocation ?? "undefined", 51));
+                status.AppendLine();
+                status.AppendFormat("              Report title: {0}", Title ?? "undefined");
+                status.AppendLine();
+                status.AppendFormat("      Idle report lifetime: {0:N2} days", IdleReportLifetime);
+                status.AppendLine();
+                status.AppendFormat("          Report e-mailing: {0}", EnableReportEmail ? "Enabled" : "Disabled");
+                status.AppendLine();
+
+                if (EnableReportEmail)
+                {
+                    status.AppendFormat("       Defined SMTP server: {0}", SmtpServer ?? "undefined");
+                    status.AppendLine();
+                    status.AppendFormat("              From address: {0}", FromAddress ?? "undefined");
+                    status.AppendLine();
+                    status.AppendFormat("              To addresses: {0}", ToAddresses ?? "undefined");
+                    status.AppendLine();
+                }
+
+                return status.ToString();
             }
         }
 
@@ -440,10 +502,12 @@ namespace GSF.TimeSeries.Reports
             // the arguments below have an extra leading and trailing space around quoted values
             // for proper parsing.
             return string.Format(
-                 "--archiveLocation=\" {0} \" " +
-                 "--reportLocation=\" {1} \" " +
-                 "--title=\" {2} \" " +
-                 "--company=\" {3} \"",
+                 "--reportType=\" {0} \" " +
+                 "--archiveLocation=\" {1} \" " +
+                 "--reportLocation=\" {2} \" " +
+                 "--title=\" {3} \" " +
+                 "--company=\" {4} \"",
+                 ReportType.Replace("\"", "\\\""),
                  FilePath.GetDirectoryName(ArchiveFilePath).Replace("\"", "\\\""),
                  ReportLocation.Replace("\"", "\\\""),
                  Title.Replace("\"", "\\\""),
@@ -473,6 +537,34 @@ namespace GSF.TimeSeries.Reports
                     ToAddresses);
 
             return arguments;
+        }
+
+        /// <summary>
+        /// Applies any received command line arguments for the reporting process.
+        /// </summary>
+        /// <param name="args">Received command line arguments.</param>
+        public virtual void SetArguments(Arguments args)
+        {
+            double value;
+            string arg = args["reportLocation"];
+
+            if ((object)arg != null)
+                ReportLocation = arg.Trim();
+
+            arg = args["title"];
+
+            if ((object)arg != null)
+                Title = arg.Trim();
+
+            arg = args["company"];
+
+            if ((object)arg != null)
+                Company = arg.Trim();
+
+            arg = args["idleReportLifetime"];
+
+            if ((object)arg != null && double.TryParse(arg.Trim(), out value))
+                IdleReportLifetime = value;
         }
 
         /// <summary>

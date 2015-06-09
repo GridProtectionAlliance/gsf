@@ -139,9 +139,8 @@ namespace GSF.TimeSeries.UI.ViewModels
         private Visibility m_connectivityMessageVisibility;
         private bool m_serviceConnected;
         private bool m_reportingEnabled;
-
+        private string m_reportType;
         private string m_scheduledProcessName;
-        private string m_reportName;
         private string m_reportTitle;
         private string m_reportingConfiguration;
         private string m_originalReportLocation;
@@ -244,6 +243,31 @@ namespace GSF.TimeSeries.UI.ViewModels
         }
 
         /// <summary>
+        /// Gets report type, i.e., basically the report name associated with this reporting process.
+        /// </summary>
+        /// <remarks>
+        /// This value is passed to StatHistorianReportGenerator as "reportType" parameter.
+        /// </remarks>
+        public string ReportType
+        {
+            get
+            {
+                return m_reportType;
+            }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException("value");
+
+                m_reportType = value;
+                OnPropertyChanged("ReportType");
+
+                if (string.IsNullOrEmpty(m_scheduledProcessName))
+                    ScheduledProcessName = string.Format("{0}Reporting", m_reportType);
+            }
+        }
+
+        /// <summary>
         /// Gets or sets scheduled process name for the current report.
         /// </summary>
         public string ScheduledProcessName
@@ -256,22 +280,6 @@ namespace GSF.TimeSeries.UI.ViewModels
             {
                 m_scheduledProcessName = value;
                 OnPropertyChanged("ScheduledProcessName");
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets report name of the current report.
-        /// </summary>
-        public string ReportName
-        {
-            get
-            {
-                return m_reportName;
-            }
-            set
-            {
-                m_reportName = value;
-                OnPropertyChanged("ReportName");
             }
         }
 
@@ -351,6 +359,7 @@ namespace GSF.TimeSeries.UI.ViewModels
             set
             {
                 m_originalReportGenerationTime = value;
+                OnPropertyChanged("OriginalReportGenerationTime");
             }
         }
 
@@ -586,7 +595,7 @@ namespace GSF.TimeSeries.UI.ViewModels
             {
                 m_responseComplete.Reset();
                 serviceClient = CommonFunctions.GetWindowsServiceClient();
-                serviceClient.Helper.SendRequest(string.Format("ReportingConfig {0}", ReportName));
+                serviceClient.Helper.SendRequest(string.Format("ReportingConfig {0}", ReportType));
 
                 // Wait for command response allowing for processing time
                 if ((object)m_responseComplete != null)
@@ -634,7 +643,7 @@ namespace GSF.TimeSeries.UI.ViewModels
                 if (m_serviceConnected)
                 {
                     serviceClient = CommonFunctions.GetWindowsServiceClient();
-                    serviceClient.Helper.SendRequest(string.Format("ListReports {0}", ReportName));
+                    serviceClient.Helper.SendRequest(string.Format("ListReports {0}", ReportType));
                 }
             }
             catch (Exception ex)
@@ -660,7 +669,7 @@ namespace GSF.TimeSeries.UI.ViewModels
                 {
                     m_responseComplete.Reset();
                     serviceClient = CommonFunctions.GetWindowsServiceClient();
-                    serviceClient.Helper.SendRequest(string.Format("GetReport {0} {1:yyyy-MM-dd}", ReportName, reportDate));
+                    serviceClient.Helper.SendRequest(string.Format("GetReport {0} {1:yyyy-MM-dd}", ReportType, reportDate));
 
                     // Wait for command response allowing for processing time
                     if ((object)m_responseComplete != null)
@@ -705,7 +714,7 @@ namespace GSF.TimeSeries.UI.ViewModels
             {
                 m_responseComplete.Reset();
                 serviceClient = CommonFunctions.GetWindowsServiceClient();
-                serviceClient.Helper.SendRequest(string.Format("GenerateReport {0} {1:yyyy-MM-dd}", ReportName, m_reportDate));
+                serviceClient.Helper.SendRequest(string.Format("GenerateReport {0} {1:yyyy-MM-dd}", ReportType, m_reportDate));
 
                 // Wait for command response allowing for processing time
                 if ((object)m_responseComplete != null)
@@ -767,7 +776,7 @@ namespace GSF.TimeSeries.UI.ViewModels
                     m_responseComplete.Reset();
 
                     serviceClient.Helper.SendRequest(string.Format("ReportingConfig {0} -set --reportLocation=\" {1} \" --idleReportLifetime=\" {2} \"",
-                        ReportName, m_reportLocation.Replace("\"", "\\\""), m_idleReportLifetime));
+                        ReportType, m_reportLocation.Replace("\"", "\\\""), m_idleReportLifetime));
 
                     // Wait for command response allowing for processing time
                     if ((object)m_responseComplete != null)
@@ -834,14 +843,14 @@ namespace GSF.TimeSeries.UI.ViewModels
             }
         }
 
-        private string GetReportDate(string reportName)
+        private string GetReportDate(string reportType)
         {
             string regex;
             Match match;
             DateTime reportDate;
 
             regex = string.Format(@"{0} (?<Date>[^.]+)\.pdf", m_reportTitle);
-            match = Regex.Match(reportName, regex);
+            match = Regex.Match(reportType, regex);
 
             if (!match.Success || !DateTime.TryParse(match.Groups["Date"].Value, out reportDate))
                 reportDate = DateTime.Today - TimeSpan.FromDays(1);

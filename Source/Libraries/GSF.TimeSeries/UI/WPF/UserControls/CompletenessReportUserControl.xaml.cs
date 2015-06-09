@@ -24,7 +24,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Windows.Controls;
 using GSF.TimeSeries.UI.ViewModels;
 
 namespace GSF.TimeSeries.UI.UserControls
@@ -32,7 +31,7 @@ namespace GSF.TimeSeries.UI.UserControls
     /// <summary>
     /// Interaction logic for CompletenessReportUserControl.xaml
     /// </summary>
-    public partial class CompletenessReportUserControl : UserControl
+    public partial class CompletenessReportUserControl
     {
         /// <summary>
         /// Creates a new instance of the <see cref="CompletenessReportUserControl"/> class.
@@ -44,12 +43,11 @@ namespace GSF.TimeSeries.UI.UserControls
             ReportUserControl userControl = new ReportUserControl();
             ReportViewModel viewModel = userControl.ViewModel;
 
-            viewModel.ReportName = "CompletenessReport";
-            viewModel.ScheduledProcessName = "CompletenessReporting";
+            viewModel.ReportType = "Completeness";
             viewModel.ReportGenerationTime = new DateTime(1, 1, 1, 2, 0, 0);
             viewModel.OriginalReportGenerationTime = viewModel.ReportGenerationTime;
 
-            this.AddChild(userControl);
+            AddChild(userControl);
         }
     }
 }
