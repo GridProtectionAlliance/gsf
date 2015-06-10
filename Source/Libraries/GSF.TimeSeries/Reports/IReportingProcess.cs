@@ -139,7 +139,8 @@ namespace GSF.TimeSeries.Reports
         /// Queues up a report to be generated on a separate thread.
         /// </summary>
         /// <param name="reportDate">The date of the report to be generated.</param>
-        void GenerateReport(DateTime reportDate);
+        /// <param name="emailReport">Flag that determines if report should be e-mailed, if enabled.</param>
+        void GenerateReport(DateTime reportDate, bool emailReport);
 
         /// <summary>
         /// Deletes reports from the <see cref="ReportLocation"/> that have been idle for the length of the <see cref="IdleReportLifetime"/>.
@@ -154,7 +155,9 @@ namespace GSF.TimeSeries.Reports
         /// <summary>
         /// Gets the command line arguments for the reporting process for a given report date.
         /// </summary>
-        string GetArguments(DateTime reportDate);
+        /// <param name="reportDate">The date of the report to be generated.</param>
+        /// <param name="emailReport">Flag that determines if report should be e-mailed, if enabled.</param>
+        string GetArguments(DateTime reportDate, bool emailReport);
 
         /// <summary>
         /// Applies any received command line arguments for the reporting process.

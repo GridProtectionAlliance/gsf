@@ -2705,13 +2705,13 @@ namespace GSF.ServiceProcess
                     responseMessage.AppendFormat("Process schedules defined in {0}:", Name);
                     responseMessage.AppendLine();
                     responseMessage.AppendLine();
-                    responseMessage.Append("Name".PadRight(20));
+                    responseMessage.Append("Name".PadRight(25));
                     responseMessage.Append(' ');
                     responseMessage.Append("Rule".PadRight(20));
                     responseMessage.Append(' ');
                     responseMessage.Append("Last Due".PadRight(30));
                     responseMessage.AppendLine();
-                    responseMessage.Append(new string('-', 20));
+                    responseMessage.Append(new string('-', 25));
                     responseMessage.Append(' ');
                     responseMessage.Append(new string('-', 20));
                     responseMessage.Append(' ');
@@ -2720,7 +2720,7 @@ namespace GSF.ServiceProcess
                     foreach (Schedule schedule in m_processScheduler.Schedules)
                     {
                         responseMessage.AppendLine();
-                        responseMessage.Append(schedule.Name.PadRight(20));
+                        responseMessage.Append(schedule.Name.PadRight(25));
                         responseMessage.Append(' ');
                         responseMessage.Append(schedule.Rule.PadRight(20));
                         responseMessage.Append(' ');

@@ -48,7 +48,7 @@ namespace GSF.TimeSeries.Reports
 
         // Fields
         private readonly string m_reportType;
-        private readonly ConcurrentQueue<DateTime> m_reportGenerationQueue;
+        private readonly ConcurrentQueue<Tuple<DateTime, bool>> m_reportGenerationQueue;
         private readonly LongSynchronizedOperation m_executeOperation;
         private bool m_persistSettings;
         private string m_settingsCategory;
@@ -61,6 +61,8 @@ namespace GSF.TimeSeries.Reports
         private string m_smtpServer;
         private string m_fromAddress;
         private string m_toAddresses;
+        private long m_generatedReports;
+        private DateTime m_lastReportGenerationTime;
 
         #endregion
 
@@ -73,7 +75,7 @@ namespace GSF.TimeSeries.Reports
         protected ReportingProcessBase(string reportType)
         {
             m_reportType = reportType;
-            m_reportGenerationQueue = new ConcurrentQueue<DateTime>();
+            m_reportGenerationQueue = new ConcurrentQueue<Tuple<DateTime, bool>>();
             m_executeOperation = new LongSynchronizedOperation(Execute)
             {
                 IsBackground = true
@@ -304,6 +306,12 @@ namespace GSF.TimeSeries.Reports
                 status.AppendLine();
                 status.AppendFormat("      Idle report lifetime: {0:N2} days", IdleReportLifetime);
                 status.AppendLine();
+                status.AppendFormat("            Queued reports: {0:N0}", m_reportGenerationQueue.Count);
+                status.AppendLine();
+                status.AppendFormat("         Generated reports: {0:N0}", m_generatedReports);
+                status.AppendLine();
+                status.AppendFormat("    Last report generation: {0:yyyy-MM-dd HH:mm:ss} UTC", m_lastReportGenerationTime);
+                status.AppendLine();
                 status.AppendFormat("          Report e-mailing: {0}", EnableReportEmail ? "Enabled" : "Disabled");
                 status.AppendLine();
 
@@ -360,14 +368,14 @@ namespace GSF.TimeSeries.Reports
         /// Queues up a report to be generated on a separate thread.
         /// </summary>
         /// <param name="reportDate">The date of the report to be generated.</param>
-        public void GenerateReport(DateTime reportDate)
+        /// <param name="emailReport">Flag that determines if report should be e-mailed, if enabled.</param>
+        public void GenerateReport(DateTime reportDate, bool emailReport)
         {
-            // ToArray is a thread-safe operation on ConcurrentQueue
-            // whereas using an enumerator directly on a ConcurrentQueue
-            // can cause collection modified errors while iterating
-            if (!m_reportGenerationQueue.ToArray().Contains(reportDate))
+            // ToArray is a thread-safe operation on ConcurrentQueue whereas using an enumerator
+            // directly on a ConcurrentQueue can cause collection modified errors while iterating
+            if (m_reportGenerationQueue.ToArray().Count(tuple => tuple.Item1 == reportDate) == 0)
             {
-                m_reportGenerationQueue.Enqueue(reportDate);
+                m_reportGenerationQueue.Enqueue(new Tuple<DateTime, bool>(reportDate, emailReport));
                 m_executeOperation.RunOnceAsync();
             }
         }
@@ -462,7 +470,7 @@ namespace GSF.TimeSeries.Reports
         private void Execute()
         {
             WindowsIdentity currentOwner = WindowsIdentity.GetCurrent();
-            DateTime reportDate;
+            Tuple<DateTime, bool> tuple;
 
             if ((object)currentOwner != null)
             {
@@ -475,13 +483,13 @@ namespace GSF.TimeSeries.Reports
                 }
             }
 
-            while (m_reportGenerationQueue.TryPeek(out reportDate))
+            while (m_reportGenerationQueue.TryPeek(out tuple))
             {
                 // Execute the reporting process
                 using (Process process = new Process())
                 {
                     process.StartInfo.FileName = FilePath.GetAbsolutePath("StatHistorianReportGenerator.exe");
-                    process.StartInfo.Arguments = GetArguments(reportDate);
+                    process.StartInfo.Arguments = GetArguments(tuple.Item1, tuple.Item2);
                     process.Start();
                     process.WaitForExit();
                     process.Close();
@@ -489,7 +497,9 @@ namespace GSF.TimeSeries.Reports
 
                 // Dequeue only after the report is generated so that it
                 // remains in the list of pending reports during generation
-                m_reportGenerationQueue.TryDequeue(out reportDate);
+                m_reportGenerationQueue.TryDequeue(out tuple);
+                m_generatedReports++;
+                m_lastReportGenerationTime = DateTime.UtcNow;
             }
         }
 
@@ -517,7 +527,9 @@ namespace GSF.TimeSeries.Reports
         /// <summary>
         /// Gets the command line arguments for the reporting process for a given report date.
         /// </summary>
-        public string GetArguments(DateTime reportDate)
+        /// <param name="reportDate">The date of the report to be generated.</param>
+        /// <param name="emailReport">Flag that determines if report should be e-mailed, if enabled.</param>
+        public string GetArguments(DateTime reportDate, bool emailReport)
         {
             string arguments = string.Format(
                 "{0} " +
@@ -525,7 +537,7 @@ namespace GSF.TimeSeries.Reports
                 GetArguments(),
                 reportDate);
 
-            if (EnableReportEmail)
+            if (emailReport && EnableReportEmail)
                 arguments = string.Format(
                     "{0} " +
                     "--smtpServer=\" {1} \" " +

@@ -572,8 +572,10 @@ namespace GSF.TimeSeries
             // Define scheduled service processes
             m_serviceHelper.AddScheduledProcess(HealthMonitorProcessHandler, "HealthMonitor", "* * * * *");    // Every minute
             m_serviceHelper.AddScheduledProcess(StatusExportProcessHandler, "StatusExport", "*/30 * * * *");   // Every 30 minutes
-            m_serviceHelper.AddProcess(ReportingProcessHandler, "CompletenessReporting");                      // Unscheduled
-            m_serviceHelper.AddProcess(ReportingProcessHandler, "CorrectnessReporting");                       // Unscheduled
+
+            // Define processes for each report (initially unscheduled)
+            foreach (IReportingProcess reportingProcess in m_reportingProcesses)
+                m_serviceHelper.AddProcess(ReportingProcessHandler, string.Format("{0}Reporting", reportingProcess.ReportType));
 
             // Add key Iaon collections as service components
             m_serviceHelper.ServiceComponents.Add(m_iaonSession.InputAdapters);
@@ -595,6 +597,7 @@ namespace GSF.TimeSeries
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("TemporalSupport", "Determines if any adapters support temporal processing", TemporalSupportRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ListReports", "Lists the available reports that have been generated", ListReportsRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("GetReport", "Gets a previously generated report for the specified date", GetReportRequestHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("GetReportStatus", "Gets a reporting process status", GetReportStatusRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("GenerateReport", "Generates a report for the specified date", GenerateReportRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReportingConfig", "Displays or modifies the configuration of the reporting process", ReportingConfigRequestHandler, false));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("LogEvent", "Logs remote event log entries.", LogEventRequestHandler, false));
@@ -1552,7 +1555,7 @@ namespace GSF.TimeSeries
             if ((object)reportingProcess != null)
             {
                 reportingProcess.CleanReportLocation();
-                reportingProcess.GenerateReport(DateTime.Today - TimeSpan.FromDays(1));
+                reportingProcess.GenerateReport(DateTime.Today - TimeSpan.FromDays(1), true);
             }
         }
 
@@ -2391,6 +2394,55 @@ namespace GSF.TimeSeries
             }
         }
 
+        private void GetReportStatusRequestHandler(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount == 0)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Gets a reporting process status.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       GetReportStatus ReportType [Options]");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   ReportType:".PadRight(20));
+                helpMessage.Append("Type of the report to process (e.g., Completeness)");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+
+                DisplayResponseMessage(requestInfo, helpMessage.ToString());
+            }
+            else
+            {
+                IReportingProcess reportingProcess;
+
+                if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
+                    reportingProcess = m_reportingProcesses.FindReportType(requestInfo.Request.Arguments["OrderedArg1"]);
+                else
+                    throw new ArgumentException("ReportType not specified.");
+
+                if ((object)reportingProcess == null)
+                    throw new ArgumentException(string.Format("ReportType \"{0}\" undefined.", requestInfo.Request.Arguments["OrderedArg1"]));
+
+                try
+                {
+                    SendResponse(requestInfo, true, reportingProcess.Status);
+                }
+                catch (Exception ex)
+                {
+                    SendResponse(requestInfo, false, "Unable to get report status due to exception: {0}", ex.Message);
+                }
+            }
+        }
+
         private void GenerateReportRequestHandler(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount == 0)
@@ -2414,6 +2466,9 @@ namespace GSF.TimeSeries
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
+                helpMessage.Append("       -email".PadRight(20));
+                helpMessage.Append("E-mail generated report, if enabled");
+                helpMessage.AppendLine();
                 helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
                 helpMessage.AppendLine();
@@ -2435,6 +2490,7 @@ namespace GSF.TimeSeries
                 DateTime now = DateTime.UtcNow;
                 DateTime today = DateTime.Parse(now.ToString("yyyy-MM-dd"));
                 DateTime reportDate;
+                bool emailReport = requestInfo.Request.Arguments.Exists("email");
 
                 try
                 {
@@ -2443,7 +2499,7 @@ namespace GSF.TimeSeries
 
                     if (reportDate < today)
                     {
-                        reportingProcess.GenerateReport(reportDate);
+                        reportingProcess.GenerateReport(reportDate, emailReport);
                         SendResponse(requestInfo, true, "Report was successfully queued for generation.");
                     }
                     else
@@ -2478,14 +2534,14 @@ namespace GSF.TimeSeries
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       -?".PadRight(20));
-                helpMessage.Append("Displays this help message");
-                helpMessage.AppendLine();
                 helpMessage.Append("       -get".PadRight(20));
                 helpMessage.Append("Gets the configuration of the reporting process as command-line arguments");
                 helpMessage.AppendLine();
                 helpMessage.Append("       -set Args".PadRight(20));
                 helpMessage.Append("Sets the configuration of the reporting process using the given command-line arguments");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
                 helpMessage.AppendLine();
 
                 DisplayResponseMessage(requestInfo, helpMessage.ToString());
