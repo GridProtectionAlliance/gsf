@@ -72,7 +72,7 @@ namespace GSF.TimeSeries.Reports
                         foreach (IReportingProcess item in this)
                         {
                             status.AppendLine();
-                            status.AppendFormat("Status of reporting process [{0}] \"{1}\":", ++index, item.ReportType);
+                            status.AppendFormat("Status of reporting process [{0}] \"{1}\":", ++index, item.Name);
                             status.AppendLine();
 
                             try
