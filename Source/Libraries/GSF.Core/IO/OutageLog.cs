@@ -30,7 +30,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
-using GSF.Collections;
 using GSF.Threading;
 
 namespace GSF.IO
@@ -80,7 +79,7 @@ namespace GSF.IO
         private readonly ShortSynchronizedOperation m_readLogOperation;
         private readonly ShortSynchronizedOperation m_writeLogOperation;
         private readonly ShortSynchronizedOperation m_condenseLogOperation;
-        private readonly object m_readerWriterLock;
+        private readonly object m_readWriteLock;
         private volatile bool m_postponeWriteOperations;
         private long m_totalReads;
         private long m_totalWrites;
@@ -102,7 +101,7 @@ namespace GSF.IO
             m_readLogOperation = new ShortSynchronizedOperation(ReadLog);
             m_writeLogOperation = new ShortSynchronizedOperation(WriteLog);
             m_condenseLogOperation = new ShortSynchronizedOperation(CondenseLog);
-            m_readerWriterLock = new object();
+            m_readWriteLock = new object();
         }
 
         /// <summary>
@@ -163,11 +162,11 @@ namespace GSF.IO
         /// <summary>
         /// Gets locking object for <see cref="OutageLog"/>.
         /// </summary>
-        protected internal object ReaderWriterLock
+        protected internal object ReadWriteLock
         {
             get
             {
-                return m_readerWriterLock;
+                return m_readWriteLock;
             }
         }
 
@@ -356,7 +355,7 @@ namespace GSF.IO
                     }
                 }
 
-                lock (m_readerWriterLock)
+                lock (m_readWriteLock)
                 {
                     try
                     {
@@ -394,7 +393,7 @@ namespace GSF.IO
 
                 Outage[] outages;
 
-                lock (m_readerWriterLock)
+                lock (m_readWriteLock)
                 {
                     outages = this.ToArray();
                 }
@@ -404,8 +403,8 @@ namespace GSF.IO
                     foreach (Outage outage in outages)
                     {
                         writer.WriteLine("{0};{1}",
-                            outage.StartTime.ToString(DateTimeFormat, CultureInfo.InvariantCulture),
-                            outage.EndTime.ToString(DateTimeFormat, CultureInfo.InvariantCulture));
+                            outage.Start.ToString(DateTimeFormat, CultureInfo.InvariantCulture),
+                            outage.End.ToString(DateTimeFormat, CultureInfo.InvariantCulture));
                     }
                 }
 
@@ -423,57 +422,42 @@ namespace GSF.IO
         // Condenses the outage log (i.e., reduces the overlapping outages into single outages)
         private void CondenseLog()
         {
-            lock (m_readerWriterLock)
+            List<Outage> mergedOutages;
+            bool originalPostponeState;
+            int count;
+
+            lock (m_readWriteLock)
             {
-                Dictionary<Outage, HashSet<Outage>> outageOverlaps = new Dictionary<Outage, HashSet<Outage>>();
+                originalPostponeState = m_postponeWriteOperations;
 
-                // Detect overlapping outages
-                foreach (Outage outage in this)
+                try
                 {
-                    Outage a = outage;
-                    foreach (Outage overlap in this.Where(b => !ReferenceEquals(a, b) && a.StartTime <= b.EndTime && b.StartTime <= a.EndTime))
-                        outageOverlaps.GetOrAdd(outage, o => new HashSet<Outage>()).Add(overlap);
+                    // Don't kick off write log operations during load
+                    m_postponeWriteOperations = true;
+
+                    // Merge all overlapping outages
+                    mergedOutages = Outage.MergeOverlapping(this.OrderBy(outage => outage.Start)).ToList();
+
+                    // Get the current total number of outages
+                    count = Count;
+
+                    // Any changes to the collection will trigger another condense operation
+                    // so make sure to check whether this condense operation is necessary
+                    // before attempting to modify the collection
+                    if (count == mergedOutages.Count)
+                        return;
+
+                    Clear();
+
+                    foreach (Outage outage in mergedOutages)
+                        Add(outage);
+
+                    m_totalCondenses++;
                 }
-
-                // If there are any overlapping outages, we need to reduce set
-                if (outageOverlaps.Count > 0)
+                finally
                 {
-                    bool originalPostponeState = m_postponeWriteOperations;
-
-                    try
-                    {
-                        // In this "fix-up" mode, we delay write subsequent log operations until process is complete
-                        m_postponeWriteOperations = true;
-
-                        foreach (KeyValuePair<Outage, HashSet<Outage>> overlap in outageOverlaps)
-                        {
-                            HashSet<Outage> overlaps = overlap.Value;
-
-                            // Add base outage to overlaps so full minimum and maximum range can be determined
-                            overlaps.Add(overlap.Key);
-
-                            Outage combinedOutage = new Outage(overlaps.Min(o => o.StartTime), overlaps.Max(o => o.EndTime));
-                            bool outagesRemoved = false;
-
-                            // Remove each overlapping outage
-                            foreach (Outage outage in overlaps)
-                            {
-                                if (Remove(outage))
-                                    outagesRemoved = true;
-                            }
-
-                            // Add a new combined outage of the complete span, assuming any of the outages were removed (could have already been handled)
-                            if (outagesRemoved)
-                                Add(combinedOutage);
-                        }
-
-                        m_totalCondenses++;
-                    }
-                    finally
-                    {
-                        m_postponeWriteOperations = originalPostponeState;
-                        QueueWriteLog();
-                    }
+                    m_postponeWriteOperations = originalPostponeState;
+                    QueueWriteLog();
                 }
             }
         }

@@ -165,7 +165,7 @@ namespace GSF.IO
                 Outage nextOutage = null;
 
                 // Get next outage for processing, if any
-                lock (m_outageLog.ReaderWriterLock)
+                lock (m_outageLog.ReadWriteLock)
                 {
                     if (m_outageLog.Count > 0)
                         nextOutage = m_outageLog[0];
@@ -181,7 +181,7 @@ namespace GSF.IO
                             m_processOutageFunction(nextOutage);
 
                             // Outage processed successfully, attempt to clear it from the log
-                            lock (m_outageLog.ReaderWriterLock)
+                            lock (m_outageLog.ReadWriteLock)
                             {
                                 m_outageLog.Remove(nextOutage);
                             }

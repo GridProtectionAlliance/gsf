@@ -22,28 +22,23 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace GSF.IO
 {
     /// <summary>
     /// Represents an outage as a start time and an end time.
     /// </summary>
-    public class Outage
+    public class Outage : Range<DateTime>
     {
-        #region [ Members ]
-
-        // Fields
-        private DateTime m_startTime;
-        private DateTime m_endTime;
-
-        #endregion
-
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="Outage"/>.
+        /// Creates a new <see cref="Outage"/> with the same start and end time as the given range.
         /// </summary>
-        public Outage()
+        public Outage(Range<DateTime> range)
+            : this(range.Start, range.End)
         {
         }
 
@@ -53,49 +48,28 @@ namespace GSF.IO
         /// <param name="startTime">Start time for outage.</param>
         /// <param name="endTime">End time for outage.</param>
         public Outage(DateTime startTime, DateTime endTime)
+            : base(startTime, endTime)
         {
-            StartTime = startTime;
-            EndTime = endTime;
+            if (startTime > endTime)
+                throw new ArgumentException("Outage start time is past end time");
         }
 
         #endregion
 
-        #region [ Properties ]
+        #region [ Static ]
+
+        // Static Methods
 
         /// <summary>
-        /// Gets or sets start time for <see cref="Outage"/>.
+        /// Merges all consecutive groups of overlapping ranges in a
+        /// collection and returns the resulting collection of outages.
         /// </summary>
-        public DateTime StartTime
+        /// <param name="outages">The collection of outages.</param>
+        /// <returns>The collection of merged outages.</returns>
+        /// <remarks>This method does not preserve the order of the source collection.</remarks>
+        public static IEnumerable<Outage> MergeOverlapping(IEnumerable<Outage> outages)
         {
-            get
-            {
-                return m_startTime;
-            }
-            set
-            {
-                if (m_endTime > DateTime.MinValue && value > m_endTime)
-                    throw new ArgumentOutOfRangeException("value", "Outage start time is past end time");
-
-                m_startTime = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets end time for <see cref="Outage"/>.
-        /// </summary>
-        public DateTime EndTime
-        {
-            get
-            {
-                return m_endTime;
-            }
-            set
-            {
-                if (m_startTime > value)
-                    throw new ArgumentOutOfRangeException("value", "Outage start time is past end time");
-
-                m_endTime = value;
-            }
+            return MergeAllOverlapping(outages).Select(range => new Outage(range));
         }
 
         #endregion

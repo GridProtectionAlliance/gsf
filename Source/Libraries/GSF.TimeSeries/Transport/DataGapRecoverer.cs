@@ -813,7 +813,7 @@ namespace GSF.TimeSeries.Transport
         // Can only start data gap processing when end time of recovery range is beyond recovery start delay
         private bool CanProcessDataGap(Outage dataGap)
         {
-            return m_connected && Enabled && (DateTime.UtcNow - dataGap.EndTime).TotalSeconds > m_recoveryStartDelay;
+            return m_connected && Enabled && (DateTime.UtcNow - dataGap.End).TotalSeconds > m_recoveryStartDelay;
         }
 
         // Any exceptions in this handler will be exposed through ProcessException event and cause OutageLogProcessor
@@ -821,8 +821,8 @@ namespace GSF.TimeSeries.Transport
         private void ProcessDataGap(Outage dataGap)
         {
             // Establish start and stop time for temporal session
-            m_subscriptionInfo.StartTime = dataGap.StartTime.ToString(OutageLog.DateTimeFormat, CultureInfo.InvariantCulture);
-            m_subscriptionInfo.StopTime = dataGap.EndTime.ToString(OutageLog.DateTimeFormat, CultureInfo.InvariantCulture);
+            m_subscriptionInfo.StartTime = dataGap.Start.ToString(OutageLog.DateTimeFormat, CultureInfo.InvariantCulture);
+            m_subscriptionInfo.StopTime = dataGap.End.ToString(OutageLog.DateTimeFormat, CultureInfo.InvariantCulture);
 
             OnStatusMessage("Starting data gap recovery for period \"{0}\" - \"{1}\"...", m_subscriptionInfo.StartTime, m_subscriptionInfo.StopTime);
 
@@ -834,7 +834,7 @@ namespace GSF.TimeSeries.Transport
             m_measurementsRecoveredOverLastInterval = 0;
 
             // Reset processing fields
-            m_mostRecentRecoveredTime = dataGap.StartTime.Ticks;
+            m_mostRecentRecoveredTime = dataGap.Start.Ticks;
             m_abnormalTermination = false;
 
             // Reset process completion wait handle
@@ -850,7 +850,7 @@ namespace GSF.TimeSeries.Transport
             if (m_abnormalTermination)
             {
                 // Make sure any data recovered so far doesn't get unnecessarily re-recovered, this requires that source historian report data in time-sorted order
-                dataGap.StartTime = new DateTime(GSF.Common.Max((Ticks)dataGap.StartTime.Ticks, m_mostRecentRecoveredTime - (m_subscriptionInfo.UseMillisecondResolution ? Ticks.PerMillisecond : 1L)), DateTimeKind.Utc);
+                dataGap = new Outage(new DateTime(GSF.Common.Max((Ticks)dataGap.Start.Ticks, m_mostRecentRecoveredTime - (m_subscriptionInfo.UseMillisecondResolution ? Ticks.PerMillisecond : 1L)), DateTimeKind.Utc), dataGap.End);
 
                 // Re-insert adjusted data gap at the top of the processing queue
                 m_dataGapLog.Insert(0, dataGap);
@@ -859,7 +859,7 @@ namespace GSF.TimeSeries.Transport
                 if (m_measurementsRecoveredForDataGap == 0)
                     OnStatusMessage("WARNING: Failed to establish temporal session. Data recovery for period \"{0}\" - \"{1}\" will be re-attempted.", m_subscriptionInfo.StartTime, m_subscriptionInfo.StopTime);
                 else
-                    OnStatusMessage("WARNING: Temporal session was disconnected during recovery operation. Data recovery for adjusted period \"{0}\" - \"{1}\" will be re-attempted.", dataGap.StartTime.ToString(OutageLog.DateTimeFormat, CultureInfo.InvariantCulture), m_subscriptionInfo.StopTime);
+                    OnStatusMessage("WARNING: Temporal session was disconnected during recovery operation. Data recovery for adjusted period \"{0}\" - \"{1}\" will be re-attempted.", dataGap.Start.ToString(OutageLog.DateTimeFormat, CultureInfo.InvariantCulture), m_subscriptionInfo.StopTime);
             }
 
             // Disconnect temporal session
