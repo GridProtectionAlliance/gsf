@@ -1137,15 +1137,15 @@ namespace PhasorProtocolAdapters
             // Assign reference to frame parser for this connection and attach to needed events
             FrameParser = frameParser;
 
-            // Load specific configuration file if one was specified
-            if (settings.TryGetValue("configurationFile", out setting))
-                LoadConfiguration(setting);
-
             // Load input devices associated with this connection
             LoadInputDevices();
 
             // Load active device measurements associated with this connection
             LoadDeviceMeasurements();
+
+            // Load specific configuration file if one was specified
+            if (settings.TryGetValue("configurationFile", out setting))
+                LoadConfiguration(setting);
 
             // Register with the statistics engine
             StatisticsEngine.Register(this, "InputStream", "IS");
