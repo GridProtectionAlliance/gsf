@@ -3960,7 +3960,7 @@ namespace GSF.PhasorProtocols
             Exception ex = e.Argument;
 
             if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException))
-                OnParsingException(e.Argument, "Command channel send exception: {0}", ex.Message);
+                OnParsingException(e.Argument, "Command channel receive exception: {0}", ex.Message);
         }
 
         private void m_commandChannel_UnhandledUserException(object sender, EventArgs<Exception> e)
