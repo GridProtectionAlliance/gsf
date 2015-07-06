@@ -73,6 +73,7 @@ namespace PIAdapters
         private int m_connectTimeout;                                       // PI connection timeout
         private string m_tagMapCacheFileName;                               // Tag map cache file name
         private bool m_runMetadataSync;                                     // Flag for automatically creating and/or updating PI points on the server
+        private int m_tagNamePrefixRemoveCount;                             // Count of number of tag subscription based tag name prefix to remove, if any
         private string m_pointSource;                                       // Point source to set on PI points when automatically created by the adapter
         private string m_pointClass;                                        // Point class to use for new PI points when automatically created by the adapter
         private DateTime m_lastMetadataRefresh;                             // Tracks time of last meta-data refresh
@@ -209,6 +210,22 @@ namespace PIAdapters
             set
             {
                 m_runMetadataSync = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the number of tag name prefixes, e.g., "SOURCE!", applied by subscriptions to remove from PI tag names.
+        /// </summary>
+        [ConnectionStringParameter, Description("Defines the number of tag name prefixes applied by subscriptions, e.g., \"SOURCE!\", to remove from PI tag names."), DefaultValue(0)]
+        public int TagNamePrefixRemoveCount
+        {
+            get
+            {
+                return m_tagNamePrefixRemoveCount;
+            }
+            set
+            {
+                m_tagNamePrefixRemoveCount = value;
             }
         }
 
@@ -771,7 +788,7 @@ namespace PIAdapters
                         measurementRow = rows[0];
 
                         // Get tag-name as defined in meta-data
-                        tagName = measurementRow["PointTag"].ToNonNullString().Trim();
+                        tagName = GetPITagName(measurementRow["PointTag"].ToNonNullString().Trim());
 
                         // If tag name is not defined in measurements there is no need to continue processing
                         if (string.IsNullOrWhiteSpace(tagName))
@@ -1054,7 +1071,6 @@ namespace PIAdapters
             }
         }
 
-        // It is recommended that the GetPIPoint overloads are called from a PIConnection.Execute function
         private PIPoint GetPIPoint(PIServer server, string tagName)
         {
             PIPoint point;
@@ -1098,11 +1114,29 @@ namespace PIAdapters
 
             PIPoint point = GetPIPoint(server, signalID, out cachedTagName);
 
-            // If point was not found in cache or cached tag name does not match current tag name, attempt to lookup using current tag name
-            if ((object)point == null || string.Compare(cachedTagName, tagName, StringComparison.OrdinalIgnoreCase) != 0)
+            // If point was not found in cache and cached tag name does not match current tag name, attempt to lookup using current tag name
+            if ((object)point == null && string.Compare(cachedTagName, tagName, StringComparison.OrdinalIgnoreCase) != 0)
                 point = GetPIPoint(server, tagName);
 
             return point;
+        }
+
+        private string GetPITagName(string tagName)
+        {
+            if (m_tagNamePrefixRemoveCount < 1)
+                return tagName;
+
+            for (int i = 0; i < m_tagNamePrefixRemoveCount; i++)
+            {
+                int prefixIndex = tagName.IndexOf('!');
+
+                if (prefixIndex > -1 && prefixIndex + 1 < tagName.Length)
+                    tagName = tagName.Substring(prefixIndex + 1);
+                else
+                    break;
+            }
+
+            return tagName;
         }
 
         private void m_connection_Disconnected(object sender, EventArgs e)
