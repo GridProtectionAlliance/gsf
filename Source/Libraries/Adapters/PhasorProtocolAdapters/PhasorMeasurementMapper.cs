@@ -180,6 +180,7 @@ namespace PhasorProtocolAdapters
         private double m_lagTime;
         private double m_leadTime;
         private long m_timeResolution;
+        private bool m_countOnlyMappedMeasurements;
 
         private long m_lifetimeMeasurements;
         private long m_minimumMeasurementsPerSecond;
@@ -1073,6 +1074,11 @@ namespace PhasorProtocolAdapters
             else
                 m_allowUseOfCachedConfiguration = true;
 
+            if (settings.TryGetValue("countOnlyMappedMeasurements", out setting))
+                m_countOnlyMappedMeasurements = setting.ParseBoolean();
+            else
+                m_countOnlyMappedMeasurements = false;
+
             // Create a new phasor protocol frame parser for non-virtual connections
             MultiProtocolFrameParser frameParser = new MultiProtocolFrameParser();
 
@@ -1738,6 +1744,7 @@ namespace PhasorProtocolAdapters
             const int DfDtIndex = (int)CompositeFrequencyValue.DfDt;
 
             List<IMeasurement> mappedMeasurements = new List<IMeasurement>(m_lastMeasurementMappedCount);
+            List<IMeasurement> deviceMappedMeasurements = new List<IMeasurement>();
             DeviceStatisticsHelper<ConfigurationCell> statisticsHelper;
             ConfigurationCell definedDevice;
             PhasorValueCollection phasors;
@@ -1830,20 +1837,20 @@ namespace PhasorProtocolAdapters
                             measurements = phasors[x].Measurements;
 
                             // Map angle
-                            MapMeasurementAttributes(mappedMeasurements, definedDevice.GetSignalReference(SignalKind.Angle, x, count), measurements[AngleIndex]);
+                            MapMeasurementAttributes(deviceMappedMeasurements, definedDevice.GetSignalReference(SignalKind.Angle, x, count), measurements[AngleIndex]);
 
                             // Map magnitude
-                            MapMeasurementAttributes(mappedMeasurements, definedDevice.GetSignalReference(SignalKind.Magnitude, x, count), measurements[MagnitudeIndex]);
+                            MapMeasurementAttributes(deviceMappedMeasurements, definedDevice.GetSignalReference(SignalKind.Magnitude, x, count), measurements[MagnitudeIndex]);
                         }
 
                         // Map frequency (FQ) and dF/dt (DF)
                         measurements = parsedDevice.FrequencyValue.Measurements;
 
                         // Map frequency
-                        MapMeasurementAttributes(mappedMeasurements, definedDevice.GetSignalReference(SignalKind.Frequency), measurements[FrequencyIndex]);
+                        MapMeasurementAttributes(deviceMappedMeasurements, definedDevice.GetSignalReference(SignalKind.Frequency), measurements[FrequencyIndex]);
 
                         // Map dF/dt
-                        MapMeasurementAttributes(mappedMeasurements, definedDevice.GetSignalReference(SignalKind.DfDt), measurements[DfDtIndex]);
+                        MapMeasurementAttributes(deviceMappedMeasurements, definedDevice.GetSignalReference(SignalKind.DfDt), measurements[DfDtIndex]);
 
                         // Map analog values (AVn)
                         analogs = parsedDevice.AnalogValues;
@@ -1852,7 +1859,7 @@ namespace PhasorProtocolAdapters
                         for (x = 0; x < count; x++)
                         {
                             // Map analog value
-                            MapMeasurementAttributes(mappedMeasurements, definedDevice.GetSignalReference(SignalKind.Analog, x, count), analogs[x].Measurements[0]);
+                            MapMeasurementAttributes(deviceMappedMeasurements, definedDevice.GetSignalReference(SignalKind.Analog, x, count), analogs[x].Measurements[0]);
                         }
 
                         // Map digital values (DVn)
@@ -1862,11 +1869,17 @@ namespace PhasorProtocolAdapters
                         for (x = 0; x < count; x++)
                         {
                             // Map digital value
-                            MapMeasurementAttributes(mappedMeasurements, definedDevice.GetSignalReference(SignalKind.Digital, x, count), digitals[x].Measurements[0]);
+                            MapMeasurementAttributes(deviceMappedMeasurements, definedDevice.GetSignalReference(SignalKind.Digital, x, count), digitals[x].Measurements[0]);
                         }
 
                         // Track measurement count statistics for this device
-                        statisticsHelper.AddToMeasurementsReceived(CountParsedMeasurements(parsedDevice));
+                        if (m_countOnlyMappedMeasurements)
+                            statisticsHelper.AddToMeasurementsReceived(CountMappedMeasurements(parsedDevice, deviceMappedMeasurements));
+                        else
+                            statisticsHelper.AddToMeasurementsReceived(CountParsedMeasurements(parsedDevice));
+
+                        mappedMeasurements.AddRange(deviceMappedMeasurements);
+                        deviceMappedMeasurements.Clear();
                     }
                     else
                     {
@@ -1899,6 +1912,18 @@ namespace PhasorProtocolAdapters
             int measurementCount = mappedMeasurements.Count;
             m_lifetimeMeasurements += measurementCount;
             UpdateMeasurementsPerSecond(measurementCount);
+        }
+
+        private int CountMappedMeasurements(IDataCell parsedDevice, List<IMeasurement> mappedMeasurements)
+        {
+            IFrequencyValue frequencyValue = parsedDevice.FrequencyValue;
+
+            // Ignore frequency measurements when
+            // frequency value is zero - some PDCs use
+            // zero for missing frequency values
+            return frequencyValue.Frequency == 0.0D
+                ? mappedMeasurements.Count(measurement => !double.IsNaN(measurement.Value) && frequencyValue.Measurements.All(freq => measurement.Key != freq.Key))
+                : mappedMeasurements.Count(measurement => !double.IsNaN(measurement.Value));
         }
 
         // Could parsed measurements for this device
@@ -1942,7 +1967,8 @@ namespace PhasorProtocolAdapters
                 }
             }
 
-            // Ignore frequency measurements when frequency value is zero - some PDCs use
+            // Ignore frequency measurements when
+            // frequency value is zero - some PDCs use
             // zero for missing frequency values
             if (frequencyValue.Frequency != 0.0D)
             {
