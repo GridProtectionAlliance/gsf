@@ -616,6 +616,8 @@ namespace PIAdapters
 
                 try
                 {
+                    mappingEstablished = false;
+
                     if (m_mappedPIPoints.TryGetValue(key, out point))
                     {
                         if ((object)point == null)
