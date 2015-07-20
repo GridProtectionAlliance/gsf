@@ -2438,7 +2438,7 @@ namespace GSF.TimeSeries.Transport
                 string remoteCertificateFile;
                 X509Certificate certificate;
 
-                if ((object)m_certificateChecker == null || m_securityMode != SecurityMode.TLS)
+                if ((object)m_certificateChecker == null || (object)m_subscriberIdentities == null || m_securityMode != SecurityMode.TLS)
                     return;
 
                 m_certificateChecker.DistrustAll();
