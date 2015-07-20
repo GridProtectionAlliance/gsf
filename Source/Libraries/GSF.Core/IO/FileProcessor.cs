@@ -131,6 +131,11 @@ namespace GSF.IO
         /// </summary>
         public static readonly string DefaultCachePath = Path.Combine(FilePath.GetCommonApplicationDataFolder(), "FileProcessors");
 
+        /// <summary>
+        /// Default value for the <see cref="InternalBufferSize"/> property.
+        /// </summary>
+        public const int DefaultInternalBufferSize = 8192;
+
         // Events
 
         /// <summary>
@@ -150,6 +155,7 @@ namespace GSF.IO
         private string m_filter;
         private bool m_trackChanges;
         private string m_cachePath;
+        private int m_internalBufferSize;
 
         private readonly object m_fileWatchersLock;
         private readonly List<FileSystemWatcher> m_fileWatchers;
@@ -177,6 +183,7 @@ namespace GSF.IO
             m_filter = DefaultFilter;
             m_trackChanges = DefaultTrackChanges;
             m_cachePath = DefaultCachePath;
+            m_internalBufferSize = DefaultInternalBufferSize;
 
             m_fileWatchersLock = new object();
             m_fileWatchers = new List<FileSystemWatcher>();
@@ -251,6 +258,22 @@ namespace GSF.IO
                         m_processedFiles.FilePath = Path.Combine(m_cachePath, m_processorID.ToString());
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the internal buffer size of each of the
+        /// <see cref="FileSystemWatcher"/>s instantiated by this file processor.
+        /// </summary>
+        public int InternalBufferSize
+        {
+            get
+            {
+                return m_internalBufferSize;
+            }
+            set
+            {
+                m_internalBufferSize = value;
             }
         }
 
