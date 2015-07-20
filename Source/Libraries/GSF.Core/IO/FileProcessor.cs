@@ -314,6 +314,7 @@ namespace GSF.IO
             {
                 watcher = new FileSystemWatcher(fullPath);
                 watcher.IncludeSubdirectories = true;
+                watcher.InternalBufferSize = m_internalBufferSize;
 
                 watcher.Created += Watcher_Created;
                 watcher.Changed += Watcher_Changed;
