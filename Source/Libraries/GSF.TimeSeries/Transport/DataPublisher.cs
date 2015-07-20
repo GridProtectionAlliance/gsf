@@ -2324,21 +2324,7 @@ namespace GSF.TimeSeries.Transport
         /// <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
         internal protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, byte[] data)
         {
-            return SendClientResponse(null, clientID, (byte)response, (byte)command, data);
-        }
-
-        /// <summary>
-        /// Sends response back to specified client with attached data using specified working buffer.
-        /// </summary>
-        /// <param name="workingBuffer">Working buffer to use to assemble response, or <c>null</c> to have one created for you.</param>
-        /// <param name="clientID">ID of client to send response.</param>
-        /// <param name="response">Server response.</param>
-        /// <param name="command">In response to command.</param>
-        /// <param name="data">Data to return to client; null if none.</param>
-        /// <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
-        internal protected virtual bool SendClientResponse(BlockAllocatedMemoryStream workingBuffer, Guid clientID, ServerResponse response, ServerCommand command, byte[] data)
-        {
-            return SendClientResponse(workingBuffer, clientID, (byte)response, (byte)command, data);
+            return SendClientResponse(clientID, (byte)response, (byte)command, data);
         }
 
         /// <summary>
@@ -2528,111 +2514,101 @@ namespace GSF.TimeSeries.Transport
         }
 
         // Send binary response packet to client
-        private bool SendClientResponse(BlockAllocatedMemoryStream workingBuffer, Guid clientID, byte responseCode, byte commandCode, byte[] data)
+        private bool SendClientResponse(Guid clientID, byte responseCode, byte commandCode, byte[] data)
         {
             ClientConnection connection;
             bool success = false;
-            bool createdBuffer = false;
 
             // Attempt to lookup associated client connection
             if (m_clientConnections.TryGetValue(clientID, out connection) && (object)connection != null)
             {
                 try
                 {
-                    // Make sure a working buffer is available and ready to use
-                    if ((object)workingBuffer == null)
+                    // Create a new working buffer
+                    using (BlockAllocatedMemoryStream workingBuffer = new BlockAllocatedMemoryStream())
                     {
-                        // Create a new working buffer
-                        workingBuffer = new BlockAllocatedMemoryStream();
-                        createdBuffer = true;
-                    }
-                    else
-                    {
-                        // Reset existing working buffer
-                        workingBuffer.SetLength(0);
-                    }
+                        bool dataPacketResponse = responseCode == (byte)ServerResponse.DataPacket;
+                        bool useDataChannel = (dataPacketResponse || responseCode == (byte)ServerResponse.BufferBlock);
 
-                    bool dataPacketResponse = responseCode == (byte)ServerResponse.DataPacket;
-                    bool useDataChannel = (dataPacketResponse || responseCode == (byte)ServerResponse.BufferBlock);
+                        // Add response code
+                        workingBuffer.WriteByte(responseCode);
 
-                    // Add response code
-                    workingBuffer.WriteByte(responseCode);
+                        // Add original in response to command code
+                        workingBuffer.WriteByte(commandCode);
 
-                    // Add original in response to command code
-                    workingBuffer.WriteByte(commandCode);
-
-                    if ((object)data == null || data.Length == 0)
-                    {
-                        // Add zero sized data buffer to response packet
-                        workingBuffer.Write(ZeroLengthBytes, 0, 4);
-                    }
-                    else
-                    {
-                        // If response is for a data packet and a connection key is defined, encrypt the data packet payload
-                        if (dataPacketResponse && (object)connection.KeyIVs != null)
+                        if ((object)data == null || data.Length == 0)
                         {
-                            // Get a local copy of volatile keyIVs and cipher index since these can change at any time
-                            byte[][][] keyIVs = connection.KeyIVs;
-                            int cipherIndex = connection.CipherIndex;
-
-                            // Reserve space for size of data buffer to go into response packet
+                            // Add zero sized data buffer to response packet
                             workingBuffer.Write(ZeroLengthBytes, 0, 4);
-
-                            // Get data packet flags
-                            DataPacketFlags flags = (DataPacketFlags)data[0];
-
-                            // Encode current cipher index into data packet flags
-                            if (cipherIndex > 0)
-                                flags |= DataPacketFlags.CipherIndex;
-
-                            // Write data packet flags into response packet
-                            workingBuffer.WriteByte((byte)flags);
-
-                            // Copy source data payload into a memory stream
-                            MemoryStream sourceData = new MemoryStream(data, 1, data.Length - 1);
-
-                            // Encrypt payload portion of data packet and copy into the response packet
-                            Common.SymmetricAlgorithm.Encrypt(sourceData, workingBuffer, keyIVs[cipherIndex][0], keyIVs[cipherIndex][1]);
-
-                            // Calculate length of encrypted data payload
-                            int payloadLength = (int)workingBuffer.Length - 6;
-
-                            // Move the response packet position back to the packet size reservation
-                            workingBuffer.Seek(2, SeekOrigin.Begin);
-
-                            // Add the actual size of payload length to response packet
-                            workingBuffer.Write(BigEndian.GetBytes(payloadLength), 0, 4);
                         }
                         else
                         {
-                            // Add size of data buffer to response packet
-                            workingBuffer.Write(BigEndian.GetBytes(data.Length), 0, 4);
+                            // If response is for a data packet and a connection key is defined, encrypt the data packet payload
+                            if (dataPacketResponse && (object)connection.KeyIVs != null)
+                            {
+                                // Get a local copy of volatile keyIVs and cipher index since these can change at any time
+                                byte[][][] keyIVs = connection.KeyIVs;
+                                int cipherIndex = connection.CipherIndex;
 
-                            // Add data buffer
-                            workingBuffer.Write(data, 0, data.Length);
+                                // Reserve space for size of data buffer to go into response packet
+                                workingBuffer.Write(ZeroLengthBytes, 0, 4);
+
+                                // Get data packet flags
+                                DataPacketFlags flags = (DataPacketFlags)data[0];
+
+                                // Encode current cipher index into data packet flags
+                                if (cipherIndex > 0)
+                                    flags |= DataPacketFlags.CipherIndex;
+
+                                // Write data packet flags into response packet
+                                workingBuffer.WriteByte((byte)flags);
+
+                                // Copy source data payload into a memory stream
+                                MemoryStream sourceData = new MemoryStream(data, 1, data.Length - 1);
+
+                                // Encrypt payload portion of data packet and copy into the response packet
+                                Common.SymmetricAlgorithm.Encrypt(sourceData, workingBuffer, keyIVs[cipherIndex][0], keyIVs[cipherIndex][1]);
+
+                                // Calculate length of encrypted data payload
+                                int payloadLength = (int)workingBuffer.Length - 6;
+
+                                // Move the response packet position back to the packet size reservation
+                                workingBuffer.Seek(2, SeekOrigin.Begin);
+
+                                // Add the actual size of payload length to response packet
+                                workingBuffer.Write(BigEndian.GetBytes(payloadLength), 0, 4);
+                            }
+                            else
+                            {
+                                // Add size of data buffer to response packet
+                                workingBuffer.Write(BigEndian.GetBytes(data.Length), 0, 4);
+
+                                // Add data buffer
+                                workingBuffer.Write(data, 0, data.Length);
+                            }
                         }
-                    }
 
-                    IServer publishChannel;
+                        IServer publishChannel;
 
-                    // Data packets and buffer blocks can be published on a UDP data channel, so check for this...
-                    if (useDataChannel)
-                        publishChannel = m_clientPublicationChannels.GetOrAdd(clientID, id => (object)connection != null ? connection.PublishChannel : m_commandChannel);
-                    else
-                        publishChannel = m_commandChannel;
-
-                    // Send response packet
-                    if ((object)publishChannel != null && publishChannel.CurrentState == ServerState.Running)
-                    {
-                        byte[] responseData = workingBuffer.ToArray();
-
-                        if (publishChannel is UdpServer)
-                            publishChannel.MulticastAsync(responseData, 0, responseData.Length);
+                        // Data packets and buffer blocks can be published on a UDP data channel, so check for this...
+                        if (useDataChannel)
+                            publishChannel = m_clientPublicationChannels.GetOrAdd(clientID, id => (object)connection != null ? connection.PublishChannel : m_commandChannel);
                         else
-                            publishChannel.SendToAsync(clientID, responseData, 0, responseData.Length);
+                            publishChannel = m_commandChannel;
 
-                        m_totalBytesSent += responseData.Length;
-                        success = true;
+                        // Send response packet
+                        if ((object)publishChannel != null && publishChannel.CurrentState == ServerState.Running)
+                        {
+                            byte[] responseData = workingBuffer.ToArray();
+
+                            if (publishChannel is UdpServer)
+                                publishChannel.MulticastAsync(responseData, 0, responseData.Length);
+                            else
+                                publishChannel.SendToAsync(clientID, responseData, 0, responseData.Length);
+
+                            m_totalBytesSent += responseData.Length;
+                            success = true;
+                        }
                     }
                 }
                 catch (ObjectDisposedException)
@@ -2657,11 +2633,6 @@ namespace GSF.TimeSeries.Transport
                 catch (Exception ex)
                 {
                     OnProcessException(new InvalidOperationException("Failed to send response packet to client due to exception: " + ex.Message, ex));
-                }
-                finally
-                {
-                    if (createdBuffer)
-                        workingBuffer.Dispose();
                 }
             }
 
@@ -3866,7 +3837,7 @@ namespace GSF.TimeSeries.Transport
                     {
                         // Handle unrecognized commands
                         message = " sent an unrecognized server command: 0x" + commandByte.ToString("X").PadLeft(2, '0');
-                        SendClientResponse(null, clientID, (byte)ServerResponse.Failed, commandByte, GetClientEncoding(clientID).GetBytes("Client" + message));
+                        SendClientResponse(clientID, (byte)ServerResponse.Failed, commandByte, GetClientEncoding(clientID).GetBytes("Client" + message));
                         OnProcessException(new InvalidOperationException("WARNING: " + connection.ConnectionID + message));
                     }
                 }

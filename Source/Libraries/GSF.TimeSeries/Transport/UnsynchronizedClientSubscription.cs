@@ -81,7 +81,6 @@ namespace GSF.TimeSeries.Transport
         private volatile bool m_startTimeSent;
         private IaonSession m_iaonSession;
 
-        private readonly BlockAllocatedMemoryStream m_workingBuffer;
         private readonly List<byte[]> m_bufferBlockCache;
         private readonly object m_bufferBlockCacheLock;
         private uint m_bufferBlockSequenceNumber;
@@ -110,7 +109,6 @@ namespace GSF.TimeSeries.Transport
             m_signalIndexCache = new SignalIndexCache();
             m_signalIndexCache.SubscriberID = subscriberID;
 
-            m_workingBuffer = new BlockAllocatedMemoryStream();
             m_bufferBlockCache = new List<byte[]>();
             m_bufferBlockCacheLock = new object();
         }
@@ -387,9 +385,6 @@ namespace GSF.TimeSeries.Transport
                             m_baseTimeRotationTimer.Dispose();
                             m_baseTimeRotationTimer = null;
                         }
-
-                        if ((object)m_workingBuffer != null)
-                            m_workingBuffer.Dispose();
 
                         // Dispose Iaon session
                         this.DisposeTemporalSession(ref m_iaonSession);
@@ -695,7 +690,7 @@ namespace GSF.TimeSeries.Transport
 
                         // Append measurement data and send
                         Buffer.BlockCopy(bufferBlockMeasurement.Buffer, 0, bufferBlock, 6, bufferBlockMeasurement.Length);
-                        m_parent.SendClientResponse(m_workingBuffer, m_clientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, bufferBlock);
+                        m_parent.SendClientResponse(m_clientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, bufferBlock);
 
                         lock (m_bufferBlockCacheLock)
                         {
@@ -750,46 +745,47 @@ namespace GSF.TimeSeries.Transport
 
         private void ProcessBinaryMeasurements(IEnumerable<IBinaryMeasurement> measurements, bool useCompactMeasurementFormat, bool usePayloadCompression)
         {
-            // Reset working buffer
-            m_workingBuffer.SetLength(0);
-
-            // Serialize data packet flags into response
-            DataPacketFlags flags = DataPacketFlags.NoFlags; // No flags means bit is cleared, i.e., unsynchronized
-
-            if (useCompactMeasurementFormat)
-                flags |= DataPacketFlags.Compact;
-
-            m_workingBuffer.WriteByte((byte)flags);
-
-            // No frame level timestamp is serialized into the data packet since all data is unsynchronized and essentially
-            // published upon receipt, however timestamps are optionally included in the serialized measurements.
-
-            // Serialize total number of measurement values to follow
-            m_workingBuffer.Write(BigEndian.GetBytes(measurements.Count()), 0, 4);
-
-            // Attempt compression when requested - encoding of compressed buffer only happens if size would be smaller than normal serialization
-            if (!usePayloadCompression || !measurements.Cast<CompactMeasurement>().CompressPayload(m_workingBuffer, m_compressionStrength, m_includeTime, ref flags))
+            // Create working buffer
+            using (BlockAllocatedMemoryStream workingBuffer = new BlockAllocatedMemoryStream())
             {
-                // Serialize measurements to data buffer
-                foreach (IBinaryMeasurement measurement in measurements)
+                // Serialize data packet flags into response
+                DataPacketFlags flags = DataPacketFlags.NoFlags; // No flags means bit is cleared, i.e., unsynchronized
+
+                if (useCompactMeasurementFormat)
+                    flags |= DataPacketFlags.Compact;
+
+                workingBuffer.WriteByte((byte)flags);
+
+                // No frame level timestamp is serialized into the data packet since all data is unsynchronized and essentially
+                // published upon receipt, however timestamps are optionally included in the serialized measurements.
+
+                // Serialize total number of measurement values to follow
+                workingBuffer.Write(BigEndian.GetBytes(measurements.Count()), 0, 4);
+
+                // Attempt compression when requested - encoding of compressed buffer only happens if size would be smaller than normal serialization
+                if (!usePayloadCompression || !measurements.Cast<CompactMeasurement>().CompressPayload(workingBuffer, m_compressionStrength, m_includeTime, ref flags))
                 {
-                    measurement.CopyBinaryImageToStream(m_workingBuffer);
+                    // Serialize measurements to data buffer
+                    foreach (IBinaryMeasurement measurement in measurements)
+                    {
+                        measurement.CopyBinaryImageToStream(workingBuffer);
+                    }
                 }
+
+                // Update data packet flags if it has updated compression flags
+                if ((flags & DataPacketFlags.Compressed) > 0)
+                {
+                    workingBuffer.Seek(0, SeekOrigin.Begin);
+                    workingBuffer.WriteByte((byte)flags);
+                }
+
+                // Publish data packet to client
+                if ((object)m_parent != null)
+                    m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, workingBuffer.ToArray());
+
+                // Track last publication time
+                m_lastPublishTime = DateTime.UtcNow.Ticks;
             }
-
-            // Update data packet flags if it has updated compression flags
-            if ((flags & DataPacketFlags.Compressed) > 0)
-            {
-                m_workingBuffer.Seek(0, SeekOrigin.Begin);
-                m_workingBuffer.WriteByte((byte)flags);
-            }
-
-            // Publish data packet to client
-            if ((object)m_parent != null)
-                m_parent.SendClientResponse(m_workingBuffer, m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, m_workingBuffer.ToArray());
-
-            // Track last publication time
-            m_lastPublishTime = DateTime.UtcNow.Ticks;
         }
 
         // Retransmits all buffer blocks for which confirmation has not yet been received
