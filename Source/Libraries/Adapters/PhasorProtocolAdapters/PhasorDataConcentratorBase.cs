@@ -1622,7 +1622,7 @@ namespace PhasorProtocolAdapters
                             m_configurationFramePublished = false;
                         }
 
-                        if (!m_configurationFramePublished)
+                        if (!m_configurationFramePublished && (object)m_configurationFrame != null)
                         {
                             // Publish configuration frame binary image
                             m_configurationFramePublished = true;

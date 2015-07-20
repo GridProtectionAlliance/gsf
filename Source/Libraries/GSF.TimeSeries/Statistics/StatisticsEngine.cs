@@ -27,7 +27,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Drawing.Text;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -99,7 +98,7 @@ namespace GSF.TimeSeries.Statistics
             #region [ Members ]
 
             // Fields
-            private AdoDataConnection m_database;
+            private readonly AdoDataConnection m_database;
             private StatisticSource m_source;
             private DataRow m_statistic;
 
@@ -293,6 +292,10 @@ namespace GSF.TimeSeries.Statistics
                 TemplatedExpressionParser parser;
 
                 arguments = m_statistic.Field<string>("Arguments");
+
+                if (string.IsNullOrWhiteSpace(arguments))
+                    return m_source.SourceName;
+
                 substitutions = arguments.ParseKeyValuePairs();
                 parser = new TemplatedExpressionParser();
                 parser.TemplatedExpression = m_source.StatisticMeasurementNameFormat;
@@ -768,7 +771,7 @@ namespace GSF.TimeSeries.Statistics
                     // Get the statistic measurements from the database which have already been defined for this source
                     args = string.Join(",", signalReferences.Select((signalReference, index) => string.Concat("{", index, "}")));
                     statisticMeasurements = helper.RetrieveData(string.Format(StatisticMeasurementSelectFormat, args), signalReferences.ToArray<object>()).Select().ToList();
-                    
+
                     // If the number of statistics for the source category matches
                     // the number of statistic measurements for the source, assume
                     // all is well and move to the next source
