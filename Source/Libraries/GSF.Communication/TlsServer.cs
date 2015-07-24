@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -36,6 +37,7 @@ using System.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
+using System.Text;
 using System.Threading;
 using GSF.Configuration;
 using GSF.IO;
@@ -611,6 +613,26 @@ namespace GSF.Communication
             set
             {
                 m_defaultCertificateChecker.ValidChainFlags = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the descriptive status of the server.
+        /// </summary>
+        public override string Status
+        {
+            get
+            {
+                StringBuilder statusBuilder = new StringBuilder(base.Status);
+                int count = 0;
+
+                foreach (ConcurrentQueue<TlsServerPayload> sendQueue in m_clientInfoLookup.Values.Select(clientInfo => clientInfo.SendQueue))
+                {
+                    statusBuilder.AppendFormat("           Queued payloads: {0} for client {1}", sendQueue.Count, ++count);
+                    statusBuilder.AppendLine();
+                }
+
+                return statusBuilder.ToString();
             }
         }
 

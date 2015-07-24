@@ -421,7 +421,7 @@ namespace GSF.Communication
         }
 
         /// <summary>
-        /// Gets the descriptive status of the client.
+        /// Gets the descriptive status of the server.
         /// </summary>
         public override string Status
         {
