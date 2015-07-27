@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -56,6 +57,7 @@ namespace GSF.TimeSeries
         // Fields
         private bool m_telnetActive;
         private volatile bool m_authenticated;
+        private volatile bool m_authenticationFailure;
         private readonly object m_displayLock;
 
         private readonly ConsoleColor m_originalBgColor;
@@ -85,6 +87,7 @@ namespace GSF.TimeSeries
 
             // Register event handlers.
             m_clientHelper.AuthenticationSuccess += ClientHelper_AuthenticationSuccess;
+            m_clientHelper.AuthenticationFailure += ClientHelper_AuthenticationFailure;
             m_clientHelper.ReceivedServiceUpdate += ClientHelper_ReceivedServiceUpdate;
             m_clientHelper.ReceivedServiceResponse += ClientHelper_ReceivedServiceResponse;
             m_clientHelper.TelnetSessionEstablished += ClientHelper_TelnetSessionEstablished;
@@ -285,19 +288,20 @@ namespace GSF.TimeSeries
                         lastConnectAttempt = DateTime.UtcNow.Ticks;
                         m_clientHelper.Connect();
 
-                        if (!m_clientHelper.RemotingClient.Enabled)
+                        if (!m_authenticationFailure && !m_clientHelper.RemotingClient.Enabled)
                             continue;
 
                         // If connection attempt failed with provided credentials, try once more with direct authentication
                         // but only when transport is secured
-                        if (!m_authenticated && !string.IsNullOrEmpty(password) && m_clientHelper.RemotingClient is TlsClient)
+                        if (m_authenticationFailure && !string.IsNullOrEmpty(password) && m_clientHelper.RemotingClient is TlsClient)
                         {
+                            m_authenticationFailure = false;
                             m_clientHelper.Disconnect();
                             m_clientHelper.Password = password;
                             m_clientHelper.Connect();
                         }
 
-                        if (!m_authenticated)
+                        if (m_authenticationFailure)
                         {
                             string username;
                             UserInfo userInfo;
@@ -358,12 +362,14 @@ namespace GSF.TimeSeries
                                 // Set the user name on the client helper
                                 m_clientHelper.Username = username;
                                 m_clientHelper.Password = SecurityProviderUtility.EncryptPassword(password);
+                                m_authenticationFailure = false;
                             }
                             catch
                             {
                                 // Even if this fails, we can still pass along user credentials
                                 m_clientHelper.Username = username;
                                 m_clientHelper.Password = SecurityProviderUtility.EncryptPassword(password);
+                                m_authenticationFailure = false;
                             }
                         }
 
@@ -587,13 +593,23 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Client helper service update reception handler.
+        /// Client helper authentication success reception handler.
         /// </summary>
         /// <param name="sender">Sending object.</param>
-        /// <param name="e">Event argument containing update type and associated message data.</param>
+        /// <param name="e">Event argument.</param>
         private void ClientHelper_AuthenticationSuccess(object sender, EventArgs e)
         {
             m_authenticated = true;
+        }
+
+        /// <summary>
+        /// Client helper authentication failure reception handler.
+        /// </summary>
+        /// <param name="sender">Sending object.</param>
+        /// <param name="e">Event argument.</param>
+        private void ClientHelper_AuthenticationFailure(object sender, CancelEventArgs e)
+        {
+            m_authenticationFailure = true;
         }
 
         /// <summary>

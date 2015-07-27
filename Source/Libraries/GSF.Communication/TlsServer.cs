@@ -1263,7 +1263,7 @@ namespace GSF.Communication
             TlsClientInfo clientInfo = null;
             TransportProvider<TlsSocket> client = null;
             ConcurrentQueue<TlsServerPayload> sendQueue = null;
-            ManualResetEventSlim handle = null;
+            ManualResetEventSlim handle;
 
             try
             {
@@ -1273,7 +1273,11 @@ namespace GSF.Communication
                 sendQueue = clientInfo.SendQueue;
                 handle = payload.WaitHandle;
 
-                // Send operation is complete.
+                // Set the wait handle to indicate
+                // the send operation is complete.
+                handle.Set();
+
+                // Update statistics and notify.
                 client.Provider.SslStream.EndWrite(asyncResult);
                 client.Statistics.UpdateBytesSent(payload.Length);
                 OnSendClientDataComplete(client.ID);
