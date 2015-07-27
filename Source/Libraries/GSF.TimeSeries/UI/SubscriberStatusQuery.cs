@@ -222,7 +222,7 @@ namespace GSF.TimeSeries.UI
                 foreach (Guid subscriberID in subscriberIDs)
                 {
                     // Send command for authorized signals for this device
-                    CommonFunctions.SendCommandToService(string.Format("INVOKE EXTERNAL!DATAPUBLISHER GetSubscriberStatus {0}", subscriberID));
+                    CommonFunctions.SendCommandToService(string.Format("INVOKE TLS!DATAPUBLISHER GetSubscriberStatus {0}", subscriberID));
                     m_requests++;
                 }
 
