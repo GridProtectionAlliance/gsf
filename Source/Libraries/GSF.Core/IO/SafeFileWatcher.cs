@@ -38,11 +38,11 @@ namespace GSF.IO
     /// file system watcher when used as a member of a class that consumers fail to properly dispose. If a class
     /// has a reference to a file watcher as a member variable and attaches to the file watcher's events, the
     /// file watcher will maintain a reference the parent class so it can call its event handler. If the parent
-    /// class is not disposed properly, the file watcher will not thusly be disposed and will maintain the
+    /// class is not disposed properly, the file watcher will thusly not be disposed and will maintain the
     /// reference to the parent class - the garbage collector will never collect the parent because it has a
-    /// valid reference, no collection means the parent finalizer will never get called and the file system
+    /// valid reference and no collection means the parent finalizer will never get called and the file system
     /// watcher will never get disposed. Creating multiple instances of parent class and not disposing of them
-    /// will a causing a memory leak even with a properly designed disposable pattern. Using the SafeFileWatcher
+    /// will cause a memory leak even with a properly designed disposable pattern. Using the SafeFileWatcher
     /// instead of directly using the FileSystemWatcher will resolve this potential issue.
     /// </para>
     /// <para>
@@ -142,7 +142,7 @@ namespace GSF.IO
         // because there will be no remaining references to this class instance. Also, even though the following
         // intermediate lambda classes that get created will be attached to the file system watcher event handlers,
         // they will also be freed because this class will make sure the file system watcher instance is handled
-        // like an unmanaged resource and always disposed, via the finalizer if need be.
+        // like an unmanaged resource, i.e., it always gets disposed, via the finalizer if need be.
         private void InitializeFileSystemWatcher()
         {
             WeakReference<SafeFileWatcher> reference = new WeakReference<SafeFileWatcher>(this);
