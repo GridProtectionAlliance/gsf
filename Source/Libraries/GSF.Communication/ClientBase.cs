@@ -1052,6 +1052,12 @@ namespace GSF.Communication
                         // This will be done only when the object is disposed by calling Dispose().
                         Disconnect();
                         SaveSettings();
+
+                        if ((object)m_connectHandle != null)
+                        {
+                            m_connectHandle.Set();
+                            m_connectHandle.Dispose();
+                        }
                     }
                 }
                 finally
