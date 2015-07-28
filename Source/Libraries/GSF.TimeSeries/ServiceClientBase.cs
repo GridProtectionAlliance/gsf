@@ -273,7 +273,6 @@ namespace GSF.TimeSeries
                     m_remotingClient.ConnectionString = string.Format("Server={0}", arguments["server"]);
                 }
 
-                string password = null;
                 long lastConnectAttempt = 0;
 
                 // Connect to service and send commands.
@@ -286,91 +285,36 @@ namespace GSF.TimeSeries
                             Thread.Sleep(200);
 
                         lastConnectAttempt = DateTime.UtcNow.Ticks;
-                        m_clientHelper.Connect();
 
-                        if (!m_authenticationFailure && !m_clientHelper.RemotingClient.Enabled)
-                            continue;
-
-                        // If connection attempt failed with provided credentials, try once more with direct authentication
-                        // but only when transport is secured
-                        if (m_authenticationFailure && !string.IsNullOrEmpty(password) && m_clientHelper.RemotingClient is TlsClient)
+                        if (!m_authenticationFailure)
                         {
-                            m_authenticationFailure = false;
-                            m_clientHelper.Disconnect();
-                            m_clientHelper.Password = password;
-                            m_clientHelper.Connect();
+                            // If there has been no authentication
+                            // failure, connect normally
+                            Connect();
                         }
-
-                        if (m_authenticationFailure)
+                        else
                         {
-                            string username;
                             UserInfo userInfo;
-                            StringBuilder passwordBuilder = new StringBuilder();
-                            StringBuilder prompt = new StringBuilder();
-                            ConsoleKeyInfo key;
+                            StringBuilder username = new StringBuilder();
+                            StringBuilder password = new StringBuilder();
 
-                            lock (m_displayLock)
-                            {
-                                prompt.AppendLine();
-                                prompt.AppendLine();
-                                prompt.AppendLine("Connection to the service was rejected due to authentication failure.");
-                                prompt.AppendLine("Enter the credentials to be used for authentication with the service.");
-                                prompt.AppendLine();
-                                Write(prompt.ToString());
-
-                                // Capture the user name.
-                                Write("Enter user name: ");
-
-                                username = System.Console.ReadLine();
-
-                                // Capture the password.
-                                Write("Enter password: ");
-
-                                char endOfLine = Common.IsPosixEnvironment ? '\n' : '\r';
-
-                                while ((key = System.Console.ReadKey(true)).KeyChar != endOfLine)
-                                {
-                                    switch (key.Key)
-                                    {
-                                        case ConsoleKey.Backspace:
-                                            if (passwordBuilder.Length > 0)
-                                                passwordBuilder.Remove(passwordBuilder.Length - 1, 1);
-
-                                            break;
-
-                                        case ConsoleKey.Escape:
-                                            passwordBuilder.Clear();
-                                            break;
-
-                                        default:
-                                            passwordBuilder.Append(key.KeyChar);
-                                            break;
-                                    }
-                                }
-
-                                WriteLine();
-                            }
+                            // If there has been an authentication failure,
+                            // prompt the user for new credentials
+                            PromptForCredentials(username, password);
 
                             try
                             {
                                 // Attempt to set network credentials used when attempting AD authentication
-                                password = passwordBuilder.ToString();
-                                userInfo = new UserInfo(username);
+                                userInfo = new UserInfo(username.ToString());
                                 userInfo.Initialize();
-                                SetNetworkCredential(new NetworkCredential(userInfo.LoginID, password));
-
-                                // Set the user name on the client helper
-                                m_clientHelper.Username = username;
-                                m_clientHelper.Password = SecurityProviderUtility.EncryptPassword(password);
-                                m_authenticationFailure = false;
+                                SetNetworkCredential(new NetworkCredential(userInfo.LoginID, password.ToString()));
                             }
                             catch
                             {
                                 // Even if this fails, we can still pass along user credentials
-                                m_clientHelper.Username = username;
-                                m_clientHelper.Password = SecurityProviderUtility.EncryptPassword(password);
-                                m_authenticationFailure = false;
                             }
+
+                            Connect(username.ToString(), password.ToString());
                         }
 
                         while (m_authenticated && m_clientHelper.Enabled && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
@@ -390,6 +334,7 @@ namespace GSF.TimeSeries
                                         // User wants to clear the console window. 
                                         System.Console.Clear();
                                         break;
+
                                     case "EXIT":
                                         // User wants to exit the telnet session with the service. 
                                         if (m_telnetActive)
@@ -397,15 +342,18 @@ namespace GSF.TimeSeries
                                             userInput = string.Empty;
                                             m_clientHelper.SendRequest("Telnet -disconnect");
                                         }
+
                                         break;
+
                                     case "LOGIN":
-                                        m_clientHelper.Username = null;
-                                        m_clientHelper.Password = null;
                                         m_authenticated = false;
+                                        m_authenticationFailure = true;
                                         break;
+
                                     default:
                                         // User wants to send a request to the service. 
                                         m_clientHelper.SendRequest(userInput);
+
                                         if (string.Compare(userInput, "Help", StringComparison.OrdinalIgnoreCase) == 0)
                                             DisplayHelp();
 
@@ -510,6 +458,87 @@ namespace GSF.TimeSeries
             return remotingClient;
         }
 
+        private void Connect()
+        {
+            m_authenticated = false;
+            m_authenticationFailure = false;
+            m_clientHelper.Connect();
+
+            if (m_authenticationFailure)
+                m_clientHelper.Disconnect();
+        }
+
+        private void Connect(string username, string password)
+        {
+            m_clientHelper.Username = username.ToNonNullString();
+
+            // If the communications channel is secured or the user
+            // has entered a blank password, send the password as-is
+            if (string.IsNullOrEmpty(password) || m_clientHelper.RemotingClient is TlsClient)
+            {
+                m_clientHelper.Password = password.ToNonNullString();
+                Connect();
+            }
+
+            // If the client fails to connect with the as-is password,
+            // attempt to connect again with an encrypted password
+            // because the server may only be authenticating against
+            // the encrypted password
+            if (!m_clientHelper.RemotingClient.Enabled && !string.IsNullOrEmpty(password))
+            {
+                m_clientHelper.Password = SecurityProviderUtility.EncryptPassword(password);
+                Connect();
+            }
+        }
+
+        private void PromptForCredentials(StringBuilder username, StringBuilder password)
+        {
+            StringBuilder prompt = new StringBuilder();
+            ConsoleKeyInfo key;
+
+            lock (m_displayLock)
+            {
+                prompt.AppendLine();
+                prompt.AppendLine();
+                prompt.AppendLine("Connection to the service was rejected due to authentication failure.");
+                prompt.AppendLine("Enter the credentials to be used for authentication with the service.");
+                prompt.AppendLine();
+                Write(prompt.ToString());
+
+                // Capture the user name.
+                Write("Enter user name: ");
+
+                username.Append(System.Console.ReadLine());
+
+                // Capture the password.
+                Write("Enter password: ");
+
+                char endOfLine = Common.IsPosixEnvironment ? '\n' : '\r';
+
+                while ((key = System.Console.ReadKey(true)).KeyChar != endOfLine)
+                {
+                    switch (key.Key)
+                    {
+                        case ConsoleKey.Backspace:
+                            if (password.Length > 0)
+                                password.Remove(password.Length - 1, 1);
+
+                            break;
+
+                        case ConsoleKey.Escape:
+                            password.Clear();
+                            break;
+
+                        default:
+                            password.Append(key.KeyChar);
+                            break;
+                    }
+                }
+
+                WriteLine();
+            }
+        }
+
         private void SetNetworkCredential(NetworkCredential credential)
         {
             TlsClient tlsClient;
@@ -581,6 +610,10 @@ namespace GSF.TimeSeries
             help.Append("Cls".PadRight(20));
             help.Append(" ");
             help.Append("Clears this console screen".PadRight(55));
+            help.AppendLine();
+            help.Append("Login".PadRight(20));
+            help.Append(" ");
+            help.Append("Disconnects from server and prompts for credentials".PadRight(55));
             help.AppendLine();
             help.Append("Exit".PadRight(20));
             help.Append(" ");
