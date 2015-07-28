@@ -100,7 +100,8 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
                 try
                 {
-                    CommonFunctions.SendCommandToService("Invoke " + CommonFunctions.GetRuntimeID("Historian", (int)CurrentItem.HistorianID) + " RefreshMetadata");
+                    // Note that a ReloadConfig will call RefreshMetadata on all relevant output adapters
+                    CommonFunctions.SendCommandToService("ReloadConfig");
                 }
                 catch (Exception ex)
                 {
