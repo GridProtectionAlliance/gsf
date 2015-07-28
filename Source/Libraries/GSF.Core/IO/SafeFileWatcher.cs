@@ -96,8 +96,9 @@ namespace GSF.IO
         /// Initializes a new instance of the <see cref="SafeFileWatcher"/> class.
         /// </summary>
         public SafeFileWatcher()
-            : this("", "*.*")
         {
+            m_fileSystemWatcher = new FileSystemWatcher();
+            InitializeFileSystemWatcher();
         }
 
         /// <summary>
@@ -111,8 +112,9 @@ namespace GSF.IO
         /// The path specified through the <paramref name="path"/> parameter does not exist.
         /// </exception>
         public SafeFileWatcher(string path)
-            : this(path, "*.*")
         {
+            m_fileSystemWatcher = new FileSystemWatcher(path);
+            InitializeFileSystemWatcher();
         }
 
         /// <summary>
@@ -130,18 +132,21 @@ namespace GSF.IO
         /// </exception>
         public SafeFileWatcher(string path, string filter)
         {
+            m_fileSystemWatcher = new FileSystemWatcher(path, filter);
+            InitializeFileSystemWatcher();
+        }
+
+        // Attach to file system watcher events via lambda function using a weak reference to this class instance
+        // connected through static method so that file watcher cannot hold onto a reference to this class - this
+        // way even if consumer neglects to dispose this class, it will get properly garbage collected and finalized
+        // because there will be no remaining references to this class instance. Also, even though the following
+        // intermediate lambda classes that get created will be attached to the file system watcher event handlers,
+        // they will also be freed because this class will make sure the file system watcher instance is handled
+        // like an unmanaged resource and always disposed, via the finalizer if need be.
+        private void InitializeFileSystemWatcher()
+        {
             WeakReference<SafeFileWatcher> reference = new WeakReference<SafeFileWatcher>(this);
 
-            // Create a new file system watcher
-            m_fileSystemWatcher = new FileSystemWatcher(path, filter);
-
-            // Attach to file system watcher events via lambda function using a weak reference to this class instance
-            // connected through static method so that file watcher cannot hold onto a reference to this class - this
-            // way even if consumer neglects to dispose this class, it will get properly garbage collected and finalized
-            // because there will be no remaining references to this class instance. Also, even though the following
-            // intermediate lambda classes that get created will be attached to the file system watcher event handlers,
-            // they will also be freed because this class will make sure the file system watcher instance is handled
-            // like an unmanaged resource and always disposed, via the finalizer if need be.
             m_fileSystemWatcher.Changed += (sender, e) => OnChanged(reference, e);
             m_fileSystemWatcher.Created += (sender, e) => OnCreated(reference, e);
             m_fileSystemWatcher.Deleted += (sender, e) => OnDeleted(reference, e);
