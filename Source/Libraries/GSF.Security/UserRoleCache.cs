@@ -316,13 +316,7 @@ namespace GSF.Security
             localUserRoleCache = new UserRoleCache
             {
                 FileName = localCacheFileName,
-#if DNF45 && !MONO
-                ReloadOnChange = true,
-#else
-                // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
-                // automatic runtime reloading of key/iv data cached by another application.
                 ReloadOnChange = false,
-#endif
                 AutoSave = false
             };
 
@@ -344,6 +338,7 @@ namespace GSF.Security
                 // No access issues exist, use local cache as the primary cache
                 currentCache = localUserRoleCache;
                 currentCache.AutoSave = true;
+                localUserRoleCache = null;
             }
             catch (UnauthorizedAccessException)
             {
@@ -364,13 +359,7 @@ namespace GSF.Security
                 currentCache = new UserRoleCache
                 {
                     FileName = userCacheFileName,
-#if DNF45 && !MONO
-                    ReloadOnChange = true,
-#else
-                    // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
-                    // automatic runtime reloading of key/iv data cached by another application.
                     ReloadOnChange = false,
-#endif
                     AutoSave = true
                 };
 
@@ -380,6 +369,9 @@ namespace GSF.Security
                 // Merge new or updated roles, protected folder roles taking precedence over user folder roles
                 currentCache.MergeRight(localUserRoleCache);
             }
+
+            if ((object)localUserRoleCache != null)
+                localUserRoleCache.Dispose();
 
             return currentCache;
         }

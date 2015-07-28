@@ -396,7 +396,7 @@ namespace GSF.Adapters
         private bool m_persistSettings;
         private string m_settingsCategory;
         private readonly ObservableCollection<T> m_adapters;
-        private FileSystemWatcher m_adapterWatcher;
+        private SafeFileWatcher m_adapterWatcher;
         private readonly AsyncQueue<object> m_operationQueue;
         private readonly Dictionary<Type, bool> m_enabledStates;
         private bool m_enabled;
@@ -425,7 +425,7 @@ namespace GSF.Adapters
             m_allowableProcessProcessorUsage = DefaultAllowableProcessProcessorUsage;
             m_allowableAdapterMemoryUsage = DefaultAllowableAdapterMemoryUsage;
             m_allowableAdapterProcessorUsage = DefaultAllowableAdapterProcessorUsage;
-            m_settingsCategory = this.GetType().Name;
+            m_settingsCategory = GetType().Name;
             m_adapters = new ObservableCollection<T>();
             m_adapters.CollectionChanged += Adapters_CollectionChanged;
             m_operationQueue = new AsyncQueue<object>();
@@ -735,7 +735,7 @@ namespace GSF.Adapters
         {
             get
             {
-                return this.GetType().Name;
+                return GetType().Name;
             }
         }
 
@@ -798,7 +798,7 @@ namespace GSF.Adapters
         /// <summary>
         /// Gets the <see cref="FileSystemWatcher"/> object watching for new adapter assemblies added at runtime.
         /// </summary>
-        protected FileSystemWatcher AdapterWatcher
+        protected SafeFileWatcher AdapterWatcher
         {
             get
             {
@@ -872,9 +872,7 @@ namespace GSF.Adapters
                 // Watch for adapters.
                 if (m_watchForAdapters)
                 {
-                    // Create file watcher only if needed to avoid issue in .NET 4.0 that causes memory leak.
-                    // http://support.microsoft.com/kb/2628838
-                    m_adapterWatcher = new FileSystemWatcher();
+                    m_adapterWatcher = new SafeFileWatcher();
                     m_adapterWatcher.Path = m_adapterDirectory;
                     m_adapterWatcher.EnableRaisingEvents = true;
                     m_adapterWatcher.Created += AdapterWatcher_Events;

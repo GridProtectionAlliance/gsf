@@ -388,13 +388,7 @@ namespace GSF.Security
                     userDataCache = UserDataCache.GetCurrentCache(providerID);
                     userDataCache.RetryDelayInterval = m_cacheRetryDelayInterval;
                     userDataCache.MaximumRetryAttempts = m_cacheMaximumRetryAttempts;
-#if DNF45 && !MONO
-                    userDataCache.ReloadOnChange = true;
-#else
-                    // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
-                    // automatic runtime reloading of user data cached by another application.
                     userDataCache.ReloadOnChange = false;
-#endif
                     userDataCache.AutoSave = true;
                     userDataCache.Load();
                 }

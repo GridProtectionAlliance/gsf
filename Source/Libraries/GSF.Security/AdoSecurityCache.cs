@@ -235,13 +235,7 @@ namespace GSF.Security
                 localSecurityCache = new AdoSecurityCache
                 {
                     FileName = localCacheFileName,
-#if DNF45 && !MONO
-                    ReloadOnChange = true,
-#else
-                    // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
-                    // automatic runtime reloading of key/iv data cached by another application.
                     ReloadOnChange = false,
-#endif
                     AutoSave = false
                 };
 
@@ -261,6 +255,7 @@ namespace GSF.Security
                 // No access issues exist, use local cache as the primary cache
                 currentCache = localSecurityCache;
                 currentCache.AutoSave = true;
+                localSecurityCache = null;
             }
             catch (UnauthorizedAccessException)
             {
@@ -281,13 +276,7 @@ namespace GSF.Security
                 currentCache = new AdoSecurityCache
                 {
                     FileName = userCacheFileName,
-#if DNF45 && !MONO
-                    ReloadOnChange = true,
-#else
-                    // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
-                    // automatic runtime reloading of key/iv data cached by another application.
                     ReloadOnChange = false,
-#endif
                     AutoSave = true
                 };
 
@@ -298,6 +287,9 @@ namespace GSF.Security
                 if ((object)localSecurityCache != null && File.Exists(localCacheFileName) && File.Exists(userCacheFileName) && File.GetLastWriteTime(localCacheFileName) > File.GetLastWriteTime(userCacheFileName))
                     currentCache.DataSet = localSecurityCache.DataSet;
             }
+
+            if ((object)localSecurityCache != null)
+                localSecurityCache.Dispose();
 
             return currentCache;
         }

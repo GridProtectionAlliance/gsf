@@ -188,6 +188,7 @@
     <Compile Include="IO\OutageLog.cs" />
     <Compile Include="IO\OutageLogProcessor.cs" />
     <Compile Include="IO\RunTimeLog.cs" />
+    <Compile Include="IO\SafeFileWatcher.cs" />
     <Compile Include="NativeBinaryValue.cs" />
     <Compile Include="BinaryValueBase.cs" />
     <Compile Include="BitExtensions.cs" />

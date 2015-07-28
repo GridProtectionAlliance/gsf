@@ -61,7 +61,7 @@ namespace EpriExport
         private bool m_simulateTimestamp;
         private System.Timers.Timer m_looseTimer;
         private PrecisionInputTimer m_precisionTimer;
-        private FileSystemWatcher m_fileSystemWatcher;
+        private SafeFileWatcher m_fileSystemWatcher;
         private AsyncQueue<string> m_fileProcessQueue;
         private long m_processedFiles;
         private string m_timestampFormat;
@@ -497,7 +497,7 @@ namespace EpriExport
                 m_looseTimer.Elapsed += m_looseTimer_Elapsed;
             }
 
-            m_fileSystemWatcher = new FileSystemWatcher(m_importPath, "EPRI-VS-Metrics-*.csv");
+            m_fileSystemWatcher = new SafeFileWatcher(m_importPath, "EPRI-VS-Metrics-*.csv");
             m_fileSystemWatcher.Created += m_fileSystemWatcher_Created;
             m_fileSystemWatcher.Renamed += m_fileSystemWatcher_Renamed;
         }
@@ -656,7 +656,7 @@ namespace EpriExport
             try
             {
                 List<IMeasurement> newMeasurements = new List<IMeasurement>();
-                long fileTime = 0;
+                long fileTime;
                 int timestampColumn = 0;
                 string line = m_fileStream.ReadLine();
 

@@ -348,7 +348,7 @@ namespace GSF.IO
         private readonly ManualResetEventSlim m_loadWaitHandle;
         private readonly ManualResetEventSlim m_saveWaitHandle;
         private readonly Timer m_autoSaveTimer;
-        private FileSystemWatcher m_fileWatcher;
+        private SafeFileWatcher m_fileWatcher;
         private bool m_disposed;
         private bool m_initialized;
 
@@ -803,9 +803,7 @@ namespace GSF.IO
                 // Watch for changes to the file content.
                 if (m_reloadOnModify)
                 {
-                    // Create watcher only if needed to avoid a issue in .NET 4.0 that causes memory leak.
-                    // http://support.microsoft.com/kb/2628838
-                    m_fileWatcher = new FileSystemWatcher();
+                    m_fileWatcher = new SafeFileWatcher();
                     m_fileWatcher.Path = FilePath.GetDirectoryName(FilePath.GetAbsolutePath(m_fileName));
                     m_fileWatcher.Filter = FilePath.GetFileName(m_fileName);
                     m_fileWatcher.Changed += m_fileWatcher_Changed;

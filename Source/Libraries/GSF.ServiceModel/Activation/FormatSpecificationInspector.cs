@@ -24,6 +24,7 @@
 #if !MONO
 
 using System.ServiceModel;
+using System.ServiceModel.Channels;
 using System.ServiceModel.Dispatcher;
 using System.ServiceModel.Web;
 
@@ -35,7 +36,15 @@ namespace GSF.ServiceModel.Activation
     /// </summary>
     public class FormatSpecificationInspector : IDispatchMessageInspector
     {
-        public object AfterReceiveRequest(ref System.ServiceModel.Channels.Message request, IClientChannel channel, InstanceContext instanceContext)
+        /// <summary>
+        /// Called after an inbound message has been received but before the message is dispatched to the intended operation.
+        /// </summary>
+        /// <returns>
+        /// The object used to correlate state. This object is passed back in the <see cref="BeforeSendReply"/> method.
+        /// </returns>
+        /// <param name="request">The request message.</param><param name="channel">The incoming channel.</param>
+        /// <param name="instanceContext">The current service instance.</param>
+        public object AfterReceiveRequest(ref Message request, IClientChannel channel, InstanceContext instanceContext)
         {
             WebOperationContext context = WebOperationContext.Current;
 
@@ -50,6 +59,11 @@ namespace GSF.ServiceModel.Activation
             return null;
         }
 
+        /// <summary>
+        /// Called after the operation has returned but before the reply message is sent.
+        /// </summary>
+        /// <param name="reply">The reply message. This value is null if the operation is one way.</param>
+        /// <param name="correlationState">The correlation object returned from the <see cref="AfterReceiveRequest"/> method.</param>
         public void BeforeSendReply(ref System.ServiceModel.Channels.Message reply, object correlationState)
         {
         }

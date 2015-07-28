@@ -319,7 +319,8 @@ namespace GSF.Security
                 catch (InvalidOperationException)
                 {
                     // Failed to open ADO connection, attempt to fall back on using security context from last known cached information
-                    securityContext = AdoSecurityCache.GetCurrentCache().DataSet;
+                    using (AdoSecurityCache cache = AdoSecurityCache.GetCurrentCache())
+                        securityContext = cache.DataSet;
                 }
 
                 try
@@ -838,83 +839,88 @@ namespace GSF.Security
             try
             {
                 // Using an inter-process cache for user roles
-                UserRoleCache userRoleCache = UserRoleCache.GetCurrentCache();
-                HashSet<string> currentRoles;
-                string[] cachedRoles;
-
-                // Retrieve current user roles
-                currentRoles = new HashSet<string>(UserData.Roles, StringComparer.OrdinalIgnoreCase);
-
-                // Attempt to retrieve cached user roles
-                cachedRoles = userRoleCache[UserData.Username];
-
-                bool rolesChanged = false;
-                string message;
-                EventLogEntryType entryType;
-
-                if ((object)cachedRoles == null)
+                using (UserRoleCache userRoleCache = UserRoleCache.GetCurrentCache())
                 {
-                    if (currentRoles.Count == 0)
+                    HashSet<string> currentRoles;
+                    string[] cachedRoles;
+
+                    // Retrieve current user roles
+                    currentRoles = new HashSet<string>(UserData.Roles, StringComparer.OrdinalIgnoreCase);
+
+                    // Attempt to retrieve cached user roles
+                    cachedRoles = userRoleCache[UserData.Username];
+
+                    bool rolesChanged = false;
+                    string message;
+                    EventLogEntryType entryType;
+
+                    if ((object)cachedRoles == null)
                     {
-                        // New user access granted
-                        message = string.Format("Initial Encounter: user \"{0}\" attempted login with no assigned roles.", UserData.Username);
-                        entryType = EventLogEntryType.FailureAudit;
-                        rolesChanged = true;
+                        if (currentRoles.Count == 0)
+                        {
+                            // New user access granted
+                            message = string.Format("Initial Encounter: user \"{0}\" attempted login with no assigned roles.", UserData.Username);
+                            entryType = EventLogEntryType.FailureAudit;
+                            rolesChanged = true;
+                        }
+                        else
+                        {
+                            // New user access granted
+                            message = string.Format("Initial Encounter: user \"{0}\" granted access with role{1} \"{2}\".", UserData.Username, currentRoles.Count == 1 ? "" : "s", currentRoles.ToDelimitedString(", "));
+                            entryType = EventLogEntryType.Information;
+                            rolesChanged = true;
+                        }
+                    }
+                    else if (!currentRoles.SetEquals(cachedRoles))
+                    {
+                        if (currentRoles.Count == 0)
+                        {
+                            // New user access granted
+                            message = string.Format("Subsequent Encounter: user \"{0}\" attempted login with no assigned roles - role assignment that existed at last login was \"{1}\".", UserData.Username, cachedRoles.ToDelimitedString(", "));
+                            entryType = EventLogEntryType.FailureAudit;
+                            rolesChanged = true;
+                        }
+                        else
+                        {
+                            // User role access changed
+                            message = string.Format("Subsequent Encounter: user \"{0}\" granted access with new role{1} \"{2}\" - role assignment is different from last login, was \"{3}\".", UserData.Username, currentRoles.Count == 1 ? "" : "s", currentRoles.ToDelimitedString(", "), cachedRoles.ToDelimitedString(", "));
+                            entryType = EventLogEntryType.Warning;
+                            rolesChanged = true;
+                        }
                     }
                     else
                     {
-                        // New user access granted
-                        message = string.Format("Initial Encounter: user \"{0}\" granted access with role{1} \"{2}\".", UserData.Username, currentRoles.Count == 1 ? "" : "s", currentRoles.ToDelimitedString(", "));
-                        entryType = EventLogEntryType.Information;
-                        rolesChanged = true;
+                        if (currentRoles.Count == 0)
+                        {
+                            // New user access granted
+                            message = string.Format("Subsequent Encounter: user \"{0}\" attempted login with no assigned roles - same as last login attempt.", UserData.Username);
+                            entryType = EventLogEntryType.FailureAudit;
+                            rolesChanged = true;
+                        }
+                        else
+                        {
+                            message = string.Format("Subsequent Encounter: user \"{0}\" granted access with role{1} \"{2}\" - role assignment is the same as last login.", UserData.Username, currentRoles.Count == 1 ? "" : "s", currentRoles.ToDelimitedString(", "));
+                            entryType = EventLogEntryType.SuccessAudit;
+                        }
                     }
-                }
-                else if (!currentRoles.SetEquals(cachedRoles))
-                {
-                    if (currentRoles.Count == 0)
-                    {
-                        // New user access granted
-                        message = string.Format("Subsequent Encounter: user \"{0}\" attempted login with no assigned roles - role assignment that existed at last login was \"{1}\".", UserData.Username, cachedRoles.ToDelimitedString(", "));
-                        entryType = EventLogEntryType.FailureAudit;
-                        rolesChanged = true;
-                    }
-                    else
-                    {
-                        // User role access changed
-                        message = string.Format("Subsequent Encounter: user \"{0}\" granted access with new role{1} \"{2}\" - role assignment is different from last login, was \"{3}\".", UserData.Username, currentRoles.Count == 1 ? "" : "s", currentRoles.ToDelimitedString(", "), cachedRoles.ToDelimitedString(", "));
-                        entryType = EventLogEntryType.Warning;
-                        rolesChanged = true;
-                    }
-                }
-                else
-                {
-                    if (currentRoles.Count == 0)
-                    {
-                        // New user access granted
-                        message = string.Format("Subsequent Encounter: user \"{0}\" attempted login with no assigned roles - same as last login attempt.", UserData.Username);
-                        entryType = EventLogEntryType.FailureAudit;
-                        rolesChanged = true;
-                    }
-                    else
-                    {
-                        message = string.Format("Subsequent Encounter: user \"{0}\" granted access with role{1} \"{2}\" - role assignment is the same as last login.", UserData.Username, currentRoles.Count == 1 ? "" : "s", currentRoles.ToDelimitedString(", "));
-                        entryType = EventLogEntryType.SuccessAudit;
-                    }
-                }
 
-                // Log granted role access to event log
-                try
-                {
-                    LogEvent(ApplicationName, message, entryType, 0);
-                }
-                catch (Exception ex)
-                {
-                    LogError(ex.Source, ex.ToString());
-                }
+                    // Log granted role access to event log
+                    try
+                    {
+                        LogEvent(ApplicationName, message, entryType, 0);
+                    }
+                    catch (Exception ex)
+                    {
+                        LogError(ex.Source, ex.ToString());
+                    }
 
-                // If role has changed, update cache
-                if (rolesChanged)
-                    userRoleCache[UserData.Username] = currentRoles.ToArray();
+                    // If role has changed, update cache
+                    if (rolesChanged)
+                    {
+                        userRoleCache[UserData.Username] = currentRoles.ToArray();
+                        userRoleCache.WaitForSave();
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -970,7 +976,14 @@ namespace GSF.Security
             }
 
             // Always cache security context after successful extraction
-            Thread cacheSecurityContext = new Thread(() => AdoSecurityCache.GetCurrentCache().DataSet = securityContext);
+            Thread cacheSecurityContext = new Thread(() =>
+            {
+                using (AdoSecurityCache cache = AdoSecurityCache.GetCurrentCache())
+                {
+                    cache.DataSet = securityContext;
+                    cache.WaitForSave();
+                }
+            });
             cacheSecurityContext.IsBackground = true;
             cacheSecurityContext.Start();
 

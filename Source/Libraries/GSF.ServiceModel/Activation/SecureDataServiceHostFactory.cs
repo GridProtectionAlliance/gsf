@@ -133,6 +133,10 @@ namespace GSF.ServiceModel.Activation
             }
         }
 
+        /// <summary>
+        /// Gets or sets the list of <see cref="IServiceBehavior"/> applied to the service.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">Assigned value cannot be null</exception>
         public List<IServiceBehavior> ServiceBehaviors
         {
             get
@@ -176,14 +180,14 @@ namespace GSF.ServiceModel.Activation
             policies.Add((IAuthorizationPolicy)Activator.CreateInstance(m_authorizationPolicy));
             serviceBehavior.ExternalAuthorizationPolicies = policies.AsReadOnly();
 
-            foreach(var behavior in m_serviceBehaviors ?? new List<IServiceBehavior>())
+            foreach (var behavior in m_serviceBehaviors ?? new List<IServiceBehavior>())
             {
                 host.Description.Behaviors.Add(behavior);
             }
 
-            foreach(var endpoint in host.Description.Endpoints)
+            foreach (var endpoint in host.Description.Endpoints)
             {
-                foreach(var behavior in m_endpointBehaviors ?? new List<IEndpointBehavior>())
+                foreach (var behavior in m_endpointBehaviors ?? new List<IEndpointBehavior>())
                 {
                     endpoint.EndpointBehaviors.Add(behavior);
                 }

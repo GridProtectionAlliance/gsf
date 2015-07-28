@@ -23,7 +23,6 @@
 
 using System;
 using System.Collections;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading;
 using System.Timers;
@@ -59,22 +58,22 @@ namespace GSF.IO
         public const double DefaultRetryDelayInterval = 1000.0D;
 
         // Fields
-        private string m_fileName;                          // Path and file name of file needing inter-process synchronization
-        private byte[] m_fileData;                          // Data loaded or to be saved
-        private bool m_autoSave;                            // Flag to auto save when file data has changed
-        private LongSynchronizedOperation m_loadOperation;  // Synchronized operation to asynchronously load data from the file
-        private LongSynchronizedOperation m_saveOperation;  // Synchronized operation to asynchronously save data to the file
-        private InterprocessReaderWriterLock m_fileLock;    // Inter-process reader/writer lock used to synchronize file access
-        private ManualResetEventSlim m_loadIsReady;         // Wait handle used so that system will wait for file data load
-        private ManualResetEventSlim m_saveIsReady;         // Wait handle used so that system will wait for file data save
-        private FileSystemWatcher m_fileWatcher;            // Optional file watcher used to reload changes
-        private readonly int m_maximumConcurrentLocks;      // Maximum concurrent reader locks allowed
-        private int m_maximumRetryAttempts;                 // Maximum retry attempts allowed for loading file
-        private readonly BitArray m_retryQueue;             // Retry event queue
-        private Timer m_retryTimer;                         // File I/O retry timer
-        private long m_lastRetryTime;                       // Time of last retry attempt
-        private int m_retryCount;                           // Total number of retries attempted so far
-        private bool m_disposed;                            // Class disposed flag
+        private string m_fileName;                                  // Path and file name of file needing inter-process synchronization
+        private byte[] m_fileData;                                  // Data loaded or to be saved
+        private bool m_autoSave;                                    // Flag to auto save when file data has changed
+        private readonly LongSynchronizedOperation m_loadOperation; // Synchronized operation to asynchronously load data from the file
+        private readonly LongSynchronizedOperation m_saveOperation; // Synchronized operation to asynchronously save data to the file
+        private InterprocessReaderWriterLock m_fileLock;            // Inter-process reader/writer lock used to synchronize file access
+        private ManualResetEventSlim m_loadIsReady;                 // Wait handle used so that system will wait for file data load
+        private ManualResetEventSlim m_saveIsReady;                 // Wait handle used so that system will wait for file data save
+        private SafeFileWatcher m_fileWatcher;                      // Optional file watcher used to reload changes
+        private readonly int m_maximumConcurrentLocks;              // Maximum concurrent reader locks allowed
+        private int m_maximumRetryAttempts;                         // Maximum retry attempts allowed for loading file
+        private readonly BitArray m_retryQueue;                     // Retry event queue
+        private Timer m_retryTimer;                                 // File I/O retry timer
+        private long m_lastRetryTime;                               // Time of last retry attempt
+        private int m_retryCount;                                   // Total number of retries attempted so far
+        private bool m_disposed;                                    // Class disposed flag
 
         #endregion
 
@@ -95,7 +94,10 @@ namespace GSF.IO
         public InterprocessCache(int maximumConcurrentLocks)
         {
             // Initialize field values
-            m_loadOperation = new LongSynchronizedOperation(SynchronizedRead) { IsBackground = true };
+            m_loadOperation = new LongSynchronizedOperation(SynchronizedRead)
+            {
+                IsBackground = true
+            };
             m_saveOperation = new LongSynchronizedOperation(SynchronizedWrite);
             m_loadIsReady = new ManualResetEventSlim(false);
             m_saveIsReady = new ManualResetEventSlim(true);
@@ -210,6 +212,11 @@ namespace GSF.IO
         /// <summary>
         /// Gets or sets flag that enables system to monitor for changes in <see cref="FileName"/> and automatically reload <see cref="FileData"/>.
         /// </summary>
+        /// <remarks>
+        /// Use extreme caution when enabling this property - it will be critical to dispose of this class when this property is set to true
+        /// since it will create a file watcher that attaches to an event referenced by this class using pinned memory, as a result, this class
+        /// will not get garbage collected until this class is disposed thus detaching the associated event.
+        /// </remarks>
         public bool ReloadOnChange
         {
             get
@@ -224,7 +231,7 @@ namespace GSF.IO
                         throw new NullReferenceException("FileName property must be defined before enabling ReloadOnChange");
 
                     // Setup file watcher to monitor for external updates
-                    m_fileWatcher = new FileSystemWatcher();
+                    m_fileWatcher = new SafeFileWatcher();
                     m_fileWatcher.Path = FilePath.GetDirectoryName(m_fileName);
                     m_fileWatcher.Filter = FilePath.GetFileName(m_fileName);
                     m_fileWatcher.EnableRaisingEvents = true;

@@ -423,9 +423,6 @@ namespace GSF.Security.Cryptography
         // Primary cryptographic key and initialization vector cache.
         private static readonly KeyIVCache s_keyIVCache;
 
-        // Password hash table (run-time optimization)
-        private static readonly Dictionary<string, string> s_passwordHash = new Dictionary<string, string>();
-
         // Switch to turn off managed encryption and use wrappers over FIPS-compliant algorithms.
         private static readonly bool s_managedEncryption;
 
@@ -502,6 +499,7 @@ namespace GSF.Security.Cryptography
                 // No access issues exist, use local cache as the primary cryptographic key and initialization vector cache
                 s_keyIVCache = localKeyIVCache;
                 s_keyIVCache.AutoSave = true;
+                localKeyIVCache = null;
             }
             catch (UnauthorizedAccessException)
             {
@@ -539,6 +537,9 @@ namespace GSF.Security.Cryptography
                 // Merge new or updated keys, protected folder keys taking precedence over user keys
                 s_keyIVCache.MergeRight(localKeyIVCache);
             }
+
+            if ((object)localKeyIVCache != null)
+                localKeyIVCache.Dispose();
         }
 
         /// <summary>
@@ -583,8 +584,6 @@ namespace GSF.Security.Cryptography
             double retryDelayInterval = 0.0;
             int maximumRetryAttempts = 0;
 
-            KeyIVCache commonKeyIVCache;
-
             // Load the system key cache
             s_keyIVCache.Load();
 
@@ -601,7 +600,7 @@ namespace GSF.Security.Cryptography
                 maximumRetryAttempts = settings["CacheMaximumRetryAttempts"].ValueAs(maximumRetryAttempts);
 
                 // Initialize local cryptographic key and initialization vector cache (application may only have read-only access to this cache)
-                commonKeyIVCache = new KeyIVCache
+                using (KeyIVCache commonKeyIVCache = new KeyIVCache
                 {
                     FileName = commonCacheFileName,
                     RetryDelayInterval = retryDelayInterval,
@@ -609,13 +608,14 @@ namespace GSF.Security.Cryptography
                     ManagedEncryption = s_managedEncryption,
                     ReloadOnChange = false,
                     AutoSave = false
-                };
+                })
+                {
+                    // Load initial keys
+                    commonKeyIVCache.Load();
 
-                // Load initial keys
-                commonKeyIVCache.Load();
-
-                // Merge new or updated keys, common cache folder keys taking precedence
-                s_keyIVCache.MergeRight(commonKeyIVCache);
+                    // Merge new or updated keys, common cache folder keys taking precedence
+                    s_keyIVCache.MergeRight(commonKeyIVCache);
+                }
             }
         }
 
@@ -675,26 +675,17 @@ namespace GSF.Security.Cryptography
             // Suffix password with category ID (key size) since same password may be in use for different category IDs
             password += categoryID.ToString();
 
-            lock (s_passwordHash)
+            // Password hash doesn't exist, create one
+            if (s_managedEncryption)
             {
-                // Lookup SHA-256 hash of user password in run-time cache
-                if (!s_passwordHash.TryGetValue(password, out hash))
-                {
-                    // Password hash doesn't exist, create one
-                    if (s_managedEncryption)
-                    {
-                        hash = Convert.ToBase64String((new SHA256Managed()).ComputeHash(Encoding.Default.GetBytes(password)));
-                    }
-                    else
-                    {
-                        // Switch from SHA256Managed to SHA256CryptoServiceProvider complying with FIPS
-                        // http://msdn.microsoft.com/en-us/library/system.security.cryptography.sha256cryptoserviceprovider.aspx
-                        // http://msdn.microsoft.com/en-us/library/system.security.cryptography.sha256managed.sha256managed.aspx
-                        hash = Convert.ToBase64String((new SHA256CryptoServiceProvider()).ComputeHash(Encoding.Default.GetBytes(password)));
-                    }
-
-                    s_passwordHash.Add(password, hash);
-                }
+                hash = Convert.ToBase64String((new SHA256Managed()).ComputeHash(Encoding.Default.GetBytes(password)));
+            }
+            else
+            {
+                // Switch from SHA256Managed to SHA256CryptoServiceProvider complying with FIPS
+                // http://msdn.microsoft.com/en-us/library/system.security.cryptography.sha256cryptoserviceprovider.aspx
+                // http://msdn.microsoft.com/en-us/library/system.security.cryptography.sha256managed.sha256managed.aspx
+                hash = Convert.ToBase64String((new SHA256CryptoServiceProvider()).ComputeHash(Encoding.Default.GetBytes(password)));
             }
 
             return hash;

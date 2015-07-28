@@ -77,7 +77,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         private string m_configurationFileName;
         private string m_deviceLabel;
         private bool m_refreshConfigurationFileOnChange;
-        private FileSystemWatcher m_configurationFileWatcher;
+        private SafeFileWatcher m_configurationFileWatcher;
         private readonly object m_syncLock;
         private bool m_disposed;
 
@@ -478,7 +478,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                 {
                     // Create a new file watcher for configuration file - we'll automatically refresh configuration file
                     // when this file gets updated...
-                    m_configurationFileWatcher = new FileSystemWatcher(FilePath.GetDirectoryName(configurationFile), FilePath.GetFileName(configurationFile));
+                    m_configurationFileWatcher = new SafeFileWatcher(FilePath.GetDirectoryName(configurationFile), FilePath.GetFileName(configurationFile));
                     m_configurationFileWatcher.Changed += m_configurationFileWatcher_Changed;
                     m_configurationFileWatcher.EnableRaisingEvents = true;
                     m_configurationFileWatcher.IncludeSubdirectories = false;

@@ -158,7 +158,7 @@ namespace GSF.IO
         private int m_internalBufferSize;
 
         private readonly object m_fileWatchersLock;
-        private readonly List<FileSystemWatcher> m_fileWatchers;
+        private readonly List<SafeFileWatcher> m_fileWatchers;
         private ProcessQueue<Action> m_processingQueue;
         private Timer m_fileWatchTimer;
         private ManualResetEvent m_waitObject;
@@ -186,7 +186,7 @@ namespace GSF.IO
             m_internalBufferSize = DefaultInternalBufferSize;
 
             m_fileWatchersLock = new object();
-            m_fileWatchers = new List<FileSystemWatcher>();
+            m_fileWatchers = new List<SafeFileWatcher>();
             m_processingQueue = ProcessQueue<Action>.CreateRealTimeQueue(action => action());
             m_processingQueue.SynchronizedOperationType = SynchronizedOperationType.LongBackground;
             m_processingQueue.ProcessException += (sender, args) => OnError(args.Argument);
@@ -263,7 +263,7 @@ namespace GSF.IO
 
         /// <summary>
         /// Gets or sets the internal buffer size of each of the
-        /// <see cref="FileSystemWatcher"/>s instantiated by this file processor.
+        /// <see cref="SafeFileWatcher"/>s instantiated by this file processor.
         /// </summary>
         public int InternalBufferSize
         {
@@ -304,7 +304,7 @@ namespace GSF.IO
         public void AddTrackedDirectory(string path)
         {
             string fullPath = FilePath.GetAbsolutePath(path);
-            FileSystemWatcher watcher;
+            SafeFileWatcher watcher;
 
             DateTime enumerationStart;
             HashSet<string> enumeratedFiles;
@@ -312,7 +312,7 @@ namespace GSF.IO
 
             if (!TrackedDirectories.Contains(fullPath, StringComparer.OrdinalIgnoreCase))
             {
-                watcher = new FileSystemWatcher(fullPath);
+                watcher = new SafeFileWatcher(fullPath);
                 watcher.IncludeSubdirectories = true;
                 watcher.InternalBufferSize = m_internalBufferSize;
 
@@ -351,7 +351,7 @@ namespace GSF.IO
         {
             string fullPath = FilePath.GetAbsolutePath(path);
 
-            List<FileSystemWatcher> fileWatchersToRemove;
+            List<SafeFileWatcher> fileWatchersToRemove;
 
             lock (m_fileWatchers)
             {
@@ -359,7 +359,7 @@ namespace GSF.IO
                     .Where(w => fullPath.Equals(w.Path, StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
-                foreach (FileSystemWatcher watcher in fileWatchersToRemove)
+                foreach (SafeFileWatcher watcher in fileWatchersToRemove)
                     RemoveFileWatcher(watcher);
 
                 if (m_fileWatchers.Count == 0)
@@ -607,7 +607,7 @@ namespace GSF.IO
 
         // Detaches from events, removes the given file watcher from
         // the list of watchers, and disposes of the file watcher.
-        private void RemoveFileWatcher(FileSystemWatcher watcher)
+        private void RemoveFileWatcher(SafeFileWatcher watcher)
         {
             watcher.Created -= Watcher_Created;
             watcher.Changed -= Watcher_Changed;
@@ -717,7 +717,7 @@ namespace GSF.IO
                         {
                             // This file watcher is no longer raising events so
                             // attempt to create a new file watcher for that file path
-                            FileSystemWatcher newWatcher = new FileSystemWatcher(m_fileWatchers[i].Path);
+                            SafeFileWatcher newWatcher = new SafeFileWatcher(m_fileWatchers[i].Path);
 
                             DateTime enumerationStart;
                             HashSet<string> enumeratedFiles;

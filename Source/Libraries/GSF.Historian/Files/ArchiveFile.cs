@@ -148,10 +148,15 @@ namespace GSF.Historian.Files
         /// </summary>
         private class Info : IComparable
         {
+            public Info(string fileName)
+            {
+                FileName = fileName;
+            }
+
             /// <summary>
             /// Name of the <see cref="ArchiveFile"/>.
             /// </summary>
-            public string FileName;
+            public readonly string FileName;
 
             /// <summary>
             /// Start <see cref="TimeTag"/> of the <see cref="ArchiveFile"/>.
@@ -511,8 +516,8 @@ namespace GSF.Historian.Files
         private readonly ProcessQueue<IDataPoint> m_currentDataQueue;
         private readonly ProcessQueue<IDataPoint> m_historicDataQueue;
         private readonly ProcessQueue<IDataPoint> m_outOfSequenceDataQueue;
-        private FileSystemWatcher m_currentLocationFileWatcher;
-        private FileSystemWatcher m_offloadLocationFileWatcher;
+        private SafeFileWatcher m_currentLocationFileWatcher;
+        private SafeFileWatcher m_offloadLocationFileWatcher;
 
         #endregion
 
@@ -597,7 +602,7 @@ namespace GSF.Historian.Files
 
                 if (string.Compare(FilePath.GetExtension(value), FileExtension, StringComparison.OrdinalIgnoreCase) != 0 &&
                     string.Compare(FilePath.GetExtension(value), StandbyFileExtension, StringComparison.OrdinalIgnoreCase) != 0)
-                    throw (new ArgumentException(string.Format("{0} must have an extension of {1} or {2}.", this.GetType().Name, FileExtension, StandbyFileExtension)));
+                    throw (new ArgumentException(string.Format("{0} must have an extension of {1} or {2}.", GetType().Name, FileExtension, StandbyFileExtension)));
 
                 m_fileName = value;
                 ReOpen();
@@ -1309,13 +1314,13 @@ namespace GSF.Historian.Files
 
                 if (m_monitorNewArchiveFiles)
                 {
-                    m_currentLocationFileWatcher = new FileSystemWatcher();
+                    m_currentLocationFileWatcher = new SafeFileWatcher();
                     m_currentLocationFileWatcher.IncludeSubdirectories = true;
                     m_currentLocationFileWatcher.Renamed += FileWatcher_Renamed;
                     m_currentLocationFileWatcher.Deleted += FileWatcher_Deleted;
                     m_currentLocationFileWatcher.Created += FileWatcher_Created;
 
-                    m_offloadLocationFileWatcher = new FileSystemWatcher();
+                    m_offloadLocationFileWatcher = new SafeFileWatcher();
                     m_offloadLocationFileWatcher.IncludeSubdirectories = true;
                     m_offloadLocationFileWatcher.Renamed += FileWatcher_Renamed;
                     m_offloadLocationFileWatcher.Deleted += FileWatcher_Deleted;
@@ -2049,10 +2054,12 @@ namespace GSF.Historian.Files
             if (endTime.CompareTo(m_fat.FileStartTime) >= 0)
             {
                 // Data is to be read from the active file.
-                Info activeFileInfo = new Info();
-                activeFileInfo.FileName = m_fileName;
-                activeFileInfo.StartTimeTag = m_fat.FileStartTime;
-                activeFileInfo.EndTimeTag = m_fat.FileEndTime;
+                Info activeFileInfo = new Info(m_fileName)
+                {
+                    StartTimeTag = m_fat.FileStartTime,
+                    EndTimeTag = m_fat.FileEndTime
+                };
+
                 dataFiles.Add(activeFileInfo);
             }
 
@@ -3065,10 +3072,11 @@ namespace GSF.Historian.Files
                     {
                         historicArchiveFile.Open();
 
-                        fileInfo = new Info();
-                        fileInfo.FileName = fileName;
-                        fileInfo.StartTimeTag = historicArchiveFile.Fat.FileStartTime;
-                        fileInfo.EndTimeTag = historicArchiveFile.Fat.FileEndTime;
+                        fileInfo = new Info(fileName)
+                        {
+                            StartTimeTag = historicArchiveFile.Fat.FileStartTime,
+                            EndTimeTag = historicArchiveFile.Fat.FileEndTime
+                        };
                     }
                     catch (Exception ex)
                     {
@@ -3087,8 +3095,7 @@ namespace GSF.Historian.Files
                     string datesString = FilePath.GetFileNameWithoutExtension(fileName).Substring((FilePath.GetFileNameWithoutExtension(m_fileName) + "_").Length);
                     string[] fileStartEndDates = datesString.Split(new string[] { "_to_" }, StringSplitOptions.None);
 
-                    fileInfo = new Info();
-                    fileInfo.FileName = fileName;
+                    fileInfo = new Info(fileName);
 
                     if (fileStartEndDates.Length == 2)
                     {

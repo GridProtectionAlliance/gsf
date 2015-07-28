@@ -94,7 +94,7 @@ namespace GSF.IO
         /// <summary>
         /// Default value for <see cref="BlockSize"/> property.
         /// </summary>
-        public const int DefaultBlockSize = 65536;
+        public const int DefaultBlockSize = 16384;
 
         // Fields
         private long m_length;

@@ -70,7 +70,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         private string m_configurationFileName;
         private bool m_refreshConfigurationFileOnChange;
         private bool m_parseWordCountFromByte;
-        private FileSystemWatcher m_configurationFileWatcher;
+        private SafeFileWatcher m_configurationFileWatcher;
         private bool m_usePhasorDataFileFormat;
         private readonly object m_syncLock;
         private bool m_disposed;
@@ -393,7 +393,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 {
                     // Create a new file watcher for configuration file - we'll automatically refresh configuration file
                     // when this file gets updated...
-                    m_configurationFileWatcher = new FileSystemWatcher(FilePath.GetDirectoryName(configurationFile), FilePath.GetFileName(configurationFile));
+                    m_configurationFileWatcher = new SafeFileWatcher(FilePath.GetDirectoryName(configurationFile), FilePath.GetFileName(configurationFile));
                     m_configurationFileWatcher.Changed += m_configurationFileWatcher_Changed;
                     m_configurationFileWatcher.EnableRaisingEvents = true;
                     m_configurationFileWatcher.IncludeSubdirectories = false;
