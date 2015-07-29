@@ -23,6 +23,7 @@
 //
 //******************************************************************************************************
 
+
 namespace GSF.TimeSeries.UI.DataModels
 {
     /// <summary>
@@ -117,6 +118,36 @@ namespace GSF.TimeSeries.UI.DataModels
         {
             get
             {
+                if (string.IsNullOrEmpty(m_description))
+                {
+                    try
+                    {
+                        Alarm alarm = Alarm.GetAlarm(null, "WHERE ID = " + m_id);
+
+                        if ((object)alarm != null)
+                        {
+                            string tagName = m_tagName;
+
+                            if (tagName.StartsWith("AL-"))
+                            {
+                                int index = tagName.IndexOf(':');
+
+                                if (index > -1)
+                                    tagName = tagName.Substring(index + 1);
+                            }
+
+                            string operationDescription = Alarm.GetOperationDescription(alarm, tagName);
+
+                            if (!string.IsNullOrEmpty(operationDescription))
+                                return "Alarm for " + operationDescription;
+                        }
+                    }
+                    catch
+                    {
+                        // Just ignore failures to derive a description...
+                    }
+                }
+
                 return m_description;
             }
             set

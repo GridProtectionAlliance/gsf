@@ -82,11 +82,11 @@
                 <TextBlock Text="Tag Name" Style="{StaticResource RequiredLabel}" />
                 <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
-            <TextBox Grid.Row="0" Grid.Column="1" CharacterCasing="Upper" Text="{tsfBinding:Column Path=TagName}" Width="{StaticResource ItemSize}" />
+            <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" CharacterCasing="Upper" Text="{tsfBinding:Column Path=TagName}" Width="480" Margin="5,5,0,5" />
 
             <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right">
-              <TextBlock Text="Signal" Style="{StaticResource RequiredLabel}" />
-              <TextBlock Style="{StaticResource RequiredMarker}" />
+                <TextBlock Text="Signal" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
             <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal">
                 <TextBlock Name="SignalLabel" Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorLevel=1, AncestorType=UserControl}, Path=DataContext.SelectedMeasurementLabel}" />
@@ -113,17 +113,17 @@
             <TextBox Grid.Row="4" Grid.Column="3" Text="{tsfBinding:Column UpdateSourceTrigger=LostFocus, Path=Hysteresis}" Width="{StaticResource XSmallItemSize}" TextAlignment="Right" IsEnabled="{Binding Path=HysteresisEnabled}" />
 
             <TextBlock Text="Description" Grid.Row="5" Grid.Column="0" VerticalAlignment="Top" />
-            <TextBox Grid.Row="5" Grid.Column="1" Text="{tsfBinding:Column Path=Description}" TextWrapping="Wrap" />
+            <TextBox Grid.Row="5" Grid.Column="1" Grid.RowSpan="2" Text="{tsfBinding:Column Path=Description}" TextWrapping="Wrap" MinLines="2" MaxLines="2" VerticalScrollBarVisibility="Auto" />
 
             <TextBlock Text="Severity" Grid.Row="5" Grid.Column="2" />
             <ComboBox Grid.Row="5" Grid.Column="3" ItemsSource="{Binding Source={StaticResource SeverityList}}" DisplayMemberPath="Value"
                       SelectedItem="{tsfBinding:Column Path=Severity, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource SeverityList}}"/>
 
-            <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.Column="0" HorizontalAlignment="Right">
+            <StackPanel Orientation="Horizontal" Grid.Row="7" Grid.Column="0" HorizontalAlignment="Right">
                 <TextBlock Text="Load Order" Style="{StaticResource RequiredLabel}" />
                 <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
-            <TextBox Grid.Row="6" Grid.Column="1" Text="{tsfBinding:Column Path=LoadOrder}" Width="35" />
+            <TextBox Grid.Row="7" Grid.Column="1" Text="{tsfBinding:Column Path=LoadOrder}" Width="35" />
 
             <CheckBox Content="Enabled" Grid.Row="6" Grid.Column="3" IsChecked="{tsfBinding:Column Path=Enabled}"/>
 
@@ -138,9 +138,15 @@
             <sdk:DataGrid.Columns>
                 <sdk:DataGridTextColumn Header="TagName" Width="*" Binding="{tsfBinding:Column Path=TagName}" />
                 <sdk:DataGridTextColumn Header="Operation" Width="*" Binding="{tsfBinding:Column Path=OperationDescription}" IsReadOnly="True" />
-                <sdk:DataGridTextColumn Header="Severity" Width="*" Binding="{tsfBinding:Column Path=SeverityName}" IsReadOnly="True" />
+                <sdk:DataGridTextColumn Header="Severity" Width="85" Binding="{tsfBinding:Column Path=SeverityName}" IsReadOnly="True" >
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center" />
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </sdk:DataGridTextColumn>
                 <sdk:DataGridTextColumn Header="Description" Width="2*" Binding="{tsfBinding:Column Path=Description}" />
-                <sdk:DataGridCheckBoxColumn Header="Enabled" Width="*" Binding="{tsfBinding:Column Path=Enabled}" />
+                <sdk:DataGridCheckBoxColumn Header="Enabled" Width="55" Binding="{tsfBinding:Column Path=Enabled}" />
             </sdk:DataGrid.Columns>
         </sdk:DataGrid>
 

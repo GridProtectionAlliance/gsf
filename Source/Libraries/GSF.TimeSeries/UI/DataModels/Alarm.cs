@@ -30,6 +30,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
+using System.Text;
 using GSF.Data;
 
 namespace GSF.TimeSeries.UI.DataModels
@@ -123,7 +124,6 @@ namespace GSF.TimeSeries.UI.DataModels
         /// </summary>
         [Required(ErrorMessage = " Alarm tag name is a required field, please select a value.")]
         [StringLength(200, ErrorMessage = "Alarm tag name cannot exceed 200 characters.")]
-        [RegularExpression("^[A-Z0-9-'!'_''.' @#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' , '.'and '$' are allowed.")]
         public string TagName
         {
             get
@@ -177,6 +177,9 @@ namespace GSF.TimeSeries.UI.DataModels
         {
             get
             {
+                if (string.IsNullOrEmpty(m_description) && !string.IsNullOrEmpty(m_operationDescription))
+                    return "Alarm for " + m_operationDescription;
+
                 return m_description;
             }
             set
@@ -871,6 +874,68 @@ namespace GSF.TimeSeries.UI.DataModels
         {
             string query = database.ParameterizedQueryString("DELETE FROM Measurement WHERE SignalID = {0}", "signalId");
             database.Connection.ExecuteNonQuery(query, database.Guid(measurementId));
+        }
+
+        /// <summary>
+        /// Gets an operation description for an alarm.
+        /// </summary>
+        /// <param name="alarm">Alarm to derive description for.</param>
+        /// <param name="tagName">Label of associated measurement.</param>
+        /// <returns>Derived label.</returns>
+        public static string GetOperationDescription(Alarm alarm, string tagName)
+        {
+            StringBuilder description;
+
+            description = new StringBuilder(tagName);
+
+            AlarmOperation operation = alarm.Operation.GetEnumValueOrDefault<AlarmOperation>(AlarmOperation.Equal);
+
+            switch (operation)
+            {
+                case AlarmOperation.Equal:
+                    description.Append(" = ");
+                    break;
+
+                case AlarmOperation.NotEqual:
+                    description.Append(" != ");
+                    break;
+
+                case AlarmOperation.GreaterOrEqual:
+                    description.Append(" >= ");
+                    break;
+
+                case AlarmOperation.LessOrEqual:
+                    description.Append(" <= ");
+                    break;
+
+                case AlarmOperation.GreaterThan:
+                    description.Append(" > ");
+                    break;
+
+                case AlarmOperation.LessThan:
+                    description.Append(" < ");
+                    break;
+
+                case AlarmOperation.Flatline:
+                    if ((object)alarm.Delay == null)
+                        return string.Empty;
+
+                    description.Append(" flat-lined for ");
+                    description.Append(alarm.Delay);
+                    description.Append(" seconds");
+                    return description.ToString();
+
+                default:
+                    description.Append(operation.GetDescription());
+                    break;
+            }
+
+            if (alarm.SetPoint.HasValue)
+                description.Append(alarm.SetPoint);
+            else
+                description.Append("undefined");
+
+            return description.ToString();
         }
 
         #endregion

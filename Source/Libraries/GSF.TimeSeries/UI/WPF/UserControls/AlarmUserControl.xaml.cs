@@ -52,7 +52,7 @@ namespace GSF.TimeSeries.UI.UserControls
         public AlarmUserControl()
         {
             InitializeComponent();
-            m_dataContext = new Alarms(10);
+            m_dataContext = new Alarms(15);
             m_dataContext.PropertyChanged += ViewModel_PropertyChanged;
             this.DataContext = m_dataContext;
         }

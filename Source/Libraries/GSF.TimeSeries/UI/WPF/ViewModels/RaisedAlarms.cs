@@ -75,7 +75,7 @@ namespace GSF.TimeSeries.UI.ViewModels
             }
             set
             {
-                if((object)m_monitor != null)
+                if ((object)m_monitor != null)
                     m_monitor.RefreshedAlarms -= Monitor_RefreshedAlarms;
 
                 m_monitor = value;
@@ -143,7 +143,7 @@ namespace GSF.TimeSeries.UI.ViewModels
                     row.Background = Brushes.Orange;
                 else if (item.Severity >= (int)AlarmSeverity.Medium)
                     row.Background = Brushes.Yellow;
-                else if(item.Severity >= (int)AlarmSeverity.Low)
+                else if (item.Severity >= (int)AlarmSeverity.Low)
                     row.Background = Brushes.LightGreen;
                 else
                     row.Background = Brushes.White;
@@ -237,14 +237,14 @@ namespace GSF.TimeSeries.UI.ViewModels
                 {
                     itemsSource = ItemsSource
                         .OrderBy(alarm => alarm.Severity)
-                        .OrderBy(alarm => alarm.Severity == (int)AlarmSeverity.Error)
+                        .ThenBy(alarm => alarm.Severity == (int)AlarmSeverity.Error)
                         .ToList();
                 }
                 else
                 {
                     itemsSource = ItemsSource
                         .OrderByDescending(alarm => alarm.Severity)
-                        .OrderByDescending(alarm => alarm.Severity == (int)AlarmSeverity.Error)
+                        .ThenByDescending(alarm => alarm.Severity == (int)AlarmSeverity.Error)
                         .ToList();
                 }
             }

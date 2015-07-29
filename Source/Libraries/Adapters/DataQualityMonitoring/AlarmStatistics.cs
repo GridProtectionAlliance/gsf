@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System.Collections.Generic;
+using GSF.Annotations;
 using GSF.Collections;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Statistics;
@@ -36,7 +37,7 @@ namespace DataQualityMonitoring
         #region [ Members ]
 
         // Fields
-        private Dictionary<int, long> m_countBySeverity;
+        private readonly Dictionary<int, long> m_countBySeverity;
 
         #endregion
 
@@ -68,11 +69,12 @@ namespace DataQualityMonitoring
         #region [ Static ]
 
         // Static Fields
-        private static StatisticValueStateCache s_statisticValueCache = new StatisticValueStateCache();
+        private static readonly StatisticValueStateCache s_statisticValueCache = new StatisticValueStateCache();
 
         // Static Methods
 
         // Gets the alarm count for a specific signal at a specific severity.
+        [UsedImplicitly]
         private static double GetPointStatistic_MeasurementCountForSeverity(object source, string arguments)
         {
             double statistic = 0.0D;

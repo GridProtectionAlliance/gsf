@@ -383,7 +383,7 @@ namespace DataQualityMonitoring
                 SignalID = Guid.Parse(row.Field<object>("SignalID").ToString()),
                 AssociatedMeasurementID = ((object)associatedMeasurementId != null) ? Guid.Parse(associatedMeasurementId.ToString()) : (Guid?)null,
                 Description = row.Field<object>("Description").ToNonNullString(),
-                Severity = (AlarmSeverity)row.ConvertField<int>("Severity"),
+                Severity = row.ConvertField<int>("Severity").GetEnumValueOrDefault<AlarmSeverity>(AlarmSeverity.None),
                 SetPoint = row.ConvertNullableField<double>("SetPoint"),
                 Tolerance = row.ConvertNullableField<double>("Tolerance"),
                 Delay = row.ConvertNullableField<double>("Delay"),

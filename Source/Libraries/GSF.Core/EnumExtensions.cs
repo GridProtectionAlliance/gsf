@@ -58,6 +58,61 @@ namespace GSF
         }
 
         /// <summary>
+        /// Gets the enumeration constant for this value, if defined in the enumeration, or a default value.
+        /// </summary>
+        /// <typeparam name="T">Type of enumeration.</typeparam>
+        /// <param name="value">Value to attempt to return from enumeration.</param>
+        /// <param name="defaultValue">Value to return if enumeration value is not found.</param>
+        /// <returns>Enumeration value specified, if found, or a default value.</returns>
+        /// <remarks>
+        /// If a default value is not defined, first enumeration value will be used.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
+        /// <exception cref="ArgumentException">
+        /// <typeparamref name="T"/> is not an enum. -or-
+        /// The type of <paramref name="value"/> is not of type <typeparamref name="T"/>. -or-
+        /// The type of <paramref name="value"/> is not an underlying type of <typeparamref name="T"/>.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// <paramref name="value"/> is not type <see cref="T:System.SByte"/>, <see cref="T:System.Int16"/>,
+        /// <see cref="T:System.Int32"/>, <see cref="T:System.Int64"/>, <see cref="T:System.Byte"/>, <see cref="T:System.UInt16"/>,
+        /// <see cref="T:System.UInt32"/>, or <see cref="T:System.UInt64"/>, or <see cref="T:System.String"/>.
+        /// </exception>
+        public static T GetEnumValueOrDefault<T>(this object value, object defaultValue = null)
+        {
+            return (T)value.GetEnumValueOrDefault(typeof(T), defaultValue);
+        }
+
+        /// <summary>
+        /// Gets the enumeration constant for value, if defined in the enumeration, or a default value.
+        /// </summary>
+        /// <param name="value">Value to attempt to return from enumeration.</param>
+        /// <param name="type"><see cref="Type"/> of the enumeration.</param>
+        /// <param name="defaultValue">Value to return if enumeration value is not found.</param>
+        /// <returns>Enumeration value specified, if found, or a default value.</returns>
+        /// <remarks>
+        /// If a default value is not defined, first enumeration value will be used.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="type"/> or <paramref name="value"/> is null.</exception>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="type"/> is not an enum. -or-
+        /// The type of <paramref name="value"/> is not of type <paramref name="type"/>. -or-
+        /// The type of <paramref name="value"/> is not an underlying type of <paramref name="type"/>.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// <paramref name="value"/> is not type <see cref="T:System.SByte"/>, <see cref="T:System.Int16"/>,
+        /// <see cref="T:System.Int32"/>, <see cref="T:System.Int64"/>, <see cref="T:System.Byte"/>, <see cref="T:System.UInt16"/>,
+        /// <see cref="T:System.UInt32"/>, or <see cref="T:System.UInt64"/>, or <see cref="T:System.String"/>.
+        /// </exception>
+        public static object GetEnumValueOrDefault(this object value, Type type, object defaultValue = null)
+        {
+            if (Enum.IsDefined(type, value))
+                return value;
+
+            return defaultValue ?? Enum.GetValues(type).GetValue(0);
+        }
+
+        /// <summary>
         /// Gets the enumeration of the specified <paramref name="type"/> whose description matches this <paramref name="description"/>.
         /// </summary>
         /// <param name="description">Description to be used for lookup of the enumeration.</param>

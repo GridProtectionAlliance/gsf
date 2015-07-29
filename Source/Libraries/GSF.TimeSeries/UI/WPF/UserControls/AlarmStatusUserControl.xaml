@@ -101,9 +101,9 @@
                       Height="Auto" Sorting="DataGrid_Sorting" LoadingRow="DataGrid_LoadingRow" SelectionMode="Single" CellStyle="{StaticResource ResourceKey=AlarmCellStyle}">
             <sdk:DataGrid.Columns>
                 <sdk:DataGridTextColumn Header="Severity" Width="*" Binding="{tsfBinding:Column Path=Severity}" CellStyle="{StaticResource CenterAlignAlarmCellStyle}" IsReadOnly="True" />
-                <sdk:DataGridTextColumn Header="Time Raised" Width="2*" Binding="{tsfBinding:Column Path=TimeRaised}" CellStyle="{StaticResource CenterAlignAlarmCellStyle}" IsReadOnly="True" />
-                <sdk:DataGridTextColumn Header="Tag Name" Width="*" Binding="{tsfBinding:Column Path=TagName}" CellStyle="{StaticResource CenterAlignAlarmCellStyle}" IsReadOnly="True" />
-                <sdk:DataGridTextColumn Header="Description" Width="4*" Binding="{tsfBinding:Column Path=Description}" IsReadOnly="True" />
+                <sdk:DataGridTextColumn Header="Time Raised" Width="*" Binding="{tsfBinding:Column Path=TimeRaised}" CellStyle="{StaticResource CenterAlignAlarmCellStyle}" IsReadOnly="True" />
+                <sdk:DataGridTextColumn Header="Tag Name" Width="2*" Binding="{tsfBinding:Column Path=TagName}" CellStyle="{StaticResource CenterAlignAlarmCellStyle}" IsReadOnly="True" />
+                <sdk:DataGridTextColumn Header="Description" Width="3*" Binding="{tsfBinding:Column Path=Description}" IsReadOnly="True" />
             </sdk:DataGrid.Columns>
         </sdk:DataGrid>
 

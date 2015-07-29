@@ -26,6 +26,7 @@
 //******************************************************************************************************
 
 using System;
+using System.ComponentModel;
 
 namespace GSF.TimeSeries
 {
@@ -55,46 +56,67 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Indicates that an alarm is of no importance.
         /// </summary>
+        [Description("NONE")]
         None = 0,
 
         /// <summary>
         /// Indicates that an alarm is informative, but not dangerous.
         /// </summary>
+        [Description("INFO")]
         Information = 50,
 
         /// <summary>
         /// Indicates that an alarm is not very important.
         /// </summary>
+        [Description("LOW")]
         Low = 150,
 
         /// <summary>
         /// Indicates that an alarm is somewhat important.
         /// </summary>
+        [Description("MEDLOW")]
         MediumLow = 300,
 
         /// <summary>
         /// Indicates that an alarm is moderately importance.
         /// </summary>
+        [Description("MED")]
         Medium = 500,
 
         /// <summary>
         /// Indicates that an alarm is important.
         /// </summary>
+        [Description("MEDHIGH")]
         MediumHigh = 700,
 
         /// <summary>
         /// Indicates that an alarm is very important.
         /// </summary>
+        [Description("HIGH")]
         High = 850,
+
+        /// <summary>
+        /// Indicates an alarm for a value that is unreasonable.
+        /// </summary>
+        [Description("RANGE")]
+        Unreasonable = 900,
 
         /// <summary>
         /// Indicates than an alarm signifies a dangerous situation.
         /// </summary>
+        [Description("CRITICAL")]
         Critical = 950,
+
+        /// <summary>
+        /// Indicates an alarm for a value that is latched, i.e., flat-lined.
+        /// </summary>
+        [Description("FLATLINE")]
+        Latched = 980,
 
         /// <summary>
         /// Indicates that an alarm reports bad data.
         /// </summary>
+        [Description("ERROR")]
         Error = 1000
     }
 
@@ -107,36 +129,43 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Internal range test
         /// </summary>
+        [Description("Equal to")]
         Equal = 1,
 
         /// <summary>
         /// External range test
         /// </summary>
+        [Description("Not equal to")]
         NotEqual = 2,
 
         /// <summary>
         /// Upper bound
         /// </summary>
+        [Description("Greater than or equal to")]
         GreaterOrEqual = 11,
 
         /// <summary>
         /// Lower bound
         /// </summary>
+        [Description("Less than or equal to")]
         LessOrEqual = 21,
 
         /// <summary>
         /// Upper limit
         /// </summary>
+        [Description("Greater than")]
         GreaterThan = 12,
 
         /// <summary>
         /// Lower limit
         /// </summary>
+        [Description("Less than")]
         LessThan = 22,
 
         /// <summary>
         /// Latched value
         /// </summary>
+        [Description("Latched")]
         Flatline = 3
     }
 
@@ -640,7 +669,7 @@ namespace GSF.TimeSeries
                 m_lastValue = measurement.Value;
             }
 
-            dist = Ticks.FromSeconds(Delay.Value);
+            dist = Ticks.FromSeconds(Delay.GetValueOrDefault());
             diff = measurement.Timestamp - m_lastChanged;
 
             return diff >= dist;
@@ -724,7 +753,7 @@ namespace GSF.TimeSeries
 
                 // If the amount of time is larger than
                 // the delay threshold, raise the alarm
-                if (dist >= Ticks.FromSeconds(m_delay.Value))
+                if (dist >= Ticks.FromSeconds(m_delay.GetValueOrDefault()))
                     return true;
             }
 

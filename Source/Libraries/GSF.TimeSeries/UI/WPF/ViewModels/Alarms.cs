@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  12/20/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  07/29/2015 - J. Ritchie Carroll
+//       Adjusted alarm severity and operation lists to load from source enumerations.
 //
 //******************************************************************************************************
 
@@ -251,6 +253,9 @@ namespace GSF.TimeSeries.UI.ViewModels
 
             if (e.PropertyName == "Operation")
                 UpdateEnableFlags();
+
+            if (e.PropertyName == "SignalID" || e.PropertyName == "Operation" || e.PropertyName == "Severity")
+                CurrentItem.TagName = GetTagName(CurrentItem);
         }
 
         /// <summary>
@@ -263,7 +268,7 @@ namespace GSF.TimeSeries.UI.ViewModels
 
             if (propertyName == "ItemsSource")
                 m_measurementLabels = GetMeasurementLabels();
-            
+
             base.OnPropertyChanged(propertyName);
 
             if (propertyName == "CurrentItem")
@@ -279,13 +284,8 @@ namespace GSF.TimeSeries.UI.ViewModels
         {
             Dictionary<int, string> operationList = new Dictionary<int, string>();
 
-            operationList.Add((int)AlarmOperation.Equal, "Equal to");
-            operationList.Add((int)AlarmOperation.NotEqual, "Not equal to");
-            operationList.Add((int)AlarmOperation.GreaterOrEqual, "Greater than or equal to");
-            operationList.Add((int)AlarmOperation.LessOrEqual, "Less than or equal to");
-            operationList.Add((int)AlarmOperation.GreaterThan, "Greater than");
-            operationList.Add((int)AlarmOperation.LessThan, "Less than");
-            operationList.Add((int)AlarmOperation.Flatline, "Latched");
+            foreach (AlarmOperation operation in Enum.GetValues(typeof(AlarmOperation)).Cast<AlarmOperation>())
+                operationList.Add((int)operation, operation.GetDescription());
 
             return operationList;
         }
@@ -295,15 +295,8 @@ namespace GSF.TimeSeries.UI.ViewModels
         {
             Dictionary<int, string> severityList = new Dictionary<int, string>();
 
-            severityList.Add((int)AlarmSeverity.None, "None");
-            severityList.Add((int)AlarmSeverity.Information, "Information");
-            severityList.Add((int)AlarmSeverity.Low, "Low");
-            severityList.Add((int)AlarmSeverity.MediumLow, "Medium Low");
-            severityList.Add((int)AlarmSeverity.Medium, "Medium");
-            severityList.Add((int)AlarmSeverity.MediumHigh, "Medium High");
-            severityList.Add((int)AlarmSeverity.High, "High");
-            severityList.Add((int)AlarmSeverity.Critical, "Critical");
-            severityList.Add((int)AlarmSeverity.Error, "Error");
+            foreach (AlarmSeverity severity in Enum.GetValues(typeof(AlarmSeverity)).Cast<AlarmSeverity>())
+                severityList.Add((int)severity, severity.GetFormattedName());
 
             return severityList;
         }
@@ -312,8 +305,54 @@ namespace GSF.TimeSeries.UI.ViewModels
         private Dictionary<Guid, string> GetMeasurementLabels()
         {
             List<Guid> signals = ItemsSource.Select(alarm => alarm.SignalID).Distinct().ToList();
+
+            if (IsNewRecord && CurrentItem.SignalID != Guid.Empty && !signals.Contains(CurrentItem.SignalID))
+                signals.Add(CurrentItem.SignalID);
+
             IList<DataModels.Measurement> measurements = DataModels.Measurement.LoadFromKeys(null, signals);
             return measurements.ToDictionary(measurement => measurement.SignalID, measurement => measurement.PointTag);
+        }
+
+        // Generates an alarm tag name
+        private string GetTagName(DataModels.Alarm item)
+        {
+            string measurementLabel;
+            StringBuilder description = new StringBuilder("AL-");
+            AlarmSeverity severity = item.Severity.GetEnumValueOrDefault<AlarmSeverity>(AlarmSeverity.None);
+            AlarmOperation operation = item.Operation.GetEnumValueOrDefault<AlarmOperation>(AlarmOperation.Equal);
+
+            switch (severity)
+            {
+                case AlarmSeverity.None:
+                    description.Append("EXEMPT");
+                    break;
+                case AlarmSeverity.Unreasonable:
+                    switch (operation)
+                    {
+                        case AlarmOperation.GreaterThan:
+                        case AlarmOperation.GreaterOrEqual:
+                            description.Append("HIGH");
+                            break;
+                        case AlarmOperation.LessThan:
+                        case AlarmOperation.LessOrEqual:
+                            description.Append("LOW");
+                            break;
+                        default:
+                            description.Append(severity.GetDescription());
+                            break;
+                    }
+                    break;
+                default:
+                    description.Append(severity.GetDescription());
+                    break;
+            }
+
+            description.Append(':');
+
+            if (m_measurementLabels.TryGetValue(item.SignalID, out measurementLabel))
+                description.Append(measurementLabel);
+
+            return description.ToString();
         }
 
         // Generates a description of the operation that triggers the alarm.
@@ -322,57 +361,11 @@ namespace GSF.TimeSeries.UI.ViewModels
             if (item.ID > 0)
             {
                 string measurementLabel;
-                StringBuilder description;
 
                 if (!m_measurementLabels.TryGetValue(item.SignalID, out measurementLabel))
                     measurementLabel = m_selectedMeasurementLabel;
 
-                description = new StringBuilder(measurementLabel);
-
-                switch ((AlarmOperation)item.Operation)
-                {
-                    case AlarmOperation.Equal:
-                        description.Append(" = ");
-                        break;
-
-                    case AlarmOperation.NotEqual:
-                        description.Append(" != ");
-                        break;
-
-                    case AlarmOperation.GreaterOrEqual:
-                        description.Append(" >= ");
-                        break;
-
-                    case AlarmOperation.LessOrEqual:
-                        description.Append(" <= ");
-                        break;
-
-                    case AlarmOperation.GreaterThan:
-                        description.Append(" > ");
-                        break;
-
-                    case AlarmOperation.LessThan:
-                        description.Append(" < ");
-                        break;
-
-                    case AlarmOperation.Flatline:
-                        if ((object)item.Delay == null)
-                            return string.Empty;
-
-                        description.Append(" flatlined for ");
-                        description.Append(item.Delay);
-                        description.Append(" seconds");
-                        return description.ToString();
-
-                    default:
-                        return string.Empty;
-                }
-
-                if ((object)item.SetPoint == null)
-                    return string.Empty;
-
-                description.Append(item.SetPoint);
-                return description.ToString();
+                return DataModels.Alarm.GetOperationDescription(item, measurementLabel);
             }
 
             return string.Empty;

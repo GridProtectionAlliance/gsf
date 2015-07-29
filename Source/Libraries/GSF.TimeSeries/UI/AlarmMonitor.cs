@@ -71,7 +71,7 @@ namespace GSF.TimeSeries.UI
         private volatile Dictionary<int, Alarm> m_definedAlarmsByID;
         private volatile Dictionary<Guid, Alarm> m_definedAlarmsByMeasurement;
         private readonly object m_currentAlarmsLock;
-        private ISet<Alarm> m_currentAlarms;
+        private readonly ISet<Alarm> m_currentAlarms;
         private int m_alarmsChanged;
         private Timer m_refreshTimer;
         private int m_refreshInterval;
@@ -360,8 +360,8 @@ namespace GSF.TimeSeries.UI
                 SignalID = Guid.Parse(row.Field<object>("SignalID").ToString()),
                 AssociatedMeasurementID = ((object)associatedMeasurementId != null) ? Guid.Parse(associatedMeasurementId.ToString()) : (Guid?)null,
                 Description = row.Field<object>("Description").ToNonNullString(),
-                Severity = (AlarmSeverity)row.ConvertField<int>("Severity"),
-                Operation = (AlarmOperation)row.ConvertField<int>("Operation"),
+                Severity = row.ConvertField<int>("Severity").GetEnumValueOrDefault<AlarmSeverity>(AlarmSeverity.None),
+                Operation = row.ConvertField<int>("Operation").GetEnumValueOrDefault<AlarmOperation>(AlarmOperation.Equal),
                 SetPoint = row.ConvertNullableField<double>("SetPoint"),
                 Tolerance = row.ConvertNullableField<double>("Tolerance"),
                 Delay = row.ConvertNullableField<double>("Delay"),
