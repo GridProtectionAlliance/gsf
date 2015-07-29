@@ -814,7 +814,7 @@ namespace GSF.TimeSeries.Statistics
             Assembly assembly;
             Type type;
             MethodInfo method;
-            string assemblyName, typeName, methodName;
+            string assemblyName, typeName, methodName, signalReference;
 
             Dictionary<string, StatisticSource> sourceLookup;
             Dictionary<StatisticSource, List<DataRow>> activeMeasurementsLookup;
@@ -899,7 +899,14 @@ namespace GSF.TimeSeries.Statistics
             foreach (Tuple<StatisticSource, IEnumerable<Statistic>> mapping in sources.GroupJoin(m_statistics, src => src.SourceCategory, stat => stat.Source, Tuple.Create))
             {
                 foreach (Statistic stat in mapping.Item2)
-                    sourceLookup.Add(GetSignalReference(stat, mapping.Item1), mapping.Item1);
+                {
+                    signalReference = GetSignalReference(stat, mapping.Item1);
+
+                    if (sourceLookup.ContainsKey(signalReference))
+                        OnStatusMessage("WARNING: Encountered duplicate signal reference statistic: {0}", signalReference);
+                    else
+                        sourceLookup.Add(signalReference, mapping.Item1);
+                }
             }
 
             // Create a lookup table from statistic source to a

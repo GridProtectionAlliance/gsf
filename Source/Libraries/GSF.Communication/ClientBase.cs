@@ -1054,10 +1054,7 @@ namespace GSF.Communication
                         SaveSettings();
 
                         if ((object)m_connectHandle != null)
-                        {
-                            m_connectHandle.Set();
                             m_connectHandle.Dispose();
-                        }
                     }
                 }
                 finally

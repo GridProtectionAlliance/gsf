@@ -309,6 +309,8 @@ namespace PIAdapters
 
                 if (m_runMetadataSync)
                 {
+                    status.AppendFormat("    Tag prefixes to remove: {0}", TagNamePrefixRemoveCount);
+                    status.AppendLine();
                     status.AppendFormat("       OSI-PI point source: {0}", m_pointSource);
                     status.AppendLine();
                     status.AppendFormat("        OSI-PI point class: {0}", m_pointClass);
@@ -437,6 +439,9 @@ namespace PIAdapters
                 UseCompression = setting.ParseBoolean();
             else
                 UseCompression = true;
+
+            if (!settings.TryGetValue("TagNamePrefixRemoveCount", out setting) || !int.TryParse(setting, out m_tagNamePrefixRemoveCount))
+                m_tagNamePrefixRemoveCount = 0;
 
             if (settings.TryGetValue("RunMetadataSync", out setting))
                 m_runMetadataSync = setting.ParseBoolean();
@@ -677,7 +682,7 @@ namespace PIAdapters
                 if (m_runMetadataSync)
                 {
                     // Attempt lookup by EXDESC signal ID                           
-                    point = GetPIPoint(m_connection.Server, signalID);
+                    point = GetPIPointBySignalID(m_connection.Server, signalID);
                     foundPoint = (object)point != null;
                 }
 
@@ -789,19 +794,19 @@ namespace PIAdapters
                         // Get matching measurement row
                         measurementRow = rows[0];
 
-                        // Get tag-name as defined in meta-data
+                        // Get tag-name as defined in meta-data, adjusting as needed
                         tagName = GetPITagName(measurementRow["PointTag"].ToNonNullString().Trim());
 
-                        // If tag name is not defined in measurements there is no need to continue processing
+                        // Use alternate tag if one is defined - note that digitals are an exception since they use this field for special labeling
+                        if (!string.IsNullOrWhiteSpace(measurementRow["AlternateTag"].ToString()) && !measurementRow["SignalType"].ToString().Equals("DIGI", StringComparison.OrdinalIgnoreCase))
+                            tagName = measurementRow["AlternateTag"].ToString().Trim();
+
+                        // If no tag name is defined in measurements there is no need to continue processing
                         if (string.IsNullOrWhiteSpace(tagName))
                         {
                             m_tagMap.TryRemove(signalID, out tagName);
                             continue;
                         }
-
-                        // Use alternate tag if one is defined - note that digitals are an exception since they use this field for special labeling
-                        if (!string.IsNullOrWhiteSpace(measurementRow["AlternateTag"].ToString()) && !measurementRow["SignalType"].ToString().Equals("DIGI", StringComparison.OrdinalIgnoreCase))
-                            tagName = measurementRow["AlternateTag"].ToString().Trim();
 
                         // Lookup PI point trying signal ID and tag name
                         point = GetPIPoint(server, signalID, tagName);
@@ -834,10 +839,17 @@ namespace PIAdapters
                             {
                                 // Rename tag-name if needed - PI tags are not case sensitive
                                 if (string.Compare(point.Name, tagName, StringComparison.InvariantCultureIgnoreCase) != 0)
-                                {
-                                    point.SetAttribute(PICommonPointAttributes.Tag, tagName);
-                                    point.SaveAttributes(PICommonPointAttributes.Tag);
-                                }
+                                    point.Name = tagName;
+
+                                // Make sure renamed point gets fully remapped
+                                PIPoint removedPIPoint;
+                                m_mappedPIPoints.TryRemove(key, out removedPIPoint);
+
+                                lock (m_mapRequestQueue.SyncRoot)
+                                    m_mapRequestQueue.Remove(key);
+
+                                lock (m_pendingMappings)
+                                    m_pendingMappings.Remove(key);
                             }
                             catch (Exception ex)
                             {
@@ -1082,13 +1094,26 @@ namespace PIAdapters
             return point;
         }
 
-        private PIPoint GetPIPoint(PIServer server, Guid signalID)
+        private PIPoint GetPIPoint(PIServer server, Guid signalID, string tagName)
         {
             string cachedTagName;
-            return GetPIPoint(server, signalID, out cachedTagName);
+
+            PIPoint point = GetPIPointBySignalID(server, signalID, out cachedTagName);
+
+            // If point was not found in cache and cached tag name does not match current tag name, attempt to lookup using current tag name
+            if ((object)point == null && string.Compare(cachedTagName, tagName, StringComparison.OrdinalIgnoreCase) != 0)
+                point = GetPIPoint(server, tagName);
+
+            return point;
         }
 
-        private PIPoint GetPIPoint(PIServer server, Guid signalID, out string cachedTagName)
+        private PIPoint GetPIPointBySignalID(PIServer server, Guid signalID)
+        {
+            string cachedTagName;
+            return GetPIPointBySignalID(server, signalID, out cachedTagName);
+        }
+
+        private PIPoint GetPIPointBySignalID(PIServer server, Guid signalID, out string cachedTagName)
         {
             PIPoint point = null;
 
@@ -1099,26 +1124,13 @@ namespace PIAdapters
             if ((object)point == null)
             {
                 // Point was not previously cached, lookup tag using signal ID stored in extended description field
-                IEnumerable<PIPoint> points = PIPoint.FindPIPoints(server, string.Format("EXDESC='{0}'", signalID), false, new[] { PICommonPointAttributes.ExtendedDescriptor });
+                IEnumerable<PIPoint> points = PIPoint.FindPIPoints(server, string.Format("EXDESC:='{0}'", signalID), false);
 
                 point = points.FirstOrDefault();
 
                 if ((object)point != null)
                     cachedTagName = point.Name;
             }
-
-            return point;
-        }
-
-        private PIPoint GetPIPoint(PIServer server, Guid signalID, string tagName)
-        {
-            string cachedTagName;
-
-            PIPoint point = GetPIPoint(server, signalID, out cachedTagName);
-
-            // If point was not found in cache and cached tag name does not match current tag name, attempt to lookup using current tag name
-            if ((object)point == null && string.Compare(cachedTagName, tagName, StringComparison.OrdinalIgnoreCase) != 0)
-                point = GetPIPoint(server, tagName);
 
             return point;
         }
