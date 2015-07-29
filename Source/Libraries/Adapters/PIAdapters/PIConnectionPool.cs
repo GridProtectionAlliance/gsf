@@ -31,6 +31,7 @@ namespace PIAdapters
     /// <summary>
     /// Represents a pool of <see cref="PIConnection"/> instances.
     /// </summary>
+    [Obsolete("Pooling connections was a PI-SDK optimization technique, this is not required for AF-SDK implementations.", false)]
     public class PIConnectionPool : IDisposable
     {
         #region [ Members ]

@@ -47,6 +47,8 @@ namespace PIAdapters
     /// <summary>
     /// Uses PI event pipes to deliver real-time PI data to GSF host
     /// </summary>
+    // TODO: Remove attribute once adapter is working properly - this hides adapter from Manager UI:
+    [EditorBrowsable(EditorBrowsableState.Never)]
     [Description("OSI-PI: Reads real-time measurements from an OSI-PI server using AF-SDK.")]
     public class PIRTInputAdapter : InputAdapterBase
     {
@@ -60,7 +62,7 @@ namespace PIAdapters
         private string m_password;                                            // Password for PI connection string
         private int m_connectTimeout;                                         // PI connection timeout
         private PIPointList m_points;                                         // PI point list of points to which subscription should be made
-        private AFDataPipe m_pipe;                                            // event pipe object raises an event when a subscribed point is updated
+        //private AFDataPipe m_pipe;                                            // event pipe object raises an event when a subscribed point is updated
         private int m_processedMeasurements;                                  // processed measurements for short status
         private bool m_autoAddOutput;                                         // whether or not to automatically add PI points
         private DateTime m_lastReceivedTimestamp;                             // last received timestamp from PI event pipe
@@ -91,7 +93,8 @@ namespace PIAdapters
         /// <summary>
         /// Gets or sets a value for whether the adapter will use event pipes. If event pipes are disabled, the adapter will use polling.
         /// </summary>
-        [ConnectionStringParameter, Description("Gets or sets a value for whether the adapter will use event pipes. If event pipes are disabled, the adapter will use polling."), DefaultValue(true)]
+        // Hiding this property for now...
+        //[ConnectionStringParameter, Description("Gets or sets a value for whether the adapter will use event pipes. If event pipes are disabled, the adapter will use polling."), DefaultValue(true)]
         public bool UseEventPipes
         {
             get
@@ -155,6 +158,7 @@ namespace PIAdapters
             set
             {
                 base.RequestedOutputMeasurementKeys = value;
+
                 if ((object)value != null && value.Any())
                     HandleNewMeasurementsRequest(value);
             }
@@ -180,7 +184,7 @@ namespace PIAdapters
         /// <summary>
         /// Gets or sets the name of the PI user ID for the adapter's PI connection.
         /// </summary>
-        [ConnectionStringParameter, Description("Defines the name of the PI user ID for the adapter's PI connection.")]
+        [ConnectionStringParameter, Description("Defines the name of the PI user ID for the adapter's PI connection."), DefaultValue("")]
         public string UserName
         {
             get
@@ -196,7 +200,7 @@ namespace PIAdapters
         /// <summary>
         /// Gets or sets the password used for the adapter's PI connection.
         /// </summary>
-        [ConnectionStringParameter, Description("Defines the password used for the adapter's PI connection.")]
+        [ConnectionStringParameter, Description("Defines the password used for the adapter's PI connection."), DefaultValue("")]
         public string Password
         {
             get
@@ -309,7 +313,7 @@ namespace PIAdapters
             if (settings.TryGetValue("UseEventPipes", out setting))
                 UseEventPipes = bool.Parse(setting);
             else
-                UseEventPipes = true;
+                UseEventPipes = false;
 
             if (settings.TryGetValue("QueryTimeSpan", out setting))
                 QueryTimeSpan = Convert.ToInt32(setting);
@@ -448,6 +452,7 @@ namespace PIAdapters
             if (m_useEventPipes)
                 OnStatusMessage("WARNING: PI adapter switching from event pipes to polling due to error or start/stop time constraints.");
 
+            // TODO: Poll method needs some work...
             // set up a new thread to do some long calls to PI and set up threads, timers, etc for polling
             StopGettingData();
             ThreadPool.QueueUserWorkItem(StartGettingData, tagFilter);
@@ -610,6 +615,9 @@ namespace PIAdapters
                                 m_measurements.Remove(measurement);
                             }
                         }
+
+                        if (measurement.Timestamp > m_lastReceivedTimestamp.Ticks)
+                            m_lastReceivedTimestamp = measurement.Timestamp;
                     }
 
                     OnNewMeasurements(publishMeasurements);
@@ -621,7 +629,7 @@ namespace PIAdapters
             }
         }
 
-        // TODO: Updated code for handling piped-events in AF-SDK
+        // TODO: Update code to properly handle piped-events in AF-SDK
         //private void PipeOnOnNewValue()
         //{
         //    List<IMeasurement> measurements = new List<IMeasurement>();
@@ -688,7 +696,7 @@ namespace PIAdapters
 
             m_connection = null;
             m_points = null;
-            m_pipe = null;
+            //m_pipe = null;
 
             m_measurements.Clear();
             m_measurements = null;

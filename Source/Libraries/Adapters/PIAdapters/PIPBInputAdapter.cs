@@ -132,7 +132,7 @@ namespace PIAdapters
         /// <summary>
         /// Gets or sets the name of the PI user ID for the adapter's PI connection.
         /// </summary>
-        [ConnectionStringParameter, Description("Defines the name of the PI user ID for the adapter's PI connection.")]
+        [ConnectionStringParameter, Description("Defines the name of the PI user ID for the adapter's PI connection."), DefaultValue("")]
         public string UserName
         {
             get
@@ -148,7 +148,7 @@ namespace PIAdapters
         /// <summary>
         /// Gets or sets the password used for the adapter's PI connection.
         /// </summary>
-        [ConnectionStringParameter, Description("Defines the password used for the adapter's PI connection.")]
+        [ConnectionStringParameter, Description("Defines the password used for the adapter's PI connection."), DefaultValue("")]
         public string Password
         {
             get
