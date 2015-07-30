@@ -313,7 +313,7 @@ namespace GSF.Security
                     // Attempt to extract current security context from the database
                     using (AdoDataConnection database = new AdoDataConnection(SettingsCategory))
                     {
-                        securityContext = ExtractSecurityContext(database.Connection);
+                        securityContext = ExtractSecurityContext(database.Connection, ex => LogError(ex.Source, ex.ToString()));
                     }
                 }
                 catch (InvalidOperationException)
@@ -964,8 +964,9 @@ namespace GSF.Security
         /// Extracts the current security context from the database.
         /// </summary>
         /// <param name="connection">Existing database connection used to extract security context.</param>
+        /// <param name="exceptionHandler">Exception handler to use for any exceptions encountered while updating security cache.</param>
         /// <returns>A new <see cref="DataSet"/> containing the latest security context.</returns>
-        public static DataSet ExtractSecurityContext(IDbConnection connection)
+        public static DataSet ExtractSecurityContext(IDbConnection connection, Action<Exception> exceptionHandler)
         {
             DataSet securityContext = new DataSet("AdoSecurityContext");
 
@@ -978,12 +979,20 @@ namespace GSF.Security
             // Always cache security context after successful extraction
             Thread cacheSecurityContext = new Thread(() =>
             {
-                using (AdoSecurityCache cache = AdoSecurityCache.GetCurrentCache())
+                try
                 {
-                    cache.DataSet = securityContext;
-                    cache.WaitForSave();
+                    using (AdoSecurityCache cache = AdoSecurityCache.GetCurrentCache())
+                    {
+                        cache.DataSet = securityContext;
+                        cache.WaitForSave();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    exceptionHandler(ex);
                 }
             });
+
             cacheSecurityContext.IsBackground = true;
             cacheSecurityContext.Start();
 

@@ -655,7 +655,7 @@ namespace GSF.TimeSeries.Configuration
                 OnStatusMessage("Preparing current security context...");
 
                 operationStartTime = DateTime.UtcNow.Ticks;
-                AdoSecurityProvider.ExtractSecurityContext(database.Connection);
+                AdoSecurityProvider.ExtractSecurityContext(database.Connection, OnProcessException);
                 operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
                 OnStatusMessage(string.Format("Security context prepared in {0}.", operationElapsedTime.ToString(2)));
