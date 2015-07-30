@@ -57,7 +57,7 @@ namespace GSF.TimeSeries.Statistics
         // Represents a source for a statistics
         private class StatisticSource
         {
-            public object Source;
+            public WeakReference<object> SourceReference;
             public string SourceName;
             public string SourceCategory;
             public string SourceAcronym;
@@ -452,6 +452,7 @@ namespace GSF.TimeSeries.Statistics
         private readonly LongSynchronizedOperation m_updateStatisticMeasurementsOperation;
         private readonly LongSynchronizedOperation m_loadStatisticsOperation;
         private readonly LongSynchronizedOperation m_calculateStatisticsOperation;
+        private readonly ShortSynchronizedOperation m_validateSourceReferencesOperation;
 
         private readonly PerformanceMonitor m_performanceMonitor;
 
@@ -497,6 +498,12 @@ namespace GSF.TimeSeries.Statistics
             m_calculateStatisticsOperation = new LongSynchronizedOperation(CalculateStatistics, ex =>
             {
                 string message = "An error occurred while attempting to calculate statistics: " + ex.Message;
+                OnProcessException(new InvalidOperationException(message, ex));
+            });
+
+            m_validateSourceReferencesOperation = new ShortSynchronizedOperation(ValidateSourceReferences, ex =>
+            {
+                string message = "An error occurred while attempting to validate statistic source references: " + ex.Message;
                 OnProcessException(new InvalidOperationException(message, ex));
             });
 
@@ -1019,40 +1026,49 @@ namespace GSF.TimeSeries.Statistics
 
         private IMeasurement CalculateStatistic(Statistic[] statistics, DateTime serverTime, StatisticSource source, DataRow measurement)
         {
-            Guid signalID;
-            string signalReference;
-            int signalIndex;
+            object target;
 
-            Statistic statistic;
-
-            try
+            if (source.SourceReference.TryGetTarget(out target))
             {
-                // Get the signal ID and signal reference of the current measurement
-                signalID = Guid.Parse(measurement["SignalID"].ToString());
-                signalReference = measurement["SignalReference"].ToString();
-                signalIndex = Convert.ToInt32(signalReference.Substring(signalReference.LastIndexOf("-ST", StringComparison.Ordinal) + 3));
+                Guid signalID;
+                string signalReference;
+                int signalIndex;
 
-                // Find the statistic corresponding to the current measurement
-                statistic = statistics.FirstOrDefault(stat => (source.SourceCategory == stat.Source) && (signalIndex == stat.Index));
+                Statistic statistic;
 
-                if ((object)statistic != null)
+                try
                 {
-                    // Calculate the current value of the statistic measurement
-                    return new Measurement()
+                    // Get the signal ID and signal reference of the current measurement
+                    signalID = Guid.Parse(measurement["SignalID"].ToString());
+                    signalReference = measurement["SignalReference"].ToString();
+                    signalIndex = Convert.ToInt32(signalReference.Substring(signalReference.LastIndexOf("-ST", StringComparison.Ordinal) + 3));
+
+                    // Find the statistic corresponding to the current measurement
+                    statistic = statistics.FirstOrDefault(stat => (source.SourceCategory == stat.Source) && (signalIndex == stat.Index));
+
+                    if ((object)statistic != null)
                     {
-                        Key = MeasurementKey.LookUpOrCreate(signalID, measurement["ID"].ToString()),
-                        TagName = measurement["PointTag"].ToNonNullString(),
-                        Adder = double.Parse(measurement["Adder"].ToNonNullString("0.0")),
-                        Multiplier = double.Parse(measurement["Multiplier"].ToNonNullString("1.0")),
-                        Value = statistic.Method(source.Source, statistic.Arguments),
-                        Timestamp = serverTime
-                    };
+                        // Calculate the current value of the statistic measurement
+                        return new Measurement()
+                        {
+                            Key = MeasurementKey.LookUpOrCreate(signalID, measurement["ID"].ToString()),
+                            TagName = measurement["PointTag"].ToNonNullString(),
+                            Adder = double.Parse(measurement["Adder"].ToNonNullString("0.0")),
+                            Multiplier = double.Parse(measurement["Multiplier"].ToNonNullString("1.0")),
+                            Value = statistic.Method(target, statistic.Arguments),
+                            Timestamp = serverTime
+                        };
+                    }
+                }
+                catch (Exception ex)
+                {
+                    string errorMessage = string.Format("Error calculating statistic for {0}: {1}", measurement["SignalReference"], ex.Message);
+                    OnProcessException(new Exception(errorMessage, ex));
                 }
             }
-            catch (Exception ex)
+            else
             {
-                string errorMessage = string.Format("Error calculating statistic for {0}: {1}", measurement["SignalReference"], ex.Message);
-                OnProcessException(new Exception(errorMessage, ex));
+                m_validateSourceReferencesOperation.RunOnceAsync();
             }
 
             return null;
@@ -1164,7 +1180,7 @@ namespace GSF.TimeSeries.Statistics
 
             sourceInfo = new StatisticSource()
             {
-                Source = source,
+                SourceReference = new WeakReference<object>(source),
                 SourceName = sourceName,
                 SourceCategory = sourceCategory,
                 SourceAcronym = sourceAcronym,
@@ -1173,7 +1189,9 @@ namespace GSF.TimeSeries.Statistics
 
             lock (StatisticSources)
             {
-                if (StatisticSources.Any(registeredSource => registeredSource.Source == source))
+                object target;
+
+                if (StatisticSources.Any(registeredSource => registeredSource.SourceReference.TryGetTarget(out target) && target == source))
                     throw new InvalidOperationException(string.Format("Unable to register {0} as statistic source because it is already registered.", sourceName));
 
                 StatisticSources.Add(sourceInfo);
@@ -1200,13 +1218,15 @@ namespace GSF.TimeSeries.Statistics
         /// </remarks>
         public static void Unregister(object source)
         {
+            object target;
+
             if (source != null)
             {
                 lock (StatisticSources)
                 {
                     for (int i = 0; i < StatisticSources.Count; i++)
                     {
-                        if (StatisticSources[i].Source == source)
+                        if (StatisticSources[i].SourceReference.TryGetTarget(out target) && target == source)
                         {
                             StatisticSources.RemoveAt(i);
                             break;
@@ -1268,6 +1288,24 @@ namespace GSF.TimeSeries.Statistics
 
             if ((object)sourceRegistered != null)
                 sourceRegistered(null, EventArgs.Empty);
+        }
+
+        private static void ValidateSourceReferences()
+        {
+            List<int> expiredSources = new List<int>();
+            object target;
+
+            lock (StatisticSources)
+            {
+                for (int i = 0; i < StatisticSources.Count; i++)
+                {
+                    if (!StatisticSources[i].SourceReference.TryGetTarget(out target))
+                        expiredSources.Add(i);
+                }
+
+                for (int i = expiredSources.Count - 1; i >= 0; i--)
+                    StatisticSources.RemoveAt(expiredSources[i]);
+            }
         }
 
         #endregion
