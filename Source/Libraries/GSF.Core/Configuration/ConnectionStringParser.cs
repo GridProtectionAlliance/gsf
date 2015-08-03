@@ -598,18 +598,17 @@ namespace GSF.Configuration
             foreach (PropertyInfo property in GetNestedSettingsProperties(settingsObject))
             {
                 nestedSettingsObject = property.GetValue(settingsObject);
+                nestedSettings = string.Empty;
 
                 if (nestedSettingsObject != null)
                 {
-                    foreach (string name in GetNames(property))
-                    {
-                        if (settings.TryGetValue(name, out nestedSettings))
-                        {
-                            ParseConnectionString(nestedSettings, nestedSettingsObject);
-                            break;
-                        }
-                    }
+                    nestedSettings = GetNames(property)
+                        .Where(name => settings.TryGetValue(name, out nestedSettings))
+                        .Select(name => nestedSettings)
+                        .DefaultIfEmpty(string.Empty)
+                        .First();
 
+                    ParseConnectionString(nestedSettings, nestedSettingsObject);
                 }
             }
         }
