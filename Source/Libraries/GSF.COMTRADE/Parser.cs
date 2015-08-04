@@ -94,6 +94,9 @@ namespace GSF.COMTRADE
                         m_values = new double[m_schema.TotalChannels];
                     else
                         throw new InvalidOperationException("Invalid schema: total channels defined in schema is zero.");
+
+                    if (m_schema.TotalSampleRates == 0)
+                        m_inferTimeFromSampleRates = false;
                 }
                 else
                 {

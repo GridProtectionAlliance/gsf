@@ -82,6 +82,7 @@ namespace GSF.COMTRADE
             m_nominalFrequency = 60.0D;
             m_fileType = FileType.Binary;
             m_timeFactor = 1.0D;
+            SampleRates = null;
         }
 
         /// <summary>
@@ -143,13 +144,14 @@ namespace GSF.COMTRADE
             // Parse total number of sample rates
             int totalSampleRates = int.Parse(lines[lineNumber++]);
 
+            if (totalSampleRates == 0)
+                totalSampleRates = 1;
+
             // Parse each sample rate
             List<SampleRate> sampleRates = new List<SampleRate>();
 
             for (int i = 0; i < totalSampleRates; i++)
-            {
                 sampleRates.Add(new SampleRate(lines[lineNumber++]));
-            }
 
             SampleRates = sampleRates.ToArray();
 
@@ -317,10 +319,10 @@ namespace GSF.COMTRADE
         {
             get
             {
-                if (m_sampleRates != null)
-                    return m_sampleRates.Length;
+                if (m_sampleRates.Length == 1 && m_sampleRates[0].Rate == 0)
+                    return 0;
 
-                return 0;
+                return m_sampleRates.Length;
             }
         }
 
@@ -335,7 +337,10 @@ namespace GSF.COMTRADE
             }
             set
             {
-                m_sampleRates = value;
+                if ((object)value == null)
+                    m_sampleRates = new SampleRate[] { new SampleRate() { Rate = 0, EndSample = 1 } };
+                else
+                    m_sampleRates = value;
             }
         }
 
