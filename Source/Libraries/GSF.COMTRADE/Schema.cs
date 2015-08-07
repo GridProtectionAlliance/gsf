@@ -98,12 +98,16 @@ namespace GSF.COMTRADE
             // Parse version line
             parts = lines[lineNumber++].Split(',');
 
-            if (parts.Length != 3)
-                throw new InvalidOperationException(string.Format("Unexpected number of line image elements for first configuration file line: {0} - expected 3\r\nImage = {1}", parts.Length, lines[0]));
+            if (parts.Length != 2 && parts.Length != 3)
+                throw new InvalidOperationException(string.Format("Unexpected number of line image elements for first configuration file line: {0} - expected 2 or 3\r\nImage = {1}", parts.Length, lines[0]));
 
             StationName = parts[0].Trim();
             DeviceID = parts[1].Trim();
-            Version = int.Parse(parts[2].Trim());
+
+            if (parts.Length == 3 && !string.IsNullOrWhiteSpace(parts[2]))
+                m_version = int.Parse(parts[2].Trim());
+            else
+                m_version = 1991;
 
             // Parse totals line
             parts = lines[lineNumber++].Split(',');
