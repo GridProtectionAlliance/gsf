@@ -37,8 +37,10 @@
 
 using System;
 using System.IO;
+using System.Net;
 using System.Net.Mail;
 using System.Net.Mime;
+using System.Security;
 
 namespace GSF.Net.Smtp
 {
@@ -87,7 +89,13 @@ namespace GSF.Net.Smtp
         private string m_body;
         private string m_attachments;
         private bool m_isBodyHtml;
+
+        private string m_username;
+        private SecureString m_password;
+        private bool m_enableSSL;
+
         private SmtpClient m_smtpClient;
+
         private bool m_disposed;
 
         #endregion
@@ -112,9 +120,9 @@ namespace GSF.Net.Smtp
         /// <param name="smtpServer">The name or IP address of the SMTP server to be used for sending the <see cref="Mail"/> message.</param>
         public Mail(string from, string toRecipients, string smtpServer)
         {
-            this.From = from;
-            this.ToRecipients = toRecipients;
-            this.SmtpServer = smtpServer;
+            From = from;
+            ToRecipients = toRecipients;
+            SmtpServer = smtpServer;
         }
 
         /// <summary>
@@ -253,6 +261,7 @@ namespace GSF.Net.Smtp
 
                 // Instantiate new client.
                 m_smtpClient = new SmtpClient(value);
+                ApplySecuritySettings();
             }
         }
 
@@ -283,6 +292,73 @@ namespace GSF.Net.Smtp
             set
             {
                 m_isBodyHtml = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the username used to authenticate to the SMTP server.
+        /// </summary>
+        public string Username
+        {
+            get
+            {
+                return m_username;
+            }
+            set
+            {
+                m_username = value;
+                ApplySecuritySettings();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the password used to authenticate to the SMTP server.
+        /// </summary>
+        public string Password
+        {
+            get
+            {
+                return m_password.ToUnsecureString();
+            }
+            set
+            {
+                m_password = value.ToSecureString();
+                ApplySecuritySettings();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the password used to authenticate to the SMTP server.
+        /// </summary>
+        public SecureString SecurePassword
+        {
+            get
+            {
+                return m_password;
+            }
+            set
+            {
+                m_password = value;
+                ApplySecuritySettings();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the flag that determines whether
+        /// to use SSL when communicating with the SMTP server.
+        /// </summary>
+        public bool EnableSSL
+        {
+            get
+            {
+                return m_enableSSL;
+            }
+            set
+            {
+                m_enableSSL = value;
+
+                if ((object)m_smtpClient != null)
+                    m_smtpClient.EnableSsl = value;
             }
         }
 
@@ -342,14 +418,16 @@ namespace GSF.Net.Smtp
         /// </summary>
         public void Send()
         {
-            MailMessage emailMessage = new MailMessage();
+            MailMessage emailMessage;
+
+            emailMessage = new MailMessage();
             emailMessage.From = new MailAddress(m_from);
             emailMessage.Subject = m_subject;
             emailMessage.Body = m_body;
             emailMessage.IsBodyHtml = m_isBodyHtml;
 
             // Add the specified To recipients for the mail message.
-            foreach (string toRecipient in m_toRecipients.Split(new[] { ';', ',' }))
+            foreach (string toRecipient in m_toRecipients.Split(';', ','))
             {
                 emailMessage.To.Add(toRecipient.Trim());
             }
@@ -357,25 +435,21 @@ namespace GSF.Net.Smtp
             if (!string.IsNullOrEmpty(m_ccRecipients))
             {
                 // Add the specified CC recipients for the mail message.
-                foreach (string ccRecipient in m_ccRecipients.Split(new[] { ';', ',' }))
-                {
+                foreach (string ccRecipient in m_ccRecipients.Split(';', ','))
                     emailMessage.CC.Add(ccRecipient.Trim());
-                }
             }
 
             if (!string.IsNullOrEmpty(m_bccRecipients))
             {
                 // Add the specified BCC recipients for the mail message.
-                foreach (string bccRecipient in m_bccRecipients.Split(new[] { ';', ',' }))
-                {
+                foreach (string bccRecipient in m_bccRecipients.Split(';', ','))
                     emailMessage.Bcc.Add(bccRecipient.Trim());
-                }
             }
 
             if (!string.IsNullOrEmpty(m_attachments))
             {
                 // Attach the specified files to the mail message.
-                foreach (string attachment in m_attachments.Split(new[] { ';', ',' }))
+                foreach (string attachment in m_attachments.Split(';', ','))
                 {
                     // Create the file attachment for the mail message.
                     Attachment data = new Attachment(attachment.Trim(), MediaTypeNames.Application.Octet);
@@ -400,6 +474,23 @@ namespace GSF.Net.Smtp
                 // Clean-up.
                 emailMessage.Dispose();
             }
+        }
+
+        private void ApplySecuritySettings()
+        {
+            // If the SMTP client is null,
+            // we cannot apply security settings
+            if ((object)m_smtpClient == null)
+                return;
+
+            // Set the username and password used to authenticate to the SMTP server
+            if (!string.IsNullOrEmpty(m_username) && (object)m_password != null)
+                m_smtpClient.Credentials = new NetworkCredential(m_username, m_password);
+            else
+                m_smtpClient.Credentials = null;
+
+            // Apply the flag to enable SSL
+            m_smtpClient.EnableSsl = m_enableSSL;
         }
 
         #endregion
@@ -473,6 +564,81 @@ namespace GSF.Net.Smtp
                 email.Body = body;
                 email.IsBodyHtml = isBodyHtml;
                 email.Attachments = attachments;
+                email.Send();
+            }
+        }
+
+        /// <summary>
+        /// Sends a secure <see cref="Mail"/> message.
+        /// </summary>
+        /// <param name="from">The e-mail address of the <see cref="Mail"/> message sender.</param>
+        /// <param name="toRecipients">A comma-separated or semicolon-seperated e-mail address list of the <see cref="Mail"/> message recipients.</param>
+        /// <param name="subject">The subject of the <see cref="Mail"/> message.</param>
+        /// <param name="body">The body of the <see cref="Mail"/> message.</param>
+        /// <param name="isBodyHtml">true if the <see cref="Mail"/> message body is to be formated as HTML; otherwise false.</param>
+        /// <param name="smtpServer">The name or IP address of the SMTP server to be used for sending the <see cref="Mail"/> message.</param>
+        /// <param name="username">The username of the account used to authenticate to the SMTP server.</param>
+        /// <param name="password">The password of the account used to authenticate to the SMTP server.</param>
+        public static void Send(string from, string toRecipients, string subject, string body, bool isBodyHtml, string smtpServer, string username, string password)
+        {
+            Send(from, toRecipients, subject, body, isBodyHtml, smtpServer, username, password, true);
+        }
+
+        /// <summary>
+        /// Sends a secure <see cref="Mail"/> message.
+        /// </summary>
+        /// <param name="from">The e-mail address of the <see cref="Mail"/> message sender.</param>
+        /// <param name="toRecipients">A comma-separated or semicolon-seperated e-mail address list of the <see cref="Mail"/> message recipients.</param>
+        /// <param name="subject">The subject of the <see cref="Mail"/> message.</param>
+        /// <param name="body">The body of the <see cref="Mail"/> message.</param>
+        /// <param name="isBodyHtml">true if the <see cref="Mail"/> message body is to be formated as HTML; otherwise false.</param>
+        /// <param name="smtpServer">The name or IP address of the SMTP server to be used for sending the <see cref="Mail"/> message.</param>
+        /// <param name="username">The username of the account used to authenticate to the SMTP server.</param>
+        /// <param name="password">The password of the account used to authenticate to the SMTP server.</param>
+        public static void Send(string from, string toRecipients, string subject, string body, bool isBodyHtml, string smtpServer, string username, SecureString password)
+        {
+            Send(from, toRecipients, subject, body, isBodyHtml, smtpServer, username, password, true);
+        }
+
+        /// <summary>
+        /// Sends a secure <see cref="Mail"/> message.
+        /// </summary>
+        /// <param name="from">The e-mail address of the <see cref="Mail"/> message sender.</param>
+        /// <param name="toRecipients">A comma-separated or semicolon-seperated e-mail address list of the <see cref="Mail"/> message recipients.</param>
+        /// <param name="subject">The subject of the <see cref="Mail"/> message.</param>
+        /// <param name="body">The body of the <see cref="Mail"/> message.</param>
+        /// <param name="isBodyHtml">true if the <see cref="Mail"/> message body is to be formated as HTML; otherwise false.</param>
+        /// <param name="smtpServer">The name or IP address of the SMTP server to be used for sending the <see cref="Mail"/> message.</param>
+        /// <param name="username">The username of the account used to authenticate to the SMTP server.</param>
+        /// <param name="password">The password of the account used to authenticate to the SMTP server.</param>
+        /// <param name="enableSSL">The flag that determines whether to use SSL when communicating with the SMTP server.</param>
+        public static void Send(string from, string toRecipients, string subject, string body, bool isBodyHtml, string smtpServer, string username, string password, bool enableSSL)
+        {
+            Send(from, toRecipients, subject, body, isBodyHtml, smtpServer, username, password.ToSecureString(), enableSSL);
+        }
+
+        /// <summary>
+        /// Sends a secure <see cref="Mail"/> message.
+        /// </summary>
+        /// <param name="from">The e-mail address of the <see cref="Mail"/> message sender.</param>
+        /// <param name="toRecipients">A comma-separated or semicolon-seperated e-mail address list of the <see cref="Mail"/> message recipients.</param>
+        /// <param name="subject">The subject of the <see cref="Mail"/> message.</param>
+        /// <param name="body">The body of the <see cref="Mail"/> message.</param>
+        /// <param name="isBodyHtml">true if the <see cref="Mail"/> message body is to be formated as HTML; otherwise false.</param>
+        /// <param name="smtpServer">The name or IP address of the SMTP server to be used for sending the <see cref="Mail"/> message.</param>
+        /// <param name="username">The username of the account used to authenticate to the SMTP server.</param>
+        /// <param name="password">The password of the account used to authenticate to the SMTP server.</param>
+        /// <param name="enableSSL">The flag that determines whether to use SSL when communicating with the SMTP server.</param>
+        public static void Send(string from, string toRecipients, string subject, string body, bool isBodyHtml, string smtpServer, string username, SecureString password, bool enableSSL)
+        {
+            using (Mail email = new Mail(from, toRecipients, smtpServer))
+            {
+                email.Subject = subject;
+                email.Body = body;
+                email.IsBodyHtml = isBodyHtml;
+                email.Username = username;
+                email.SecurePassword = password;
+                email.EnableSSL = enableSSL;
                 email.Send();
             }
         }
