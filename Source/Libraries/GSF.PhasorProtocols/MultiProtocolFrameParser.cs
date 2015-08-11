@@ -85,6 +85,7 @@ using GSF.Parsing;
 using GSF.PhasorProtocols.IEEEC37_118;
 using GSF.PhasorProtocols.Macrodyne;
 using GSF.PhasorProtocols.SelFastMessage;
+using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.Units;
 using GSF.Units.EE;
@@ -1739,6 +1740,7 @@ namespace GSF.PhasorProtocols
         private IPAddress m_receiveFromAddress;
         private IPAddress m_multicastServerAddress;
         private PrecisionInputTimer m_inputTimer;
+        private ShortSynchronizedOperation m_readNextBuffer;
         private Timer m_rateCalcTimer;
         private IConfigurationFrame m_configurationFrame;
         private CheckSumValidationFrameTypes m_checkSumValidationFrameTypes;
@@ -3089,7 +3091,11 @@ namespace GSF.PhasorProtocols
                     fileClient.FileAccessMode = FileAccess.Read;
                     fileClient.FileShareMode = FileShare.Read;
                     fileClient.ReceiveOnDemand = true;
+                    fileClient.ReceiveBufferSize = ushort.MaxValue;
                     fileClient.AutoRepeat = m_autoRepeatCapturedPlayback;
+
+                    // Setup synchronized read operation for file client operations
+                    m_readNextBuffer = new ShortSynchronizedOperation(ReadNextFileBuffer, ex => OnParsingException(new InvalidOperationException("Encountered an exception while reading file data: " + ex.Message, ex)));
                     break;
                 default:
                     throw new InvalidOperationException(string.Format("Transport protocol \"{0}\" is not recognized, failed to initialize data channel", m_transportProtocol));
@@ -3134,7 +3140,9 @@ namespace GSF.PhasorProtocols
                 m_serverBasedDataChannel.Start();
             }
             else
+            {
                 throw new InvalidOperationException("No data channel was initialized, cannot start frame parser");
+            }
         }
 
         private void InitializeUdpDataChannel(Dictionary<string, string> settings)
@@ -3222,8 +3230,11 @@ namespace GSF.PhasorProtocols
                     m_dataChannel.UnhandledUserException -= m_dataChannel_UnhandledUserException;
                     m_dataChannel.Dispose();
                 }
+
+                m_dataChannel = null;
             }
-            m_dataChannel = null;
+
+            m_readNextBuffer = null;
 
             if ((object)m_serverBasedDataChannel != null)
             {
@@ -3248,8 +3259,9 @@ namespace GSF.PhasorProtocols
                     m_serverBasedDataChannel.UnhandledUserException -= m_serverBasedDataChannel_UnhandledUserException;
                     m_serverBasedDataChannel.Dispose();
                 }
+
+                m_serverBasedDataChannel = null;
             }
-            m_serverBasedDataChannel = null;
 
             if ((object)m_commandChannel != null)
             {
@@ -3273,8 +3285,9 @@ namespace GSF.PhasorProtocols
                     m_commandChannel.UnhandledUserException -= m_commandChannel_UnhandledUserException;
                     m_commandChannel.Dispose();
                 }
+
+                m_commandChannel = null;
             }
-            m_commandChannel = null;
 
             if ((object)m_frameParser != null)
             {
@@ -3303,8 +3316,9 @@ namespace GSF.PhasorProtocols
 
                     m_frameParser.Dispose();
                 }
+
+                m_frameParser = null;
             }
-            m_frameParser = null;
         }
 
         /// <summary>
@@ -3722,8 +3736,8 @@ namespace GSF.PhasorProtocols
             }
 
             // Read next buffer if output frames are almost all processed
-            if (QueuedOutputs < 2)
-                ThreadPool.QueueUserWorkItem(ReadNextFileBuffer);
+            if (QueuedOutputs < 2 && (object)m_readNextBuffer != null)
+                m_readNextBuffer.RunOnceAsync();
         }
 
         #region [ Data Channel Event Handlers ]
@@ -3765,8 +3779,8 @@ namespace GSF.PhasorProtocols
             try
             {
                 // Start reading file data
-                if (m_transportProtocol == TransportProtocol.File)
-                    ThreadPool.QueueUserWorkItem(ReadNextFileBuffer);
+                if (m_transportProtocol == TransportProtocol.File && (object)m_readNextBuffer != null)
+                    m_readNextBuffer.RunOnceAsync();
             }
             catch (Exception ex)
             {
@@ -4155,26 +4169,15 @@ namespace GSF.PhasorProtocols
             }
         }
 
-        private void ReadNextFileBuffer(object state)
+        private void ReadNextFileBuffer()
         {
-            try
-            {
-                FileClient fileClient = m_dataChannel as FileClient;
+            FileClient fileClient = m_dataChannel as FileClient;
 
-                if ((object)fileClient != null)
-                {
-                    if (fileClient.CurrentState == ClientState.Connected)
-                        fileClient.ReadNextBuffer();
-                }
-            }
-            catch (ThreadAbortException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                OnParsingException(new InvalidOperationException("Encountered an exception while reading file data: " + ex.Message, ex));
-            }
+            if ((object)fileClient == null)
+                return;
+
+            if (fileClient.CurrentState == ClientState.Connected)
+                fileClient.ReadNextBuffer();
         }
 
         #endregion
