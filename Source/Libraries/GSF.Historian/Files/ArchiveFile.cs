@@ -2131,9 +2131,9 @@ namespace GSF.Historian.Files
                         // Atomically decrement active file reader count to signal in-process code that read is complete or yielded
                         Interlocked.Decrement(ref m_activeFileReaders);
                     }
-                    else if ((object)file != null && file.IsOpen)
+                    else if ((object)file != null)
                     {
-                        file.Close();
+                        file.Dispose();
                     }
                 }
 
