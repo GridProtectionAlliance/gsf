@@ -173,7 +173,7 @@ namespace GSF
         /// <paramref name="sourceOffset"/> or <paramref name="otherOffset"/> is outside the range of valid indexes for the associated array -or-
         /// <paramref name="sourceCount"/> or <paramref name="otherCount"/> is less than 0 -or- 
         /// <paramref name="sourceOffset"/> or <paramref name="otherOffset"/>, 
-        /// and <paramref name="sourceCount"/> or <paramref name="otherCount"/> do not specify a valid section in the the associated array.
+        /// and <paramref name="sourceCount"/> or <paramref name="otherCount"/> do not specify a valid section in the associated array.
         /// </exception>
         /// <remarks>
         /// <para>
@@ -463,6 +463,12 @@ namespace GSF
         /// <summary>Returns comparison results of two binary arrays.</summary>
         /// <param name="source">Source array.</param>
         /// <param name="other">Other array to compare to <paramref name="source"/> array.</param>
+        /// <remarks>
+        /// Note that if both arrays are <c>null</c> the arrays will be considered equal.
+        /// If one array is <c>null</c> and the other array is not <c>null</c>, the non-null array will be considered larger.
+        /// If the array lengths are not equal, the array with the larger length will be considered larger.
+        /// If the array lengths are equal, the arrays will be compared based on content.
+        /// </remarks>
         /// <returns>
         /// <para>
         /// A signed integer that indicates the relative comparison of <paramref name="source"/> array and <paramref name="other"/> array.
@@ -496,11 +502,11 @@ namespace GSF
 
             // If other array has data and source array is nothing, other array is assumed larger
             if ((object)source == null)
-                return 1;
+                return -1;
 
             // If source array has data and other array is nothing, source array is assumed larger
             if ((object)other == null)
-                return -1;
+                return 1;
 
             int length1 = source.Length;
             int length2 = other.Length;
@@ -531,6 +537,10 @@ namespace GSF
         /// <param name="other">Other array to compare to <paramref name="source"/> array.</param>
         /// <param name="otherOffset">Offset into <paramref name="other"/> array to begin compare.</param>
         /// <param name="count">Number of bytes to compare in both arrays.</param>
+        /// <remarks>
+        /// Note that if both arrays are <c>null</c> the arrays will be considered equal.
+        /// If one array is <c>null</c> and the other array is not <c>null</c>, the non-null array will be considered larger.
+        /// </remarks>
         /// <returns>
         /// <para>
         /// A signed integer that indicates the relative comparison of <paramref name="source"/> array and <paramref name="other"/> array.
@@ -559,7 +569,7 @@ namespace GSF
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="sourceOffset"/> or <paramref name="otherOffset"/> is outside the range of valid indexes for the associated array -or-
         /// <paramref name="count"/> is less than 0 -or- 
-        /// <paramref name="sourceOffset"/> or <paramref name="otherOffset"/> and <paramref name="count"/> do not specify a valid section in the the associated array.
+        /// <paramref name="sourceOffset"/> or <paramref name="otherOffset"/> and <paramref name="count"/> do not specify a valid section in the associated array.
         /// </exception>
         public static int CompareTo<T>(this T[] source, int sourceOffset, T[] other, int otherOffset, int count) where T : IComparable<T>
         {
@@ -569,11 +579,11 @@ namespace GSF
 
             // If other array has data and source array is nothing, other array is assumed larger
             if ((object)source == null)
-                return 1;
+                return -1;
 
             // If source array has data and other array is nothing, source array is assumed larger
             if ((object)other == null)
-                return -1;
+                return 1;
 
             if (sourceOffset < 0)
                 throw new ArgumentOutOfRangeException("sourceOffset", "cannot be negative");
