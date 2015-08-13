@@ -929,10 +929,15 @@ namespace GSF.Communication
             catch (Exception ex)
             {
                 // Notify of the exception.
-                if ((object)client.Provider != null)
+                if ((object)client.Provider != null && (object)client.Provider.RemoteEndPoint != null)
                 {
                     string clientAddress = ((IPEndPoint)client.Provider.RemoteEndPoint).Address.ToString();
                     string errorMessage = string.Format("Unable to accept connection to client [{0}]: {1}", clientAddress, ex.Message);
+                    OnClientConnectingException(new Exception(errorMessage, ex));
+                }
+                else
+                {
+                    string errorMessage = string.Format("Unable to accept connection to client [unknown]: {0}", ex.Message);
                     OnClientConnectingException(new Exception(errorMessage, ex));
                 }
 
