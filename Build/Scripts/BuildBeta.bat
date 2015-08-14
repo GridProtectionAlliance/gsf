@@ -29,13 +29,11 @@
 
 echo off
 
-setlocal enabledelayedexpansion
-set parameter_list=
-for %%y in (%*) do (
-	set parameter_list=!parameter_list! %%y
-)
-echo %parameter_list%
-call CommonBuild.bat  %parameter_list%
+SetLocal EnableDelayedExpansion
 
-C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe GridSolutionsFramework.buildproj /p:BuildDeployFolder=%deploy%;NugetApiKey=%api_key%;NugetPackagesFolder=%package%;TfsUserName=%tfs_user_name%;TfsPassword=%tfs_password%;ForceBuild=true /l:FileLogger,Microsoft.Build.Engine;logfile=%logger%  
+ECHO BuildBeta: CALL CommonBuild.bat %*
+CALL CommonBuild.bat %*
+
+ECHO BuildBeta: C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe GridSolutionsFramework.buildproj /p:BuildDeployFolder=%deploy%;NugetApiKey=%api_key%;NugetPackagesFolder=%package%;ForceBuild=true /l:FileLogger,Microsoft.Build.Engine;logfile=%logger%
+C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe GridSolutionsFramework.buildproj /p:BuildDeployFolder=%deploy%;NugetApiKey=%api_key%;NugetPackagesFolder=%package%;ForceBuild=true /l:FileLogger,Microsoft.Build.Engine;logfile=%logger%  
 endlocal

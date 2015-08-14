@@ -82,17 +82,16 @@
   </PropertyGroup>
 
   <Target Name="BeforePrepareSettings">
+    <!--
     <Error Condition="'$(NuGetPackagesFolder)' == ''"  Text="Error: Location of NuGet Packages must be specified."/>
     <Error Condition="'$(BuildDeployFolder)' == ''" Text="Error: Drop location of the build content must be specified."/>
+    -->
     <PropertyGroup>
       <!--Must-override setting(s).-->
       <ProjectName>GridSolutionsFramework</ProjectName>
-      <TfsServer>https://tfs.codeplex.com/tfs/tfs07</TfsServer>
+      <GitServer>git@github.com:GridProtectionAlliance/gsf.git</GitServer>
       <VersionBuildChange>Increment</VersionBuildChange>
       <VersionRevisionChange>Reset</VersionRevisionChange>
-
-      <!-- Server folder does not match project name -->
-      <ServerFolder>$/gsf/Main</ServerFolder>
     </PropertyGroup>
   </Target>
 
@@ -176,7 +175,7 @@
   <Target Name="AfterDeployBuild">
     <CallTarget Targets="DeploySource"/>
     <CallTarget Targets="DeployHelpFiles"/>
-    <CallTarget Targets="PublishNuGetPackages"/>
+    <!--<CallTarget Targets="PublishNuGetPackages"/>-->
   </Target>
   
   <Target Name="DeploySource" Condition="'$(ForceBuild)' == 'true' And '$(BuildDeployFolder)' != ''">

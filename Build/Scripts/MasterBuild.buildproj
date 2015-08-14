@@ -68,8 +68,7 @@
 
 <Project DefaultTargets="All" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <Import Project="Targets\Inline\TfsHistory.targets"/>
-  <Import Project="Targets\Inline\TfsVersion.targets"/>
+  <Import Project="Targets\Inline\GitHistory.targets"/>
   <Import Project="Targets\MSBuild Community Tasks\MSBuild.Community.Tasks.Targets"/>
   <Import Project="Targets\MSBuild Extension Pack\MSBuild.ExtensionPack.tasks"/>
 
@@ -80,14 +79,12 @@
     <ProjectSolution></ProjectSolution>
     <!-- Name of the local build workspace. -->
     <Workspace></Workspace>
-    <!-- URL of the Team Foundation Server. -->
-    <TfsServer></TfsServer>
-    <!-- Root server folder of the project. -->
-    <ServerFolder></ServerFolder>
+    <!-- URL of the Git Server. -->
+    <GitServer></GitServer>
     <!-- Root local folder of the project. -->
     <LocalFolder></LocalFolder>
-    <!-- Source control label for the build. -->
-    <BuildLabel></BuildLabel>
+    <!-- Source control tag for the build. -->
+    <BuildTag></BuildTag>
     <!-- Type of the build to compile. -->
     <BuildFlavor></BuildFlavor>
     <!-- Target platform of the build. -->
@@ -108,14 +105,10 @@
     <VersionBuildChange></VersionBuildChange>
     <!-- Versioning scheme revision number change type. -->
     <VersionRevisionChange></VersionRevisionChange>
-    <!-- Version of the source code to build. -->
-    <SourceVersion></SourceVersion>
-    <!-- User name for Team Foundation Client. -->
-    <TfsUserName></TfsUserName>
-    <!-- Password for Team Foundation Client. -->
-    <TfsPassword></TfsPassword>
-    <!-- Paths to Team Foundation Client. -->
-    <TfsClient></TfsClient>
+    <!-- Paths to Git Client. -->
+    <GitClient></GitClient>
+    <!-- Branch to be built. -->
+    <GitBranch></GitBranch>
     <!-- Path to Visual Studio IDE. -->
     <VisualStudio></VisualStudio>
     <!-- Path to unit testing tool. -->
@@ -145,15 +138,14 @@
            CheckEnvironment   (Before > Core > After)
            CreateWorkspace    (Before > Core > After)
          CompileBuild
-           PopulateWorkspace  (Before > Core > After)
+           CloneRepository    (Before > Core > After)
            VersionSource      (Before > Core > After)
            BuildProjects      (Before > Core > After)
            ExecuteUnitTests   (Before > Core > After)
          FinalizeBuild
-           LabelBuild         (Before > Core > After)
            CleanBuild         (Before > Core > After)
            DeployBuild        (Before > Core > After)
-           DeleteWorkspace    (Before > Core > After)
+           PushToServer       (Before > Core > After)
     -->
     <InitializeBuildDependsOn>
       PrepareSettings;
@@ -162,17 +154,16 @@
     </InitializeBuildDependsOn>
 
     <CompileBuildDependsOn>
-      PopulateWorkspace;
+      CloneRepository;
       VersionSource;
       BuildProjects;
       ExecuteUnitTests;
     </CompileBuildDependsOn>
 
     <FinalizeBuildDependsOn>
-      LabelBuild;
       CleanBuild;
       DeployBuild;
-      DeleteWorkspace;
+      PushToServer;
     </FinalizeBuildDependsOn>
 
     <CheckEnvironmentDependsOn>
@@ -192,11 +183,11 @@
       AfterCreateWorkspace;
     </CreateWorkspaceDependsOn>
 
-    <PopulateWorkspaceDependsOn>
-      BeforePopulateWorkspace;
-      CorePopulateWorkspace;
-      AfterPopulateWorkspace;
-    </PopulateWorkspaceDependsOn>
+    <CloneRepositoryDependsOn>
+      BeforeCloneRepository;
+      CoreCloneRepository;
+      AfterCloneRepository;
+    </CloneRepositoryDependsOn>
 
     <VersionSourceDependsOn>
       BeforeVersionSource;
@@ -216,12 +207,6 @@
       AfterExecuteUnitTests;
     </ExecuteUnitTestsDependsOn>
 
-    <LabelBuildDependsOn>
-      BeforeLabelBuild;
-      CoreLabelBuild;
-      AfterLabelBuild;
-    </LabelBuildDependsOn>
-
     <CleanBuildDependsOn>
       BeforeCleanBuild;
       CoreCleanBuild;
@@ -234,11 +219,11 @@
       AfterDeployBuild;
     </DeployBuildDependsOn>
 
-    <DeleteWorkspaceDependsOn>
-      BeforeDeleteWorkspace;
-      CoreDeleteWorkspace;
-      AfterDeleteWorkspace;
-    </DeleteWorkspaceDependsOn>
+    <PushToServerDependsOn>
+      BeforePushToServer;
+      CorePushToServer;
+      AfterPushToServer;
+    </PushToServerDependsOn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -276,14 +261,13 @@
   <Target Name="PrepareSettings" DependsOnTargets="$(PrepareSettingsDependsOn)"/>
   <Target Name="CheckEnvironment" DependsOnTargets="$(CheckEnvironmentDependsOn)"/>
   <Target Name="CreateWorkspace" DependsOnTargets="$(CreateWorkspaceDependsOn)"/>
-  <Target Name="PopulateWorkspace" DependsOnTargets="$(PopulateWorkspaceDependsOn)"/>
+  <Target Name="CloneRepository" DependsOnTargets="$(CloneRepositoryDependsOn)"/>
   <Target Name="VersionSource" DependsOnTargets="$(VersionSourceDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
   <Target Name="BuildProjects" DependsOnTargets="$(BuildProjectsDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
   <Target Name="ExecuteUnitTests" DependsOnTargets="$(ExecuteUnitTestsDependsOn)" Condition="'$(ForceBuild)' == 'true' And '$(SkipUnitTest)' == 'false'"/>
-  <Target Name="LabelBuild" DependsOnTargets="$(LabelBuildDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
   <Target Name="CleanBuild" DependsOnTargets="$(CleanBuildDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
   <Target Name="DeployBuild" DependsOnTargets="$(DeployBuildDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
-  <Target Name="DeleteWorkspace" DependsOnTargets="$(DeleteWorkspaceDependsOn)"/>
+  <Target Name="PushToServer" DependsOnTargets="$(PushToServerDependsOn)"/>
   <Target Name="BeforePrepareSettings"/>
 
   <Target Name="CorePrepareSettings">
@@ -291,23 +275,21 @@
     <Message Text="Preparing settings for build..."/>
 
     <Error Condition="'$(ProjectName)' == ''" Text="ProjectName property must be set."/>
-    <Error Condition="'$(TfsServer)' == ''" Text="TfsServer property must be set."/>
+    <Error Condition="'$(GitServer)' == ''" Text="GitServer property must be set."/>
 
     <PropertyGroup>
-      <ServerFolder Condition="'$(ServerFolder)' == ''">$/$(ProjectName)/Main</ServerFolder>
       <LocalFolder Condition="'$(LocalFolder)' == ''">$([System.IO.Path]::GetFullPath('$(TEMP)\MSBuild\$(ProjectName)'))</LocalFolder>
       <BuildFlavor Condition="'$(BuildFlavor)' == ''">Release</BuildFlavor>
       <BuildTarget Condition="'$(BuildTarget)' == ''">Any CPU</BuildTarget>
       <BuildOutputFolder Condition="'$(BuildOutputFolder)' == ''">$(LocalFolder)\Build\Output\$(BuildFlavor)</BuildOutputFolder>
       <BuildInteractive Condition="'$(BuildInteractive)' == ''">true</BuildInteractive>
       <VersionFile Condition="'$(VersionFile)' == ''">$(LocalFolder)\Build\Scripts\$(ProjectName).version</VersionFile>
-      <SourceVersion Condition="'$(SourceVersion)' == ''">T</SourceVersion>
-      <TfsClient Condition="'$(TfsClient)' == ''">$(VS110COMNTOOLS)\..\IDE\tf.exe</TfsClient>
+      <GitClient Condition="'$(GitClient)' == ''">$(MSBuildProgramFiles32)\Git\cmd\git.exe</GitClient>
+      <GitBranch Condition="'$(GitBranch)' == ''">master</GitBranch>
       <VisualStudio Condition="'$(VisualStudio)' == ''">$(VS110COMNTOOLS)\..\IDE\devenv.com</VisualStudio>
       <MSTest Condition="'$(MSTest)' == ''">$(VS110COMNTOOLS)\..\IDE\mstest.exe</MSTest>
       <SandcastleBuilder Condition="'$(SandcastleBuilder)' == ''">$(SHFBROOT)\SandcastleBuilderGUI.exe</SandcastleBuilder>
       <ForceBuild Condition="'$(ForceBuild)' == ''">false</ForceBuild>
-      <ForceBuild Condition="'$(SourceVersion)' != 'T'">true</ForceBuild>
       <SkipVersioning Condition="'$(SkipVersioning)' == ''">false</SkipVersioning>
       <BinariesArchiveFileName Condition="'$(BinariesArchiveFileName)' == ''">$(LocalFolder)\$(ProjectName).Binaries.zip</BinariesArchiveFileName>
       <InstallsArchiveFileName Condition="'$(InstallsArchiveFileName)' == ''">$(LocalFolder)\$(ProjectName).Installs.zip</InstallsArchiveFileName>
@@ -323,7 +305,7 @@
     <!-- Ensure that all required tools are installed. -->
     <Message Text="Checking for required application..."/>
 
-    <Error Condition="'$(TfsClient)' != '' And !Exists('$(TfsClient)')" Text="TFS Client is not installed."/>
+    <Error Condition="'$(GitClient)' != '' And !Exists('$(GitClient)')" Text="Git Client is not installed."/>
     <Error Condition="'$(VisualStudio)' != '' And !Exists('$(VisualStudio)')" Text="Visual Studio is not installed."/>
     <Error Condition="'$(MSTest)' != '' And !Exists('$(MSTest)')" Text="Unit testing tool is not installed."/>
     <Error Condition="'$(SandcastleBuilder)' != '' And !Exists('$(SandcastleBuilder)')" Text="Sandcastle Builder is not installed."/>
@@ -335,60 +317,41 @@
   <Target Name="CoreCreateWorkspace">
     <!-- Create a temporary workspace for the build. -->
     <Message Text="Creating temporary workspace..."/>
-
-    <PropertyGroup>
-      <Workspace Condition="'$(Workspace)' == ''">$(COMPUTERNAME)_$(ProjectName)</Workspace>
-    </PropertyGroup>
-
     <RemoveDir Directories="$(LocalFolder)" Condition="Exists('$(LocalFolder)')"/>
     <MakeDir Directories="$(LocalFolder)"/>
-    <Exec Condition="'$(TfsUserName)' == ''" Command="%22$(TfsClient)%22 workspace /new /server:$(TfsServer) /noprompt %22$(Workspace)%22" WorkingDirectory="$(LocalFolder)"/>
-    <Exec Condition="'$(TfsUserName)' != ''" Command="%22$(TfsClient)%22 workspace /new /server:$(TfsServer) /noprompt %22$(Workspace)%22 /login:$(TfsUserName),$(TfsPassword)" WorkingDirectory="$(LocalFolder)"/>
-    <Exec Condition="'$(TFSUserName)' == ''" Command="%22$(TfsClient)%22 workfold /unmap /server:$(TfsServer) /workspace:%22$(Workspace)%22 $/"/>
-    <Exec Condition="'$(TFSUserName)' != ''" Command="%22$(TfsClient)%22 workfold  /unmap /server:$(TfsServer) /workspace:%22$(Workspace)%22 $/ /login:$(TfsUserName),$(TfsPassword)"/>
-    <Exec Condition="'$(TfsUserName)' == ''" Command="%22$(TfsClient)%22 workfold /map /server:$(TfsServer) /workspace:%22$(Workspace)%22 %22$(ServerFolder)%22 %22$(LocalFolder)%22"/>
-    <Exec Condition="'$(TfsUserName)' != ''" Command="%22$(TfsClient)%22 workfold /map /server:$(TfsServer) /workspace:%22$(Workspace)%22 %22$(ServerFolder)%22 %22$(LocalFolder)%22 /login:$(TfsUserName),$(TfsPassword)"/>
   </Target>
 
   <Target Name="AfterCreateWorkspace"/>
-  
-  <Target Name="BeforePopulateWorkspace" Condition="'$(ForceBuild)' != 'true'">
-    <!-- Get version file for the most recent version. -->
-    <Message Text="Checking for changes to project since last build..."/>
-    <Exec Condition="'$(TfsUserName)' == ''" Command="%22$(TfsClient)%22 get %22$(VersionFile)%22 /force /recursive /noprompt"/>
-    <Exec Condition="'$(TfsUserName)' != ''" Command="%22$(TfsClient)%22 get %22$(VersionFile)%22 /force /recursive /noprompt /login:$(TfsUserName),$(TfsPassword)"/>
-    
+  <Target Name="BeforeCloneRepository"/>
+
+  <Target Name="CoreCloneRepository">
+    <!-- Get source code for the specified version. -->
+    <Message Text="Getting source code..."/>
+    <Exec Command="%22$(GitClient)%22 clone %22$(GitServer)%22 ." WorkingDirectory="$(LocalFolder)"/>
+    <Exec Command="%22$(GitClient)%22 checkout %22$(GitBranch)%22" WorkingDirectory="$(LocalFolder)"/>
+  </Target>
+
+  <Target Name="AfterCloneRepository" Condition="'$(ForceBuild)' != 'true'">
     <!-- Check for new changes since the last build. -->
     <ReadLinesFromFile File="$(VersionFile)">
       <Output TaskParameter="Lines" ItemName="VersionNumber"/>
     </ReadLinesFromFile>
-    <TfsHistory TfsClient="$(TfsClient)" LocalPath="$(LocalFolder)" VersionSpec="L$(ProjectName)_v@(VersionNumber)~T" ContinueOnError="true">
+    <GitHistory GitClient="$(GitClient)" LocalPath="$(LocalFolder)" VersionTag="v@(VersionNumber)-$(GitBranch)" ContinueOnError="true">
       <Output TaskParameter="TotalChanges" PropertyName="TotalChanges"/>
-    </TfsHistory>
+    </GitHistory>
+    <Message Text="Detected $(TotalChanges) changes since last version."/>
     <PropertyGroup>
-      <ForceBuild Condition="'$(TotalChanges)' == '-1' Or '$(TotalChanges)' &gt; '1'">true</ForceBuild>
+      <ForceBuild Condition="'$(TotalChanges)' == '-1' Or '$(TotalChanges)' &gt; '0'">true</ForceBuild>
       <SkipVersioning Condition="'$(ForceBuild)' != 'true'">true</SkipVersioning>
     </PropertyGroup>
     <Message Text="Build is skipped - No new changes." Condition="'$(ForceBuild)' != 'true'"/>
   </Target>
-
-  <Target Name="CorePopulateWorkspace" Condition="'$(ForceBuild)' == 'true'">
-    <!-- Get source code for the specified version. -->
-    <Message Text="Getting source code..."/>
-    <Exec Condition="'$(TfsUserName)' == ''" Command="%22$(TfsClient)%22 get %22$(LocalFolder)%22 /version:$(SourceVersion) /force /recursive /noprompt"/>
-    <Exec Condition="'$(TfsUserName)' != ''" Command="%22$(TfsClient)%22 get %22$(LocalFolder)%22 /version:$(SourceVersion) /force /recursive /noprompt /login:$(TfsUserName),$(TfsPassword)"/>
-  </Target>
-
-  <Target Name="AfterPopulateWorkspace"/>
+  
   <Target Name="BeforeVersionSource"/>
 
-  <Target Name="CoreVersionSource" Condition="'$(SourceVersion)' == 'T' And '@(FilesToVersion)' != '' And '$(SkipVersioning)' != 'true'">
+  <Target Name="CoreVersionSource" Condition="'@(FilesToVersion)' != '' And '$(SkipVersioning)' != 'true'">
     <!-- Update version number of the source code. -->
     <Message Text="Versioning source code..."/>
-    <Exec Condition="'$(TfsUserName)' == ''" Command="%22$(TfsClient)%22 checkout /noprompt %22$(VersionFile)%22"/>
-    <Exec Condition="'$(TfsUserName)' != ''" Command="%22$(TfsClient)%22 checkout /noprompt %22$(VersionFile)%22 /login:$(TfsUserName),$(TfsPassword)"/>
-    <Exec Condition="'$(TfsUserName)' == ''" Command="%22$(TfsClient)%22 checkout /noprompt %22%(FilesToVersion.FullPath)%22"/>
-    <Exec Condition="'$(TfsUserName)' != ''" Command="%22$(TfsClient)%22 checkout /noprompt %22%(FilesToVersion.FullPath)%22 /login:$(TfsUserName),$(TfsPassword)"/>
     <Version VersionFile="$(VersionFile)" Major="$(VersionMajorChange)" Minor="$(VersionMinorChange)" BuildType="$(VersionBuildChange)" RevisionType="$(VersionRevisionChange)">
       <Output TaskParameter="Major" PropertyName="Major"/>
       <Output TaskParameter="Minor" PropertyName="Minor"/>
@@ -400,8 +363,11 @@
     <FileUpdate Files="%(FilesToVersion.FullPath)" Regex="%(FilesToVersion.VersionRegex)" ReplacementText="${BeforeVersion}$(Major).$(Minor).$(Build)${AfterVersion}" Condition="'%(FilesToVersion.VersionPrecision)' == '3'"/>
     <FileUpdate Files="%(FilesToVersion.FullPath)" Regex="%(FilesToVersion.VersionRegex)" ReplacementText="${BeforeVersion}$(Major).$(Minor).$(Build).$(Revision)${AfterVersion}" Condition="'%(FilesToVersion.VersionPrecision)' == '4'"/>
     <PropertyGroup>
-      <BuildLabel Condition="'$(BuildLabel)' == ''">$(ProjectName)_v$(Major).$(Minor).$(Build).$(Revision)</BuildLabel>
+      <BuildTag Condition="'$(BuildTag)' == ''">v$(Major).$(Minor).$(Build).$(Revision)-$(GitBranch)</BuildTag>
     </PropertyGroup>
+    <Exec Command="%22$(GitClient)%22 add --all" WorkingDirectory="$(LocalFolder)" ContinueOnError="true"  />
+    <Exec Command="%22$(GitClient)%22 commit -m %22$(ProjectName): Version change for build $(BuildTag).%22" WorkingDirectory="$(LocalFolder)" ContinueOnError="true"  />
+    <Exec Command="%22$(GitClient)%22 tag %22$(BuildTag)%22" WorkingDirectory="$(LocalFolder)"/>
   </Target>
 
   <Target Name="AfterVersionSource"/>
@@ -435,16 +401,6 @@
   </Target>
 
   <Target Name="AfterExecuteUnitTests"/>
-  <Target Name="BeforeLabelBuild"/>
-
-  <Target Name="CoreLabelBuild" Condition="'$(BuildLabel)' != '' And '$(SkipVersioning)' != 'true'">
-    <!-- Apply label for the current build. -->
-    <Message Text="Labeling build $(BuildLabel)..."/>
-    <Exec Condition="'$(TfsUserName)' == ''" Command="%22$(TfsClient)%22 label %22$(BuildLabel)%22 %22$(LocalFolder)%22 /comment:%22Label applied for build $(BuildLabel).%22 /recursive"/>
-    <Exec Condition="'$(TfsUserName)' != ''" Command="%22$(TfsClient)%22 label %22$(BuildLabel)%22 %22$(LocalFolder)%22 /comment:%22Label applied for build $(BuildLabel).%22 /recursive /login:$(TfsUserName),$(TfsPassword)"/>
-  </Target>
-
-  <Target Name="AfterLabelBuild"/>
   <Target Name="BeforeCleanBuild"/>
 
   <Target Name="CoreCleanBuild">
@@ -488,27 +444,19 @@
   </Target>
 
   <Target Name="AfterDeployBuild"/>
-  <Target Name="BeforeDeleteWorkspace"/>
+  <Target Name="BeforePushToServer"/>
 
-  <Target Name="CoreDeleteWorkspace">
-    <!-- Checkin all of the pending changes. -->
-    <Message Text="Checking in pending changes..." Condition="'$(SkipVersioning)' != 'true'" />
-    <Exec Condition="'$(TfsUserName)' == '' and '$(SkipVersioning)' != 'true'" Command="%22$(TfsClient)%22 checkin /comment:%22$(ProjectName): Version change for build $(BuildLabel).%22 /recursive /noprompt %22$(LocalFolder)%22" ContinueOnError="true"  />
-    <Exec Condition="'$(TfsUserName)' != '' and '$(SkipVersioning)' != 'true'" Command="%22$(TfsClient)%22 checkin /comment:%22$(ProjectName): Version change for build $(BuildLabel).%22 /recursive /noprompt %22$(LocalFolder)%22 /login:$(TfsUserName),$(TfsPassword)" ContinueOnError="true"/>
-    <!-- Delete the temporary build workpsace. -->
-    <Message Text="Deleting temporary workspace..."/>
-    <Exec Condition="'$(TfsUserName)' == ''" Command="%22$(TfsClient)%22 workspace /delete /server:$(TfsServer) %22$(Workspace)%22" ContinueOnError="true"/>
-    <Exec Condition="'$(TfsUserName)' != ''" Command="%22$(TfsClient)%22 workspace /delete /server:$(TfsServer) %22$(Workspace)%22 /login:$(TfsUserName),$(TfsPassword)" ContinueOnError="true"/>
+  <Target Name="CorePushToServer" Condition="'$(SkipVersioning)' != 'true'">
+    <!-- Commit all of the pending changes. -->
+    <Message Text="Pushing changes to Git server..." />
+    <Exec Command="%22$(GitClient)%22 push" WorkingDirectory="$(LocalFolder)" ContinueOnError="true"  />
+    <Exec Command="%22$(GitClient)%22 push --tags" WorkingDirectory="$(LocalFolder)" ContinueOnError="true"  />
   </Target>
 
-  <Target Name="AfterDeleteWorkspace"/>
+  <Target Name="AfterPushToServer"/>
 
   <Target Name="HandleBuildFailure">
     <!-- Handle any unexpected build errors. -->
-    <Message Text="Undoing pending changes..." Condition="'$(SkipVersioning)' != 'true'" />
-    <Exec Condition="'$(TfsUserName)' == '' and '$(SkipVersioning)' != 'true'" Command="%22$(TfsClient)%22 undo %22$(LocalFolder)%22 /recursive /noprompt" ContinueOnError="true"/>
-    <Exec Condition="'$(TfsUserName)' != '' and '$(SkipVersioning)' != 'true'" Command="%22$(TfsClient)%22 undo %22$(LocalFolder)%22 /recursive /noprompt /login:$(TfsUserName),$(TfsPassword)" ContinueOnError="true"/>
-    <CallTarget Targets="DeleteWorkspace"/>
     <Beep Duration="2000"/>
   </Target>
 </Project>

@@ -36,6 +36,6 @@ SetLocal EnableDelayedExpansion
 ECHO BuildNightly: CALL CommonBuild.bat %*
 CALL CommonBuild.bat %*
 
-ECHO BuildNightly: C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe GridSolutionsFramework.buildproj /p:BuildDeployFolder=%deploy%;NugetApiKey=%api_key%;NugetPackagesFolder=%package%;TfsUserName=%tfs_user_name%;TfsPassword=%tfs_password%;ForceBuild=false /l:FileLogger,Microsoft.Build.Engine;logfile=%logger%
-C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe GridSolutionsFramework.buildproj /p:BuildDeployFolder=%deploy%;NugetApiKey=%api_key%;NugetPackagesFolder=%package%;TfsUserName=%tfs_user_name%;TfsPassword=%tfs_password%;ForceBuild=false /l:FileLogger,Microsoft.Build.Engine;logfile=%logger%  
+ECHO BuildNightly: C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe GridSolutionsFramework.buildproj /p:BuildDeployFolder=%deploy%;NugetApiKey=%api_key%;NugetPackagesFolder=%package%;ForceBuild=false /l:FileLogger,Microsoft.Build.Engine;logfile=%logger%
+C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe GridSolutionsFramework.buildproj /p:BuildDeployFolder=%deploy%;NugetApiKey=%api_key%;NugetPackagesFolder=%package%;ForceBuild=false /l:FileLogger,Microsoft.Build.Engine;logfile=%logger%  
 endlocal
