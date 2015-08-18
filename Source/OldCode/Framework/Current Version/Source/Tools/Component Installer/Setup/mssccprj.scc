@@ -1,0 +1,5 @@
+SCC = This is a Source Code Control file
+
+[Setup.vbproj]
+SCC_Aux_Path = "\\opgfs\SourceSafe\CodeLibrary"
+SCC_Project_Name = "$/TVA Code Library/Version/4.0/Source/Tools/Component Installer/Setup", NRABAAAA

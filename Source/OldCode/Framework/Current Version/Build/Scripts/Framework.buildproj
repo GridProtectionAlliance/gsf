@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+*******************************************************************************************************
+**  Framework.buildproj - Gbtc
+**
+**  Tennessee Valley Authority, 2009
+**  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
+**
+**  This software is made freely available under the TVA Open Source Agreement (see below).
+**
+**  Code Modification History:
+**  ===================================================================================================
+**  10/05/2009 - Pinal C. Patel
+**       Generated original version of source code.
+**  10/10/2009 - Pinal C. Patel
+**       Modified to accommodate the change in file versioning.
+**  10/13/2009 - Pinal C. Patel
+**       Made building of help docs optional using SkipHelpFiles property.
+**  10/15/2009 - Pinal C. Patel
+**       Enabled unit testing.
+**  10/19/2009 - Pinal C. Patel
+**       Enabled archiving of binaries and installs.
+**  10/20/2009 - Pinal C. Patel
+**       Made deployment of archives to public locations switchable.
+**  04/27/2010 - Pinal C. Patel
+**       Moved initialization of version and project files to after the build has been initialized
+**       so that they don't include files that have to deleted of moved since the last build.
+**  04/28/2010 - Pinal C. Patel
+**       Modified the build to output a set of signed class libraries by leveraging the newly added
+**       ProjectsToBuild.Properties property.
+**       Made building of strong-named class libraries optional using SkipSigning property.
+**
+*******************************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="..\..\..\..\Contributor Resources\Tools\Build Tools\Master Build\Master.buildproj"/>
+
+  <Target Name="BeforePrepareSettings">
+    <PropertyGroup>
+      <!-- Must-override setting(s). -->
+      <ProjectName>Framework</ProjectName>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="AfterPrepareSettings">
+    <PropertyGroup>
+      <!-- Project specific settings. -->
+      <ProjectSolution>$(LocalFolder)\Source\$(ProjectName).sln</ProjectSolution>
+      <BuildDeployFolder Condition="'$(BuildDeployFolder)' == ''">\\rgocopgfs1\Applications\openPDC\$(ProjectName)\Beta</BuildDeployFolder>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="BeforeVersionSource">
+    <ItemGroup>
+      <!-- List of files to be versioned. -->
+      <FilesToVersion Include="$(LocalFolder)\Source\**\AssemblyInfo.*">
+        <VersionRegex>(?'BeforeVersion'AssemblyVersion\(%22)(?'CoreVersion'(\*|\d+)\.)+(\*|\d+)(?'AfterVersion'%22\))</VersionRegex>
+      </FilesToVersion>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="BeforeBuildProjects">
+    <ItemGroup>
+      <!-- List of projects to build. -->
+      <ProjectsToBuild Include="$(ProjectSolution)"/>
+      <ProjectsToBuild Include="$(LocalFolder)\Source\Libraries\**\*.csproj" Exclude="$(LocalFolder)\Source\Libraries\**\*.Test.csproj" Condition="'$(SkipSigning)' == ''">
+        <Properties>SignAssembly=true;AssemblyOriginatorKeyFile=$(LocalFolder)\Source\openPDC.snk;OutputPath=$(BuildOutputFolder)\Libraries\Signed</Properties>
+      </ProjectsToBuild>
+      <ProjectsToBuild Include="$(LocalFolder)\Build\Scripts\$(ProjectName).shfbproj" Condition="'$(SkipHelpFiles)' == ''"/>
+    </ItemGroup>
+  </Target>
+  
+  <Target Name="BeforeExecuteUnitTests">
+    <ItemGroup>
+      <!-- List of unit test assemblies. -->
+      <UnitTestAssemblies Include="$(BuildOutputFolder)\**\*.Test.dll"/>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="AfterExecuteUnitTests">
+    <!-- Clean-up after all unit tests have been executed and passed. -->
+    <RemoveDir Directories="%(UnitTestAssemblies.RootDir)%(UnitTestAssemblies.Directory)" Condition="Exists('%(UnitTestAssemblies.RootDir)%(UnitTestAssemblies.Directory)')"/>
+  </Target>
+  
+  <Target Name="BeforeDeployBuild">
+    <ItemGroup>
+      <!-- List of binaries to archive. -->
+      <BinariesToArchive Include="$(BuildOutputFolder)\**\*.*"/>
+      <!-- List of installs to archive. -->
+      <InstallsToArchive Include="$(BuildOutputFolder)\**\*.msi"/>
+      <!-- Destinations of archive files (*.zip). -->
+      <ArchiveDestinations Include="$(BuildDeployFolder)"/>
+      <ArchiveDestinations Include="\\socppmuweb\naspi\openPDC;\\rocppmuweb\naspi\openPDC" Condition="'$(SkipPublicArchive)' != 'true'"/>
+    </ItemGroup>
+  </Target>
+  
+</Project>
