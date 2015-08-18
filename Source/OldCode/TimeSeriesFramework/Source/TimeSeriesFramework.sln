@@ -1,0 +1,440 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Applications", "Applications", "{F2F990DA-EC53-4B01-86FC-5557EF149769}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Data", "Data", "{0DB3505F-CC49-4D22-A67F-14688BABB192}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{996B7C6C-A49D-44D9-BBEC-91609858AA53}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{2D752CB3-5075-49A0-BFA1-6E6131AF2404}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Access", "Access", "{D2F52E0C-FDD4-4AC7-BF60-F2C589A3A61C}"
+	ProjectSection(SolutionItems) = preProject
+		Data\Access\IaonConfig.mdb = Data\Access\IaonConfig.mdb
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MySQL", "MySQL", "{305DB059-5B1C-4BBF-85C1-D41148D90CE5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SQL Server", "SQL Server", "{F08ECF09-C90D-4CCD-864D-8ECDD9F2CB9C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TVA", "TVA", "{03779694-D6C5-482A-AF4B-9C058338FA8C}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\TVA\TVA.Communication.dll = Dependencies\TVA\TVA.Communication.dll
+		Dependencies\TVA\TVA.Communication.XML = Dependencies\TVA\TVA.Communication.XML
+		Dependencies\TVA\TVA.Core.dll = Dependencies\TVA\TVA.Core.dll
+		Dependencies\TVA\TVA.Core.XML = Dependencies\TVA\TVA.Core.XML
+		Dependencies\TVA\TVA.Security.XML = Dependencies\TVA\TVA.Security.XML
+		Dependencies\TVA\TVA.ServiceBus.dll = Dependencies\TVA\TVA.ServiceBus.dll
+		Dependencies\TVA\TVA.ServiceBus.XML = Dependencies\TVA\TVA.ServiceBus.XML
+		Dependencies\TVA\TVA.ServiceModel.dll = Dependencies\TVA\TVA.ServiceModel.dll
+		Dependencies\TVA\TVA.ServiceModel.XML = Dependencies\TVA\TVA.ServiceModel.XML
+		Dependencies\TVA\TVA.ServiceProcess.dll = Dependencies\TVA\TVA.ServiceProcess.dll
+		Dependencies\TVA\TVA.ServiceProcess.XML = Dependencies\TVA\TVA.ServiceProcess.XML
+		Dependencies\TVA\TVA.Web.dll = Dependencies\TVA\TVA.Web.dll
+		Dependencies\TVA\TVA.Web.XML = Dependencies\TVA\TVA.Web.XML
+		Dependencies\TVA\TVA.Windows.dll = Dependencies\TVA\TVA.Windows.dll
+		Dependencies\TVA\TVA.Windows.XML = Dependencies\TVA\TVA.Windows.XML
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeSeriesFramework", "Libraries\TimeSeriesFramework\TimeSeriesFramework.csproj", "{412F9F59-D9B9-4C8E-96D2-20492644198C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5EE054A2-9C72-4801-9FF1-60C4D2DA5F20}"
+	ProjectSection(SolutionItems) = preProject
+		LICENSE.txt = LICENSE.txt
+		NOTICE.txt = NOTICE.txt
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataSubscriberTest", "Applications\DataSubscriberTest\DataSubscriberTest.csproj", "{DEAE7327-1628-4D6D-B682-257335B86B22}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPublisherTest", "Applications\DataPublisherTest\DataPublisherTest.csproj", "{4508009C-7011-4981-B35F-594F42CC0D1F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeSeriesFramework.UI", "Libraries\TimeSeriesFramework\UI\TimeSeriesFramework.UI.csproj", "{7ED01B57-DD71-4A38-BB29-65D629224A12}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeSeriesFramework.UI.WPF", "Libraries\TimeSeriesFramework\UI\WPF\TimeSeriesFramework.UI.WPF.csproj", "{5AF0D55A-30BF-46A5-8A47-FA885F56BFEF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TsfManager", "Applications\TsfManager\TsfManager.csproj", "{FC5B2769-89FD-420B-9722-D6E0B029ABDD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Adapters", "Adapters", "{3AFB6F1F-816E-42EE-A99C-75F8652A1557}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WavInputAdapter", "Libraries\Adapters\WavInputAdapter\WavInputAdapter.csproj", "{3F0B62F6-99B8-4F57-8C58-0B4B862358EA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdoAdapters", "Libraries\Adapters\AdoAdapters\AdoAdapters.csproj", "{C4145EB5-FEF9-4419-AC5E-31D4F23AD311}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsvAdapters", "Libraries\Adapters\CsvAdapters\CsvAdapters.csproj", "{A8861372-0FE2-45E5-9DED-73B55AC4196C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataQualityMonitoring", "Libraries\Adapters\DataQualityMonitoring\DataQualityMonitoring.csproj", "{AD054F7A-C944-4BA3-8CD8-CA275184BD33}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MongoAdapters", "Libraries\Adapters\MongoAdapters\MongoAdapters.csproj", "{383F4F83-8228-4B9A-9757-250043B6E30B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MongoDB", "MongoDB", "{4445C29E-41FF-4C18-AFA3-5FCF2C4B6B2D}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\MongoDB\MongoDB.dll = Dependencies\MongoDB\MongoDB.dll
+		Dependencies\MongoDB\MongoDB.GridFS.dll = Dependencies\MongoDB\MongoDB.GridFS.dll
+		Dependencies\MongoDB\MongoDB.GridFS.xml = Dependencies\MongoDB\MongoDB.GridFS.xml
+		Dependencies\MongoDB\MongoDB.xml = Dependencies\MongoDB\MongoDB.xml
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MySqlAdapters", "Libraries\Adapters\MySqlAdapters\MySqlAdapters.csproj", "{1FEC4033-C80F-4CF1-835C-BBEE0E7F6803}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestingAdapters", "Libraries\Adapters\TestingAdapters\TestingAdapters.csproj", "{69846364-E3F5-4086-B9FE-D447BB7E56C3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Wave Demo Apps", "Wave Demo Apps", "{7877F254-782B-4221-83B4-DB31D9107A43}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WavSubscriptionDemo", "Applications\Wave Demo Apps\WavSubscriptionDemo\WavSubscriptionDemo.csproj", "{D78C3B1B-F673-45EB-86CB-93DCB4572905}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UpdateWAVMetaData", "Applications\Wave Demo Apps\UpdateWAVMetaData\UpdateWAVMetaData.csproj", "{5E75D20E-228E-4ACC-B73D-E9471D9E0852}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NAudio", "NAudio", "{EED5904B-0149-4529-94CB-6511004F06D9}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\NAudio\NAudio.dll = Dependencies\NAudio\NAudio.dll
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CSampleAdapters", "Libraries\Adapters\CSampleAdapters\CSampleAdapters.vcxproj", "{BB0CAA29-229E-4648-80A0-1474B3A0FACF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FLEE", "FLEE", "{C78E58AC-B54A-4FA2-9412-08AA86847791}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\FLEE\Ciloci.Flee.dll = Dependencies\FLEE\Ciloci.Flee.dll
+		Dependencies\FLEE\Ciloci.Flee.xml = Dependencies\FLEE\Ciloci.Flee.xml
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicCalculator", "Libraries\Adapters\DynamicCalculator\DynamicCalculator.csproj", "{374F5805-28DB-4BCA-8062-BF802793BD4F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TSFPlatformLibrary", "Libraries\TSFPlatformLibrary\TSFPlatformLibrary.vcxproj", "{2A542BE8-8D17-44C3-BCD2-768DF480FF82}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneSecondFrequencyAverager", "Libraries\Adapters\FrequencyAverager\OneSecondFrequencyAverager.csproj", "{AF33B063-D523-493E-951A-29C930A49002}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OpenDNP3", "OpenDNP3", "{109F186F-C8B9-43EC-8D5B-F2494DBE8923}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\OpenDNP3\boost_date_time-vc100-mt-1_47.dll = Dependencies\OpenDNP3\boost_date_time-vc100-mt-1_47.dll
+		Dependencies\OpenDNP3\boost_system-vc100-mt-1_47.dll = Dependencies\OpenDNP3\boost_system-vc100-mt-1_47.dll
+		Dependencies\OpenDNP3\boost_thread-vc100-mt-1_47.dll = Dependencies\OpenDNP3\boost_thread-vc100-mt-1_47.dll
+		Dependencies\OpenDNP3\DotNetAdapter.dll = Dependencies\OpenDNP3\DotNetAdapter.dll
+		Dependencies\OpenDNP3\DotNetInterface.dll = Dependencies\OpenDNP3\DotNetInterface.dll
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dnp3Adapters", "Libraries\Adapters\Dnp3Adapters\Dnp3Adapters.csproj", "{A04A48C2-112D-4EE3-A6B0-3784A1315BCF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "x86", "x86", "{9963387D-7D8C-4B3F-8584-93CC8279E87D}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\OpenDNP3\x86\boost_date_time-vc100-mt-1_47.dll = Dependencies\OpenDNP3\x86\boost_date_time-vc100-mt-1_47.dll
+		Dependencies\OpenDNP3\x86\boost_system-vc100-mt-1_47.dll = Dependencies\OpenDNP3\x86\boost_system-vc100-mt-1_47.dll
+		Dependencies\OpenDNP3\x86\boost_thread-vc100-mt-1_47.dll = Dependencies\OpenDNP3\x86\boost_thread-vc100-mt-1_47.dll
+		Dependencies\OpenDNP3\x86\DotNetAdapter.dll = Dependencies\OpenDNP3\x86\DotNetAdapter.dll
+		Dependencies\OpenDNP3\x86\DotNetInterface.dll = Dependencies\OpenDNP3\x86\DotNetInterface.dll
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{F13A693A-0852-4D96-BECF-5F5BEF784526}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigurationCacher", "Tools\ConfigurationCacher\ConfigurationCacher.csproj", "{5DF2EAAB-8498-44A5-8777-30B73849D01E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PIAdapters", "Libraries\Adapters\PIAdapters\PIAdapters.csproj", "{8BDA86DB-B944-4880-9D97-E4FF04577C03}"
+EndProject
+Global
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 23
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs07
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = Libraries\\TimeSeriesFramework\\TimeSeriesFramework.csproj
+		SccProjectTopLevelParentUniqueName1 = TimeSeriesFramework.sln
+		SccProjectName1 = Libraries/TimeSeriesFramework
+		SccLocalPath1 = Libraries\\TimeSeriesFramework
+		SccProjectUniqueName2 = Applications\\DataSubscriberTest\\DataSubscriberTest.csproj
+		SccProjectTopLevelParentUniqueName2 = TimeSeriesFramework.sln
+		SccProjectName2 = Applications/DataSubscriberTest
+		SccLocalPath2 = Applications\\DataSubscriberTest
+		SccProjectUniqueName3 = Applications\\DataPublisherTest\\DataPublisherTest.csproj
+		SccProjectTopLevelParentUniqueName3 = TimeSeriesFramework.sln
+		SccProjectName3 = Applications/DataPublisherTest
+		SccLocalPath3 = Applications\\DataPublisherTest
+		SccProjectUniqueName4 = Libraries\\TimeSeriesFramework\\UI\\TimeSeriesFramework.UI.csproj
+		SccProjectTopLevelParentUniqueName4 = TimeSeriesFramework.sln
+		SccProjectName4 = Libraries/TimeSeriesFramework/UI
+		SccLocalPath4 = Libraries\\TimeSeriesFramework\\UI
+		SccProjectUniqueName5 = Libraries\\TimeSeriesFramework\\UI\\WPF\\TimeSeriesFramework.UI.WPF.csproj
+		SccProjectTopLevelParentUniqueName5 = TimeSeriesFramework.sln
+		SccProjectName5 = Libraries/TimeSeriesFramework/UI/WPF
+		SccLocalPath5 = Libraries\\TimeSeriesFramework\\UI\\WPF
+		SccProjectUniqueName6 = Applications\\TsfManager\\TsfManager.csproj
+		SccProjectTopLevelParentUniqueName6 = TimeSeriesFramework.sln
+		SccProjectName6 = Applications/TsfManager
+		SccLocalPath6 = Applications\\TsfManager
+		SccProjectUniqueName7 = Libraries\\Adapters\\AdoAdapters\\AdoAdapters.csproj
+		SccProjectTopLevelParentUniqueName7 = TimeSeriesFramework.sln
+		SccProjectName7 = Libraries/Adapters/AdoAdapters
+		SccLocalPath7 = Libraries\\Adapters\\AdoAdapters
+		SccProjectUniqueName8 = Libraries\\Adapters\\WavInputAdapter\\WavInputAdapter.csproj
+		SccProjectTopLevelParentUniqueName8 = TimeSeriesFramework.sln
+		SccProjectName8 = Libraries/Adapters/WavInputAdapter
+		SccLocalPath8 = Libraries\\Adapters\\WavInputAdapter
+		SccProjectUniqueName9 = Libraries\\Adapters\\CsvAdapters\\CsvAdapters.csproj
+		SccProjectTopLevelParentUniqueName9 = TimeSeriesFramework.sln
+		SccProjectName9 = Libraries/Adapters/CsvAdapters
+		SccLocalPath9 = Libraries\\Adapters\\CsvAdapters
+		SccProjectUniqueName10 = Libraries\\Adapters\\DataQualityMonitoring\\DataQualityMonitoring.csproj
+		SccProjectTopLevelParentUniqueName10 = TimeSeriesFramework.sln
+		SccProjectName10 = Libraries/Adapters/DataQualityMonitoring
+		SccLocalPath10 = Libraries\\Adapters\\DataQualityMonitoring
+		SccProjectUniqueName11 = Libraries\\Adapters\\MongoAdapters\\MongoAdapters.csproj
+		SccProjectTopLevelParentUniqueName11 = TimeSeriesFramework.sln
+		SccProjectName11 = Libraries/Adapters/MongoAdapters
+		SccLocalPath11 = Libraries\\Adapters\\MongoAdapters
+		SccProjectUniqueName12 = Libraries\\Adapters\\MySqlAdapters\\MySqlAdapters.csproj
+		SccProjectTopLevelParentUniqueName12 = TimeSeriesFramework.sln
+		SccProjectName12 = Libraries/Adapters/MySqlAdapters
+		SccLocalPath12 = Libraries\\Adapters\\MySqlAdapters
+		SccProjectUniqueName13 = Libraries\\Adapters\\TestingAdapters\\TestingAdapters.csproj
+		SccProjectTopLevelParentUniqueName13 = TimeSeriesFramework.sln
+		SccProjectName13 = Libraries/Adapters/TestingAdapters
+		SccLocalPath13 = Libraries\\Adapters\\TestingAdapters
+		SccProjectUniqueName14 = Applications\\Wave\u0020Demo\u0020Apps\\UpdateWAVMetaData\\UpdateWAVMetaData.csproj
+		SccProjectTopLevelParentUniqueName14 = TimeSeriesFramework.sln
+		SccProjectName14 = Applications/Wave\u0020Demo\u0020Apps/UpdateWAVMetaData
+		SccLocalPath14 = Applications\\Wave\u0020Demo\u0020Apps\\UpdateWAVMetaData
+		SccProjectUniqueName15 = Applications\\Wave\u0020Demo\u0020Apps\\WavSubscriptionDemo\\WavSubscriptionDemo.csproj
+		SccProjectTopLevelParentUniqueName15 = TimeSeriesFramework.sln
+		SccProjectName15 = Applications/Wave\u0020Demo\u0020Apps/WavSubscriptionDemo
+		SccLocalPath15 = Applications\\Wave\u0020Demo\u0020Apps\\WavSubscriptionDemo
+		SccProjectUniqueName16 = Libraries\\Adapters\\CSampleAdapters\\CSampleAdapters.vcxproj
+		SccProjectTopLevelParentUniqueName16 = TimeSeriesFramework.sln
+		SccProjectName16 = Libraries/Adapters/CSampleAdapters
+		SccLocalPath16 = Libraries\\Adapters\\CSampleAdapters
+		SccProjectUniqueName17 = Libraries\\Adapters\\DynamicCalculator\\DynamicCalculator.csproj
+		SccProjectTopLevelParentUniqueName17 = TimeSeriesFramework.sln
+		SccProjectName17 = Libraries/Adapters/DynamicCalculator
+		SccLocalPath17 = Libraries\\Adapters\\DynamicCalculator
+		SccProjectUniqueName18 = Libraries\\TSFPlatformLibrary\\TSFPlatformLibrary.vcxproj
+		SccProjectTopLevelParentUniqueName18 = TimeSeriesFramework.sln
+		SccProjectName18 = Libraries/TSFPlatformLibrary
+		SccLocalPath18 = Libraries\\TSFPlatformLibrary
+		SccProjectUniqueName19 = Libraries\\Adapters\\Dnp3Adapters\\Dnp3Adapters.csproj
+		SccProjectTopLevelParentUniqueName19 = TimeSeriesFramework.sln
+		SccProjectName19 = Libraries/Adapters/Dnp3Adapters
+		SccLocalPath19 = Libraries\\Adapters\\Dnp3Adapters
+		SccProjectUniqueName20 = Libraries\\Adapters\\FrequencyAverager\\OneSecondFrequencyAverager.csproj
+		SccProjectTopLevelParentUniqueName20 = TimeSeriesFramework.sln
+		SccProjectName20 = Libraries/Adapters/FrequencyAverager
+		SccLocalPath20 = Libraries\\Adapters\\FrequencyAverager
+		SccProjectUniqueName21 = Tools\\ConfigurationCacher\\ConfigurationCacher.csproj
+		SccProjectTopLevelParentUniqueName21 = TimeSeriesFramework.sln
+		SccProjectName21 = Tools/ConfigurationCacher
+		SccLocalPath21 = Tools\\ConfigurationCacher
+		SccProjectUniqueName22 = Libraries\\Adapters\\PIAdapters\\PIAdapters.csproj
+		SccProjectTopLevelParentUniqueName22 = TimeSeriesFramework.sln
+		SccProjectName22 = Libraries/Adapters/PIAdapters
+		SccLocalPath22 = Libraries\\Adapters\\PIAdapters
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{412F9F59-D9B9-4C8E-96D2-20492644198C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{412F9F59-D9B9-4C8E-96D2-20492644198C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{412F9F59-D9B9-4C8E-96D2-20492644198C}.Debug|x86.ActiveCfg = Debug|x86
+		{412F9F59-D9B9-4C8E-96D2-20492644198C}.Debug|x86.Build.0 = Debug|x86
+		{412F9F59-D9B9-4C8E-96D2-20492644198C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{412F9F59-D9B9-4C8E-96D2-20492644198C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{412F9F59-D9B9-4C8E-96D2-20492644198C}.Release|x86.ActiveCfg = Release|x86
+		{412F9F59-D9B9-4C8E-96D2-20492644198C}.Release|x86.Build.0 = Release|x86
+		{DEAE7327-1628-4D6D-B682-257335B86B22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DEAE7327-1628-4D6D-B682-257335B86B22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DEAE7327-1628-4D6D-B682-257335B86B22}.Debug|x86.ActiveCfg = Debug|x86
+		{DEAE7327-1628-4D6D-B682-257335B86B22}.Debug|x86.Build.0 = Debug|x86
+		{DEAE7327-1628-4D6D-B682-257335B86B22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DEAE7327-1628-4D6D-B682-257335B86B22}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DEAE7327-1628-4D6D-B682-257335B86B22}.Release|x86.ActiveCfg = Release|x86
+		{DEAE7327-1628-4D6D-B682-257335B86B22}.Release|x86.Build.0 = Release|x86
+		{4508009C-7011-4981-B35F-594F42CC0D1F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4508009C-7011-4981-B35F-594F42CC0D1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4508009C-7011-4981-B35F-594F42CC0D1F}.Debug|x86.ActiveCfg = Debug|x86
+		{4508009C-7011-4981-B35F-594F42CC0D1F}.Debug|x86.Build.0 = Debug|x86
+		{4508009C-7011-4981-B35F-594F42CC0D1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4508009C-7011-4981-B35F-594F42CC0D1F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4508009C-7011-4981-B35F-594F42CC0D1F}.Release|x86.ActiveCfg = Release|x86
+		{4508009C-7011-4981-B35F-594F42CC0D1F}.Release|x86.Build.0 = Release|x86
+		{7ED01B57-DD71-4A38-BB29-65D629224A12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7ED01B57-DD71-4A38-BB29-65D629224A12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7ED01B57-DD71-4A38-BB29-65D629224A12}.Debug|x86.ActiveCfg = Debug|x86
+		{7ED01B57-DD71-4A38-BB29-65D629224A12}.Debug|x86.Build.0 = Debug|x86
+		{7ED01B57-DD71-4A38-BB29-65D629224A12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7ED01B57-DD71-4A38-BB29-65D629224A12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7ED01B57-DD71-4A38-BB29-65D629224A12}.Release|x86.ActiveCfg = Release|x86
+		{7ED01B57-DD71-4A38-BB29-65D629224A12}.Release|x86.Build.0 = Release|x86
+		{5AF0D55A-30BF-46A5-8A47-FA885F56BFEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5AF0D55A-30BF-46A5-8A47-FA885F56BFEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5AF0D55A-30BF-46A5-8A47-FA885F56BFEF}.Debug|x86.ActiveCfg = Debug|x86
+		{5AF0D55A-30BF-46A5-8A47-FA885F56BFEF}.Debug|x86.Build.0 = Debug|x86
+		{5AF0D55A-30BF-46A5-8A47-FA885F56BFEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5AF0D55A-30BF-46A5-8A47-FA885F56BFEF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5AF0D55A-30BF-46A5-8A47-FA885F56BFEF}.Release|x86.ActiveCfg = Release|x86
+		{5AF0D55A-30BF-46A5-8A47-FA885F56BFEF}.Release|x86.Build.0 = Release|x86
+		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Debug|x86.ActiveCfg = Debug|x86
+		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Debug|x86.Build.0 = Debug|x86
+		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Release|x86.ActiveCfg = Release|x86
+		{FC5B2769-89FD-420B-9722-D6E0B029ABDD}.Release|x86.Build.0 = Release|x86
+		{3F0B62F6-99B8-4F57-8C58-0B4B862358EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F0B62F6-99B8-4F57-8C58-0B4B862358EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F0B62F6-99B8-4F57-8C58-0B4B862358EA}.Debug|x86.ActiveCfg = Debug|x86
+		{3F0B62F6-99B8-4F57-8C58-0B4B862358EA}.Debug|x86.Build.0 = Debug|x86
+		{3F0B62F6-99B8-4F57-8C58-0B4B862358EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F0B62F6-99B8-4F57-8C58-0B4B862358EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F0B62F6-99B8-4F57-8C58-0B4B862358EA}.Release|x86.ActiveCfg = Release|x86
+		{3F0B62F6-99B8-4F57-8C58-0B4B862358EA}.Release|x86.Build.0 = Release|x86
+		{C4145EB5-FEF9-4419-AC5E-31D4F23AD311}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4145EB5-FEF9-4419-AC5E-31D4F23AD311}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4145EB5-FEF9-4419-AC5E-31D4F23AD311}.Debug|x86.ActiveCfg = Debug|x86
+		{C4145EB5-FEF9-4419-AC5E-31D4F23AD311}.Debug|x86.Build.0 = Debug|x86
+		{C4145EB5-FEF9-4419-AC5E-31D4F23AD311}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4145EB5-FEF9-4419-AC5E-31D4F23AD311}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C4145EB5-FEF9-4419-AC5E-31D4F23AD311}.Release|x86.ActiveCfg = Release|x86
+		{C4145EB5-FEF9-4419-AC5E-31D4F23AD311}.Release|x86.Build.0 = Release|x86
+		{A8861372-0FE2-45E5-9DED-73B55AC4196C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8861372-0FE2-45E5-9DED-73B55AC4196C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8861372-0FE2-45E5-9DED-73B55AC4196C}.Debug|x86.ActiveCfg = Debug|x86
+		{A8861372-0FE2-45E5-9DED-73B55AC4196C}.Debug|x86.Build.0 = Debug|x86
+		{A8861372-0FE2-45E5-9DED-73B55AC4196C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8861372-0FE2-45E5-9DED-73B55AC4196C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A8861372-0FE2-45E5-9DED-73B55AC4196C}.Release|x86.ActiveCfg = Release|x86
+		{A8861372-0FE2-45E5-9DED-73B55AC4196C}.Release|x86.Build.0 = Release|x86
+		{AD054F7A-C944-4BA3-8CD8-CA275184BD33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD054F7A-C944-4BA3-8CD8-CA275184BD33}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD054F7A-C944-4BA3-8CD8-CA275184BD33}.Debug|x86.ActiveCfg = Debug|x86
+		{AD054F7A-C944-4BA3-8CD8-CA275184BD33}.Debug|x86.Build.0 = Debug|x86
+		{AD054F7A-C944-4BA3-8CD8-CA275184BD33}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD054F7A-C944-4BA3-8CD8-CA275184BD33}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD054F7A-C944-4BA3-8CD8-CA275184BD33}.Release|x86.ActiveCfg = Release|x86
+		{AD054F7A-C944-4BA3-8CD8-CA275184BD33}.Release|x86.Build.0 = Release|x86
+		{383F4F83-8228-4B9A-9757-250043B6E30B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{383F4F83-8228-4B9A-9757-250043B6E30B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{383F4F83-8228-4B9A-9757-250043B6E30B}.Debug|x86.ActiveCfg = Debug|x86
+		{383F4F83-8228-4B9A-9757-250043B6E30B}.Debug|x86.Build.0 = Debug|x86
+		{383F4F83-8228-4B9A-9757-250043B6E30B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{383F4F83-8228-4B9A-9757-250043B6E30B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{383F4F83-8228-4B9A-9757-250043B6E30B}.Release|x86.ActiveCfg = Release|x86
+		{383F4F83-8228-4B9A-9757-250043B6E30B}.Release|x86.Build.0 = Release|x86
+		{1FEC4033-C80F-4CF1-835C-BBEE0E7F6803}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1FEC4033-C80F-4CF1-835C-BBEE0E7F6803}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1FEC4033-C80F-4CF1-835C-BBEE0E7F6803}.Debug|x86.ActiveCfg = Debug|x86
+		{1FEC4033-C80F-4CF1-835C-BBEE0E7F6803}.Debug|x86.Build.0 = Debug|x86
+		{1FEC4033-C80F-4CF1-835C-BBEE0E7F6803}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1FEC4033-C80F-4CF1-835C-BBEE0E7F6803}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1FEC4033-C80F-4CF1-835C-BBEE0E7F6803}.Release|x86.ActiveCfg = Release|x86
+		{1FEC4033-C80F-4CF1-835C-BBEE0E7F6803}.Release|x86.Build.0 = Release|x86
+		{69846364-E3F5-4086-B9FE-D447BB7E56C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{69846364-E3F5-4086-B9FE-D447BB7E56C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{69846364-E3F5-4086-B9FE-D447BB7E56C3}.Debug|x86.ActiveCfg = Debug|x86
+		{69846364-E3F5-4086-B9FE-D447BB7E56C3}.Debug|x86.Build.0 = Debug|x86
+		{69846364-E3F5-4086-B9FE-D447BB7E56C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{69846364-E3F5-4086-B9FE-D447BB7E56C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{69846364-E3F5-4086-B9FE-D447BB7E56C3}.Release|x86.ActiveCfg = Release|x86
+		{69846364-E3F5-4086-B9FE-D447BB7E56C3}.Release|x86.Build.0 = Release|x86
+		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Debug|Any CPU.Build.0 = Debug|x86
+		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Debug|x86.ActiveCfg = Debug|x86
+		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Debug|x86.Build.0 = Debug|x86
+		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Release|Any CPU.ActiveCfg = Release|x86
+		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Release|Any CPU.Build.0 = Release|x86
+		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Release|x86.ActiveCfg = Release|x86
+		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Release|x86.Build.0 = Release|x86
+		{5E75D20E-228E-4ACC-B73D-E9471D9E0852}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E75D20E-228E-4ACC-B73D-E9471D9E0852}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E75D20E-228E-4ACC-B73D-E9471D9E0852}.Debug|x86.ActiveCfg = Debug|x86
+		{5E75D20E-228E-4ACC-B73D-E9471D9E0852}.Debug|x86.Build.0 = Debug|x86
+		{5E75D20E-228E-4ACC-B73D-E9471D9E0852}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E75D20E-228E-4ACC-B73D-E9471D9E0852}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E75D20E-228E-4ACC-B73D-E9471D9E0852}.Release|x86.ActiveCfg = Release|x86
+		{5E75D20E-228E-4ACC-B73D-E9471D9E0852}.Release|x86.Build.0 = Release|x86
+		{BB0CAA29-229E-4648-80A0-1474B3A0FACF}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{BB0CAA29-229E-4648-80A0-1474B3A0FACF}.Debug|x86.ActiveCfg = Debug|Win32
+		{BB0CAA29-229E-4648-80A0-1474B3A0FACF}.Release|Any CPU.ActiveCfg = Release|Win32
+		{BB0CAA29-229E-4648-80A0-1474B3A0FACF}.Release|x86.ActiveCfg = Release|Win32
+		{374F5805-28DB-4BCA-8062-BF802793BD4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{374F5805-28DB-4BCA-8062-BF802793BD4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{374F5805-28DB-4BCA-8062-BF802793BD4F}.Debug|x86.ActiveCfg = Debug|x86
+		{374F5805-28DB-4BCA-8062-BF802793BD4F}.Debug|x86.Build.0 = Debug|x86
+		{374F5805-28DB-4BCA-8062-BF802793BD4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{374F5805-28DB-4BCA-8062-BF802793BD4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{374F5805-28DB-4BCA-8062-BF802793BD4F}.Release|x86.ActiveCfg = Release|x86
+		{374F5805-28DB-4BCA-8062-BF802793BD4F}.Release|x86.Build.0 = Release|x86
+		{2A542BE8-8D17-44C3-BCD2-768DF480FF82}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{2A542BE8-8D17-44C3-BCD2-768DF480FF82}.Debug|x86.ActiveCfg = Debug|Win32
+		{2A542BE8-8D17-44C3-BCD2-768DF480FF82}.Release|Any CPU.ActiveCfg = Release|Win32
+		{2A542BE8-8D17-44C3-BCD2-768DF480FF82}.Release|x86.ActiveCfg = Release|Win32
+		{AF33B063-D523-493E-951A-29C930A49002}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF33B063-D523-493E-951A-29C930A49002}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF33B063-D523-493E-951A-29C930A49002}.Debug|x86.ActiveCfg = Debug|x86
+		{AF33B063-D523-493E-951A-29C930A49002}.Debug|x86.Build.0 = Debug|x86
+		{AF33B063-D523-493E-951A-29C930A49002}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF33B063-D523-493E-951A-29C930A49002}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF33B063-D523-493E-951A-29C930A49002}.Release|x86.ActiveCfg = Release|x86
+		{AF33B063-D523-493E-951A-29C930A49002}.Release|x86.Build.0 = Release|x86
+		{A04A48C2-112D-4EE3-A6B0-3784A1315BCF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A04A48C2-112D-4EE3-A6B0-3784A1315BCF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A04A48C2-112D-4EE3-A6B0-3784A1315BCF}.Debug|x86.ActiveCfg = Debug|x86
+		{A04A48C2-112D-4EE3-A6B0-3784A1315BCF}.Debug|x86.Build.0 = Debug|x86
+		{A04A48C2-112D-4EE3-A6B0-3784A1315BCF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A04A48C2-112D-4EE3-A6B0-3784A1315BCF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A04A48C2-112D-4EE3-A6B0-3784A1315BCF}.Release|x86.ActiveCfg = Release|x86
+		{A04A48C2-112D-4EE3-A6B0-3784A1315BCF}.Release|x86.Build.0 = Release|x86
+		{5DF2EAAB-8498-44A5-8777-30B73849D01E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DF2EAAB-8498-44A5-8777-30B73849D01E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DF2EAAB-8498-44A5-8777-30B73849D01E}.Debug|x86.ActiveCfg = Debug|x86
+		{5DF2EAAB-8498-44A5-8777-30B73849D01E}.Debug|x86.Build.0 = Debug|x86
+		{5DF2EAAB-8498-44A5-8777-30B73849D01E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DF2EAAB-8498-44A5-8777-30B73849D01E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DF2EAAB-8498-44A5-8777-30B73849D01E}.Release|x86.ActiveCfg = Release|x86
+		{5DF2EAAB-8498-44A5-8777-30B73849D01E}.Release|x86.Build.0 = Release|x86
+		{8BDA86DB-B944-4880-9D97-E4FF04577C03}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8BDA86DB-B944-4880-9D97-E4FF04577C03}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8BDA86DB-B944-4880-9D97-E4FF04577C03}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8BDA86DB-B944-4880-9D97-E4FF04577C03}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8BDA86DB-B944-4880-9D97-E4FF04577C03}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8BDA86DB-B944-4880-9D97-E4FF04577C03}.Release|x86.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DEAE7327-1628-4D6D-B682-257335B86B22} = {F2F990DA-EC53-4B01-86FC-5557EF149769}
+		{4508009C-7011-4981-B35F-594F42CC0D1F} = {F2F990DA-EC53-4B01-86FC-5557EF149769}
+		{FC5B2769-89FD-420B-9722-D6E0B029ABDD} = {F2F990DA-EC53-4B01-86FC-5557EF149769}
+		{7877F254-782B-4221-83B4-DB31D9107A43} = {F2F990DA-EC53-4B01-86FC-5557EF149769}
+		{D2F52E0C-FDD4-4AC7-BF60-F2C589A3A61C} = {0DB3505F-CC49-4D22-A67F-14688BABB192}
+		{305DB059-5B1C-4BBF-85C1-D41148D90CE5} = {0DB3505F-CC49-4D22-A67F-14688BABB192}
+		{F08ECF09-C90D-4CCD-864D-8ECDD9F2CB9C} = {0DB3505F-CC49-4D22-A67F-14688BABB192}
+		{03779694-D6C5-482A-AF4B-9C058338FA8C} = {996B7C6C-A49D-44D9-BBEC-91609858AA53}
+		{4445C29E-41FF-4C18-AFA3-5FCF2C4B6B2D} = {996B7C6C-A49D-44D9-BBEC-91609858AA53}
+		{EED5904B-0149-4529-94CB-6511004F06D9} = {996B7C6C-A49D-44D9-BBEC-91609858AA53}
+		{C78E58AC-B54A-4FA2-9412-08AA86847791} = {996B7C6C-A49D-44D9-BBEC-91609858AA53}
+		{109F186F-C8B9-43EC-8D5B-F2494DBE8923} = {996B7C6C-A49D-44D9-BBEC-91609858AA53}
+		{412F9F59-D9B9-4C8E-96D2-20492644198C} = {2D752CB3-5075-49A0-BFA1-6E6131AF2404}
+		{7ED01B57-DD71-4A38-BB29-65D629224A12} = {2D752CB3-5075-49A0-BFA1-6E6131AF2404}
+		{5AF0D55A-30BF-46A5-8A47-FA885F56BFEF} = {2D752CB3-5075-49A0-BFA1-6E6131AF2404}
+		{3AFB6F1F-816E-42EE-A99C-75F8652A1557} = {2D752CB3-5075-49A0-BFA1-6E6131AF2404}
+		{2A542BE8-8D17-44C3-BCD2-768DF480FF82} = {2D752CB3-5075-49A0-BFA1-6E6131AF2404}
+		{3F0B62F6-99B8-4F57-8C58-0B4B862358EA} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
+		{C4145EB5-FEF9-4419-AC5E-31D4F23AD311} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
+		{A8861372-0FE2-45E5-9DED-73B55AC4196C} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
+		{AD054F7A-C944-4BA3-8CD8-CA275184BD33} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
+		{383F4F83-8228-4B9A-9757-250043B6E30B} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
+		{1FEC4033-C80F-4CF1-835C-BBEE0E7F6803} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
+		{69846364-E3F5-4086-B9FE-D447BB7E56C3} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
+		{BB0CAA29-229E-4648-80A0-1474B3A0FACF} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
+		{374F5805-28DB-4BCA-8062-BF802793BD4F} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
+		{AF33B063-D523-493E-951A-29C930A49002} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
+		{A04A48C2-112D-4EE3-A6B0-3784A1315BCF} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
+		{8BDA86DB-B944-4880-9D97-E4FF04577C03} = {3AFB6F1F-816E-42EE-A99C-75F8652A1557}
+		{D78C3B1B-F673-45EB-86CB-93DCB4572905} = {7877F254-782B-4221-83B4-DB31D9107A43}
+		{5E75D20E-228E-4ACC-B73D-E9471D9E0852} = {7877F254-782B-4221-83B4-DB31D9107A43}
+		{9963387D-7D8C-4B3F-8584-93CC8279E87D} = {109F186F-C8B9-43EC-8D5B-F2494DBE8923}
+		{5DF2EAAB-8498-44A5-8777-30B73849D01E} = {F13A693A-0852-4D96-BECF-5F5BEF784526}
+	EndGlobalSection
+EndGlobal

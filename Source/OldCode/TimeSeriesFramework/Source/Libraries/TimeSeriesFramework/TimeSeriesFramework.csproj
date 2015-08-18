@@ -1,0 +1,204 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{412F9F59-D9B9-4C8E-96D2-20492644198C}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>TimeSeriesFramework</RootNamespace>
+    <AssemblyName>TimeSeriesFramework</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\..\Build\Output\Debug\Libraries\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;UseHighResolutionTime</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>..\..\..\Build\Output\Debug\Libraries\TimeSeriesFramework.XML</DocumentationFile>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <CodeAnalysisRuleSet>TimeSeriesFramework.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\..\Build\Output\Release\Libraries\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>..\..\..\Build\Output\Release\Libraries\TimeSeriesFramework.XML</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;UseHighResolutionTime</DefineConstants>
+    <DocumentationFile>..\..\..\Build\Output\Debug\Libraries\TimeSeriesFramework.XML</DocumentationFile>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <CodeAnalysisLogFile>..\..\..\Build\Output\Debug\Libraries\TimeSeriesFramework.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+    <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE;UseHighResolutionTime</DefineConstants>
+    <DocumentationFile>..\..\..\Build\Output\Release\Libraries\TimeSeriesFramework.XML</DocumentationFile>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <CodeAnalysisLogFile>..\..\..\Build\Output\Release\Libraries\TimeSeriesFramework.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+    <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Configuration.Install" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="TVA.Communication">
+      <HintPath>..\..\Dependencies\TVA\TVA.Communication.dll</HintPath>
+    </Reference>
+    <Reference Include="TVA.Core">
+      <HintPath>..\..\Dependencies\TVA\TVA.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="TVA.Security, Version=4.0.4.46, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependencies\TVA\TVA.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="TVA.ServiceProcess">
+      <HintPath>..\..\Dependencies\TVA\TVA.ServiceProcess.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Adapters\ConnectionStringParameterAttribute.cs" />
+    <Compile Include="Adapters\IaonSession.cs" />
+    <Compile Include="Adapters\RoutingTables.cs" />
+    <Compile Include="Alarm.cs" />
+    <Compile Include="ConcentratorBase.cs" />
+    <Compile Include="Frame.cs" />
+    <Compile Include="FrameQueue.cs" />
+    <Compile Include="IFrame.cs" />
+    <Compile Include="IMeasurement.cs" />
+    <Compile Include="ImmediateMeasurements.cs" />
+    <Compile Include="InstallerBase.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ITimeSeriesValue.cs" />
+    <Compile Include="Measurement.cs" />
+    <Compile Include="MeasurementKey.cs" />
+    <Compile Include="NamespaceDoc.cs" />
+    <Compile Include="Adapters\ActionAdapterBase.cs" />
+    <Compile Include="Adapters\ActionAdapterCollection.cs" />
+    <Compile Include="Adapters\AdapterBase.cs" />
+    <Compile Include="Adapters\AdapterCollectionBase.cs" />
+    <Compile Include="Adapters\AdapterCommandAttribute.cs" />
+    <Compile Include="Adapters\AllAdaptersCollection.cs" />
+    <Compile Include="Adapters\FacileActionAdapterBase.cs" />
+    <Compile Include="Adapters\IActionAdapter.cs" />
+    <Compile Include="Adapters\IAdapter.cs" />
+    <Compile Include="Adapters\IAdapterCollection.cs" />
+    <Compile Include="Adapters\IInputAdapter.cs" />
+    <Compile Include="Adapters\InputAdapterBase.cs" />
+    <Compile Include="Adapters\InputAdapterCollection.cs" />
+    <Compile Include="Adapters\IOutputAdapter.cs" />
+    <Compile Include="Adapters\NamespaceDoc.cs" />
+    <Compile Include="Adapters\OutputAdapterBase.cs" />
+    <Compile Include="Adapters\OutputAdapterCollection.cs" />
+    <Compile Include="PrecisionInputTimer.cs" />
+    <Compile Include="Statistics\GatewayStatistics.cs" />
+    <Compile Include="Statistics\PerformanceStatistics.cs" />
+    <Compile Include="Statistics\Statistic.cs" />
+    <Compile Include="Statistics\StatisticsEngine.cs" />
+    <Compile Include="Statistics\StatisticValueState.cs" />
+    <Compile Include="Statistics\StatisticValueStateCache.cs" />
+    <Compile Include="TimeSeriesStartupOperations.cs" />
+    <Compile Include="Transport\ClientConnection.cs" />
+    <Compile Include="Transport\Common.cs" />
+    <Compile Include="Transport\DataPublisher.cs" />
+    <Compile Include="Transport\DataSubscriber.cs" />
+    <Compile Include="DebugHostBase.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DebugHostBase.designer.cs">
+      <DependentUpon>DebugHostBase.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Transport\IBinaryMeasurement.cs" />
+    <Compile Include="Transport\SerializableMeasurement.cs" />
+    <Compile Include="ServiceClientBase.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ServiceClientBase.designer.cs">
+      <DependentUpon>ServiceClientBase.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ServiceHostBase.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ServiceHostBase.designer.cs">
+      <DependentUpon>ServiceHostBase.cs</DependentUpon>
+    </Compile>
+    <Compile Include="TemporalMeasurement.cs" />
+    <Compile Include="TrackingFrame.cs" />
+    <Compile Include="Transport\CompactMeasurement.cs" />
+    <Compile Include="Transport\IClientSubscription.cs" />
+    <Compile Include="Transport\SignalIndexCache.cs" />
+    <Compile Include="Transport\SubscriptionInfo.cs" />
+    <Compile Include="Transport\SynchronizedClientSubscription.cs" />
+    <Compile Include="Transport\TemporalClientSubscriptionProxy.cs" />
+    <Compile Include="Transport\UnsynchronizedClientSubscription.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="DebugHostBase.resx">
+      <DependentUpon>DebugHostBase.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ServiceClientBase.resx">
+      <DependentUpon>ServiceClientBase.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ServiceHostBase.resx">
+      <DependentUpon>ServiceHostBase.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Adapters\IaonAdapters.vsd" />
+    <None Include="Adapters\IaonOverview.vsd" />
+    <None Include="TimeSeriesFramework.ruleset" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
