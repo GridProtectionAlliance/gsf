@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+    <CodeSnippet Format="1.0.0">
+        <Header>
+            <Title>ISupportInitialize Implementation</Title>
+            <Shortcut>isupportinitialize</Shortcut>
+            <Description>Creates the canonical ISupportInitialize implementation.</Description>
+            <Author>Pinal Patel</Author>
+            <SnippetTypes>
+                <SnippetType>Expansion</SnippetType>
+            </SnippetTypes>
+        </Header>
+        <Snippet>
+            <Declarations>
+                <Literal Editable="false">
+                    <ID>class</ID>
+                    <Function>ClassName()</Function>
+                </Literal>
+            </Declarations>
+            <Code Language="csharp">
+                <![CDATA[/// <summary>
+        /// Performs necessary operations before the <see cref="$class$"/> object properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the <see cref="$class$"/> object is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void BeginInit()
+        {
+            if (!DesignMode)
+            {
+            	// Nothing needs to be done before component is initialized.
+            }
+        }
+
+        /// <summary>
+        /// Performs necessary operations after the <see cref="$class$"/> object properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the <see cref="$class$"/> object is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void EndInit()
+        {
+            if (!DesignMode)
+            {
+            	$end$
+            }
+        }]]>
+            </Code>
+        </Snippet>
+    </CodeSnippet>
+</CodeSnippets>

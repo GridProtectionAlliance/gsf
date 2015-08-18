@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+    <CodeSnippet Format="1.0.0">
+        <Header>
+            <Title>ISupportLifecycle Implementation</Title>
+            <Shortcut>isupportlifecycle</Shortcut>
+            <Description>Creates the canonical ISupportLifecycle implementation.</Description>
+            <Author>Pinal Patel</Author>
+            <SnippetTypes>
+                <SnippetType>Expansion</SnippetType>
+            </SnippetTypes>
+        </Header>
+        <Snippet>
+            <Declarations>
+                <Literal Editable="false">
+                    <ID>class</ID>
+                    <Function>ClassName()</Function>
+                </Literal>
+            </Declarations>
+            <Code Language="csharp">
+                <![CDATA[private bool m_enabled;
+        private bool m_disposed;
+        private bool m_initialized;
+
+        /// <summary>
+        /// Releases the unmanaged resources before the <see cref="$class$"/> object is reclaimed by <see cref="GC"/>.
+        /// </summary>
+        ~$class$()
+        {
+            Dispose(false);
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the <see cref="$class$"/> object is currently enabled.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Enabled"/> property is not be set by user-code directly.
+        /// </remarks>
+        [Browsable(false), 
+        EditorBrowsable(EditorBrowsableState.Never), 
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool Enabled
+        {
+            get
+            {
+                return m_enabled;
+            }
+            set
+            {
+                m_enabled = value;
+            }
+        }    
+
+        /// <summary>
+        /// Initializes the <see cref="$class$"/> object.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Initialize()"/> is to be called by user-code directly only if the <see cref="$class$"/> 
+        /// object is not consumed through the designer surface of the IDE.
+        /// </remarks>
+        public void Initialize()
+        {
+            if (!m_initialized)
+            {
+                $end$
+                m_initialized = true; // Initialize only once.
+            }
+        }
+
+        /// <summary>
+        /// Releases all the resources used by the <see cref="$class$"/> object.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="$class$"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {			
+                    // This will be done regardless of whether the object is finalized or disposed.				
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
+            }
+        }]]>
+            </Code>
+        </Snippet>
+    </CodeSnippet>
+</CodeSnippets>

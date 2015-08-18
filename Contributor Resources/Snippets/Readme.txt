@@ -1,0 +1,3 @@
+These are the C# snippets used by the openPDC. The "Regions" snippet is consistently used throughout the entire project. If you expect to have your patch or code update included within the project it must follow this convention.
+
+To install the snippets copy the *.snippet files to the file location that is defined for your code snippets. The file location can be found by selecting [Tools] > [Code Snippet Manager] from within Visual Studio then choosing Visual C# in the Language dropdown and selecting My Code Snippets. The folder is typically "...Documents\Visual Studio 2010\Code Snippets\Visual C#\My Code Snippets".
