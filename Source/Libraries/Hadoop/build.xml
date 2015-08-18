@@ -1,0 +1,55 @@
+<project name="openPDC_DMTools" basedir="." default="distr">
+	<property name="Name" value="dm-tools"/>
+	<property name="name" value="dm-tools"/>
+
+	<property name="version" value="0.1.0"/>
+	<property name="final.name" value="${name}-${version}"/>
+
+	<property name="src.dir" value="src"/>
+    <property name="lib.dir" value="lib"/>
+
+	<property name="build.dir" value="build"/>
+	<property name="jar.dir" value="${build.dir}"/>
+	<property name="build.lib.dir" value="${build.dir}/lib"/>
+
+	<property name="main-class" value="TVA.Hadoop.Datamining.Tools.DataminingTools"/>
+	<property name="tmp.dir" value="tmp"/>
+	
+
+    <path id="classpath">
+        <fileset dir="${lib.dir}" includes="**/*.jar"/>
+    </path>
+
+	<target name="clean">
+		<delete dir="${build.dir}"/>
+		<delete dir="${tmp.dir}"/>
+	</target>
+
+	<target name="compile">
+		<mkdir dir="${tmp.dir}"/>
+		<mkdir dir="${build.dir}"/>
+
+		<javac srcdir="${src.dir}" destdir="${tmp.dir}" debug="on"
+			classpathref="classpath"/>
+	</target>
+
+	<target name="distr" depends="jar">
+		<mkdir dir="${build.lib.dir}"/>
+		<copy todir="${build.lib.dir}">
+			<fileset dir="${lib.dir}"/>
+		</copy>
+		<copy todir="${build.dir}/bin">
+			<fileset dir="bin"/>
+		</copy>
+		<delete dir="${tmp.dir}"/>
+	</target>
+
+	<target name="jar" depends="clean, compile">
+		<jar destfile="${build.dir}/${final.name}.jar" basedir="${tmp.dir}">
+			<manifest>
+				<attribute name="Main-Class" value="${main-class}"/>
+				<attribute name="Class-Path" value="classpath"/>
+			</manifest>
+		</jar>
+	</target>
+</project>

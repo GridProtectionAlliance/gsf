@@ -1,0 +1,177 @@
+#!/usr/bin/env bash
+
+
+
+bin=`dirname "$0"`
+bin=`cd "$bin"; pwd`
+
+
+
+. "$bin"/HdfsBridge-config.sh
+
+
+
+
+cygwin=false
+case "`uname`" in
+CYGWIN*) cygwin=true;;
+esac
+
+# if no args specified, show usage
+if [ $# = 0 ]; then
+  echo "Usage: HdfsBridge <COMMAND>"
+  echo "where <COMMAND> is one of:"
+  echo "  server		[start|stop|status] for ftp-to-hdfs bridge server"
+  echo "  debug			debug config for ftp-to-hdfs bridge server"  
+  echo "Most commands print help when invoked w/o parameters."
+  exit 1
+fi
+
+server_usage="Usage: HdfsBridge <args...>"
+
+
+# get arguments
+COMMAND=$1
+shift
+
+
+if [ "$COMMAND" = "server" ]; then
+
+	# get arguments
+	startStop=$1
+	shift
+fi
+
+if [ -f "${HDFSBRIDGE_CONF_DIR}/HdfsBridge-env.sh" ]; then
+  . "${HDFSBRIDGE_CONF_DIR}/HdfsBridge-env.sh"
+fi
+
+# some Java parameters
+if [ "$JAVA_HOME" != "" ]; then
+  #echo "run java in $JAVA_HOME"
+  JAVA_HOME=$JAVA_HOME
+fi
+  
+if [ "$JAVA_HOME" = "" ]; then
+  echo "Error: JAVA_HOME is not set."
+  exit 1
+fi
+
+export HDFSBRIDGE_NICENESS=0
+
+JAVA=$JAVA_HOME/bin/java
+JAVA_HEAP_MAX=-Xmx1000m 
+
+# CLASSPATH initially contains $HDFSBRIDGE_CONF_DIR
+CLASSPATH="${HDFSBRIDGE_CONF_DIR}"
+CLASSPATH=${CLASSPATH}:$JAVA_HOME/lib/tools.jar
+
+
+
+
+# so that filenames w/ spaces are handled correctly in loops below
+IFS=
+
+for f in $HDFSBRIDGE_HOME/hdfsbridge-*.jar; do
+  CLASSPATH=${CLASSPATH}:$f;
+done
+
+# add libs to CLASSPATH
+for f in $HDFSBRIDGE_HOME/lib/*.jar; do
+  CLASSPATH=${CLASSPATH}:$f;
+done
+
+
+
+# default log directory & file
+if [ "$HDFSBRIDGE_LOG_DIR" = "" ]; then
+  HDFSBRIDGE_LOG_DIR="$HDFSBRIDGE_HOME/logs"
+fi
+if [ "$HDFSBRIDGE_LOGFILE" = "" ]; then
+  HDFSBRIDGE_LOGFILE='HdfsBridge.log'
+fi
+
+
+
+# restore ordinary behaviour
+unset IFS
+
+
+# figure out which class to run
+if [ "$COMMAND" = "server" ] ; then
+
+  CLASS='gov.tva.openpdc.ftp.hdfs.HdfsBridge'
+
+	# run it
+#	exec "$JAVA" $JAVA_HEAP_MAX -classpath "$CLASSPATH" $CLASS "$@"
+
+	pid=$HDFSBRIDGE_PID_DIR/hdfsbridge-$COMMAND.pid
+	log=$HDFSBRIDGE_LOG_DIR/hdfsbridge-$COMMAND.log.out  
+
+		case $startStop in
+		
+		  (start)
+
+			
+			
+		
+			    mkdir -p "$HDFSBRIDGE_PID_DIR"
+			
+			    if [ -f $pid ]; then
+			      if kill -0 `cat $pid` > /dev/null 2>&1; then
+			        echo $command running as process `cat $pid`.  Stop it first.
+			        exit 1
+			      fi
+			    fi
+			    
+			    echo starting $COMMAND, logging to $log
+			    cd "$HDFSBRIDGE_HOME"
+nohup nice -n $HDFSBRIDGE_NICENESS "$JAVA" $JAVA_HEAP_MAX -classpath "$CLASSPATH" $CLASS "$@" > "$log" 2>&1 < /dev/null &
+			    echo $! > $pid
+
+			    sleep 1; head "$log"			    
+		    ;;
+		          
+		  (stop)
+
+			
+			    if [ -f $pid ]; then
+			      if kill `cat $pid` > /dev/null 2>&1; then
+			        echo "stopping $COMMAND"
+			        kill `cat $pid`
+			      else
+			        echo no $COMMAND to stop
+			      fi
+			    else
+			      echo no $COMMAND to stop
+			    fi
+			    
+			    
+		    ;;
+		
+		  (*)
+		    echo $server_usage
+		    exit 1
+		    ;;
+		
+		esac  
+
+
+
+
+ 
+elif [ "$COMMAND" = "debug" ] ; then
+
+  CLASS='gov.tva.openpdc.ftp.hdfs.HdfsBridge'
+
+	# run it
+	exec "$JAVA" $JAVA_HEAP_MAX -classpath "$CLASSPATH" $CLASS "$@" -debugconfig -param
+	#echo "$JAVA" $JAVA_HEAP_MAX -classpath "$CLASSPATH" $CLASS "$@ -debugconfig param1" 
+	
+
+
+else
+  CLASS=$COMMAND
+fi
+
+

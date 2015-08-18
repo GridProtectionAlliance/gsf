@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<configuration>
+
+  <property>
+    <name>hadoop.hdfs.uri</name>
+    <value>hdfs://socdvmhdfs1:9000</value>
+    <description></description>
+  </property>
+  
+  
+  <property>
+    <name>sparky.http.port</name>
+    <value>8080</value>
+    <description>The base HTTP port to bind to.</description>
+  </property>  
+
+
+
+
+
+
+  <property>
+    <name>hbase.uri</name>
+    <value>8092</value>
+    <description></description>
+  </property>  
+
+
+
+  <property>
+    <name>hbase.stargate.REST.uri</name>
+    <value>8092</value>
+    <description></description>
+  </property>  
+
+  <property>
+    <name>hbase.stargate.REST.port</name>
+    <value>http://socdvmhbase</value>
+    <description></description>
+  </property>  
+
+
+
+
+
+
+  <property>
+          <name>fs.default.name</name>
+          <value>hdfs://socdvmhdfs1:9000</value>
+  </property>
+
+  <property>
+          <name>mapred.job.tracker</name>
+          <value>socdvmhdfs1:9001</value>
+  </property>
+
+  <property>
+         <name>dfs.replication</name>
+         <value>3</value>
+  </property>
+
+  <property>
+         <name>mapred.reduce.copy.backoff</name>
+         <value>5</value>
+  </property>
+
+
+
+
+  
+</configuration>  

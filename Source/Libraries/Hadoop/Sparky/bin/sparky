@@ -1,0 +1,177 @@
+#!/usr/bin/env bash
+
+bin=`dirname "$0"`
+bin=`cd "$bin"; pwd`
+
+. "$bin"/sparky-config.sh
+
+cygwin=false
+case "`uname`" in
+CYGWIN*) cygwin=true;;
+esac
+
+# if no args specified, show usage
+if [ $# = 0 ]; then
+  echo "Usage: sparky <COMMAND>"
+  echo "where <COMMAND> is one of:"
+  echo "  server		run the Sparky http and REST server"
+  echo "  indexer		run the Sparky manual indexer"
+  echo "Most commands print help when invoked w/o parameters."
+  exit 1
+fi
+
+server_usage="Usage: sparky server (start|stop) <args...>"
+
+# get arguments
+COMMAND=$1
+shift
+
+if [ "$COMMAND" != "indexer" ]; then
+
+	# get arguments
+	startStop=$1
+	shift
+fi
+
+
+if [ -f "${SPARKY_CONF_DIR}/sparky-env.sh" ]; then
+  . "${SPARKY_CONF_DIR}/sparky-env.sh"
+fi
+
+# some Java parameters
+if [ "$JAVA_HOME" != "" ]; then
+  #echo "run java in $JAVA_HOME"
+  JAVA_HOME=$JAVA_HOME
+fi
+  
+if [ "$JAVA_HOME" = "" ]; then
+  echo "Error: JAVA_HOME is not set."
+  exit 1
+fi
+
+export SPARKY_NICENESS=0
+
+JAVA=$JAVA_HOME/bin/java
+JAVA_HEAP_MAX=-Xmx1000m 
+
+# CLASSPATH initially contains $SPARKY_CONF_DIR
+CLASSPATH="${SPARKY_CONF_DIR}"
+CLASSPATH=${CLASSPATH}:$JAVA_HOME/lib/tools.jar
+
+
+
+
+# so that filenames w/ spaces are handled correctly in loops below
+IFS=
+
+for f in $SPARKY_HOME/sparky-*.jar; do
+  CLASSPATH=${CLASSPATH}:$f;
+done
+
+# add libs to CLASSPATH
+for f in $SPARKY_HOME/lib/*.jar; do
+  CLASSPATH=${CLASSPATH}:$f;
+done
+
+
+
+# default log directory & file
+if [ "$SPARKY_LOG_DIR" = "" ]; then
+  SPARKY_LOG_DIR="$SPARKY_HOME/logs"
+fi
+if [ "$SPARKY_LOGFILE" = "" ]; then
+  SPARKY_LOGFILE='sparky.log'
+fi
+
+# restore ordinary behaviour
+unset IFS
+
+
+# figure out which class to run
+if [ "$COMMAND" = "server" ] ; then
+  CLASS='gov.tva.sparky.core.Jetty'
+  
+  
+  #  ------------ we want to run a background daemon here that plays nice -------------------
+	pid=$SPARKY_PID_DIR/sparky-$COMMAND.pid
+	log=$SPARKY_LOG_DIR/sparky-$COMMAND.log.out  
+
+		case $startStop in
+		
+		  (start)
+
+			
+			
+		
+			    mkdir -p "$SPARKY_PID_DIR"
+			
+			    if [ -f $pid ]; then
+			      if kill -0 `cat $pid` > /dev/null 2>&1; then
+			        echo $command running as process `cat $pid`.  Stop it first.
+			        exit 1
+			      fi
+			    fi
+			    
+			    echo starting $COMMAND, logging to $log
+			    cd "$SPARKY_HOME"
+nohup nice -n $SPARKY_NICENESS "$JAVA" $JAVA_HEAP_MAX -classpath "$CLASSPATH" $CLASS "$@" > "$log" 2>&1 < /dev/null &
+			    echo $! > $pid
+
+			    sleep 1; head "$log"			    
+		    ;;
+		          
+		  (stop)
+
+			
+			    if [ -f $pid ]; then
+			      if kill `cat $pid` > /dev/null 2>&1; then
+			        echo "stopping $COMMAND"
+			        kill `cat $pid`
+			      else
+			        echo no $COMMAND to stop
+			      fi
+			    else
+			      echo no $COMMAND to stop
+			    fi
+			    
+			    
+		    ;;
+		
+		  (*)
+		    echo $server_usage
+		    exit 1
+		    ;;
+		
+		esac  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+elif [ "$COMMAND" = "indexer" ] ; then
+  CLASS='gov.tva.sparky.util.indexer.IndexingAgent'
+
+
+
+	# run it
+	exec "$JAVA" $JAVA_HEAP_MAX -classpath "$CLASSPATH" $CLASS "$@"
+
+ # -------------- here we just want to run the class.Main() function .... -------------- 
+
+else
+  CLASS=$COMMAND
+fi
+
+
+
+
+

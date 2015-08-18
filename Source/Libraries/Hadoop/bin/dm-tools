@@ -1,0 +1,140 @@
+#!/usr/bin/env bash
+
+
+
+bin=`dirname "$0"`
+bin=`cd "$bin"; pwd`
+
+
+
+. "$bin"/dm-tools-config.sh
+
+
+
+
+cygwin=false
+case "`uname`" in
+CYGWIN*) cygwin=true;;
+esac
+
+# if no args specified, show usage
+if [ $# = 0 ]; then
+  echo "Usage: dm-tools <COMMAND>"
+  echo "where <COMMAND> is one of:"
+  echo "  Instances		Generate instance sets"
+  echo "  Archives		Work with time series archives"
+  echo "  Tools			Test instances locally"  
+  echo "Most commands print help when invoked w/o parameters."
+  exit 1
+fi
+
+server_usage="Usage: dm-tools <args...>"
+
+
+# get arguments
+COMMAND=$1
+shift
+
+# shift the params for non-server processes
+#if [ "$COMMAND" != "indexer" ]; then
+
+	# get arguments
+#	startStop=$1
+#	shift
+#fi
+
+
+if [ -f "${DM_TOOLS_CONF_DIR}/dm-tools-env.sh" ]; then
+  . "${DM_TOOLS_CONF_DIR}/dm-tools-env.sh"
+fi
+
+# some Java parameters
+if [ "$JAVA_HOME" != "" ]; then
+  #echo "run java in $JAVA_HOME"
+  JAVA_HOME=$JAVA_HOME
+fi
+  
+if [ "$JAVA_HOME" = "" ]; then
+  echo "Error: JAVA_HOME is not set."
+  exit 1
+fi
+
+export DM_TOOLS_NICENESS=0
+
+JAVA=$JAVA_HOME/bin/java
+JAVA_HEAP_MAX=-Xmx1000m 
+
+# CLASSPATH initially contains $DM_TOOLS_CONF_DIR
+CLASSPATH="${DM_TOOLS_CONF_DIR}"
+CLASSPATH=${CLASSPATH}:$JAVA_HOME/lib/tools.jar
+
+
+
+
+# so that filenames w/ spaces are handled correctly in loops below
+IFS=
+
+for f in $DM_TOOLS_HOME/dm-tools-*.jar; do
+  CLASSPATH=${CLASSPATH}:$f;
+done
+
+# add libs to CLASSPATH
+for f in $DM_TOOLS_HOME/lib/*.jar; do
+  CLASSPATH=${CLASSPATH}:$f;
+done
+
+
+
+# default log directory & file
+if [ "$DM_TOOLS_LOG_DIR" = "" ]; then
+  DM_TOOLS_LOG_DIR="$DM_TOOLS_HOME/logs"
+fi
+if [ "$DM_TOOLS_LOGFILE" = "" ]; then
+  DM_TOOLS_LOGFILE='dm-tools.log'
+fi
+
+
+
+# restore ordinary behaviour
+unset IFS
+
+
+# figure out which class to run
+if [ "$COMMAND" = "Archives" ] ; then
+
+  CLASS='TVA.Hadoop.Datamining.Tools.Archive'
+
+	# run it
+	exec "$JAVA" $JAVA_HEAP_MAX -classpath "$CLASSPATH" $CLASS "$@"
+  
+  
+  
+elif [ "$COMMAND" = "Instances" ] ; then
+
+  CLASS='TVA.Hadoop.Datamining.Tools.Instances'
+
+	# run it
+	exec "$JAVA" $JAVA_HEAP_MAX -classpath "$CLASSPATH" $CLASS "$@"
+
+
+elif [ "$COMMAND" = "Tools" ] ; then
+
+  CLASS='TVA.Hadoop.Datamining.Tools.DataminingTools'
+
+	# run it
+	exec "$JAVA" $JAVA_HEAP_MAX -classpath "$CLASSPATH" $CLASS "$@"
+
+
+else
+  CLASS=$COMMAND
+fi
+
+
+
+
+
+
+
+
+echo "foooo"
+exit 1

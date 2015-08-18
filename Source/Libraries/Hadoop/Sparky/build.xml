@@ -1,0 +1,91 @@
+<project name="Sparky" basedir="." default="distr">
+
+	<property name="Name" value="Sparky"/>
+	<property name="name" value="sparky"/>
+	
+	<property name="version" value="0.1.0-dev"/>
+	<property name="final.name" value="${name}-${version}"/>
+	
+    <property name="src.dir" value="src"/>
+
+    <property name="build.dir" value="build"/>
+    <property name="jar.dir" value="${build.dir}"/>
+
+    <property name="main-class" value="gov.tva.sparky.core.Jetty"/>
+
+    <property name="lib.dir" value="lib"/>
+    <property name="build.lib.dir" value="${build.dir}/lib"/>
+	
+	
+    <property name="tmp.dir" value="tmp"/>
+
+	<property name="build.jsp.dir" value="${build.dir}/jsp"/>
+	<property name="build.WEB-INF.dir" value="${build.dir}/WEB-INF"/>
+
+    <path id="classpath">
+        <fileset dir="${lib.dir}" includes="**/*.jar"/>
+    </path>
+
+    <property name="jar-all" location="${lib.dir}"/>
+
+    <pathconvert property="cp" refid="classpath" pathsep=" " dirsep="/">
+        <map from="${jar-all}" to="${lib.dir}"/>
+    </pathconvert>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+        <delete dir="${tmp.dir}"/>
+	<delete dir="${build.jsp.dir}"/>
+	<delete dir="${build.WEB-INF.dir}"/>
+    </target>
+
+    <target name="compile">
+        <mkdir dir="${tmp.dir}"/>
+        <mkdir dir="${build.dir}"/>
+	<mkdir dir="${build.jsp.dir}"/>
+	<mkdir dir="${build.WEB-INF.dir}"/>
+
+        <javac srcdir="${src.dir}" destdir="${tmp.dir}" debug="on" classpathref="classpath"/>
+    </target>
+
+    <target name="distr" depends="jar">
+        <mkdir dir="${build.lib.dir}"/>
+        <copy todir="${build.lib.dir}">
+            <fileset dir="${lib.dir}"/>
+        </copy>
+        <delete dir="${tmp.dir}"/>
+
+        	
+    	<copy file="conf/log4j.props" todir="${build.dir}/conf"/>
+    	<copy file="conf/sparky-site.xml" todir="${build.dir}/conf"/>
+    	<copy file="conf/sparky-site.xml.example" todir="${build.dir}/conf"/>
+    	
+    	
+        <copy todir="${build.dir}/bin">
+          <fileset dir="bin"/>
+        </copy>
+
+	<copy todir="${build.jsp.dir}">
+	  <fileset dir="jsp"/>
+	</copy>
+
+	<copy todir="${build.WEB-INF.dir}">
+	  <fileset dir="WEB-INF"/>
+	</copy>
+
+    	<exec executable="chmod">
+           <arg value="+x"/>
+           <arg value="${build.dir}/bin/sparky"/>
+         </exec>
+    	
+    </target>
+
+    <target name="jar" depends="clean, compile">
+        <jar destfile="${build.dir}/${final.name}.jar" basedir="${tmp.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="${main-class}"/>
+                <attribute name="Class-Path" value="${cp}"/>
+            </manifest>
+        </jar>
+    </target>
+</project>

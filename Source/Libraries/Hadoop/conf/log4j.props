@@ -1,0 +1,25 @@
+
+log.dir=./logs/
+rrd.dir=${log.dir}/rrd
+datestamp=yyyy-MM-dd/HH:mm:ss.SSS/zzz
+roll.pattern.hourly=.yyyy-MM-dd.HH
+roll.pattern.daily=.yyyy-MM-dd
+
+
+# catchAll.log -- Default catch-all.
+log4j.rootLogger=DEBUG, defaultLog
+log4j.appender.defaultLog=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.defaultLog.DatePattern=${roll.pattern.daily}
+log4j.appender.defaultLog.File=${log.dir}/catchAll.log
+log4j.appender.defaultLog.layout=org.apache.log4j.PatternLayout
+log4j.appender.defaultLog.layout.ConversionPattern=%d{${datestamp}} [%t] %-5p %m%n
+
+# foo.log
+log4j.logger.gov.tva.sparky.util.indexer.IndexingAgent=ALL,fooLog
+log4j.logger.gov.tva.sparky.util.indexer.HBaseRestInterface=ALL,fooLog
+
+log4j.appender.fooLog=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.fooLog.File=${log.dir}/Instances.log
+log4j.appender.fooLog.DatePattern=${roll.pattern.hourly}
+log4j.appender.fooLog.layout=org.apache.log4j.PatternLayout
+log4j.appender.fooLog.layout.ConversionPattern=%d{${datestamp}}%p%m%n
