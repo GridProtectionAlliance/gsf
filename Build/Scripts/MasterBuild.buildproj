@@ -352,13 +352,12 @@
   <Target Name="CoreVersionSource" Condition="'@(FilesToVersion)' != '' And '$(SkipVersioning)' != 'true'">
     <!-- Update version number of the source code. -->
     <Message Text="Versioning source code..."/>
-    <Version VersionFile="$(VersionFile)" Major="$(VersionMajorChange)" Minor="$(VersionMinorChange)" BuildType="$(VersionBuildChange)" RevisionType="$(VersionRevisionChange)">
+    <Version VersionFile="$(VersionFile)" MajorType="$(VersionMajorChange)" MinorType="$(VersionMinorChange)" BuildType="$(VersionBuildChange)" RevisionType="$(VersionRevisionChange)">
       <Output TaskParameter="Major" PropertyName="Major"/>
       <Output TaskParameter="Minor" PropertyName="Minor"/>
       <Output TaskParameter="Build" PropertyName="Build"/>
       <Output TaskParameter="Revision" PropertyName="Revision"/>
     </Version>
-    <FileUpdate Files="$(VersionFile)" Regex="(\d+)\.(\d+)\.(\d+)\.(\d+)" ReplacementText="$1.$2.$3.$(Revision)"/>
     <FileUpdate Files="%(FilesToVersion.FullPath)" Regex="%(FilesToVersion.VersionRegex)" ReplacementText="${BeforeVersion}$(Major).$(Minor)${AfterVersion}" Condition="'%(FilesToVersion.VersionPrecision)' &lt;= '2'"/>
     <FileUpdate Files="%(FilesToVersion.FullPath)" Regex="%(FilesToVersion.VersionRegex)" ReplacementText="${BeforeVersion}$(Major).$(Minor).$(Build)${AfterVersion}" Condition="'%(FilesToVersion.VersionPrecision)' == '3'"/>
     <FileUpdate Files="%(FilesToVersion.FullPath)" Regex="%(FilesToVersion.VersionRegex)" ReplacementText="${BeforeVersion}$(Major).$(Minor).$(Build).$(Revision)${AfterVersion}" Condition="'%(FilesToVersion.VersionPrecision)' == '4'"/>
@@ -449,8 +448,8 @@
   <Target Name="CorePushToServer" Condition="'$(SkipVersioning)' != 'true'">
     <!-- Commit all of the pending changes. -->
     <Message Text="Pushing changes to Git server..." />
-    <Exec Command="%22$(GitClient)%22 push" WorkingDirectory="$(LocalFolder)" ContinueOnError="true"  />
-    <Exec Command="%22$(GitClient)%22 push --tags" WorkingDirectory="$(LocalFolder)" ContinueOnError="true"  />
+    <Exec Command="%22$(GitClient)%22 push origin $(GitBranch):$(GitBranch)" WorkingDirectory="$(LocalFolder)" ContinueOnError="true"  />
+    <Exec Command="%22$(GitClient)%22 push --tags origin $(GitBranch):$(GitBranch)" WorkingDirectory="$(LocalFolder)" ContinueOnError="true"  />
   </Target>
 
   <Target Name="AfterPushToServer"/>
