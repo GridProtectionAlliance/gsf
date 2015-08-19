@@ -49,7 +49,7 @@ FOR %%i IN (1 2 3) DO (
     IF "!update!" == "true" (
         ECHO Updating !db[%%i]!...
         
-        FOR /f %%v IN ('CALL sqlite3 !db[%%i]! "PRAGMA user_version') DO SET /a version=%%v+1
+        FOR /f %%v IN ('CALL sqlite3 !db[%%i]! "PRAGMA user_version"') DO SET /a version=%%v+1
         
         IF "!prevdb!" == "" (
             DEL !db[%%i]!
