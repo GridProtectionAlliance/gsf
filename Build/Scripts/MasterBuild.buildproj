@@ -125,10 +125,14 @@
     <BinariesArchiveFileName></BinariesArchiveFileName>
     <!-- Name of installs archive file. -->
     <InstallsArchiveFileName></InstallsArchiveFileName>
+    <!-- Name of source code archive file. -->
+    <SourceArchiveFileName></SourceArchiveFileName>
     <!-- Working directory for creating binaries archive file. -->
     <BinariesArchiveWorkingDirectory></BinariesArchiveWorkingDirectory>
     <!-- Working directory for creating installs archive file. -->
     <InstallsArchiveWorkingDirectory></InstallsArchiveWorkingDirectory>
+    <!-- Working directory for creating source code archive file. -->
+    <SourceArchiveWorkingDirectory></SourceArchiveWorkingDirectory>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -242,6 +246,8 @@
     <BinariesToArchive Include="Nothing" Exclude="Nothing"/>
     <!-- List of installs to archive. -->
     <InstallsToArchive Include="Nothing" Exclude="Nothing"/>
+    <!-- List of source code files to archive. -->
+    <SourcesToArchive Include="Nothing" Exclude="Nothing"/>
     <!-- Destinations of archive files (*.zip). -->
     <ArchiveDestinations Include="Nothing" Exclude="Nothing"/>
   </ItemGroup>
@@ -293,8 +299,10 @@
       <SkipVersioning Condition="'$(SkipVersioning)' == ''">false</SkipVersioning>
       <BinariesArchiveFileName Condition="'$(BinariesArchiveFileName)' == ''">$(LocalFolder)\$(ProjectName).Binaries.zip</BinariesArchiveFileName>
       <InstallsArchiveFileName Condition="'$(InstallsArchiveFileName)' == ''">$(LocalFolder)\$(ProjectName).Installs.zip</InstallsArchiveFileName>
+      <SourceArchiveFileName Condition="'$(SourceArchiveFileName)' == ''">$(LocalFolder)\$(ProjectName).Source.zip</SourceArchiveFileName>
       <BinariesArchiveWorkingDirectory Condition="'$(BinariesArchiveWorkingDirectory)' == ''">$(LocalFolder)\Archives\Binaries</BinariesArchiveWorkingDirectory>
       <InstallsArchiveWorkingDirectory Condition="'$(InstallsArchiveWorkingDirectory)' == ''">$(LocalFolder)\Archives\Installs</InstallsArchiveWorkingDirectory>
+      <SourceArchiveWorkingDirectory Condition="'$(SourceArchiveWorkingDirectory)' == ''">$(LocalFolder)\Archives\Source</SourceArchiveWorkingDirectory>
     </PropertyGroup>
   </Target>
 
@@ -423,6 +431,8 @@
     <Folder TaskAction="RemoveContent" Path="$(BuildDeployFolder)"/>
     <Copy SourceFiles="@(FilesToDeploy)" DestinationFolder="$(BuildDeployFolder)\%(FilesToDeploy.RecursiveDir)"/>
     <CallTarget Targets="ArchiveBuildOutput"/>
+    <CallTarget Targets="ArchiveSource"/>
+    <CallTarget Targets="DeployArchives"/>
   </Target>
 
   <Target Name="ArchiveBuildOutput" Condition="'@(BinariesToArchive)' != '' Or '@(InstallsToArchive)' != ''">
@@ -441,6 +451,23 @@
     <ItemGroup>
       <Archives Include="$(LocalFolder)\*.zip"/>
     </ItemGroup>
+  </Target>
+
+  <Target Name="ArchiveSource" Condition="'@(SourcesToArchive)' != ''">
+    <!-- Create archive of source tree. -->
+    <Message Text="Archiving source code..."/>
+    <Copy SourceFiles="@(SourcesToArchive)" DestinationFolder="$(SourceArchiveWorkingDirectory)\%(SourcesToArchive.RecursiveDir)"/>
+    <ItemGroup>
+      <SourcesToArchive Remove="@(SourcesToArchive)"/>
+      <SourcesToArchive Include="$(SourceArchiveWorkingDirectory)\**\*.*"/>
+    </ItemGroup>
+    <MSBuild.Community.Tasks.Zip Files="@(SourcesToArchive)" ZipFileName="$(SourceArchiveFileName)" WorkingDirectory="$(SourceArchiveWorkingDirectory)" Condition="'@(SourcesToArchive)' != ''"/>
+    <ItemGroup>
+      <Archives Include="$(SourceArchiveFileName)"/>
+    </ItemGroup>
+  </Target>
+  
+  <Target Name="DeployArchives" Condition="'@(Archives)' != ''">
     <Copy SourceFiles="@(Archives)" DestinationFolder="%(ArchiveDestinations.FullPath)" ContinueOnError="true"/>
   </Target>
 
