@@ -114,11 +114,11 @@
     <Message Text="SkipNuGetPackages = --$(SkipNuGetPackages)--"/>
     <ItemGroup>
       <!--List of files to be versioned.-->
-      <FilesToVersion Include="$(LocalFolder)\Source\**\AssemblyInfo.*">
+      <FilesToVersion Include="$(LocalFolder)\Source\**\AssemblyInfo.*" Exclude="$(LocalFolder)\Source\OldCode\**\*.*">
         <VersionRegex>(?'BeforeVersion'AssemblyVersion\(%22)(?'CoreVersion'(\*|\d+)\.)+(\*|\d+)(?'AfterVersion'%22\))</VersionRegex>
         <VersionPrecision>4</VersionPrecision>
       </FilesToVersion>
-      <FilesToVersion Include="$(LocalFolder)\Source\**\AssemblyInfo.*">
+      <FilesToVersion Include="$(LocalFolder)\Source\**\AssemblyInfo.*" Exclude="$(LocalFolder)\Source\OldCode\**\*.*">
         <VersionRegex>(?'BeforeVersion'AssemblyFileVersion\(%22)(?'CoreVersion'(\*|\d+)\.)+(\*|\d+)(?'AfterVersion'%22\))</VersionRegex>
         <VersionPrecision>4</VersionPrecision>
       </FilesToVersion>
