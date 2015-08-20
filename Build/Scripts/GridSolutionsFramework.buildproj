@@ -159,7 +159,7 @@
       <BuildScripts Include="$(LocalFolder)\Build\Scripts\**\*.*"/>
     
       <!--List of source code files to archive.-->
-      <SourcesToArchive Include="$(LocalFolder)\Source\**\*.*" Exclude="$(LocalFolder)\Source\**\obj\**\*.*"/>
+      <SourcesToArchive Include="$(LocalFolder)\Source\**\*.*" Exclude="$(LocalFolder)\Source\**\obj\**\*.*; $(LocalFolder)\Source\OldCode\**\*.*"/>
     
       <!--List of binaries to archive.-->
       <BinariesToArchive Include="$(BuildOutputFolder)\**\*.*" Exclude="$(BuildOutputFolder)\**\*.msi"/>
