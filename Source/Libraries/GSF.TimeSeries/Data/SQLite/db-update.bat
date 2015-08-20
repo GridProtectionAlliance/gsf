@@ -37,13 +37,13 @@ FOR %%i IN (1 2 3) DO (
     IF NOT "!update!" == "true" (
         ECHO Checking for pending edits on !script[%%i]!...
         FOR /f "delims=" %%s IN ('CALL %git% status --short !script[%%i]!') DO SET status=%%s
-        IF NOT "!status!" == "There are no pending changes." SET update=true
+        IF NOT "!status!" == "" SET update=true
     )
     
     IF NOT "!update!" == "true" (
         ECHO Checking for changes to !script[%%i]! since last update...
-        FOR /f "tokens=1" %%c IN ('CALL %git% log --max-count=1 --pretty=oneline !db[%%i]!') DO SET commit=%%c
-        FOR /f %%c IN ('CALL %git% log --max-count=1 --pretty=oneline !commit!.. !script[%%i]!') DO SET update=true
+        FOR /f "tokens=1" %%c IN ('CALL %git% log "--max-count=1" "--pretty=oneline" !db[%%i]!') DO SET commit=%%c
+        FOR /f %%c IN ('CALL %git% log "--max-count=1" "--pretty=oneline" !commit!.. !script[%%i]!') DO SET update=true
     )
     
     IF "!update!" == "true" (
