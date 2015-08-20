@@ -158,6 +158,9 @@
     </PropertyGroup>
       
     <ItemGroup>
+      <!--List of build scripts to deploy.-->
+      <BuildScripts Include="$(LocalFolder)\Build\Scripts\**\*.*"/>
+    
       <!--List of source code files to archive.-->
       <SourcesToArchive Include="$(LocalFolder)\Source\**\*.*" Exclude="$(LocalFolder)\Source\**\obj\**\*.*"/>
     
@@ -173,9 +176,16 @@
   </Target>
 
   <Target Name="AfterDeployBuild">
+    <CallTarget Targets="DeployBuildScripts"/>
     <CallTarget Targets="DeploySource"/>
     <CallTarget Targets="DeployHelpFiles"/>
     <!--<CallTarget Targets="PublishNuGetPackages"/>-->
+  </Target>
+  
+  <Target Name="DeployBuildScripts" Condition="'$(ForceBuild)' == 'true' And '$(BuildDeployFolder)' != ''">
+    <!-- Create archive of source tree. -->
+    <Message Text="Deploying build scripts..."/>
+    <Copy SourceFiles="@(BuildScripts)" DestinationFolder="$(BuildDeployFolder)\Build Scripts\%(BuildScripts.RecursiveDir)"/>
   </Target>
   
   <Target Name="DeploySource" Condition="'$(ForceBuild)' == 'true' And '$(BuildDeployFolder)' != ''">
