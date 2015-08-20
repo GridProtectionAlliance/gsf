@@ -329,9 +329,10 @@
     <Message Text="Getting source code..."/>
     <Exec Command="%22$(GitClient)%22 clone %22$(GitServer)%22 ." WorkingDirectory="$(LocalFolder)"/>
     <Exec Command="%22$(GitClient)%22 checkout %22$(GitBranch)%22" WorkingDirectory="$(LocalFolder)"/>
+    <CallTarget Targets="CheckForChanges"/>
   </Target>
 
-  <Target Name="AfterCloneRepository" Condition="'$(ForceBuild)' != 'true'">
+  <Target Name="CheckForChanges" Condition="'$(ForceBuild)' != 'true'">
     <!-- Check for new changes since the last build. -->
     <ReadLinesFromFile File="$(VersionFile)">
       <Output TaskParameter="Lines" ItemName="VersionNumber"/>
@@ -347,6 +348,7 @@
     <Message Text="Build is skipped - No new changes." Condition="'$(ForceBuild)' != 'true'"/>
   </Target>
   
+  <Target Name="AfterCloneRepository"/>
   <Target Name="BeforeVersionSource"/>
 
   <Target Name="CoreVersionSource" Condition="'@(FilesToVersion)' != '' And '$(SkipVersioning)' != 'true'">
