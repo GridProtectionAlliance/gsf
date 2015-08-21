@@ -1,0 +1,11 @@
+﻿Very careful consideration should be taken when adding objects to the .NET System namespace.
+In general, the following rules should apply:
+
+1) The object name should not conflict with any existing .NET objects.
+2) The object should naturally extend the .NET libraries (as if item were missing from .NET).
+3) Object should be pure and generally not rely on classes outside of system namespace.
+4) If item will naturally fit within another namespace, put it there instead.  Remember
+   that anything added to this namespace "becomes" part of .NET and hence should be
+   extremely well documented and directly compliment the .NET System namespace.
+
+Ritchie
