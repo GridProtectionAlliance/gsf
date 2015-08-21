@@ -1,0 +1,275 @@
+
+
+2007-12-10 7:52:29.514
+
+Task No. 0:
+Mode 0:
+Frequency = 1.2355 Hz, Damping Ratio = 0.0165
+Mode 1:
+Frequency = 0.4168 Hz, Damping Ratio = 0.0276
+
+Task No. 1:
+Mode 0:
+Frequency = 1.2350 Hz, Damping Ratio = 0.0155
+Mode 1:
+Frequency = 0.4161 Hz, Damping Ratio = 0.0532
+Mode 2 may be underestimated:
+Frequency = 0.2331 Hz, Damping Ratio = 0.0860
+
+
+2007-12-10 7:52:31.56
+
+Task No. 0:
+Mode 0:
+Frequency = 1.2348 Hz, Damping Ratio = 0.0191
+Mode 1:
+Frequency = 0.4164 Hz, Damping Ratio = 0.0236
+Mode 2 may be underestimated:
+Frequency = 0.2330 Hz, Damping Ratio = 0.0718
+Mode 3 may be underestimated:
+Frequency = 0.8336 Hz, Damping Ratio = 0.0049
+
+Task No. 1:
+Mode 0:
+Frequency = 1.2347 Hz, Damping Ratio = 0.0176
+Mode 1:
+Frequency = 0.4156 Hz, Damping Ratio = 0.0438
+Mode 2:
+Frequency = 0.2335 Hz, Damping Ratio = 0.0754
+
+
+2007-12-10 7:52:32.488
+
+Task No. 0:
+Mode 0:
+Frequency = 1.2354 Hz, Damping Ratio = 0.0210
+Mode 1:
+Frequency = 0.4153 Hz, Damping Ratio = 0.0256
+Mode 2 may be underestimated:
+Frequency = 0.2271 Hz, Damping Ratio = 0.0816
+Mode 3 is not reliable:
+Frequency = 0.8335 Hz, Damping Ratio = 0.0049
+
+Task No. 1:
+Mode 0:
+Frequency = 1.2351 Hz, Damping Ratio = 0.0194
+Mode 1:
+Frequency = 0.4197 Hz, Damping Ratio = 0.0439
+Mode 2:
+Frequency = 0.2345 Hz, Damping Ratio = 0.1017
+Mode 3 is not reliable:
+Frequency = 0.8336 Hz, Damping Ratio = 0.0049
+
+
+2007-12-10 7:52:34.51
+
+Task No. 0:
+Mode 0:
+Frequency = 1.2348 Hz, Damping Ratio = 0.0187
+Mode 1:
+Frequency = 0.4160 Hz, Damping Ratio = 0.0307
+
+Task No. 1:
+Mode 0:
+Frequency = 1.2346 Hz, Damping Ratio = 0.0172
+Mode 1:
+Frequency = 0.3789 Hz, Damping Ratio = 0.0740
+
+
+2007-12-10 7:52:35.72
+
+Task No. 0:
+Mode 0:
+Frequency = 1.2323 Hz, Damping Ratio = 0.0161
+Mode 1:
+Frequency = 0.4139 Hz, Damping Ratio = 0.0159
+Mode 2:
+Frequency = 0.2307 Hz, Damping Ratio = 0.0622
+
+Task No. 1:
+Mode 0:
+Frequency = 1.2326 Hz, Damping Ratio = 0.0150
+Mode 1:
+Frequency = 0.4151 Hz, Damping Ratio = 0.0529
+Mode 2:
+Frequency = 0.2317 Hz, Damping Ratio = 0.0631
+
+
+2007-12-10 7:52:36.414
+
+Task No. 0:
+Mode 0:
+Frequency = 1.2332 Hz, Damping Ratio = 0.0146
+Mode 1:
+Frequency = 0.4152 Hz, Damping Ratio = 0.0184
+
+Task No. 1:
+Mode 0:
+Frequency = 1.2316 Hz, Damping Ratio = 0.0162
+Mode 1:
+Frequency = 0.4156 Hz, Damping Ratio = 0.0486
+
+
+2007-12-10 7:52:37.496
+
+Task No. 0:
+Mode 0:
+Frequency = 1.2335 Hz, Damping Ratio = 0.0148
+Mode 1:
+Frequency = 0.4210 Hz, Damping Ratio = 0.0462
+
+Task No. 1:
+Mode 0:
+Frequency = 1.2332 Hz, Damping Ratio = 0.0149
+Mode 1:
+Frequency = 0.4181 Hz, Damping Ratio = 0.0493
+
+
+2007-12-10 7:52:38.497
+
+Task No. 0:
+Mode 0:
+Frequency = 1.2353 Hz, Damping Ratio = 0.0143
+Mode 1:
+Frequency = 0.4126 Hz, Damping Ratio = 0.0301
+
+Task No. 1:
+Mode 0:
+Frequency = 1.2350 Hz, Damping Ratio = 0.0144
+Mode 1:
+Frequency = 0.4089 Hz, Damping Ratio = 0.0641
+
+
+2007-12-10 7:52:39.488
+
+Task No. 0:
+Mode 0:
+Frequency = 1.2366 Hz, Damping Ratio = 0.0156
+Mode 1:
+Frequency = 0.4208 Hz, Damping Ratio = 0.0409
+
+Task No. 1:
+Mode 0:
+Frequency = 1.2362 Hz, Damping Ratio = 0.0158
+Mode 1:
+Frequency = 0.4191 Hz, Damping Ratio = 0.0465
+
+
+2007-12-10 7:52:40.530
+
+Task No. 0:
+Mode 0:
+Frequency = 1.2358 Hz, Damping Ratio = 0.0151
+Mode 1:
+Frequency = 0.4154 Hz, Damping Ratio = 0.0119
+
+Task No. 1:
+Mode 0:
+Frequency = 1.2355 Hz, Damping Ratio = 0.0151
+Mode 1:
+Frequency = 0.4195 Hz, Damping Ratio = 0.0594
+
+
+2007-12-10 7:52:41.571
+
+Task No. 0:
+Mode 0:
+Frequency = 1.2345 Hz, Damping Ratio = 0.0155
+Mode 1:
+Frequency = 0.4162 Hz, Damping Ratio = 0.0131
+
+Task No. 1:
+Mode 0:
+Frequency = 1.2343 Hz, Damping Ratio = 0.0153
+Mode 1:
+Frequency = 0.4200 Hz, Damping Ratio = 0.0561
+
+
+2007-12-10 7:52:42.613
+
+Task No. 0:
+Mode 0:
+Frequency = 1.2342 Hz, Damping Ratio = 0.0147
+Mode 1:
+Frequency = 0.4164 Hz, Damping Ratio = 0.0117
+
+Task No. 1:
+Mode 0:
+Frequency = 1.2341 Hz, Damping Ratio = 0.0148
+Mode 1:
+Frequency = 0.4184 Hz, Damping Ratio = 0.0309
+
+
+2007-12-10 7:52:43.594
+
+Task No. 0:
+Mode 0:
+Frequency = 1.2383 Hz, Damping Ratio = 0.0143
+Mode 1:
+Frequency = 0.4212 Hz, Damping Ratio = 0.0494
+
+Task No. 1:
+Mode 0:
+Frequency = 1.2384 Hz, Damping Ratio = 0.0139
+Mode 1:
+Frequency = 0.4190 Hz, Damping Ratio = 0.0616
+
+
+2007-12-10 7:52:44.576
+
+Task No. 0:
+Mode 0:
+Frequency = 1.2388 Hz, Damping Ratio = 0.0130
+Mode 1:
+Frequency = 0.4203 Hz, Damping Ratio = 0.0492
+
+Task No. 1:
+Mode 0:
+Frequency = 1.2388 Hz, Damping Ratio = 0.0131
+Mode 1:
+Frequency = 0.4204 Hz, Damping Ratio = 0.0522
+
+
+2007-12-10 7:52:45.567
+
+Task No. 0:
+Mode 0:
+Frequency = 1.2389 Hz, Damping Ratio = 0.0111
+Mode 1:
+Frequency = 0.4146 Hz, Damping Ratio = 0.0247
+
+Task No. 1:
+Mode 0:
+Frequency = 1.2388 Hz, Damping Ratio = 0.0112
+Mode 1:
+Frequency = 0.4204 Hz, Damping Ratio = 0.0544
+
+
+2007-12-10 7:52:46.569
+
+Task No. 0:
+Mode 0:
+Frequency = 1.2410 Hz, Damping Ratio = 0.0104
+Mode 1:
+Frequency = 0.4223 Hz, Damping Ratio = 0.0404
+
+Task No. 1:
+Mode 0:
+Frequency = 1.2409 Hz, Damping Ratio = 0.0102
+Mode 1:
+Frequency = 0.4202 Hz, Damping Ratio = 0.0489
+
+
+2007-12-10 7:52:47.560
+
+Task No. 0:
+Mode 0:
+Frequency = 1.2413 Hz, Damping Ratio = 0.0088
+Mode 1:
+Frequency = 0.4214 Hz, Damping Ratio = 0.0442
+
+Task No. 1:
+Mode 0:
+Frequency = 1.2412 Hz, Damping Ratio = 0.0087
+Mode 1:
+Frequency = 0.4208 Hz, Damping Ratio = 0.0515
