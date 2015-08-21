@@ -1,0 +1,64 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "DatAWare PDC", "DatAWare PDC.vbproj", "{8B700A21-92AC-42F5-95C2-5E84DE7FF8A3}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "ConsoleMonitor", "ConsoleMonitor\ConsoleMonitor.vbproj", "{211C2962-0C40-4608-A1F4-2073EAF4C470}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "Setup\Setup.vdproj", "{D14EDEE5-3FFA-4F9D-A4FE-3C7825654027}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "GenPasswordKey", "GenPasswordKey\GenPasswordKey.vbproj", "{88C3D4D6-D963-4B6B-AA07-02ABFED245B7}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SourceCodeControl) = preSolution
+		SccNumberOfProjects = 5
+		SccLocalPath0 = .
+		CanCheckoutShared = false
+		SolutionUniqueID = {18F549A6-984E-4F10-AF71-718A415556DE}
+		SccProjectUniqueName1 = ConsoleMonitor\\ConsoleMonitor.vbproj
+		SccLocalPath1 = .
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection1 = ConsoleMonitor\\
+		SccProjectUniqueName2 = DatAWare\u0020PDC.vbproj
+		SccLocalPath2 = .
+		CanCheckoutShared = false
+		SccProjectUniqueName3 = GenPasswordKey\\GenPasswordKey.vbproj
+		SccLocalPath3 = .
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection3 = GenPasswordKey\\
+		SccProjectUniqueName4 = Setup\\Setup.vdproj
+		SccLocalPath4 = .
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection4 = Setup\\
+	EndGlobalSection
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{8B700A21-92AC-42F5-95C2-5E84DE7FF8A3}.Debug.ActiveCfg = Debug|.NET
+		{8B700A21-92AC-42F5-95C2-5E84DE7FF8A3}.Debug.Build.0 = Debug|.NET
+		{8B700A21-92AC-42F5-95C2-5E84DE7FF8A3}.Release.ActiveCfg = Release|.NET
+		{8B700A21-92AC-42F5-95C2-5E84DE7FF8A3}.Release.Build.0 = Release|.NET
+		{211C2962-0C40-4608-A1F4-2073EAF4C470}.Debug.ActiveCfg = Debug|.NET
+		{211C2962-0C40-4608-A1F4-2073EAF4C470}.Debug.Build.0 = Debug|.NET
+		{211C2962-0C40-4608-A1F4-2073EAF4C470}.Release.ActiveCfg = Release|.NET
+		{211C2962-0C40-4608-A1F4-2073EAF4C470}.Release.Build.0 = Release|.NET
+		{D14EDEE5-3FFA-4F9D-A4FE-3C7825654027}.Debug.ActiveCfg = Debug
+		{D14EDEE5-3FFA-4F9D-A4FE-3C7825654027}.Release.ActiveCfg = Release
+		{88C3D4D6-D963-4B6B-AA07-02ABFED245B7}.Debug.ActiveCfg = Debug|.NET
+		{88C3D4D6-D963-4B6B-AA07-02ABFED245B7}.Debug.Build.0 = Debug|.NET
+		{88C3D4D6-D963-4B6B-AA07-02ABFED245B7}.Release.ActiveCfg = Release|.NET
+		{88C3D4D6-D963-4B6B-AA07-02ABFED245B7}.Release.Build.0 = Release|.NET
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal

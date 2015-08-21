@@ -1,0 +1,40 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "BpaPdcLoader", "BpaPdcLoader.vbproj", "{CAC01EDA-DC3D-41FB-9F4A-228035E69012}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "Setup\Setup.vdproj", "{37ADD255-E7CE-406C-852E-FFE5FCF55FAC}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SourceCodeControl) = preSolution
+		SccNumberOfProjects = 3
+		SccLocalPath0 = .
+		CanCheckoutShared = false
+		SolutionUniqueID = {F7ED603B-178F-45A9-AE6F-A7CF1AC79862}
+		SccProjectUniqueName1 = BpaPdcLoader.vbproj
+		SccLocalPath1 = .
+		CanCheckoutShared = false
+		SccProjectUniqueName2 = Setup\\Setup.vdproj
+		SccLocalPath2 = .
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection2 = Setup\\
+	EndGlobalSection
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{CAC01EDA-DC3D-41FB-9F4A-228035E69012}.Debug.ActiveCfg = Debug|.NET
+		{CAC01EDA-DC3D-41FB-9F4A-228035E69012}.Debug.Build.0 = Debug|.NET
+		{CAC01EDA-DC3D-41FB-9F4A-228035E69012}.Release.ActiveCfg = Release|.NET
+		{CAC01EDA-DC3D-41FB-9F4A-228035E69012}.Release.Build.0 = Release|.NET
+		{37ADD255-E7CE-406C-852E-FFE5FCF55FAC}.Debug.ActiveCfg = Debug
+		{37ADD255-E7CE-406C-852E-FFE5FCF55FAC}.Release.ActiveCfg = Release
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal
