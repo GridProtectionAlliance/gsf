@@ -1,0 +1,130 @@
+Variable Initialization Log - 10/09/2003 3:39:39 PM
+Provided Config File Name: C:\Documents and Settings\jrcarrol\My Documents\Visual Studio Projects\Tests\ApplicationVariablesTest\Variables.config
+
+-----------------------------------------------------------------------
+Variable Initialization Log - 10/09/2003 3:40:32 PM
+Provided Config File Name: C:\Documents and Settings\jrcarrol\My Documents\Visual Studio Projects\Tests\ApplicationVariablesTest\Variables.config
+
+UnspecifiedTest2 [Text] = 10/09/2003 3:39:40 PM
+UnspecifiedTest [Text] = 123
+StringTest [Text] = YadaYadaYada
+UndeterminedTest2 [Undetermined] = 10/09/2003 3:39:40 PM
+UndeterminedTest [Undetermined] = ---
+UnspecifiedTest3 [Text] = hohoho
+DateTest [DATE] = 10/09/2003 3:39:40 PM
+BoolTest2 [BOOL] = false
+BoolTest1 [BOOL] = true
+EvalTest [EVAL] = Thu Oct 9 15:40:32 EDT 2003
+FloatTest [FLOAT] = 12.456798553466797
+IntTest [INT] = 12
+NewTest [INT] = 12
+CanYouUseMe3 [INT] = 12
+-----------------------------------------------------------------------
+Variable Initialization Log - 10/09/2003 3:41:06 PM
+Provided Config File Name: C:\Documents and Settings\jrcarrol\My Documents\Visual Studio Projects\Tests\ApplicationVariablesTest\Variables.config
+
+UnspecifiedTest2 [Text] = 10/09/2003 3:39:40 PM
+UnspecifiedTest [Text] = 123
+StringTest [Text] = YadaYadaYada
+UndeterminedTest2 [Undetermined] = 10/09/2003 3:39:40 PM
+UndeterminedTest [Undetermined] = ---
+UnspecifiedTest3 [Text] = hohoho
+DateTest [DATE] = 10/09/2003 3:39:40 PM
+BoolTest2 [BOOL] = false
+BoolTest1 [BOOL] = true
+EvalTest [EVAL] = Thu Oct 9 15:41:06 EDT 2003
+FloatTest [FLOAT] = 12.456798553466797
+IntTest [INT] = 12
+NewTest [INT] = 12
+CanYouUseMe3 [INT] = 12
+-----------------------------------------------------------------------
+Variable Initialization Log - 10/09/2003 3:42:03 PM
+Provided Config File Name: C:\Documents and Settings\jrcarrol\My Documents\Visual Studio Projects\Tests\ApplicationVariablesTest\Variables.config
+
+UnspecifiedTest2 [Text] = 10/09/2003 3:39:40 PM
+UnspecifiedTest [Text] = 123
+StringTest [Text] = YadaYadaYada
+UndeterminedTest2 [Undetermined] = 10/09/2003 3:39:40 PM
+UndeterminedTest [Undetermined] = ---
+UnspecifiedTest3 [Text] = hohoho
+DateTest [DATE] = 10/09/2003 3:39:40 PM
+BoolTest2 [BOOL] = false
+BoolTest1 [BOOL] = true
+EvalTest [EVAL] = Thu Oct 9 15:42:03 EDT 2003
+FloatTest [FLOAT] = 12.456798553466797
+IntTest [INT] = 12
+NewTest [INT] = 12
+CanYouUseMe3 [INT] = 12
+-----------------------------------------------------------------------
+Variable Initialization Log - 10/09/2003 3:50:32 PM
+Provided Config File Name: C:\Documents and Settings\jrcarrol\My Documents\Visual Studio Projects\Tests\ApplicationVariablesTest\Variables.config
+
+UnspecifiedTest2 [Text] = 10/09/2003 3:39:40 PM
+UnspecifiedTest [Text] = 123
+StringTest [Text] = YadaYadaYada
+UndeterminedTest2 [Undetermined] = 10/09/2003 3:39:40 PM
+UndeterminedTest [Undetermined] = ---
+UnspecifiedTest3 [Text] = hohoho
+DateTest [DATE] = 10/09/2003 3:39:40 PM
+BoolTest2 [BOOL] = false
+BoolTest1 [BOOL] = true
+EvalTest [EVAL] = Thu Oct 9 15:50:32 EDT 2003
+FloatTest [FLOAT] = 12.456798553466797
+IntTest [INT] = 12
+NewTest [INT] = 12
+CanYouUseMe3 [INT] = 12
+-----------------------------------------------------------------------
+Variable Initialization Log - 10/09/2003 3:52:44 PM
+Provided Config File Name: C:\Documents and Settings\jrcarrol\My Documents\Visual Studio Projects\Tests\ApplicationVariablesTest\Variables.config
+
+UnspecifiedTest2 [Text] = 10/09/2003 3:39:40 PM
+UnspecifiedTest [Text] = 123
+StringTest [Text] = YadaYadaYada
+UndeterminedTest2 [Undetermined] = 10/09/2003 3:39:40 PM
+UndeterminedTest [Undetermined] = ---
+UnspecifiedTest3 [Text] = hohoho
+DateTest [DATE] = 10/09/2003 3:50:32 PM
+BoolTest2 [BOOL] = false
+BoolTest1 [BOOL] = true
+EvalTest [EVAL] = Thu Oct 9 15:52:44 EDT 2003
+FloatTest [FLOAT] = 12.456798553466797
+IntTest [INT] = 12
+NewTest [INT] = 12
+CanYouUseMe3 [INT] = 12
+-----------------------------------------------------------------------
+Variable Initialization Log - 10/09/2003 3:57:31 PM
+Provided Config File Name: C:\Documents and Settings\jrcarrol\My Documents\Visual Studio Projects\Tests\ApplicationVariablesTest\Variables.config
+
+UnspecifiedTest2 [Text] = 10/09/2003 3:39:40 PM
+UnspecifiedTest [Text] = 123
+StringTest [Text] = YadaYadaYada
+UndeterminedTest2 [Undetermined] = 10/09/2003 3:39:40 PM
+UndeterminedTest [Undetermined] = ---
+UnspecifiedTest3 [Text] = hohoho
+DateTest [DATE] = 05/05/2000 1:52:24 PM
+BoolTest2 [BOOL] = false
+BoolTest1 [BOOL] = true
+EvalTest [EVAL] = Thu Oct 9 15:57:31 EDT 2003
+FloatTest [FLOAT] = 12.456798553466797
+IntTest [INT] = 12
+NewTest [INT] = 12
+CanYouUseMe3 [INT] = 12
+-----------------------------------------------------------------------
+Variable Initialization Log - 11/06/2003 2:39:04 PM
+Provided Config File Name: C:\Documents and Settings\jrcarrol\My Documents\Visual Studio Projects\Tests\ApplicationVariablesTest\Variables.config
+
+UnspecifiedTest2 [Text] = 10/09/2003 3:39:40 PM
+UnspecifiedTest [Text] = 123
+StringTest [Text] = YadaYadaYada
+UndeterminedTest2 [Undetermined] = 10/09/2003 3:39:40 PM
+UndeterminedTest [Undetermined] = ---
+UnspecifiedTest3 [Text] = hohoho
+DateTest [DATE] = 10/09/2003 3:57:31 PM
+BoolTest2 [BOOL] = false
+BoolTest1 [BOOL] = true
+EvalTest [EVAL] = Thu Nov 6 14:39:04 EST 2003
+FloatTest [FLOAT] = 12.456798553466797
+IntTest [INT] = 12
+NewTest [INT] = 12
+CanYouUseMe3 [INT] = 12
+-----------------------------------------------------------------------

@@ -1,0 +1,697 @@
+<?xml version="1.0" ?>
+<doc>
+	<assembly>
+		<name>TVACodeLibrary</name>
+	</assembly>
+	<members>
+		<member name="T:TVACodeLibrary.ASPBasePage">
+			<summary>Base page for ASP.NET pages</summary>
+		</member>
+		<member name="M:TVACodeLibrary.ASPBasePage.Page_Load(System.Object,System.EventArgs)">
+			<summary>Overridden page load - adds common notation to pages written using this utility</summary>
+		</member>
+		<member name="M:TVACodeLibrary.ASPBasePage.Arg(System.String@)">
+			<summary>Argument shortcut function - equivalent to Request(Name)</summary>
+			<param name="Name">Name of parameter</param>
+		</member>
+		<member name="M:TVACodeLibrary.ASPBasePage.PostArg(System.String@)">
+			<summary>Argument shortcut function - equivalent to Request.Form(Name)</summary>
+			<param name="Name">Name of parameter</param>
+		</member>
+		<member name="M:TVACodeLibrary.ASPBasePage.SearchArg(System.String@)">
+			<summary>Argument shortcut function - equivalent to Request.QueryString(Name)</summary>
+			<param name="Name">Name of parameter</param>
+		</member>
+        <member name="M:TVACodeLibrary.ASPBasePage.PostArgItem(System.String@,System.Int32)">
+            <summary>Argument shortcut function - equivalent to Request.Form.GetValues(Name)(Index)</summary>
+            <param name="Name">Name of array parameter</param>
+            <param name="Index">Index into array</param>
+        </member>
+        <member name="M:TVACodeLibrary.ASPBasePage.SearchArgItem(System.String@,System.Int32)">
+            <summary>Argument shortcut function - equivalent to Request.QueryString.GetValues(Name)(Index)</summary>
+            <param name="Name">Name of array parameter</param>
+            <param name="Index">Index into array</param>
+        </member>
+        <member name="M:TVACodeLibrary.ASPBasePage.PostArgItemCount(System.String@)">
+            <summary>Argument shortcut function - equivalent to Request.Form.GetValues(Name).Length</summary>
+            <param name="Name">Parameter 1 definition</param>
+        </member>
+        <member name="M:TVACodeLibrary.ASPBasePage.SearchArgItemCount(System.String@)">
+            <summary>Argument shortcut function - equivalent to Request.QueryString.GetValues(Name).Length</summary>
+            <param name="Name">Parameter 1 definition</param>
+        </member>
+		<member name="M:TVACodeLibrary.ASPBasePage.RequiredArg(System.String@)">
+			<summary>Required argument shortcut function, response ends if argument not provided - equivalent to Request(Name)</summary>
+			<param name="Name">Name of parameter</param>
+		</member>
+		<member name="M:TVACodeLibrary.ASPBasePage.RequiredPostArg(System.String@)">
+			<summary>Required argument shortcut function, response ends if argument not provided - equivalent to Request.Form(Name)</summary>
+			<param name="Name">Name of parameter</param>
+		</member>
+		<member name="M:TVACodeLibrary.ASPBasePage.RequiredSearchArg(System.String@)">
+			<summary>Required argument shortcut function, response ends if argument not provided - equivalent to Request.QueryString(Name)</summary>
+			<param name="Name">Name of parameter</param>
+		</member>
+        <member name="M:TVACodeLibrary.ASPBasePage.RequiredPostArgItem(System.String@,System.Int32)">
+            <summary>Required argument shortcut function, response ends if argument not provided - equivalent to Request.Form.GetValues(Name)(Index)</summary>
+            <param name="Name">Name of array parameter</param>
+            <param name="Index">Index into array</param>
+        </member>
+        <member name="M:TVACodeLibrary.ASPBasePage.RequiredSearchArgItem(System.String@,System.Int32)">
+            <summary>Required argument shortcut function, response ends if argument not provided - equivalent to Request.QueryString.GetValues(Name)(Index)</summary>
+            <param name="Name">Name of array parameter</param>
+            <param name="Index">Index into array</param>
+        </member>
+		<member name="M:TVACodeLibrary.ASPBasePage.ArgIs(System.String@,System.String@)">
+			<summary>Argument shortcut function - returns True if argument is equal to specified value (uses case insensitive comparsion equivalent to Request(Name) = Value)</summary>
+			<param name="Name">Name of parameter</param>
+			<param name="Value">Value to test</param>
+		</member>
+		<member name="M:TVACodeLibrary.ASPBasePage.SearchArgIs(System.String@,System.String@)">
+			<summary>Argument shortcut function - returns True if argument is equal to specified value (uses case insensitive comparsion equivalent to Request.QueryString(Name) = Value)</summary>
+			<param name="Name">Name of parameter</param>
+			<param name="Value">Value to test</param>
+		</member>
+        <member name="M:TVACodeLibrary.ASPBasePage.SearchArgItemIs(System.String@,System.String@,System.Int32)">
+            <summary>Argument shortcut function - returns True if argument is equal to specified value (uses case insensitive comparsion equivalent to Request.QueryString.GetValues(Name)(Index) = Value)</summary>
+            <param name="Name">Name of array parameter</param>
+            <param name="Value">Value to test</param>
+            <param name="Index">Index into array</param>
+        </member>
+		<member name="M:TVACodeLibrary.ASPBasePage.PostArgIs(System.String@,System.String@)">
+			<summary>Argument shortcut function - returns True if argument is equal to specified value (uses case insensitive comparsion equivalent to Request.Form(Name) = Value)</summary>
+			<param name="Name">Name of parameter</param>
+			<param name="Value">Value to test</param>
+		</member>
+        <member name="M:TVACodeLibrary.ASPBasePage.PostArgItemIs(System.String@,System.String@,System.Int32)">
+            <summary>Argument shortcut function - returns True if argument is equal to specified value (uses case insensitive comparsion equivalent to Request.Form.GetValues(Name)(Index) = Value)</summary>
+            <param name="Name">Name of array parameter</param>
+            <param name="Value">Value to test</param>
+            <param name="Index">Index into array</param>
+        </member>
+		<member name="M:TVACodeLibrary.ASPBasePage.ArgIsEmpty(System.String@)">
+			<summary>Argument shortcut function - returns True if argument is empty (equivalent to Len(Request(Name)) = 0)</summary>
+			<param name="Name">Name of parameter</param>
+		</member>
+		<member name="M:TVACodeLibrary.ASPBasePage.SearchArgIsEmpty(System.String@)">
+			<summary>Argument shortcut function - returns True if argument is empty (equivalent to Len(Request.QueryString(Name)) = 0)</summary>
+			<param name="Name">Name of parameter</param>
+		</member>
+        <member name="M:TVACodeLibrary.ASPBasePage.SearchArgItemIsEmpty(System.String@,System.Int32)">
+            <summary>Argument shortcut function - returns True if argument is empty (equivalent to Len(Request.QueryString.GetValues(Name)(Index)) = 0)</summary>
+            <param name="Name">Name of array parameter</param>
+            <param name="Index">Index into array</param>
+        </member>
+		<member name="M:TVACodeLibrary.ASPBasePage.PostArgIsEmpty(System.String@)">
+			<summary>Argument shortcut function - returns True if argument is empty (equivalent to Len(Request.Form(Name)) = 0)</summary>
+			<param name="Name">Name of parameter</param>
+		</member>
+        <member name="M:TVACodeLibrary.ASPBasePage.PostArgItemIsEmpty(System.String@,System.Int32)">
+            <summary>Argument shortcut function - returns True if argument is empty (equivalent to Len(Request.Form.GetValues(Name)(Index)) = 0)</summary>
+            <param name="Name">Name of array parameter</param>
+            <param name="Index">Index into array</param>
+        </member>
+		<member name="M:TVACodeLibrary.ASPBasePage.NumericArg(System.String@,System.Boolean)">
+			<summary>Argument shortcut function - insures returned blank numeric arguments come back with a "0" instead of blank</summary>
+			<param name="Name">Name of parameter</param>
+			<param name="WithDecimal">Set to True to return 0.0</param>
+		</member>
+        <member name="M:TVACodeLibrary.ASPBasePage.DBBoolArg(System.String@)">
+            <summary>Argument shortcut function for checkbox field - returns a 1 or 0 integer value for checked/unchecked</summary>
+            <param name="Name">Parameter 1 definition</param>
+        </member>
+		<member name="M:TVACodeLibrary.ASPBasePage.YesNoArg(System.String@)">
+			<summary>Argument shortcut function for checkbox field - returns a "Yes" or "No" string value for checked/unchecked</summary>
+			<param name="Name">Name of parameter</param>
+		</member>
+		<member name="M:TVACodeLibrary.ASPBasePage.YNArg(System.String@)">
+			<summary>Argument shortcut function for checkbox field - returns a "Y" or "N" string value for checked/unchecked</summary>
+			<param name="Name">Name of parameter</param>
+		</member>
+		<member name="M:TVACodeLibrary.ASPBasePage.BoolArg(System.String@)">
+			<summary>Argument shortcut function for checkbox field - returns a True or False boolean value for checked/unchecked</summary>
+			<param name="Name">Name of parameter</param>
+		</member>
+		<member name="T:TVACodeLibrary.BitFunctions">
+			<summary>Bit Manipulation Functions</summary>
+		</member>
+		<member name="M:TVACodeLibrary.BitFunctions.HiByte(System.Int16)">
+			<summary>Returns the high byte (Int8) from a word (Int16)</summary>
+			<param name="w">Word parameter</param>
+		</member>
+		<member name="M:TVACodeLibrary.BitFunctions.HiWord(System.Int32)">
+			<summary>Returns the high word (Int16) from a double word (Int32)</summary>
+			<param name="dw">Double-word parameter</param>
+		</member>
+		<member name="M:TVACodeLibrary.BitFunctions.LoByte(System.Int16)">
+			<summary>Returns the low byte (Int8) from a word (Int16)</summary>
+			<param name="w">Word parameter</param>
+		</member>
+		<member name="M:TVACodeLibrary.BitFunctions.LoWord(System.Int32)">
+			<summary>Returns the low word (Int16) from a double word (Int32)</summary>
+			<param name="dw">Double-word parameter</param>
+		</member>
+		<member name="M:TVACodeLibrary.BitFunctions.LShiftWord(System.Int16,System.Int16)">
+			<summary>Bits shifts word (Int16) value to the left "n" times</summary>
+			<param name="w">Word parameter</param>
+			<param name="n">Number of times to bits shift to the left</param>
+		</member>
+		<member name="M:TVACodeLibrary.BitFunctions.RShiftWord(System.Int16,System.Int16)">
+			<summary>Bits shifts word (Int16) value to the right "n" times</summary>
+			<param name="w">Word parameter</param>
+			<param name="n">Number of times to bits shift to the right</param>
+		</member>
+		<member name="M:TVACodeLibrary.BitFunctions.MakeWord(System.Byte,System.Byte)">
+			<summary>Makes a word (Int16) from two bytes (Int8)</summary>
+			<param name="bHi">High byte parameter</param>
+			<param name="bLo">Low byte parameter</param>
+		</member>
+		<member name="M:TVACodeLibrary.BitFunctions.MakeDWord(System.Int16,System.Int16)">
+			<summary>Makes a double word (Int32) from two words (Int16)</summary>
+			<param name="wHi">High word parameter</param>
+			<param name="wLo">Low word parameter</param>
+		</member>
+		<member name="T:TVACodeLibrary.CommonFunctions">
+			<summary>Common Functions</summary>
+		</member>
+		<member name="M:TVACodeLibrary.CommonFunctions.InList(System.Object,System.Object[])">
+			<summary>Returns True if specified item is in parameter list</summary>
+			<param name="Item">Test item</param>
+			<param name="ParamArray ItemList">Test list</param>
+		</member>
+		<member name="M:TVACodeLibrary.CommonFunctions.StrInList(System.String@,Microsoft.VisualBasic.CompareMethod,System.String[])">
+			<summary>Returns True if specified string is in parameter list (allows for case-sensitive text comparisons)</summary>
+			<param name="Item">Test item</param>
+			<param name="Compare">String comparision method</param>
+			<param name="ParamArray ItemList">Test list</param>
+		</member>
+		<member name="M:TVACodeLibrary.CommonFunctions.ArrayContains(System.Object,System.Object)">
+			<summary>Returns True if specified item exists in given array</summary>
+			<param name="Item">Test item</param>
+			<param name="ArrayItems">Test array</param>
+		</member>
+		<member name="M:TVACodeLibrary.CommonFunctions.Delay(System.Single)">
+			<summary>Pauses execution for specified number of seconds</summary>
+			<param name="DelaySeconds">Pause time in seconds</param>
+		</member>
+		<member name="M:TVACodeLibrary.CommonFunctions.IsObject(System.Object)">
+			<summary>Determines if given item is an object (i.e., a class instance - a reference type but not a string or an array)</summary>
+			<param name="Item">Test item</param>
+		</member>
+		<member name="M:TVACodeLibrary.CommonFunctions.Maximum(System.Object[])">
+			<summary>Returns largest item from list of parameters</summary>
+			<param name="ParamArray ItemList">Test list</param>
+		</member>
+		<member name="M:TVACodeLibrary.CommonFunctions.Minimum(System.Object[])">
+			<summary>Returns smallest item from list of parameters</summary>
+			<param name="ParamArray ItemList">Test list</param>
+		</member>
+        <member name="M:TVACodeLibrary.CommonFunctions.SendMail(System.String@,System.String@,System.String@,System.String@,System.String@,System.Web.Mail.MailPriority)">
+            <summary>Sends SMTP e-mail message - separate multiple e-mail recipents with a semi-colon</summary>
+            <param name="SMTPServer">SMTP Send Mail Server</param>
+            <param name="From">Sender E-mail Address</param>
+            <param name="ToRecipients">Recipient e-mail addresses</param>
+            <param name="Subject">Message subject</param>
+            <param name="HTMLMessage">HTML based message body</param>
+            <param name="Importance">Optional message importance</param>
+        </member>
+        <member name="M:TVACodeLibrary.CommonFunctions.SendMail(System.String@,System.String@,System.String@,System.String@,System.String@,System.String@,System.String@,System.Web.Mail.MailFormat,System.Web.Mail.MailPriority)">
+            <summary>Sends SMTP e-mail message - separate multiple e-mail recipents with a semi-colon</summary>
+            <param name="SMTPServer">SMTP Send Mail Server</param>
+            <param name="From">Sender E-mail Address</param>
+            <param name="ToRecipients">Recipient e-mail addresses</param>
+            <param name="CCRecipients">CC recipient e-mail addresses</param>
+            <param name="BCCRecipients">BCC recipient e-mail addresses</param>
+            <param name="Subject">Message subject</param>
+            <param name="Message">Message body</param>
+            <param name="Format">Format of message body</param>
+            <param name="Importance">Optional message importance</param>
+        </member>
+        <member name="M:TVACodeLibrary.CommonFunctions.GetShortAssemblyName(System.Reflection.Assembly)">
+            <summary>Returns only assembly name and version from full assembly name</summary>
+            <param name="AssemblyInstance">Parameter 1 definition</param>
+        </member>
+		<member name="T:TVACodeLibrary.CryptoFunctions">
+			<summary>Crypto Functions</summary>
+		</member>
+		<member name="M:TVACodeLibrary.CryptoFunctions.Crypt(System.String,System.String@)">
+			<summary>Encrypts/decrypts a string, call once to encrypt, call again with same key to decrypt</summary>
+			<param name="Str">String to encrypt/decrypt</param>
+			<param name="EncryptionKey">Encryption key</param>
+		</member>
+		<member name="M:TVACodeLibrary.CryptoFunctions.GetKeyFromSeed(System.Int32)">
+			<summary>Returns a coded string representing a number which can later be decoded with GetSeedFromKey() - function designed for system Timer values</summary>
+			<param name="Seed">Timer variable to encode</param>
+		</member>
+		<member name="M:TVACodeLibrary.CryptoFunctions.GetSeedFromKey(System.String@)">
+			<summary>Returns the number from a string coded with GetKeyFromSeed()</summary>
+			<param name="Key">Key to decode</param>
+		</member>
+		<member name="T:TVACodeLibrary.DatabaseFunctions">
+			<summary>Database Functions</summary>
+		</member>
+        <member name="M:TVACodeLibrary.DatabaseFunctions.ExecuteNonQuery(System.String@,System.String@,System.Boolean,System.Int32)">
+			<summary>Executes given SQL update query for given connection string</summary>
+			<param name="SQL">SQL to execute</param>
+			<param name="ConnectString">Connection string (will create temporary connection)</param>
+			<param name="IsSqlClient">Set to True to use SQLConnection (for SQL server only)</param>
+            <param name="Timeout">Timeout for query in seconds</param>
+		</member>
+        <member name="M:TVACodeLibrary.DatabaseFunctions.ExecuteNonQuery(System.String@,System.Data.OleDb.OleDbConnection,System.Int32)">
+			<summary>Executes given SQL update query for given connection</summary>
+			<param name="SQL">SQL to execute</param>
+			<param name="Connection">Open data connection</param>
+            <param name="Timeout">Timeout for query in seconds</param>
+		</member>
+        <member name="M:TVACodeLibrary.DatabaseFunctions.ExecuteNonQuery(System.String@,System.Data.SqlClient.SqlConnection,System.Int32)">
+			<summary>Executes given SQL update query for given connection</summary>
+			<param name="SQL">SQL to execute</param>
+			<param name="Connection">Open data connection</param>
+            <param name="Timeout">Timeout for query in seconds</param>
+		</member>
+        <member name="M:TVACodeLibrary.DatabaseFunctions.ExecuteReader(System.String@,System.Data.OleDb.OleDbConnection,System.Data.CommandBehavior,System.Int32)">
+			<summary>Executes given SQL data query for given connection</summary>
+			<param name="SQL">SQL to execute</param>
+			<param name="Connection">Open data connection</param>
+			<param name="Behavior">Desired behavior</param>
+            <param name="Timeout">Timeout for query in seconds</param>
+		</member>
+        <member name="M:TVACodeLibrary.DatabaseFunctions.ExecuteReader(System.String@,System.Data.SqlClient.SqlConnection,System.Data.CommandBehavior,System.Int32)">
+			<summary>Executes given SQL data query for given connection</summary>
+			<param name="SQL">Parameter 1 definition</param>
+			<param name="Connection">Parameter 2 definition</param>
+			<param name="Behavior">Desired behavior</param>
+            <param name="Timeout">Parameter 4 definition</param>
+		</member>
+        <member name="M:TVACodeLibrary.DatabaseFunctions.ExecuteScalar(System.String@,System.Data.OleDb.OleDbConnection,System.Int32)">
+			<summary>Executes given SQL scalar query for given connection</summary>
+			<param name="SQL">SQL to execute</param>
+			<param name="Connection">Open data connection</param>
+            <param name="Timeout">Timeout for query in seconds</param>
+		</member>
+        <member name="M:TVACodeLibrary.DatabaseFunctions.ExecuteScalar(System.String@,System.Data.SqlClient.SqlConnection,System.Int32)">
+			<summary>Executes given SQL scalar query for given connection</summary>
+			<param name="SQL">SQL to execute</param>
+			<param name="Connection">Open data connection</param>
+            <param name="Timeout">Timeout for query in seconds</param>
+		</member>
+        <member name="M:TVACodeLibrary.DatabaseFunctions.RetrieveRow(System.String@,System.Data.SqlClient.SqlConnection,System.Int32)">
+			<summary>Return a single row of data given a SQL statement and connection</summary>
+			<param name="SQL">SQL to execute</param>
+			<param name="Connection">Open data connection</param>
+            <param name="Timeout">Timeout for query in seconds</param>
+		</member>
+        <member name="M:TVACodeLibrary.DatabaseFunctions.RetrieveRow(System.String@,System.Data.OleDb.OleDbConnection,System.Int32)">
+			<summary>Return a single row of data given a SQL statement and connection</summary>
+			<param name="SQL">SQL to execute</param>
+			<param name="Connection">Open data connection</param>
+            <param name="Timeout">Timeout for query in seconds</param>
+		</member>
+        <member name="M:TVACodeLibrary.DatabaseFunctions.RetrieveData(System.String@,System.Data.SqlClient.SqlConnection,System.Int32,System.Int32,System.Int32)">
+			<summary>Return a data table given a SQL statement and connection</summary>
+			<param name="SQL">SQL to execute</param>
+			<param name="Connection">Open data connection</param>
+			<param name="StartRow">Row to start returning records from</param>
+			<param name="MaxRows">Maximum number of rows to retrieve</param>
+            <param name="Timeout">Timeout for query in seconds</param>
+		</member>
+        <member name="M:TVACodeLibrary.DatabaseFunctions.RetrieveData(System.String@,System.Data.OleDb.OleDbConnection,System.Int32,System.Int32,System.Int32)">
+			<summary>Return a data table given a SQL statement and connection</summary>
+			<param name="SQL">SQL to execute</param>
+			<param name="Connection">Open data connection</param>
+			<param name="StartRow">Row to start returning records from</param>
+			<param name="MaxRows">Maximum number of rows to retrieve</param>
+            <param name="Timeout">Timeout for query in seconds</param>
+		</member>
+		<member name="T:TVACodeLibrary.DateTimeFunctions">
+			<summary>Date/Time Functions</summary>
+		</member>
+		<member name="M:TVACodeLibrary.DateTimeFunctions.SecondsToText(System.Single,System.Int32)">
+			<summary>Turns number of given seconds into years/days/hours/minutes string</summary>
+			<param name="Seconds">Number of seconds to convert to text</param>
+			<param name="SecondPrecision">Number second decimal places to return</param>
+		</member>
+		<member name="M:TVACodeLibrary.DateTimeFunctions.GetShortMonth(System.Int16)">
+			<summary>Returns 3 letter month abbreviation for given month number (1-12)</summary>
+			<param name="MonthNumber">Month number</param>
+		</member>
+		<member name="M:TVACodeLibrary.DateTimeFunctions.GetLongMonth(System.Int16)">
+			<summary>Returns full month name from given month number (1-12)</summary>
+			<param name="MonthNumber">Month number</param>
+		</member>
+		<member name="M:TVACodeLibrary.DateTimeFunctions.GetDisplayDateFromDBDate(System.String@,System.String@)">
+            <summary>Returns a date (as a string) in the format of "mm/dd/yyyy" or "dd/mm/yyyy" from a given db date string.  This is handy displaying a date from the DB on a web page, e.g., many db's (like Oracle) return dates as 25-Oct-1999</summary>
+			<param name="DateString">Oracle style date string: 25-Oct-1999</param>
+			<param name="DateFormat">Desired output format: "mm/dd/yyyy" or "dd/mm/yyyy"</param>
+		</member>
+		<member name="M:TVACodeLibrary.DateTimeFunctions.GetDBDateFromDisplayDate(System.String@,System.String@)">
+            <summary>Gets a date into a format most databases will recognize given a date (as a string) in the format of "mm/dd/yyyy" or "dd/mm/yyyy", e.g., many db's (like Oracle) require date fields like 25-Oct-1999</summary>
+			<param name="DateString">Date string formatted as: "mm/dd/yyyy" or "dd/mm/yyyy"</param>
+			<param name="DateFormat">Input format: "mm/dd/yyyy" or "dd/mm/yyyy"</param>
+		</member>
+		<member name="T:TVACodeLibrary.FileFunctions">
+			<summary>File/Path Functions</summary>
+		</member>
+		<member name="M:TVACodeLibrary.FileFunctions.GetFileLen(System.String@)">
+			<summary>Get the length of the specified file in bytes</summary>
+			<param name="FilePath">File Name</param>
+		</member>
+		<member name="M:TVACodeLibrary.FileFunctions.GetTempFile">
+			<summary>Gets a temporary file name</summary>
+		</member>
+		<member name="M:TVACodeLibrary.FileFunctions.GetTempFilePath">
+			<summary>Gets the temporary file path</summary>
+		</member>
+		<member name="M:TVACodeLibrary.FileFunctions.FileExists(System.String)">
+			<summary>Returns True if specified file exisits</summary>
+			<param name="FilePath">File Name</param>
+		</member>
+		<member name="M:TVACodeLibrary.FileFunctions.GetDelimetedFileData(System.IO.FileStream,System.Byte,System.Boolean)">
+			<summary>Reads data from a delimited file (file must already be open with FileStream object)</summary>
+			<param name="DelimitedFileStream">Open file stream to read data from</param>
+			<param name="Delimiter">Text delimeter</param>
+			<param name="StopAtCrLf">Set to True to stop at CrLf</param>
+		</member>
+		<member name="M:TVACodeLibrary.FileFunctions.JustDrive(System.String)">
+			<summary>Returns just the drive letter (or UNC \\server\share\) from a path")</summary>
+			<param name="FilePath">File Name</param>
+		</member>
+		<member name="M:TVACodeLibrary.FileFunctions.JustFileName(System.String)">
+			<summary>Returns just the file name from a path</summary>
+			<param name="FilePath">File Name</param>
+		</member>
+		<member name="M:TVACodeLibrary.FileFunctions.JustPath(System.String)">
+			<summary>Returns just the path from a path</summary>
+			<param name="FilePath">File Name</param>
+		</member>
+		<member name="M:TVACodeLibrary.FileFunctions.NoFileExt(System.String)">
+			<summary>Returns just the file name with no extension from a path</summary>
+			<param name="FilePath">File Name</param>
+		</member>
+		<member name="M:TVACodeLibrary.FileFunctions.PathExists(System.String@)">
+			<summary>Returns True if given path exists</summary>
+			<param name="FilePath">File Name</param>
+		</member>
+		<member name="M:TVACodeLibrary.FileFunctions.GetFileList(System.String@)">
+			<summary>Gets a list of files for the given path and wildcard pattern (e.g., "c:\*.*")</summary>
+			<param name="Selection">File Pattern</param>
+		</member>
+        <member name="T:TVACodeLibrary.LicenseProvider">
+            <summary>Custom license file provider for licensed classes</summary>
+        </member>
+		<member name="T:TVACodeLibrary.MathFunctions">
+			<summary>Math Functions</summary>
+		</member>
+		<member name="M:TVACodeLibrary.MathFunctions.RoundedInt(System.Double)">
+			<summary>Returns a rounded integer from given floating point number</summary>
+			<param name="TestValue">Value to Round</param>
+        </member>
+        <member name="T:TVACodeLibrary.ProxyClient">
+            <summary>This is the default implementation of a client class that can connect to an established ProxyServer instance.</summary>
+        </member>
+        <member name="P:TVACodeLibrary.ProxyClient.Connected">
+            <summary>Returns True if proxy client is connected</summary>
+        </member>
+        <member name="P:TVACodeLibrary.ProxyClient.ClientID">
+            <summary>Returns the ID of the proxy client - you may want to override this to extend it with information about your client</summary>
+        </member>
+        <member name="P:TVACodeLibrary.ProxyClient.ConnectTime">
+            <summary>Time client was connected to host (host maintains this value)</summary>
+        </member>
+        <member name="P:TVACodeLibrary.ProxyClient.ActivityTestInterval">
+            <summary>Number of seconds between activity tests</summary>
+        </member>
+        <member name="P:TVACodeLibrary.ProxyClient.ActivityFlag">
+            <summary>Set this to True to reset the activity test timer (i.e., we recieved activity)</summary>
+        </member>
+        <member name="P:TVACodeLibrary.ProxyClient.HostID">
+            <summary>Host ID, should the client want to validate this</summary>
+        </member>
+        <member name="P:TVACodeLibrary.ProxyClient.AppPath">
+            <summary>Host application path, should the client find this useful</summary>
+        </member>
+        <member name="M:TVACodeLibrary.ProxyClient.SendHostNotification(System.Object,System.EventArgs)">
+            <summary>This function allows clients to send a "custom" message back to the host</summary>
+            <param name="sender">Any Object</param>
+            <param name="e">Any Class Derived from EventArgs</param>
+        </member>
+        <member name="M:TVACodeLibrary.ProxyClient.InitializeLifetimeService">
+            <summary>Overrides the lease settings for this object</summary>
+        </member>
+        <member name="T:TVACodeLibrary.ProxyServer">
+            <summary>This class simply exists as a remotable interface to pass relevant information between a service and any defined client application</summary>
+        </member>
+        <member name="M:TVACodeLibrary.ProxyServer.StartCommunications(TVACodeLibrary.ProxyServer,System.Int32,System.String)">
+            <summary>This starts the communications establishment loop</summary>
+            <param name="ProxyServerInstance">Instance to start communications on</param>
+            <param name="TCPPort">TCP/IP port to use</param>
+            <param name="HostURI">URI to remote the instance on</param>
+        </member>
+        <member name="M:TVACodeLibrary.ProxyServer.StopCommunications(TVACodeLibrary.ProxyServer)">
+            <summary>This terminates any established communications</summary>
+            <param name="ProxyServerInstance">Instance to stop communications on</param>
+        </member>
+        <member name="M:TVACodeLibrary.ProxyServer.UpdateStatus(System.String@,System.Boolean)">
+            <summary>This will send a status text message to all clients (messages sent from this function will *not* be queued)</summary>
+            <param name="StatusText">Text of status message to send (this will be encrypted)</param>
+            <param name="LogStatus">Flag to tell client if it should log this status message</param>
+        </member>
+        <member name="M:TVACodeLibrary.ProxyServer.UpdateProgress(System.Int64,System.Int64)">
+            <summary>This will send a progress notification to all clients (messages sent from this function will *not* be queued)</summary>
+            <param name="BytesCompleted">Total number of bytes of current operation completed</param>
+            <param name="BytesTotal">Total number bytes to be completed for current operation</param>
+        </member>
+        <member name="M:TVACodeLibrary.ProxyServer.UpdateServiceState(TVACodeLibrary.ServiceBase+ServiceState)">
+            <summary>This will send a service state change notification message to all clients.  A service can use this function to notify app of relevant service states (messages sent from this function will *not* be queued)</summary>
+            <param name="NewState">New service state</param>
+        </member>
+        <member name="M:TVACodeLibrary.ProxyServer.SendNotification(System.Object,System.EventArgs)">
+            <summary>This function is used to send a custom event notification to the client (messages sent from this function will *not* be queued)</summary>
+            <param name="sender">Any Object</param>
+            <param name="e">Any Class Dervied from EventArgs</param>
+        </member>
+        <member name="M:TVACodeLibrary.ProxyServer.SendMessage(System.String@)">
+            <summary>This will send a status text message to all clients (messages sent from this function will be queued)</summary>
+            <param name="MessageText">Text of message to send (this will be encrypted)</param>
+        </member>
+        <member name="M:TVACodeLibrary.ProxyServer.SendMessage(Object,EventArgs)">
+            <summary>This will send a notification message to all clients (messages sent from this function will be queued)</summary>
+            <param name="sender">Any Object</param>
+            <param name="e">Any Class Dervied from EventArgs</param>
+        </member>
+        <member name="M:TVACodeLibrary.ProxyServer.SendPrivateMessage(IProxyClient,System.String@)">
+            <summary>This will send a status text message to a single client (messages sent from this function will be queued)</summary>
+            <param name="ProxyClientInstance">Recipient of message</param>
+            <param name="MessageText">Text of message to send (this will be encrypted)</param>
+        </member>
+        <member name="M:TVACodeLibrary.ProxyServer.SendPrivateMessage(IProxyClient,Object,EventArgs)">
+            <summary>This will send a notification message to a single client (messages sent from this function will be queued)</summary>
+            <param name="ProxyClientInstance">Recipient of message</param>
+            <param name="sender">Any Object</param>
+            <param name="e">Any Class Dervied from EventArgs</param>
+        </member>
+        <member name="M:TVACodeLibrary.ProxyServer.GetClientList">
+            <summary>Return a string that lists all of the connected clients</summary>
+        </member>
+        <member name="M:TVACodeLibrary.ProxyServer.InitializeLifetimeService">
+            <summary>Overrides the lease settings for this object</summary>
+        </member>
+        <member name="T:TVACodeLibrary.ServiceBase">
+            <summary>Remotely Monitorable Service Implementation</summary>
+        </member>
+        <member name="M:TVACodeLibrary.ServiceBase.ExecuteOnDemandProcess(System.Object,System.Timers.ElapsedEventArgs)">
+            <summary>Starts an "on demand" process cycle for the service</summary>
+            <param name="sender">Any Object</param>
+            <param name="e">Any Class Dervied from EventArgs</param>
+        </member>
+        <member name="M:TVACodeLibrary.ServiceBase.LoadProcessSchedule">
+            <summary>Loads/reloads the process schedule</summary>
+        </member>
+        <member name="M:TVACodeLibrary.ServiceBase.PauseService">
+            <summary>Pauses the service</summary>
+        </member>
+        <member name="M:TVACodeLibrary.ServiceBase.ResumeService">
+            <summary>Resumes the service</summary>
+        </member>
+        <member name="M:TVACodeLibrary.ServiceBase.StopService">
+            <summary>Stops the service</summary>
+        </member>
+        <member name="M:TVACodeLibrary.ServiceBase.RestartService">
+            <summary>Restarts the service</summary>
+        </member>
+        <member name="M:TVACodeLibrary.ServiceBase.UpdateStatus(System.String@,System.Boolean,System.Diagnostics.EventLogEntryType)">
+            <summary>The service can use this function to log information to the event log and end status information to its monitoring clients</summary>
+            <param name="Status">Status text</param>
+            <param name="LogStatus">Set to True to log this status info the Event Log</param>
+            <param name="EntryType">Event log type</param>
+        </member>
+        <member name="M:TVACodeLibrary.ServiceBase.UpdateProgress(System.Int64,System.Int64)">
+            <summary>The service can use this function to notify any clients of work progress</summary>
+            <param name="BytesCompleted">Total number of bytes of current operation completed</param>
+            <param name="BytesTotal">Total number bytes to be completed for current operation</param>
+        </member>
+        <member name="M:TVACodeLibrary.ServiceBase.SendNotification(System.Object,System.EventArgs)">
+            <summary>The service can use this function to send a custom notification to its clients</summary>
+            <param name="sender">Any Object</param>
+            <param name="e">Any Class Dervied from EventArgs</param>
+        </member>
+        <member name="M:TVACodeLibrary.ServiceBase.SendMessage(System.String@)">
+            <summary>This will send a status text message to all clients</summary>
+            <param name="MessageText">Text of message to send (this will be encrypted)</param>
+        </member>
+        <member name="M:TVACodeLibrary.ServiceBase.SendMessage(Object,EventArgs)">
+            <summary>This will send a notification message to all clients</summary>
+            <param name="sender">Any Object</param>
+            <param name="e">Any Class Dervied from EventArgs</param>
+        </member>
+        <member name="M:TVACodeLibrary.ServiceBase.SendPrivateMessage(IProxyClient,System.String@)">
+            <summary>This will send a status text message to a single client</summary>
+            <param name="ProxyClientInstance">Recipient of message</param>
+            <param name="MessageText">Text of message to send (this will be encrypted)</param>
+        </member>
+        <member name="M:TVACodeLibrary.ServiceBase.SendPrivateMessage(IProxyClient,Object,EventArgs)">
+            <summary>This will send a notification message to a single client</summary>
+            <param name="ProxyClientInstance">Recipient of message</param>
+            <param name="sender">Any Object</param>
+            <param name="e">Any Class Dervied from EventArgs</param>
+        </member>
+        <member name="M:TVACodeLibrary.ServiceBase.GetClientList">
+            <summary>Return a string that lists all of the connected clients</summary>
+        </member>
+		<member name="T:TVACodeLibrary.StringFunctions">
+			<summary>String Functions</summary>
+		</member>
+		<member name="M:TVACodeLibrary.StringFunctions.SQLEncode(System.String@)">
+			<summary>Performs SQL encoding on given string</summary>
+			<param name="SQL">String to encode</param>
+		</member>
+        <member name="M:TVACodeLibrary.StringFunctions.JavaScriptEncode(System.String)">
+			<summary>Performs JavaScript encoding on given string</summary>
+			<param name="Str">String to encode</param>
+		</member>
+        <member name="M:TVACodeLibrary.StringFunctions.ValidCookieName(System.String)">
+            <summary>Ensures a string is compliant with cookie name requirements</summary>
+            <param name="Str">String to encode</param>
+        </member>
+        <member name="M:TVACodeLibrary.StringFunctions.ValidCookieValue(System.String)">
+            <summary>Ensures a string is compliant with cookie value requirements</summary>
+            <param name="Str">String to encode</param>
+        </member>
+        <member name="M:TVACodeLibrary.StringFunctions.FormatValue(System.Object,System.String@)">
+            <summary>Performs a standard format, but returns blank string if no value is specified</summary>
+            <param name="Expression">String to format</param>
+            <param name="Style">Format expression</param>
+        </member>
+		<member name="M:TVACodeLibrary.StringFunctions.CharCount(System.String@,System.Byte)">
+			<summary>Returns the number of occurances of the specified character in a string</summary>
+			<param name="Str">Work string</param>
+			<param name="CharToCount">Character to count</param>
+		</member>
+		<member name="M:TVACodeLibrary.StringFunctions.ExtractCharacters(System.String@,System.String@,System.String@,System.String@,Microsoft.VisualBasic.CompareMethod)">
+			<summary>Extracts the specified characters from a string</summary>
+			<param name="Str">Work string</param>
+			<param name="CharsToExtract">Characters to extract</param>
+			<param name="ExtractedChars">Destination string for extracted characters</param>
+			<param name="RemainingChars">Destination string for remaining characters</param>
+			<param name="Compare">String Comparison Type</param>
+		</member>
+		<member name="M:TVACodeLibrary.StringFunctions.GetCharCode(System.Object)">
+			<summary>Returns ASC regardless of parameter type</summary>
+			<param name="KeyCode">Character to test</param>
+		</member>
+		<member name="M:TVACodeLibrary.StringFunctions.SubStr(System.String@,System.Int64,System.String@,Microsoft.VisualBasic.CompareMethod)">
+			<summary>Returns the "nth" sub string from a delimited string</summary>
+			<param name="Str">Work string</param>
+			<param name="ItemNum">Sub string index</param>
+			<param name="Delimiter">Delimeter of sub strings</param>
+			<param name="Compare">String Comparison Type</param>
+		</member>
+		<member name="M:TVACodeLibrary.StringFunctions.GetDelimiterPos(System.String@,System.Int64,System.String@,Microsoft.VisualBasic.CompareMethod)">
+			<summary>Returns the string position of the specified "nth" delimiter in a string</summary>
+			<param name="Str">Work string</param>
+			<param name="nthDelimiter">Sub string index</param>
+			<param name="Delimiter">Delimeter of sub strings</param>
+			<param name="Compare">String Comparison Type</param>
+		</member>
+		<member name="M:TVACodeLibrary.StringFunctions.IsLowerChar(System.Object)">
+			<summary>Tests to see if a character is a lower case charater</summary>
+			<param name="TestChar">Character to test</param>
+		</member>
+		<member name="M:TVACodeLibrary.StringFunctions.IsNumberChar(System.Object)">
+			<summary>Tests to see if a character is a number charater (0-9)</summary>
+			<param name="TestChar">Character to test</param>
+		</member>
+		<member name="M:TVACodeLibrary.StringFunctions.IsPhoneChar(System.Object)">
+			<summary>Tests to see if a character is a valid phone charater</summary>
+			<param name="TestChar">Character to test</param>
+		</member>
+		<member name="M:TVACodeLibrary.StringFunctions.IsSign(System.Object)">
+			<summary>Tests to see if a character is a sign charater (- or +)</summary>
+			<param name="TestChar">Character to test</param>
+		</member>
+		<member name="M:TVACodeLibrary.StringFunctions.IsWhiteSpace(System.Object)">
+			<summary>Tests to see if a character is a white space charater</summary>
+			<param name="TestChar">Character to test</param>
+		</member>
+		<member name="M:TVACodeLibrary.StringFunctions.IsUpperChar(System.Object)">
+			<summary>Tests to see if a character is a upper case charater</summary>
+			<param name="TestChar">Character to test</param>
+		</member>
+		<member name="M:TVACodeLibrary.StringFunctions.NotEmptyStr(System.Object,System.String)">
+			<summary>Ensures parameter is not an empty string</summary>
+			<param name="TestData">String to test</param>
+			<param name="NotReturnValue">Value to return if empty</param>
+		</member>
+		<member name="M:TVACodeLibrary.StringFunctions.NotZero(System.Object,System.Object)">
+			<summary>Ensures parameter is not zero</summary>
+			<param name="TestData">Data to test</param>
+			<param name="NotReturnValue">Value to return if zero</param>
+		</member>
+		<member name="M:TVACodeLibrary.StringFunctions.NotNull(System.Object,System.Object)">
+			<summary>Ensures parameter is not Null</summary>
+			<param name="TestData">Data to test</param>
+			<param name="NotReturnValue">Value to return if null</param>
+		</member>
+        <member name="M:TVACodeLibrary.StringFunctions.PadLeft(System.Object,System.Int64,System.String)">
+			<summary>Pads a string to the left given number of pad characters (optional pad character)</summary>
+			<param name="PadData">Work string</param>
+			<param name="PadLen">Desired pad length</param>
+			<param name="PadChar">Character to pad with</param>
+		</member>
+        <member name="M:TVACodeLibrary.StringFunctions.PadRight(System.Object,System.Int64,System.String)">
+			<summary>Pads a string to the right given number of pad characters (optional pad character)</summary>
+			<param name="PadData">Work string</param>
+			<param name="PadLen">Desired pad length</param>
+			<param name="PadChar">Character to pad with</param>
+		</member>
+		<member name="M:TVACodeLibrary.StringFunctions.Proper(System.String@,System.Boolean)">
+			<summary>Peforms capitization on a word or sentence</summary>
+			<param name="Str">Work string</param>
+			<param name="FirstWordOnly">Only capitalize first word?</param>
+		</member>
+        <member name="M:TVACodeLibrary.StringFunctions.RemoveDuplicateStr(System.String,System.String@,Microsoft.VisualBasic.CompareMethod)">
+			<summary>Returns a string with all of the duplicates of the specified string removed</summary>
+			<param name="Str">Work string</param>
+			<param name="DupString">String to find duplicates of</param>
+			<param name="Compare">String Comparison Type</param>
+		</member>
+		<member name="M:TVACodeLibrary.StringFunctions.RemoveNull(System.String@)">
+			<summary>Removes terminator (Chr(0)) from a null terminated string) - useful for strings returned from API</summary>
+			<param name="Str">Work string</param>
+		</member>
+        <member name="M:TVACodeLibrary.StringFunctions.RemoveCrLf(System.String@)">
+			<summary>Removes all carriage return/line feeds from a string</summary>
+			<param name="Str">Work string</param>
+		</member>
+		<member name="M:TVACodeLibrary.StringFunctions.RemoveWhiteSpace(System.String@)">
+			<summary>Returns a string with all white space removed</summary>
+			<param name="Str">Work string</param>
+		</member>
+		<member name="M:TVACodeLibrary.StringFunctions.SubStrCount(System.String@,System.String@,Microsoft.VisualBasic.CompareMethod)">
+			<summary>Returns count of the number of occurances of a sub string within a string</summary>
+			<param name="Str">Work string</param>
+			<param name="SubString">Sub string to count</param>
+			<param name="Compare">String Comparison Type</param>
+		</member>
+	</members>
+</doc>

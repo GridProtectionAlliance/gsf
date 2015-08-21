@@ -1,0 +1,453 @@
+/*
+ * HTMLParser.jj -- JavaCC grammar for HTML.
+ * Copyright (C) 1999 Quiotix Corporation.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License, version 2, as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License (http://www.gnu.org/copyleft/gpl.txt)
+ * for more details.
+ *
+ * Bug fixes and .NET integration, James Ritchie Carroll - 2004
+ */
+
+
+/*
+ * JavaCC grammar file for HTML.
+ *
+ * Author: Brian Goetz, Quiotix
+ * Version: 1.01
+ * Revision: $Id: HTMLParser.jj,v 1.41 2000/11/10 02:50:54 brian Exp $
+ *
+ * This grammar parses an HTML document and produces a (flat) parse "tree"
+ * representing the document.  It preserves almost all information in the
+ * source document, including carriage control and spacing (except inside
+ * of tags.)  See the HTMLDocument and HTMLDocument.* classes for a
+ * description of the parse tree.  The parse tree supports traversal using
+ * the commonly used "Visitor" pattern.  The HTMLDumper class is a visitor
+ * which dumps out the tree to an output stream.
+ *
+ * It does not require begin tags to be matched with end tags, or validate
+ * the names or contents of the tags (this can easily be done post-parsing;
+ * see the HTMLCollector class (which matches begin tags with end tags)
+ * for an example.)
+ *
+ * Notable edge cases include:
+ * - Quoted string processing.  Quoted strings are matched inside of comments, and
+ *   as tag attribute values.  Quoted strings are matched in normal text only
+ *   to the extent that they do not span line breaks.
+ *
+ * Please direct comments, questions, gripes or praise to
+ * html-parser@quiotix.com.  If you like it/hate it/use it, please let us know!
+ */
+
+options { IGNORE_CASE = true; STATIC = false; }
+
+PARSER_BEGIN(HTMLParser)
+
+package TVA.Parsers.HTMLParser;
+
+import java.io.*;
+
+public class HTMLParser {
+
+  final static String NL = System.Environment.get_NewLine();
+
+  private static String getTokenText(Token first, Token cur) {
+    Token t;
+    StringBuffer sb = new StringBuffer();
+
+    for (t=first; t != cur.next; t = t.next) {
+      if (t.specialToken != null) {
+        Token tt=t.specialToken;
+        while (tt.specialToken != null)
+          tt = tt.specialToken;
+        for (; tt != null; tt = tt.next)
+          sb.append(tt.image);
+      };
+      sb.append(t.image);
+    };
+    return sb.toString();
+  }
+
+/*
+  public static void main(String[] args) throws ParseException {
+    HTMLParser parser = new HTMLParser(System.in);
+    HTMLDocument doc = parser.HTMLDocument();
+    doc.accept(new HTMLDumper(System.out));
+    System.exit(0);
+  }
+*/
+
+	// .NET HTML parsing hooks
+	public static HTMLDocument ParseFile(String FileName) throws Exception
+	{
+		HTMLParser parser = new HTMLParser(new FileInputStream(FileName));
+		return parser.HTMLDocument();
+	}
+	
+	public static HTMLDocument ParseSource(String HTMLSource) throws Exception
+	{
+		HTMLParser parser = new HTMLParser(new BufferedReader(new StringReader(HTMLSource)));
+		return parser.HTMLDocument();
+	}
+
+/*
+	private static String deQuote(String s)
+	{
+		if (s.startsWith("\"") && s.endsWith("\""))
+			return s.substring(1, s.length() - 1);
+		else if (s.startsWith("'") && s.endsWith("'"))
+			return s.substring(1, s.length() - 1);
+		else
+			return s;
+	}
+
+	private static String dePound(String s)
+	{
+		int pi = s.IndexOf('#');
+
+		if (pi > -1)
+		{
+			if (pi > 0)
+				return s.Substring(0, pi);
+			else
+				return "";
+		}	
+		else
+			return s;
+	}
+*/
+}
+
+PARSER_END(HTMLParser)
+
+
+
+<*> TOKEN :
+{
+  <#ALPHA_CHAR: ["a"-"z", "A"-"Z"] >
+| <#NUM_CHAR:   ["0"-"9"] >
+| <#ALPHANUM_CHAR: [ "a"-"z", "A"-"Z", "0"-"9" ] >
+| <#IDENTIFIER_CHAR: [ "a"-"z", "A"-"Z", "0"-"9", "_", "-", "." ] >
+| <#IDENTIFIER: <ALPHA_CHAR> (<IDENTIFIER_CHAR>)* >
+| <#QUOTED_STRING_NB: ( "'" ( ~["'", "\r", "\n"] )* "'" )
+                    | ( "\"" ( ~["\"", "\r", "\n"] )* "\"" ) >
+| <#QUOTED_STRING: ( "'" ( ~["'"] )* "'" ) | ( "\"" ( ~["\""] )* "\"" ) >
+| <#WHITESPACE: ( " " | "\t" | "\n" | "\r" ) >
+| <#NEWLINE:    ( "\r\n" | "\r" | "\n" ) >
+| <#QUOTE:      ( "'" | "\"" )>
+}
+
+<DEFAULT> TOKEN :
+{
+  <EOL:            ( " " | "\t" )* <NEWLINE> >
+| <TAG_START:      "<"       > : LexStartTag
+| <ENDTAG_START:   "</"      > : LexStartTag
+| <COMMENT_START:  "<!--"    > : LexComment
+| <DECL_START:     "<!"      > : LexDecl
+| <PCDATA:         ( ~["'", "\"", "<", "\r", "\n"] )+ >
+| <PCDATA_QS:      <QUOTED_STRING_NB> >
+| <PCDATA_Q:       <QUOTE> >
+}
+
+<LexStartTag> TOKEN :
+{
+  <TAG_SCRIPT: "SCRIPT">    : LexInTag
+| <TAG_STYLE:  "STYLE">     : LexInTag
+| <TAG_NAME: <IDENTIFIER> > : LexInTag
+| <LST_ERROR: ~[]>          : DEFAULT
+}
+
+<LexInTag> SPECIAL_TOKEN :
+{
+  < (<WHITESPACE>)+ >
+}
+
+<LexInTag> TOKEN :
+{
+  <ATTR_NAME: <IDENTIFIER> >
+| <TAG_END: ">" >                       : DEFAULT
+| <TAG_SLASHEND: "/>" >                 : DEFAULT
+| <ATTR_EQ: "=" >                       : LexAttrVal
+| <IMPLICIT_TAG_END: "<">
+  {
+    Token t = new Token();
+    t.image       = "<";
+    t.kind        = TAG_START;
+    t.next        = matchedToken.next;
+    t.beginLine   = matchedToken.beginLine;
+    t.beginColumn = matchedToken.beginColumn;
+    t.endLine     = matchedToken.endLine;
+    t.endColumn   = matchedToken.endColumn;
+    matchedToken.next  = t;
+    matchedToken.kind  = TAG_END;
+    matchedToken.image = ">";
+  }                                     : LexStartTag
+}
+
+// JRC 04/28/04 - this added to keep lexical state "in the tag", even if badly formatted...
+<LexInTag> MORE :
+{
+	< ~[] >  : LexInTag
+}
+
+<LexAttrVal> SPECIAL_TOKEN :
+{
+  < <WHITESPACE> >
+}
+
+<LexAttrVal> TOKEN :
+{
+  <ATTR_VAL: <QUOTED_STRING>
+| ( ~[">", "\"", "'", " ", "\t", "\n", "\r"] )+ > : LexInTag
+| <LAV_ERROR: ~[]>
+}
+
+<LexComment> TOKEN :
+{
+  < COMMENT_END:  ("--" (" ")* ">" | "->") > : DEFAULT
+| < DASH:         "-" >
+| < COMMENT_EOL:  <NEWLINE> >
+| < COMMENT_WORD: ( (~[ "\n", "\r", "'", "\"", "-" ])+
+                    | <QUOTED_STRING_NB>
+                    | <QUOTE> ) >
+}
+
+<LexDecl> TOKEN :
+{
+  <DECL_ANY: ( <QUOTED_STRING> | ~[ ">", "\"", "'" ] )+ >
+| <DECL_END: ">" > : DEFAULT
+}
+
+<LexScript> TOKEN : {
+  <SCRIPT_END:   "</SCRIPT>" > : DEFAULT
+}
+
+<LexStyle> TOKEN : {
+  <STYLE_END:    "</STYLE>" > : DEFAULT
+}
+
+<LexScript, LexStyle> TOKEN :
+{
+  <BLOCK_EOL:    <NEWLINE> >
+| <BLOCK_LBR:    "<" >
+| <BLOCK_WORD:   ( <QUOTED_STRING_NB>
+                   | <QUOTE>
+                   | (~[ "\n", "\r", "'", "\"", "<"])+ ) >
+}
+
+HTMLDocument HTMLDocument() :
+{
+  HTMLDocument.ElementSequence s;
+}
+{
+  s=ElementSequence() <EOF>
+  { return new HTMLDocument(s); }
+}
+
+HTMLDocument.ElementSequence ElementSequence() :
+{
+  HTMLDocument.ElementSequence s = new HTMLDocument.ElementSequence();
+  HTMLDocument.HTMLElement h;
+}
+{
+  ( h=Element() { s.addElement(h); } ) *
+  { return s; }
+}
+
+HTMLDocument.HTMLElement Element() :
+{
+  HTMLDocument.HTMLElement e;
+  Token text;
+}
+{
+(
+    LOOKAHEAD(2)
+         e = Tag()        { return e; }
+  |      e = EndTag()     { return e; }
+  |      e = CommentTag() { return e; }
+  |      e = DeclTag()    { return e; }
+  | LOOKAHEAD(2)
+         e = ScriptBlock() { return e; }
+  | LOOKAHEAD(2)
+         e = StyleBlock()  { return e; }
+  | LOOKAHEAD(2)
+             <TAG_START> text=<LST_ERROR>
+                          { return new HTMLDocument.Text("<" + text.image); }
+  |   text = <PCDATA>     { return new HTMLDocument.Text(text.image); }
+  |   text = <PCDATA_QS>  { return new HTMLDocument.Text(text.image); }
+  |   text = <PCDATA_Q>   { return new HTMLDocument.Text(text.image); }
+  |          <EOL>        { return new HTMLDocument.Newline(); }
+)
+}
+
+HTMLDocument.Attribute Attribute() :
+{
+  HTMLDocument.Attribute a;
+  Token t1, t2=null;
+}
+{
+  t1=<ATTR_NAME> [ <ATTR_EQ> t2=<ATTR_VAL> ]
+  { if (t2 == null)
+      return new HTMLDocument.Attribute(t1.image);
+    else
+      return new HTMLDocument.Attribute(t1.image, t2.image);
+  }
+}
+
+HTMLDocument.AttributeList AttributeList() :
+{
+  HTMLDocument.AttributeList alist = new HTMLDocument.AttributeList();
+  HTMLDocument.Attribute a;
+}
+{
+  (a=Attribute() { alist.addAttribute(a); } )*
+  { return alist; }
+}
+
+HTMLDocument.HTMLElement Tag() :
+{
+  Token t, et;
+  HTMLDocument.AttributeList alist;
+  Token firstToken = getToken(1);
+}
+{
+  try {
+    <TAG_START> t=<TAG_NAME> alist=AttributeList()
+    ( et=<TAG_END> | et=<TAG_SLASHEND> )
+    {
+      HTMLDocument.Tag tag = new HTMLDocument.Tag(t.image, alist);
+      if (et.kind == TAG_SLASHEND) tag.setEmpty(true);
+      return tag;
+    }
+  }
+  catch (ParseException ex) {
+    token_source.SwitchTo(DEFAULT);
+    String s = getTokenText(firstToken, getNextToken());
+    return new HTMLDocument.Text(s);
+  }
+}
+
+
+HTMLDocument.ElementSequence BlockContents() : {
+  Token t;
+  StringBuffer s = new StringBuffer();
+  HTMLDocument.ElementSequence e = new HTMLDocument.ElementSequence();
+}
+{
+  ( <BLOCK_EOL> {
+      if (s.length() > 0) {
+        e.addElement(new HTMLDocument.Text(s.toString()));
+        s.setLength(0);
+      };
+      e.addElement(new HTMLDocument.Newline());
+    }
+    | t=<BLOCK_WORD> { s.append(t.image); }
+    | t=<BLOCK_LBR>  { s.append(t.image); }
+  )*
+  {
+    if (s.length() > 0)
+      e.addElement(new HTMLDocument.Text(s.toString()));
+    e.addElement(new HTMLDocument.Newline());
+    return e;
+  }
+}
+
+HTMLDocument.HTMLElement ScriptBlock() :
+{
+  HTMLDocument.AttributeList alist;
+  HTMLDocument.ElementSequence e;
+  Token firstToken = getToken(1);
+}
+{
+  try {
+    <TAG_START> <TAG_SCRIPT> alist=AttributeList() <TAG_END>
+    {
+      token_source.SwitchTo(LexScript);
+    }
+    e=BlockContents()
+    <SCRIPT_END>
+    {
+      return new HTMLDocument.TagBlock("SCRIPT", alist, e);
+    }
+  }
+  catch (ParseException ex) {
+    token_source.SwitchTo(DEFAULT);
+    String s = getTokenText(firstToken, getNextToken());
+    return new HTMLDocument.Text(s);
+  }
+}
+
+
+HTMLDocument.HTMLElement StyleBlock() :
+{
+  HTMLDocument.AttributeList alist;
+  HTMLDocument.ElementSequence e;
+  Token firstToken = getToken(1);
+}
+{
+  try {
+    <TAG_START> <TAG_STYLE> alist=AttributeList() <TAG_END>
+    {
+      token_source.SwitchTo(LexStyle);
+    }
+    e=BlockContents()
+    <STYLE_END>
+    {
+      return new HTMLDocument.TagBlock("STYLE", alist, e);
+    }
+  }
+  catch (ParseException ex) {
+    token_source.SwitchTo(DEFAULT);
+    String s = getTokenText(firstToken, getNextToken());
+    return new HTMLDocument.Text(s);
+  }
+}
+
+
+HTMLDocument.HTMLElement EndTag() :
+{
+  Token t;
+  Token firstToken = getToken(1);
+}
+{
+  try {
+    <ENDTAG_START> t=<TAG_NAME> <TAG_END>
+    { return new HTMLDocument.EndTag(t.image); }
+  }
+  catch (ParseException ex) {
+    token_source.SwitchTo(DEFAULT);
+    String s = getTokenText(firstToken, getNextToken());
+    return new HTMLDocument.Text(s);
+  }
+}
+
+HTMLDocument.Comment CommentTag() :
+{
+  Token t;
+  StringBuffer s = new StringBuffer("--");
+}
+{
+  <COMMENT_START>
+  ( t=<DASH> { s.append(t.image); }
+    | <COMMENT_EOL>  { s.append(NL); }
+    | t=<COMMENT_WORD> { s.append(t.image); } )*
+  (<EOF> | <COMMENT_END>)
+  { return new HTMLDocument.Comment(s.append("--").toString()); }
+}
+
+HTMLDocument.Comment DeclTag() :
+{
+  Token t;
+}
+{
+  <DECL_START> t=<DECL_ANY> <DECL_END>
+  {
+    return new HTMLDocument.Comment(t.image);
+  }
+}
