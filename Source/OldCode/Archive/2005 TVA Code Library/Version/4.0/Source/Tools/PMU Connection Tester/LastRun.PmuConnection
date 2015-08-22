@@ -1,0 +1,14 @@
+<SOAP-ENV:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:clr="http://schemas.microsoft.com/soap/encoding/clr/1.0" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+<SOAP-ENV:Body>
+<a1:ConnectionSettings id="ref-1" xmlns:a1="http://schemas.microsoft.com/clr/nsassem/ConnectionTester/PMUConnectionTester">
+<PhasorProtocol>Ieee1344</PhasorProtocol>
+<TransportProtocol>File</TransportProtocol>
+<ConnectionString id="ref-5">file=Sample1344.PmuCapture</ConnectionString>
+<PmuID>2</PmuID>
+<FrameRate>30</FrameRate>
+<AutoRepeatPlayback>true</AutoRepeatPlayback>
+<ByteEncodingDisplayFormat>0</ByteEncodingDisplayFormat>
+<ConnectionParameters xsi:null="1"/>
+</a1:ConnectionSettings>
+</SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

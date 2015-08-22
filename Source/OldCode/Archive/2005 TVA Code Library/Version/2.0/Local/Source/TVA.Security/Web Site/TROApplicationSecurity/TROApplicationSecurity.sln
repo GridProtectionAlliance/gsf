@@ -1,0 +1,77 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "http://localhost/TROApplicationSecurityAdministration/", "http://localhost/TROApplicationSecurityAdministration", "{FDBE0E3A-DE5D-4E1A-ABA1-553BA61A6B32}"
+	ProjectSection(WebsiteProperties) = preProject
+		SccProjectName = ""$/TVA Code Library/Version/2.0/Local/Source/Tva.Security/Web Site/TROApplicationSecurityAdministration", QFPAAAAA"
+		SccAuxPath = ""
+		SccLocalPath = "."
+		SccProvider = "MSSCCI:Microsoft Visual SourceSafe"
+		Debug.AspNetCompiler.VirtualPath = "/TROApplicationSecurityAdministration"
+		Debug.AspNetCompiler.PhysicalPath = "..\Web\TROApplicationSecurity\Administration\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\TROApplicationSecurityAdministration\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/TROApplicationSecurityAdministration"
+		Release.AspNetCompiler.PhysicalPath = "..\Web\TROApplicationSecurity\Administration\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\TROApplicationSecurityAdministration\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		SlnRelativePath = "..\Web\TROApplicationSecurity\Administration\"
+	EndProjectSection
+EndProject
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "http://localhost/TROApplicationSecuritySupport/", "http://localhost/TROApplicationSecuritySupport", "{0C63D0A0-36A3-4CA8-8A59-23454A38CCEB}"
+	ProjectSection(WebsiteProperties) = preProject
+		SccProjectName = ""$/TVA Code Library/Version/2.0/Local/Source/Tva.Security/Web Site/TROApplicationSecuritySupport", RFPAAAAA"
+		SccAuxPath = ""
+		SccLocalPath = "."
+		SccProvider = "MSSCCI:Microsoft Visual SourceSafe"
+		Debug.AspNetCompiler.VirtualPath = "/TROApplicationSecuritySupport"
+		Debug.AspNetCompiler.PhysicalPath = "..\Web\TROApplicationSecurity\Support\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\TROApplicationSecuritySupport\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/TROApplicationSecuritySupport"
+		Release.AspNetCompiler.PhysicalPath = "..\Web\TROApplicationSecurity\Support\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\TROApplicationSecuritySupport\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		SlnRelativePath = "..\Web\TROApplicationSecurity\Support\"
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SourceCodeControl) = preSolution
+		SccNumberOfProjects = 3
+		SccLocalPath0 = .
+		SccWebProject1 = true
+		SccProjectUniqueName1 = http://localhost/TROApplicationSecurityAdministration
+		SccProjectName1 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Local/Source/Tva.Security/Web\u0020Site/TROApplicationSecurityAdministration\u0022,\u0020QFPAAAAA
+		SccLocalPath1 = Administration
+		SccProjectEnlistmentChoice1 = 2
+		SccWebProject2 = true
+		SccProjectUniqueName2 = http://localhost/TROApplicationSecuritySupport
+		SccProjectName2 = \u0022$/TVA\u0020Code\u0020Library/Version/2.0/Local/Source/Tva.Security/Web\u0020Site/TROApplicationSecuritySupport\u0022,\u0020RFPAAAAA
+		SccLocalPath2 = Support
+		SccProjectEnlistmentChoice2 = 2
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|.NET = Debug|.NET
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FDBE0E3A-DE5D-4E1A-ABA1-553BA61A6B32}.Debug|.NET.ActiveCfg = Debug|.NET
+		{FDBE0E3A-DE5D-4E1A-ABA1-553BA61A6B32}.Debug|.NET.Build.0 = Debug|.NET
+		{0C63D0A0-36A3-4CA8-8A59-23454A38CCEB}.Debug|.NET.ActiveCfg = Debug|.NET
+		{0C63D0A0-36A3-4CA8-8A59-23454A38CCEB}.Debug|.NET.Build.0 = Debug|.NET
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
