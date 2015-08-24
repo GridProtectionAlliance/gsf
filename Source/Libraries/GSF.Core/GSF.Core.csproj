@@ -389,6 +389,7 @@
     <Compile Include="Ticks.cs" />
     <Compile Include="TimeSpanExtensions.cs" />
     <Compile Include="TimeTagBase.cs" />
+    <Compile Include="TransformEqualityComparer.cs" />
     <Compile Include="TypeExtensions.cs" />
     <Compile Include="UInt24.cs" />
     <Compile Include="Units\Angle.cs" />
