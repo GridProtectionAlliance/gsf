@@ -68,6 +68,40 @@ namespace GSF.Collections
             m_enabled = 1;
         }
 
+        /// <summary>
+        /// Creates a new <see cref="AsyncQueue{T}"/>.
+        /// </summary>
+        /// <param name="synchronizedOperationType">The type of synchronized operation to use to process items in the queue.</param>
+        public AsyncQueue(SynchronizedOperationType synchronizedOperationType)
+        {
+            m_asyncQueue = new ConcurrentQueue<T>();
+            m_enabled = 1;
+
+            switch (synchronizedOperationType)
+            {
+                case SynchronizedOperationType.Short:
+                    m_processItemOperation = new ShortSynchronizedOperation(TryProcessItem, OnProcessException);
+                    break;
+
+                case SynchronizedOperationType.Long:
+                    m_processItemOperation = new LongSynchronizedOperation(TryProcessItem, OnProcessException);
+                    break;
+
+                case SynchronizedOperationType.LongBackground:
+                    LongSynchronizedOperation processItemOperation = new LongSynchronizedOperation(TryProcessItem, OnProcessException);
+                    processItemOperation.IsBackground = true;
+                    m_processItemOperation = processItemOperation;
+                    break;
+
+                case SynchronizedOperationType.Mixed:
+                    m_processItemOperation = new MixedSynchronizedOperation(TryProcessItem, OnProcessException);
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException("synchronizedOperationType");
+            }
+        }
+
         #endregion
 
         #region [ Properties ]
