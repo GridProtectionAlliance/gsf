@@ -1,0 +1,384 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
+using System.Data;
+using System.Linq;
+using GSF.Data;
+using GSF.TimeSeries.UI;
+using GSF.TimeSeries.UI.DataModels;
+
+
+namespace PowerCalculator.UI.DataModels
+{
+	public class PowerCalculation : DataModelBase
+	{
+
+		#region [ Members ]
+
+		private int m_powerCalculationId;
+		private string m_circuitDescription;
+		private Guid m_voltageAngleSignalId;
+		private Guid m_voltageMagnitudeSignalId;
+		private Guid m_currentAngleSignalId;
+		private Guid m_currentMagnitudeSignalId;
+		private Guid m_realPowerOutputSignalId;
+		private Guid m_activePowerOutputSignalId;
+		private Guid m_reactivePowerOutputSignalId;
+		private bool m_powerCalculationEnabled;
+		private Guid m_nodeId;
+
+		#endregion
+
+		#region [ Properties ]
+
+		public int PowerCalculationId
+		{
+			get { return m_powerCalculationId; }
+			set
+			{
+				if (m_powerCalculationId == value) return;
+				m_powerCalculationId = value;
+				OnPropertyChanged("PowerCalculationId");
+			}
+		}
+
+		[Required(ErrorMessage = "Power calculation description is a required field. Please provide a value.")]
+		[StringLength(4000, ErrorMessage = "Power calculation description cannot exceed 4000 characters")]
+		public string CircuitDescription
+		{
+			get { return m_circuitDescription; }
+			set
+			{
+				if (m_circuitDescription == value) return;
+				m_circuitDescription = value;
+				OnPropertyChanged("CircuitDescription");
+			}
+		}
+
+		private Measurement m_voltageAngleMeasurement;
+		[Required(ErrorMessage = "Voltage angle signal ID is a required field. Please provide a value.")]
+		public Measurement VoltageAngleMeasurement
+		{
+			get { return m_voltageAngleMeasurement; }
+			set
+			{
+				if (m_voltageAngleMeasurement == value) return;
+				m_voltageAngleMeasurement = value;
+				OnPropertyChanged("VoltageAngleMeasurement");
+			}
+		}
+
+		private Measurement m_voltageMagnitudeMeasurement;
+		[Required(ErrorMessage = "Voltage magnitude signal ID is a required field. Please provide a value.")]
+		public Measurement VoltageMagnitudeMeasurement
+		{
+			get { return m_voltageMagnitudeMeasurement; }
+			set
+			{
+				if (m_voltageMagnitudeMeasurement == value) return;
+				m_voltageMagnitudeMeasurement = value;
+				OnPropertyChanged("VoltageMagnitudeMeasurement");
+			}
+		}
+
+		private Measurement m_currentAngleMeasurement;
+		[Required(ErrorMessage = "Current angle signal ID is a required field. Please provide a value.")]
+		public Measurement CurrentAngleMeasurement
+		{
+			get { return m_currentAngleMeasurement; }
+			set
+			{
+				if (m_currentAngleMeasurement == value) return;
+				m_currentAngleMeasurement = value;
+				OnPropertyChanged("CurrentAngleMeasurement");
+			}
+		}
+
+		private Measurement m_currentMagnitudeMeasurement;
+		[Required(ErrorMessage = "Current magnitude signal ID is a required field. Please provide a value.")]
+		public Measurement CurrentMagnitudeMeasurement
+		{
+			get { return m_currentMagnitudeMeasurement; }
+			set
+			{
+				if (m_currentMagnitudeMeasurement == value) return;
+				m_currentMagnitudeMeasurement = value;
+				OnPropertyChanged("CurrentMagnitudeMeasurement");
+			}
+		}
+
+		private Measurement m_realPowerOutputMeasurement;
+		public Measurement RealPowerOutputMeasurement
+		{
+			get { return m_realPowerOutputMeasurement; }
+			set
+			{
+				if (m_realPowerOutputMeasurement == value) return;
+				m_realPowerOutputMeasurement = value;
+				OnPropertyChanged("RealPowerOutputMeasurement");
+			}
+		}
+
+		private Measurement m_reactivePowerOutputMeasurement;
+		public Measurement ReactivePowerOutputMeasurement
+		{
+			get { return m_reactivePowerOutputMeasurement; }
+			set
+			{
+				if (m_reactivePowerOutputMeasurement == value) return;
+				m_reactivePowerOutputMeasurement = value;
+				OnPropertyChanged("ReactivePowerOutputMeasurement");
+			}
+		}
+
+		private Measurement m_activePowerOutputMeasurement;
+		public Measurement ActivePowerOutputMeasurement
+		{
+			get { return m_activePowerOutputMeasurement; }
+			set
+			{
+				if (m_activePowerOutputMeasurement == value) return;
+				m_activePowerOutputMeasurement = value;
+				OnPropertyChanged("ActivePowerOutputMeasurement");
+			}
+		}
+
+		[Required(ErrorMessage = "Enabled is a required field. Please enter a value for the enabled flag.")]
+		public bool PowerCalculationEnabled
+		{
+			get { return m_powerCalculationEnabled; }
+			set
+			{
+				if (m_powerCalculationEnabled == value) return;
+				m_powerCalculationEnabled = value;
+				OnPropertyChanged("PowerCalculationEnabled");
+			}
+		}
+
+		[Required(ErrorMessage = "Node ID is a required field. Please enter a value for the Node ID.")]
+		public Guid NodeId
+		{
+			get { return m_nodeId; }
+			set
+			{
+				if (m_nodeId == value) return;
+				m_nodeId = value;
+				OnPropertyChanged("NodeId");
+			}
+		}
+
+		#endregion
+
+
+		#region [ Statics ]
+
+		/// <summary>
+		/// LoadKeys <see cref="PowerCalculation"/> information as an <see cref="ObservableCollection{T}"/> style list.
+		/// </summary>
+		/// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+		/// <returns>Collection of <see cref="int"/>.</returns>
+		public static IList<int> LoadKeys(AdoDataConnection database)
+		{
+			var createdConnection = false;
+
+			try
+			{
+				createdConnection = CreateConnection(ref database);
+
+				var calculationList = new List<int>();
+				var query = string.Format("SELECT PowerCalculationId FROM PowerCalculation WHERE NodeId='{0}'", database.CurrentNodeID());
+				var calculationTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
+
+				foreach (DataRow row in calculationTable.Rows)
+				{
+					calculationList.Add(row.ConvertField<int>("PowerCalculationId"));
+				}
+
+				return calculationList;
+			}
+			finally
+			{
+				if (createdConnection && database != null)
+					database.Dispose();
+			}
+		}
+
+		/// <summary>
+		/// Loads <see cref="PowerCalculation"/> information as an <see cref="ObservableCollection{T}"/> style list.
+		/// </summary>
+		/// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+		/// <param name="keys">Keys of the measurement to be loaded from the database</param>
+		/// <returns>Collection of <see cref="PowerCalculation"/>.</returns>
+		public static ObservableCollection<PowerCalculation> Load(AdoDataConnection database, IList<int> keys)
+		{
+			var createdConnection = false;
+
+			try
+			{
+				createdConnection = CreateConnection(ref database);
+
+				PowerCalculation[] calculationList = null;
+
+				if (keys != null && keys.Count > 0)
+				{
+					var commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
+					var query = string.Format("SELECT * FROM PowerCalculation WHERE PowerCalculationId IN ({0})", commaSeparatedKeys);
+					var calculationTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
+					calculationList = new PowerCalculation[calculationTable.Rows.Count];
+
+					foreach (DataRow row in calculationTable.Rows)
+					{
+						var id = row.ConvertField<int>("PowerCalculationId");
+
+						var voltageAngle = database.Guid(row, "VoltageAngleSignalId");
+						var voltageMagnitude = database.Guid(row, "VoltageMagSignalId");
+						var currentAngle = database.Guid(row, "CurrentAngleSignalId");
+						var currentMagnitude = database.Guid(row, "CurrentMagSignalId");
+
+						Guid? realPower = null;
+						if (!row.IsNull("RealPowerOutputSignalId"))
+							realPower = database.Guid(row, "RealPowerOutputSignalId");
+
+						Guid? reactivePower = null;
+						if (!row.IsNull("ReactivePowerOutputSignalId"))
+							reactivePower = database.Guid(row, "ReactivePowerOutputSignalId");
+
+						Guid? activePower = null;
+						if (!row.IsNull("ActivePowerOutputSignalId"))
+							activePower = database.Guid(row, "ActivePowerOutputSignalId");
+
+						calculationList[keys.IndexOf(id)] = new PowerCalculation
+						{
+							PowerCalculationId = row.Field<int>("PowerCalculationId"),
+							CircuitDescription = row.Field<string>("CircuitDescription"),
+							PowerCalculationEnabled = row.Field<bool>("CalculationEnabled"),
+							NodeId = database.Guid(row, "NodeId")
+						};
+						var mkeys = new List<Guid> { voltageAngle, voltageMagnitude, currentAngle, currentMagnitude };
+						if (realPower != null) { mkeys.Add(realPower.Value); }
+						if (reactivePower != null) { mkeys.Add(reactivePower.Value); }
+						if (activePower != null) { mkeys.Add(activePower.Value); }
+						var measurements = Measurement.LoadFromKeys(database, mkeys);
+
+						foreach (var measurement in measurements)
+						{
+							if (measurement.SignalID == voltageAngle)
+							{
+								calculationList[keys.IndexOf(id)].VoltageAngleMeasurement = measurement;
+							}
+							else if (measurement.SignalID == voltageMagnitude)
+							{
+								calculationList[keys.IndexOf(id)].VoltageMagnitudeMeasurement = measurement;
+							}
+							else if (measurement.SignalID == currentAngle)
+							{
+								calculationList[keys.IndexOf(id)].CurrentAngleMeasurement = measurement;
+							}
+							else if (measurement.SignalID == currentMagnitude)
+							{
+								calculationList[keys.IndexOf(id)].CurrentMagnitudeMeasurement = measurement;
+							}
+							else if (measurement.SignalID == realPower)
+							{
+								calculationList[keys.IndexOf(id)].RealPowerOutputMeasurement = measurement;
+							}
+							else if (measurement.SignalID == reactivePower)
+							{
+								calculationList[keys.IndexOf(id)].ReactivePowerOutputMeasurement = measurement;
+							}
+							else if (measurement.SignalID == activePower)
+							{
+								calculationList[keys.IndexOf(id)].ActivePowerOutputMeasurement = measurement;
+							}
+						}
+					}
+
+
+				}
+
+				return new ObservableCollection<PowerCalculation>(calculationList ?? new PowerCalculation[0]);
+			}
+			finally
+			{
+				if (createdConnection && database != null)
+					database.Dispose();
+			}
+		}
+
+		/// <summary>
+		/// Deletes specified <see cref="PowerCalculation"/> record from database.
+		/// </summary>
+		/// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+		/// <param name="powerCalculationId">ID of the record to be deleted.</param>
+		/// <returns>String, for display use, indicating success.</returns>
+		public static string Delete(AdoDataConnection database, int powerCalculationId)
+		{
+			bool createdConnection = false;
+
+			try
+			{
+				createdConnection = CreateConnection(ref database);
+
+				// Setup current user context for any delete triggers
+				CommonFunctions.SetCurrentUserContext(database);
+
+				database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM PowerCalculation WHERE PowerCalculationId = {0}", "companyID"), DefaultTimeout, powerCalculationId);
+
+				return "Power Calculation deleted successfully";
+			}
+			finally
+			{
+				if (createdConnection && database != null)
+					database.Dispose();
+			}
+		}
+
+		/// <summary>
+		/// Saves <see cref="Company"/> information to database.
+		/// </summary>
+		/// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+		/// <param name="powerCalculation">Information about <see cref="PowerCalculation"/>.</param>        
+		/// <returns>String, for display use, indicating success.</returns>
+		public static string Save(AdoDataConnection database, PowerCalculation powerCalculation)
+		{
+			bool createdConnection = false;
+			string query;
+
+			try
+			{
+				createdConnection = CreateConnection(ref database);
+
+				if (powerCalculation.PowerCalculationId == 0)
+				{
+					query = database.ParameterizedQueryString("INSERT INTO PowerCalculation (CircuitDescription, VoltageAngleSignalId, VoltageMagSignalId, CurrentAngleSignalId, CurrentMagSignalId, RealPowerOutputSignalId, ReactivePowerOutputSignalId, ActivePowerOutputSignalId, CalculationEnabled, NodeId) " +
+						"VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})", "circuitDescription", "voltageAngle", "voltageMag", "currentAngle", "currentMag", "realPowerOutput", "reactivePowerOutput", "activePowerOutput", "calculationEnabled", "nodeId");
+
+					database.Connection.ExecuteNonQuery(query, DefaultTimeout, powerCalculation.CircuitDescription, database.Guid(powerCalculation.VoltageAngleMeasurement.SignalID),
+						database.Guid(powerCalculation.VoltageMagnitudeMeasurement.SignalID), database.Guid(powerCalculation.CurrentAngleMeasurement.SignalID), database.Guid(powerCalculation.CurrentMagnitudeMeasurement.SignalID),
+						database.Guid(powerCalculation.RealPowerOutputMeasurement.SignalID), database.Guid(powerCalculation.ReactivePowerOutputMeasurement.SignalID), database.Guid(powerCalculation.ActivePowerOutputMeasurement.SignalID),
+						powerCalculation.PowerCalculationEnabled, database.CurrentNodeID());
+				}
+				else
+				{
+					query = database.ParameterizedQueryString("UPDATE PowerCalculation SET CircuitDescription = {0}, VoltageAngleSignalId = {1}, VoltageMagSignalId = {2}, CurrentAngleSignalId = {3}, CurrentMagSignalId = {4}, " +
+						"RealPowerOutputSignalId = {5}, ReactivePowerOutputSignalId = {6}, ActivePowerOutputSignalId = {7}, CalculationEnabled = {8} WHERE PowerCalculationId = {9}", "circuitDescription", "voltageAngle", "voltageMag", "currentAngle", "currentMag", "realPowerOutput", "reactivePowerOutput", "activePowerOutput", "calculationEnabled", "powerCalculationId");
+
+					database.Connection.ExecuteNonQuery(query, DefaultTimeout, powerCalculation.CircuitDescription,
+						database.Guid(powerCalculation.VoltageAngleMeasurement.SignalID), database.Guid(powerCalculation.VoltageMagnitudeMeasurement.SignalID), database.Guid(powerCalculation.CurrentAngleMeasurement.SignalID), database.Guid(powerCalculation.CurrentMagnitudeMeasurement.SignalID),
+						database.Guid(powerCalculation.RealPowerOutputMeasurement.SignalID), database.Guid(powerCalculation.ReactivePowerOutputMeasurement.SignalID), database.Guid(powerCalculation.ActivePowerOutputMeasurement.SignalID), powerCalculation.PowerCalculationEnabled, powerCalculation.PowerCalculationId);
+				}
+
+				return "Power Calculation information saved successfully";
+			}
+			finally
+			{
+				if (createdConnection && database != null)
+					database.Dispose();
+			}
+		}
+
+		#endregion
+
+	}
+}
