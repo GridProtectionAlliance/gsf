@@ -101,22 +101,13 @@ namespace GSF.IO
         static FilePath()
         {
             StringBuilder pattern = new StringBuilder();
-            HashSet<char> invalidPathChars = new HashSet<char>();
 
             // Defines a regular expression pattern for a valid file name character. We do this by
             // allowing any characters except those that would not be valid as part of a filename.
             // This essentially builds the "?" wildcard pattern match.
-            invalidPathChars.Add(Path.DirectorySeparatorChar);
-            invalidPathChars.Add(Path.AltDirectorySeparatorChar);
-            invalidPathChars.Add(Path.PathSeparator);
-            invalidPathChars.Add(Path.VolumeSeparatorChar);
-
-            foreach (char c in Path.GetInvalidPathChars())
-                invalidPathChars.Add(c);
-
             pattern.Append("[^");
 
-            foreach (char c in invalidPathChars)
+            foreach (char c in Path.GetInvalidFileNameChars())
                 pattern.Append(c.RegexEncode());
 
             pattern.Append("]");
