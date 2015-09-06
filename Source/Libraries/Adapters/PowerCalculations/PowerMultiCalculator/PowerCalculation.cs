@@ -1,5 +1,4 @@
-﻿using System;
-using GSF.TimeSeries;
+﻿using GSF.TimeSeries;
 
 namespace PowerCalculations.PowerMultiCalculator
 {
@@ -11,8 +10,8 @@ namespace PowerCalculations.PowerMultiCalculator
 		public MeasurementKey VoltageMagnitudeSignalId { get; set; }
 		public MeasurementKey CurrentAngleSignalId { get; set; }
 		public MeasurementKey CurrentMagnitudeSignalId { get; set; }
-		public MeasurementKey RealPowerOutputSignalId { get; set; }
-		public MeasurementKey ReactivePowerOutputSignalId { get; set; }
-		public MeasurementKey ActivePowerOutputSignalId { get; set; }
+		public IMeasurement RealPowerOutputMeasurement { get; set; }
+		public IMeasurement ReactivePowerOutputMeasurement { get; set; }
+		public IMeasurement ActivePowerOutputMeasurement { get; set; }
 	}
 }

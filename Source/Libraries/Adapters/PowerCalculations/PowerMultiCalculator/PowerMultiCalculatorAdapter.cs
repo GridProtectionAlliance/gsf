@@ -21,7 +21,7 @@ namespace PowerCalculations.PowerMultiCalculator
 	{
 		private const double SqrtOf3 = 1.7320508075688772935274463415059D;
 		private const int ValuesToTrack = 5;
-
+		
 		private List<PowerCalculation> _configuredCalculations;
 		private RunningAverage _averageCalculationsPerFrame = new RunningAverage();
 		private RunningAverage _averageCalculationTime = new RunningAverage();
@@ -33,7 +33,7 @@ namespace PowerCalculations.PowerMultiCalculator
 		private Queue<IMeasurement> _lastReactivePowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
 		private Queue<IMeasurement> _lastActivePowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
 
-		/// <summary>
+			/// <summary>
 		/// Gets or sets a boolean indicating whether or not this adapter will produce a result for all calculations. If this value is true and a calculation fails,
 		/// the adapter will produce NaN for that calculation. If this value is false and a calculation fails, the adapter will not produce any result.
 		/// </summary>
@@ -73,7 +73,7 @@ namespace PowerCalculations.PowerMultiCalculator
 				status.AppendLine(string.Format("       Average Calculation Time: {0} ms", _averageCalculationTime.Average.ToString("N4")));
 				status.AppendLine(string.Format("    Last Total Calculation Time: {0} ms", _lastTotalCalculationTime.ToString("N4")));
 				status.AppendLine(string.Format("Average  Total Calculation Time: {0} ms", _averageTotalCalculationTime.Average.ToString("N4")));
-
+				
 				status.AppendLine("   Last Real Power Measurements:");
 				if (!_lastRealPowerCalculations.Any())
 				{
@@ -139,36 +139,33 @@ namespace PowerCalculations.PowerMultiCalculator
 
 			_configuredCalculations = new List<PowerCalculation>();
 			using (var database = new AdoDataConnection("systemSettings"))
-			using (var cmd = database.Connection.CreateCommand())
+			using(var cmd = database.Connection.CreateCommand())
 			{
 				cmd.CommandText = string.Format("SELECT PowerCalculationId, CircuitDescription, VoltageAngleSignalId, VoltageMagSignalId, CurrentAngleSignalId, CurrentMagSignalID, " +
-								  "RealPowerOutputSignalId, ReactivePowerOutputSignalId, ActivePowerOutputSignalId FROM PowerCalculation " +
-								  "WHERE NodeId = '{0}' AND CalculationEnabled=1", ConfigurationFile.Current.Settings["systemSettings"]["NodeID"].ValueAs<Guid>());
+				                  "RealPowerOutputSignalId, ReactivePowerOutputSignalId, ActivePowerOutputSignalId FROM PowerCalculation " +
+								  "WHERE NodeId = '{0}' AND CalculationEnabled=1",  ConfigurationFile.Current.Settings["systemSettings"]["NodeID"].ValueAs<Guid>());
 
-				using (var rdr = cmd.ExecuteReader())
+				var rdr = cmd.ExecuteReader();
+				while (rdr.Read())
 				{
-					while (rdr.Read())
-					{
-						var pc = new PowerCalculation
-						{
-							PowerCalculationId = rdr.GetInt32(0),
-							CircuitDescription = rdr.GetString(1),
-							VoltageAngleSignalId = MeasurementKey.LookUpBySignalID(rdr.GetGuid(2)),
-							VoltageMagnitudeSignalId = MeasurementKey.LookUpBySignalID(rdr.GetGuid(3)),
-							CurrentAngleSignalId = MeasurementKey.LookUpBySignalID(rdr.GetGuid(4)),
-							CurrentMagnitudeSignalId = MeasurementKey.LookUpBySignalID(rdr.GetGuid(5)),
-							RealPowerOutputSignalId = MeasurementKey.LookUpBySignalID(rdr.GetGuid(6)),
-							ReactivePowerOutputSignalId = MeasurementKey.LookUpBySignalID(rdr.GetGuid(7)),
-							ActivePowerOutputSignalId = MeasurementKey.LookUpBySignalID(rdr.GetGuid(8))
-						};
-						_configuredCalculations.Add(pc);
-					}
+					var pc = new PowerCalculation();
+					pc.PowerCalculationId = rdr.GetInt32(0);
+					pc.CircuitDescription = rdr.GetString(1);
+					pc.VoltageAngleSignalId = MeasurementKey.LookUpBySignalID(rdr.GetGuid(2));
+					pc.VoltageMagnitudeSignalId = MeasurementKey.LookUpBySignalID(rdr.GetGuid(3));
+					pc.CurrentAngleSignalId = MeasurementKey.LookUpBySignalID(rdr.GetGuid(4));
+					pc.CurrentMagnitudeSignalId = MeasurementKey.LookUpBySignalID(rdr.GetGuid(5));
+					pc.ActivePowerOutputMeasurement = AddOutputMeasurement(rdr.GetGuid(6));
+					pc.ReactivePowerOutputMeasurement = AddOutputMeasurement(rdr.GetGuid(7));
+					pc.RealPowerOutputMeasurement = AddOutputMeasurement(rdr.GetGuid(8));
+					_configuredCalculations.Add(pc);
 				}
 			}
 
-			InputMeasurementKeys = _configuredCalculations.SelectMany(pc => new[] { pc.CurrentAngleSignalId, pc.CurrentMagnitudeSignalId, pc.VoltageAngleSignalId, pc.VoltageMagnitudeSignalId }).ToArray();
-			var outputMeasurementFilterString = "FILTER ActiveMeasurements WHERE " + string.Join(" OR ", _configuredCalculations.SelectMany(pc => new[] { pc.ActivePowerOutputSignalId.SignalID, pc.ReactivePowerOutputSignalId.SignalID, pc.RealPowerOutputSignalId.SignalID }).Select(s => string.Format("SIGNALID='{0}'", s)));
-			OutputMeasurements = AdapterBase.ParseOutputMeasurements(DataSource, true, outputMeasurementFilterString);
+			if (_configuredCalculations.Any())
+			{
+				InputMeasurementKeys = _configuredCalculations.SelectMany(pc => new[] { pc.CurrentAngleSignalId, pc.CurrentMagnitudeSignalId, pc.VoltageAngleSignalId, pc.VoltageMagnitudeSignalId }).ToArray();
+			}
 
 			var settings = Settings;
 			string setting;
@@ -253,9 +250,9 @@ namespace PowerCalculations.PowerMultiCalculator
 				{
 					if (OutputMeasurements != null && OutputMeasurements.Any())
 					{
-						var realPowerMeasurement = Measurement.Clone(OutputMeasurements.FirstOrDefault(m => m.ID == powerCalculation.RealPowerOutputSignalId.SignalID), power, frame.Timestamp);
-						var reactivePowerMeasurement = Measurement.Clone(OutputMeasurements.FirstOrDefault(m => m.ID == powerCalculation.ReactivePowerOutputSignalId.SignalID), reactivePower, frame.Timestamp);
-						var activePowerMeasurement = Measurement.Clone(OutputMeasurements.FirstOrDefault(m => m.ID == powerCalculation.ActivePowerOutputSignalId.SignalID), apparentPower, frame.Timestamp);
+						var realPowerMeasurement = Measurement.Clone(powerCalculation.RealPowerOutputMeasurement, power, frame.Timestamp);
+						var reactivePowerMeasurement = Measurement.Clone(powerCalculation.ReactivePowerOutputMeasurement, reactivePower, frame.Timestamp);
+						var activePowerMeasurement = Measurement.Clone(powerCalculation.ActivePowerOutputMeasurement, apparentPower, frame.Timestamp);
 
 						if (AlwaysProduceResult || !double.IsNaN(realPowerMeasurement.Value))
 						{
@@ -301,6 +298,28 @@ namespace PowerCalculations.PowerMultiCalculator
 			_averageCalculationsPerFrame.AddValue(calculations);
 
 			OnNewMeasurements(outputMeasurements);
+		}
+
+		private Measurement AddOutputMeasurement(Guid signalId)
+		{
+			var measurement = GetMeasurement(signalId);
+			if (measurement != null)
+				OutputMeasurements = (OutputMeasurements ?? Enumerable.Empty<IMeasurement>()).Concat(Enumerable.Repeat(measurement, 1)).ToArray();
+
+			return measurement;
+		}
+
+		private Measurement GetMeasurement(Guid signalId)
+		{
+			var rows = DataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalID = '{0}'", signalId));
+			if (!rows.Any()) return null;
+
+			var meas = new Measurement();
+			meas.Key = MeasurementKey.LookUpBySignalID(signalId);
+			meas.TagName = rows[0]["PointTag"].ToString();
+			meas.Adder = Convert.ToDouble(rows[0]["Adder"]);
+			meas.Multiplier = Convert.ToDouble(rows[0]["Multiplier"]);
+			return meas;
 		}
 	}
 }
