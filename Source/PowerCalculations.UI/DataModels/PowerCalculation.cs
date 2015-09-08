@@ -8,8 +8,7 @@ using GSF.Data;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.DataModels;
 
-
-namespace PowerCalculator.UI.DataModels
+namespace PowerCalculations.UI.DataModels
 {
 	public class PowerCalculation : DataModelBase
 	{

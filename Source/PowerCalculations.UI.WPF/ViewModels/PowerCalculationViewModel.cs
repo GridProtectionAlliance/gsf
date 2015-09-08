@@ -3,7 +3,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using GSF.TimeSeries.UI;
-using PowerCalculator.UI.DataModels;
+using PowerCalculations.UI.DataModels;
 
 namespace PowerCalculations.UI.WPF.ViewModels
 {
