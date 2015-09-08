@@ -7,9 +7,9 @@ using PowerCalculations.UI.DataModels;
 
 namespace PowerCalculations.UI.WPF.ViewModels
 {
-	public class PowerCalculationViewModel : PagedViewModelBase<PowerCalculation, int>
+	public class PhasorSelectionViewModel : PagedViewModelBase<Phasor, int>
 	{
-		public PowerCalculationViewModel(int itemsPerPage, bool autoSave = true)
+		public PhasorSelectionViewModel(int itemsPerPage, bool autoSave = true)
 			: base(itemsPerPage, autoSave)
 		{
 
@@ -17,18 +17,20 @@ namespace PowerCalculations.UI.WPF.ViewModels
 
 		public override int GetCurrentItemKey()
 		{
-			return CurrentItem.PowerCalculationId;
+			return CurrentItem.Id;
 		}
 
 		public override string GetCurrentItemName()
 		{
-			return CurrentItem.CircuitDescription;
+			return CurrentItem.Label;
 		}
 
 		public override bool IsNewRecord
 		{
-			get { return CurrentItem.PowerCalculationId == 0; }
+			get { return CurrentItem.Id == 0; }
 		}
+
+
 
 		/// <summary>
 		/// Loads collection of <see cref="PowerCalculation"/> information stored in the database.
@@ -45,7 +47,7 @@ namespace PowerCalculations.UI.WPF.ViewModels
 
 				if (ItemsKeys == null)
 				{
-					ItemsKeys = PowerCalculation.LoadKeys(null);
+					ItemsKeys = Phasor.LoadKeys(null);
 
 					if ((object)SortSelector != null)
 					{
@@ -57,7 +59,7 @@ namespace PowerCalculations.UI.WPF.ViewModels
 				}
 
 				var pageKeys = ItemsKeys.Skip((CurrentPageNumber - 1) * ItemsPerPage).Take(ItemsPerPage).ToList();
-				ItemsSource = PowerCalculation.Load(null, pageKeys);
+				ItemsSource = Phasor.Load(null, pageKeys);
 
 				OnLoaded();
 			}
@@ -65,13 +67,13 @@ namespace PowerCalculations.UI.WPF.ViewModels
 			{
 				if (ex.InnerException != null)
 				{
-					Popup(ex.Message + Environment.NewLine + "Inner Exception: " + ex.InnerException.Message, "Load Power Calculations Exception:", MessageBoxImage.Error);
-					CommonFunctions.LogException(null, "Load Power Calculations", ex.InnerException);
+					Popup(ex.Message + Environment.NewLine + "Inner Exception: " + ex.InnerException.Message, "Load Phasors Exception:", MessageBoxImage.Error);
+					CommonFunctions.LogException(null, "Load Phasors", ex.InnerException);
 				}
 				else
 				{
-					Popup(ex.Message, "Load Power Calculations Exception:", MessageBoxImage.Error);
-					CommonFunctions.LogException(null, "Load Power Calculations", ex);
+					Popup(ex.Message, "Load Phasors Exception:", MessageBoxImage.Error);
+					CommonFunctions.LogException(null, "Load Phasors", ex);
 				}
 			}
 			finally

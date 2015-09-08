@@ -44,9 +44,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UserControls\PhasorSelectionUserControl.xaml.cs">
+      <DependentUpon>PhasorSelectionUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\PowerCalculationUserControl.xaml.cs">
       <DependentUpon>PowerCalculationUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ViewModels\PhasorSelectionViewModel.cs" />
     <Compile Include="ViewModels\PowerCalculationViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -69,6 +73,10 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Page Include="UserControls\PhasorSelectionUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UserControls\PowerCalculationUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
