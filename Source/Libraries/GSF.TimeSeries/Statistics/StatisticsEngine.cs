@@ -719,7 +719,7 @@ namespace GSF.TimeSeries.Statistics
         private void UpdateStatisticMeasurements()
         {
             const string StatisticSelectFormat = "SELECT Source, SignalIndex, Arguments, Description FROM Statistic WHERE Enabled <> 0";
-            const string StatisticMeasurementSelectFormat = "SELECT SignalReference FROM ActiveMeasurement WHERE SignalReference IN ({0})";
+            const string StatisticMeasurementSelectFormat = "SELECT SignalReference FROM Measurement WHERE SignalReference IN ({0})";
             const string StatisticMeasurementInsertFormat = "INSERT INTO Measurement(HistorianID, DeviceID, PointTag, SignalTypeID, SignalReference, Description, Enabled) VALUES({0}, {1}, {2}, {3}, {4}, {5}, 1)";
 
             StatisticSource[] sources;
