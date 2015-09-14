@@ -24,6 +24,8 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using GSF.PQDIF.Physical;
 
 namespace GSF.PQDIF.Logical
@@ -68,6 +70,48 @@ namespace GSF.PQDIF.Logical
                     return 60.0D;
 
                 return nominalFrequencyElement.GetReal8();
+            }
+        }
+
+        /// <summary>
+        /// Gets the flag that determines whether the calibration
+        /// settings need to be applied before using the values
+        /// recorded by this monitor.
+        /// </summary>
+        public bool UseCalibration
+        {
+            get
+            {
+                return m_physicalRecord.Body.Collection.GetScalarByTag(UseCalibrationTag).GetBool4();
+            }
+        }
+
+        /// <summary>
+        /// Gets the flag that determines whether the transducer
+        /// ratio needs to be applied before using the values
+        /// recorded by this monitor.
+        /// </summary>
+        public bool UseTransducer
+        {
+            get
+            {
+                return m_physicalRecord.Body.Collection.GetScalarByTag(UseTransducerTag).GetBool4();
+            }
+        }
+
+        /// <summary>
+        /// Gets the settings for the channels defined in the data source.
+        /// </summary>
+        public IList<ChannelSetting> ChannelSettings
+        {
+            get
+            {
+                return m_physicalRecord.Body.Collection
+                    .GetCollectionByTag(ChannelSettingsArrayTag)
+                    .GetElementsByTag(OneChannelSettingTag)
+                    .Cast<CollectionElement>()
+                    .Select(collection => new ChannelSetting(collection, this))
+                    .ToList();
             }
         }
 

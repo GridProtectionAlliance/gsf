@@ -84,7 +84,7 @@ namespace GSF.PQDIF.Logical
             get
             {
                 return m_physicalStructure
-                    .GetScalarByTag(ChannelDefinitionIndexTag)
+                    .GetScalarByTag(ChannelDefinition.ChannelDefinitionIndexTag)
                     .GetUInt4();
             }
         }
@@ -97,6 +97,23 @@ namespace GSF.PQDIF.Logical
             get
             {
                 return m_observationRecord.DataSource.ChannelDefinitions[(int)ChannelDefinitionIndex];
+            }
+        }
+
+        /// <summary>
+        /// Gets the channel setting which defines the instrument settings for the channel.
+        /// </summary>
+        public ChannelSetting Setting
+        {
+            get
+            {
+                MonitorSettingsRecord monitorSettings = m_observationRecord.Settings;
+
+                if ((object)monitorSettings == null)
+                    return null;
+
+                return monitorSettings.ChannelSettings
+                    .FirstOrDefault(channelSetting => channelSetting.ChannelDefinitionIndex == ChannelDefinitionIndex);
             }
         }
 
@@ -175,11 +192,6 @@ namespace GSF.PQDIF.Logical
         // Static Fields
 
         /// <summary>
-        /// Tag that identifies the channel definition index.
-        /// </summary>
-        public static readonly Guid ChannelDefinitionIndexTag = new Guid("b48d858f-f5f5-11cf-9d89-0080c72e70a3");
-
-        /// <summary>
         /// Tag that identifies the channel group ID.
         /// </summary>
         public static readonly Guid ChannelGroupIDTag = new Guid("f90de218-e67b-4cf1-a295-b021a2d46767");
@@ -205,6 +217,5 @@ namespace GSF.PQDIF.Logical
         public static readonly Guid CrossTriggerDeviceNameTag = new Guid("0fa118c5-cb4a-11cf-9d89-0080c72e70a3");
 
         #endregion
-
     }
 }

@@ -252,7 +252,42 @@ namespace GSF.PQDIF.Logical
                 values[i] = offset + (value * scale);
             }
 
+            ApplyTransducerRatio(values);
+
             return values;
+        }
+
+        private void ApplyTransducerRatio(IList<object> values)
+        {
+            ChannelSetting channelSetting;
+            double ratio;
+            dynamic value;
+
+            if ((object)Channel.ObservationRecord.Settings == null)
+                return;
+
+            if (!Channel.ObservationRecord.Settings.UseTransducer)
+                return;
+
+            channelSetting = Channel.Setting;
+
+            if ((object)channelSetting == null)
+                return;
+
+            if (!channelSetting.HasElement(ChannelSetting.XDSystemSideRatioTag))
+                return;
+
+            if (!channelSetting.HasElement(ChannelSetting.XDMonitorSideRatioTag))
+                return;
+
+            ratio = channelSetting.XDSystemSideRatio / channelSetting.XDMonitorSideRatio;
+
+            for (int i = 0; i < values.Count; i++)
+            {
+                value = values[i];
+                value = value * ratio;
+                values[i] = value;
+            }
         }
 
         #endregion

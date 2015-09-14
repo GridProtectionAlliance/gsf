@@ -458,6 +458,11 @@ namespace GSF.PQDIF.Logical
         // Static Fields
 
         /// <summary>
+        /// Tag that identifies the channel definition index.
+        /// </summary>
+        public static readonly Guid ChannelDefinitionIndexTag = new Guid("b48d858f-f5f5-11cf-9d89-0080c72e70a3");
+
+        /// <summary>
         /// Tag that identifies the channel name.
         /// </summary>
         public static readonly Guid ChannelNameTag = new Guid("b48d8590-f5f5-11cf-9d89-0080c72e70a3");
@@ -493,6 +498,5 @@ namespace GSF.PQDIF.Logical
         public static readonly Guid OneSeriesDefinitionTag = new Guid("b48d859a-f5f5-11cf-9d89-0080c72e70a3");
 
         #endregion
-
     }
 }

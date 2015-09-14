@@ -367,6 +367,22 @@ namespace GSF.PQDIF.Logical
             }
         }
 
+        /// <summary>
+        /// Gets the nominal quantity of the series.
+        /// </summary>
+        public double? SeriesNominalQuantity
+        {
+            get
+            {
+                ScalarElement seriesNominalQuantityScalar = m_physicalStructure.GetScalarByTag(SeriesNominalQuantityTag);
+
+                if ((object)seriesNominalQuantityScalar == null)
+                    return null;
+
+                return seriesNominalQuantityScalar.GetReal8();
+            }
+        }
+
         #endregion
 
         #region [ Static ]
@@ -397,6 +413,11 @@ namespace GSF.PQDIF.Logical
         /// Tag that identifies the value type name of the series.
         /// </summary>
         public static readonly Guid ValueTypeNameTag = new Guid("b48d859d-f5f5-11cf-9d89-0080c72e70a3");
+
+        /// <summary>
+        /// Tag that identifies the nominal quantity of the series.
+        /// </summary>
+        public static readonly Guid SeriesNominalQuantityTag = new Guid("0fa118c8-cb4a-11d2-b30b-fe25cb9a1760");
 
         #endregion
 
