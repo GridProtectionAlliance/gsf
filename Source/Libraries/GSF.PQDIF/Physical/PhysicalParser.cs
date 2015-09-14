@@ -25,7 +25,6 @@
 
 using System;
 using System.IO;
-using GSF.IO;
 using Ionic.Zlib;
 
 namespace GSF.PQDIF.Physical
@@ -246,36 +245,32 @@ namespace GSF.PQDIF.Physical
         private RecordHeader ReadRecordHeader()
         {
             return new RecordHeader
-                {
-                    RecordSignature = new Guid(m_fileReader.ReadBytes(16)),
-                    RecordTypeTag = new Guid(m_fileReader.ReadBytes(16)),
-                    HeaderSize = m_fileReader.ReadInt32(),
-                    BodySize = m_fileReader.ReadInt32(),
-                    NextRecordPosition = m_fileReader.ReadInt32(),
-                    Checksum = m_fileReader.ReadUInt32(),
-                    Reserved = m_fileReader.ReadBytes(16)
-                };
+            {
+                RecordSignature = new Guid(m_fileReader.ReadBytes(16)),
+                RecordTypeTag = new Guid(m_fileReader.ReadBytes(16)),
+                HeaderSize = m_fileReader.ReadInt32(),
+                BodySize = m_fileReader.ReadInt32(),
+                NextRecordPosition = m_fileReader.ReadInt32(),
+                Checksum = m_fileReader.ReadUInt32(),
+                Reserved = m_fileReader.ReadBytes(16)
+            };
         }
 
         // Reads the body of a record from the PQDIF file.
         private RecordBody ReadRecordBody(int byteSize)
         {
-            byte[] buffer;
-            MemoryStream bufferStream;
-
             if (byteSize == 0)
                 return null;
 
-            buffer = m_fileReader.ReadBytes(byteSize);
-            Decompress(ref buffer);
-
-            // Using provided buffer as non-expandable memory stream for record body collection
-            bufferStream = new MemoryStream(buffer);
-
-            return new RecordBody
+            using (MemoryStream stream = new MemoryStream(m_fileReader.ReadBytes(byteSize)))
+            using (Stream decompressedStream = GetDecompressedStream(stream))
+            using (BinaryReader reader = new BinaryReader(decompressedStream))
             {
-                Collection = ReadCollection(new BinaryReader(bufferStream))
-            };
+                return new RecordBody()
+                {
+                    Collection = ReadCollection(reader)
+                };
+            }
         }
 
         // Reads an element from the PQDIF file.
@@ -329,10 +324,10 @@ namespace GSF.PQDIF.Physical
         // Reads a collection element from the PQDIF file.
         private CollectionElement ReadCollection(BinaryReader recordBodyReader)
         {
-            CollectionElement collection = new CollectionElement
-                {
-                    Size = recordBodyReader.ReadInt32()
-                };
+            CollectionElement collection = new CollectionElement()
+            {
+                Size = recordBodyReader.ReadInt32()
+            };
 
             for (int i = 0; i < collection.Size; i++)
                 collection.AddElement(ReadElement(recordBodyReader));
@@ -343,11 +338,11 @@ namespace GSF.PQDIF.Physical
         // Reads a vector element from the PQDIF file.
         private VectorElement ReadVector(BinaryReader recordBodyReader, PhysicalType typeOfValue)
         {
-            VectorElement element = new VectorElement
-                {
-                    Size = recordBodyReader.ReadInt32(),
-                    TypeOfValue = typeOfValue
-                };
+            VectorElement element = new VectorElement()
+            {
+                Size = recordBodyReader.ReadInt32(),
+                TypeOfValue = typeOfValue
+            };
 
             byte[] values = recordBodyReader.ReadBytes(element.Size * typeOfValue.GetByteSize());
 
@@ -359,10 +354,10 @@ namespace GSF.PQDIF.Physical
         // Reads a scalar element from the PQDIF file.
         private ScalarElement ReadScalar(BinaryReader recordBodyReader, PhysicalType typeOfValue)
         {
-            ScalarElement element = new ScalarElement
-                {
-                    TypeOfValue = typeOfValue
-                };
+            ScalarElement element = new ScalarElement()
+            {
+                TypeOfValue = typeOfValue
+            };
 
             byte[] value = recordBodyReader.ReadBytes(typeOfValue.GetByteSize());
 
@@ -371,35 +366,17 @@ namespace GSF.PQDIF.Physical
             return element;
         }
 
-        // Decompresses the given buffer based on the compression style and algorithm currently used by the parser.
-        // The result is placed back in the buffer that was sent to this method.
-        private void Decompress(ref byte[] buffer)
+        // Converts the given stream to a stream of
+        // decompressed data based on the compression algorithm.
+        private Stream GetDecompressedStream(Stream stream)
         {
-            if (CompressionAlgorithm == CompressionAlgorithm.None || CompressionStyle == CompressionStyle.None)
-                return;
+            if (m_compressionAlgorithm == CompressionAlgorithm.PKZIP)
+                throw new InvalidOperationException("PKZIP compression is not supported by this PQDIF parsing library.");
 
-            byte[] readBuffer = new byte[65536];
+            if (m_compressionAlgorithm == CompressionAlgorithm.Zlib && m_compressionStyle != CompressionStyle.None)
+                return new ZlibStream(stream, CompressionMode.Decompress);
 
-            using (BlockAllocatedMemoryStream readStream = new BlockAllocatedMemoryStream())
-            {
-                int readAmount;
-
-                // Faster here to use provided buffer as non-expandable memory stream
-                using (MemoryStream bufferStream = new MemoryStream(buffer))
-                {
-                    using (ZlibStream inflater = new ZlibStream(bufferStream, CompressionMode.Decompress))
-                    {
-                        do
-                        {
-                            readAmount = inflater.Read(readBuffer, 0, readBuffer.Length);
-                            readStream.Write(readBuffer, 0, readAmount);
-                        }
-                        while (readAmount != 0);
-                    }
-                }
-
-                buffer = readStream.ToArray();
-            }
+            return stream;
         }
 
         #endregion
