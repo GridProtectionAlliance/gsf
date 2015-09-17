@@ -324,7 +324,7 @@ namespace GSF.PQDIF.Logical
     /// definition resides within a <see cref="DataSourceRecord"/> and
     /// defines a <see cref="ChannelInstance"/>.
     /// </summary>
-    public class ChannelDefinition
+    public class ChannelDefinition : IEquatable<ChannelDefinition>
     {
         #region [ Members ]
 
@@ -352,6 +352,17 @@ namespace GSF.PQDIF.Logical
         #region [ Properties ]
 
         /// <summary>
+        /// Gets the physical structure of the channel definition.
+        /// </summary>
+        public CollectionElement PhysicalStructure
+        {
+            get
+            {
+                return m_physicalStructure;
+            }
+        }
+
+        /// <summary>
         /// Gets the data source record in which
         /// the channel definition resides.
         /// </summary>
@@ -370,12 +381,31 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                VectorElement channelNameVector = m_physicalStructure.GetVectorByTag(ChannelNameTag);
+                VectorElement channelNameElement = m_physicalStructure.GetVectorByTag(ChannelNameTag);
 
-                if ((object)channelNameVector == null)
+                if ((object)channelNameElement == null)
                     return null;
 
-                return Encoding.ASCII.GetString(channelNameVector.GetValues()).Trim((char)0);
+                return Encoding.ASCII.GetString(channelNameElement.GetValues()).Trim((char)0);
+            }
+            set
+            {
+                byte[] bytes = Encoding.ASCII.GetBytes(value + (char)0);
+                VectorElement channelNameElement = m_physicalStructure.GetVectorByTag(ChannelNameTag);
+
+                if ((object)channelNameElement == null)
+                {
+                    channelNameElement = new VectorElement()
+                    {
+                        TagOfElement = ChannelNameTag,
+                        TypeOfValue = PhysicalType.Char1
+                    };
+
+                    m_physicalStructure.AddElement(channelNameElement);
+                }
+
+                channelNameElement.Size = bytes.Length;
+                channelNameElement.SetValues(bytes, 0);
             }
         }
 
@@ -389,6 +419,23 @@ namespace GSF.PQDIF.Logical
                 return (Phase)m_physicalStructure
                     .GetScalarByTag(PhaseIDTag)
                     .GetUInt4();
+            }
+            set
+            {
+                ScalarElement phaseIDElement = m_physicalStructure.GetScalarByTag(PhaseIDTag);
+
+                if ((object)phaseIDElement == null)
+                {
+                    phaseIDElement = new ScalarElement()
+                    {
+                        TagOfElement = PhaseIDTag,
+                        TypeOfValue = PhysicalType.UnsignedInteger4
+                    };
+
+                    m_physicalStructure.AddElement(phaseIDElement);
+                }
+
+                phaseIDElement.SetUInt4((uint)value);
             }
         }
 
@@ -404,6 +451,23 @@ namespace GSF.PQDIF.Logical
                     .GetScalarByTag(QuantityTypeIDTag)
                     .GetGuid();
             }
+            set
+            {
+                ScalarElement quantityTypeIDElement = m_physicalStructure.GetScalarByTag(QuantityTypeIDTag);
+
+                if ((object)quantityTypeIDElement == null)
+                {
+                    quantityTypeIDElement = new ScalarElement()
+                    {
+                        TagOfElement = QuantityTypeIDTag,
+                        TypeOfValue = PhysicalType.Guid
+                    };
+
+                    m_physicalStructure.AddElement(quantityTypeIDElement);
+                }
+
+                quantityTypeIDElement.SetGuid(value);
+            }
         }
 
         /// <summary>
@@ -418,6 +482,23 @@ namespace GSF.PQDIF.Logical
                     .GetScalarByTag(QuantityMeasuredIDTag)
                     .GetUInt4();
             }
+            set
+            {
+                ScalarElement quantityMeasuredIDElement = m_physicalStructure.GetScalarByTag(QuantityMeasuredIDTag);
+
+                if ((object)quantityMeasuredIDElement == null)
+                {
+                    quantityMeasuredIDElement = new ScalarElement()
+                    {
+                        TagOfElement = QuantityMeasuredIDTag,
+                        TypeOfValue = PhysicalType.UnsignedInteger4
+                    };
+
+                    m_physicalStructure.AddElement(quantityMeasuredIDElement);
+                }
+
+                quantityMeasuredIDElement.SetUInt4((uint)value);
+            }
         }
 
         /// <summary>
@@ -427,12 +508,31 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                VectorElement quantityNameVector = m_physicalStructure.GetVectorByTag(QuantityNameTag);
+                VectorElement quantityNameElement = m_physicalStructure.GetVectorByTag(QuantityNameTag);
 
-                if ((object)quantityNameVector == null)
+                if ((object)quantityNameElement == null)
                     return null;
 
-                return Encoding.ASCII.GetString(quantityNameVector.GetValues()).Trim((char)0);
+                return Encoding.ASCII.GetString(quantityNameElement.GetValues()).Trim((char)0);
+            }
+            set
+            {
+                byte[] bytes = Encoding.ASCII.GetBytes(value + (char)0);
+                VectorElement quantityNameElement = m_physicalStructure.GetVectorByTag(QuantityNameTag);
+
+                if ((object)quantityNameElement == null)
+                {
+                    quantityNameElement = new VectorElement()
+                    {
+                        TagOfElement = QuantityNameTag,
+                        TypeOfValue = PhysicalType.Char1
+                    };
+
+                    m_physicalStructure.AddElement(quantityNameElement);
+                }
+
+                quantityNameElement.Size = bytes.Length;
+                quantityNameElement.SetValues(bytes, 0);
             }
         }
 
@@ -449,6 +549,93 @@ namespace GSF.PQDIF.Logical
                     .Select(collection => new SeriesDefinition(collection, this))
                     .ToList();
             }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Adds a new series definition to the collection
+        /// of series definitions in this channel definition.
+        /// </summary>
+        public SeriesDefinition AddNewSeriesDefinition()
+        {
+            CollectionElement seriesDefinitionsElement = m_physicalStructure.GetCollectionByTag(SeriesDefinitionsTag);
+            CollectionElement seriesDefinitionElement = new CollectionElement() { TagOfElement = OneSeriesDefinitionTag };
+            SeriesDefinition seriesDefinition = new SeriesDefinition(seriesDefinitionElement, this);
+
+            if ((object)seriesDefinitionsElement == null)
+            {
+                seriesDefinitionsElement = new CollectionElement()
+                {
+                    TagOfElement = SeriesDefinitionsTag
+                };
+
+                m_physicalStructure.AddElement(seriesDefinitionsElement);
+            }
+
+            seriesDefinitionsElement.AddElement(seriesDefinitionElement);
+
+            return seriesDefinition;
+        }
+
+        /// <summary>
+        /// Removes the given series definition from the collection of series definitions.
+        /// </summary>
+        /// <param name="seriesDefinition">The series definition to be removed.</param>
+        public void Remove(SeriesDefinition seriesDefinition)
+        {
+            CollectionElement seriesDefinitionsElement = m_physicalStructure.GetCollectionByTag(SeriesDefinitionsTag);
+            List<CollectionElement> seriesDefinitionElements;
+            SeriesDefinition definition;
+
+            if ((object)seriesDefinitionsElement == null)
+                return;
+
+            seriesDefinitionElements = seriesDefinitionsElement.GetElementsByTag(OneSeriesDefinitionTag).Cast<CollectionElement>().ToList();
+
+            foreach (CollectionElement seriesDefinitionElement in seriesDefinitionElements)
+            {
+                definition = new SeriesDefinition(seriesDefinitionElement, this);
+
+                if (Equals(seriesDefinition, definition))
+                    seriesDefinitionsElement.RemoveElement(seriesDefinitionElement);
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether the current object is equal to another object of the same type.
+        /// </summary>
+        /// <param name="other">An object to compare with this object.</param>
+        /// <returns>true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.</returns>
+        public bool Equals(ChannelDefinition other)
+        {
+            if ((object)other == null)
+                return false;
+
+            return ReferenceEquals(m_physicalStructure, other.m_physicalStructure);
+        }
+
+        /// <summary>
+        /// Determines whether the specified <see cref="Object"/> is equal to the current <see cref="ChannelDefinition"/>.
+        /// </summary>
+        /// <param name="obj">The object to compare with the current object. </param>
+        /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
+        /// <filterpriority>2</filterpriority>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as ChannelDefinition);
+        }
+
+        /// <summary>
+        /// Serves as a hash function for a particular type. 
+        /// </summary>
+        /// <returns>A hash code for the current <see cref="ChannelDefinition"/>.</returns>
+        /// <filterpriority>2</filterpriority>
+        public override int GetHashCode()
+        {
+            return m_physicalStructure.GetHashCode();
         }
 
         #endregion

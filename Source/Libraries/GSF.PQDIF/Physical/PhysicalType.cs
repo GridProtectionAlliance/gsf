@@ -24,10 +24,10 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 
 namespace GSF.PQDIF.Physical
 {
-
     #region [ Enumerations ]
 
     /// <summary>
@@ -107,7 +107,7 @@ namespace GSF.PQDIF.Physical
         /// <remarks>
         /// The first four bytes represent the real part of the complex
         /// number, and the last four bytes represent the imaginary part.
-        /// Both values are 64-bit floating point numbers.
+        /// Both values are 32-bit floating point numbers.
         /// </remarks>
         Complex8 = 42,
 
@@ -143,7 +143,7 @@ namespace GSF.PQDIF.Physical
     /// <summary>
     /// Defines extension methods for <see cref="PhysicalType"/>.
     /// </summary>
-    public static class PysicalTypeExtensions
+    public static class PhysicalTypeExtensions
     {
         /// <summary>
         /// Gets the size of the physical type, in bytes.
@@ -186,6 +186,38 @@ namespace GSF.PQDIF.Physical
                 default:
                     throw new ArgumentOutOfRangeException("type");
             }
+        }
+
+        /// <summary>
+        /// Gets the physical type that most closely maps to the given type.
+        /// </summary>
+        /// <param name="type">The type to be converted to a PQDIF physical type.</param>
+        /// <returns>The physical type that most closely maps to the given type.</returns>
+        public static PhysicalType GetPhysicalType(Type type)
+        {
+            Dictionary<Type, PhysicalType> physicalTypeLookup = new Dictionary<Type, PhysicalType>()
+            {
+                { typeof(bool), PhysicalType.Boolean4 },
+                { typeof(sbyte), PhysicalType.Integer1 },
+                { typeof(short), PhysicalType.Integer2 },
+                { typeof(int), PhysicalType.Integer4 },
+                { typeof(byte), PhysicalType.UnsignedInteger1 },
+                { typeof(ushort), PhysicalType.UnsignedInteger2 },
+                { typeof(uint), PhysicalType.UnsignedInteger4 },
+                { typeof(float), PhysicalType.Real4 },
+                { typeof(double), PhysicalType.Real8 },
+                { typeof(ComplexNumber), PhysicalType.Complex16 },
+                { typeof(DateTime), PhysicalType.Timestamp },
+                { typeof(string), PhysicalType.Char1 },
+                { typeof(char), PhysicalType.Char1 }
+            };
+
+            PhysicalType physicalType;
+
+            if (!physicalTypeLookup.TryGetValue(type, out physicalType))
+                throw new ArgumentOutOfRangeException("type");
+
+            return physicalType;
         }
     }
 }

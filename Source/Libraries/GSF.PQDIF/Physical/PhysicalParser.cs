@@ -203,6 +203,11 @@ namespace GSF.PQDIF.Physical
             if ((object)body != null)
                 body.Collection.TagOfElement = header.RecordTypeTag;
 
+            // If the link to the next record points outside the bounds of the file,
+            // set it to zero to indicate that this is the last record in the file
+            if (header.NextRecordPosition < 0 || header.NextRecordPosition > m_fileReader.BaseStream.Length)
+                header.NextRecordPosition = 0;
+
             m_hasNextRecord = header.NextRecordPosition != 0;
             m_fileReader.BaseStream.Seek(header.NextRecordPosition, SeekOrigin.Begin);
 
@@ -244,7 +249,7 @@ namespace GSF.PQDIF.Physical
         // Reads the header of a record from the PQDIF file.
         private RecordHeader ReadRecordHeader()
         {
-            return new RecordHeader
+            return new RecordHeader()
             {
                 RecordSignature = new Guid(m_fileReader.ReadBytes(16)),
                 RecordTypeTag = new Guid(m_fileReader.ReadBytes(16)),
@@ -259,12 +264,18 @@ namespace GSF.PQDIF.Physical
         // Reads the body of a record from the PQDIF file.
         private RecordBody ReadRecordBody(int byteSize)
         {
+            byte[] bytes;
+
             if (byteSize == 0)
                 return null;
 
-            using (MemoryStream stream = new MemoryStream(m_fileReader.ReadBytes(byteSize)))
-            using (Stream decompressedStream = GetDecompressedStream(stream))
-            using (BinaryReader reader = new BinaryReader(decompressedStream))
+            bytes = m_fileReader.ReadBytes(byteSize);
+
+            if (m_compressionAlgorithm == CompressionAlgorithm.Zlib && m_compressionStyle != CompressionStyle.None)
+                bytes = ZlibStream.UncompressBuffer(bytes);
+
+            using (MemoryStream stream = new MemoryStream(bytes))
+            using (BinaryReader reader = new BinaryReader(stream))
             {
                 return new RecordBody()
                 {
@@ -324,12 +335,10 @@ namespace GSF.PQDIF.Physical
         // Reads a collection element from the PQDIF file.
         private CollectionElement ReadCollection(BinaryReader recordBodyReader)
         {
-            CollectionElement collection = new CollectionElement()
-            {
-                Size = recordBodyReader.ReadInt32()
-            };
+            int size = recordBodyReader.ReadInt32();
+            CollectionElement collection = new CollectionElement();
 
-            for (int i = 0; i < collection.Size; i++)
+            for (int i = 0; i < size; i++)
                 collection.AddElement(ReadElement(recordBodyReader));
 
             return collection;
@@ -364,19 +373,6 @@ namespace GSF.PQDIF.Physical
             element.SetValue(value, 0);
 
             return element;
-        }
-
-        // Converts the given stream to a stream of
-        // decompressed data based on the compression algorithm.
-        private Stream GetDecompressedStream(Stream stream)
-        {
-            if (m_compressionAlgorithm == CompressionAlgorithm.PKZIP)
-                throw new InvalidOperationException("PKZIP compression is not supported by this PQDIF parsing library.");
-
-            if (m_compressionAlgorithm == CompressionAlgorithm.Zlib && m_compressionStyle != CompressionStyle.None)
-                return new ZlibStream(stream, CompressionMode.Decompress);
-
-            return stream;
         }
 
         #endregion

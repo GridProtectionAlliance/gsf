@@ -34,7 +34,7 @@ namespace GSF.PQDIF.Logical
     /// instance resides in a <see cref="ChannelInstance"/> and is
     /// defined by a <see cref="SeriesDefinition"/>.
     /// </summary>
-    public class SeriesInstance
+    public class SeriesInstance : IEquatable<SeriesInstance>
     {
         #region [ Members ]
 
@@ -63,6 +63,17 @@ namespace GSF.PQDIF.Logical
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets the physical structure of the series instance.
+        /// </summary>
+        public CollectionElement PhysicalStructure
+        {
+            get
+            {
+                return m_physicalStructure;
+            }
+        }
 
         /// <summary>
         /// Gets the channel instance in which the series instance resides.
@@ -96,6 +107,12 @@ namespace GSF.PQDIF.Logical
             {
                 return m_physicalStructure.GetScalarByTag(SeriesScaleTag);
             }
+            set
+            {
+                value.TagOfElement = SeriesScaleTag;
+                m_physicalStructure.RemoveElementsByTag(SeriesScaleTag);
+                m_physicalStructure.AddElement(value);
+            }
         }
 
         /// <summary>
@@ -107,6 +124,12 @@ namespace GSF.PQDIF.Logical
             get
             {
                 return m_physicalStructure.GetScalarByTag(SeriesOffsetTag);
+            }
+            set
+            {
+                value.TagOfElement = SeriesOffsetTag;
+                m_physicalStructure.RemoveElementsByTag(SeriesOffsetTag);
+                m_physicalStructure.AddElement(value);
             }
         }
 
@@ -122,6 +145,12 @@ namespace GSF.PQDIF.Logical
                 return ((object)seriesShareSeries != null)
                     ? seriesShareSeries.SeriesValues
                     : m_physicalStructure.GetVectorByTag(SeriesValuesTag);
+            }
+            set
+            {
+                value.TagOfElement = SeriesValuesTag;
+                m_physicalStructure.RemoveElementsByTag(SeriesValuesTag);
+                m_physicalStructure.AddElement(value);
             }
         }
 
@@ -151,6 +180,31 @@ namespace GSF.PQDIF.Logical
                     ? seriesShareChannelIndexScalar.GetUInt4()
                     : (uint?)null;
             }
+            set
+            {
+                if (!value.HasValue)
+                {
+                    m_physicalStructure.RemoveElementsByTag(SeriesShareChannelIndexTag);
+                }
+                else
+                {
+                    ScalarElement seriesShareChannelIndexScalar = m_physicalStructure
+                        .GetScalarByTag(SeriesShareChannelIndexTag);
+
+                    if ((object)seriesShareChannelIndexScalar == null)
+                    {
+                        seriesShareChannelIndexScalar = new ScalarElement()
+                        {
+                            TagOfElement = SeriesShareChannelIndexTag,
+                            TypeOfValue = PhysicalType.UnsignedInteger4
+                        };
+
+                        m_physicalStructure.AddElement(seriesShareChannelIndexScalar);
+                    }
+
+                    seriesShareChannelIndexScalar.SetUInt4(value.GetValueOrDefault());
+                }
+            }
         }
 
         /// <summary>
@@ -166,6 +220,31 @@ namespace GSF.PQDIF.Logical
                 return ((object)seriesShareSeriesIndexScalar != null)
                     ? seriesShareSeriesIndexScalar.GetUInt4()
                     : (uint?)null;
+            }
+            set
+            {
+                if (!value.HasValue)
+                {
+                    m_physicalStructure.RemoveElementsByTag(SeriesShareSeriesIndexTag);
+                }
+                else
+                {
+                    ScalarElement seriesShareSeriesIndexScalar = m_physicalStructure
+                        .GetScalarByTag(SeriesShareSeriesIndexTag);
+
+                    if ((object)seriesShareSeriesIndexScalar == null)
+                    {
+                        seriesShareSeriesIndexScalar = new ScalarElement()
+                        {
+                            TagOfElement = SeriesShareSeriesIndexTag,
+                            TypeOfValue = PhysicalType.UnsignedInteger4
+                        };
+
+                        m_physicalStructure.AddElement(seriesShareSeriesIndexScalar);
+                    }
+
+                    seriesShareSeriesIndexScalar.SetUInt4(value.GetValueOrDefault());
+                }
             }
         }
 
@@ -205,6 +284,82 @@ namespace GSF.PQDIF.Logical
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Sets the raw values to be written to the PQDIF file as the <see cref="SeriesValues"/>.
+        /// </summary>
+        /// <param name="values">The values to be written to the PQDIF file.</param>
+        public void SetValues(IList<object> values)
+        {
+            VectorElement seriesValuesElement;
+
+            seriesValuesElement = new VectorElement()
+            {
+                Size = values.Count,
+                TagOfElement = SeriesValuesTag,
+                TypeOfValue = PhysicalTypeExtensions.GetPhysicalType(values[0].GetType())
+            };
+
+            for (int i = 0; i < values.Count; i++)
+                seriesValuesElement.Set(i, values[i]);
+        }
+
+        /// <summary>
+        /// Sets the values to be written to the PQDIF
+        /// file for the increment storage method.
+        /// </summary>
+        /// <param name="start">The start of the increment.</param>
+        /// <param name="count">The number of values in the series.</param>
+        /// <param name="increment">The amount by which to increment each value in the series.</param>
+        public void SetValues(object start, object count, object increment)
+        {
+            VectorElement seriesValuesElement;
+
+            seriesValuesElement = new VectorElement()
+            {
+                Size = 3,
+                TagOfElement = SeriesValuesTag,
+                TypeOfValue = PhysicalTypeExtensions.GetPhysicalType(start.GetType())
+            };
+
+            seriesValuesElement.Set(0, start);
+            seriesValuesElement.Set(1, count);
+            seriesValuesElement.Set(2, increment);
+        }
+
+        /// <summary>
+        /// Indicates whether the current object is equal to another object of the same type.
+        /// </summary>
+        /// <param name="other">An object to compare with this object.</param>
+        /// <returns>true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.</returns>
+        public bool Equals(SeriesInstance other)
+        {
+            if ((object)other == null)
+                return false;
+
+            return ReferenceEquals(m_physicalStructure, other.m_physicalStructure);
+        }
+
+        /// <summary>
+        /// Determines whether the specified <see cref="SeriesInstance"/> is equal to the current <see cref="SeriesInstance"/>.
+        /// </summary>
+        /// <param name="obj">The object to compare with the current object. </param>
+        /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
+        /// <filterpriority>2</filterpriority>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as SeriesInstance);
+        }
+
+        /// <summary>
+        /// Serves as a hash function for a particular type. 
+        /// </summary>
+        /// <returns>A hash code for the current <see cref="SeriesInstance"/>.</returns>
+        /// <filterpriority>2</filterpriority>
+        public override int GetHashCode()
+        {
+            return m_physicalStructure.GetHashCode();
+        }
 
         /// <summary>
         /// Gets the original data values by expanding

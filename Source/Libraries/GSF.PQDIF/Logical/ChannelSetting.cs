@@ -61,6 +61,17 @@ namespace GSF.PQDIF.Logical
         #region [ Properties ]
 
         /// <summary>
+        /// Gets the physical structure of the channel setting.
+        /// </summary>
+        public CollectionElement PhysicalStructure
+        {
+            get
+            {
+                return m_physicalStructure;
+            }
+        }
+
+        /// <summary>
         /// Gets the monitor settings record in which the channel setting resides.
         /// </summary>
         public MonitorSettingsRecord MonitorSettingsRecord
@@ -83,6 +94,23 @@ namespace GSF.PQDIF.Logical
                     .GetScalarByTag(ChannelDefinition.ChannelDefinitionIndexTag)
                     .GetUInt4();
             }
+            set
+            {
+                ScalarElement channelDefinitionIndexElement = m_physicalStructure.GetScalarByTag(ChannelDefinition.ChannelDefinitionIndexTag);
+
+                if ((object)channelDefinitionIndexElement == null)
+                {
+                    channelDefinitionIndexElement = new ScalarElement()
+                    {
+                        TagOfElement = ChannelDefinition.ChannelDefinitionIndexTag,
+                        TypeOfValue = PhysicalType.UnsignedInteger4
+                    };
+
+                    m_physicalStructure.AddElement(channelDefinitionIndexElement);
+                }
+
+                channelDefinitionIndexElement.SetUInt4(value);
+            }
         }
 
         /// <summary>
@@ -99,6 +127,23 @@ namespace GSF.PQDIF.Logical
 
                 return xdSystemSideRatioElement.GetReal8();
             }
+            set
+            {
+                ScalarElement xdSystemSideRatioElement = m_physicalStructure.GetScalarByTag(XDSystemSideRatioTag);
+
+                if ((object)xdSystemSideRatioElement == null)
+                {
+                    xdSystemSideRatioElement = new ScalarElement()
+                    {
+                        TagOfElement = XDSystemSideRatioTag,
+                        TypeOfValue = PhysicalType.Real8
+                    };
+
+                    m_physicalStructure.AddElement(xdSystemSideRatioElement);
+                }
+
+                xdSystemSideRatioElement.SetReal8(value);
+            }
         }
 
         /// <summary>
@@ -108,12 +153,29 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                ScalarElement xdSystemSideRatioElement = m_physicalStructure.GetScalarByTag(XDMonitorSideRatioTag);
+                ScalarElement xdMonitorSideRatioElement = m_physicalStructure.GetScalarByTag(XDMonitorSideRatioTag);
 
-                if ((object)xdSystemSideRatioElement == null)
+                if ((object)xdMonitorSideRatioElement == null)
                     return 1.0D;
 
-                return xdSystemSideRatioElement.GetReal8();
+                return xdMonitorSideRatioElement.GetReal8();
+            }
+            set
+            {
+                ScalarElement xdMonitorSideRatioElement = m_physicalStructure.GetScalarByTag(XDMonitorSideRatioTag);
+
+                if ((object)xdMonitorSideRatioElement == null)
+                {
+                    xdMonitorSideRatioElement = new ScalarElement()
+                    {
+                        TagOfElement = XDMonitorSideRatioTag,
+                        TypeOfValue = PhysicalType.Real8
+                    };
+
+                    m_physicalStructure.AddElement(xdMonitorSideRatioElement);
+                }
+
+                xdMonitorSideRatioElement.SetReal8(value);
             }
         }
 

@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Linq;
 using System.Text;
 using GSF.PQDIF.Physical;
 
@@ -259,7 +260,7 @@ namespace GSF.PQDIF.Logical
     /// <summary>
     /// Definition of a <see cref="SeriesInstance"/>.
     /// </summary>
-    public class SeriesDefinition
+    public class SeriesDefinition : IEquatable<SeriesDefinition>
     {
         #region [ Members ]
 
@@ -285,6 +286,17 @@ namespace GSF.PQDIF.Logical
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets the physical structure of the series definition.
+        /// </summary>
+        public CollectionElement PhysicalStructure
+        {
+            get
+            {
+                return m_physicalStructure;
+            }
+        }
         
         /// <summary>
         /// Gets the channel definition in which the series definition resides.
@@ -309,6 +321,23 @@ namespace GSF.PQDIF.Logical
                     .GetScalarByTag(ValueTypeIDTag)
                     .GetGuid();
             }
+            set
+            {
+                ScalarElement valueTypeIDElement = m_physicalStructure.GetScalarByTag(ValueTypeIDTag);
+
+                if ((object)valueTypeIDElement == null)
+                {
+                    valueTypeIDElement = new ScalarElement()
+                    {
+                        TagOfElement = ValueTypeIDTag,
+                        TypeOfValue = PhysicalType.Guid
+                    };
+
+                    m_physicalStructure.AddElement(valueTypeIDElement);
+                }
+
+                valueTypeIDElement.SetGuid(value);
+            }
         }
 
         /// <summary>
@@ -322,6 +351,23 @@ namespace GSF.PQDIF.Logical
                     .GetScalarByTag(QuantityUnitsIDTag)
                     .GetUInt4();
             }
+            set
+            {
+                ScalarElement quantityUnitsIDElement = m_physicalStructure.GetScalarByTag(QuantityUnitsIDTag);
+
+                if ((object)quantityUnitsIDElement == null)
+                {
+                    quantityUnitsIDElement = new ScalarElement()
+                    {
+                        TagOfElement = QuantityUnitsIDTag,
+                        TypeOfValue = PhysicalType.UnsignedInteger4
+                    };
+
+                    m_physicalStructure.AddElement(quantityUnitsIDElement);
+                }
+
+                quantityUnitsIDElement.SetUInt4((uint)value);
+            }
         }
 
         /// <summary>
@@ -334,6 +380,23 @@ namespace GSF.PQDIF.Logical
                 return m_physicalStructure
                     .GetScalarByTag(QuantityCharacteristicIDTag)
                     .GetGuid();
+            }
+            set
+            {
+                ScalarElement quantityCharacteristicIDElement = m_physicalStructure.GetScalarByTag(QuantityCharacteristicIDTag);
+
+                if ((object)quantityCharacteristicIDElement == null)
+                {
+                    quantityCharacteristicIDElement = new ScalarElement()
+                    {
+                        TagOfElement = QuantityCharacteristicIDTag,
+                        TypeOfValue = PhysicalType.Guid
+                    };
+
+                    m_physicalStructure.AddElement(quantityCharacteristicIDElement);
+                }
+
+                quantityCharacteristicIDElement.SetGuid(value);
             }
         }
 
@@ -349,6 +412,23 @@ namespace GSF.PQDIF.Logical
                     .GetScalarByTag(StorageMethodIDTag)
                     .GetUInt4();
             }
+            set
+            {
+                ScalarElement storageMethodIDElement = m_physicalStructure.GetScalarByTag(StorageMethodIDTag);
+
+                if ((object)storageMethodIDElement == null)
+                {
+                    storageMethodIDElement = new ScalarElement()
+                    {
+                        TagOfElement = StorageMethodIDTag,
+                        TypeOfValue = PhysicalType.UnsignedInteger4
+                    };
+
+                    m_physicalStructure.AddElement(storageMethodIDElement);
+                }
+
+                storageMethodIDElement.SetUInt4((uint)value);
+            }
         }
 
         /// <summary>
@@ -358,29 +438,115 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                VectorElement valueTypeNameVector = m_physicalStructure.GetVectorByTag(ValueTypeNameTag);
+                VectorElement valueTypeNameElement = m_physicalStructure.GetVectorByTag(ValueTypeNameTag);
 
-                if ((object)valueTypeNameVector == null)
+                if ((object)valueTypeNameElement == null)
                     return null;
 
-                return Encoding.ASCII.GetString(valueTypeNameVector.GetValues()).Trim((char)0);
+                return Encoding.ASCII.GetString(valueTypeNameElement.GetValues()).Trim((char)0);
+            }
+            set
+            {
+                byte[] bytes = Encoding.ASCII.GetBytes(value + (char)0);
+                VectorElement valueTypeNameElement = m_physicalStructure.GetVectorByTag(ValueTypeNameTag);
+
+                if ((object)valueTypeNameElement == null)
+                {
+                    valueTypeNameElement = new VectorElement()
+                    {
+                        TagOfElement = ValueTypeNameTag,
+                        TypeOfValue = PhysicalType.Char1
+                    };
+
+                    m_physicalStructure.AddElement(valueTypeNameElement);
+                }
+
+                valueTypeNameElement.Size = bytes.Length;
+                valueTypeNameElement.SetValues(bytes, 0);
             }
         }
 
         /// <summary>
         /// Gets the nominal quantity of the series.
         /// </summary>
-        public double? SeriesNominalQuantity
+        public double SeriesNominalQuantity
         {
             get
             {
-                ScalarElement seriesNominalQuantityScalar = m_physicalStructure.GetScalarByTag(SeriesNominalQuantityTag);
+                ScalarElement seriesNominalQuantityElement = m_physicalStructure.GetScalarByTag(SeriesNominalQuantityTag);
 
-                if ((object)seriesNominalQuantityScalar == null)
-                    return null;
+                if ((object)seriesNominalQuantityElement == null)
+                    return 0.0D;
 
-                return seriesNominalQuantityScalar.GetReal8();
+                return seriesNominalQuantityElement.GetReal8();
             }
+            set
+            {
+
+                ScalarElement seriesNominalQuantityElement = m_physicalStructure.GetScalarByTag(SeriesNominalQuantityTag);
+
+                if ((object)seriesNominalQuantityElement == null)
+                {
+                    seriesNominalQuantityElement = new ScalarElement()
+                    {
+                        TagOfElement = SeriesNominalQuantityTag,
+                        TypeOfValue = PhysicalType.Real8
+                    };
+
+                    m_physicalStructure.AddElement(seriesNominalQuantityElement);
+                }
+
+                seriesNominalQuantityElement.SetReal8(value);
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Determines whether an element identified by the
+        /// given tag exists in this object's physical structure.
+        /// </summary>
+        /// <param name="tag">The tag of the element to search for.</param>
+        /// <returns>True if the element exists; false otherwise.</returns>
+        public bool HasElement(Guid tag)
+        {
+            return m_physicalStructure.GetElementsByTag(tag).Any();
+        }
+
+        /// <summary>
+        /// Indicates whether the current object is equal to another object of the same type.
+        /// </summary>
+        /// <param name="other">An object to compare with this object.</param>
+        /// <returns>true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.</returns>
+        public bool Equals(SeriesDefinition other)
+        {
+            if ((object)other == null)
+                return false;
+
+            return ReferenceEquals(m_physicalStructure, other.m_physicalStructure);
+        }
+
+        /// <summary>
+        /// Determines whether the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>.
+        /// </summary>
+        /// <param name="obj">The object to compare with the current object. </param>
+        /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
+        /// <filterpriority>2</filterpriority>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as SeriesDefinition);
+        }
+
+        /// <summary>
+        /// Serves as a hash function for a particular type. 
+        /// </summary>
+        /// <returns>A hash code for the current <see cref="T:System.Object"/>.</returns>
+        /// <filterpriority>2</filterpriority>
+        public override int GetHashCode()
+        {
+            return m_physicalStructure.GetHashCode();
         }
 
         #endregion
@@ -420,6 +586,5 @@ namespace GSF.PQDIF.Logical
         public static readonly Guid SeriesNominalQuantityTag = new Guid("0fa118c8-cb4a-11d2-b30b-fe25cb9a1760");
 
         #endregion
-
     }
 }
