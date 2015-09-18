@@ -552,6 +552,20 @@ namespace GSF.Historian
         }
 
         /// <summary>
+        /// Gets a flag that indicates whether the object has been disposed.
+        /// </summary>
+        [Browsable(false),
+        EditorBrowsable(EditorBrowsableState.Never),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool IsDisposed
+        {
+            get
+            {
+                return m_disposed;
+            }
+        }
+
+        /// <summary>
         /// Gets the newest time-series data received by the <see cref="DataListener"/>.
         /// </summary>
         /// <remarks>

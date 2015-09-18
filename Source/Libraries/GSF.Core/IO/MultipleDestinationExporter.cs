@@ -498,6 +498,18 @@ namespace GSF.IO
         }
 
         /// <summary>
+        /// Gets a flag that indicates whether the object has been disposed.
+        /// </summary>
+        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool IsDisposed
+        {
+            get
+            {
+                return m_disposed;
+            }
+        }
+
+        /// <summary>
         /// Gets the total number exports performed successfully.
         /// </summary>
         [Browsable(false)]

@@ -197,6 +197,17 @@ namespace GSF.IO
             }
         }
 
+        /// <summary>
+        /// Gets a flag that indicates whether the object has been disposed.
+        /// </summary>
+        public bool IsDisposed
+        {
+            get
+            {
+                return m_disposed;
+            }
+        }
+
         // Gets the name of the run-time log
         string IProvideStatus.Name
         {

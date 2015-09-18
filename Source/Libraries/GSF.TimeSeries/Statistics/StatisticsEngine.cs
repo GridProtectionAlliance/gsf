@@ -1194,13 +1194,18 @@ namespace GSF.TimeSeries.Statistics
                 if (StatisticSources.Any(registeredSource => registeredSource.SourceReference.TryGetTarget(out target) && target == source))
                     throw new InvalidOperationException(string.Format("Unable to register {0} as statistic source because it is already registered.", sourceName));
 
+                adapter = source as IAdapter;
+
+                if ((object)adapter != null)
+                {
+                    adapter.Disposed += (sender, args) => Unregister(sender);
+
+                    if (adapter.IsDisposed)
+                        return;
+                }
+
                 StatisticSources.Add(sourceInfo);
             }
-
-            adapter = source as IAdapter;
-
-            if ((object)adapter != null)
-                adapter.Disposed += (sender, args) => Unregister(sender);
 
             OnSourceRegistered();
         }

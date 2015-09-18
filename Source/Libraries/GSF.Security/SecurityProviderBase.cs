@@ -369,6 +369,17 @@ namespace GSF.Security
         }
 
         /// <summary>
+        /// Gets a flag that indicates whether the object has been disposed.
+        /// </summary>
+        public bool IsDisposed
+        {
+            get
+            {
+                return m_disposed;
+            }
+        }
+
+        /// <summary>
         /// Gets the <see cref="UserData"/> object containing information about the user.
         /// </summary>
         public virtual UserData UserData

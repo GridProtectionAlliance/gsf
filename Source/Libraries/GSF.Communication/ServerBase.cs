@@ -439,6 +439,19 @@ namespace GSF.Communication
         }
 
         /// <summary>
+        /// Gets a flag that indicates whether the object has been disposed.
+        /// </summary>
+        [Browsable(false),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool IsDisposed
+        {
+            get
+            {
+                return m_disposed;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the <see cref="Encoding"/> to be used for the text sent to the connected clients.
         /// </summary>
         [Browsable(false),

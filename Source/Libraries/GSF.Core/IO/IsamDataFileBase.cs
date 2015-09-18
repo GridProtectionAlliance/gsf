@@ -566,6 +566,18 @@ namespace GSF.IO
         }
 
         /// <summary>
+        /// Gets a flag that indicates whether the object has been disposed.
+        /// </summary>
+        [XmlIgnore]
+        public bool IsDisposed
+        {
+            get
+            {
+                return m_disposed;
+            }
+        }
+
+        /// <summary>
         /// Gets a boolean value that indicates whether the file is open.
         /// </summary>
         public bool IsOpen

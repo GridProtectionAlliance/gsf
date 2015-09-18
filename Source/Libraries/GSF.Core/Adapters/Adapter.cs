@@ -188,6 +188,18 @@ namespace GSF.Adapters
         }
 
         /// <summary>
+        /// Gets a flag that indicates whether the object has been disposed.
+        /// </summary>
+        [XmlIgnore]
+        public bool IsDisposed
+        {
+            get
+            {
+                return m_disposed;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets a boolean value that indicates whether <see cref="Adapter"/> settings are to be saved to the config file.
         /// </summary>
         [XmlIgnore]

@@ -660,6 +660,20 @@ namespace GSF.ErrorManagement
         }
 
         /// <summary>
+        /// Gets a flag that indicates whether the object has been disposed.
+        /// </summary>
+        [Browsable(false),
+        EditorBrowsable(EditorBrowsableState.Never),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool IsDisposed
+        {
+            get
+            {
+                return m_disposed;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the <see cref="Delegate"/> that provides common text stating what could have possibly 
         /// caused the <see cref="Exception"/>.
         /// </summary>

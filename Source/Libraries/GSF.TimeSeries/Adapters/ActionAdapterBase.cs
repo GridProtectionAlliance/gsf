@@ -930,6 +930,17 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
+        /// Gets a flag that indicates whether the object has been disposed.
+        /// </summary>
+        public bool IsDisposed
+        {
+            get
+            {
+                return m_disposed;
+            }
+        }
+
+        /// <summary>
         /// Starts the <see cref="ActionAdapterBase"/> or restarts it if it is already running.
         /// </summary>
         [AdapterCommand("Starts the action adapter or restarts it if it is already running.", "Administrator", "Editor")]
