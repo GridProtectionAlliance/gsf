@@ -323,7 +323,7 @@
   <Target Name="BeforeCreateWorkspace"/>
 
   <Target Name="CoreCreateWorkspace">
-    <!-- Create a temporary workspace for the build. -->
+    <!-- Create a workspace for the build. -->
     <Message Text="Creating local build workspace..."/>
     <RemoveDir Directories="$(LocalFolder)" Condition="Exists('$(LocalFolder)') And !Exists('$(LocalFolder)\.git')"/>
     <MakeDir Directories="$(LocalFolder)" Condition="!Exists('$(LocalFolder)')"/>
