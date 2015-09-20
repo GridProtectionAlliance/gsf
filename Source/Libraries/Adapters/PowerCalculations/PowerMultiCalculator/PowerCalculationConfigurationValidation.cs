@@ -24,7 +24,7 @@ namespace PowerCalculations.PowerMultiCalculator
 			using (var cmd = database.Connection.CreateCommand())
 			{
 				cmd.CommandText = string.Format("INSERT INTO DataOperation (Description, AssemblyName, TypeName, MethodName, Enabled) VALUES (" +
-												"'Power Calculation Validations', 'PowerMultiCalculatorAdapter.dll', '{0}', 'ValidatePowerCalculationConfigurations', 1)", typeof(PowerCalculationConfigurationValidation).FullName);
+												"'Power Calculation Validations', 'PowerCalculations.dll', '{0}', 'ValidatePowerCalculationConfigurations', 1)", typeof(PowerCalculationConfigurationValidation).FullName);
 				cmd.ExecuteNonQuery();
 			}
 		}
@@ -69,16 +69,16 @@ namespace PowerCalculations.PowerMultiCalculator
 		{
 			statusMessage("Checking for calculations with null output measurements...");
 			var query = string.Format("SELECT pc.PowerCalculationId, pc.CircuitDescription, pc.RealPowerOutputSignalId, pc.ActivePowerOutputSignalId, pc.ReactivePowerOutputSignalId, v.Acronym as vendoracronym, d.Acronym as deviceacronym, c.Acronym as companyacronym, d.id as deviceid, d.historianid as historianid " +
-									  "FROM [openpdc].[dbo].PowerCalculation pc " +
-									  "join [openpdc].[dbo].measurement m " +
+									  "FROM PowerCalculation pc " +
+									  "join measurement m " +
 									  "on m.signalid = pc.voltageanglesignalid " +
-									  "join [openpdc].[dbo].device d " +
+									  "join device d " +
 									  "on m.deviceid = d.id " +
-									  "join [openpdc].[dbo].VendorDevice vd " +
+									  "join VendorDevice vd " +
 									  "on vd.id = d.VendorDeviceID " +
-									  "join [openpdc].[dbo].vendor v " +
+									  "join vendor v " +
 									  "on vd.VendorID = v.id " +
-									  "join [openpdc].[dbo].company c " +
+									  "join company c " +
 									  "on d.CompanyID = c.id " +
 									  "WHERE pc.CalculationEnabled=1 and pc.nodeid={0} " +
 									  "AND (pc.RealPowerOutputSignalId IS NULL OR pc.ReactivePowerOutputSignalId IS NULL OR pc.ActivePowerOutputSignalId IS NULL)", nodeIdQueryString);
@@ -128,6 +128,7 @@ namespace PowerCalculations.PowerMultiCalculator
 			}
 
 			var newMeasurementsCount = realPowerUpdates.Count + reactivePowerUpdates.Count + activePowerUpdates.Count;
+
 			if (newMeasurementsCount > 0)
 			{
 				statusMessage(string.Format("Creating {0} new output measurements for power calculation...", newMeasurementsCount));
@@ -135,23 +136,31 @@ namespace PowerCalculations.PowerMultiCalculator
 				foreach (var update in realPowerUpdates)
 				{
 					GSF.TimeSeries.UI.DataModels.Measurement.Save(database, update.Value);
-					var measurement = GSF.TimeSeries.UI.DataModels.Measurement.GetMeasurement(database, string.Format("WHERE DeviceId={0} AND Description LIKE '%Real Power Calculation%'", update.Value.DeviceID));
+					var measurement = GSF.TimeSeries.UI.DataModels.Measurement.GetMeasurement(database, string.Format("WHERE DeviceId={0} AND Description = '{1}'", update.Value.DeviceID, update.Value.Description));
 					UpdatePowerCalculation(database, update.Key, realPowerOutputSignalId: measurement.SignalID);
 				}
+
+				statusMessage("Successfully created new real power calculations.");
 
 				foreach (var update in reactivePowerUpdates)
 				{
 					GSF.TimeSeries.UI.DataModels.Measurement.Save(database, update.Value);
-					var measurement = GSF.TimeSeries.UI.DataModels.Measurement.GetMeasurement(database, string.Format("WHERE DeviceId={0} AND Description LIKE '%Reactive Power Calculation%'", update.Value.DeviceID));
+					var measurement = GSF.TimeSeries.UI.DataModels.Measurement.GetMeasurement(database, string.Format("WHERE DeviceId={0} AND Description = '{1}'", update.Value.DeviceID, update.Value.Description));
 					UpdatePowerCalculation(database, update.Key, reactivePowerOutputSignalId: measurement.SignalID);
 				}
+
+				statusMessage("Successfully created new reactive power calculations.");
 
 				foreach (var update in activePowerUpdates)
 				{
 					GSF.TimeSeries.UI.DataModels.Measurement.Save(database, update.Value);
-					var measurement = GSF.TimeSeries.UI.DataModels.Measurement.GetMeasurement(database, string.Format("WHERE DeviceId={0} AND Description LIKE '%Active Power Calculation%'", update.Value.DeviceID));
+					var measurement = GSF.TimeSeries.UI.DataModels.Measurement.GetMeasurement(database, string.Format("WHERE DeviceId={0} AND Description = '{1}'", update.Value.DeviceID, update.Value.Description));
 					UpdatePowerCalculation(database, update.Key, activePowerOutputSignalId: measurement.SignalID);
 				}
+
+				statusMessage("Successfully created new active power calculations.");
+
+				statusMessage("Completed creation of new measurements for null output measurements on power calculations.");
 			}
 		}
 

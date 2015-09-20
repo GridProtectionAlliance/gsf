@@ -21,7 +21,7 @@ namespace PowerCalculations.PowerMultiCalculator
 	{
 		private const double SqrtOf3 = 1.7320508075688772935274463415059D;
 		private const int ValuesToTrack = 5;
-		
+
 		private List<PowerCalculation> _configuredCalculations;
 		private RunningAverage _averageCalculationsPerFrame = new RunningAverage();
 		private RunningAverage _averageCalculationTime = new RunningAverage();
@@ -33,7 +33,7 @@ namespace PowerCalculations.PowerMultiCalculator
 		private Queue<IMeasurement> _lastReactivePowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
 		private Queue<IMeasurement> _lastActivePowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
 
-			/// <summary>
+		/// <summary>
 		/// Gets or sets a boolean indicating whether or not this adapter will produce a result for all calculations. If this value is true and a calculation fails,
 		/// the adapter will produce NaN for that calculation. If this value is false and a calculation fails, the adapter will not produce any result.
 		/// </summary>
@@ -73,7 +73,7 @@ namespace PowerCalculations.PowerMultiCalculator
 				status.AppendLine(string.Format("       Average Calculation Time: {0} ms", _averageCalculationTime.Average.ToString("N4")));
 				status.AppendLine(string.Format("    Last Total Calculation Time: {0} ms", _lastTotalCalculationTime.ToString("N4")));
 				status.AppendLine(string.Format("Average  Total Calculation Time: {0} ms", _averageTotalCalculationTime.Average.ToString("N4")));
-				
+
 				status.AppendLine("   Last Real Power Measurements:");
 				if (!_lastRealPowerCalculations.Any())
 				{
@@ -139,11 +139,11 @@ namespace PowerCalculations.PowerMultiCalculator
 
 			_configuredCalculations = new List<PowerCalculation>();
 			using (var database = new AdoDataConnection("systemSettings"))
-			using(var cmd = database.Connection.CreateCommand())
+			using (var cmd = database.Connection.CreateCommand())
 			{
 				cmd.CommandText = string.Format("SELECT PowerCalculationId, CircuitDescription, VoltageAngleSignalId, VoltageMagSignalId, CurrentAngleSignalId, CurrentMagSignalID, " +
-				                  "RealPowerOutputSignalId, ReactivePowerOutputSignalId, ActivePowerOutputSignalId FROM PowerCalculation " +
-								  "WHERE NodeId = '{0}' AND CalculationEnabled=1",  ConfigurationFile.Current.Settings["systemSettings"]["NodeID"].ValueAs<Guid>());
+								  "RealPowerOutputSignalId, ReactivePowerOutputSignalId, ActivePowerOutputSignalId FROM PowerCalculation " +
+								  "WHERE NodeId = '{0}' AND CalculationEnabled=1", ConfigurationFile.Current.Settings["systemSettings"]["NodeID"].ValueAs<Guid>());
 
 				var rdr = cmd.ExecuteReader();
 				while (rdr.Read())
