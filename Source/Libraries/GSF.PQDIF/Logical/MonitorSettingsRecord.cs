@@ -192,8 +192,12 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                return m_physicalRecord.Body.Collection
-                    .GetCollectionByTag(ChannelSettingsArrayTag)
+                CollectionElement channelSettingsArray = m_physicalRecord.Body.Collection.GetCollectionByTag(ChannelSettingsArrayTag);
+
+                if ((object)channelSettingsArray == null)
+                    return null;
+
+                return channelSettingsArray
                     .GetElementsByTag(OneChannelSettingTag)
                     .Cast<CollectionElement>()
                     .Select(collection => new ChannelSetting(collection, this))

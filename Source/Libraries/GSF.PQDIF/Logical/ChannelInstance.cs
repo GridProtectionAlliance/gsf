@@ -104,13 +104,20 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                MonitorSettingsRecord monitorSettings = m_observationRecord.Settings;
+                MonitorSettingsRecord monitorSettings;
+                IList<ChannelSetting> channelSettings;
+
+                monitorSettings = m_observationRecord.Settings;
 
                 if ((object)monitorSettings == null)
                     return null;
 
-                return monitorSettings.ChannelSettings
-                    .FirstOrDefault(channelSetting => channelSetting.ChannelDefinitionIndex == ChannelDefinitionIndex);
+                channelSettings = monitorSettings.ChannelSettings;
+
+                if ((object)channelSettings == null)
+                    return null;
+
+                return channelSettings.FirstOrDefault(channelSetting => channelSetting.ChannelDefinitionIndex == ChannelDefinitionIndex);
             }
         }
 
