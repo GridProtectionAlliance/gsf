@@ -33,12 +33,27 @@ namespace GSF.Threading
     /// actions can be dispatched from other threads.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// This class provides a simple alternative to synchronization primitives
     /// such as wait handles and locks. Actions dispatched to a logical thread
     /// will be processed synchronously as though it was executed as consecutive
     /// method calls. All such actions can be dispatched from any thread in the
     /// system so method calls coming from multiple threads can be easily
     /// synchronized without locks, loops, wait handles, or timeouts.
+    /// </para>
+    /// 
+    /// <para>
+    /// Note that the <see cref="LogicalThreadScheduler"/> implements its own
+    /// thread pool to execute tasks pushed to logical threads. Executing
+    /// long-running processes or using synchronization primitives with high
+    /// contention or long timeouts can hinder the logical thread scheduler's
+    /// ability to schedule the actions of other logical threads. Like other
+    /// thread pool implementations, you can mitigate this by increasing the
+    /// maximum thread count of the logical thread scheduler, however it is
+    /// recommended to avoid using synchronization primitives and instead
+    /// synchronize those operations by running them as separate actions on
+    /// the same logical thread.
+    /// </para>
     /// </remarks>
     public class LogicalThread
     {

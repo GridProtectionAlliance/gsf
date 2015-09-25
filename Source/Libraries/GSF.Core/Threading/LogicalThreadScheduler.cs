@@ -83,7 +83,7 @@ namespace GSF.Threading
                 Interlocked.Exchange(ref m_maxThreadCount, value);
 
                 for (int i = 0; i < inactiveThreads; i++)
-                    StartNewPhysicalThread();
+                    ActivatePhysicalThread();
             }
         }
 
