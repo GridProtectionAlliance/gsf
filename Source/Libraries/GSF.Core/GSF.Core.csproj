@@ -372,6 +372,8 @@
     <Compile Include="Threading\InterprocessLock.cs" />
     <Compile Include="Threading\InterprocessReaderWriterLock.cs" />
     <Compile Include="Threading\ISynchronizedOperation.cs" />
+    <Compile Include="Threading\LogicalThread.cs" />
+    <Compile Include="Threading\LogicalThreadLocal.cs" />
     <Compile Include="Threading\LongSynchronizedOperation.cs" />
     <Compile Include="Threading\ManagedThread.cs" />
     <Compile Include="Threading\ManagedThreadPool.cs" />
@@ -381,6 +383,8 @@
     <Compile Include="Threading\ReaderWriterSpinLock.cs" />
     <Compile Include="Threading\ScheduledTask.cs" />
     <Compile Include="Threading\ShortSynchronizedOperation.cs" />
+    <Compile Include="Threading\LogicalThreadScheduler.cs" />
+    <Compile Include="Threading\LogicalThreadOperation.cs" />
     <Compile Include="Threading\SynchronizedOperationBase.cs" />
     <Compile Include="Threading\ThreadContainerBase.cs" />
     <Compile Include="Threading\ThreadContainerDedicated.cs" />
