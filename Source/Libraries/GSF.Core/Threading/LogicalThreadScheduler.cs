@@ -47,6 +47,7 @@ namespace GSF.Threading
         private ConcurrentQueue<LogicalThread> m_logicalThreads;
         private int m_maxThreadCount;
         private int m_threadCount;
+        private bool m_useBackgroundThreads;
 
         #endregion
 
@@ -59,6 +60,7 @@ namespace GSF.Threading
         {
             m_maxThreadCount = Environment.ProcessorCount;
             m_logicalThreads = new ConcurrentQueue<LogicalThread>();
+            m_useBackgroundThreads = true;
         }
 
         #endregion
@@ -84,6 +86,22 @@ namespace GSF.Threading
 
                 for (int i = 0; i < inactiveThreads; i++)
                     ActivatePhysicalThread();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the flag that determines whether the threads in
+        /// the scheduler's thread pool should be background threads.
+        /// </summary>
+        public bool UseBackgroundThreads
+        {
+            get
+            {
+                return m_useBackgroundThreads;
+            }
+            set
+            {
+                m_useBackgroundThreads = value;
             }
         }
 
@@ -158,7 +176,7 @@ namespace GSF.Threading
         private void StartNewPhysicalThread()
         {
             Thread thread = new Thread(ProcessLogicalThreads);
-            thread.IsBackground = true;
+            thread.IsBackground = m_useBackgroundThreads;
             thread.Start();
         }
 
