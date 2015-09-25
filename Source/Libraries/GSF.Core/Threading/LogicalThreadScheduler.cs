@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading;
 
 namespace GSF.Threading
@@ -186,8 +187,11 @@ namespace GSF.Threading
         /// </summary>
         private void ProcessLogicalThreads()
         {
+            Stopwatch stopwatch;
             LogicalThread thread;
             Action action;
+
+            stopwatch = new Stopwatch();
 
             while (ThreadCount <= MaxThreadCount && m_logicalThreads.TryDequeue(out thread))
             {
@@ -196,8 +200,13 @@ namespace GSF.Threading
                 if ((object)action != null)
                 {
                     LogicalThread.CurrentThread = thread;
+
+                    stopwatch.Restart();
                     TryExecute(action);
+                    stopwatch.Stop();
+
                     LogicalThread.CurrentThread = null;
+                    thread.UpdateStatistics(stopwatch.Elapsed);
                 }
 
                 if (thread.HasAction)

@@ -29,6 +29,91 @@ using System.Threading;
 namespace GSF.Threading
 {
     /// <summary>
+    /// Represents a set of statistics gathered about
+    /// the execution time of actions on a logical thread.
+    /// </summary>
+    public class LogicalThreadStatistics
+    {
+        #region [ Members ]
+
+        // Fields
+        private TimeSpan m_maxExecutionTime;
+        private TimeSpan m_minExecutionTime;
+        private TimeSpan m_totalExecutionTime;
+        private long m_executionCount;
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets the execution time of the longest running action.
+        /// </summary>
+        public TimeSpan MaxExecutionTime
+        {
+            get
+            {
+                return m_maxExecutionTime;
+            }
+        }
+
+        /// <summary>
+        /// Gets the execution time of the shortest running action.
+        /// </summary>
+        public TimeSpan MinExecutionTime
+        {
+            get
+            {
+                return m_minExecutionTime;
+            }
+        }
+
+        /// <summary>
+        /// Gets the total execution time of all actions executed on the logical thread.
+        /// </summary>
+        public TimeSpan TotalExecutionTime
+        {
+            get
+            {
+                return m_totalExecutionTime;
+            }
+        }
+
+        /// <summary>
+        /// Gets the total number of actions executed on the logical thread.
+        /// </summary>
+        public long ExecutionCount
+        {
+            get
+            {
+                return m_executionCount;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Updates the statistics based on the execution time of a single action.
+        /// </summary>
+        /// <param name="executionTime">The execution time of the action.</param>
+        internal void UpdateStatistics(TimeSpan executionTime)
+        {
+            if (m_executionCount == 0 || executionTime > m_maxExecutionTime)
+                m_maxExecutionTime = executionTime;
+
+            if (m_executionCount == 0 || executionTime < m_minExecutionTime)
+                m_minExecutionTime = executionTime;
+
+            m_totalExecutionTime += executionTime;
+            m_executionCount++;
+        }
+
+        #endregion
+    }
+
+    /// <summary>
     /// Represents a thread of execution to which
     /// actions can be dispatched from other threads.
     /// </summary>
@@ -72,6 +157,8 @@ namespace GSF.Threading
         private Dictionary<Guid, object> m_threadLocalStorage;
         private int m_isActive;
 
+        private LogicalThreadStatistics m_statistics;
+
         #endregion
 
         #region [ Constructors ]
@@ -96,6 +183,7 @@ namespace GSF.Threading
             m_scheduler = scheduler;
             m_queue = new ConcurrentQueue<Action>();
             m_threadLocalStorage = new Dictionary<Guid, object>();
+            m_statistics = new LogicalThreadStatistics();
         }
 
         #endregion
@@ -142,6 +230,16 @@ namespace GSF.Threading
 
             while (!m_queue.IsEmpty)
                 m_queue.TryDequeue(out action);
+        }
+
+        /// <summary>
+        /// Samples the statistics, providing current statistic
+        /// values and resetting statistic counters.
+        /// </summary>
+        /// <returns>The current statistic values.</returns>
+        public LogicalThreadStatistics SampleStatistics()
+        {
+            return Interlocked.Exchange(ref m_statistics, new LogicalThreadStatistics());
         }
 
         /// <summary>
@@ -197,6 +295,15 @@ namespace GSF.Threading
                 m_threadLocalStorage[id] = value;
             else
                 m_threadLocalStorage.Remove(id);
+        }
+
+        /// <summary>
+        /// Updates the statistics based on the execution time of a single action.
+        /// </summary>
+        /// <param name="executionTime">The execution time of the action.</param>
+        internal void UpdateStatistics(TimeSpan executionTime)
+        {
+            m_statistics.UpdateStatistics(executionTime);
         }
 
         /// <summary>
