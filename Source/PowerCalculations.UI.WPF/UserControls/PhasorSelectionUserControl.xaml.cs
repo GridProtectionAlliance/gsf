@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using PowerCalculations.UI.WPF.ViewModels;
 
 namespace PowerCalculations.UI.WPF.UserControls
 {
@@ -23,6 +24,7 @@ namespace PowerCalculations.UI.WPF.UserControls
 		public PhasorSelectionUserControl()
 		{
 			InitializeComponent();
+			DataContext = new PhasorSelectionViewModel(16);
 		}
 	}
 }

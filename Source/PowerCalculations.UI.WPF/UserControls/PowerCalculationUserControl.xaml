@@ -7,6 +7,7 @@
 			 xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 			 xmlns:binding="clr-namespace:GSF.TimeSeries.UI.Binding;assembly=GSF.TimeSeries.UI"
              xmlns:viewModels1="clr-namespace:PowerCalculations.UI.WPF.ViewModels"
+             xmlns:userControls="clr-namespace:PowerCalculations.UI.WPF.UserControls"
              mc:Ignorable="d" 
              d:DesignHeight="500" d:DesignWidth="500" d:DataContext="{d:DesignInstance viewModels1:PowerCalculationViewModel}">
 
@@ -65,11 +66,8 @@
 						<StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="3">
 							<TextBox Text="{Binding RealPowerOutputMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
 							<ToggleButton x:Name="RealPowerOutputToggle" Content="..." Width="25"  />
-							<Popup StaysOpen="False" Visibility="{Binding ElementName=RealPowerOutputToggle, Path=IsChecked, UpdateSourceTrigger=PropertyChanged}">
-								<!--<userControls:PhasorUserControl/>-->
-							</Popup>
 						</StackPanel>
-
+						
 						<TextBlock Grid.Row="2" Grid.Column="2" Text="Reactive Power Output Alt Tag Name" TextAlignment="Right" />
 						<TextBox Grid.Row="2" Grid.Column="3" Text="{Binding ReactivePowerOutputMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
 
@@ -83,6 +81,10 @@
 				</StackPanel>
 			</GroupBox>
 		</Grid>
+
+		<Popup StaysOpen="True" IsOpen="{Binding ElementName=RealPowerOutputToggle, Path=IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="500" Height="250">
+			<userControls:PhasorSelectionUserControl />
+		</Popup>
 
 		<sdk:DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" SelectedIndex="{binding:Column Path=CurrentSelectedIndex}">
 			<!--PreviewKeyDown="DataGrid_PreviewKeyDown" Sorting="DataGrid_Sorting" CellEditEnding="DataGrid_CellEditEnding">-->

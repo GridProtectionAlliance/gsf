@@ -23,8 +23,8 @@ namespace PowerCalculations.UI.WPF.UserControls
 	{
 		public PowerCalculationUserControl()
 		{
-			InitializeComponent();
 			DataContext = new PowerCalculationViewModel(16);
+			InitializeComponent();
 		}
 	}
 }

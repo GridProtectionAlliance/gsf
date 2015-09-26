@@ -30,8 +30,6 @@ namespace PowerCalculations.UI.WPF.ViewModels
 			get { return CurrentItem.Id == 0; }
 		}
 
-
-
 		/// <summary>
 		/// Loads collection of <see cref="PowerCalculation"/> information stored in the database.
 		/// </summary>

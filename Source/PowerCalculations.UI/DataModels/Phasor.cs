@@ -16,7 +16,6 @@ namespace PowerCalculations.UI.DataModels
 		private string m_label;
 		private string m_type;
 		private string m_phase;
-		private int m_destinationPhasorId;
 		private int m_sourceIndex;
 
 		#endregion
@@ -75,17 +74,6 @@ namespace PowerCalculations.UI.DataModels
 				if (m_phase == value) return;
 				m_phase = value;
 				OnPropertyChanged("Phase");
-			}
-		}
-
-		public int DestinationPhasorId
-		{
-			get { return m_destinationPhasorId; }
-			set
-			{
-				if (m_destinationPhasorId == value) return;
-				m_destinationPhasorId = value;
-				OnPropertyChanged("DestinationPhasorId");
 			}
 		}
 
@@ -166,7 +154,6 @@ namespace PowerCalculations.UI.DataModels
 						var label = row.ConvertField<string>("Label");
 						var type = row.ConvertField<string>("Type");
 						var phase = row.ConvertField<string>("Phase");
-						var destinationPhasorId = row.ConvertField<int>("DestinationPhasorId");
 						var sourceIndex = row.ConvertField<int>("SourceIndex");
 
 						phasorList[keys.IndexOf(id)] = new Phasor
@@ -176,7 +163,6 @@ namespace PowerCalculations.UI.DataModels
 							Label = label,
 							Type = type,
 							Phase = phase,
-							DestinationPhasorId = destinationPhasorId,
 							SourceIndex = sourceIndex
 						};
 					}

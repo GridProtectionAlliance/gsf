@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:viewModels="clr-namespace:PowerCalculations.UI.WPF.ViewModels"
+             xmlns:binding="clr-namespace:GSF.TimeSeries.UI.Binding;assembly=GSF.TimeSeries.UI"
              mc:Ignorable="d" 
              d:DesignHeight="500" d:DesignWidth="500" d:DataContext="{d:DesignInstance viewModels:PhasorSelectionViewModel}">
 
@@ -17,58 +18,13 @@
 
 	<StackPanel Orientation="Vertical">
 
-		<GroupBox Header="Power Calculation Detail">
-				<Grid x:Name="GridDetailView" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5"  DataContext="{Binding CurrentItem, Mode=TwoWay}">
-					<Grid.RowDefinitions>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-					</Grid.RowDefinitions>
+		<DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" SelectedIndex="{binding:Column Path=CurrentSelectedIndex}">
+			<DataGrid.Columns>
+				<DataGridTextColumn Header="Label" Binding="{Binding Label, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+				<DataGridTextColumn Header="Type" Binding="{Binding Type, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+				<DataGridTextColumn Header="Phase" Binding="{Binding Phase, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+			</DataGrid.Columns>
+		</DataGrid>
 
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="Auto"/>
-						<ColumnDefinition Width="Auto"/>
-						<ColumnDefinition Width="Auto"/>
-						<ColumnDefinition Width="Auto"/>
-					</Grid.ColumnDefinitions>
-
-					<TextBlock Grid.Row="1" Grid.Column="0" Text="Circuit Description" TextAlignment="Right"/>
-					<TextBox Grid.Row="1" Grid.Column="1" Text="{Binding CircuitDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-
-					<TextBlock Grid.Row="2" Grid.Column="0" Text="Voltage Angle" TextAlignment="Right"/>
-					<TextBox Grid.Row="2" Grid.Column="1" Text="{Binding VoltageAngleMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
-
-					<TextBlock Grid.Row="3" Grid.Column="0" Text="Voltage Magnitude" TextAlignment="Right"/>
-					<TextBox Grid.Row="3" Grid.Column="1" Text="{Binding VoltageMagnitudeMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
-
-					<TextBlock Grid.Row="4" Grid.Column="0" Text="Current Angle" TextAlignment="Right" />
-					<TextBox Grid.Row="4" Grid.Column="1" Text="{Binding CurrentAngleMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
-
-					<TextBlock Grid.Row="5" Grid.Column="0" Text="Current Magnitude" TextAlignment="Right" />
-					<TextBox Grid.Row="5" Grid.Column="1" Text="{Binding CurrentMagnitudeMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
-
-					<TextBlock Grid.Row="0" Grid.Column="3">(Leave blank to use template names)</TextBlock>
-
-					<TextBlock Grid.Row="1" Grid.Column="2" Text="Real Power Output Alt Tag Name" TextAlignment="Right" />
-					<StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="3">
-						<TextBox Text="{Binding RealPowerOutputMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
-						<ToggleButton x:Name="RealPowerOutputToggle" Content="..." Width="25"  />
-						<Popup StaysOpen="False" Visibility="{Binding ElementName=RealPowerOutputToggle, Path=IsChecked, UpdateSourceTrigger=PropertyChanged}">
-							<!--<userControls:PhasorUserControl/>-->
-						</Popup>
-					</StackPanel>
-
-					<TextBlock Grid.Row="2" Grid.Column="2" Text="Reactive Power Output Alt Tag Name" TextAlignment="Right" />
-					<TextBox Grid.Row="2" Grid.Column="3" Text="{Binding ReactivePowerOutputMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
-
-					<TextBlock Grid.Row="3" Grid.Column="2" Text="Active Power Output Alt Tag Name" TextAlignment="Right" />
-					<TextBox Grid.Row="3" Grid.Column="3" Text="{Binding ActivePowerOutputMeasurement.PointTag, Mode=OneWay,UpdateSourceTrigger=PropertyChanged}" />
-
-					<CheckBox Grid.Row="4" Grid.Column="2" IsChecked="{Binding PowerCalculationEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="Enabled" HorizontalAlignment="Right"/>
-				</Grid>
-		</GroupBox>
 	</StackPanel>
 </UserControl>
