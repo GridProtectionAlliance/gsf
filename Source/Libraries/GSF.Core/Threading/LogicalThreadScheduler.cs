@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Text;
 using System.Threading;
 
 namespace GSF.Threading
@@ -234,19 +235,78 @@ namespace GSF.Threading
             }
             catch (Exception ex)
             {
-                try
-                {
-                    if (!LogicalThread.CurrentThread.OnUnhandledException(ex))
-                    {
-                        if (!OnUnhandledException(ex))
-                            throw;
-                    }
-                }
-                catch
-                {
-                    throw ex;
-                }
+                if (!TryHandleException(ex))
+                    throw;
             }
+        }
+
+        /// <summary>
+        /// Decrements the thread count upon deactivation of a physical thread.
+        /// </summary>
+        private void DeactivatePhysicalThread()
+        {
+            Interlocked.Decrement(ref m_threadCount);
+        }
+
+        /// <summary>
+        /// Attempts to handle the exception via either the logical thread's
+        /// exception handler or the scheduler's exception handler.
+        /// </summary>
+        /// <param name="unhandledException">The unhandled exception thrown by an action on the logical thread.</param>
+        /// <returns>True if the exception could be handled; false otherwise.</returns>
+        private bool TryHandleException(Exception unhandledException)
+        {
+            Exception ex;
+            StringBuilder message;
+            bool handled;
+
+            ex = unhandledException;
+            message = new StringBuilder();
+            message.AppendFormat("Logical thread action threw an exception of type {0}: {1}", unhandledException.GetType().FullName, unhandledException.Message);
+
+            try
+            {
+                // Attempt to handle the exception via the logical thread's exception handler
+                handled = LogicalThread.CurrentThread.OnUnhandledException(ex);
+            }
+            catch (Exception handlerException)
+            {
+                // If the handler throws an exception,
+                // make a note of it in the exception's exception message
+                message.AppendLine();
+                message.AppendFormat("Logical thread exception handler threw an exception of type {0}: {1}", handlerException.GetType().FullName, handlerException.Message);
+                ex = new Exception(message.ToString(), unhandledException);
+                handled = false;
+            }
+
+            try
+            {
+                // If the logical thread's exception handler was not able to handle the exception,
+                // attempt to handle the exception via the thread scheduler's exception handler
+                handled = handled || OnUnhandledException(ex);
+            }
+            catch (Exception handlerException)
+            {
+                // If the handler throws an exception,
+                // make a note of it in the exception's exception message
+                message.AppendLine();
+                message.AppendFormat("Scheduler exception handler threw an exception of type {0}: {1}", handlerException.GetType().FullName, handlerException.Message);
+                ex = new Exception(message.ToString(), unhandledException);
+                handled = false;
+            }
+
+            if (!handled)
+            {
+                // If the exception could not be handled by either the
+                // logical thread's exception handler or the scheduler's
+                // exception handler, throw it as an unhandled exception
+                if (ex != unhandledException)
+                    throw ex;
+
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -264,14 +324,6 @@ namespace GSF.Threading
             unhandledException(this, new EventArgs<Exception>(ex));
 
             return true;
-        }
-
-        /// <summary>
-        /// Decrements the thread count upon deactivation of a physical thread.
-        /// </summary>
-        private void DeactivatePhysicalThread()
-        {
-            Interlocked.Decrement(ref m_threadCount);
         }
 
         #endregion
