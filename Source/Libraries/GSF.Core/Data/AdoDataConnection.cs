@@ -291,6 +291,7 @@ namespace GSF.Data
             if (!typeof(IDbDataAdapter).IsAssignableFrom(adapterType))
                 throw new ArgumentException("Adapter type must implement the IDbDataAdapter interface", "adapterType");
 
+            m_connection = connection;
             m_connectionString = connection.ConnectionString;
             m_connectionType = connection.GetType();
             m_adapterType = adapterType;

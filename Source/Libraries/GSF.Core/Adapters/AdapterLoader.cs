@@ -729,6 +729,17 @@ namespace GSF.Adapters
         }
 
         /// <summary>
+        /// Gets a flag that indicates whether the object has been disposed.
+        /// </summary>
+        public bool IsDisposed
+        {
+            get
+            {
+                return m_disposed;
+            }
+        }
+
+        /// <summary>
         /// Gets the unique identifier of the <see cref="AdapterLoader{T}"/>.
         /// </summary>
         public string Name

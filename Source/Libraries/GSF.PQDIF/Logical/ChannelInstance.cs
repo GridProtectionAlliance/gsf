@@ -37,7 +37,7 @@ namespace GSF.PQDIF.Logical
     /// a <see cref="ChannelDefinition"/> inside the observation record's
     /// <see cref="DataSourceRecord"/>.
     /// </summary>
-    public class ChannelInstance
+    public class ChannelInstance : IEquatable<ChannelInstance>
     {
         #region [ Members ]
 
@@ -65,6 +65,17 @@ namespace GSF.PQDIF.Logical
         #region [ Properties ]
 
         /// <summary>
+        /// Gets the physical structure of the channel instance.
+        /// </summary>
+        public CollectionElement PhysicalStructure
+        {
+            get
+            {
+                return m_physicalStructure;
+            }
+        }
+
+        /// <summary>
         /// Gets the observation record in which the channel instance resides.
         /// </summary>
         public ObservationRecord ObservationRecord
@@ -72,6 +83,41 @@ namespace GSF.PQDIF.Logical
             get
             {
                 return m_observationRecord;
+            }
+        }
+
+        /// <summary>
+        /// Gets the channel definition which defines the channel instance.
+        /// </summary>
+        public ChannelDefinition Definition
+        {
+            get
+            {
+                return m_observationRecord.DataSource.ChannelDefinitions[(int)ChannelDefinitionIndex];
+            }
+        }
+
+        /// <summary>
+        /// Gets the channel setting which defines the instrument settings for the channel.
+        /// </summary>
+        public ChannelSetting Setting
+        {
+            get
+            {
+                MonitorSettingsRecord monitorSettings;
+                IList<ChannelSetting> channelSettings;
+
+                monitorSettings = m_observationRecord.Settings;
+
+                if ((object)monitorSettings == null)
+                    return null;
+
+                channelSettings = monitorSettings.ChannelSettings;
+
+                if ((object)channelSettings == null)
+                    return null;
+
+                return channelSettings.FirstOrDefault(channelSetting => channelSetting.ChannelDefinitionIndex == ChannelDefinitionIndex);
             }
         }
 
@@ -84,19 +130,25 @@ namespace GSF.PQDIF.Logical
             get
             {
                 return m_physicalStructure
-                    .GetScalarByTag(ChannelDefinitionIndexTag)
+                    .GetScalarByTag(ChannelDefinition.ChannelDefinitionIndexTag)
                     .GetUInt4();
             }
-        }
-
-        /// <summary>
-        /// Gets the channel definition which defines the channel instance.
-        /// </summary>
-        public ChannelDefinition Definition
-        {
-            get
+            set
             {
-                return m_observationRecord.DataSource.ChannelDefinitions[(int)ChannelDefinitionIndex];
+                ScalarElement channelDefinitionIndexElement = m_physicalStructure.GetScalarByTag(ChannelDefinition.ChannelDefinitionIndexTag);
+
+                if ((object)channelDefinitionIndexElement == null)
+                {
+                    channelDefinitionIndexElement = new ScalarElement()
+                    {
+                        TagOfElement = ChannelDefinition.ChannelDefinitionIndexTag,
+                        TypeOfValue = PhysicalType.UnsignedInteger4
+                    };
+
+                    m_physicalStructure.AddElement(channelDefinitionIndexElement);
+                }
+
+                channelDefinitionIndexElement.SetUInt4(value);
             }
         }
 
@@ -115,6 +167,23 @@ namespace GSF.PQDIF.Logical
 
                 return channelGroupIDElement.GetInt2();
             }
+            set
+            {
+                ScalarElement channelGroupIDElement = m_physicalStructure.GetScalarByTag(ChannelGroupIDTag);
+
+                if ((object)channelGroupIDElement == null)
+                {
+                    channelGroupIDElement = new ScalarElement()
+                    {
+                        TagOfElement = ChannelGroupIDTag,
+                        TypeOfValue = PhysicalType.Integer2
+                    };
+
+                    m_physicalStructure.AddElement(channelGroupIDElement);
+                }
+
+                channelGroupIDElement.SetInt2(value);
+            }
         }
 
         /// <summary>
@@ -126,12 +195,30 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                VectorElement moduleNameVector = m_physicalStructure.GetVectorByTag(ChannelTriggerModuleNameTag);
+                VectorElement moduleNameElement = m_physicalStructure.GetVectorByTag(ChannelTriggerModuleNameTag);
 
-                if ((object)moduleNameVector == null)
+                if ((object)moduleNameElement == null)
                     return null;
 
-                return Encoding.ASCII.GetString(moduleNameVector.GetValues()).Trim((char)0);
+                return Encoding.ASCII.GetString(moduleNameElement.GetValues()).Trim((char)0);
+            }
+            set
+            {
+                byte[] bytes = Encoding.ASCII.GetBytes(value + (char)0);
+                VectorElement moduleNameElement = m_physicalStructure.GetVectorByTag(ChannelTriggerModuleNameTag);
+
+                if ((object)moduleNameElement == null)
+                {
+                    moduleNameElement = new VectorElement()
+                    {
+                        TagOfElement = ChannelTriggerModuleNameTag,
+                        TypeOfValue = PhysicalType.Char1
+                    };
+
+                    m_physicalStructure.AddElement(moduleNameElement);
+                }
+
+                moduleNameElement.SetValues(bytes, 0);
             }
         }
 
@@ -143,12 +230,30 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                VectorElement deviceNameVector = m_physicalStructure.GetVectorByTag(CrossTriggerDeviceNameTag);
+                VectorElement deviceNameElement = m_physicalStructure.GetVectorByTag(CrossTriggerDeviceNameTag);
 
-                if ((object)deviceNameVector == null)
+                if ((object)deviceNameElement == null)
                     return null;
 
-                return Encoding.ASCII.GetString(deviceNameVector.GetValues()).Trim((char)0);
+                return Encoding.ASCII.GetString(deviceNameElement.GetValues()).Trim((char)0);
+            }
+            set
+            {
+                byte[] bytes = Encoding.ASCII.GetBytes(value + (char)0);
+                VectorElement deviceNameElement = m_physicalStructure.GetVectorByTag(CrossTriggerDeviceNameTag);
+
+                if ((object)deviceNameElement == null)
+                {
+                    deviceNameElement = new VectorElement()
+                    {
+                        TagOfElement = CrossTriggerDeviceNameTag,
+                        TypeOfValue = PhysicalType.Char1
+                    };
+
+                    m_physicalStructure.AddElement(deviceNameElement);
+                }
+
+                deviceNameElement.SetValues(bytes, 0);
             }
         }
 
@@ -170,14 +275,109 @@ namespace GSF.PQDIF.Logical
 
         #endregion
 
+        #region [ Methods ]
+
+        /// <summary>
+        /// Adds a new series instance to the collection
+        /// of series instances in this channel instance.
+        /// </summary>
+        public SeriesInstance AddNewSeriesInstance()
+        {
+            CollectionElement seriesInstancesElement;
+            CollectionElement seriesInstanceElement;
+            SeriesDefinition seriesDefinition;
+            SeriesInstance seriesInstance;
+
+            if (Definition.SeriesDefinitions.Count <= SeriesInstances.Count)
+                throw new InvalidOperationException("Cannot create a series instance without a corresponding series definition.");
+
+            seriesInstancesElement = m_physicalStructure.GetCollectionByTag(SeriesInstancesTag);
+            seriesInstanceElement = new CollectionElement() { TagOfElement = OneSeriesInstanceTag };
+            seriesDefinition = Definition.SeriesDefinitions[SeriesInstances.Count];
+            seriesInstance = new SeriesInstance(seriesInstanceElement, this, seriesDefinition);
+
+            if ((object)seriesInstancesElement == null)
+            {
+                seriesInstancesElement = new CollectionElement()
+                {
+                    TagOfElement = SeriesInstancesTag
+                };
+
+                m_physicalStructure.AddElement(seriesInstancesElement);
+            }
+
+            seriesInstancesElement.AddElement(seriesInstanceElement);
+
+            return seriesInstance;
+        }
+
+        /// <summary>
+        /// Removes the given series instance from the collection of series instances.
+        /// </summary>
+        /// <param name="seriesInstance">The series instance to be removed.</param>
+        public void Remove(SeriesInstance seriesInstance)
+        {
+            CollectionElement seriesInstancesElement;
+            List<CollectionElement> seriesInstanceElements;
+            IList<SeriesDefinition> seriesDefinitions;
+            SeriesInstance instance;
+
+            seriesInstancesElement = m_physicalStructure.GetCollectionByTag(SeriesInstancesTag);
+
+            if ((object)seriesInstancesElement == null)
+                return;
+
+            seriesDefinitions = Definition.SeriesDefinitions;
+            seriesInstanceElements = seriesInstancesElement.GetElementsByTag(OneSeriesInstanceTag).Cast<CollectionElement>().ToList();
+
+            for (int i = seriesInstanceElements.Count; i >= 0; i--)
+            {
+                instance = new SeriesInstance(seriesInstanceElements[i], this, seriesDefinitions[i]);
+
+                if (Equals(seriesInstance, instance))
+                    seriesInstancesElement.RemoveElement(seriesInstancesElement);
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether the current object is equal to another object of the same type.
+        /// </summary>
+        /// <param name="other">An object to compare with this object.</param>
+        /// <returns>true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.</returns>
+        public bool Equals(ChannelInstance other)
+        {
+            if ((object)other == null)
+                return false;
+
+            return ReferenceEquals(m_physicalStructure, other.m_physicalStructure);
+        }
+
+        /// <summary>
+        /// Determines whether the specified <see cref="ChannelInstance"/> is equal to the current <see cref="ChannelInstance"/>.
+        /// </summary>
+        /// <param name="obj">The object to compare with the current object. </param>
+        /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
+        /// <filterpriority>2</filterpriority>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as ChannelInstance);
+        }
+
+        /// <summary>
+        /// Serves as a hash function for a particular type. 
+        /// </summary>
+        /// <returns>A hash code for the current <see cref="ChannelInstance"/>.</returns>
+        /// <filterpriority>2</filterpriority>
+        public override int GetHashCode()
+        {
+            return m_physicalStructure.GetHashCode();
+        }
+
+        #endregion
+
         #region [ Static ]
 
         // Static Fields
-
-        /// <summary>
-        /// Tag that identifies the channel definition index.
-        /// </summary>
-        public static readonly Guid ChannelDefinitionIndexTag = new Guid("b48d858f-f5f5-11cf-9d89-0080c72e70a3");
 
         /// <summary>
         /// Tag that identifies the channel group ID.
@@ -205,6 +405,5 @@ namespace GSF.PQDIF.Logical
         public static readonly Guid CrossTriggerDeviceNameTag = new Guid("0fa118c5-cb4a-11cf-9d89-0080c72e70a3");
 
         #endregion
-
     }
 }

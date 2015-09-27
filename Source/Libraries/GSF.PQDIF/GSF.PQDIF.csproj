@@ -90,7 +90,9 @@
   <ItemGroup>
     <Compile Include="Logical\ChannelDefinition.cs" />
     <Compile Include="Logical\ChannelInstance.cs" />
+    <Compile Include="Logical\ChannelSetting.cs" />
     <Compile Include="Logical\Equipment.cs" />
+    <Compile Include="Logical\LogicalWriter.cs" />
     <Compile Include="Logical\QuantityCharacteristic.cs" />
     <Compile Include="Logical\SeriesValueType.cs" />
     <Compile Include="Logical\Vendor.cs" />
@@ -104,6 +106,7 @@
     <Compile Include="Physical\PhysicalParser.cs" />
     <Compile Include="Physical\PhysicalType.cs" />
     <Compile Include="Logical\QuantityType.cs" />
+    <Compile Include="Physical\PhysicalWriter.cs" />
     <Compile Include="Physical\RecordHeader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Physical\Record.cs" />

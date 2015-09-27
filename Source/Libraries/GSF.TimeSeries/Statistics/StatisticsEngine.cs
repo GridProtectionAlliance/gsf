@@ -719,7 +719,7 @@ namespace GSF.TimeSeries.Statistics
         private void UpdateStatisticMeasurements()
         {
             const string StatisticSelectFormat = "SELECT Source, SignalIndex, Arguments, Description FROM Statistic WHERE Enabled <> 0";
-            const string StatisticMeasurementSelectFormat = "SELECT SignalReference FROM ActiveMeasurement WHERE SignalReference IN ({0})";
+            const string StatisticMeasurementSelectFormat = "SELECT SignalReference FROM Measurement WHERE SignalReference IN ({0})";
             const string StatisticMeasurementInsertFormat = "INSERT INTO Measurement(HistorianID, DeviceID, PointTag, SignalTypeID, SignalReference, Description, Enabled) VALUES({0}, {1}, {2}, {3}, {4}, {5}, 1)";
 
             StatisticSource[] sources;
@@ -1194,13 +1194,18 @@ namespace GSF.TimeSeries.Statistics
                 if (StatisticSources.Any(registeredSource => registeredSource.SourceReference.TryGetTarget(out target) && target == source))
                     throw new InvalidOperationException(string.Format("Unable to register {0} as statistic source because it is already registered.", sourceName));
 
+                adapter = source as IAdapter;
+
+                if ((object)adapter != null)
+                {
+                    adapter.Disposed += (sender, args) => Unregister(sender);
+
+                    if (adapter.IsDisposed)
+                        return;
+                }
+
                 StatisticSources.Add(sourceInfo);
             }
-
-            adapter = source as IAdapter;
-
-            if ((object)adapter != null)
-                adapter.Disposed += (sender, args) => Unregister(sender);
 
             OnSourceRegistered();
         }

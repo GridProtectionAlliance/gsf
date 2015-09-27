@@ -945,6 +945,17 @@ namespace GSF.Collections
         }
 
         /// <summary>
+        /// Gets a flag that indicates whether the object has been disposed.
+        /// </summary>
+        public bool IsDisposed
+        {
+            get
+            {
+                return m_disposed;
+            }
+        }
+
+        /// <summary>
         /// Gets indicator that the <see cref="ProcessQueue{T}"/> is actively processing items.
         /// </summary>
         public bool IsProcessing

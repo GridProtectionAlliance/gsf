@@ -694,7 +694,7 @@ namespace GSF.TimeSeries
                 m_serviceHelper.ErrorLogger.ErrorLog.LogException -= LogExceptionHandler;
             }
 
-            // Unattach from handler for unobserved task exceptions
+            // Detach from handler for unobserved task exceptions
             TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;
         }
 
@@ -2833,8 +2833,6 @@ namespace GSF.TimeSeries
                 {
                     if (success)
                     {
-                        m_iaonSession.AllAdapters.UpdateCollectionConfigurations();
-
                         if (invoking && (object)invokeHandler != null)
                             invokeHandler.HandlerMethod(invokeInfo);
                         else

@@ -24,6 +24,9 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using GSF.PQDIF.Physical;
 
 namespace GSF.PQDIF.Logical
@@ -56,7 +59,154 @@ namespace GSF.PQDIF.Logical
         #region [ Properties ]
 
         /// <summary>
-        /// Gets nominal frequency.
+        /// Gets the physical record of the monitor settings record.
+        /// </summary>
+        public Record PhysicalRecord
+        {
+            get
+            {
+                return m_physicalRecord;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the date time at which these settings become effective.
+        /// </summary>
+        public DateTime Effective
+        {
+            get
+            {
+                return m_physicalRecord.Body.Collection.GetScalarByTag(EffectiveTag).GetTimestamp();
+            }
+            set
+            {
+                ScalarElement effectiveElement = m_physicalRecord.Body.Collection.GetScalarByTag(EffectiveTag);
+
+                if ((object)effectiveElement == null)
+                {
+                    effectiveElement = new ScalarElement()
+                    {
+                        TagOfElement = EffectiveTag,
+                        TypeOfValue = PhysicalType.Timestamp
+                    };
+
+                    m_physicalRecord.Body.Collection.AddElement(effectiveElement);
+                }
+
+                effectiveElement.SetTimestamp(value);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the time at which the settings were installed.
+        /// </summary>
+        public DateTime TimeInstalled
+        {
+            get
+            {
+                return m_physicalRecord.Body.Collection.GetScalarByTag(TimeInstalledTag).GetTimestamp();
+            }
+            set
+            {
+                ScalarElement timeInstalledElement = m_physicalRecord.Body.Collection.GetScalarByTag(TimeInstalledTag);
+
+                if ((object)timeInstalledElement == null)
+                {
+                    timeInstalledElement = new ScalarElement()
+                    {
+                        TagOfElement = TimeInstalledTag,
+                        TypeOfValue = PhysicalType.Timestamp
+                    };
+
+                    m_physicalRecord.Body.Collection.AddElement(timeInstalledElement);
+                }
+
+                timeInstalledElement.SetTimestamp(value);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the flag that determines whether the
+        /// calibration settings need to be applied before using
+        /// the values recorded by this monitor.
+        /// </summary>
+        public bool UseCalibration
+        {
+            get
+            {
+                return m_physicalRecord.Body.Collection.GetScalarByTag(UseCalibrationTag).GetBool4();
+            }
+            set
+            {
+                ScalarElement useCalibrationElement = m_physicalRecord.Body.Collection.GetScalarByTag(UseCalibrationTag);
+
+                if ((object)useCalibrationElement == null)
+                {
+                    useCalibrationElement = new ScalarElement()
+                    {
+                        TagOfElement = UseCalibrationTag,
+                        TypeOfValue = PhysicalType.Boolean4
+                    };
+
+                    m_physicalRecord.Body.Collection.AddElement(useCalibrationElement);
+                }
+
+                useCalibrationElement.SetBool4(value);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the flag that determines whether the
+        /// transducer ratio needs to be applied before using
+        /// the values recorded by this monitor.
+        /// </summary>
+        public bool UseTransducer
+        {
+            get
+            {
+                return m_physicalRecord.Body.Collection.GetScalarByTag(UseTransducerTag).GetBool4();
+            }
+            set
+            {
+                ScalarElement useTransducerElement = m_physicalRecord.Body.Collection.GetScalarByTag(UseTransducerTag);
+
+                if ((object)useTransducerElement == null)
+                {
+                    useTransducerElement = new ScalarElement()
+                    {
+                        TagOfElement = UseTransducerTag,
+                        TypeOfValue = PhysicalType.Boolean4
+                    };
+
+                    m_physicalRecord.Body.Collection.AddElement(useTransducerElement);
+                }
+
+                useTransducerElement.SetBool4(value);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the settings for the channels defined in the data source.
+        /// </summary>
+        public IList<ChannelSetting> ChannelSettings
+        {
+            get
+            {
+                CollectionElement channelSettingsArray = m_physicalRecord.Body.Collection.GetCollectionByTag(ChannelSettingsArrayTag);
+
+                if ((object)channelSettingsArray == null)
+                    return null;
+
+                return channelSettingsArray
+                    .GetElementsByTag(OneChannelSettingTag)
+                    .Cast<CollectionElement>()
+                    .Select(collection => new ChannelSetting(collection, this))
+                    .ToList();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets nominal frequency.
         /// </summary>
         public double NominalFrequency
         {
@@ -68,6 +218,76 @@ namespace GSF.PQDIF.Logical
                     return 60.0D;
 
                 return nominalFrequencyElement.GetReal8();
+            }
+            set
+            {
+                ScalarElement nominalFrequencyElement = m_physicalRecord.Body.Collection.GetScalarByTag(NominalFrequencyTag);
+
+                if ((object)nominalFrequencyElement == null)
+                {
+                    nominalFrequencyElement = new ScalarElement()
+                    {
+                        TagOfElement = NominalFrequencyTag,
+                        TypeOfValue = PhysicalType.Real8
+                    };
+
+                    m_physicalRecord.Body.Collection.AddElement(nominalFrequencyElement);
+                }
+
+                nominalFrequencyElement.SetReal8(value);
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Adds a new channel setting to the collection
+        /// of channel settings in this monitor settings record.
+        /// </summary>
+        public ChannelSetting AddNewChannelSetting()
+        {
+            CollectionElement channelSettingsElement = m_physicalRecord.Body.Collection.GetCollectionByTag(ChannelSettingsArrayTag);
+            CollectionElement channelSettingElement = new CollectionElement() { TagOfElement = OneChannelSettingTag };
+            ChannelSetting channelSetting = new ChannelSetting(channelSettingElement, this);
+
+            if ((object)channelSettingsElement == null)
+            {
+                channelSettingsElement = new CollectionElement()
+                {
+                    TagOfElement = OneChannelSettingTag
+                };
+
+                m_physicalRecord.Body.Collection.AddElement(channelSettingsElement);
+            }
+
+            channelSettingsElement.AddElement(channelSettingElement);
+
+            return channelSetting;
+        }
+
+        /// <summary>
+        /// Removes the given channel setting from the collection of channel settings.
+        /// </summary>
+        /// <param name="channelSetting">The channel setting to be removed.</param>
+        public void Remove(ChannelSetting channelSetting)
+        {
+            CollectionElement channelSettingsElement = m_physicalRecord.Body.Collection.GetCollectionByTag(ChannelSettingsArrayTag);
+            List<CollectionElement> channelSettingElements;
+            ChannelSetting setting;
+
+            if ((object)channelSettingsElement == null)
+                return;
+
+            channelSettingElements = channelSettingsElement.GetElementsByTag(OneChannelSettingTag).Cast<CollectionElement>().ToList();
+
+            foreach (CollectionElement channelSettingElement in channelSettingElements)
+            {
+                setting = new ChannelSetting(channelSettingElement, this);
+
+                if (Equals(channelSetting, setting))
+                    channelSettingsElement.RemoveElement(channelSettingElement);
             }
         }
 
@@ -128,6 +348,5 @@ namespace GSF.PQDIF.Logical
         }
 
         #endregion
-        
     }
 }

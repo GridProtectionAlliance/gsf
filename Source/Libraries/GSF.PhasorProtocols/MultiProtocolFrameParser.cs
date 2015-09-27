@@ -286,6 +286,8 @@ namespace GSF.PhasorProtocols
             private string m_configurationString;
             private int m_receiveBufferSize;
 
+            private bool m_disposed;
+
             #endregion
 
             #region [ Properties ]
@@ -488,6 +490,17 @@ namespace GSF.PhasorProtocols
                 }
             }
 
+            /// <summary>
+            /// Gets a flag that indicates whether the object has been disposed.
+            /// </summary>
+            public bool IsDisposed
+            {
+                get
+                {
+                    return m_disposed;
+                }
+            }
+
             #endregion
 
             #region [ Methods ]
@@ -549,7 +562,17 @@ namespace GSF.PhasorProtocols
             /// <filterpriority>2</filterpriority>
             public void Dispose()
             {
-                ReturnSharedServer();
+                if (!m_disposed)
+                {
+                    try
+                    {
+                        ReturnSharedServer();
+                    }
+                    finally
+                    {
+                        m_disposed = true;
+                    }
+                }
             }
 
             /// <summary>
@@ -932,6 +955,8 @@ namespace GSF.PhasorProtocols
             private int m_maxConnectionAttempts;
             private bool m_receivePacketInfo;
 
+            private bool m_disposed;
+
             #endregion
 
             #region [ Properties ]
@@ -1091,6 +1116,17 @@ namespace GSF.PhasorProtocols
                 {
                     if ((object)m_udpClient != null)
                         m_udpClient.Enabled = value;
+                }
+            }
+
+            /// <summary>
+            /// Gets a flag that indicates whether the object has been disposed.
+            /// </summary>
+            public bool IsDisposed
+            {
+                get
+                {
+                    return m_disposed;
                 }
             }
 
@@ -1285,7 +1321,17 @@ namespace GSF.PhasorProtocols
             /// </summary>
             public void Dispose()
             {
-                ReturnSharedClient();
+                if (!m_disposed)
+                {
+                    try
+                    {
+                        ReturnSharedClient();
+                    }
+                    finally
+                    {
+                        m_disposed = true;
+                    }
+                }
             }
 
             /// <summary>

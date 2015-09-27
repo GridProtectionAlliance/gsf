@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System;
+using System.IO;
 using System.Text;
 
 namespace GSF.PQDIF.Physical
@@ -174,6 +175,100 @@ namespace GSF.PQDIF.Physical
             }
         }
 
+        /// <summary>                
+        /// Sets the value at the given index as the physical type defined by <see cref="TypeOfValue"/>.
+        /// </summary>
+        /// <param name="index">The index of the value.</param>
+        /// <param name="value">The new value to be stored.</param>
+        public void Set(int index, object value)
+        {
+            char c;
+            byte[] bytes;
+            ComplexNumber complexNumber;
+
+            switch (TypeOfValue)
+            {
+                case PhysicalType.Boolean1:
+                    SetUInt1(index, Convert.ToBoolean(value) ? (byte)1 : (byte)0);
+                    break;
+
+                case PhysicalType.Boolean2:
+                    SetInt2(index, Convert.ToBoolean(value) ? (short)1 : (short)0);
+                    break;
+
+                case PhysicalType.Boolean4:
+                    SetInt4(index, Convert.ToBoolean(value) ? 1 : 0);
+                    break;
+
+                case PhysicalType.Char1:
+                    c = Convert.ToChar(value);
+                    bytes = Encoding.ASCII.GetBytes(c.ToString());
+                    SetUInt1(index, bytes[0]);
+                    break;
+
+                case PhysicalType.Char2:
+                    c = Convert.ToChar(value);
+                    bytes = Encoding.Unicode.GetBytes(c.ToString());
+                    SetInt2(index, BitConverter.ToInt16(bytes, 0));
+                    break;
+
+                case PhysicalType.Integer1:
+                    SetInt1(index, Convert.ToSByte(value));
+                    break;
+
+                case PhysicalType.Integer2:
+                    SetInt2(index, Convert.ToInt16(value));
+                    break;
+
+                case PhysicalType.Integer4:
+                    SetInt4(index, Convert.ToInt32(value));
+                    break;
+
+                case PhysicalType.UnsignedInteger1:
+                    SetUInt1(index, Convert.ToByte(value));
+                    break;
+
+                case PhysicalType.UnsignedInteger2:
+                    SetUInt2(index, Convert.ToUInt16(value));
+                    break;
+
+                case PhysicalType.UnsignedInteger4:
+                    SetUInt4(index, Convert.ToUInt32(value));
+                    break;
+
+                case PhysicalType.Real4:
+                    SetReal4(index, Convert.ToSingle(value));
+                    break;
+
+                case PhysicalType.Real8:
+                    SetReal8(index, Convert.ToDouble(value));
+                    break;
+
+                case PhysicalType.Complex8:
+                    complexNumber = (ComplexNumber)value;
+                    SetReal4(index * 2, (float)complexNumber.Real);
+                    SetReal4(index * 2 + 1, (float)complexNumber.Imaginary);
+                    break;
+
+                case PhysicalType.Complex16:
+                    complexNumber = (ComplexNumber)value;
+                    SetReal8(index * 2, complexNumber.Real);
+                    SetReal8(index * 2 + 1, complexNumber.Imaginary);
+                    break;
+
+                case PhysicalType.Timestamp:
+                    SetTimestamp(index, Convert.ToDateTime(value));
+                    break;
+
+                case PhysicalType.Guid:
+                    SetGuid(index, (Guid)value);
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
         /// <summary>
         /// Gets a value in this vector as an 8-bit unsigned integer.
         /// </summary>
@@ -198,6 +293,88 @@ namespace GSF.PQDIF.Physical
                 throw new InvalidOperationException("Unable to insert values into uninitialized vector; set the size and physical type of the vector first");
 
             m_values[index] = value;
+        }
+
+        /// <summary>
+        /// Gets a value in this vector as a 16-bit unsigned integer.
+        /// </summary>
+        /// <param name="index">The index of the value.</param>
+        /// <returns>The value as a 16-bit unsigned integer.</returns>
+        public ushort GetUInt2 (int index)
+        {
+            if ((object)m_values == null)
+                throw new InvalidOperationException("Unable to retrieve values from uninitialized vector; set the size and physical type of the vector first");
+
+            int byteIndex = index * 2;
+            return LittleEndian.ToUInt16(m_values, byteIndex);
+        }
+
+        /// <summary>
+        /// Sets a value in this vector as a 16-bit unsigned integer.
+        /// </summary>
+        /// <param name="index">The index of the value.</param>
+        /// <param name="value">The new value of a 16-bit unsigned integer.</param>
+        public void SetUInt2(int index, ushort value)
+        {
+            if ((object)m_values == null)
+                throw new InvalidOperationException("Unable to insert values into uninitialized vector; set the size and physical type of the vector first");
+
+            int byteIndex = index * 2;
+            LittleEndian.CopyBytes(value, m_values, byteIndex);
+        }
+
+        /// <summary>
+        /// Gets a value in this vector as a 32-bit unsigned integer.
+        /// </summary>
+        /// <param name="index">The index of the value.</param>
+        /// <returns>The value as a 32-bit unsigned integer.</returns>
+        public uint GetUInt4(int index)
+        {
+            if ((object)m_values == null)
+                throw new InvalidOperationException("Unable to retrieve values from uninitialized vector; set the size and physical type of the vector first");
+
+            int byteIndex = index * 4;
+            return LittleEndian.ToUInt32(m_values, byteIndex);
+        }
+
+        /// <summary>
+        /// Sets a value in this vector as a 32-bit unsigned integer.
+        /// </summary>
+        /// <param name="index">The index of the value.</param>
+        /// <param name="value">The new value of a 32-bit unsigned integer.</param>
+        public void SetUInt4(int index, uint value)
+        {
+            if ((object)m_values == null)
+                throw new InvalidOperationException("Unable to insert values into uninitialized vector; set the size and physical type of the vector first");
+
+            int byteIndex = index * 4;
+            LittleEndian.CopyBytes(value, m_values, byteIndex);
+        }
+
+        /// <summary>
+        /// Gets a value in this vector as an 8-bit signed integer.
+        /// </summary>
+        /// <param name="index">The index of the value.</param>
+        /// <returns>The value as an 8-bit signed integer.</returns>
+        public sbyte GetInt1(int index)
+        {
+            if ((object)m_values == null)
+                throw new InvalidOperationException("Unable to retrieve values from uninitialized vector; set the size and physical type of the vector first");
+
+            return (sbyte)m_values[index];
+        }
+
+        /// <summary>
+        /// Sets a value in this vector as an 8-bit signed integer.
+        /// </summary>
+        /// <param name="index">The index of the value.</param>
+        /// <param name="value">The new value of an 8-bit signed integer.</param>
+        public void SetInt1(int index, sbyte value)
+        {
+            if ((object)m_values == null)
+                throw new InvalidOperationException("Unable to insert values into uninitialized vector; set the size and physical type of the vector first");
+
+            m_values[index] = (byte)value;
         }
 
         /// <summary>
@@ -248,34 +425,6 @@ namespace GSF.PQDIF.Physical
         /// <param name="index">The index of the value.</param>
         /// <param name="value">The new value of a 32-bit signed integer.</param>
         public void SetInt4(int index, int value)
-        {
-            if ((object)m_values == null)
-                throw new InvalidOperationException("Unable to insert values into uninitialized vector; set the size and physical type of the vector first");
-
-            int byteIndex = index * 4;
-            LittleEndian.CopyBytes(value, m_values, byteIndex);
-        }
-
-        /// <summary>
-        /// Gets a value in this vector as a 32-bit unsigned integer.
-        /// </summary>
-        /// <param name="index">The index of the value.</param>
-        /// <returns>The value as a 32-bit unsigned integer.</returns>
-        public uint GetUInt4(int index)
-        {
-            if ((object)m_values == null)
-                throw new InvalidOperationException("Unable to retrieve values from uninitialized vector; set the size and physical type of the vector first");
-
-            int byteIndex = index * 4;
-            return LittleEndian.ToUInt32(m_values, byteIndex);
-        }
-
-        /// <summary>
-        /// Sets a value in this vector as a 32-bit unsigned integer.
-        /// </summary>
-        /// <param name="index">The index of the value.</param>
-        /// <param name="value">The new value of a 32-bit unsigned integer.</param>
-        public void SetUInt4(int index, uint value)
         {
             if ((object)m_values == null)
                 throw new InvalidOperationException("Unable to insert values into uninitialized vector; set the size and physical type of the vector first");
@@ -392,6 +541,30 @@ namespace GSF.PQDIF.Physical
             // need to also add two days here when creating PQDIF timestamps.
             LittleEndian.CopyBytes((uint)daySpan.TotalDays + 2u, m_values, byteIndex);
             LittleEndian.CopyBytes(secondSpan.TotalSeconds, m_values, byteIndex + 4);
+        }
+
+        /// <summary>
+        /// Gets the value in this vector as a globally unique identifier.
+        /// </summary>
+        /// <param name="index">The index of the value.</param>
+        /// <returns>The value as a globally unique identifier.</returns>
+        public Guid GetGuid(int index)
+        {
+            int byteIndex = index * 16;
+            byte[] bytes = m_values.BlockCopy(byteIndex, 16);
+            return new Guid(bytes);
+        }
+
+        /// <summary>
+        /// Sets the value in this vector as a globally unique identifier.
+        /// </summary>
+        /// <param name="index">The index of the value.</param>
+        /// <param name="value">The new value as a globally unique identifier.</param>
+        public void SetGuid(int index, Guid value)
+        {
+            byte[] bytes = value.ToByteArray();
+            int byteIndex = index * bytes.Length;
+            Buffer.BlockCopy(bytes, 0, m_values, byteIndex, bytes.Length);
         }
 
         /// <summary>

@@ -142,7 +142,7 @@
            CheckEnvironment   (Before > Core > After)
            CreateWorkspace    (Before > Core > After)
          CompileBuild
-           CloneRepository    (Before > Core > After)
+           UpdateRepository    (Before > Core > After)
            VersionSource      (Before > Core > After)
            BuildProjects      (Before > Core > After)
            ExecuteUnitTests   (Before > Core > After)
@@ -158,7 +158,7 @@
     </InitializeBuildDependsOn>
 
     <CompileBuildDependsOn>
-      CloneRepository;
+      UpdateRepository;
       VersionSource;
       BuildProjects;
       ExecuteUnitTests;
@@ -187,11 +187,11 @@
       AfterCreateWorkspace;
     </CreateWorkspaceDependsOn>
 
-    <CloneRepositoryDependsOn>
-      BeforeCloneRepository;
-      CoreCloneRepository;
-      AfterCloneRepository;
-    </CloneRepositoryDependsOn>
+    <UpdateRepositoryDependsOn>
+      BeforeUpdateRepository;
+      CoreUpdateRepository;
+      AfterUpdateRepository;
+    </UpdateRepositoryDependsOn>
 
     <VersionSourceDependsOn>
       BeforeVersionSource;
@@ -267,7 +267,7 @@
   <Target Name="PrepareSettings" DependsOnTargets="$(PrepareSettingsDependsOn)"/>
   <Target Name="CheckEnvironment" DependsOnTargets="$(CheckEnvironmentDependsOn)"/>
   <Target Name="CreateWorkspace" DependsOnTargets="$(CreateWorkspaceDependsOn)"/>
-  <Target Name="CloneRepository" DependsOnTargets="$(CloneRepositoryDependsOn)"/>
+  <Target Name="UpdateRepository" DependsOnTargets="$(UpdateRepositoryDependsOn)"/>
   <Target Name="VersionSource" DependsOnTargets="$(VersionSourceDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
   <Target Name="BuildProjects" DependsOnTargets="$(BuildProjectsDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
   <Target Name="ExecuteUnitTests" DependsOnTargets="$(ExecuteUnitTestsDependsOn)" Condition="'$(ForceBuild)' == 'true' And '$(SkipUnitTest)' == 'false'"/>
@@ -323,20 +323,23 @@
   <Target Name="BeforeCreateWorkspace"/>
 
   <Target Name="CoreCreateWorkspace">
-    <!-- Create a temporary workspace for the build. -->
-    <Message Text="Creating temporary workspace..."/>
-    <RemoveDir Directories="$(LocalFolder)" Condition="Exists('$(LocalFolder)')"/>
-    <MakeDir Directories="$(LocalFolder)"/>
+    <!-- Create a workspace for the build. -->
+    <Message Text="Creating local build workspace..."/>
+    <RemoveDir Directories="$(LocalFolder)" Condition="Exists('$(LocalFolder)') And !Exists('$(LocalFolder)\.git')"/>
+    <MakeDir Directories="$(LocalFolder)" Condition="!Exists('$(LocalFolder)')"/>
+    <Exec Command="%22$(GitClient)%22 clone %22$(GitServer)%22 ." WorkingDirectory="$(LocalFolder)" Condition="!Exists('$(LocalFolder)\.git')"/>
+    <Exec Command="%22$(GitClient)%22 reset --hard" WorkingDirectory="$(LocalFolder)"/>
+    <Exec Command="%22$(GitClient)%22 checkout %22$(GitBranch)%22" WorkingDirectory="$(LocalFolder)"/>
+    <Exec Command="%22$(GitClient)%22 clean -f -d" WorkingDirectory="$(LocalFolder)"/>
   </Target>
 
   <Target Name="AfterCreateWorkspace"/>
-  <Target Name="BeforeCloneRepository"/>
+  <Target Name="BeforeUpdateRepository"/>
 
-  <Target Name="CoreCloneRepository">
+  <Target Name="CoreUpdateRepository">
     <!-- Get source code for the specified version. -->
-    <Message Text="Getting source code..."/>
-    <Exec Command="%22$(GitClient)%22 clone %22$(GitServer)%22 ." WorkingDirectory="$(LocalFolder)"/>
-    <Exec Command="%22$(GitClient)%22 checkout %22$(GitBranch)%22" WorkingDirectory="$(LocalFolder)"/>
+    <Message Text="Getting latest updates from repo..."/>
+    <Exec Command="%22$(GitClient)%22 pull origin %22$(GitBranch)%22" WorkingDirectory="$(LocalFolder)"/>
     <CallTarget Targets="CheckForChanges"/>
   </Target>
 
@@ -356,7 +359,7 @@
     <Message Text="Build is skipped - No new changes." Condition="'$(ForceBuild)' != 'true'"/>
   </Target>
   
-  <Target Name="AfterCloneRepository"/>
+  <Target Name="AfterUpdateRepository"/>
   <Target Name="BeforeVersionSource"/>
 
   <Target Name="CoreVersionSource" Condition="'@(FilesToVersion)' != '' And '$(SkipVersioning)' != 'true'">
@@ -374,9 +377,9 @@
     <PropertyGroup>
       <BuildTag Condition="'$(BuildTag)' == ''">v$(Major).$(Minor).$(Build).$(Revision)-$(GitBranch)</BuildTag>
     </PropertyGroup>
-    <Exec Command="%22$(GitClient)%22 add --all" WorkingDirectory="$(LocalFolder)" ContinueOnError="true"  />
-    <Exec Command="%22$(GitClient)%22 commit -m %22$(ProjectName): Version change for build $(BuildTag).%22" WorkingDirectory="$(LocalFolder)" ContinueOnError="true"  />
-    <Exec Command="%22$(GitClient)%22 tag %22$(BuildTag)%22" WorkingDirectory="$(LocalFolder)"/>
+    <Exec Command="%22$(GitClient)%22 add --all" WorkingDirectory="$(LocalFolder)" ContinueOnError="true"/>
+    <Exec Command="%22$(GitClient)%22 commit -m %22$(ProjectName): Version change for build $(BuildTag).%22" WorkingDirectory="$(LocalFolder)" ContinueOnError="true"/>
+    <Exec Command="%22$(GitClient)%22 tag %22$(BuildTag)%22" WorkingDirectory="$(LocalFolder)" ContinueOnError="true"/>
   </Target>
 
   <Target Name="AfterVersionSource"/>
@@ -478,7 +481,6 @@
     <!-- Commit all of the pending changes. -->
     <Message Text="Pushing changes to Git server..." />
     <Exec Command="%22$(GitClient)%22 push origin $(GitBranch):$(GitBranch)" WorkingDirectory="$(LocalFolder)" ContinueOnError="true"  />
-    <Exec Command="%22$(GitClient)%22 push --tags origin $(GitBranch):$(GitBranch)" WorkingDirectory="$(LocalFolder)" ContinueOnError="true"  />
   </Target>
 
   <Target Name="AfterPushToServer"/>

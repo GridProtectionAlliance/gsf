@@ -68,6 +68,37 @@ namespace GSF.TimeSeries.Adapters
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="DataSet"/> based data source used to load each <see cref="IAdapter"/>.
+        /// Updates to this property will cascade to all items in this <see cref="AdapterCollectionBase{T}"/>.
+        /// </summary>
+        /// <remarks>
+        /// Table name specified in <see cref="AdapterCollectionBase{T}.DataMember"/> from <see cref="AdapterCollectionBase{T}.DataSource"/> is expected
+        /// to have the following table column names:<br/>
+        /// ID, AdapterName, AssemblyName, TypeName, ConnectionString<br/>
+        /// ID column type should be integer based, all other column types are expected to be string based.
+        /// </remarks>
+        public override DataSet DataSource
+        {
+            get
+            {
+                return base.DataSource;
+            }
+            set
+            {
+                // First remove old adapters that are no longer defined in the configuration
+                // so that we do not update the data source of non-existent adapters
+                RemoveOldAdapters(value);
+
+                // Update the data source of all existing adapters
+                base.DataSource = value;
+
+                // Add new adapters that weren't
+                // previously defined in the configuration
+                AddNewAdapters(value);
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -98,9 +129,9 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Create newly defined adapters and remove adapters that are no longer present in the adapter collection configurations. 
+        /// Create newly defined adapters in the adapter collection configurations. 
         /// </summary>
-        public void UpdateCollectionConfigurations()
+        private void AddNewAdapters(DataSet dataSource)
         {
             List<IAdapterCollection> adapters;
 
@@ -116,13 +147,47 @@ namespace GSF.TimeSeries.Adapters
                 {
                     string dataMember = adapterCollection.DataMember;
 
-                    if (DataSource.Tables.Contains(dataMember))
+                    if (dataSource.Tables.Contains(dataMember))
+                    {
+                        // Create newly defined adapters
+                        foreach (DataRow adapterRow in dataSource.Tables[dataMember].Rows)
+                        {
+                            IAdapter adapter;
+
+                            if (!adapterCollection.TryGetAdapterByID(uint.Parse(adapterRow["ID"].ToNonNullString("0")), out adapter) && adapterCollection.TryCreateAdapter(adapterRow, out adapter))
+                                adapterCollection.Add(adapter);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Remove adapters that are no longer present in the adapter collection configurations. 
+        /// </summary>
+        private void RemoveOldAdapters(DataSet dataSource)
+        {
+            List<IAdapterCollection> adapters;
+
+            // Create a local synchronized copy of the items to iterate to avoid nested locks
+            lock (this)
+            {
+                adapters = new List<IAdapterCollection>(this);
+            }
+
+            foreach (IAdapterCollection adapterCollection in adapters)
+            {
+                lock (adapterCollection)
+                {
+                    string dataMember = adapterCollection.DataMember;
+
+                    if (dataSource.Tables.Contains(dataMember))
                     {
                         // Remove adapters that are no longer present in the configuration
                         for (int i = adapterCollection.Count - 1; i >= 0; i--)
                         {
                             IAdapter adapter = adapterCollection[i];
-                            DataRow[] adapterRows = DataSource.Tables[dataMember].Select(string.Format("ID = {0}", adapter.ID));
+                            DataRow[] adapterRows = dataSource.Tables[dataMember].Select(string.Format("ID = {0}", adapter.ID));
 
                             if (adapterRows.Length == 0 && adapter.ID != 0)
                             {
@@ -137,15 +202,6 @@ namespace GSF.TimeSeries.Adapters
 
                                 adapterCollection.Remove(adapter);
                             }
-                        }
-
-                        // Create newly defined adapters
-                        foreach (DataRow adapterRow in DataSource.Tables[dataMember].Rows)
-                        {
-                            IAdapter adapter;
-
-                            if (!adapterCollection.TryGetAdapterByID(uint.Parse(adapterRow["ID"].ToNonNullString("0")), out adapter) && adapterCollection.TryCreateAdapter(adapterRow, out adapter))
-                                adapterCollection.Add(adapter);
                         }
                     }
                 }

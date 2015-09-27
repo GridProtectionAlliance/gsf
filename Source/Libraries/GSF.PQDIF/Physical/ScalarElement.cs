@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System;
+using System.IO;
 using System.Text;
 
 namespace GSF.PQDIF.Physical
@@ -137,6 +138,131 @@ namespace GSF.PQDIF.Physical
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        /// <summary>                
+        /// Sets the value at the given index as the physical type defined by <see cref="TypeOfValue"/>.
+        /// </summary>
+        /// <param name="index">The index of the value.</param>
+        /// <param name="value">The new value to be stored.</param>
+        public void Set(int index, object value)
+        {
+            char c;
+            byte[] bytes;
+
+            switch (TypeOfValue)
+            {
+                case PhysicalType.Boolean1:
+                    SetUInt1(Convert.ToBoolean(value) ? (byte)1 : (byte)0);
+                    break;
+
+                case PhysicalType.Boolean2:
+                    SetInt2(Convert.ToBoolean(value) ? (short)1 : (short)0);
+                    break;
+
+                case PhysicalType.Boolean4:
+                    SetInt4(Convert.ToBoolean(value) ? 1 : 0);
+                    break;
+
+                case PhysicalType.Char1:
+                    c = Convert.ToChar(value);
+                    bytes = Encoding.ASCII.GetBytes(c.ToString());
+                    SetUInt1(bytes[0]);
+                    break;
+
+                case PhysicalType.Char2:
+                    c = Convert.ToChar(value);
+                    bytes = Encoding.Unicode.GetBytes(c.ToString());
+                    SetInt2(BitConverter.ToInt16(bytes, 0));
+                    break;
+
+                case PhysicalType.Integer1:
+                    SetInt1(Convert.ToSByte(value));
+                    break;
+
+                case PhysicalType.Integer2:
+                    SetInt2(Convert.ToInt16(value));
+                    break;
+
+                case PhysicalType.Integer4:
+                    SetInt4(Convert.ToInt32(value));
+                    break;
+
+                case PhysicalType.UnsignedInteger1:
+                    SetUInt1(Convert.ToByte(value));
+                    break;
+
+                case PhysicalType.UnsignedInteger2:
+                    SetUInt2(Convert.ToUInt16(value));
+                    break;
+
+                case PhysicalType.UnsignedInteger4:
+                    SetUInt4(Convert.ToUInt32(value));
+                    break;
+
+                case PhysicalType.Real4:
+                    SetReal4(Convert.ToSingle(value));
+                    break;
+
+                case PhysicalType.Real8:
+                    SetReal8(Convert.ToDouble(value));
+                    break;
+
+                case PhysicalType.Complex8:
+                    SetComplex8((ComplexNumber)value);
+                    break;
+
+                case PhysicalType.Complex16:
+                    SetComplex16((ComplexNumber)value);
+                    break;
+
+                case PhysicalType.Timestamp:
+                    SetTimestamp(Convert.ToDateTime(value));
+                    break;
+
+                case PhysicalType.Guid:
+                    SetGuid((Guid)value);
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        /// <summary>
+        /// Gets the value of this scalar as an 8-bit unsigned integer.
+        /// </summary>
+        /// <returns>The value as an 8-bit unsigned integer.</returns>
+        public ushort GetUInt1()
+        {
+            return m_value[0];
+        }
+
+        /// <summary>
+        /// Sets the value of this scalar as an 8-bit unsigned integer.
+        /// </summary>
+        /// <param name="value">The new value as an 8-bit unsigned integer.</param>
+        public void SetUInt1(byte value)
+        {
+            m_value[0] = value;
+        }
+
+        /// <summary>
+        /// Gets the value of this scalar as an 8-bit signed integer.
+        /// </summary>
+        /// <returns>The value as an 8-bit signed integer.</returns>
+        public short GetInt1()
+        {
+            return (sbyte)m_value[0];
+        }
+
+        /// <summary>
+        /// Sets the value of this scalar as an 8-bit signed integer.
+        /// </summary>
+        /// <param name="value">The new value as an 8-bit signed integer.</param>
+        public void SetInt1(sbyte value)
+        {
+            m_value[0] = (byte)value;
         }
 
         /// <summary>
@@ -304,7 +430,7 @@ namespace GSF.PQDIF.Physical
         public void SetComplex16(ComplexNumber value)
         {
             LittleEndian.CopyBytes(value.Real, m_value, 0);
-            LittleEndian.CopyBytes(value.Imaginary, m_value, 0);
+            LittleEndian.CopyBytes(value.Imaginary, m_value, 8);
         }
 
         /// <summary>

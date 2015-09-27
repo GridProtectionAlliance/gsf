@@ -602,6 +602,17 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
+        /// Gets a flag that indicates whether the object has been disposed.
+        /// </summary>
+        public bool IsDisposed
+        {
+            get
+            {
+                return m_disposed;
+            }
+        }
+
+        /// <summary>
         /// Gets a value indicating whether the <see cref="AdapterCollectionBase{T}"/> is read-only.
         /// </summary>
         public virtual bool IsReadOnly

@@ -481,6 +481,17 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Gets a flag that indicates whether the object has been disposed.
+        /// </summary>
+        public bool IsDisposed
+        {
+            get
+            {
+                return m_disposed;
+            }
+        }
+
+        /// <summary>
         /// Gets reference to the data gap <see cref="OutageLog"/> for this <see cref="DataGapRecoverer"/>.
         /// </summary>
         protected OutageLog DataGapLog
