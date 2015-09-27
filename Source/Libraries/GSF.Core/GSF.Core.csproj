@@ -129,6 +129,9 @@
     <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ExpressionEvaluator">
+      <HintPath>..\..\Dependencies\CSEE\ExpressionEvaluator.dll</HintPath>
+    </Reference>
     <Reference Include="Mono.Security">
       <HintPath>..\..\Dependencies\Mono\Mono.Security.dll</HintPath>
       <Private>False</Private>
