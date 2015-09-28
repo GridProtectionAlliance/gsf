@@ -154,7 +154,7 @@ namespace GSF.Threading
         // Fields
         private LogicalThreadScheduler m_scheduler;
         private ConcurrentQueue<Action> m_queue;
-        private Dictionary<Guid, object> m_threadLocalStorage;
+        private Dictionary<object, object> m_threadLocalStorage;
         private int m_isActive;
 
         private LogicalThreadStatistics m_statistics;
@@ -182,7 +182,7 @@ namespace GSF.Threading
 
             m_scheduler = scheduler;
             m_queue = new ConcurrentQueue<Action>();
-            m_threadLocalStorage = new Dictionary<Guid, object>();
+            m_threadLocalStorage = new Dictionary<object, object>();
             m_statistics = new LogicalThreadStatistics();
         }
 
@@ -275,26 +275,26 @@ namespace GSF.Threading
         /// <summary>
         /// Returns the thread local object with the given ID.
         /// </summary>
-        /// <param name="id">The ID of the thread local object.</param>
+        /// <param name="key">The key used to look up the thread local object.</param>
         /// <returns>The value of the thread local object with the given ID.</returns>
-        internal object GetThreadLocal(Guid id)
+        internal object GetThreadLocal(object key)
         {
             object value;
-            m_threadLocalStorage.TryGetValue(id, out value);
+            m_threadLocalStorage.TryGetValue(key, out value);
             return value;
         }
 
         /// <summary>
         /// Sets the value of the thread local object with the given ID.
         /// </summary>
-        /// <param name="id">The ID of the thread local object.</param>
+        /// <param name="key">The key used to look up the thread local object.</param>
         /// <param name="value">The new value for the thread local object.</param>
-        internal void SetThreadLocal(Guid id, object value)
+        internal void SetThreadLocal(object key, object value)
         {
             if (value != null)
-                m_threadLocalStorage[id] = value;
+                m_threadLocalStorage[key] = value;
             else
-                m_threadLocalStorage.Remove(id);
+                m_threadLocalStorage.Remove(key);
         }
 
         /// <summary>

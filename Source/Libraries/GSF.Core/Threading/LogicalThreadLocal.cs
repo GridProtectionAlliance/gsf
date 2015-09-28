@@ -55,7 +55,6 @@ namespace GSF.Threading
         private event EventHandler Disposed;
 
         // Fields
-        private Guid m_id;
         private Func<T> m_newObjectFactory;
         private ThreadLocal<T> m_threadLocal;
 
@@ -80,7 +79,6 @@ namespace GSF.Threading
         /// <param name="newObjectFactory">Factory to produce the initial value when accessing uninitialized values.</param>
         public LogicalThreadLocal(Func<T> newObjectFactory)
         {
-            m_id = Guid.NewGuid();
             m_newObjectFactory = newObjectFactory;
             m_threadLocal = new ThreadLocal<T>(newObjectFactory);
         }
@@ -225,13 +223,13 @@ namespace GSF.Threading
                 return false;
             }
 
-            slot = currentThread.GetThreadLocal(m_id) as Slot;
+            slot = currentThread.GetThreadLocal(this) as Slot;
 
             if ((object)slot == null)
             {
                 slot = new Slot();
                 slot.Value = m_newObjectFactory();
-                currentThread.SetThreadLocal(m_id, slot);
+                currentThread.SetThreadLocal(this, slot);
                 AttachToDisposed();
             }
 
@@ -263,7 +261,7 @@ namespace GSF.Threading
                 LogicalThread thread;
 
                 if (threadRef.TryGetTarget(out thread))
-                    thread.SetThreadLocal(m_id, null);
+                    thread.SetThreadLocal(this, null);
             };
         }
 
