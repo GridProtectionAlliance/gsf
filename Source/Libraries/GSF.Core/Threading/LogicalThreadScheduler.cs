@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Threading;
 
@@ -228,7 +229,6 @@ namespace GSF.Threading
         /// <param name="action">The action to be executed.</param>
         private void TryExecute(Action action)
         {
-
             try
             {
                 action();
@@ -256,18 +256,18 @@ namespace GSF.Threading
         /// <returns>True if the exception could be handled; false otherwise.</returns>
         private bool TryHandleException(Exception unhandledException)
         {
-            Exception ex;
+            AggregateException aggregateException;
             StringBuilder message;
             bool handled;
 
-            ex = unhandledException;
+            aggregateException = new AggregateException(unhandledException);
             message = new StringBuilder();
             message.AppendFormat("Logical thread action threw an exception of type {0}: {1}", unhandledException.GetType().FullName, unhandledException.Message);
 
             try
             {
                 // Attempt to handle the exception via the logical thread's exception handler
-                handled = LogicalThread.CurrentThread.OnUnhandledException(ex);
+                handled = LogicalThread.CurrentThread.OnUnhandledException(aggregateException);
             }
             catch (Exception handlerException)
             {
@@ -275,7 +275,7 @@ namespace GSF.Threading
                 // make a note of it in the exception's exception message
                 message.AppendLine();
                 message.AppendFormat("Logical thread exception handler threw an exception of type {0}: {1}", handlerException.GetType().FullName, handlerException.Message);
-                ex = new Exception(message.ToString(), unhandledException);
+                aggregateException = new AggregateException(message.ToString(), aggregateException.InnerExceptions.Concat(new Exception[] { handlerException }));
                 handled = false;
             }
 
@@ -283,7 +283,7 @@ namespace GSF.Threading
             {
                 // If the logical thread's exception handler was not able to handle the exception,
                 // attempt to handle the exception via the thread scheduler's exception handler
-                handled = handled || OnUnhandledException(ex);
+                handled = handled || OnUnhandledException(aggregateException);
             }
             catch (Exception handlerException)
             {
@@ -291,7 +291,7 @@ namespace GSF.Threading
                 // make a note of it in the exception's exception message
                 message.AppendLine();
                 message.AppendFormat("Scheduler exception handler threw an exception of type {0}: {1}", handlerException.GetType().FullName, handlerException.Message);
-                ex = new Exception(message.ToString(), unhandledException);
+                aggregateException = new AggregateException(message.ToString(), aggregateException.InnerExceptions.Concat(new Exception[] { handlerException }));
                 handled = false;
             }
 
@@ -300,8 +300,8 @@ namespace GSF.Threading
                 // If the exception could not be handled by either the
                 // logical thread's exception handler or the scheduler's
                 // exception handler, throw it as an unhandled exception
-                if (ex != unhandledException)
-                    throw ex;
+                if (aggregateException.InnerExceptions.Count > 1)
+                    throw aggregateException;
 
                 return false;
             }

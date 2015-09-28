@@ -88,14 +88,16 @@ namespace GSF.TimeSeries.Adapters
             {
                 // First remove old adapters that are no longer defined in the configuration
                 // so that we do not update the data source of non-existent adapters
-                RemoveOldAdapters(value);
+                if (Initialized)
+                    RemoveOldAdapters(value);
 
                 // Update the data source of all existing adapters
                 base.DataSource = value;
 
                 // Add new adapters that weren't
                 // previously defined in the configuration
-                AddNewAdapters(value);
+                if (Initialized)
+                    AddNewAdapters(value);
             }
         }
 
