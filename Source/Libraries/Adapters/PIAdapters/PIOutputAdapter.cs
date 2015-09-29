@@ -73,6 +73,8 @@ namespace PIAdapters
         private int m_connectTimeout;                                       // PI connection timeout
         private string m_tagMapCacheFileName;                               // Tag map cache file name
         private bool m_runMetadataSync;                                     // Flag for automatically creating and/or updating PI points on the server
+        private bool m_autoCreateTags;                                      // Flag that determines if tags should be automatically created (when metdata is sync'd)
+        private bool m_autoUpdateTags;                                      // Flag that determines if tags should be autoamtically updated (when metdata is sync'd)
         private int m_tagNamePrefixRemoveCount;                             // Count of number of tag subscription based tag name prefix to remove, if any
         private string m_pointSource;                                       // Point source to set on PI points when automatically created by the adapter
         private string m_pointClass;                                        // Point class to use for new PI points when automatically created by the adapter
@@ -105,6 +107,9 @@ namespace PIAdapters
             m_tagMap = new ConcurrentDictionary<Guid, string>();
             m_pendingMappings = new HashSet<MeasurementKey>();
             m_lastMetadataRefresh = DateTime.MinValue;
+            m_runMetadataSync = true;
+            m_autoCreateTags = true;
+            m_autoUpdateTags = true;
         }
 
         #endregion
@@ -214,6 +219,38 @@ namespace PIAdapters
         }
 
         /// <summary>
+        /// Gets or sets whether or not this adapter should automatically manage metadata for PI points.
+        /// </summary>
+        [ConnectionStringParameter, Description("Determines if this adapter should automatically create new tags when managing metadata for PI points (recommended)."), DefaultValue(true)]
+        public bool AutoCreateTags
+        {
+            get
+            {
+                return m_autoCreateTags;
+            }
+            set
+            {
+                m_autoCreateTags = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets whether or not this adapter should automatically manage metadata for PI points.
+        /// </summary>
+        [ConnectionStringParameter, Description("Determines if this adapter should automatically update existing tags when managing metadata for PI points (recommended). This will make openPDC the master for maintaing PI tags (like the name); othwerwise, when False, PI will be the master."), DefaultValue(true)]
+        public bool AutoUpdateTags
+        {
+            get
+            {
+                return m_autoUpdateTags;
+            }
+            set
+            {
+                m_autoUpdateTags = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the number of tag name prefixes, e.g., "SOURCE!", applied by subscriptions to remove from PI tag names.
         /// </summary>
         [ConnectionStringParameter, Description("Defines the number of tag name prefixes applied by subscriptions, e.g., \"SOURCE!\", to remove from PI tag names."), DefaultValue(0)]
@@ -303,6 +340,10 @@ namespace PIAdapters
                 status.AppendFormat("       Connected to server: {0}", (object)m_connection == null ? "No" : m_connection.Connected ? "Yes" : "No");
                 status.AppendLine();
                 status.AppendFormat("    Meta-data sync enabled: {0}", m_runMetadataSync);
+                status.AppendLine();
+                status.AppendFormat("          Auto-create tags: {0}", m_autoCreateTags);
+                status.AppendLine();
+                status.AppendFormat("          Auto-update tags: {0}", m_autoUpdateTags);
                 status.AppendLine();
                 status.AppendFormat("         Using compression: {0}", UseCompression);
                 status.AppendLine();
@@ -445,8 +486,12 @@ namespace PIAdapters
 
             if (settings.TryGetValue("RunMetadataSync", out setting))
                 m_runMetadataSync = setting.ParseBoolean();
-            else
-                m_runMetadataSync = true; // By default, assume that PI tags will be automatically maintained
+
+            if (settings.TryGetValue("AutoCreateTags", out setting))
+                m_autoCreateTags = setting.ParseBoolean();
+
+            if (settings.TryGetValue("AutoUpdateTags", out setting))
+                m_autoUpdateTags = setting.ParseBoolean();
 
             if (settings.TryGetValue("PIPointSource", out setting))
                 m_pointSource = setting;
@@ -811,7 +856,7 @@ namespace PIAdapters
                         // Lookup PI point trying signal ID and tag name
                         point = GetPIPoint(server, signalID, tagName);
 
-                        if ((object)point == null)
+                        if (m_autoCreateTags && (object)point == null)
                         {
                             try
                             {
@@ -838,7 +883,7 @@ namespace PIAdapters
                             try
                             {
                                 // Rename tag-name if needed - PI tags are not case sensitive
-                                if (string.Compare(point.Name, tagName, StringComparison.InvariantCultureIgnoreCase) != 0)
+                                if (m_autoUpdateTags && string.Compare(point.Name, tagName, StringComparison.InvariantCultureIgnoreCase) != 0)
                                     point.Name = tagName;
 
                                 // Make sure renamed point gets fully remapped
@@ -912,25 +957,34 @@ namespace PIAdapters
                                     }
                                 };
 
-                                // Load current attributes
-                                point.LoadAttributes(
-                                    PICommonPointAttributes.PointSource,
-                                    PICommonPointAttributes.Descriptor,
-                                    PICommonPointAttributes.ExtendedDescriptor,
-                                    PICommonPointAttributes.Tag,
-                                    PICommonPointAttributes.Compressing,
-                                    PICommonPointAttributes.EngineeringUnits);
+                                if (m_autoUpdateTags)
+                                {
+                                    // Load current attributes
+                                    point.LoadAttributes(
+                                        PICommonPointAttributes.PointSource,
+                                        PICommonPointAttributes.Descriptor,
+                                        PICommonPointAttributes.ExtendedDescriptor,
+                                        PICommonPointAttributes.Tag,
+                                        PICommonPointAttributes.Compressing,
+                                        PICommonPointAttributes.EngineeringUnits);
 
-                                // Update tag meta-data if it has changed
-                                updateAttribute(PICommonPointAttributes.PointSource, m_pointSource);
-                                updateAttribute(PICommonPointAttributes.Descriptor, measurementRow["Description"].ToString());
-                                updateAttribute(PICommonPointAttributes.ExtendedDescriptor, measurementRow["SignalID"].ToString());
-                                updateAttribute(PICommonPointAttributes.Tag, tagName);
-                                updateAttribute(PICommonPointAttributes.Compressing, UseCompression ? 1 : 0);
+                                    // Update tag meta-data if it has changed
+                                    updateAttribute(PICommonPointAttributes.PointSource, m_pointSource);
+                                    updateAttribute(PICommonPointAttributes.Descriptor, measurementRow["Description"].ToString());
+                                    updateAttribute(PICommonPointAttributes.ExtendedDescriptor, measurementRow["SignalID"].ToString());
+                                    updateAttribute(PICommonPointAttributes.Tag, tagName);
+                                    updateAttribute(PICommonPointAttributes.Compressing, UseCompression ? 1 : 0);
 
-                                // Engineering units is a new field for this view -- handle the case that it's not there
-                                if (measurements.Columns.Contains("EngineeringUnits"))
-                                    updateAttribute(PICommonPointAttributes.EngineeringUnits, measurementRow["EngineeringUnits"].ToString());
+                                    // Engineering units is a new field for this view -- handle the case that it's not there
+                                    if (measurements.Columns.Contains("EngineeringUnits"))
+                                        updateAttribute(PICommonPointAttributes.EngineeringUnits, measurementRow["EngineeringUnits"].ToString());
+                                }
+                                else
+                                {
+                                    // Have to maintain Guid link at a minimum
+                                    point.LoadAttributes(PICommonPointAttributes.ExtendedDescriptor);
+                                    updateAttribute(PICommonPointAttributes.ExtendedDescriptor, measurementRow["SignalID"].ToString());
+                                }
 
                                 // Save any changes
                                 if (updatedAttributes.Count > 0)
@@ -946,9 +1000,7 @@ namespace PIAdapters
                         m_metadataRefreshProgress = processed / (double)total;
 
                         if (processed % 100 == 0)
-                        {
                             OnStatusMessage("Updated {0:N0} PI tags and associated metadata, {1:0.00%} complete...", processed, m_metadataRefreshProgress);
-                        }
 
                         // If mapping for this connection was removed, it may have been because there was no meta-data so
                         // we re-add key to dictionary with null value, actual mapping will happen dynamically as needed
@@ -967,9 +1019,7 @@ namespace PIAdapters
                             OnStatusMessage("Caching tag-map for faster future loads...");
 
                             using (FileStream tagMapCache = File.Create(m_tagMapCacheFileName))
-                            {
                                 Serialization.Serialize(m_tagMap.ToDictionary(kvp => kvp.Key, kvp => kvp.Value), GSF.SerializationFormat.Binary, tagMapCache);
-                            }
 
                             OnStatusMessage("Tag-map cached for faster future loads.");
                         }
@@ -1040,9 +1090,7 @@ namespace PIAdapters
                 if (tagsToRemove.Count > 0)
                 {
                     foreach (MeasurementKey key in tagsToRemove)
-                    {
                         m_mappedPIPoints.TryRemove(key, out removedPIPoint);
-                    }
 
                     OnStatusMessage("Detected {0:N0} tags that have been removed from OSI-PI output - primary tag-map has been updated...", tagsToRemove.Count);
                 }
