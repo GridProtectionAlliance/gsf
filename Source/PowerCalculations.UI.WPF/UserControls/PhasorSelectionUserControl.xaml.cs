@@ -1,18 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using PowerCalculations.UI.WPF.ViewModels;
+using PowerCalculations.UI.DataModels;
 
 namespace PowerCalculations.UI.WPF.UserControls
 {
@@ -25,6 +15,11 @@ namespace PowerCalculations.UI.WPF.UserControls
 		{
 			InitializeComponent();
 			DataContext = new PhasorSelectionViewModel(16);
+		}
+
+		public Phasor SelectedPhasor
+		{
+			get { return ((PhasorSelectionViewModel) DataContext).CurrentItem; }
 		}
 	}
 }

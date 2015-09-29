@@ -26,6 +26,8 @@ namespace PowerCalculations.UI.DataModels
 		private Guid m_reactivePowerOutputSignalId;
 		private bool m_powerCalculationEnabled;
 		private Guid m_nodeId;
+		private Phasor m_voltagePhasor;
+		private Phasor m_currentPhasor;
 
 		#endregion
 
@@ -167,6 +169,29 @@ namespace PowerCalculations.UI.DataModels
 			}
 		}
 
+		public Phasor VoltagePhasor
+		{
+			get { return m_voltagePhasor; }
+			set
+			{
+				if (m_voltagePhasor == value) return;
+				m_voltagePhasor = value;
+				OnPropertyChanged("VoltagePhasor");
+			}
+		}
+
+		public Phasor CurrentPhasor
+		{
+			get { return m_currentPhasor; }
+			set
+			{
+				if (m_currentPhasor == value) return;
+				m_currentPhasor = value;
+				OnPropertyChanged("CurrentPhasor");
+			}
+		}
+
+
 		#endregion
 
 
@@ -222,7 +247,18 @@ namespace PowerCalculations.UI.DataModels
 				if (keys != null && keys.Count > 0)
 				{
 					var commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
-					var query = string.Format("SELECT * FROM PowerCalculation WHERE PowerCalculationId IN ({0})", commaSeparatedKeys);
+					var query = string.Format("select pc.PowerCalculationId, pc.CircuitDescription, pc.VoltageAngleSignalId, pc.VoltageMagSignalId, pc.CurrentAngleSignalId, " +
+		 									  "       pc.CurrentMagSignalId, pc.RealPowerOutputSignalId, pc.ReactivePowerOutputSignalId, pc.ActivePowerOutputSignalId, pc.CalculationEnabled, " +
+											  "	   pc.nodeid, vp.id voltagePhasorId, cp.id as currentPhasorId " +
+											  "from powercalculation pc " +
+											  "     left join measurement vm " +
+											  "	 on pc.voltagemagsignalid=vm.signalid " +
+											  "	 left join measurement cm " +
+											  "	 on pc.currentmagsignalid=cm.signalid " +
+											  "	 left join phasor vp " +
+											  "	 on vm.deviceid=vp.deviceid and vm.phasorsourceindex=vp.sourceindex " +
+											  "	 left join phasor cp " +
+											  " on cm.deviceid=cp.deviceid and cm.phasorsourceindex=cp.sourceindex WHERE PowerCalculationId IN ({0})", commaSeparatedKeys);
 					var calculationTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
 					calculationList = new PowerCalculation[calculationTable.Rows.Count];
 
@@ -247,6 +283,10 @@ namespace PowerCalculations.UI.DataModels
 						if (!row.IsNull("ActivePowerOutputSignalId"))
 							activePower = database.Guid(row, "ActivePowerOutputSignalId");
 
+						var currentPhasorId = row.ConvertField<int>("currentPhasorId");
+						var voltagePhasorId = row.ConvertField<int>("voltagePhasorId");
+						var phasors = Phasor.Load(database, new List<int> {currentPhasorId, voltagePhasorId});
+
 						calculationList[keys.IndexOf(id)] = new PowerCalculation
 						{
 							PowerCalculationId = row.Field<int>("PowerCalculationId"),
@@ -259,7 +299,6 @@ namespace PowerCalculations.UI.DataModels
 						if (reactivePower != null) { mkeys.Add(reactivePower.Value); }
 						if (activePower != null) { mkeys.Add(activePower.Value); }
 						var measurements = Measurement.LoadFromKeys(database, mkeys);
-
 						foreach (var measurement in measurements)
 						{
 							if (measurement.SignalID == voltageAngle)
@@ -289,6 +328,18 @@ namespace PowerCalculations.UI.DataModels
 							else if (measurement.SignalID == activePower)
 							{
 								calculationList[keys.IndexOf(id)].ActivePowerOutputMeasurement = measurement;
+							}
+						}
+
+						foreach (var phasor in phasors)
+						{
+							if (phasor.Id == currentPhasorId)
+							{
+								calculationList[keys.IndexOf(id)].CurrentPhasor = phasor;
+							}
+							else if (phasor.Id == voltagePhasorId)
+							{
+								calculationList[keys.IndexOf(id)].VoltagePhasor = phasor;
 							}
 						}
 					}

@@ -48,25 +48,32 @@
 						<TextBlock Grid.Row="1" Grid.Column="0" Text="Circuit Description" TextAlignment="Right"/>
 						<TextBox Grid.Row="1" Grid.Column="1" Text="{Binding CircuitDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-						<TextBlock Grid.Row="2" Grid.Column="0" Text="Voltage Angle" TextAlignment="Right"/>
-						<TextBox Grid.Row="2" Grid.Column="1" Text="{Binding VoltageAngleMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+						<TextBlock Grid.Row="2" Grid.Column="0" Text="Voltage Phasor" TextAlignment="Right"/>
+						<StackPanel Orientation="Vertical" Grid.Row="2" Grid.Column="1">
+							<StackPanel Orientation="Horizontal">
+								<TextBox Text="{Binding VoltagePhasor.Label, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" />
+								<ToggleButton x:Name="VoltagePhasorToggle" Content="..." Width="25"  />
+							</StackPanel>
+							<Popup StaysOpen="True" IsOpen="{Binding ElementName=VoltagePhasorToggle, Path=IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+								<userControls:PhasorSelectionUserControl x:Name="VoltagePhasorSelector" />
+							</Popup>
+						</StackPanel>
 
-						<TextBlock Grid.Row="3" Grid.Column="0" Text="Voltage Magnitude" TextAlignment="Right"/>
-						<TextBox Grid.Row="3" Grid.Column="1" Text="{Binding VoltageMagnitudeMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
-
-						<TextBlock Grid.Row="4" Grid.Column="0" Text="Current Angle" TextAlignment="Right" />
-						<TextBox Grid.Row="4" Grid.Column="1" Text="{Binding CurrentAngleMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
-
-						<TextBlock Grid.Row="5" Grid.Column="0" Text="Current Magnitude" TextAlignment="Right" />
-						<TextBox Grid.Row="5" Grid.Column="1" Text="{Binding CurrentMagnitudeMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+						<TextBlock Grid.Row="3" Grid.Column="0" Text="Current Phasor" TextAlignment="Right"/>
+						<StackPanel Orientation="Vertical" Grid.Row="3" Grid.Column="1">
+							<StackPanel Orientation="Horizontal">
+								<TextBox Text="{Binding CurrentPhasor.Label, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" />
+								<ToggleButton x:Name="CurrentPhasorToggle" Content="..." Width="25"  />
+							</StackPanel>
+							<Popup StaysOpen="True" IsOpen="{Binding ElementName=CurrentPhasorToggle, Path=IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+								<userControls:PhasorSelectionUserControl x:Name="CurrentPhasorSelector" />
+							</Popup>
+						</StackPanel>
 
 						<TextBlock Grid.Row="0" Grid.Column="3">(Leave blank to use template names)</TextBlock>
 
 						<TextBlock Grid.Row="1" Grid.Column="2" Text="Real Power Output Alt Tag Name" TextAlignment="Right" />
-						<StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="3">
-							<TextBox Text="{Binding RealPowerOutputMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
-							<ToggleButton x:Name="RealPowerOutputToggle" Content="..." Width="25"  />
-						</StackPanel>
+						<TextBox Grid.Row="1" Grid.Column="3" Text="{Binding RealPowerOutputMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
 						
 						<TextBlock Grid.Row="2" Grid.Column="2" Text="Reactive Power Output Alt Tag Name" TextAlignment="Right" />
 						<TextBox Grid.Row="2" Grid.Column="3" Text="{Binding ReactivePowerOutputMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
@@ -81,10 +88,6 @@
 				</StackPanel>
 			</GroupBox>
 		</Grid>
-
-		<Popup StaysOpen="True" IsOpen="{Binding ElementName=RealPowerOutputToggle, Path=IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="500" Height="250">
-			<userControls:PhasorSelectionUserControl />
-		</Popup>
 
 		<sdk:DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" SelectedIndex="{binding:Column Path=CurrentSelectedIndex}">
 			<!--PreviewKeyDown="DataGrid_PreviewKeyDown" Sorting="DataGrid_Sorting" CellEditEnding="DataGrid_CellEditEnding">-->

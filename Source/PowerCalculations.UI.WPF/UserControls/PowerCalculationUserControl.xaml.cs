@@ -1,17 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+using System.ComponentModel;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using PowerCalculations.UI.WPF.ViewModels;
 
 namespace PowerCalculations.UI.WPF.UserControls
@@ -19,12 +8,37 @@ namespace PowerCalculations.UI.WPF.UserControls
 	/// <summary>
 	/// Interaction logic for PowerCalculationUserControl.xaml
 	/// </summary>
-	public partial class PowerCalculationUserControl : UserControl
+	public partial class PowerCalculationUserControl
 	{
 		public PowerCalculationUserControl()
 		{
 			DataContext = new PowerCalculationViewModel(16);
 			InitializeComponent();
+
+			((PhasorSelectionViewModel)GetVoltagePhasorSelector().DataContext).PropertyChanged += VoltagePhasorChanged;
+			((PhasorSelectionViewModel)GetCurrentPhasorSelector().DataContext).PropertyChanged += CurrentPhasorChanged;
+		}
+
+		private void CurrentPhasorChanged(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
+		{
+			if (propertyChangedEventArgs.PropertyName == "CurrentItem")
+				((PowerCalculationViewModel)DataContext).CurrentItem.CurrentPhasor = ((PhasorSelectionViewModel)GetCurrentPhasorSelector().DataContext).CurrentItem;
+		}
+
+		private void VoltagePhasorChanged(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
+		{
+			if (propertyChangedEventArgs.PropertyName == "CurrentItem")
+				((PowerCalculationViewModel)DataContext).CurrentItem.VoltagePhasor = ((PhasorSelectionViewModel)GetVoltagePhasorSelector().DataContext).CurrentItem;
+		}
+
+		private PhasorSelectionUserControl GetVoltagePhasorSelector()
+		{
+			return FindName("VoltagePhasorSelector") as PhasorSelectionUserControl;
+		}
+
+		private PhasorSelectionUserControl GetCurrentPhasorSelector()
+		{
+			return FindName("CurrentPhasorSelector") as PhasorSelectionUserControl;
 		}
 	}
 }

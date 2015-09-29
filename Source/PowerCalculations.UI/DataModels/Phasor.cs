@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 using GSF.Data;
 using GSF.TimeSeries.UI;
+using GSF.TimeSeries.UI.DataModels;
 
 namespace PowerCalculations.UI.DataModels
 {
@@ -88,6 +89,30 @@ namespace PowerCalculations.UI.DataModels
 			}
 		}
 
+		private Measurement m_magnitudeMeasurement;
+		public Measurement MagnitudeMeasurement
+		{
+			get { return m_magnitudeMeasurement; }
+			set
+			{
+				if (m_magnitudeMeasurement == value) return;
+				m_magnitudeMeasurement = value;
+				OnPropertyChanged("MagnitudeMeasurement");
+			}
+		}
+
+		private Measurement m_angleMeasurement;
+		public Measurement AngleMeasurement
+		{
+			get { return m_angleMeasurement; }
+			set
+			{
+				if (m_angleMeasurement == value) return;
+				m_angleMeasurement = value;
+				OnPropertyChanged("AngleMeasurement");
+			}
+		}
+
 		#endregion
 
 
@@ -143,7 +168,12 @@ namespace PowerCalculations.UI.DataModels
 				if (keys != null && keys.Count > 0)
 				{
 					var commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
-					var query = string.Format("SELECT * FROM Phasor WHERE Id IN ({0})", commaSeparatedKeys);
+					var query = string.Format("select p.id, p.deviceid, p.label, p.type, p.phase, p.sourceindex, mags.signalid as mag_signalid, angles.signalid as angle_signalid " +
+											  "from phasor p left join measurement mags " +
+											  "on mags.deviceid = p.deviceid and mags.phasorsourceindex = p.sourceindex and mags.signaltypeid in (1,3) " +
+											  "left join measurement angles " +
+											  "on angles.deviceid = p.deviceid and angles.phasorsourceindex = p.sourceindex and angles.signaltypeid in (2,4) " +
+											  "where p.id in ({0})", commaSeparatedKeys);
 					var phasorTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
 					phasorList = new Phasor[phasorTable.Rows.Count];
 
@@ -155,6 +185,10 @@ namespace PowerCalculations.UI.DataModels
 						var type = row.ConvertField<string>("Type");
 						var phase = row.ConvertField<string>("Phase");
 						var sourceIndex = row.ConvertField<int>("SourceIndex");
+						var magnitudeSignalId = database.Guid(row, "mag_signalId");
+						var angleSignalId = database.Guid(row, "angle_signalId");
+
+						var measurements = Measurement.LoadFromKeys(database, (new[] {magnitudeSignalId, angleSignalId}).ToList());
 
 						phasorList[keys.IndexOf(id)] = new Phasor
 						{
@@ -163,7 +197,9 @@ namespace PowerCalculations.UI.DataModels
 							Label = label,
 							Type = type,
 							Phase = phase,
-							SourceIndex = sourceIndex
+							SourceIndex = sourceIndex,
+							MagnitudeMeasurement = measurements.FirstOrDefault(m => m.SignalID == magnitudeSignalId),
+							AngleMeasurement = measurements.FirstOrDefault(m => m.SignalID == angleSignalId)
 						};
 					}
 				}
