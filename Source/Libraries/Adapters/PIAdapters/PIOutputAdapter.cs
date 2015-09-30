@@ -221,7 +221,7 @@ namespace PIAdapters
         /// <summary>
         /// Gets or sets whether or not this adapter should automatically manage metadata for PI points.
         /// </summary>
-        [ConnectionStringParameter, Description("Determines if this adapter should automatically create new tags when managing metadata for PI points (recommended)."), DefaultValue(true)]
+        [ConnectionStringParameter, Description("Determines if this adapter should automatically create new tags when managing metadata for PI points (recommended). Value will only be considered when RunMetadataSync is True."), DefaultValue(true)]
         public bool AutoCreateTags
         {
             get
@@ -237,7 +237,7 @@ namespace PIAdapters
         /// <summary>
         /// Gets or sets whether or not this adapter should automatically manage metadata for PI points.
         /// </summary>
-        [ConnectionStringParameter, Description("Determines if this adapter should automatically update existing tags when managing metadata for PI points (recommended). This will make openPDC the master for maintaing PI tags (like the name); othwerwise, when False, PI will be the master."), DefaultValue(true)]
+        [ConnectionStringParameter, Description("Determines if this adapter should automatically update existing tags when managing metadata for PI points (recommended). This will make openPDC the master for maintaining PI tag metadata (like the tag name); othwerwise, when False, PI will be the master. Value will only be considered when RunMetadataSync is True."), DefaultValue(true)]
         public bool AutoUpdateTags
         {
             get
@@ -253,7 +253,7 @@ namespace PIAdapters
         /// <summary>
         /// Gets or sets the number of tag name prefixes, e.g., "SOURCE!", applied by subscriptions to remove from PI tag names.
         /// </summary>
-        [ConnectionStringParameter, Description("Defines the number of tag name prefixes applied by subscriptions, e.g., \"SOURCE!\", to remove from PI tag names."), DefaultValue(0)]
+        [ConnectionStringParameter, Description("Defines the number of tag name prefixes applied by subscriptions, e.g., \"SOURCE!\", to remove from PI tag names. Value will only be considered when RunMetadataSync is True."), DefaultValue(0)]
         public int TagNamePrefixRemoveCount
         {
             get
@@ -269,7 +269,7 @@ namespace PIAdapters
         /// <summary>
         /// Gets or sets the point source string used when automatically creating new PI points during the metadata update
         /// </summary>
-        [ConnectionStringParameter, Description("Defines the point source string used when automatically creating new PI points during the metadata update"), DefaultValue("GSF")]
+        [ConnectionStringParameter, Description("Defines the point source string used when automatically creating new PI points during the metadata update. Value will only be considered when RunMetadataSync is True."), DefaultValue("GSF")]
         public string PIPointSource
         {
             get
@@ -285,7 +285,7 @@ namespace PIAdapters
         /// <summary>
         /// Gets or sets the point class string used when automatically creating new PI points during the metadata update. On the PI server, this class should inherit from classic.
         /// </summary>
-        [ConnectionStringParameter, Description("Defines the point class string used when automatically creating new PI points during the metadata update. On the PI server, this class should inherit from classic."), DefaultValue("classic")]
+        [ConnectionStringParameter, Description("Defines the point class string used when automatically creating new PI points during the metadata update. On the PI server, this class should inherit from classic. Value will only be considered when RunMetadataSync is True."), DefaultValue("classic")]
         public string PIPointClass
         {
             get
@@ -339,17 +339,17 @@ namespace PIAdapters
                 status.AppendLine();
                 status.AppendFormat("       Connected to server: {0}", (object)m_connection == null ? "No" : m_connection.Connected ? "Yes" : "No");
                 status.AppendLine();
-                status.AppendFormat("    Meta-data sync enabled: {0}", m_runMetadataSync);
-                status.AppendLine();
-                status.AppendFormat("          Auto-create tags: {0}", m_autoCreateTags);
-                status.AppendLine();
-                status.AppendFormat("          Auto-update tags: {0}", m_autoUpdateTags);
-                status.AppendLine();
                 status.AppendFormat("         Using compression: {0}", UseCompression);
+                status.AppendLine();
+                status.AppendFormat("    Meta-data sync enabled: {0}", m_runMetadataSync);
                 status.AppendLine();
 
                 if (m_runMetadataSync)
                 {
+                    status.AppendFormat("          Auto-create tags: {0}", m_autoCreateTags);
+                    status.AppendLine();
+                    status.AppendFormat("          Auto-update tags: {0}", m_autoUpdateTags);
+                    status.AppendLine();
                     status.AppendFormat("    Tag prefixes to remove: {0}", TagNamePrefixRemoveCount);
                     status.AppendLine();
                     status.AppendFormat("       OSI-PI point source: {0}", m_pointSource);
