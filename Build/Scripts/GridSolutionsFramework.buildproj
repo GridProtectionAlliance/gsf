@@ -175,7 +175,7 @@
   <Target Name="AfterDeployBuild">
     <CallTarget Targets="DeployBuildScripts"/>
     <CallTarget Targets="DeployHelpFiles"/>
-    <!--<CallTarget Targets="PublishNuGetPackages"/>-->
+    <CallTarget Targets="PublishNuGetPackages"/>
   </Target>
   
   <Target Name="DeployBuildScripts" Condition="'$(ForceBuild)' == 'true' And '$(BuildDeployFolder)' != ''">
