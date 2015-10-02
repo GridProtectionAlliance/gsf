@@ -1,6 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Windows.Controls;
+using GSF.TimeSeries.UI.UserControls;
 using PowerCalculations.UI.WPF.ViewModels;
 
 namespace PowerCalculations.UI.WPF.UserControls
@@ -39,6 +39,21 @@ namespace PowerCalculations.UI.WPF.UserControls
 		private PhasorSelectionUserControl GetCurrentPhasorSelector()
 		{
 			return FindName("CurrentPhasorSelector") as PhasorSelectionUserControl;
+		}
+
+		private void RealMeasurementUpdated(object sender, EventArgs e)
+		{
+			((PowerCalculationViewModel) DataContext).CurrentItem.RealPowerOutputMeasurement = RealMeasurementPager.CurrentItem;
+		}
+
+		private void ReactiveMeasurementUpdated(object sender, EventArgs e)
+		{
+			((PowerCalculationViewModel)DataContext).CurrentItem.ReactivePowerOutputMeasurement = ReactiveMeasurementPager.CurrentItem;
+		}
+
+		private void ActiveMeasurementUpdated(object sender, EventArgs e)
+		{
+			((PowerCalculationViewModel)DataContext).CurrentItem.ActivePowerOutputMeasurement = ActiveMeasurementPager.CurrentItem;
 		}
 	}
 }
