@@ -407,6 +407,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CSEE", "CSEE", "{C279C92E-3
 		Dependencies\CSEE\ExpressionEvaluator.dll = Dependencies\CSEE\ExpressionEvaluator.dll
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Extensions", "Extensions", "{4E8D127B-DBEE-4B5F-9620-5ADC4E3C6EB3}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "GPAVSExtension", "Extensions\GPAVSExtension\GPAVSExtension.vbproj", "{018E3229-1D7C-430B-915C-BA6336E3FC04}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -1320,6 +1324,12 @@ Global
 		{CD5A5BA7-BD0A-4C9F-9403-C58B5862EBE2}.Mono|x86.ActiveCfg = Mono|Any CPU
 		{CD5A5BA7-BD0A-4C9F-9403-C58B5862EBE2}.Release|Any CPU.ActiveCfg = Mono|Any CPU
 		{CD5A5BA7-BD0A-4C9F-9403-C58B5862EBE2}.Release|x86.ActiveCfg = Mono|Any CPU
+		{018E3229-1D7C-430B-915C-BA6336E3FC04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{018E3229-1D7C-430B-915C-BA6336E3FC04}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{018E3229-1D7C-430B-915C-BA6336E3FC04}.Mono|Any CPU.ActiveCfg = Release|Any CPU
+		{018E3229-1D7C-430B-915C-BA6336E3FC04}.Mono|x86.ActiveCfg = Release|Any CPU
+		{018E3229-1D7C-430B-915C-BA6336E3FC04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{018E3229-1D7C-430B-915C-BA6336E3FC04}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1455,6 +1465,7 @@ Global
 		{51B18F86-5C42-4610-84C5-41DCA7B89ED4} = {13006BBE-434A-4027-940B-EAD752844137}
 		{ADC095DB-F1DD-4095-BFE5-34B485BC5FE1} = {D3215BAD-9EA1-463D-8035-181F9F60C2EE}
 		{C279C92E-397A-4BEF-8DD3-409D379889AD} = {13006BBE-434A-4027-940B-EAD752844137}
+		{018E3229-1D7C-430B-915C-BA6336E3FC04} = {4E8D127B-DBEE-4B5F-9620-5ADC4E3C6EB3}
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = GSF.Core.Tests.vsmdi
