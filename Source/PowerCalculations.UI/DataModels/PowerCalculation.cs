@@ -8,8 +8,7 @@ using GSF.Data;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.DataModels;
 
-
-namespace PowerCalculator.UI.DataModels
+namespace PowerCalculations.UI.DataModels
 {
 	public class PowerCalculation : DataModelBase
 	{
@@ -27,6 +26,8 @@ namespace PowerCalculator.UI.DataModels
 		private Guid m_reactivePowerOutputSignalId;
 		private bool m_powerCalculationEnabled;
 		private Guid m_nodeId;
+		private Phasor m_voltagePhasor;
+		private Phasor m_currentPhasor;
 
 		#endregion
 
@@ -53,58 +54,6 @@ namespace PowerCalculator.UI.DataModels
 				if (m_circuitDescription == value) return;
 				m_circuitDescription = value;
 				OnPropertyChanged("CircuitDescription");
-			}
-		}
-
-		private Measurement m_voltageAngleMeasurement;
-		[Required(ErrorMessage = "Voltage angle signal ID is a required field. Please provide a value.")]
-		public Measurement VoltageAngleMeasurement
-		{
-			get { return m_voltageAngleMeasurement; }
-			set
-			{
-				if (m_voltageAngleMeasurement == value) return;
-				m_voltageAngleMeasurement = value;
-				OnPropertyChanged("VoltageAngleMeasurement");
-			}
-		}
-
-		private Measurement m_voltageMagnitudeMeasurement;
-		[Required(ErrorMessage = "Voltage magnitude signal ID is a required field. Please provide a value.")]
-		public Measurement VoltageMagnitudeMeasurement
-		{
-			get { return m_voltageMagnitudeMeasurement; }
-			set
-			{
-				if (m_voltageMagnitudeMeasurement == value) return;
-				m_voltageMagnitudeMeasurement = value;
-				OnPropertyChanged("VoltageMagnitudeMeasurement");
-			}
-		}
-
-		private Measurement m_currentAngleMeasurement;
-		[Required(ErrorMessage = "Current angle signal ID is a required field. Please provide a value.")]
-		public Measurement CurrentAngleMeasurement
-		{
-			get { return m_currentAngleMeasurement; }
-			set
-			{
-				if (m_currentAngleMeasurement == value) return;
-				m_currentAngleMeasurement = value;
-				OnPropertyChanged("CurrentAngleMeasurement");
-			}
-		}
-
-		private Measurement m_currentMagnitudeMeasurement;
-		[Required(ErrorMessage = "Current magnitude signal ID is a required field. Please provide a value.")]
-		public Measurement CurrentMagnitudeMeasurement
-		{
-			get { return m_currentMagnitudeMeasurement; }
-			set
-			{
-				if (m_currentMagnitudeMeasurement == value) return;
-				m_currentMagnitudeMeasurement = value;
-				OnPropertyChanged("CurrentMagnitudeMeasurement");
 			}
 		}
 
@@ -168,6 +117,29 @@ namespace PowerCalculator.UI.DataModels
 			}
 		}
 
+		public Phasor VoltagePhasor
+		{
+			get { return m_voltagePhasor; }
+			set
+			{
+				if (m_voltagePhasor == value) return;
+				m_voltagePhasor = value;
+				OnPropertyChanged("VoltagePhasor");
+			}
+		}
+
+		public Phasor CurrentPhasor
+		{
+			get { return m_currentPhasor; }
+			set
+			{
+				if (m_currentPhasor == value) return;
+				m_currentPhasor = value;
+				OnPropertyChanged("CurrentPhasor");
+			}
+		}
+
+
 		#endregion
 
 
@@ -223,7 +195,18 @@ namespace PowerCalculator.UI.DataModels
 				if (keys != null && keys.Count > 0)
 				{
 					var commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
-					var query = string.Format("SELECT * FROM PowerCalculation WHERE PowerCalculationId IN ({0})", commaSeparatedKeys);
+					var query = string.Format("select pc.PowerCalculationId, pc.CircuitDescription, pc.VoltageAngleSignalId, pc.VoltageMagSignalId, pc.CurrentAngleSignalId, " +
+		 									  "       pc.CurrentMagSignalId, pc.RealPowerOutputSignalId, pc.ReactivePowerOutputSignalId, pc.ActivePowerOutputSignalId, pc.CalculationEnabled, " +
+											  "	   pc.nodeid, vp.id voltagePhasorId, cp.id as currentPhasorId " +
+											  "from powercalculation pc " +
+											  "     left join measurement vm " +
+											  "	 on pc.voltagemagsignalid=vm.signalid " +
+											  "	 left join measurement cm " +
+											  "	 on pc.currentmagsignalid=cm.signalid " +
+											  "	 left join phasor vp " +
+											  "	 on vm.deviceid=vp.deviceid and vm.phasorsourceindex=vp.sourceindex " +
+											  "	 left join phasor cp " +
+											  " on cm.deviceid=cp.deviceid and cm.phasorsourceindex=cp.sourceindex WHERE PowerCalculationId IN ({0})", commaSeparatedKeys);
 					var calculationTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
 					calculationList = new PowerCalculation[calculationTable.Rows.Count];
 
@@ -248,6 +231,10 @@ namespace PowerCalculator.UI.DataModels
 						if (!row.IsNull("ActivePowerOutputSignalId"))
 							activePower = database.Guid(row, "ActivePowerOutputSignalId");
 
+						var currentPhasorId = row.ConvertField<int>("currentPhasorId");
+						var voltagePhasorId = row.ConvertField<int>("voltagePhasorId");
+						var phasors = Phasor.Load(database, new List<int> {currentPhasorId, voltagePhasorId});
+
 						calculationList[keys.IndexOf(id)] = new PowerCalculation
 						{
 							PowerCalculationId = row.Field<int>("PowerCalculationId"),
@@ -255,29 +242,41 @@ namespace PowerCalculator.UI.DataModels
 							PowerCalculationEnabled = row.Field<bool>("CalculationEnabled"),
 							NodeId = database.Guid(row, "NodeId")
 						};
+
+						foreach (var phasor in phasors)
+						{
+							if (phasor.Id == currentPhasorId)
+							{
+								calculationList[keys.IndexOf(id)].CurrentPhasor = phasor;
+							}
+							else if (phasor.Id == voltagePhasorId)
+							{
+								calculationList[keys.IndexOf(id)].VoltagePhasor = phasor;
+							}
+						}
+
 						var mkeys = new List<Guid> { voltageAngle, voltageMagnitude, currentAngle, currentMagnitude };
 						if (realPower != null) { mkeys.Add(realPower.Value); }
 						if (reactivePower != null) { mkeys.Add(reactivePower.Value); }
 						if (activePower != null) { mkeys.Add(activePower.Value); }
 						var measurements = Measurement.LoadFromKeys(database, mkeys);
-
 						foreach (var measurement in measurements)
 						{
 							if (measurement.SignalID == voltageAngle)
 							{
-								calculationList[keys.IndexOf(id)].VoltageAngleMeasurement = measurement;
+								calculationList[keys.IndexOf(id)].VoltagePhasor.AngleMeasurement = measurement;
 							}
 							else if (measurement.SignalID == voltageMagnitude)
 							{
-								calculationList[keys.IndexOf(id)].VoltageMagnitudeMeasurement = measurement;
+								calculationList[keys.IndexOf(id)].VoltagePhasor.MagnitudeMeasurement = measurement;
 							}
 							else if (measurement.SignalID == currentAngle)
 							{
-								calculationList[keys.IndexOf(id)].CurrentAngleMeasurement = measurement;
+								calculationList[keys.IndexOf(id)].CurrentPhasor.AngleMeasurement = measurement;
 							}
 							else if (measurement.SignalID == currentMagnitude)
 							{
-								calculationList[keys.IndexOf(id)].CurrentMagnitudeMeasurement = measurement;
+								calculationList[keys.IndexOf(id)].CurrentPhasor.MagnitudeMeasurement = measurement;
 							}
 							else if (measurement.SignalID == realPower)
 							{
@@ -354,19 +353,19 @@ namespace PowerCalculator.UI.DataModels
 					query = database.ParameterizedQueryString("INSERT INTO PowerCalculation (CircuitDescription, VoltageAngleSignalId, VoltageMagSignalId, CurrentAngleSignalId, CurrentMagSignalId, RealPowerOutputSignalId, ReactivePowerOutputSignalId, ActivePowerOutputSignalId, CalculationEnabled, NodeId) " +
 						"VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})", "circuitDescription", "voltageAngle", "voltageMag", "currentAngle", "currentMag", "realPowerOutput", "reactivePowerOutput", "activePowerOutput", "calculationEnabled", "nodeId");
 
-					database.Connection.ExecuteNonQuery(query, DefaultTimeout, powerCalculation.CircuitDescription, database.Guid(powerCalculation.VoltageAngleMeasurement.SignalID),
-						database.Guid(powerCalculation.VoltageMagnitudeMeasurement.SignalID), database.Guid(powerCalculation.CurrentAngleMeasurement.SignalID), database.Guid(powerCalculation.CurrentMagnitudeMeasurement.SignalID),
-						database.Guid(powerCalculation.RealPowerOutputMeasurement.SignalID), database.Guid(powerCalculation.ReactivePowerOutputMeasurement.SignalID), database.Guid(powerCalculation.ActivePowerOutputMeasurement.SignalID),
-						powerCalculation.PowerCalculationEnabled, database.CurrentNodeID());
+					database.Connection.ExecuteNonQuery(query, DefaultTimeout, new[] { powerCalculation.CircuitDescription, database.Guid(powerCalculation.VoltagePhasor.AngleMeasurement.SignalID),
+						database.Guid(powerCalculation.VoltagePhasor.MagnitudeMeasurement.SignalID), database.Guid(powerCalculation.CurrentPhasor.AngleMeasurement.SignalID), database.Guid(powerCalculation.CurrentPhasor.MagnitudeMeasurement.SignalID),
+						powerCalculation.RealPowerOutputMeasurement == null ? DBNull.Value : database.Guid(powerCalculation.RealPowerOutputMeasurement.SignalID), powerCalculation.ReactivePowerOutputMeasurement == null ? DBNull.Value : database.Guid(powerCalculation.ReactivePowerOutputMeasurement.SignalID), powerCalculation.ActivePowerOutputMeasurement == null ? DBNull.Value : database.Guid(powerCalculation.ActivePowerOutputMeasurement.SignalID),
+						powerCalculation.PowerCalculationEnabled, database.CurrentNodeID() });
 				}
 				else
 				{
 					query = database.ParameterizedQueryString("UPDATE PowerCalculation SET CircuitDescription = {0}, VoltageAngleSignalId = {1}, VoltageMagSignalId = {2}, CurrentAngleSignalId = {3}, CurrentMagSignalId = {4}, " +
 						"RealPowerOutputSignalId = {5}, ReactivePowerOutputSignalId = {6}, ActivePowerOutputSignalId = {7}, CalculationEnabled = {8} WHERE PowerCalculationId = {9}", "circuitDescription", "voltageAngle", "voltageMag", "currentAngle", "currentMag", "realPowerOutput", "reactivePowerOutput", "activePowerOutput", "calculationEnabled", "powerCalculationId");
 
-					database.Connection.ExecuteNonQuery(query, DefaultTimeout, powerCalculation.CircuitDescription,
-						database.Guid(powerCalculation.VoltageAngleMeasurement.SignalID), database.Guid(powerCalculation.VoltageMagnitudeMeasurement.SignalID), database.Guid(powerCalculation.CurrentAngleMeasurement.SignalID), database.Guid(powerCalculation.CurrentMagnitudeMeasurement.SignalID),
-						database.Guid(powerCalculation.RealPowerOutputMeasurement.SignalID), database.Guid(powerCalculation.ReactivePowerOutputMeasurement.SignalID), database.Guid(powerCalculation.ActivePowerOutputMeasurement.SignalID), powerCalculation.PowerCalculationEnabled, powerCalculation.PowerCalculationId);
+					database.Connection.ExecuteNonQuery(query, DefaultTimeout, new[] { powerCalculation.CircuitDescription,
+						database.Guid(powerCalculation.VoltagePhasor.AngleMeasurement.SignalID), database.Guid(powerCalculation.VoltagePhasor.MagnitudeMeasurement.SignalID), database.Guid(powerCalculation.CurrentPhasor.AngleMeasurement.SignalID), database.Guid(powerCalculation.CurrentPhasor.MagnitudeMeasurement.SignalID),
+						powerCalculation.RealPowerOutputMeasurement == null ? DBNull.Value : database.Guid(powerCalculation.RealPowerOutputMeasurement.SignalID), powerCalculation.ReactivePowerOutputMeasurement == null ? DBNull.Value : database.Guid(powerCalculation.ReactivePowerOutputMeasurement.SignalID), powerCalculation.ActivePowerOutputMeasurement == null ? DBNull.Value : database.Guid(powerCalculation.ActivePowerOutputMeasurement.SignalID), powerCalculation.PowerCalculationEnabled, powerCalculation.PowerCalculationId });
 				}
 
 				return "Power Calculation information saved successfully";

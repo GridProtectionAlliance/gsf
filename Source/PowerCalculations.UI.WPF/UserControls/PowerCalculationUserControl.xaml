@@ -7,6 +7,7 @@
 			 xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 			 xmlns:binding="clr-namespace:GSF.TimeSeries.UI.Binding;assembly=GSF.TimeSeries.UI"
              xmlns:viewModels1="clr-namespace:PowerCalculations.UI.WPF.ViewModels"
+             xmlns:userControls="clr-namespace:PowerCalculations.UI.WPF.UserControls"
              mc:Ignorable="d" 
              d:DesignHeight="500" d:DesignWidth="500" d:DataContext="{d:DesignInstance viewModels1:PowerCalculationViewModel}">
 
@@ -47,34 +48,79 @@
 						<TextBlock Grid.Row="1" Grid.Column="0" Text="Circuit Description" TextAlignment="Right"/>
 						<TextBox Grid.Row="1" Grid.Column="1" Text="{Binding CircuitDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-						<TextBlock Grid.Row="2" Grid.Column="0" Text="Voltage Angle" TextAlignment="Right"/>
-						<TextBox Grid.Row="2" Grid.Column="1" Text="{Binding VoltageAngleMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+						<TextBlock Grid.Row="2" Grid.Column="0" Text="Voltage Phasor" TextAlignment="Right"/>
+						<StackPanel Orientation="Vertical" Grid.Row="2" Grid.Column="1">
+							<StackPanel Orientation="Horizontal">
+								<TextBox Text="{Binding VoltagePhasor.Label, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" />
+								<ToggleButton x:Name="VoltagePhasorToggle" Content="..." Width="25"  />
+							</StackPanel>
+							<Popup StaysOpen="False" IsOpen="{Binding ElementName=VoltagePhasorToggle, Path=IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+								<userControls:PhasorSelectionUserControl x:Name="VoltagePhasorSelector">
+									<userControls:PhasorSelectionUserControl.Resources>
+										<ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
+									</userControls:PhasorSelectionUserControl.Resources>
+								</userControls:PhasorSelectionUserControl>
+							</Popup>
+						</StackPanel>
 
-						<TextBlock Grid.Row="3" Grid.Column="0" Text="Voltage Magnitude" TextAlignment="Right"/>
-						<TextBox Grid.Row="3" Grid.Column="1" Text="{Binding VoltageMagnitudeMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
-
-						<TextBlock Grid.Row="4" Grid.Column="0" Text="Current Angle" TextAlignment="Right" />
-						<TextBox Grid.Row="4" Grid.Column="1" Text="{Binding CurrentAngleMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
-
-						<TextBlock Grid.Row="5" Grid.Column="0" Text="Current Magnitude" TextAlignment="Right" />
-						<TextBox Grid.Row="5" Grid.Column="1" Text="{Binding CurrentMagnitudeMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+						<TextBlock Grid.Row="3" Grid.Column="0" Text="Current Phasor" TextAlignment="Right"/>
+						<StackPanel Orientation="Vertical" Grid.Row="3" Grid.Column="1">
+							<StackPanel Orientation="Horizontal">
+								<TextBox Text="{Binding CurrentPhasor.Label, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" />
+								<ToggleButton x:Name="CurrentPhasorToggle" Content="..." Width="25"  />
+							</StackPanel>
+							<Popup StaysOpen="False" IsOpen="{Binding ElementName=CurrentPhasorToggle, Path=IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+								<userControls:PhasorSelectionUserControl x:Name="CurrentPhasorSelector">
+									<userControls:PhasorSelectionUserControl.Resources>
+										<ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
+									</userControls:PhasorSelectionUserControl.Resources>
+								</userControls:PhasorSelectionUserControl>
+							</Popup>
+						</StackPanel>
 
 						<TextBlock Grid.Row="0" Grid.Column="3">(Leave blank to use template names)</TextBlock>
 
 						<TextBlock Grid.Row="1" Grid.Column="2" Text="Real Power Output Alt Tag Name" TextAlignment="Right" />
-						<StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="3">
-							<TextBox Text="{Binding RealPowerOutputMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
-							<ToggleButton x:Name="RealPowerOutputToggle" Content="..." Width="25"  />
-							<Popup StaysOpen="False" Visibility="{Binding ElementName=RealPowerOutputToggle, Path=IsChecked, UpdateSourceTrigger=PropertyChanged}">
-								<!--<userControls:PhasorUserControl/>-->
+						<StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="3">
+							<StackPanel Orientation="Horizontal">
+								<TextBox Text="{Binding RealPowerOutputMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" />
+								<ToggleButton x:Name="RealPowerOutputToggle" Content="..." Width="25" />
+							</StackPanel>
+							<Popup StaysOpen="False" IsOpen="{Binding ElementName=RealPowerOutputToggle, Path=IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="650">
+								<StackPanel Orientation="Vertical" Background="LightGray">
+									<userControls1:MeasurementPagerUserControl x:Name="RealMeasurementPager" />
+									<Button HorizontalAlignment="Left" Content="Update Selection" Width="Auto" Click="RealMeasurementUpdated" />
+								</StackPanel>
+							</Popup>
+						</StackPanel>
+						
+						<TextBlock Grid.Row="2" Grid.Column="2" Text="Reactive Power Output Alt Tag Name" TextAlignment="Right" />
+						<StackPanel Orientation="Vertical" Grid.Row="2" Grid.Column="3">
+							<StackPanel Orientation="Horizontal">
+								<TextBox Text="{Binding ReactivePowerOutputMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" />
+								<ToggleButton x:Name="ReactivePowerOutputToggle" Content="..." Width="25" />
+							</StackPanel>
+							<Popup StaysOpen="False" IsOpen="{Binding ElementName=ReactivePowerOutputToggle, Path=IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="650">
+								<StackPanel Orientation="Vertical" Background="LightGray">
+									<userControls1:MeasurementPagerUserControl x:Name="ReactiveMeasurementPager" />
+									<Button HorizontalAlignment="Left" Content="Update Selection" Width="Auto" Click="ReactiveMeasurementUpdated" />
+								</StackPanel>
 							</Popup>
 						</StackPanel>
 
-						<TextBlock Grid.Row="2" Grid.Column="2" Text="Reactive Power Output Alt Tag Name" TextAlignment="Right" />
-						<TextBox Grid.Row="2" Grid.Column="3" Text="{Binding ReactivePowerOutputMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
-
 						<TextBlock Grid.Row="3" Grid.Column="2" Text="Active Power Output Alt Tag Name" TextAlignment="Right" />
-						<TextBox Grid.Row="3" Grid.Column="3" Text="{Binding ActivePowerOutputMeasurement.PointTag, Mode=OneWay,UpdateSourceTrigger=PropertyChanged}" />
+						<StackPanel Orientation="Vertical" Grid.Row="3" Grid.Column="3">
+							<StackPanel Orientation="Horizontal">
+								<TextBox Text="{Binding ActivePowerOutputMeasurement.PointTag, Mode=OneWay,UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" />
+								<ToggleButton x:Name="ActivePowerOutputToggle" Content="..." Width="25" />
+							</StackPanel>
+							<Popup StaysOpen="False" IsOpen="{Binding ElementName=ActivePowerOutputToggle, Path=IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="650">
+								<StackPanel Orientation="Vertical" Background="LightGray">
+									<userControls1:MeasurementPagerUserControl x:Name="ActiveMeasurementPager" />
+									<Button HorizontalAlignment="Left" Content="Update Selection" Width="Auto" Click="ActiveMeasurementUpdated" />
+								</StackPanel>
+							</Popup>
+						</StackPanel>
 
 						<CheckBox Grid.Row="4" Grid.Column="2" IsChecked="{Binding PowerCalculationEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="Enabled" HorizontalAlignment="Right"/>
 					</Grid>

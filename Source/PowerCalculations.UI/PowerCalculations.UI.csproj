@@ -40,7 +40,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PowerCalculation.cs" />
+    <Compile Include="DataModels\Phasor.cs" />
+    <Compile Include="DataModels\PowerCalculation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
