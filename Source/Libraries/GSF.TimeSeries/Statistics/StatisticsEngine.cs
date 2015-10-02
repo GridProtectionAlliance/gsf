@@ -64,6 +64,7 @@ namespace GSF.TimeSeries.Statistics
             public string StatisticMeasurementNameFormat;
 
             public List<DataRow> StatisticMeasurements;
+            public bool HasUpdatedStatisticMeasurements;
         }
 
         // Represents a signal reference
@@ -758,6 +759,12 @@ namespace GSF.TimeSeries.Statistics
                     List<string> signalReferences;
                     string args;
 
+                    // If statistic measurements have already been updated for this source,
+                    // do not attempt to update them again. This helps to prevent race conditions
+                    // between configuration changes and statistics engine registration
+                    if (source.HasUpdatedStatisticMeasurements)
+                        continue;
+
                     // If no statistics exist for this category,
                     // there are no statistics that can be created for this source
                     if (!statisticsLookup.TryGetValue(source.SourceCategory, out statistics))
@@ -804,6 +811,8 @@ namespace GSF.TimeSeries.Statistics
                         helper.ExecuteNonQuery(StatisticMeasurementInsertFormat, helper.HistorianID, helper.DeviceID, helper.PointTag, helper.SignalTypeID, helper.SignalReference, helper.Description);
                         configurationChanged = true;
                     }
+
+                    source.HasUpdatedStatisticMeasurements = true;
                 }
             }
 
