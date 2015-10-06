@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataModels\Phasor.cs" />
+    <Compile Include="DataModels\PhasorType.cs" />
     <Compile Include="DataModels\PowerCalculation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

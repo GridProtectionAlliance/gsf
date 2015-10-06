@@ -1,7 +1,4 @@
-﻿using System.ComponentModel;
-using System.Windows;
-using System.Windows.Controls;
-using PowerCalculations.UI.WPF.ViewModels;
+﻿using PowerCalculations.UI.WPF.ViewModels;
 using PowerCalculations.UI.DataModels;
 
 namespace PowerCalculations.UI.WPF.UserControls
@@ -9,7 +6,7 @@ namespace PowerCalculations.UI.WPF.UserControls
 	/// <summary>
 	/// Interaction logic for PhasorSelectionUserControl.xaml
 	/// </summary>
-	public partial class PhasorSelectionUserControl : UserControl
+	public partial class PhasorSelectionUserControl
 	{
 		public PhasorSelectionUserControl()
 		{
@@ -20,6 +17,12 @@ namespace PowerCalculations.UI.WPF.UserControls
 		public Phasor SelectedPhasor
 		{
 			get { return ((PhasorSelectionViewModel) DataContext).CurrentItem; }
+		}
+
+		public PhasorType PhasorTypeFilter
+		{
+			get { return (DataContext as PhasorSelectionViewModel).PhasorTypeFilter; }
+			set { (DataContext as PhasorSelectionViewModel).PhasorTypeFilter = value; }
 		}
 	}
 }

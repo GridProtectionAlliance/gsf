@@ -9,10 +9,26 @@ namespace PowerCalculations.UI.WPF.ViewModels
 {
 	public class PhasorSelectionViewModel : PagedViewModelBase<Phasor, int>
 	{
+		private bool m_filterChanged = false;
+
 		public PhasorSelectionViewModel(int itemsPerPage, bool autoSave = true)
 			: base(itemsPerPage, autoSave)
 		{
 
+		}
+
+		private PhasorType m_phasorType = PhasorType.Any;
+		public PhasorType PhasorTypeFilter
+		{
+			get { return m_phasorType; }
+			set
+			{
+				if (m_phasorType == value) return;
+				m_phasorType = value;
+				m_filterChanged = true;
+				OnPropertyChanged("PhasorType");
+				Load();
+			}
 		}
 
 		public override int GetCurrentItemKey()
@@ -43,9 +59,10 @@ namespace PowerCalculations.UI.WPF.ViewModels
 				if (OnBeforeLoadCanceled())
 					throw new OperationCanceledException("Load was canceled.");
 
-				if (ItemsKeys == null)
+				if (ItemsKeys == null || m_filterChanged)
 				{
-					ItemsKeys = Phasor.LoadKeys(null);
+					ItemsKeys = Phasor.LoadKeys(null, PhasorTypeFilter);
+					m_filterChanged = false;
 
 					if ((object)SortSelector != null)
 					{

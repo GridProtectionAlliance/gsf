@@ -122,8 +122,9 @@ namespace PowerCalculations.UI.DataModels
 		/// LoadKeys <see cref="Phasor"/> information as an <see cref="ObservableCollection{T}"/> style list.
 		/// </summary>
 		/// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+		/// <param name="filter">The type of phasors to load</param>
 		/// <returns>Collection of <see cref="int"/>.</returns>
-		public static IList<int> LoadKeys(AdoDataConnection database)
+		public static IList<int> LoadKeys(AdoDataConnection database, PhasorType filter = PhasorType.Any)
 		{
 			var createdConnection = false;
 
@@ -132,7 +133,12 @@ namespace PowerCalculations.UI.DataModels
 				createdConnection = CreateConnection(ref database);
 
 				var phasorList = new List<int>();
-				const string query = "SELECT Id FROM Phasor";
+				var query = "SELECT Id FROM Phasor";
+				if (filter != PhasorType.Any)
+				{
+					query += string.Format(" Where Type = '{0}'", filter == PhasorType.Voltage ? "V" : "I");
+				}
+
 				var calculationTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
 
 				foreach (DataRow row in calculationTable.Rows)

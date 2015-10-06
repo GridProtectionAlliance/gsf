@@ -55,7 +55,7 @@
 								<ToggleButton x:Name="VoltagePhasorToggle" Content="..." Width="25"  />
 							</StackPanel>
 							<Popup StaysOpen="False" IsOpen="{Binding ElementName=VoltagePhasorToggle, Path=IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-								<userControls:PhasorSelectionUserControl x:Name="VoltagePhasorSelector">
+								<userControls:PhasorSelectionUserControl x:Name="VoltagePhasorSelector" PhasorTypeFilter="Voltage">
 									<userControls:PhasorSelectionUserControl.Resources>
 										<ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
 									</userControls:PhasorSelectionUserControl.Resources>
@@ -70,7 +70,7 @@
 								<ToggleButton x:Name="CurrentPhasorToggle" Content="..." Width="25"  />
 							</StackPanel>
 							<Popup StaysOpen="False" IsOpen="{Binding ElementName=CurrentPhasorToggle, Path=IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-								<userControls:PhasorSelectionUserControl x:Name="CurrentPhasorSelector">
+								<userControls:PhasorSelectionUserControl x:Name="CurrentPhasorSelector" PhasorTypeFilter="Current">
 									<userControls:PhasorSelectionUserControl.Resources>
 										<ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
 									</userControls:PhasorSelectionUserControl.Resources>
