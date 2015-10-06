@@ -93,6 +93,7 @@
     <Compile Include="MovingValueInputAdapter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RandomValueInputAdapter.cs" />
+    <Compile Include="SampleActionAdapter.cs" />
     <Compile Include="VirtualActionAdapter.cs" />
     <Compile Include="VirtualInputAdapter.cs" />
     <Compile Include="VirtualOutputAdapter.cs" />
