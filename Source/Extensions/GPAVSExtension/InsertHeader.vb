@@ -127,8 +127,8 @@ Public NotInheritable Class InsertHeader
             .AppendLine(commentToken & "")
             .AppendLine(commentToken & "  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See")
             .AppendLine(commentToken & "  the NOTICE file distributed with this work for additional information regarding copyright ownership.")
-            .AppendLine(commentToken & "  The GPA licenses this file to you under the MIT License (MIT), the ""License""; you may")
-            .AppendLine(commentToken & "  not use this file except in compliance with the License. You may obtain a copy of the License at:")
+            .AppendLine(commentToken & "  The GPA licenses this file to you under the MIT License (MIT), the ""License""; you may not use this")
+            .AppendLine(commentToken & "  file except in compliance with the License. You may obtain a copy of the License at:")
             .AppendLine(commentToken & "")
             .AppendLine(commentToken & "      http://opensource.org/licenses/MIT")
             .AppendLine(commentToken & "")
@@ -155,10 +155,10 @@ Public NotInheritable Class InsertHeader
     Private ReadOnly Property FullName() As String
         Get
             ' If machine name and domain are the same, user is likely not logged into a domain so
-            ' there's a good probablility that no active directory services will be available...
+            ' there's a good probability that no active directory services will be available...
             If String.Compare(Environment.MachineName.Trim(), Environment.UserDomainName.Trim(), True) = 0 Then
                 ' If not running on a domain, we use user name from Visual Studio registration
-                Dim registeredName As String = Registry.GetValue("HKEY_USERS\.DEFAULT\Software\Microsoft\VisualStudio\11.0_Config\Registration", "UserName", "")
+                Dim registeredName As String = Registry.GetValue("HKEY_USERS\.DEFAULT\Software\Microsoft\VisualStudio\14.0_Config\Registration", "UserName", "")
 
                 If String.IsNullOrEmpty(registeredName) Then
                     Return Environment.UserName
