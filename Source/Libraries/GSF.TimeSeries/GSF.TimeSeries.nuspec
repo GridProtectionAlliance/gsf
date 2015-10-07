@@ -45,4 +45,5 @@
       <dependency id="GSF.ServiceProcess" version="" />
     </dependencies>
   </metadata>
+  <files/>
 </package>
