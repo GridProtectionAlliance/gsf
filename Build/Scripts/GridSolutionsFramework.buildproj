@@ -100,7 +100,6 @@
       <!--Project specific settings.-->
       <ProjectSolution>$(LocalFolder)\Source\$(ProjectName).sln</ProjectSolution>
       <PreRelease Condition="'$(PreRelease)' == ''">true</PreRelease>
-      <NuGet>$(LocalFolder)\Build\Scripts\NuGet\NuGet.exe</NuGet>
       <NuGetPackagesFolder>$(NuGetPackagesFolder)</NuGetPackagesFolder>
       <BuildDeployFolder>$(BuildDeployFolder)</BuildDeployFolder>
     </PropertyGroup>
