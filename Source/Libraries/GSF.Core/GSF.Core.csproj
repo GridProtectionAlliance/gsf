@@ -129,8 +129,13 @@
     <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ExpressionEvaluator">
-      <HintPath>..\..\Dependencies\CSEE\ExpressionEvaluator.dll</HintPath>
+    <Reference Include="Antlr3.Runtime, Version=3.5.0.2, Culture=neutral, PublicKeyToken=eb42632606e9261f, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\NuGet\Antlr.3.5.0.2\lib\Antlr3.Runtime.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="ExpressionEvaluator, Version=2.0.3.0, Culture=neutral, PublicKeyToken=90d9f15d622e2348, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\NuGet\ExpressionEvaluator.2.0.3.0\lib\net40\ExpressionEvaluator.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Mono.Security">
       <HintPath>..\..\Dependencies\Mono\Mono.Security.dll</HintPath>
@@ -459,6 +464,10 @@
   <ItemGroup>
     <None Include="GSF.Core.nuspec" />
     <None Include="GSF.Core.ruleset" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="LICENSE.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
