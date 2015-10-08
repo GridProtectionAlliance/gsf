@@ -26,8 +26,8 @@ namespace PowerCalculations.PowerMultiCalculator
 		private RunningAverage _averageCalculationsPerFrame = new RunningAverage();
 		private RunningAverage _averageCalculationTime = new RunningAverage();
 		private RunningAverage _averageTotalCalculationTime = new RunningAverage();
-		private double _lastTotalCalculationTime = 0;
-		private int _lastTotalCalculations = 0;
+		private double _lastTotalCalculationTime;
+		private int _lastTotalCalculations;
 
 		private Queue<IMeasurement> _lastRealPowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
 		private Queue<IMeasurement> _lastReactivePowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
@@ -50,6 +50,9 @@ namespace PowerCalculations.PowerMultiCalculator
 		 DefaultValue(false)]
 		public bool ApplySqrt3Adjustment { get; set; }
 
+		/// <summary>
+		/// Creates the adapter
+		/// </summary>
 		public PowerMultiCalculatorAdapter()
 		{
 			using (var database = new AdoDataConnection("systemSettings"))
@@ -62,6 +65,9 @@ namespace PowerCalculations.PowerMultiCalculator
 			}
 		}
 
+		/// <summary>
+		/// Returns the adapter status, including real-time statistics about adapter operation
+		/// </summary>
 		public override string Status
 		{
 			get
@@ -126,6 +132,9 @@ namespace PowerCalculations.PowerMultiCalculator
 			}
 		}
 
+		/// <summary>
+		/// Loads configuration from the database and configures adapter to run with that configuration
+		/// </summary>
 		public override void Initialize()
 		{
 			base.Initialize();
@@ -176,11 +185,19 @@ namespace PowerCalculations.PowerMultiCalculator
 				ApplySqrt3Adjustment = setting.ParseBoolean();
 		}
 
+		/// <summary>
+		/// Returns true or false to indicate whether this adapter will run in a non-realtime IAON session
+		/// </summary>
 		public override bool SupportsTemporalProcessing
 		{
 			get { return true; }
 		}
 
+		/// <summary>
+		/// Calculates MW, MVAR, and MVA, and publishes those measurements
+		/// </summary>
+		/// <param name="frame">Input values for calculation</param>
+		/// <param name="index"></param>
 		protected override void PublishFrame(IFrame frame, int index)
 		{
 			var totalCalculationTimeStopwatch = new Stopwatch();
@@ -250,9 +267,9 @@ namespace PowerCalculations.PowerMultiCalculator
 				{
 					if (OutputMeasurements != null && OutputMeasurements.Any())
 					{
-						var realPowerMeasurement = Measurement.Clone(powerCalculation.RealPowerOutputMeasurement, power, frame.Timestamp);
-						var reactivePowerMeasurement = Measurement.Clone(powerCalculation.ReactivePowerOutputMeasurement, reactivePower, frame.Timestamp);
-						var activePowerMeasurement = Measurement.Clone(powerCalculation.ActivePowerOutputMeasurement, apparentPower, frame.Timestamp);
+						var realPowerMeasurement = GSF.TimeSeries.Measurement.Clone(powerCalculation.RealPowerOutputMeasurement, power, frame.Timestamp);
+						var reactivePowerMeasurement = GSF.TimeSeries.Measurement.Clone(powerCalculation.ReactivePowerOutputMeasurement, reactivePower, frame.Timestamp);
+						var activePowerMeasurement = GSF.TimeSeries.Measurement.Clone(powerCalculation.ActivePowerOutputMeasurement, apparentPower, frame.Timestamp);
 
 						if (AlwaysProduceResult || !double.IsNaN(realPowerMeasurement.Value))
 						{
@@ -300,7 +317,7 @@ namespace PowerCalculations.PowerMultiCalculator
 			OnNewMeasurements(outputMeasurements);
 		}
 
-		private Measurement AddOutputMeasurement(Guid signalId)
+		private GSF.TimeSeries.Measurement AddOutputMeasurement(Guid signalId)
 		{
 			var measurement = GetMeasurement(signalId);
 			if (measurement != null)
@@ -309,12 +326,12 @@ namespace PowerCalculations.PowerMultiCalculator
 			return measurement;
 		}
 
-		private Measurement GetMeasurement(Guid signalId)
+		private GSF.TimeSeries.Measurement GetMeasurement(Guid signalId)
 		{
 			var rows = DataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalID = '{0}'", signalId));
 			if (!rows.Any()) return null;
 
-			var meas = new Measurement();
+			var meas = new GSF.TimeSeries.Measurement();
 			meas.Key = MeasurementKey.LookUpBySignalID(signalId);
 			meas.TagName = rows[0]["PointTag"].ToString();
 			meas.Adder = Convert.ToDouble(rows[0]["Adder"]);

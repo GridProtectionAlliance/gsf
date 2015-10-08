@@ -5,8 +5,16 @@ using PhasorProtocolAdapters;
 
 namespace PowerCalculations.PowerMultiCalculator
 {
+	/// <summary>
+	/// Implements validations for power calculations in the power calculation adapter
+	/// </summary>
 	public static class PowerCalculationConfigurationValidation
 	{
+		/// <summary>
+		/// Returns true if a data operation exists to run this class. Returns false otherwise.
+		/// </summary>
+		/// <param name="database">Database connection to use for checking the data operation</param>
+		/// <returns>True or false indicating whether the operation exists</returns>
 		public static bool CheckDataOperationExists(AdoDataConnection database)
 		{
 			bool dataOperationExists;
@@ -19,6 +27,10 @@ namespace PowerCalculations.PowerMultiCalculator
 			return dataOperationExists;
 		}
 
+		/// <summary>
+		/// Creates a data operation to run the validations in this class.
+		/// </summary>
+		/// <param name="database">Database connection to use for creating the data operation</param>
 		public static void CreateDataOperation(AdoDataConnection database)
 		{
 			using (var cmd = database.Connection.CreateCommand())
