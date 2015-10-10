@@ -25,7 +25,7 @@ namespace PowerCalculations.PowerMultiCalculator
 		/// <summary>
 		/// Gets or sets the current <see cref="Measurement"/>'s Multiplier
 		/// </summary>
-		public string Multiplier { get; set; }
+		public int Multiplier { get; set; }
 
 		/// <summary>
 		/// Gets or sets the current <see cref="Measurement"/>'s description

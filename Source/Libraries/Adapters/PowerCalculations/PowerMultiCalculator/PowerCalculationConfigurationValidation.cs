@@ -95,9 +95,9 @@ namespace PowerCalculations.PowerMultiCalculator
 									  "WHERE pc.CalculationEnabled=1 and pc.nodeid={0} " +
 									  "AND (pc.RealPowerOutputSignalId IS NULL OR pc.ReactivePowerOutputSignalId IS NULL OR pc.ActivePowerOutputSignalId IS NULL)", nodeIdQueryString);
 
-			var realPowerUpdates = new Dictionary<int, GSF.TimeSeries.UI.DataModels.Measurement>();
-			var reactivePowerUpdates = new Dictionary<int, GSF.TimeSeries.UI.DataModels.Measurement>();
-			var activePowerUpdates = new Dictionary<int, GSF.TimeSeries.UI.DataModels.Measurement>();
+			var realPowerUpdates = new Dictionary<int, Measurement>();
+			var reactivePowerUpdates = new Dictionary<int, Measurement>();
+			var activePowerUpdates = new Dictionary<int, Measurement>();
 
 			using (var cmd = database.Connection.CreateCommand())
 			{
@@ -143,12 +143,13 @@ namespace PowerCalculations.PowerMultiCalculator
 
 			if (newMeasurementsCount > 0)
 			{
+				var repo = new MeasurementRepository();
 				statusMessage(string.Format("Creating {0} new output measurements for power calculation...", newMeasurementsCount));
 
 				foreach (var update in realPowerUpdates)
 				{
-					GSF.TimeSeries.UI.DataModels.Measurement.Save(database, update.Value);
-					var measurement = GSF.TimeSeries.UI.DataModels.Measurement.GetMeasurement(database, string.Format("WHERE DeviceId={0} AND Description = '{1}'", update.Value.DeviceID, update.Value.Description));
+					repo.Save(database, update.Value);
+					var measurement = GSF.TimeSeries.UI.DataModels.Measurement.GetMeasurement(database, string.Format("WHERE DeviceId={0} AND Description = '{1}'", update.Value.DeviceId, update.Value.Description));
 					UpdatePowerCalculation(database, update.Key, realPowerOutputSignalId: measurement.SignalID);
 				}
 
@@ -156,8 +157,8 @@ namespace PowerCalculations.PowerMultiCalculator
 
 				foreach (var update in reactivePowerUpdates)
 				{
-					GSF.TimeSeries.UI.DataModels.Measurement.Save(database, update.Value);
-					var measurement = GSF.TimeSeries.UI.DataModels.Measurement.GetMeasurement(database, string.Format("WHERE DeviceId={0} AND Description = '{1}'", update.Value.DeviceID, update.Value.Description));
+					repo.Save(database, update.Value);
+					var measurement = GSF.TimeSeries.UI.DataModels.Measurement.GetMeasurement(database, string.Format("WHERE DeviceId={0} AND Description = '{1}'", update.Value.DeviceId, update.Value.Description));
 					UpdatePowerCalculation(database, update.Key, reactivePowerOutputSignalId: measurement.SignalID);
 				}
 
@@ -165,8 +166,8 @@ namespace PowerCalculations.PowerMultiCalculator
 
 				foreach (var update in activePowerUpdates)
 				{
-					GSF.TimeSeries.UI.DataModels.Measurement.Save(database, update.Value);
-					var measurement = GSF.TimeSeries.UI.DataModels.Measurement.GetMeasurement(database, string.Format("WHERE DeviceId={0} AND Description = '{1}'", update.Value.DeviceID, update.Value.Description));
+					repo.Save(database, update.Value);
+					var measurement = GSF.TimeSeries.UI.DataModels.Measurement.GetMeasurement(database, string.Format("WHERE DeviceId={0} AND Description = '{1}'", update.Value.DeviceId, update.Value.Description));
 					UpdatePowerCalculation(database, update.Key, activePowerOutputSignalId: measurement.SignalID);
 				}
 
@@ -179,18 +180,19 @@ namespace PowerCalculations.PowerMultiCalculator
 		/// <summary>
 		/// Creates a new measurement object for power calculation output measurements
 		/// </summary>
-		private static GSF.TimeSeries.UI.DataModels.Measurement CreateMeasurement(string companyAcronym, string deviceAcronym, string vendorAcronym, string signalTypeAcronym, string circuitDescription, int deviceId, int historianId, string descriptionSuffix)
+		private static Measurement CreateMeasurement(string companyAcronym, string deviceAcronym, string vendorAcronym, string signalTypeAcronym, string circuitDescription, int deviceId, int historianId, string descriptionSuffix)
 		{
-			var measurement = new GSF.TimeSeries.UI.DataModels.Measurement
+			var measurement = new Measurement
 			{
 				PointTag = CommonPhasorServices.CreatePointTag(companyAcronym, deviceAcronym, vendorAcronym, signalTypeAcronym),
 				Adder = 0,
 				Multiplier = 1,
 				Description = string.Format("{0} {1}", circuitDescription, descriptionSuffix),
-				DeviceID = deviceId,
-				HistorianID = historianId,
-				SignalTypeID = 10,
-				Enabled = true
+				DeviceId = deviceId,
+				HistorianId = historianId,
+				SignalTypeId = 10,
+				Enabled = true,
+				SignalId = Guid.NewGuid()
 			};
 
 			if (measurement.PointTag != null)
