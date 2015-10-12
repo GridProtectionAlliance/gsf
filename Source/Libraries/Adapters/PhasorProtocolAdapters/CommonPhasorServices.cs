@@ -512,7 +512,7 @@ namespace PhasorProtocolAdapters
 
             if (string.IsNullOrEmpty(arguments))
             {
-                statusMessage(string.Format("WARNING: No arguments supplied to MeasurementDeviceAssociation data operation - no action will be performed. Expecting \"deviceAcronym\" and \"lookupExpression\" settings at a minimum."));
+                statusMessage("WARNING: No arguments supplied to MeasurementDeviceAssociation data operation - no action will be performed. Expecting \"deviceAcronym\" and \"lookupExpression\" settings at a minimum.");
                 return;
             }
 
@@ -522,7 +522,7 @@ namespace PhasorProtocolAdapters
 
             if (!args.TryGetValue("DeviceAcronym", out deviceAcronym))
             {
-                statusMessage(string.Format("WARNING: No \"deviceAcronyym\" argument supplied to MeasurementDeviceAssociation data operation - no action will be performed. Expecting \"deviceAcronym\" and \"lookupExpression\" settings at a minimum."));
+                statusMessage("WARNING: No \"deviceAcronyym\" argument supplied to MeasurementDeviceAssociation data operation - no action will be performed. Expecting \"deviceAcronym\" and \"lookupExpression\" settings at a minimum.");
                 return;
             }
 
@@ -530,17 +530,17 @@ namespace PhasorProtocolAdapters
 
             if (!args.TryGetValue("LookupExpression", out lookupExpression))
             {
-                statusMessage(string.Format("WARNING: No \"lookupExpression\" argument supplied to MeasurementDeviceAssociation data operation - no action will be performed. Expecting \"deviceAcronym\" and \"lookupExpression\" settings at a minimum."));
+                statusMessage("WARNING: No \"lookupExpression\" argument supplied to MeasurementDeviceAssociation data operation - no action will be performed. Expecting \"deviceAcronym\" and \"lookupExpression\" settings at a minimum.");
                 return;
             }
 
             // Make sure device acronym exists
-            if (connection.ExecuteScalar<int>(string.Format("SELECT COUNT(*) FROM Device WHERE NodeID={0} AND Acronym={{{0}}}", nodeIDQueryString), deviceAcronym) == 0)
+            if (connection.ExecuteScalar<int>(string.Format("SELECT COUNT(*) FROM Device WHERE NodeID={0} AND Acronym={{0}}", nodeIDQueryString), deviceAcronym) == 0)
             {
                 // Lookup virtual device protocol
                 if (connection.ExecuteScalar<int>("SELECT COUNT(*) FROM Protocol WHERE Acronym='VirtualInput'") == 0)
                 {
-                    statusMessage(string.Format("WARNING: No VirutalInput device protocol was found in source database configuration for MeasurementDeviceAssociation data operation - no action will be performed."));
+                    statusMessage("WARNING: No VirutalInput device protocol was found in source database configuration for MeasurementDeviceAssociation data operation - no action will be performed.");
                     return;
                 }
 
@@ -549,27 +549,27 @@ namespace PhasorProtocolAdapters
                 int virtualProtocolID = connection.ExecuteScalar<int>("SELECT ID FROM Protocol WHERE Acronym='VirtualInput'");
 
                 // Create new virtual device record
-                connection.ExecuteNonQuery(string.Format("INSERT INTO Device(NodeID, Acronym, Name, ProtocolID) VALUES({0}, {{{0}}}, {{{1}}}, {{{2}}})", nodeIDQueryString), deviceAcronym, deviceAcronym, virtualProtocolID);
+                connection.ExecuteNonQuery(string.Format("INSERT INTO Device(NodeID, Acronym, Name, ProtocolID) VALUES({0}, {{0}}, {{1}}, {{2}})", nodeIDQueryString), deviceAcronym, deviceAcronym, virtualProtocolID);
             }
 
             statusMessage(string.Format("Validating \"{0}\" virtual device measurement associations...", deviceAcronym));
 
             // Get device ID
-            int deviceID = connection.ExecuteScalar<int>(string.Format("SELECT ID FROM Device WHERE NodeID={0} AND Acronym={{{0}}}", nodeIDQueryString), deviceAcronym);
+            int deviceID = connection.ExecuteScalar<int>(string.Format("SELECT ID FROM Device WHERE NodeID={0} AND Acronym={{0}}", nodeIDQueryString), deviceAcronym);
 
             // Get measurements that should be associated with device ID but are not currently
-            IEnumerable<DataRow> measurements = connection.RetrieveData(string.Format("SELECT ID FROM Measurement WHERE ({0}) AND (DeviceID IS NULL OR DeviceID <> {{{0}}})", lookupExpression), deviceID).AsEnumerable();
+            IEnumerable<DataRow> measurements = connection.RetrieveData(string.Format("SELECT PointID FROM Measurement WHERE ({0}) AND (DeviceID IS NULL OR DeviceID <> {{0}})", lookupExpression), deviceID).AsEnumerable();
 
             int associatedMeasurements = 0;
 
             foreach (DataRow row in measurements)
             {
-                connection.ExecuteNonQuery("UPDATE Measurement SET DeviceID={0} WHERE ID={1}", deviceID, row.Field<int>("ID"));
+                connection.ExecuteNonQuery("UPDATE Measurement SET DeviceID={0} WHERE PointID={1}", deviceID, row.Field<int>("PointID"));
                 associatedMeasurements++;
             }
 
             if (associatedMeasurements > 0)
-                statusMessage(string.Format("Associated \"{0}\" measurements to \"{0}\" virtual device...", associatedMeasurements, deviceAcronym));
+                statusMessage(string.Format("Associated \"{0}\" measurements to \"{1}\" virtual device...", associatedMeasurements, deviceAcronym));
         }
 
         /// <summary>
