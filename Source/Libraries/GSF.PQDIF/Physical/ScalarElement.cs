@@ -141,7 +141,7 @@ namespace GSF.PQDIF.Physical
         }
 
         /// <summary>                
-        /// Sets the value at the given index as the physical type defined by <see cref="TypeOfValue"/>.
+        /// Sets the value at the given index as the physical type defined by <see cref="Element.TypeOfValue"/>.
         /// </summary>
         /// <param name="index">The index of the value.</param>
         /// <param name="value">The new value to be stored.</param>

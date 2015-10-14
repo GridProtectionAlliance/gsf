@@ -156,7 +156,7 @@ namespace GSF.Threading
 
         /// <summary>
         /// Executes the given action in a protected code block that ensures all
-        /// unmanaged resources get cleaned up after a call to <see cref="Dispose"/>.
+        /// unmanaged resources get cleaned up after a call to <see cref="Dispose()"/>.
         /// </summary>
         /// <param name="action">The action to be executed.</param>
         private void Access(Action action)
@@ -181,7 +181,7 @@ namespace GSF.Threading
 
         /// <summary>
         /// Executes the given function in a protected code block that ensures all
-        /// unmanaged resources get cleaned up after a call to <see cref="Dispose"/>.
+        /// unmanaged resources get cleaned up after a call to <see cref="Dispose()"/>.
         /// </summary>
         /// <param name="func">The function to be executed.</param>
         private TResult Access<TResult>(Func<TResult> func)
