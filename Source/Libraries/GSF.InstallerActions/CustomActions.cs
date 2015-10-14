@@ -32,6 +32,7 @@ using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text;
 using System.Xml.Linq;
+using GSF.Data;
 using GSF.Identity;
 using GSF.Interop;
 using GSF.ServiceProcess;
@@ -259,6 +260,89 @@ namespace GSF.InstallerActions
             }
 
             session.Log("End ServiceAccountAction");
+
+            return ActionResult.Success;
+        }
+
+        /// <summary>
+        /// Tests a connection to a database server.
+        /// </summary>
+        /// <param name="session">Session object containing data from the installer.</param>
+        /// <returns>Result of the custom action.</returns>
+        [CustomAction]
+        public static ActionResult TestDatabaseConnectionAction(Session session)
+        {
+            string connectionString;
+            string dataProviderString;
+
+            session.Log("Begin TestDatabaseConnection");
+
+            // Get properties from the installer session
+            connectionString = session["CONNECTIONSTRING"];
+            dataProviderString = session["DATAPROVIDERSTRING"];
+
+            try
+            {
+                // Execute the database script
+                using (new AdoDataConnection(connectionString, dataProviderString))
+                {
+                }
+
+                session["DATABASECONNECTED"] = "yes";
+            }
+            catch (Exception ex)
+            {
+                // Log the error and return failure code
+                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Failed to connect to the database: {0}.", ex.Message));
+                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Connection string: {0}", connectionString));
+                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Data provider string: {0}", dataProviderString));
+
+                session["DATABASECONNECTED"] = null;
+            }
+
+            session.Log("End TestDatabaseConnection");
+
+            return ActionResult.Success;
+        }
+
+        /// <summary>
+        /// Custom action to execute a database script during installation.
+        /// </summary>
+        /// <param name="session">Session object containing data from the installer.</param>
+        /// <returns>Result of the custom action.</returns>
+        [CustomAction]
+        public static ActionResult DatabaseScriptAction(Session session)
+        {
+            string connectionString;
+            string dataProviderString;
+            string scriptPath;
+
+            session.Log("Begin DatabaseScriptAction");
+
+            // Get properties from the installer session
+            connectionString = session.CustomActionData["CONNECTIONSTRING"];
+            dataProviderString = session.CustomActionData["DATAPROVIDERSTRING"];
+            scriptPath = session.CustomActionData["SCRIPTPATH"];
+
+            try
+            {
+                // Execute the database script
+                using (AdoDataConnection connection = new AdoDataConnection(connectionString, dataProviderString))
+                {
+                    connection.ExecuteScript(scriptPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the error and return failure code
+                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Failed to execute database script: {0}.", ex.Message));
+                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Database Script: {0}", scriptPath));
+                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Connection string: {0}", connectionString));
+                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Data provider string: {0}", dataProviderString));
+                return ActionResult.Failure;
+            }
+
+            session.Log("End DatabaseScriptAction");
 
             return ActionResult.Success;
         }
