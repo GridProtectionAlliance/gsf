@@ -37,5 +37,5 @@ ECHO BuildNightly: CALL CommonBuild.bat %*
 CALL CommonBuild.bat %*
 
 ECHO BuildNightly: C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe GridSolutionsFramework.buildproj /p:BuildDeployFolder=%deploy%;NugetApiKey=%api_key%;NugetPackagesFolder=%package%;ForceBuild=false /l:FileLogger,Microsoft.Build.Engine;logfile=%logger%
-C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe GridSolutionsFramework.buildproj /p:BuildDeployFolder=%deploy%;NugetApiKey=%api_key%;NugetPackagesFolder=%package%;ForceBuild=false /l:FileLogger,Microsoft.Build.Engine;logfile=%logger%  
+"C:\Program Files (x86)\MSBuild\14.0\Bin\MSBuild.exe" GridSolutionsFramework.buildproj /p:BuildDeployFolder=%deploy%;NugetApiKey=%api_key%;NugetPackagesFolder=%package%;ForceBuild=false /l:FileLogger,Microsoft.Build.Engine;logfile=%logger%  
 endlocal
