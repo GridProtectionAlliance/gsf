@@ -550,6 +550,10 @@ namespace GSF.Data
                         MethodInfo executeMethod = executor.GetType().GetMethod("Execute");
                         executeMethod.Invoke(executor, null);
                     }
+                    else
+                    {
+                        m_connection.ExecuteMySQLScript(scriptReader);
+                    }
 
                     break;
 
