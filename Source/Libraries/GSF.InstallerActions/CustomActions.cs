@@ -311,6 +311,48 @@ namespace GSF.InstallerActions
         /// <param name="session">Session object containing data from the installer.</param>
         /// <returns>Result of the custom action.</returns>
         [CustomAction]
+        public static ActionResult DatabaseQueryAction(Session session)
+        {
+            string connectionString;
+            string dataProviderString;
+            string query;
+
+            session.Log("Begin DatabaseQueryAction");
+
+            // Get properties from the installer session
+            connectionString = session.CustomActionData["CONNECTIONSTRING"];
+            dataProviderString = session.CustomActionData["DATAPROVIDERSTRING"];
+            query = session.CustomActionData["DBQUERY"];
+
+            try
+            {
+                // Execute the database script
+                using (AdoDataConnection connection = new AdoDataConnection(connectionString, dataProviderString))
+                {
+                    connection.ExecuteNonQuery(query);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the error and return failure code
+                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Failed to execute database query: {0}.", ex.Message));
+                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Database Query: {0}", query));
+                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Connection string: {0}", connectionString));
+                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Data provider string: {0}", dataProviderString));
+                return ActionResult.Failure;
+            }
+
+            session.Log("End DatabaseQueryAction");
+
+            return ActionResult.Success;
+        }
+
+        /// <summary>
+        /// Custom action to execute a database script during installation.
+        /// </summary>
+        /// <param name="session">Session object containing data from the installer.</param>
+        /// <returns>Result of the custom action.</returns>
+        [CustomAction]
         public static ActionResult DatabaseScriptAction(Session session)
         {
             string connectionString;
