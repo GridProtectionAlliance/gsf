@@ -827,6 +827,7 @@ namespace PIAdapters
                         DataRow measurementRow;
                         PIPoint point;
                         string tagName;
+                        bool createdNewTag = false;
 
                         refreshMetadata = false;
 
@@ -868,6 +869,7 @@ namespace PIAdapters
                                 point = server.CreatePIPoint(tagName, attributes);
 
                                 refreshMetadata = true;
+                                createdNewTag = true;
                             }
                             catch (Exception ex)
                             {
@@ -957,7 +959,7 @@ namespace PIAdapters
                                     }
                                 };
 
-                                if (m_autoUpdateTags)
+                                if (m_autoUpdateTags || createdNewTag)
                                 {
                                     // Load current attributes
                                     point.LoadAttributes(
