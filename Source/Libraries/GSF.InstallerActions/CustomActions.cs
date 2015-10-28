@@ -38,6 +38,7 @@ using System.Xml.Linq;
 using GSF.Data;
 using GSF.Identity;
 using GSF.Interop;
+using GSF.Security.Cryptography;
 using GSF.ServiceProcess;
 using Microsoft.Deployment.WindowsInstaller;
 
@@ -366,6 +367,28 @@ namespace GSF.InstallerActions
             }
 
             session.Log("End UnzipAction");
+
+            return ActionResult.Success;
+        }
+
+        /// <summary>
+        /// Tests a connection to a database server.
+        /// </summary>
+        /// <param name="session">Session object containing data from the installer.</param>
+        /// <returns>Result of the custom action.</returns>
+        [CustomAction]
+        public static ActionResult PasswordGenerationAction(Session session)
+        {
+            int passwordLength;
+
+            session.Log("Begin PasswordGenerationAction");
+
+            if (int.TryParse(session["GENPASSWORDLENGTH"], out passwordLength))
+                session["GENERATEDPASSWORD"] = PasswordGenerator.Default.GeneratePassword(passwordLength);
+            else
+                session["GENERATEDPASSWORD"] = PasswordGenerator.Default.GeneratePassword();
+
+            session.Log("End PasswordGenerationAction");
 
             return ActionResult.Success;
         }

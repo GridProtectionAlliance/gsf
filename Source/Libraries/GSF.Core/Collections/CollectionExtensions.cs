@@ -790,7 +790,7 @@ namespace GSF.Collections
         /// <remarks>This function uses a cryptographically strong random number generator to perform the scramble.</remarks>
         public static void Scramble<TSource>(this IList<TSource> source)
         {
-            if (source.IsReadOnly)
+            if (source.IsReadOnly && !(source is TSource[]))
                 throw new ArgumentException("Cannot modify items in a read only list");
 
             int x, y;
@@ -821,7 +821,7 @@ namespace GSF.Collections
         /// <remarks>This function uses the <see cref="System.Random"/> generator to perform the scramble using a sequence that is repeatable.</remarks>
         public static void Scramble<TSource>(this IList<TSource> source, int seed)
         {
-            if (source.IsReadOnly)
+            if (source.IsReadOnly && !(source is TSource[]))
                 throw new ArgumentException("Cannot modify items in a read only list");
 
             System.Random random = new System.Random(seed);
@@ -852,7 +852,7 @@ namespace GSF.Collections
         /// <remarks>This function uses the <see cref="System.Random"/> generator to perform the unscramble using a sequence that is repeatable.</remarks>
         public static void Unscramble<TSource>(this IList<TSource> source, int seed)
         {
-            if (source.IsReadOnly)
+            if (source.IsReadOnly && !(source is TSource[]))
                 throw new ArgumentException("Cannot modify items in a read only list");
 
             System.Random random = new System.Random(seed);
