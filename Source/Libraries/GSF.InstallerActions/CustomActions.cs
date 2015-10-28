@@ -379,20 +379,14 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult PasswordGenerationAction(Session session)
         {
-            PasswordGenerator passwordGenerator;
             int passwordLength;
 
             session.Log("Begin PasswordGenerationAction");
 
-            passwordGenerator = new PasswordGenerator();
-
-            foreach (CharacterGroup characterGroup in passwordGenerator.CharacterGroups)
-                characterGroup.Characters = characterGroup.Characters.RemoveCharacters(c => c == ';');
-
             if (int.TryParse(session["GENPASSWORDLENGTH"], out passwordLength))
-                session["GENERATEDPASSWORD"] = passwordGenerator.GeneratePassword(passwordLength);
+                session["GENERATEDPASSWORD"] = PasswordGenerator.Default.GeneratePassword(passwordLength);
             else
-                session["GENERATEDPASSWORD"] = passwordGenerator.GeneratePassword();
+                session["GENERATEDPASSWORD"] = PasswordGenerator.Default.GeneratePassword();
 
             session.Log("End PasswordGenerationAction");
 

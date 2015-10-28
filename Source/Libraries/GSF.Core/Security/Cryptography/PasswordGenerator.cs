@@ -182,7 +182,7 @@ namespace GSF.Security.Cryptography
             new CharacterGroup() { Characters = "abcdefghijklmnopqrstuvwxyz", MinOccurrence = 1 },
             new CharacterGroup() { Characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ", MinOccurrence = 1 },
             new CharacterGroup() { Characters = "0123456789", MinOccurrence = 1 },
-            new CharacterGroup() { Characters = "~!@#$%^&*-_=+;:,.?", MinOccurrence = 1 }
+            new CharacterGroup() { Characters = "~!@#$%^&*-_+:,.?", MinOccurrence = 1 }
         };
 
         /// <summary>
