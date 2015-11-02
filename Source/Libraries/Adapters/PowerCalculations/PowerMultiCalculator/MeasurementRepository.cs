@@ -32,6 +32,9 @@ namespace PowerCalculations.PowerMultiCalculator
 	/// </summary>
 	public class MeasurementRepository
 	{
+
+		#region [ Methods ]
+
 		/// <summary>
 		/// Saves measurement back to the configuration database
 		/// </summary>
@@ -89,5 +92,8 @@ namespace PowerCalculations.PowerMultiCalculator
 				return false;
 			}
 		}
+
+		#endregion
+
 	}
 }

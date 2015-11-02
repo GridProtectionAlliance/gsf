@@ -30,6 +30,9 @@ namespace PowerCalculations.PowerMultiCalculator
 	/// </summary>
 	public class Measurement
 	{
+
+		#region [ Properties ]
+
 		/// <summary>
 		/// Gets or sets the current <see cref="Measurement"/>'s Signal Id
 		/// </summary>
@@ -79,5 +82,7 @@ namespace PowerCalculations.PowerMultiCalculator
 		/// Gets or sets the current <see cref="Measurement"/>'s signal reference
 		/// </summary>
 		public string SignalReference { get; set; }
+
+		#endregion
 	}
 }

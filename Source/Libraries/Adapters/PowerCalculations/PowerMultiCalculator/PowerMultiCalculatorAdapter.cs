@@ -42,6 +42,8 @@ namespace PowerCalculations.PowerMultiCalculator
 	[Description("PowerMultiCalculatorAdapter: Performs MW, MVA, and MVAR calculations based on current and voltage phasors input to the adapter")]
 	public class PowerMultiCalculatorAdapter : ActionAdapterBase
 	{
+		#region [ Members ]
+
 		private const double SqrtOf3 = 1.7320508075688772935274463415059D;
 		private const int ValuesToTrack = 5;
 
@@ -55,6 +57,29 @@ namespace PowerCalculations.PowerMultiCalculator
 		private Queue<IMeasurement> m_lastRealPowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
 		private Queue<IMeasurement> m_lastReactivePowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
 		private Queue<IMeasurement> m_lastActivePowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
+
+		#endregion
+
+		#region [ Constructors ]
+
+		/// <summary>
+		/// Creates the adapter
+		/// </summary>
+		public PowerMultiCalculatorAdapter()
+		{
+			using (var database = new AdoDataConnection("systemSettings"))
+			{
+				var dataOperationExists = PowerCalculationConfigurationValidation.CheckDataOperationExists(database);
+				if (!dataOperationExists)
+				{
+					PowerCalculationConfigurationValidation.CreateDataOperation(database);
+				}
+			}
+		}
+
+		#endregion
+
+		#region [ Properties ]
 
 		/// <summary>
 		/// Gets or sets a boolean indicating whether or not this adapter will produce a result for all calculations. If this value is true and a calculation fails,
@@ -72,21 +97,6 @@ namespace PowerCalculations.PowerMultiCalculator
 		 Description("Defines whether the adapter should apply a sqrt(3) adjustment to all results."),
 		 DefaultValue(false)]
 		public bool ApplySqrt3Adjustment { get; set; }
-
-		/// <summary>
-		/// Creates the adapter
-		/// </summary>
-		public PowerMultiCalculatorAdapter()
-		{
-			using (var database = new AdoDataConnection("systemSettings"))
-			{
-				var dataOperationExists = PowerCalculationConfigurationValidation.CheckDataOperationExists(database);
-				if (!dataOperationExists)
-				{
-					PowerCalculationConfigurationValidation.CreateDataOperation(database);
-				}
-			}
-		}
 
 		/// <summary>
 		/// Returns the adapter status, including real-time statistics about adapter operation
@@ -156,6 +166,18 @@ namespace PowerCalculations.PowerMultiCalculator
 		}
 
 		/// <summary>
+		/// Returns true or false to indicate whether this adapter will run in a non-realtime IAON session
+		/// </summary>
+		public override bool SupportsTemporalProcessing
+		{
+			get { return true; }
+		}
+
+		#endregion
+
+		#region [ Methods ]
+
+		/// <summary>
 		/// Loads configuration from the database and configures adapter to run with that configuration
 		/// </summary>
 		public override void Initialize()
@@ -206,14 +228,6 @@ namespace PowerCalculations.PowerMultiCalculator
 				AlwaysProduceResult = setting.ParseBoolean();
 			if (settings.TryGetValue("ApplySqrt3Adjustment", out setting))
 				ApplySqrt3Adjustment = setting.ParseBoolean();
-		}
-
-		/// <summary>
-		/// Returns true or false to indicate whether this adapter will run in a non-realtime IAON session
-		/// </summary>
-		public override bool SupportsTemporalProcessing
-		{
-			get { return true; }
 		}
 
 		/// <summary>
@@ -361,5 +375,7 @@ namespace PowerCalculations.PowerMultiCalculator
 			meas.Multiplier = Convert.ToDouble(rows[0]["Multiplier"]);
 			return meas;
 		}
+
+		#endregion
 	}
 }

@@ -28,6 +28,8 @@ using PhasorProtocolAdapters;
 
 namespace PowerCalculations.PowerMultiCalculator
 {
+	#region [ Static ]
+
 	/// <summary>
 	/// Implements validations for power calculations in the power calculation adapter
 	/// </summary>
@@ -420,5 +422,7 @@ namespace PowerCalculations.PowerMultiCalculator
 				}
 			}
 		}
+
+		#endregion
 	}
 }

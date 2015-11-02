@@ -30,6 +30,9 @@ namespace PowerCalculations.PowerMultiCalculator
 	/// </summary>
 	public class PowerCalculation
 	{
+
+		#region [ Properties ]
+
 		/// <summary>
 		/// ID field for the <see cref="PowerCalculation"/>
 		/// </summary>
@@ -74,5 +77,7 @@ namespace PowerCalculations.PowerMultiCalculator
 		/// Measurement template to be used for outputing active power output values from the <see cref="PowerCalculation"/>
 		/// </summary>
 		public IMeasurement ActivePowerOutputMeasurement { get; set; }
+
+		#endregion
 	}
 }

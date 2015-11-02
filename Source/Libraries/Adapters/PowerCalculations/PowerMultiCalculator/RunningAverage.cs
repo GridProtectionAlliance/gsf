@@ -28,8 +28,15 @@ namespace PowerCalculations.PowerMultiCalculator
 	/// </summary>
 	public class RunningAverage
 	{
+
+		#region [ Members ]
+
 		private double m_numberOfValues = 0;
 		private double m_average = 0;
+
+		#endregion
+
+		#region [ Properties ]
 
 		/// <summary>
 		/// Average calculated on values provided so far
@@ -38,6 +45,10 @@ namespace PowerCalculations.PowerMultiCalculator
 		{
 			get { return m_average; }
 		}
+
+		#endregion
+
+		#region [ Methods ]
 
 		/// <summary>
 		/// Calculates running average based on previous values and the new value
@@ -51,5 +62,7 @@ namespace PowerCalculations.PowerMultiCalculator
 			m_average = total / m_numberOfValues;
 			return m_average;
 		}
+
+		#endregion	
 	}
 }
