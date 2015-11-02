@@ -28,15 +28,15 @@ namespace PowerCalculations.PowerMultiCalculator
 	/// </summary>
 	public class RunningAverage
 	{
-		private double _numberOfValues = 0;
-		private double _average = 0;
+		private double m_numberOfValues = 0;
+		private double m_average = 0;
 
 		/// <summary>
 		/// Average calculated on values provided so far
 		/// </summary>
 		public double Average
 		{
-			get { return _average; }
+			get { return m_average; }
 		}
 
 		/// <summary>
@@ -46,10 +46,10 @@ namespace PowerCalculations.PowerMultiCalculator
 		/// <returns>New running average</returns>
 		public double AddValue(double value)
 		{
-			var total = _numberOfValues * _average + value;
-			_numberOfValues++;
-			_average = total / _numberOfValues;
-			return _average;
+			var total = m_numberOfValues * m_average + value;
+			m_numberOfValues++;
+			m_average = total / m_numberOfValues;
+			return m_average;
 		}
 	}
 }

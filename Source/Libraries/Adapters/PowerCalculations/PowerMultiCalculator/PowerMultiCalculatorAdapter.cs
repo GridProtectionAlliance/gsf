@@ -45,16 +45,16 @@ namespace PowerCalculations.PowerMultiCalculator
 		private const double SqrtOf3 = 1.7320508075688772935274463415059D;
 		private const int ValuesToTrack = 5;
 
-		private List<PowerCalculation> _configuredCalculations;
-		private RunningAverage _averageCalculationsPerFrame = new RunningAverage();
-		private RunningAverage _averageCalculationTime = new RunningAverage();
-		private RunningAverage _averageTotalCalculationTime = new RunningAverage();
-		private double _lastTotalCalculationTime;
-		private int _lastTotalCalculations;
+		private List<PowerCalculation> m_configuredCalculations;
+		private RunningAverage m_averageCalculationsPerFrame = new RunningAverage();
+		private RunningAverage m_averageCalculationTime = new RunningAverage();
+		private RunningAverage m_averageTotalCalculationTime = new RunningAverage();
+		private double m_lastTotalCalculationTime;
+		private int m_lastTotalCalculations;
 
-		private Queue<IMeasurement> _lastRealPowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
-		private Queue<IMeasurement> _lastReactivePowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
-		private Queue<IMeasurement> _lastActivePowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
+		private Queue<IMeasurement> m_lastRealPowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
+		private Queue<IMeasurement> m_lastReactivePowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
+		private Queue<IMeasurement> m_lastActivePowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
 
 		/// <summary>
 		/// Gets or sets a boolean indicating whether or not this adapter will produce a result for all calculations. If this value is true and a calculation fails,
@@ -97,21 +97,21 @@ namespace PowerCalculations.PowerMultiCalculator
 			{
 				var status = new StringBuilder();
 
-				status.AppendLine(string.Format("        Last Total Calculations: {0}", _lastTotalCalculations));
-				status.AppendLine(string.Format("     Average Total Calculations: {0}", Math.Round(_averageCalculationsPerFrame.Average)));
-				status.AppendLine(string.Format("       Average Calculation Time: {0} ms", _averageCalculationTime.Average.ToString("N4")));
-				status.AppendLine(string.Format("    Last Total Calculation Time: {0} ms", _lastTotalCalculationTime.ToString("N4")));
-				status.AppendLine(string.Format("Average  Total Calculation Time: {0} ms", _averageTotalCalculationTime.Average.ToString("N4")));
+				status.AppendLine(string.Format("        Last Total Calculations: {0}", m_lastTotalCalculations));
+				status.AppendLine(string.Format("     Average Total Calculations: {0}", Math.Round(m_averageCalculationsPerFrame.Average)));
+				status.AppendLine(string.Format("       Average Calculation Time: {0} ms", m_averageCalculationTime.Average.ToString("N4")));
+				status.AppendLine(string.Format("    Last Total Calculation Time: {0} ms", m_lastTotalCalculationTime.ToString("N4")));
+				status.AppendLine(string.Format("Average  Total Calculation Time: {0} ms", m_averageTotalCalculationTime.Average.ToString("N4")));
 
 				status.AppendLine("   Last Real Power Measurements:");
-				if (!_lastRealPowerCalculations.Any())
+				if (!m_lastRealPowerCalculations.Any())
 				{
 					status.AppendLine("\tNot enough values...");
 				}
 				else
 				{
-					var realPowerValues = new IMeasurement[_lastRealPowerCalculations.Count];
-					_lastRealPowerCalculations.CopyTo(realPowerValues, 0);
+					var realPowerValues = new IMeasurement[m_lastRealPowerCalculations.Count];
+					m_lastRealPowerCalculations.CopyTo(realPowerValues, 0);
 					foreach (var measurement in realPowerValues)
 					{
 						status.AppendLine(string.Format("\t{0} = {1}", measurement.Key, measurement.AdjustedValue.ToString("N3")));
@@ -119,14 +119,14 @@ namespace PowerCalculations.PowerMultiCalculator
 				}
 
 				status.AppendLine("   Last Reactive Power Measurements:");
-				if (!_lastReactivePowerCalculations.Any())
+				if (!m_lastReactivePowerCalculations.Any())
 				{
 					status.AppendLine("\tNot enough values...");
 				}
 				else
 				{
-					var reactivePowerValues = new IMeasurement[_lastReactivePowerCalculations.Count];
-					_lastReactivePowerCalculations.CopyTo(reactivePowerValues, 0);
+					var reactivePowerValues = new IMeasurement[m_lastReactivePowerCalculations.Count];
+					m_lastReactivePowerCalculations.CopyTo(reactivePowerValues, 0);
 					foreach (var measurement in reactivePowerValues)
 					{
 						status.AppendLine(string.Format("\t{0} = {1}", measurement.Key, measurement.AdjustedValue.ToString("N3")));
@@ -134,14 +134,14 @@ namespace PowerCalculations.PowerMultiCalculator
 				}
 
 				status.AppendLine("   Last Active Power Measurements:");
-				if (!_lastActivePowerCalculations.Any())
+				if (!m_lastActivePowerCalculations.Any())
 				{
 					status.AppendLine("\tNot enough values...");
 				}
 				else
 				{
-					var activePowerValues = new IMeasurement[_lastActivePowerCalculations.Count];
-					_lastActivePowerCalculations.CopyTo(activePowerValues, 0);
+					var activePowerValues = new IMeasurement[m_lastActivePowerCalculations.Count];
+					m_lastActivePowerCalculations.CopyTo(activePowerValues, 0);
 					foreach (var measurement in activePowerValues)
 					{
 						status.AppendLine(string.Format("\t{0} = {1}", measurement.Key, measurement.AdjustedValue.ToString("N3")));
@@ -162,14 +162,14 @@ namespace PowerCalculations.PowerMultiCalculator
 		{
 			base.Initialize();
 
-			_averageCalculationsPerFrame = new RunningAverage();
-			_averageCalculationTime = new RunningAverage();
-			_averageTotalCalculationTime = new RunningAverage();
-			_lastRealPowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
-			_lastReactivePowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
-			_lastActivePowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
+			m_averageCalculationsPerFrame = new RunningAverage();
+			m_averageCalculationTime = new RunningAverage();
+			m_averageTotalCalculationTime = new RunningAverage();
+			m_lastRealPowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
+			m_lastReactivePowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
+			m_lastActivePowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
 
-			_configuredCalculations = new List<PowerCalculation>();
+			m_configuredCalculations = new List<PowerCalculation>();
 			using (var database = new AdoDataConnection("systemSettings"))
 			using (var cmd = database.Connection.CreateCommand())
 			{
@@ -190,13 +190,13 @@ namespace PowerCalculations.PowerMultiCalculator
 					pc.ActivePowerOutputMeasurement = AddOutputMeasurement(rdr.GetGuid(6));
 					pc.ReactivePowerOutputMeasurement = AddOutputMeasurement(rdr.GetGuid(7));
 					pc.RealPowerOutputMeasurement = AddOutputMeasurement(rdr.GetGuid(8));
-					_configuredCalculations.Add(pc);
+					m_configuredCalculations.Add(pc);
 				}
 			}
 
-			if (_configuredCalculations.Any())
+			if (m_configuredCalculations.Any())
 			{
-				InputMeasurementKeys = _configuredCalculations.SelectMany(pc => new[] { pc.CurrentAngleSignalId, pc.CurrentMagnitudeSignalId, pc.VoltageAngleSignalId, pc.VoltageMagnitudeSignalId }).ToArray();
+				InputMeasurementKeys = m_configuredCalculations.SelectMany(pc => new[] { pc.CurrentAngleSignalId, pc.CurrentMagnitudeSignalId, pc.VoltageAngleSignalId, pc.VoltageMagnitudeSignalId }).ToArray();
 			}
 
 			var settings = Settings;
@@ -229,7 +229,7 @@ namespace PowerCalculations.PowerMultiCalculator
 			var calculations = 0;
 			var outputMeasurements = new List<IMeasurement>();
 			var measurements = frame.Measurements;
-			foreach (var powerCalculation in _configuredCalculations)
+			foreach (var powerCalculation in m_configuredCalculations)
 			{
 				double power = double.NaN, reactivePower = double.NaN, apparentPower = double.NaN;
 				try
@@ -298,44 +298,44 @@ namespace PowerCalculations.PowerMultiCalculator
 						{
 							outputMeasurements.Add(realPowerMeasurement);
 							calculations++;
-							_lastRealPowerCalculations.Enqueue(realPowerMeasurement);
-							while (_lastRealPowerCalculations.Count > ValuesToTrack)
+							m_lastRealPowerCalculations.Enqueue(realPowerMeasurement);
+							while (m_lastRealPowerCalculations.Count > ValuesToTrack)
 							{
-								_lastRealPowerCalculations.Dequeue();
+								m_lastRealPowerCalculations.Dequeue();
 							}
 						}
 						if (AlwaysProduceResult || !double.IsNaN(reactivePowerMeasurement.Value))
 						{
 							outputMeasurements.Add(reactivePowerMeasurement);
 							calculations++;
-							_lastReactivePowerCalculations.Enqueue(reactivePowerMeasurement);
-							while (_lastReactivePowerCalculations.Count > ValuesToTrack)
+							m_lastReactivePowerCalculations.Enqueue(reactivePowerMeasurement);
+							while (m_lastReactivePowerCalculations.Count > ValuesToTrack)
 							{
-								_lastReactivePowerCalculations.Dequeue();
+								m_lastReactivePowerCalculations.Dequeue();
 							}
 						}
 						if (AlwaysProduceResult || !double.IsNaN(activePowerMeasurement.Value))
 						{
 							outputMeasurements.Add(activePowerMeasurement);
 							calculations++;
-							_lastActivePowerCalculations.Enqueue(activePowerMeasurement);
-							while (_lastActivePowerCalculations.Count > ValuesToTrack)
+							m_lastActivePowerCalculations.Enqueue(activePowerMeasurement);
+							while (m_lastActivePowerCalculations.Count > ValuesToTrack)
 							{
-								_lastActivePowerCalculations.Dequeue();
+								m_lastActivePowerCalculations.Dequeue();
 							}
 						}
 					}
 
 					lastCalculationTimeStopwatch.Stop();
-					_averageCalculationTime.AddValue(lastCalculationTimeStopwatch.Elapsed.TotalMilliseconds);
+					m_averageCalculationTime.AddValue(lastCalculationTimeStopwatch.Elapsed.TotalMilliseconds);
 				}
 			}
 
 			totalCalculationTimeStopwatch.Stop();
-			_lastTotalCalculationTime = totalCalculationTimeStopwatch.Elapsed.TotalMilliseconds;
-			_averageTotalCalculationTime.AddValue(totalCalculationTimeStopwatch.Elapsed.TotalMilliseconds);
-			_lastTotalCalculations = calculations;
-			_averageCalculationsPerFrame.AddValue(calculations);
+			m_lastTotalCalculationTime = totalCalculationTimeStopwatch.Elapsed.TotalMilliseconds;
+			m_averageTotalCalculationTime.AddValue(totalCalculationTimeStopwatch.Elapsed.TotalMilliseconds);
+			m_lastTotalCalculations = calculations;
+			m_averageCalculationsPerFrame.AddValue(calculations);
 
 			OnNewMeasurements(outputMeasurements);
 		}
