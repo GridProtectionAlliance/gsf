@@ -48,6 +48,9 @@
 //       Replaced single-threaded BlockingCollection pattern with asynchronous loop pattern.
 //  12/13/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  09/24/2015 - Allan V. Scheid
+//       Fixed Mono socket error with System.Net.Sockets.Socket.IOControl method and SIO_UDP_CONNRESET
+//       inside Start().
 //
 //******************************************************************************************************
 
@@ -559,7 +562,14 @@ namespace GSF.Communication
                 m_udpServer.Provider.ReceiveBufferSize = ReceiveBufferSize;
 
                 // Disable SocketError.ConnectionReset exception from being thrown when the endpoint is not listening
-                m_udpServer.Provider.IOControl(SIO_UDP_CONNRESET, new[] { Convert.ToByte(false) }, null);
+		// Fix MONO bug with SIO_UDP_CONNRESET
+                try
+                {
+                    m_udpServer.Provider.IOControl(SIO_UDP_CONNRESET, new[] { Convert.ToByte(false) }, null);
+                }
+                catch
+                {
+                }
 
                 // Notify that the server has been started successfully
                 OnServerStarted();

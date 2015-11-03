@@ -90,5 +90,13 @@ namespace GSF
             get;
             set;
         }
+
+        /// <summary>
+        /// Gets a flag that indicates whether the object has been disposed.
+        /// </summary>
+        bool IsDisposed
+        {
+            get;
+        }
     }
 }

@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -40,7 +41,6 @@ namespace GSF.PQDIF.Physical
         #region [ Members ]
 
         // Fields
-        private int m_size;
         private readonly IList<Element> m_elements;
 
         #endregion
@@ -66,11 +66,7 @@ namespace GSF.PQDIF.Physical
         {
             get
             {
-                return m_size;
-            }
-            set
-            {
-                m_size = value;
+                return m_elements.Count;
             }
         }
 
@@ -86,6 +82,17 @@ namespace GSF.PQDIF.Physical
             }
         }
 
+        /// <summary>
+        /// Gets a list of the element in this collection.
+        /// </summary>
+        public IList<Element> Elements
+        {
+            get
+            {
+                return m_elements;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -97,6 +104,28 @@ namespace GSF.PQDIF.Physical
         public void AddElement(Element element)
         {
             m_elements.Add(element);
+        }
+
+        /// <summary>
+        /// Removes the given element from the collection.
+        /// </summary>
+        /// <param name="element">The element to be removed.</param>
+        public void RemoveElement(Element element)
+        {
+            m_elements.Remove(element);
+        }
+
+        /// <summary>
+        /// Removes all elements identified by the given tag from the collection.
+        /// </summary>
+        /// <param name="tag">The tag of the elements to be removed.</param>
+        public void RemoveElementsByTag(Guid tag)
+        {
+            for (int i = m_elements.Count; i >= 0; i--)
+            {
+                if (m_elements[i].TagOfElement == tag)
+                    m_elements.RemoveAt(i);
+            }
         }
 
         /// <summary>
@@ -154,7 +183,7 @@ namespace GSF.PQDIF.Physical
             StringBuilder builder = new StringBuilder();
             string[] lines;
 
-            builder.AppendFormat("Collection -- Size: {0}, Tag: {1}", m_size, TagOfElement);
+            builder.AppendFormat("Collection -- Size: {0}, Tag: {1}", Size, TagOfElement);
 
             foreach (Element element in m_elements)
             {

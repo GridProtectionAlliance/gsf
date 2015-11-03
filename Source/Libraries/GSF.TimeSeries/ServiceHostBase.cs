@@ -694,7 +694,7 @@ namespace GSF.TimeSeries
                 m_serviceHelper.ErrorLogger.ErrorLog.LogException -= LogExceptionHandler;
             }
 
-            // Unattach from handler for unobserved task exceptions
+            // Detach from handler for unobserved task exceptions
             TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;
         }
 
@@ -2149,8 +2149,16 @@ namespace GSF.TimeSeries
             }
             else
             {
+                bool requestedAdapterExists = RequestedAdapterExists(requestInfo);
+
                 if (requestInfo.Request.Arguments.Exists("SkipReloadConfig"))
                 {
+                    if (!requestedAdapterExists)
+                    {
+                        SendResponse(requestInfo, false, "Unable to initialize disabled or nonexistent adapter with ID.");
+                        return;
+                    }
+
                     HandleInitializeRequest(requestInfo);
 
                     // Spawn routing table calculation updates
@@ -2160,10 +2168,14 @@ namespace GSF.TimeSeries
                 {
                     m_reloadConfigQueue.Add(Tuple.Create("System", new Action<bool>(success =>
                     {
-                        if (success)
-                            HandleInitializeRequest(requestInfo);
-                        else
+                        if (!success)
+                        {
                             SendResponse(requestInfo, false, "Failed to load system configuration.");
+                            return;
+                        }
+
+                        if (requestedAdapterExists)
+                            HandleInitializeRequest(requestInfo);
                     })));
                 }
             }
@@ -2833,8 +2845,6 @@ namespace GSF.TimeSeries
                 {
                     if (success)
                     {
-                        m_iaonSession.AllAdapters.UpdateCollectionConfigurations();
-
                         if (invoking && (object)invokeHandler != null)
                             invokeHandler.HandlerMethod(invokeInfo);
                         else
@@ -3137,6 +3147,48 @@ namespace GSF.TimeSeries
                     DisplayStatusMessage("Remote restart request denied, this is currently disallowed in the system configuration.", UpdateType.Warning);
                 }
             }
+        }
+
+        /// <summary>
+        /// Determines whether the requested adapter exists.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
+        /// <returns>True if the requested adapter exists; false otherwise.</returns>
+        private bool RequestedAdapterExists(ClientRequestInfo requestInfo)
+        {
+            IAdapter adapter;
+            string adapterID = requestInfo.Request.Arguments["OrderedArg1"];
+            IAdapterCollection collection = GetRequestedCollection(requestInfo);
+
+            if (!string.IsNullOrWhiteSpace(adapterID))
+            {
+                uint id;
+
+                adapterID = adapterID.Trim();
+
+                if (adapterID.IsAllNumbers() && uint.TryParse(adapterID, out id))
+                {
+                    // Adapter ID is numeric, try numeric lookup by adapter ID in requested collection
+                    if (collection.TryGetAdapterByID(id, out adapter))
+                        return true;
+
+                    // Try looking for ID in any collection if all runtime ID's are unique
+                    if (m_uniqueAdapterIDs && m_iaonSession.AllAdapters.TryGetAnyAdapterByID(id, out adapter, out collection))
+                        return true;
+                }
+                else
+                {
+                    // Adapter ID is alpha-numeric, try text-based lookup by adapter name in requested collection
+                    if (collection.TryGetAdapterByName(adapterID, out adapter))
+                        return true;
+
+                    // Try looking for adapter name in any collection
+                    if (m_iaonSession.AllAdapters.TryGetAnyAdapterByName(adapterID, out adapter, out collection))
+                        return true;
+                }
+            }
+
+            return false;
         }
 
         #endregion

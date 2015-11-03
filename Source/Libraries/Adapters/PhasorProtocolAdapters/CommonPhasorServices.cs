@@ -497,6 +497,82 @@ namespace PhasorProtocolAdapters
         }
 
         /// <summary>
+        /// Associates independent measurements to a virtual device based on a lookup expression.
+        /// </summary>
+        /// <param name="connection">The database connection.</param>
+        /// <param name="nodeIDQueryString">Current node ID in proper query format.</param>
+        /// <param name="trackingVersion">Latest version of the configuration to which data operations were previously applied.</param>
+        /// <param name="arguments">Arguments, if any, to be used but the data source validation.</param>
+        /// <param name="statusMessage">The delegate which will display a status message to the user.</param>
+        /// <param name="processException">The delegate which will handle exception logging.</param>
+        [SuppressMessage("Microsoft.Maintainability", "CA1502"), SuppressMessage("Microsoft.Maintainability", "CA1505")]
+        private static void MeasurementDeviceAssociation(AdoDataConnection connection, string nodeIDQueryString, ulong trackingVersion, string arguments, Action<string> statusMessage, Action<Exception> processException)
+        {
+            Dictionary<string, string> args = new Dictionary<string, string>();
+
+            if (string.IsNullOrEmpty(arguments))
+            {
+                statusMessage("WARNING: No arguments supplied to MeasurementDeviceAssociation data operation - no action will be performed. Expecting \"deviceAcronym\" and \"lookupExpression\" settings at a minimum.");
+                return;
+            }
+
+            args = arguments.ParseKeyValuePairs();
+
+            string deviceAcronym;
+
+            if (!args.TryGetValue("DeviceAcronym", out deviceAcronym))
+            {
+                statusMessage("WARNING: No \"deviceAcronyym\" argument supplied to MeasurementDeviceAssociation data operation - no action will be performed. Expecting \"deviceAcronym\" and \"lookupExpression\" settings at a minimum.");
+                return;
+            }
+
+            string lookupExpression;
+
+            if (!args.TryGetValue("LookupExpression", out lookupExpression))
+            {
+                statusMessage("WARNING: No \"lookupExpression\" argument supplied to MeasurementDeviceAssociation data operation - no action will be performed. Expecting \"deviceAcronym\" and \"lookupExpression\" settings at a minimum.");
+                return;
+            }
+
+            // Make sure device acronym exists
+            if (connection.ExecuteScalar<int>(string.Format("SELECT COUNT(*) FROM Device WHERE NodeID={0} AND Acronym={{0}}", nodeIDQueryString), deviceAcronym) == 0)
+            {
+                // Lookup virtual device protocol
+                if (connection.ExecuteScalar<int>("SELECT COUNT(*) FROM Protocol WHERE Acronym='VirtualInput'") == 0)
+                {
+                    statusMessage("WARNING: No VirutalInput device protocol was found in source database configuration for MeasurementDeviceAssociation data operation - no action will be performed.");
+                    return;
+                }
+
+                statusMessage(string.Format("Creating new \"{0}\" virtual device...", deviceAcronym));
+
+                int virtualProtocolID = connection.ExecuteScalar<int>("SELECT ID FROM Protocol WHERE Acronym='VirtualInput'");
+
+                // Create new virtual device record
+                connection.ExecuteNonQuery(string.Format("INSERT INTO Device(NodeID, Acronym, Name, ProtocolID) VALUES({0}, {{0}}, {{1}}, {{2}})", nodeIDQueryString), deviceAcronym, deviceAcronym, virtualProtocolID);
+            }
+
+            statusMessage(string.Format("Validating \"{0}\" virtual device measurement associations...", deviceAcronym));
+
+            // Get device ID
+            int deviceID = connection.ExecuteScalar<int>(string.Format("SELECT ID FROM Device WHERE NodeID={0} AND Acronym={{0}}", nodeIDQueryString), deviceAcronym);
+
+            // Get measurements that should be associated with device ID but are not currently
+            IEnumerable<DataRow> measurements = connection.RetrieveData(string.Format("SELECT PointID FROM Measurement WHERE ({0}) AND (DeviceID IS NULL OR DeviceID <> {{0}})", lookupExpression), deviceID).AsEnumerable();
+
+            int associatedMeasurements = 0;
+
+            foreach (DataRow row in measurements)
+            {
+                connection.ExecuteNonQuery("UPDATE Measurement SET DeviceID={0} WHERE PointID={1}", deviceID, row.Field<int>("PointID"));
+                associatedMeasurements++;
+            }
+
+            if (associatedMeasurements > 0)
+                statusMessage(string.Format("Associated \"{0}\" measurements to \"{1}\" virtual device...", associatedMeasurements, deviceAcronym));
+        }
+
+        /// <summary>
         /// Apply start-up phasor data source validations
         /// </summary>
         /// <param name="database">The database connection.</param>

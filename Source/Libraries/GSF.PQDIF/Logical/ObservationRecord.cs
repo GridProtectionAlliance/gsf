@@ -25,9 +25,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using GSF.PQDIF.Physical;
+using Ionic.Zlib;
 
 namespace GSF.PQDIF.Logical
 {
@@ -65,6 +67,17 @@ namespace GSF.PQDIF.Logical
         #region [ Properties ]
 
         /// <summary>
+        /// Gets the physical structure of the observation record.
+        /// </summary>
+        public Record PhysicalRecord
+        {
+            get
+            {
+                return m_physicalRecord;
+            }
+        }
+
+        /// <summary>
         /// Gets the data source record that defines
         /// the channels in this observation record.
         /// </summary>
@@ -95,8 +108,26 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                VectorElement nameVector = m_physicalRecord.Body.Collection.GetVectorByTag(ObservationNameTag);
-                return Encoding.ASCII.GetString(nameVector.GetValues()).Trim((char)0);
+                VectorElement nameElement = m_physicalRecord.Body.Collection.GetVectorByTag(ObservationNameTag);
+                return Encoding.ASCII.GetString(nameElement.GetValues()).Trim((char)0);
+            }
+            set
+            {
+                byte[] bytes = Encoding.ASCII.GetBytes(value + (char)0);
+                VectorElement nameElement = m_physicalRecord.Body.Collection.GetVectorByTag(ObservationNameTag);
+
+                if ((object)nameElement == null)
+                {
+                    nameElement = new VectorElement()
+                    {
+                        TagOfElement = ObservationNameTag,
+                        TypeOfValue = PhysicalType.Char1
+                    };
+
+                    m_physicalRecord.Body.Collection.AddElement(nameElement);
+                }
+
+                nameElement.SetValues(bytes, 0);
             }
         }
 
@@ -110,6 +141,23 @@ namespace GSF.PQDIF.Logical
                 return m_physicalRecord.Body.Collection
                     .GetScalarByTag(TimeStartTag)
                     .GetTimestamp();
+            }
+            set
+            {
+                ScalarElement timeStartElement = m_physicalRecord.Body.Collection.GetScalarByTag(TimeStartTag);
+
+                if ((object)timeStartElement == null)
+                {
+                    timeStartElement = new ScalarElement()
+                    {
+                        TagOfElement = TimeStartTag,
+                        TypeOfValue = PhysicalType.Timestamp
+                    };
+
+                    m_physicalRecord.Body.Collection.AddElement(timeStartElement);
+                }
+
+                timeStartElement.SetTimestamp(value);
             }
         }
 
@@ -126,6 +174,59 @@ namespace GSF.PQDIF.Logical
                     .Cast<CollectionElement>()
                     .Select(collection => new ChannelInstance(collection, this))
                     .ToList();
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Adds a new channel instance to the collection
+        /// of channel instances in this observation record.
+        /// </summary>
+        public ChannelInstance AddNewChannelInstance()
+        {
+            CollectionElement channelInstancesElement = m_physicalRecord.Body.Collection.GetCollectionByTag(ChannelInstancesTag);
+            CollectionElement channelInstanceElement = new CollectionElement() { TagOfElement = OneChannelInstanceTag };
+            ChannelInstance channelInstance = new ChannelInstance(channelInstanceElement, this);
+
+            if ((object)channelInstancesElement == null)
+            {
+                channelInstancesElement = new CollectionElement()
+                {
+                    TagOfElement = OneChannelInstanceTag
+                };
+
+                m_physicalRecord.Body.Collection.AddElement(channelInstancesElement);
+            }
+
+            channelInstancesElement.AddElement(channelInstanceElement);
+
+            return channelInstance;
+        }
+
+        /// <summary>
+        /// Removes the given channel instance from the collection of channel instances.
+        /// </summary>
+        /// <param name="channelInstance">The channel instance to be removed.</param>
+        public void Remove(ChannelInstance channelInstance)
+        {
+            CollectionElement channelInstancesElement = m_physicalRecord.Body.Collection.GetCollectionByTag(ChannelInstancesTag);
+            List<CollectionElement> channelInstanceElements;
+            ChannelInstance instance;
+
+            if ((object)channelInstancesElement == null)
+                return;
+
+            channelInstanceElements = channelInstancesElement.GetElementsByTag(OneChannelInstanceTag).Cast<CollectionElement>().ToList();
+
+            foreach (CollectionElement channelSettingElement in channelInstanceElements)
+            {
+                instance = new ChannelInstance(channelSettingElement, this);
+
+                if (Equals(channelInstance, instance))
+                    channelInstancesElement.RemoveElement(channelSettingElement);
             }
         }
 
@@ -183,6 +284,5 @@ namespace GSF.PQDIF.Logical
         }
 
         #endregion
-
     }
 }

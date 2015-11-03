@@ -24,7 +24,9 @@
 //******************************************************************************************************
 
 using System;
+using System.IO;
 using System.Text;
+using GSF.IO.Checksums;
 
 namespace GSF.PQDIF.Physical
 {

@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System;
+using System.IO;
 using System.Text;
 using GSF.PQDIF.Physical;
 
@@ -59,6 +60,17 @@ namespace GSF.PQDIF.Logical
         #region [ Properties ]
 
         /// <summary>
+        /// Gets the physical structure of the container record.
+        /// </summary>
+        public Record PhysicalRecord
+        {
+            get
+            {
+                return m_physicalRecord;
+            }
+        }
+
+        /// <summary>
         /// Gets the major version number of the PQDIF file writer.
         /// </summary>
         public uint WriterMajorVersion
@@ -68,6 +80,24 @@ namespace GSF.PQDIF.Logical
                 return m_physicalRecord.Body.Collection
                     .GetVectorByTag(VersionInfoTag)
                     .GetUInt4(0);
+            }
+            set
+            {
+                VectorElement versionInfoElement = m_physicalRecord.Body.Collection.GetVectorByTag(VersionInfoTag);
+
+                if ((object)versionInfoElement == null)
+                {
+                    versionInfoElement = new VectorElement()
+                    {
+                        Size = 4,
+                        TagOfElement = VersionInfoTag,
+                        TypeOfValue = PhysicalType.UnsignedInteger4
+                    };
+
+                    m_physicalRecord.Body.Collection.AddElement(versionInfoElement);
+                }
+
+                versionInfoElement.SetUInt4(0, value);
             }
         }
 
@@ -82,6 +112,24 @@ namespace GSF.PQDIF.Logical
                     .GetVectorByTag(VersionInfoTag)
                     .GetUInt4(1);
             }
+            set
+            {
+                VectorElement versionInfoElement = m_physicalRecord.Body.Collection.GetVectorByTag(VersionInfoTag);
+
+                if ((object)versionInfoElement == null)
+                {
+                    versionInfoElement = new VectorElement()
+                    {
+                        Size = 4,
+                        TagOfElement = VersionInfoTag,
+                        TypeOfValue = PhysicalType.UnsignedInteger4
+                    };
+
+                    m_physicalRecord.Body.Collection.AddElement(versionInfoElement);
+                }
+
+                versionInfoElement.SetUInt4(1, value);
+            }
         }
 
         /// <summary>
@@ -94,6 +142,24 @@ namespace GSF.PQDIF.Logical
                 return m_physicalRecord.Body.Collection
                     .GetVectorByTag(VersionInfoTag)
                     .GetUInt4(2);
+            }
+            set
+            {
+                VectorElement versionInfoElement = m_physicalRecord.Body.Collection.GetVectorByTag(VersionInfoTag);
+
+                if ((object)versionInfoElement == null)
+                {
+                    versionInfoElement = new VectorElement()
+                    {
+                        Size = 4,
+                        TagOfElement = VersionInfoTag,
+                        TypeOfValue = PhysicalType.UnsignedInteger4
+                    };
+
+                    m_physicalRecord.Body.Collection.AddElement(versionInfoElement);
+                }
+
+                versionInfoElement.SetUInt4(2, value);
             }
         }
 
@@ -108,6 +174,24 @@ namespace GSF.PQDIF.Logical
                     .GetVectorByTag(VersionInfoTag)
                     .GetUInt4(3);
             }
+            set
+            {
+                VectorElement versionInfoElement = m_physicalRecord.Body.Collection.GetVectorByTag(VersionInfoTag);
+
+                if ((object)versionInfoElement == null)
+                {
+                    versionInfoElement = new VectorElement()
+                    {
+                        Size = 4,
+                        TagOfElement = VersionInfoTag,
+                        TypeOfValue = PhysicalType.UnsignedInteger4
+                    };
+
+                    m_physicalRecord.Body.Collection.AddElement(versionInfoElement);
+                }
+
+                versionInfoElement.SetUInt4(3, value);
+            }
         }
 
         /// <summary>
@@ -117,8 +201,27 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                VectorElement fileNameVector = m_physicalRecord.Body.Collection.GetVectorByTag(FileNameTag);
-                return Encoding.ASCII.GetString(fileNameVector.GetValues()).Trim((char)0);
+                VectorElement fileNameElement = m_physicalRecord.Body.Collection.GetVectorByTag(FileNameTag);
+                return Encoding.ASCII.GetString(fileNameElement.GetValues()).Trim((char)0);
+            }
+            set
+            {
+                byte[] bytes = Encoding.ASCII.GetBytes(value + (char)0);
+                VectorElement fileNameElement = m_physicalRecord.Body.Collection.GetVectorByTag(FileNameTag);
+
+                if ((object)fileNameElement == null)
+                {
+                    fileNameElement = new VectorElement()
+                    {
+                        TagOfElement = FileNameTag,
+                        TypeOfValue = PhysicalType.Char1
+                    };
+
+                    m_physicalRecord.Body.Collection.AddElement(fileNameElement);
+                }
+
+                fileNameElement.Size = bytes.Length;
+                fileNameElement.SetValues(bytes, 0);
             }
         }
 
@@ -133,6 +236,23 @@ namespace GSF.PQDIF.Logical
                     .GetScalarByTag(CreationTag)
                     .GetTimestamp();
             }
+            set
+            {
+                ScalarElement creationElement = m_physicalRecord.Body.Collection.GetScalarByTag(CreationTag);
+
+                if ((object)creationElement == null)
+                {
+                    creationElement = new ScalarElement()
+                    {
+                        TagOfElement = CreationTag,
+                        TypeOfValue = PhysicalType.Timestamp
+                    };
+
+                    m_physicalRecord.Body.Collection.AddElement(creationElement);
+                }
+
+                creationElement.SetTimestamp(value);
+            }
         }
 
         /// <summary>
@@ -142,12 +262,31 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                VectorElement notesVector = m_physicalRecord.Body.Collection.GetVectorByTag(NotesTag);
+                VectorElement notesElement = m_physicalRecord.Body.Collection.GetVectorByTag(NotesTag);
 
-                if ((object)notesVector == null)
+                if ((object)notesElement == null)
                     return null;
 
-                return Encoding.ASCII.GetString(notesVector.GetValues()).Trim((char)0);
+                return Encoding.ASCII.GetString(notesElement.GetValues()).Trim((char)0);
+            }
+            set
+            {
+                byte[] bytes = Encoding.ASCII.GetBytes(value + (char)0);
+                VectorElement notesElement = m_physicalRecord.Body.Collection.GetVectorByTag(NotesTag);
+
+                if ((object)notesElement == null)
+                {
+                    notesElement = new VectorElement()
+                    {
+                        TagOfElement = NotesTag,
+                        TypeOfValue = PhysicalType.Char1
+                    };
+
+                    m_physicalRecord.Body.Collection.AddElement(notesElement);
+                }
+
+                notesElement.Size = bytes.Length;
+                notesElement.SetValues(bytes, 0);
             }
         }
 
@@ -167,6 +306,24 @@ namespace GSF.PQDIF.Logical
 
                 return (CompressionStyle)compressionStyleID;
             }
+            set
+            {
+                CollectionElement collection = m_physicalRecord.Body.Collection;
+                ScalarElement compressionStyleElement = collection.GetScalarByTag(CompressionStyleTag);
+
+                if ((object)compressionStyleElement == null)
+                {
+                    compressionStyleElement = new ScalarElement()
+                    {
+                        TagOfElement = CompressionStyleTag,
+                        TypeOfValue = PhysicalType.UnsignedInteger4
+                    };
+
+                    m_physicalRecord.Body.Collection.AddElement(compressionStyleElement);
+                }
+
+                compressionStyleElement.SetUInt4((uint)value);
+            }
         }
 
         /// <summary>
@@ -185,6 +342,37 @@ namespace GSF.PQDIF.Logical
 
                 return (CompressionAlgorithm)compressionAlgorithmID;
             }
+            set
+            {
+                CollectionElement collection = m_physicalRecord.Body.Collection;
+                ScalarElement compressionAlgorithmElement = collection.GetScalarByTag(CompressionAlgorithmTag);
+
+                if ((object)compressionAlgorithmElement == null)
+                {
+                    compressionAlgorithmElement = new ScalarElement()
+                    {
+                        TagOfElement = CompressionAlgorithmTag,
+                        TypeOfValue = PhysicalType.UnsignedInteger4
+                    };
+
+                    m_physicalRecord.Body.Collection.AddElement(compressionAlgorithmElement);
+                }
+
+                compressionAlgorithmElement.SetUInt4((uint)value);
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Removes the element identified by the given tag from the record.
+        /// </summary>
+        /// <param name="tag">The tag of the element to be removed.</param>
+        public void RemoveElement(Guid tag)
+        {
+            m_physicalRecord.Body.Collection.RemoveElementsByTag(tag);
         }
 
         #endregion

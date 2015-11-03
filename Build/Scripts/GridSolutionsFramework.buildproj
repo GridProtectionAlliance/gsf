@@ -100,7 +100,6 @@
       <!--Project specific settings.-->
       <ProjectSolution>$(LocalFolder)\Source\$(ProjectName).sln</ProjectSolution>
       <PreRelease Condition="'$(PreRelease)' == ''">true</PreRelease>
-      <NuGet>$(LocalFolder)\Build\Scripts\NuGet\NuGet.exe</NuGet>
       <NuGetPackagesFolder>$(NuGetPackagesFolder)</NuGetPackagesFolder>
       <BuildDeployFolder>$(BuildDeployFolder)</BuildDeployFolder>
     </PropertyGroup>
@@ -175,7 +174,7 @@
   <Target Name="AfterDeployBuild">
     <CallTarget Targets="DeployBuildScripts"/>
     <CallTarget Targets="DeployHelpFiles"/>
-    <!--<CallTarget Targets="PublishNuGetPackages"/>-->
+    <CallTarget Targets="PublishNuGetPackages"/>
   </Target>
   
   <Target Name="DeployBuildScripts" Condition="'$(ForceBuild)' == 'true' And '$(BuildDeployFolder)' != ''">

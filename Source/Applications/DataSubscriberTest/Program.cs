@@ -38,6 +38,7 @@ namespace DataSubscriberTest
 {
     class Program
     {
+        // Define subscription modes for testing
         static readonly SynchronizedSubscriptionInfo remotelySynchronizedInfo = new SynchronizedSubscriptionInfo(true, 30);
         static readonly SynchronizedSubscriptionInfo locallySynchronizedInfo = new SynchronizedSubscriptionInfo(false, 30);
         static readonly UnsynchronizedSubscriptionInfo unsynchronizedInfo = new UnsynchronizedSubscriptionInfo(false);

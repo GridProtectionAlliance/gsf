@@ -24,7 +24,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -33,11 +32,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 using System.Timers;
 using GSF.Annotations;
 using GSF.Collections;
 using GSF.IO;
+using GSF.Threading;
 using GSF.Units;
 using Timer = System.Timers.Timer;
 
@@ -114,8 +113,9 @@ namespace GSF.TimeSeries.Adapters
         private int m_processingInterval;
         private Timer m_monitorTimer;
         private bool m_monitorTimerEnabled;
-        private readonly ConcurrentQueue<T> m_initializationQueue;
-        private int m_initializationThreadCount;
+        private readonly LogicalThreadScheduler m_lifecycleThreadScheduler;
+        private readonly Dictionary<uint, LogicalThread> m_lifecycleThreads;
+        private readonly LogicalThreadLocal<T> m_activeItem;
         private bool m_enabled;
         private bool m_disposed;
 
@@ -128,7 +128,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         protected AdapterCollectionBase()
         {
-            m_name = this.GetType().Name;
+            m_name = GetType().Name;
             m_settings = new Dictionary<string, string>();
             m_startTimeConstraint = DateTime.MinValue;
             m_stopTimeConstraint = DateTime.MaxValue;
@@ -144,7 +144,17 @@ namespace GSF.TimeSeries.Adapters
             m_monitorTimer.AutoReset = true;
             m_monitorTimer.Enabled = false;
 
-            m_initializationQueue = new ConcurrentQueue<T>();
+            m_lifecycleThreadScheduler = new LogicalThreadScheduler();
+            m_lifecycleThreads = new Dictionary<uint, LogicalThread>();
+            m_activeItem = new LogicalThreadLocal<T>();
+
+            // Even on a single processor system we want a few threads such that if an
+            // adapter is taking a long time to initialize, other adapters can still be
+            // initializing in the meanwhile
+            if (m_lifecycleThreadScheduler.MaxThreadCount < 4)
+                m_lifecycleThreadScheduler.MaxThreadCount = 4;
+
+            m_lifecycleThreadScheduler.UnhandledException += (sender, args) => OnProcessException(args.Argument);
         }
 
         /// <summary>
@@ -217,7 +227,7 @@ namespace GSF.TimeSeries.Adapters
             {
                 m_connectionString = value;
 
-                // Preparse settings upon connection string assignment
+                // Pre-parse settings upon connection string assignment
                 if (string.IsNullOrWhiteSpace(m_connectionString))
                     m_settings = new Dictionary<string, string>();
                 else
@@ -257,7 +267,7 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets specific data member (e.g., table name) in <see cref="DataSource"/> used to <see cref="Initialize"/> this <see cref="AdapterCollectionBase{T}"/>.
+        /// Gets or sets specific data member (e.g., table name) in <see cref="DataSource"/> used to <see cref="Initialize()"/> this <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>
         /// <remarks>
         /// Table name specified in <see cref="DataMember"/> from <see cref="DataSource"/> is expected
@@ -278,7 +288,7 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets the default adapter time that represents the maximum time system will wait during <see cref="Start"/> for initialization.
+        /// Gets or sets the default adapter time that represents the maximum time system will wait during <see cref="Start()"/> for initialization.
         /// </summary>
         /// <remarks>
         /// Set to <see cref="System.Threading.Timeout.Infinite"/> to wait indefinitely.
@@ -602,6 +612,17 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
+        /// Gets a flag that indicates whether the object has been disposed.
+        /// </summary>
+        public bool IsDisposed
+        {
+            get
+            {
+                return m_disposed;
+            }
+        }
+
+        /// <summary>
         /// Gets a value indicating whether the <see cref="AdapterCollectionBase{T}"/> is read-only.
         /// </summary>
         public virtual bool IsReadOnly
@@ -661,7 +682,7 @@ namespace GSF.TimeSeries.Adapters
             get
             {
                 StringBuilder status = new StringBuilder();
-                DataSet dataSource = this.DataSource;
+                DataSet dataSource = DataSource;
 
                 // Show collection status
                 status.AppendFormat("  Total adapter components: {0}", Count);
@@ -743,7 +764,7 @@ namespace GSF.TimeSeries.Adapters
                     {
                         foreach (T item in this)
                         {
-                            IProvideStatus statusProvider = item as IProvideStatus;
+                            IProvideStatus statusProvider = item;
 
                             if (statusProvider != null)
                             {
@@ -884,7 +905,7 @@ namespace GSF.TimeSeries.Adapters
         public virtual bool TryCreateAdapter(DataRow adapterRow, out T adapter)
         {
             if ((object)adapterRow == null)
-                throw new NullReferenceException(string.Format("Cannot initialize from null adapter DataRow"));
+                throw new NullReferenceException("Cannot initialize from null adapter DataRow");
 
             Assembly assembly;
             string name = "", assemblyName = "", typeName = "", connectionString, setting;
@@ -1034,9 +1055,6 @@ namespace GSF.TimeSeries.Adapters
 
                                 if (oldAdapter.ID == id)
                                 {
-                                    // Stop old item
-                                    oldAdapter.Stop();
-
                                     // Dispose old item, initialize new item
                                     this[i] = newAdapter;
 
@@ -1066,6 +1084,8 @@ namespace GSF.TimeSeries.Adapters
         [AdapterCommand("Starts, or restarts, each adapter in the collection.", "Administrator", "Editor")]
         public virtual void Start()
         {
+            LogicalThread lifecycleThread;
+
             // Make sure we are stopped (e.g., disconnected) before attempting to start (e.g., connect)
             if (!m_enabled)
             {
@@ -1078,7 +1098,15 @@ namespace GSF.TimeSeries.Adapters
                     foreach (T item in this)
                     {
                         if (item.Initialized && item.AutoStart && !item.Enabled)
-                            item.Start();
+                        {
+                            // Create local reference to the foreach
+                            // variable to be accessed in the lambda function
+                            T itemRef = item;
+
+                            // Push start command to the lifecycle thread for the adapter
+                            lifecycleThread = m_lifecycleThreads.GetOrAdd(item.ID, id => m_lifecycleThreadScheduler.CreateThread());
+                            lifecycleThread.Push(() => Start(itemRef));
+                        }
                     }
                 }
 
@@ -1094,6 +1122,8 @@ namespace GSF.TimeSeries.Adapters
         [AdapterCommand("Stops each adapter in the collection.", "Administrator", "Editor")]
         public virtual void Stop()
         {
+            LogicalThread lifecycleThread;
+
             if (m_enabled)
             {
                 m_enabled = false;
@@ -1103,7 +1133,15 @@ namespace GSF.TimeSeries.Adapters
                     foreach (T item in this)
                     {
                         if (item.Initialized && item.Enabled)
-                            item.Stop();
+                        {
+                            // Create local reference to the foreach
+                            // variable to be accessed in the lambda function
+                            T itemRef = item;
+
+                            // Push stop command to the lifecycle thread for the adapter
+                            lifecycleThread = m_lifecycleThreads.GetOrAdd(item.ID, id => m_lifecycleThreadScheduler.CreateThread());
+                            lifecycleThread.Push(() => Stop(itemRef));
+                        }
                     }
                 }
 
@@ -1318,9 +1356,7 @@ namespace GSF.TimeSeries.Adapters
             lock (this)
             {
                 foreach (T item in this)
-                {
                     DisposeItem(item);
-                }
 
                 base.ClearItems();
             }
@@ -1383,6 +1419,8 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         protected virtual void InitializeItem(T item)
         {
+            LogicalThread lifecycleThread;
+
             if ((object)item != null)
             {
                 // Wire up events
@@ -1399,22 +1437,13 @@ namespace GSF.TimeSeries.Adapters
                     // its own thread so it can take needed amount of time
                     if (AutoInitialize)
                     {
-                        m_initializationQueue.Enqueue(item);
+                        lifecycleThread = GetLifecycleThread(item);
 
-                        lock (m_initializationQueue)
+                        lifecycleThread.Push(() =>
                         {
-                            // Even on a single processor system we want a few threads such that if an
-                            // adapter is taking a long time to initialize, other adapters can still be
-                            // initializing in the meanwhile
-                            if (m_initializationThreadCount < Math.Max(4, Environment.ProcessorCount))
-                            {
-                                m_initializationThreadCount++;
-
-                                Thread itemThread = new Thread(InitializeQueuedItems);
-                                itemThread.IsBackground = true;
-                                itemThread.Start();
-                            }
-                        }
+                            m_activeItem.Value = item;
+                            LogicalThread.CurrentThread.Push(() => Initialize(item));
+                        });
                     }
                 }
                 catch (Exception ex)
@@ -1426,41 +1455,31 @@ namespace GSF.TimeSeries.Adapters
             }
         }
 
-        private void InitializeQueuedItems()
+        /// <summary>
+        /// Un-wires events and disposes of <see cref="IAdapter"/> implementation.
+        /// </summary>
+        /// <param name="item"><see cref="IAdapter"/> to dispose.</param>
+        /// <remarks>
+        /// Derived classes should override if more events are defined.
+        /// </remarks>
+        protected virtual void DisposeItem(T item)
         {
-            T adapter;
+            LogicalThread lifecycleThread;
 
-            // Loop until there are no more items to process
-            while (true)
+            if ((object)item != null)
             {
-                // Attempt to dequeue an item and handle initialization/start
-                // procedure on this thread
-                if (m_initializationQueue.TryDequeue(out adapter))
-                    InitializeAndStartItem(adapter);
-
-                // We carefully control thread count in critical section
-                if (Monitor.TryEnter(m_initializationQueue))
-                {
-                    try
-                    {
-                        if (m_initializationQueue.IsEmpty)
-                        {
-                            m_initializationThreadCount--;
-                            break;
-                        }
-                    }
-                    finally
-                    {
-                        Monitor.Exit(m_initializationQueue);
-                    }
-                }
+                lifecycleThread = GetLifecycleThread(item);
+                lifecycleThread.Push(() => Dispose(item));
             }
         }
 
-        // Handle item initialization and startup
-        private void InitializeAndStartItem(T item)
+        // Handle item initialization
+        private void Initialize(T item)
         {
             Timer initializationTimeoutTimer = null;
+
+            if (m_activeItem.Value != item)
+                return;
 
             try
             {
@@ -1483,7 +1502,7 @@ namespace GSF.TimeSeries.Adapters
                             OnStatusMessage(MessageFormat, item.Name, item.InitializationTimeout / 1000.0);
                         };
 
-                        initializationTimeoutTimer.AutoReset = false;
+                        initializationTimeoutTimer.AutoReset = true;
                         initializationTimeoutTimer.Start();
                     }
 
@@ -1495,25 +1514,32 @@ namespace GSF.TimeSeries.Adapters
                         initializationTimeoutTimer.Stop();
                 }
 
-                try
+                // If the item is set to auto-start and not already started, start it now
+                if (item.AutoStart && !item.Enabled)
                 {
-                    // If the item is set to auto-start and not already started, start it now
-                    if (item.AutoStart && !item.Enabled)
-                        item.Start();
+                    LogicalThread.CurrentThread.Push(() =>
+                    {
+                        Start(item);
+
+                        // Set item to its final initialized state so that
+                        // start and stop commands may be issued to the adapter
+                        item.Initialized = true;
+
+                        // If input measurement keys were not updated during initialize of the adapter,
+                        // make sure to notify routing tables that adapter is ready for broadcast
+                        OnInputMeasurementKeysUpdated();
+                    });
                 }
-                catch (Exception ex)
+                else
                 {
-                    // We report any errors encountered during startup...
-                    OnProcessException(new InvalidOperationException(string.Format("Failed to start adapter {0}: {1}", item.Name, ex.Message), ex));
+                    // Set item to its final initialized state so that
+                    // start and stop commands may be issued to the adapter
+                    item.Initialized = true;
+
+                    // If input measurement keys were not updated during initialize of the adapter,
+                    // make sure to notify routing tables that adapter is ready for broadcast
+                    OnInputMeasurementKeysUpdated();
                 }
-
-                // Set item to its final initialized state so that
-                // start and stop commands may be issued to the adapter
-                item.Initialized = true;
-
-                // If input measurement keys were not updated during initialize of the adapter,
-                // make sure to notify routing tables that adapter is ready for broadcast
-                OnInputMeasurementKeysUpdated();
             }
             catch (Exception ex)
             {
@@ -1527,28 +1553,58 @@ namespace GSF.TimeSeries.Adapters
             }
         }
 
-        /// <summary>
-        /// Unwires events and disposes of <see cref="IAdapter"/> implementation.
-        /// </summary>
-        /// <param name="item"><see cref="IAdapter"/> to dispose.</param>
-        /// <remarks>
-        /// Derived classes should override if more events are defined.
-        /// </remarks>
-        protected virtual void DisposeItem(T item)
+        // Handle item startup
+        private void Start(T item)
         {
-            if ((object)item != null)
-            {
-                // Un-wire events
-                item.StatusMessage -= item_StatusMessage;
-                item.ProcessException -= item_ProcessException;
-                item.InputMeasurementKeysUpdated -= item_InputMeasurementKeysUpdated;
-                item.OutputMeasurementsUpdated -= item_OutputMeasurementsUpdated;
-                item.ConfigurationChanged -= item_ConfigurationChanged;
+            if (m_activeItem.Value != item)
+                return;
 
-                // Dispose of item, then un-wire disposed event
-                item.Dispose();
-                item.Disposed -= item_Disposed;
+            try
+            {
+                item.Start();
             }
+            catch (Exception ex)
+            {
+                // We report any errors encountered during startup...
+                OnProcessException(new InvalidOperationException(string.Format("Failed to start adapter {0}: {1}", item.Name, ex.Message), ex));
+            }
+        }
+
+        // Handle item stop
+        private void Stop(T item)
+        {
+            if (m_activeItem.Value != item)
+                return;
+
+            if (item.Initialized && item.Enabled)
+                item.Stop();
+        }
+
+        // Handles item disposal
+        private void Dispose(T item)
+        {
+            // Stop item, then un-wire events
+            item.Stop();
+            item.StatusMessage -= item_StatusMessage;
+            item.ProcessException -= item_ProcessException;
+            item.InputMeasurementKeysUpdated -= item_InputMeasurementKeysUpdated;
+            item.OutputMeasurementsUpdated -= item_OutputMeasurementsUpdated;
+            item.ConfigurationChanged -= item_ConfigurationChanged;
+
+            // Dispose of item, then un-wire disposed event
+            item.Dispose();
+            item.Disposed -= item_Disposed;
+        }
+
+        // Gets the lifecycle thread for the given item
+        private LogicalThread GetLifecycleThread(T item)
+        {
+            return m_lifecycleThreads.GetOrAdd(item.ID, id =>
+            {
+                LogicalThread thread = m_lifecycleThreadScheduler.CreateThread();
+                thread.UnhandledException += (sender, args) => item_ProcessException(item, args);
+                return thread;
+            });
         }
 
         // Raise status message event on behalf of each item in collection
@@ -1598,7 +1654,7 @@ namespace GSF.TimeSeries.Adapters
         {
             StringBuilder status = new StringBuilder();
             Ticks currentTime, totalProcessTime;
-            long totalNew, processedMeasurements = this.ProcessedMeasurements;
+            long totalNew, processedMeasurements = ProcessedMeasurements;
 
             // Calculate time since last call
             currentTime = DateTime.UtcNow.Ticks;
@@ -1705,7 +1761,7 @@ namespace GSF.TimeSeries.Adapters
         {
             lock (this)
             {
-                return this.IndexOf((T)item);
+                return IndexOf((T)item);
             }
         }
 
@@ -1713,7 +1769,7 @@ namespace GSF.TimeSeries.Adapters
         {
             lock (this)
             {
-                this.Insert(index, (T)item);
+                Insert(index, (T)item);
             }
         }
 

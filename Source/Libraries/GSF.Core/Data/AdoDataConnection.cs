@@ -32,6 +32,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using GSF.Annotations;
@@ -291,6 +292,7 @@ namespace GSF.Data
             if (!typeof(IDbDataAdapter).IsAssignableFrom(adapterType))
                 throw new ArgumentException("Adapter type must implement the IDbDataAdapter interface", "adapterType");
 
+            m_connection = connection;
             m_connectionString = connection.ConnectionString;
             m_connectionType = connection.GetType();
             m_adapterType = adapterType;
@@ -499,6 +501,67 @@ namespace GSF.Data
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Executes the given SQL script using <see cref="Connection"/>.
+        /// </summary>
+        /// <param name="scriptPath">The path to the SQL script.</param>
+        public void ExecuteScript(string scriptPath)
+        {
+            using (TextReader scriptReader = File.OpenText(scriptPath))
+            {
+                ExecuteScript(scriptReader);
+            }
+        }
+
+        /// <summary>
+        /// Executes the given SQL script using <see cref="Connection"/>.
+        /// </summary>
+        /// <param name="scriptReader">The reader used to extract SQL statements to be executed.</param>
+        public void ExecuteScript(TextReader scriptReader)
+        {
+            switch (m_databaseType)
+            {
+                case DatabaseType.SQLServer:
+                    // For the standard way to execute a TSQL script, refer to the following.
+                    //
+                    // http://stackoverflow.com/questions/650098/how-to-execute-an-sql-script-file-using-c-sharp
+                    //
+                    // This solution was not used here because useLegacyV2RuntimeActivationPolicy
+                    // needs to be added to the app.config file for it to work. This is not
+                    // ideal for a core library since it has no control over an application's
+                    // config, and it can make no assertion about the flag's suitability to the
+                    // application. For more information, refer to the following.
+                    //
+                    // http://web.archive.org/web/20130128072944/http://www.marklio.com/marklio/PermaLink,guid,ecc34c3c-be44-4422-86b7-900900e451f9.aspx
+                    m_connection.ExecuteTSQLScript(scriptReader);
+                    break;
+
+                case DatabaseType.Oracle:
+                    m_connection.ExecuteOracleScript(scriptReader);
+                    break;
+
+                case DatabaseType.MySQL:
+                    Type mySqlScriptType = m_connection.GetType().Assembly.GetType("MySql.Data.MySqlClient.MySqlScript");
+
+                    if ((object)mySqlScriptType != null)
+                    {
+                        object executor = Activator.CreateInstance(mySqlScriptType, m_connection, scriptReader.ReadToEnd());
+                        MethodInfo executeMethod = executor.GetType().GetMethod("Execute");
+                        executeMethod.Invoke(executor, null);
+                    }
+                    else
+                    {
+                        m_connection.ExecuteMySQLScript(scriptReader);
+                    }
+
+                    break;
+
+                default:
+                    m_connection.ExecuteNonQuery(scriptReader.ReadToEnd());
+                    break;
+            }
+        }
 
         /// <summary>
         /// Executes the SQL statement using <see cref="Connection"/>, and returns the number of rows affected.
@@ -768,7 +831,7 @@ namespace GSF.Data
                 }
                 finally
                 {
-                    m_disposed = true;  // Prevent duplicate dispose.
+                    m_disposed = true; // Prevent duplicate dispose.
                 }
             }
         }
@@ -865,9 +928,7 @@ namespace GSF.Data
 
         private string GenericParameterizedQueryString(string sqlFormat, object[] parameters)
         {
-            string[] parameterNames = parameters
-                .Select((parameter, index) => "p" + index)
-                .ToArray();
+            string[] parameterNames = parameters.Select((parameter, index) => "p" + index).ToArray();
 
             return ParameterizedQueryString(sqlFormat, parameterNames);
         }

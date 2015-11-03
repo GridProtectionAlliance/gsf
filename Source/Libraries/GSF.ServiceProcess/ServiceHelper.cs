@@ -846,6 +846,20 @@ namespace GSF.ServiceProcess
         }
 
         /// <summary>
+        /// Gets a flag that indicates whether the object has been disposed.
+        /// </summary>
+        [Browsable(false),
+        EditorBrowsable(EditorBrowsableState.Never),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool IsDisposed
+        {
+            get
+            {
+                return m_disposed;
+            }
+        }
+
+        /// <summary>
         /// Gets a list of <see cref="ServiceProcess"/> defined in the <see cref="ServiceHelper"/>.
         /// </summary>
         [Browsable(false),

@@ -416,6 +416,19 @@ namespace GSF.IO
         }
 
         /// <summary>
+        /// Gets a flag that indicates whether the object has been disposed.
+        /// </summary>
+        [Browsable(false),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool IsDisposed
+        {
+            get
+            {
+                return m_disposed;
+            }
+        }
+
+        /// <summary>
         /// Gets a boolean value that indicates whether the <see cref="LogFile"/> is open.
         /// </summary>
         [Browsable(false)]

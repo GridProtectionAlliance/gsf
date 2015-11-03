@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using GSF.PQDIF.Physical;
@@ -61,6 +62,17 @@ namespace GSF.PQDIF.Logical
         #region [ Properties ]
 
         /// <summary>
+        /// Gets the physical structure of the data source record.
+        /// </summary>
+        public Record PhysicalRecord
+        {
+            get
+            {
+                return m_physicalRecord;
+            }
+        }
+
+        /// <summary>
         /// Gets the ID of the vendor of the data source.
         /// </summary>
         public Guid VendorID
@@ -73,6 +85,23 @@ namespace GSF.PQDIF.Logical
                     return Vendor.None;
 
                 return vendorIDElement.GetGuid();
+            }
+            set
+            {
+                ScalarElement vendorIDElement = m_physicalRecord.Body.Collection.GetScalarByTag(VendorIDTag);
+
+                if ((object)vendorIDElement == null)
+                {
+                    vendorIDElement = new ScalarElement()
+                    {
+                        TagOfElement = VendorIDTag,
+                        TypeOfValue = PhysicalType.Guid
+                    };
+
+                    m_physicalRecord.Body.Collection.AddElement(vendorIDElement);
+                }
+
+                vendorIDElement.SetGuid(value);
             }
         }
 
@@ -90,6 +119,23 @@ namespace GSF.PQDIF.Logical
 
                 return equipmentIDElement.GetGuid();
             }
+            set
+            {
+                ScalarElement equipmentIDElement = m_physicalRecord.Body.Collection.GetScalarByTag(EquipmentIDTag);
+
+                if ((object)equipmentIDElement == null)
+                {
+                    equipmentIDElement = new ScalarElement()
+                    {
+                        TagOfElement = EquipmentIDTag,
+                        TypeOfValue = PhysicalType.Guid
+                    };
+
+                    m_physicalRecord.Body.Collection.AddElement(equipmentIDElement);
+                }
+
+                equipmentIDElement.SetGuid(value);
+            }
         }
 
         /// <summary>
@@ -101,6 +147,24 @@ namespace GSF.PQDIF.Logical
             {
                 VectorElement dataSourceNameElement = m_physicalRecord.Body.Collection.GetVectorByTag(DataSourceNameTag);
                 return Encoding.ASCII.GetString(dataSourceNameElement.GetValues()).Trim((char)0);
+            }
+            set
+            {
+                byte[] bytes = Encoding.ASCII.GetBytes(value + (char)0);
+                VectorElement dataSourceNameElement = m_physicalRecord.Body.Collection.GetVectorByTag(DataSourceNameTag);
+
+                if ((object)dataSourceNameElement == null)
+                {
+                    dataSourceNameElement = new VectorElement()
+                    {
+                        TagOfElement = DataSourceNameTag,
+                        TypeOfValue = PhysicalType.Char1
+                    };
+
+                    m_physicalRecord.Body.Collection.AddElement(dataSourceNameElement);
+                }
+
+                dataSourceNameElement.SetValues(bytes, 0);
             }
         }
 
@@ -118,6 +182,24 @@ namespace GSF.PQDIF.Logical
 
                 return dataSourceCoordinatesElement.GetUInt4(0);
             }
+            set
+            {
+                VectorElement dataSourceCoordinatesElement = m_physicalRecord.Body.Collection.GetVectorByTag(DataSourceCoordinatesTag);
+
+                if ((object)dataSourceCoordinatesElement == null)
+                {
+                    dataSourceCoordinatesElement = new VectorElement()
+                    {
+                        Size = 2,
+                        TagOfElement = DataSourceCoordinatesTag,
+                        TypeOfValue = PhysicalType.UnsignedInteger4
+                    };
+
+                    m_physicalRecord.Body.Collection.AddElement(dataSourceCoordinatesElement);
+                }
+
+                dataSourceCoordinatesElement.SetUInt4(0, value);
+            }
         }
 
         /// <summary>
@@ -133,6 +215,24 @@ namespace GSF.PQDIF.Logical
                     return uint.MaxValue;
 
                 return dataSourceCoordinatesElement.GetUInt4(1);
+            }
+            set
+            {
+                VectorElement dataSourceCoordinatesElement = m_physicalRecord.Body.Collection.GetVectorByTag(DataSourceCoordinatesTag);
+
+                if ((object)dataSourceCoordinatesElement == null)
+                {
+                    dataSourceCoordinatesElement = new VectorElement()
+                    {
+                        Size = 2,
+                        TagOfElement = DataSourceCoordinatesTag,
+                        TypeOfValue = PhysicalType.UnsignedInteger4
+                    };
+
+                    m_physicalRecord.Body.Collection.AddElement(dataSourceCoordinatesElement);
+                }
+
+                dataSourceCoordinatesElement.SetUInt4(1, value);
             }
         }
 
@@ -150,6 +250,68 @@ namespace GSF.PQDIF.Logical
                     .Select(collection => new ChannelDefinition(collection, this))
                     .ToList();
             }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Adds a new channel definition to the collection
+        /// of channel definitions in this data source record.
+        /// </summary>
+        public ChannelDefinition AddNewChannelDefinition()
+        {
+            CollectionElement channelDefinitionsElement = m_physicalRecord.Body.Collection.GetCollectionByTag(ChannelDefinitionsTag);
+            CollectionElement channelDefinitionElement = new CollectionElement() { TagOfElement = OneChannelDefinitionTag };
+            ChannelDefinition channelDefinition = new ChannelDefinition(channelDefinitionElement, this);
+
+            if ((object)channelDefinitionsElement == null)
+            {
+                channelDefinitionsElement = new CollectionElement()
+                {
+                    TagOfElement = ChannelDefinitionsTag
+                };
+
+                m_physicalRecord.Body.Collection.AddElement(channelDefinitionsElement);
+            }
+
+            channelDefinitionsElement.AddElement(channelDefinitionElement);
+
+            return channelDefinition;
+        }
+
+        /// <summary>
+        /// Removes the given channel definition from the collection of channel definitions.
+        /// </summary>
+        /// <param name="channelDefinition">The channel definition to be removed.</param>
+        public void Remove(ChannelDefinition channelDefinition)
+        {
+            CollectionElement channelDefinitionsElement = m_physicalRecord.Body.Collection.GetCollectionByTag(ChannelDefinitionsTag);
+            List<CollectionElement> channelDefinitionElements;
+            ChannelDefinition definition;
+
+            if ((object)channelDefinitionsElement == null)
+                return;
+
+            channelDefinitionElements = channelDefinitionsElement.GetElementsByTag(OneChannelDefinitionTag).Cast<CollectionElement>().ToList();
+
+            foreach (CollectionElement channelDefinitionElement in channelDefinitionElements)
+            {
+                definition = new ChannelDefinition(channelDefinitionElement, this);
+
+                if (Equals(channelDefinition, definition))
+                    channelDefinitionsElement.RemoveElement(channelDefinitionElement);
+            }
+        }
+
+        /// <summary>
+        /// Removes the element identified by the given tag from the record.
+        /// </summary>
+        /// <param name="tag">The tag of the element to be removed.</param>
+        public void RemoveElement(Guid tag)
+        {
+            m_physicalRecord.Body.Collection.RemoveElementsByTag(tag);
         }
 
         #endregion
@@ -214,6 +376,5 @@ namespace GSF.PQDIF.Logical
         }
 
         #endregion
-        
     }
 }

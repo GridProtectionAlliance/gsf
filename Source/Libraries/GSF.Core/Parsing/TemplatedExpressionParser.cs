@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  06/13/2014 - J. Ritchie Carroll
 //       Generated original version of source code.
+//  09/26/2015 - J. Ritchie Carroll
+//       Added advanced expression evaluation option, i.e., eval{expression}
 //
 //******************************************************************************************************
 
@@ -28,12 +30,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using ExpressionEvaluator;
 using ParsedExpression = System.Tuple<string, bool, string>;
+using ParsedEvaluation = System.Tuple<string, string>;
 
 namespace GSF.Parsing
 {
     /// <summary>
-    /// Represents a template based token substitution parser that supports binary expressions.
+    /// Represents a template based token substitution parser that supports binary and advanced expressions.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -43,6 +47,12 @@ namespace GSF.Parsing
     /// </code>
     /// then replace the tokens with actual values and properly evaluate the expressions.
     /// Example results could look like: GPA_SHELBY-PA1:IPHA and GPA_SHELBY:FREQ
+    /// </para>
+    /// <para>
+    /// Parser also supports more complex C# style expressions using the "eval{}" function, e.g.:
+    /// <code>
+    /// eval{'{CompanyAcronym}'.Substring(0,3)}_{DeviceAcronym}eval{'[?{SignalType.Source}=Phasor[-{SignalType.Suffix}]]'.Length}
+    /// </code>
     /// </para>
     /// </remarks>
     public class TemplatedExpressionParser
@@ -67,9 +77,11 @@ namespace GSF.Parsing
 
         // Constants
         private const string ExpressionParser = @"^[^\{0}\{1}]*(((?<Expressions>(?'Open'\{0})[^\{0}\{1}]*))+((?'Close-Open'\{1})[^\{0}\{1}]*)+)*(?(Open)(?!))$";
+        private const string EvaluationParser = @"eval\{0}([^\]]+)\{1}";
 
         // Fields
         private readonly Regex m_expressionParser;
+        private readonly Regex m_evaluationParser;
         private readonly string[] m_escapedReservedSymbols;
         private readonly string[] m_encodedReservedSymbols;
         private readonly char m_startTokenDelimiter;
@@ -110,15 +122,16 @@ namespace GSF.Parsing
             // Define a regular expression that can parse nested binary expressions
             m_expressionParser = new Regex(string.Format(ExpressionParser, startExpressionDelimiter, endExpressionDelimiter), RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
+            // Define a regular expression that will find each "eval[]" expression
+            m_evaluationParser = new Regex(string.Format(EvaluationParser, startTokenDelimiter, endTokenDelimiter), RegexOptions.Compiled);
+
             // Reserved symbols include all expression operators and delimiters (hashset keeps symbol list unique)
             HashSet<string> escapedReservedSymbols = new HashSet<string>(new[] { "\\\\", "\\<", "\\>", "\\=", "\\!", "\\" + startTokenDelimiter, "\\" + endTokenDelimiter, "\\" + startExpressionDelimiter, "\\" + endExpressionDelimiter });
             m_escapedReservedSymbols = escapedReservedSymbols.ToArray();
             m_encodedReservedSymbols = new string[m_escapedReservedSymbols.Length];
 
             for (int i = 0; i < m_encodedReservedSymbols.Length; i++)
-            {
                 m_encodedReservedSymbols[i] = m_escapedReservedSymbols[i][1].RegexEncode();
-            }
 
             m_startTokenDelimiter = startTokenDelimiter;
             m_endTokenDelimiter = endTokenDelimiter;
@@ -147,9 +160,7 @@ namespace GSF.Parsing
                 if (!string.IsNullOrEmpty(m_templatedExpression))
                 {
                     for (int i = 0; i < m_escapedReservedSymbols.Length; i++)
-                    {
                         m_templatedExpression = m_templatedExpression.Replace(m_escapedReservedSymbols[i], m_encodedReservedSymbols[i]);
-                    }
                 }
             }
         }
@@ -244,6 +255,14 @@ namespace GSF.Parsing
         /// the expression will be numerically evaluated otherwise expression will be a culture-invariant string comparison. Nested expressions
         /// are evaluated as cumulative AND operators. There is no defined nesting limit.
         /// </para>
+        /// <para>
+        /// Advanced expressions can be parsed using the eval function, e.g., eval{1 + 2}. Eval function expression is delimited by the currently
+        /// defined token delimiters, { and } by default. The evaluation engine deals with numbers and strings. The typing of numeric literals
+        /// follow C# standards, suffixes such as d, f and m may be used to explicitly specify the numeric type. If no numeric suffix is provided,
+        /// the default type of a numeric literal is assumed to be <see cref="int"/>. String literals should be specified using single quotes
+        /// instead of double quotes, this includes substitution parameters, e.g., <c>eval{'{DeviceAcronym}'.Length + 1}</c>. Advanced evaluation
+        /// expressions using the eval function are always parsed after common expressions. Eval functions cannot be nested.
+        /// </para>
         /// </remarks>
         public string Execute(IDictionary<string, string> substitutions, bool ignoreCase = true, bool evaluateExpressions = true)
         {
@@ -263,21 +282,24 @@ namespace GSF.Parsing
 
             if (evaluateExpressions)
             {
-                // Parse expressions
+                // Parse common expressions, i.e., [?expression[result]]
                 List<ParsedExpression> parsedExpressions = ParseExpressions(result, ignoreCase);
 
-                // Execute expression replacements
+                // Execute common expression replacements
                 foreach (ParsedExpression parsedExpression in parsedExpressions)
-                {
                     result = result.Replace(parsedExpression.Item1, parsedExpression.Item2 ? parsedExpression.Item3 : "");
-                }
+
+                // Parse evaluation expressions, i.e., eval{expression}
+                List<ParsedEvaluation> parsedEvaluations = ParseEvaluations(result);
+
+                // Execute evaluation expression replacements
+                foreach (ParsedEvaluation parsedEvaluation in parsedEvaluations)
+                    result = result.Replace(parsedEvaluation.Item1, parsedEvaluation.Item2);
             }
 
             // Decode any reserved symbols that were escaped in original templated expression
             for (int i = 0; i < m_escapedReservedSymbols.Length; i++)
-            {
                 result = result.Replace(m_encodedReservedSymbols[i], m_escapedReservedSymbols[i].Substring(1));
-            }
 
             return result;
         }
@@ -426,7 +448,7 @@ namespace GSF.Parsing
                     }
                     else if (double.TryParse(operands[0], out leftF) && double.TryParse(operands[1], out rightF))
                     {
-                        // Both operands can be compared as integers
+                        // Both operands can be compared as doubles
                         leftOperand = new CodePrimitiveExpression(leftF);
                         rightOperand = new CodePrimitiveExpression(rightF);
                         expressionType = TypeCode.Double;
@@ -463,6 +485,28 @@ namespace GSF.Parsing
 
             expressionType = TypeCode.Object;
             return null;
+        }
+
+        // Parses expressions of the form "eval{expression}". Expressions cannot be nested.
+        // Returns list of complete expressions (used as base replacement text) and evaluation results
+        private List<ParsedEvaluation> ParseEvaluations(string fieldReplacedTemplatedExpression)
+        {
+            List<ParsedEvaluation> parsedEvaluations = new List<ParsedEvaluation>();
+
+            Match match = m_evaluationParser.Match(fieldReplacedTemplatedExpression);
+
+            if (match.Success)
+            {
+                foreach (Capture capture in match.Captures)
+                {
+                    CompiledExpression expression = new CompiledExpression(capture.Value);
+                    string source = string.Format("eval{0}{1}{2}", m_startTokenDelimiter, capture.Value, m_endTokenDelimiter);
+                    string result = expression.Eval().ToString();
+                    parsedEvaluations.Add(new ParsedEvaluation(source, result));
+                }
+            }
+
+            return parsedEvaluations;
         }
 
         #endregion

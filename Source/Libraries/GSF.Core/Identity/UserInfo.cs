@@ -308,6 +308,17 @@ namespace GSF.Identity
         }
 
         /// <summary>
+        /// Gets a flag that indicates whether the object has been disposed.
+        /// </summary>
+        bool ISupportLifecycle.IsDisposed
+        {
+            get
+            {
+                return m_disposed;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets a boolean value that indicates whether the settings of <see cref="UserInfo"/> object are 
         /// to be saved to the config file.
         /// </summary>

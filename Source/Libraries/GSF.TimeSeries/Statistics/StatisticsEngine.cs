@@ -64,6 +64,7 @@ namespace GSF.TimeSeries.Statistics
             public string StatisticMeasurementNameFormat;
 
             public List<DataRow> StatisticMeasurements;
+            public bool HasUpdatedStatisticMeasurements;
         }
 
         // Represents a signal reference
@@ -719,7 +720,7 @@ namespace GSF.TimeSeries.Statistics
         private void UpdateStatisticMeasurements()
         {
             const string StatisticSelectFormat = "SELECT Source, SignalIndex, Arguments, Description FROM Statistic WHERE Enabled <> 0";
-            const string StatisticMeasurementSelectFormat = "SELECT SignalReference FROM ActiveMeasurement WHERE SignalReference IN ({0})";
+            const string StatisticMeasurementSelectFormat = "SELECT SignalReference FROM Measurement WHERE SignalReference IN ({0})";
             const string StatisticMeasurementInsertFormat = "INSERT INTO Measurement(HistorianID, DeviceID, PointTag, SignalTypeID, SignalReference, Description, Enabled) VALUES({0}, {1}, {2}, {3}, {4}, {5}, 1)";
 
             StatisticSource[] sources;
@@ -757,6 +758,12 @@ namespace GSF.TimeSeries.Statistics
                 {
                     List<string> signalReferences;
                     string args;
+
+                    // If statistic measurements have already been updated for this source,
+                    // do not attempt to update them again. This helps to prevent race conditions
+                    // between configuration changes and statistics engine registration
+                    if (source.HasUpdatedStatisticMeasurements)
+                        continue;
 
                     // If no statistics exist for this category,
                     // there are no statistics that can be created for this source
@@ -804,6 +811,8 @@ namespace GSF.TimeSeries.Statistics
                         helper.ExecuteNonQuery(StatisticMeasurementInsertFormat, helper.HistorianID, helper.DeviceID, helper.PointTag, helper.SignalTypeID, helper.SignalReference, helper.Description);
                         configurationChanged = true;
                     }
+
+                    source.HasUpdatedStatisticMeasurements = true;
                 }
             }
 
@@ -1194,13 +1203,18 @@ namespace GSF.TimeSeries.Statistics
                 if (StatisticSources.Any(registeredSource => registeredSource.SourceReference.TryGetTarget(out target) && target == source))
                     throw new InvalidOperationException(string.Format("Unable to register {0} as statistic source because it is already registered.", sourceName));
 
+                adapter = source as IAdapter;
+
+                if ((object)adapter != null)
+                {
+                    adapter.Disposed += (sender, args) => Unregister(sender);
+
+                    if (adapter.IsDisposed)
+                        return;
+                }
+
                 StatisticSources.Add(sourceInfo);
             }
-
-            adapter = source as IAdapter;
-
-            if ((object)adapter != null)
-                adapter.Disposed += (sender, args) => Unregister(sender);
 
             OnSourceRegistered();
         }

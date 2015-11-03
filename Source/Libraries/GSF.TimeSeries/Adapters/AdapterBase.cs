@@ -657,6 +657,17 @@ namespace GSF.TimeSeries.Adapters
             }
         }
 
+        /// <summary>
+        /// Gets a flag that indicates whether the object has been disposed.
+        /// </summary>
+        public bool IsDisposed
+        {
+            get
+            {
+                return m_disposed;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]

@@ -129,6 +129,14 @@
     <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Antlr3.Runtime, Version=3.5.0.2, Culture=neutral, PublicKeyToken=eb42632606e9261f, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\NuGet\Antlr.3.5.0.2\lib\Antlr3.Runtime.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="ExpressionEvaluator, Version=2.0.3.0, Culture=neutral, PublicKeyToken=90d9f15d622e2348, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\NuGet\ExpressionEvaluator.2.0.3.0\lib\net40\ExpressionEvaluator.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Mono.Security">
       <HintPath>..\..\Dependencies\Mono\Mono.Security.dll</HintPath>
       <Private>False</Private>
@@ -353,7 +361,9 @@
     <Compile Include="ReusableObjectPool.cs" />
     <Compile Include="Scheduling\NamespaceDoc.cs" />
     <Compile Include="Searching\AsyncSearcher.cs" />
+    <Compile Include="Security\Cryptography\CharacterGroup.cs" />
     <Compile Include="Security\Cryptography\NamespaceDoc.cs" />
+    <Compile Include="Security\Cryptography\PasswordGenerator.cs" />
     <Compile Include="Security\Cryptography\Random.cs" />
     <Compile Include="Reflection\AssemblyExtensions.cs" />
     <Compile Include="Reflection\AssemblyInfo.cs" />
@@ -372,6 +382,8 @@
     <Compile Include="Threading\InterprocessLock.cs" />
     <Compile Include="Threading\InterprocessReaderWriterLock.cs" />
     <Compile Include="Threading\ISynchronizedOperation.cs" />
+    <Compile Include="Threading\LogicalThread.cs" />
+    <Compile Include="Threading\LogicalThreadLocal.cs" />
     <Compile Include="Threading\LongSynchronizedOperation.cs" />
     <Compile Include="Threading\ManagedThread.cs" />
     <Compile Include="Threading\ManagedThreadPool.cs" />
@@ -381,6 +393,8 @@
     <Compile Include="Threading\ReaderWriterSpinLock.cs" />
     <Compile Include="Threading\ScheduledTask.cs" />
     <Compile Include="Threading\ShortSynchronizedOperation.cs" />
+    <Compile Include="Threading\LogicalThreadScheduler.cs" />
+    <Compile Include="Threading\LogicalThreadOperation.cs" />
     <Compile Include="Threading\SynchronizedOperationBase.cs" />
     <Compile Include="Threading\ThreadContainerBase.cs" />
     <Compile Include="Threading\ThreadContainerDedicated.cs" />
@@ -452,6 +466,10 @@
   <ItemGroup>
     <None Include="GSF.Core.nuspec" />
     <None Include="GSF.Core.ruleset" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="LICENSE.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
