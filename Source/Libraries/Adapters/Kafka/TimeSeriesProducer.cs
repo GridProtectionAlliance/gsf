@@ -24,10 +24,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Linq;
 using System.Text;
 using GSF;
 using GSF.Collections;
+using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using Misakai.Kafka;
@@ -49,10 +51,28 @@ namespace KafkaAdapters
         /// </summary>
         public const string DefaultTopic = "GSF";
 
+        /// <summary>
+        /// Defines the default value for the <see cref="Partitions"/> property.
+        /// </summary>
+        public const int DefaultPartitions = 1;
+
+        /// <summary>
+        /// Defines the default value for the <see cref="SerializeMetadata"/> property.
+        /// </summary>
+        public const bool DefaultSerializeMetadata = true;
+
+        /// <summary>
+        /// Defines the default value for the <see cref="CacheMetadataLocally"/> property.
+        /// </summary>
+        public const bool DefaultCacheMetadataLocally = false;
+
         // Fields
         private Uri[] m_servers;
         private BrokerRouter m_router;
         private Producer m_producer;
+        private TimeSeriesMetadata m_metadata;
+        private long m_metadataUpdateCount;
+        private LongSynchronizedOperation m_cacheMetadataLocally;
 
         #endregion
 
@@ -61,7 +81,7 @@ namespace KafkaAdapters
         /// <summary>
         /// Gets or sets Kafka servers to connect to, comma separated.
         /// </summary>
-        [ConnectionStringParameter, Description("Defines comma separated list of Kakfa server URIs, e.g.: http://kafka1:9092, http://kafka2:9092")]
+        [ConnectionStringParameter, Description("Defines comma separated list of Kafka server URIs, e.g.: http://kafka1:9092, http://kafka2:9092")]
         public string Servers
         {
             get;
@@ -73,6 +93,41 @@ namespace KafkaAdapters
         /// </summary>
         [ConnectionStringParameter, Description("Defines the Kafka topic name. Defaults to \"GSF\"."), DefaultValue(DefaultTopic)]
         public string Topic
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets the Kafka metadata topic name.
+        /// </summary>
+        public string MetadataTopic => $"{Topic ?? "[undefined]"}-metadata";
+
+        /// <summary>
+        /// Gets or sets the total number of partitions used for data distribution.
+        /// </summary>
+        [ConnectionStringParameter, Description("Defines the total number of partitions defined for distribution of measurement data. The measurement key ID will be used to target a particular partition (ID % Partitions)."), DefaultValue(DefaultPartitions)]
+        public int Partitions
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if metadata should be serialized into Kafka.
+        /// </summary>
+        [ConnectionStringParameter, Description("Determines if metadata should be serialized into Kafka."), DefaultValue(DefaultSerializeMetadata)]
+        public bool SerializeMetadata
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if metadata should cached locally.
+        /// </summary>
+        [ConnectionStringParameter, Description("Determines if metadata should be cached locally."), DefaultValue(DefaultCacheMetadataLocally)]
+        public bool CacheMetadataLocally
         {
             get;
             set;
@@ -107,10 +162,26 @@ namespace KafkaAdapters
 
                 status.Append(base.Status);
                 status.AppendLine();
-                status.AppendFormat("         Kafka server URIs: {0}", (object)m_servers == null ? "Undefined" : m_servers.ToDelimitedString(", "));
+                status.AppendFormat("         Kafka server URIs: {0}", m_servers?.ToDelimitedString(", ") ?? "Undefined");
                 status.AppendLine();
-                status.AppendFormat("       Producer topic name: {0}", Topic);
+                status.AppendFormat("       Producer topic name: {0}", Topic ?? "[undefined]");
                 status.AppendLine();
+                status.AppendFormat("        Defined partitions: {0:N0}", Partitions);
+                status.AppendLine();
+                status.AppendFormat("  Caching metadata locally: {0}", CacheMetadataLocally);
+                status.AppendLine();
+                status.AppendFormat("    Metadata serialization: {0}", SerializeMetadata ? "Enabled" : "Disabled");
+                status.AppendLine();
+
+                if (SerializeMetadata)
+                {
+                    status.AppendFormat("       Metadata topic name: {0}", MetadataTopic);
+                    status.AppendLine();
+                    status.AppendFormat("          Metadata records: {0}", m_metadata?.Count.ToString("N0") ?? "Waiting for metadata...");
+                    status.AppendLine();
+                    status.AppendFormat("     Metadata update count: {0:N0}", m_metadataUpdateCount);
+                    status.AppendLine();
+                }
 
                 if ((object)m_producer != null)
                 {
@@ -121,6 +192,9 @@ namespace KafkaAdapters
                 return status.ToString();
             }
         }
+
+        // Derives meta-data version - byte value reduces context to last 256 changes to minimize message serialization size
+        private byte MetadataVersion => (byte)((m_metadata?.Version ?? 0) % byte.MaxValue);
 
         #endregion
 
@@ -135,19 +209,38 @@ namespace KafkaAdapters
 
             Dictionary<string, string> settings = Settings;
             string setting;
+            int value;
 
             // Parse required settings
-            if (!settings.TryGetValue("Servers", out setting) || string.IsNullOrWhiteSpace(setting))
-                throw new ArgumentException("Required \"servers\" setting is missing.");
+            if (!settings.TryGetValue(nameof(Servers), out setting) || string.IsNullOrWhiteSpace(setting))
+                throw new ArgumentException($"Required \"{nameof(Servers)}\" setting is missing.");
 
             Servers = setting.Trim();
             m_servers = Servers.Split(',').Select(uri => new Uri(uri)).ToArray();
 
             // Parse optional settings
-            if (settings.TryGetValue("Topic", out setting) && !string.IsNullOrWhiteSpace(setting))
+            if (settings.TryGetValue(nameof(Topic), out setting) && !string.IsNullOrWhiteSpace(setting))
                 Topic = setting.Trim();
             else
                 Topic = DefaultTopic;
+
+            if (settings.TryGetValue(nameof(Partitions), out setting) && int.TryParse(setting, out value))
+                Partitions = value;
+            else
+                Partitions = DefaultPartitions;
+
+            if (settings.TryGetValue(nameof(SerializeMetadata), out setting))
+                SerializeMetadata = setting.ParseBoolean();
+            else
+                SerializeMetadata = DefaultSerializeMetadata;
+
+            if (settings.TryGetValue(nameof(CacheMetadataLocally), out setting))
+                CacheMetadataLocally = setting.ParseBoolean();
+            else
+                CacheMetadataLocally = DefaultCacheMetadataLocally;
+
+            if (CacheMetadataLocally)
+                m_cacheMetadataLocally = new LongSynchronizedOperation(() => TimeSeriesMetadata.CacheLocally(m_metadata, MetadataTopic, OnStatusMessage)) { IsBackground = true };
         }
 
         /// <summary>
@@ -161,6 +254,7 @@ namespace KafkaAdapters
         {
             m_router = new BrokerRouter(new KafkaOptions(m_servers) { Log = new TimeSeriesLogger(OnStatusMessage, OnProcessException) });
             m_producer = new Producer(m_router);
+            MetadataRefreshOperation.RunOnceAsync();
         }
 
         /// <summary>
@@ -196,21 +290,131 @@ namespace KafkaAdapters
         }
 
         /// <summary>
+        /// Executes the metadata refresh in a synchronous fashion.
+        /// </summary>
+        protected override void ExecuteMetadataRefresh()
+        {
+            if (!Initialized || !Enabled || !SerializeMetadata)
+                return;
+
+            try
+            {
+                using (BrokerRouter router = new BrokerRouter(new KafkaOptions(m_servers) { Log = new TimeSeriesLogger(OnStatusMessage, ex => OnProcessException(new InvalidOperationException($"[{MetadataTopic}]: {ex.Message}", ex))) }))
+                {
+                    // Attempt to retrieve last known metadata record from Kafka
+                    if ((object)m_metadata == null)
+                    {
+                        try
+                        {
+                            Ticks serializationTime;
+
+                            OnStatusMessage("Reading latest time-series metadata records from Kafka...");
+
+                            m_metadata = TimeSeriesMetadata.ReadFromKafka(router, MetadataTopic, OnStatusMessage, out serializationTime);
+
+                            OnStatusMessage($"Deserialized {m_metadata.Count:N0} Kafka time-series metadata records, version {m_metadata.Version:N0}, from \"{MetadataTopic}\" serialized at {serializationTime.ToString(MetadataRecord.DateTimeFormat)}");
+                        }
+                        catch (Exception ex)
+                        {
+                            OnStatusMessage($"WARNING: Failed to read any existing Kafka time-series metadata records from topic \"{MetadataTopic}\": {ex.Message}");
+                        }
+                    }
+
+                    // Create new meta-data object based on newly loaded configuration
+                    TimeSeriesMetadata metadata = new TimeSeriesMetadata();
+
+                    try
+                    {
+                        foreach (DataRow row in DataSource.Tables["ActiveMeasurements"].AsEnumerable())
+                        {
+                            MeasurementKey key;
+
+                            if (MeasurementKey.TryParse(row.Field<string>("ID") ?? MeasurementKey.Undefined.ToString(), out key))
+                            {
+                                metadata.Records.Add(new MetadataRecord
+                                {
+                                    ID = key.ID,
+                                    Source = key.Source,
+                                    UniqueID = row.Field<Guid>("SignalID").ToString(),
+                                    PointTag = row.Field<string>("PointTag"),
+                                    Device = row.Field<string>("Device"),
+                                    Longitude = (float)row.Field<decimal>("Longitude"),
+                                    Latitude = (float)row.Field<decimal>("Latitude"),
+                                    Protocol = row.Field<string>("Protocol"),
+                                    SignalType = row.Field<string>("SignalType"),
+                                    EngineeringUnits = row.Field<string>("EngineeringUnits"),
+                                    PhasorType = row.Field<string>("PhasorType"),
+                                    Phase = row.Field<string>("Phase"),
+                                    Description = row.Field<string>("Description"),
+                                    LastUpdate = row.Field<DateTime>("UpdatedOn").ToString(MetadataRecord.DateTimeFormat)
+                                });
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        OnProcessException(new InvalidOperationException($"Failed to serialize current time-series metadata records: {ex.Message}", ex));
+                    }
+
+                    if (metadata.Count > 0)
+                    {
+                        // See if metadata has not been created yet or is different from last known Kafka record
+                        if ((object)m_metadata == null || m_metadata.CalculateChecksum() != metadata.CalculateChecksum())
+                        {
+                            // Update local metadata reference
+                            m_metadata = metadata;
+
+                            // Send updated metadata to Kafka
+                            TimeSeriesMetadata.WriteToKafka(m_metadata, router, MetadataTopic);
+
+                            // Cache metadata locally, if configured
+                            m_cacheMetadataLocally?.RunOnceAsync();
+
+                            m_metadataUpdateCount++;
+
+                            OnStatusMessage($"Updated \"{MetadataTopic}\" with {m_metadata.Count:N0} Kafka time-series metadata records...");
+                        }
+                        else
+                        {
+                            OnStatusMessage($"Latest \"{MetadataTopic}\" is up to date with current time-series metadata records...");
+                        }
+                    }
+                    else
+                    {
+                        OnStatusMessage("WARNING: No available local time-series metadata available to serialize...");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException($"Failed to update \"{MetadataTopic}\" with current time-series metadata records: {ex.Message}", ex));
+            }
+        }
+
+        /// <summary>
         /// Serializes measurements to data output stream.
         /// </summary>
         protected override async void ProcessMeasurements(IMeasurement[] measurements)
         {
-            List<Message> messages = new List<Message>(measurements.Length);
-
-            foreach (IMeasurement measurement in measurements)
+            try
             {
-                Message message = new Message { PartitionId = (int)measurement.Key.ID };
-                measurement.KakfaSerialize(message);
-                messages.Add(message);
-            }
+                List<Message> messages = new List<Message>(measurements.Length);
 
-            await m_producer.SendMessageAsync(Topic, messages);
-        }
+                foreach (IMeasurement measurement in measurements)
+                {
+                    Message message = new Message { PartitionId = (int)(measurement.Key.ID % Partitions) };
+                    measurement.KakfaSerialize(message, MetadataVersion);
+                    messages.Add(message);
+                }
+
+                await m_producer.SendMessageAsync(Topic, messages);
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException($"Exception while sending Kafka messages for topic \"{Topic}\": {ex.Message}", ex));
+                Start();
+            }
+        }        
 
         #endregion
     }
