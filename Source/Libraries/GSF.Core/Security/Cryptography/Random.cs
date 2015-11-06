@@ -39,19 +39,19 @@ namespace GSF.Security.Cryptography
     /// </summary>
     public static class Random
     {
-        private static readonly RNGCryptoServiceProvider s_randomNumberGenerator = new RNGCryptoServiceProvider();
+        private static readonly RNGCryptoServiceProvider RandomNumberGenerator = new RNGCryptoServiceProvider();
 
         /// <summary>
         /// Generates a cryptographically strong double-precision floating-point random number between zero and one.
         /// </summary>
-        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static double Number
         {
             get
             {
                 unchecked
                 {
-                    return (double)UInt32 / (double)uint.MaxValue;
+                    return UInt32 / (uint.MaxValue + 1.0D);
                 }
             }
         }
@@ -59,14 +59,14 @@ namespace GSF.Security.Cryptography
         /// <summary>
         /// Generates a cryptographically strong random decimal between zero and one.
         /// </summary>
-        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static decimal Decimal
         {
             get
             {
                 unchecked
                 {
-                    return (decimal)UInt64 / (decimal)ulong.MaxValue;
+                    return UInt64 / (ulong.MaxValue + 1.0M);
                 }
             }
         }
@@ -76,7 +76,7 @@ namespace GSF.Security.Cryptography
         /// </summary>
         /// <param name="startNumber">A <see cref="double"/> that is the low end of our range.</param>
         /// <param name="stopNumber">A <see cref="double"/> that is the high end of our range.</param>
-        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         /// <returns>A <see cref="double"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>, or an excception.</returns>
         public static double Between(double startNumber, double stopNumber)
         {
@@ -94,24 +94,24 @@ namespace GSF.Security.Cryptography
         /// <para>The length of the byte array determines how many cryptographically strong random bytes are produced.</para>
         /// <para>This method is thread safe.</para>
         /// </remarks>
-        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
-        /// <exception cref="System.ArgumentNullException">buffer is null.</exception>
+        /// <exception cref="CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="ArgumentNullException">buffer is null.</exception>
         public static void GetBytes(byte[] buffer)
         {
-            s_randomNumberGenerator.GetBytes(buffer);
+            RandomNumberGenerator.GetBytes(buffer);
         }
 
         /// <summary>
         /// Generates a cryptographically strong random boolean (i.e., a coin toss).
         /// </summary>
-        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static bool Boolean
         {
             get
             {
                 byte[] value = new byte[1];
 
-                s_randomNumberGenerator.GetBytes(value);
+                RandomNumberGenerator.GetBytes(value);
 
                 return value[0] % 2 == 0;
             }
@@ -120,14 +120,14 @@ namespace GSF.Security.Cryptography
         /// <summary>
         /// Generates a cryptographically strong 8-bit random integer.
         /// </summary>
-        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static byte Byte
         {
             get
             {
                 byte[] value = new byte[1];
 
-                s_randomNumberGenerator.GetBytes(value);
+                RandomNumberGenerator.GetBytes(value);
 
                 return value[0];
             }
@@ -136,7 +136,7 @@ namespace GSF.Security.Cryptography
         /// <summary>
         /// Generates a cryptographically strong 8-bit random integer between specified values.
         /// </summary>
-        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         /// <param name="startNumber">A <see cref="byte"/> that is the low end of our range.</param>
         /// <param name="stopNumber">A <see cref="byte"/> that is the high end of our range.</param>
         /// <returns>A <see cref="byte"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>.</returns>
@@ -151,14 +151,14 @@ namespace GSF.Security.Cryptography
         /// <summary>
         /// Generates a cryptographically strong 16-bit random integer.
         /// </summary>
-        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static short Int16
         {
             get
             {
                 byte[] value = new byte[2];
 
-                s_randomNumberGenerator.GetBytes(value);
+                RandomNumberGenerator.GetBytes(value);
 
                 return BitConverter.ToInt16(value, 0);
             }
@@ -167,7 +167,7 @@ namespace GSF.Security.Cryptography
         /// <summary>
         /// Generates a cryptographically strong 16-bit random integer between specified values.
         /// </summary>
-        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         /// <param name="startNumber">A <see cref="short"/> that is the low end of our range.</param>
         /// <param name="stopNumber">A <see cref="short"/> that is the high end of our range.</param>
         /// <returns>A <see cref="short"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>.</returns>
@@ -182,14 +182,14 @@ namespace GSF.Security.Cryptography
         /// <summary>
         /// Generates a cryptographically strong unsigned 16-bit random integer.
         /// </summary>
-        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static ushort UInt16
         {
             get
             {
                 byte[] value = new byte[2];
 
-                s_randomNumberGenerator.GetBytes(value);
+                RandomNumberGenerator.GetBytes(value);
 
                 return BitConverter.ToUInt16(value, 0);
             }
@@ -198,7 +198,7 @@ namespace GSF.Security.Cryptography
         /// <summary>
         /// Generates a cryptographically strong unsigned 16-bit random integer between specified values.
         /// </summary>
-        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         /// <param name="startNumber">A <see cref="ushort"/> that is the low end of our range.</param>
         /// <param name="stopNumber">A <see cref="ushort"/> that is the high end of our range.</param>
         /// <returns>A <see cref="ushort"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>.</returns>
@@ -213,14 +213,14 @@ namespace GSF.Security.Cryptography
         /// <summary>
         /// Generates a cryptographically strong 24-bit random integer.
         /// </summary>
-        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static Int24 Int24
         {
             get
             {
                 byte[] value = new byte[3];
 
-                s_randomNumberGenerator.GetBytes(value);
+                RandomNumberGenerator.GetBytes(value);
 
                 return Int24.GetValue(value, 0);
             }
@@ -229,7 +229,7 @@ namespace GSF.Security.Cryptography
         /// <summary>
         /// Generates a cryptographically strong 24-bit random integer between specified values.
         /// </summary>
-        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         /// <param name="startNumber">A <see cref="Int24"/> that is the low end of our range.</param>
         /// <param name="stopNumber">A <see cref="Int24"/> that is the high end of our range.</param>
         /// <returns>A <see cref="Int24"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>.</returns>
@@ -244,14 +244,14 @@ namespace GSF.Security.Cryptography
         /// <summary>
         /// Generates a cryptographically strong unsigned 24-bit random integer.
         /// </summary>
-        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static UInt24 UInt24
         {
             get
             {
                 byte[] value = new byte[3];
 
-                s_randomNumberGenerator.GetBytes(value);
+                RandomNumberGenerator.GetBytes(value);
 
                 return UInt24.GetValue(value, 0);
             }
@@ -260,7 +260,7 @@ namespace GSF.Security.Cryptography
         /// <summary>
         /// Generates a cryptographically strong unsigned 24-bit random integer between specified values.
         /// </summary>
-        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         /// <param name="startNumber">A <see cref="UInt24"/> that is the low end of our range.</param>
         /// <param name="stopNumber">A <see cref="UInt24"/> that is the high end of our range.</param>
         /// <returns>A <see cref="UInt24"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>.</returns>
@@ -275,14 +275,14 @@ namespace GSF.Security.Cryptography
         /// <summary>
         /// Generates a cryptographically strong 32-bit random integer.
         /// </summary>
-        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static int Int32
         {
             get
             {
                 byte[] value = new byte[4];
 
-                s_randomNumberGenerator.GetBytes(value);
+                RandomNumberGenerator.GetBytes(value);
 
                 return BitConverter.ToInt32(value, 0);
             }
@@ -291,7 +291,7 @@ namespace GSF.Security.Cryptography
         /// <summary>
         /// Generates a cryptographically strong 32-bit random integer between specified values.
         /// </summary>
-        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         /// <param name="startNumber">A <see cref="int"/> that is the low end of our range.</param>
         /// <param name="stopNumber">A <see cref="int"/> that is the high end of our range.</param>
         /// <returns>A <see cref="int"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>.</returns>
@@ -306,14 +306,14 @@ namespace GSF.Security.Cryptography
         /// <summary>
         /// Generates a cryptographically strong unsigned 32-bit random integer.
         /// </summary>
-        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static uint UInt32
         {
             get
             {
                 byte[] value = new byte[4];
 
-                s_randomNumberGenerator.GetBytes(value);
+                RandomNumberGenerator.GetBytes(value);
 
                 return BitConverter.ToUInt32(value, 0);
             }
@@ -322,7 +322,7 @@ namespace GSF.Security.Cryptography
         /// <summary>
         /// Generates a cryptographically strong unsigned 32-bit random integer between specified values.
         /// </summary>
-        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         /// <param name="startNumber">A <see cref="uint"/> that is the low end of our range.</param>
         /// <param name="stopNumber">A <see cref="uint"/> that is the high end of our range.</param>
         /// <returns>A <see cref="uint"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>.</returns>
@@ -337,14 +337,14 @@ namespace GSF.Security.Cryptography
         /// <summary>
         /// Generates a cryptographically strong 64-bit random integer.
         /// </summary>
-        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static long Int64
         {
             get
             {
                 byte[] value = new byte[8];
 
-                s_randomNumberGenerator.GetBytes(value);
+                RandomNumberGenerator.GetBytes(value);
 
                 return BitConverter.ToInt64(value, 0);
             }
@@ -353,7 +353,7 @@ namespace GSF.Security.Cryptography
         /// <summary>
         /// Generates a cryptographically strong 64-bit random integer between specified values.
         /// </summary>
-        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         /// <param name="startNumber">A <see cref="long"/> that is the low end of our range.</param>
         /// <param name="stopNumber">A <see cref="long"/> that is the high end of our range.</param>
         /// <returns>A <see cref="long"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>.</returns>
@@ -368,14 +368,14 @@ namespace GSF.Security.Cryptography
         /// <summary>
         /// Generates a cryptographically strong unsigned 64-bit random integer.
         /// </summary>
-        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static ulong UInt64
         {
             get
             {
                 byte[] value = new byte[8];
 
-                s_randomNumberGenerator.GetBytes(value);
+                RandomNumberGenerator.GetBytes(value);
 
                 return BitConverter.ToUInt64(value, 0);
             }
@@ -384,7 +384,7 @@ namespace GSF.Security.Cryptography
         /// <summary>
         /// Generates a cryptographically strong unsigned 64-bit random integer between specified values.
         /// </summary>
-        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <exception cref="CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         /// <param name="startNumber">A <see cref="ulong"/> that is the low end of our range.</param>
         /// <param name="stopNumber">A <see cref="ulong"/> that is the high end of our range.</param>
         /// <returns>A <see cref="ulong"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>.</returns>

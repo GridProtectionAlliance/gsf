@@ -27,14 +27,18 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text;
+using System.Threading;
+using System.Windows.Forms;
 using System.Xml.Linq;
 using GSF.Data;
 using GSF.Identity;
 using GSF.Interop;
+using GSF.Security.Cryptography;
 using GSF.ServiceProcess;
 using Microsoft.Deployment.WindowsInstaller;
 
@@ -265,6 +269,131 @@ namespace GSF.InstallerActions
         }
 
         /// <summary>
+        /// Prompts the user to select a file via the open file dialog.
+        /// </summary>
+        /// <param name="session">Session object containing data from the installer.</param>
+        /// <returns>Result of the custom action.</returns>
+        [CustomAction]
+        public static ActionResult BrowseFileAction(Session session)
+        {
+            Thread staThread;
+
+            session.Log("Begin BrowseFileAction");
+
+            staThread = new Thread(() =>
+            {
+                using (OpenFileDialog openFileDialog = new OpenFileDialog())
+                {
+                    openFileDialog.CheckFileExists = true;
+                    openFileDialog.FileName = session["SELECTEDFILE"];
+                    openFileDialog.DefaultExt = session["BROWSEFILEEXTENSION"];
+                    openFileDialog.Filter = string.Format("{0} Files|*.{1}|All Files|*.*", session["BROWSEFILEEXTENSION"].ToUpper(), session["BROWSEFILEEXTENSION"]);
+
+                    if (openFileDialog.ShowDialog() == DialogResult.OK)
+                        session["SELECTEDFILE"] = openFileDialog.FileName;
+                    else
+                        session["SELECTEDFILE"] = null;
+                }
+            });
+
+            staThread.SetApartmentState(ApartmentState.STA);
+            staThread.Start();
+            staThread.Join();
+
+            session.Log("End BrowseFileAction");
+
+            return ActionResult.Success;
+        }
+
+        /// <summary>
+        /// Determines whether a file exists.
+        /// </summary>
+        /// <param name="session">Session object containing data from the installer.</param>
+        /// <returns>Result of the custom action.</returns>
+        [CustomAction]
+        public static ActionResult CheckFileExistenceAction(Session session)
+        {
+            session.Log("Begin CheckFileExistenceAction");
+            session["FILEEXISTS"] = File.Exists(session["FILEPATH"]) ? "yes" : null;
+            session.Log("End CheckFileExistenceAction");
+            return ActionResult.Success;
+        }
+
+        /// <summary>
+        /// Extracts a zip file to a destination folder.
+        /// </summary>
+        /// <param name="session">Session object containing data from the installer.</param>
+        /// <returns>Result of the custom action.</returns>
+        [CustomAction]
+        public static ActionResult UnzipAction(Session session)
+        {
+            string zipFile;
+            string sourceDir;
+            string destinationDir;
+
+            ZipArchive archive;
+            string directoryPath;
+            string filePath;
+
+            session.Log("Begin UnzipAction");
+
+            zipFile = session.CustomActionData["ZIPFILE"];
+            sourceDir = session.CustomActionData["SOURCEDIR"] ?? string.Empty;
+            destinationDir = session.CustomActionData["DESTINATIONDIR"] ?? string.Empty;
+
+            sourceDir = sourceDir.Replace('\\', '/').EnsureEnd('/');
+
+            archive = ZipFile.OpenRead(zipFile);
+
+            foreach (ZipArchiveEntry entry in archive.Entries.Where(entry => entry.FullName.StartsWith(sourceDir)))
+            {
+                if (entry.FullName.EndsWith("/"))
+                    continue;
+
+                filePath = Path.Combine(destinationDir, entry.FullName.Substring(sourceDir.Length).Replace('/', '\\'));
+                directoryPath = Path.GetDirectoryName(filePath);
+
+                if ((object)directoryPath == null)
+                    continue;
+
+                if (!Directory.Exists(directoryPath))
+                    Directory.CreateDirectory(directoryPath);
+
+                using (Stream stream = entry.Open())
+                using (FileStream fileStream = File.Create(filePath))
+                {
+                    stream.CopyTo(fileStream);
+                }
+            }
+
+            session.Log("End UnzipAction");
+
+            return ActionResult.Success;
+        }
+
+        /// <summary>
+        /// Tests a connection to a database server.
+        /// </summary>
+        /// <param name="session">Session object containing data from the installer.</param>
+        /// <returns>Result of the custom action.</returns>
+        [CustomAction]
+        public static ActionResult PasswordGenerationAction(Session session)
+        {
+            int passwordLength;
+
+            session.Log("Begin PasswordGenerationAction");
+
+            if (int.TryParse(session["GENPASSWORDLENGTH"], out passwordLength))
+                session["GENERATEDPASSWORD"] = PasswordGenerator.Default.GeneratePassword(passwordLength);
+            else
+                session["GENERATEDPASSWORD"] = PasswordGenerator.Default.GeneratePassword();
+
+            session.Log("End PasswordGenerationAction");
+
+            return ActionResult.Success;
+        }
+
+        /// <summary>
         /// Tests a connection to a database server.
         /// </summary>
         /// <param name="session">Session object containing data from the installer.</param>
@@ -275,7 +404,7 @@ namespace GSF.InstallerActions
             string connectionString;
             string dataProviderString;
 
-            session.Log("Begin TestDatabaseConnection");
+            session.Log("Begin TestDatabaseConnectionAction");
 
             // Get properties from the installer session
             connectionString = session["CONNECTIONSTRING"];
@@ -300,7 +429,7 @@ namespace GSF.InstallerActions
                 session["DATABASECONNECTED"] = null;
             }
 
-            session.Log("End TestDatabaseConnection");
+            session.Log("End TestDatabaseConnectionAction");
 
             return ActionResult.Success;
         }
