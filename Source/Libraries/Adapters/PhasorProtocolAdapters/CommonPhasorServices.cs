@@ -549,7 +549,7 @@ namespace PhasorProtocolAdapters
                 int virtualProtocolID = connection.ExecuteScalar<int>("SELECT ID FROM Protocol WHERE Acronym='VirtualInput'");
 
                 // Create new virtual device record
-                connection.ExecuteNonQuery(string.Format("INSERT INTO Device(NodeID, Acronym, Name, ProtocolID) VALUES({0}, {{0}}, {{1}}, {{2}})", nodeIDQueryString), deviceAcronym, deviceAcronym, virtualProtocolID);
+                connection.ExecuteNonQuery(string.Format("INSERT INTO Device(NodeID, Acronym, Name, ProtocolID, Enabled) VALUES({0}, {{0}}, {{1}}, {{2}}, 1)", nodeIDQueryString), deviceAcronym, deviceAcronym, virtualProtocolID);
             }
 
             statusMessage(string.Format("Validating \"{0}\" virtual device measurement associations...", deviceAcronym));
