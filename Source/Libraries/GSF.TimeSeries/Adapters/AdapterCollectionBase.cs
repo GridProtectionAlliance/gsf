@@ -267,7 +267,7 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets specific data member (e.g., table name) in <see cref="DataSource"/> used to <see cref="Initialize"/> this <see cref="AdapterCollectionBase{T}"/>.
+        /// Gets or sets specific data member (e.g., table name) in <see cref="DataSource"/> used to <see cref="Initialize()"/> this <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>
         /// <remarks>
         /// Table name specified in <see cref="DataMember"/> from <see cref="DataSource"/> is expected
@@ -288,7 +288,7 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets the default adapter time that represents the maximum time system will wait during <see cref="Start"/> for initialization.
+        /// Gets or sets the default adapter time that represents the maximum time system will wait during <see cref="Start()"/> for initialization.
         /// </summary>
         /// <remarks>
         /// Set to <see cref="System.Threading.Timeout.Infinite"/> to wait indefinitely.

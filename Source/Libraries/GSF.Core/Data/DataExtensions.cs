@@ -71,6 +71,7 @@ using System.Data.Odbc;
 using System.Data.OleDb;
 using System.Data.SqlClient;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -875,6 +876,198 @@ namespace GSF.Data
             command.PopulateParameters(parameters);
             return command.ExecuteScalar();
         }
+
+        #endregion
+
+        #region [ ExecuteScript Overloaded Extensions ]
+
+        /// <summary>
+        /// Executes the statements defined in the given TSQL script.
+        /// </summary>
+        /// <param name="connection">The connection used to execute SQL statements.</param>
+        /// <param name="scriptPath">The path to the SQL script.</param>
+        public static void ExecuteTSQLScript(this IDbConnection connection, string scriptPath)
+        {
+            using (TextReader scriptReader = File.OpenText(scriptPath))
+            {
+                ExecuteTSQLScript(connection, scriptReader);
+            }
+        }
+
+        /// <summary>
+        /// Executes the statements defined in the given TSQL script.
+        /// </summary>
+        /// <param name="connection">The connection used to execute SQL statements.</param>
+        /// <param name="scriptReader">The reader used to extract statements from the SQL script.</param>
+        public static void ExecuteTSQLScript(this IDbConnection connection, TextReader scriptReader)
+        {
+            string line = scriptReader.ReadLine();
+
+            using (IDbCommand command = connection.CreateCommand())
+            {
+                StringBuilder statementBuilder = new StringBuilder();
+                Regex comment = new Regex(@"/\*.*\*/|--.*\n", RegexOptions.Multiline);
+
+                while ((object)line != null)
+                {
+                    string trimLine = line.Trim();
+                    string statement;
+
+                    if (trimLine == "GO")
+                    {
+                        // Remove comments and execute the statement.
+                        statement = statementBuilder.ToString();
+                        command.CommandText = comment.Replace(statement, " ").Trim();
+                        command.ExecuteNonQuery();
+                        statementBuilder.Clear();
+                    }
+                    else
+                    {
+                        // Append this line to the statement
+                        statementBuilder.Append(line);
+                        statementBuilder.Append('\n');
+                    }
+
+                    // Read the next line from the file.
+                    line = scriptReader.ReadLine();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Executes the statements defined in the given MySQL script.
+        /// </summary>
+        /// <param name="connection">The connection used to execute SQL statements.</param>
+        /// <param name="scriptPath">The path to the SQL script.</param>
+        public static void ExecuteMySQLScript(this IDbConnection connection, string scriptPath)
+        {
+            using (TextReader scriptReader = File.OpenText(scriptPath))
+            {
+                ExecuteMySQLScript(connection, scriptReader);
+            }
+        }
+
+        /// <summary>
+        /// Executes the statements defined in the given MySQL script.
+        /// </summary>
+        /// <param name="connection">The connection used to execute SQL statements.</param>
+        /// <param name="scriptReader">The reader used to extract statements from the SQL script.</param>
+        public static void ExecuteMySQLScript(this IDbConnection connection, TextReader scriptReader)
+        {
+            string line;
+            string delimiter;
+
+            line = scriptReader.ReadLine();
+            delimiter = ";";
+
+            using (IDbCommand command = connection.CreateCommand())
+            {
+                StringBuilder statementBuilder = new StringBuilder();
+                Regex comment = new Regex(@"/\*.*\*/|--.*\n", RegexOptions.Multiline);
+
+                while ((object)line != null)
+                {
+                    string statement;
+
+                    if (line.StartsWith("DELIMITER "))
+                    {
+                        delimiter = line.Split(' ')[1].Trim();
+                    }
+                    else
+                    {
+                        statementBuilder.Append(line);
+                        statementBuilder.Append('\n');
+                        statement = statementBuilder.ToString();
+                        statement = comment.Replace(statement, " ").Trim();
+
+                        if (statement.EndsWith(delimiter))
+                        {
+                            // Remove trailing delimiter.
+                            statement = statement.Remove(statement.Length - delimiter.Length);
+
+                            // Remove comments and execute the statement.
+                            command.CommandText = statement;
+                            command.ExecuteNonQuery();
+                            statementBuilder.Clear();
+                        }
+                    }
+
+                    // Read the next line from the file.
+                    line = scriptReader.ReadLine();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Executes the statements defined in the given Oracle database script.
+        /// </summary>
+        /// <param name="connection">The connection used to execute SQL statements.</param>
+        /// <param name="scriptPath">The path to the SQL script.</param>
+        public static void ExecuteOracleScript(this IDbConnection connection, string scriptPath)
+        {
+            using (TextReader scriptReader = File.OpenText(scriptPath))
+            {
+                ExecuteOracleScript(connection, scriptReader);
+            }
+        }
+
+        /// <summary>
+        /// Executes the statements defined in the given Oracle database script.
+        /// </summary>
+        /// <param name="connection">The connection used to execute SQL statements.</param>
+        /// <param name="scriptReader">The reader used to extract statements from the SQL script.</param>
+        public static void ExecuteOracleScript(this IDbConnection connection, TextReader scriptReader)
+        {
+            string line;
+
+            line = scriptReader.ReadLine();
+
+            using (IDbCommand command = connection.CreateCommand())
+            {
+                StringBuilder statementBuilder = new StringBuilder();
+                Regex comment = new Regex(@"/\*.*\*/|--.*\n", RegexOptions.Multiline);
+
+                while ((object)line != null)
+                {
+                    string trimLine = line.Trim();
+                    string statement;
+                    bool isPlsqlBlock;
+
+                    statementBuilder.Append(line);
+                    statementBuilder.Append('\n');
+                    statement = statementBuilder.ToString();
+                    statement = comment.Replace(statement, " ").Trim();
+
+                    // Determine whether the statement is a PL/SQL block.
+                    // If the statement is a PL/SQL block, the delimiter
+                    // is a forward slash. Otherwise, it is a semicolon.
+                    isPlsqlBlock = s_plsqlIdentifiers.Any(ident => statement.IndexOf(ident, StringComparison.CurrentCultureIgnoreCase) >= 0);
+
+                    // If the statement is a PL/SQL block and the current line is a forward slash,
+                    // or if the statement is not a PL/SQL block and the statement in a semicolon,
+                    // then execute and flush the statement so that the next statement can be executed.
+                    if ((isPlsqlBlock && trimLine == "/") || (!isPlsqlBlock && statement.EndsWith(";")))
+                    {
+                        // Remove trailing delimiter and newlines.
+                        statement = statement.Remove(statement.Length - 1);
+
+                        // Remove comments and execute the statement.
+                        command.CommandText = statement;
+                        command.ExecuteNonQuery();
+                        statementBuilder.Clear();
+                    }
+
+                    // Read the next line from the file.
+                    line = scriptReader.ReadLine();
+                }
+            }
+        }
+
+        // Defines a list of keywords used to identify PL/SQL blocks.
+        private static string[] s_plsqlIdentifiers = { "CREATE FUNCTION", "CREATE OR REPLACE FUNCTION",
+                                                       "CREATE PROCEDURE", "CREATE OR REPLACE PROCEDURE",
+                                                       "CREATE PACKAGE", "CREATE OR REPLACE PACKAGE",
+                                                       "DECLARE", "BEGIN" };
 
         #endregion
 

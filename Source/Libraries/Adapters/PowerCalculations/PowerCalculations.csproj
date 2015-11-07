@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>PowerCalculations</RootNamespace>
     <AssemblyName>PowerCalculations</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
@@ -102,6 +102,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -116,6 +117,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AverageFrequency.cs" />
+    <Compile Include="PowerMultiCalculator\Measurement.cs" />
+    <Compile Include="PowerMultiCalculator\MeasurementRepository.cs" />
+    <Compile Include="PowerMultiCalculator\PowerCalculation.cs" />
+    <Compile Include="PowerMultiCalculator\PowerCalculationConfigurationValidation.cs" />
+    <Compile Include="PowerMultiCalculator\PowerMultiCalculatorAdapter.cs" />
+    <Compile Include="PowerMultiCalculator\RunningAverage.cs" />
     <Compile Include="SequenceCalculator.cs" />
     <Compile Include="PowerCalculator.cs" />
     <Compile Include="PowerStability.cs" />
@@ -154,6 +161,10 @@
     <ProjectReference Include="..\..\GSF.TimeSeries\GSF.TimeSeries.csproj">
       <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
       <Name>GSF.TimeSeries</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\GSF.TimeSeries\UI\GSF.TimeSeries.UI.csproj">
+      <Project>{7ed01b57-dd71-4a38-bb29-65d629224a12}</Project>
+      <Name>GSF.TimeSeries.UI</Name>
     </ProjectReference>
     <ProjectReference Include="..\PhasorProtocolAdapters\PhasorProtocolAdapters.csproj">
       <Project>{c4f3c41d-d76a-4283-8732-681b67b7ad74}</Project>

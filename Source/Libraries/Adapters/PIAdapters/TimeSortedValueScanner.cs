@@ -35,15 +35,6 @@ namespace PIAdapters
     /// </summary>
     public class TimeSortedValueScanner
     {
-        #region [ Members ]
-
-        // Fields
-        private PIPointList m_points;
-        private AFTime m_startTime;
-        private AFTime m_endTime;
-
-        #endregion
-
         #region [ Properties ]
 
         /// <summary>
@@ -51,14 +42,8 @@ namespace PIAdapters
         /// </summary>
         public PIPointList Points
         {
-            get
-            {
-                return m_points;
-            }
-            set
-            {
-                m_points = value;
-            }
+            get;
+            set;
         }
 
         /// <summary>
@@ -66,14 +51,8 @@ namespace PIAdapters
         /// </summary>
         public AFTime StartTime
         {
-            get
-            {
-                return m_startTime;
-            }
-            set
-            {
-                m_startTime = value;
-            }
+            get;
+            set;
         }
 
         /// <summary>
@@ -81,14 +60,8 @@ namespace PIAdapters
         /// </summary>
         public AFTime EndTime
         {
-            get
-            {
-                return m_endTime;
-            }
-            set
-            {
-                m_endTime = value;
-            }
+            get;
+            set;
         }
 
         /// <summary>
@@ -110,13 +83,13 @@ namespace PIAdapters
         /// <returns>Each recorded <see cref="AFValue"/> in time-sorted order for the specified <see cref="Points"/> and time-range.</returns>
         public IEnumerable<AFValue> Read()
         {
-            PIPagingConfiguration config = new PIPagingConfiguration(PIPageType.TagCount, m_points.Count);
+            PIPagingConfiguration config = new PIPagingConfiguration(PIPageType.TagCount, Points.Count);
             List<IEnumerator<AFValue>> enumerators = new List<IEnumerator<AFValue>>();
 
             try
             {
                 // Setup enumerators for each set of points that have data
-                foreach (AFValues scanner in m_points.RecordedValues(new AFTimeRange(m_startTime, m_endTime), AFBoundaryType.Inside, null, false, config))
+                foreach (AFValues scanner in Points.RecordedValues(new AFTimeRange(StartTime, EndTime), AFBoundaryType.Inside, null, false, config))
                 {
                     IEnumerator<AFValue> enumerator = scanner.GetEnumerator();
 

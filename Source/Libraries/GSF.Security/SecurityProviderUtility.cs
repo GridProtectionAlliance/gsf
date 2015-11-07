@@ -215,46 +215,9 @@ namespace GSF.Security
         public static string GeneratePassword(int length)
         {
             if (length < 8)
-                throw new ArgumentException("Value must be at least 8", "length");
+                throw new ArgumentException("Value must be at least 8", nameof(length));
 
-            // ASCII character ranges:
-            // Lower case - 97 to 122
-            // Upper case - 65 to 90
-            // Special character - 33 to 47
-            // Digits - 48 to 57
-
-            int cursor = 0;
-            int lower = Random.Int32Between(1, length / 2);
-            int upper = Random.Int32Between(1, (length - lower) / 2);
-            int special = Random.Int32Between(1, (length - (lower + upper)) / 2);
-            int digits = length - (lower + upper + special);
-            char[] password = new char[length];
-            for (int i = 0; i < lower; i++)
-            {
-                password[cursor] = (char)Random.Int32Between(97, 122);
-                cursor++;
-            }
-            for (int i = 0; i < upper; i++)
-            {
-                password[cursor] = (char)Random.Int32Between(65, 90);
-                cursor++;
-            }
-            for (int i = 0; i < special; i++)
-            {
-                password[cursor] = (char)Random.Int32Between(33, 47);
-                cursor++;
-            }
-            for (int i = 0; i < digits; i++)
-            {
-                password[cursor] = (char)Random.Int32Between(48, 57);
-                cursor++;
-            }
-
-            // Scramble for more randomness.
-            List<char> scrambledPassword = new List<char>(password);
-            scrambledPassword.Scramble();
-
-            return new string(scrambledPassword.ToArray());
+            return PasswordGenerator.Default.GeneratePassword(length);
         }
 
         /// <summary>

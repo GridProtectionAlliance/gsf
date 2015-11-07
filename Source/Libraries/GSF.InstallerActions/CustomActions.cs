@@ -27,13 +27,18 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text;
+using System.Threading;
+using System.Windows.Forms;
 using System.Xml.Linq;
+using GSF.Data;
 using GSF.Identity;
 using GSF.Interop;
+using GSF.Security.Cryptography;
 using GSF.ServiceProcess;
 using Microsoft.Deployment.WindowsInstaller;
 
@@ -259,6 +264,256 @@ namespace GSF.InstallerActions
             }
 
             session.Log("End ServiceAccountAction");
+
+            return ActionResult.Success;
+        }
+
+        /// <summary>
+        /// Prompts the user to select a file via the open file dialog.
+        /// </summary>
+        /// <param name="session">Session object containing data from the installer.</param>
+        /// <returns>Result of the custom action.</returns>
+        [CustomAction]
+        public static ActionResult BrowseFileAction(Session session)
+        {
+            Thread staThread;
+
+            session.Log("Begin BrowseFileAction");
+
+            staThread = new Thread(() =>
+            {
+                using (OpenFileDialog openFileDialog = new OpenFileDialog())
+                {
+                    openFileDialog.CheckFileExists = true;
+                    openFileDialog.FileName = session["SELECTEDFILE"];
+                    openFileDialog.DefaultExt = session["BROWSEFILEEXTENSION"];
+                    openFileDialog.Filter = string.Format("{0} Files|*.{1}|All Files|*.*", session["BROWSEFILEEXTENSION"].ToUpper(), session["BROWSEFILEEXTENSION"]);
+
+                    if (openFileDialog.ShowDialog() == DialogResult.OK)
+                        session["SELECTEDFILE"] = openFileDialog.FileName;
+                    else
+                        session["SELECTEDFILE"] = null;
+                }
+            });
+
+            staThread.SetApartmentState(ApartmentState.STA);
+            staThread.Start();
+            staThread.Join();
+
+            session.Log("End BrowseFileAction");
+
+            return ActionResult.Success;
+        }
+
+        /// <summary>
+        /// Determines whether a file exists.
+        /// </summary>
+        /// <param name="session">Session object containing data from the installer.</param>
+        /// <returns>Result of the custom action.</returns>
+        [CustomAction]
+        public static ActionResult CheckFileExistenceAction(Session session)
+        {
+            session.Log("Begin CheckFileExistenceAction");
+            session["FILEEXISTS"] = File.Exists(session["FILEPATH"]) ? "yes" : null;
+            session.Log("End CheckFileExistenceAction");
+            return ActionResult.Success;
+        }
+
+        /// <summary>
+        /// Extracts a zip file to a destination folder.
+        /// </summary>
+        /// <param name="session">Session object containing data from the installer.</param>
+        /// <returns>Result of the custom action.</returns>
+        [CustomAction]
+        public static ActionResult UnzipAction(Session session)
+        {
+            string zipFile;
+            string sourceDir;
+            string destinationDir;
+
+            ZipArchive archive;
+            string directoryPath;
+            string filePath;
+
+            session.Log("Begin UnzipAction");
+
+            zipFile = session.CustomActionData["ZIPFILE"];
+            sourceDir = session.CustomActionData["SOURCEDIR"] ?? string.Empty;
+            destinationDir = session.CustomActionData["DESTINATIONDIR"] ?? string.Empty;
+
+            sourceDir = sourceDir.Replace('\\', '/').EnsureEnd('/');
+
+            archive = ZipFile.OpenRead(zipFile);
+
+            foreach (ZipArchiveEntry entry in archive.Entries.Where(entry => entry.FullName.StartsWith(sourceDir)))
+            {
+                if (entry.FullName.EndsWith("/"))
+                    continue;
+
+                filePath = Path.Combine(destinationDir, entry.FullName.Substring(sourceDir.Length).Replace('/', '\\'));
+                directoryPath = Path.GetDirectoryName(filePath);
+
+                if ((object)directoryPath == null)
+                    continue;
+
+                if (!Directory.Exists(directoryPath))
+                    Directory.CreateDirectory(directoryPath);
+
+                using (Stream stream = entry.Open())
+                using (FileStream fileStream = File.Create(filePath))
+                {
+                    stream.CopyTo(fileStream);
+                }
+            }
+
+            session.Log("End UnzipAction");
+
+            return ActionResult.Success;
+        }
+
+        /// <summary>
+        /// Tests a connection to a database server.
+        /// </summary>
+        /// <param name="session">Session object containing data from the installer.</param>
+        /// <returns>Result of the custom action.</returns>
+        [CustomAction]
+        public static ActionResult PasswordGenerationAction(Session session)
+        {
+            int passwordLength;
+
+            session.Log("Begin PasswordGenerationAction");
+
+            if (int.TryParse(session["GENPASSWORDLENGTH"], out passwordLength))
+                session["GENERATEDPASSWORD"] = PasswordGenerator.Default.GeneratePassword(passwordLength);
+            else
+                session["GENERATEDPASSWORD"] = PasswordGenerator.Default.GeneratePassword();
+
+            session.Log("End PasswordGenerationAction");
+
+            return ActionResult.Success;
+        }
+
+        /// <summary>
+        /// Tests a connection to a database server.
+        /// </summary>
+        /// <param name="session">Session object containing data from the installer.</param>
+        /// <returns>Result of the custom action.</returns>
+        [CustomAction]
+        public static ActionResult TestDatabaseConnectionAction(Session session)
+        {
+            string connectionString;
+            string dataProviderString;
+
+            session.Log("Begin TestDatabaseConnectionAction");
+
+            // Get properties from the installer session
+            connectionString = session["CONNECTIONSTRING"];
+            dataProviderString = session["DATAPROVIDERSTRING"];
+
+            try
+            {
+                // Execute the database script
+                using (new AdoDataConnection(connectionString, dataProviderString))
+                {
+                }
+
+                session["DATABASECONNECTED"] = "yes";
+            }
+            catch (Exception ex)
+            {
+                // Log the error and return failure code
+                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Failed to connect to the database: {0}.", ex.Message));
+                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Connection string: {0}", connectionString));
+                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Data provider string: {0}", dataProviderString));
+
+                session["DATABASECONNECTED"] = null;
+            }
+
+            session.Log("End TestDatabaseConnectionAction");
+
+            return ActionResult.Success;
+        }
+
+        /// <summary>
+        /// Custom action to execute a database script during installation.
+        /// </summary>
+        /// <param name="session">Session object containing data from the installer.</param>
+        /// <returns>Result of the custom action.</returns>
+        [CustomAction]
+        public static ActionResult DatabaseQueryAction(Session session)
+        {
+            string connectionString;
+            string dataProviderString;
+            string query;
+
+            session.Log("Begin DatabaseQueryAction");
+
+            // Get properties from the installer session
+            connectionString = session.CustomActionData["CONNECTIONSTRING"];
+            dataProviderString = session.CustomActionData["DATAPROVIDERSTRING"];
+            query = session.CustomActionData["DBQUERY"];
+
+            try
+            {
+                // Execute the database script
+                using (AdoDataConnection connection = new AdoDataConnection(connectionString, dataProviderString))
+                {
+                    connection.ExecuteNonQuery(query);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the error and return failure code
+                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Failed to execute database query: {0}.", ex.Message));
+                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Database Query: {0}", query));
+                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Connection string: {0}", connectionString));
+                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Data provider string: {0}", dataProviderString));
+                return ActionResult.Failure;
+            }
+
+            session.Log("End DatabaseQueryAction");
+
+            return ActionResult.Success;
+        }
+
+        /// <summary>
+        /// Custom action to execute a database script during installation.
+        /// </summary>
+        /// <param name="session">Session object containing data from the installer.</param>
+        /// <returns>Result of the custom action.</returns>
+        [CustomAction]
+        public static ActionResult DatabaseScriptAction(Session session)
+        {
+            string connectionString;
+            string dataProviderString;
+            string scriptPath;
+
+            session.Log("Begin DatabaseScriptAction");
+
+            // Get properties from the installer session
+            connectionString = session.CustomActionData["CONNECTIONSTRING"];
+            dataProviderString = session.CustomActionData["DATAPROVIDERSTRING"];
+            scriptPath = session.CustomActionData["SCRIPTPATH"];
+
+            try
+            {
+                // Execute the database script
+                using (AdoDataConnection connection = new AdoDataConnection(connectionString, dataProviderString))
+                {
+                    connection.ExecuteScript(scriptPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the error and return failure code
+                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Failed to execute database script: {0}.", ex.Message));
+                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Database Script: {0}", scriptPath));
+                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Connection string: {0}", connectionString));
+                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Data provider string: {0}", dataProviderString));
+                return ActionResult.Failure;
+            }
+
+            session.Log("End DatabaseScriptAction");
 
             return ActionResult.Success;
         }

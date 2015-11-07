@@ -53,6 +53,16 @@ namespace LibraryTester
             Common.IsDefaultValue(true);            // Call to load GSF.Core
             Transport.GetDefaultIPStack();          // Call to load GSF.Communications
 
+            Action<List<int>> showCount = list => Console.WriteLine(list?.Count.ToString("N0") ?? "Calculating...");
+
+            List<int> test = null;
+
+            showCount(test);
+
+            test = new List<int>();
+
+            showCount(test);
+
             //Console.WriteLine(FilePath.GetAbsolutePath("Temp"));
             //Console.WriteLine(FilePath.GetDirectoryName(FilePath.GetAbsolutePath("Temp")));
             //Console.WriteLine(FilePath.GetDirectoryName(@"C:\"));
