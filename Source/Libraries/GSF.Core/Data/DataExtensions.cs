@@ -2327,8 +2327,29 @@ namespace GSF.Data
         /// <returns>The value, of type T, of the <see cref="DataColumn"/> specified by columnName.</returns>
         public static T ConvertField<T>(this DataRow row, string field)
         {
-            Type type = typeof(T);
-            object value = row.Field<object>(field);
+            return ConvertField(row, field, default(T));
+        }
+
+        /// <summary>
+        /// Provides strongly-typed access to each of the column values in the specified row.
+        /// Automatically applies type conversion to the column values.
+        /// </summary>
+        /// <typeparam name="T">A generic parameter that specifies the return type of the column.</typeparam>
+        /// <param name="row">The input <see cref="DataRow"/>, which acts as the this instance for the extension method.</param>
+        /// <param name="field">The name of the column to return the value of.</param>
+        /// <param name="defaultValue">The value to be substituted if <see cref="DBNull.Value"/> is retrieved.</param>
+        /// <returns>The value, of type T, of the <see cref="DataColumn"/> specified by columnName.</returns>
+        public static T ConvertField<T>(this DataRow row, string field, T defaultValue)
+        {
+            Type type;
+            object value;
+
+            value = row.Field<object>(field);
+
+            if (value == null || value == DBNull.Value)
+                return defaultValue;
+
+            type = typeof(T);
 
             // Nullable types cannot be used in type conversion, but we can use Nullable.GetUnderlyingType()
             // to determine whether the type is nullable and convert to the underlying type instead
