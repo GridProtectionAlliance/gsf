@@ -29,6 +29,7 @@ using System.Linq;
 using System.Text;
 using GSF;
 using GSF.Collections;
+using GSF.Data;
 using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -338,8 +339,8 @@ namespace KafkaAdapters
                                     UniqueID = row.Field<Guid>("SignalID").ToString(),
                                     PointTag = row.Field<string>("PointTag"),
                                     Device = row.Field<string>("Device"),
-                                    Longitude = (float)row.Field<decimal>("Longitude"),
-                                    Latitude = (float)row.Field<decimal>("Latitude"),
+                                    Longitude = row.ConvertField("Longitude", 0.0F),
+                                    Latitude = row.ConvertField("Latitude", 0.0F),
                                     Protocol = row.Field<string>("Protocol"),
                                     SignalType = row.Field<string>("SignalType"),
                                     EngineeringUnits = row.Field<string>("EngineeringUnits"),
