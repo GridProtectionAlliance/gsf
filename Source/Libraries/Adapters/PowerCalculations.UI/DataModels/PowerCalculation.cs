@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
+using GSF;
 using GSF.Data;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.DataModels;
@@ -17,13 +18,9 @@ namespace PowerCalculations.UI.DataModels
 
 		private int m_powerCalculationId;
 		private string m_circuitDescription;
-		private Guid m_voltageAngleSignalId;
-		private Guid m_voltageMagnitudeSignalId;
-		private Guid m_currentAngleSignalId;
-		private Guid m_currentMagnitudeSignalId;
-		private Guid m_realPowerOutputSignalId;
-		private Guid m_activePowerOutputSignalId;
-		private Guid m_reactivePowerOutputSignalId;
+        private Measurement m_realPowerOutputMeasurement;
+        private Measurement m_reactivePowerOutputMeasurement;
+        private Measurement m_activePowerOutputMeasurement;
 		private bool m_powerCalculationEnabled;
 		private Guid m_nodeId;
 		private Phasor m_voltagePhasor;
@@ -57,7 +54,6 @@ namespace PowerCalculations.UI.DataModels
 			}
 		}
 
-		private Measurement m_realPowerOutputMeasurement;
 		public Measurement RealPowerOutputMeasurement
 		{
 			get { return m_realPowerOutputMeasurement; }
@@ -69,7 +65,6 @@ namespace PowerCalculations.UI.DataModels
 			}
 		}
 
-		private Measurement m_reactivePowerOutputMeasurement;
 		public Measurement ReactivePowerOutputMeasurement
 		{
 			get { return m_reactivePowerOutputMeasurement; }
@@ -81,7 +76,6 @@ namespace PowerCalculations.UI.DataModels
 			}
 		}
 
-		private Measurement m_activePowerOutputMeasurement;
 		public Measurement ActivePowerOutputMeasurement
 		{
 			get { return m_activePowerOutputMeasurement; }
@@ -125,7 +119,8 @@ namespace PowerCalculations.UI.DataModels
 				if (m_voltagePhasor == value) return;
 				m_voltagePhasor = value;
 				OnPropertyChanged("VoltagePhasor");
-			}
+                UpdateCircuitDescription();
+            }
 		}
 
 		public Phasor CurrentPhasor
@@ -136,21 +131,28 @@ namespace PowerCalculations.UI.DataModels
 				if (m_currentPhasor == value) return;
 				m_currentPhasor = value;
 				OnPropertyChanged("CurrentPhasor");
-			}
-		}
+                UpdateCircuitDescription();
+            }
+        }
+
+        private void UpdateCircuitDescription()
+        {
+            if ((object)m_voltagePhasor != null && (object)m_currentPhasor != null)
+                CircuitDescription = $"{LookupDeviceName(m_voltagePhasor.DeviceId)}-{(m_currentPhasor.Label ?? "").ToUpperInvariant().RemoveWhiteSpace()}";
+        }
 
 
-		#endregion
+        #endregion
 
 
-		#region [ Statics ]
+        #region [ Statics ]
 
-		/// <summary>
-		/// LoadKeys <see cref="PowerCalculation"/> information as an <see cref="ObservableCollection{T}"/> style list.
-		/// </summary>
-		/// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-		/// <returns>Collection of <see cref="int"/>.</returns>
-		public static IList<int> LoadKeys(AdoDataConnection database)
+        /// <summary>
+        /// LoadKeys <see cref="PowerCalculation"/> information as an <see cref="ObservableCollection{T}"/> style list.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <returns>Collection of <see cref="int"/>.</returns>
+        public static IList<int> LoadKeys(AdoDataConnection database)
 		{
 			var createdConnection = false;
 
@@ -175,6 +177,20 @@ namespace PowerCalculations.UI.DataModels
 					database.Dispose();
 			}
 		}
+
+        private static string LookupDeviceName(int deviceID)
+        {
+            AdoDataConnection database = null;
+            string deviceName = "";
+
+            if (CreateConnection(ref database))
+            {
+                deviceName = database.ExecuteScalar<string>("SELECT Acronym FROM Device WHERE ID={0}", deviceID) ?? "";
+                database.Dispose();
+            }
+
+            return deviceName;
+        }
 
 		/// <summary>
 		/// Loads <see cref="PowerCalculation"/> information as an <see cref="ObservableCollection{T}"/> style list.

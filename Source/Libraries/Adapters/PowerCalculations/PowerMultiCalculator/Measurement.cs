@@ -66,7 +66,7 @@ namespace PowerCalculations.PowerMultiCalculator
 		/// <summary>
 		/// Gets or sets the current <see cref="Measurement"/>'s Historian Id
 		/// </summary>
-		public int HistorianId { get; set; }
+		public int? HistorianId { get; set; }
 
 		/// <summary>
 		/// Gets or sets the current <see cref="Measurement"/>'s Signal Type Id
