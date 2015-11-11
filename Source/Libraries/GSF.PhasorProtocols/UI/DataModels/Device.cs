@@ -226,7 +226,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             set
             {
-                m_acronym = value.Replace("'", "").Replace(" ", "").ToUpper();
+                m_acronym = value.Replace("'", "").Replace(" ", "_").ToUpper();
                 if (m_acronym.Length > 200)
                     m_acronym = m_acronym.Substring(0, 200);
 
@@ -1287,7 +1287,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         "measurementReportingInterval", "connectOndemand", "updatedBy", "updatedOn", "createdBy", "createdOn");
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, nodeID,
-                        device.ParentID.ToNotNull(), database.Guid(Guid.NewGuid()), device.Acronym.Replace(" ", "").ToUpper(), device.Name.ToNotNull(), database.Bool(device.IsConcentrator), device.CompanyID.ToNotNull(),
+                        device.ParentID.ToNotNull(), database.Guid(Guid.NewGuid()), device.Acronym.Replace(" ", "_").ToUpper(), device.Name.ToNotNull(), database.Bool(device.IsConcentrator), device.CompanyID.ToNotNull(),
                         device.HistorianID.ToNotNull(), device.AccessID, device.VendorDeviceID.ToNotNull(),
                         device.ProtocolID.ToNotNull(), device.Longitude.ToNotNull(), device.Latitude.ToNotNull(), device.InterconnectionID.ToNotNull(),
                         BuildConnectionString(device), device.TimeZone.ToNotNull(), device.FramesPerSecond ?? 30, device.TimeAdjustmentTicks, device.DataLossInterval, device.ContactList.ToNotNull(), device.MeasuredLines.ToNotNull(),
@@ -1312,7 +1312,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         "updatedBy", "updatedOn", "id");
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, nodeID,
-                        device.ParentID.ToNotNull(), database.Guid(device.UniqueID), device.Acronym.Replace(" ", "").ToUpper(), device.Name.ToNotNull(), database.Bool(device.IsConcentrator), device.CompanyID.ToNotNull(),
+                        device.ParentID.ToNotNull(), database.Guid(device.UniqueID), device.Acronym.Replace(" ", "_").ToUpper(), device.Name.ToNotNull(), database.Bool(device.IsConcentrator), device.CompanyID.ToNotNull(),
                         device.HistorianID.ToNotNull(), device.AccessID, device.VendorDeviceID.ToNotNull(),
                         device.ProtocolID.ToNotNull(), device.Longitude.ToNotNull(), device.Latitude.ToNotNull(), device.InterconnectionID.ToNotNull(),
                         BuildConnectionString(device), device.TimeZone.ToNotNull(), device.FramesPerSecond ?? 30, device.TimeAdjustmentTicks, device.DataLossInterval, device.ContactList.ToNotNull(), device.MeasuredLines.ToNotNull(),
@@ -1322,7 +1322,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 }
 
 
-                Device savedDevice = GetDevice(database, "WHERE Acronym = '" + device.Acronym.Replace(" ", "").ToUpper() + "'");
+                Device savedDevice = GetDevice(database, "WHERE Acronym = '" + device.Acronym.Replace(" ", "_").ToUpper() + "'");
 
                 if ((object)savedDevice == null)
                     return "Device information saved successfully but failed to create measurements";

@@ -74,7 +74,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             set
             {
-                m_acronym = value.Replace("'", "").Replace(" ", "").ToUpper();
+                m_acronym = value.Replace("'", "").Replace(" ", "_").ToUpper();
 
                 if (m_acronym.Length > 200)
                     m_acronym = m_acronym.Substring(0, 200);

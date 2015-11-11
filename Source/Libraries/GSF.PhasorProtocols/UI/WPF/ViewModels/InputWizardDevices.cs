@@ -481,7 +481,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             }
             set
             {
-                m_pdcAcronym = value.Replace(" ", "").Replace("'", "").ToUpper();
+                m_pdcAcronym = value.Replace(" ", "_").Replace("'", "").ToUpper();
                 ValidatePdcAcronym();
             }
         }
@@ -1069,11 +1069,11 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             {
                 foreach (IConfigurationCell cell in m_configurationFrame.Cells)
                 {
-                    Device existingDevice = Device.GetDevice(null, "WHERE Acronym = '" + cell.StationName.Replace(" ", "").Replace("'", "").ToUpper() + "'");
+                    Device existingDevice = Device.GetDevice(null, "WHERE Acronym = '" + cell.StationName.Replace(" ", "_").Replace("'", "").ToUpper() + "'");
 
                     wizardDeviceList.Add(new InputWizardDevice()
                     {
-                        Acronym = cell.StationName.Replace(" ", "").Replace("'", "").ToUpper(),
+                        Acronym = cell.StationName.Replace(" ", "_").Replace("'", "").ToUpper(),
                         Name = CultureInfo.CurrentUICulture.TextInfo.ToTitleCase(cell.StationName.ToLower()),
                         Longitude = existingDevice == null ? -98.6m : existingDevice.Longitude == null ? -98.6m : (decimal)existingDevice.Longitude,
                         Latitude = existingDevice == null ? 37.5m : existingDevice.Latitude == null ? 37.5m : (decimal)existingDevice.Latitude,
