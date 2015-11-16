@@ -336,7 +336,7 @@ namespace KafkaAdapters
                                 {
                                     ID = key.ID,
                                     Source = key.Source,
-                                    UniqueID = row.Field<Guid>("SignalID").ToString(),
+                                    UniqueID = row.Field<object>("SignalID").ToString(),
                                     PointTag = row.Field<string>("PointTag"),
                                     Device = row.Field<string>("Device"),
                                     Longitude = row.ConvertField("Longitude", 0.0F),
