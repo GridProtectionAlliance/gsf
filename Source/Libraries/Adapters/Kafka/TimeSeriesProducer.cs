@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using GSF;
@@ -58,9 +59,24 @@ namespace KafkaAdapters
         public const int DefaultPartitions = 1;
 
         /// <summary>
+        /// Defines the default value for the <see cref="Encoding"/> property.
+        /// </summary>
+        public const Encoding DefaultEncoding = null;
+
+        /// <summary>
         /// Defines the default value for the <see cref="SerializeMetadata"/> property.
         /// </summary>
         public const bool DefaultSerializeMetadata = true;
+
+        /// <summary>
+        /// Defines the default value for the <see cref="TimestampFormat"/> property.
+        /// </summary>
+        public const string DefaultTimestampFormat = "yyyy-MM-dd HH:mm:ss.fffffff";
+
+        /// <summary>
+        /// Defines the default value for the <see cref="ValueFormat"/> property.
+        /// </summary>
+        public const string DefaultValueFormat = "0.######";
 
         /// <summary>
         /// Defines the default value for the <see cref="CacheMetadataLocally"/> property.
@@ -74,6 +90,7 @@ namespace KafkaAdapters
         private TimeSeriesMetadata m_metadata;
         private long m_metadataUpdateCount;
         private LongSynchronizedOperation m_cacheMetadataLocally;
+        private Encoding m_encoding;
 
         #endregion
 
@@ -109,6 +126,48 @@ namespace KafkaAdapters
         /// </summary>
         [ConnectionStringParameter, Description("Defines the total number of partitions defined for distribution of measurement data. The measurement key ID will be used to target a particular partition (ID % Partitions)."), DefaultValue(DefaultPartitions)]
         public int Partitions
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the encoding used to serialize measurements into the Kafka stream. Default value of null defines binary encoding.
+        /// </summary>
+        [ConnectionStringParameter, Description("Defines the encoding used to serialize measurements."), DefaultValue(DefaultEncoding)]
+        public string Encoding
+        {
+            get
+            {
+                if ((object)m_encoding != null)
+                    return m_encoding.EncodingName;
+
+                return null;
+            }
+            set
+            {
+                if ((object)value != null)
+                    m_encoding = System.Text.Encoding.GetEncoding(value);
+                else
+                    m_encoding = null;
+            }
+        }
+        
+        /// <summary>
+        /// Gets or sets the text format for measurement timestamps.
+        /// </summary>
+        [ConnectionStringParameter, Description("Defines the text format for measurement timestamps."), DefaultValue(DefaultTimestampFormat)]
+        public string TimestampFormat
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the text format for measurement values.
+        /// </summary>
+        [ConnectionStringParameter, Description("Defines the the text format for measurement values."), DefaultValue(DefaultValueFormat)]
+        public string ValueFormat
         {
             get;
             set;
@@ -230,6 +289,21 @@ namespace KafkaAdapters
             else
                 Partitions = DefaultPartitions;
 
+            if (settings.TryGetValue(nameof(Encoding), out setting))
+                Encoding = setting;
+            else
+                Encoding = null;
+
+            if (settings.TryGetValue(nameof(TimestampFormat), out setting))
+                TimestampFormat = setting;
+            else
+                TimestampFormat = DefaultTimestampFormat;
+
+            if (settings.TryGetValue(nameof(ValueFormat), out setting))
+                ValueFormat = setting;
+            else
+                ValueFormat = DefaultValueFormat;
+
             if (settings.TryGetValue(nameof(SerializeMetadata), out setting))
                 SerializeMetadata = setting.ParseBoolean();
             else
@@ -336,7 +410,7 @@ namespace KafkaAdapters
                                 {
                                     ID = key.ID,
                                     Source = key.Source,
-                                    UniqueID = row.Field<Guid>("SignalID").ToString(),
+                                    UniqueID = row.Field<object>("SignalID").ToString(),
                                     PointTag = row.Field<string>("PointTag"),
                                     Device = row.Field<string>("Device"),
                                     Longitude = row.ConvertField("Longitude", 0.0F),
@@ -404,7 +478,12 @@ namespace KafkaAdapters
                 foreach (IMeasurement measurement in measurements)
                 {
                     Message message = new Message { PartitionId = (int)(measurement.Key.ID % Partitions) };
-                    measurement.KakfaSerialize(message, MetadataVersion);
+
+                    if ((object)m_encoding != null)
+                        KafkaTextEncode(measurement, message, MetadataVersion);
+                    else
+                        measurement.KakfaSerialize(message, MetadataVersion);
+
                     messages.Add(message);
                 }
 
@@ -415,7 +494,31 @@ namespace KafkaAdapters
                 OnProcessException(new InvalidOperationException($"Exception while sending Kafka messages for topic \"{Topic}\": {ex.Message}", ex));
                 Start();
             }
-        }        
+        }
+
+        private void KafkaTextEncode(IMeasurement measurement, Message message, byte metadataVersion)
+        {
+            if ((object)measurement == null)
+                throw new ArgumentNullException(nameof(measurement));
+
+            if ((object)message == null)
+                throw new ArgumentNullException(nameof(message));
+
+            // Copy in "key" for Kafka message, for a time-series entity, the "timestamp" and "ID"
+            string timeString = measurement.Timestamp.ToString(TimestampFormat, CultureInfo.InvariantCulture);
+            string idString = measurement.Key.ID.ToString();
+            string messageKeyString = string.Concat(timeString, ",", idString);
+
+            // Copy in "value" for Kafka message, for a time-series entity, the "version", "quality" and "value"
+            string versionString = metadataVersion.ToString();
+            string qualityString = ((byte)((int)measurement.StateFlags.DeriveQualityFlags() | (SerializationExtensions.DecodeVersion << 2))).ToString();
+            string valueString = measurement.AdjustedValue.ToString(ValueFormat, CultureInfo.InvariantCulture);
+            string messageValueString = string.Join(",", versionString, qualityString, valueString);
+
+            // Text-encode the key and value
+            message.Key = m_encoding.GetBytes(messageKeyString);
+            message.Value = m_encoding.GetBytes(messageValueString);
+        }
 
         #endregion
     }

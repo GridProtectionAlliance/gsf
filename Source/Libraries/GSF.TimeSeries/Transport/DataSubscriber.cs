@@ -1579,36 +1579,45 @@ namespace GSF.TimeSeries.Transport
             // Initialize data gap recovery processing, if requested
             if (settings.TryGetValue("dataGapRecovery", out setting))
             {
-                // Example connection string for data gap recovery:
-                //  dataGapRecovery={enabled=true; recoveryStartDelay=10.0; minimumRecoverySpan=0.0; maximumRecoverySpan=3600.0}
-                Dictionary<string, string> dataGapSettings = setting.ParseKeyValuePairs();
+                // Make sure setting exists to allow user to by-pass phasor data source validation at startup
+                ConfigurationFile configFile = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
+                CategorizedSettingsElement dataGapRecoveryEnabledSetting = systemSettings["DataGapRecoveryEnabled"];
 
-                if (dataGapSettings.TryGetValue("enabled", out setting) && setting.ParseBoolean())
+                // See if this node should process phasor source validation
+                if ((object)dataGapRecoveryEnabledSetting == null || dataGapRecoveryEnabledSetting.ValueAsBoolean())
                 {
-                    // Remove dataGapRecovery connection setting from command channel connection string, if defined there.
-                    // This will prevent any recursive data gap recovery operations from being established:
-                    Dictionary<string, string> connectionSettings = m_commandChannel.ConnectionString.ParseKeyValuePairs();
-                    connectionSettings.Remove("dataGapRecovery");
-                    connectionSettings.Remove("autoConnect");
-                    connectionSettings.Remove("synchronizeMetadata");
-                    connectionSettings.Remove("outputMeasurements");
+                    // Example connection string for data gap recovery:
+                    //  dataGapRecovery={enabled=true; recoveryStartDelay=10.0; minimumRecoverySpan=0.0; maximumRecoverySpan=3600.0}
+                    Dictionary<string, string> dataGapSettings = setting.ParseKeyValuePairs();
 
-                    // Note that the data gap recoverer will connect on the same command channel port as
-                    // the real-time subscriber (TCP only)
-                    m_dataGapRecoveryEnabled = true;
-                    m_dataGapRecoverer = new DataGapRecoverer();
-                    m_dataGapRecoverer.SourceConnectionName = Name;
-                    m_dataGapRecoverer.DataSource = DataSource;
-                    m_dataGapRecoverer.ConnectionString = string.Join("; ", string.Format("autoConnect=false; synchronizeMetadata=false{0}", string.IsNullOrWhiteSpace(m_loggingPath) ? "" : "; loggingPath=" + m_loggingPath), dataGapSettings.JoinKeyValuePairs(), connectionSettings.JoinKeyValuePairs());
-                    m_dataGapRecoverer.FilterExpression = this.OutputMeasurementKeys().Select(key => key.SignalID.ToString()).ToDelimitedString(';');
-                    m_dataGapRecoverer.RecoveredMeasurements += m_dataGapRecoverer_RecoveredMeasurements;
-                    m_dataGapRecoverer.StatusMessage += m_dataGapRecoverer_StatusMessage;
-                    m_dataGapRecoverer.ProcessException += m_dataGapRecoverer_ProcessException;
-                    m_dataGapRecoverer.Initialize();
-                }
-                else
-                {
-                    m_dataGapRecoveryEnabled = false;
+                    if (dataGapSettings.TryGetValue("enabled", out setting) && setting.ParseBoolean())
+                    {
+                        // Remove dataGapRecovery connection setting from command channel connection string, if defined there.
+                        // This will prevent any recursive data gap recovery operations from being established:
+                        Dictionary<string, string> connectionSettings = m_commandChannel.ConnectionString.ParseKeyValuePairs();
+                        connectionSettings.Remove("dataGapRecovery");
+                        connectionSettings.Remove("autoConnect");
+                        connectionSettings.Remove("synchronizeMetadata");
+                        connectionSettings.Remove("outputMeasurements");
+
+                        // Note that the data gap recoverer will connect on the same command channel port as
+                        // the real-time subscriber (TCP only)
+                        m_dataGapRecoveryEnabled = true;
+                        m_dataGapRecoverer = new DataGapRecoverer();
+                        m_dataGapRecoverer.SourceConnectionName = Name;
+                        m_dataGapRecoverer.DataSource = DataSource;
+                        m_dataGapRecoverer.ConnectionString = string.Join("; ", string.Format("autoConnect=false; synchronizeMetadata=false{0}", string.IsNullOrWhiteSpace(m_loggingPath) ? "" : "; loggingPath=" + m_loggingPath), dataGapSettings.JoinKeyValuePairs(), connectionSettings.JoinKeyValuePairs());
+                        m_dataGapRecoverer.FilterExpression = this.OutputMeasurementKeys().Select(key => key.SignalID.ToString()).ToDelimitedString(';');
+                        m_dataGapRecoverer.RecoveredMeasurements += m_dataGapRecoverer_RecoveredMeasurements;
+                        m_dataGapRecoverer.StatusMessage += m_dataGapRecoverer_StatusMessage;
+                        m_dataGapRecoverer.ProcessException += m_dataGapRecoverer_ProcessException;
+                        m_dataGapRecoverer.Initialize();
+                    }
+                    else
+                    {
+                        m_dataGapRecoveryEnabled = false;
+                    }
                 }
             }
             else

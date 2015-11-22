@@ -151,7 +151,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public DataGapRecoverer()
         {
-            m_dataGapRecoveryCompleted = new ManualResetEventSlim(false);
+            m_dataGapRecoveryCompleted = new ManualResetEventSlim(true);
 
             m_recoveryStartDelay = DefaultRecoveryStartDelay;
             m_minimumRecoverySpan = DefaultMinimumRecoverySpan;
