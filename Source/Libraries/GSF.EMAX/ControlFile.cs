@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace GSF.EMAX
@@ -239,8 +240,10 @@ namespace GSF.EMAX
                 }
 
                 // Read in actual file structures
-                foreach (CTL_FILE_STRUCT fileStructure in FileStructures)
+                for (int index = 0; index < FileStructures.Length; index++)
                 {
+                    CTL_FILE_STRUCT fileStructure = FileStructures[index];
+
                     if (fileStructure.type == StructureType.Unknown)
                         continue;
 
@@ -277,9 +280,18 @@ namespace GSF.EMAX
                                     ScalingFactors = new Dictionary<int, double>();
                                     ANLG_CHNL_NEW settings;
 
+                                    uint nextOffset = (index + 1 < FileStructures.Length) ? FileStructures[index + 1].offset : (uint)stream.Length;
+                                    uint length = nextOffset - fileStructure.offset;
+                                    Func<ANLG_CHNL_NEW> channelFactory;
+
+                                    if (Marshal.SizeOf<ANLG_CHNL_NEW2>() * ConfiguredAnalogChannels <= length)
+                                        channelFactory = () => reader.ReadStructure<ANLG_CHNL_NEW2>().ToAnlgChnlNew();
+                                    else
+                                        channelFactory = () => reader.ReadStructure<ANLG_CHNL_NEW1>().ToAnlgChnlNew();
+
                                     for (int i = 0; i < ConfiguredAnalogChannels; i++)
                                     {
-                                        settings = reader.ReadStructure<ANLG_CHNL_NEW>();
+                                        settings = channelFactory();
                                         AnalogChannelSettings.Add(settings.ChannelNumber, settings);
                                         ScalingFactors.Add(settings.ChannelNumber, settings.ScalingFactor);
                                     }
@@ -291,9 +303,18 @@ namespace GSF.EMAX
                                     EventChannelSettings = new Dictionary<int, EVNT_CHNL_NEW>();
                                     EVNT_CHNL_NEW settings;
 
+                                    uint nextOffset = (index + 1 < FileStructures.Length) ? FileStructures[index + 1].offset : (uint)stream.Length;
+                                    uint length = nextOffset - fileStructure.offset;
+                                    Func<EVNT_CHNL_NEW> channelFactory;
+
+                                    if (Marshal.SizeOf<EVNT_CHNL_NEW2>() * ConfiguredDigitalChannels <= length)
+                                        channelFactory = () => reader.ReadStructure<EVNT_CHNL_NEW2>().ToEvntChnlNew();
+                                    else
+                                        channelFactory = () => reader.ReadStructure<EVNT_CHNL_NEW1>().ToEvntChnlNew();
+
                                     for (int i = 0; i < ConfiguredDigitalChannels; i++)
                                     {
-                                        settings = reader.ReadStructure<EVNT_CHNL_NEW>();
+                                        settings = channelFactory();
                                         EventChannelSettings.Add(settings.EventNumber, settings);
                                     }
                                 });

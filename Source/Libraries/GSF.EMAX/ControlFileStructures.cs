@@ -24,6 +24,7 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using GSF.Annotations;
 
 // ReSharper disable FieldCanBeMadeReadOnly.Local
 // ReSharper disable MemberCanBePrivate.Local
@@ -479,8 +480,74 @@ namespace GSF.EMAX
         }
     }
 
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
     public struct ANLG_CHNL_NEW
+    {
+        public string chanlnum;
+        public string title;
+        public string type;
+        public string primary;
+        public string secondary;
+        public string cal_in;
+        public string cal_ref;
+        public string shunt;
+        public string display_location;
+        public string display_scale;
+        public string limit_set;
+        public string limit_on_off;
+        public string over_set;
+        public string over_on_off;
+        public string under_set;
+        public string under_on_off;
+        public string rate_set;
+        public string rate_on_off;
+        public string mult_factor;
+        public string ct_ratio;
+        public string peak_cal;
+        public string cr_lf;
+
+        public int ChannelNumber
+        {
+            get
+            {
+                int number;
+
+                if (!int.TryParse(chanlnum, out number))
+                    return -1;
+
+                return number - 1;  // Prefer zero based indexes
+            }
+        }
+
+        public double ScalingFactor
+        {
+            get
+            {
+                double d_cal_in, d_cal_ref, d_secondary, d_primary;
+
+                if (!double.TryParse(cal_in, out d_cal_in))
+                    d_cal_in = 1.0D;
+
+                if (!double.TryParse(cal_ref, out d_cal_ref) || d_cal_ref == 0.0D)
+                    d_cal_ref = 1.0D;
+
+                if (!double.TryParse(secondary, out d_secondary))
+                    d_secondary = 1.0D;
+
+                if (!double.TryParse(primary, out d_primary))
+                    d_primary = 1.0D;
+
+                return 5.0D * d_cal_in / d_cal_ref * d_primary / d_secondary;
+            }
+        }
+
+        public override string ToString()
+        {
+            return title.ToNonNullString().Trim();
+        }
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+    public struct ANLG_CHNL_NEW1
     {
         private const int TYPE_LEN = 1;
         private const int TITLE_LEN = 20;
@@ -543,49 +610,160 @@ namespace GSF.EMAX
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 3)]
         public string cr_lf;
 
-        public int ChannelNumber
+        public ANLG_CHNL_NEW ToAnlgChnlNew()
+        {
+            return new ANLG_CHNL_NEW()
+            {
+                chanlnum = chanlnum,
+                title = title,
+                type = type,
+                primary = primary,
+                secondary = secondary,
+                cal_in = cal_in,
+                cal_ref = cal_ref,
+                shunt = shunt,
+                display_location = display_location,
+                display_scale = display_scale,
+                limit_set = limit_set,
+                limit_on_off = limit_on_off,
+                over_set = over_set,
+                over_on_off = over_on_off,
+                under_set = under_set,
+                under_on_off = under_on_off,
+                rate_set = rate_set,
+                rate_on_off = rate_on_off,
+                mult_factor = mult_factor,
+                ct_ratio = ct_ratio,
+                peak_cal = peak_cal,
+                cr_lf = cr_lf
+            };
+        }
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+    public struct ANLG_CHNL_NEW2
+    {
+        private const int TYPE_LEN = 1;
+        private const int TITLE_LEN = 64;
+        private const int CHANLNUM_LEN = 2;
+        private const int PRIMARY_LEN = 6;
+        private const int SECONDARY_LEN = 4;
+        private const int CT_RATIO_LEN = 4;
+        private const int SHUNT_LEN = 4;
+        private const int LIMIT_SET_LEN = 3;
+        private const int SET_LEN = 3;
+        private const int ON_OFF_LEN = 3;
+        private const int SCALE_FACTOR_LEN = 2;
+        private const int ZERO_LINE_LEN = 4;
+        private const int MULT_FACT_LEN = 8;
+        private const int CAL_LEN = 4;
+        private const int PEAK_CAL_LEN = 4;
+
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = CHANLNUM_LEN + 1)]
+        public string chanlnum;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = TITLE_LEN + 1)]
+        public string title;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = TYPE_LEN + 1)]
+        public string type;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = PRIMARY_LEN + 1)]
+        public string primary;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = SECONDARY_LEN + 1)]
+        public string secondary;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = CAL_LEN + 1)]
+        public string cal_in;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = CAL_LEN + 1)]
+        public string cal_ref;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = SHUNT_LEN + 1)]
+        public string shunt;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = ZERO_LINE_LEN + 1)]
+        public string display_location;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = SCALE_FACTOR_LEN + 1)]
+        public string display_scale;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = LIMIT_SET_LEN + 1)]
+        public string limit_set;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = ON_OFF_LEN + 1)]
+        public string limit_on_off;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = SET_LEN + 1)]
+        public string over_set;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = ON_OFF_LEN + 1)]
+        public string over_on_off;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = SET_LEN + 1)]
+        public string under_set;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = ON_OFF_LEN + 1)]
+        public string under_on_off;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = SET_LEN + 1)]
+        public string rate_set;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = ON_OFF_LEN + 1)]
+        public string rate_on_off;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MULT_FACT_LEN + 1)]
+        public string mult_factor;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = CT_RATIO_LEN + 1)]
+        public string ct_ratio;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = PEAK_CAL_LEN + 1)]
+        public string peak_cal;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 3)]
+        public string cr_lf;
+
+        public ANLG_CHNL_NEW ToAnlgChnlNew()
+        {
+            return new ANLG_CHNL_NEW()
+            {
+                chanlnum = chanlnum,
+                title = title,
+                type = type,
+                primary = primary,
+                secondary = secondary,
+                cal_in = cal_in,
+                cal_ref = cal_ref,
+                shunt = shunt,
+                display_location = display_location,
+                display_scale = display_scale,
+                limit_set = limit_set,
+                limit_on_off = limit_on_off,
+                over_set = over_set,
+                over_on_off = over_on_off,
+                under_set = under_set,
+                under_on_off = under_on_off,
+                rate_set = rate_set,
+                rate_on_off = rate_on_off,
+                mult_factor = mult_factor,
+                ct_ratio = ct_ratio,
+                peak_cal = peak_cal,
+                cr_lf = cr_lf
+            };
+        }
+    }
+
+    public struct EVNT_CHNL_NEW
+    {
+        public string eventnum;
+        public string e_title;
+        public string nc_no;
+        public string alarm_on_off;
+        public string rtn_on_off;
+        public ushort eveentdebouncems;
+
+        public int EventNumber
         {
             get
             {
                 int number;
 
-                if (!int.TryParse(chanlnum, out number))
+                if (!int.TryParse(eventnum, out number))
                     return -1;
 
                 return number - 1;  // Prefer zero based indexes
             }
         }
 
-        public double ScalingFactor
-        {
-            get
-            {
-                double d_cal_in, d_cal_ref, d_secondary, d_primary;
-
-                if (!double.TryParse(cal_in, out d_cal_in))
-                    d_cal_in = 1.0D;
-
-                if (!double.TryParse(cal_ref, out d_cal_ref) || d_cal_ref == 0.0D)
-                    d_cal_ref = 1.0D;
-
-                if (!double.TryParse(secondary, out d_secondary))
-                    d_secondary = 1.0D;
-
-                if (!double.TryParse(primary, out d_primary))
-                    d_primary = 1.0D;
-
-                return 5.0D * d_cal_in / d_cal_ref * d_primary / d_secondary;
-            }
-        }
-
         public override string ToString()
         {
-            return title.ToNonNullString().Trim();
+            return e_title.ToNonNullString().Trim();
         }
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-    public struct EVNT_CHNL_NEW
+    public struct EVNT_CHNL_NEW1
     {
         private const int EVENTNUM_LEN = 2;
         private const int E_TITLE_LEN = 20;
@@ -605,22 +783,52 @@ namespace GSF.EMAX
         [MarshalAs(UnmanagedType.I2)]
         public ushort eveentdebouncems;
 
-        public int EventNumber
+        public EVNT_CHNL_NEW ToEvntChnlNew()
         {
-            get
+            return new EVNT_CHNL_NEW()
             {
-                int number;
-
-                if (!int.TryParse(eventnum, out number))
-                    return -1;
-
-                return number - 1;  // Prefer zero based indexes
-            }
+                eventnum = eventnum,
+                e_title = e_title,
+                nc_no = nc_no,
+                alarm_on_off = alarm_on_off,
+                rtn_on_off = rtn_on_off,
+                eveentdebouncems = eveentdebouncems
+            };
         }
+    }
 
-        public override string ToString()
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+    public struct EVNT_CHNL_NEW2
+    {
+        private const int EVENTNUM_LEN = 2;
+        private const int E_TITLE_LEN = 64;
+        private const int NC_NO_LEN = 2;
+        private const int E_ON_OFF_LEN = 3;
+
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = EVENTNUM_LEN + 1)]
+        public string eventnum;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = E_TITLE_LEN + 1)]
+        public string e_title;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = NC_NO_LEN + 1)]
+        public string nc_no;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = E_ON_OFF_LEN + 1)]
+        public string alarm_on_off;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = E_ON_OFF_LEN + 1)]
+        public string rtn_on_off;
+        [MarshalAs(UnmanagedType.I2)]
+        public ushort eveentdebouncems;
+
+        public EVNT_CHNL_NEW ToEvntChnlNew()
         {
-            return e_title.ToNonNullString().Trim();
+            return new EVNT_CHNL_NEW()
+            {
+                eventnum = eventnum,
+                e_title = e_title,
+                nc_no = nc_no,
+                alarm_on_off = alarm_on_off,
+                rtn_on_off = rtn_on_off,
+                eveentdebouncems = eveentdebouncems
+            };
         }
     }
 
