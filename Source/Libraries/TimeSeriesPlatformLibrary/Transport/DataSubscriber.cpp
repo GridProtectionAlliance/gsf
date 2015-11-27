@@ -474,20 +474,20 @@ void gsfts::Transport::DataSubscriber::NewMeasurementsDispatcher(DataSubscriber*
 	dataPacketFlags = data[0];
 	++offset;
 
-	// Read measurement count and gather statistics
-	measurementCountPtr = (int32_t*)&data[1];
-	source->m_totalMeasurementsReceived += source->m_endianConverter.ConvertBigEndian(*measurementCountPtr);
-	offset += 4;
-
 	// Read frame-level timestamp, if available
 	if (dataPacketFlags & DataPacketFlags::Synchronized)
 	{
-		frameLevelTimestampPtr = (int64_t*)(measurementCountPtr + 1);
+		frameLevelTimestampPtr = (int64_t*)&data[offset];
 		frameLevelTimestamp = source->m_endianConverter.ConvertBigEndian(*frameLevelTimestampPtr);
 		offset += 8;
 
 		includeTime = false;
 	}
+
+	// Read measurement count and gather statistics
+	measurementCountPtr = (int32_t*)&data[offset];
+	source->m_totalMeasurementsReceived += source->m_endianConverter.ConvertBigEndian(*measurementCountPtr);
+	offset += 4;
 
 	// Set up buffer and length for measurement parsing
 	buffer = &data[0];
@@ -495,6 +495,7 @@ void gsfts::Transport::DataSubscriber::NewMeasurementsDispatcher(DataSubscriber*
 	
 	// Create measurement parser
 	CompactMeasurementParser measurementParser(source->m_signalIndexCache, source->m_baseTimeOffsets, includeTime, info.UseMillisecondResolution);
+
 
 	if (newMeasurementsCallback != 0)
 	{
@@ -511,7 +512,7 @@ void gsfts::Transport::DataSubscriber::NewMeasurementsDispatcher(DataSubscriber*
 			if (frameLevelTimestampPtr != 0)
 				parsedMeasurement.Timestamp = frameLevelTimestamp;
 
-			newMeasurements.push_back(measurementParser.GetParsedMeasurement());
+			newMeasurements.push_back(parsedMeasurement);
 		}
 
 		newMeasurementsCallback(newMeasurements);

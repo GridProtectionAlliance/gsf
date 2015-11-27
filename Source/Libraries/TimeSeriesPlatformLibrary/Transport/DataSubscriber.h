@@ -347,7 +347,8 @@ namespace Transport
 			  m_port(0),
 			  m_maxRetries(-1),
 			  m_retryInterval(2000),
-			  m_autoReconnect(true)
+			  m_autoReconnect(true),
+			  m_cancel(false)
 		{
 		}
 

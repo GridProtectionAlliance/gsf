@@ -98,7 +98,7 @@ void gsfts::Transport::SignalIndexCache::GetMeasurementKey(
 }
 
 // Gets the 16-bit runtime ID associated with the given globally unique signal ID.
-unsigned short TimeSeriesFramework::Transport::SignalIndexCache::GetSignalIndex(gsfts::Guid signalID) const
+unsigned short gsfts::Transport::SignalIndexCache::GetSignalIndex(gsfts::Guid signalID) const
 {
 	std::map<gsfts::Guid, uint16_t>::const_iterator it;
 	uint16_t signalIndex = 0xFFFF;
