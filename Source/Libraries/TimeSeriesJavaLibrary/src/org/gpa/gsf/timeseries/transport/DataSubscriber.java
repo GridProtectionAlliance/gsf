@@ -895,14 +895,14 @@ public class DataSubscriber
 		compactFlag = (dataPacketFlags & DataPacketFlags.Compact) != 0;
 		syncFlag = (dataPacketFlags & DataPacketFlags.Synchronized) != 0;
 		
-		// Gather statistics
-		m_totalMeasurementsReceived += buffer.getInt();
-		
 		if (syncFlag)
 		{
 			frameLevelTimestamp = buffer.getLong();
 			includeTime = false;
 		}
+		
+		// Gather statistics
+		m_totalMeasurementsReceived += buffer.getInt();
 		
 		if (compactFlag)
 		{
