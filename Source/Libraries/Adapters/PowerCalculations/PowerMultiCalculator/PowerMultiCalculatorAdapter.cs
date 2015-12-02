@@ -323,11 +323,9 @@ namespace PowerCalculations.PowerMultiCalculator
                 }
                 finally
                 {
-                    if (OutputMeasurements != null && OutputMeasurements.Any())
+                    if ((object)powerCalculation.ActivePowerOutputMeasurement != null)
                     {
                         Measurement activePowerMeasurement = Measurement.Clone(powerCalculation.ActivePowerOutputMeasurement, activePower, frame.Timestamp);
-                        Measurement reactivePowerMeasurement = Measurement.Clone(powerCalculation.ReactivePowerOutputMeasurement, reactivePower, frame.Timestamp);
-                        Measurement apparentPowerMeasurement = Measurement.Clone(powerCalculation.ApparentPowerOutputMeasurement, apparentPower, frame.Timestamp);
 
                         if (AlwaysProduceResult || !double.IsNaN(activePowerMeasurement.Value))
                         {
@@ -338,6 +336,11 @@ namespace PowerCalculations.PowerMultiCalculator
                             while (m_lastActivePowerCalculations.Count > ValuesToTrack)
                                 m_lastActivePowerCalculations.Dequeue();
                         }
+                    }
+
+                    if ((object)powerCalculation.ReactivePowerOutputMeasurement != null)
+                    {
+                        Measurement reactivePowerMeasurement = Measurement.Clone(powerCalculation.ReactivePowerOutputMeasurement, reactivePower, frame.Timestamp);
 
                         if (AlwaysProduceResult || !double.IsNaN(reactivePowerMeasurement.Value))
                         {
@@ -348,6 +351,11 @@ namespace PowerCalculations.PowerMultiCalculator
                             while (m_lastReactivePowerCalculations.Count > ValuesToTrack)
                                 m_lastReactivePowerCalculations.Dequeue();
                         }
+                    }
+
+                    if ((object)powerCalculation.ApparentPowerOutputMeasurement != null)
+                    {
+                        Measurement apparentPowerMeasurement = Measurement.Clone(powerCalculation.ApparentPowerOutputMeasurement, apparentPower, frame.Timestamp);
 
                         if (AlwaysProduceResult || !double.IsNaN(apparentPowerMeasurement.Value))
                         {
