@@ -49,19 +49,20 @@ namespace PowerCalculations.PowerMultiCalculator
     {
         #region [ Members ]
 
+        // Constants
         private const double SqrtOf3 = 1.7320508075688772935274463415059D;
         private const int ValuesToTrack = 5;
 
+        // Fields
         private List<PowerCalculation> m_configuredCalculations;
-        private RunningAverage m_averageCalculationsPerFrame = new RunningAverage();
-        private RunningAverage m_averageCalculationTime = new RunningAverage();
-        private RunningAverage m_averageTotalCalculationTime = new RunningAverage();
+        private RunningAverage m_averageCalculationsPerFrame;
+        private RunningAverage m_averageCalculationTime;
+        private RunningAverage m_averageTotalCalculationTime;
+        private ConcurrentQueue<IMeasurement> m_lastActivePowerCalculations;
+        private ConcurrentQueue<IMeasurement> m_lastReactivePowerCalculations;
+        private ConcurrentQueue<IMeasurement> m_lastApparentPowerCalculations;
         private double m_lastTotalCalculationTime;
         private int m_lastTotalCalculations;
-
-        private Queue<IMeasurement> m_lastActivePowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
-        private Queue<IMeasurement> m_lastReactivePowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
-        private Queue<IMeasurement> m_lastApparentPowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
 
         #endregion
 
@@ -141,10 +142,7 @@ namespace PowerCalculations.PowerMultiCalculator
                 }
                 else
                 {
-                    IMeasurement[] activePowerValues = new IMeasurement[m_lastActivePowerCalculations.Count];
-                    m_lastActivePowerCalculations.CopyTo(activePowerValues, 0);
-
-                    foreach (IMeasurement measurement in activePowerValues)
+                    foreach (IMeasurement measurement in m_lastActivePowerCalculations)
                         status.AppendLine($"\t{measurement.Key} = {measurement.AdjustedValue:N3}");
                 }
 
@@ -156,11 +154,7 @@ namespace PowerCalculations.PowerMultiCalculator
                 }
                 else
                 {
-                    IMeasurement[] reactivePowerValues = new IMeasurement[m_lastReactivePowerCalculations.Count];
-
-                    m_lastReactivePowerCalculations.CopyTo(reactivePowerValues, 0);
-
-                    foreach (IMeasurement measurement in reactivePowerValues)
+                    foreach (IMeasurement measurement in m_lastReactivePowerCalculations)
                         status.AppendLine($"\t{measurement.Key} = {measurement.AdjustedValue:N3}");
                 }
 
@@ -172,11 +166,7 @@ namespace PowerCalculations.PowerMultiCalculator
                 }
                 else
                 {
-                    IMeasurement[] apparentPowerValues = new IMeasurement[m_lastApparentPowerCalculations.Count];
-
-                    m_lastApparentPowerCalculations.CopyTo(apparentPowerValues, 0);
-
-                    foreach (IMeasurement measurement in apparentPowerValues)
+                    foreach (IMeasurement measurement in m_lastApparentPowerCalculations)
                         status.AppendLine($"\t{measurement.Key} = {measurement.AdjustedValue:N3}");
                 }
 
@@ -199,13 +189,13 @@ namespace PowerCalculations.PowerMultiCalculator
 
             HashSet<IMeasurement> outputMeasurements = new HashSet<IMeasurement>();
 
+            m_configuredCalculations = new List<PowerCalculation>();
             m_averageCalculationsPerFrame = new RunningAverage();
             m_averageCalculationTime = new RunningAverage();
             m_averageTotalCalculationTime = new RunningAverage();
-            m_lastActivePowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
-            m_lastReactivePowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
-            m_lastApparentPowerCalculations = new Queue<IMeasurement>(ValuesToTrack);
-            m_configuredCalculations = new List<PowerCalculation>();
+            m_lastActivePowerCalculations = new ConcurrentQueue<IMeasurement>();
+            m_lastReactivePowerCalculations = new ConcurrentQueue<IMeasurement>();
+            m_lastApparentPowerCalculations = new ConcurrentQueue<IMeasurement>();
 
             using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
             using (IDbCommand cmd = database.Connection.CreateCommand())
@@ -262,14 +252,14 @@ namespace PowerCalculations.PowerMultiCalculator
         /// <param name="index">Index of frame within second.</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            Stopwatch totalCalculationTimeStopwatch = new Stopwatch();
-            totalCalculationTimeStopwatch.Start();
-
-            Stopwatch lastCalculationTimeStopwatch = new Stopwatch();
-            int calculations = 0;
-            List<IMeasurement> outputMeasurements = new List<IMeasurement>();
-
             ConcurrentDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
+            Stopwatch totalCalculationTimeStopwatch = new Stopwatch();
+            Stopwatch lastCalculationTimeStopwatch = new Stopwatch();
+            List<IMeasurement> outputMeasurements = new List<IMeasurement>();
+            IMeasurement output;
+            int calculations = 0;
+
+            totalCalculationTimeStopwatch.Start();
 
             foreach (PowerCalculation powerCalculation in m_configuredCalculations)
             {
@@ -334,7 +324,7 @@ namespace PowerCalculations.PowerMultiCalculator
                             m_lastActivePowerCalculations.Enqueue(activePowerMeasurement);
 
                             while (m_lastActivePowerCalculations.Count > ValuesToTrack)
-                                m_lastActivePowerCalculations.Dequeue();
+                                m_lastActivePowerCalculations.TryDequeue(out output);
                         }
                     }
 
@@ -349,7 +339,7 @@ namespace PowerCalculations.PowerMultiCalculator
                             m_lastReactivePowerCalculations.Enqueue(reactivePowerMeasurement);
 
                             while (m_lastReactivePowerCalculations.Count > ValuesToTrack)
-                                m_lastReactivePowerCalculations.Dequeue();
+                                m_lastReactivePowerCalculations.TryDequeue(out output);
                         }
                     }
 
@@ -364,7 +354,7 @@ namespace PowerCalculations.PowerMultiCalculator
                             m_lastApparentPowerCalculations.Enqueue(apparentPowerMeasurement);
 
                             while (m_lastApparentPowerCalculations.Count > ValuesToTrack)
-                                m_lastApparentPowerCalculations.Dequeue();
+                                m_lastApparentPowerCalculations.TryDequeue(out output);
                         }
                     }
 
