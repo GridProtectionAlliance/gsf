@@ -28,7 +28,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using GSF;
@@ -253,13 +252,11 @@ namespace PowerCalculations.PowerMultiCalculator
         protected override void PublishFrame(IFrame frame, int index)
         {
             ConcurrentDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
-            Stopwatch totalCalculationTimeStopwatch = new Stopwatch();
-            Stopwatch lastCalculationTimeStopwatch = new Stopwatch();
+            Ticks totalCalculationTime = DateTime.UtcNow.Ticks;
+            Ticks lastCalculationTime = DateTime.UtcNow.Ticks;
             List<IMeasurement> outputMeasurements = new List<IMeasurement>();
-            IMeasurement output;
+            IMeasurement measurement;
             int calculations = 0;
-
-            totalCalculationTimeStopwatch.Start();
 
             foreach (PowerCalculation powerCalculation in m_configuredCalculations)
             {
@@ -267,10 +264,10 @@ namespace PowerCalculations.PowerMultiCalculator
 
                 try
                 {
-                    lastCalculationTimeStopwatch.Restart();
                     double voltageMagnitude = 0.0D, voltageAngle = 0.0D, currentMagnitude = 0.0D, currentAngle = 0.0D;
-                    IMeasurement measurement;
                     bool allValuesReceived = false;
+
+                    lastCalculationTime = DateTime.UtcNow.Ticks;
 
                     if (measurements.TryGetValue(powerCalculation.VoltageMagnitudeSignalID, out measurement) && measurement.ValueQualityIsGood())
                     {
@@ -324,7 +321,7 @@ namespace PowerCalculations.PowerMultiCalculator
                             m_lastActivePowerCalculations.Enqueue(activePowerMeasurement);
 
                             while (m_lastActivePowerCalculations.Count > ValuesToTrack)
-                                m_lastActivePowerCalculations.TryDequeue(out output);
+                                m_lastActivePowerCalculations.TryDequeue(out measurement);
                         }
                     }
 
@@ -339,7 +336,7 @@ namespace PowerCalculations.PowerMultiCalculator
                             m_lastReactivePowerCalculations.Enqueue(reactivePowerMeasurement);
 
                             while (m_lastReactivePowerCalculations.Count > ValuesToTrack)
-                                m_lastReactivePowerCalculations.TryDequeue(out output);
+                                m_lastReactivePowerCalculations.TryDequeue(out measurement);
                         }
                     }
 
@@ -354,19 +351,16 @@ namespace PowerCalculations.PowerMultiCalculator
                             m_lastApparentPowerCalculations.Enqueue(apparentPowerMeasurement);
 
                             while (m_lastApparentPowerCalculations.Count > ValuesToTrack)
-                                m_lastApparentPowerCalculations.TryDequeue(out output);
+                                m_lastApparentPowerCalculations.TryDequeue(out measurement);
                         }
                     }
 
-                    lastCalculationTimeStopwatch.Stop();
-                    m_averageCalculationTime.AddValue(lastCalculationTimeStopwatch.Elapsed.TotalMilliseconds);
+                    m_averageCalculationTime.AddValue((DateTime.UtcNow.Ticks - lastCalculationTime).ToMilliseconds());
                 }
             }
 
-            totalCalculationTimeStopwatch.Stop();
-
-            m_lastTotalCalculationTime = totalCalculationTimeStopwatch.Elapsed.TotalMilliseconds;
-            m_averageTotalCalculationTime.AddValue(totalCalculationTimeStopwatch.Elapsed.TotalMilliseconds);
+            m_lastTotalCalculationTime = (DateTime.UtcNow.Ticks - totalCalculationTime).ToMilliseconds();
+            m_averageTotalCalculationTime.AddValue(m_lastTotalCalculationTime);
 
             m_lastTotalCalculations = calculations;
             m_averageCalculationsPerFrame.AddValue(calculations);
