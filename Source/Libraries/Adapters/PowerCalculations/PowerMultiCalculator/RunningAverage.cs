@@ -23,46 +23,44 @@
 
 namespace PowerCalculations.PowerMultiCalculator
 {
-	/// <summary>
-	/// Calculates running average of a value
-	/// </summary>
-	public class RunningAverage
-	{
+    /// <summary>
+    /// Calculates running average of a value
+    /// </summary>
+    public class RunningAverage
+    {
+        #region [ Members ]
 
-		#region [ Members ]
+        private double m_numberOfValues;
+        private double m_average;
 
-		private double m_numberOfValues = 0;
-		private double m_average = 0;
+        #endregion
 
-		#endregion
+        #region [ Properties ]
 
-		#region [ Properties ]
+        /// <summary>
+        /// Average calculated on values provided so far
+        /// </summary>
+        public double Average => m_average;
 
-		/// <summary>
-		/// Average calculated on values provided so far
-		/// </summary>
-		public double Average
-		{
-			get { return m_average; }
-		}
+        #endregion
 
-		#endregion
+        #region [ Methods ]
 
-		#region [ Methods ]
+        /// <summary>
+        /// Calculates running average based on previous values and the new value
+        /// </summary>
+        /// <param name="value">Value to be added to the running average</param>
+        /// <returns>New running average</returns>
+        public double AddValue(double value)
+        {
+            double total = m_numberOfValues * m_average + value;
 
-		/// <summary>
-		/// Calculates running average based on previous values and the new value
-		/// </summary>
-		/// <param name="value">Value to be added to the running average</param>
-		/// <returns>New running average</returns>
-		public double AddValue(double value)
-		{
-			var total = m_numberOfValues * m_average + value;
-			m_numberOfValues++;
-			m_average = total / m_numberOfValues;
-			return m_average;
-		}
+            m_numberOfValues++;
+            m_average = total / m_numberOfValues;
 
-		#endregion	
-	}
+            return m_average;
+        }
+
+        #endregion	
+    }
 }

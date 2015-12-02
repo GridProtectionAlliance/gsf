@@ -27,6 +27,8 @@
 //  12/18/2012 - J. Ritchie Carroll
 //       Updated operation such that class will used cached angle and magnitude values
 //       when these are provided to improve accuracy and operational speed.
+//  12/02/2015 - J. Ritchie Carroll
+//       Added implicit operators to interact with new .NET Complex structure.
 //
 //******************************************************************************************************
 
@@ -66,10 +68,13 @@
 
 using System;
 using System.ComponentModel;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using GSF.Units;
 
+// ReSharper disable CompareOfFloatsByEqualityOperator
+// ReSharper disable PossibleInvalidOperationException
 namespace GSF
 {
     /// <summary>
@@ -145,10 +150,7 @@ namespace GSF
         {
             get
             {
-                if (m_real.HasValue)
-                    return m_real.Value;
-
-                return double.NaN;
+                return m_real ?? double.NaN;
             }
             set
             {
@@ -167,10 +169,7 @@ namespace GSF
         {
             get
             {
-                if (m_imaginary.HasValue)
-                    return m_imaginary.Value;
-
-                return double.NaN;
+                return m_imaginary ?? double.NaN;
             }
             set
             {
@@ -193,17 +192,15 @@ namespace GSF
                 if (m_magnitude.HasValue)
                     return m_magnitude.Value;
 
+                if (!AllAssigned)
+                    return double.NaN;
+
                 // If complex number is internally represented in rectangular coordinates and no magnitude has been assigned,
                 // return a calculated magnitude
-                if (AllAssigned)
-                {
-                    double real = m_real.Value;
-                    double imaginary = m_imaginary.Value;
+                double real = m_real.Value;
+                double imaginary = m_imaginary.Value;
 
-                    return Math.Sqrt(real * real + imaginary * imaginary);
-                }
-
-                return double.NaN;
+                return Math.Sqrt(real * real + imaginary * imaginary);
             }
             set
             {
@@ -240,12 +237,12 @@ namespace GSF
                 if (m_angle.HasValue)
                     return m_angle.Value;
 
+                if (!AllAssigned)
+                    return double.NaN;
+
                 // If complex number is internally represented in rectangular coordinates and no angle has been assigned,
                 // return a calculated angle
-                if (AllAssigned)
-                    return Math.Atan2(m_imaginary.Value, m_real.Value);
-
-                return double.NaN;
+                return Math.Atan2(m_imaginary.Value, m_real.Value);
             }
             set
             {
@@ -274,37 +271,19 @@ namespace GSF
         /// <summary>
         /// Gets the complex conjugate of this <see cref="ComplexNumber"/>.
         /// </summary>
-        public ComplexNumber Conjugate
-        {
-            get
-            {
-                return new ComplexNumber(Real, -Imaginary);
-            }
-        }
+        public ComplexNumber Conjugate => new ComplexNumber(Real, -Imaginary);
 
         /// <summary>
         /// Gets a boolean value indicating if each composite value of the <see cref="ComplexNumber"/> (i.e., real and imaginary) has been assigned a value.
         /// </summary>
         /// <returns>True, if all composite values have been assigned a value; otherwise, false.</returns>
-        public bool AllAssigned
-        {
-            get
-            {
-                return m_real.HasValue && m_imaginary.HasValue;
-            }
-        }
+        public bool AllAssigned => m_real.HasValue && m_imaginary.HasValue;
 
         /// <summary>
         /// Gets a boolean value indicating if each composite value of the <see cref="ComplexNumber"/> (i.e., real and imaginary) has not been assigned a value.
         /// </summary>
         /// <returns>True, if none of the composite values have been assigned a value; otherwise, false.</returns>
-        public bool NoneAssigned
-        {
-            get
-            {
-                return !m_real.HasValue && !m_imaginary.HasValue;
-            }
-        }
+        public bool NoneAssigned => !m_real.HasValue && !m_imaginary.HasValue;
 
         #endregion
 
@@ -322,6 +301,7 @@ namespace GSF
         {
             if (obj is ComplexNumber)
                 return Equals((ComplexNumber)obj);
+
             return false;
         }
 
@@ -332,10 +312,7 @@ namespace GSF
         /// <returns>
         /// True if <paramref name="obj"/> has the same value as this instance; otherwise, False.
         /// </returns>
-        public bool Equals(ComplexNumber obj)
-        {
-            return this == obj;
-        }
+        public bool Equals(ComplexNumber obj) => this == obj;
 
         /// <summary>
         /// Returns the hash code for this instance.
@@ -343,10 +320,7 @@ namespace GSF
         /// <returns>
         /// A 32-bit signed integer hash code.
         /// </returns>
-        public override int GetHashCode()
-        {
-            return Real.GetHashCode() ^ Imaginary.GetHashCode();
-        }
+        public override int GetHashCode() => Real.GetHashCode() ^ Imaginary.GetHashCode();
 
         /// <summary>
         /// Converts the numeric value of this instance to its equivalent string representation.
@@ -393,10 +367,21 @@ namespace GSF
         /// </summary>
         /// <param name="value">Operand.</param>
         /// <returns>ComplexNumber representing the result of the operation.</returns>
-        public static implicit operator ComplexNumber(double value)
-        {
-            return new ComplexNumber(value, 0.0D);
-        }
+        public static implicit operator ComplexNumber(double value) => new ComplexNumber(value, 0.0D);
+
+        /// <summary>
+        /// Implicitly converts a <see cref="ComplexNumber"/> to a .NET <see cref="Complex"/> value.
+        /// </summary>
+        /// <param name="value">Operand.</param>
+        /// <returns>Complex representing the result of the operation.</returns>
+        public static implicit operator Complex(ComplexNumber value) => new Complex(value.Real, value.Imaginary);
+
+        /// <summary>
+        /// Implicitly converts a .NET <see cref="Complex"/> value to a <see cref="ComplexNumber"/>.
+        /// </summary>
+        /// <param name="value">Operand.</param>
+        /// <returns>Complex representing the result of the operation.</returns>
+        public static implicit operator ComplexNumber(Complex value) => new ComplexNumber(value.Real, value.Imaginary);
 
         /// <summary>
         /// Compares the two values for equality.
@@ -404,10 +389,7 @@ namespace GSF
         /// <param name="value1">Left hand operand.</param>
         /// <param name="value2">Right hand operand.</param>
         /// <returns>Boolean representing the result of the addition operation.</returns>
-        public static bool operator ==(ComplexNumber value1, ComplexNumber value2)
-        {
-            return (value1.Real == value2.Real && value1.Imaginary == value2.Imaginary);
-        }
+        public static bool operator ==(ComplexNumber value1, ComplexNumber value2) => value1.Real == value2.Real && value1.Imaginary == value2.Imaginary;
 
         /// <summary>
         /// Compares the two values for inequality.
@@ -415,20 +397,14 @@ namespace GSF
         /// <param name="value1">Left hand operand.</param>
         /// <param name="value2">Right hand operand.</param>
         /// <returns>Boolean representing the result of the inequality operation.</returns>
-        public static bool operator !=(ComplexNumber value1, ComplexNumber value2)
-        {
-            return !(value1 == value2);
-        }
+        public static bool operator !=(ComplexNumber value1, ComplexNumber value2) => !(value1 == value2);
 
         /// <summary>
         /// Returns the negated value.
         /// </summary>
         /// <param name="z">Left hand operand.</param>
         /// <returns>ComplexNumber representing the result of the unary negation operation.</returns>
-        public static ComplexNumber operator -(ComplexNumber z)
-        {
-            return new ComplexNumber(-z.Real, -z.Imaginary);
-        }
+        public static ComplexNumber operator -(ComplexNumber z) => new ComplexNumber(-z.Real, -z.Imaginary);
 
         /// <summary>
         /// Returns computed sum of values.
@@ -436,10 +412,7 @@ namespace GSF
         /// <param name="value1">Left hand operand.</param>
         /// <param name="value2">Right hand operand.</param>
         /// <returns>ComplexNumber representing the result of the addition operation.</returns>
-        public static ComplexNumber operator +(ComplexNumber value1, ComplexNumber value2)
-        {
-            return new ComplexNumber(value1.Real + value2.Real, value1.Imaginary + value2.Imaginary);
-        }
+        public static ComplexNumber operator +(ComplexNumber value1, ComplexNumber value2) => new ComplexNumber(value1.Real + value2.Real, value1.Imaginary + value2.Imaginary);
 
         /// <summary>
         /// Returns computed difference of values.
@@ -447,10 +420,7 @@ namespace GSF
         /// <param name="value1">Left hand operand.</param>
         /// <param name="value2">Right hand operand.</param>
         /// <returns>ComplexNumber representing the result of the subtraction operation.</returns>
-        public static ComplexNumber operator -(ComplexNumber value1, ComplexNumber value2)
-        {
-            return new ComplexNumber(value1.Real - value2.Real, value1.Imaginary - value2.Imaginary);
-        }
+        public static ComplexNumber operator -(ComplexNumber value1, ComplexNumber value2) => new ComplexNumber(value1.Real - value2.Real, value1.Imaginary - value2.Imaginary);
 
         /// <summary>
         /// Returns computed product of values.
@@ -487,10 +457,7 @@ namespace GSF
         ///<param name="z">Complex number to be raised to power <paramref name="y"/>.</param>
         ///<param name="y">Power to raise <see cref="ComplexNumber"/> <paramref name="z"/>.</param>
         /// <returns>ComplexNumber representing the result of the operation.</returns>
-        public static ComplexNumber Pow(ComplexNumber z, double y)
-        {
-            return new ComplexNumber(z.Angle * y, Math.Pow(z.Magnitude, y));
-        }
+        public static ComplexNumber Pow(ComplexNumber z, double y) => new ComplexNumber(z.Angle * y, Math.Pow(z.Magnitude, y));
 
         // C# doesn't expose an exponent operator but some other .NET languages do,
         // so we expose the operator via its native special IL function name
@@ -502,10 +469,7 @@ namespace GSF
         ///<param name="y">Power to raise <see cref="ComplexNumber"/> <paramref name="z"/>.</param>
         /// <returns>ComplexNumber representing the result of the operation.</returns>
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
-        public static ComplexNumber op_Exponent(ComplexNumber z, double y)
-        {
-            return Pow(z, y);
-        }
+        public static ComplexNumber op_Exponent(ComplexNumber z, double y) => Pow(z, y);
 
         #endregion
     }

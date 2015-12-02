@@ -16,13 +16,16 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  07/17/2014 - Ritchie
+//  07/17/2014 - J. Ritchie Carroll
 //       Generated original version of source code.
+//  12/02/2015 - J. Ritchie Carroll
+//       Added common power calculation functions and implicit interaction with .NET Complex type.
 //
 //******************************************************************************************************
 
 using System;
 using System.ComponentModel;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace GSF.Units.EE
@@ -39,12 +42,12 @@ namespace GSF.Units.EE
         /// <summary>
         /// Phasor type.
         /// </summary>
-        public PhasorType Type;
+        public readonly PhasorType Type;
 
         /// <summary>
         /// Phasor value.
         /// </summary>
-        public ComplexNumber Value;
+        public readonly ComplexNumber Value;
 
         #endregion
 
@@ -90,6 +93,15 @@ namespace GSF.Units.EE
 
         #endregion
 
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets the complex conjugate of this <see cref="Phasor"/>.
+        /// </summary>
+        public ComplexNumber Conjugate => Value.Conjugate;
+
+        #endregion
+
         #region [ Methods ]
 
         /// <summary>
@@ -115,10 +127,7 @@ namespace GSF.Units.EE
         /// <returns>
         /// True if <paramref name="obj"/> has the same value as this instance; otherwise, False.
         /// </returns>
-        public bool Equals(Phasor obj)
-        {
-            return this == obj;
-        }
+        public bool Equals(Phasor obj) => this == obj;
 
         /// <summary>
         /// Returns the hash code for this instance.
@@ -126,10 +135,7 @@ namespace GSF.Units.EE
         /// <returns>
         /// A 32-bit signed integer hash code.
         /// </returns>
-        public override int GetHashCode()
-        {
-            return Value.GetHashCode() ^ Type.GetHashCode();
-        }
+        public override int GetHashCode() => Value.GetHashCode() ^ Type.GetHashCode();
 
         /// <summary>
         /// Converts the numeric value of this instance to its equivalent string representation.
@@ -137,10 +143,7 @@ namespace GSF.Units.EE
         /// <returns>
         /// The string representation of the value of this <see cref="ComplexNumber"/> instance.
         /// </returns>
-        public override string ToString()
-        {
-            return string.Format("{0}:{1}", Type, Value);
-        }
+        public override string ToString() => $"{Type}:{Value}";
 
         #endregion
 
@@ -151,10 +154,14 @@ namespace GSF.Units.EE
         /// </summary>
         /// <param name="phasor">Operand.</param>
         /// <returns>ComplexNumber representing the result of the operation.</returns>
-        public static implicit operator ComplexNumber(Phasor phasor)
-        {
-            return phasor.Value;
-        }
+        public static implicit operator ComplexNumber(Phasor phasor) => phasor.Value;
+
+        /// <summary>
+        /// Implicitly converts a <see cref="Phasor"/> to a .NET <see cref="Complex"/> value.
+        /// </summary>
+        /// <param name="phasor">Operand.</param>
+        /// <returns>ComplexNumber representing the result of the operation.</returns>
+        public static implicit operator Complex(Phasor phasor) => phasor.Value;
 
         /// <summary>
         /// Compares the two values for equality.
@@ -162,10 +169,7 @@ namespace GSF.Units.EE
         /// <param name="phasor1">Left hand operand.</param>
         /// <param name="phasor2">Right hand operand.</param>
         /// <returns>Boolean representing the result of the addition operation.</returns>
-        public static bool operator ==(Phasor phasor1, Phasor phasor2)
-        {
-            return (phasor1.Type == phasor2.Type && phasor1.Value == phasor2.Value);
-        }
+        public static bool operator ==(Phasor phasor1, Phasor phasor2) => (phasor1.Type == phasor2.Type && phasor1.Value == phasor2.Value);
 
         /// <summary>
         /// Compares the two values for inequality.
@@ -173,20 +177,14 @@ namespace GSF.Units.EE
         /// <param name="phasor1">Left hand operand.</param>
         /// <param name="phasor2">Right hand operand.</param>
         /// <returns>Boolean representing the result of the inequality operation.</returns>
-        public static bool operator !=(Phasor phasor1, Phasor phasor2)
-        {
-            return !(phasor1 == phasor2);
-        }
+        public static bool operator !=(Phasor phasor1, Phasor phasor2) => !(phasor1 == phasor2);
 
         /// <summary>
         /// Returns the negated value.
         /// </summary>
         /// <param name="z">Left hand operand.</param>
         /// <returns>Phasor representing the result of the unary negation operation.</returns>
-        public static Phasor operator -(Phasor z)
-        {
-            return new Phasor(z.Type, -z.Value);
-        }
+        public static Phasor operator -(Phasor z) => new Phasor(z.Type, -z.Value);
 
         /// <summary>
         /// Returns computed sum of values.
@@ -195,10 +193,7 @@ namespace GSF.Units.EE
         /// <param name="phasor2">Right hand operand.</param>
         /// <returns>ComplexNumber representing the result of the addition operation.</returns>
         /// <remarks>Resultant phasor will have <see cref="Type"/> of left hand operand, <paramref name="phasor1"/>.</remarks>
-        public static Phasor operator +(Phasor phasor1, Phasor phasor2)
-        {
-            return new Phasor(phasor1.Type, phasor1.Value + phasor2.Value);
-        }
+        public static Phasor operator +(Phasor phasor1, Phasor phasor2) => new Phasor(phasor1.Type, phasor1.Value + phasor2.Value);
 
         /// <summary>
         /// Returns computed difference of values.
@@ -207,10 +202,7 @@ namespace GSF.Units.EE
         /// <param name="phasor2">Right hand operand.</param>
         /// <returns>ComplexNumber representing the result of the subtraction operation.</returns>
         /// <remarks>Resultant phasor will have <see cref="Type"/> of left hand operand, <paramref name="phasor1"/>.</remarks>
-        public static Phasor operator -(Phasor phasor1, Phasor phasor2)
-        {
-            return new Phasor(phasor1.Type, phasor1.Value - phasor2.Value);
-        }
+        public static Phasor operator -(Phasor phasor1, Phasor phasor2) => new Phasor(phasor1.Type, phasor1.Value - phasor2.Value);
 
         /// <summary>
         /// Returns computed product of values.
@@ -219,10 +211,7 @@ namespace GSF.Units.EE
         /// <param name="phasor2">Right hand operand.</param>
         /// <returns>ComplexNumber representing the result of the multiplication operation.</returns>
         /// <remarks>Resultant phasor will have <see cref="Type"/> of left hand operand, <paramref name="phasor1"/>.</remarks>
-        public static Phasor operator *(Phasor phasor1, Phasor phasor2)
-        {
-            return new Phasor(phasor1.Type, phasor1.Value * phasor2.Value);
-        }
+        public static Phasor operator *(Phasor phasor1, Phasor phasor2) => new Phasor(phasor1.Type, phasor1.Value * phasor2.Value);
 
         /// <summary>
         /// Returns computed division of values.
@@ -231,10 +220,7 @@ namespace GSF.Units.EE
         /// <param name="phasor2">Right hand operand.</param>
         /// <returns>ComplexNumber representing the result of the division operation.</returns>
         /// <remarks>Resultant phasor will have <see cref="Type"/> of left hand operand, <paramref name="phasor1"/>.</remarks>
-        public static Phasor operator /(Phasor phasor1, Phasor phasor2)
-        {
-            return new Phasor(phasor1.Type, phasor1.Value / phasor2.Value);
-        }
+        public static Phasor operator /(Phasor phasor1, Phasor phasor2) => new Phasor(phasor1.Type, phasor1.Value / phasor2.Value);
 
         ///<summary>
         /// Returns specified <see cref="Phasor"/> raised to the specified power.
@@ -242,10 +228,7 @@ namespace GSF.Units.EE
         ///<param name="z">Phasor to be raised to power <paramref name="y"/>.</param>
         ///<param name="y">Power to raise <see cref="Phasor"/> <paramref name="z"/>.</param>
         /// <returns>Phasor representing the result of the operation.</returns>
-        public static Phasor Pow(Phasor z, double y)
-        {
-            return new Phasor(z.Type, ComplexNumber.Pow(z.Value, y));
-        }
+        public static Phasor Pow(Phasor z, double y) => new Phasor(z.Type, ComplexNumber.Pow(z.Value, y));
 
         // C# doesn't expose an exponent operator but some other .NET languages do,
         // so we expose the operator via its native special IL function name
@@ -257,9 +240,102 @@ namespace GSF.Units.EE
         ///<param name="y">Power to raise <see cref="Phasor"/> <paramref name="z"/>.</param>
         /// <returns>Phasor representing the result of the operation.</returns>
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
-        public static Phasor op_Exponent(Phasor z, double y)
+        public static Phasor op_Exponent(Phasor z, double y) => Pow(z, y);
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        /// <summary>
+        /// Calculates active (or real) power P, i.e., total watts, from imaginary and real components of a voltage and current phasor.
+        /// </summary>
+        /// <param name="voltage">Voltage phasor.</param>
+        /// <param name="current">Current phasor.</param>
+        /// <exception cref="ArgumentException"><paramref name="voltage"/> and <paramref name="current"/> must have proper <see cref="Type"/>.</exception>
+        /// <returns>Calculated watts from imaginary and real components of specified <paramref name="voltage"/> and <paramref name="current"/> phasors.</returns>
+        public static Power CalculateActivePower(Phasor voltage, Phasor current)
         {
-            return Pow(z, y);
+            if (voltage.Type != PhasorType.Voltage)
+                throw new ArgumentException("Provided voltage phasor is a current", nameof(voltage));
+
+            if (current.Type != PhasorType.Current)
+                throw new ArgumentException("Provided current phasor is a voltage", nameof(current));
+
+            return 3 * (voltage.Value.Real * current.Value.Real + voltage.Value.Imaginary * current.Value.Imaginary);
+
+            // Polar version of calculation
+            //return 3 * voltage.Value.Magnitude * current.Value.Magnitude * Math.Cos(CalculateRelativePhase(voltage, current));
+        }
+
+        /// <summary>
+        /// Calculates reactive power Q, i.e., total volt-amperes of reactive power, from imaginary and real components of a voltage and current phasor.
+        /// </summary>
+        /// <param name="voltage">Voltage phasor.</param>
+        /// <param name="current">Current phasor.</param>
+        /// <exception cref="ArgumentException"><paramref name="voltage"/> and <paramref name="current"/> must have proper <see cref="Type"/>.</exception>
+        /// <returns>Calculated vars from imaginary and real components of specified <paramref name="voltage"/> and <paramref name="current"/> phasors.</returns>
+        public static Power CalculateReactivePower(Phasor voltage, Phasor current)
+        {
+            if (voltage.Type != PhasorType.Voltage)
+                throw new ArgumentException("Provided voltage phasor is a current", nameof(voltage));
+
+            if (current.Type != PhasorType.Current)
+                throw new ArgumentException("Provided current phasor is a voltage", nameof(current));
+
+            return 3 * (voltage.Value.Imaginary * current.Value.Real - voltage.Value.Real * current.Value.Imaginary);
+
+            // Polar version of calculation
+            //return 3 * voltage.Value.Magnitude * current.Value.Magnitude * Math.Sin(CalculateRelativePhase(voltage, current));
+        }
+
+        /// <summary>
+        /// Calculates complex power S, i.e., total volt-amperes power vector, from a voltage and current phasor.
+        /// </summary>
+        /// <param name="voltage">Voltage phasor.</param>
+        /// <param name="current">Current phasor.</param>
+        /// <exception cref="ArgumentException"><paramref name="voltage"/> and <paramref name="current"/> must have proper <see cref="Type"/>.</exception>
+        /// <returns>Calculated complex volt-amperes from specified <paramref name="voltage"/> and <paramref name="current"/> phasors.</returns>
+        public static ComplexNumber CalculateComplexPower(Phasor voltage, Phasor current)
+        {
+            if (voltage.Type != PhasorType.Voltage)
+                throw new ArgumentException("Provided voltage phasor is a current", nameof(voltage));
+
+            if (current.Type != PhasorType.Current)
+                throw new ArgumentException("Provided current phasor is a voltage", nameof(current));
+
+            return voltage.Value * current.Conjugate;
+        }
+
+        /// <summary>
+        /// Calculates apparent power |S|, i.e., magnitude of complex power, from a voltage and current phasor.
+        /// </summary>
+        /// <param name="voltage">Voltage phasor.</param>
+        /// <param name="current">Current phasor.</param>
+        /// <exception cref="ArgumentException"><paramref name="voltage"/> and <paramref name="current"/> must have proper <see cref="Type"/>.</exception>
+        /// <returns>Calculated complex volt-amperes magnitude from specified <paramref name="voltage"/> and <paramref name="current"/> phasors.</returns>
+        public static Power CalculateApparentPower(Phasor voltage, Phasor current)
+        {
+            return CalculateComplexPower(voltage, current).Magnitude;
+        }
+
+        /// <summary>
+        /// Calculates phase φ of voltage relative to current, i.e., angle difference between current and voltage phasor.
+        /// </summary>
+        /// <param name="voltage">Voltage phasor.</param>
+        /// <param name="current">Current phasor.</param>
+        /// <exception cref="ArgumentException"><paramref name="voltage"/> and <paramref name="current"/> must have proper <see cref="Type"/>.</exception>
+        /// <returns>Calculated phase of specified <paramref name="voltage"/> phasor relative to specified <paramref name="current"/> phasor.</returns>
+        public static Angle CalculateRelativePhase(Phasor voltage, Phasor current)
+        {
+            if (voltage.Type != PhasorType.Voltage)
+                throw new ArgumentException("Provided voltage phasor is a current", nameof(voltage));
+
+            if (current.Type != PhasorType.Current)
+                throw new ArgumentException("Provided current phasor is a voltage", nameof(current));
+
+            return voltage.Value.Angle - current.Value.Angle;
         }
 
         #endregion

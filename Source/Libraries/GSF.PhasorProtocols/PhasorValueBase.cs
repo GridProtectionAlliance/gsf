@@ -156,6 +156,17 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
+        /// Gets <see cref="GSF.Units.EE.Phasor"/> value from this <see cref="IPhasorValue"/>.
+        /// </summary>
+        public Phasor Phasor
+        {
+            get
+            {
+                return new Phasor(Type, m_phasor);
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the <see cref="GSF.Units.Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValueBase"/>, in radians.
         /// </summary>
         public virtual Angle Angle
@@ -520,8 +531,7 @@ namespace GSF.PhasorProtocols
             if (current == null)
                 throw new ArgumentNullException("current", "No current specified");
 
-            return 3 * (voltage.Real * current.Real + voltage.Imaginary * current.Imaginary);
-            //Return 3 * voltage.Magnitude * current.Magnitude * System.Math.Cos(voltage.Angle - current.Angle)
+            return Phasor.CalculateActivePower(voltage.Phasor, current.Phasor);
         }
 
         /// <summary>
@@ -545,8 +555,7 @@ namespace GSF.PhasorProtocols
             if (current == null)
                 throw new ArgumentNullException("current", "No current specified");
 
-            return 3 * (voltage.Imaginary * current.Real - voltage.Real * current.Imaginary);
-            //Return 3 * voltage.Magnitude * current.Magnitude * System.Math.Sin(voltage.Angle - current.Angle)
+            return Phasor.CalculateReactivePower(voltage.Phasor, current.Phasor);
         }
 
         /// <summary>

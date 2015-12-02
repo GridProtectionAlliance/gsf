@@ -58,6 +58,14 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
+        /// Gets <see cref="GSF.Units.EE.Phasor"/> value from this <see cref="IPhasorValue"/>.
+        /// </summary>
+        Phasor Phasor
+        {
+            get;
+        }
+
+        /// <summary>
         /// Gets or sets the <see cref="GSF.Units.Angle"/> value (a.k.a., the argument) of this <see cref="IPhasorValue"/>, in radians.
         /// </summary>
         Angle Angle

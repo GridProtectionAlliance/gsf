@@ -30,13 +30,12 @@ namespace PowerCalculations.PowerMultiCalculator
 	/// </summary>
 	public class PowerCalculation
 	{
-
 		#region [ Properties ]
 
 		/// <summary>
 		/// ID field for the <see cref="PowerCalculation"/>
 		/// </summary>
-		public int PowerCalculationId { get; set; }
+		public int PowerCalculationID { get; set; }
 
 		/// <summary>
 		/// Circuit Description field for the <see cref="PowerCalculation"/>
@@ -44,39 +43,39 @@ namespace PowerCalculations.PowerMultiCalculator
 		public string CircuitDescription { get; set; }
 
 		/// <summary>
-		/// Measurement key from the <see cref="PowerCalculation"/>'s Voltage Angle <see cref="Measurement"/> 
+		/// Measurement key from the <see cref="PowerCalculation"/>'s Voltage Angle <see cref="PowerMeasurement"/> 
 		/// </summary>
-		public MeasurementKey VoltageAngleSignalId { get; set; }
+		public MeasurementKey VoltageAngleSignalID { get; set; }
 
 		/// <summary>
-		/// Measurement key from the <see cref="PowerCalculation"/>'s Voltage Magnitude <see cref="Measurement"/> 
+		/// Measurement key from the <see cref="PowerCalculation"/>'s Voltage Magnitude <see cref="PowerMeasurement"/> 
 		/// </summary>
-		public MeasurementKey VoltageMagnitudeSignalId { get; set; }
+		public MeasurementKey VoltageMagnitudeSignalID { get; set; }
 
 		/// <summary>
-		/// Measurement key from the <see cref="PowerCalculation"/>'s Current Angle <see cref="Measurement"/> 
+		/// Measurement key from the <see cref="PowerCalculation"/>'s Current Angle <see cref="PowerMeasurement"/> 
 		/// </summary>
-		public MeasurementKey CurrentAngleSignalId { get; set; }
+		public MeasurementKey CurrentAngleSignalID { get; set; }
 
 		/// <summary>
-		/// Measurement key from the <see cref="PowerCalculation"/>'s Current Magnitude <see cref="Measurement"/> 
+		/// Measurement key from the <see cref="PowerCalculation"/>'s Current Magnitude <see cref="PowerMeasurement"/> 
 		/// </summary>
-		public MeasurementKey CurrentMagnitudeSignalId { get; set; }
+		public MeasurementKey CurrentMagnitudeSignalID { get; set; }
 
 		/// <summary>
-		/// Measurement template to be used for outputing real power output values from the <see cref="PowerCalculation"/>
+		/// Measurement template to be used for active power output values from the <see cref="PowerCalculation"/>
 		/// </summary>
-		public IMeasurement RealPowerOutputMeasurement { get; set; }
+		public IMeasurement ActivePowerOutputMeasurement { get; set; }
 
 		/// <summary>
-		/// Measurement template to be used for outputing reactive power output values from the <see cref="PowerCalculation"/>
+		/// Measurement template to be used for reactive power output values from the <see cref="PowerCalculation"/>
 		/// </summary>
 		public IMeasurement ReactivePowerOutputMeasurement { get; set; }
 
 		/// <summary>
-		/// Measurement template to be used for outputing active power output values from the <see cref="PowerCalculation"/>
+		/// Measurement template to be used for apparent power output values from the <see cref="PowerCalculation"/>
 		/// </summary>
-		public IMeasurement ActivePowerOutputMeasurement { get; set; }
+		public IMeasurement ApparentPowerOutputMeasurement { get; set; }
 
 		#endregion
 	}

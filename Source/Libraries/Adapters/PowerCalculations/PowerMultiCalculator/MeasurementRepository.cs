@@ -32,51 +32,52 @@ namespace PowerCalculations.PowerMultiCalculator
 	/// </summary>
 	public class MeasurementRepository
 	{
-
 		#region [ Methods ]
 
-		/// <summary>
-		/// Saves measurement back to the configuration database
-		/// </summary>
-		/// <param name="database">Database connection for query. Will be created from config if this value is null.</param>
-		/// <param name="measurement">Measurement to be inserted or updated</param>
-		public void Save(AdoDataConnection database, Measurement measurement)
-		{
-			var createdConnection = false;
+        /// <summary>
+        /// Saves measurement back to the configuration database
+        /// </summary>
+        /// <param name="database">Database connection for query. Will be created from config if this value is null.</param>
+        /// <param name="measurement">Measurement to be inserted or updated</param>
+        public void Save(AdoDataConnection database, PowerMeasurement measurement)
+        {
+            var createdConnection = false;
 
 			try
 			{
 				createdConnection = CreateConnection(ref database);
 
-				if (measurement.SignalId == Guid.Empty)
+				if (measurement.SignalID == Guid.Empty)
 				{
 					database.ExecuteNonQuery("INSERT INTO Measurement (DeviceID, PointTag, SignalTypeID, " +
                         "SignalReference, Adder, Multiplier, Description, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES " + 
-                        "({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11})", measurement.DeviceId.ToNotNull(), measurement.PointTag, 
-                        measurement.SignalTypeId, measurement.SignalReference, measurement.Adder, measurement.Multiplier, measurement.Description.ToNotNull(), 
+                        "({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11})", measurement.DeviceID.ToNotNull(), measurement.PointTag, 
+                        measurement.SignalTypeID, measurement.SignalReference, measurement.Adder, measurement.Multiplier, measurement.Description.ToNotNull(), 
                         database.Bool(measurement.Enabled), CommonFunctions.CurrentUser, database.UtcNow, CommonFunctions.CurrentUser, database.UtcNow);
 
-                    measurement.SignalId = database.ExecuteScalar<Guid?>("SELECT SignalID FROM Measurement WHERE PointTag={0}", measurement.PointTag).GetValueOrDefault();
+                    measurement.SignalID = database.ExecuteScalar<Guid?>("SELECT SignalID FROM Measurement WHERE PointTag={0}", measurement.PointTag).GetValueOrDefault();
 				}
 				else
 				{
 					database.ExecuteNonQuery("UPDATE Measurement SET DeviceID = {0}, PointTag = {1}, " +
                         "SignalTypeID = {2}, SignalReference = {3}, Adder = {4}, Multiplier = {5}, Description = {6}, " +
-                        "Enabled = {7}, UpdatedBy = {8}, UpdatedOn = {9} WHERE SignalId = {10}", measurement.DeviceId.ToNotNull(), measurement.PointTag,
-						measurement.SignalTypeId, measurement.SignalReference, measurement.Adder, measurement.Multiplier, measurement.Description.ToNotNull(), 
-                        database.Bool(measurement.Enabled), CommonFunctions.CurrentUser, database.UtcNow, measurement.SignalId);
+                        "Enabled = {7}, UpdatedBy = {8}, UpdatedOn = {9} WHERE SignalId = {10}", measurement.DeviceID.ToNotNull(), measurement.PointTag,
+						measurement.SignalTypeID, measurement.SignalReference, measurement.Adder, measurement.Multiplier, measurement.Description.ToNotNull(), 
+                        database.Bool(measurement.Enabled), CommonFunctions.CurrentUser, database.UtcNow, measurement.SignalID);
 				}
 			}
 			finally
 			{
-				if (createdConnection && database != null)
-					database.Dispose();
+				if (createdConnection)
+					database?.Dispose();
 			}
 		}
 
 		private static bool CreateConnection(ref AdoDataConnection database)
 		{
-			if (database != null) return false;
+			if ((object)database != null)
+                return false;
+
 			try
 			{
 				database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
@@ -89,6 +90,5 @@ namespace PowerCalculations.PowerMultiCalculator
 		}
 
 		#endregion
-
 	}
 }
