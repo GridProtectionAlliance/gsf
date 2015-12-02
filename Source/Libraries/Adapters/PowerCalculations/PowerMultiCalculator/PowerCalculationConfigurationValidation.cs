@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using GSF.Configuration;
 using GSF.Data;
 using PhasorProtocolAdapters;
 
@@ -37,11 +38,26 @@ namespace PowerCalculations.PowerMultiCalculator
     public static class PowerCalculationConfigurationValidation
     {
         /// <summary>
+        /// Validates that data operation and adapter instance exist within database.
+        /// </summary>
+        public static void ValidateDatabaseDefinitions()
+        {
+            using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
+            {
+                if (!DataOperationExists(database))
+                    CreateDataOperation(database);
+
+                if (!AdapterInstanceExists(database))
+                    CreateAdapterInstance(database);
+            }
+        }
+
+        /// <summary>
         /// Returns true if a data operation exists to run this class. Returns false otherwise.
         /// </summary>
         /// <param name="database">Database connection to use for checking the data operation</param>
         /// <returns>True or false indicating whether the operation exists</returns>
-        public static bool CheckDataOperationExists(AdoDataConnection database)
+        private static bool DataOperationExists(AdoDataConnection database)
         {
             return Convert.ToInt32(database.ExecuteScalar($"SELECT COUNT(*) FROM DataOperation WHERE TypeName='{typeof(PowerCalculationConfigurationValidation).FullName}' AND MethodName='ValidatePowerCalculationConfigurations'")) > 0;
         }
@@ -50,9 +66,28 @@ namespace PowerCalculations.PowerMultiCalculator
         /// Creates a data operation to run the validations in this class.
         /// </summary>
         /// <param name="database">Database connection to use for creating the data operation</param>
-        public static void CreateDataOperation(AdoDataConnection database)
+        private static void CreateDataOperation(AdoDataConnection database)
         {
             database.ExecuteNonQuery($"INSERT INTO DataOperation(Description, AssemblyName, TypeName, MethodName, Enabled) VALUES ('Power Calculation Validations', 'PowerCalculations.dll', '{typeof(PowerCalculationConfigurationValidation).FullName}', 'ValidatePowerCalculationConfigurations', 1)");
+        }
+
+        /// <summary>
+        /// Returns true if a data operation exists to run this class. Returns false otherwise.
+        /// </summary>
+        /// <param name="database">Database connection to use for checking the data operation</param>
+        /// <returns>True or false indicating whether the operation exists</returns>
+        private static bool AdapterInstanceExists(AdoDataConnection database)
+        {
+            return Convert.ToInt32(database.ExecuteScalar($"SELECT COUNT(*) FROM CustomActionAdapter WHERE TypeName='{typeof(PowerMultiCalculatorAdapter).FullName}'")) > 0;
+        }
+
+        /// <summary>
+        /// Creates a data operation to run the validations in this class.
+        /// </summary>
+        /// <param name="database">Database connection to use for creating the data operation</param>
+        private static void CreateAdapterInstance(AdoDataConnection database)
+        {
+            database.ExecuteNonQuery($"INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, Enabled) VALUES ('{ConfigurationFile.Current.Settings["systemSettings"]["NodeID"].ValueAs<Guid>()}', 'PHASOR!POWERCALC', 'PowerCalculations.dll', '{typeof(PowerMultiCalculatorAdapter).FullName}', 'FramesPerSecond=30; LagTime=3; LeadTime=1', 1)");
         }
 
         /// <summary>
@@ -95,7 +130,18 @@ namespace PowerCalculations.PowerMultiCalculator
         {
             statusMessage("Checking for calculations with null output measurements...");
 
-            string query = "SELECT pc.PowerCalculationId, pc.CircuitDescription, pc.RealPowerOutputSignalId, pc.ActivePowerOutputSignalId, pc.ReactivePowerOutputSignalId, v.Acronym as vendoracronym,  d.Acronym as deviceacronym, c.Acronym as companyacronym, d.id as deviceid, d.historianid as historianid, " + "(SELECT p.Label FROM Phasor p JOIN Measurement m on m.SignalID = pc.currentanglesignalid and m.DeviceID = p.DeviceID AND m.PhasorSourceIndex = p.SourceIndex) as currentLabel " + "FROM PowerCalculation pc " + "join measurement m on m.SignalID = pc.voltageanglesignalid " + "left outer join device d on m.deviceid = d.id " + "left outer join VendorDevice vd on vd.id = d.VendorDeviceID " + "left outer join vendor v on vd.VendorID = v.id " + "left outer join company c on d.CompanyID = c.id " + $"WHERE pc.CalculationEnabled = 1 and pc.nodeid={nodeIdQueryString}  AND (pc.RealPowerOutputSignalId IS NULL OR pc.ReactivePowerOutputSignalId IS NULL OR pc.ActivePowerOutputSignalId IS NULL)";
+            string query = 
+                "SELECT pc.PowerCalculationId, pc.CircuitDescription, pc.RealPowerOutputSignalId, pc.ActivePowerOutputSignalId, pc.ReactivePowerOutputSignalId, " +
+                "v.Acronym as vendoracronym,  d.Acronym as deviceacronym, c.Acronym as companyacronym, d.id as deviceid, d.historianid as historianid, " + 
+                "(SELECT p.Label FROM Phasor p JOIN Measurement m on m.SignalID = pc.currentanglesignalid and m.DeviceID = p.DeviceID AND m.PhasorSourceIndex = p.SourceIndex) as currentLabel " + 
+                "FROM PowerCalculation pc " + 
+                "join measurement m on m.SignalID = pc.voltageanglesignalid " + 
+                "left outer join device d on m.deviceid = d.id " + 
+                "left outer join VendorDevice vd on vd.id = d.VendorDeviceID " + 
+                "left outer join vendor v on vd.VendorID = v.id " + 
+                "left outer join company c on d.CompanyID = c.id " + 
+                $"WHERE pc.CalculationEnabled = 1 and pc.nodeid={nodeIdQueryString} " + 
+                "AND (pc.RealPowerOutputSignalId IS NULL OR pc.ReactivePowerOutputSignalId IS NULL OR pc.ActivePowerOutputSignalId IS NULL)";
 
             Dictionary<int, PowerMeasurement> realPowerUpdates = new Dictionary<int, PowerMeasurement>();
             Dictionary<int, PowerMeasurement> reactivePowerUpdates = new Dictionary<int, PowerMeasurement>();

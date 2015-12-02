@@ -72,13 +72,14 @@ namespace PowerCalculations.PowerMultiCalculator
         /// </summary>
         public PowerMultiCalculatorAdapter()
         {
-            using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
+            try
             {
-                bool dataOperationExists = PowerCalculationConfigurationValidation.CheckDataOperationExists(database);
-                if (!dataOperationExists)
-                {
-                    PowerCalculationConfigurationValidation.CreateDataOperation(database);
-                }
+                // Validate that data operation and adapter instance exist within database
+                PowerCalculationConfigurationValidation.ValidateDatabaseDefinitions();
+            }
+            catch
+            {
+                // This should never cause unhanded exception
             }
         }
 
@@ -226,7 +227,9 @@ namespace PowerCalculations.PowerMultiCalculator
             }
 
             if (m_configuredCalculations.Any())
-                InputMeasurementKeys = m_configuredCalculations.SelectMany(pc => new[] { pc.CurrentAngleSignalID, pc.CurrentMagnitudeSignalID, pc.VoltageAngleSignalID, pc.VoltageMagnitudeSignalID }).ToArray();
+                InputMeasurementKeys = m_configuredCalculations.SelectMany(pc => new[] {pc.CurrentAngleSignalID, pc.CurrentMagnitudeSignalID, pc.VoltageAngleSignalID, pc.VoltageMagnitudeSignalID}).ToArray();
+            else
+                throw new InvalidOperationException("Skipped initialization of power calculator: no defined power calculations...");
 
             if (outputMeasurements.Any())
                 OutputMeasurements = outputMeasurements.ToArray();
