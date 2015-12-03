@@ -33,7 +33,7 @@ namespace PowerCalculations.UI.WPF.ViewModels
 
 		public override int GetCurrentItemKey()
 		{
-			return CurrentItem.Id;
+			return CurrentItem.ID;
 		}
 
 		public override string GetCurrentItemName()
@@ -43,7 +43,7 @@ namespace PowerCalculations.UI.WPF.ViewModels
 
 		public override bool IsNewRecord
 		{
-			get { return CurrentItem.Id == 0; }
+			get { return CurrentItem.ID == 0; }
 		}
 
 		/// <summary>

@@ -601,6 +601,9 @@ namespace GSF.TimeSeries.UI.UserControls
             if (e.PropertyName == "CurrentItem")
             {
                 OnCurrentItemChanged();
+
+                if (m_dataContext.IsNewRecord)
+                    DataGridList.SelectedIndex = -1;
             }
             else if (e.PropertyName == "ItemsSource")
             {

@@ -33,6 +33,7 @@ using System.Windows;
 using System.Windows.Media;
 using GSF.Data;
 using GSF.TimeSeries.UI;
+using GSF;
 
 namespace GSF.PhasorProtocols.UI.DataModels
 {
@@ -81,7 +82,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_id = value;
-                OnPropertyChanged("ID");
+                OnPropertyChanged(nameof(ID));
             }
         }
 
@@ -97,7 +98,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_acronym = value;
-                OnPropertyChanged("Acronym");
+                OnPropertyChanged(nameof(Acronym));
             }
         }
 
@@ -113,7 +114,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_name = value;
-                OnPropertyChanged("Name");
+                OnPropertyChanged(nameof(Name));
             }
         }
 
@@ -129,7 +130,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_companyName = value;
-                OnPropertyChanged("CompanyName");
+                OnPropertyChanged(nameof(CompanyName));
             }
         }
 
@@ -145,7 +146,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_expanded = value;
-                OnPropertyChanged("Expanded");
+                OnPropertyChanged(nameof(Expanded));
             }
         }
 
@@ -161,7 +162,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_statusColor = value;
-                OnPropertyChanged("StatusColor");
+                OnPropertyChanged(nameof(StatusColor));
             }
         }
 
@@ -177,7 +178,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_enabled = value;
-                OnPropertyChanged("Enabled");
+                OnPropertyChanged(nameof(Enabled));
             }
         }
 
@@ -193,7 +194,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_deviceList = value;
-                OnPropertyChanged("DeviceList");
+                OnPropertyChanged(nameof(DeviceList));
             }
         }
 
@@ -552,6 +553,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         private string m_statusColor;
         private bool m_enabled;
         private double m_maximumSignalReferenceWidth = double.NaN;
+        private double m_maximumShortSignalReferenceWidth = double.NaN;
         private RealTimeStream m_parent;
         private ObservableCollection<RealTimeMeasurement> m_measurementList;
 
@@ -583,7 +585,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_id = value;
-                OnPropertyChanged("ID");
+                OnPropertyChanged(nameof(ID));
             }
         }
 
@@ -600,7 +602,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 m_acronym = value;
                 AcronymTruncated = m_acronym.Substring(m_acronym.LastIndexOf("!") + 1);
-                OnPropertyChanged("Acronym");
+                OnPropertyChanged(nameof(Acronym));
             }
         }
 
@@ -631,7 +633,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_name = value;
-                OnPropertyChanged("Name");
+                OnPropertyChanged(nameof(Name));
             }
         }
 
@@ -647,7 +649,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_protocolName = value;
-                OnPropertyChanged("ProtocolName");
+                OnPropertyChanged(nameof(ProtocolName));
             }
         }
 
@@ -663,7 +665,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_vendorDeviceName = value;
-                OnPropertyChanged("VendorDeviceName");
+                OnPropertyChanged(nameof(VendorDeviceName));
             }
         }
 
@@ -679,7 +681,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_parentAcronym = value;
-                OnPropertyChanged("ParentAcronym");
+                OnPropertyChanged(nameof(ParentAcronym));
             }
         }
 
@@ -695,7 +697,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_expanded = value;
-                OnPropertyChanged("Expanded");
+                OnPropertyChanged(nameof(Expanded));
             }
         }
 
@@ -711,7 +713,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_statusColor = value;
-                OnPropertyChanged("StatusColor");
+                OnPropertyChanged(nameof(StatusColor));
             }
         }
 
@@ -727,7 +729,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_enabled = value;
-                OnPropertyChanged("Enabled");
+                OnPropertyChanged(nameof(Enabled));
             }
         }
 
@@ -744,12 +746,13 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 m_measurementList = value;
                 m_maximumSignalReferenceWidth = double.NaN;
-                OnPropertyChanged("MeasurementList");
+                m_maximumShortSignalReferenceWidth = double.NaN;
+                OnPropertyChanged(nameof(MeasurementList));
             }
         }
 
         /// <summary>
-        /// Gets maximum with of signal reference column.
+        /// Gets maximum width of signal reference column.
         /// </summary>
         public double MaximumSignalReferenceWidth
         {
@@ -763,7 +766,26 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_maximumSignalReferenceWidth = value;
-                OnPropertyChanged("MaximumSignalReferenceWidth");
+                OnPropertyChanged(nameof(MaximumSignalReferenceWidth));
+            }
+        }
+
+        /// <summary>
+        /// Gets maximum width of short signal reference column.
+        /// </summary>
+        public double MaximumShortSignalReferenceWidth
+        {
+            get
+            {
+                if (double.IsNaN(m_maximumShortSignalReferenceWidth) && m_measurementList != null)
+                    m_maximumShortSignalReferenceWidth = m_measurementList.Max(rtm => RealTimeStream.GetTextWidth(rtm.ShortSignalReference));
+
+                return m_maximumShortSignalReferenceWidth;
+            }
+            set
+            {
+                m_maximumShortSignalReferenceWidth = value;
+                OnPropertyChanged(nameof(MaximumShortSignalReferenceWidth));
             }
         }
 
@@ -779,7 +801,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_parent = value;
-                OnPropertyChanged("Parent");
+                OnPropertyChanged(nameof(Parent));
             }
         }
 
@@ -843,7 +865,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_parent = value;
-                OnPropertyChanged("MaximumSignalReferenceWidth");
+                OnPropertyChanged(nameof(MaximumSignalReferenceWidth));
             }
         }
 
@@ -871,6 +893,29 @@ namespace GSF.PhasorProtocols.UI.DataModels
         }
 
         /// <summary>
+        /// Gets maximum with of signal reference column.
+        /// </summary>
+        public string MaximumShortSignalReferenceWidth
+        {
+            get
+            {
+                if (m_parent == null)
+                    return "Auto";
+
+                double width = m_parent.MaximumShortSignalReferenceWidth;
+
+                if (double.IsNaN(width))
+                    return "Auto";
+
+                return width.ToString();
+            }
+            set
+            {
+
+            }
+        }
+
+        /// <summary>
         /// Gets or sets DeviceID for <see cref="RealTimeMeasurement"/>.
         /// </summary>
         public int? DeviceID
@@ -882,7 +927,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_deviceID = value;
-                OnPropertyChanged("DeviceID");
+                OnPropertyChanged(nameof(DeviceID));
             }
         }
 
@@ -898,7 +943,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_signalID = value;
-                OnPropertyChanged("SignalID");
+                OnPropertyChanged(nameof(SignalID));
             }
         }
 
@@ -914,7 +959,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_id = value;
-                OnPropertyChanged("ID");
+                OnPropertyChanged(nameof(ID));
             }
         }
 
@@ -930,7 +975,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_pointID = value;
-                OnPropertyChanged("PointID");
+                OnPropertyChanged(nameof(PointID));
             }
         }
 
@@ -946,7 +991,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_pointTag = value;
-                OnPropertyChanged("PointTag");
+                OnPropertyChanged(nameof(PointTag));
             }
         }
 
@@ -962,7 +1007,19 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_signalReference = value;
-                OnPropertyChanged("SignalReference");
+                OnPropertyChanged(nameof(SignalReference));
+                OnPropertyChanged(nameof(ShortSignalReference));
+            }
+        }
+
+        /// <summary>
+        /// Gets a shortened version of the signal reference.
+        /// </summary>
+        public string ShortSignalReference
+        {
+            get
+            {
+                return m_signalReference.TrimWithEllipsisMiddle(16);
             }
         }
 
@@ -978,7 +1035,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_description = value;
-                OnPropertyChanged("Description");
+                OnPropertyChanged(nameof(Description));
             }
         }
 
@@ -994,7 +1051,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_signalName = value;
-                OnPropertyChanged("SignalName");
+                OnPropertyChanged(nameof(SignalName));
             }
         }
 
@@ -1010,7 +1067,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_signalAcronym = value;
-                OnPropertyChanged("SignalAcronym");
+                OnPropertyChanged(nameof(SignalAcronym));
             }
         }
 
@@ -1026,8 +1083,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_engineeringUnit = value;
-                OnPropertyChanged("EngineeringUnit");
-                OnPropertyChanged("Value");
+                OnPropertyChanged(nameof(EngineeringUnit));
+                OnPropertyChanged(nameof(Value));
             }
         }
 
@@ -1043,7 +1100,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_expanded = value;
-                OnPropertyChanged("Expanded");
+                OnPropertyChanged(nameof(Expanded));
             }
         }
 
@@ -1059,7 +1116,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_selected = value;
-                OnPropertyChanged("Selected");
+                OnPropertyChanged(nameof(Selected));
             }
         }
 
@@ -1075,7 +1132,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_selectable = value;
-                OnPropertyChanged("Selectable");
+                OnPropertyChanged(nameof(Selectable));
             }
         }
 
@@ -1091,7 +1148,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_timeTag = value;
-                OnPropertyChanged("TimeTag");
+                OnPropertyChanged(nameof(TimeTag));
             }
         }
 
@@ -1115,7 +1172,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_value = value;
-                OnPropertyChanged("Value");
+                OnPropertyChanged(nameof(Value));
             }
         }
 
@@ -1131,7 +1188,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_quality = value;
-                OnPropertyChanged("Quality");
+                OnPropertyChanged(nameof(Quality));
             }
         }
 
@@ -1147,7 +1204,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_lastUpdated = value;
-                OnPropertyChanged("LastUpdated");
+                OnPropertyChanged(nameof(LastUpdated));
             }
         }
 
@@ -1163,7 +1220,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_foreground = value;
-                OnPropertyChanged("Foreground");
+                OnPropertyChanged(nameof(Foreground));
             }
         }
 

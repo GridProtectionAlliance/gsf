@@ -1,5 +1,6 @@
-﻿using PowerCalculations.UI.WPF.ViewModels;
+﻿using System.ComponentModel;
 using PowerCalculations.UI.DataModels;
+using PowerCalculations.UI.WPF.ViewModels;
 
 namespace PowerCalculations.UI.WPF.UserControls
 {
@@ -8,21 +9,54 @@ namespace PowerCalculations.UI.WPF.UserControls
 	/// </summary>
 	public partial class PhasorSelectionUserControl
 	{
-		public PhasorSelectionUserControl()
+        private PhasorSelectionViewModel m_dataContext;
+        private PhasorType m_phasorTypeFilter;
+
+        public PhasorSelectionUserControl()
 		{
 			InitializeComponent();
-			DataContext = new PhasorSelectionViewModel(16);
-		}
+        }
 
-		public Phasor SelectedPhasor
-		{
-			get { return ((PhasorSelectionViewModel) DataContext).CurrentItem; }
-		}
+        private void PhasorSelectionUserControl_Loaded(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (!DesignerProperties.GetIsInDesignMode(this))
+            {
+                m_dataContext = new PhasorSelectionViewModel(16);
+                m_dataContext.PropertyChanged += ViewModel_PropertyChanged;
+                m_dataContext.PhasorTypeFilter = m_phasorTypeFilter;
+                DataContext = m_dataContext;
+            }
+        }
+
+        private void ViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(m_dataContext.CurrentItem) && m_dataContext.IsNewRecord)
+                DataGridList.SelectedIndex = -1;
+        }
+
+        public Phasor SelectedPhasor
+        {
+            get
+            {
+                return IsLoaded ? ((PhasorSelectionViewModel)DataContext).CurrentItem : null;
+            }
+        }
 
 		public PhasorType PhasorTypeFilter
 		{
-			get { return (DataContext as PhasorSelectionViewModel).PhasorTypeFilter; }
-			set { (DataContext as PhasorSelectionViewModel).PhasorTypeFilter = value; }
+			get
+            {
+                return m_phasorTypeFilter;
+            }
+			set
+            {
+                var dataContext = DataContext as PhasorSelectionViewModel;
+
+                m_phasorTypeFilter = value;
+
+                if ((object)dataContext != null)
+                    dataContext.PhasorTypeFilter = value;
+            }
 		}
-	}
+    }
 }

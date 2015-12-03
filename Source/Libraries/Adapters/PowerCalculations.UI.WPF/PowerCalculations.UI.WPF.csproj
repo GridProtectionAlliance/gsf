@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\..\..\..\Build\Output\Debug\Libraries\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -25,7 +25,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\..\..\..\Build\Output\Release\Libraries\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -70,6 +70,10 @@
     <ProjectReference Include="..\PowerCalculations.UI\PowerCalculations.UI.csproj">
       <Project>{96cd89d2-30fa-49cc-9b40-10523021feaf}</Project>
       <Name>PowerCalculations.UI</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PowerCalculations\PowerCalculations.csproj">
+      <Project>{b74cf4da-2972-489b-af08-419560ee57ef}</Project>
+      <Name>PowerCalculations</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

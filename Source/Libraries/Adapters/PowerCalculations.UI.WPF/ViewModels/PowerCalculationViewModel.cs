@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using GSF.Data;
 using GSF.TimeSeries.UI;
 using PowerCalculations.UI.DataModels;
 
@@ -17,7 +18,7 @@ namespace PowerCalculations.UI.WPF.ViewModels
 
 		public override int GetCurrentItemKey()
 		{
-			return CurrentItem.PowerCalculationId;
+			return CurrentItem.ID;
 		}
 
 		public override string GetCurrentItemName()
@@ -27,8 +28,27 @@ namespace PowerCalculations.UI.WPF.ViewModels
 
 		public override bool IsNewRecord
 		{
-			get { return CurrentItem.PowerCalculationId == 0; }
+			get { return CurrentItem.ID == 0; }
 		}
+
+        public string RuntimeID
+        {
+            get
+            {
+                try
+                {
+                    using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
+                    {
+                        int id = database.ExecuteScalar<int>("SELECT ID FROM CustomActionAdapter WHERE AdapterName = 'PHASOR!POWERCALC'");
+                        return CommonFunctions.GetRuntimeID("CustomActionAdapter", id, database);
+                    }
+                }
+                catch
+                {
+                    return "-1";
+                }
+            }
+        }
 
 		/// <summary>
 		/// Loads collection of <see cref="PowerCalculation"/> information stored in the database.
@@ -79,5 +99,19 @@ namespace PowerCalculations.UI.WPF.ViewModels
 				Mouse.OverrideCursor = null;
 			}
 		}
+
+        public void InitializeAdapter()
+        {
+            try
+            {
+                if (Confirm("Do you want to Initialize the power calculation adapter?", "Confirm Initialize"))
+                    Popup(CommonFunctions.SendCommandToService("Initialize " + RuntimeID), "Initialize", MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                Popup(ex.Message, "Initialize Adapter:", MessageBoxImage.Error);
+                CommonFunctions.LogException(null, "Initialize Adapter", ex);
+            }
+        }
 	}
 }

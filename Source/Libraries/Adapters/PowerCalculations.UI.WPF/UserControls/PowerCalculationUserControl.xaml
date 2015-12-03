@@ -9,14 +9,15 @@
              xmlns:viewModels1="clr-namespace:PowerCalculations.UI.WPF.ViewModels"
              xmlns:userControls="clr-namespace:PowerCalculations.UI.WPF.UserControls"
              mc:Ignorable="d" 
-             d:DesignHeight="500" d:DesignWidth="500" d:DataContext="{d:DesignInstance viewModels1:PowerCalculationViewModel}">
+             d:DesignHeight="500" d:DesignWidth="1300" d:DataContext="{d:DesignInstance viewModels1:PowerCalculationViewModel}"
+             PreviewKeyDown="PowerCalculationUserControl_PreviewKeyDown">
 
 	<UserControl.Resources>
 		<ResourceDictionary>
 			<ResourceDictionary.MergedDictionaries>
 				<ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
-			</ResourceDictionary.MergedDictionaries>
-		</ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
 	</UserControl.Resources>
 
 	<StackPanel Orientation="Vertical">
@@ -45,52 +46,65 @@
 							<ColumnDefinition Width="Auto"/>
 						</Grid.ColumnDefinitions>
 
-						<TextBlock Grid.Row="1" Grid.Column="0" Text="Circuit Description" TextAlignment="Right"/>
-						<TextBox Grid.Row="1" Grid.Column="1" Text="{Binding CircuitDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-
-						<TextBlock Grid.Row="2" Grid.Column="0" Text="Voltage Phasor" TextAlignment="Right"/>
-						<StackPanel Orientation="Vertical" Grid.Row="2" Grid.Column="1">
+						<TextBlock Grid.Row="1" Grid.Column="0" Text="Voltage Phasor" TextAlignment="Right"/>
+						<StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="1">
 							<StackPanel Orientation="Horizontal">
 								<TextBox Text="{Binding VoltagePhasor.Label, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" />
-								<ToggleButton x:Name="VoltagePhasorToggle" Content="..." Width="25"  />
+                                <ToggleButton x:Name="VoltagePhasorToggle" Padding="0" Content="..." Width="25" Height="22" />
 							</StackPanel>
-							<Popup StaysOpen="False" IsOpen="{Binding ElementName=VoltagePhasorToggle, Path=IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-								<userControls:PhasorSelectionUserControl x:Name="VoltagePhasorSelector" PhasorTypeFilter="Voltage">
-									<userControls:PhasorSelectionUserControl.Resources>
-										<ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
-									</userControls:PhasorSelectionUserControl.Resources>
-								</userControls:PhasorSelectionUserControl>
-							</Popup>
-						</StackPanel>
+							<Popup IsOpen="{Binding ElementName=VoltagePhasorToggle, Path=IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Opened="Popup_Opened">
+                                <StackPanel Background="LightGray">
+								    <userControls:PhasorSelectionUserControl x:Name="VoltagePhasorSelector" PhasorTypeFilter="Voltage" Loaded="PhasorSelector_Loaded" />
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <Button Content="Clear" Click="ClearVoltagePhasor_Click" />
+                                        <Button Content="Close" Click="CloseButton_Click" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Popup>
+                        </StackPanel>
 
-						<TextBlock Grid.Row="3" Grid.Column="0" Text="Current Phasor" TextAlignment="Right"/>
-						<StackPanel Orientation="Vertical" Grid.Row="3" Grid.Column="1">
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Current Phasor" TextAlignment="Right"/>
+						<StackPanel Orientation="Vertical" Grid.Row="2" Grid.Column="1">
 							<StackPanel Orientation="Horizontal">
 								<TextBox Text="{Binding CurrentPhasor.Label, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" />
-								<ToggleButton x:Name="CurrentPhasorToggle" Content="..." Width="25"  />
+                                <ToggleButton x:Name="CurrentPhasorToggle" Padding="0" Content="..." Width="25" Height="22" />
 							</StackPanel>
-							<Popup StaysOpen="False" IsOpen="{Binding ElementName=CurrentPhasorToggle, Path=IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-								<userControls:PhasorSelectionUserControl x:Name="CurrentPhasorSelector" PhasorTypeFilter="Current">
-									<userControls:PhasorSelectionUserControl.Resources>
-										<ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
-									</userControls:PhasorSelectionUserControl.Resources>
-								</userControls:PhasorSelectionUserControl>
-							</Popup>
-						</StackPanel>
+                            <Popup IsOpen="{Binding ElementName=CurrentPhasorToggle, Path=IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Opened="Popup_Opened">
+                                <StackPanel Background="LightGray">
+								    <userControls:PhasorSelectionUserControl x:Name="CurrentPhasorSelector" PhasorTypeFilter="Current" Loaded="PhasorSelector_Loaded" />
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <Button Content="Clear" Click="ClearCurrentPhasor_Click" />
+                                        <Button Content="Close" Click="CloseButton_Click" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Popup>
+                        </StackPanel>
 
-						<TextBlock Grid.Row="0" Grid.Column="3">(Leave blank to use template names)</TextBlock>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Circuit Description" TextAlignment="Right"/>
+                        <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding CircuitDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-						<TextBlock Grid.Row="1" Grid.Column="2" Text="Real Power Output Alt Tag Name" TextAlignment="Right" />
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Runtime ID" />
+                        <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal">
+                            <TextBlock Loaded="RuntimeIDTextBlock_Loaded" />
+                            <Button Content="Initialize" Click="InitializeButton_Click" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="0" Grid.Column="3">(Leave blank to use template names)</TextBlock>
+
+						<TextBlock Grid.Row="1" Grid.Column="2" Text="Active Power Output Alt Tag Name" TextAlignment="Right" />
 						<StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="3">
 							<StackPanel Orientation="Horizontal">
-								<TextBox Text="{Binding RealPowerOutputMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" />
-								<ToggleButton x:Name="RealPowerOutputToggle" Content="..." Width="25" />
+								<TextBox Text="{Binding ActivePowerOutputMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" />
+                                <ToggleButton x:Name="ActivePowerOutputToggle" Padding="0" Content="..." Width="25" Height="22" />
 							</StackPanel>
-							<Popup StaysOpen="False" IsOpen="{Binding ElementName=RealPowerOutputToggle, Path=IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="650">
+                            <Popup IsOpen="{Binding ElementName=ActivePowerOutputToggle, Path=IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="650" Opened="Popup_Opened">
 								<StackPanel Orientation="Vertical" Background="LightGray">
-									<userControls1:MeasurementPagerUserControl x:Name="RealMeasurementPager" />
-									<Button HorizontalAlignment="Left" Content="Update Selection" Width="Auto" Click="RealMeasurementUpdated" />
-								</StackPanel>
+									<userControls1:MeasurementPagerUserControl x:Name="ActiveMeasurementPager" Loaded="MeasurementPager_Loaded" />
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <Button Content="Clear" Click="ClearActiveMeasurement_Click" />
+                                        <Button Content="Close" Click="CloseButton_Click" />
+                                    </StackPanel>
+                                </StackPanel>
 							</Popup>
 						</StackPanel>
 						
@@ -98,31 +112,37 @@
 						<StackPanel Orientation="Vertical" Grid.Row="2" Grid.Column="3">
 							<StackPanel Orientation="Horizontal">
 								<TextBox Text="{Binding ReactivePowerOutputMeasurement.PointTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" />
-								<ToggleButton x:Name="ReactivePowerOutputToggle" Content="..." Width="25" />
+                                <ToggleButton x:Name="ReactivePowerOutputToggle" Padding="0" Content="..." Width="25" Height="22" />
 							</StackPanel>
-							<Popup StaysOpen="False" IsOpen="{Binding ElementName=ReactivePowerOutputToggle, Path=IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="650">
+                            <Popup IsOpen="{Binding ElementName=ReactivePowerOutputToggle, Path=IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="650" Opened="Popup_Opened">
 								<StackPanel Orientation="Vertical" Background="LightGray">
-									<userControls1:MeasurementPagerUserControl x:Name="ReactiveMeasurementPager" />
-									<Button HorizontalAlignment="Left" Content="Update Selection" Width="Auto" Click="ReactiveMeasurementUpdated" />
-								</StackPanel>
+									<userControls1:MeasurementPagerUserControl x:Name="ReactiveMeasurementPager" Loaded="MeasurementPager_Loaded" />
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <Button Content="Clear" Click="ClearReactiveMeasurement_Click" />
+                                        <Button Content="Close" Click="CloseButton_Click" />
+                                    </StackPanel>
+                                </StackPanel>
 							</Popup>
 						</StackPanel>
 
-						<TextBlock Grid.Row="3" Grid.Column="2" Text="Active Power Output Alt Tag Name" TextAlignment="Right" />
+						<TextBlock Grid.Row="3" Grid.Column="2" Text="Apparent Power Output Alt Tag Name" TextAlignment="Right" />
 						<StackPanel Orientation="Vertical" Grid.Row="3" Grid.Column="3">
 							<StackPanel Orientation="Horizontal">
-								<TextBox Text="{Binding ActivePowerOutputMeasurement.PointTag, Mode=OneWay,UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" />
-								<ToggleButton x:Name="ActivePowerOutputToggle" Content="..." Width="25" />
+								<TextBox Text="{Binding ApparentPowerOutputMeasurement.PointTag, Mode=OneWay,UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" />
+                                <ToggleButton x:Name="ApparentPowerOutputToggle" Padding="0" Content="..." Width="25" Height="22" />
 							</StackPanel>
-							<Popup StaysOpen="False" IsOpen="{Binding ElementName=ActivePowerOutputToggle, Path=IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="650">
+                            <Popup IsOpen="{Binding ElementName=ApparentPowerOutputToggle, Path=IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="650" Opened="Popup_Opened">
 								<StackPanel Orientation="Vertical" Background="LightGray">
-									<userControls1:MeasurementPagerUserControl x:Name="ActiveMeasurementPager" />
-									<Button HorizontalAlignment="Left" Content="Update Selection" Width="Auto" Click="ActiveMeasurementUpdated" />
-								</StackPanel>
+									<userControls1:MeasurementPagerUserControl x:Name="ApparentMeasurementPager" Loaded="MeasurementPager_Loaded" />
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <Button Content="Clear" Click="ClearApparentMeasurement_Click" />
+                                        <Button Content="Close" Click="CloseButton_Click" />
+                                    </StackPanel>
+                                </StackPanel>
 							</Popup>
 						</StackPanel>
 
-						<CheckBox Grid.Row="4" Grid.Column="2" IsChecked="{Binding PowerCalculationEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="Enabled" HorizontalAlignment="Right"/>
+						<CheckBox Grid.Row="4" Grid.Column="2" IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="Enabled" HorizontalAlignment="Right"/>
 					</Grid>
 
 					<userControls1:DetailViewFooterUserControl x:Name="UserControlDetailViewFooter" DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}" HorizontalAlignment="Right" SaveEnabled="{binding:DataOperation Path=(Validation.HasError)}"/>
@@ -133,20 +153,32 @@
 		<sdk:DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" SelectedIndex="{binding:Column Path=CurrentSelectedIndex}">
 			<!--PreviewKeyDown="DataGrid_PreviewKeyDown" Sorting="DataGrid_Sorting" CellEditEnding="DataGrid_CellEditEnding">-->
 			<sdk:DataGrid.Columns>
-				<sdk:DataGridTextColumn Header="ID" Width="100" Binding="{Binding PowerCalculationId, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+                <sdk:DataGridTextColumn Header="ID" Width="100" Binding="{Binding ID, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
+                    <sdk:DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="HorizontalAlignment" Value="Center" />
+                        </Style>
+                    </sdk:DataGridTextColumn.ElementStyle>
+                </sdk:DataGridTextColumn>
 				<sdk:DataGridTemplateColumn Header="Circuit Description" Width="*" SortMemberPath="CircuitDescription">
 					<sdk:DataGridTemplateColumn.CellTemplate>
 						<DataTemplate>
-							<Button Template="{StaticResource HyperlinkStyleButtonTemplate}" Content="{binding:Column Path=CircuitDescription}" 
+                            <Button Margin="0" Template="{StaticResource HyperlinkStyleButtonTemplate}" Content="{binding:Column Path=CircuitDescription}" 
                                     Command="{binding:GridButtonCommand Path=DataContext.EditCommand}" 
-                                    CommandParameter="{binding:GridButtonCommand Path=DataContext.CurrentItem}" ToolTip="{Binding Path=CircuitDescription}" Width="Auto" />
+                                    CommandParameter="{binding:GridButtonCommand Path=DataContext.CurrentItem}" ToolTip="{Binding Path=CircuitDescription}" Width="Auto">
+                                <Button.Resources>
+                                    <Style TargetType="{x:Type TextBlock}">
+                                        <Setter Property="Margin" Value="0" />
+                                    </Style>
+                                </Button.Resources>
+                            </Button>
 						</DataTemplate>
 					</sdk:DataGridTemplateColumn.CellTemplate>
 				</sdk:DataGridTemplateColumn>
 				<sdk:DataGridTemplateColumn Header="Enabled" Width="200" SortMemberPath="Enabled" >
 					<sdk:DataGridTemplateColumn.CellTemplate>
 						<DataTemplate>
-							<CheckBox IsChecked="{Binding PowerCalculationEnabled, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" />
+							<CheckBox IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" />
 						</DataTemplate>
 					</sdk:DataGridTemplateColumn.CellTemplate>
 				</sdk:DataGridTemplateColumn>

@@ -95,22 +95,22 @@ namespace PowerCalculations.PowerMultiCalculator
         /// If null output measurements are found in the configuration, this method will create the output measurements and update the configuration.
         /// </summary>
         /// <param name="database">Database connection for configuration information</param>
-        /// <param name="nodeIdQueryString">Node ID for database queries</param>
+        /// <param name="nodeIDQueryString">Node ID for database queries</param>
         /// <param name="trackingVersion">Not used</param>
         /// <param name="arguments">Not used</param>
         /// <param name="statusMessage">Delegate for method to communicate status updates</param>
         /// <param name="processException">Exception handling delegate</param>
-        public static void ValidatePowerCalculationConfigurations(AdoDataConnection database, string nodeIdQueryString, ulong trackingVersion, string arguments, Action<string> statusMessage, Action<Exception> processException)
+        public static void ValidatePowerCalculationConfigurations(AdoDataConnection database, string nodeIDQueryString, ulong trackingVersion, string arguments, Action<string> statusMessage, Action<Exception> processException)
         {
             try
             {
-                CheckInputMeasurementsExist(database, nodeIdQueryString, statusMessage);
-                CheckInputMeasurementsAreEnabled(database, nodeIdQueryString, statusMessage);
-                CheckInputMeasurementsSignalType(database, nodeIdQueryString, statusMessage);
-                CheckOutputMeasurementsExist(database, nodeIdQueryString, statusMessage);
-                CheckOutputMeasurementsAreEnabled(database, nodeIdQueryString, statusMessage);
-                CheckOutputMeasurementsSignalType(database, nodeIdQueryString, statusMessage);
-                CreateOutputMeasurementsWhereNull(database, nodeIdQueryString, statusMessage);
+                CheckInputMeasurementsExist(database, nodeIDQueryString, statusMessage);
+                CheckInputMeasurementsAreEnabled(database, nodeIDQueryString, statusMessage);
+                CheckInputMeasurementsSignalType(database, nodeIDQueryString, statusMessage);
+                CheckOutputMeasurementsExist(database, nodeIDQueryString, statusMessage);
+                CheckOutputMeasurementsAreEnabled(database, nodeIDQueryString, statusMessage);
+                CheckOutputMeasurementsSignalType(database, nodeIDQueryString, statusMessage);
+                CreateOutputMeasurementsWhereNull(database, nodeIDQueryString, statusMessage);
             }
             catch (Exception e)
             {
@@ -124,14 +124,14 @@ namespace PowerCalculations.PowerMultiCalculator
         /// Checks power calculation configuration for null output measurements. When found, a new measurement is created, and the configuration is updated to use the new measurement.
         /// </summary>
         /// <param name="database">Configuration database connection</param>
-        /// <param name="nodeIdQueryString">Node ID formatted for query</param>
+        /// <param name="nodeIDQueryString">Node ID formatted for query</param>
         /// <param name="statusMessage">Delegate for communicating status updates</param>
-        private static void CreateOutputMeasurementsWhereNull(AdoDataConnection database, string nodeIdQueryString, Action<string> statusMessage)
+        private static void CreateOutputMeasurementsWhereNull(AdoDataConnection database, string nodeIDQueryString, Action<string> statusMessage)
         {
             statusMessage("Checking for calculations with null output measurements...");
 
             string query = 
-                "SELECT pc.PowerCalculationId, pc.CircuitDescription, pc.RealPowerOutputSignalId, pc.ActivePowerOutputSignalId, pc.ReactivePowerOutputSignalId, " +
+                "SELECT pc.ID, pc.CircuitDescription, pc.ActivePowerOutputSignalID, pc.ApparentPowerOutputSignalID, pc.ReactivePowerOutputSignalID, " +
                 "v.Acronym as vendoracronym,  d.Acronym as deviceacronym, c.Acronym as companyacronym, d.id as deviceid, d.historianid as historianid, " + 
                 "(SELECT p.Label FROM Phasor p JOIN Measurement m on m.SignalID = pc.currentanglesignalid and m.DeviceID = p.DeviceID AND m.PhasorSourceIndex = p.SourceIndex) as currentLabel " + 
                 "FROM PowerCalculation pc " + 
@@ -140,10 +140,10 @@ namespace PowerCalculations.PowerMultiCalculator
                 "left outer join VendorDevice vd on vd.id = d.VendorDeviceID " + 
                 "left outer join vendor v on vd.VendorID = v.id " + 
                 "left outer join company c on d.CompanyID = c.id " + 
-                $"WHERE pc.CalculationEnabled = 1 and pc.nodeid={nodeIdQueryString} " + 
-                "AND (pc.RealPowerOutputSignalId IS NULL OR pc.ReactivePowerOutputSignalId IS NULL OR pc.ActivePowerOutputSignalId IS NULL)";
+                $"WHERE pc.Enabled = 1 and pc.nodeid={nodeIDQueryString} " + 
+                "AND (pc.ActivePowerOutputSignalID IS NULL OR pc.ReactivePowerOutputSignalID IS NULL OR pc.ApparentPowerOutputSignalID IS NULL)";
 
-            Dictionary<int, PowerMeasurement> realPowerUpdates = new Dictionary<int, PowerMeasurement>();
+            Dictionary<int, PowerMeasurement> activePowerUpdates = new Dictionary<int, PowerMeasurement>();
             Dictionary<int, PowerMeasurement> reactivePowerUpdates = new Dictionary<int, PowerMeasurement>();
             Dictionary<int, PowerMeasurement> apparentPowerUpdates = new Dictionary<int, PowerMeasurement>();
 
@@ -154,39 +154,39 @@ namespace PowerCalculations.PowerMultiCalculator
                 {
                     while (rdr.Read())
                     {
-                        int powerCalculationId = rdr.GetInt32(0);
+                        int powerCalculationID = rdr.GetInt32(0);
                         string companyAcronym = rdr.IsDBNull(7) ? "" : rdr.GetString(7);
                         string vendorAcronym = rdr.IsDBNull(5) ? "" : rdr.GetString(5);
                         string signalTypeAcronym = "CALC";
                         string circuitDescription = rdr.IsDBNull(1) ? "" : rdr.GetString(1);
-                        int deviceId = rdr.GetInt32(8);
-                        int? historianId = rdr.IsDBNull(9) ? null : (int?)rdr.GetInt32(9);
+                        int deviceID = rdr.GetInt32(8);
+                        int? historianID = rdr.IsDBNull(9) ? null : (int?)rdr.GetInt32(9);
 
                         if (rdr.IsDBNull(2)) // Real - MW
                         {
-                            // create real power output measurement
-                            PowerMeasurement measurement = CreateMeasurement(companyAcronym, circuitDescription + "-MW", vendorAcronym, signalTypeAcronym, circuitDescription, deviceId, historianId, "Real Power Calculation");
-                            realPowerUpdates.Add(powerCalculationId, measurement);
+                            // create active power output measurement
+                            PowerMeasurement measurement = CreateMeasurement(companyAcronym, circuitDescription + "-MW", vendorAcronym, signalTypeAcronym, circuitDescription, deviceID, historianID, "Active Power Calculation");
+                            activePowerUpdates.Add(powerCalculationID, measurement);
                         }
 
                         if (rdr.IsDBNull(3)) // Apparent - MVA
                         {
                             // create apparent power output measurement
-                            PowerMeasurement measurement = CreateMeasurement(companyAcronym, circuitDescription + "-MVA", vendorAcronym, signalTypeAcronym, circuitDescription, deviceId, historianId, "Apparent Power Calculation");
-                            apparentPowerUpdates.Add(powerCalculationId, measurement);
+                            PowerMeasurement measurement = CreateMeasurement(companyAcronym, circuitDescription + "-MVA", vendorAcronym, signalTypeAcronym, circuitDescription, deviceID, historianID, "Apparent Power Calculation");
+                            apparentPowerUpdates.Add(powerCalculationID, measurement);
                         }
 
                         if (rdr.IsDBNull(4)) // Reactive - MVAR
                         {
                             //create reactive power output measurement
-                            PowerMeasurement measurement = CreateMeasurement(companyAcronym, circuitDescription + "-MVAR", vendorAcronym, signalTypeAcronym, circuitDescription, deviceId, historianId, "Reactive Power Calculation");
-                            reactivePowerUpdates.Add(powerCalculationId, measurement);
+                            PowerMeasurement measurement = CreateMeasurement(companyAcronym, circuitDescription + "-MVAR", vendorAcronym, signalTypeAcronym, circuitDescription, deviceID, historianID, "Reactive Power Calculation");
+                            reactivePowerUpdates.Add(powerCalculationID, measurement);
                         }
                     }
                 }
             }
 
-            int newMeasurementsCount = realPowerUpdates.Count + reactivePowerUpdates.Count + apparentPowerUpdates.Count;
+            int newMeasurementsCount = activePowerUpdates.Count + reactivePowerUpdates.Count + apparentPowerUpdates.Count;
 
             if (newMeasurementsCount > 0)
             {
@@ -194,18 +194,18 @@ namespace PowerCalculations.PowerMultiCalculator
 
                 statusMessage($"Creating {newMeasurementsCount} new output measurements for power calculation...");
 
-                foreach (KeyValuePair<int, PowerMeasurement> update in realPowerUpdates)
+                foreach (KeyValuePair<int, PowerMeasurement> update in activePowerUpdates)
                 {
                     repo.Save(database, update.Value);
-                    UpdatePowerCalculation(database, update.Key, realPowerOutputSignalId: update.Value.SignalID);
+                    UpdatePowerCalculation(database, update.Key, activePowerOutputSignalID: update.Value.SignalID);
                 }
 
-                statusMessage("Successfully created new real power calculations.");
+                statusMessage("Successfully created new active power calculations.");
 
                 foreach (KeyValuePair<int, PowerMeasurement> update in reactivePowerUpdates)
                 {
                     repo.Save(database, update.Value);
-                    UpdatePowerCalculation(database, update.Key, reactivePowerOutputSignalId: update.Value.SignalID);
+                    UpdatePowerCalculation(database, update.Key, reactivePowerOutputSignalID: update.Value.SignalID);
                 }
 
                 statusMessage("Successfully created new reactive power calculations.");
@@ -213,7 +213,7 @@ namespace PowerCalculations.PowerMultiCalculator
                 foreach (KeyValuePair<int, PowerMeasurement> update in apparentPowerUpdates)
                 {
                     repo.Save(database, update.Value);
-                    UpdatePowerCalculation(database, update.Key, activePowerOutputSignalId: update.Value.SignalID);
+                    UpdatePowerCalculation(database, update.Key, apparentPowerOutputSignalID: update.Value.SignalID);
                 }
 
                 statusMessage("Successfully created new apparent power calculations.");
@@ -225,7 +225,7 @@ namespace PowerCalculations.PowerMultiCalculator
         /// <summary>
         /// Creates a new measurement object for power calculation output measurements
         /// </summary>
-        private static PowerMeasurement CreateMeasurement(string companyAcronym, string deviceAcronym, string vendorAcronym, string signalTypeAcronym, string circuitDescription, int deviceId, int? historianId, string descriptionSuffix)
+        private static PowerMeasurement CreateMeasurement(string companyAcronym, string deviceAcronym, string vendorAcronym, string signalTypeAcronym, string circuitDescription, int deviceID, int? historianID, string descriptionSuffix)
         {
             PowerMeasurement measurement = new PowerMeasurement
             {
@@ -233,8 +233,8 @@ namespace PowerCalculations.PowerMultiCalculator
                 Adder = 0,
                 Multiplier = 1,
                 Description = $"{circuitDescription} {descriptionSuffix}",
-                DeviceID = deviceId,
-                HistorianID = historianId,
+                DeviceID = deviceID,
+                HistorianID = historianID,
                 SignalTypeID = 10,
                 Enabled = true,
                 SignalID = Guid.Empty
@@ -253,26 +253,26 @@ namespace PowerCalculations.PowerMultiCalculator
         /// Updated power calculation to use new Signal IDs for output measurement
         /// </summary>
         /// <param name="database">Configuration database connection</param>
-        /// <param name="powerCalculationId">ID of the power calculation to be updated</param>
-        /// <param name="realPowerOutputSignalId">Real power output signal ID, if needed for update</param>
-        /// <param name="reactivePowerOutputSignalId">Reactive power output signal ID, if needed for update</param>
-        /// <param name="activePowerOutputSignalId">Active power output signal ID, if needed for update</param>
-        private static void UpdatePowerCalculation(AdoDataConnection database, int powerCalculationId, Guid? realPowerOutputSignalId = null, Guid? reactivePowerOutputSignalId = null, Guid? activePowerOutputSignalId = null)
+        /// <param name="powerCalculationID">ID of the power calculation to be updated</param>
+        /// <param name="activePowerOutputSignalID">Active power output signal ID, if needed for update</param>
+        /// <param name="reactivePowerOutputSignalID">Reactive power output signal ID, if needed for update</param>
+        /// <param name="apparentPowerOutputSignalID">Apparent power output signal ID, if needed for update</param>
+        private static void UpdatePowerCalculation(AdoDataConnection database, int powerCalculationID, Guid? activePowerOutputSignalID = null, Guid? reactivePowerOutputSignalID = null, Guid? apparentPowerOutputSignalID = null)
         {
-            if (realPowerOutputSignalId == null && reactivePowerOutputSignalId == null && activePowerOutputSignalId == null)
+            if (activePowerOutputSignalID == null && reactivePowerOutputSignalID == null && apparentPowerOutputSignalID == null)
                 return;
 
             List<string> updates = new List<string>();
-            if (realPowerOutputSignalId != null)
-                updates.Add($"RealPowerOutputSignalId='{realPowerOutputSignalId.Value}'");
-            if (reactivePowerOutputSignalId != null)
-                updates.Add($"ReactivePowerOutputSignalId='{reactivePowerOutputSignalId.Value}'");
-            if (activePowerOutputSignalId != null)
-                updates.Add($"ActivePowerOutputSignalId='{activePowerOutputSignalId.Value}'");
+            if (activePowerOutputSignalID != null)
+                updates.Add($"ActivePowerOutputSignalID='{activePowerOutputSignalID.Value}'");
+            if (reactivePowerOutputSignalID != null)
+                updates.Add($"ReactivePowerOutputSignalID='{reactivePowerOutputSignalID.Value}'");
+            if (apparentPowerOutputSignalID != null)
+                updates.Add($"ApparentPowerOutputSignalID='{apparentPowerOutputSignalID.Value}'");
 
             string query = "UPDATE PowerCalculation SET ";
             query += string.Join(", ", updates) + " ";
-            query += $"WHERE PowerCalculationId={powerCalculationId} ";
+            query += $"WHERE ID={powerCalculationID} ";
 
             using (IDbCommand cmd = database.Connection.CreateCommand())
             {
@@ -285,22 +285,22 @@ namespace PowerCalculations.PowerMultiCalculator
         /// Verifies that output measurements are set to calculated signal type. Calculations are disabled if output measurements are not configured correctly.
         /// </summary>
         /// <param name="database">Configuration database connection</param>
-        /// <param name="nodeIdQueryString">Node ID formatted for query</param>
+        /// <param name="nodeIDQueryString">Node ID formatted for query</param>
         /// <param name="statusMessage">Delegate to communicate status updates</param>
-        private static void CheckOutputMeasurementsSignalType(AdoDataConnection database, string nodeIdQueryString, Action<string> statusMessage)
+        private static void CheckOutputMeasurementsSignalType(AdoDataConnection database, string nodeIDQueryString, Action<string> statusMessage)
         {
             statusMessage("Validating if non-null output measurements have correct signal type...");
 
             string query = 
-                "UPDATE PowerCalculation SET CalculationEnabled=0 WHERE PowerCalculationId IN (select PowerCalculationId " + 
+                "UPDATE PowerCalculation SET Enabled=0 WHERE ID IN (select pc.ID " + 
                 "from PowerCalculation pc " + 
                 "left join measurement m1 " + 
-                "on pc.realpoweroutputsignalid = m1.signalid " + 
+                "on pc.activepoweroutputsignalid = m1.signalid " + 
                 "left join measurement m2 " + 
                 "on pc.reactivepoweroutputsignalid = m2.signalid " + 
                 "left join Measurement m3 " + 
-                "on pc.activepoweroutputsignalid = m3.signalid " + 
-                $"where pc.CalculationEnabled=1 AND pc.NodeId={nodeIdQueryString} " + 
+                "on pc.apparentpoweroutputsignalid = m3.signalid " + 
+                $"where pc.Enabled=1 AND pc.NodeID={nodeIDQueryString} " + 
                 "  and (m1.signaltypeid != 10  " + 
                 "   or m2.signaltypeid != 10  " + 
                 "   or m3.signaltypeid != 10))";
@@ -314,22 +314,22 @@ namespace PowerCalculations.PowerMultiCalculator
         /// Verifies that output measurements are enabled. Power calculations will be disabled where outputs are disabled.
         /// </summary>
         /// <param name="database"></param>
-        /// <param name="nodeIdQueryString"></param>
+        /// <param name="nodeIDQueryString"></param>
         /// <param name="statusMessage"></param>
-        private static void CheckOutputMeasurementsAreEnabled(AdoDataConnection database, string nodeIdQueryString, Action<string> statusMessage)
+        private static void CheckOutputMeasurementsAreEnabled(AdoDataConnection database, string nodeIDQueryString, Action<string> statusMessage)
         {
             statusMessage("Validating if non-null output measurements are enabled...");
 
             string query = 
-                "UPDATE PowerCalculation SET CalculationEnabled=0 WHERE PowerCalculationId IN (select PowerCalculationId " + 
+                "UPDATE PowerCalculation SET Enabled=0 WHERE ID IN (select pc.ID " + 
                 "from PowerCalculation pc " + 
                 "left join measurement m1 " + 
-                "on pc.realpoweroutputsignalid = m1.signalid " + 
+                "on pc.activepoweroutputsignalid = m1.signalid " + 
                 "left join measurement m2 " + 
                 "on pc.reactivepoweroutputsignalid = m2.signalid " + 
                 "left join Measurement m3 " + 
-                "on pc.activepoweroutputsignalid = m3.signalid " + 
-                $"where pc.CalculationEnabled=1 AND pc.NodeId={nodeIdQueryString} " + 
+                "on pc.apparentpoweroutputsignalid = m3.signalid " + 
+                $"where pc.Enabled=1 AND pc.NodeID={nodeIDQueryString} " + 
                 "  and (m1.enabled=0  " + 
                 "   or m2.enabled=0  " + 
                 "   or m3.enabled=0))";
@@ -343,17 +343,17 @@ namespace PowerCalculations.PowerMultiCalculator
         /// Verifies that output measurements exist in the measurement table. Power calculations are disabled where the configured outputs do not exist.
         /// </summary>
         /// <param name="database">Configuration database connection</param>
-        /// <param name="nodeIdQueryString">Node ID formatted for query</param>
+        /// <param name="nodeIDQueryString">Node ID formatted for query</param>
         /// <param name="statusMessage">Delegate to communicate status updates</param>
-        private static void CheckOutputMeasurementsExist(AdoDataConnection database, string nodeIdQueryString, Action<string> statusMessage)
+        private static void CheckOutputMeasurementsExist(AdoDataConnection database, string nodeIDQueryString, Action<string> statusMessage)
         {
             statusMessage("Validating if non-null output measurements exist...");
 
             string query = 
-                $"UPDATE PowerCalculation SET CalculationEnabled=0 WHERE CalculationEnabled=1 AND NodeId={nodeIdQueryString} " + 
-                "AND ((RealPowerOutputSignalId IS NOT NULL AND RealPowerOutputSignalId NOT IN (SELECT SignalId from Measurement)) " + 
-                "OR (ReactivePowerOutputSignalId IS NOT NULL AND ReactivePowerOutputSignalId NOT IN (SELECT SignalId from Measurement)) " + 
-                "OR (ActivePowerOutputSignalId IS NOT NULL AND ActivePowerOutputSignalId NOT IN (SELECT SignalId from Measurement)))";
+                $"UPDATE PowerCalculation SET Enabled=0 WHERE Enabled=1 AND NodeID={nodeIDQueryString} " + 
+                "AND ((ActivePowerOutputSignalID IS NOT NULL AND ActivePowerOutputSignalID NOT IN (SELECT SignalID from Measurement)) " + 
+                "OR (ReactivePowerOutputSignalID IS NOT NULL AND ReactivePowerOutputSignalID NOT IN (SELECT SignalID from Measurement)) " + 
+                "OR (ApparentPowerOutputSignalID IS NOT NULL AND ApparentPowerOutputSignalID NOT IN (SELECT SignalID from Measurement)))";
 
             const string failureMessage = "One or more power calculations are defined with non-null output measurements that do not exist. Power calculations will be disabled.";
 
@@ -364,24 +364,24 @@ namespace PowerCalculations.PowerMultiCalculator
         /// Validates that input measurements have the correct signal type. Power calculations are disabled where inputs have the wrong signal types.
         /// </summary>
         /// <param name="database">Configuration database connection</param>
-        /// <param name="nodeIdQueryString">Node ID formatted for database query</param>
+        /// <param name="nodeIDQueryString">Node ID formatted for database query</param>
         /// <param name="statusMessage">Delegate for status updates</param>
-        private static void CheckInputMeasurementsSignalType(AdoDataConnection database, string nodeIdQueryString, Action<string> statusMessage)
+        private static void CheckInputMeasurementsSignalType(AdoDataConnection database, string nodeIDQueryString, Action<string> statusMessage)
         {
             statusMessage("Validating if input measurements have correct signal type...");
 
-            string query = 
-                "UPDATE PowerCalculation SET CalculationEnabled=0 WHERE PowerCalculationId IN (select PowerCalculationId " + 
+            string query =
+                "UPDATE PowerCalculation SET Enabled=0 WHERE ID IN (select pc.ID " + 
                 "from PowerCalculation pc " + 
                 "left join measurement m1 " + 
                 "on pc.voltageanglesignalid = m1.signalid " + 
                 "left join measurement m2 " + 
-                "on pc.VoltageMagSignalId = m2.signalid " + 
+                "on pc.VoltageMagSignalID = m2.signalid " + 
                 "left join Measurement m3 " + 
-                "on pc.CurrentAngleSignalId = m3.signalid " + 
+                "on pc.CurrentAngleSignalID = m3.signalid " + 
                 "left join measurement m4 " + 
-                "on pc.CurrentMagSignalId = m4.signalid " + 
-                $"where pc.CalculationEnabled=1 AND pc.NodeId={nodeIdQueryString} " + 
+                "on pc.CurrentMagSignalID = m4.signalid " + 
+                $"where pc.Enabled=1 AND pc.NodeID={nodeIDQueryString} " + 
                 "  and (m1.signaltypeid != 4  " + 
                 "   or m2.signaltypeid != 3  " + 
                 "   or m3.signaltypeid != 2  " + 
@@ -396,24 +396,24 @@ namespace PowerCalculations.PowerMultiCalculator
         /// Verifies that input measurements are enabled. Power calculations are disabled where input measurements are disabled.
         /// </summary>
         /// <param name="database">Configuration database connection</param>
-        /// <param name="nodeIdQueryString">Node ID formatted for query</param>
+        /// <param name="nodeIDQueryString">Node ID formatted for query</param>
         /// <param name="statusMessage">Delegate for communicating status updates</param>
-        private static void CheckInputMeasurementsAreEnabled(AdoDataConnection database, string nodeIdQueryString, Action<string> statusMessage)
+        private static void CheckInputMeasurementsAreEnabled(AdoDataConnection database, string nodeIDQueryString, Action<string> statusMessage)
         {
             statusMessage("Validating if input measurements are enabled...");
 
-            string query = 
-                "UPDATE PowerCalculation SET CalculationEnabled=0 WHERE PowerCalculationId IN (select pc.PowerCalculationId " + 
+            string query =
+                "UPDATE PowerCalculation SET Enabled=0 WHERE ID IN (select pc.ID " + 
                 "from PowerCalculation pc " + 
                 "left join measurement m1 " + 
                 "on pc.voltageanglesignalid = m1.signalid " + 
                 "left join measurement m2 " + 
-                "on pc.VoltageMagSignalId = m2.signalid " + 
+                "on pc.VoltageMagSignalID = m2.signalid " + 
                 "left join Measurement m3 " + 
-                "on pc.CurrentAngleSignalId = m3.signalid " + 
+                "on pc.CurrentAngleSignalID = m3.signalid " + 
                 "left join measurement m4 " + 
-                "on pc.CurrentMagSignalId = m4.signalid " + 
-                $"where pc.CalculationEnabled=1 AND pc.NodeId={nodeIdQueryString} " + 
+                "on pc.CurrentMagSignalID = m4.signalid " + 
+                $"where pc.Enabled=1 AND pc.NodeID={nodeIDQueryString} " + 
                 "  and (m1.enabled=0  " + 
                 "   or m2.enabled=0  " + 
                 "   or m3.enabled=0  " + 
@@ -428,18 +428,18 @@ namespace PowerCalculations.PowerMultiCalculator
         /// Verifies that input measurements exist. Power calculations are disabled where input measurements do not exist.
         /// </summary>
         /// <param name="database">Configuration database connection</param>
-        /// <param name="nodeIdQueryString">Node ID formatted for query</param>
+        /// <param name="nodeIDQueryString">Node ID formatted for query</param>
         /// <param name="statusMessage">Delegate for communicating status updates</param>
-        private static void CheckInputMeasurementsExist(AdoDataConnection database, string nodeIdQueryString, Action<string> statusMessage)
+        private static void CheckInputMeasurementsExist(AdoDataConnection database, string nodeIDQueryString, Action<string> statusMessage)
         {
             statusMessage("Validating if input measurements exist...");
 
             string query = 
-                $"UPDATE PowerCalculation SET CalculationEnabled=0 WHERE CalculationEnabled=1 AND NodeId={nodeIdQueryString}" + 
-                "AND (VoltageMagSignalId NOT IN (SELECT SignalId from Measurement) " + 
-                "OR VoltageAngleSignalId NOT IN (SELECT SignalId from Measurement) " + 
-                "OR CurrentMagSignalId NOT IN (SELECT SignalId from Measurement) " + 
-                "OR CurrentAngleSignalId NOT IN (SELECT SignalId from Measurement))";
+                $"UPDATE PowerCalculation SET Enabled=0 WHERE Enabled=1 AND NodeID={nodeIDQueryString}" + 
+                "AND (VoltageMagSignalID NOT IN (SELECT SignalID from Measurement) " + 
+                "OR VoltageAngleSignalID NOT IN (SELECT SignalID from Measurement) " + 
+                "OR CurrentMagSignalID NOT IN (SELECT SignalID from Measurement) " + 
+                "OR CurrentAngleSignalID NOT IN (SELECT SignalID from Measurement))";
 
             const string failureMessage = "One or more power calculations are defined with input measurements that do not exist. Power calculations will be disabled.";
 

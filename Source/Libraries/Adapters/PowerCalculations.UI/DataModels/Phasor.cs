@@ -23,25 +23,25 @@ namespace PowerCalculations.UI.DataModels
 
 		#region [ Properties ]
 
-		public int Id
+		public int ID
 		{
 			get { return m_id; }
 			set
 			{
 				if (m_id == value) return;
 				m_id = value;
-				OnPropertyChanged("Id");
+				OnPropertyChanged(nameof(ID));
 			}
 		}
 
-		public int DeviceId
+		public int DeviceID
 		{
 			get { return m_deviceId; }
 			set
 			{
 				if (m_deviceId == value) return;
 				m_deviceId = value;
-				OnPropertyChanged("DeviceId");
+				OnPropertyChanged(nameof(DeviceID));
 			}
 		}
 
@@ -52,7 +52,7 @@ namespace PowerCalculations.UI.DataModels
 			{
 				if (m_label == value) return;
 				m_label = value;
-				OnPropertyChanged("Label");
+				OnPropertyChanged(nameof(Label));
 			}
 		}
 
@@ -63,7 +63,7 @@ namespace PowerCalculations.UI.DataModels
 			{
 				if (m_type == value) return;
 				m_type = value;
-				OnPropertyChanged("Type");
+				OnPropertyChanged(nameof(Type));
 			}
 		}
 
@@ -74,7 +74,7 @@ namespace PowerCalculations.UI.DataModels
 			{
 				if (m_phase == value) return;
 				m_phase = value;
-				OnPropertyChanged("Phase");
+				OnPropertyChanged(nameof(Phase));
 			}
 		}
 
@@ -85,7 +85,7 @@ namespace PowerCalculations.UI.DataModels
 			{
 				if (m_sourceIndex == value) return;
 				m_sourceIndex = value;
-				OnPropertyChanged("SourceIndex");
+				OnPropertyChanged(nameof(SourceIndex));
 			}
 		}
 
@@ -97,7 +97,7 @@ namespace PowerCalculations.UI.DataModels
 			{
 				if (m_magnitudeMeasurement == value) return;
 				m_magnitudeMeasurement = value;
-				OnPropertyChanged("MagnitudeMeasurement");
+				OnPropertyChanged(nameof(MagnitudeMeasurement));
 			}
 		}
 
@@ -109,7 +109,7 @@ namespace PowerCalculations.UI.DataModels
 			{
 				if (m_angleMeasurement == value) return;
 				m_angleMeasurement = value;
-				OnPropertyChanged("AngleMeasurement");
+				OnPropertyChanged(nameof(AngleMeasurement));
 			}
 		}
 
@@ -133,7 +133,7 @@ namespace PowerCalculations.UI.DataModels
 				createdConnection = CreateConnection(ref database);
 
 				var phasorList = new List<int>();
-				var query = "SELECT Id FROM Phasor";
+				var query = "SELECT ID FROM Phasor";
 				if (filter != PhasorType.Any)
 				{
 					query += string.Format(" Where Type = '{0}'", filter == PhasorType.Voltage ? "V" : "I");
@@ -198,8 +198,8 @@ namespace PowerCalculations.UI.DataModels
 
 						phasorList[keys.IndexOf(id)] = new Phasor
 						{
-							Id = id,
-							DeviceId = deviceId,
+							ID = id,
+							DeviceID = deviceId,
 							Label = label,
 							Type = type,
 							Phase = phase,

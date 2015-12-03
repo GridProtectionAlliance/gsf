@@ -3,10 +3,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:userControls1="clr-namespace:GSF.TimeSeries.UI.UserControls;assembly=GSF.TimeSeries.UI.WPF"
              xmlns:viewModels="clr-namespace:PowerCalculations.UI.WPF.ViewModels"
              xmlns:binding="clr-namespace:GSF.TimeSeries.UI.Binding;assembly=GSF.TimeSeries.UI"
              mc:Ignorable="d" 
-             d:DesignHeight="500" d:DesignWidth="500" d:DataContext="{d:DesignInstance viewModels:PhasorSelectionViewModel}">
+             d:DesignHeight="500" d:DesignWidth="500" d:DataContext="{d:DesignInstance viewModels:PhasorSelectionViewModel}"
+             Loaded="PhasorSelectionUserControl_Loaded">
 
 	<UserControl.Resources>
 		<ResourceDictionary>
@@ -19,11 +21,14 @@
 	<StackPanel Orientation="Vertical">
 		<DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" SelectedIndex="{binding:Column Path=CurrentSelectedIndex}">
 			<DataGrid.Columns>
-				<DataGridTextColumn Header="Label" Binding="{Binding Label, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+				<DataGridTextColumn Header="Label" Width="350" Binding="{Binding Label, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
 				<DataGridTextColumn Header="Type" Binding="{Binding Type, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
 				<DataGridTextColumn Header="Phase" Binding="{Binding Phase, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
 			</DataGrid.Columns>
-		</DataGrid>
+        </DataGrid>
 
-	</StackPanel>
+        <userControls1:DataPagerUserControl CurrentPageNumber="{Binding CurrentPageNumber}" PageCount="{Binding PageCount}"
+                                 FirstCommand="{Binding FirstCommand}" PreviousCommand="{Binding PreviousCommand}"
+                                 NextCommand="{Binding NextCommand}" LastCommand="{Binding LastCommand}" VerticalAlignment="Bottom"/>
+    </StackPanel>
 </UserControl>

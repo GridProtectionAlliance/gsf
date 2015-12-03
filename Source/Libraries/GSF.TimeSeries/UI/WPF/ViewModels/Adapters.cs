@@ -562,7 +562,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         {
             try
             {
-                if (Confirm("Do you want to send Initialize " + GetCurrentItemName() + "?", "Confirm Initialize"))
+                if (Confirm("Do you want to Initialize " + GetCurrentItemName() + "?", "Confirm Initialize"))
                     Popup(CommonFunctions.SendCommandToService("Initialize " + RuntimeID), "Initialize", MessageBoxImage.Information);
             }
             catch (Exception ex)

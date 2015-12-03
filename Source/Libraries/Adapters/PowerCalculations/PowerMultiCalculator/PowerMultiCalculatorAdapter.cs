@@ -105,6 +105,14 @@ namespace PowerCalculations.PowerMultiCalculator
         public bool ApplySqrt3Adjustment { get; set; }
 
         /// <summary>
+        /// Gets or sets flag indicating whether or not this adapter should divide all calculation results by sqrt(3)
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines flag that determines if adapter should remove the sqrt(3) adjustment from all results.")]
+        [DefaultValue(false)]
+        public bool RemoveSqrt3Adjustment { get; set; }
+
+        /// <summary>
         /// Gets or sets flag that determines if adapter should enable temporal processing support.
         /// </summary>
         [ConnectionStringParameter]
@@ -201,11 +209,11 @@ namespace PowerCalculations.PowerMultiCalculator
             using (IDbCommand cmd = database.Connection.CreateCommand())
             {
                 cmd.CommandText = "SELECT " +
-                    //   0                   1                   2                     3                   4                     5
-                    "PowerCalculationId, CircuitDescription, VoltageAngleSignalId, VoltageMagSignalId, CurrentAngleSignalId, CurrentMagSignalID, " +
-                    //   6                        7                            8
-                    "RealPowerOutputSignalId, ReactivePowerOutputSignalId, ActivePowerOutputSignalId FROM PowerCalculation " + 
-                    $"WHERE NodeId = '{ConfigurationFile.Current.Settings["systemSettings"]["NodeID"].ValueAs<Guid>()}' AND CalculationEnabled <> 0 ";
+                    //            1                   2                     3                   4                     5
+                    "ID, CircuitDescription, VoltageAngleSignalID, VoltageMagSignalID, CurrentAngleSignalID, CurrentMagSignalID, " +
+                    //         6                        7                            8
+                    "ActivePowerOutputSignalID, ReactivePowerOutputSignalID, ApparentPowerOutputSignalID FROM PowerCalculation " + 
+                    $"WHERE NodeId = '{ConfigurationFile.Current.Settings["systemSettings"]["NodeID"].ValueAs<Guid>()}' AND Enabled <> 0 ";
 
                 IDataReader rdr = cmd.ExecuteReader();
 
@@ -243,6 +251,9 @@ namespace PowerCalculations.PowerMultiCalculator
             if (settings.TryGetValue("ApplySqrt3Adjustment", out setting))
                 ApplySqrt3Adjustment = setting.ParseBoolean();
 
+            if (settings.TryGetValue("RemoveSqrt3Adjustment", out setting))
+                RemoveSqrt3Adjustment = setting.ParseBoolean();
+
             if (settings.TryGetValue("EnableTemporalProcessing", out setting))
                 EnableTemporalProcessing = setting.ParseBoolean();
         }
@@ -279,6 +290,9 @@ namespace PowerCalculations.PowerMultiCalculator
                         if (ApplySqrt3Adjustment)
                             voltageMagnitude *= SqrtOf3;
 
+                        if (RemoveSqrt3Adjustment)
+                            voltageMagnitude /= SqrtOf3;
+
                         if (measurements.TryGetValue(powerCalculation.VoltageAngleSignalID, out measurement) && measurement.ValueQualityIsGood())
                         {
                             voltageAngle = measurement.AdjustedValue;
@@ -302,9 +316,9 @@ namespace PowerCalculations.PowerMultiCalculator
                         Phasor voltage = new Phasor(PhasorType.Voltage, Angle.FromDegrees(voltageAngle), voltageMagnitude);
                         Phasor current = new Phasor(PhasorType.Current, Angle.FromDegrees(currentAngle), currentMagnitude);
 
-                        activePower = Phasor.CalculateActivePower(voltage, current);
-                        reactivePower = Phasor.CalculateReactivePower(voltage, current);
-                        apparentPower = Phasor.CalculateApparentPower(voltage, current);
+                        activePower = Phasor.CalculateActivePower(voltage, current) / SI.Mega;
+                        reactivePower = Phasor.CalculateReactivePower(voltage, current) / SI.Mega;
+                        apparentPower = Phasor.CalculateApparentPower(voltage, current) / SI.Mega;
                     }
                 }
                 catch (Exception ex)

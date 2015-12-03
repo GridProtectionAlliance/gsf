@@ -324,10 +324,15 @@ namespace GSF.TimeSeries
         /// <returns>A <see cref="TemporalMeasurement"/> object.</returns>
         public TemporalMeasurement Measurement(IMeasurement measurement)
         {
-            return m_measurements.GetOrAdd(measurement.Key, key => new TemporalMeasurement(m_lagTime, m_leadTime)
+            TemporalMeasurement temporalMeasurement = m_measurements.GetOrAdd(measurement.Key, key => new TemporalMeasurement(m_lagTime, m_leadTime)
             {
                 Key = key
             });
+
+            temporalMeasurement.Adder = measurement.Adder;
+            temporalMeasurement.Multiplier = measurement.Multiplier;
+
+            return temporalMeasurement;
         }
 
         /// <summary>

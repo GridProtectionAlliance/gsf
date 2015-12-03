@@ -415,6 +415,7 @@ namespace GSF.TimeSeries.UI
                 }
                 catch (Exception ex)
                 {
+                    throw;
                     if (!MessageFlag)
                     {
                         m_messageFlag = true;
