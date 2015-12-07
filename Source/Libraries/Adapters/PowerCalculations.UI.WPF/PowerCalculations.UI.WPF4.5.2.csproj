@@ -71,6 +71,10 @@
       <Project>{96cd89d2-30fa-49cc-9b40-10523021feaf}</Project>
       <Name>PowerCalculations.UI4.5.2</Name>
     </ProjectReference>
+    <ProjectReference Include="..\PowerCalculations\PowerCalculations4.5.2.csproj">
+      <Project>{b74cf4da-2972-489b-af08-419560ee57ef}</Project>
+      <Name>PowerCalculations4.5.2</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
