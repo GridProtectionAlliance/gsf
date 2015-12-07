@@ -68,10 +68,12 @@
 
 using System;
 using System.ComponentModel;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using GSF.Units;
+#if DNF46
+using System.Numerics;
+#endif
 
 // ReSharper disable CompareOfFloatsByEqualityOperator
 // ReSharper disable PossibleInvalidOperationException
@@ -369,6 +371,8 @@ namespace GSF
         /// <returns>ComplexNumber representing the result of the operation.</returns>
         public static implicit operator ComplexNumber(double value) => new ComplexNumber(value, 0.0D);
 
+        #if DNF46
+
         /// <summary>
         /// Implicitly converts a <see cref="ComplexNumber"/> to a .NET <see cref="Complex"/> value.
         /// </summary>
@@ -382,6 +386,8 @@ namespace GSF
         /// <param name="value">Operand.</param>
         /// <returns>Complex representing the result of the operation.</returns>
         public static implicit operator ComplexNumber(Complex value) => new ComplexNumber(value.Real, value.Imaginary);
+
+        #endif
 
         /// <summary>
         /// Compares the two values for equality.

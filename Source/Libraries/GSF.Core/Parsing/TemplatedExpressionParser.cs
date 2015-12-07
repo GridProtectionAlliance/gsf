@@ -30,7 +30,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+#if DNF46
 using ExpressionEvaluator;
+#endif
 using ParsedExpression = System.Tuple<string, bool, string>;
 using ParsedEvaluation = System.Tuple<string, string>;
 
@@ -493,6 +495,8 @@ namespace GSF.Parsing
         {
             List<ParsedEvaluation> parsedEvaluations = new List<ParsedEvaluation>();
 
+            #if DNF46
+
             Match match = m_evaluationParser.Match(fieldReplacedTemplatedExpression);
 
             if (match.Success)
@@ -505,6 +509,8 @@ namespace GSF.Parsing
                     parsedEvaluations.Add(new ParsedEvaluation(source, result));
                 }
             }
+
+            #endif
 
             return parsedEvaluations;
         }

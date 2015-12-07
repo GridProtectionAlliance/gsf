@@ -25,8 +25,10 @@
 
 using System;
 using System.ComponentModel;
-using System.Numerics;
 using System.Runtime.CompilerServices;
+#if DNF46
+using System.Numerics;
+#endif
 
 namespace GSF.Units.EE
 {
@@ -156,12 +158,16 @@ namespace GSF.Units.EE
         /// <returns>ComplexNumber representing the result of the operation.</returns>
         public static implicit operator ComplexNumber(Phasor phasor) => phasor.Value;
 
+        #if DNF46
+
         /// <summary>
         /// Implicitly converts a <see cref="Phasor"/> to a .NET <see cref="Complex"/> value.
         /// </summary>
         /// <param name="phasor">Operand.</param>
         /// <returns>ComplexNumber representing the result of the operation.</returns>
         public static implicit operator Complex(Phasor phasor) => phasor.Value;
+
+        #endif
 
         /// <summary>
         /// Compares the two values for equality.
