@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using GSF;
 using GSF.Data;
 using GSF.TimeSeries.UI;
 
@@ -55,7 +56,7 @@ namespace PowerCalculations.PowerMultiCalculator
                         measurement.SignalTypeID, measurement.SignalReference, measurement.Adder, measurement.Multiplier, measurement.Description.ToNotNull(), 
                         database.Bool(measurement.Enabled), CommonFunctions.CurrentUser, database.UtcNow, CommonFunctions.CurrentUser, database.UtcNow);
 
-                    measurement.SignalID = Guid.Parse(database.ExecuteScalar<object>(Guid.Empty, "SELECT SignalID FROM Measurement WHERE PointTag={0}", measurement.PointTag).ToString());
+                    measurement.SignalID = database.ExecuteScalar<Guid>("SELECT SignalID FROM Measurement WHERE PointTag={0}", measurement.PointTag);
 				}
 				else
 				{

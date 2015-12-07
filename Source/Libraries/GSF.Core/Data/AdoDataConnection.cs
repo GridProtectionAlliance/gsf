@@ -684,7 +684,21 @@ namespace GSF.Data
 
             // Nullable types cannot be used in type conversion, but we can use Nullable.GetUnderlyingType()
             // to determine whether the type is nullable and convert to the underlying type instead
-            return (T)Convert.ChangeType(value, Nullable.GetUnderlyingType(type) ?? type);
+            type = Nullable.GetUnderlyingType(type) ?? type;
+
+            // Handle Guids
+            if (type == typeof(Guid))
+                return (T)(object)System.Guid.Parse(value.ToString());
+
+            // Handle string types that may have a converter function (e.g., Enums)
+            if (value.GetType() == typeof(string))
+                return value.ToString().ConvertToType<T>(type);
+
+            // Handle native types
+            if (typeof(IConvertible).IsAssignableFrom(value.GetType()))
+                return (T)Convert.ChangeType(value, type);
+
+            return (T)value;
         }
 
         /// <summary>

@@ -206,12 +206,8 @@ namespace GSF
             try
             {
                 // Handle booleans as a special case to allow numeric entries as well as true/false
-                if (type.IsAssignableFrom(typeof(bool)))
-                    return (T)((object)value.ParseBoolean());
-
-                // This is faster for native types than using type converter...
-                if (type.IsAssignableFrom(typeof(IConvertible)))
-                    return (T)Convert.ChangeType(value, type, culture);
+                if (type == typeof(bool))
+                    return (T)(object)value.ParseBoolean();
 
                 // Handle objects that have type converters (e.g., Enum, Color, Point, etc.)
                 TypeConverter converter = TypeDescriptor.GetConverter(type);
