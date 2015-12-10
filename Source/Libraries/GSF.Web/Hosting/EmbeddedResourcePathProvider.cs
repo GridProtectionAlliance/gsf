@@ -424,7 +424,12 @@ namespace GSF.Web.Hosting
 
             foreach (string assembly in assemblies)
             {
-                this.ProcessEmbeddedFiles(assembly);
+                try
+                {
+                    this.ProcessEmbeddedFiles(assembly);
+                }
+                // Thrown when there's a non-.NET dll in bin.  Since that's a valid case, we ignore it.
+                catch (BadImageFormatException) { }
             }
 
             base.Initialize();
