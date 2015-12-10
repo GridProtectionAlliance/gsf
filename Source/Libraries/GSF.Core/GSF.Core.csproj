@@ -467,7 +467,7 @@
   <ItemGroup>
     <None Include="GSF.Core.nuspec" />
     <None Include="GSF.Core.ruleset" />
-    <None Include="packages.config" />
+    <None Include="packages.GSF.Core.config" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="LICENSE.txt" />

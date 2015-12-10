@@ -741,7 +741,7 @@ namespace StatHistorianReportGenerator
                         verticalMillimeters += lineHeightMillimeters;
                     }
                 }
-                
+
                 // Add the remainder of the line to the page.
                 page.AddMM(PageMarginMillimeters, verticalMillimeters + font.rSizeMM, new RepString(font, builder.ToString()));
                 verticalMillimeters += 1.5D * lineHeightMillimeters;
