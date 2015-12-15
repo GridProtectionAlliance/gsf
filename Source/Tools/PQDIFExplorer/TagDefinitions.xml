@@ -1,0 +1,1227 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<tags>
+    <tag>
+        <id>89738606-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>ContainerTag</name>
+        <standardName>tagContainer</standardName>
+        <description>Record-level tag which identifies the container record (always the first one in the file, and there must be only one per file).</description>
+        <elementType>Collection</elementType>
+        <physicalType>0</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>89738619-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>DataSourceTag</name>
+        <standardName>tagRecDataSource</standardName>
+        <description>Record-level tag which identifies a data source (an instrument, etc.).</description>
+        <elementType>Collection</elementType>
+        <physicalType>0</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>b48d858c-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>MonitorSettingsTag</name>
+        <standardName>tagRecMonitorSettings</standardName>
+        <description>Record-level tag which identifies a set of configuration parameters.</description>
+        <elementType>Collection</elementType>
+        <physicalType>0</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>8973861a-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>ObservationTag</name>
+        <standardName>tagRecObservation</standardName>
+        <description>Record-level tag which identifies an observation -- an event, measurement, etc.</description>
+        <elementType>Collection</elementType>
+        <physicalType>0</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>89738607-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>VersionInfoTag</name>
+        <standardName>tagVersionInfo</standardName>
+        <description>Specifies the format version for read/write compatibility. The four required numbers in the vector are described below.</description>
+        <elementType>Vector</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>89738608-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>FileNameTag</name>
+        <standardName>tagFileName</standardName>
+        <description>Original name of the file.</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>89738609-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>CreationTag</name>
+        <standardName>tagCreation</standardName>
+        <description>Date/time when the file was created.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Timestamp</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>8973860a-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>LastSavedTag</name>
+        <standardName>tagLastSaved</standardName>
+        <description>Date/time when the file was last saved.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Timestamp</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>8973860b-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>TimesSavedTag</name>
+        <standardName>tagTimesSaved</standardName>
+        <description>The number of times the file has been saved/modified.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>8973860c-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>LanguageTag</name>
+        <standardName>tagLanguage</standardName>
+        <description>The language (English, etc.) of the file.</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>8973860d-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>TitleTag</name>
+        <standardName>tagTitle</standardName>
+        <description>Arbitrary title.</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>8973860e-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>SubjectTag</name>
+        <standardName>tagSubject</standardName>
+        <description>Arbitrary subject string</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>8973860f-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>AuthorTag</name>
+        <standardName>tagAuthor</standardName>
+        <description>Individual/company who caused the file to be written</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>89738610-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>KeywordsTag</name>
+        <standardName>tagKeywords</standardName>
+        <description>Keywords for assisting searches</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>89738611-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>CommentsTag</name>
+        <standardName>tagComments</standardName>
+        <description>Arbitrary comments</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>89738612-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>LastSavedByTag</name>
+        <standardName>tagLastSavedBy</standardName>
+        <description>Individual/company who last wrote to file</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>89738623-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>ApplicationTag</name>
+        <standardName>tagApplication</standardName>
+        <description>Creating application</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>89738613-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>SecurityTag</name>
+        <standardName>tagSecurity</standardName>
+        <description>Security descriptor information</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>89738614-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>OwnerTag</name>
+        <standardName>tagOwner</standardName>
+        <description>Owner of file contents (This and some of the following fields are for copyright and trademark information)</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>89738615-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>CopyrightTag</name>
+        <standardName>tagCopyright</standardName>
+        <description>Copyright notice</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>89738616-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>TrademarksTag</name>
+        <standardName>tagTrademarks</standardName>
+        <description>Trademark notice</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>89738617-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>NotesTag</name>
+        <standardName>tagNotes</standardName>
+        <description>RTF formatted notes associated with this file (This corresponds to the IEEE COMTRADE .HDR file, for example).</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>8973861b-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>CompressionStyleIDTag</name>
+        <standardName>tagCompressionStyleID</standardName>
+        <description>Specified how the compression is applied to the file.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>8973861c-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>CompressionAlgorithmIDTag</name>
+        <standardName>tagCompressionAlgorithmID</standardName>
+        <description>Required if tagCompressionStyleID specifies that compression is turned on.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>8973861d-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>CompressionChecksumTag</name>
+        <standardName>tagCompressionChecksum</standardName>
+        <description>If compression style is _TOTALFILE, this is the checksum for the entire file. This feature has been deprecated under 1.5.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d85a2-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>NameTag</name>
+        <standardName>tagName</standardName>
+        <description>General contact information (all optional)</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d85a3-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>Address1Tag</name>
+        <standardName>tagAddress1</standardName>
+        <description>General contact information (all optional)</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d85a4-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>Address2Tag</name>
+        <standardName>tagAddress2</standardName>
+        <description>General contact information (all optional)</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d85a5-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>CityTag</name>
+        <standardName>tagCity</standardName>
+        <description>General contact information (all optional)</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d85a6-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>StateTag</name>
+        <standardName>tagState</standardName>
+        <description>General contact information (all optional)</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d85a7-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>PostalCodeTag</name>
+        <standardName>tagPostalCode</standardName>
+        <description>General contact information (all optional)</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d85a8-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>CountryTag</name>
+        <standardName>tagCountry</standardName>
+        <description>General contact information (all optional)</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d85a9-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>PhoneVoiceTag</name>
+        <standardName>tagPhoneVoice</standardName>
+        <description>General contact information (all optional)</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>3d786f80-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>PhoneFAXTag</name>
+        <standardName>tagPhoneFAX</standardName>
+        <description>General contact information (all optional)</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>3d786f81-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>EMailTag</name>
+        <standardName>tagEMail</standardName>
+        <description>General contact information (all optional)</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d8581-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>DataSourceTypeIDTag</name>
+        <standardName>tagDataSourceTypeID</standardName>
+        <description>Since this ID is a Guid, you can generate a custom ID if a standard ID is not defined.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Guid</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>b48d8582-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>VendorIDTag</name>
+        <standardName>tagVendorID</standardName>
+        <description>Since this ID is a Guid, you can generate a custom ID if a standard ID is not defined.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Guid</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d8583-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>EquipmentIDTag</name>
+        <standardName>tagEquipmentID</standardName>
+        <description>Since this ID is a Guid, you can generate a custom ID if a standard ID is not defined.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Guid</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d8584-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>CustomSourceInfoTag</name>
+        <standardName>tagCustomSourceInfo</standardName>
+        <description>This collection can include the standard name, address &amp; telephone number tags -- these apply to the vendor -- as well as tags about the instrument itself.</description>
+        <elementType>Collection</elementType>
+        <physicalType>0</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d8585-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>SerialNumberDSTag</name>
+        <standardName>tagSerialNumberDS</standardName>
+        <description>Arbitrary string to hold data souce (instrument) serial number</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d8586-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>VersionDSTag</name>
+        <standardName>tagVersionDS</standardName>
+        <description>Arbitrary string to hold data souce (instrument) version number (if applicable)</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d8587-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>NameDSTag</name>
+        <standardName>tagNameDS</standardName>
+        <description>Arbitrary string to hold the name of the data souce (instrument)</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>b48d8588-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>OwnerDSTag</name>
+        <standardName>tagOwnerDS</standardName>
+        <description>Arbitrary string to hold data souce (instrument) owner name</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d8589-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>LocationDSTag</name>
+        <standardName>tagLocationDS</standardName>
+        <description>Arbitrary string to hold data souce (instrument) location information</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d858a-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>TimeZoneDSTag</name>
+        <standardName>tagTimeZoneDS</standardName>
+        <description>EST, CST, etc.</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d858b-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>CoordinatesDSTag</name>
+        <standardName>tagCoordinatesDS</standardName>
+        <description>Longitude/latitude</description>
+        <elementType>Vector</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d858d-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>ChannelDefnsTag</name>
+        <standardName>tagChannelDefns</standardName>
+        <description>The tagChannelDefns collection must be a collection where the count = the number of channel definitions. Each entry must be another collection, each having the tagOneChannelDefn tag.</description>
+        <elementType>Collection</elementType>
+        <physicalType>0</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>3d786f82-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>InstrumentTypeIDTag</name>
+        <standardName>tagInstrumentTypeID</standardName>
+        <description></description>
+        <elementType>Scalar</elementType>
+        <physicalType>Guid</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>3d786f83-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>InstrumentModelNameTag</name>
+        <standardName>tagInstrumentModelName</standardName>
+        <description>Arbitrary string</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>3d786f84-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>InstrumentModelNumberTag</name>
+        <standardName>tagInstrumentModelNumber</standardName>
+        <description>Arbitrary string</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d858e-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>OneChannelDefnTag</name>
+        <standardName>tagOneChannelDefn</standardName>
+        <description>Must have one or more channel definitions</description>
+        <elementType>Collection</elementType>
+        <physicalType>0</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>b48d8590-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>ChannelNameTag</name>
+        <standardName>tagChannelName</standardName>
+        <description>Arbitrary string</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d8591-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>PhaseIDTag</name>
+        <standardName>tagPhaseID</standardName>
+        <description>Phase identifier</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>b48d8593-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>OtherChannelIdentifierTag</name>
+        <standardName>tagOtherChannelIdentifier</standardName>
+        <description>Arbitrary string</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d8594-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>GroupNameTag</name>
+        <standardName>tagGroupName</standardName>
+        <description>This tag can be repeated if there are multiple groupings. The first one should be the highest-level group (example: a bus), and the next one should be a lower group (example: a feeder).</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d8592-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>QuantityTypeIDTag</name>
+        <standardName>tagQuantityTypeID</standardName>
+        <description>The high-level description of the type of quantity which is being captured by this channel. In order to guarantee reader compatibility, the following series value types (in order) should be used (ID_SERIES_VALUE_TYPE_VAL, etc.).</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Guid</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>c690e872-f755-11cf-9d89-0080c72e70a3</id>
+        <name>QuantityMeasuredIDTag</name>
+        <standardName>tagQuantityMeasuredID</standardName>
+        <description>Identifies the physical quantity under measurement -- Voltage, Current, Power, etc. In general, there is a one-to-one correspondence between this and the units of the series, but not always.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>89738622-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>PhysicalChannelTag</name>
+        <standardName>tagPhysicalChannel</standardName>
+        <description>The instrument physical channel that this channel definition is associated with.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d8595-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>QuantityNameTag</name>
+        <standardName>tagQuantityName</standardName>
+        <description>Additional quantity information.</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d8596-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>PrimarySeriesIdxTag</name>
+        <standardName>tagPrimarySeriesIdx</standardName>
+        <description>Identifies the series which will be the primary. Index into the tagSeriesDefns collection.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d8598-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>SeriesDefnsTag</name>
+        <standardName>tagSeriesDefns</standardName>
+        <description>The tagSeriesDefns collection must be a collection where the count = the number of series definitions. Each entry must be another collection, each having the tagOneSeriesDefn tag.</description>
+        <elementType>Collection</elementType>
+        <physicalType>0</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>b48d859a-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>OneSeriesDefnTag</name>
+        <standardName>tagOneSeriesDefn</standardName>
+        <description>One of these collections per series.</description>
+        <elementType>Collection</elementType>
+        <physicalType>0</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>b48d859c-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>ValueTypeIDTag</name>
+        <standardName>tagValueTypeID</standardName>
+        <description>This specifies the meaning of the series data.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Guid</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>b48d859b-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>QuantityUnitsIDTag</name>
+        <standardName>tagQuantityUnitsID</standardName>
+        <description>This specifies the units of the data in this series. The expected physical type for the tagSeriesValues vector is REAL4 or Real8 (except as noted).</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>3d786f9e-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>QuantityCharacteristicIDTag</name>
+        <standardName>tagQuantityCharacteristicID</standardName>
+        <description>This specifies additional detail about the meaning of the series data.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Guid</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>a112f421-b111-11d2-9b37-0040052c2d28</id>
+        <name>QuantitySignificantDigitsIDTag</name>
+        <standardName>tagQuantitySignificantDigitsID</standardName>
+        <description>Defines the number of significant digits in the data represented by this series.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>fb228ee0-fc8d-11d2-b49a-006008b37183</id>
+        <name>QuantityResolutionIDTag</name>
+        <standardName>tagQuantityResolutionID</standardName>
+        <description>Contains a double indicating the scaled distance between two values of the quantity represented by this series (e.g. scaled A/D resolution)</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d85a1-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>StorageMethodIDTag</name>
+        <standardName>tagStorageMethodID</standardName>
+        <description>The legal values for this entry are masks, since they are OR-able.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>b48d859d-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>ValueTypeNameTag</name>
+        <standardName>tagValueTypeName</standardName>
+        <description>Arbitrary string</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d859e-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>HintGreekPrefixIDTag</name>
+        <standardName>tagHintGreekPrefixID</standardName>
+        <description></description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d859f-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>HintPreferredUnitsIDTag</name>
+        <standardName>tagHintPreferredUnitsID</standardName>
+        <description></description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d85a0-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>HintDefaultDisplayIDTag</name>
+        <standardName>tagHintDefaultDisplayID</standardName>
+        <description></description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>2747d441-2bd0-11d2-ae42-0060083a2628</id>
+        <name>ProbIntervalTag</name>
+        <standardName>tagProbInterval</standardName>
+        <description>For a probability series definition, this specifies its time interval (in seconds; >0).</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>2747d440-2bd0-11d2-ae42-0060083a2628</id>
+        <name>ProbPercentileTag</name>
+        <standardName>tagProbPercentile</standardName>
+        <description>For a probability series definition, this specifies its probability percentile (in percent; 0-100).</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>0fa118c8-cb4a-11d2-b30b-fe25cb9a1760</id>
+        <name>SeriesNominalQuantityTag</name>
+        <standardName>tagSeriesNominalQuantity</standardName>
+        <description>Contains the default nominal base voltage or any or any other necessary normalizing quantity. Display programs may use this value or the tagSeriesBaseQuantity in the series instance for displaying data in percent or per unit.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>62f28183-f9c4-11cf-9d89-0080c72e70a3</id>
+        <name>EffectiveTag</name>
+        <standardName>tagEffective</standardName>
+        <description>The time that these settings become effective.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Timestamp</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>3d786f85-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>TimeInstalledTag</name>
+        <standardName>tagTimeInstalled</standardName>
+        <description></description>
+        <elementType>Scalar</elementType>
+        <physicalType>Timestamp</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>3d786f86-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>TimeRemovedTag</name>
+        <standardName>tagTimeRemoved</standardName>
+        <description></description>
+        <elementType>Scalar</elementType>
+        <physicalType>Timestamp</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>62f28180-f9c4-11cf-9d89-0080c72e70a3</id>
+        <name>UseCalibrationTag</name>
+        <standardName>tagUseCalibration</standardName>
+        <description>If TRUE, the calibration adjustments *must* be applied to the series data before using. Otherwise the data is for informative use only.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Boolean4</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>62f28181-f9c4-11cf-9d89-0080c72e70a3</id>
+        <name>UseTransducerTag</name>
+        <standardName>tagUseTransducer</standardName>
+        <description>If TRUE, the transducer adjustments *must* be applied to the series data before using. Otherwise the data is for informative use only.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Boolean4</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>62f28182-f9c4-11cf-9d89-0080c72e70a3</id>
+        <name>ChannelSettingsArrayTag</name>
+        <standardName>tagChannelSettingsArray</standardName>
+        <description>Channel specific monitor settings stuff</description>
+        <elementType>Collection</elementType>
+        <physicalType>0</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>0fa118c3-cb4a-11d2-b30b-fe25cb9a1760</id>
+        <name>NominalFrequencyTag</name>
+        <standardName>tagNominalFrequency</standardName>
+        <description>Nominal power system frequency for this instrument in Hertz</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>9f256ee0-803b-11d3-b92f-0050da2b1f4d</id>
+        <name>SettingPhysicalConnectionTag</name>
+        <standardName>tagSettingPhysicalConnection</standardName>
+        <description>Identifies the physical connection of the instrumentation or insturment transducers.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>3d786f9a-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>OneChannelSettingTag</name>
+        <standardName>tagOneChannelSetting</standardName>
+        <description>One of these collections per channel.</description>
+        <elementType>Collection</elementType>
+        <physicalType>0</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>b48d858f-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>ChannelDefnIdxTag</name>
+        <standardName>tagChannelDefnIdx</standardName>
+        <description>The channel definition which these settings apply to. Index into tagChannelDefns collection of the matching data source record.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>62f28184-f9c4-11cf-9d89-0080c72e70a3</id>
+        <name>TriggerTypeIDTag</name>
+        <standardName>tagTriggerTypeID</standardName>
+        <description>Integer ID representing which trigger fields are used.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>3d786f87-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>FullScaleTag</name>
+        <standardName>tagFullScale</standardName>
+        <description>Full scale range for this instrument channel</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>3d786f89-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>NoiseFloorTag</name>
+        <standardName>tagNoiseFloor</standardName>
+        <description>Noise floor for this instrument channel</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>62f28188-f9c4-11cf-9d89-0080c72e70a3</id>
+        <name>TriggerShapeParamTag</name>
+        <standardName>tagTriggerShapeParam</standardName>
+        <description>Parameters for shape based triggering algorithms for this channel</description>
+        <elementType>Vector</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>62f28189-f9c4-11cf-9d89-0080c72e70a3</id>
+        <name>XDTransformerTypeIDTag</name>
+        <standardName>tagXDTransformerTypeID</standardName>
+        <description>PT or CT</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>62f2818a-f9c4-11cf-9d89-0080c72e70a3</id>
+        <name>XDSystemSideRatioTag</name>
+        <standardName>tagXDSystemSideRatio</standardName>
+        <description>System side part of ratio</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>62f2818b-f9c4-11cf-9d89-0080c72e70a3</id>
+        <name>XDMonitorSideRatioTag</name>
+        <standardName>tagXDMonitorSideRatio</standardName>
+        <description>Monitor side part of ratio</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>62f2818c-f9c4-11cf-9d89-0080c72e70a3</id>
+        <name>XDFrequencyResponseTag</name>
+        <standardName>tagXDFrequencyResponse</standardName>
+        <description>Transducer frequency response</description>
+        <elementType>Vector</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>62f2818d-f9c4-11cf-9d89-0080c72e70a3</id>
+        <name>CalTimeSkewTag</name>
+        <standardName>tagCalTimeSkew</standardName>
+        <description>Chanel time skew</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>62f2818e-f9c4-11cf-9d89-0080c72e70a3</id>
+        <name>CalOffsetTag</name>
+        <standardName>tagCalOffset</standardName>
+        <description>Channel DC offset error</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>62f2818f-f9c4-11cf-9d89-0080c72e70a3</id>
+        <name>CalRatioTag</name>
+        <standardName>tagCalRatio</standardName>
+        <description>Channel ratio error</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>62f28190-f9c4-11cf-9d89-0080c72e70a3</id>
+        <name>CalMustUseARCalTag</name>
+        <standardName>tagCalMustUseARCal</standardName>
+        <description>Flag indicating that the applied/recordedt calibration arrays must be used to correct data.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Boolean4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>62f28191-f9c4-11cf-9d89-0080c72e70a3</id>
+        <name>CalAppliedTag</name>
+        <standardName>tagCalApplied</standardName>
+        <description>Array of applied signals for this channel</description>
+        <elementType>Vector</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>62f28192-f9c4-11cf-9d89-0080c72e70a3</id>
+        <name>CalRecordedTag</name>
+        <standardName>tagCalRecorded</standardName>
+        <description>Array of recorded actual values for the applied signal</description>
+        <elementType>Vector</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>5b12f431-ff54-11d3-b968-0050da2b1f4d</id>
+        <name>TriggerHighHighTag</name>
+        <standardName>tagTriggerHighHigh</standardName>
+        <description>High High trigger for this channel</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>62f28186-f9c4-11cf-9d89-0080c72e70a3</id>
+        <name>TriggerHighTag</name>
+        <standardName>tagTriggerHigh</standardName>
+        <description>High trigger for this channel</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>62f28185-f9c4-11cf-9d89-0080c72e70a3</id>
+        <name>TriggerLowTag</name>
+        <standardName>tagTriggerLow</standardName>
+        <description>Low trigger for this channel</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>5b12f430-ff54-11d3-b968-0050da2b1f4d</id>
+        <name>TriggerLowLowTag</name>
+        <standardName>tagTriggerLowLow</standardName>
+        <description>Low Low trigger for this channel</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>5b12f432-ff54-11d3-b968-0050da2b1f4d</id>
+        <name>TriggerDeadBandTag</name>
+        <standardName>tagTriggerDeadBand</standardName>
+        <description>Deadband trigger for this channel</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>62f28187-f9c4-11cf-9d89-0080c72e70a3</id>
+        <name>TriggerRateTag</name>
+        <standardName>tagTriggerRate</standardName>
+        <description>Rate of change trigger for this channel</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>3d786f8a-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>ObservationNameTag</name>
+        <standardName>tagObservationName</standardName>
+        <description>Name of the observation</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>3d786f8b-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>TimeCreateTag</name>
+        <standardName>tagTimeCreate</standardName>
+        <description>Time this observation was created</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Timestamp</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>3d786f8c-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>TimeStartTag</name>
+        <standardName>tagTimeStart</standardName>
+        <description>The start time of the observation -- the zero point where the .</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Timestamp</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>3d786f8d-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>TriggerMethodIDTag</name>
+        <standardName>tagTriggerMethodID</standardName>
+        <description>Type of trigger which caused the observation.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>3d786f8e-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>TimeTriggeredTag</name>
+        <standardName>tagTimeTriggered</standardName>
+        <description>Tme this observation was triggered if appropriate</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Timestamp</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>3d786f8f-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>ChannelTriggerIdxTag</name>
+        <standardName>tagChannelTriggerIdx</standardName>
+        <description>Index into tagChannelInstances collection within this record. This specifies which channel(s) initiated the observation.</description>
+        <elementType>Vector</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>3d786f90-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>ObservationSerialTag</name>
+        <standardName>tagObservationSerial</standardName>
+        <description>The serial number of the observation (if generated by an instrument, for example).</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>89738621-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>ObservationAggregationSerialTag</name>
+        <standardName>tagObservationAggregationSerial</standardName>
+        <description>Serial number -- of specific cycle, for example -- that can be used to correlate observations.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>b48d8597-f5f5-11cf-9d89-0080c72e70a3</id>
+        <name>DisturbanceCategoryIDTag</name>
+        <standardName>tagDisturbanceCategoryID</standardName>
+        <description>Currently uses the IEEE 1159 disturbance categories, but others could be used as well.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Guid</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>3d786f91-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>ChannelInstancesTag</name>
+        <standardName>tagChannelInstances</standardName>
+        <description>This collection contains a set of channel instances. It is not required to contain the same number of channels as there are channel instances. This can be determined on an observation-by-observation basis.</description>
+        <elementType>Collection</elementType>
+        <physicalType>0</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>0fa118c0-cb4a-11d2-b30b-fe25cb9a1760</id>
+        <name>CharactDisturbDirectionTag</name>
+        <standardName>tagCharactDisturbDirection</standardName>
+        <description>Direction of disturbance represented by the data in this observation. Value of 0 means don't know, 1 means originated from load side, 2 means originated from source side.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>0fa118c1-cb4a-11d2-b30b-fe25cb9a1760</id>
+        <name>CharactDisturbDirectionQualityTag</name>
+        <standardName>tagCharactDisturbDirectionQuality</standardName>
+        <description>Quality of the direction result given in another tag. Range is from 0 (no confidence), to 100 (darn sure).</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>3d786f92-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>OneChannelInstTag</name>
+        <standardName>tagOneChannelInst</standardName>
+        <description>One of these collections per channel instance.</description>
+        <elementType>Collection</elementType>
+        <physicalType>0</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>2747d444-2bd0-11d2-ae42-0060083a2628</id>
+        <name>CharactDurationTag</name>
+        <standardName>tagCharactDuration</standardName>
+        <description>Simple characterization value: duration of disturbance (seconds)</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>3d786f93-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>SeriesInstancesTag</name>
+        <standardName>tagSeriesInstances</standardName>
+        <description>This collection must contain the exact number of series which were defined for the specified channel definition.</description>
+        <elementType>Collection</elementType>
+        <physicalType>0</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>2747d443-2bd0-11d2-ae42-0060083a2628</id>
+        <name>CharactMagnitudeTag</name>
+        <standardName>tagCharactMagnitude</standardName>
+        <description>Simple characterization value: magnitude of disturbance (percent: 100%=nominal)</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>2747d445-2bd0-11d2-ae42-0060083a2628</id>
+        <name>CharactFrequencyTag</name>
+        <standardName>tagCharactFrequency</standardName>
+        <description>Simple characterization value: frequency (Hertz)</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>0fa118c7-cb4a-11d2-b30b-fe25cb9a1760</id>
+        <name>ChanTriggerModuleInfoTag</name>
+        <standardName>tagChanTriggerModuleInfo</standardName>
+        <description>Contains a 32 bit integer that represents module spefic information related to the trigger reason.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>0fa118c6-cb4a-11d2-b30b-fe25cb9a1760</id>
+        <name>ChanTriggerModuleNameTag</name>
+        <standardName>tagChanTriggerModuleName</standardName>
+        <description>Contains the name of a device specific code or hardware module, algorithm or rule not necessarily channel based that caused this channel to be recorded</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>0fa118c5-cb4a-11d2-b30b-fe25cb9a1760</id>
+        <name>CrossTriggerDeviceNameTag</name>
+        <standardName>tagCrossTriggerDeviceName</standardName>
+        <description>Contains the name of the device involved in an external cross trigger scenario.</description>
+        <elementType>Vector</elementType>
+        <physicalType>Char1</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>0fa118c4-cb4a-11d2-b30b-fe25cb9a1760</id>
+        <name>CrossTriggerChanIdxTag</name>
+        <standardName>tagCrossTriggerChanIdx</standardName>
+        <description>Contains the channel definition index of the channel that triggered in a cross trigger scenrio.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>0fa118c2-cb4a-11d2-b30b-fe25cb9a1760</id>
+        <name>ChanTriggerTypeIDTag</name>
+        <standardName>tagChanTriggerTypeID</standardName>
+        <description>Integer ID representing the trigger type for this channel instance. Used only with type ID_QT_VALUELOG wit a trigger method of channel.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>2747d442-2bd0-11d2-ae42-0060083a2628</id>
+        <name>ChannelFrequencyTag</name>
+        <standardName>tagChannelFrequency</standardName>
+        <description>For a channel which contains multiple instances to represent a sparse log of time-stamped frequency-domain information, this specifies the frequency for which this channel instance applies (in Hertz). If not present, the channel characteristics are frequency independent unless further specified by the quantity characteristic.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>f90de218-e67b-4cf1-a295-b021a2d46767</id>
+        <name>ChannelGroupIDTag</name>
+        <standardName>tagChannelGroupID</standardName>
+        <description>For a channel which contains multiple instances to represent a sparse log of time-stamped frequency-domain information, this specifies the frequency for which this channel instance applies (in Index). The index referes to a harmonic or interharmonic group index.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Integer2</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>3d786f94-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>OneSeriesInstanceTag</name>
+        <standardName>tagOneSeriesInstance</standardName>
+        <description>One of these collections per series instance.</description>
+        <elementType>Collection</elementType>
+        <physicalType>0</physicalType>
+        <required>True</required>
+    </tag>
+    <tag>
+        <id>3d786f95-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>SeriesBaseQuantityTag</name>
+        <standardName>tagSeriesBaseQuantity</standardName>
+        <description>Contains the nominal base voltage, or any other necessary normalizing quantity.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>Real8</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>3d786f96-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>SeriesScaleTag</name>
+        <standardName>tagSeriesScale</standardName>
+        <description>If not present, assumed to be 1. The physical type should match that of tagSeriesValues.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>0</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>3d786f97-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>SeriesOffsetTag</name>
+        <standardName>tagSeriesOffset</standardName>
+        <description>If not present, assumed to be 0. Generally used as a starting point when the ID_SERIES_METHOD_INCREMENT storage method is used. The physical type should match that of tagSeriesValues.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>0</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>8973861f-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>SeriesShareChannelIdxTag</name>
+        <standardName>tagSeriesShareChannelIdx</standardName>
+        <description>Identifies the channel which owns the series to be shared. An index into the tagChannelInstances collection.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>89738620-f1c3-11cf-9d89-0080c72e70a3</id>
+        <name>SeriesShareSeriesIdxTag</name>
+        <standardName>tagSeriesShareSeriesIdx</standardName>
+        <description>Identifies the series to be shared. An index into the tagSeriesInstances collection. The tagSeriesValues vector from this series is used. This must be present if tagSeriesShareChannelIdx is used.</description>
+        <elementType>Scalar</elementType>
+        <physicalType>UnsignedInteger4</physicalType>
+        <required>False</required>
+    </tag>
+    <tag>
+        <id>3d786f99-f76e-11cf-9d89-0080c72e70a3</id>
+        <name>SeriesValuesTag</name>
+        <standardName>tagSeriesValues</standardName>
+        <description>Contains the actual data points of the series. Required unless the data series is shared, in which case both tagSeriesShareChannelIdx and tagSeriesShareSeriesIdx should be present.</description>
+        <elementType>Vector</elementType>
+        <physicalType>0</physicalType>
+        <required>True</required>
+    </tag>
+</tags>
