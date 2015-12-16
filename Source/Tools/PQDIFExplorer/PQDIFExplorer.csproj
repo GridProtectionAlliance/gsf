@@ -53,6 +53,9 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Icons\explorer.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -122,10 +125,19 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Icons\collection.png" />
+    <EmbeddedResource Include="Icons\container.png" />
+    <EmbeddedResource Include="Icons\datasource.png" />
+    <EmbeddedResource Include="Icons\monitorsettings.png" />
+    <EmbeddedResource Include="Icons\observation.png" />
+    <EmbeddedResource Include="Icons\scalar.png" />
+    <EmbeddedResource Include="Icons\vector.png" />
+    <EmbeddedResource Include="Icons\explorer.ico" />
     <Content Include="TagDefinitions.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

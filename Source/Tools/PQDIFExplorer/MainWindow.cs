@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -93,6 +94,31 @@ namespace PQDIFExplorer
             // a selected node with the record that spawned it
             node.Tag = record;
 
+            // Determine the icon to apply to this
+            // node based on the record type
+            switch (record.Header.TypeOfRecord)
+            {
+                case RecordType.Container:
+                    node.ImageIndex = 0;
+                    node.SelectedImageIndex = 0;
+                    break;
+
+                case RecordType.DataSource:
+                    node.ImageIndex = 1;
+                    node.SelectedImageIndex = 1;
+                    break;
+
+                case RecordType.MonitorSettings:
+                    node.ImageIndex = 2;
+                    node.SelectedImageIndex = 2;
+                    break;
+
+                case RecordType.Observation:
+                    node.ImageIndex = 3;
+                    node.SelectedImageIndex = 3;
+                    break;
+            }
+
             if ((object)record.Body != null)
             {
                 // Convert each of the elements in the record body's
@@ -104,51 +130,56 @@ namespace PQDIFExplorer
             // Return the node that represents the record
             return node;
         }
-
-        private TreeNode ToTreeNode(CollectionElement collection)
-        {
-            TreeNode node;
-            Tag tag;
-
-            // Look up the tag of the element to determine its name and
-            // use that name, or the tag itself if no name is available,
-            // to identify the node in the tree view
-            if (m_tagLookup.TryGetValue(collection.TagOfElement, out tag))
-                node = new TreeNode(tag.Name);
-            else
-                node = new TreeNode(collection.TagOfElement.ToString());
-
-            // Set the tag of the node so that we can quickly associate
-            // a selected node with the element that spawned it
-            node.Tag = collection;
-
-            // Convert each of the elements in the collection
-            // into child nodes of this element's tree node
-            foreach (Element element in collection.Elements)
-                node.Nodes.Add(ToTreeNode(element));
-
-            // Return the node that represents the collection
-            return node;
-        }
         
         private TreeNode ToTreeNode(Element element)
         {
+            TreeNode node;
             CollectionElement collection;
             Tag tag;
 
+            // Look up the tag and create a leaf node identified by
+            // the tag name or the tag itself if no name is available
+            if (m_tagLookup.TryGetValue(element.TagOfElement, out tag))
+                node = new TreeNode(tag.Name);
+            else
+                node = new TreeNode(element.TagOfElement.ToString());
+
+            // Set the image of the node based on the type of the element
+            switch (element.TypeOfElement)
+            {
+                case ElementType.Collection:
+                    node.ImageIndex = 4;
+                    node.SelectedImageIndex = 4;
+                    break;
+
+                case ElementType.Vector:
+                    node.ImageIndex = 5;
+                    node.SelectedImageIndex = 5;
+                    break;
+
+                case ElementType.Scalar:
+                    node.ImageIndex = 6;
+                    node.SelectedImageIndex = 6;
+                    break;
+            }
+
+            // Set the tag of the node so that we can quickly associate
+            // a selected node with the element that spawned it
+            node.Tag = element;
+
             // If the element is a collection element,
-            // treat it as a recursive case
+            // convert each of the elements in the collection
+            // into child nodes of this element's tree node
             collection = element as CollectionElement;
 
             if ((object)collection != null)
-                return ToTreeNode(collection);
+            {
+                foreach (Element child in collection.Elements)
+                    node.Nodes.Add(ToTreeNode(child));
+            }
 
-            // Base case: look up the tag and create a leaf node identified
-            // by the tag name or the tag itself if no name is available
-            if (m_tagLookup.TryGetValue(element.TagOfElement, out tag))
-                return new TreeNode(tag.Name) { Tag = element };
-            else
-                return new TreeNode(element.TagOfElement.ToString()) { Tag = element };
+            // Return the node that represents the element
+            return node;
         }
 
         // Gets detailed information about the given record.
@@ -349,6 +380,19 @@ namespace PQDIFExplorer
             m_tagLookup = PQDIFExplorer.Tag.GenerateTags(XDocument.Load("TagDefinitions.xml"))
                 .ToDictionary(tag => tag.ID);
 
+            // Set the icon used by the main window
+            Icon = new Icon(typeof(MainWindow), "Icons.explorer.ico");
+
+            // Create the list of images to be displayed in the tree view
+            ObservationTree.ImageList = new ImageList();
+            ObservationTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.container.png")));
+            ObservationTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.datasource.png")));
+            ObservationTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.monitorsettings.png")));
+            ObservationTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.observation.png")));
+            ObservationTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.collection.png")));
+            ObservationTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.vector.png")));
+            ObservationTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.scalar.png")));
+
             // Fix the size of the contents of the form
             FixSize();
         }
@@ -416,7 +460,7 @@ namespace PQDIFExplorer
             // Figure out which node the user double-clicked on
             node = ObservationTree.GetNodeAt(ObservationTree.PointToClient(MousePosition));
 
-            if ((object)node == null)
+            if ((object)node == null || !node.Bounds.Contains(ObservationTree.PointToClient(MousePosition)))
                 return;
 
             tag = node.Tag;

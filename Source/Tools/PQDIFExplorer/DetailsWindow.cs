@@ -80,6 +80,7 @@ namespace PQDIFExplorer
         // Handler called when the details window is initially loaded.
         private void DetailsWindow_Load(object sender, EventArgs e)
         {
+            Icon = new Icon(typeof(MainWindow), "Icons.explorer.ico");
             FixSize();
         }
 
@@ -90,7 +91,7 @@ namespace PQDIFExplorer
         }
 
         // Handler called when the text changes in the details window's text box.
-        private void DetailsTextBox_TextChanged(object sender, System.EventArgs e)
+        private void DetailsTextBox_TextChanged(object sender, EventArgs e)
         {
             FixScrollBars();
         }
