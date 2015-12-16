@@ -32,7 +32,7 @@
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.ObservationTree = new System.Windows.Forms.TreeView();
+            this.RecordTree = new System.Windows.Forms.TreeView();
             this.DetailsTextBox = new System.Windows.Forms.TextBox();
             this.MenuBar.SuspendLayout();
             this.SuspendLayout();
@@ -74,12 +74,12 @@
             // 
             // ObservationTree
             // 
-            this.ObservationTree.Location = new System.Drawing.Point(12, 28);
-            this.ObservationTree.Name = "ObservationTree";
-            this.ObservationTree.Size = new System.Drawing.Size(300, 576);
-            this.ObservationTree.TabIndex = 2;
-            this.ObservationTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.ObservationTree_AfterSelect);
-            this.ObservationTree.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ObservationTree_MouseDown);
+            this.RecordTree.Location = new System.Drawing.Point(12, 28);
+            this.RecordTree.Name = "ObservationTree";
+            this.RecordTree.Size = new System.Drawing.Size(300, 576);
+            this.RecordTree.TabIndex = 2;
+            this.RecordTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.RecordTree_AfterSelect);
+            this.RecordTree.MouseDown += new System.Windows.Forms.MouseEventHandler(this.RecordTree_MouseDown);
             // 
             // DetailsTextBox
             // 
@@ -100,7 +100,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(886, 617);
             this.Controls.Add(this.DetailsTextBox);
-            this.Controls.Add(this.ObservationTree);
+            this.Controls.Add(this.RecordTree);
             this.Controls.Add(this.MenuBar);
             this.MainMenuStrip = this.MenuBar;
             this.Name = "MainWindow";
@@ -121,7 +121,7 @@
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
-        private System.Windows.Forms.TreeView ObservationTree;
+        private System.Windows.Forms.TreeView RecordTree;
         private System.Windows.Forms.TextBox DetailsTextBox;
     }
 }

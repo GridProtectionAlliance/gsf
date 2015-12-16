@@ -87,6 +87,19 @@ namespace GSF.PQDIF.Physical
     {
         #region [ Members ]
 
+        // Nested Types
+        private class UnknownElement : Element
+        {
+            private ElementType m_typeOfElement;
+
+            public UnknownElement(ElementType typeOfElement)
+            {
+                m_typeOfElement = typeOfElement;
+            }
+
+            public override ElementType TypeOfElement => m_typeOfElement;
+        }
+
         // Fields
         private string m_fileName;
         private BinaryReader m_fileReader;
@@ -323,7 +336,9 @@ namespace GSF.PQDIF.Physical
                     break;
 
                 default:
-                    throw new ArgumentOutOfRangeException(string.Format("Unknown element type: {0}", typeOfElement));
+                    element = new UnknownElement(typeOfElement);
+                    element.TypeOfValue = typeOfValue;
+                    break;
             }
 
             element.TagOfElement = tagOfElement;

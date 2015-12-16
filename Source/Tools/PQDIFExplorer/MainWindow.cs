@@ -24,7 +24,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -57,7 +56,7 @@ namespace PQDIFExplorer
             ContainerRecord containerRecord;
 
             // Clear out existing items in the tree view
-            ObservationTree.Nodes.Clear();
+            RecordTree.Nodes.Clear();
 
             // Use the physical parser to more closely display the structure of the file
             using (PhysicalParser parser = new PhysicalParser(fileName))
@@ -80,7 +79,7 @@ namespace PQDIFExplorer
 
                     // Convert this record and all its child elements to a node for
                     // the tree view and add the node to the root level of the tree
-                    ObservationTree.Nodes.Add(ToTreeNode(record));
+                    RecordTree.Nodes.Add(ToTreeNode(record));
                 }
             }
         }
@@ -99,23 +98,23 @@ namespace PQDIFExplorer
             switch (record.Header.TypeOfRecord)
             {
                 case RecordType.Container:
-                    node.ImageIndex = 0;
-                    node.SelectedImageIndex = 0;
-                    break;
-
-                case RecordType.DataSource:
                     node.ImageIndex = 1;
                     node.SelectedImageIndex = 1;
                     break;
 
-                case RecordType.MonitorSettings:
+                case RecordType.DataSource:
                     node.ImageIndex = 2;
                     node.SelectedImageIndex = 2;
                     break;
 
-                case RecordType.Observation:
+                case RecordType.MonitorSettings:
                     node.ImageIndex = 3;
                     node.SelectedImageIndex = 3;
+                    break;
+
+                case RecordType.Observation:
+                    node.ImageIndex = 4;
+                    node.SelectedImageIndex = 4;
                     break;
             }
 
@@ -148,18 +147,18 @@ namespace PQDIFExplorer
             switch (element.TypeOfElement)
             {
                 case ElementType.Collection:
-                    node.ImageIndex = 4;
-                    node.SelectedImageIndex = 4;
-                    break;
-
-                case ElementType.Vector:
                     node.ImageIndex = 5;
                     node.SelectedImageIndex = 5;
                     break;
 
-                case ElementType.Scalar:
+                case ElementType.Vector:
                     node.ImageIndex = 6;
                     node.SelectedImageIndex = 6;
+                    break;
+
+                case ElementType.Scalar:
+                    node.ImageIndex = 7;
+                    node.SelectedImageIndex = 7;
                     break;
             }
 
@@ -327,7 +326,7 @@ namespace PQDIFExplorer
             int width = 300;
             int height = ClientRectangle.Height - y - pad;
 
-            ObservationTree.SetBounds(x, y, width, height);
+            RecordTree.SetBounds(x, y, width, height);
 
             x += width + pad;
             width = ClientRectangle.Width - x - pad;
@@ -363,12 +362,12 @@ namespace PQDIFExplorer
             expandCollapseHandler = (expandSender, args) =>
             {
                 args.Cancel = true;
-                ObservationTree.BeforeExpand -= expandCollapseHandler;
-                ObservationTree.BeforeCollapse -= expandCollapseHandler;
+                RecordTree.BeforeExpand -= expandCollapseHandler;
+                RecordTree.BeforeCollapse -= expandCollapseHandler;
             };
 
-            ObservationTree.BeforeExpand += expandCollapseHandler;
-            ObservationTree.BeforeCollapse += expandCollapseHandler;
+            RecordTree.BeforeExpand += expandCollapseHandler;
+            RecordTree.BeforeCollapse += expandCollapseHandler;
         }
 
         // Handler called when the window loads.
@@ -384,14 +383,15 @@ namespace PQDIFExplorer
             Icon = new Icon(typeof(MainWindow), "Icons.explorer.ico");
 
             // Create the list of images to be displayed in the tree view
-            ObservationTree.ImageList = new ImageList();
-            ObservationTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.container.png")));
-            ObservationTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.datasource.png")));
-            ObservationTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.monitorsettings.png")));
-            ObservationTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.observation.png")));
-            ObservationTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.collection.png")));
-            ObservationTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.vector.png")));
-            ObservationTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.scalar.png")));
+            RecordTree.ImageList = new ImageList();
+            RecordTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.default.png")));
+            RecordTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.container.png")));
+            RecordTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.datasource.png")));
+            RecordTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.monitorsettings.png")));
+            RecordTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.observation.png")));
+            RecordTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.collection.png")));
+            RecordTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.vector.png")));
+            RecordTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.scalar.png")));
 
             // Fix the size of the contents of the form
             FixSize();
@@ -411,7 +411,7 @@ namespace PQDIFExplorer
         }
 
         // Handler called after the user selects a node in the tree view.
-        private void ObservationTree_AfterSelect(object sender, TreeViewEventArgs e)
+        private void RecordTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
             object tag;
             Record record;
@@ -442,7 +442,7 @@ namespace PQDIFExplorer
         }
 
         // Handler called when the user clicks on the tree view.
-        private void ObservationTree_MouseDown(object sender, MouseEventArgs e)
+        private void RecordTree_MouseDown(object sender, MouseEventArgs e)
         {
             TreeNode node;
 
@@ -458,9 +458,9 @@ namespace PQDIFExplorer
                 return;
 
             // Figure out which node the user double-clicked on
-            node = ObservationTree.GetNodeAt(ObservationTree.PointToClient(MousePosition));
+            node = RecordTree.GetNodeAt(RecordTree.PointToClient(MousePosition));
 
-            if ((object)node == null || !node.Bounds.Contains(ObservationTree.PointToClient(MousePosition)))
+            if ((object)node == null || !node.Bounds.Contains(RecordTree.PointToClient(MousePosition)))
                 return;
 
             tag = node.Tag;

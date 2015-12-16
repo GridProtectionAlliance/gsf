@@ -133,6 +133,7 @@
     <EmbeddedResource Include="Icons\scalar.png" />
     <EmbeddedResource Include="Icons\vector.png" />
     <EmbeddedResource Include="Icons\explorer.ico" />
+    <EmbeddedResource Include="Icons\default.png" />
     <Content Include="TagDefinitions.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
