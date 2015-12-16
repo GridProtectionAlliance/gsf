@@ -488,7 +488,8 @@ namespace PQDIFExplorer
 
             // Cancel expand or collapse once to suppress the
             // default behavior of expand/collapse on double-click
-            CancelExpandCollapseOnce();
+            if (node.Nodes.Count > 0)
+                CancelExpandCollapseOnce();
         }
 
         // Handler called when the user resizes the form.
