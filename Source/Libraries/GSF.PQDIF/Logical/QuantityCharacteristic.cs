@@ -748,8 +748,8 @@ namespace GSF.PQDIF.Logical
             if (quantityCharacteristic == FlkrPLT)
                 return "FlkrPLT";
 
-            if (quantityCharacteristic == TIF)
-                return "TIF";
+            if (quantityCharacteristic == TIFRMS)
+                return "TIFRMS";
 
             if (quantityCharacteristic == FlkrPLTSlide)
                 return "PLTSlide";
@@ -841,6 +841,9 @@ namespace GSF.PQDIF.Logical
             if (quantityCharacteristic == PFCoSDemand)
                 return "PFCoSDemand";
 
+            if (quantityCharacteristic == PFCoPDemand)
+                return "PFCoPDemand";
+
             if (quantityCharacteristic == PFCoQDemand)
                 return "PFCoQDemand";
 
@@ -891,6 +894,9 @@ namespace GSF.PQDIF.Logical
 
             if (quantityCharacteristic == PPeakDemand)
                 return "PPeakDemand";
+
+            if (quantityCharacteristic == PHarmonic)
+                return "PHarmonic";
 
             if (quantityCharacteristic == PHarmonicUnsigned)
                 return "PHarmonicUnsigned";
@@ -955,8 +961,8 @@ namespace GSF.PQDIF.Logical
             if (quantityCharacteristic == QIVLIntgPos)
                 return "QIVLIntgPos";
 
-            if (quantityCharacteristic == QIVLIntgPos)
-                return "QIVLIntgPos";
+            if (quantityCharacteristic == QIVLIntgPosFund)
+                return "QIVLIntgPosFund";
 
             if (quantityCharacteristic == QIVLIntgNegFund)
                 return "QIVLIntgNegFund";
@@ -1109,7 +1115,7 @@ namespace GSF.PQDIF.Logical
             if (quantityCharacteristic == FlkrPLT)
                 return "Long term flicker";
 
-            if (quantityCharacteristic == TIF)
+            if (quantityCharacteristic == TIFRMS)
                 return "TIF normalized to RMS";
 
             if (quantityCharacteristic == FlkrPLTSlide)
@@ -1200,6 +1206,9 @@ namespace GSF.PQDIF.Logical
                 return "Reactive power coincident with apparent power demand";
 
             if (quantityCharacteristic == PFCoSDemand)
+                return "True power factor coincident with apparent power demand";
+
+            if (quantityCharacteristic == PFCoPDemand)
                 return "True power factor coincident with active power demand";
 
             if (quantityCharacteristic == PFCoQDemand)
@@ -1252,6 +1261,9 @@ namespace GSF.PQDIF.Logical
 
             if (quantityCharacteristic == PPeakDemand)
                 return "Peak active power demand";
+
+            if (quantityCharacteristic == PHarmonic)
+                return "Net harmonic active power";
 
             if (quantityCharacteristic == PHarmonicUnsigned)
                 return "Arithmetic sum harmonic active power";
@@ -1316,7 +1328,7 @@ namespace GSF.PQDIF.Logical
             if (quantityCharacteristic == QIVLIntgPos)
                 return "Reactive power integrated over time in the positive direction";
 
-            if (quantityCharacteristic == QIVLIntgPos)
+            if (quantityCharacteristic == QIVLIntgPosFund)
                 return "Fundamental frequency reactive power integrated over time in the positive direction";
 
             if (quantityCharacteristic == QIVLIntgNegFund)

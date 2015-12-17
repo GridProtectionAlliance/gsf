@@ -65,22 +65,22 @@ namespace GSF.PQDIF.Logical
         /// <summary>
         /// Phase angle.
         /// </summary>
-        public static readonly Guid PhaseAngle = new Guid("67f6af9d-f753-11cf-9d89-0080c72e70a3");
+        public static readonly Guid PhaseAngle = new Guid("3d786f9d-f76e-11cf-9d89-0080c72e70a3");
 
         /// <summary>
         /// Phase angle which corresponds to a <see cref="Min"/> series.
         /// </summary>
-        public static readonly Guid PhaseAngleMin = new Guid("dc762340-3c56-11cf-9d89-0080c72e70a3");
+        public static readonly Guid PhaseAngleMin = new Guid("dc762340-3c56-11d2-ae44-0060083a2628");
 
         /// <summary>
         /// Phase angle which corresponds to a <see cref="Max"/> series.
         /// </summary>
-        public static readonly Guid PhaseAngleMax = new Guid("dc762341-3c56-11cf-9d89-0080c72e70a3");
+        public static readonly Guid PhaseAngleMax = new Guid("dc762341-3c56-11d2-ae44-0060083a2628");
 
         /// <summary>
         /// Phase angle which corresponds to an <see cref="Avg"/> series.
         /// </summary>
-        public static readonly Guid PhaseAngleAvg = new Guid("dc762342-3c56-11cf-9d89-0080c72e70a3");
+        public static readonly Guid PhaseAngleAvg = new Guid("dc762342-3c56-11d2-ae44-0060083a2628");
 
         /// <summary>
         /// Area under the signal, usually an rms voltage, current, or other quantity.
@@ -299,7 +299,10 @@ namespace GSF.PQDIF.Logical
             
             if (seriesValueType == Interval)
                 return "Interval";
-            
+
+            if (seriesValueType == Status)
+                return "Status";
+
             if (seriesValueType == P1)
                 return "Probability: 1%";
             
