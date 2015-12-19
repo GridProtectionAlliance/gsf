@@ -86,8 +86,11 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Identifier.cs" />
     <Compile Include="Logical\ChannelDefinition.cs" />
     <Compile Include="Logical\ChannelInstance.cs" />
     <Compile Include="Logical\ChannelSetting.cs" />
@@ -115,6 +118,7 @@
     <Compile Include="Logical\SeriesDefinition.cs" />
     <Compile Include="Logical\SeriesInstance.cs" />
     <Compile Include="Physical\VectorElement.cs" />
+    <Compile Include="Tag.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GSF.Core\GSF.Core.csproj">
@@ -124,6 +128,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="GSF.PQDIF.nuspec" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="TagDefinitions.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

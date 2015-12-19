@@ -24,10 +24,12 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml.Linq;
+using GSF.PQDIF;
 using GSF.PQDIF.Logical;
 using GSF.PQDIF.Physical;
 
@@ -38,7 +40,6 @@ namespace PQDIFExplorer
     /// </summary>
     public partial class MainWindow : Form
     {
-        private Dictionary<Guid, Tag> m_tagLookup;
         private List<DetailsWindow> m_detailsWindows;
 
         /// <summary>
@@ -138,7 +139,9 @@ namespace PQDIFExplorer
 
             // Look up the tag and create a leaf node identified by
             // the tag name or the tag itself if no name is available
-            if (m_tagLookup.TryGetValue(element.TagOfElement, out tag))
+            tag = GSF.PQDIF.Tag.GetTag(element.TagOfElement);
+
+            if ((object)tag != null)
                 node = new TreeNode(tag.Name);
             else
                 node = new TreeNode(element.TagOfElement.ToString());
@@ -216,7 +219,9 @@ namespace PQDIFExplorer
 
             // Look up the element's tag to display detailed information about the element as defined
             // by its tag as well as the expected type of the element and its value based on the tag
-            if (m_tagLookup.TryGetValue(element.TagOfElement, out tag))
+            tag = GSF.PQDIF.Tag.GetTag(element.TagOfElement);
+
+            if ((object)tag != null)
             {
                 details.AppendLine();
                 details.AppendLine($"-- Tag details --");
@@ -234,56 +239,94 @@ namespace PQDIFExplorer
         // Converts the value of the given element to a string.
         private string ValueAsString(ScalarElement element)
         {
-            // The values of many elements can be displayed in a more readable
-            // format based on its definition in PQDIF's logical structure
-            if (element.TagOfElement == ContainerRecord.CompressionAlgorithmTag && element.TypeOfValue == PhysicalType.UnsignedInteger4)
-                return $"{(CompressionAlgorithm)element.GetUInt4()} ({element.GetUInt4()})";
+            string identifierName;
+            string valueString;
 
-            if (element.TagOfElement == ContainerRecord.CompressionStyleTag && element.TypeOfValue == PhysicalType.UnsignedInteger4)
-                return $"{(CompressionStyle)element.GetUInt4()} ({element.GetUInt4()})";
+            object value;
 
-            if (element.TagOfElement == DataSourceRecord.EquipmentIDTag && element.TypeOfValue == PhysicalType.Guid)
-                return $"{Equipment.ToString(element.GetGuid())} ({element.GetGuid()})";
+            Tag tag;
+            IReadOnlyCollection<Identifier> identifiers;
+            List<Identifier> bitFields;
 
-            if (element.TagOfElement == DataSourceRecord.VendorIDTag && element.TypeOfValue == PhysicalType.Guid)
-                return $"{Vendor.ToString(element.GetGuid())} ({element.GetGuid()})";
+            uint bitSet;
+            List<string> setBits;
 
-            if (element.TagOfElement == ChannelDefinition.QuantityTypeIDTag && element.TypeOfValue == PhysicalType.Guid)
-                return $"{QuantityType.ToString(element.GetGuid())} ({element.GetGuid()})";
+            // Get the value of the element
+            // parsed from the PQDIF file
+            value = element.Get();
 
-            if (element.TagOfElement == ChannelDefinition.QuantityMeasuredIDTag && element.TypeOfValue == PhysicalType.UnsignedInteger4)
-                return $"{(QuantityMeasured)element.GetUInt4()} ({element.GetUInt4()})";
+            // Get the tag definition for the element being displayed
+            tag = GSF.PQDIF.Tag.GetTag(element.TagOfElement);
 
-            if (element.TagOfElement == SeriesDefinition.QuantityCharacteristicIDTag && element.TypeOfValue == PhysicalType.Guid)
-                return $"{QuantityCharacteristic.ToString(element.GetGuid())} ({element.GetGuid()})";
-
-            if (element.TagOfElement == ChannelDefinition.PhaseIDTag && element.TypeOfValue == PhysicalType.UnsignedInteger4)
-                return $"{(Phase)element.GetUInt4()} ({element.GetUInt4()})";
-
-            if (element.TagOfElement == SeriesDefinition.ValueTypeIDTag && element.TypeOfValue == PhysicalType.Guid)
-                return $"{SeriesValueType.ToString(element.GetGuid())} ({element.GetGuid()})";
-
-            if (element.TagOfElement == SeriesDefinition.QuantityUnitsIDTag && element.TypeOfValue == PhysicalType.UnsignedInteger4)
-                return $"{(QuantityUnits)element.GetUInt4()} ({element.GetUInt4()})";
-
-            if (element.TagOfElement == SeriesDefinition.StorageMethodIDTag && element.TypeOfValue == PhysicalType.UnsignedInteger4)
-                return $"{(StorageMethods)element.GetUInt4()} ({element.GetUInt4()})";
-
-            // Use a specific date-time format for timestamps
+            // Use the format string specified by the tag
+            // or a default format string if not specified
             if (element.TypeOfValue == PhysicalType.Timestamp)
-                return element.GetTimestamp().ToString("yyyy-MM-dd HH:mm:ss.fffffff");
+                valueString = string.Format(tag.FormatString ?? "{0:yyyy-MM-dd HH:mm:ss.fffffff}", value);
+            else
+                valueString = string.Format(tag.FormatString ?? "{0}", value);
 
-            // If the tag could not be recognized as one that can be displayed
-            // in a more readable form, this method will parse the type as appropriate
-            // based on the physical type defined in the file and convert it to a
-            // string using that type's implementation of the ToString() method
-            return element.Get().ToString();
+            // Determine whether the tag definition contains
+            // a list of identifiers which can be used to
+            // display the value in a more readable format
+            identifiers = tag.ValidIdentifiers;
+
+            // Some identifier collections define a set of bitfields which can be
+            // combined to represent a collection of states rather than a single value
+            // and these are identified by the values being represented in hexadecimal
+            bitFields = identifiers.Where(id => id.Value.StartsWith("0x")).ToList();
+
+            if (bitFields.Count > 0)
+            {
+                // If the value is not convertible,
+                // it cannot be converted to an
+                // integer to check for bit states
+                if (!(value is IConvertible))
+                    return valueString;
+
+                // Convert the value to an integer which can
+                // then be checked for the state of its bits
+                bitSet = Convert.ToUInt32(value);
+
+                // Get the names of the bitfields in the
+                // collection of bitfields that are set
+                setBits = bitFields
+                    .Select(id => new { Name = id.Name, Value = Convert.ToUInt32(id.Value, 16) })
+                    .Where(id => bitSet == id.Value || (bitSet & id.Value) > 0u)
+                    .Select(id => id.Name)
+                    .ToList();
+
+                // If none of the bitfields are set,
+                // show just the value by itself
+                if (setBits.Count == 0)
+                    return valueString;
+
+                // If any of the bitfields are set,
+                // display them as a comma-separated
+                // list alongside the value
+                identifierName = string.Join(", ", setBits);
+
+                return $"{{ {identifierName} }} ({valueString})";
+            }
+
+            // Determine if there are any identifiers whose value exactly
+            // matches the string representation of the element's value
+            identifierName = identifiers.SingleOrDefault(id => id.Value == valueString)?.Name;
+
+            if ((object)identifierName != null)
+                return $"{identifierName} ({element.Get()})";
+
+            // If the tag could not be recognized as
+            // one that can be displayed in a more
+            // readable form, display the value by itself
+            return valueString;
         }
 
         // Converts the value of the given element to a string.
         private string ValueAsString(VectorElement element)
         {
+            Tag tag;
             IEnumerable<string> values;
+            string format;
             string join;
 
             // The physical types Char1 and Char2 indicate the value is a string
@@ -293,19 +336,19 @@ namespace PQDIFExplorer
             if (element.TypeOfValue == PhysicalType.Char2)
                 return Encoding.Unicode.GetString(element.GetValues()).Trim((char)0);
 
+            // Get the tag definition of the element being displayed
+            tag = GSF.PQDIF.Tag.GetTag(element.TagOfElement);
+
+            // Determine the format in which to display the values
+            // based on the tag definition and the type of the value
             if (element.TypeOfValue == PhysicalType.Timestamp)
-            {
-                // Use a specific date-time format for timestamps
-                values = Enumerable.Range(0, element.Size)
-                    .Select(index => element.GetTimestamp(index).ToString("yyyy-MM-dd HH:mm:ss.fffffff"));
-            }
+                format = tag.FormatString ?? "{0:yyyy-MM-dd HH:mm:ss.fffffff}";
             else
-            {
-                // Other types of values must be parsed as appropriate
-                // based on the physical type as defined in the file
-                values = Enumerable.Range(0, element.Size)
-                    .Select(index => element.Get(index).ToString());
-            }
+                format = tag.FormatString ?? "{0}";
+
+            // Convert the values to their string representations
+            values = Enumerable.Range(0, element.Size)
+                .Select(index => string.Format(format, element.Get(index)));
 
             // Join the values in the collection
             // to a single, comma-separated string
@@ -374,10 +417,6 @@ namespace PQDIFExplorer
         private void MainWindow_Load(object sender, EventArgs e)
         {
             m_detailsWindows = new List<DetailsWindow>();
-
-            // Look up tag definitions in the TagDefinitions.xml file
-            m_tagLookup = PQDIFExplorer.Tag.GenerateTags(XDocument.Load("TagDefinitions.xml"))
-                .ToDictionary(tag => tag.ID);
 
             // Set the icon used by the main window
             Icon = new Icon(typeof(MainWindow), "Icons.explorer.ico");

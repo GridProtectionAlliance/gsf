@@ -612,6 +612,7 @@
             <elementType>Scalar</elementType>
             <physicalType>UnsignedInteger4</physicalType>
             <required>True</required>
+            <formatString>0x{0:X2}</formatString>
         </tag>
         <tag>
             <id>b48d859d-f5f5-11cf-9d89-0080c72e70a3</id>
@@ -774,6 +775,7 @@
             <elementType>Scalar</elementType>
             <physicalType>UnsignedInteger4</physicalType>
             <required>False</required>
+            <formatString>0x{0:X2}</formatString>
         </tag>
         <tag>
             <id>3d786f87-f76e-11cf-9d89-0080c72e70a3</id>
@@ -3225,40 +3227,40 @@
         </tagHintDefaultDisplayID>
         <tagTriggerTypeID>
             <id>
-                <name>ID_TRIG_NONE</name>
+                <name>None</name>
                 <standardName>ID_TRIG_NONE</standardName>
                 <value>0x00</value>
-                <description>ID_TRIG_NONE</description>
+                <description>No trigger</description>
             </id>
             <id>
-                <name>ID_TRIG_LOW</name>
+                <name>Low</name>
                 <standardName>ID_TRIG_LOW</standardName>
                 <value>0x01</value>
-                <description>ID_TRIG_LOW</description>
+                <description>Trigger when the value is too low</description>
             </id>
             <id>
-                <name>ID_TRIG_HIGH</name>
+                <name>High</name>
                 <standardName>ID_TRIG_HIGH</standardName>
                 <value>0x02</value>
-                <description>ID_TRIG_HIGH</description>
+                <description>Trigger when the value is too high</description>
             </id>
             <id>
-                <name>ID_TRIG_RATE</name>
+                <name>Rate</name>
                 <standardName>ID_TRIG_RATE</standardName>
                 <value>0x04</value>
-                <description>ID_TRIG_RATE</description>
+                <description>Rate trigger</description>
             </id>
             <id>
-                <name>ID_TRIG_SHAPE</name>
+                <name>Shape</name>
                 <standardName>ID_TRIG_SHAPE</standardName>
                 <value>0x08</value>
-                <description>ID_TRIG_SHAPE</description>
+                <description>Shape trigger</description>
             </id>
             <id>
-                <name>ID_TRIG_OTHER</name>
+                <name>Other</name>
                 <standardName>ID_TRIG_OTHER</standardName>
                 <value>0x10</value>
-                <description>ID_TRIG_OTHER</description>
+                <description>Trigger that cannot otherwise be categorized</description>
             </id>
         </tagTriggerTypeID>
         <tagXDTransformerTypeID>

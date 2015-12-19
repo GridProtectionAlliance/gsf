@@ -22,6 +22,8 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace GSF.PQDIF.Logical
 {
@@ -566,331 +568,43 @@ namespace GSF.PQDIF.Logical
         public static readonly Guid ELCOMBK550 = new Guid("f4380a60-6f1d-11d6-9cb3-0020e010453b");
 
         /// <summary>
+        /// Gets information about the equipment identified by the given ID.
+        /// </summary>
+        /// <param name="equipmentID">The identifier for the equipment.</param>
+        /// <returns>Information about the equipment.</returns>
+        public static Identifier GetInfo(Guid equipmentID)
+        {
+            Identifier identifier;
+            return EquipmentLookup.TryGetValue(equipmentID, out identifier) ? identifier : null;
+        }
+
+        /// <summary>
         /// Converts the given equpiment ID to a string containing the name of the equipment.
         /// </summary>
         /// <param name="equipmentID">The ID of the equipment to be converted to a string.</param>
         /// <returns>A string containing the name of the equipment with the given ID.</returns>
         public static string ToString(Guid equipmentID)
         {
-            if (equipmentID == WPT5530)
-                return "WPT 5530";
-
-            if (equipmentID == WPT5540)
-                return "WPT 5540";
-
-            if (equipmentID == BMI3100)
-                return "BMI 3100";
-
-            if (equipmentID == BMI7100)
-                return "BMI 7100";
-
-            if (equipmentID == BMI8010)
-                return "BMI 8010";
-
-            if (equipmentID == BMI8020)
-                return "BMI 8020";
-
-            if (equipmentID == BMI9010)
-                return "BMI 9010";
-
-            if (equipmentID == CooperVHarm)
-                return "Cooper V-Harm";
-
-            if (equipmentID == CooperVFlicker)
-                return "Cooper V-Flicker";
-
-            if (equipmentID == DCGEMTP)
-                return "DCG EMTP";
-
-            if (equipmentID == Dranetz656)
-                return "Dranetz 656";
-
-            if (equipmentID == Dranetz658)
-                return "Dranetz 658";
-
-            if (equipmentID == ETKTestProgram)
-                return "ETK Test Program";
-
-            if (equipmentID == Dranetz8000)
-                return "Dranetz 8000";
-
-            if (equipmentID == ETKPQDIFEditor)
-                return "ETK PQDIF editor";
-
-            if (equipmentID == ETKPASS)
-                return "ETK PASS";
-
-            if (equipmentID == ETKSuperHarm)
-                return "ETK Super-Harm";
-
-            if (equipmentID == ETKSuperTran)
-                return "ETK Super-Tran";
-
-            if (equipmentID == ETKTOP)
-                return "TOP";
-
-            if (equipmentID == ETKPQView)
-                return "PQView";
-
-            if (equipmentID == ETKHarmoni)
-                return "ETK Harmoni";
-
-            if (equipmentID == FlukeCUR)
-                return "Fluke CUR";
-
-            if (equipmentID == IEEECOMTRADE)
-                return "IEEE COMTRADE";
-
-            if (equipmentID == FlukeF41)
-                return "Fluke F41";
-
-            if (equipmentID == PublicATP)
-                return "Public ATP";
-
-            if (equipmentID == MetrosonicM1)
-                return "Metrosonic M1";
-
-            if (equipmentID == SQDSMS)
-                return "SMS";
-
-            if (equipmentID == TelogM1)
-                return "Telog M1";
-
-            if (equipmentID == PML3710)
-                return "PML 3710";
-
-            if (equipmentID == PML3720)
-                return "PML 3720";
-
-            if (equipmentID == PML3800)
-                return "PML 3800";
-
-            if (equipmentID == PML7300)
-                return "PML 7300";
-
-            if (equipmentID == PML7700)
-                return "PML 7700";
-
-            if (equipmentID == PMLVIP)
-                return "PML VIP";
-
-            if (equipmentID == PMLLogServer)
-                return "PML Log Server";
-
-            if (equipmentID == MetOneELT15)
-                return "ELT15";
-
-            if (equipmentID == PMIScanner)
-                return "PMI Scanner";
-
-            if (equipmentID == AdvanTechADAM4017)
-                return "ADAM 4017";
-
-            if (equipmentID == ETKDSS)
-                return "ETK DSS";
-
-            if (equipmentID == AdvanTechADAM4018)
-                return "ADAM 4018";
-
-            if (equipmentID == AdvanTechADAM4018M)
-                return "ADAM 4018M";
-
-            if (equipmentID == AdvanTechADAM4052)
-                return "ADAM 4052";
-
-            if (equipmentID == BMI8800)
-                return "BMI 8800";
-
-            if (equipmentID == TrinergiPQM)
-                return "Trinergi PQM";
-
-            if (equipmentID == Medcal)
-                return "Medcal";
-
-            if (equipmentID == GEKV)
-                return "GE kV Energy Meter";
-
-            if (equipmentID == GEKV2)
-                return "GE kV2 Energy Meter";
-
-            if (equipmentID == AcumentricsControl)
-                return "Acumentrics Control";
-
-            if (equipmentID == ETKPQWeb)
-                return "PQWeb";
-
-            if (equipmentID == QWavePowerDistribution)
-                return "QWave Power Distribution";
-
-            if (equipmentID == QWavePowerTransmission)
-                return "QWave Power Transmission";
-
-            if (equipmentID == QWaveMicro)
-                return "QWave Micro";
-
-            if (equipmentID == QWaveTWin)
-                return "QWave TWin";
-
-            if (equipmentID == QWavePremium)
-                return "QWave Premium";
-
-            if (equipmentID == QWaveLight)
-                return "QWave Light";
-
-            if (equipmentID == QWaveNomad)
-                return "QWave Nomad";
-
-            if (equipmentID == EWON4000)
-                return "EWON 4000";
-
-            if (equipmentID == Qualimetre)
-                return "Qualimetre";
-
-            if (equipmentID == LEMAnalyst3Q)
-                return "LEM Analyst 3Q";
-
-            if (equipmentID == LEMAnalyst1Q)
-                return "LEM Analyst 1Q";
-
-            if (equipmentID == LEMAnalyst2050)
-                return "LEM Analyst 2050";
-
-            if (equipmentID == LEMAnalyst2060)
-                return "LEM Analyst 2060";
-
-            if (equipmentID == LEMMidget200)
-                return "LEM Midget 200";
-
-            if (equipmentID == LEMMBX300)
-                return "MBX 300";
-
-            if (equipmentID == LEMMBX800)
-                return "MBX 800";
-
-            if (equipmentID == LEMMBX601)
-                return "MBX 601";
-
-            if (equipmentID == LEMMBX602)
-                return "MBX 602";
-
-            if (equipmentID == LEMMBX603)
-                return "MBX 603";
-
-            if (equipmentID == LEMMBX686)
-                return "MBX 686";
-
-            if (equipmentID == LEMPerma701)
-                return "Perma 701";
-
-            if (equipmentID == LEMPerma702)
-                return "Perma 702";
-
-            if (equipmentID == LEMPerma705)
-                return "Perma 705";
-
-            if (equipmentID == LEMPerma706)
-                return "Perma 706";
-
-            if (equipmentID == LEMQWaveMicro)
-                return "QWave Micro";
-
-            if (equipmentID == LEMQWaveNomad)
-                return "QWave Nomad";
-
-            if (equipmentID == LEMQWaveLight)
-                return "QWave Light";
-
-            if (equipmentID == LEMQWaveTWin)
-                return "QWave TWin";
-
-            if (equipmentID == LEMQWavePowerDistribution)
-                return "QWave Power Distribution";
-
-            if (equipmentID == LEMQWavePremium)
-                return "QWave Premium";
-
-            if (equipmentID == LEMQWavePowerTransport)
-                return "QWave Power Transport";
-
-            if (equipmentID == LEMTOPASLT)
-                return "TOPAS LT";
-
-            if (equipmentID == LEMTOPAS1000)
-                return "TOPAS 1000";
-
-            if (equipmentID == LEMTOPAS1019)
-                return "TOPAS 1019";
-
-            if (equipmentID == LEMTOPAS1020)
-                return "TOPAS 1020";
-
-            if (equipmentID == LEMTOPAS1040)
-                return "TOPAS 1040";
-
-            if (equipmentID == LEMBEN5000)
-                return "BEN 5000";
-
-            if (equipmentID == LEMBEN6000)
-                return "BEN 6000";
-
-            if (equipmentID == LEMEWave)
-                return "LEM EWave";
-
-            if (equipmentID == LEMEWON4000)
-                return "EWON 4000";
-
-            if (equipmentID == WPT5510)
-                return "WPT 5510";
-
-            if (equipmentID == WPT5520)
-                return "WPT 5520";
-
-            if (equipmentID == WPT5530T)
-                return "WPT 5530T";
-
-            if (equipmentID == WPT5560)
-                return "WPT 5560";
-
-            if (equipmentID == WPT5590)
-                return "WPT 5590";
-
-            if (equipmentID == ETKNodeCenter)
-                return "ETK Node Center";
-
-            if (equipmentID == WPTDranView)
-                return "WPT Dran View";
-
-            if (equipmentID == AdvanTechADAM5017)
-                return "ADAM 5017";
-
-            if (equipmentID == AdvanTechADAM5018)
-                return "ADAM 5018";
-
-            if (equipmentID == AdvanTechADAM5080)
-                return "ADAM 5080";
-
-            if (equipmentID == AdvanTechADAM5052)
-                return "ADAM 5052";
-
-            if (equipmentID == AdvanTechADAM4050)
-                return "ADAM 4050";
-
-            if (equipmentID == AdvanTechADAM4053)
-                return "ADAM 4053";
-
-            if (equipmentID == AdvanTechADAM4080)
-                return "ADAM 4080";
-
-            if (equipmentID == AdvanTechADAM5050)
-                return "ADAM 5050";
-
-            if (equipmentID == AdvanTechADAM5051)
-                return "ADAM 5051";
-
-            if (equipmentID == ELCOMBK550)
-                return "BK 550";
-
-            return equipmentID.ToString();
+            return GetInfo(equipmentID)?.Name ?? equipmentID.ToString();
         }
+
+        private static Dictionary<Guid, Identifier> EquipmentLookup
+        {
+            get
+            {
+                Tag equipmentTag = Tag.GetTag(DataSourceRecord.EquipmentIDTag);
+
+                if (s_equipmentTag != equipmentTag)
+                {
+                    s_equipmentTag = equipmentTag;
+                    s_equipmentLookup = equipmentTag.ValidIdentifiers.ToDictionary(id => Guid.Parse(id.Value));
+                }
+
+                return s_equipmentLookup;
+            }
+        }
+
+        private static Tag s_equipmentTag;
+        private static Dictionary<Guid, Identifier> s_equipmentLookup;
     }
 }

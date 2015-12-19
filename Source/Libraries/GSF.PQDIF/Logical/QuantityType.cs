@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace GSF.PQDIF.Logical
 {
@@ -102,14 +103,25 @@ namespace GSF.PQDIF.Logical
         public static readonly Guid MagDurCount = new Guid("67f6af8e-f753-11cf-9d89-0080c72e70a3");
 
         /// <summary>
+        /// Gets the information about the quantity
+        /// type identified by the given ID.
+        /// </summary>
+        /// <param name="quantityTypeID">The quantity type ID.</param>
+        /// <returns>Information about the quantity type.</returns>
+        public static Identifier GetInfo(Guid quantityTypeID)
+        {
+            Identifier identifier;
+            return QuantityTypeLookup.TryGetValue(quantityTypeID, out identifier) ? identifier : null;
+        }
+
+        /// <summary>
         /// Gets the name of the quantity type with the given ID.
         /// </summary>
         /// <param name="quantityTypeID">The ID of the quantity type.</param>
         /// <returns>The name of the quantity type with the given ID.</returns>
         public static string ToString(Guid quantityTypeID)
         {
-            string name;
-            return QuantityTypeNames.TryGetValue(quantityTypeID, out name) ? name : null;
+            return GetInfo(quantityTypeID)?.Name;
         }
 
         /// <summary>
@@ -119,24 +131,26 @@ namespace GSF.PQDIF.Logical
         /// <returns>True if the given ID is a quantity type ID; false otherwise.</returns>
         public static bool IsQuantityTypeID(Guid id)
         {
-            return QuantityTypeNames.ContainsKey(id);
+            return (object)GetInfo(id) != null;
         }
 
-        private static readonly Dictionary<Guid, string> QuantityTypeNames = new Dictionary<Guid, string>()
+        private static Dictionary<Guid, Identifier> QuantityTypeLookup
         {
-            { WaveForm, "WaveForm" },
-            { ValueLog, "ValueLog" },
-            { Phasor, "Phasor" },
-            { Response, "Response" },
-            { Flash, "Flash" },
-            { Histogram, "Histogram" },
-            { Histogram3D, "Histogram3D" },
-            { CPF, "CPF" },
-            { XY, "XY" },
-            { MagDur, "MagDur" },
-            { XYZ, "XYZ" },
-            { MagDurTime, "MagDurTime" },
-            { MagDurCount, "MagDurCount" }
-        }; 
+            get
+            {
+                Tag quantityTypeTag = Tag.GetTag(ChannelDefinition.QuantityTypeIDTag);
+
+                if (s_quantityTypeTag != quantityTypeTag)
+                {
+                    s_quantityTypeTag = quantityTypeTag;
+                    s_quantityTypeLookup = quantityTypeTag.ValidIdentifiers.ToDictionary(id => Guid.Parse(id.Value));
+                }
+
+                return s_quantityTypeLookup;
+            }
+        }
+
+        private static Tag s_quantityTypeTag;
+        private static Dictionary<Guid, Identifier> s_quantityTypeLookup;
     }
 }

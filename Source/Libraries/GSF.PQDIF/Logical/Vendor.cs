@@ -22,6 +22,8 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace GSF.PQDIF.Logical
 {
@@ -191,109 +193,43 @@ namespace GSF.PQDIF.Logical
         public static readonly Guid ELCOM = new Guid("f7e9eb70-6f1d-11d6-9cb3-0020e010453b");
 
         /// <summary>
+        /// Gets information about the vendor identified by the given ID.
+        /// </summary>
+        /// <param name="vendorID">Globally unique identifier for the vendor.</param>
+        /// <returns>The information about the vendor.</returns>
+        public static Identifier GetInfo(Guid vendorID)
+        {
+            Identifier identifier;
+            return VendorLookup.TryGetValue(vendorID, out identifier) ? identifier : null;
+        }
+
+        /// <summary>
         /// Converts the given vendor ID to a string containing the name of the vendor.
         /// </summary>
         /// <param name="vendorID">The ID of the vendor to be converted to a string.</param>
         /// <returns>A string containing the name of the vendor with the given ID.</returns>
         public static string ToString(Guid vendorID)
         {
-            if (vendorID == SATEC)
-                return "SATEC";
-
-            if (vendorID == WPT)
-                return "WPT";
-
-            if (vendorID == None)
-                return "None";
-
-            if (vendorID == BMI)
-                return "BMI";
-
-            if (vendorID == BPA)
-                return "BPA";
-
-            if (vendorID == CESI)
-                return "CESI";
-
-            if (vendorID == Cooper)
-                return "Cooper";
-
-            if (vendorID == DCG)
-                return "DCG";
-
-            if (vendorID == Dranetz)
-                return "Dranetz";
-
-            if (vendorID == EDF)
-                return "EDF";
-
-            if (vendorID == EPRI)
-                return "EPRI";
-
-            if (vendorID == Electrotek)
-                return "Electrotek";
-
-            if (vendorID == Fluke)
-                return "Fluke";
-
-            if (vendorID == HydroQuebec)
-                return "Hydro-Quebec";
-
-            if (vendorID == IEEE)
-                return "IEEE";
-
-            if (vendorID == KreissJohnson)
-                return "Kreiss Johnson";
-
-            if (vendorID == Metrosonic)
-                return "Metrosonic";
-
-            if (vendorID == PML)
-                return "PML";
-
-            if (vendorID == PSI)
-                return "PSI";
-
-            if (vendorID == PTI)
-                return "PTI";
-
-            if (vendorID == PublicDomain)
-                return "Public Domain";
-
-            if (vendorID == RPM)
-                return "RPM";
-
-            if (vendorID == SquareDPowerLogic)
-                return "Square D PowerLogic";
-
-            if (vendorID == Telog)
-                return "Telog";
-
-            if (vendorID == PMI)
-                return "PMI";
-
-            if (vendorID == MetOne)
-                return "Met One";
-
-            if (vendorID == Trinergi)
-                return "Trinergi";
-
-            if (vendorID == GE)
-                return "GE";
-
-            if (vendorID == LEM)
-                return "LEM";
-
-            if (vendorID == ACTL)
-                return "ACTL";
-
-            if (vendorID == AdvanTech)
-                return "AdvanTech";
-
-            if (vendorID == ELCOM)
-                return "ELCOM";
-
-            return vendorID.ToString();
+            return GetInfo(vendorID)?.Name ?? vendorID.ToString();
         }
+
+        private static Dictionary<Guid, Identifier> VendorLookup
+        {
+            get
+            {
+                Tag vendorTag = Tag.GetTag(DataSourceRecord.VendorIDTag);
+
+                if (s_vendorTag != vendorTag)
+                {
+                    s_vendorTag = vendorTag;
+                    s_vendorLookup = vendorTag.ValidIdentifiers.ToDictionary(id => Guid.Parse(id.Value));
+                }
+
+                return s_vendorLookup;
+            }
+        }
+
+        private static Tag s_vendorTag;
+        private static Dictionary<Guid, Identifier> s_vendorLookup;
     }
 }

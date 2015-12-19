@@ -24,6 +24,8 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace GSF.PQDIF.Logical
 {
@@ -213,118 +215,43 @@ namespace GSF.PQDIF.Logical
         public static readonly Guid Frequency = new Guid("c690e868-f755-11cf-9d89-0080c72e70a3");
 
         /// <summary>
+        /// Gets information about the series value type identified by the given ID.
+        /// </summary>
+        /// <param name="seriesValueTypeID">The identifier for the series value type.</param>
+        /// <returns>Information about the series value type.</returns>
+        public static Identifier GetInfo(Guid seriesValueTypeID)
+        {
+            Identifier identifier;
+            return SeriesValueTypeLookup.TryGetValue(seriesValueTypeID, out identifier) ? identifier : null;
+        }
+
+        /// <summary>
         /// Returns the name of the given series value type.
         /// </summary>
-        /// <param name="seriesValueType">The GUID tag which identifies the series value type.</param>
+        /// <param name="seriesValueTypeID">The GUID tag which identifies the series value type.</param>
         /// <returns>The name of the given series value type.</returns>
-        public static string ToString(Guid seriesValueType)
+        public static string ToString(Guid seriesValueTypeID)
         {
-            if (seriesValueType == Val)
-                return "Values";
-            
-            if (seriesValueType == Time)
-                return "Time";
-            
-            if (seriesValueType == Min)
-                return "Minimum";
-            
-            if (seriesValueType == Max)
-                return "Maximum";
-            
-            if (seriesValueType == Avg)
-                return "Average";
-            
-            if (seriesValueType == Inst)
-                return "Instantaneous";
-            
-            if (seriesValueType == PhaseAngle)
-                return "Phase Angle";
-            
-            if (seriesValueType == PhaseAngleMin)
-                return "Phase Angle Mininum";
-            
-            if (seriesValueType == PhaseAngleMax)
-                return "Phase Angle Maximum";
-            
-            if (seriesValueType == PhaseAngleAvg)
-                return "Phase Angle Average";
-            
-            if (seriesValueType == Area)
-                return "Area";
-            
-            if (seriesValueType == Latitude)
-                return "Latitude";
-            
-            if (seriesValueType == Duration)
-                return "Duration";
-            
-            if (seriesValueType == Longitude)
-                return "Longitude";
-            
-            if (seriesValueType == Polarity)
-                return "Polarity";
-            
-            if (seriesValueType == Ellipse)
-                return "Ellipse";
-            
-            if (seriesValueType == BinID)
-                return "Bin ID";
-            
-            if (seriesValueType == BinHigh)
-                return "Bin High";
-            
-            if (seriesValueType == BinLow)
-                return "Bin Low";
-            
-            if (seriesValueType == XBinHigh)
-                return "X Bin High";
-            
-            if (seriesValueType == XBinLow)
-                return "X Bin Low";
-            
-            if (seriesValueType == YBinHigh)
-                return "Y Bin High";
-            
-            if (seriesValueType == YBinLow)
-                return "Y Bin Low";
-            
-            if (seriesValueType == Count)
-                return "Count";
-            
-            if (seriesValueType == Transition)
-                return "Transition";
-            
-            if (seriesValueType == Prob)
-                return "Probability";
-            
-            if (seriesValueType == Interval)
-                return "Interval";
-
-            if (seriesValueType == Status)
-                return "Status";
-
-            if (seriesValueType == P1)
-                return "Probability: 1%";
-            
-            if (seriesValueType == P5)
-                return "Probability: 5%";
-            
-            if (seriesValueType == P10)
-                return "Probability: 10%";
-            
-            if (seriesValueType == P90)
-                return "Probability: 90%";
-            
-            if (seriesValueType == P95)
-                return "Probability: 95%";
-            
-            if (seriesValueType == P99)
-                return "Probability: 99%";
-            
-            if (seriesValueType == Frequency)
-                return "Frequency";
-
-            return null;
+            return GetInfo(seriesValueTypeID)?.Name;
         }
+
+        private static Dictionary<Guid, Identifier> SeriesValueTypeLookup
+        {
+            get
+            {
+                Tag seriesValueTypeTag = Tag.GetTag(SeriesDefinition.ValueTypeIDTag);
+
+                if (s_seriesValueTypeTag != seriesValueTypeTag)
+                {
+                    s_seriesValueTypeTag = seriesValueTypeTag;
+                    s_seriesValueTypeLookup = seriesValueTypeTag.ValidIdentifiers.ToDictionary(id => Guid.Parse(id.Value));
+                }
+
+                return s_seriesValueTypeLookup;
+            }
+        }
+
+        private static Tag s_seriesValueTypeTag;
+        private static Dictionary<Guid, Identifier> s_seriesValueTypeLookup;
     }
 }

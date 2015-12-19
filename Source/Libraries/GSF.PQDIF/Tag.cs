@@ -25,10 +25,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using GSF;
 using GSF.PQDIF.Physical;
 
-namespace PQDIFExplorer
+namespace GSF.PQDIF
 {
     /// <summary>
     /// Represents a tag as defined by the PQDIF standard.
@@ -41,11 +40,12 @@ namespace PQDIFExplorer
         private Guid m_id;
         private string m_name;
         private string m_standardName;
-
         private string m_description;
         private ElementType m_elementType;
         private PhysicalType m_physicalType;
         private bool m_required;
+        private string m_formatString;
+        private List<Identifier> m_validIdentifiers;
 
         #endregion
 
@@ -53,8 +53,17 @@ namespace PQDIFExplorer
 
         // Tags are readonly and can only be created by
         // defining them in the TagDefinitions.xml file.
-        private Tag()
+        private Tag(XDocument doc, XElement element)
         {
+            m_id = Guid.Parse((string)element.Element("id"));
+            m_name = (string)element.Element("name");
+            m_standardName = (string)element.Element("standardName");
+            m_description = (string)element.Element("description");
+            m_elementType = GetElementType(element);
+            m_physicalType = GetPhysicalType(element);
+            m_required = ((string)element.Element("required") ?? "False").ParseBoolean();
+            m_formatString = (string)element.Element("formatString");
+            m_validIdentifiers = Identifier.GenerateIdentifiers(doc, this);
         }
 
         #endregion
@@ -93,13 +102,49 @@ namespace PQDIFExplorer
         /// </summary>
         public PhysicalType PhysicalType => m_physicalType;
 
+        /// <summary>
+        /// Gets the flag that determines whether it is
+        /// required that this tag be specified in a PQDIF file.
+        /// </summary>
         public bool Required => m_required;
+
+        /// <summary>
+        /// Format string specified for some tags as a
+        /// hint for how the value should be displayed.
+        /// </summary>
+        public string FormatString => m_formatString;
+
+        /// <summary>
+        /// Gets the collection of valid identifiers for this tag.
+        /// </summary>
+        public IReadOnlyCollection<Identifier> ValidIdentifiers => m_validIdentifiers.AsReadOnly();
 
         #endregion
 
         #region [ Static ]
 
+        // Static Fields
+        private static Dictionary<Guid, Tag> TagLookup;
+
         // Static Methods
+
+        /// <summary>
+        /// Gets the tag identified by the given globally unique identifier.
+        /// </summary>
+        /// <param name="id">The globally unique identifier for the tag to be retrieved.</param>
+        /// <returns>The tag, if defined, or null if the tag is not found.</returns>
+        public static Tag GetTag(Guid id)
+        {
+            Tag tag;
+
+            if ((object)TagLookup == null)
+                RefreshTags(XDocument.Load("TagDefinitions.xml"));
+            
+            if (!TagLookup.TryGetValue(id, out tag))
+                return null;
+
+            return tag;
+        }
 
         /// <summary>
         /// Generates a list of tags from the given XML document.
@@ -109,17 +154,18 @@ namespace PQDIFExplorer
         public static List<Tag> GenerateTags(XDocument doc)
         {
             return doc.Descendants("tag")
-                .Select(element => new Tag()
-                {
-                    m_id = Guid.Parse((string)element.Element("id")),
-                    m_name = (string)element.Element("name"),
-                    m_standardName = (string)element.Element("standardName"),
-                    m_description = (string)element.Element("description"),
-                    m_elementType = GetElementType(element),
-                    m_physicalType = GetPhysicalType(element),
-                    m_required = ((string)element.Element("required") ?? "False").ParseBoolean()
-                })
+                .Select(element => new Tag(doc, element))
                 .ToList();
+        }
+
+        /// <summary>
+        /// Refreshes the cache of tags used to return
+        /// tags from the <see cref="GetTag(Guid)"/> method.
+        /// </summary>
+        /// <param name="doc">The XML document containing the tag definitions.</param>
+        public static void RefreshTags(XDocument doc)
+        {
+            TagLookup = GenerateTags(doc).ToDictionary(t => t.ID);
         }
 
         // Attempts to parse the element type via the ElementType enumeration.
