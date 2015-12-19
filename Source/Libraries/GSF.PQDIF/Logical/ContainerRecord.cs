@@ -24,7 +24,6 @@
 //******************************************************************************************************
 
 using System;
-using System.IO;
 using System.Text;
 using GSF.PQDIF.Physical;
 

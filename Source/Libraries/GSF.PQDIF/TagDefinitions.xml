@@ -201,7 +201,7 @@
         </tag>
         <tag>
             <id>8973861b-f1c3-11cf-9d89-0080c72e70a3</id>
-            <name>CompressionStyleIDTag</name>
+            <name>CompressionStyleTag</name>
             <standardName>tagCompressionStyleID</standardName>
             <description>Specified how the compression is applied to the file.</description>
             <elementType>Scalar</elementType>
@@ -210,7 +210,7 @@
         </tag>
         <tag>
             <id>8973861c-f1c3-11cf-9d89-0080c72e70a3</id>
-            <name>CompressionAlgorithmIDTag</name>
+            <name>CompressionAlgorithmTag</name>
             <standardName>tagCompressionAlgorithmID</standardName>
             <description>Required if tagCompressionStyleID specifies that compression is turned on.</description>
             <elementType>Scalar</elementType>
@@ -291,7 +291,7 @@
         </tag>
         <tag>
             <id>b48d85a9-f5f5-11cf-9d89-0080c72e70a3</id>
-            <name>PhoneVoiceTag</name>
+            <name>PhoneNumberTag</name>
             <standardName>tagPhoneVoice</standardName>
             <description>General contact information (all optional)</description>
             <elementType>Scalar</elementType>
@@ -300,7 +300,7 @@
         </tag>
         <tag>
             <id>3d786f80-f76e-11cf-9d89-0080c72e70a3</id>
-            <name>PhoneFAXTag</name>
+            <name>FaxNumberTag</name>
             <standardName>tagPhoneFAX</standardName>
             <description>General contact information (all optional)</description>
             <elementType>Scalar</elementType>
@@ -309,7 +309,7 @@
         </tag>
         <tag>
             <id>3d786f81-f76e-11cf-9d89-0080c72e70a3</id>
-            <name>EMailTag</name>
+            <name>EmailTag</name>
             <standardName>tagEMail</standardName>
             <description>General contact information (all optional)</description>
             <elementType>Scalar</elementType>
@@ -318,7 +318,7 @@
         </tag>
         <tag>
             <id>b48d8581-f5f5-11cf-9d89-0080c72e70a3</id>
-            <name>DataSourceTypeIDTag</name>
+            <name>DataSourceTypeTag</name>
             <standardName>tagDataSourceTypeID</standardName>
             <description>Since this ID is a Guid, you can generate a custom ID if a standard ID is not defined.</description>
             <elementType>Scalar</elementType>
@@ -354,7 +354,7 @@
         </tag>
         <tag>
             <id>b48d8585-f5f5-11cf-9d89-0080c72e70a3</id>
-            <name>SerialNumberDSTag</name>
+            <name>SerialNumberTag</name>
             <standardName>tagSerialNumberDS</standardName>
             <description>Arbitrary string to hold data souce (instrument) serial number</description>
             <elementType>Vector</elementType>
@@ -363,7 +363,7 @@
         </tag>
         <tag>
             <id>b48d8586-f5f5-11cf-9d89-0080c72e70a3</id>
-            <name>VersionDSTag</name>
+            <name>DataSourceVersionTag</name>
             <standardName>tagVersionDS</standardName>
             <description>Arbitrary string to hold data souce (instrument) version number (if applicable)</description>
             <elementType>Vector</elementType>
@@ -372,7 +372,7 @@
         </tag>
         <tag>
             <id>b48d8587-f5f5-11cf-9d89-0080c72e70a3</id>
-            <name>NameDSTag</name>
+            <name>DataSourceNameTag</name>
             <standardName>tagNameDS</standardName>
             <description>Arbitrary string to hold the name of the data souce (instrument)</description>
             <elementType>Vector</elementType>
@@ -381,7 +381,7 @@
         </tag>
         <tag>
             <id>b48d8588-f5f5-11cf-9d89-0080c72e70a3</id>
-            <name>OwnerDSTag</name>
+            <name>DataSourceOwnerTag</name>
             <standardName>tagOwnerDS</standardName>
             <description>Arbitrary string to hold data souce (instrument) owner name</description>
             <elementType>Vector</elementType>
@@ -390,7 +390,7 @@
         </tag>
         <tag>
             <id>b48d8589-f5f5-11cf-9d89-0080c72e70a3</id>
-            <name>LocationDSTag</name>
+            <name>DataSourceLocationTag</name>
             <standardName>tagLocationDS</standardName>
             <description>Arbitrary string to hold data souce (instrument) location information</description>
             <elementType>Vector</elementType>
@@ -399,7 +399,7 @@
         </tag>
         <tag>
             <id>b48d858a-f5f5-11cf-9d89-0080c72e70a3</id>
-            <name>TimeZoneDSTag</name>
+            <name>DataSourceTimeZoneTag</name>
             <standardName>tagTimeZoneDS</standardName>
             <description>EST, CST, etc.</description>
             <elementType>Vector</elementType>
@@ -408,7 +408,7 @@
         </tag>
         <tag>
             <id>b48d858b-f5f5-11cf-9d89-0080c72e70a3</id>
-            <name>CoordinatesDSTag</name>
+            <name>DataSourceCoordinatesTag</name>
             <standardName>tagCoordinatesDS</standardName>
             <description>Longitude/latitude</description>
             <elementType>Vector</elementType>
@@ -417,7 +417,7 @@
         </tag>
         <tag>
             <id>b48d858d-f5f5-11cf-9d89-0080c72e70a3</id>
-            <name>ChannelDefnsTag</name>
+            <name>ChannelDefinitionsTag</name>
             <standardName>tagChannelDefns</standardName>
             <description>The tagChannelDefns collection must be a collection where the count = the number of channel definitions. Each entry must be another collection, each having the tagOneChannelDefn tag.</description>
             <elementType>Collection</elementType>
@@ -453,7 +453,7 @@
         </tag>
         <tag>
             <id>b48d858e-f5f5-11cf-9d89-0080c72e70a3</id>
-            <name>OneChannelDefnTag</name>
+            <name>OneChannelDefinitionTag</name>
             <standardName>tagOneChannelDefn</standardName>
             <description>Must have one or more channel definitions</description>
             <elementType>Collection</elementType>
@@ -534,7 +534,7 @@
         </tag>
         <tag>
             <id>b48d8596-f5f5-11cf-9d89-0080c72e70a3</id>
-            <name>PrimarySeriesIdxTag</name>
+            <name>PrimarySeriesIndexTag</name>
             <standardName>tagPrimarySeriesIdx</standardName>
             <description>Identifies the series which will be the primary. Index into the tagSeriesDefns collection.</description>
             <elementType>Scalar</elementType>
@@ -543,7 +543,7 @@
         </tag>
         <tag>
             <id>b48d8598-f5f5-11cf-9d89-0080c72e70a3</id>
-            <name>SeriesDefnsTag</name>
+            <name>SeriesDefinitionsTag</name>
             <standardName>tagSeriesDefns</standardName>
             <description>The tagSeriesDefns collection must be a collection where the count = the number of series definitions. Each entry must be another collection, each having the tagOneSeriesDefn tag.</description>
             <elementType>Collection</elementType>
@@ -552,7 +552,7 @@
         </tag>
         <tag>
             <id>b48d859a-f5f5-11cf-9d89-0080c72e70a3</id>
-            <name>OneSeriesDefnTag</name>
+            <name>OneSeriesDefinitionTag</name>
             <standardName>tagOneSeriesDefn</standardName>
             <description>One of these collections per series.</description>
             <elementType>Collection</elementType>
@@ -652,7 +652,7 @@
         </tag>
         <tag>
             <id>2747d441-2bd0-11d2-ae42-0060083a2628</id>
-            <name>ProbIntervalTag</name>
+            <name>ProbabilityIntervalTag</name>
             <standardName>tagProbInterval</standardName>
             <description>For a probability series definition, this specifies its time interval (in seconds; >0).</description>
             <elementType>Scalar</elementType>
@@ -661,7 +661,7 @@
         </tag>
         <tag>
             <id>2747d440-2bd0-11d2-ae42-0060083a2628</id>
-            <name>ProbPercentileTag</name>
+            <name>ProbabilityPercentileTag</name>
             <standardName>tagProbPercentile</standardName>
             <description>For a probability series definition, this specifies its probability percentile (in percent; 0-100).</description>
             <elementType>Scalar</elementType>
@@ -760,7 +760,7 @@
         </tag>
         <tag>
             <id>b48d858f-f5f5-11cf-9d89-0080c72e70a3</id>
-            <name>ChannelDefnIdxTag</name>
+            <name>ChannelDefinitionIndexTag</name>
             <standardName>tagChannelDefnIdx</standardName>
             <description>The channel definition which these settings apply to. Index into tagChannelDefns collection of the matching data source record.</description>
             <elementType>Scalar</elementType>
@@ -797,7 +797,7 @@
         </tag>
         <tag>
             <id>62f28188-f9c4-11cf-9d89-0080c72e70a3</id>
-            <name>TriggerShapeParamTag</name>
+            <name>TriggerShapeParametersTag</name>
             <standardName>tagTriggerShapeParam</standardName>
             <description>Parameters for shape based triggering algorithms for this channel</description>
             <elementType>Vector</elementType>
@@ -932,7 +932,7 @@
         </tag>
         <tag>
             <id>5b12f432-ff54-11d3-b968-0050da2b1f4d</id>
-            <name>TriggerDeadBandTag</name>
+            <name>TriggerDeadbandTag</name>
             <standardName>tagTriggerDeadBand</standardName>
             <description>Deadband trigger for this channel</description>
             <elementType>Scalar</elementType>
@@ -977,7 +977,7 @@
         </tag>
         <tag>
             <id>3d786f8d-f76e-11cf-9d89-0080c72e70a3</id>
-            <name>TriggerMethodIDTag</name>
+            <name>TriggerMethodTag</name>
             <standardName>tagTriggerMethodID</standardName>
             <description>Type of trigger which caused the observation.</description>
             <elementType>Scalar</elementType>
@@ -995,7 +995,7 @@
         </tag>
         <tag>
             <id>3d786f8f-f76e-11cf-9d89-0080c72e70a3</id>
-            <name>ChannelTriggerIdxTag</name>
+            <name>ChannelTriggerIndexTag</name>
             <standardName>tagChannelTriggerIdx</standardName>
             <description>Index into tagChannelInstances collection within this record. This specifies which channel(s) initiated the observation.</description>
             <elementType>Vector</elementType>
@@ -1040,7 +1040,7 @@
         </tag>
         <tag>
             <id>0fa118c0-cb4a-11d2-b30b-fe25cb9a1760</id>
-            <name>CharactDisturbDirectionTag</name>
+            <name>CharacterizationDisturbanceDirectionTag</name>
             <standardName>tagCharactDisturbDirection</standardName>
             <description>Direction of disturbance represented by the data in this observation. Value of 0 means don't know, 1 means originated from load side, 2 means originated from source side.</description>
             <elementType>Scalar</elementType>
@@ -1049,7 +1049,7 @@
         </tag>
         <tag>
             <id>0fa118c1-cb4a-11d2-b30b-fe25cb9a1760</id>
-            <name>CharactDisturbDirectionQualityTag</name>
+            <name>CharacterizationDisturbanceDirectionQualityTag</name>
             <standardName>tagCharactDisturbDirectionQuality</standardName>
             <description>Quality of the direction result given in another tag. Range is from 0 (no confidence), to 100 (darn sure).</description>
             <elementType>Scalar</elementType>
@@ -1058,7 +1058,7 @@
         </tag>
         <tag>
             <id>3d786f92-f76e-11cf-9d89-0080c72e70a3</id>
-            <name>OneChannelInstTag</name>
+            <name>OneChannelInstanceTag</name>
             <standardName>tagOneChannelInst</standardName>
             <description>One of these collections per channel instance.</description>
             <elementType>Collection</elementType>
@@ -1067,7 +1067,7 @@
         </tag>
         <tag>
             <id>2747d444-2bd0-11d2-ae42-0060083a2628</id>
-            <name>CharactDurationTag</name>
+            <name>CharacterizationDurationTag</name>
             <standardName>tagCharactDuration</standardName>
             <description>Simple characterization value: duration of disturbance (seconds)</description>
             <elementType>Scalar</elementType>
@@ -1085,7 +1085,7 @@
         </tag>
         <tag>
             <id>2747d443-2bd0-11d2-ae42-0060083a2628</id>
-            <name>CharactMagnitudeTag</name>
+            <name>CharacterizationMagnitudeTag</name>
             <standardName>tagCharactMagnitude</standardName>
             <description>Simple characterization value: magnitude of disturbance (percent: 100%=nominal)</description>
             <elementType>Scalar</elementType>
@@ -1094,7 +1094,7 @@
         </tag>
         <tag>
             <id>2747d445-2bd0-11d2-ae42-0060083a2628</id>
-            <name>CharactFrequencyTag</name>
+            <name>CharacterizationFrequencyTag</name>
             <standardName>tagCharactFrequency</standardName>
             <description>Simple characterization value: frequency (Hertz)</description>
             <elementType>Scalar</elementType>
@@ -1103,7 +1103,7 @@
         </tag>
         <tag>
             <id>0fa118c7-cb4a-11d2-b30b-fe25cb9a1760</id>
-            <name>ChanTriggerModuleInfoTag</name>
+            <name>ChannelTriggerModuleInfoTag</name>
             <standardName>tagChanTriggerModuleInfo</standardName>
             <description>Contains a 32 bit integer that represents module spefic information related to the trigger reason.</description>
             <elementType>Scalar</elementType>
@@ -1112,7 +1112,7 @@
         </tag>
         <tag>
             <id>0fa118c6-cb4a-11d2-b30b-fe25cb9a1760</id>
-            <name>ChanTriggerModuleNameTag</name>
+            <name>ChannelTriggerModuleNameTag</name>
             <standardName>tagChanTriggerModuleName</standardName>
             <description>Contains the name of a device specific code or hardware module, algorithm or rule not necessarily channel based that caused this channel to be recorded</description>
             <elementType>Vector</elementType>
@@ -1130,7 +1130,7 @@
         </tag>
         <tag>
             <id>0fa118c4-cb4a-11d2-b30b-fe25cb9a1760</id>
-            <name>CrossTriggerChanIdxTag</name>
+            <name>CrossTriggerChannelIndexTag</name>
             <standardName>tagCrossTriggerChanIdx</standardName>
             <description>Contains the channel definition index of the channel that triggered in a cross trigger scenrio.</description>
             <elementType>Scalar</elementType>
@@ -1139,7 +1139,7 @@
         </tag>
         <tag>
             <id>0fa118c2-cb4a-11d2-b30b-fe25cb9a1760</id>
-            <name>ChanTriggerTypeIDTag</name>
+            <name>ChannelTriggerTypeIDTag</name>
             <standardName>tagChanTriggerTypeID</standardName>
             <description>Integer ID representing the trigger type for this channel instance. Used only with type ID_QT_VALUELOG wit a trigger method of channel.</description>
             <elementType>Scalar</elementType>
@@ -1202,7 +1202,7 @@
         </tag>
         <tag>
             <id>8973861f-f1c3-11cf-9d89-0080c72e70a3</id>
-            <name>SeriesShareChannelIdxTag</name>
+            <name>SeriesShareChannelIndexTag</name>
             <standardName>tagSeriesShareChannelIdx</standardName>
             <description>Identifies the channel which owns the series to be shared. An index into the tagChannelInstances collection.</description>
             <elementType>Scalar</elementType>
@@ -1211,7 +1211,7 @@
         </tag>
         <tag>
             <id>89738620-f1c3-11cf-9d89-0080c72e70a3</id>
-            <name>SeriesShareSeriesIdxTag</name>
+            <name>SeriesShareSeriesIndexTag</name>
             <standardName>tagSeriesShareSeriesIdx</standardName>
             <description>Identifies the series to be shared. An index into the tagSeriesInstances collection. The tagSeriesValues vector from this series is used. This must be present if tagSeriesShareChannelIdx is used.</description>
             <elementType>Scalar</elementType>
