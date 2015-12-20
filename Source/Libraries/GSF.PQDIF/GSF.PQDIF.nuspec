@@ -42,4 +42,8 @@
       <dependency id="GSF.Core" version="" />
     </dependencies>
   </metadata>
+  <files>
+    <file src="TagDefinitions.xml" target="build" />
+    <file src="GSF.PQDIF.targets" target="build" />
+  </files>
 </package>
