@@ -130,6 +130,7 @@
     <None Include="GSF.PQDIF.nuspec" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="GSF.PQDIF.targets" />
     <None Include="TagDefinitions.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
