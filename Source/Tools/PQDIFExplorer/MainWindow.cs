@@ -32,6 +32,7 @@ using System.Xml.Linq;
 using GSF.PQDIF;
 using GSF.PQDIF.Logical;
 using GSF.PQDIF.Physical;
+using PQDIFExplorer.Properties;
 
 namespace PQDIFExplorer
 {
@@ -375,25 +376,6 @@ namespace PQDIFExplorer
             return $"{{ {join} }}";
         }
 
-        // Fixes the size of the tree view and
-        // details text box after the form is resized.
-        private void FixSize()
-        {
-            const int pad = 15;
-
-            int x = ClientRectangle.X + pad;
-            int y = ClientRectangle.Y + MenuBar.Height + pad;
-            int width = 300;
-            int height = ClientRectangle.Height - y - pad;
-
-            RecordTree.SetBounds(x, y, width, height);
-
-            x += width + pad;
-            width = ClientRectangle.Width - x - pad;
-
-            DetailsTextBox.SetBounds(x, y, width, height);
-        }
-
         // Fixes the scroll bars in the details view
         // based on whether the text fits inside the text box.
         private void FixScrollBars()
@@ -449,8 +431,9 @@ namespace PQDIFExplorer
             RecordTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.vector.png")));
             RecordTree.ImageList.Images.Add(Image.FromStream(typeof(MainWindow).Assembly.GetManifestResourceStream("PQDIFExplorer.Icons.scalar.png")));
 
-            // Fix the size of the contents of the form
-            FixSize();
+            // Set initial size of the form
+            if (Settings.Default.WindowSize != null)
+                Size = Settings.Default.WindowSize;
         }
 
         // Handler called when the user selects the option to open a PQDIF file.
@@ -548,12 +531,6 @@ namespace PQDIFExplorer
                 CancelExpandCollapseOnce();
         }
 
-        // Handler called when the user resizes the form.
-        private void MainWindow_Resize(object sender, EventArgs e)
-        {
-            FixSize();
-        }
-
         // Handler called when the text is changed in the details text box.
         private void DetailsTextBox_TextChanged(object sender, EventArgs e)
         {
@@ -581,6 +558,13 @@ namespace PQDIFExplorer
 
             foreach (DetailsWindow detailsWindow in detailsWindows)
                 detailsWindow.Close();
+
+            if (WindowState == FormWindowState.Normal)
+                Settings.Default.WindowSize = Size;
+            else
+                Settings.Default.WindowSize = RestoreBounds.Size;
+
+            Settings.Default.Save();
         }
     }
 }
