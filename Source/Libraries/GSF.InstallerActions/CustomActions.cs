@@ -240,6 +240,7 @@ namespace GSF.InstallerActions
                 UserInfo.CreateLocalGroup(groupName, string.Format("Members in this group have the necessary rights to administrate the {0} service.", serviceName));
                 UserInfo.AddUserToLocalGroup(groupName, serviceAccount);
                 UserInfo.AddUserToLocalGroup("Performance Log Users", serviceAccount);
+                UserInfo.AddUserToLocalGroup("Performance Monitor Users", serviceAccount);
                 AddPrivileges(serviceAccount, "SeServiceLogonRight");
                 session.Log("Done adding {0} user to {1} group.", serviceAccount, groupName);
             }
