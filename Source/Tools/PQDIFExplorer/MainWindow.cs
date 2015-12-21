@@ -137,6 +137,8 @@ namespace PQDIFExplorer
             CollectionElement collection;
             Tag tag;
 
+            IEnumerable<List<TreeNode>> childNodes;
+
             // Look up the tag and create a leaf node identified by
             // the tag name or the tag itself if no name is available
             tag = GSF.PQDIF.Tag.GetTag(element.TagOfElement);
@@ -178,6 +180,21 @@ namespace PQDIFExplorer
             {
                 foreach (Element child in collection.Elements)
                     node.Nodes.Add(ToTreeNode(child));
+
+                // If the collection element has more than
+                // one child with the same tag, add an index
+                // to the nodes to aid navigation
+                childNodes = node.Nodes
+                    .Cast<TreeNode>()
+                    .GroupBy(childNode => ((Element)childNode.Tag).TagOfElement)
+                    .Select(grouping => grouping.ToList())
+                    .Where(list => list.Count > 1);
+
+                foreach (List<TreeNode> list in childNodes)
+                {
+                    for (int i = 0; i < list.Count; i++)
+                        list[i].Text = $"[{i}] {list[i].Text}";
+                }
             }
 
             // Return the node that represents the element
