@@ -39,7 +39,7 @@
     <iconUrl>https://s3.amazonaws.com/cloud.ohloh.net/attachments/70294/GSF64x64_med.png</iconUrl>
     <tags>Media Music WAV Wave Sound DTMF TouchTone RIFF Note Song Tempo Timbre</tags>
     <dependencies>
-      <dependency id="GSF.Core" version="" />
+      <dependency id="GSF.Core" version="$version$" />
     </dependencies>
   </metadata>
 </package>

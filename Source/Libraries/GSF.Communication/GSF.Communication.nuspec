@@ -40,7 +40,7 @@
     <iconUrl>https://s3.amazonaws.com/cloud.ohloh.net/attachments/70294/GSF64x64_med.png</iconUrl>
     <tags>Communications TCP UDP Multicast TLS SSL ZeroMQ Serial Client Server</tags>
     <dependencies>
-      <dependency id="GSF.Core" version="" />
+      <dependency id="GSF.Core" version="$version$" />
     </dependencies>
   </metadata>
 </package>

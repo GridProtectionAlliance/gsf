@@ -39,9 +39,9 @@
     <iconUrl>https://s3.amazonaws.com/cloud.ohloh.net/attachments/70294/GSF64x64_med.png</iconUrl>
     <tags>Synchrophasor Streaming Data Exchange Protocol Parser Generator PMU PDC Phasor Concentrator IEEE C37118 1344 IEC 61850 FNET Macrodyne SELFastMessage Library</tags>
     <dependencies>
-      <dependency id="GSF.Core" version="" />
-      <dependency id="GSF.Communication" version="" />
-      <dependency id="GSF.TimeSeries" version="" />
+      <dependency id="GSF.Core" version="$version$" />
+      <dependency id="GSF.Communication" version="$version$" />
+      <dependency id="GSF.TimeSeries" version="$version$" />
     </dependencies>
   </metadata>
 </package>

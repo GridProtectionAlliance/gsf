@@ -39,9 +39,9 @@
     <iconUrl>https://s3.amazonaws.com/cloud.ohloh.net/attachments/70294/GSF64x64_med.png</iconUrl>
     <tags>Web ASP.NET Extensions Hosting HTTP Module Security Portal JavaScript Extensions</tags>
     <dependencies>
-      <dependency id="GSF.Core" version="" />
-      <dependency id="GSF.Security" version="" />
-      <dependency id="GSF.ServiceModel" version="" />
+      <dependency id="GSF.Core" version="$version$" />
+      <dependency id="GSF.Security" version="$version$" />
+      <dependency id="GSF.ServiceModel" version="$version$" />
     </dependencies>
   </metadata>
 </package>
