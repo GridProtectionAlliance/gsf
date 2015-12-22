@@ -118,6 +118,11 @@
         <VersionRegex>(?'BeforeVersion'AssemblyFileVersion\(%22)(?'CoreVersion'(\*|\d+)\.)+(\*|\d+)(?'AfterVersion'%22\))</VersionRegex>
         <VersionPrecision>4</VersionPrecision>
       </FilesToVersion>
+      <FilesToVersion Include="$(LocalFolder)\Source\**\AssemblyInfo.*" Exclude="$(LocalFolder)\Source\OldCode\**\*.*">
+        <VersionRegex>(?'BeforeVersion'AssemblyInformationalVersion\(%22)(?'CoreVersion'(\*|\d+)\.)+(\*|\d+)(-beta)?(?'AfterVersion'%22\))</VersionRegex>
+        <VersionPrecision>3</VersionPrecision>
+        <VersionTag Condition="'$(PreRelease)' == 'true'">-beta</VersionTag>
+      </FilesToVersion>
     </ItemGroup>
   </Target>
 
@@ -206,8 +211,7 @@
     <ItemGroup>
       <NuGetLibraries Include="$(LocalFolder)\Source\Libraries\**\*.nuspec"/>
     </ItemGroup>
-    <Exec Command="%22$(NuGet)%22 pack %22%(NuGetLibraries.RootDir)%(NuGetLibraries.Directory)%(NuGetLibraries.Filename).csproj%22 /Version $(Major).$(Minor).$(Build) /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NuGetPackagesFolder)%22" Condition="'$(PreRelease)' != 'true'" ContinueOnError="true"/>
-    <Exec Command="%22$(NuGet)%22 pack %22%(NuGetLibraries.RootDir)%(NuGetLibraries.Directory)%(NuGetLibraries.Filename).csproj%22 /Version $(Major).$(Minor).$(Build)-beta /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NuGetPackagesFolder)%22" Condition="'$(PreRelease)' == 'true'" ContinueOnError="true"/>
+    <Exec Command="%22$(NuGet)%22 pack %22%(NuGetLibraries.RootDir)%(NuGetLibraries.Directory)%(NuGetLibraries.Filename).csproj%22 /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NuGetPackagesFolder)%22" ContinueOnError="true"/>
     <Message Text="Creating NuGet template packages..."/>
     <ItemGroup>
       <NuGetTemplates Include="$(LocalFolder)\Source\Templates\NuGet\**\*.nuspec"/>

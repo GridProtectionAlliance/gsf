@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+********************************************************************************************************
+**  GSF.PQDIF.targets - Gbtc
+**
+**  Copyright © 2015, Grid Protection Alliance.  All Rights Reserved.
+**
+**  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+**  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+**  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
+**  not use this file except in compliance with the License. You may obtain a copy of the License at:
+**
+**      http://opensource.org/licenses/MIT
+**
+**  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+**  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+**  License for the specific language governing permissions and limitations.
+**
+**  Code Modification History:
+**  ===================================================================================================
+**  12/19/2015 - Stephen C. Wills
+**       Generated original version of source code.
+**
+********************************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <!--
+      This targets file makes use of a feature in NuGet whereby a
+      file by the name of {packageid}.targets that is placed into
+      the build folder will automatically be imported by the project
+      file referencing the NuGet package.
+      
+      https://docs.nuget.org/create/creating-and-publishing-a-package#import-msbuild-targets-and-props-files-into-project
+      
+      This file will ensure that projects referencing the GSF.PQDIF
+      NuGet package will receive the TagDefinitions.xml file, which
+      contains names and descriptions for tags as well as for some
+      tags' values, into the output directory for that project.
+    -->
+    <Content Include="$(MSBuildThisFileDirectory)TagDefinitions.xml">
+      <Link>TagDefinitions.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

@@ -4,7 +4,7 @@
 *******************************************************************************************************
 **  GSF.TimeSeries.nuspec - Gbtc
 **
-**  Copyright © 2014, Grid Protection Alliance.  All Rights Reserved.
+**  Copyright © 2015, Grid Protection Alliance.  All Rights Reserved.
 **
 **  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 **  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -23,6 +23,8 @@
 **       Generated original version of source code.
 **  12/02/2014 - J. Ritchie Carroll
 **       Updated NuGet package information.
+**  12/19/2015 - Stephen C. Wills
+**       Added <files> section to copy important files to the build folder of referencing projects.
 **
 *******************************************************************************************************
 -->
@@ -39,7 +41,25 @@
     <iconUrl>https://s3.amazonaws.com/cloud.ohloh.net/attachments/70294/GSF64x64_med.png</iconUrl>
     <tags>Power Quality Data Exchange File Format Parser PQDIF Library</tags>
     <dependencies>
-      <dependency id="GSF.Core" version="" />
+      <dependency id="GSF.Core" version="$version$" />
     </dependencies>
   </metadata>
+  
+  <!--
+      This section makes use of a feature in NuGet whereby a file
+      by the name of {packageid}.targets that is placed into the
+      build folder will automatically be imported by the project
+      file referencing the NuGet package.
+      
+      https://docs.nuget.org/create/creating-and-publishing-a-package#import-msbuild-targets-and-props-files-into-project
+      
+      The purpose of this is to ensure that projects referencing the
+      GSF.PQDIF NuGet package will receive the TagDefinitions.xml file,
+      which contains names and descriptions for tags as well as for some
+      tags' values, into the output directory for that project.
+  -->
+  <files>
+    <file src="TagDefinitions.xml" target="build" />
+    <file src="GSF.PQDIF.targets" target="build" />
+  </files>
 </package>

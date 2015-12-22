@@ -40,8 +40,8 @@
     <iconUrl>https://s3.amazonaws.com/cloud.ohloh.net/attachments/70294/GSF64x64_med.png</iconUrl>
     <tags>Windows Forms WPF Security User Interface Extensions About Dialog</tags>
     <dependencies>
-      <dependency id="GSF.Core" version="" />
-      <dependency id="GSF.Security" version="" />
+      <dependency id="GSF.Core" version="$version$" />
+      <dependency id="GSF.Security" version="$version$" />
     </dependencies>
   </metadata>
 </package>

@@ -39,10 +39,10 @@
     <iconUrl>https://s3.amazonaws.com/cloud.ohloh.net/attachments/70294/GSF64x64_med.png</iconUrl>
     <tags>Historian TimeSeries Data Archive Query Metadata Sorting</tags>
     <dependencies>
-      <dependency id="GSF.Communication" version="" />
-      <dependency id="GSF.Core" version="" />
-      <dependency id="GSF.ServiceModel" version="" />
-      <dependency id="GSF.TimeSeries" version="" />	
+      <dependency id="GSF.Communication" version="$version$" />
+      <dependency id="GSF.Core" version="$version$" />
+      <dependency id="GSF.ServiceModel" version="$version$" />
+      <dependency id="GSF.TimeSeries" version="$version$" />	
     </dependencies>
   </metadata>
 </package>
