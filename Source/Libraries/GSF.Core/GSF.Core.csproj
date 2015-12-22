@@ -186,6 +186,7 @@
     <Compile Include="Console\Command.cs" />
     <Compile Include="Console\CommandException.cs" />
     <Compile Include="Console\CommandResponse.cs" />
+    <Compile Include="Encoding7Bit.cs" />
     <Compile Include="Identity\IUserInfo.cs" />
     <Compile Include="Identity\UnixUserInfo.cs" />
     <Compile Include="Identity\WindowsUserInfo.cs" />

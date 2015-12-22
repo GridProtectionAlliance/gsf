@@ -353,7 +353,7 @@ namespace GSF.TimeSeries.Transport
         /// Mask to get mode of compression.
         /// </summary>
         /// <remarks>
-        /// GZip compression is only mode currently supported. Remaining bits are
+        /// GZip and TSSC compression are the only modes currently supported. Remaining bits are
         /// reserved for future compression modes.
         /// </remarks>
         CompressionModeMask = (uint)(Bits.Bit07 | Bits.Bit06 | Bits.Bit05),
@@ -448,12 +448,17 @@ namespace GSF.TimeSeries.Transport
     /// <summary>
     /// Enumeration for compression modes supported by the Gateway Exchange Protocol.
     /// </summary>
-    public enum GatewayCompressionMode : uint
+    [Flags]
+    public enum CompressionModes : uint
     {
         /// <summary>
         /// GZip compression
         /// </summary>
         GZip = (uint)Bits.Bit05,
+        /// <summary>
+        /// TSSC compression
+        /// </summary>
+        TSSC = (uint)Bits.Bit06,
         /// <summary>
         /// No compression
         /// </summary>
@@ -3011,6 +3016,7 @@ namespace GSF.TimeSeries.Transport
                     else
                     {
                         bool usePayloadCompression = m_allowPayloadCompression && ((connection.OperationalModes & OperationalModes.CompressPayloadData) > 0);
+                        CompressionModes compressionModes = (CompressionModes)(connection.OperationalModes & OperationalModes.CompressionModeMask);
                         bool useCompactMeasurementFormat = ((byte)(flags & DataPacketFlags.Compact) > 0);
                         bool addSubscription = false;
 
@@ -3033,9 +3039,9 @@ namespace GSF.TimeSeries.Transport
                             {
                                 // Client subscription not established yet, so we create a new one
                                 if (useSynchronizedSubscription)
-                                    subscription = new SynchronizedClientSubscription(this, clientID, connection.SubscriberID);
+                                    subscription = new SynchronizedClientSubscription(this, clientID, connection.SubscriberID, compressionModes);
                                 else
-                                    subscription = new UnsynchronizedClientSubscription(this, clientID, connection.SubscriberID);
+                                    subscription = new UnsynchronizedClientSubscription(this, clientID, connection.SubscriberID, compressionModes);
 
                                 addSubscription = true;
                             }
@@ -3055,7 +3061,7 @@ namespace GSF.TimeSeries.Transport
                                         }
 
                                         // Create a new synchronized subscription
-                                        subscription = new SynchronizedClientSubscription(this, clientID, connection.SubscriberID);
+                                        subscription = new SynchronizedClientSubscription(this, clientID, connection.SubscriberID, compressionModes);
                                         addSubscription = true;
                                     }
                                 }
@@ -3072,7 +3078,7 @@ namespace GSF.TimeSeries.Transport
                                         }
 
                                         // Create a new unsynchronized subscription
-                                        subscription = new UnsynchronizedClientSubscription(this, clientID, connection.SubscriberID);
+                                        subscription = new UnsynchronizedClientSubscription(this, clientID, connection.SubscriberID, compressionModes);
                                         addSubscription = true;
                                     }
                                 }
@@ -3590,7 +3596,7 @@ namespace GSF.TimeSeries.Transport
             if (m_clientConnections.TryGetValue(clientID, out connection))
             {
                 OperationalModes operationalModes = connection.OperationalModes;
-                GatewayCompressionMode gatewayCompressionMode = (GatewayCompressionMode)(operationalModes & OperationalModes.CompressionModeMask);
+                CompressionModes compressionModes = (CompressionModes)(operationalModes & OperationalModes.CompressionModeMask);
                 bool useCommonSerializationFormat = (operationalModes & OperationalModes.UseCommonSerializationFormat) > 0;
                 bool compressSignalIndexCache = (operationalModes & OperationalModes.CompressSignalIndexCache) > 0;
 
@@ -3609,7 +3615,7 @@ namespace GSF.TimeSeries.Transport
                     signalIndexCache.GenerateBinaryImage(serializedSignalIndexCache, 0);
                 }
 
-                if (compressSignalIndexCache && gatewayCompressionMode == GatewayCompressionMode.GZip)
+                if (compressSignalIndexCache && compressionModes.HasFlag(CompressionModes.GZip))
                 {
                     try
                     {
@@ -3643,7 +3649,7 @@ namespace GSF.TimeSeries.Transport
             if (m_clientConnections.TryGetValue(clientID, out connection))
             {
                 OperationalModes operationalModes = connection.OperationalModes;
-                GatewayCompressionMode gatewayCompressionMode = (GatewayCompressionMode)(operationalModes & OperationalModes.CompressionModeMask);
+                CompressionModes compressionModes = (CompressionModes)(operationalModes & OperationalModes.CompressionModeMask);
                 bool useCommonSerializationFormat = (operationalModes & OperationalModes.UseCommonSerializationFormat) > 0;
                 bool compressMetadata = (operationalModes & OperationalModes.CompressMetadata) > 0;
 
@@ -3667,7 +3673,7 @@ namespace GSF.TimeSeries.Transport
                     }
                 }
 
-                if (compressMetadata && gatewayCompressionMode == GatewayCompressionMode.GZip)
+                if (compressMetadata && compressionModes.HasFlag(CompressionModes.GZip))
                 {
                     try
                     {

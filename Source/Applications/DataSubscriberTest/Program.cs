@@ -88,6 +88,7 @@ namespace DataSubscriberTest
             //subscriber.ConnectionString = "server=tcp://127.0.0.1:9898; useZeroMQChannel=true";
             subscriber.ConnectionString = "server=localhost:9898";
             subscriber.OperationalModes |= OperationalModes.UseCommonSerializationFormat | OperationalModes.CompressMetadata | OperationalModes.CompressSignalIndexCache | OperationalModes.CompressPayloadData;
+            //subscriber.CompressionModes = CompressionModes.TSSC | CompressionModes.GZip;
             subscriber.Initialize();
 
             // Start subscriber connection cycle

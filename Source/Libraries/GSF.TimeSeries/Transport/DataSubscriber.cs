@@ -894,18 +894,21 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="GatewayCompressionMode"/> used by the subscriber and publisher.
+        /// Gets or sets the <see cref="CompressionModes"/> used by the subscriber and publisher.
         /// </summary>
-        public GatewayCompressionMode GatewayCompressionMode
+        public CompressionModes CompressionModes
         {
             get
             {
-                return (GatewayCompressionMode)(m_operationalModes & OperationalModes.CompressionModeMask);
+                return (CompressionModes)(m_operationalModes & OperationalModes.CompressionModeMask);
             }
             set
             {
                 m_operationalModes &= ~OperationalModes.CompressionModeMask;
                 m_operationalModes |= (OperationalModes)value;
+
+                if (value.HasFlag(CompressionModes.TSSC))
+                    CompressPayload = true;
             }
         }
 
@@ -1050,8 +1053,15 @@ namespace GSF.TimeSeries.Transport
                 status.AppendLine();
                 status.AppendFormat("                Subscribed: {0}", m_subscribed);
                 status.AppendLine();
-                status.AppendFormat("      Data packet security: {0}", (object)m_keyIVs == null ? "Unencrypted" : "Encrypted");
+                status.AppendFormat("             Security mode: {0}", SecurityMode);
                 status.AppendLine();
+                status.AppendFormat("         Compression modes: {0}", CompressionModes);
+                status.AppendLine();
+                if ((object)m_dataChannel != null)
+                {
+                    status.AppendFormat("  UDP Data packet security: {0}", (object)m_keyIVs == null ? "Unencrypted" : "Encrypted");
+                    status.AppendLine();
+                }
                 status.AppendFormat("      Data monitor enabled: {0}", (object)m_dataStreamMonitor != null && m_dataStreamMonitor.Enabled);
                 status.AppendLine();
                 status.AppendFormat("              Logging path: {0}", FilePath.TrimFileName(m_loggingPath.ToNonNullNorWhiteSpace(FilePath.GetAbsolutePath("")), 51));
@@ -1357,6 +1367,7 @@ namespace GSF.TimeSeries.Transport
             string setting;
 
             OperationalModes operationalModes;
+            CompressionModes compressionModes;
             int metadataSynchronizationTimeout;
             double interval;
             int bufferSize;
@@ -1365,9 +1376,17 @@ namespace GSF.TimeSeries.Transport
             if (settings.TryGetValue("requireAuthentication", out setting))
                 RequireAuthentication = setting.ParseBoolean();
 
+            // See if user has opted for different operational modes
+            if (settings.TryGetValue("operationalModes", out setting) && Enum.TryParse(setting, true, out operationalModes))
+                OperationalModes = operationalModes;
+
             // Set the security mode if explicitly defined
-            if (settings.TryGetValue("securityMode", out setting))
-                m_securityMode = (SecurityMode)Enum.Parse(typeof(SecurityMode), setting);
+            if (!settings.TryGetValue("securityMode", out setting) || !Enum.TryParse(setting, true, out m_securityMode))
+                m_securityMode = SecurityMode.None;
+
+            // Apply gateway compression mode to operational mode flags
+            if (settings.TryGetValue("compressionModes", out setting) && Enum.TryParse(setting, true, out compressionModes))
+                CompressionModes = compressionModes;
 
             if (settings.TryGetValue("useZeroMQChannel", out setting))
                 m_useZeroMQChannel = setting.ParseBoolean();
@@ -1410,10 +1429,6 @@ namespace GSF.TimeSeries.Transport
             // Check if measurements for this connection should be marked as "internal" - i.e., owned and allowed for proxy
             if (settings.TryGetValue("internal", out setting))
                 m_internal = setting.ParseBoolean();
-
-            // See if user has opted for different operational modes
-            if (settings.TryGetValue("operationalModes", out setting) && Enum.TryParse(setting, true, out operationalModes))
-                m_operationalModes = operationalModes;
 
             // Check if user has explicitly defined the ReceiveInternalMetadata flag
             if (settings.TryGetValue("receiveInternalMetadata", out setting))
@@ -2869,8 +2884,53 @@ namespace GSF.TimeSeries.Transport
                                 {
                                     try
                                     {
-                                        // Decompress compact measurements from payload
-                                        measurements.AddRange(buffer.DecompressPayload(m_signalIndexCache, responseIndex, responseLength - responseIndex + DataPublisher.ClientResponseHeaderSize, count, m_includeTime, flags));
+                                        if (CompressionModes.HasFlag(CompressionModes.TSSC))
+                                        {
+                                            // Use TSSC compression to decompress measurements
+                                            MeasurementDecompressionBlock decompressionBlock = new MeasurementDecompressionBlock();
+                                            MemoryStream bufferStream = new MemoryStream(buffer, responseIndex, responseLength - responseIndex + DataPublisher.ClientResponseHeaderSize);
+                                            bool eos = false;
+
+                                            while (!eos)
+                                            {
+                                                Measurement measurement;
+                                                Tuple<Guid, string, uint> tuple;
+                                                ushort id;
+                                                long time;
+                                                uint quality;
+                                                float value;
+                                                byte command;
+
+                                                switch (decompressionBlock.GetMeasurement(out id, out time, out quality, out value, out command))
+                                                {
+                                                    case DecompressionExitCode.EndOfStreamOccured:
+                                                        if (bufferStream.Position != bufferStream.Length)
+                                                            decompressionBlock.Fill(bufferStream);
+                                                        else
+                                                            eos = true;
+                                                        break;
+                                                    case DecompressionExitCode.CommandRead:
+                                                        break;
+                                                    case DecompressionExitCode.MeasurementRead:                                                        
+                                                        // Attempt to restore signal identification
+                                                        if (m_signalIndexCache.Reference.TryGetValue(id, out tuple))
+                                                        {
+                                                            measurement = new Measurement();
+                                                            measurement.Key = MeasurementKey.LookUpOrCreate(tuple.Item1, tuple.Item2, tuple.Item3);
+                                                            measurement.Timestamp = time;
+                                                            measurement.StateFlags = (MeasurementStateFlags)quality;
+                                                            measurement.Value = value;
+                                                            measurements.Add(measurement);
+                                                        }
+                                                        break;
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+                                            // Decompress compact measurements from payload
+                                            measurements.AddRange(buffer.DecompressPayload(m_signalIndexCache, responseIndex, responseLength - responseIndex + DataPublisher.ClientResponseHeaderSize, count, m_includeTime, flags));
+                                        }
                                     }
                                     catch (Exception ex)
                                     {
@@ -3233,7 +3293,7 @@ namespace GSF.TimeSeries.Transport
                 }
 
                 // Start unsynchronized subscription
-#pragma warning disable 0618
+                #pragma warning disable 0618
                 UnsynchronizedSubscribe(true, false, filterExpression.ToString(), dataChannel);
             }
             else if (metaDataRefreshCompleted)
@@ -3837,7 +3897,7 @@ namespace GSF.TimeSeries.Transport
 
         private SignalIndexCache DeserializeSignalIndexCache(byte[] buffer)
         {
-            GatewayCompressionMode gatewayCompressionMode = (GatewayCompressionMode)(m_operationalModes & OperationalModes.CompressionModeMask);
+            CompressionModes compressionModes = (CompressionModes)(m_operationalModes & OperationalModes.CompressionModeMask);
             bool useCommonSerializationFormat = (m_operationalModes & OperationalModes.UseCommonSerializationFormat) > 0;
             bool compressSignalIndexCache = (m_operationalModes & OperationalModes.CompressSignalIndexCache) > 0;
 
@@ -3845,7 +3905,7 @@ namespace GSF.TimeSeries.Transport
 
             GZipStream inflater = null;
 
-            if (compressSignalIndexCache && gatewayCompressionMode == GatewayCompressionMode.GZip)
+            if (compressSignalIndexCache && compressionModes.HasFlag(CompressionModes.GZip))
             {
                 try
                 {
@@ -3878,7 +3938,7 @@ namespace GSF.TimeSeries.Transport
 
         private DataSet DeserializeMetadata(byte[] buffer)
         {
-            GatewayCompressionMode gatewayCompressionMode = (GatewayCompressionMode)(m_operationalModes & OperationalModes.CompressionModeMask);
+            CompressionModes compressionModes = (CompressionModes)(m_operationalModes & OperationalModes.CompressionModeMask);
             bool useCommonSerializationFormat = (m_operationalModes & OperationalModes.UseCommonSerializationFormat) > 0;
             bool compressMetadata = (m_operationalModes & OperationalModes.CompressMetadata) > 0;
             Ticks startTime = DateTime.UtcNow.Ticks;
@@ -3886,7 +3946,7 @@ namespace GSF.TimeSeries.Transport
             DataSet deserializedMetadata;
             GZipStream inflater = null;
 
-            if (compressMetadata && gatewayCompressionMode == GatewayCompressionMode.GZip)
+            if (compressMetadata && compressionModes.HasFlag(CompressionModes.GZip))
             {
                 try
                 {

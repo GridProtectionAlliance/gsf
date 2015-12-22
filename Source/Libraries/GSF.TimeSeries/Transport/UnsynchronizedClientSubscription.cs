@@ -69,6 +69,7 @@ namespace GSF.TimeSeries.Transport
         private volatile byte m_compressionStrength;
         private volatile bool m_usePayloadCompression;
         private volatile bool m_useCompactMeasurementFormat;
+        private CompressionModes m_compressionModes;
         private long m_lastPublishTime;
         private string m_requestedInputFilter;
         private double m_publishInterval;
@@ -100,11 +101,13 @@ namespace GSF.TimeSeries.Transport
         /// <param name="parent">Reference to parent.</param>
         /// <param name="clientID"><see cref="Guid"/> based client connection ID.</param>
         /// <param name="subscriberID"><see cref="Guid"/> based subscriber ID.</param>
-        public UnsynchronizedClientSubscription(DataPublisher parent, Guid clientID, Guid subscriberID)
+        /// <param name="compressionModes"><see cref="CompressionModes"/> requested by client.</param>
+        public UnsynchronizedClientSubscription(DataPublisher parent, Guid clientID, Guid subscriberID, CompressionModes compressionModes)
         {
             m_parent = parent;
             m_clientID = clientID;
             m_subscriberID = subscriberID;
+            m_compressionModes = compressionModes;
 
             m_signalIndexCache = new SignalIndexCache();
             m_signalIndexCache.SubscriberID = subscriberID;
@@ -751,8 +754,15 @@ namespace GSF.TimeSeries.Transport
                 // Serialize data packet flags into response
                 DataPacketFlags flags = DataPacketFlags.NoFlags; // No flags means bit is cleared, i.e., unsynchronized
 
-                if (useCompactMeasurementFormat)
-                    flags |= DataPacketFlags.Compact;
+                if (m_compressionModes.HasFlag(CompressionModes.TSSC))
+                {
+                    flags |= DataPacketFlags.Compressed;
+                }
+                else
+                {
+                    if (useCompactMeasurementFormat)
+                        flags |= DataPacketFlags.Compact;
+                }
 
                 workingBuffer.WriteByte((byte)flags);
 
@@ -762,21 +772,34 @@ namespace GSF.TimeSeries.Transport
                 // Serialize total number of measurement values to follow
                 workingBuffer.Write(BigEndian.GetBytes(measurements.Count()), 0, 4);
 
-                // Attempt compression when requested - encoding of compressed buffer only happens if size would be smaller than normal serialization
-                if (!usePayloadCompression || !measurements.Cast<CompactMeasurement>().CompressPayload(workingBuffer, m_compressionStrength, m_includeTime, ref flags))
+                if (usePayloadCompression && m_compressionModes.HasFlag(CompressionModes.TSSC))
                 {
-                    // Serialize measurements to data buffer
-                    foreach (IBinaryMeasurement measurement in measurements)
+                    MeasurementCompressionBlock compressionBlock = new MeasurementCompressionBlock();
+
+                    foreach (CompactMeasurement measurement in measurements.Cast<CompactMeasurement>())
                     {
-                        measurement.CopyBinaryImageToStream(workingBuffer);
+                        if (compressionBlock.CanAddMeasurements)
+                            compressionBlock.AddMeasurement(measurement.RuntimeID, measurement.Timestamp.Value, (uint)measurement.StateFlags, (float)measurement.AdjustedValue);
                     }
                 }
-
-                // Update data packet flags if it has updated compression flags
-                if ((flags & DataPacketFlags.Compressed) > 0)
+                else
                 {
-                    workingBuffer.Seek(0, SeekOrigin.Begin);
-                    workingBuffer.WriteByte((byte)flags);
+                    // Attempt compression when requested - encoding of compressed buffer only happens if size would be smaller than normal serialization
+                    if (!usePayloadCompression || !measurements.Cast<CompactMeasurement>().CompressPayload(workingBuffer, m_compressionStrength, m_includeTime, ref flags))
+                    {
+                        // Serialize measurements to data buffer
+                        foreach (IBinaryMeasurement measurement in measurements)
+                        {
+                            measurement.CopyBinaryImageToStream(workingBuffer);
+                        }
+                    }
+
+                    // Update data packet flags if it has updated compression flags
+                    if ((flags & DataPacketFlags.Compressed) > 0)
+                    {
+                        workingBuffer.Seek(0, SeekOrigin.Begin);
+                        workingBuffer.WriteByte((byte)flags);
+                    }
                 }
 
                 // Publish data packet to client
