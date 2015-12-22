@@ -17,6 +17,8 @@
     <SccAuxPath>SAK</SccAuxPath>
     <SccProvider>SAK</SccProvider>
     <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -88,6 +90,10 @@
     <Reference Include="System.configuration" />
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.SQLite, Version=1.0.99.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\NuGet\System.Data.SQLite.Core.1.0.99.0\lib\net46\System.Data.SQLite.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.Management" />
     <Reference Include="System.ServiceProcess" />
@@ -202,12 +208,13 @@
   <ItemGroup>
     <None Include="Adapters\IaonAdapters.vsd" />
     <None Include="Adapters\IaonOverview.vsd" />
-    <Content Include="Data\SQLite\db-update.bat" />
-    <Content Include="Data\SQLite\GSFSchema-InitialDataSet.db" />
-    <Content Include="Data\SQLite\GSFSchema-SampleDataSet.db" />
-    <Content Include="Data\SQLite\GSFSchema.db" />
+    <None Include="Data\SQLite\db-update.bat" />
+    <None Include="Data\SQLite\GSFSchema-InitialDataSet.db" />
+    <None Include="Data\SQLite\GSFSchema-SampleDataSet.db" />
+    <None Include="Data\SQLite\GSFSchema.db" />
     <None Include="Data\SerializedSchema.bin" />
     <None Include="GSF.TimeSeries.nuspec" />
+    <None Include="packages.config" />
     <None Include="PostBuildSetup.bat" />
     <None Include="TimeSeriesFramework.ruleset" />
   </ItemGroup>
@@ -231,27 +238,34 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\DatabaseUpdateReadme.txt" />
-    <Content Include="Data\MySQL\AuditLog.sql" />
-    <Content Include="Data\MySQL\InitialDataSet.sql" />
-    <Content Include="Data\MySQL\GSFSchema.sql" />
-    <Content Include="Data\MySQL\SampleDataSet.sql" />
-    <Content Include="Data\Oracle\AuditLog.sql" />
-    <Content Include="Data\Oracle\InitialDataSet.sql" />
-    <Content Include="Data\Oracle\GSFSchema.sql" />
-    <Content Include="Data\Oracle\SampleDataSet.sql" />
-    <Content Include="Data\SQL Server\AuditLog.sql" />
-    <Content Include="Data\SQL Server\InitialDataSet.sql" />
-    <Content Include="Data\SQL Server\GSFSchema.sql" />
-    <Content Include="Data\SQL Server\SampleDataSet.sql" />
-    <Content Include="Data\SQLite\InitialDataSet.sql" />
-    <Content Include="Data\SQLite\GSFSchema.sql" />
-    <Content Include="Data\SQLite\SampleDataSet.sql" />
-    <Content Include="Data\SQLite\sqlite3.exe" />
+    <None Include="Data\MySQL\AuditLog.sql" />
+    <None Include="Data\MySQL\InitialDataSet.sql" />
+    <None Include="Data\MySQL\GSFSchema.sql" />
+    <None Include="Data\MySQL\SampleDataSet.sql" />
+    <None Include="Data\Oracle\AuditLog.sql" />
+    <None Include="Data\Oracle\InitialDataSet.sql" />
+    <None Include="Data\Oracle\GSFSchema.sql" />
+    <None Include="Data\Oracle\SampleDataSet.sql" />
+    <None Include="Data\SQL Server\AuditLog.sql" />
+    <None Include="Data\SQL Server\InitialDataSet.sql" />
+    <None Include="Data\SQL Server\GSFSchema.sql" />
+    <None Include="Data\SQL Server\SampleDataSet.sql" />
+    <None Include="Data\SQLite\InitialDataSet.sql" />
+    <None Include="Data\SQLite\GSFSchema.sql" />
+    <None Include="Data\SQLite\SampleDataSet.sql" />
+    <None Include="Data\SQLite\sqlite3.exe" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>CALL "$(ProjectDir)PostBuildSetup.bat" "$(TargetDir)Data" "$(ProjectDir)Data\*.*"</PostBuildEvent>
   </PropertyGroup>
+  <Import Project="..\..\Dependencies\NuGet\System.Data.SQLite.Core.1.0.99.0\build\net46\System.Data.SQLite.Core.targets" Condition="Exists('..\..\Dependencies\NuGet\System.Data.SQLite.Core.1.0.99.0\build\net46\System.Data.SQLite.Core.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\Dependencies\NuGet\System.Data.SQLite.Core.1.0.99.0\build\net46\System.Data.SQLite.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\Dependencies\NuGet\System.Data.SQLite.Core.1.0.99.0\build\net46\System.Data.SQLite.Core.targets'))" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

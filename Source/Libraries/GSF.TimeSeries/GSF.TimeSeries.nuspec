@@ -45,5 +45,8 @@
       <dependency id="GSF.ServiceProcess" version="$version$" />
     </dependencies>
   </metadata>
-  <files/>
+  <files>
+    <file src="Data\**\*.sql" target="tools\dbscripts" />
+    <file src="Data\**\*.db" target="tools\dbscripts" />
+  </files>
 </package>
