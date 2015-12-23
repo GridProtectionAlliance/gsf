@@ -14,16 +14,18 @@ namespace PowerCalculations.UI.DataModels
 
 		private int m_id;
 		private int m_deviceId;
-		private string m_label;
+        private string m_deviceName;
+        private string m_label;
 		private string m_type;
 		private string m_phase;
 		private int m_sourceIndex;
+        private Measurement m_angleMeasurement;
 
-		#endregion
+        #endregion
 
-		#region [ Properties ]
+        #region [ Properties ]
 
-		public int ID
+        public int ID
 		{
 			get { return m_id; }
 			set
@@ -44,6 +46,17 @@ namespace PowerCalculations.UI.DataModels
 				OnPropertyChanged(nameof(DeviceID));
 			}
 		}
+
+        public string DeviceName
+        {
+            get { return m_deviceName; }
+            set
+            {
+                if (m_deviceName == value) return;
+                m_deviceName = value;
+                OnPropertyChanged(nameof(DeviceName));
+            }
+        }
 
 		public string Label
 		{
@@ -101,8 +114,7 @@ namespace PowerCalculations.UI.DataModels
 			}
 		}
 
-		private Measurement m_angleMeasurement;
-		public Measurement AngleMeasurement
+        public Measurement AngleMeasurement
 		{
 			get { return m_angleMeasurement; }
 			set
@@ -174,11 +186,13 @@ namespace PowerCalculations.UI.DataModels
 				if (keys != null && keys.Count > 0)
 				{
 					var commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
-					var query = string.Format("select p.id, p.deviceid, p.label, p.type, p.phase, p.sourceindex, mags.signalid as mag_signalid, angles.signalid as angle_signalid " +
+					var query = string.Format("select p.id, p.deviceid, d.acronym as DeviceAcronym, p.label, p.type, p.phase, p.sourceindex, mags.signalid as mag_signalid, angles.signalid as angle_signalid " +
 											  "from phasor p left join measurement mags " +
 											  "on mags.deviceid = p.deviceid and mags.phasorsourceindex = p.sourceindex and mags.signaltypeid in (1,3) " +
 											  "left join measurement angles " +
 											  "on angles.deviceid = p.deviceid and angles.phasorsourceindex = p.sourceindex and angles.signaltypeid in (2,4) " +
+                                              "left join device d " +
+                                              "on p.deviceid = d.id " +
 											  "where p.id in ({0})", commaSeparatedKeys);
 					var phasorTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
 					phasorList = new Phasor[phasorTable.Rows.Count];
@@ -187,6 +201,7 @@ namespace PowerCalculations.UI.DataModels
 					{
 						var id = row.ConvertField<int>("Id");
 						var deviceId = row.ConvertField<int>("DeviceId");
+                        var deviceName = row.ConvertField<string>("DeviceAcronym");
 						var label = row.ConvertField<string>("Label");
 						var type = row.ConvertField<string>("Type");
 						var phase = row.ConvertField<string>("Phase");
@@ -196,10 +211,11 @@ namespace PowerCalculations.UI.DataModels
 
 						var measurements = Measurement.LoadFromKeys(database, (new[] {magnitudeSignalId, angleSignalId}).ToList());
 
-						phasorList[keys.IndexOf(id)] = new Phasor
-						{
-							ID = id,
-							DeviceID = deviceId,
+                        phasorList[keys.IndexOf(id)] = new Phasor
+                        {
+                            ID = id,
+                            DeviceID = deviceId,
+                            DeviceName = deviceName,
 							Label = label,
 							Type = type,
 							Phase = phase,
