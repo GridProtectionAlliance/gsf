@@ -1555,7 +1555,7 @@ namespace GSF.TimeSeries
             if ((object)reportingProcess != null)
             {
                 reportingProcess.CleanReportLocation();
-                reportingProcess.GenerateReport(DateTime.Today - TimeSpan.FromDays(1), true);
+                reportingProcess.GenerateReport(DateTime.UtcNow - TimeSpan.FromDays(1), true);
             }
         }
 
@@ -2499,8 +2499,7 @@ namespace GSF.TimeSeries
                 if ((object)reportingProcess == null)
                     throw new ArgumentException(string.Format("ReportType \"{0}\" undefined.", requestInfo.Request.Arguments["OrderedArg1"]));
 
-                DateTime now = DateTime.UtcNow;
-                DateTime today = DateTime.Parse(now.ToString("yyyy-MM-dd"));
+                DateTime today = DateTime.UtcNow;
                 DateTime reportDate;
                 bool emailReport = requestInfo.Request.Arguments.Exists("email");
 
@@ -2516,7 +2515,7 @@ namespace GSF.TimeSeries
                     }
                     else
                     {
-                        SendResponse(requestInfo, false, string.Format("[{0:yyyy-MM-dd HH:mm:ss}] Unable to generate report for {1:yyyy-MM-dd} until {2:yyyy-MM-dd}. The statistics archive is not fully populated for that date.", now, reportDate, reportDate + TimeSpan.FromDays(1)));
+                        SendResponse(requestInfo, false, string.Format("[{0:yyyy-MM-dd HH:mm:ss}] Unable to generate report for {1:yyyy-MM-dd} until {2:yyyy-MM-dd}. The statistics archive is not fully populated for that date.", today, reportDate, reportDate + TimeSpan.FromDays(1)));
                     }
                 }
                 catch (Exception ex)

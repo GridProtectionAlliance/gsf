@@ -78,7 +78,7 @@ namespace StatHistorianReportGenerator
 
             string reportLocation = "";
             string reportFileName = "";
-            DateTime reportDate = DateTime.Now;
+            DateTime reportDate = DateTime.UtcNow;
             double threshold;
 
             if (TryGetValue(args, "archiveLocation", out arg))
@@ -97,7 +97,12 @@ namespace StatHistorianReportGenerator
                 completenessReportGenerator.CompanyText = arg;
 
             if (TryGetValue(args, "reportDate", out arg) && DateTime.TryParse(arg, out reportDate))
+            {
+                if (reportDate.Kind == DateTimeKind.Unspecified)
+                    reportDate = new DateTime(reportDate.Ticks, DateTimeKind.Utc);
+
                 completenessReportGenerator.ReportDate = reportDate;
+            }
 
             if (TryGetValue(args, "level4Threshold", out arg) && double.TryParse(arg, out threshold))
                 completenessReportGenerator.Level4Threshold = threshold;
@@ -136,7 +141,7 @@ namespace StatHistorianReportGenerator
 
             string reportLocation = "";
             string reportFileName = "";
-            DateTime reportDate = DateTime.Now;
+            DateTime reportDate = DateTime.UtcNow;
 
             if (TryGetValue(args, "archiveLocation", out arg))
                 correctnessReportGenerator.ArchiveLocation = arg;
@@ -154,7 +159,12 @@ namespace StatHistorianReportGenerator
                 correctnessReportGenerator.CompanyText = arg;
 
             if (TryGetValue(args, "reportDate", out arg) && DateTime.TryParse(arg, out reportDate))
+            {
+                if (reportDate.Kind == DateTimeKind.Unspecified)
+                    reportDate = new DateTime(reportDate.Ticks, DateTimeKind.Utc);
+
                 correctnessReportGenerator.ReportDate = reportDate;
+            }
 
             if (string.IsNullOrEmpty(reportFileName))
                 reportFileName = string.Format("{0} {1:yyyy-MM-dd}.pdf", correctnessReportGenerator.TitleText, correctnessReportGenerator.ReportDate);
