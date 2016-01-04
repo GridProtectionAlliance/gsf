@@ -235,6 +235,9 @@ namespace GSF.Net.Security
             IPHostEntry hostEntry = Dns.GetHostEntry(Dns.GetHostName());
 
             return hostEntry.AddressList
+                .Select(address => address.MapToIPv6())
+                .Concat(hostEntry.AddressList)
+                .Distinct()
                 .Select(address => address.ToString())
                 .Concat(hostEntry.Aliases)
                 .Concat(new string[] { Environment.MachineName, hostEntry.HostName })

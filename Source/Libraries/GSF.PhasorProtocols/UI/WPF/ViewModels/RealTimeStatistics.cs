@@ -266,7 +266,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
             if (m_subscribedUnsynchronized && !string.IsNullOrEmpty(m_allSignalIDs))
             {
-                info = new UnsynchronizedSubscriptionInfo(true);
+                info = new UnsynchronizedSubscriptionInfo(false);
 
                 info.UseCompactMeasurementFormat = true;
                 info.FilterExpression = m_allSignalIDs;

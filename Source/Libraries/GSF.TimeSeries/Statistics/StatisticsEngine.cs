@@ -561,6 +561,14 @@ namespace GSF.TimeSeries.Statistics
                 status.AppendLine();
                 status.AppendFormat(" Recently calculated stats: {0}", m_lastStatisticCalculationCount);
                 status.AppendLine();
+                status.AppendFormat("     Last stat calculation: {0}", m_lastStatisticCalculationTime);
+                status.AppendLine();
+
+                lock (StatisticSources)
+                {
+                    status.AppendFormat("    Statistic source count: {0}", StatisticSources.Count);
+                    status.AppendLine();
+                }
 
                 return status.ToString();
             }

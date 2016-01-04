@@ -143,8 +143,8 @@
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <Button x:Name="ButtonDisplaySettings" Content="Display Settings" Template="{StaticResource HyperlinkStyleButtonTemplate}" 
-                     Width="Auto" Click="ButtonDisplaySettings_Click"/>
-            <TextBlock Text="Refresh Interval: " Width="Auto" />                
+                     Width="Auto" Click="ButtonDisplaySettings_Click" Visibility="Collapsed" />
+            <TextBlock Text="Refresh Interval: " Width="Auto" Visibility="Collapsed" />
             <TextBlock x:Name="TextBlockMeasurementRefreshInterval" Width="Auto"/>                
             <TextBlock Text="{Binding Path=DataContext.LastRefresh, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}}" />
         </StackPanel>
