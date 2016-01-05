@@ -145,7 +145,7 @@
             <Button x:Name="ButtonDisplaySettings" Content="Display Settings" Template="{StaticResource HyperlinkStyleButtonTemplate}" 
                      Width="Auto" Click="ButtonDisplaySettings_Click" Visibility="Collapsed" />
             <TextBlock Text="Refresh Interval: " Width="Auto" Visibility="Collapsed" />
-            <TextBlock x:Name="TextBlockMeasurementRefreshInterval" Width="Auto"/>                
+            <TextBlock x:Name="TextBlockMeasurementRefreshInterval" Width="Auto" Visibility="Collapsed" />
             <TextBlock Text="{Binding Path=DataContext.LastRefresh, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}}" />
         </StackPanel>
 

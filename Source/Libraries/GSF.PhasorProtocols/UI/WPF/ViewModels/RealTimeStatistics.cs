@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -117,7 +118,6 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             : base(0, autoSave)
         {
             m_statisticDataRefreshInterval = refreshInterval;
-            InitializeUnsynchronizedSubscription();
             m_restartConnectionCycle = true;
 
             Load();
@@ -208,12 +208,10 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
         private void m_unsynchronizedSubscriber_ProcessException(object sender, EventArgs<Exception> e)
         {
-
         }
 
         private void m_unsynchronizedSubscriber_StatusMessage(object sender, EventArgs<string> e)
         {
-
         }
 
         private void InitializeUnsynchronizedSubscription()
@@ -336,6 +334,8 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
                 if (m_allSignalIDs.Length > 0)
                     m_allSignalIDs = m_allSignalIDs.Substring(0, m_allSignalIDs.Length - 1);
+
+                InitializeUnsynchronizedSubscription();
             }
             catch (Exception ex)
             {
