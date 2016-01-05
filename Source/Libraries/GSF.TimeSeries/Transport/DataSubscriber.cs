@@ -3312,6 +3312,8 @@ namespace GSF.TimeSeries.Transport
         /// </remarks>
         protected virtual void SynchronizeMetadata()
         {
+            bool dataMonitoringEnabled = false;
+
             // TODO: This function is complex and very closely tied to the current time-series data schema - perhaps it should be moved outside this class and referenced
             // TODO: as a delegate that can be assigned and called to allow other schemas as well. DataPublisher is already very flexible in what data it can deliver.
             try
@@ -3327,8 +3329,6 @@ namespace GSF.TimeSeries.Transport
                     OnStatusMessage("WARNING: Meta-data synchronization was not performed, deserialized dataset was empty.");
                     return;
                 }
-
-                bool dataMonitoringEnabled = false;
 
                 // Reset data stream monitor while meta-data synchronization is in progress
                 if ((object)m_dataStreamMonitor != null && m_dataStreamMonitor.Enabled)
@@ -3863,14 +3863,16 @@ namespace GSF.TimeSeries.Transport
 
                 // Send notification that system configuration has changed
                 OnConfigurationChanged();
-
-                // Restart data stream monitor after meta-data synchronization if it was originally enabled
-                if (dataMonitoringEnabled && (object)m_dataStreamMonitor != null)
-                    m_dataStreamMonitor.Enabled = true;
             }
             catch (Exception ex)
             {
                 OnProcessException(new InvalidOperationException("Failed to synchronize meta-data to local cache: " + ex.Message, ex));
+            }
+            finally
+            {
+                // Restart data stream monitor after meta-data synchronization if it was originally enabled
+                if (dataMonitoringEnabled && (object)m_dataStreamMonitor != null)
+                    m_dataStreamMonitor.Enabled = true;
             }
         }
 
@@ -4123,6 +4125,7 @@ namespace GSF.TimeSeries.Transport
                     }
 
                     m_statisticsHelpers = new List<DeviceStatisticsHelper<SubscribedDevice>>();
+                    m_subscribedDevicesLookup = new Dictionary<Guid, DeviceStatisticsHelper<SubscribedDevice>>();
                 }
                 else
                 {
@@ -4214,6 +4217,9 @@ namespace GSF.TimeSeries.Transport
                 {
                     foreach (DeviceStatisticsHelper<SubscribedDevice> statisticsHelper in m_statisticsHelpers)
                         statisticsHelper.Device.Dispose();
+
+                    m_statisticsHelpers = new List<DeviceStatisticsHelper<SubscribedDevice>>();
+                    m_subscribedDevicesLookup = new Dictionary<Guid, DeviceStatisticsHelper<SubscribedDevice>>();
                 }
             }
             catch (Exception ex)
