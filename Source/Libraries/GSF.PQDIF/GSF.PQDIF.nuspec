@@ -43,6 +43,10 @@
     <dependencies>
       <dependency id="GSF.Core" version="$version$" />
     </dependencies>
+    <references>
+      <reference file="Ionic.Zlib.dll" />
+      <reference file="GSF.PQDIF.dll" />
+    </references>
   </metadata>
   
   <!--
@@ -61,5 +65,6 @@
   <files>
     <file src="TagDefinitions.xml" target="build" />
     <file src="GSF.PQDIF.targets" target="build" />
+    <file src="..\..\Dependencies\DotNetZip\Ionic.Zlib.dll" target="lib/net46" />
   </files>
 </package>
