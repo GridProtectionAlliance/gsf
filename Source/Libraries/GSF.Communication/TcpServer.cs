@@ -547,6 +547,7 @@ namespace GSF.Communication
         public override void Stop()
         {
             SocketAsyncEventArgs acceptArgs = m_acceptArgs;
+
             m_acceptArgs = null;
 
             if (CurrentState == ServerState.Running)
@@ -555,7 +556,7 @@ namespace GSF.Communication
                 m_tcpServer.Close();    // Stop accepting new connections.
 
                 // Clean up accept args.
-                acceptArgs.Dispose();
+                acceptArgs?.Dispose();
 
                 OnServerStopped();
             }
@@ -798,27 +799,33 @@ namespace GSF.Communication
         private void ProcessAccept()
         {
             TransportProvider<Socket> client = new TransportProvider<Socket>();
+            SocketAsyncEventArgs acceptArgs = null;
             SocketAsyncEventArgs receiveArgs = null;
             WindowsPrincipal clientPrincipal = null;
             TcpClientInfo clientInfo;
 
             try
             {
+                acceptArgs = m_acceptArgs;
+
                 if (CurrentState == ServerState.NotRunning)
                     return;
 
-                if (m_acceptArgs.SocketError != SocketError.Success)
+                if ((object)acceptArgs == null)
+                    return;
+
+                if (acceptArgs.SocketError != SocketError.Success)
                 {
                     // Error is unrecoverable.
                     // We need to make sure to restart the
                     // server before we throw the error.
-                    SocketError error = m_acceptArgs.SocketError;
+                    SocketError error = acceptArgs.SocketError;
                     ThreadPool.QueueUserWorkItem(state => ReStart());
                     throw new SocketException((int)error);
                 }
 
                 // Process the newly connected client.
-                client.Provider = m_acceptArgs.AcceptSocket;
+                client.Provider = acceptArgs.AcceptSocket;
                 client.Provider.ReceiveBufferSize = ReceiveBufferSize;
 
                 // Set up SocketAsyncEventArgs for receive operations.
@@ -826,9 +833,9 @@ namespace GSF.Communication
                 receiveArgs.Completed += ReceiveHandler;
 
                 // Return to accepting new connections.
-                m_acceptArgs.AcceptSocket = null;
+                acceptArgs.AcceptSocket = null;
 
-                if (!m_tcpServer.AcceptAsync(m_acceptArgs))
+                if (!m_tcpServer.AcceptAsync(acceptArgs))
                 {
                     ThreadPool.QueueUserWorkItem(state => ProcessAccept());
                 }
@@ -925,6 +932,10 @@ namespace GSF.Communication
 
                     ReceivePayloadAsync(client, receiveArgs);
                 }
+            }
+            catch (ObjectDisposedException)
+            {
+                // m_acceptArgs may be disposed while in the middle of accepting a connection
             }
             catch (Exception ex)
             {

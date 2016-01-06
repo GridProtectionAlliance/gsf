@@ -780,6 +780,7 @@ namespace GSF.Communication
         public override void Stop()
         {
             SocketAsyncEventArgs acceptArgs = m_acceptArgs;
+
             m_acceptArgs = null;
 
             if (CurrentState == ServerState.Running)
@@ -788,7 +789,7 @@ namespace GSF.Communication
                 m_tlsServer.Close();    // Stop accepting new connections.
 
                 // Clean up accept args.
-                acceptArgs.Dispose();
+                acceptArgs?.Dispose();
 
                 OnServerStopped();
             }
@@ -994,26 +995,32 @@ namespace GSF.Communication
         private void ProcessAccept()
         {
             TransportProvider<TlsSocket> client = new TransportProvider<TlsSocket>();
+            SocketAsyncEventArgs acceptArgs = null;
             IPEndPoint remoteEndPoint = null;
             NetworkStream netStream;
 
             try
             {
+                acceptArgs = m_acceptArgs;
+
                 if (CurrentState == ServerState.NotRunning)
                     return;
 
-                if (m_acceptArgs.SocketError != SocketError.Success)
+                if ((object)acceptArgs == null)
+                    return;
+
+                if (acceptArgs.SocketError != SocketError.Success)
                 {
                     // Error is unrecoverable.
                     // We need to make sure to restart the
                     // server before we throw the error.
-                    SocketError error = m_acceptArgs.SocketError;
+                    SocketError error = acceptArgs.SocketError;
                     ThreadPool.QueueUserWorkItem(state => ReStart());
                     throw new SocketException((int)error);
                 }
 
                 // Get the remote end point in case we need to display useful error messages
-                remoteEndPoint = m_acceptArgs.AcceptSocket.RemoteEndPoint as IPEndPoint;
+                remoteEndPoint = acceptArgs.AcceptSocket.RemoteEndPoint as IPEndPoint;
 
                 if (MaxClientConnections != -1 && ClientIDs.Length >= MaxClientConnections)
                 {
@@ -1024,11 +1031,11 @@ namespace GSF.Communication
                 {
                     // Process the newly connected client.
                     LoadTrustedCertificates();
-                    netStream = new NetworkStream(m_acceptArgs.AcceptSocket);
+                    netStream = new NetworkStream(acceptArgs.AcceptSocket);
 
                     client.Provider = new TlsSocket
                     {
-                        Socket = m_acceptArgs.AcceptSocket,
+                        Socket = acceptArgs.AcceptSocket,
                         SslStream = new SslStream(netStream, false, m_remoteCertificateValidationCallback ?? CertificateChecker.ValidateRemoteCertificate, m_localCertificateSelectionCallback)
                     };
 
@@ -1037,12 +1044,16 @@ namespace GSF.Communication
                 }
 
                 // Return to accepting new connections.
-                m_acceptArgs.AcceptSocket = null;
+                acceptArgs.AcceptSocket = null;
 
-                if (!m_tlsServer.AcceptAsync(m_acceptArgs))
+                if (!m_tlsServer.AcceptAsync(acceptArgs))
                 {
                     ThreadPool.QueueUserWorkItem(state => ProcessAccept());
                 }
+            }
+            catch (ObjectDisposedException)
+            {
+                // m_acceptArgs may be disposed while in the middle of accepting a connection
             }
             catch (Exception ex)
             {
