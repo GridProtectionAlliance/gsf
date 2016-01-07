@@ -542,11 +542,24 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
         private void ButtonMeasurement_Click(object sender, RoutedEventArgs e)
         {
-            Measurement measurement = Measurement.GetMeasurement(null, "WHERE SignalReference = '" + ((Button)sender).Content + "'");
+            DependencyObject obj = sender as DependencyObject;
 
-            if (measurement.DeviceID.HasValue)
+            TreeViewItem item;
+            RealTimeMeasurement realTimeMeasurement;
+            Measurement measurement;
+
+            PhasorMeasurementUserControl phasorMeasurementUserControl;
+
+            while ((object)obj != null && obj.GetType() != typeof(TreeViewItem))
+                obj = VisualTreeHelper.GetParent(obj);
+
+            item = (TreeViewItem)obj;
+            realTimeMeasurement = (RealTimeMeasurement)item?.DataContext;
+            measurement = Measurement.GetMeasurement(null, $"WHERE SignalReference = '{realTimeMeasurement?.SignalReference}'");
+
+            if ((object)measurement != null && measurement.DeviceID.HasValue)
             {
-                PhasorMeasurementUserControl phasorMeasurementUserControl = CommonFunctions.LoadUserControl("Manage Measurements for " + measurement.DeviceAcronym, typeof(PhasorMeasurementUserControl), (int)measurement.DeviceID) as PhasorMeasurementUserControl;
+                phasorMeasurementUserControl = CommonFunctions.LoadUserControl("Manage Measurements for " + measurement.DeviceAcronym, typeof(PhasorMeasurementUserControl), (int)measurement.DeviceID) as PhasorMeasurementUserControl;
 
                 if (phasorMeasurementUserControl != null)
                     ((PhasorMeasurements)phasorMeasurementUserControl.DataContext).CurrentItem = measurement;
