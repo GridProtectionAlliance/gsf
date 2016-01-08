@@ -250,7 +250,7 @@ namespace GSF.Communication
             m_maxSendQueueSize = DefaultMaxSendQueueSize;
             m_clientInfoLookup = new ConcurrentDictionary<Guid, TcpClientInfo>();
 
-            m_acceptHandler = (sender, args) => ProcessAccept();
+            m_acceptHandler = (sender, args) => ProcessAccept(args);
             m_sendHandler = (sender, args) => ProcessSend(args);
             m_receivePayloadAwareHandler = (sender, args) => ProcessReceivePayloadAware(args);
             m_receivePayloadUnawareHandler = (sender, args) => ProcessReceivePayloadUnaware(args);
@@ -607,7 +607,7 @@ namespace GSF.Communication
                 m_acceptArgs.Completed += m_acceptHandler;
 
                 if (!m_tcpServer.AcceptAsync(m_acceptArgs))
-                    ThreadPool.QueueUserWorkItem(state => ProcessAccept());
+                    ThreadPool.QueueUserWorkItem(state => ProcessAccept((SocketAsyncEventArgs)state), m_acceptArgs);
 
                 // Notify that the server has been started successfully.
                 OnServerStarted();
@@ -796,22 +796,22 @@ namespace GSF.Communication
         /// <summary>
         /// Callback method for asynchronous accept operation.
         /// </summary>
-        private void ProcessAccept()
+        private void ProcessAccept(SocketAsyncEventArgs acceptArgs)
         {
             TransportProvider<Socket> client = new TransportProvider<Socket>();
-            SocketAsyncEventArgs acceptArgs = null;
             SocketAsyncEventArgs receiveArgs = null;
             WindowsPrincipal clientPrincipal = null;
             TcpClientInfo clientInfo;
 
             try
             {
-                acceptArgs = m_acceptArgs;
-
                 if (CurrentState == ServerState.NotRunning)
                     return;
 
-                if ((object)acceptArgs == null)
+                // If acceptArgs was disposed, m_acceptArgs will either
+                // be null or another instance of SocketAsyncEventArgs.
+                // This check will tell us whether it's been disposed.
+                if ((object)acceptArgs != m_acceptArgs)
                     return;
 
                 if (acceptArgs.SocketError != SocketError.Success)
@@ -837,7 +837,7 @@ namespace GSF.Communication
 
                 if (!m_tcpServer.AcceptAsync(acceptArgs))
                 {
-                    ThreadPool.QueueUserWorkItem(state => ProcessAccept());
+                    ThreadPool.QueueUserWorkItem(state => ProcessAccept(acceptArgs));
                 }
 
 #if !MONO

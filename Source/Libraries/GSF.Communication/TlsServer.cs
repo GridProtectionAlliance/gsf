@@ -214,7 +214,7 @@ namespace GSF.Communication
             m_maxSendQueueSize = DefaultMaxSendQueueSize;
             m_clientInfoLookup = new ConcurrentDictionary<Guid, TlsClientInfo>();
 
-            m_acceptHandler = (sender, args) => ProcessAccept();
+            m_acceptHandler = (sender, args) => ProcessAccept(args);
         }
 
         /// <summary>
@@ -831,7 +831,7 @@ namespace GSF.Communication
                 m_acceptArgs.Completed += m_acceptHandler;
 
                 if (!m_tlsServer.AcceptAsync(m_acceptArgs))
-                    ThreadPool.QueueUserWorkItem(state => ProcessAccept());
+                    ThreadPool.QueueUserWorkItem(state => ProcessAccept((SocketAsyncEventArgs)state), m_acceptArgs);
 
                 // Notify that the server has been started successfully.
                 OnServerStarted();
@@ -992,21 +992,21 @@ namespace GSF.Communication
         /// <summary>
         /// Callback method for asynchronous accept operation.
         /// </summary>
-        private void ProcessAccept()
+        private void ProcessAccept(SocketAsyncEventArgs acceptArgs)
         {
             TransportProvider<TlsSocket> client = new TransportProvider<TlsSocket>();
-            SocketAsyncEventArgs acceptArgs = null;
             IPEndPoint remoteEndPoint = null;
             NetworkStream netStream;
 
             try
             {
-                acceptArgs = m_acceptArgs;
-
                 if (CurrentState == ServerState.NotRunning)
                     return;
 
-                if ((object)acceptArgs == null)
+                // If acceptArgs was disposed, m_acceptArgs will either
+                // be null or another instance of SocketAsyncEventArgs.
+                // This check will tell us whether it's been disposed.
+                if ((object)acceptArgs != m_acceptArgs)
                     return;
 
                 if (acceptArgs.SocketError != SocketError.Success)
@@ -1048,7 +1048,7 @@ namespace GSF.Communication
 
                 if (!m_tlsServer.AcceptAsync(acceptArgs))
                 {
-                    ThreadPool.QueueUserWorkItem(state => ProcessAccept());
+                    ThreadPool.QueueUserWorkItem(state => ProcessAccept(acceptArgs));
                 }
             }
             catch (ObjectDisposedException)
