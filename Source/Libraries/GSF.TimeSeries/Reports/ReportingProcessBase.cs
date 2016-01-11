@@ -371,6 +371,9 @@ namespace GSF.TimeSeries.Reports
         /// <param name="emailReport">Flag that determines if report should be e-mailed, if enabled.</param>
         public void GenerateReport(DateTime reportDate, bool emailReport)
         {
+            // Align reportDate with the top of the day before using it with the report generation queue
+            reportDate = reportDate.AddTicks(-(reportDate.Ticks % TimeSpan.TicksPerDay));
+
             // ToArray is a thread-safe operation on ConcurrentQueue whereas using an enumerator
             // directly on a ConcurrentQueue can cause collection modified errors while iterating
             if (m_reportGenerationQueue.ToArray().Count(tuple => tuple.Item1 == reportDate) == 0)
