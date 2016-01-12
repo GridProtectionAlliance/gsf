@@ -29,12 +29,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Management;
+using System.Security;
 using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
 using GSF.Configuration;
 using GSF.Console;
 using GSF.IO;
+using GSF.Security.Cryptography;
 using GSF.Threading;
 
 namespace GSF.TimeSeries.Reports
@@ -61,6 +63,8 @@ namespace GSF.TimeSeries.Reports
         private string m_smtpServer;
         private string m_fromAddress;
         private string m_toAddresses;
+        private string m_smtpUsername;
+        private SecureString m_smtpPassword;
         private long m_generatedReports;
         private DateTime m_lastReportGenerationTime;
 
@@ -288,6 +292,51 @@ namespace GSF.TimeSeries.Reports
         }
 
         /// <summary>
+        /// Gets or sets the username used to authenticate to the SMTP server.
+        /// </summary>
+        public string SmtpUsername
+        {
+            get
+            {
+                return m_smtpUsername;
+            }
+            set
+            {
+                m_smtpUsername = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the password used to authenticate to the SMTP server.
+        /// </summary>
+        public string SmtpPassword
+        {
+            get
+            {
+                return m_smtpPassword.ToUnsecureString();
+            }
+            set
+            {
+                m_smtpPassword = value.ToSecureString();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the password used to authenticate to the SMTP server as a secure string.
+        /// </summary>
+        public SecureString SmtpSecurePassword
+        {
+            get
+            {
+                return m_smtpPassword;
+            }
+            set
+            {
+                m_smtpPassword = value;
+            }
+        }
+
+        /// <summary>
         /// Gets the current status details about reporting process.
         /// </summary>
         public virtual string Status
@@ -322,6 +371,10 @@ namespace GSF.TimeSeries.Reports
                     status.AppendFormat("              From address: {0}", FromAddress ?? "undefined");
                     status.AppendLine();
                     status.AppendFormat("              To addresses: {0}", ToAddresses ?? "undefined");
+                    status.AppendLine();
+                    status.AppendFormat("             SMTP username: {0}", SmtpUsername ?? "undefined");
+                    status.AppendLine();
+                    status.AppendFormat("             SMTP password: {0}", new string('*', SmtpSecurePassword?.Length ?? 0));
                     status.AppendLine();
                 }
 
@@ -428,6 +481,8 @@ namespace GSF.TimeSeries.Reports
             settings.Add("SmtpServer", m_smtpServer, "The SMTP relay server from which to send e-mails.");
             settings.Add("FromAddress", m_fromAddress, "The from address for the report e-mails.");
             settings.Add("ToAddresses", m_toAddresses, "Comma separated list of destination addresses for the report e-mails.");
+            settings.Add("SmtpUsername", m_smtpUsername, "Username to authenticate to the SMTP server.");
+            settings.Add("SmtpPassword", m_smtpPassword, "Password to authenticate to the SMTP server.");
 
             ArchiveFilePath = settings["ArchiveFilePath"].ValueAs(m_archiveFilePath);
             ReportLocation = settings["ReportLocation"].ValueAs(m_reportLocation);
@@ -438,6 +493,8 @@ namespace GSF.TimeSeries.Reports
             SmtpServer = settings["SmtpServer"].ValueAs(m_smtpServer);
             FromAddress = settings["FromAddress"].ValueAs(m_fromAddress);
             ToAddresses = settings["ToAddresses"].ValueAs(m_toAddresses);
+            SmtpUsername = settings["SmtpUsername"].ValueAs(m_smtpUsername);
+            SmtpPassword = settings["SmtpPassword"].ValueAs(string.Empty);
         }
 
         /// <summary>
@@ -464,6 +521,8 @@ namespace GSF.TimeSeries.Reports
             settings["SmtpServer", true].Update(m_smtpServer);
             settings["FromAddress", true].Update(m_fromAddress);
             settings["ToAddresses", true].Update(m_toAddresses);
+            settings["SmtpUsername", true].Update(m_smtpUsername);
+            settings["SmtpPassword", true].Update(SmtpPassword);
             config.Save();
         }
 
@@ -534,6 +593,8 @@ namespace GSF.TimeSeries.Reports
         /// <param name="emailReport">Flag that determines if report should be e-mailed, if enabled.</param>
         public string GetArguments(DateTime reportDate, bool emailReport)
         {
+            const string CryptoKey = "0679d9ae-aca5-4702-a3f5-604415096987";
+
             string arguments = string.Format(
                 "{0} " +
                 "--reportDate=\" {1:yyyy-MM-dd} \"",
@@ -545,11 +606,15 @@ namespace GSF.TimeSeries.Reports
                     "{0} " +
                     "--smtpServer=\" {1} \" " +
                     "--fromAddress=\" {2} \" " +
-                    "--toAddresses=\" {3} \"",
+                    "--toAddresses=\" {3} \" " +
+                    "--username=\" {4} \" " +
+                    "--password=\" {5} \"",
                     arguments,
                     SmtpServer,
                     FromAddress,
-                    ToAddresses);
+                    ToAddresses,
+                    SmtpUsername,
+                    SmtpPassword.Encrypt(CryptoKey, CipherStrength.Aes256));
 
             return arguments;
         }

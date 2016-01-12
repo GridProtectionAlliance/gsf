@@ -249,6 +249,9 @@ namespace GSF.Net.Smtp
             }
             set
             {
+                string[] split;
+                int port;
+
                 // This is a required field.
                 if (string.IsNullOrEmpty(value))
                     throw new ArgumentNullException("value");
@@ -260,7 +263,13 @@ namespace GSF.Net.Smtp
 #endif
 
                 // Instantiate new client.
-                m_smtpClient = new SmtpClient(value);
+                split = value.Split(':');
+
+                if (split.Length == 2 && int.TryParse(split[1], out port))
+                    m_smtpClient = new SmtpClient(split[0], port);
+                else
+                    m_smtpClient = new SmtpClient(value);
+
                 ApplySecuritySettings();
             }
         }
