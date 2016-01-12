@@ -248,29 +248,33 @@ namespace GSF.Historian.Files
         {
             List<DataPointScanner> dataPointScanners = new List<DataPointScanner>();
 
-            TimeTag startTime = m_startTime;
-            int resumeFromHistorianID = 0;
-            bool includeStartTime = true;
-
-            // Set up parameters needed to properly resume a query after rollover
-            if ((object)m_resumeFrom != null)
+            if (m_historianIDs != null && m_historianIDs.Any())
             {
-                resumeFromHistorianID = m_resumeFrom.HistorianID;
-                startTime = m_resumeFrom.Time;
-                includeStartTime = false;
-            }
+                TimeTag startTime = m_startTime ?? TimeTag.MinValue;
+                TimeTag endTime = m_endTime ?? TimeTag.MaxValue;
+                int resumeFromHistorianID = 0;
+                bool includeStartTime = true;
 
-            // Create data point scanners for each historian ID
-            List<int> historianIDs = m_historianIDs.ToList();
+                // Set up parameters needed to properly resume a query after rollover
+                if ((object)m_resumeFrom != null)
+                {
+                    resumeFromHistorianID = m_resumeFrom.HistorianID;
+                    startTime = m_resumeFrom.Time ?? startTime;
+                    includeStartTime = false;
+                }
 
-            historianIDs.Sort();
+                // Create data point scanners for each historian ID
+                List<int> historianIDs = m_historianIDs.ToList();
 
-            for (int i = 0; i < historianIDs.Count; i++)
-            {
-                dataPointScanners.Add(new DataPointScanner(m_fileAllocationTable, historianIDs[i], startTime, m_endTime, includeStartTime, m_dataReadExceptionHandler));
+                historianIDs.Sort();
 
-                if (historianIDs[i] == resumeFromHistorianID)
-                    includeStartTime = true;
+                foreach (int historianID in historianIDs)
+                {
+                    dataPointScanners.Add(new DataPointScanner(m_fileAllocationTable, historianID, startTime, endTime, includeStartTime, m_dataReadExceptionHandler));
+
+                    if (historianID == resumeFromHistorianID)
+                        includeStartTime = true;
+                }
             }
 
             return dataPointScanners;
