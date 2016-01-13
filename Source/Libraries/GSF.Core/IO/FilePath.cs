@@ -54,6 +54,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -92,6 +93,7 @@ namespace GSF.IO
         private const int RESOURCETYPE_DISK = 0x1;
 
         // Fields
+        private static readonly string s_directorySeparatorCharPattern;
         private static readonly string s_fileNameCharPattern;
 
         #endregion
@@ -100,19 +102,28 @@ namespace GSF.IO
 
         static FilePath()
         {
-            StringBuilder pattern = new StringBuilder();
+            char[] directorySeparatorChars =
+            {
+                Path.DirectorySeparatorChar,
+                Path.AltDirectorySeparatorChar
+            };
+
+            char[] encodedInvalidFileNameChars = Path.GetInvalidFileNameChars()
+                .SelectMany(c => c.RegexEncode())
+                .ToArray();
+
+            char[] encodedDirectorySeparatorChars = directorySeparatorChars
+                .Distinct()
+                .SelectMany(c => c.RegexEncode())
+                .ToArray();
+
+            // Defines a regular expression pattern for a valid directory separator character.
+            s_directorySeparatorCharPattern = $"[{new string(encodedDirectorySeparatorChars)}]";
 
             // Defines a regular expression pattern for a valid file name character. We do this by
             // allowing any characters except those that would not be valid as part of a filename.
             // This essentially builds the "?" wildcard pattern match.
-            pattern.Append("[^");
-
-            foreach (char c in Path.GetInvalidFileNameChars())
-                pattern.Append(c.RegexEncode());
-
-            pattern.Append("]");
-
-            s_fileNameCharPattern = pattern.ToString();
+            s_fileNameCharPattern = $"[^{new string(encodedInvalidFileNameChars)}]";
         }
 
         #endregion
@@ -178,6 +189,18 @@ namespace GSF.IO
         /// <param name="fileName">The file name to be tested against the specified file specs for a match.</param>
         /// <param name="ignoreCase"><c>true</c> to specify a case-insensitive match; otherwise <c>false</c>.</param>
         /// <returns><c>true</c> if the specified file name matches any of the given file specs; otherwise <c>false</c>.</returns>
+        /// <remarks>
+        /// The syntax for <paramref name="fileSpecs"/> adheres to the following rules:
+        /// 
+        /// <ul>
+        /// <li>Either '\' or '/' (as defined by <see cref="Path.DirectorySeparatorChar"/> and <see cref="Path.AltDirectorySeparatorChar"/>) can match the other.</li>
+        /// <li>A single '\' or '/' at the beginning of the pattern matches any valid path root (such as "C:\" or "\\server\share").</li>
+        /// <li>A '?' matches a single character which would be valid in a file name (as defined by <see cref="Path.GetInvalidFileNameChars"/>).</li>
+        /// <li>A '*' matches any number of characters which would be valid in a file name.</li>
+        /// <li>A sequence of "**\" or "**/" matches any number of sequential directories.</li>
+        /// <li>Any other character matches itself.</li>
+        /// </ul>
+        /// </remarks>
         public static bool IsFilePatternMatch(string[] fileSpecs, string fileName, bool ignoreCase)
         {
             foreach (string fileSpec in fileSpecs)
@@ -196,8 +219,34 @@ namespace GSF.IO
         /// <param name="fileName">The file name to be tested against the specified file spec for a match.</param>
         /// <param name="ignoreCase"><c>true</c> to specify a case-insensitive match; otherwise <c>false</c>.</param>
         /// <returns><c>true</c> if the specified file name matches the given file spec; otherwise <c>false</c>.</returns>
+        /// <remarks>
+        /// The syntax for <paramref name="fileSpec"/> adheres to the following rules:
+        /// 
+        /// <ul>
+        /// <li>Either '\' or '/' (as defined by <see cref="Path.DirectorySeparatorChar"/> and <see cref="Path.AltDirectorySeparatorChar"/>) can match the other.</li>
+        /// <li>A single '\' or '/' at the beginning of the pattern matches any valid path root (such as "C:\" or "\\server\share").</li>
+        /// <li>A '?' matches a single character which would be valid in a file name (as defined by <see cref="Path.GetInvalidFileNameChars"/>).</li>
+        /// <li>A '*' matches any number of characters which would be valid in a file name.</li>
+        /// <li>A sequence of "**\" or "**/" matches any number of sequential directories.</li>
+        /// <li>Any other character matches itself.</li>
+        /// </ul>
+        /// </remarks>
         public static bool IsFilePatternMatch(string fileSpec, string fileName, bool ignoreCase)
         {
+            // Define regular expression patterns for the three possible sequences that can match the path root.
+            string recursiveDirPattern = $"{(Regex.Escape("**"))}{s_directorySeparatorCharPattern}";
+            string pathRootPattern = string.Format("({0}[^{0}]|{0}$)", Regex.Escape(Path.DirectorySeparatorChar.ToString()));
+            string altPathRootPattern = string.Format("({0}[^{0}]|{0}$)", Regex.Escape(Path.AltDirectorySeparatorChar.ToString()));
+
+            // If any of the three patterns are found at the start of fileSpec and the fileName refers to a rooted path,
+            // remove the path root from fileName and then remove all leading directory separator chars from both fileSpec and fileName.
+            if (Regex.IsMatch(fileSpec, $"^({recursiveDirPattern}|{pathRootPattern}|{altPathRootPattern})") && Path.IsPathRooted(fileName))
+            {
+                fileSpec = fileSpec.TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                fileName = Regex.Replace(fileName, $"^{Regex.Escape(Path.GetPathRoot(fileName))}", "").TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            }
+
+            // Use regular expression matching to determine whether fileSpec matches fileName.
             return (new Regex(GetFilePatternRegularExpression(fileSpec), (ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None))).IsMatch(fileName);
         }
 
@@ -365,13 +414,48 @@ namespace GSF.IO
         /// <returns>Regular expression pattern that simulates wildcard matching for filenames.</returns>
         public static string GetFilePatternRegularExpression(string fileSpec)
         {
-            // Replaces wildcard file patterns with their equivalent regular expression.
-            fileSpec = fileSpec.Replace("\\", "\\u005C"); // Backslash in Regex means special sequence. Here, we really want a backslash.
-            fileSpec = fileSpec.Replace(".", "\\u002E");  // Dot in Regex means any character. Here, we really want a dot.
-            fileSpec = fileSpec.Replace("?", s_fileNameCharPattern);
-            fileSpec = fileSpec.Replace("*", "(" + s_fileNameCharPattern + ")*");
+            List<Tuple<string, string>> replacements = new List<Tuple<string, string>>()
+            {
+                // Replaces directory separator characters with their equivalent regular expressions.
+                Tuple.Create($"{s_directorySeparatorCharPattern}+", $"{s_directorySeparatorCharPattern}+"),
+                
+                // Replaces wildcard file patterns with their equivalent regular expression.
+                Tuple.Create(Regex.Escape("?"), s_fileNameCharPattern),
+                Tuple.Create(Regex.Escape("**") + s_directorySeparatorCharPattern, $"({s_fileNameCharPattern}*{s_directorySeparatorCharPattern})*"),
+                Tuple.Create(Regex.Escape("*"), $"{s_fileNameCharPattern}*")
+            };
 
-            return "^" + fileSpec + "$";
+            StringBuilder input;
+            StringBuilder output;
+            Tuple<string, string> replacement;
+            Match match;
+            
+            input = new StringBuilder(fileSpec);
+            output = new StringBuilder();
+
+            while (input.Length > 0)
+            {
+                // Determine if any of the replacement patterns match the input.
+                replacement = replacements.FirstOrDefault(r => Regex.IsMatch(input.ToString(), $"^{r.Item1}"));
+
+                if ((object)replacement != null)
+                {
+                    // If one of the replacement patterns matches the input,
+                    // apply that replacement and write it to the output.
+                    match = Regex.Match(input.ToString(), $"^{replacement.Item1}");
+                    output.Append(Regex.Replace(match.Value, replacement.Item1, replacement.Item2));
+                    input.Remove(0, match.Length);
+                }
+                else
+                {
+                    // If not, move a single character as-is from input to the output.
+                    output.Append(Regex.Escape(input[0].ToString()));
+                    input.Remove(0, 1);
+                }
+            }
+
+            // Return the output string as the regular expression pattern.
+            return "^" + output.ToString() + "$";
         }
 
         /// <summary>
