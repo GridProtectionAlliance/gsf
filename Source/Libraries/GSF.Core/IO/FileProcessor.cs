@@ -119,7 +119,7 @@ namespace GSF.IO
         /// <summary>
         /// Default value for the <see cref="Filter"/> property.
         /// </summary>
-        public const string DefaultFilter = "*";
+        public const string DefaultFilter = @"**\*";
 
         /// <summary>
         /// Default value for the <see cref="TrackChanges"/> property.
@@ -429,9 +429,8 @@ namespace GSF.IO
         // Determines if the given file matches the file processor's filter.
         private bool MatchesFilter(string filePath)
         {
-            string fileName = FilePath.GetFileName(filePath);
             string[] filters = m_filter.Split(Path.PathSeparator);
-            return FilePath.IsFilePatternMatch(filters, fileName, true);
+            return FilePath.IsFilePatternMatch(filters, filePath, true);
         }
 
         // Queues the file for processing.
