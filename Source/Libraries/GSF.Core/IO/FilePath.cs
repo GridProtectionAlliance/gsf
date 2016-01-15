@@ -186,9 +186,10 @@ namespace GSF.IO
         /// Determines whether the specified file name matches any of the given file specs (wildcards are defined as '*' or '?' characters).
         /// </summary>
         /// <param name="fileSpecs">The file specs used for matching the specified file name.</param>
-        /// <param name="fileName">The file name to be tested against the specified file specs for a match.</param>
+        /// <param name="filePath">The file path to be tested against the specified file specs for a match.</param>
         /// <param name="ignoreCase"><c>true</c> to specify a case-insensitive match; otherwise <c>false</c>.</param>
         /// <returns><c>true</c> if the specified file name matches any of the given file specs; otherwise <c>false</c>.</returns>
+        /// <exception cref="ArgumentException"><paramref name="filePath"/> contains one or more of the invalid characters defined in <see cref="Path.GetInvalidPathChars"/>.</exception>
         /// <remarks>
         /// The syntax for <paramref name="fileSpecs"/> adheres to the following rules:
         /// 
@@ -201,11 +202,11 @@ namespace GSF.IO
         /// <li>Any other character matches itself.</li>
         /// </ul>
         /// </remarks>
-        public static bool IsFilePatternMatch(string[] fileSpecs, string fileName, bool ignoreCase)
+        public static bool IsFilePatternMatch(string[] fileSpecs, string filePath, bool ignoreCase)
         {
             foreach (string fileSpec in fileSpecs)
             {
-                if (IsFilePatternMatch(fileSpec, fileName, ignoreCase))
+                if (IsFilePatternMatch(fileSpec, filePath, ignoreCase))
                     return true;
             }
 
@@ -216,9 +217,10 @@ namespace GSF.IO
         /// Determines whether the specified file name matches the given file spec (wildcards are defined as '*' or '?' characters).
         /// </summary>
         /// <param name="fileSpec">The file spec used for matching the specified file name.</param>
-        /// <param name="fileName">The file name to be tested against the specified file spec for a match.</param>
+        /// <param name="filePath">The file path to be tested against the specified file spec for a match.</param>
         /// <param name="ignoreCase"><c>true</c> to specify a case-insensitive match; otherwise <c>false</c>.</param>
         /// <returns><c>true</c> if the specified file name matches the given file spec; otherwise <c>false</c>.</returns>
+        /// <exception cref="ArgumentException"><paramref name="filePath"/> contains one or more of the invalid characters defined in <see cref="Path.GetInvalidPathChars"/>.</exception>
         /// <remarks>
         /// The syntax for <paramref name="fileSpec"/> adheres to the following rules:
         /// 
@@ -231,7 +233,7 @@ namespace GSF.IO
         /// <li>Any other character matches itself.</li>
         /// </ul>
         /// </remarks>
-        public static bool IsFilePatternMatch(string fileSpec, string fileName, bool ignoreCase)
+        public static bool IsFilePatternMatch(string fileSpec, string filePath, bool ignoreCase)
         {
             // Define regular expression patterns for the three possible sequences that can match the path root.
             string recursiveDirPattern = $"{(Regex.Escape("**"))}{s_directorySeparatorCharPattern}";
@@ -240,14 +242,14 @@ namespace GSF.IO
 
             // If any of the three patterns are found at the start of fileSpec and the fileName refers to a rooted path,
             // remove the path root from fileName and then remove all leading directory separator chars from both fileSpec and fileName.
-            if (Regex.IsMatch(fileSpec, $"^({recursiveDirPattern}|{pathRootPattern}|{altPathRootPattern})") && Path.IsPathRooted(fileName))
+            if (Regex.IsMatch(fileSpec, $"^({recursiveDirPattern}|{pathRootPattern}|{altPathRootPattern})") && Path.IsPathRooted(filePath))
             {
                 fileSpec = fileSpec.TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-                fileName = Regex.Replace(fileName, $"^{Regex.Escape(Path.GetPathRoot(fileName))}", "").TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                filePath = Regex.Replace(filePath, $"^{Regex.Escape(Path.GetPathRoot(filePath))}", "").TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             }
 
             // Use regular expression matching to determine whether fileSpec matches fileName.
-            return (new Regex(GetFilePatternRegularExpression(fileSpec), (ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None))).IsMatch(fileName);
+            return (new Regex(GetFilePatternRegularExpression(fileSpec), (ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None))).IsMatch(filePath);
         }
 
         /// <summary>
