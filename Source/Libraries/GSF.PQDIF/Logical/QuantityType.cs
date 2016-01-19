@@ -142,8 +142,8 @@ namespace GSF.PQDIF.Logical
 
                 if (s_quantityTypeTag != quantityTypeTag)
                 {
-                    s_quantityTypeTag = quantityTypeTag;
                     s_quantityTypeLookup = quantityTypeTag.ValidIdentifiers.ToDictionary(id => Guid.Parse(id.Value));
+                    s_quantityTypeTag = quantityTypeTag;
                 }
 
                 return s_quantityTypeLookup;
