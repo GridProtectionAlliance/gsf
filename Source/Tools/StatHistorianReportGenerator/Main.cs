@@ -28,20 +28,6 @@ namespace StatHistorianReportGenerator
 {
     public partial class Main : Form
     {
-        #region [ Members ]
-
-        // Nested Types
-
-        // Constants
-
-        // Delegates
-
-        // Events
-
-        // Fields
-
-        #endregion
-
         #region [ Constructors ]
 
         public Main()
@@ -51,15 +37,11 @@ namespace StatHistorianReportGenerator
 
         #endregion
 
-        #region [ Properties ]
-
-        #endregion
-
         #region [ Methods ]
 
         private void Main_Load(object sender, EventArgs e)
         {
-            ReportDateDateTimePicker.Value = DateTime.Parse(DateTime.Now.ToString("yyyy-MM-dd"));
+            ReportDateDateTimePicker.Value = DateTime.UtcNow.Date;
         }
 
         private void GenerateReportButton_Click(object sender, EventArgs e)
@@ -79,7 +61,7 @@ namespace StatHistorianReportGenerator
                     {
                         TitleText = TitleTextTextBox.Text,
                         CompanyText = CompanyTextTextBox.Text,
-                        ReportDate = ReportDateDateTimePicker.Value,
+                        ReportDate = new DateTime(ReportDateDateTimePicker.Value.Ticks, DateTimeKind.Utc),
                         Level4Alias = Level4AliasTextBox.Text,
                         Level3Alias = Level3AliasTextBox.Text
                     };
@@ -94,22 +76,6 @@ namespace StatHistorianReportGenerator
                 }
             }
         }
-
-        #endregion
-
-        #region [ Operators ]
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Fields
-
-        // Static Constructor
-
-        // Static Properties
-
-        // Static Methods
 
         #endregion
     }
