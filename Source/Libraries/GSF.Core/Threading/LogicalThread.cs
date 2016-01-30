@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace GSF.Threading
@@ -153,7 +154,7 @@ namespace GSF.Threading
 
         // Fields
         private LogicalThreadScheduler m_scheduler;
-        private ConcurrentQueue<Action> m_queue;
+        private ConcurrentQueue<Action>[] m_queues;
         private Dictionary<object, object> m_threadLocalStorage;
         private int m_isActive;
 
@@ -167,7 +168,16 @@ namespace GSF.Threading
         /// Creates a new instance of the <see cref="LogicalThread"/> class.
         /// </summary>
         public LogicalThread()
-            : this(DefaultScheduler)
+            : this(1)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="LogicalThread"/> class.
+        /// </summary>
+        /// <param name="priorityLevels">The number of levels of priority supported by this logical thread.</param>
+        public LogicalThread(int priorityLevels)
+            : this(DefaultScheduler, priorityLevels)
         {
         }
 
@@ -175,20 +185,41 @@ namespace GSF.Threading
         /// Creates a new instance of the <see cref="LogicalThread"/> class.
         /// </summary>
         /// <param name="scheduler">The <see cref="LogicalThreadScheduler"/> that created this thread.</param>
-        internal LogicalThread(LogicalThreadScheduler scheduler)
+        /// <param name="priorityLevels">The number of levels of priority supported by this logical thread.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="scheduler"/> is null.</exception>
+        /// <exception cref="ArgumentException"><paramref name="priorityLevels"/> is less than or equal to zero.</exception>
+        internal LogicalThread(LogicalThreadScheduler scheduler, int priorityLevels)
         {
             if ((object)scheduler == null)
-                throw new ArgumentNullException("scheduler");
+                throw new ArgumentNullException(nameof(scheduler));
+
+            if (priorityLevels <= 0)
+                throw new ArgumentException($"A logical thread must have at least one priority level.", nameof(priorityLevels));
 
             m_scheduler = scheduler;
-            m_queue = new ConcurrentQueue<Action>();
+            m_queues = new ConcurrentQueue<Action>[priorityLevels];
             m_threadLocalStorage = new Dictionary<object, object>();
             m_statistics = new LogicalThreadStatistics();
+
+            for (int i = 0; i < m_queues.Length; i++)
+                m_queues[i] = new ConcurrentQueue<Action>();
         }
 
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets the number of levels of priority
+        /// supported by this logical thread.
+        /// </summary>
+        public int PriorityLevels
+        {
+            get
+            {
+                return m_queues.Length;
+            }
+        }
 
         /// <summary>
         /// Gets a flag that indicates whether the logical
@@ -198,7 +229,7 @@ namespace GSF.Threading
         {
             get
             {
-                return !m_queue.IsEmpty;
+                return m_queues.Any(queue => !queue.IsEmpty);
             }
         }
 
@@ -212,13 +243,22 @@ namespace GSF.Threading
         /// <param name="action">The action to be executed on this thread.</param>
         public void Push(Action action)
         {
-            ConcurrentQueue<Action> queue = m_queue;
+            Push(PriorityLevels, action);
+        }
 
-            if ((object)queue != null)
-            {
-                m_queue.Enqueue(action);
-                m_scheduler.SignalItemHandler(this);
-            }
+        /// <summary>
+        /// Pushes an action to the logical thread.
+        /// </summary>
+        /// <param name="priority">The priority the action should be given when executing actions on the thread (higher numbers have higher priority).</param>
+        /// <param name="action">The action to be executed on this thread.</param>
+        /// <exception cref="ArgumentException"><paramref name="priority"/> is outside the range between 1 and <see cref="PriorityLevels"/>.</exception>
+        public void Push(int priority, Action action)
+        {
+            if (priority < 1 || priority > PriorityLevels)
+                throw new ArgumentException($"Priority {priority} is outside the range between 1 and {PriorityLevels}.", nameof(priority));
+
+            m_queues[PriorityLevels - priority].Enqueue(action);
+            m_scheduler.SignalItemHandler(this);
         }
 
         /// <summary>
@@ -228,8 +268,11 @@ namespace GSF.Threading
         {
             Action action;
 
-            while (!m_queue.IsEmpty)
-                m_queue.TryDequeue(out action);
+            foreach (ConcurrentQueue<Action> queue in m_queues)
+            {
+                while (!queue.IsEmpty)
+                    queue.TryDequeue(out action);
+            }
         }
 
         /// <summary>
@@ -250,9 +293,13 @@ namespace GSF.Threading
         {
             Action action;
 
-            return m_queue.TryDequeue(out action)
-                ? action
-                : null;
+            foreach (ConcurrentQueue<Action> queue in m_queues)
+            {
+                if (queue.TryDequeue(out action))
+                    return action;
+            }
+
+            return null;
         }
 
         /// <summary>

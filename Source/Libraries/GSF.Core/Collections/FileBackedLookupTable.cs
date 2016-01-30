@@ -148,6 +148,7 @@ namespace GSF.Collections
 
         private string m_filePath;
         private IEqualityComparer<TKey> m_keyComparer;
+        private int m_fragmentationCount;
 
         private LookupTableType m_lookupTableType;
 
@@ -384,6 +385,9 @@ namespace GSF.Collections
                 m_fileStream.Seek(m_headerNode.EndOfFilePointer, SeekOrigin.Begin);
                 Write(itemNode);
                 Set(lookupPointer, m_headerNode.EndOfFilePointer, count);
+
+                if (itemPointer >= m_headerNode.ItemSectionPointer)
+                    m_fragmentationCount++;
             }
         }
 
@@ -408,6 +412,24 @@ namespace GSF.Collections
 
                 // ReSharper disable once PossibleNullReferenceException
                 m_fileStream.CacheSize = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the number of operations that fragment the
+        /// lookup table that have occurred since the last
+        /// time the lookup table was compacted.
+        /// </summary>
+        /// <remarks>
+        /// This value is not stored in the file and may therefore
+        /// be inaccurate if the lookup table has not been compacted
+        /// since the last time it was opened.
+        /// </remarks>
+        public int FragmentationCount
+        {
+            get
+            {
+                return m_fragmentationCount;
             }
         }
 
@@ -447,7 +469,7 @@ namespace GSF.Collections
                 directory = Path.GetDirectoryName(m_filePath);
 
                 // Attempt to create the directory if it doesn't already exist
-                if ((object)directory != null && !Directory.Exists(directory))
+                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                     Directory.CreateDirectory(directory);
 
                 // Open the file in read/write mode
@@ -629,6 +651,7 @@ namespace GSF.Collections
             if (itemPointer >= m_headerNode.ItemSectionPointer)
             {
                 Delete(lookupPointer, m_headerNode.Count - 1);
+                m_fragmentationCount++;
                 return true;
             }
 
@@ -719,7 +742,10 @@ namespace GSF.Collections
                     mark = m_fileReader.ReadInt32();
 
                     if (mark != 0)
+                    {
                         Delete(lookupPointer, m_headerNode.Count - 1);
+                        m_fragmentationCount++;
+                    }
 
                     lookupPointer += LookupNodeSize;
                 }
@@ -749,7 +775,10 @@ namespace GSF.Collections
                     Read(lookupNode);
 
                     if (lookupNode.ItemPointer >= m_headerNode.ItemSectionPointer && lookupNode.Marker == 0)
+                    {
                         Delete(lookupPointer, m_headerNode.Count - 1);
+                        m_fragmentationCount++;
+                    }
 
                     lookupPointer += LookupNodeSize;
                 }
@@ -863,6 +892,9 @@ namespace GSF.Collections
 
             // Create the new lookup table section
             m_fileStream.SetLength(m_headerNode.ItemSectionPointer);
+
+            // Clearing the lookup table defragments the file
+            m_fragmentationCount = 0;
         }
 
         /// <summary>
@@ -1035,6 +1067,10 @@ namespace GSF.Collections
 
             if (orphan1)
                 Truncate(item1);
+
+            // Set fragmentation count to zero
+            // once the file has been compacted
+            m_fragmentationCount = 0;
         }
 
         /// <summary>
@@ -1050,6 +1086,10 @@ namespace GSF.Collections
                 m_fileWriter = null;
                 m_fileReader = null;
             }
+
+            // Set fragmentation count to
+            // zero when closing the file
+            m_fragmentationCount = 0;
         }
 
         /// <summary>
