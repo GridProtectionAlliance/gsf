@@ -91,7 +91,7 @@ namespace StatHistorianReportGenerator
         {
             m_titleText = "GSF Data Completeness Report";
             m_companyText = "Grid Protection Alliance";
-            m_reportDate = ToDate(DateTime.Now);
+            m_reportDate = DateTime.UtcNow.Date;
             m_level4Threshold = 99.0D;
             m_level3Threshold = 90.0D;
         }
@@ -156,7 +156,7 @@ namespace StatHistorianReportGenerator
             }
             set
             {
-                m_reportDate = ToDate(value);
+                m_reportDate = value.ToUniversalTime().Date;
             }
         }
 
@@ -327,7 +327,7 @@ namespace StatHistorianReportGenerator
                     ArchiveName = "STAT"
                 };
 
-                endTime = m_reportDate.ToUniversalTime() + TimeSpan.FromDays(1);
+                endTime = m_reportDate + TimeSpan.FromDays(1);
                 startTime = endTime - TimeSpan.FromDays(ReportDays);
 
                 // Set up and open the statistics reader
@@ -1145,11 +1145,6 @@ namespace StatHistorianReportGenerator
                 m_level3Alias,
                 m_level4Alias
             };
-        }
-
-        private DateTime ToDate(DateTime dateTime)
-        {
-            return new DateTime(dateTime.Year, dateTime.Month, dateTime.Day);
         }
 
         #endregion

@@ -675,8 +675,8 @@ namespace GSF.PQDIF.Logical
 
                 if (s_quantityCharacteristicTag != quantityCharacteristicTag)
                 {
-                    s_quantityCharacteristicTag = quantityCharacteristicTag;
                     s_quantityCharacteristicLookup = quantityCharacteristicTag.ValidIdentifiers.ToDictionary(id => Guid.Parse(id.Value));
+                    s_quantityCharacteristicTag = quantityCharacteristicTag;
                 }
 
                 return s_quantityCharacteristicLookup;

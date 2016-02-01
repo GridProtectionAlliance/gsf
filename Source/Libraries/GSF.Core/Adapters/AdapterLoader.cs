@@ -58,6 +58,11 @@
 //       to avoid a issue introduced in .NET 4.0 that causes memory leak.
 //  12/13/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  01/29/2016 - Pinal C. Patel
+//       Fixed a bug in ProcessAdapter(string) method that was always replacing the first adapter
+//       in the adapter list instead of the adapter that was modified.
+//       Updated Deserializer.Deserialize() method to get an exclusive lock on the adapter file prior to
+//       processing it.
 //
 //******************************************************************************************************
 
@@ -248,12 +253,16 @@ namespace GSF.Adapters
             {
                 // Attempt binary deserialization.
                 if (adapterFormat == AdapterFileFormat.SerializedBin)
+                {
+                    FilePath.WaitForReadLockExclusive(adapterFile);
                     return Serialization.Deserialize<T>(File.ReadAllBytes(adapterFile), SerializationFormat.Binary);
+                }
 
                 if (adapterFormat != AdapterFileFormat.SerializedXml)
                     throw new NotSupportedException();
 
                 // Attempt XML deserialization.
+                FilePath.WaitForReadLockExclusive(adapterFile);
                 XDocument xml = XDocument.Parse(File.ReadAllText(adapterFile));
 
                 if ((object)xml.Root != null)
@@ -1014,7 +1023,7 @@ namespace GSF.Adapters
                     if (adapterIndex < 0)
                         m_adapters.Add(adapter);    // Add adapter.
                     else
-                        m_adapters[0] = adapter;    // Update adapter.
+                        m_adapters[adapterIndex] = adapter;    // Update adapter.
                 }
             }
             catch (Exception ex)

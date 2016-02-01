@@ -132,7 +132,7 @@ namespace StatHistorianReportGenerator
         {
             m_titleText = "GSF Data Correctness Report";
             m_companyText = "Grid Protection Alliance";
-            m_reportDate = ToDate(DateTime.Now);
+            m_reportDate = DateTime.UtcNow.Date;
         }
 
         #endregion
@@ -195,7 +195,7 @@ namespace StatHistorianReportGenerator
             }
             set
             {
-                m_reportDate = ToDate(value);
+                m_reportDate = value.ToUniversalTime().Date;
             }
         }
 
@@ -1039,11 +1039,6 @@ namespace StatHistorianReportGenerator
             int start = signalReference.IndexOf('!') + 1;
             int end = signalReference.LastIndexOf('!');
             return signalReference.Substring(start, end - start);
-        }
-
-        private DateTime ToDate(DateTime dateTime)
-        {
-            return new DateTime(dateTime.Year, dateTime.Month, dateTime.Day);
         }
 
         #endregion

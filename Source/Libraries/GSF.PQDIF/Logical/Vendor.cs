@@ -221,8 +221,8 @@ namespace GSF.PQDIF.Logical
 
                 if (s_vendorTag != vendorTag)
                 {
-                    s_vendorTag = vendorTag;
                     s_vendorLookup = vendorTag.ValidIdentifiers.ToDictionary(id => Guid.Parse(id.Value));
+                    s_vendorTag = vendorTag;
                 }
 
                 return s_vendorLookup;

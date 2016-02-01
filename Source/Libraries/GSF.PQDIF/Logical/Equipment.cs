@@ -596,8 +596,8 @@ namespace GSF.PQDIF.Logical
 
                 if (s_equipmentTag != equipmentTag)
                 {
-                    s_equipmentTag = equipmentTag;
                     s_equipmentLookup = equipmentTag.ValidIdentifiers.ToDictionary(id => Guid.Parse(id.Value));
+                    s_equipmentTag = equipmentTag;
                 }
 
                 return s_equipmentLookup;

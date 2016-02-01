@@ -425,7 +425,7 @@ namespace GSF.TimeSeries.Reports
         public void GenerateReport(DateTime reportDate, bool emailReport)
         {
             // Align reportDate with the top of the day before using it with the report generation queue
-            reportDate = reportDate.AddTicks(-(reportDate.Ticks % TimeSpan.TicksPerDay));
+            reportDate = reportDate.Date;
 
             // ToArray is a thread-safe operation on ConcurrentQueue whereas using an enumerator
             // directly on a ConcurrentQueue can cause collection modified errors while iterating

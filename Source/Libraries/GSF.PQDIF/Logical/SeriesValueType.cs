@@ -243,8 +243,8 @@ namespace GSF.PQDIF.Logical
 
                 if (s_seriesValueTypeTag != seriesValueTypeTag)
                 {
-                    s_seriesValueTypeTag = seriesValueTypeTag;
                     s_seriesValueTypeLookup = seriesValueTypeTag.ValidIdentifiers.ToDictionary(id => Guid.Parse(id.Value));
+                    s_seriesValueTypeTag = seriesValueTypeTag;
                 }
 
                 return s_seriesValueTypeLookup;

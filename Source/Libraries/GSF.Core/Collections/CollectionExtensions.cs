@@ -592,29 +592,29 @@ namespace GSF.Collections
         /// <returns>Returns the largest item from the enumeration.</returns>
         public static TSource MaxBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector) where TKey : IComparable
         {
-            TSource minItem = default(TSource);
-            TKey minKey, nextKey;
+            TSource maxItem = default(TSource);
+            TKey maxKey, nextKey;
 
             IEnumerator<TSource> enumerator = source.GetEnumerator();
 
             if (enumerator.MoveNext())
             {
-                minItem = enumerator.Current;
-                minKey = keySelector(minItem);
+                maxItem = enumerator.Current;
+                maxKey = keySelector(maxItem);
 
                 while (enumerator.MoveNext())
                 {
                     nextKey = keySelector(enumerator.Current);
 
-                    if (nextKey.CompareTo(minKey) > 0)
+                    if (nextKey.CompareTo(maxKey) > 0)
                     {
-                        minItem = enumerator.Current;
-                        minKey = nextKey;
+                        maxItem = enumerator.Current;
+                        maxKey = nextKey;
                     }
                 }
             }
 
-            return minItem;
+            return maxItem;
         }
 
         /// <summary>Returns the largest item from the enumeration.</summary>
