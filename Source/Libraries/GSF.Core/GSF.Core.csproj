@@ -381,6 +381,7 @@
     <Compile Include="Serialization.cs" />
     <Compile Include="Collections\SettingsCollection.cs" />
     <Compile Include="StringExtensions.cs" />
+    <Compile Include="Threading\CancellationToken.cs" />
     <Compile Include="Threading\InterprocessLock.cs" />
     <Compile Include="Threading\InterprocessReaderWriterLock.cs" />
     <Compile Include="Threading\ISynchronizedOperation.cs" />

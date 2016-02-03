@@ -290,6 +290,24 @@ namespace GSF.Collections
             }
         }
 
+        /// <summary>
+        /// Gets the number of operations that fragment the
+        /// lookup table that have occurred since the last
+        /// time the lookup table was compacted.
+        /// </summary>
+        /// <remarks>
+        /// This value is not stored in the file and may therefore
+        /// be inaccurate if the lookup table has not been compacted
+        /// since the last time it was opened.
+        /// </remarks>
+        public int FragmentationCount
+        {
+            get
+            {
+                return m_lookupTable.FragmentationCount;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]

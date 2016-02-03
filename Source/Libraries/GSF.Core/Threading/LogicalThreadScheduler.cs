@@ -130,7 +130,18 @@ namespace GSF.Threading
         /// <returns>A new logical thread managed by this scheduler.</returns>
         public LogicalThread CreateThread()
         {
-            return new LogicalThread(this);
+            return CreateThread(1);
+        }
+
+        /// <summary>
+        /// Creates a new logical thread whose
+        /// execution is managed by this scheduler.
+        /// </summary>
+        /// <param name="priorityLevels">The number of levels of priority supported by the logical thread.</param>
+        /// <returns>A new logical thread managed by this scheduler.</returns>
+        public LogicalThread CreateThread(int priorityLevels)
+        {
+            return new LogicalThread(this, priorityLevels);
         }
 
         /// <summary>

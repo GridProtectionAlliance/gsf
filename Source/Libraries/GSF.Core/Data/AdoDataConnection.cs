@@ -167,7 +167,7 @@ namespace GSF.Data
         private readonly string m_connectionString;
         private readonly Type m_connectionType;
         private readonly Type m_adapterType;
-        private bool m_disposeConnection;
+        private readonly bool m_disposeConnection;
         private bool m_disposed;
 
         #endregion
@@ -182,7 +182,7 @@ namespace GSF.Data
         public AdoDataConnection(string settingsCategory)
         {
             if (string.IsNullOrWhiteSpace(settingsCategory))
-                throw new ArgumentNullException("settingsCategory", "Parameter cannot be null or empty");
+                throw new ArgumentNullException(nameof(settingsCategory), "Parameter cannot be null or empty");
 
             // Only need to establish data types and load settings once per defined section since they are being loaded from config file
             AdoDataConnection configuredConnection;
@@ -256,10 +256,10 @@ namespace GSF.Data
         public AdoDataConnection(string connectionString, Type connectionType, Type adapterType)
         {
             if (!typeof(IDbConnection).IsAssignableFrom(connectionType))
-                throw new ArgumentException("Connection type must implement the IDbConnection interface", "connectionType");
+                throw new ArgumentException("Connection type must implement the IDbConnection interface", nameof(connectionType));
 
             if (!typeof(IDbDataAdapter).IsAssignableFrom(adapterType))
-                throw new ArgumentException("Adapter type must implement the IDbDataAdapter interface", "adapterType");
+                throw new ArgumentException("Adapter type must implement the IDbDataAdapter interface", nameof(adapterType));
 
             m_connectionString = connectionString;
             m_connectionType = connectionType;
@@ -290,7 +290,7 @@ namespace GSF.Data
         public AdoDataConnection(IDbConnection connection, Type adapterType, bool disposeConnection)
         {
             if (!typeof(IDbDataAdapter).IsAssignableFrom(adapterType))
-                throw new ArgumentException("Adapter type must implement the IDbDataAdapter interface", "adapterType");
+                throw new ArgumentException("Adapter type must implement the IDbDataAdapter interface", nameof(adapterType));
 
             m_connection = connection;
             m_connectionString = connection.ConnectionString;
@@ -304,10 +304,10 @@ namespace GSF.Data
         private AdoDataConnection(string connectionString, string dataProviderString, bool openConnection)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
-                throw new ArgumentNullException("connectionString", "Parameter cannot be null or empty");
+                throw new ArgumentNullException(nameof(connectionString), "Parameter cannot be null or empty");
 
             if (string.IsNullOrWhiteSpace(dataProviderString))
-                throw new ArgumentNullException("dataProviderString", "Parameter cannot be null or empty");
+                throw new ArgumentNullException(nameof(dataProviderString), "Parameter cannot be null or empty");
 
             // Cache connection string as member level variable
             m_connectionString = connectionString;
@@ -372,31 +372,19 @@ namespace GSF.Data
         /// <summary>
         /// Gets an open <see cref="IDbConnection"/> to configured ADO.NET data source.
         /// </summary>
-        public IDbConnection Connection
-        {
-            get
-            {
-                return m_connection;
-            }
-        }
+        public IDbConnection Connection => m_connection;
 
         /// <summary>
         /// Gets the type of data adapter for configured ADO.NET data source.
         /// </summary>
-        public Type AdapterType
-        {
-            get
-            {
-                return m_adapterType;
-            }
-        }
+        public Type AdapterType => m_adapterType;
 
         /// <summary>
         /// Gets or sets the type of the database underlying the <see cref="AdoDataConnection"/>.
         /// </summary>
         /// <remarks>
         /// This value is automatically assigned based on the adapter type specified in the data provider string, however,
-        /// if the database type cannot be determined it will be set to <see cref="GSF.Data.DatabaseType.Other"/>. In this
+        /// if the database type cannot be determined it will be set to <see cref="Data.DatabaseType.Other"/>. In this
         /// case, if you know the behavior of your custom ADO database connection matches that of another defined database
         /// type, you can manually assign the database type to allow for database interaction interoperability.
         /// </remarks>
@@ -411,6 +399,11 @@ namespace GSF.Data
                 m_databaseType = value;
             }
         }
+
+        /// <summary>
+        /// Gets or sets default timeout for <see cref="AdoDataConnection"/> data operations.
+        /// </summary>
+        public int DefaultTimeout { get; set; } = DataExtensions.DefaultTimeoutDuration;
 
         /// <summary>
         /// Gets current UTC date-time in an implementation that is proper for the connected <see cref="AdoDataConnection"/> database type.
@@ -446,57 +439,27 @@ namespace GSF.Data
         /// <summary>
         /// Gets a value to indicate whether source database is Microsoft Access.
         /// </summary>
-        public bool IsJetEngine
-        {
-            get
-            {
-                return m_databaseType == DatabaseType.Access;
-            }
-        }
+        public bool IsJetEngine => m_databaseType == DatabaseType.Access;
 
         /// <summary>
         /// Gets a value to indicate whether source database is Microsoft SQL Server.
         /// </summary>
-        public bool IsSQLServer
-        {
-            get
-            {
-                return m_databaseType == DatabaseType.SQLServer;
-            }
-        }
+        public bool IsSQLServer => m_databaseType == DatabaseType.SQLServer;
 
         /// <summary>
         /// Gets a value to indicate whether source database is MySQL.
         /// </summary>
-        public bool IsMySQL
-        {
-            get
-            {
-                return m_databaseType == DatabaseType.MySQL;
-            }
-        }
+        public bool IsMySQL => m_databaseType == DatabaseType.MySQL;
 
         /// <summary>
         /// Gets a value to indicate whether source database is Oracle.
         /// </summary>
-        public bool IsOracle
-        {
-            get
-            {
-                return m_databaseType == DatabaseType.Oracle;
-            }
-        }
+        public bool IsOracle => m_databaseType == DatabaseType.Oracle;
 
         /// <summary>
         /// Gets a value to indicate whether source database is SQLite.
         /// </summary>
-        public bool IsSqlite
-        {
-            get
-            {
-                return m_databaseType == DatabaseType.SQLite;
-            }
-        }
+        public bool IsSqlite => m_databaseType == DatabaseType.SQLite;
 
         #endregion
 
@@ -572,7 +535,7 @@ namespace GSF.Data
         [StringFormatMethod("sqlFormat")]
         public int ExecuteNonQuery(string sqlFormat, params object[] parameters)
         {
-            return ExecuteNonQuery(DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
+            return ExecuteNonQuery(DefaultTimeout, sqlFormat, parameters);
         }
 
         /// <summary>
@@ -599,7 +562,7 @@ namespace GSF.Data
         [StringFormatMethod("sqlFormat")]
         public IDataReader ExecuteReader(string sqlFormat, params object[] parameters)
         {
-            return ExecuteReader(DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
+            return ExecuteReader(DefaultTimeout, sqlFormat, parameters);
         }
 
         /// <summary>
@@ -627,7 +590,7 @@ namespace GSF.Data
         [StringFormatMethod("sqlFormat")]
         public T ExecuteScalar<T>(string sqlFormat, params object[] parameters)
         {
-            return ExecuteScalar<T>(DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
+            return ExecuteScalar<T>(DefaultTimeout, sqlFormat, parameters);
         }
 
         /// <summary>
@@ -656,7 +619,7 @@ namespace GSF.Data
         [StringFormatMethod("sqlFormat")]
         public T ExecuteScalar<T>(T defaultValue, string sqlFormat, params object[] parameters)
         {
-            return ExecuteScalar(defaultValue, DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
+            return ExecuteScalar(defaultValue, DefaultTimeout, sqlFormat, parameters);
         }
 
         /// <summary>
@@ -672,15 +635,12 @@ namespace GSF.Data
         [StringFormatMethod("sqlFormat")]
         public T ExecuteScalar<T>(T defaultValue, int timeout, string sqlFormat, params object[] parameters)
         {
-            Type type;
-            object value;
-
-            value = ExecuteScalar(timeout, sqlFormat, parameters);
+            object value = ExecuteScalar(timeout, sqlFormat, parameters);
 
             if (value == DBNull.Value)
                 return defaultValue;
 
-            type = typeof(T);
+            Type type = typeof(T);
 
             // Nullable types cannot be used in type conversion, but we can use Nullable.GetUnderlyingType()
             // to determine whether the type is nullable and convert to the underlying type instead
@@ -691,11 +651,11 @@ namespace GSF.Data
                 return (T)(object)System.Guid.Parse(value.ToString());
 
             // Handle string types that may have a converter function (e.g., Enums)
-            if (value.GetType() == typeof(string))
+            if (value is string)
                 return value.ToString().ConvertToType<T>(type);
 
             // Handle native types
-            if (typeof(IConvertible).IsAssignableFrom(value.GetType()))
+            if (value is IConvertible)
                 return (T)Convert.ChangeType(value, type);
 
             return (T)value;
@@ -711,7 +671,7 @@ namespace GSF.Data
         [StringFormatMethod("sqlFormat")]
         public object ExecuteScalar(string sqlFormat, params object[] parameters)
         {
-            return ExecuteScalar(DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
+            return ExecuteScalar(DefaultTimeout, sqlFormat, parameters);
         }
 
         /// <summary>
@@ -739,7 +699,7 @@ namespace GSF.Data
         [StringFormatMethod("sqlFormat")]
         public DataRow RetrieveRow(string sqlFormat, params object[] parameters)
         {
-            return RetrieveRow(DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
+            return RetrieveRow(DefaultTimeout, sqlFormat, parameters);
         }
 
         /// <summary>
@@ -767,7 +727,7 @@ namespace GSF.Data
         [StringFormatMethod("sqlFormat")]
         public DataTable RetrieveData(string sqlFormat, params object[] parameters)
         {
-            return RetrieveData(DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
+            return RetrieveData(DefaultTimeout, sqlFormat, parameters);
         }
 
         /// <summary>
@@ -796,7 +756,7 @@ namespace GSF.Data
         [StringFormatMethod("sqlFormat")]
         public DataSet RetrieveDataSet(string sqlFormat, params object[] parameters)
         {
-            return RetrieveDataSet(DataExtensions.DefaultTimeoutDuration, sqlFormat, parameters);
+            return RetrieveDataSet(DefaultTimeout, sqlFormat, parameters);
         }
 
         /// <summary>
@@ -992,21 +952,21 @@ namespace GSF.Data
         /// <returns></returns>
         public static string ToDataProviderString(Type connectionType, Type adapterType)
         {
-            Dictionary<string, string> settings;
-
             if (!typeof(IDbConnection).IsAssignableFrom(connectionType))
-                throw new ArgumentException("Connection type must implement the IDbConnection interface", "connectionType");
+                throw new ArgumentException("Connection type must implement the IDbConnection interface", nameof(connectionType));
 
             if (!typeof(IDbDataAdapter).IsAssignableFrom(adapterType))
-                throw new ArgumentException("Adapter type must implement the IDbDataAdapter interface", "adapterType");
+                throw new ArgumentException("Adapter type must implement the IDbDataAdapter interface", nameof(adapterType));
 
             if (connectionType.Assembly != adapterType.Assembly)
                 throw new InvalidOperationException("Data provider string requires that connection type and adapter type reside in the same assembly");
 
-            settings = new Dictionary<string, string>();
-            settings["AssemblyName"] = connectionType.Assembly.FullName;
-            settings["ConnectionType"] = connectionType.FullName;
-            settings["AdapterType"] = adapterType.FullName;
+            Dictionary<string, string> settings = new Dictionary<string, string>
+            {
+                ["AssemblyName"] = connectionType.Assembly.FullName,
+                ["ConnectionType"] = connectionType.FullName,
+                ["AdapterType"] = adapterType.FullName
+            };
 
             return settings.JoinKeyValuePairs();
         }
