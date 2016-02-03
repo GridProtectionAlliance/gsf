@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  CancellationToken.cs - Gbtc
+//  ICancellationToken.cs - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,12 +16,16 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  01/29/2016 - Stephen C. Wills
+//  02/02/2016 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System.Threading;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace GSF.Threading
 {
@@ -29,42 +33,12 @@ namespace GSF.Threading
     /// Represents a token that can be used
     /// to cancel an asynchronous operation.
     /// </summary>
-    public class CancellationToken : ICancellationToken
+    public interface ICancellationToken
     {
-        #region [ Members ]
-
-        // Fields
-        private int m_cancelled;
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets a value that indicates whether
-        /// the operation has been cancelled.
-        /// </summary>
-        public bool Cancelled
-        {
-            get
-            {
-                return Interlocked.CompareExchange(ref m_cancelled, 0, 0) != 0;
-            }
-        }
-
-        #endregion
-
-        #region [ Methods ]
-
         /// <summary>
         /// Cancels the operation.
         /// </summary>
         /// <returns>True if the operation was previously cancelled; otherwise false.</returns>
-        public bool Cancel()
-        {
-            return Interlocked.Exchange(ref m_cancelled, 1) != 0;
-        }
-
-        #endregion
+        bool Cancel();
     }
 }
