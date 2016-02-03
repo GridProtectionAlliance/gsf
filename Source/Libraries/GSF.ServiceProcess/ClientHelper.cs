@@ -298,7 +298,7 @@ namespace GSF.ServiceProcess
             }
             set
             {
-                m_statusMessageFilter = value;
+                m_statusMessageFilter = value ?? DefaultStatusMessageFilter;
             }
         }
 
