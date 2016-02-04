@@ -724,6 +724,7 @@ namespace GSF.IO
 
         private LogicalThreadScheduler m_threadScheduler;
         private LogicalThread m_processingThread;
+        private LogicalThread m_watcherThread;
         private Timer m_fileWatchTimer;
         private ManualResetEvent m_waitObject;
 
@@ -763,6 +764,7 @@ namespace GSF.IO
             m_threadScheduler = new LogicalThreadScheduler();
             m_threadScheduler.UnhandledException += (sender, args) => OnError(args.Argument);
             m_processingThread = m_threadScheduler.CreateThread(2);
+            m_watcherThread = m_threadScheduler.CreateThread();
             m_fileWatchTimer = new Timer(15000);
             m_fileWatchTimer.Elapsed += FileWatchTimer_Elapsed;
             m_waitObject = new ManualResetEvent(false);
@@ -1385,7 +1387,16 @@ namespace GSF.IO
         // Queues the created file for processing.
         private void Watcher_Created(object sender, FileSystemEventArgs args)
         {
-            QueueFileForProcessing(args.FullPath);
+            m_watcherThread.Push(() =>
+            {
+                if (!MatchesFilter(args.FullPath))
+                {
+                    Interlocked.Increment(ref m_skippedFileCount);
+                    return;
+                }
+
+                m_processingThread.Push(2, () => TouchLockAndProcess(args.FullPath));
+            });
         }
 
         // If the watcher tracks changes, queues the changed file for processing.
@@ -1394,52 +1405,61 @@ namespace GSF.IO
             if (!m_trackChanges)
                 return;
 
-            if (MatchesFilter(args.FullPath))
+            m_watcherThread.Push(() =>
             {
-                m_processingThread.Push(2, () =>
+                if (MatchesFilter(args.FullPath))
                 {
-                    m_touchedFiles.Remove(args.FullPath);
-                    TouchLockAndProcess(args.FullPath);
-                });
-            }
-            else
-            {
-                Interlocked.Increment(ref m_skippedFileCount);
-            }
+                    m_processingThread.Push(2, () =>
+                    {
+                        m_touchedFiles.Remove(args.FullPath);
+                        TouchLockAndProcess(args.FullPath);
+                    });
+                }
+                else
+                {
+                    Interlocked.Increment(ref m_skippedFileCount);
+                }
+            });
         }
 
         // Track renames so that files whose names are changed can be updated in the processed files list.
         private void Watcher_Renamed(object sender, RenamedEventArgs args)
         {
-            bool oldMatch = MatchesFilter(args.OldFullPath);
-            bool newMatch = MatchesFilter(args.FullPath);
-
-            if (!oldMatch && !newMatch)
-                return;
-
-            m_processingThread.Push(2, () =>
+            m_watcherThread.Push(() =>
             {
-                if (oldMatch && m_touchedFiles.Remove(args.OldFullPath) && newMatch)
-                    m_touchedFiles.Add(args.FullPath, File.GetLastWriteTimeUtc(args.FullPath));
+                bool oldMatch = MatchesFilter(args.OldFullPath);
+                bool newMatch = MatchesFilter(args.FullPath);
 
-                if (oldMatch && m_processedFiles.Remove(args.OldFullPath))
-                    m_processedFiles.Add(args.FullPath);
+                if (!oldMatch && !newMatch)
+                    return;
 
-                if (!oldMatch && newMatch)
-                    TouchLockAndProcess(args.FullPath);
+                m_processingThread.Push(2, () =>
+                {
+                    if (oldMatch && m_touchedFiles.Remove(args.OldFullPath) && newMatch)
+                        m_touchedFiles.Add(args.FullPath, File.GetLastWriteTimeUtc(args.FullPath));
+
+                    if (oldMatch && m_processedFiles.Remove(args.OldFullPath))
+                        m_processedFiles.Add(args.FullPath);
+
+                    if (!oldMatch && newMatch)
+                        TouchLockAndProcess(args.FullPath);
+                });
             });
         }
 
         // Track deletes so that files can be removed from the processed files list.
         private void Watcher_Deleted(object sender, FileSystemEventArgs args)
         {
-            if (!MatchesFilter(args.FullPath))
-                return;
-
-            m_processingThread.Push(2, () =>
+            m_watcherThread.Push(() =>
             {
-                m_touchedFiles.Remove(args.FullPath);
-                m_processedFiles.Remove(args.FullPath);
+                if (!MatchesFilter(args.FullPath))
+                    return;
+
+                m_processingThread.Push(2, () =>
+                {
+                    m_touchedFiles.Remove(args.FullPath);
+                    m_processedFiles.Remove(args.FullPath);
+                });
             });
         }
 
