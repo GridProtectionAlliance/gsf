@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -732,6 +733,8 @@ namespace GSF.IO
         private int m_processedFileCount;
         private int m_skippedFileCount;
         private int m_requeuedFileCount;
+        private DateTime m_lastCompactTime;
+        private TimeSpan m_lastCompactDuration;
 
         private bool m_disposed;
 
@@ -979,6 +982,30 @@ namespace GSF.IO
             get
             {
                 return Interlocked.CompareExchange(ref m_requeuedFileCount, 0, 0);
+            }
+        }
+
+        /// <summary>
+        /// Gets the time at which the last operation to
+        /// compact the set of processed files occurred.
+        /// </summary>
+        public DateTime LastCompactTime
+        {
+            get
+            {
+                return m_lastCompactTime;
+            }
+        }
+
+        /// <summary>
+        /// Gets the amount of time spent during the last
+        /// operation to compact the set of processed files.
+        /// </summary>
+        public TimeSpan LastCompactDuration
+        {
+            get
+            {
+                return m_lastCompactDuration;
             }
         }
 
@@ -1473,7 +1500,12 @@ namespace GSF.IO
             m_processingThread.Push(1, () =>
             {
                 if (m_processedFiles.FragmentationCount > m_maxFragmentation)
+                {
+                    DateTime lastCompactTime = DateTime.UtcNow;
                     m_processedFiles.Compact();
+                    m_lastCompactTime = lastCompactTime;
+                    m_lastCompactDuration = m_lastCompactTime - DateTime.UtcNow;
+                }
             });
         }
 
