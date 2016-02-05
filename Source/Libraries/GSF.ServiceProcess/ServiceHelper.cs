@@ -1655,7 +1655,8 @@ namespace GSF.ServiceProcess
                 if (client != Guid.Empty)
                 {
                     // Send message directly to specified client.
-                    handles = new[] { m_remotingServer.SendToAsync(client, response) };
+                    if (m_remotingServer.IsClientConnected(client))
+                        handles = new[] { m_remotingServer.SendToAsync(client, response) };
                 }
                 else
                 {

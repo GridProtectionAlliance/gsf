@@ -964,6 +964,16 @@ namespace GSF.Communication
         }
 
         /// <summary>
+        /// Determines whether the given client is currently connected to the server.
+        /// </summary>
+        /// <param name="clientID">The ID of the client.</param>
+        /// <returns>True if the client is connected; false otherwise.</returns>
+        public bool IsClientConnected(Guid clientID)
+        {
+            return m_clientIDs.ContainsKey(clientID);
+        }
+
+        /// <summary>
         /// Raises the <see cref="ServerStarted"/> event.
         /// </summary>
         protected virtual void OnServerStarted()
