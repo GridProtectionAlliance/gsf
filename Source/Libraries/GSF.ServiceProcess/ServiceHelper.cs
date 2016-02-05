@@ -621,12 +621,13 @@ namespace GSF.ServiceProcess
         /// Provides notification of when status messages were sent to consumer(s).
         /// </summary>
         /// <remarks>
-        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the status message sent to consumer(s).<br/>
-        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the message <see cref="UpdateType"/>.
+        /// <see cref="EventArgs{T1,T2,T3}.Argument1"/> is the ID of the consumer(s).<br/>
+        /// <see cref="EventArgs{T1,T2,T3}.Argument2"/> is the status message sent to consumer(s).<br/>
+        /// <see cref="EventArgs{T1,T2,T3}.Argument3"/> is the message <see cref="UpdateType"/>.
         /// </remarks>
         [Category("Notification"),
         Description("Occurs when there are status messages sent to consumer(s).")]
-        public event EventHandler<EventArgs<string, UpdateType>> UpdatedStatus;
+        public event EventHandler<EventArgs<Guid, string, UpdateType>> UpdatedStatus;
 
         /// <summary>
         /// Provides notification of when there is an exception logged.
@@ -1716,7 +1717,7 @@ namespace GSF.ServiceProcess
                 // Send response to service
                 SendResponse(requestInfo.Sender.ClientID, response);
 
-                OnUpdatedStatus(response.Message, success ? UpdateType.Information : UpdateType.Alarm);
+                OnUpdatedStatus(requestInfo.Sender.ClientID, response.Message, success ? UpdateType.Information : UpdateType.Alarm);
             }
             catch (Exception ex)
             {
@@ -2128,15 +2129,16 @@ namespace GSF.ServiceProcess
         /// <summary>
         /// Raises the <see cref="UpdatedStatus"/> event with the updated status message.
         /// </summary>
+        /// <param name="clientID">ID of the client receiving the message.</param>
         /// <param name="status">Updated status message.</param>
         /// <param name="type"><see cref="UpdateType"/> of status message.</param>
         /// <remarks>
         /// This overload combines string.Format and SendStatusMessage for convenience.
         /// </remarks>
-        protected virtual void OnUpdatedStatus(string status, UpdateType type)
+        protected virtual void OnUpdatedStatus(Guid clientID, string status, UpdateType type)
         {
             if ((object)UpdatedStatus != null)
-                UpdatedStatus(this, new EventArgs<string, UpdateType>(status, type));
+                UpdatedStatus(this, new EventArgs<Guid, string, UpdateType>(clientID, status, type));
         }
 
         /// <summary>
@@ -2390,7 +2392,7 @@ namespace GSF.ServiceProcess
             response.Message = CurtailMessageLength(responseMessage);
             SendResponse(clientID, response);
 
-            OnUpdatedStatus(response.Message, type);
+            OnUpdatedStatus(clientID, response.Message, type);
         }
 
         private void SendServiceStateChangedResponse(ServiceState currentState)

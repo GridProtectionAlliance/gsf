@@ -102,7 +102,7 @@ namespace GSF.TimeSeries
         private const int DefaultMaxThreadPoolSize = 2048;
         private const int DefaultConfigurationBackups = 5;
 
-        internal event EventHandler<EventArgs<string, UpdateType>> UpdatedStatus;
+        internal event EventHandler<EventArgs<Guid, string, UpdateType>> UpdatedStatus;
         internal event EventHandler<EventArgs<Exception>> LoggedException;
 
         // Fields
@@ -698,10 +698,10 @@ namespace GSF.TimeSeries
             TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;
         }
 
-        private void UpdatedStatusHandler(object sender, EventArgs<string, UpdateType> e)
+        private void UpdatedStatusHandler(object sender, EventArgs<Guid, string, UpdateType> e)
         {
             if ((object)UpdatedStatus != null)
-                UpdatedStatus(sender, new EventArgs<string, UpdateType>(e.Argument1, e.Argument2));
+                UpdatedStatus(sender, new EventArgs<Guid, string, UpdateType>(e.Argument1, e.Argument2, e.Argument3));
         }
 
         private void LoggedExceptionHandler(object sender, EventArgs<Exception> e)
