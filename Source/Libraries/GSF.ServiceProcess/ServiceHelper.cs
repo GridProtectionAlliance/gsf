@@ -1984,6 +1984,42 @@ namespace GSF.ServiceProcess
         }
 
         /// <summary>
+        /// Disconnects the client from the service.
+        /// </summary>
+        /// <param name="clientID">The ID of the client.</param>
+        public void DisconnectClient(Guid clientID)
+        {
+            ClientInfo disconnectedClient;
+
+            m_statusUpdateThread.Push(() => m_clientStatusUpdateLookup.Remove(clientID));
+            disconnectedClient = FindConnectedClient(clientID);
+
+            if ((object)disconnectedClient == null)
+                return;
+
+            if (clientID == m_remoteCommandClientID)
+            {
+                try
+                {
+                    RemoteTelnetSession(new ClientRequestInfo(disconnectedClient, ClientRequest.Parse("Telnet -disconnect")));
+                }
+                catch (Exception ex)
+                {
+                    // We'll encounter an exception because we'll try to update the status of the client that had the
+                    // remote command session open and this will fail since the client is disconnected.
+                    LogException(ex);
+                }
+            }
+
+            lock (m_remoteClients)
+            {
+                m_remoteClients.Remove(disconnectedClient);
+            }
+
+            UpdateStatus(UpdateType.Information, "Remote client disconnected - {0} from {1}.\r\n\r\n", disconnectedClient.ClientUser.Identity.Name, disconnectedClient.MachineName);
+        }
+
+        /// <summary>
         /// Log exception to <see cref="ErrorLogger"/>.
         /// </summary>
         /// <param name="ex">Exception to log.</param>
@@ -2455,30 +2491,7 @@ namespace GSF.ServiceProcess
 
         private void RemotingServer_ClientDisconnected(object sender, EventArgs<Guid> e)
         {
-            ClientInfo disconnectedClient = FindConnectedClient(e.Argument);
-
-            if ((object)disconnectedClient == null)
-                return;
-
-            if (e.Argument == m_remoteCommandClientID)
-            {
-                try
-                {
-                    RemoteTelnetSession(new ClientRequestInfo(disconnectedClient, ClientRequest.Parse("Telnet -disconnect")));
-                }
-                catch (Exception ex)
-                {
-                    // We'll encounter an exception because we'll try to update the status of the client that had the
-                    // remote command session open and this will fail since the client is disconnected.
-                    LogException(ex);
-                }
-            }
-
-            lock (m_remoteClients)
-            {
-                m_remoteClients.Remove(disconnectedClient);
-            }
-            UpdateStatus(UpdateType.Information, "Remote client disconnected - {0} from {1}.\r\n\r\n", disconnectedClient.ClientUser.Identity.Name, disconnectedClient.MachineName);
+            DisconnectClient(e.Argument);
         }
 
         private void RemotingServer_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
