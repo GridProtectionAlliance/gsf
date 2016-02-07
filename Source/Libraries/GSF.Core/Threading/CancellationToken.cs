@@ -29,16 +29,12 @@ namespace GSF.Threading
     /// Represents a token that can be used
     /// to cancel an asynchronous operation.
     /// </summary>
-    public class CancellationToken
+    public class CancellationToken : ICancellationToken
     {
         #region [ Members ]
 
         // Fields
         private int m_cancelled;
-
-        #endregion
-
-        #region [ Constructors ]
 
         #endregion
 

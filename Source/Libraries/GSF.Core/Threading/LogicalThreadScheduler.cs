@@ -271,14 +271,14 @@ namespace GSF.Threading
             StringBuilder message;
             bool handled;
 
-            aggregateException = new AggregateException(unhandledException);
             message = new StringBuilder();
             message.AppendFormat("Logical thread action threw an exception of type {0}: {1}", unhandledException.GetType().FullName, unhandledException.Message);
+            aggregateException = new AggregateException(message.ToString(), unhandledException);
 
             try
             {
                 // Attempt to handle the exception via the logical thread's exception handler
-                handled = LogicalThread.CurrentThread.OnUnhandledException(aggregateException);
+                handled = LogicalThread.CurrentThread.OnUnhandledException(unhandledException);
             }
             catch (Exception handlerException)
             {
@@ -294,7 +294,8 @@ namespace GSF.Threading
             {
                 // If the logical thread's exception handler was not able to handle the exception,
                 // attempt to handle the exception via the thread scheduler's exception handler
-                handled = handled || OnUnhandledException(aggregateException);
+                Exception ex = (aggregateException.InnerExceptions.Count > 1) ? aggregateException : unhandledException;
+                handled = handled || OnUnhandledException(ex);
             }
             catch (Exception handlerException)
             {

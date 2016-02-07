@@ -33,6 +33,7 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.ServiceProcess;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using GSF.Communication;
 using GSF.Configuration;
@@ -112,6 +113,8 @@ namespace GSF.TimeSeries
         public void Initialize()
         {
             CategorizedSettingsElementCollection remotingClientSettings;
+            string[] args;
+            string filter;
 
             try
             {
@@ -134,9 +137,17 @@ namespace GSF.TimeSeries
                 m_remotingClient = InitializeTlsClient();
             }
 
+            args = Arguments.ToArgs(Environment.CommandLine);
+
+            filter = Enumerable.Range(0, args.Length)
+                .Where(index => args[index].StartsWith("--filter=", StringComparison.OrdinalIgnoreCase))
+                .Select(index => Regex.Replace(args[index], "^--filter=", "", RegexOptions.IgnoreCase))
+                .FirstOrDefault() ?? ClientHelper.DefaultStatusMessageFilter;
+
             m_clientHelper = new ClientHelper();
             m_clientHelper.PersistSettings = true;
             m_clientHelper.RemotingClient = m_remotingClient;
+            m_clientHelper.StatusMessageFilter = filter;
             m_clientHelper.Initialize();
 
             m_errorLogger = new ErrorLogger();
@@ -155,7 +166,7 @@ namespace GSF.TimeSeries
         public virtual void Start(string[] args)
         {
             string userInput = null;
-            Arguments arguments = new Arguments(string.Join(" ", args));
+            Arguments arguments = new Arguments(string.Join(" ", Arguments.ToArgs(Environment.CommandLine).Where(arg => !arg.StartsWith("--filter=", StringComparison.OrdinalIgnoreCase))));
 
             if (arguments.Exists("OrderedArg1") && arguments.Exists("restart"))
             {

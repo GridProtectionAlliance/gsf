@@ -1,14 +1,14 @@
 ﻿//******************************************************************************************************
-//  AssemblyInfo.cs - Gbtc
+//  ICancellationToken.cs - Gbtc
 //
-//  Copyright © 2013, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
 //  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
 //  not use this file except in compliance with the License. You may obtain a copy of the License at:
 //
-//      http://www.opensource.org/licenses/MIT
+//      http://opensource.org/licenses/MIT
 //
 //  Unless agreed to in writing, the subject software distributed under the License is distributed on an
 //  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
@@ -16,33 +16,29 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  05/09/2013 - J. Ritchie Carroll
+//  02/02/2016 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System.Reflection;
-using System.Runtime.InteropServices;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-// Assembly identity attributes.
-[assembly: AssemblyVersion("2.1.176.0")]
-[assembly: AssemblyInformationalVersion("2.1.176-beta")]
-
-// Informational attributes.
-[assembly: AssemblyCompany("Grid Protection Alliance")]
-[assembly: AssemblyCopyright("Copyright © GPA, 2013.  All Rights Reserved.")]
-[assembly: AssemblyProduct("Grid Solutions Framework")]
-
-// Assembly manifest attributes.
-#if DEBUG
-[assembly: AssemblyConfiguration("Debug Build")]
-#else
-[assembly: AssemblyConfiguration("Release Build")]
-#endif
-
-[assembly: AssemblyDescription("Utility for editing XML application configuration files.")]
-[assembly: AssemblyTitle("ConfigurationEditor")]
-
-// Other configuration attributes.
-[assembly: ComVisible(false)]
-[assembly: Guid("c4ba78b7-92b0-4125-a5b0-3840ab9a6d72")]
+namespace GSF.Threading
+{
+    /// <summary>
+    /// Represents a token that can be used
+    /// to cancel an asynchronous operation.
+    /// </summary>
+    public interface ICancellationToken
+    {
+        /// <summary>
+        /// Cancels the operation.
+        /// </summary>
+        /// <returns>True if the operation was previously cancelled; otherwise false.</returns>
+        bool Cancel();
+    }
+}
