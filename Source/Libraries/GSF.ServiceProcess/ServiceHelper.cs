@@ -89,19 +89,6 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Configuration;
-using System.Diagnostics;
-using System.Drawing;
-using System.Linq;
-using System.Reflection;
-using System.Security;
-using System.Security.Principal;
-using System.ServiceProcess;
-using System.Text;
-using System.Threading;
 using GSF.Annotations;
 using GSF.Collections;
 using GSF.Communication;
@@ -114,6 +101,20 @@ using GSF.Scheduling;
 using GSF.Security;
 using GSF.Security.Cryptography;
 using GSF.Units;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Configuration;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Security;
+using System.Security.Principal;
+using System.ServiceProcess;
+using System.Text;
+using System.Threading;
 
 namespace GSF.ServiceProcess
 {
@@ -1223,6 +1224,8 @@ namespace GSF.ServiceProcess
                 m_clientRequestHandlers.Add(new ClientRequestHandler("Version", "Displays current service version", ShowVersion, new[] { "ver" }));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("Time", "Displays current system time", ShowTime));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("User", "Displays current user information", ShowUser, new[] { "whoami" }));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Files", "Manages files on the server", ManageFiles));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Transfer", "Transfers files to and from the server", TransferFile));
 
                 // Enable telnet support if requested.
                 if (m_supportTelnetSessions)
@@ -3912,6 +3915,176 @@ namespace GSF.ServiceProcess
                 // Also allow consumers to directly consume message via event in response to a user info request
                 if (requestInfo.Request.Arguments.Exists("actionable"))
                     SendActionableResponse(requestInfo, true, null, message);
+            }
+        }
+
+        private void ManageFiles(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount < 2)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Manages files on the server.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       Files \"Source Path\" \"Target Path\" -options");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -copy".PadRight(20));
+                helpMessage.Append("Copies files from one location to another");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -move".PadRight(20));
+                helpMessage.Append("Moves files from one location to another");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -overwrite".PadRight(20));
+                helpMessage.Append("Overwrites files if they exist in the target location");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
+            }
+            else
+            {
+                string source = FilePath.GetAbsolutePath(requestInfo.Request.Arguments["orderedarg1"]);
+                string target = FilePath.GetDirectoryName(FilePath.GetAbsolutePath(requestInfo.Request.Arguments["orderedarg2"]));
+                string directory = FilePath.GetDirectoryName(source);
+                string filePattern = FilePath.GetFileName(source);
+                bool copy = requestInfo.Request.Arguments.Exists("copy");
+                bool move = requestInfo.Request.Arguments.Exists("move");
+                bool overwrite = requestInfo.Request.Arguments.Exists("overwrite");
+
+                string targetFile;
+                foreach (string sourceFile in Directory.GetFiles(directory, filePattern))
+                {
+                    targetFile = Path.Combine(target, FilePath.GetFileName(sourceFile));
+                    if (!File.Exists(targetFile) || overwrite)
+                    {
+                        // File can be copied or moved.
+                        if (copy)
+                        {
+                            // Copy the file.
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Copying file '{0}'...\r\n\r\n", target);
+                            File.Copy(sourceFile, targetFile, true);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "File '{0}' copied successfully.\r\n\r\n", target);
+                        }
+                        else if (move)
+                        {
+                            // Move the file.
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Moving file '{0}'...\r\n\r\n", target);
+                            File.Delete(targetFile);
+                            File.Move(sourceFile, targetFile);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "File '{0}' moved successfully.\r\n\r\n", target);
+                        }
+                        else
+                        {
+                            // Invalid command option specified.
+                            UpdateStatus(UpdateType.Alarm, "Command option is not valid.\r\n\r\n");
+                        }
+                    }
+                    else
+                    {
+                        // File already exists.
+                        UpdateStatus(UpdateType.Alarm, "File '{0}' already exists.\r\n\r\n", targetFile);
+                    }
+                }
+            }
+        }
+
+        private void TransferFile(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount < 2)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Transfers files to and from the server.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       Transfer \"Source File Path\" \"Target File Path\" -options");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -upload".PadRight(20));
+                helpMessage.Append("Uploads file from local machine to server");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -download".PadRight(20));
+                helpMessage.Append("Downloads file from server to local machine");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -overwrite".PadRight(20));
+                helpMessage.Append("Overwrites file if one exists in the target location");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
+            }
+            else
+            {
+                string source = requestInfo.Request.Arguments["orderedarg1"];
+                string target = requestInfo.Request.Arguments["orderedarg2"];
+                bool upload = requestInfo.Request.Arguments.Exists("upload");
+                bool download = requestInfo.Request.Arguments.Exists("download");
+                bool overwrite = requestInfo.Request.Arguments.Exists("overwrite");
+
+                if (upload)
+                {
+                    // Request is for uploading a file.
+                    if (requestInfo.Request.Attachments.Count == 1)
+                    {
+                        // File content is present.
+                        target = FilePath.GetAbsolutePath(target);
+                        if (!File.Exists(target) || overwrite)
+                        {
+                            // Save the received file.
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Saving file '{0}'...\r\n\r\n", target);
+                            File.WriteAllBytes(target, (byte[])requestInfo.Request.Attachments[0]);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "File '{0}' saved successfully.\r\n\r\n", target);
+                        }
+                        else
+                        {
+                            // File exists and cannot be overwritten.
+                            UpdateStatus(UpdateType.Alarm, "File '{0}' already exists.\r\n\r\n", target);
+                        }
+                    }
+                    else
+                    {
+                        // File content is not present.
+                        UpdateStatus(UpdateType.Alarm, "Content for file '{0}' is missing.\r\n\r\n", target);
+                    }
+                }
+                else if (download)
+                {
+                    // Request is for uploading a file.
+                    source = FilePath.GetAbsolutePath(source);
+                    if (File.Exists(source))
+                    {
+                        // Send file to client.
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Sending file '{0}'...\r\n\r\n", source);
+                        SendActionableResponse(requestInfo, true, File.ReadAllBytes(source));
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "File '{0}' sent successfully.\r\n\r\n", source);
+                    }
+                    else
+                    {
+                        // File does not exist.
+                        UpdateStatus(UpdateType.Alarm, "File '{0}' does not exist.\r\n\r\n", source);
+                    }
+                }
+                else
+                {
+                    // Invalid command option specified.
+                    UpdateStatus(UpdateType.Alarm, "Command option is not valid.\r\n\r\n");
+                }
             }
         }
 

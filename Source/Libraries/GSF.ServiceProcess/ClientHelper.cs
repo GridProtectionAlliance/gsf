@@ -49,14 +49,17 @@
 //
 //******************************************************************************************************
 
+using GSF.Communication;
+using GSF.Configuration;
+using GSF.Console;
+using GSF.IO;
 using System;
 using System.ComponentModel;
 using System.Configuration;
 using System.Drawing;
+using System.IO;
 using System.Text;
 using System.Threading;
-using GSF.Communication;
-using GSF.Configuration;
 
 namespace GSF.ServiceProcess
 {
@@ -550,7 +553,31 @@ namespace GSF.ServiceProcess
         /// <param name="request"><see cref="ClientRequest"/> object to be sent.</param>
         public void SendRequest(ClientRequest request)
         {
-            m_remotingClient.SendAsync(request);
+            try
+            {
+                // Intercept TRANSFER requests for uploads.
+                if (request.Command == "TRANSFER" && request.Arguments.Exists("upload"))
+                {
+                    string source = FilePath.GetAbsolutePath(request.Arguments["orderedarg1"]);
+                    if (File.Exists(source))
+                    {
+                        // Attach the file content.
+                        request.Attachments.Add(File.ReadAllBytes(source));
+                    }
+                    else
+                    {
+                        // File does not exist.
+                        throw new FileNotFoundException(string.Format("File '{0}' does not exist", source));
+                    }
+                }
+
+                // Pass the request along.
+                m_remotingClient.SendAsync(request);
+            }
+            catch (Exception ex)
+            {
+                UpdateStatus(UpdateType.Alarm, "Error processing request - {0}", ex.Message);
+            }
         }
 
         /// <summary>
@@ -832,6 +859,35 @@ namespace GSF.ServiceProcess
                             case "TERMINATED":
                                 OnTelnetSessionTerminated();
                                 break;
+                        }
+                        break;
+                    case "TRANSFER:SUCCESS":
+                        if (response.Attachments.Count == 2)
+                        {
+                            // Extract data from response.
+                            byte[] content = (byte[])response.Attachments[0];
+                            Arguments arguments = (Arguments)response.Attachments[1];
+                            string target = arguments["orderedarg2"];
+                            bool overwrite = arguments.Exists("overwrite");
+
+                            target = FilePath.GetAbsolutePath(target);
+                            if (!File.Exists(target) || overwrite)
+                            {
+                                // Save the received file.
+                                UpdateStatus(UpdateType.Information, "Saving file '{0}'...\r\n\r\n", target);
+                                File.WriteAllBytes(target, content);
+                                UpdateStatus(UpdateType.Information, "File '{0}' saved successfully.\r\n\r\n", target);
+                            }
+                            else
+                            {
+                                // File exists and cannot be overwritten.
+                                UpdateStatus(UpdateType.Alarm, "File '{0}' already exists.\r\n\r\n", target);
+                            }
+                        }
+                        else
+                        {
+                            // Response is malformed.
+                            UpdateStatus(UpdateType.Alarm, "{0} response is malformed.\r\n\r\n", response.Type);
                         }
                         break;
                     default:
