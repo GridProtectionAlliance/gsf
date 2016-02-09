@@ -84,6 +84,11 @@ namespace GSF.ServiceProcess
         public const string DefaultPassword = "";
 
         /// <summary>
+        /// Specifies the default value for the <see cref="StatusMessageFilter"/> property.
+        /// </summary>
+        public const string DefaultStatusMessageFilter = "Filter -Remove 0";
+
+        /// <summary>
         /// Specifies the default value for the <see cref="PersistSettings"/> property.
         /// </summary>
         public const bool DefaultPersistSettings = false;
@@ -159,6 +164,7 @@ namespace GSF.ServiceProcess
         private ClientBase m_remotingClient;
         private string m_username;
         private string m_password;
+        private string m_statusMessageFilter;
         private SerializationFormat m_serializationFormat;
         private bool m_persistSettings;
         private string m_settingsCategory;
@@ -179,6 +185,7 @@ namespace GSF.ServiceProcess
             m_username = DefaultUsername;
             m_password = DefaultPassword;
             m_persistSettings = DefaultPersistSettings;
+            m_statusMessageFilter = DefaultStatusMessageFilter;
             m_settingsCategory = DefaultSettingsCategory;
             m_serializationFormat = ServiceHelper.DefaultSerializationFormat;
         }
@@ -276,6 +283,25 @@ namespace GSF.ServiceProcess
                     throw new ArgumentNullException("value");
 
                 m_password = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the command used to negotiate the status
+        /// message filter with the service when the client connects.
+        /// </summary>
+        [Category("Settings"),
+        DefaultValue(DefaultStatusMessageFilter),
+        Description("Command used to negotiate status message filter when client connects to the ServiceHelper.")]
+        public string StatusMessageFilter
+        {
+            get
+            {
+                return m_statusMessageFilter;
+            }
+            set
+            {
+                m_statusMessageFilter = value ?? DefaultStatusMessageFilter;
             }
         }
 
@@ -457,13 +483,14 @@ namespace GSF.ServiceProcess
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
 
-                settings["Username", true].Update(m_username);
-                settings["Password", true].Update(m_password);
-                settings["SerializationFormat", true].Update(m_serializationFormat);
+                settings[nameof(Username), true].Update(m_username);
+                settings[nameof(Password), true].Update(m_password);
+                settings[nameof(SerializationFormat), true].Update(m_serializationFormat);
+                settings[nameof(StatusMessageFilter), true].Update(m_statusMessageFilter);
 
-                settings["Username"].Scope = SettingScope.User;
-                settings["Password"].Scope = SettingScope.User;
-                settings["Password"].Encrypted = true;
+                settings[nameof(Username)].Scope = SettingScope.User;
+                settings[nameof(Password)].Scope = SettingScope.User;
+                settings[nameof(Password)].Encrypted = true;
 
                 config.Save();
             }
@@ -485,13 +512,15 @@ namespace GSF.ServiceProcess
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
 
-                settings.Add("Username", m_username, "Username to be used for authentication with the service.", false, SettingScope.User);
-                settings.Add("Password", m_password, "Password to be used for authentication with the service.", true, SettingScope.User);
-                settings.Add("SerializationFormat", m_password, "Message serialization format for interactions with service, one of: Xml, Json or Binary. Default is Binary.");
+                settings.Add(nameof(Username), m_username, "Username to be used for authentication with the service.", false, SettingScope.User);
+                settings.Add(nameof(Password), m_password, "Password to be used for authentication with the service.", true, SettingScope.User);
+                settings.Add(nameof(SerializationFormat), m_serializationFormat, "Message serialization format for interactions with service, one of: Xml, Json or Binary. Default is Binary.");
+                settings.Add(nameof(StatusMessageFilter), m_statusMessageFilter, "Command used to negotiate status message filter when client connects to the ServiceHelper.");
 
-                Username = settings["Username"].ValueAs(m_username);
-                Password = settings["Password"].ValueAs(m_password);
-                SerializationFormat = settings["SerializationFormat"].ValueAs(m_serializationFormat);
+                Username = settings[nameof(Username)].ValueAs(m_username);
+                Password = settings[nameof(Password)].ValueAs(m_password);
+                SerializationFormat = settings[nameof(SerializationFormat)].ValueAs(m_serializationFormat);
+                StatusMessageFilter = settings[nameof(StatusMessageFilter)].ValueAs(m_statusMessageFilter);
             }
         }
 
@@ -544,7 +573,7 @@ namespace GSF.ServiceProcess
             if ((object)requestInstance != null)
                 SendRequest(requestInstance);
             else
-                UpdateStatus(UpdateType.Warning, string.Format("Request command \"{0}\" is invalid\r\n\r\n", request));
+                UpdateStatus(UpdateType.Warning, "Request command \"{0}\" is invalid\r\n\r\n", request);
         }
 
         /// <summary>
@@ -726,7 +755,8 @@ namespace GSF.ServiceProcess
             status.AppendLine();
             status.Append(m_remotingClient.Status);
             status.AppendLine();
-            UpdateStatus(UpdateType.Information, status.ToString());
+            UpdateStatus(UpdateType.Information, "{0}", status.ToString());
+            SendRequest(StatusMessageFilter);
         }
 
         private void RemotingClient_ConnectionException(object sender, EventArgs<Exception> e)
@@ -738,7 +768,7 @@ namespace GSF.ServiceProcess
             status.AppendFormat("Exception during connection attempt: {0}", e.Argument.Message);
             status.AppendLine();
             status.AppendLine();
-            UpdateStatus(UpdateType.Alarm, status.ToString());
+            UpdateStatus(UpdateType.Alarm, "{0}", status.ToString());
 
             tlsClient = m_remotingClient as TlsClient;
 
@@ -763,7 +793,7 @@ namespace GSF.ServiceProcess
             status.AppendLine();
             status.Append(m_remotingClient.Status);
             status.AppendLine();
-            UpdateStatus(UpdateType.Warning, status.ToString());
+            UpdateStatus(UpdateType.Warning, "{0}", status.ToString());
 
             // Attempt reconnection on a separate thread.
             if (m_attemptReconnection)
@@ -788,13 +818,13 @@ namespace GSF.ServiceProcess
                 switch (response.Type)
                 {
                     case "UPDATECLIENTSTATUS-INFORMATION":
-                        UpdateStatus(UpdateType.Information, response.Message);
+                        UpdateStatus(UpdateType.Information, "{0}", response.Message);
                         break;
                     case "UPDATECLIENTSTATUS-WARNING":
-                        UpdateStatus(UpdateType.Warning, response.Message);
+                        UpdateStatus(UpdateType.Warning, "{0}", response.Message);
                         break;
                     case "UPDATECLIENTSTATUS-ALARM":
-                        UpdateStatus(UpdateType.Alarm, response.Message);
+                        UpdateStatus(UpdateType.Alarm, "{0}", response.Message);
                         break;
                     case "AUTHENTICATIONSUCCESS":
                         OnAuthenticationSuccess();
@@ -822,7 +852,7 @@ namespace GSF.ServiceProcess
                                         type = UpdateType.Warning;
                                         break;
                                 }
-                                UpdateStatus(type, string.Format("State of service \"{0}\" has changed to \"{1}\".\r\n\r\n", state.ObjectName, state.CurrentState));
+                                UpdateStatus(type, "State of service \"{0}\" has changed to \"{1}\".\r\n\r\n", state.ObjectName, state.CurrentState);
                             }
                         }
                         break;
@@ -846,7 +876,7 @@ namespace GSF.ServiceProcess
                                         break;
 
                                 }
-                                UpdateStatus(type, string.Format("State of process \"{0}\" has changed to \"{1}\".\r\n\r\n", state.ObjectName, state.CurrentState));
+                                UpdateStatus(type, "State of process \"{0}\" has changed to \"{1}\".\r\n\r\n", state.ObjectName, state.CurrentState);
                             }
                         }
                         break;

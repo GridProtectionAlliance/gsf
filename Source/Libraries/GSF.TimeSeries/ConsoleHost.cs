@@ -116,12 +116,12 @@ namespace GSF.TimeSeries
             }
         }
 
-        private void m_serviceHost_UpdatedStatus(object sender, EventArgs<string, UpdateType> e)
+        private void m_serviceHost_UpdatedStatus(object sender, EventArgs<Guid, string, UpdateType> e)
         {
             lock (m_displayLock)
             {
                 // Output status updates from the service to the console window.
-                switch (e.Argument2)
+                switch (e.Argument3)
                 {
                     case UpdateType.Alarm:
                         System.Console.ForegroundColor = ConsoleColor.Red;
@@ -131,7 +131,7 @@ namespace GSF.TimeSeries
                         break;
                 }
 
-                Write(e.Argument1);
+                Write(e.Argument2);
                 System.Console.ForegroundColor = m_originalForegroundColor;
             }
         }

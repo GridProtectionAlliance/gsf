@@ -86,6 +86,8 @@
 //       Changed AddProcess(), AddScheduledProcess() and ScheduleProcess() method to return a boolean.
 //  12/20/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  02/09/2016 - Pinal C. Patel
+//       Added new Files and Transfer commands.
 //
 //******************************************************************************************************
 
@@ -93,6 +95,7 @@ using GSF.Annotations;
 using GSF.Collections;
 using GSF.Communication;
 using GSF.Configuration;
+using GSF.Console;
 using GSF.Diagnostics;
 using GSF.ErrorManagement;
 using GSF.IO;
@@ -100,6 +103,7 @@ using GSF.Reflection;
 using GSF.Scheduling;
 using GSF.Security;
 using GSF.Security.Cryptography;
+using GSF.Threading;
 using GSF.Units;
 using System;
 using System.Collections.Generic;
@@ -114,6 +118,7 @@ using System.Security;
 using System.Security.Principal;
 using System.ServiceProcess;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace GSF.ServiceProcess
@@ -167,14 +172,300 @@ namespace GSF.ServiceProcess
         {
             public StatusUpdate(Guid client, UpdateType type, string message)
             {
-                this.Client = client;
-                this.Type = type;
-                this.Message = message;
+                Client = client;
+                Type = type;
+                Message = message;
             }
 
             public readonly Guid Client;
             public readonly UpdateType Type;
             public readonly string Message;
+        }
+
+        private class ClientFilter
+        {
+            public ClientFilter()
+            {
+                TypeInclusionFilters = new List<UpdateType>();
+                TypeExclusionFilters = new List<UpdateType>();
+                PatternInclusionFilters = new List<string>();
+                PatternExclusionFilters = new List<string>();
+            }
+
+            public bool PassesFilter(StatusUpdate update)
+            {
+                UpdateType updateType = update.Type;
+                string message = update.Message;
+
+                return TypeInclusionFilters.DefaultIfEmpty(update.Type).Any(type => type == updateType) &&
+                       TypeExclusionFilters.All(type => type != updateType) &&
+                       PatternInclusionFilters.DefaultIfEmpty("").Any(pattern => Regex.IsMatch(message, pattern, RegexOptions.IgnoreCase)) &&
+                       PatternExclusionFilters.All(pattern => !Regex.IsMatch(message, pattern, RegexOptions.IgnoreCase));
+            }
+
+            public readonly List<UpdateType> TypeInclusionFilters;
+            public readonly List<UpdateType> TypeExclusionFilters;
+            public readonly List<string> PatternInclusionFilters;
+            public readonly List<string> PatternExclusionFilters;
+        }
+
+        private class ClientStatusUpdateConfiguration
+        {
+            #region [ Members ]
+
+            // Constants
+            private const int HighPriority = 2;
+            private const int LowPriority = 1;
+
+            // Fields
+            private Guid m_clientID;
+            private ClientFilter m_filter;
+            private LogicalThread m_thread;
+            private List<Tuple<DateTime, int>> m_messageCounts;
+            private ServiceHelper m_serviceHelper;
+
+            #endregion
+
+            #region [ Constructors ]
+
+            public ClientStatusUpdateConfiguration(Guid clientID, ServiceHelper serviceHelper)
+            {
+                m_clientID = clientID;
+                m_filter = new ClientFilter();
+                m_thread = serviceHelper.m_threadScheduler.CreateThread(2);
+                m_messageCounts = new List<Tuple<DateTime, int>>();
+                m_serviceHelper = serviceHelper;
+            }
+
+            #endregion
+
+            #region [ Methods ]
+
+            public void PrioritizeUpdate(StatusUpdate update)
+            {
+                m_thread.Push(HighPriority, () => m_serviceHelper.SendUpdateClientStatusResponse(update.Client, update.Type, update.Message));
+            }
+
+            public void SendBroadcastUpdates(List<StatusUpdate> updates)
+            {
+                m_thread.Push(LowPriority, () =>
+                {
+                    UpdateType type = UpdateType.Information;
+                    StringBuilder messageBuilder = new StringBuilder();
+                    List<StatusUpdate> messages = new List<StatusUpdate>();
+                    int messageCount = GetRecentMessageCount();
+                    int suppressedMessageCount = 0;
+                    int i = 0;
+
+                    foreach (StatusUpdate update in updates.Where(m_filter.PassesFilter))
+                    {
+                        // If the message count exceeds the maximum status update frequency, suppress the message
+                        if (messageCount + messages.Count >= m_serviceHelper.m_maxStatusUpdatesFrequency)
+                        {
+                            suppressedMessageCount++;
+                            continue;
+                        }
+
+                        // If the string builder is empty,
+                        // set the initial state of type
+                        if (messageBuilder.Length == 0)
+                            type = update.Type;
+
+                        // If the current update's type is not the same as the
+                        // current message, start a new message with the new type
+                        if (update.Type != type)
+                        {
+                            // Add the current message to the list of messages
+                            messages.Add(new StatusUpdate(m_clientID, type, messageBuilder.ToString()));
+
+                            // If the message count exceeds the maximum status update frequency, begin message suppression
+                            if (messageCount + messages.Count >= m_serviceHelper.m_maxStatusUpdatesFrequency)
+                            {
+                                suppressedMessageCount++;
+                                continue;
+                            }
+
+                            // Update the message type
+                            // and reset the string builder
+                            type = update.Type;
+                            messageBuilder.Clear();
+                        }
+
+                        // Update the message and increment the counter variable
+                        messageBuilder.Append(update.Message);
+                        i++;
+                    }
+
+                    // If the maximum frequency has not been reached, add the final message to the list of messages;
+                    // otherwise, add a message warning the user that messages were suppressed due to high frequency
+                    if (messageCount + messages.Count < m_serviceHelper.m_maxStatusUpdatesFrequency)
+                        messages.Add(new StatusUpdate(m_clientID, type, messageBuilder.ToString()));
+                    else
+                        messages.Add(new StatusUpdate(m_clientID, UpdateType.Warning, $"Suppressed {suppressedMessageCount:N0} status updates due to high frequency to avoid flooding.\r\n\r\n"));
+
+                    // Send messages to the client
+                    foreach (StatusUpdate message in messages)
+                        m_serviceHelper.SendUpdateClientStatusResponse(message.Client, message.Type, message.Message);
+
+                    // Add the number of messages sent to the list of messages for the current time
+                    m_messageCounts.Add(Tuple.Create(DateTime.UtcNow, messages.Count));
+                });
+            }
+
+            public void UpdateFilters(ClientFilter mergeFilter, List<int> removalIDs)
+            {
+                m_thread.Push(HighPriority, () =>
+                {
+                    foreach (int filterID in removalIDs.OrderByDescending(id => id))
+                        RemoveFilter(filterID);
+
+                    m_filter.TypeInclusionFilters.AddRange(mergeFilter.TypeInclusionFilters);
+                    m_filter.TypeExclusionFilters.AddRange(mergeFilter.TypeExclusionFilters);
+                    m_filter.PatternInclusionFilters.AddRange(mergeFilter.PatternInclusionFilters);
+                    m_filter.PatternExclusionFilters.AddRange(mergeFilter.PatternExclusionFilters);
+                });
+            }
+
+            public void ListFilters(ClientRequestInfo requestInfo)
+            {
+                m_thread.Push(HighPriority, () =>
+                {
+                    StringBuilder messageBuilder = new StringBuilder();
+                    StringBuilder commandBuilder = new StringBuilder();
+                    int i = 0;
+
+                    commandBuilder.Append("Filter");
+
+                    // List type inclusion filters
+                    if (m_filter.TypeInclusionFilters.Any())
+                    {
+                        messageBuilder.AppendLine("Type Inclusion Filters:");
+
+                        foreach (UpdateType filter in m_filter.TypeInclusionFilters)
+                        {
+                            messageBuilder.AppendLine($"[{i++}] {filter}");
+                            commandBuilder.Append($" -Include Type {Arguments.Escape(filter.ToString())}");
+                        }
+                    }
+
+                    // List type exclusion filters
+                    if (m_filter.TypeExclusionFilters.Any())
+                    {
+                        if (messageBuilder.Length > 0)
+                            messageBuilder.AppendLine();
+
+                        messageBuilder.AppendLine("Type Exclusion Filters:");
+
+                        foreach (UpdateType filter in m_filter.TypeExclusionFilters)
+                        {
+                            messageBuilder.AppendLine($"[{i++}] {filter}");
+                            commandBuilder.Append($" -Exclude Type {Arguments.Escape(filter.ToString())}");
+                        }
+                    }
+
+                    // List pattern exclusion filters
+                    if (m_filter.PatternInclusionFilters.Any())
+                    {
+                        if (messageBuilder.Length > 0)
+                            messageBuilder.AppendLine();
+
+                        messageBuilder.AppendLine("Pattern Inclusion Filters:");
+
+                        foreach (string filter in m_filter.PatternInclusionFilters)
+                        {
+                            messageBuilder.AppendLine($"[{i++}] {filter}");
+                            commandBuilder.Append($" -Include Regex {Arguments.Escape(filter)}");
+                        }
+                    }
+
+                    // List pattern exclusion filters
+                    if (m_filter.PatternExclusionFilters.Any())
+                    {
+                        if (messageBuilder.Length > 0)
+                            messageBuilder.AppendLine();
+
+                        messageBuilder.AppendLine("Pattern Exclusion Filters:");
+
+                        foreach (string filter in m_filter.PatternExclusionFilters)
+                        {
+                            messageBuilder.AppendLine($"[{i++}] {filter}");
+                            commandBuilder.Append($" -Exclude Regex {Arguments.Escape(filter)}");
+                        }
+                    }
+
+                    // Display a message if no filters are defined
+                    if (messageBuilder.Length == 0)
+                    {
+                        messageBuilder.AppendLine("No filters defined.");
+                    }
+                    else
+                    {
+                        string command = commandBuilder.ToString();
+                        string argument = Arguments.Escape(command);
+
+                        messageBuilder.AppendLine();
+                        messageBuilder.AppendLine("Command:");
+                        messageBuilder.AppendLine(command);
+                        messageBuilder.AppendLine();
+                        messageBuilder.AppendLine("Argument:");
+                        messageBuilder.AppendLine(argument);
+                    }
+
+
+                    // Send the message to the client
+                    m_serviceHelper.SendActionableResponse(requestInfo, true, null, messageBuilder.ToString().TrimEnd());
+                });
+            }
+
+            private int GetRecentMessageCount()
+            {
+                // Get the total number of messages sent to the client in the last second
+                DateTime lastSecond = DateTime.UtcNow.AddSeconds(-1.0D);
+                int oldestMessageIndex = m_messageCounts.TakeWhile(tuple => tuple.Item1 < lastSecond).Count();
+                m_messageCounts.RemoveRange(0, oldestMessageIndex);
+                return m_messageCounts.Sum(tuple => tuple.Item2);
+            }
+
+            private void RemoveFilter(int filterID)
+            {
+                int index = filterID;
+
+                // Attempt to remove a filter from the list of type inclusion filters
+                if (index < m_filter.TypeInclusionFilters.Count)
+                {
+                    m_filter.TypeInclusionFilters.RemoveAt(index);
+                    return;
+                }
+
+                index -= m_filter.TypeInclusionFilters.Count;
+
+                // Attempt to remove a filter from the list of type exclusion filters
+                if (index < m_filter.TypeExclusionFilters.Count)
+                {
+                    m_filter.TypeExclusionFilters.RemoveAt(index);
+                    return;
+                }
+
+                index -= m_filter.TypeExclusionFilters.Count;
+
+                // Attempt to remove a filter from the list of pattern inclusion filters
+                if (index < m_filter.PatternInclusionFilters.Count)
+                {
+                    m_filter.PatternInclusionFilters.RemoveAt(index);
+                    return;
+                }
+
+                index -= m_filter.PatternInclusionFilters.Count;
+
+                // Attempt to remove a filter from the list of pattern exclusion filters
+                if (index < m_filter.PatternExclusionFilters.Count)
+                {
+                    m_filter.PatternExclusionFilters.RemoveAt(index);
+                    return;
+                }
+            }
+
+            #endregion
         }
 
         // Delegates
@@ -333,12 +624,13 @@ namespace GSF.ServiceProcess
         /// Provides notification of when status messages were sent to consumer(s).
         /// </summary>
         /// <remarks>
-        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the status message sent to consumer(s).<br/>
-        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the message <see cref="UpdateType"/>.
+        /// <see cref="EventArgs{T1,T2,T3}.Argument1"/> is the ID of the consumer(s).<br/>
+        /// <see cref="EventArgs{T1,T2,T3}.Argument2"/> is the status message sent to consumer(s).<br/>
+        /// <see cref="EventArgs{T1,T2,T3}.Argument3"/> is the message <see cref="UpdateType"/>.
         /// </remarks>
         [Category("Notification"),
         Description("Occurs when there are status messages sent to consumer(s).")]
-        public event EventHandler<EventArgs<string, UpdateType>> UpdatedStatus;
+        public event EventHandler<EventArgs<Guid, string, UpdateType>> UpdatedStatus;
 
         /// <summary>
         /// Provides notification of when there is an exception logged.
@@ -377,13 +669,14 @@ namespace GSF.ServiceProcess
         private readonly List<ClientRequestHandler> m_clientRequestHandlers;
         private readonly Dictionary<ISupportLifecycle, bool> m_componentEnabledStates;
         private TryGetClientPrincipalFunctionSignature m_tryGetClientPrincipalFunction;
-        private readonly ProcessQueue<StatusUpdate> m_statusUpdateQueue;
+        private readonly Dictionary<Guid, ClientStatusUpdateConfiguration> m_clientStatusUpdateLookup;
+        private readonly LogicalThreadScheduler m_threadScheduler;
+        private readonly LogicalThread m_statusUpdateThread;
+        private readonly List<StatusUpdate> m_statusUpdateQueue;
+        private ICancellationToken m_queueCancellationToken;
         private bool m_suppressUpdates;
         private Guid m_remoteCommandClientID;
         private Process m_remoteCommandProcess;
-        private Ticks m_lastStatusUpdateTime;
-        private long m_statusUpdateCount;
-        private bool m_supressStatusUpdates;
         private bool m_enabled;
         private bool m_initialized;
         private bool m_disposed;
@@ -417,11 +710,13 @@ namespace GSF.ServiceProcess
             m_clientRequestHandlers = new List<ClientRequestHandler>();
             m_componentEnabledStates = new Dictionary<ISupportLifecycle, bool>();
 
-            // Components
-            m_statusUpdateQueue = ProcessQueue<StatusUpdate>.CreateRealTimeQueue(ProcessStatusUpdates);
-            m_statusUpdateQueue.Name = "StatusUpdateQueue";
-            m_statusUpdateQueue.ProcessException += StatusUpdateQueue_ProcessException;
+            m_clientStatusUpdateLookup = new Dictionary<Guid, ClientStatusUpdateConfiguration>();
+            m_threadScheduler = new LogicalThreadScheduler();
+            m_threadScheduler.UnhandledException += LogicalThread_ProcessException;
+            m_statusUpdateThread = m_threadScheduler.CreateThread(2);
+            m_statusUpdateQueue = new List<StatusUpdate>();
 
+            // Components
             m_statusLog = new LogFile();
             m_statusLog.FileName = "StatusLog.txt";
             m_statusLog.SettingsCategory = "StatusLog";
@@ -1221,11 +1516,12 @@ namespace GSF.ServiceProcess
                 m_clientRequestHandlers.Add(new ClientRequestHandler("Unschedule", "Unschedules a process defined in the service", UnscheduleProcess));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("SaveSchedules", "Saves process schedules to the config file", SaveSchedules));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("LoadSchedules", "Loads process schedules from the config file", LoadSchedules));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Filter", "Filters status messages coming from the service", UpdateClientFilter));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Files", "Manages files on the server", ManageFiles));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Transfer", "Transfers files to and from the server", TransferFile));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("Version", "Displays current service version", ShowVersion, new[] { "ver" }));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("Time", "Displays current system time", ShowTime));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("User", "Displays current user information", ShowUser, new[] { "whoami" }));
-                m_clientRequestHandlers.Add(new ClientRequestHandler("Files", "Manages files on the server", ManageFiles));
-                m_clientRequestHandlers.Add(new ClientRequestHandler("Transfer", "Transfers files to and from the server", TransferFile));
 
                 // Enable telnet support if requested.
                 if (m_supportTelnetSessions)
@@ -1257,7 +1553,6 @@ namespace GSF.ServiceProcess
                 m_serviceComponents.Add(m_errorLogger);
                 m_serviceComponents.Add(m_errorLogger.ErrorLog);
                 m_serviceComponents.Add(m_remotingServer);
-                m_serviceComponents.Add(m_statusUpdateQueue);
             }
 
             // Open log file if file logging is enabled.
@@ -1265,7 +1560,6 @@ namespace GSF.ServiceProcess
                 m_statusLog.Open();
 
             // Start all of the core components.
-            m_statusUpdateQueue.Start();
             m_processScheduler.Start();
             m_remotingServer.Start();
 
@@ -1366,7 +1660,8 @@ namespace GSF.ServiceProcess
                 if (client != Guid.Empty)
                 {
                     // Send message directly to specified client.
-                    handles = new[] { m_remotingServer.SendToAsync(client, response) };
+                    if (m_remotingServer.IsClientConnected(client))
+                        handles = new[] { m_remotingServer.SendToAsync(client, response) };
                 }
                 else
                 {
@@ -1428,7 +1723,7 @@ namespace GSF.ServiceProcess
                 // Send response to service
                 SendResponse(requestInfo.Sender.ClientID, response);
 
-                OnUpdatedStatus(response.Message, success ? UpdateType.Information : UpdateType.Alarm);
+                OnUpdatedStatus(requestInfo.Sender.ClientID, response.Message, success ? UpdateType.Information : UpdateType.Alarm);
             }
             catch (Exception ex)
             {
@@ -1459,11 +1754,19 @@ namespace GSF.ServiceProcess
         [StringFormatMethod("message")]
         public void UpdateStatus(Guid client, UpdateType type, string message, params object[] args)
         {
-            if (!m_suppressUpdates)
-            {
-                // Queue the status update for processing.
-                m_statusUpdateQueue.Add(new StatusUpdate(client, type, string.Format(message, args)));
-            }
+            const int HighPriority = 2;
+            const int LowPriority = 1;
+            StatusUpdate update;
+
+            if (m_suppressUpdates)
+                return;
+
+            update = new StatusUpdate(client, type, string.Format(message, args));
+
+            if (client != Guid.Empty)
+                m_statusUpdateThread.Push(HighPriority, () => PrioritizeStatusUpdate(update));
+            else
+                m_statusUpdateThread.Push(LowPriority, () => QueueStatusUpdate(update));
         }
 
         /// <summary>
@@ -1686,6 +1989,42 @@ namespace GSF.ServiceProcess
         }
 
         /// <summary>
+        /// Disconnects the client from the service.
+        /// </summary>
+        /// <param name="clientID">The ID of the client.</param>
+        public void DisconnectClient(Guid clientID)
+        {
+            ClientInfo disconnectedClient;
+
+            m_statusUpdateThread.Push(() => m_clientStatusUpdateLookup.Remove(clientID));
+            disconnectedClient = FindConnectedClient(clientID);
+
+            if ((object)disconnectedClient == null)
+                return;
+
+            if (clientID == m_remoteCommandClientID)
+            {
+                try
+                {
+                    RemoteTelnetSession(new ClientRequestInfo(disconnectedClient, ClientRequest.Parse("Telnet -disconnect")));
+                }
+                catch (Exception ex)
+                {
+                    // We'll encounter an exception because we'll try to update the status of the client that had the
+                    // remote command session open and this will fail since the client is disconnected.
+                    LogException(ex);
+                }
+            }
+
+            lock (m_remoteClients)
+            {
+                m_remoteClients.Remove(disconnectedClient);
+            }
+
+            UpdateStatus(UpdateType.Information, "Remote client disconnected - {0} from {1}.\r\n\r\n", disconnectedClient.ClientUser.Identity.Name, disconnectedClient.MachineName);
+        }
+
+        /// <summary>
         /// Log exception to <see cref="ErrorLogger"/>.
         /// </summary>
         /// <param name="ex">Exception to log.</param>
@@ -1832,15 +2171,16 @@ namespace GSF.ServiceProcess
         /// <summary>
         /// Raises the <see cref="UpdatedStatus"/> event with the updated status message.
         /// </summary>
+        /// <param name="clientID">ID of the client receiving the message.</param>
         /// <param name="status">Updated status message.</param>
         /// <param name="type"><see cref="UpdateType"/> of status message.</param>
         /// <remarks>
         /// This overload combines string.Format and SendStatusMessage for convenience.
         /// </remarks>
-        protected virtual void OnUpdatedStatus(string status, UpdateType type)
+        protected virtual void OnUpdatedStatus(Guid clientID, string status, UpdateType type)
         {
             if ((object)UpdatedStatus != null)
-                UpdatedStatus(this, new EventArgs<string, UpdateType>(status, type));
+                UpdatedStatus(this, new EventArgs<Guid, string, UpdateType>(clientID, status, type));
         }
 
         /// <summary>
@@ -1905,12 +2245,8 @@ namespace GSF.ServiceProcess
                     m_remoteCommandProcess.Dispose();
                 }
 
-                if ((object)m_statusUpdateQueue != null)
-                {
-                    m_statusUpdateQueue.ProcessException -= StatusUpdateQueue_ProcessException;
-                    m_statusUpdateQueue.Flush();
-                    m_statusUpdateQueue.Dispose();
-                }
+                if ((object)m_queueCancellationToken != null)
+                    m_queueCancellationToken.Cancel();
 
                 // Service processes are created and owned by remoting server, so we dispose them
                 if ((object)m_processes != null)
@@ -2038,52 +2374,43 @@ namespace GSF.ServiceProcess
             return message;
         }
 
-        private void ProcessStatusUpdates(StatusUpdate[] items)
+        private void PrioritizeStatusUpdate(StatusUpdate update)
         {
-            // Reset status update frequency counters after one second
-            if ((DateTime.UtcNow.Ticks - m_lastStatusUpdateTime).ToSeconds() >= 1.0D)
+            ClientStatusUpdateConfiguration clientConfig;
+
+            if (m_clientStatusUpdateLookup.TryGetValue(update.Client, out clientConfig))
+                clientConfig.PrioritizeUpdate(update);
+
+            if (m_logStatusUpdates)
+                m_statusLog.WriteTimestampedLine(update.Message);
+        }
+
+        private void QueueStatusUpdate(StatusUpdate update)
+        {
+            const int HighPriority = 2;
+            Action processAction;
+
+            m_statusUpdateQueue.Add(update);
+
+            if (m_logStatusUpdates)
+                m_statusLog.WriteTimestampedLine(update.Message);
+
+            if (m_queueCancellationToken == null)
             {
-                m_lastStatusUpdateTime = DateTime.UtcNow.Ticks;
-
-                if (m_supressStatusUpdates)
-                    SendUpdateClientStatusResponse(Guid.Empty, UpdateType.Warning, string.Format("Suppressed {0:N0} status updates due to high frequency to avoid flooding.\r\n\r\n", m_statusUpdateCount));
-
-                m_supressStatusUpdates = (m_statusUpdateCount > m_maxStatusUpdatesFrequency);
-                m_statusUpdateCount = 0;
+                processAction = () => m_statusUpdateThread.Push(HighPriority, ProcessStatusUpdates);
+                m_queueCancellationToken = processAction.DelayAndExecute(250);
             }
+        }
 
-            // Handle priority messages
-            IEnumerable<StatusUpdate> priorityStatuses = items.Where(status => status.Client != Guid.Empty || status.Type != UpdateType.Information);
+        private void ProcessStatusUpdates()
+        {
+            List<StatusUpdate> updates = new List<StatusUpdate>(m_statusUpdateQueue);
 
-            foreach (StatusUpdate clientStatus in priorityStatuses)
-            {
-                m_statusUpdateCount++;
+            foreach (ClientStatusUpdateConfiguration clientConfig in m_clientStatusUpdateLookup.Values)
+                clientConfig.SendBroadcastUpdates(updates);
 
-                // All messages sent directly to client should be displayed
-                if (clientStatus.Client != Guid.Empty || !m_supressStatusUpdates)
-                    SendUpdateClientStatusResponse(clientStatus.Client, clientStatus.Type, clientStatus.Message);
-
-                if (m_logStatusUpdates)
-                    m_statusLog.WriteTimestampedLine(clientStatus.Message);
-            }
-
-            // Handle broadcast messages
-            IEnumerable<StatusUpdate> broadcastStatuses = items.Where(status => status.Client == Guid.Empty && status.Type == UpdateType.Information);
-            StringBuilder broadcastMessages = new StringBuilder();
-
-            foreach (StatusUpdate item in broadcastStatuses)
-            {
-                broadcastMessages.Append(item.Message);
-
-                if (m_logStatusUpdates)
-                    m_statusLog.WriteTimestampedLine(item.Message);
-            }
-
-            // Counting bulk broadcast status set as one update
-            m_statusUpdateCount++;
-
-            if (!m_supressStatusUpdates)
-                SendUpdateClientStatusResponse(Guid.Empty, UpdateType.Information, broadcastMessages.ToString());
+            m_statusUpdateQueue.Clear();
+            m_queueCancellationToken = null;
         }
 
         private void SendAuthenticationSuccessResponse(Guid clientID)
@@ -2107,7 +2434,7 @@ namespace GSF.ServiceProcess
             response.Message = CurtailMessageLength(responseMessage);
             SendResponse(clientID, response);
 
-            OnUpdatedStatus(response.Message, type);
+            OnUpdatedStatus(clientID, response.Message, type);
         }
 
         private void SendServiceStateChangedResponse(ServiceState currentState)
@@ -2143,7 +2470,7 @@ namespace GSF.ServiceProcess
                 scheduledProcess.Start();
         }
 
-        private void StatusUpdateQueue_ProcessException(object sender, EventArgs<Exception> e)
+        private void LogicalThread_ProcessException(object sender, EventArgs<Exception> e)
         {
             LogException(e.Argument);
         }
@@ -2169,30 +2496,7 @@ namespace GSF.ServiceProcess
 
         private void RemotingServer_ClientDisconnected(object sender, EventArgs<Guid> e)
         {
-            ClientInfo disconnectedClient = FindConnectedClient(e.Argument);
-
-            if ((object)disconnectedClient == null)
-                return;
-
-            if (e.Argument == m_remoteCommandClientID)
-            {
-                try
-                {
-                    RemoteTelnetSession(new ClientRequestInfo(disconnectedClient, ClientRequest.Parse("Telnet -disconnect")));
-                }
-                catch (Exception ex)
-                {
-                    // We'll encounter an exception because we'll try to update the status of the client that had the
-                    // remote command session open and this will fail since the client is disconnected.
-                    LogException(ex);
-                }
-            }
-
-            lock (m_remoteClients)
-            {
-                m_remoteClients.Remove(disconnectedClient);
-            }
-            UpdateStatus(UpdateType.Information, "Remote client disconnected - {0} from {1}.\r\n\r\n", disconnectedClient.ClientUser.Identity.Name, disconnectedClient.MachineName);
+            DisconnectClient(e.Argument);
         }
 
         private void RemotingServer_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
@@ -3753,169 +4057,203 @@ namespace GSF.ServiceProcess
             }
         }
 
-        private void ShowVersion(ClientRequestInfo requestInfo)
+        private void UpdateClientFilter(ClientRequestInfo requestInfo)
         {
+            const int HighPriority = 2;
+
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
                 StringBuilder helpMessage = new StringBuilder();
 
-                helpMessage.Append("Shows the current service version.");
+                helpMessage.Append("Filters status messages coming from the service.");
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
                 helpMessage.Append("   Usage:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       Version -options");
+                helpMessage.Append("       Filter [ { -List |");
+                helpMessage.AppendLine();
+                helpMessage.Append("                  -Include <FilterDefinition> |");
+                helpMessage.AppendLine();
+                helpMessage.Append("                  -Exclude <FilterDefinition> |");
+                helpMessage.AppendLine();
+                helpMessage.Append("                  -Remove <ID> } ... ]");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("       Filter -?");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("       FilterDefinition ::= Type { Alarm | Warning | Information } |");
+                helpMessage.AppendLine();
+                helpMessage.Append("                            Message <FilterSpec> |");
+                helpMessage.AppendLine();
+                helpMessage.Append("                            Regex <FilterSpec>");
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
                 helpMessage.Append("   Options:");
                 helpMessage.AppendLine();
+                helpMessage.Append("       -List".PadRight(20));
+                helpMessage.Append("Displays a list of the client's active filters");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -Include".PadRight(20));
+                helpMessage.Append("Defines a filter matching messages to be displayed");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -Exclude".PadRight(20));
+                helpMessage.Append("Defines a filter matching messages to be suppressed");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -Remove".PadRight(20));
+                helpMessage.Append("Removes a filter");
+                helpMessage.AppendLine();
                 helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
                 helpMessage.AppendLine();
-                helpMessage.Append("       -actionable".PadRight(20));
-                helpMessage.Append("Returns results via an actionable event");
-                helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "{0}", helpMessage.ToString());
+
+                return;
             }
-            else
-            {
-                StringBuilder versionInfo = new StringBuilder();
-                AssemblyInfo serviceAssembly = AssemblyInfo.EntryAssembly;
-                string serviceName;
 
-                if ((object)m_parentService != null && !string.IsNullOrWhiteSpace(m_parentService.ServiceName))
-                    serviceName = m_parentService.ServiceName;
+            string[] args = Arguments.ToArgs(requestInfo.Request.Arguments.ToString());
+
+            ClientFilter mergeFilter = new ClientFilter();
+            List<int> removalIDs = new List<int>();
+            bool argsContainsList = !args.Any();
+
+            int i = 0;
+
+            while (i < args.Length)
+            {
+                if (args[i].Equals("-List", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Set the boolean flag indicating that
+                    // the client requested a list of filters
+                    argsContainsList = true;
+                    i++;
+                }
+                else if (args[i].Equals("-Remove", StringComparison.OrdinalIgnoreCase))
+                {
+                    int filterID;
+
+                    // Check for parsing errors with the number of arguments
+                    if (i + 1 >= args.Length)
+                        throw new FormatException("Malformed expression - Missing ID argument in 'Filter -Remove <ID>' command. Type 'Filter -?' to get help with this command.");
+
+                    // Check for parsing errors in the filter ID
+                    if (!int.TryParse(args[i + 1], out filterID))
+                        throw new FormatException("Malformed expression - ID argument supplied to 'Filter -Remove <ID>' must be an integer. Type 'Filter -?' to get help with this command.");
+
+                    // Add the ID to the list of filter IDs to be removed from the client's filter
+                    if (i + 1 < args.Length && int.TryParse(args[i + 1], out filterID))
+                        removalIDs.Add(filterID);
+
+                    i += 2;
+                }
+                else if (args[i].Equals("-Include", StringComparison.OrdinalIgnoreCase))
+                {
+                    string filterType;
+                    string filterSpec;
+                    UpdateType updateType;
+
+                    // Validate the number of arguments
+                    // associated with the filter
+                    if (i + 2 >= args.Length)
+                        throw new FormatException("Malformed expression - Missing arguments in 'Filter -Include <FilterDefinition>' command. Type 'Filter -?' to get help with this command.");
+
+                    filterType = args[i + 1];
+                    filterSpec = args[i + 2];
+
+                    if (filterType.Equals("Message", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Add message filters to the merge filter
+                        mergeFilter.PatternInclusionFilters.Add(Regex.Escape(filterSpec));
+                    }
+                    else if (args[i + 1].Equals("Type", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Add type filters to the merge filter
+                        if (!Enum.TryParse(filterSpec, true, out updateType))
+                            throw new FormatException($"Malformed expression - Unrecognized message type '{filterSpec}' in 'Filter -Include <FilterDefinition>' command. Type 'Filter -?' to get help with this command.");
+
+                        mergeFilter.TypeInclusionFilters.Add(updateType);
+                    }
+                    else if (args[i + 1].Equals("Regex", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Add pattern filters to the merge filter
+                        mergeFilter.PatternInclusionFilters.Add(filterSpec);
+                    }
+                    else
+                    {
+                        throw new FormatException($"Malformed expression - Unrecognized filter type '{filterType}' in 'Filter -Include <FilterDefinition>' command. Type 'Filter -?' to get help with this command.");
+                    }
+
+                    i += 3;
+                }
+                else if (args[i].Equals("-Exclude", StringComparison.OrdinalIgnoreCase))
+                {
+                    string filterType;
+                    string filterSpec;
+                    UpdateType updateType;
+
+                    // Validate the number of arguments
+                    // associated with the filter
+                    if (i + 2 >= args.Length)
+                        throw new FormatException("Malformed expression - Missing arguments in 'Filter -Exclude <FilterDefinition>' command. Type 'Filter -?' to get help with this command.");
+
+                    filterType = args[i + 1];
+                    filterSpec = args[i + 2];
+
+                    if (filterType.Equals("Message", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Add message filters to the merge filter
+                        mergeFilter.PatternExclusionFilters.Add(Regex.Escape(filterSpec));
+                    }
+                    else if (filterType.Equals("Type", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Add type filters to the merge filter
+                        if (!Enum.TryParse(filterSpec, true, out updateType))
+                            throw new FormatException($"Malformed expression - Unrecognized message type '{filterSpec}' in 'Filter -Exclude <FilterDefinition>' command. Type 'Filter -?' to get help with this command.");
+
+                        mergeFilter.TypeExclusionFilters.Add(updateType);
+                    }
+                    else if (filterType.Equals("Regex", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Add pattern filters to the merge filter
+                        mergeFilter.PatternExclusionFilters.Add(filterSpec);
+                    }
+                    else
+                    {
+                        throw new FormatException($"Malformed expression - Unrecognized filter type '{filterType}' in 'Filter -Exclude <FilterDefinition>' command. Type 'Filter -?' to get help with this command.");
+                    }
+
+                    i += 3;
+                }
                 else
-                    serviceName = AppDomain.CurrentDomain.FriendlyName;
-
-                // Get current process memory usage
-                long processMemory = Common.GetProcessMemory();
-
-                versionInfo.AppendFormat("{0} Service Version:{1}{1}", serviceName, Environment.NewLine);
-                versionInfo.AppendFormat("      App Domain: {0}, running on .NET {1}{2}", AppDomain.CurrentDomain.FriendlyName, Environment.Version, Environment.NewLine);
-                versionInfo.AppendFormat("    Machine Name: {0}{1}", Environment.MachineName, Environment.NewLine);
-                versionInfo.AppendFormat("      OS Version: {0}{1}", Environment.OSVersion.VersionString, Environment.NewLine);
-                versionInfo.AppendFormat("    Product Name: {0}{1}", Common.GetOSProductName(), Environment.NewLine);
-                versionInfo.AppendFormat("  Working Memory: {0}{1}", processMemory > 0 ? SI2.ToScaledString(processMemory, 4, "B", SI2.IECSymbols) : "Undetermined", Environment.NewLine);
-                versionInfo.AppendFormat("  Execution Mode: {0}-bit{1}", IntPtr.Size * 8, Environment.NewLine);
-                versionInfo.AppendFormat("      Processors: {0}{1}", Environment.ProcessorCount, Environment.NewLine);
-                versionInfo.AppendFormat("       Code Base: {0}{1}", serviceAssembly.CodeBase, Environment.NewLine);
-                versionInfo.AppendFormat("      Build Date: {0}{1}", serviceAssembly.BuildDate, Environment.NewLine);
-                versionInfo.AppendFormat("         Version: {0}", serviceAssembly.Version);
-
-                string message = versionInfo.ToString();
-                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message + "{0}{0}", Environment.NewLine);
-
-                // Also allow consumers to directly consume message via event in response to a version request
-                if (requestInfo.Request.Arguments.Exists("actionable"))
-                    SendActionableResponse(requestInfo, true, null, message);
+                {
+                    throw new FormatException($"Malformed expression - Unrecognized argument '{args[i]}'. Type 'Filter -?' to get help with this command.");
+                }
             }
-        }
 
-        private void ShowTime(ClientRequestInfo requestInfo)
-        {
-            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            // Determine whether the filter was actually updated
+            bool filterUpdated = mergeFilter.TypeInclusionFilters.Any() ||
+                                 mergeFilter.TypeExclusionFilters.Any() ||
+                                 mergeFilter.PatternInclusionFilters.Any() ||
+                                 mergeFilter.PatternExclusionFilters.Any() ||
+                                 removalIDs.Any();
+
+            if (!filterUpdated && !argsContainsList)
+                return;
+
+            // Use the status update thread to get the
+            // client's config, then update the filters
+            m_statusUpdateThread.Push(HighPriority, () =>
             {
-                StringBuilder helpMessage = new StringBuilder();
+                ClientStatusUpdateConfiguration clientConfig = m_clientStatusUpdateLookup.GetOrAdd(requestInfo.Sender.ClientID, id => new ClientStatusUpdateConfiguration(id, this));
 
-                helpMessage.Append("Shows the current system time.");
-                helpMessage.AppendLine();
-                helpMessage.AppendLine();
-                helpMessage.Append("   Usage:");
-                helpMessage.AppendLine();
-                helpMessage.Append("       Time -options");
-                helpMessage.AppendLine();
-                helpMessage.AppendLine();
-                helpMessage.Append("   Options:");
-                helpMessage.AppendLine();
-                helpMessage.Append("       -?".PadRight(20));
-                helpMessage.Append("Displays this help message");
-                helpMessage.AppendLine();
-                helpMessage.Append("       -actionable".PadRight(20));
-                helpMessage.Append("Returns results via an actionable event");
-                helpMessage.AppendLine();
-                helpMessage.AppendLine();
+                if (filterUpdated)
+                    clientConfig.UpdateFilters(mergeFilter, removalIDs);
 
-                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
-            }
-            else
-            {
-                string message;
-                //          1         2         3         4         5         6         7         8
-                // 12345678901234567890123456789012345678901234567890123456789012345678901234567890
-                //  Current system time: yyyy-MM-dd HH:mm:ss.fff, yyyy-MM-dd HH:mm:ss.fff UTC
-                // Total system runtime: xx days yy hours zz minutes ii seconds
-                if ((object)m_remotingServer != null)
-                    message = string.Format(" Current system time: {0}, {1} UTC\r\nTotal system runtime: {2}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"), m_remotingServer.RunTime.ToString());
-                else
-                    message = string.Format("Current system time: {0}, {1} UTC", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"));
-
-                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message + "\r\n\r\n");
-
-                // Also allow consumers to directly consume message via event in response to a time request
-                if (requestInfo.Request.Arguments.Exists("actionable"))
-                    SendActionableResponse(requestInfo, true, null, message);
-            }
-        }
-
-        private void ShowUser(ClientRequestInfo requestInfo)
-        {
-            if (requestInfo.Request.Arguments.ContainsHelpRequest)
-            {
-                StringBuilder helpMessage = new StringBuilder();
-
-                helpMessage.Append("Shows the current user information.");
-                helpMessage.AppendLine();
-                helpMessage.AppendLine();
-                helpMessage.Append("   Usage:");
-                helpMessage.AppendLine();
-                helpMessage.Append("       User -options");
-                helpMessage.AppendLine();
-                helpMessage.AppendLine();
-                helpMessage.Append("   Options:");
-                helpMessage.AppendLine();
-                helpMessage.Append("       -?".PadRight(20));
-                helpMessage.Append("Displays this help message");
-                helpMessage.AppendLine();
-                helpMessage.Append("       -actionable".PadRight(20));
-                helpMessage.Append("Returns results via an actionable event");
-                helpMessage.AppendLine();
-                helpMessage.AppendLine();
-
-                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
-            }
-            else
-            {
-                //          1         2         3         4         5         6         7         8
-                // 12345678901234567890123456789012345678901234567890123456789012345678901234567890
-                //   Current user: ABC\john
-                //    Client name: openPDCConsole
-                //   From machine: JohnPC
-                // Connected time: xx days yy hours zz minutes ii seconds
-                //  Authenticated: true
-
-                ClientInfo info = requestInfo.Sender;
-
-                string message = string.Format(
-                    "  Current user: {0}\r\n" +
-                    "   Client name: {1}\r\n" +
-                    "  From machine: {2}\r\n" +
-                    "Connected time: {3}\r\n" +
-                    " Authenticated: {4}",
-                    info.ClientUser.Identity.Name.ToNonNullNorEmptyString("Undetermined"),
-                    info.ClientName.ToNonNullNorEmptyString("Undetermined"),
-                    info.MachineName.ToNonNullNorEmptyString("Undetermined"),
-                    info.ConnectedAt > DateTime.MinValue ? (DateTime.UtcNow - info.ConnectedAt).ToElapsedTimeString() : m_remotingServer.RunTime.ToString(),
-                    info.ClientUser.Identity.IsAuthenticated);
-
-                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message + "\r\n\r\n");
-
-                // Also allow consumers to directly consume message via event in response to a user info request
-                if (requestInfo.Request.Arguments.Exists("actionable"))
-                    SendActionableResponse(requestInfo, true, null, message);
-            }
+                if (argsContainsList)
+                    clientConfig.ListFilters(requestInfo);
+            });
         }
 
         private void ManageFiles(ClientRequestInfo requestInfo)
@@ -4085,6 +4423,171 @@ namespace GSF.ServiceProcess
                     // Invalid command option specified.
                     UpdateStatus(UpdateType.Alarm, "Command option is not valid.\r\n\r\n");
                 }
+            }
+        }
+
+        private void ShowVersion(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Shows the current service version.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       Version -options");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -actionable".PadRight(20));
+                helpMessage.Append("Returns results via an actionable event");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
+            }
+            else
+            {
+                StringBuilder versionInfo = new StringBuilder();
+                AssemblyInfo serviceAssembly = AssemblyInfo.EntryAssembly;
+                string serviceName;
+
+                if ((object)m_parentService != null && !string.IsNullOrWhiteSpace(m_parentService.ServiceName))
+                    serviceName = m_parentService.ServiceName;
+                else
+                    serviceName = AppDomain.CurrentDomain.FriendlyName;
+
+                // Get current process memory usage
+                long processMemory = Common.GetProcessMemory();
+
+                versionInfo.AppendFormat("{0} Service Version:{1}{1}", serviceName, Environment.NewLine);
+                versionInfo.AppendFormat("      App Domain: {0}, running on .NET {1}{2}", AppDomain.CurrentDomain.FriendlyName, Environment.Version, Environment.NewLine);
+                versionInfo.AppendFormat("    Machine Name: {0}{1}", Environment.MachineName, Environment.NewLine);
+                versionInfo.AppendFormat("      OS Version: {0}{1}", Environment.OSVersion.VersionString, Environment.NewLine);
+                versionInfo.AppendFormat("    Product Name: {0}{1}", Common.GetOSProductName(), Environment.NewLine);
+                versionInfo.AppendFormat("  Working Memory: {0}{1}", processMemory > 0 ? SI2.ToScaledString(processMemory, 4, "B", SI2.IECSymbols) : "Undetermined", Environment.NewLine);
+                versionInfo.AppendFormat("  Execution Mode: {0}-bit{1}", IntPtr.Size * 8, Environment.NewLine);
+                versionInfo.AppendFormat("      Processors: {0}{1}", Environment.ProcessorCount, Environment.NewLine);
+                versionInfo.AppendFormat("       Code Base: {0}{1}", serviceAssembly.CodeBase, Environment.NewLine);
+                versionInfo.AppendFormat("      Build Date: {0}{1}", serviceAssembly.BuildDate, Environment.NewLine);
+                versionInfo.AppendFormat("         Version: {0}", serviceAssembly.Version);
+
+                string message = versionInfo.ToString();
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message + "{0}{0}", Environment.NewLine);
+
+                // Also allow consumers to directly consume message via event in response to a version request
+                if (requestInfo.Request.Arguments.Exists("actionable"))
+                    SendActionableResponse(requestInfo, true, null, message);
+            }
+        }
+
+        private void ShowTime(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Shows the current system time.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       Time -options");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -actionable".PadRight(20));
+                helpMessage.Append("Returns results via an actionable event");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
+            }
+            else
+            {
+                string message;
+                //          1         2         3         4         5         6         7         8
+                // 12345678901234567890123456789012345678901234567890123456789012345678901234567890
+                //  Current system time: yyyy-MM-dd HH:mm:ss.fff, yyyy-MM-dd HH:mm:ss.fff UTC
+                // Total system runtime: xx days yy hours zz minutes ii seconds
+                if ((object)m_remotingServer != null)
+                    message = string.Format(" Current system time: {0}, {1} UTC\r\nTotal system runtime: {2}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"), m_remotingServer.RunTime.ToString());
+                else
+                    message = string.Format("Current system time: {0}, {1} UTC", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message + "\r\n\r\n");
+
+                // Also allow consumers to directly consume message via event in response to a time request
+                if (requestInfo.Request.Arguments.Exists("actionable"))
+                    SendActionableResponse(requestInfo, true, null, message);
+            }
+        }
+
+        private void ShowUser(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Shows the current user information.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       User -options");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -actionable".PadRight(20));
+                helpMessage.Append("Returns results via an actionable event");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
+            }
+            else
+            {
+                //          1         2         3         4         5         6         7         8
+                // 12345678901234567890123456789012345678901234567890123456789012345678901234567890
+                //   Current user: ABC\john
+                //    Client name: openPDCConsole
+                //   From machine: JohnPC
+                // Connected time: xx days yy hours zz minutes ii seconds
+                //  Authenticated: true
+
+                ClientInfo info = requestInfo.Sender;
+
+                string message = string.Format(
+                    "  Current user: {0}\r\n" +
+                    "   Client name: {1}\r\n" +
+                    "  From machine: {2}\r\n" +
+                    "Connected time: {3}\r\n" +
+                    " Authenticated: {4}",
+                    info.ClientUser.Identity.Name.ToNonNullNorEmptyString("Undetermined"),
+                    info.ClientName.ToNonNullNorEmptyString("Undetermined"),
+                    info.MachineName.ToNonNullNorEmptyString("Undetermined"),
+                    info.ConnectedAt > DateTime.MinValue ? (DateTime.UtcNow - info.ConnectedAt).ToElapsedTimeString() : m_remotingServer.RunTime.ToString(),
+                    info.ClientUser.Identity.IsAuthenticated);
+
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message + "\r\n\r\n");
+
+                // Also allow consumers to directly consume message via event in response to a user info request
+                if (requestInfo.Request.Arguments.Exists("actionable"))
+                    SendActionableResponse(requestInfo, true, null, message);
             }
         }
 

@@ -512,6 +512,157 @@ namespace GSF.Console
             return parsedCommand.ToArray();
         }
 
+        /// <summary>
+        /// Provides an array of arguments parsed from the given command
+        /// using parsing rules similar to those used in POSIX environments.
+        /// </summary>
+        /// <param name="command">The command to be parsed.</param>
+        /// <returns>An array of arguments.</returns>
+        public static string[] ToArgs(string command)
+        {
+            string[] tokenCharacterPatterns =
+            {
+                // Backslash followed by another character
+                @"\\.",
+
+                // Substring wrapped in double quotes
+                @"""(?:(?:\\"")|[^""])*""",
+
+                // Substring wrapped in single quotes
+                @"'[^']*'",
+
+                // Mismatched double quote
+                @"""(?:(?:\\"")|[^""])*$",
+
+                // Mismatched single quote
+                @"'[^']*$",
+
+                // A single character that is not a
+                // single quote, double quote, or whitespace
+                @"[^'""\s]"
+            };
+
+            // Define the regular expression pattern to match tokens
+            string pattern = $"(?<=^|\\s)({string.Join("|", tokenCharacterPatterns)})+(?=\\s|$)";
+
+            // This function converts an escape
+            // sequence into the corresponding character
+            Func<string, char> toChar = escapeSequence =>
+            {
+                if (escapeSequence == @"\n")
+                    return '\n';
+
+                if (escapeSequence == @"\r")
+                    return '\r';
+
+                if (escapeSequence == @"\t")
+                    return '\t';
+
+                return escapeSequence[1];
+            };
+
+            // This function converts a token character into
+            // its corresponding output in the args array
+            Func<Capture, string> interpretCharacter = tokenChar =>
+            {
+                string value = tokenChar.Value;
+
+                switch (value[0])
+                {
+                    // Backslash followed by any character produces
+                    // only the character following the backslash
+                    case '\\':
+                        if (value.Length == 1)
+                            throw new FormatException("Malformed expression - dangling escape sequence.");
+
+                        return toChar(value).ToString();
+
+                    // Expressions wrapped in double quotes must be stripped of the
+                    // surrounding double quotes, and backslashes inside double-quoted
+                    // expressions must be replaces by the character immediately following them
+                    case '"':
+                        if (!value.EndsWith("\""))
+                            throw new FormatException("Malformed expression - mismatched quote.");
+
+                        return new string(value.Zip(value.Substring(1, value.Length - 2), (c1, c2) =>
+                        {
+                            // Handle escape sequences
+                            // inside double quotes
+                            if (c1 == '\\')
+                                return toChar(string.Concat(c1, c2));
+
+                            return c2;
+                        }).ToArray());
+
+                    // Expressions wrapped in single quotes must
+                    // be stripped of the surrounding single quotes
+                    case '\'':
+                        if (!value.EndsWith("'"))
+                            throw new FormatException("Malformed expression - mismatched quote.");
+
+                        return value.Substring(1, value.Length - 2);
+
+                    // Any other character produces itself
+                    default:
+                        return value;
+                }
+            };
+
+            // This function converts a token to its corresponding output in the args array
+            Func<Match, string> interpretToken = token => string.Concat(token.Groups[1].Captures.Cast<Capture>().Select(interpretCharacter));
+
+            // Apply the regular expression pattern and
+            // convert the result into the array of arguments
+            return Regex.Matches(command, pattern)
+                .Cast<Match>()
+                .Select(interpretToken)
+                .ToArray();
+        }
+
+        /// <summary>
+        /// Escapes a string so that it will be parsed as a
+        /// single argument by the <see cref="ToArgs"/> method.
+        /// </summary>
+        /// <param name="arg">The argument to be escaped.</param>
+        /// <returns>The escaped argument.</returns>
+        public static string Escape(string arg)
+        {
+            StringBuilder escapedArgBuilder = new StringBuilder();
+
+            foreach (char c in arg)
+            {
+                switch (c)
+                {
+                    case '\\':
+                    case '"':
+                    case '\'':
+                        escapedArgBuilder.Append('\\').Append(c);
+                        break;
+
+                    case '\n':
+                        escapedArgBuilder.Append(@"\n");
+                        break;
+
+                    case '\r':
+                        escapedArgBuilder.Append(@"\r");
+                        break;
+
+                    case '\t':
+                        escapedArgBuilder.Append(@"\t");
+                        break;
+
+                    default:
+                        if (char.IsWhiteSpace(c))
+                            escapedArgBuilder.Append('\\');
+
+                        escapedArgBuilder.Append(c);
+                        break;
+                }
+            }
+
+            return escapedArgBuilder.ToString();
+        }
+
         #endregion
     }
 }
