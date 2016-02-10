@@ -478,7 +478,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 {
                     OutputStreamMeasurement outputStreamMeasurement = new OutputStreamMeasurement
                     {
-                        NodeID = (Guid)database.CurrentNodeID(),
+                        NodeID = CommonFunctions.CurrentNodeID(),
                         AdapterID = outputStreamID,
                         HistorianID = measurement.HistorianID,
                         PointID = measurement.PointID,
