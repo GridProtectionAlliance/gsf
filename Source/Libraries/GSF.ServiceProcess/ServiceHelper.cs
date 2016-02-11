@@ -120,6 +120,7 @@ using System.ServiceProcess;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Web;
 
 namespace GSF.ServiceProcess
 {
@@ -402,6 +403,7 @@ namespace GSF.ServiceProcess
                     {
                         string command = commandBuilder.ToString();
                         string argument = Arguments.Escape(command);
+                        string url = HttpUtility.UrlEncode(command);
 
                         messageBuilder.AppendLine();
                         messageBuilder.AppendLine("Command:");
@@ -409,6 +411,9 @@ namespace GSF.ServiceProcess
                         messageBuilder.AppendLine();
                         messageBuilder.AppendLine("Argument:");
                         messageBuilder.AppendLine(argument);
+                        messageBuilder.AppendLine();
+                        messageBuilder.AppendLine("URL:");
+                        messageBuilder.AppendLine(url);
                     }
 
 
