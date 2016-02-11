@@ -629,6 +629,11 @@ namespace GSF.Console
         {
             StringBuilder escapedArgBuilder = new StringBuilder();
 
+            // Empty string is encoded as
+            // two empty double quotes
+            if (string.IsNullOrEmpty(arg))
+                return new string('"', 2);
+
             foreach (char c in arg)
             {
                 switch (c)
@@ -636,25 +641,34 @@ namespace GSF.Console
                     case '\\':
                     case '"':
                     case '\'':
+                        // Quotes and backslashes need
+                        // to be escaped by a backslash
                         escapedArgBuilder.Append('\\').Append(c);
                         break;
 
                     case '\n':
+                        // Newline (\n)
                         escapedArgBuilder.Append(@"\n");
                         break;
 
                     case '\r':
+                        // Carriage return (\r)
                         escapedArgBuilder.Append(@"\r");
                         break;
 
                     case '\t':
+                        // Tab (\t)
                         escapedArgBuilder.Append(@"\t");
                         break;
-
+                        
                     default:
+                        // White space needs to be
+                        // escaped by a backslash
                         if (char.IsWhiteSpace(c))
                             escapedArgBuilder.Append('\\');
 
+                        // All other characters do
+                        // not need to be escaped
                         escapedArgBuilder.Append(c);
                         break;
                 }
