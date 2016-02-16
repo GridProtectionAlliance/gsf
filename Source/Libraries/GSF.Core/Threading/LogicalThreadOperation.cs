@@ -147,6 +147,9 @@ namespace GSF.Threading
             }
             set
             {
+                if (value < 1 || value > m_thread.PriorityLevels)
+                    throw new ArgumentException($"Logical thread does not support priority level {value}. Specify a priority between 1 and {m_thread.PriorityLevels}.", nameof(value));
+
                 m_defaultPriority = value;
             }
         }
