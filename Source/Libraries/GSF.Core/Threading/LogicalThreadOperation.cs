@@ -70,8 +70,11 @@ namespace GSF.Threading
         private readonly LogicalThread m_thread;
         private readonly Action m_action;
         private readonly bool m_autoRunIfPending;
-        private int m_defaultPriority;
+        private int m_priority;
+
         private int m_state;
+        private int m_queuedPriority;
+        private CancellationToken m_cancellationToken;
 
         #endregion
 
@@ -96,21 +99,24 @@ namespace GSF.Threading
         /// </summary>
         /// <param name="thread">The thread on which to execute the operation's action.</param>
         /// <param name="action">The action to be executed.</param>
-        /// <param name="defaultPriority">The default priority with which the action should be executed on the logical thread.</param>
+        /// <param name="priority">The priority with which the action should be executed on the logical thread.</param>
         /// <param name="autoRunIfPending">
         /// Set to <c>true</c> to execute <see cref="RunIfPending"/> automatically; otherwise, 
         /// set to <c>false</c> for user controlled call timing.
         /// </param>
-        /// <exception cref="ArgumentException"><paramref name="defaultPriority"/> is outside the range between 1 and <see cref="LogicalThread.PriorityLevels"/>.</exception>
-        public LogicalThreadOperation(LogicalThread thread, Action action, int defaultPriority, bool autoRunIfPending = true)
+        /// <exception cref="ArgumentException"><paramref name="priority"/> is outside the range between 1 and <see cref="LogicalThread.PriorityLevels"/>.</exception>
+        public LogicalThreadOperation(LogicalThread thread, Action action, int priority, bool autoRunIfPending = true)
         {
-            if (defaultPriority < 1 || defaultPriority > thread.PriorityLevels)
-                throw new ArgumentException($"Logical thread does not support priority level {defaultPriority}. Specify a priority between 1 and {thread.PriorityLevels}.", nameof(defaultPriority));
-
             m_thread = thread;
             m_action = action;
-            m_defaultPriority = defaultPriority;
+            Priority = priority;
             m_autoRunIfPending = autoRunIfPending;
+
+            // Initialize this class with a cancelled token so that
+            // calls to EnsurePriority before the first call to
+            // ExecuteActionAsync do not inadvertently queue actions
+            m_cancellationToken = new CancellationToken();
+            m_cancellationToken.Cancel();
         }
 
         #endregion
@@ -136,21 +142,22 @@ namespace GSF.Threading
         /// <summary>
         /// Gets or sets default priority for logical thread operation.
         /// </summary>
+        /// <exception cref="ArgumentException"><paramref name="value"/> is outside the range between 1 and <see cref="LogicalThread.PriorityLevels"/>.</exception>
         /// <remarks>
         /// Updates to default priority will only take effect during next <see cref="LogicalThread.Push(int, Action)"/> call.
         /// </remarks>
-        public int DefaultPriority
+        public int Priority
         {
             get
             {
-                return m_defaultPriority;
+                return Interlocked.CompareExchange(ref m_priority, 0, 0);
             }
             set
             {
                 if (value < 1 || value > m_thread.PriorityLevels)
                     throw new ArgumentException($"Logical thread does not support priority level {value}. Specify a priority between 1 and {m_thread.PriorityLevels}.", nameof(value));
 
-                m_defaultPriority = value;
+                Interlocked.Exchange(ref m_priority, value);
             }
         }
 
@@ -162,14 +169,13 @@ namespace GSF.Threading
         /// Executes the action on the current thread or marks the operation as
         /// pending if the operation is already running.
         /// </summary>
-        /// <param name="priority">Target priority for action, defaults to <see cref="DefaultPriority"/>.</param>
         /// <remarks>
         /// When the operation is marked as pending, it will run again at the next
         /// call to <see cref="RunIfPending"/>. This can be useful if an update to
         /// an object's state has invalidated the operation that is currently running
         /// and will therefore need to be run again.
         /// </remarks>
-        public void RunOnce(int? priority = null)
+        public void RunOnce()
         {
             // if (m_state == NotRunning)
             //     TryRunOnce();
@@ -177,21 +183,20 @@ namespace GSF.Threading
             //     m_state = Pending;
 
             if (Interlocked.CompareExchange(ref m_state, Pending, Running) == NotRunning)
-                TryRunOnce(priority);
+                TryRunOnce();
         }
 
         /// <summary>
         /// Executes the action on another thread or marks the operation as pending
         /// if the operation is already running.
         /// </summary>
-        /// <param name="priority">Target priority for action, defaults to <see cref="DefaultPriority"/>.</param>
         /// <remarks>
         /// When the operation is marked as pending, it will run again at the next
         /// call to <see cref="RunIfPending"/>. This can be useful if an update to
         /// an object's state has invalidated the operation that is currently running
         /// and will therefore need to be run again.
         /// </remarks>
-        public void RunOnceAsync(int? priority = null)
+        public void RunOnceAsync()
         {
             // if (m_state == NotRunning)
             //     TryRunOnceAsync();
@@ -199,15 +204,14 @@ namespace GSF.Threading
             //     m_state = Pending;
 
             if (Interlocked.CompareExchange(ref m_state, Pending, Running) == NotRunning)
-                TryRunOnceAsync(priority);
+                TryRunOnceAsync();
         }
 
         /// <summary>
         /// Attempts to execute the action on the current thread.
         /// Does nothing if the operation is already running.
         /// </summary>
-        /// <param name="priority">Target priority for action, defaults to <see cref="DefaultPriority"/>.</param>
-        public void TryRunOnce(int? priority = null)
+        public void TryRunOnce()
         {
             // if (m_state == NotRunning)
             // {
@@ -218,15 +222,14 @@ namespace GSF.Threading
             // }
 
             if (Interlocked.CompareExchange(ref m_state, Running, NotRunning) == NotRunning)
-                ExecuteAction(m_action, priority);
+                ExecuteAction(m_action);
         }
 
         /// <summary>
         /// Attempts to execute the action on another thread.
         /// Does nothing if the operation is already running.
         /// </summary>
-        /// <param name="priority">Target priority for action, defaults to <see cref="DefaultPriority"/>.</param>
-        public void TryRunOnceAsync(int? priority = null)
+        public void TryRunOnceAsync()
         {
             // if (m_state == NotRunning)
             // {
@@ -235,14 +238,13 @@ namespace GSF.Threading
             // }
 
             if (Interlocked.CompareExchange(ref m_state, Running, NotRunning) == NotRunning)
-                m_thread.Push(priority ?? m_defaultPriority, () => ExecuteAction(m_action, priority));
+                ExecuteActionAsync(Priority);
         }
 
         /// <summary>
         /// Starts the operation over at the beginning if the operation is pending or sets
         /// the operation state back to not running so it can run again.
         /// </summary>
-        /// <param name="priority">Target priority for action, defaults to <see cref="DefaultPriority"/>.</param>
         /// <remarks>
         /// This method must be called at the end of an operation in order to set the state
         /// of the operation back to running or not running so that the operation can run again.
@@ -252,7 +254,7 @@ namespace GSF.Threading
         /// that may involve asynchronous loops and signaling patterns that would not be possible
         /// with the <see cref="ISynchronizedOperation"/> interface.
         /// </remarks>
-        public void RunIfPending(int? priority = null)
+        public void RunIfPending()
         {
             // if (m_state == Pending)
             // {
@@ -269,7 +271,7 @@ namespace GSF.Threading
                 // There is no race condition here because if m_state is Pending,
                 // then it cannot be changed by any other line of code except this one
                 Interlocked.Exchange(ref m_state, Running);
-                m_thread.Push(priority ?? m_defaultPriority, () => ExecuteAction(m_action, priority));
+                ExecuteActionAsync(Priority);
             }
         }
 
@@ -277,7 +279,6 @@ namespace GSF.Threading
         /// Executes an action once on the current thread.
         /// </summary>
         /// <param name="action"><see cref="Action"/> to run on current thread.</param>
-        /// <param name="priority">Target priority for action, defaults to <see cref="DefaultPriority"/>.</param>
         /// <remarks>
         /// This method provides exception handling for the action passed into this
         /// method with a couple of guarantees. The first is that regardless of what
@@ -286,31 +287,76 @@ namespace GSF.Threading
         /// second is that the RunIfPending method will be called if an exception
         /// does occur in the given action.
         /// </remarks>
-        public void ExecuteAction(Action action, int? priority = null)
+        public void ExecuteAction(Action action)
         {
             try
             {
                 action();
 
                 if (m_autoRunIfPending)
-                    RunIfPending(priority);
+                    RunIfPending();
             }
             catch (Exception ex)
             {
                 if (LogicalThread.CurrentThread != m_thread)
                 {
-                    m_thread.Push(priority ?? m_defaultPriority, () =>
+                    m_thread.Push(Priority, () =>
                     {
                         string message = $"Exception occurred while executing logical thread operation: {ex.Message}";
                         throw new Exception(message, ex);
                     });
                 }
 
-                RunIfPending(priority);
+                RunIfPending();
 
                 if (LogicalThread.CurrentThread == m_thread)
                     throw;
             }
+        }
+
+        /// <summary>
+        /// If the operation is running, the action has yet to be executed,
+        /// and the given priority level differs from the queued action's
+        /// priority level, this method will requeue the action at the given
+        /// priority level.
+        /// </summary>
+        /// <param name="priority">The priority at which the current operation should be requeued.</param>
+        public void RequeueAction(int priority)
+        {
+            CancellationToken cancellationToken;
+            int queuedPriority;
+
+            // Order of operations here is vital to avoid cancelling freshly
+            // queued operations when the user hasn't changed the priority level
+            cancellationToken = Interlocked.CompareExchange(ref m_cancellationToken, null, null);
+            queuedPriority = Interlocked.CompareExchange(ref m_queuedPriority, 0, 0);
+
+            // If the priority has changed, attempt to cancel the currently queued action.
+            // If the action was not previously cancelled, requeue the action at the given priority
+            if (queuedPriority != priority && !cancellationToken.Cancel())
+                ExecuteActionAsync(priority);
+        }
+
+        private void ExecuteActionAsync(int priority)
+        {
+            CancellationToken cancellationToken = new CancellationToken();
+
+            // Order of operations here is vital to avoid getting
+            // cancelled when the user hasn't changed the priority level
+            Interlocked.Exchange(ref m_queuedPriority, priority);
+            Interlocked.Exchange(ref m_cancellationToken, cancellationToken);
+
+            m_thread.Push(priority, () =>
+            {
+                // If the cancellation token was previously cancelled,
+                // it means this action has been requeued so don't do anything.
+                // By cancelling it now, we let requeue operations know that the
+                // action is currently executing and will soon be requeued anyway
+                if (m_cancellationToken.Cancel())
+                    return;
+
+                ExecuteAction(m_action);
+            });
         }
 
         #endregion

@@ -307,7 +307,7 @@ namespace GSF.IO
                 m_directoryQueue = new LogicalThreadLocal<Queue<Action>>(() => new Queue<Action>());
 
                 m_cleanProcessedFilesThread = m_fileProcessor.m_threadScheduler.CreateThread();
-                m_cleanProcessedFilesOperation = new LogicalThreadOperation(m_cleanProcessedFilesThread, GetProcessedFiles);
+                m_cleanProcessedFilesOperation = new LogicalThreadOperation(m_cleanProcessedFilesThread, GetProcessedFiles, false);
             }
 
             #endregion
