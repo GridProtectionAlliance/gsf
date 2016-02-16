@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  09/24/2015 - Stephen C. Wills
 //       Generated original version of source code.
+//  02/16/2016 - J. Ritchie Carroll
+//       Changed default priority level to 1 - normal / lowest.
 //
 //******************************************************************************************************
 
@@ -243,7 +245,7 @@ namespace GSF.Threading
         /// <param name="action">The action to be executed on this thread.</param>
         public void Push(Action action)
         {
-            Push(PriorityLevels, action);
+            Push(1, action);
         }
 
         /// <summary>
