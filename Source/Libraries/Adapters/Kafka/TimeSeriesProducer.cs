@@ -492,7 +492,15 @@ namespace KafkaAdapters
             catch (Exception ex)
             {
                 OnProcessException(new InvalidOperationException($"Exception while sending Kafka messages for topic \"{Topic}\": {ex.Message}", ex));
-                Start();
+
+                try
+                {
+                    Start();
+                }
+                catch (Exception ex2)
+                {
+                    OnStatusMessage($"WARNING: Exception occurred while attempting to restart adapter from the ProcessMeasurements handler: {ex2.Message}");
+                }
             }
         }
 
