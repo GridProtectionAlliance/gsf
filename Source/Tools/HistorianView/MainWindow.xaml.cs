@@ -642,15 +642,23 @@ namespace HistorianView
             if (!File.Exists(filePath))
                 return;
 
-            // Load the hdv file as an XML document
-            document = XDocument.Load(filePath);
-            root = document.Root;
+            try
+            {
+                // Load the hdv file as an XML document
+                document = XDocument.Load(filePath);
+                root = document.Root;
+            }
+            catch
+            {
+                MessageBox.Show($"{filePath} is not a valid session file.");
+                return;
+            }
 
             if (root == null)
                 return;
 
             // Determine the values of start time, end time, chart resolution, and show disabled points
-            value = (string)root.Attribute("startTime");
+            value = (string)root.Attribute("startTime") ?? string.Empty;
 
             if (DateTime.TryParse(value, out dateTimeValue))
             {
@@ -716,8 +724,8 @@ namespace HistorianView
 
             // Determine which archives to open based on the archive tags in the hdv file
             archiveLocations = root.Elements("archive")
-                .Select(element => string.Format("{0}|{1}", (string)element.Attribute("path"), ((string)element.Attribute("offloadLocation")).ToNonNullString()))
-                .Where(location => (object)location != null)
+                .Where(element => (object)element.Attribute("path") != null)
+                .Select(element => string.Format("{0}|{1}", (string)element.Attribute("path"), (string)element.Attribute("offloadLocation") ?? string.Empty))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
