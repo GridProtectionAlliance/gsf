@@ -355,9 +355,6 @@ namespace StatHistorianReportGenerator
                     if (deviceStatsLookup.ContainsKey(deviceName) && !signalReference.StartsWith("LOCAL$"))
                         continue;
 
-                    if (!deviceName.Contains("FREEPORT"))
-                        continue;
-
                     dataQualityRecord = dataQualityErrors.Keys.FirstOrDefault(record => GetDeviceName(record) == deviceName);
                     timeQualityRecord = timeQualityErrors.Keys.FirstOrDefault(record => GetDeviceName(record) == deviceName);
 
