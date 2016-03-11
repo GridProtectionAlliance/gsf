@@ -338,8 +338,8 @@ namespace StatHistorianReportGenerator
 
                 measurementsReceived = statisticsReader.Read("PMU", 4);
                 measurementsExpected = statisticsReader.Read("PMU", 5);
-                dataQualityErrors = statisticsReader.Read("PMU", 2);
-                timeQualityErrors = statisticsReader.Read("PMU", 3);
+                dataQualityErrors = statisticsReader.Read("PMU", 1);
+                timeQualityErrors = statisticsReader.Read("PMU", 2);
 
                 // Determine which devices in the archive have stats for both measurements received and measurements expected
                 foreach (Tuple<MetadataRecord, MetadataRecord> tuple in measurementsReceived.Keys.Join(measurementsExpected.Keys, GetDeviceName, GetDeviceName, Tuple.Create))
@@ -353,6 +353,9 @@ namespace StatHistorianReportGenerator
 
                     // Make sure LOCAL$ statistics take precedence over other statistics calculated for the same device
                     if (deviceStatsLookup.ContainsKey(deviceName) && !signalReference.StartsWith("LOCAL$"))
+                        continue;
+
+                    if (!deviceName.Contains("FREEPORT"))
                         continue;
 
                     dataQualityRecord = dataQualityErrors.Keys.FirstOrDefault(record => GetDeviceName(record) == deviceName);
