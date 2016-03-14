@@ -26,7 +26,7 @@ using System;
 namespace GSF.Data.Model
 {
     /// <summary>
-    /// Defines field name that represents a record marked for deletion.
+    /// Defines an attribute that will define the field name that represents a record marked for deletion.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
     public class IsDeletedFlagAttribute : Attribute

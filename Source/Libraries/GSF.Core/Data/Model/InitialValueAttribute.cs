@@ -26,13 +26,25 @@ using System;
 namespace GSF.Data.Model
 {
 
-    // [InitialValue("(new Date()).addDays(30)")] // <-- Example to set initial value to 30 days from now
-
+    /// <summary>
+    /// Defines an attribute that will define an initial value (Javascript based) for a modeled table field.
+    /// </summary>
+    /// <remarks>
+    /// Example to set initial value to 30 days from now:
+    /// <c>[InitialValue("(new Date()).addDays(30)")]</c>
+    /// </remarks>
     [AttributeUsage(AttributeTargets.Property)]
     public class InitialValueAttribute : Attribute
     {
+        /// <summary>
+        /// Gets Javascript based initial value for modeled table field.
+        /// </summary>
         public readonly string InitialValue;
 
+        /// <summary>
+        /// Creates a new <see cref="InitialValueAttribute"/>/
+        /// </summary>
+        /// <param name="initialValue">Javascript based initial value for modeled table field.</param>
         public InitialValueAttribute(string initialValue)
         {
             InitialValue = initialValue;

@@ -25,16 +25,32 @@ using System;
 
 namespace GSF.Data.Model
 {
+    /// <summary>
+    /// Defines an attribute that will mark a property as a primary key field for a modeled table.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public class PrimaryKeyAttribute : Attribute
     {
+        /// <summary>
+        /// Gets flag that determines if primary key field is an identity field.
+        /// </summary>
         public readonly bool IsIdentity;
 
+        /// <summary>
+        /// Creates a new <see cref="PrimaryKeyAttribute"/>.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="IsIdentity"/> is assumed to be <c>false</c>.
+        /// </remarks>
         public PrimaryKeyAttribute()
         {
             IsIdentity = false;
         }
 
+        /// <summary>
+        /// Creates a new <see cref="PrimaryKeyAttribute"/> with specified identity state.
+        /// </summary>
+        /// <param name="isIdentity">Flag that determines if this primary key field is an identity field.</param>
         public PrimaryKeyAttribute(bool isIdentity)
         {
             IsIdentity = isIdentity;

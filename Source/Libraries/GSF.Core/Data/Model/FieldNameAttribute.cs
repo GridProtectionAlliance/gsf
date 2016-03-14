@@ -25,11 +25,22 @@ using System;
 
 namespace GSF.Data.Model
 {
+    /// <summary>
+    /// Defines an attribute that will allow a custom field name for a modeled table instead of using
+    /// the property name.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public class FieldNameAttribute : Attribute
     {
+        /// <summary>
+        /// Gets field name to use for property.
+        /// </summary>
         public readonly string FieldName;
 
+        /// <summary>
+        /// Creates a new <see cref="FieldNameAttribute"/>.
+        /// </summary>
+        /// <param name="fieldName">Field name to use for property.</param>
         public FieldNameAttribute(string fieldName)
         {
             FieldName = fieldName;

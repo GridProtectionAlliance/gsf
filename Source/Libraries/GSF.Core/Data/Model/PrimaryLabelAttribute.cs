@@ -26,7 +26,7 @@ using System;
 namespace GSF.Data.Model
 {
     /// <summary>
-    /// Defines field name that best represents row identification to a user.
+    /// Defines an attribute that will define the field name that best represents the row identification to a user.
     /// </summary>
     /// <remarks>
     /// An example of when this would be used is during a record deletion confirmation, e.g:
