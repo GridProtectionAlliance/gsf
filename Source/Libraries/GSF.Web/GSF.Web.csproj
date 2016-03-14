@@ -224,6 +224,7 @@
     <Compile Include="Embedded\ISecurityService.cs" />
     <Compile Include="IgnoreServicesSecurityModule.cs" />
     <Compile Include="Model\DataContext.cs" />
+    <Compile Include="Model\NamespaceDoc.cs" />
     <Compile Include="Model\RecordOperationsCache.cs" />
     <Compile Include="NamespaceDoc.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -242,6 +243,7 @@
     <Compile Include="Security\AuthorizationCache.cs" />
     <Compile Include="Security\AuthorizeControllerRoleAttribute.cs" />
     <Compile Include="Security\AuthorizeHubRoleAttribute.cs" />
+    <Compile Include="Security\NamespaceDoc.cs" />
     <Compile Include="Security\SecurityHub.cs" />
     <Compile Include="Templating\NamespaceDoc.cs" />
     <Compile Include="Templating\RazorView.cs" />
