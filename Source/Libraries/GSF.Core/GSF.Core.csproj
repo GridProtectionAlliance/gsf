@@ -186,6 +186,18 @@
     <Compile Include="Console\Command.cs" />
     <Compile Include="Console\CommandException.cs" />
     <Compile Include="Console\CommandResponse.cs" />
+    <Compile Include="Collections\IPagedList.cs" />
+    <Compile Include="Data\Model\FieldNameAttribute.cs" />
+    <Compile Include="Data\Model\InitialValueAttribute.cs" />
+    <Compile Include="Data\Model\IsDeletedFlagAttribute.cs" />
+    <Compile Include="Data\Model\LabelAttribute.cs" />
+    <Compile Include="Data\Model\NamespaceDoc.cs" />
+    <Compile Include="Data\Model\PrimaryKeyAttribute.cs" />
+    <Compile Include="Data\Model\PrimaryLabelAttribute.cs" />
+    <Compile Include="Data\Model\RecordOperationAttribute.cs" />
+    <Compile Include="Data\Model\RecordRestriction.cs" />
+    <Compile Include="Data\Model\TableOperations.cs" />
+    <Compile Include="Collections\PagedList.cs" />
     <Compile Include="Encoding7Bit.cs" />
     <Compile Include="Identity\IUserInfo.cs" />
     <Compile Include="Identity\UnixUserInfo.cs" />
@@ -477,6 +489,7 @@
   <ItemGroup>
     <Content Include="LICENSE.txt" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -50,6 +50,8 @@
 //       Added the ability to specify a default value for Majority and Minority when none exists.
 //  12/13/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  03/13/2016 - J. Ritchie Carroll
+//       Added ToPagedList extension for enumerations.
 //
 //******************************************************************************************************
 
@@ -67,6 +69,20 @@ namespace GSF.Collections
     /// </summary>
     public static class CollectionExtensions
     {
+        /// <summary>
+        /// Gets a <see cref="PagedList{T}"/> to paginate <paramref name="source"/> enumeration for
+        /// a given <paramref name="page"/> and specified <paramref name="pageSize"/>.
+        /// </summary>
+        /// <typeparam name="T">Type of <see cref="IEnumerable{T}"/> to paginate.</typeparam>
+        /// <param name="source">Source enumeration to paginate.</param>
+        /// <param name="page">Page number.</param>
+        /// <param name="pageSize">Page size.</param>
+        /// <returns>Set of items on a given <paramref name="page"/> for specified <paramref name="pageSize"/>.</returns>
+        public static PagedList<T> ToPagedList<T>(this IEnumerable<T> source, int page, int pageSize)
+        {
+            return new PagedList<T>(source, page, pageSize);
+        }
+
         /// <summary>
         /// Merges elements of multiple dictionaries into a single dictionary with no duplicate key values overwritten.
         /// </summary>

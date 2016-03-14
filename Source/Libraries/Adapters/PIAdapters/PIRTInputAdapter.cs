@@ -32,47 +32,66 @@ using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Timers;
 using GSF;
+using GSF.Collections;
+using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using OSIsoft.AF;
 using OSIsoft.AF.Asset;
 using OSIsoft.AF.Data;
 using OSIsoft.AF.PI;
-using OSIsoft.AF.Time;
 
 namespace PIAdapters
 {
     /// <summary>
     /// Uses PI event pipes to deliver real-time PI data to GSF host
     /// </summary>
-    // TODO: Remove attribute once adapter is working properly - this hides adapter from Manager UI:
-    [EditorBrowsable(EditorBrowsableState.Never)]
     [Description("OSI-PI: Reads real-time measurements from an OSI-PI server using AF-SDK.")]
     public class PIRTInputAdapter : InputAdapterBase
     {
         #region [ Members ]
 
+        // Nested Types
+        //private class DataUpdateObserver : IObserver<AFDataPipeEvent>
+        //{
+        //    public EventHandler<EventArgs<AFValue>> DataUpdated;
+        //    public EventHandler Completed;
+        //    private Action<Exception> m_exceptionHandler;
+
+        //    public DataUpdateObserver(Action<Exception> exceptionHandler)
+        //    {
+        //        m_exceptionHandler = exceptionHandler;
+        //    }
+
+        //    public void OnCompleted() => Completed?.Invoke(this, EventArgs.Empty);
+
+        //    public void OnError(Exception error) => m_exceptionHandler?.Invoke(error);
+
+        //    public void OnNext(AFDataPipeEvent value)
+        //    {
+        //        if (value.Action != AFDataPipeAction.Delete)
+        //            DataUpdated?.Invoke(this, new EventArgs<AFValue>(value.Value));
+        //    }
+        //}
+
         // Fields
-        private ConcurrentDictionary<string, MeasurementKey> m_tagKeyMap;     // Map PI tag names to GSFSchema measurement keys
-        private PIConnection m_connection;                                    // PI server connection
-        private string m_serverName;                                          // Server name for PI connection string
-        private string m_userName;                                            // Username for PI connection string
-        private string m_password;                                            // Password for PI connection string
-        private int m_connectTimeout;                                         // PI connection timeout
-        private PIPointList m_points;                                         // PI point list of points to which subscription should be made
-        //private AFDataPipe m_pipe;                                            // event pipe object raises an event when a subscribed point is updated
-        private int m_processedMeasurements;                                  // processed measurements for short status
-        private bool m_autoAddOutput;                                         // whether or not to automatically add PI points
-        private DateTime m_lastReceivedTimestamp;                             // last received timestamp from PI event pipe
-        private bool m_useEventPipes = true;                                  // whether or not to use event pipes for real-time data
-        private List<IMeasurement> m_measurements;                            // Queried measurements that are prepared to be published  
-        private int m_queryTimeSpan = 30;                                     // Minutes of data to pull per query
-        private DateTime m_publishTime = DateTime.MinValue;                   // The timestamp that is currently being published
-        private DateTime m_queryTime = DateTime.MinValue;                     // The timestamp that is currently being queried from PI
-        Thread m_dataThread;                                                  // Thread to run queries
-        System.Timers.Timer m_publishTimer;                                   // last received timestamp from PI
+        private readonly ConcurrentDictionary<int, MeasurementKey> m_tagKeyMap; // Map PI tag ID to GSFSchema measurement keys
+        private readonly ShortSynchronizedOperation m_restartConnection;        // Restart connection operation
+        private readonly ShortSynchronizedOperation m_readEvents;               // Reads PI events
+        private readonly System.Timers.Timer m_eventTimer;                      // Timer to trigger event reader
+        private PIConnection m_connection;                                      // PI server connection
+        private PIDataPipe m_dataPipe;                                          // PI data pipe
+        private List<PIPoint> m_dataPoints;                                     // Last list of subscribed data points
+        private string m_serverName;                                            // Server name for PI connection string
+        private string m_userName;                                              // Username for PI connection string
+        private string m_password;                                              // Password for PI connection string
+        //private readonly DataUpdateObserver m_dataUpdateObserver;               // Custom observer class for handling point updates
+        private int m_connectTimeout;                                           // PI connection timeout
+        private Ticks m_lastReceivedTimestamp;                                  // Last received timestamp from PI event pipe
+        private double m_lastReceivedValue;
+        private List<IMeasurement> m_measurements;                              // Queried measurements that are prepared to be published
+        private bool m_disposed;
 
         #endregion
 
@@ -83,45 +102,20 @@ namespace PIAdapters
         /// </summary>
         public PIRTInputAdapter()
         {
-            m_tagKeyMap = new ConcurrentDictionary<string, MeasurementKey>();
+            m_tagKeyMap = new ConcurrentDictionary<int, MeasurementKey>();
+            m_restartConnection = new ShortSynchronizedOperation(Start);
+            m_readEvents = new ShortSynchronizedOperation(ReadEvents);
+            //m_dataUpdateObserver = new DataUpdateObserver(OnProcessException);
+            //m_dataUpdateObserver.DataUpdated += m_dataUpdateObserver_DataUpdated;
+            m_eventTimer = new System.Timers.Timer(1000.0D);
+            m_eventTimer.Elapsed += m_eventTimer_Elapsed;
+            m_eventTimer.AutoReset = true;
+            m_eventTimer.Enabled = false;
         }
 
         #endregion
 
         #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets a value for whether the adapter will use event pipes. If event pipes are disabled, the adapter will use polling.
-        /// </summary>
-        // Hiding this property for now...
-        //[ConnectionStringParameter, Description("Gets or sets a value for whether the adapter will use event pipes. If event pipes are disabled, the adapter will use polling."), DefaultValue(true)]
-        public bool UseEventPipes
-        {
-            get
-            {
-                return m_useEventPipes;
-            }
-            set
-            {
-                m_useEventPipes = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the number of seconds to query when the adapter is polling instead of using event pipes.
-        /// </summary>
-        [ConnectionStringParameter, Description("Gets or sets the number of seconds to query when the adapter is polling instead of using event pipes."), DefaultValue(5)]
-        public int QueryTimeSpan
-        {
-            get
-            {
-                return m_queryTimeSpan;
-            }
-            set
-            {
-                m_queryTimeSpan = value;
-            }
-        }
 
         /// <summary>
         /// Returns false to indicate that this <see cref="PIRTInputAdapter"/> does NOT connect asynchronously
@@ -160,7 +154,7 @@ namespace PIAdapters
                 base.RequestedOutputMeasurementKeys = value;
 
                 if ((object)value != null && value.Any())
-                    HandleNewMeasurementsRequest(value);
+                    SubscribeToPointUpdates(value);
             }
         }
 
@@ -230,22 +224,6 @@ namespace PIAdapters
         }
 
         /// <summary>
-        /// Enables or disables adapter's ability to automatically set output measurements.
-        /// </summary>
-        [ConnectionStringParameter, Description("Enables or disables adapter's ability to automatically set output measurements."), DefaultValue(false)]
-        public bool AutoAddOutput
-        {
-            get
-            {
-                return m_autoAddOutput;
-            }
-            set
-            {
-                m_autoAddOutput = value;
-            }
-        }
-
-        /// <summary>
         /// Last timestamp received from PI
         /// </summary>
         public DateTime LastReceivedTimestamp
@@ -264,16 +242,57 @@ namespace PIAdapters
             get
             {
                 StringBuilder status = new StringBuilder();
-                status.AppendFormat("   Last Received Timestamp: {0}\r\n", m_lastReceivedTimestamp.ToString("MM/dd/yyyy HH:mm:ss.fff"));
-                status.AppendFormat("              Last Latency: {0}s\r\n", (DateTime.UtcNow - m_lastReceivedTimestamp).TotalSeconds);
-                status.AppendFormat("         Using Event Pipes: {0}\r\n", m_useEventPipes);
-                return status + base.Status;
+
+                status.Append(base.Status);
+
+                status.AppendFormat("   Last Received Timestamp: {0}", m_lastReceivedTimestamp.ToString("MM/dd/yyyy HH:mm:ss.fff"));
+                status.AppendLine();
+                status.AppendFormat("       Last Received Value: {0:N3}", m_lastReceivedValue);
+                status.AppendLine();
+                status.AppendFormat("  Latency of Last Received: {0}", (DateTime.UtcNow.Ticks - m_lastReceivedTimestamp).ToElapsedTimeString(3));
+                status.AppendLine();
+
+                if ((object)m_dataPoints != null)
+                {
+                    status.AppendFormat("       PI Data Point Count: {0:N0}: {1}...", m_dataPoints.Count, m_dataPoints.Select(p => p.ID.ToString()).Take(5).ToDelimitedString(", "));
+                    status.AppendLine();
+                }
+
+                return status.ToString();
             }
         }
 
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="PIRTInputAdapter"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        if ((object)m_connection != null)
+                        {
+                            m_connection.Disconnected -= m_connection_Disconnected;
+                            m_connection.Dispose();
+                            m_connection = null;
+                        }
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
+                }
+            }
+        }
 
         /// <summary>
         /// Reads values from the connection string and prepares this <see cref="PIRTInputAdapter"/> for connecting to PI
@@ -303,42 +322,7 @@ namespace PIAdapters
             if (settings.TryGetValue("ConnectTimeout", out setting))
                 m_connectTimeout = Convert.ToInt32(setting);
             else
-                m_connectTimeout = PIConnection.DefaultConnectTimeout;
-
-            if (!settings.TryGetValue("AutoAddOutput", out setting))
-                AutoAddOutput = false;
-            else
-                AutoAddOutput = bool.Parse(setting);
-
-            if (settings.TryGetValue("UseEventPipes", out setting))
-                UseEventPipes = bool.Parse(setting);
-            else
-                UseEventPipes = false;
-
-            if (settings.TryGetValue("QueryTimeSpan", out setting))
-                QueryTimeSpan = Convert.ToInt32(setting);
-            else
-                QueryTimeSpan = 5;
-
-
-            if (AutoAddOutput)
-            {
-                var measurements = from row in DataSource.Tables["ActiveMeasurements"].AsEnumerable()
-                                   where row["PROTOCOL"].ToString() == "PI"
-                                   select row;
-
-                List<IMeasurement> outputMeasurements = new List<IMeasurement>();
-                foreach (DataRow row in measurements)
-                {
-                    var measurement = new Measurement();
-                    var signalID = new Guid(row["SIGNALID"].ToString());
-                    measurement.Key = MeasurementKey.LookUpOrCreate(signalID, row["ID"].ToString());
-                    outputMeasurements.Add(measurement);
-                }
-
-                OutputMeasurements = outputMeasurements.ToArray();
-                OnOutputMeasurementsUpdated();
-            }
+                m_connectTimeout = PIConnection.DefaultConnectTimeout;            
         }
 
         /// <summary>
@@ -346,17 +330,22 @@ namespace PIAdapters
         /// </summary>
         protected override void AttemptConnection()
         {
-            m_processedMeasurements = 0;
-
             m_connection = new PIConnection
             {
-                ServerName = m_serverName,
-                UserName = m_userName,
-                Password = m_password,
-                ConnectTimeout = m_connectTimeout
+                ServerName = this.ServerName,
+                UserName = this.UserName,
+                Password = this.Password,
+                ConnectTimeout = this.ConnectTimeout
             };
 
+            m_connection.Disconnected += m_connection_Disconnected;
             m_connection.Open();
+
+            m_dataPipe = new PIDataPipe(AFDataPipeType.Snapshot);
+            //m_dataPipe.Subscribe(m_dataUpdateObserver);
+
+            if (AutoStart && (object)OutputMeasurements != null && OutputMeasurements.Any())
+                SubscribeToPointUpdates(this.OutputMeasurementKeys());
         }
 
         /// <summary>
@@ -364,6 +353,20 @@ namespace PIAdapters
         /// </summary>
         protected override void AttemptDisconnection()
         {
+            m_eventTimer.Enabled = false;
+
+            if ((object)m_dataPoints != null)
+            {
+                m_dataPoints.Clear();
+                m_dataPoints = null;
+            }
+
+            if ((object)m_dataPipe != null)
+            {
+                m_dataPipe.Dispose();
+                m_dataPipe = null;
+            }
+
             if ((object)m_connection != null)
             {
                 m_connection.Dispose();
@@ -378,342 +381,135 @@ namespace PIAdapters
         /// <returns></returns>
         public override string GetShortStatus(int maxLength)
         {
-            return string.Format("Received {0} measurements from PI...", m_processedMeasurements).CenterText(maxLength);
+            return string.Format("Received {0} measurements from PI...", ProcessedMeasurements).CenterText(maxLength);
         }
 
-        private void HandleNewMeasurementsRequest(MeasurementKey[] Keys)
+        private void SubscribeToPointUpdates(MeasurementKey[] keys)
         {
-            OnStatusMessage("Received request for {0} keys...", new object[] { Keys.Count() });
-
-            if (!IsConnected)
-                AttemptConnection();
+            OnStatusMessage("Subscribing to updates for {0} measurements...", keys.Length);
 
             var query = from row in DataSource.Tables["ActiveMeasurements"].AsEnumerable()
-                        from key in Keys
-                        where row["ID"].ToString().Split(':')[1] == key.ID.ToString()
+                        from key in keys
+                        where row["ID"].ToString() == key.ToString()
                         select new
                         {
                             Key = key,
-                            AlternateTag = row["ALTERNATETAG"].ToString(),
-                            PointTag = row["POINTTAG"].ToString()
+                            AlternateTag = row["AlternateTag"].ToString(),
+                            PointTag = row["PointTag"].ToString()
                         };
 
-            StringBuilder tagFilter = new StringBuilder();
+            List<PIPoint> dataPoints = new List<PIPoint>();
+
             foreach (var row in query)
             {
-                string tagname = row.PointTag;
-                if (!String.IsNullOrWhiteSpace(row.AlternateTag))
-                    tagname = row.AlternateTag;
+                string tagName = row.PointTag;
 
-                if (!m_tagKeyMap.ContainsKey(tagname))
+                if (!string.IsNullOrWhiteSpace(row.AlternateTag))
+                    tagName = row.AlternateTag;
+
+                OnStatusMessage("DEBUG: Looking up point tag '{0}'...", tagName);
+
+                PIPoint point = GetPIPoint(m_connection.Server, tagName);
+
+                if ((object)point != null)
                 {
-                    m_tagKeyMap.AddOrUpdate(tagname, row.Key, (k, v) => row.Key);
+                    OnStatusMessage("DEBUG: Found point tag '{0}'...", tagName);
+                    dataPoints.Add(point);
+                    m_tagKeyMap[point.ID] = row.Key;
                 }
-
-                if (tagFilter.Length > 0)
-                    tagFilter.Append(" OR ");
-
-                tagFilter.Append(string.Format("tag='{0}'", tagname));
+                else
+                {
+                    OnStatusMessage("DEBUG: Failed to find point tag '{0}'...", tagName);
+                }
             }
 
-            m_points = new PIPointList(PIPoint.FindPIPoints(m_connection.Server, tagFilter.ToString(), true));
+            // Remove sign-ups for any existing point list
+            if ((object)m_dataPoints != null)
+                m_dataPipe.RemoveSignups(m_dataPoints);
 
-            // TODO: Re-enable event pipe functionality in AF-SDK
-            //bool useEventPipes;
+            // Sign up for updates on selected points
+            AFListResults<PIPoint, AFDataPipeEvent> initialEvents = m_dataPipe.AddSignupsWithInitEvents(dataPoints);
 
-            //// event pipes are only applicable if enabled in connection string and this is a real time session, not playback
-            //useEventPipes = m_useEventPipes && StartTimeConstraint == DateTime.MinValue && StopTimeConstraint == DateTime.MaxValue;
+            OnStatusMessage("DEBUG: Initial event count = {0}...", initialEvents.Results.Count);
 
-            //if (useEventPipes)
-            //{
-            //    try
-            //    {
-            //        if (m_pipe != null)
-            //            ((_DEventPipeEvents_Event)m_pipe).OnNewValue -= (_DEventPipeEvents_OnNewValueEventHandler)PipeOnOnNewValue;
+            foreach (AFDataPipeEvent item in initialEvents.Results)
+            {
+                OnStatusMessage("DEBUG: Found initial event for action...", item.Action);
 
-            //        m_connection.Execute(server => m_pipe = m_points.Data.EventPipe);
+                if (item.Action != AFDataPipeAction.Delete)
+                    m_dataUpdateObserver_DataUpdated(this, new EventArgs<AFValue>(item.Value));
+            }
 
-            //        ((_DEventPipeEvents_Event)m_pipe).OnNewValue += (_DEventPipeEvents_OnNewValueEventHandler)PipeOnOnNewValue;
-            //    }
-            //    catch (ThreadAbortException)
-            //    {
-            //        throw;
-            //    }
-            //    catch (Exception e)
-            //    {
-            //        useEventPipes = false; // try to run with polling instead of event pipes;
-            //        OnProcessException(e);
-            //    }
-            //}
+            m_dataPoints = dataPoints;
 
-            //if (!useEventPipes)
-            //{
-            // warn that we are going to use a different configuration here...
-            if (m_useEventPipes)
-                OnStatusMessage("WARNING: PI adapter switching from event pipes to polling due to error or start/stop time constraints.");
-
-            // TODO: Poll method needs some work...
-            // set up a new thread to do some long calls to PI and set up threads, timers, etc for polling
-            StopGettingData();
-            ThreadPool.QueueUserWorkItem(StartGettingData, tagFilter);
-            //}
-
-            //m_useEventPipes = useEventPipes;
+            m_eventTimer.Enabled = true;
         }
 
-        /// <summary>
-        /// Starts threads and timers to poll the PI server for data
-        /// </summary>
-        /// <param name="state">Filter string which will get the desired points from PI</param>
-        private void StartGettingData(object state)
+        private PIPoint GetPIPoint(PIServer server, string tagName)
         {
-            try
-            {
-                string tagFilter = state.ToString();
+            PIPoint point;
+            PIPoint.TryFindPIPoint(server, tagName, out point);
+            return point;
+        }
 
-                m_points = new PIPointList(PIPoint.FindPIPoints(m_connection.Server, tagFilter, true));
+        private void m_eventTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            OnStatusMessage("DEBUG: Timer elapsed...");
+            m_readEvents.TryRunOnceAsync();
+        }
 
-                m_dataThread = new Thread(QueryData);
-                m_dataThread.IsBackground = true;
-                m_dataThread.Start();
+        private void ReadEvents()
+        {
+            if ((object)m_dataPipe == null)
+                return;
 
-                m_publishTimer = new System.Timers.Timer();
-                m_publishTimer.Interval = ProcessingInterval > 0 ? ProcessingInterval : 33;
-                m_publishTimer.Elapsed += m_publishTimer_Tick;
-                m_publishTimer.Start();
-            }
-            catch (ThreadAbortException)
+            OnStatusMessage("DEBUG: Data pipe called for next 100 GetUpdateEvents...");
+
+            AFListResults<PIPoint, AFDataPipeEvent> updateEvents = m_dataPipe.GetUpdateEvents(100);
+
+            OnStatusMessage("DEBUG: Update event count = {0}...", updateEvents.Count);
+
+            foreach (AFDataPipeEvent item in updateEvents.Results)
             {
-                throw;
-            }
-            catch (Exception e)
-            {
-                OnProcessException(e);
+                OnStatusMessage("DEBUG: Found update event for action...", item.Action);
+
+                if (item.Action != AFDataPipeAction.Delete)
+                    m_dataUpdateObserver_DataUpdated(this, new EventArgs<AFValue>(item.Value));
             }
         }
 
-        private void StopGettingData()
+        // PI data updated handler
+        private void m_dataUpdateObserver_DataUpdated(object sender, EventArgs<AFValue> e)
         {
-            try
+            OnStatusMessage("DEBUG: Data observer event handler called with a new value: {0:N3}...", Convert.ToDouble(e.Argument.Value));
+            AFValue value = e.Argument;
+            MeasurementKey key;
+
+            OnStatusMessage("DEBUG: Data observer event handler looking up point ID {0:N0} in table...", value.PIPoint.ID);
+            if ((object)value != null && m_tagKeyMap.TryGetValue(value.PIPoint.ID, out key))
             {
-                if (m_publishTimer != null)
-                {
-                    m_publishTimer.Elapsed -= m_publishTimer_Tick;
-                    m_publishTimer.Stop();
-                    m_publishTimer.Dispose();
-                }
-                m_publishTimer = null;
+                OnStatusMessage("DEBUG: Data observer event handler found point ID {0:N0} in table: {1}...", value.PIPoint.ID, key);
+                Measurement measurement = new Measurement();
 
+                measurement.Key = key;
+                measurement.Value = Convert.ToDouble(value.Value);
+                measurement.Timestamp = value.Timestamp.UtcTime;
 
-                if (m_dataThread != null)
-                    m_dataThread.Abort();
+                OnNewMeasurements(new[] { measurement });
 
-                m_dataThread = null;
-
-                m_points = null;
+                m_lastReceivedTimestamp = measurement.Timestamp;
+                m_lastReceivedValue = measurement.Value;
             }
-            catch (ThreadAbortException)
+            else
             {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(ex);
+                OnStatusMessage("DEBUG: Data observer event handler did not find point ID {0:N0} in table...", value.PIPoint.ID);
             }
         }
 
-        /// <summary>
-        /// Runs a constant loop to pull data from PI
-        /// </summary>
-        private void QueryData()
+        private void m_connection_Disconnected(object sender, EventArgs e)
         {
-            DateTime currentTime = StartTimeConstraint;
-            if (currentTime == DateTime.MinValue) // handle real-time IAON session
-                currentTime = DateTime.UtcNow;
-
-            while (currentTime <= StopTimeConstraint)
-            {
-                try
-                {
-                    DateTime endTime = currentTime.AddSeconds(m_queryTimeSpan);
-
-                    if (endTime <= DateTime.UtcNow)
-                    {
-                        DateTime localCurrentTime = currentTime.ToLocalTime();
-                        DateTime localEndTime = endTime.ToLocalTime();
-                        List<IMeasurement> measToAdd = new List<IMeasurement>();
-
-                        foreach (PIPoint point in m_points)
-                        {
-                            AFValues values = point.RecordedValues(new AFTimeRange(new AFTime(localCurrentTime), new AFTime(localEndTime)), AFBoundaryType.Inside, null, false);
-
-                            foreach (AFValue value in values)
-                            {
-                                Measurement measurement = new Measurement();
-                                measurement.Key = m_tagKeyMap[point.Name];
-                                measurement.Value = Convert.ToDouble(value.Value);
-                                measurement.Timestamp = value.Timestamp.UtcTime;
-                                measToAdd.Add(measurement);
-                            }
-                        }
-
-                        if (measToAdd.Any())
-                        {
-                            lock (m_measurements)
-                            {
-                                foreach (IMeasurement meas in measToAdd)
-                                {
-                                    m_measurements.Add(meas);
-                                    m_processedMeasurements++;
-                                }
-                            }
-                        }
-
-                        currentTime = endTime;
-                        m_queryTime = currentTime;
-                    }
-                }
-                catch (ThreadAbortException)
-                {
-                    throw;
-                }
-                catch (Exception e)
-                {
-                    OnProcessException(e);
-                }
-
-                Thread.Sleep(33);
-            }
-        }
-
-        // Publishes data that was queried from PI using polling
-        private void m_publishTimer_Tick(object sender, ElapsedEventArgs e)
-        {
-            try
-            {
-                if (m_queryTime > m_publishTime)
-                {
-                    DateTime minPublishTime = StartTimeConstraint;
-                    if (minPublishTime == DateTime.MinValue)
-                        minPublishTime = DateTime.UtcNow;
-
-                    if (m_publishTime < minPublishTime)
-                        m_publishTime = minPublishTime;
-
-                    m_publishTime = m_publishTime.AddMilliseconds(33);
-
-                    List<IMeasurement> publishMeasurements = new List<IMeasurement>();
-
-                    foreach (IMeasurement measurement in m_measurements.ToArray())
-                    {
-                        if (measurement.Timestamp <= m_publishTime.Ticks)
-                        {
-                            publishMeasurements.Add(measurement);
-
-                            lock (m_measurements)
-                            {
-                                m_measurements.Remove(measurement);
-                            }
-                        }
-
-                        if (measurement.Timestamp > m_lastReceivedTimestamp.Ticks)
-                            m_lastReceivedTimestamp = measurement.Timestamp;
-                    }
-
-                    OnNewMeasurements(publishMeasurements);
-                }
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(ex);
-            }
-        }
-
-        // TODO: Update code to properly handle piped-events in AF-SDK
-        //private void PipeOnOnNewValue()
-        //{
-        //    List<IMeasurement> measurements = new List<IMeasurement>();
-
-        //    m_connection.Execute(server =>
-        //    {
-        //        PIEventObject eventobject;
-        //        PointValue pointvalue;
-
-        //        for (int i = 0; i < m_pipe.Count; i++)
-        //        {
-        //            eventobject = m_pipe.Take();
-
-        //            // we will publish measurements for every action except deleted (possible dupes on updates)
-        //            if (eventobject.Action != EventActionConstants.eaDelete)
-        //            {
-        //                try
-        //                {
-        //                    pointvalue = (PointValue)eventobject.EventData;
-
-        //                    double value = Convert.ToDouble(pointvalue.PIValue.Value);
-        //                    MeasurementKey key = m_tagKeyMap[pointvalue.PIPoint.Name];
-
-        //                    Measurement measurement = new Measurement();
-        //                    measurement.Key = key;
-        //                    measurement.Timestamp = pointvalue.PIValue.TimeStamp.LocalDate.ToUniversalTime();
-        //                    measurement.Value = value;
-        //                    measurement.StateFlags = MeasurementStateFlags.Normal;
-
-        //                    if (measurement.Timestamp > m_lastReceivedTimestamp.Ticks)
-        //                        m_lastReceivedTimestamp = measurement.Timestamp;
-
-        //                    measurements.Add(measurement);
-        //                }
-        //                catch
-        //                {
-        //                    /* squelch any errors on digital state data that can't be converted to a double */
-        //                }
-        //            }
-        //        }
-        //    });
-
-        //    if (measurements.Any())
-        //    {
-        //        OnNewMeasurements(measurements);
-        //        m_processedMeasurements += measurements.Count;
-        //    }
-        //}
-
-        /// <summary>
-        /// Disposes members for garbage collection
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-
-            if (m_tagKeyMap != null)
-                m_tagKeyMap.Clear();
-            m_tagKeyMap = null;
-
-            if ((object)m_connection != null)
-                m_connection.Dispose();
-
-            m_connection = null;
-            m_points = null;
-            //m_pipe = null;
-
-            m_measurements.Clear();
-            m_measurements = null;
-
-            if (m_dataThread != null)
-            {
-                m_dataThread.Abort();
-                m_dataThread = null;
-            }
-
-            if (m_publishTimer != null)
-            {
-                m_publishTimer.Stop();
-                m_publishTimer.Elapsed -= m_publishTimer_Tick;
-                m_publishTimer.Dispose();
-                m_publishTimer = null;
-            }
+            // Since we may get a plethora of these requests, we use a synchronized operation to restart once
+            m_restartConnection.RunOnceAsync();
         }
 
         #endregion
