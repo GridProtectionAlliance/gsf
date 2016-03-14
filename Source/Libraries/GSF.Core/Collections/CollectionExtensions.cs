@@ -58,6 +58,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using Random = GSF.Security.Cryptography.Random;
@@ -290,6 +291,16 @@ namespace GSF.Collections
         {
             dictionary[key] = value;
             return value;
+        }
+
+        /// <summary>
+        /// Converts a name/value collection to a dictionary.
+        /// </summary>
+        /// <param name="collection">Name/value collection.</param>
+        /// <returns>Dictionary converted from a name/value collection.</returns>
+        public static Dictionary<string, string> ToDictionary(this NameValueCollection collection)
+        {
+            return collection.AllKeys.ToDictionary(key => key, key => collection[key]);
         }
 
         /// <summary>

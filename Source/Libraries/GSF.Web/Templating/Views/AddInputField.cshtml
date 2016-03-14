@@ -1,0 +1,103 @@
+﻿@*******************************************************************************************************
+//  AddInputField.cshtml - Gbtc
+//
+//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  02/01/2016 - J. Ritchie Carroll
+//       Generated original version of source code.
+//
+//*****************************************************************************************************@
+@using RazorEngine.Templating
+@inherits TemplateBase
+@{
+    string fieldName = ViewBag.FieldName;
+    bool required = ViewBag.Required;
+    int maxLength = ViewBag.MaxLength;
+    string inputType = ViewBag.InputType;
+    string fieldLabel = ViewBag.FieldLabel;
+    string fieldID = ViewBag.FieldID;
+    string groupDataBinding = ViewBag.GroupDataBinding;
+    string labelDataBinding = ViewBag.LabelDataBinding;
+    string requiredDataBinding = ViewBag.RequiredDataBinding;
+    string customDataBinding = ViewBag.CustomDataBinding;
+    string dependencyFieldName = ViewBag.DependencyFieldName;
+    string toolTip = ViewBag.ToolTip;
+    string inputSizeRestriction = maxLength > 0 ? string.Format(" maxlength=\"{0}\" size=\"{0}\"", maxLength) : "";
+
+    if (!string.IsNullOrEmpty(dependencyFieldName))
+    {
+        if (string.IsNullOrEmpty(customDataBinding))
+        {
+            customDataBinding = string.Format("enable: {0}", dependencyFieldName);
+        }
+
+        if (string.IsNullOrEmpty(labelDataBinding))
+        {
+            labelDataBinding = string.Format("css: {{disabled: !{0}()}}", dependencyFieldName);
+        }
+
+        if (required && string.IsNullOrEmpty(requiredDataBinding))
+        {
+            requiredDataBinding = string.Format("{0}()", dependencyFieldName);
+        }
+    }
+
+    if (!string.IsNullOrEmpty(groupDataBinding))
+    {
+        groupDataBinding = string.Format(" data-bind=\"{0}\"", groupDataBinding);
+    }
+
+    if (!string.IsNullOrEmpty(labelDataBinding))
+    {
+        labelDataBinding = string.Format(" data-bind=\"{0}\"", labelDataBinding);
+    }
+
+    if (!string.IsNullOrEmpty(requiredDataBinding))
+    {
+        requiredDataBinding = string.Format(" && {0}", requiredDataBinding);
+    }
+
+    if (!string.IsNullOrEmpty(customDataBinding))
+    {
+        customDataBinding = string.Format(", {0}", customDataBinding);
+    }
+
+    if (!string.IsNullOrEmpty(toolTip))
+    {
+        toolTip = string.Format(" data-toggle=\"tooltip\" data-trigger=\"focus\" data-placement=\"auto bottom\" title=\"{0}\"", toolTip);
+    }
+}
+@if (required)
+{
+    @Raw(string.IsNullOrEmpty(groupDataBinding) ? "" : string.Format("<div{0}>\r\n", groupDataBinding))
+    <div class="form-group" data-bind="css: {'has-error': isEmpty(@(Raw(fieldName))())@(Raw(requiredDataBinding)), 'has-feedback': isEmpty(@(Raw(fieldName))())@(Raw(requiredDataBinding))}"@Raw(toolTip)>
+        @if (fieldLabel.Length > 0) {
+        <label for="@Raw(fieldID)"@Raw(labelDataBinding)>@Raw(fieldLabel):</label>
+        }
+        <input type="@Raw(inputType)" class="form-control" data-bind="textInput: @Raw(fieldName), attr: {'readonly': ($root.recordMode()===RecordMode.View ? true : undefined)}@Raw(customDataBinding)" id="@Raw(fieldID)"@Raw(inputSizeRestriction)@(string.IsNullOrEmpty(requiredDataBinding) ? " required" : "")>
+        <span class="glyphicon glyphicon-remove form-control-feedback" data-bind="visible: isEmpty(@(Raw(fieldName))())@(Raw(requiredDataBinding))"></span>
+    </div>
+    @Raw(string.IsNullOrEmpty(groupDataBinding) ? "" : "</div>\r\n")
+}
+else
+{
+    <div class="form-group"@Raw(groupDataBinding)@Raw(toolTip)>
+        @if (fieldLabel.Length > 0) {
+        <label for="@Raw(fieldID)"@Raw(labelDataBinding)>@Raw(fieldLabel):</label>
+        }
+        <input type="@Raw(inputType)" class="form-control" data-bind="textInput: @Raw(fieldName), attr: {'readonly': ($root.recordMode()===RecordMode.View ? true : undefined)}@Raw(customDataBinding)" id="@Raw(fieldID)"@Raw(inputSizeRestriction)>
+    </div>
+}

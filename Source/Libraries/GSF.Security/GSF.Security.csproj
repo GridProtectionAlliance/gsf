@@ -122,6 +122,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -144,6 +145,15 @@
   <ItemGroup>
     <Compile Include="AdoSecurityProvider.cs" />
     <Compile Include="AdoSecurityCache.cs" />
+    <Compile Include="Model\AccessLog.cs" />
+    <Compile Include="Model\ErrorLog.cs" />
+    <Compile Include="Model\ApplicationRole.cs" />
+    <Compile Include="Model\ApplicationRoleSecurityGroup.cs" />
+    <Compile Include="Model\SecurityGroupUserAccount.cs" />
+    <Compile Include="Model\ApplicationRoleUserAccount.cs" />
+    <Compile Include="Model\Node.cs" />
+    <Compile Include="Model\SecurityGroup.cs" />
+    <Compile Include="Model\UserAccount.cs" />
     <Compile Include="UserRoleCache.cs" />
     <Compile Include="LdapSecurityProvider.cs" />
     <Compile Include="RestrictAccessAttribute.cs" />
