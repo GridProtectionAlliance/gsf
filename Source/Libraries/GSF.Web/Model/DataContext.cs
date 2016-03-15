@@ -513,6 +513,21 @@ namespace GSF.Web.Model
         }
 
         /// <summary>
+        /// Adds field initialization, and optional validation, from a page-defined (e.g., loaded from database) parameter definition.
+        /// </summary>
+        /// <param name="fieldName">Target field name.</param>
+        /// <param name="initialValue">Javascript based initial value for field.</param>
+        /// <param name="validationPattern">Reg-ex based validation pattern, if any.</param>
+        /// <param name="errorMessage">Optional error message to display when pattern fails.</param>
+        public void AddPageDefinedFieldInitialization(string fieldName, string initialValue, string validationPattern = null, string errorMessage = null)
+        {
+            AddFieldValueInitializer(fieldName, initialValue);
+
+            if (!string.IsNullOrEmpty(validationPattern))
+                AddFieldValidation($"viewModel.currentRecord().{fieldName}", validationPattern, errorMessage);
+        }
+
+        /// <summary>
         /// Generates template based input date field based on reflected modeled table field attributes.
         /// </summary>
         /// <typeparam name="TModel">Modeled table.</typeparam>
