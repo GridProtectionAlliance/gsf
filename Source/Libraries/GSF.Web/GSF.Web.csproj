@@ -136,10 +136,6 @@
       <HintPath>..\..\Dependencies\NuGet\Microsoft.Owin.Security.2.1.0\lib\net45\Microsoft.Owin.Security.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\Dependencies\NuGet\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\..\Dependencies\NuGet\Newtonsoft.Json.6.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
@@ -246,8 +242,7 @@
     <Compile Include="Security\AuthorizeHubRoleAttribute.cs" />
     <Compile Include="Security\NamespaceDoc.cs" />
     <Compile Include="Security\SecurityHub.cs" />
-    <Compile Include="Templating\NamespaceDoc.cs" />
-    <Compile Include="Templating\RazorView.cs" />
+    <Compile Include="Model\RazorView.cs" />
     <Compile Include="UI\ClientSideExtensions.cs" />
     <Compile Include="WebExtensions.cs" />
   </ItemGroup>
@@ -309,11 +304,11 @@
     <None Include="GSF.Web.nuspec" />
     <EmbeddedResource Include="Model\Views\PagedViewModel.cshtml" />
     <None Include="packages.config" />
-    <EmbeddedResource Include="Templating\Views\AddCheckBoxField.cshtml" />
-    <EmbeddedResource Include="Templating\Views\AddDateField.cshtml" />
-    <EmbeddedResource Include="Templating\Views\AddInputField.cshtml" />
-    <EmbeddedResource Include="Templating\Views\AddSelectField.cshtml" />
-    <EmbeddedResource Include="Templating\Views\AddTextAreaField.cshtml" />
+    <EmbeddedResource Include="Model\Views\AddCheckBoxField.cshtml" />
+    <EmbeddedResource Include="Model\Views\AddDateField.cshtml" />
+    <EmbeddedResource Include="Model\Views\AddInputField.cshtml" />
+    <EmbeddedResource Include="Model\Views\AddSelectField.cshtml" />
+    <EmbeddedResource Include="Model\Views\AddTextAreaField.cshtml" />
     <EmbeddedResource Include="Security\Views\Groups.cshtml" />
     <EmbeddedResource Include="Security\Views\Users.cshtml" />
   </ItemGroup>

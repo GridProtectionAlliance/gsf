@@ -25,7 +25,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Web.Routing;
 using GSF.Collections;
@@ -33,7 +35,6 @@ using GSF.Data;
 using GSF.Data.Model;
 using GSF.Reflection;
 using GSF.Security;
-using GSF.Web.Templating;
 using RazorEngine.Templating;
 
 // ReSharper disable once StaticMemberInGenericType
@@ -282,6 +283,23 @@ namespace GSF.Web.Model
         public TableOperations<TModel> Table<TModel>() where TModel : class, new()
         {
             return m_tableOperations.GetOrAdd(typeof(TModel), type => new TableOperations<TModel>(Connection, m_exceptionHandler)) as TableOperations<TModel>;
+        }
+
+
+        /// <summary>
+        /// Gets script resource.
+        /// </summary>
+        /// <param name="scriptName">Script name.</param>
+        /// <returns>Script resource contents.</returns>
+        public string GetScriptResource(string scriptName)
+        {
+            Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"GSF.Web.Model.Scripts.{scriptName}");
+
+            if ((object)stream == null)
+                return "";
+
+            using (StreamReader reader = new StreamReader(stream))
+                return reader.ReadToEnd();
         }
 
         /// <summary>

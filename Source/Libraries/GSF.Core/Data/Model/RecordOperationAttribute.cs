@@ -26,7 +26,7 @@ using System;
 namespace GSF.Data.Model
 {
     /// <summary>
-    /// Record operations for SignalR hub data functions.
+    /// Record operations for modeled tables.
     /// </summary>
     public enum RecordOperation
     {
@@ -42,31 +42,31 @@ namespace GSF.Data.Model
         /// Operation for deleting records.
         /// </summary>
         /// <remarks>
-        /// Delete rights will be derived from methods marked with this operation.
+        /// Delete rights should be derived from methods marked with this operation.
         /// </remarks>
         DeleteRecord,
         /// <summary>
-        /// Operation for creating a new record. 
+        /// Operation for creating a new record, i.e., instantiating a new modeled table record instance.
         /// </summary>
         CreateNewRecord,
         /// <summary>
         /// Operation for adding records.
         /// </summary>
         /// <remarks>
-        /// Add rights will be derived from methods marked with this operation.
+        /// Add rights should be derived from methods marked with this operation.
         /// </remarks>
         AddNewRecord,
         /// <summary>
         /// Operation for updating records.
         /// </summary>
         /// <remarks>
-        /// Update rights will be derived from methods marked with this operation.
+        /// Update rights should be derived from methods marked with this operation.
         /// </remarks>
         UpdateRecord
     }
 
     /// <summary>
-    /// Marks a SignalR hub method as a specific <see cref="RecordOperation"/> for a modeled table.
+    /// Marks a method as a specific <see cref="RecordOperation"/> for a modeled table.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method)]
     public class RecordOperationAttribute : Attribute

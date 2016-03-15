@@ -33,13 +33,12 @@ using System.Web.Hosting;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.IO;
-using GSF.Web.Model;
 using RazorEngine;
 using RazorEngine.Configuration;
 using RazorEngine.Templating;
 
 // ReSharper disable StaticMemberInGenericType
-namespace GSF.Web.Templating
+namespace GSF.Web.Model
 {
     /// <summary>
     /// Defines resolutions modes for Razor view template files.
@@ -140,7 +139,7 @@ namespace GSF.Web.Templating
     /// <summary>
     /// Defines a Visual Basic based language constraint for embedded resources.
     /// </summary>
-    public class VisualBasicEmbeddedResource : CSharp
+    public class VisualBasicEmbeddedResource : VisualBasic
     {
         /// <summary>
         /// Gets resolution mode of <see cref="RazorView{TLanguage}"/> - embedded resources.
@@ -373,7 +372,7 @@ namespace GSF.Web.Templating
                     }
                     break;
                 case RazorViewResolutionMode.EmbeddedResource:
-                    systemSettings.Add("EmbeddedTemplatePath", "GSF.Web.Templating.Views.", "Embedded name space path for data context based razor field templates.");
+                    systemSettings.Add("EmbeddedTemplatePath", "GSF.Web.Model.Views.", "Embedded name space path for data context based razor field templates.");
                     TemplatePath = systemSettings["EmbeddedTemplatePath"].Value.EnsureEnd('.');
 
                     s_engineService = RazorEngineService.Create(new TemplateServiceConfiguration
