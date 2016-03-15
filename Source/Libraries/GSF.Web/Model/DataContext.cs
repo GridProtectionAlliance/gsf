@@ -515,16 +515,17 @@ namespace GSF.Web.Model
         /// <typeparam name="THub">SignalR hub that implements <see cref="IRecordOperationsHub"/>.</typeparam>
         /// <param name="viewBag">ViewBag for the view.</param>
         /// <param name="defaultSortField">Default sort field name, defaults to first primary key field. Prefix field name with a minus, i.e., '-', to default to descending sort.</param>
+        /// <param name="hubName">Javascript hub name, defaults to camel-cased <typeparamref name="THub"/> type name.</param>
         /// <param name="parentKeys">Primary keys values of the parent record to load.</param>
         /// <returns>Rendered paged view model configuration script.</returns>
-        public string RenderViewModelConfiguration<TModel, THub>(dynamic viewBag, string defaultSortField = null, params object[] parentKeys) where TModel : class, new() where THub : IRecordOperationsHub, new()
+        public string RenderViewModelConfiguration<TModel, THub>(dynamic viewBag, string defaultSortField = null, string hubName = null, params object[] parentKeys) where TModel : class, new() where THub : IRecordOperationsHub, new()
         {
             RecordOperationsCache cache = s_recordOperationCaches.GetOrAdd(typeof(THub), type =>
             {
                 using (THub hub = new THub())
                     return hub.RecordOperationsCache;
             });
-            return RenderViewModelConfiguration<TModel>(cache, viewBag, defaultSortField, parentKeys);
+            return RenderViewModelConfiguration<TModel>(cache, viewBag, defaultSortField, hubName ?? ToCamelCase(typeof(THub).Name), parentKeys);
         }
 
         /// <summary>
@@ -534,9 +535,10 @@ namespace GSF.Web.Model
         /// <param name="cache">Data hub record operations cache.</param>
         /// <param name="viewBag">ViewBag for the view.</param>
         /// <param name="defaultSortField">Default sort field name, defaults to first primary key field. Prefix field name with a minus, i.e., '-', to default to descending sort.</param>
+        /// <param name="hubName">Javascript hub name, defaults to "dataHub".</param>
         /// <param name="parentKeys">Primary keys values of the parent record to load.</param>
         /// <returns>Rendered paged view model configuration script.</returns>
-        public string RenderViewModelConfiguration<TModel>(RecordOperationsCache cache, dynamic viewBag, string defaultSortField = null, params object[] parentKeys) where TModel : class, new()
+        public string RenderViewModelConfiguration<TModel>(RecordOperationsCache cache, dynamic viewBag, string defaultSortField = null, string hubName = "dataHub", params object[] parentKeys) where TModel : class, new()
         {
             StringBuilder javascript = new StringBuilder();
             string[] primaryKeyFields = Table<TModel>().GetPrimaryKeyFieldNames();
@@ -563,16 +565,14 @@ namespace GSF.Web.Model
             if (viewBag.IsDeletedField != null)
                 showDeletedValue = (viewBag.ShowDeleted ?? false).ToString().ToLower();
 
-            Func<string, string> toCamelCase = methodName => methodName == null ? null : $"{char.ToLower(methodName[0])}{methodName.Substring(1)}";
-
             // Get method names for records operations of modeled table
             Tuple<string, string>[] recordOperations = cache.GetRecordOperations<TModel>();
-            string queryRecordCountMethod = toCamelCase(recordOperations[(int)RecordOperation.QueryRecordCount]?.Item1);
-            string queryRecordsMethod = toCamelCase(recordOperations[(int)RecordOperation.QueryRecords]?.Item1);
-            string deleteRecordMethod = toCamelCase(recordOperations[(int)RecordOperation.DeleteRecord]?.Item1);
-            string createNewRecordMethod = toCamelCase(recordOperations[(int)RecordOperation.CreateNewRecord]?.Item1);
-            string addNewRecordMethod = toCamelCase(recordOperations[(int)RecordOperation.AddNewRecord]?.Item1);
-            string updateMethod = toCamelCase(recordOperations[(int)RecordOperation.UpdateRecord]?.Item1);
+            string queryRecordCountMethod = ToCamelCase(recordOperations[(int)RecordOperation.QueryRecordCount]?.Item1);
+            string queryRecordsMethod = ToCamelCase(recordOperations[(int)RecordOperation.QueryRecords]?.Item1);
+            string deleteRecordMethod = ToCamelCase(recordOperations[(int)RecordOperation.DeleteRecord]?.Item1);
+            string createNewRecordMethod = ToCamelCase(recordOperations[(int)RecordOperation.CreateNewRecord]?.Item1);
+            string addNewRecordMethod = ToCamelCase(recordOperations[(int)RecordOperation.AddNewRecord]?.Item1);
+            string updateMethod = ToCamelCase(recordOperations[(int)RecordOperation.UpdateRecord]?.Item1);
 
             string keyValues = null;
 
@@ -586,42 +586,42 @@ namespace GSF.Web.Model
             if (!string.IsNullOrWhiteSpace(queryRecordCountMethod))
                 javascript.Append($@"
                     viewModel.setQueryRecordCount(function () {{
-                        return dataHub.{queryRecordCountMethod}({keyValues});
+                        return {hubName}.{queryRecordCountMethod}({keyValues});
                     }});
                 ".FixForwardSpacing());
 
             if (!string.IsNullOrWhiteSpace(queryRecordsMethod))
                 javascript.Append($@"
                     viewModel.setQueryRecords(function (sortField, ascending, page, pageSize) {{
-                        return dataHub.{queryRecordsMethod}({(keyValues == null ? "" : $"{keyValues}, ")}sortField, ascending, page, pageSize);
+                        return {hubName}.{queryRecordsMethod}({(keyValues == null ? "" : $"{keyValues}, ")}sortField, ascending, page, pageSize);
                     }});
                 ".FixForwardSpacing());
 
             if (!string.IsNullOrWhiteSpace(deleteRecordMethod))
                 javascript.Append($@"
                     viewModel.setDeleteRecord(function (keyValues) {{
-                        return dataHub.{deleteRecordMethod}({Enumerable.Range(0, Table<TModel>().GetPrimaryKeyFieldNames().Length).Select(index => $"keyValues[{index}]").ToDelimitedString(", ")});
+                        return {hubName}.{deleteRecordMethod}({Enumerable.Range(0, Table<TModel>().GetPrimaryKeyFieldNames().Length).Select(index => $"keyValues[{index}]").ToDelimitedString(", ")});
                     }});
                 ".FixForwardSpacing());
 
             if (!string.IsNullOrWhiteSpace(createNewRecordMethod))
                 javascript.Append($@"
                     viewModel.setNewRecord(function () {{
-                        return dataHub.{createNewRecordMethod}();
+                        return {hubName}.{createNewRecordMethod}();
                     }});
                 ".FixForwardSpacing());
 
             if (!string.IsNullOrWhiteSpace(addNewRecordMethod))
                 javascript.Append($@"
                     viewModel.setAddNewRecord(function (record) {{
-                        return dataHub.{addNewRecordMethod}(record);
+                        return {hubName}.{addNewRecordMethod}(record);
                     }});
                 ".FixForwardSpacing());
 
             if (!string.IsNullOrWhiteSpace(updateMethod))
                 javascript.Append($@"
                     viewModel.setUpdateRecord(function (record) {{
-                        return dataHub.{updateMethod}(record);
+                        return {hubName}.{updateMethod}(record);
                     }});
                 ".FixForwardSpacing());
 
@@ -1164,6 +1164,11 @@ namespace GSF.Web.Model
                 type == typeof(float) ||
                 type == typeof(double) ||
                 type == typeof(decimal);
+        }
+
+        private static string ToCamelCase(string methodName)
+        {
+            return methodName == null ? null : $"{char.ToLower(methodName[0])}{methodName.Substring(1)}";
         }
 
         #endregion
