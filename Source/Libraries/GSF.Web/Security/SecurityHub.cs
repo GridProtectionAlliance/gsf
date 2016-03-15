@@ -27,6 +27,7 @@ using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Identity;
+using GSF.Security;
 using GSF.Security.Model;
 using GSF.Web.Model;
 using Microsoft.AspNet.SignalR;
@@ -38,7 +39,7 @@ namespace GSF.Web.Security
     /// Defines a SignalR security hub for managing users, groups and SID management.
     /// </summary>
     [AuthorizeHubRole]
-    public class SecurityHub : Hub
+    public class SecurityHub : Hub, IRecordOperationsHub
     {
         #region [ Members ]
 
@@ -57,6 +58,15 @@ namespace GSF.Web.Security
         {
             m_dataContext = new DataContext();
         }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets <see cref="IRecordOperationsHub.RecordOperationsCache"/> for SignalR hub.
+        /// </summary>
+        public RecordOperationsCache RecordOperationsCache => s_recordOperationsCache;
 
         #endregion
 
@@ -85,7 +95,49 @@ namespace GSF.Web.Security
 
         #endregion
 
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly RecordOperationsCache s_recordOperationsCache;
+
+        /// <summary>
+        /// Gets current default Node ID for security.
+        /// </summary>
+        public static readonly Guid DefaultNodeID;
+
+        // Static Constructor
+        static SecurityHub()
+        {
+            CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
+
+            // Retrieve default NodeID
+            DefaultNodeID = Guid.Parse(systemSettings["NodeID"].Value.ToNonNullString(Guid.NewGuid().ToString()));
+
+            // Determine whether the node exists in the database and create it if it doesn't
+            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            {
+                const string NodeCountFormat = "SELECT COUNT(*) FROM Node";
+                const string NodeInsertFormat = "INSERT INTO Node(Name, Description, Enabled) VALUES('Default', 'Default node', 1)";
+                const string NodeUpdateFormat = "UPDATE Node SET ID = {0}";
+
+                int nodeCount = connection.ExecuteScalar<int?>(NodeCountFormat) ?? 0;
+
+                if (nodeCount == 0)
+                {
+                    connection.ExecuteNonQuery(NodeInsertFormat);
+                    connection.ExecuteNonQuery(NodeUpdateFormat, connection.Guid(DefaultNodeID));
+                }
+            }
+
+            // Analyze and cache record operations of security hub
+            s_recordOperationsCache = new RecordOperationsCache(typeof(SecurityHub));
+        }
+
+        #endregion
+
         // Client-side script functionality
+
+        #region [ Security Functions ]
 
         /// <summary>
         /// Gets the specified user account record.
@@ -253,38 +305,172 @@ namespace GSF.Web.Security
             return UserInfo.SIDToAccountName(sid ?? "");
         }
 
-        #region [ Static ]
+        #endregion
 
-        // Static Fields
+        #region [ UserAccount Table Operations ]
 
         /// <summary>
-        /// Gets current default Node ID for security.
+        /// Queries count of user accounts.
         /// </summary>
-        public static readonly Guid DefaultNodeID;
-
-        // Static Constructor
-        static SecurityHub()
+        /// <returns>Count of user accounts.</returns>
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserAccount), RecordOperation.QueryRecordCount)]
+        public int QueryUserAccountCount()
         {
-            CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
+            return m_dataContext.Table<UserAccount>().QueryRecordCount();
+        }
 
-            // Retrieve default NodeID
-            DefaultNodeID = Guid.Parse(systemSettings["NodeID"].Value.ToNonNullString(Guid.NewGuid().ToString()));
+        /// <summary>
+        /// Queries page of user accounts.
+        /// </summary>
+        /// <param name="sortField">Current sort field.</param>
+        /// <param name="ascending">Current sort direction.</param>
+        /// <param name="page">Current page number.</param>
+        /// <param name="pageSize">Current page size.</param>
+        /// <returns>Page of user accounts.</returns>
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserAccount), RecordOperation.QueryRecords)]
+        public IEnumerable<UserAccount> QueryUserAccounts(string sortField, bool ascending, int page, int pageSize)
+        {
+            return m_dataContext.Table<UserAccount>().QueryRecords(sortField, ascending, page, pageSize);
+        }
 
-            // Determine whether the node exists in the database and create it if it doesn't
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
-            {
-                const string NodeCountFormat = "SELECT COUNT(*) FROM Node";
-                const string NodeInsertFormat = "INSERT INTO Node(Name, Description, Enabled) VALUES('Default', 'Default node', 1)";
-                const string NodeUpdateFormat = "UPDATE Node SET ID = {0}";
+        /// <summary>
+        /// Deletes user account.
+        /// </summary>
+        /// <param name="id">Unique ID of user account.</param>
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserAccount), RecordOperation.DeleteRecord)]
+        public void DeleteUserAccount(Guid id)
+        {
+            m_dataContext.Table<UserAccount>().DeleteRecord(id);
+        }
 
-                int nodeCount = connection.ExecuteScalar<int?>(NodeCountFormat) ?? 0;
+        /// <summary>
+        /// Creates a new user account model instance.
+        /// </summary>
+        /// <returns>A new user account model instance.</returns>
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserAccount), RecordOperation.CreateNewRecord)]
+        public UserAccount NewUserAccount()
+        {
+            return new UserAccount();
+        }
 
-                if (nodeCount == 0)
-                {
-                    connection.ExecuteNonQuery(NodeInsertFormat);
-                    connection.ExecuteNonQuery(NodeUpdateFormat, connection.Guid(DefaultNodeID));
-                }
-            }
+        /// <summary>
+        /// Adds a new user account.
+        /// </summary>
+        /// <param name="record">User account model instance to add.</param>
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserAccount), RecordOperation.AddNewRecord)]
+        public void AddNewUserAccount(UserAccount record)
+        {
+            if (!record.UseADAuthentication && !string.IsNullOrWhiteSpace(record.Password))
+                record.Password = SecurityProviderUtility.EncryptPassword(record.Password);
+
+            record.DefaultNodeID = SecurityHub.DefaultNodeID;
+            record.CreatedBy = UserInfo.CurrentUserID;
+            record.CreatedOn = DateTime.UtcNow;
+            record.UpdatedBy = record.CreatedBy;
+            record.UpdatedOn = record.CreatedOn;
+            m_dataContext.Table<UserAccount>().AddNewRecord(record);
+        }
+
+        /// <summary>
+        /// Updates user account.
+        /// </summary>
+        /// <param name="record">User account model instance to update.</param>
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(UserAccount), RecordOperation.UpdateRecord)]
+        public void UpdateUserAccount(UserAccount record)
+        {
+            if (!record.UseADAuthentication && !string.IsNullOrWhiteSpace(record.Password))
+                record.Password = SecurityProviderUtility.EncryptPassword(record.Password);
+
+            record.DefaultNodeID = SecurityHub.DefaultNodeID;
+            record.UpdatedBy = UserInfo.CurrentUserID;
+            record.UpdatedOn = DateTime.UtcNow;
+            m_dataContext.Table<UserAccount>().UpdateRecord(record);
+        }
+
+        #endregion
+
+        #region [ SecurityGroup Table Operations ]
+
+        /// <summary>
+        /// Queries count of security groups.
+        /// </summary>
+        /// <returns>Count of security groups.</returns>
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(SecurityGroup), RecordOperation.QueryRecordCount)]
+        public int QuerySecurityGroupCount()
+        {
+            return m_dataContext.Table<SecurityGroup>().QueryRecordCount();
+        }
+
+        /// <summary>
+        /// Queries page of security groups.
+        /// </summary>
+        /// <param name="sortField">Current sort field.</param>
+        /// <param name="ascending">Current sort direction.</param>
+        /// <param name="page">Current page number.</param>
+        /// <param name="pageSize">Current page size.</param>
+        /// <returns>Page of security groups.</returns>
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(SecurityGroup), RecordOperation.QueryRecords)]
+        public IEnumerable<SecurityGroup> QuerySecurityGroups(string sortField, bool ascending, int page, int pageSize)
+        {
+            return m_dataContext.Table<SecurityGroup>().QueryRecords(sortField, ascending, page, pageSize);
+        }
+
+        /// <summary>
+        /// Deletes security group.
+        /// </summary>
+        /// <param name="id">Unique ID of security group.</param>
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(SecurityGroup), RecordOperation.DeleteRecord)]
+        public void DeleteSecurityGroup(Guid id)
+        {
+            m_dataContext.Table<SecurityGroup>().DeleteRecord(id);
+        }
+
+        /// <summary>
+        /// Creates a new security group model instance.
+        /// </summary>
+        /// <returns>A new security group model instance.</returns>
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(SecurityGroup), RecordOperation.CreateNewRecord)]
+        public SecurityGroup NewSecurityGroup()
+        {
+            return new SecurityGroup();
+        }
+
+        /// <summary>
+        /// Adds a new security group.
+        /// </summary>
+        /// <param name="record">Security group model instance to add.</param>
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(SecurityGroup), RecordOperation.AddNewRecord)]
+        public void AddNewSecurityGroup(SecurityGroup record)
+        {
+            record.CreatedBy = UserInfo.CurrentUserID;
+            record.CreatedOn = DateTime.UtcNow;
+            record.UpdatedBy = record.CreatedBy;
+            record.UpdatedOn = record.CreatedOn;
+            m_dataContext.Table<SecurityGroup>().AddNewRecord(record);
+        }
+
+        /// <summary>
+        /// Updates security group.
+        /// </summary>
+        /// <param name="record">Security group model instance to update.</param>
+        [AuthorizeHubRole("Administrator")]
+        [RecordOperation(typeof(SecurityGroup), RecordOperation.UpdateRecord)]
+        public void UpdateSecurityGroup(SecurityGroup record)
+        {
+            record.UpdatedBy = UserInfo.CurrentUserID;
+            record.UpdatedOn = DateTime.UtcNow;
+            m_dataContext.Table<SecurityGroup>().UpdateRecord(record);
         }
 
         #endregion

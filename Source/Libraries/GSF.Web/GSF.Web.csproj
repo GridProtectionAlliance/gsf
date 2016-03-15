@@ -224,6 +224,7 @@
     <Compile Include="Embedded\ISecurityService.cs" />
     <Compile Include="IgnoreServicesSecurityModule.cs" />
     <Compile Include="Model\DataContext.cs" />
+    <Compile Include="Model\IRecordOperationsHub.cs" />
     <Compile Include="Model\NamespaceDoc.cs" />
     <Compile Include="Model\RecordOperationsCache.cs" />
     <Compile Include="NamespaceDoc.cs" />

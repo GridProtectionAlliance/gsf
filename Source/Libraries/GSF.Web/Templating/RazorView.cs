@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -65,10 +66,10 @@ namespace GSF.Web.Templating
     /// <summary>
     /// Defines a language constraint for a <see cref="RazorView{TLanguage}"/>.
     /// </summary>
-    public abstract class LanguageContraint
+    public abstract class LanguageConstraint
     {
         /// <summary>
-        /// Gets target language for the <see cref="LanguageContraint"/> implementation.
+        /// Gets target language for the <see cref="LanguageConstraint"/> implementation.
         /// </summary>
         public abstract Language TargetLanguage
         {
@@ -84,10 +85,10 @@ namespace GSF.Web.Templating
     /// <summary>
     /// Defines a C# based language constraint.
     /// </summary>
-    public class CSharp : LanguageContraint
+    public class CSharp : LanguageConstraint
     {
         /// <summary>
-        /// Gets target language for the <see cref="LanguageContraint"/> implementation - C#.
+        /// Gets target language for the <see cref="LanguageConstraint"/> implementation - C#.
         /// </summary>
         public override Language TargetLanguage => Language.CSharp;
     }
@@ -117,10 +118,10 @@ namespace GSF.Web.Templating
     /// <summary>
     /// Defines a Visual Basic based language constraint.
     /// </summary>
-    public class VisualBasic : LanguageContraint
+    public class VisualBasic : LanguageConstraint
     {
         /// <summary>
-        /// Gets target language for the <see cref="LanguageContraint"/> implementation - Visual Basic.
+        /// Gets target language for the <see cref="LanguageConstraint"/> implementation - Visual Basic.
         /// </summary>
         public override Language TargetLanguage => Language.VisualBasic;
     }
@@ -150,8 +151,8 @@ namespace GSF.Web.Templating
     /// <summary>
     /// Defines a view class for data context based Razor template implementations.
     /// </summary>
-    /// <typeparam name="TLanguage"><see cref="LanguageContraint"/> type to use for Razor views.</typeparam>
-    public class RazorView<TLanguage> where TLanguage : LanguageContraint, new()
+    /// <typeparam name="TLanguage"><see cref="LanguageConstraint"/> type to use for Razor views.</typeparam>
+    public class RazorView<TLanguage> where TLanguage : LanguageConstraint, new()
     {
         #region [ Members ]
 
@@ -391,18 +392,11 @@ namespace GSF.Web.Templating
                                 return "";
 
                             using (StreamReader reader = new StreamReader(stream))
-                            {
                                 return reader.ReadToEnd();
-                            }
                         }),
                         Debug = false
-                    });
-
-                    
-
+                    });                   
                     break;
-                default:
-                    throw new ArgumentOutOfRangeException("");
             }
         }
 
@@ -418,21 +412,17 @@ namespace GSF.Web.Templating
 
                 if (languageType.ResolutionMode == RazorViewResolutionMode.EmbeddedResource)
                 {
-                    foreach (string fileName in Assembly.GetExecutingAssembly().GetManifestResourceNames())
+                    foreach (string fileName in Assembly.GetExecutingAssembly().GetManifestResourceNames().Where(fileName => fileName.StartsWith(TemplatePath)))
                     {
-                        if (fileName.StartsWith(TemplatePath))
+                        try
                         {
-                            try
-                            {
-                                s_engineService.Compile(fileName.Substring(TemplatePath.Length));
-                            }
-                            catch (Exception ex)
-                            {
-                                if ((object)exceptionHandler != null)
-                                    exceptionHandler(new InvalidOperationException($"Failed to pre-compile razor template \"{fileName}\": {ex.Message}", ex));
-                            }
+                            s_engineService.Compile(fileName.Substring(TemplatePath.Length));
                         }
-
+                        catch (Exception ex)
+                        {
+                            if ((object)exceptionHandler != null)
+                                exceptionHandler(new InvalidOperationException($"Failed to pre-compile razor template \"{fileName}\": {ex.Message}", ex));
+                        }
                     }
                 }
                 else

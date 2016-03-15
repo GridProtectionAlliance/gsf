@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -33,6 +34,7 @@ using GSF.Reflection;
 using GSF.Web.Templating;
 using RazorEngine.Templating;
 
+// ReSharper disable once StaticMemberInGenericType
 namespace GSF.Web.Model
 {
     /// <summary>
@@ -65,8 +67,8 @@ namespace GSF.Web.Model
     /// <summary>
     /// Defines a data context for modeled tables.
     /// </summary>
-    /// <typeparam name="TLanguage"><see cref="LanguageContraint"/> type to use for Razor views.</typeparam>
-    public class DataContext<TLanguage> : IDisposable where TLanguage : LanguageContraint, new()
+    /// <typeparam name="TLanguage"><see cref="LanguageConstraint"/> type to use for Razor views.</typeparam>
+    public class DataContext<TLanguage> : IDisposable where TLanguage : LanguageConstraint, new()
     {
         #region [ Members ]
 
@@ -266,41 +268,41 @@ namespace GSF.Web.Model
         }
 
         /// <summary>
-        /// Gets the table operations for the specified modeled table <typeparamref name="T"/>.
+        /// Gets the table operations for the specified modeled table <typeparamref name="TModel"/>.
         /// </summary>
-        /// <typeparam name="T">Modeled database table (or view).</typeparam>
-        /// <returns>Table operations for the specified modeled table <typeparamref name="T"/>.</returns>
-        public TableOperations<T> Table<T>() where T : class, new()
+        /// <typeparam name="TModel">Modeled database table (or view).</typeparam>
+        /// <returns>Table operations for the specified modeled table <typeparamref name="TModel"/>.</returns>
+        public TableOperations<TModel> Table<TModel>() where TModel : class, new()
         {
-            return m_tableOperations.GetOrAdd(typeof(T), type => new TableOperations<T>(Connection, m_exceptionHandler)) as TableOperations<T>;
+            return m_tableOperations.GetOrAdd(typeof(TModel), type => new TableOperations<TModel>(Connection, m_exceptionHandler)) as TableOperations<TModel>;
         }
 
         /// <summary>
         /// Gets the field name targeted as the primary label for the modeled table.
         /// </summary>
-        /// <typeparam name="T">Modeled database table (or view).</typeparam>
+        /// <typeparam name="TModel">Modeled database table (or view).</typeparam>
         /// <returns>Field name targeted as the primary label for the modeled table.</returns>
-        public string GetPrimaryLabelField<T>() where T : class, new()
+        public string GetPrimaryLabelField<TModel>() where TModel : class, new()
         {
             PrimaryLabelAttribute primaryLabelAttribute;
 
-            if (typeof(T).TryGetAttribute(out primaryLabelAttribute) && !string.IsNullOrWhiteSpace(primaryLabelAttribute.FieldName))
+            if (typeof(TModel).TryGetAttribute(out primaryLabelAttribute) && !string.IsNullOrWhiteSpace(primaryLabelAttribute.FieldName))
                 return primaryLabelAttribute.FieldName;
 
-            string[] fieldNames = Table<T>().GetFieldNames();
+            string[] fieldNames = Table<TModel>().GetFieldNames();
             return fieldNames.Length > 0 ? fieldNames[0] : "";
         }
 
         /// <summary>
         /// Gets the field name targeted to mark a record as deleted.
         /// </summary>
-        /// <typeparam name="T">Modeled database table (or view).</typeparam>
+        /// <typeparam name="TModel">Modeled database table (or view).</typeparam>
         /// <returns>Field name targeted to mark a record as deleted.</returns>
-        public string GetIsDeletedFlag<T>() where T : class, new()
+        public string GetIsDeletedFlag<TModel>() where TModel : class, new()
         {
             IsDeletedFlagAttribute isDeletedFlagAttribute;
 
-            if (typeof(T).TryGetAttribute(out isDeletedFlagAttribute) && !string.IsNullOrWhiteSpace(isDeletedFlagAttribute.FieldName))
+            if (typeof(TModel).TryGetAttribute(out isDeletedFlagAttribute) && !string.IsNullOrWhiteSpace(isDeletedFlagAttribute.FieldName))
                 return isDeletedFlagAttribute.FieldName;
 
             return null;
@@ -309,7 +311,29 @@ namespace GSF.Web.Model
         /// <summary>
         /// Looks up proper user roles for paged based on modeled security in <see cref="RecordOperationsCache"/>.
         /// </summary>
-        /// <typeparam name="T">Modeled database table (or view).</typeparam>
+        /// <typeparam name="TModel">Modeled database table (or view).</typeparam>
+        /// <typeparam name="THub">SignalR hub that implements <see cref="IRecordOperationsHub"/>.</typeparam>
+        /// <param name="viewBag">ViewBag for the current view.</param>
+        /// <remarks>
+        /// Typically used in paged view model scenarios and invoked by controller prior to view rendering.
+        /// Security is controlled at hub level, so failure to call will not impact security but may result
+        /// in screen enabling and/or showing controls that the user does not actually have access to and
+        /// upon attempted use will result in a security error.
+        /// </remarks>
+        public void EstablishUserRolesForPage<TModel, THub>(dynamic viewBag) where TModel : class, new() where THub : IRecordOperationsHub, new()
+        {
+            RecordOperationsCache cache = s_recordOperationCaches.GetOrAdd(typeof(THub), type =>
+            {
+                using (THub hub = new THub())
+                    return hub.RecordOperationsCache;
+            });
+            EstablishUserRolesForPage<TModel>(cache, viewBag);
+        }
+
+        /// <summary>
+        /// Looks up proper user roles for paged based on modeled security in <see cref="RecordOperationsCache"/>.
+        /// </summary>
+        /// <typeparam name="TModel">Modeled database table (or view).</typeparam>
         /// <param name="cache">Data hub record operations cache.</param>
         /// <param name="viewBag">ViewBag for the current view.</param>
         /// <remarks>
@@ -318,10 +342,10 @@ namespace GSF.Web.Model
         /// in screen enabling and/or showing controls that the user does not actually have access to and
         /// upon attempted use will result in a security error.
         /// </remarks>
-        public void EstablishUserRolesForPage<T>(RecordOperationsCache cache, dynamic viewBag) where T : class, new()
+        public void EstablishUserRolesForPage<TModel>(RecordOperationsCache cache, dynamic viewBag) where TModel : class, new()
         {
             // Get any authorized roles as defined in hub for key records operations of modeled table
-            Tuple<string, string>[] recordOperations = cache.GetRecordOperations<T>();
+            Tuple<string, string>[] recordOperations = cache.GetRecordOperations<TModel>();
 
             // Create a function to check if a method exists for operation - if none is defined, read-only access will be assumed (e.g. for a view)
             Func<RecordOperation, string> getRoles = operationType =>
@@ -338,16 +362,35 @@ namespace GSF.Web.Model
         /// <summary>
         /// Renders client-side configuration script for paged view model.
         /// </summary>
-        /// <typeparam name="T">Modeled database table (or view).</typeparam>
+        /// <typeparam name="TModel">Modeled database table (or view).</typeparam>
+        /// <typeparam name="THub">SignalR hub that implements <see cref="IRecordOperationsHub"/>.</typeparam>
+        /// <param name="viewBag">ViewBag for the view.</param>
+        /// <param name="defaultSortField">Default sort field name, defaults to first primary key field. Prefix field name with a minus, i.e., '-', to default to descending sort.</param>
+        /// <param name="parentKeys">Primary keys values of the parent record to load.</param>
+        /// <returns>Rendered paged view model configuration script.</returns>
+        public string RenderViewModelConfiguration<TModel, THub>(dynamic viewBag, string defaultSortField = null, params object[] parentKeys) where TModel : class, new() where THub : IRecordOperationsHub, new()
+        {
+            RecordOperationsCache cache = s_recordOperationCaches.GetOrAdd(typeof(THub), type =>
+            {
+                using (THub hub = new THub())
+                    return hub.RecordOperationsCache;
+            });
+            return RenderViewModelConfiguration<TModel>(cache, viewBag, defaultSortField, parentKeys);
+        }
+
+        /// <summary>
+        /// Renders client-side configuration script for paged view model.
+        /// </summary>
+        /// <typeparam name="TModel">Modeled database table (or view).</typeparam>
         /// <param name="cache">Data hub record operations cache.</param>
         /// <param name="viewBag">ViewBag for the view.</param>
         /// <param name="defaultSortField">Default sort field name, defaults to first primary key field. Prefix field name with a minus, i.e., '-', to default to descending sort.</param>
         /// <param name="parentKeys">Primary keys values of the parent record to load.</param>
         /// <returns>Rendered paged view model configuration script.</returns>
-        public string RenderViewModelConfiguration<T>(RecordOperationsCache cache, dynamic viewBag, string defaultSortField = null, params object[] parentKeys) where T : class, new()
+        public string RenderViewModelConfiguration<TModel>(RecordOperationsCache cache, dynamic viewBag, string defaultSortField = null, params object[] parentKeys) where TModel : class, new()
         {
             StringBuilder javascript = new StringBuilder();
-            string[] primaryKeyFields = Table<T>().GetPrimaryKeyFieldNames();
+            string[] primaryKeyFields = Table<TModel>().GetPrimaryKeyFieldNames();
             string defaultSortAscending = "true";
 
             defaultSortField = defaultSortField ?? primaryKeyFields[0];
@@ -362,7 +405,7 @@ namespace GSF.Web.Model
             javascript.Append($@"// Configure view model
                 viewModel.defaultSortField = ""{defaultSortField}"";
                 viewModel.defaultSortAscending = {defaultSortAscending};
-                viewModel.labelField = ""{GetPrimaryLabelField<T>()}"";
+                viewModel.labelField = ""{GetPrimaryLabelField<TModel>()}"";
                 viewModel.primaryKeyFields = [{primaryKeyFields.Select(fieldName => $"\"{fieldName}\"").ToDelimitedString(", ")}];
             ".FixForwardSpacing());
 
@@ -374,7 +417,7 @@ namespace GSF.Web.Model
             Func<string, string> toCamelCase = methodName => methodName == null ? null : $"{char.ToLower(methodName[0])}{methodName.Substring(1)}";
 
             // Get method names for records operations of modeled table
-            Tuple<string, string>[] recordOperations = cache.GetRecordOperations<T>();
+            Tuple<string, string>[] recordOperations = cache.GetRecordOperations<TModel>();
             string queryRecordCountMethod = toCamelCase(recordOperations[(int)RecordOperation.QueryRecordCount]?.Item1);
             string queryRecordsMethod = toCamelCase(recordOperations[(int)RecordOperation.QueryRecords]?.Item1);
             string deleteRecordMethod = toCamelCase(recordOperations[(int)RecordOperation.DeleteRecord]?.Item1);
@@ -408,7 +451,7 @@ namespace GSF.Web.Model
             if (!string.IsNullOrWhiteSpace(deleteRecordMethod))
                 javascript.Append($@"
                     viewModel.setDeleteRecord(function (keyValues) {{
-                        return dataHub.{deleteRecordMethod}({Enumerable.Range(0, Table<T>().GetPrimaryKeyFieldNames().Length).Select(index => $"keyValues[{index}]").ToDelimitedString(", ")});
+                        return dataHub.{deleteRecordMethod}({Enumerable.Range(0, Table<TModel>().GetPrimaryKeyFieldNames().Length).Select(index => $"keyValues[{index}]").ToDelimitedString(", ")});
                     }});
                 ".FixForwardSpacing());
 
@@ -440,7 +483,7 @@ namespace GSF.Web.Model
         /// Adds a new pattern based validation and option error message to a field.
         /// </summary>
         /// <param name="observableFieldReference">Observable field reference (from JS view model).</param>
-        /// <param name="validationPattern">Regex based validation pattern.</param>
+        /// <param name="validationPattern">Reg-ex based validation pattern.</param>
         /// <param name="errorMessage">Optional error message to display when pattern fails.</param>
         public void AddFieldValidation(string observableFieldReference, string validationPattern, string errorMessage = null)
         {
@@ -461,18 +504,18 @@ namespace GSF.Web.Model
         /// Adds a new field value initializer based on modeled table field attributes.
         /// </summary>
         /// <param name="fieldName">Field name (as defined in model).</param>
-        public void AddFieldValueInitializer<T>(string fieldName) where T : class, new()
+        public void AddFieldValueInitializer<TModel>(string fieldName) where TModel : class, new()
         {
             InitialValueAttribute initialValueAttribute;
 
-            if (Table<T>().TryGetFieldAttribute(fieldName, out initialValueAttribute))
+            if (Table<TModel>().TryGetFieldAttribute(fieldName, out initialValueAttribute))
                 AddFieldValueInitializer(fieldName, initialValueAttribute.InitialValue);
         }
 
         /// <summary>
         /// Generates template based input date field based on reflected modeled table field attributes.
         /// </summary>
-        /// <typeparam name="T">Modeled table.</typeparam>
+        /// <typeparam name="TModel">Modeled table.</typeparam>
         /// <param name="fieldName">Field name for input date field.</param>
         /// <param name="inputType">Input field type, defaults to text.</param>
         /// <param name="fieldLabel">Label name for input date field, pulls from <see cref="LabelAttribute"/> if defined, otherwise defaults to <paramref name="fieldName"/>.</param>
@@ -485,9 +528,9 @@ namespace GSF.Web.Model
         /// <param name="toolTip">Tool tip text to apply to field, if any.</param>
         /// <param name="initialFocus">Use field for initial focus.</param>
         /// <returns>Generated HTML for new date based input field based on modeled table field attributes.</returns>
-        public string AddDateField<T>(string fieldName, string inputType = null, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string requiredDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string toolTip = null, bool initialFocus = false) where T : class, new()
+        public string AddDateField<TModel>(string fieldName, string inputType = null, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string requiredDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string toolTip = null, bool initialFocus = false) where TModel : class, new()
         {
-            TableOperations<T> tableOperations = Table<T>();
+            TableOperations<TModel> tableOperations = Table<TModel>();
             StringLengthAttribute stringLengthAttribute;
             RegularExpressionAttribute regularExpressionAttribute;
 
@@ -514,7 +557,7 @@ namespace GSF.Web.Model
                 AddFieldValidation(observableReference, regularExpressionAttribute.Pattern, regularExpressionAttribute.ErrorMessage ?? "Invalid format.");
             }
 
-            AddFieldValueInitializer<T>(fieldName);
+            AddFieldValueInitializer<TModel>(fieldName);
 
             return AddDateField(fieldName, tableOperations.FieldHasAttribute<RequiredAttribute>(fieldName),
                 stringLengthAttribute?.MaximumLength ?? 0, inputType, fieldLabel, fieldID, groupDataBinding, labelDataBinding, requiredDataBinding, customDataBinding, dependencyFieldName, toolTip, initialFocus);
@@ -569,7 +612,7 @@ namespace GSF.Web.Model
         /// <summary>
         /// Generates template based input text field based on reflected modeled table field attributes.
         /// </summary>
-        /// <typeparam name="T">Modeled table.</typeparam>
+        /// <typeparam name="TModel">Modeled table.</typeparam>
         /// <param name="fieldName">Field name for input text field.</param>
         /// <param name="inputType">Input field type, defaults to text.</param>
         /// <param name="fieldLabel">Label name for input text field, pulls from <see cref="LabelAttribute"/> if defined, otherwise defaults to <paramref name="fieldName"/>.</param>
@@ -582,9 +625,9 @@ namespace GSF.Web.Model
         /// <param name="toolTip">Tool tip text to apply to field, if any.</param>
         /// <param name="initialFocus">Use field for initial focus.</param>
         /// <returns>Generated HTML for new input field based on modeled table field attributes.</returns>
-        public string AddInputField<T>(string fieldName, string inputType = null, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string requiredDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string toolTip = null, bool initialFocus = false) where T : class, new()
+        public string AddInputField<TModel>(string fieldName, string inputType = null, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string requiredDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string toolTip = null, bool initialFocus = false) where TModel : class, new()
         {
-            TableOperations<T> tableOperations = Table<T>();
+            TableOperations<TModel> tableOperations = Table<TModel>();
             StringLengthAttribute stringLengthAttribute;
             RegularExpressionAttribute regularExpressionAttribute;
 
@@ -621,7 +664,7 @@ namespace GSF.Web.Model
                 AddFieldValidation(observableReference, regularExpressionAttribute.Pattern, regularExpressionAttribute.ErrorMessage ?? "Invalid format.");
             }
 
-            AddFieldValueInitializer<T>(fieldName);
+            AddFieldValueInitializer<TModel>(fieldName);
 
             return AddInputField(fieldName, tableOperations.FieldHasAttribute<RequiredAttribute>(fieldName),
                 stringLengthAttribute?.MaximumLength ?? 0, inputType, fieldLabel, fieldID, groupDataBinding, labelDataBinding, requiredDataBinding, customDataBinding, dependencyFieldName, toolTip, initialFocus);
@@ -674,7 +717,7 @@ namespace GSF.Web.Model
         /// <summary>
         /// Generates template based text area field based on reflected modeled table field attributes.
         /// </summary>
-        /// <typeparam name="T">Modeled table.</typeparam>
+        /// <typeparam name="TModel">Modeled table.</typeparam>
         /// <param name="fieldName">Field name for text area field.</param>
         /// <param name="rows">Number of rows for text area.</param>
         /// <param name="fieldLabel">Label name for text area field, pulls from <see cref="LabelAttribute"/> if defined, otherwise defaults to <paramref name="fieldName"/>.</param>
@@ -687,9 +730,9 @@ namespace GSF.Web.Model
         /// <param name="toolTip">Tool tip text to apply to field, if any.</param>
         /// <param name="initialFocus">Use field for initial focus.</param>
         /// <returns>Generated HTML for new text area field based on modeled table field attributes.</returns>
-        public string AddTextAreaField<T>(string fieldName, int rows = 2, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string requiredDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string toolTip = null, bool initialFocus = false) where T : class, new()
+        public string AddTextAreaField<TModel>(string fieldName, int rows = 2, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string requiredDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string toolTip = null, bool initialFocus = false) where TModel : class, new()
         {
-            TableOperations<T> tableOperations = Table<T>();
+            TableOperations<TModel> tableOperations = Table<TModel>();
             StringLengthAttribute stringLengthAttribute;
             RegularExpressionAttribute regularExpressionAttribute;
 
@@ -716,7 +759,7 @@ namespace GSF.Web.Model
                 AddFieldValidation(observableReference, regularExpressionAttribute.Pattern, regularExpressionAttribute.ErrorMessage ?? "Invalid format.");
             }
 
-            AddFieldValueInitializer<T>(fieldName);
+            AddFieldValueInitializer<TModel>(fieldName);
 
             return AddTextAreaField(fieldName, tableOperations.FieldHasAttribute<RequiredAttribute>(fieldName),
                 stringLengthAttribute?.MaximumLength ?? 0, rows, fieldLabel, fieldID, groupDataBinding, labelDataBinding, requiredDataBinding, customDataBinding, dependencyFieldName, toolTip, initialFocus);
@@ -769,7 +812,7 @@ namespace GSF.Web.Model
         /// <summary>
         /// Generates template based select field based on reflected modeled table field attributes.
         /// </summary>
-        /// <typeparam name="TSelect">Modeled table for select field.</typeparam>
+        /// <typeparam name="TModel">Modeled table for select field.</typeparam>
         /// <typeparam name="TOption">Modeled table for option data.</typeparam>
         /// <param name="fieldName">Field name for value of select field.</param>
         /// <param name="optionValueFieldName">Field name for ID of option data.</param>
@@ -786,19 +829,19 @@ namespace GSF.Web.Model
         /// <param name="initialFocus">Use field for initial focus.</param>
         /// <param name="restriction">Record restriction to apply, if any.</param>
         /// <returns>Generated HTML for new text field based on modeled table field attributes.</returns>
-        public string AddSelectField<TSelect, TOption>(string fieldName, string optionValueFieldName, string optionLabelFieldName = null, string optionSortFieldName = null, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string optionDataBinding = null, string toolTip = null, bool initialFocus = false, RecordRestriction restriction = null) where TSelect : class, new() where TOption : class, new()
+        public string AddSelectField<TModel, TOption>(string fieldName, string optionValueFieldName, string optionLabelFieldName = null, string optionSortFieldName = null, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string optionDataBinding = null, string toolTip = null, bool initialFocus = false, RecordRestriction restriction = null) where TModel : class, new() where TOption : class, new()
         {
             if (string.IsNullOrEmpty(fieldLabel))
             {
                 LabelAttribute labelAttribute;
 
-                if (Table<TSelect>().TryGetFieldAttribute(fieldName, out labelAttribute))
+                if (Table<TModel>().TryGetFieldAttribute(fieldName, out labelAttribute))
                     fieldLabel = labelAttribute.Label;
             }
 
-            AddFieldValueInitializer<TSelect>(fieldName);
+            AddFieldValueInitializer<TModel>(fieldName);
 
-            return AddSelectField<TOption>(fieldName, Table<TSelect>().FieldHasAttribute<RequiredAttribute>(fieldName),
+            return AddSelectField<TOption>(fieldName, Table<TModel>().FieldHasAttribute<RequiredAttribute>(fieldName),
                 optionValueFieldName, optionLabelFieldName, optionSortFieldName, fieldLabel, fieldID, groupDataBinding, labelDataBinding, customDataBinding, dependencyFieldName, optionDataBinding, toolTip, initialFocus, restriction);
         }
 
@@ -865,7 +908,7 @@ namespace GSF.Web.Model
         /// <summary>
         /// Generates template based check box field based on reflected modeled table field attributes.
         /// </summary>
-        /// <typeparam name="T">Modeled table.</typeparam>
+        /// <typeparam name="TModel">Modeled table.</typeparam>
         /// <param name="fieldName">Field name for value of check box field.</param>
         /// <param name="fieldLabel">Label name for check box field, defaults to <paramref name="fieldName"/>.</param>
         /// <param name="fieldID">ID to use for check box field; defaults to check + <paramref name="fieldName"/>.</param>
@@ -876,17 +919,17 @@ namespace GSF.Web.Model
         /// <param name="toolTip">Tool tip text to apply to field, if any.</param>
         /// <param name="initialFocus">Use field for initial focus.</param>
         /// <returns>Generated HTML for new check box field based on modeled table field attributes.</returns>
-        public string AddCheckBoxField<T>(string fieldName, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string toolTip = null, bool initialFocus = false) where T : class, new()
+        public string AddCheckBoxField<TModel>(string fieldName, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string toolTip = null, bool initialFocus = false) where TModel : class, new()
         {
             if (string.IsNullOrEmpty(fieldLabel))
             {
                 LabelAttribute labelAttribute;
 
-                if (Table<T>().TryGetFieldAttribute(fieldName, out labelAttribute))
+                if (Table<TModel>().TryGetFieldAttribute(fieldName, out labelAttribute))
                     fieldLabel = labelAttribute.Label;
             }
 
-            AddFieldValueInitializer<T>(fieldName);
+            AddFieldValueInitializer<TModel>(fieldName);
 
             return AddCheckBoxField(fieldName, fieldLabel, fieldID, groupDataBinding, labelDataBinding, customDataBinding, dependencyFieldName, toolTip, initialFocus);
         }
@@ -930,6 +973,15 @@ namespace GSF.Web.Model
         #endregion
 
         #region [ Static ]
+
+        // Static Fields
+        private static readonly ConcurrentDictionary<Type, RecordOperationsCache> s_recordOperationCaches;
+
+        // Static Constructor
+        static DataContext()
+        {
+            s_recordOperationCaches = new ConcurrentDictionary<Type, RecordOperationsCache>();
+        }
 
         // Static Methods
         private static bool IsNumericType(Type type)
