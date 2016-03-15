@@ -27,10 +27,12 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
+using System.Web.Routing;
 using GSF.Collections;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Reflection;
+using GSF.Security;
 using GSF.Web.Templating;
 using RazorEngine.Templating;
 
@@ -135,6 +137,11 @@ namespace GSF.Web.Model
         /// Gets the <see cref="AdoDataConnection"/> for this <see cref="DataContext{TLanguage}"/>.
         /// </summary>
         public AdoDataConnection Connection => m_connection ?? (m_connection = new AdoDataConnection(m_settingsCategory));
+
+        /// <summary>
+        /// Gets reference to user specific security provider instance.
+        /// </summary>
+        public AdoSecurityProvider SecurityProvider => SecurityProviderCache.CurrentProvider as AdoSecurityProvider;
 
         /// <summary>
         /// Gets validation pattern and error message for rendered fields, if any.
@@ -306,6 +313,148 @@ namespace GSF.Web.Model
                 return isDeletedFlagAttribute.FieldName;
 
             return null;
+        }
+
+        /// <summary>
+        /// Determines if user is in a specific role or list of roles (comma separated).
+        /// </summary>
+        /// <param name="role">Role or comma separated list of roles.</param>
+        /// <returns><c>true</c> if user is in <paramref name="role"/>(s); otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// Set to * for any role.
+        /// </remarks>
+        public bool UserIsInRole(string role)
+        {
+            if (string.IsNullOrWhiteSpace(role))
+                return false;
+
+            role = role.Trim();
+
+            string[] roles = role.Split(',').Where(value => !string.IsNullOrWhiteSpace(value)).ToArray();
+
+            if (roles.Length > 1)
+                return UserIsInRole(roles);
+
+            List<string> userRoles = SecurityProvider?.UserData?.Roles ?? new List<string>();
+
+            if (role.Equals("*") && userRoles.Count > 0)
+                return true;
+
+            foreach (string userRole in userRoles)
+                if (userRole.Equals(role, StringComparison.OrdinalIgnoreCase))
+                    return true;
+
+            return false;
+        }
+
+        /// <summary>
+        /// Determines if user is in one of the provided of roles.
+        /// </summary>
+        /// <param name="roles">List of role names.</param>
+        /// <returns><c>true</c> if user is in one of the <paramref name="roles"/>; otherwise, <c>false</c>.</returns>
+        public bool UserIsInRole(string[] roles)
+        {
+            return roles.Any(UserIsInRole);
+        }
+
+        /// <summary>
+        /// Determines if user is in a specific group or list of groups (comma separated).
+        /// </summary>
+        /// <param name="group">Group or comma separated list of groups.</param>
+        /// <returns><c>true</c> if user is in <paramref name="group"/>(s); otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// Set to * for any group.
+        /// </remarks>
+        public bool UserIsInGroup(string group)
+        {
+            if (string.IsNullOrWhiteSpace(group))
+                return false;
+
+            group = group.Trim();
+
+            string[] groups = group.Split(',').Where(value => !string.IsNullOrWhiteSpace(value)).ToArray();
+
+            if (groups.Length > 1)
+                return UserIsInGroup(groups);
+
+            List<string> userGroups = SecurityProvider?.UserData?.Groups ?? new List<string>();
+
+            if (group.Equals("*") && userGroups.Count > 0)
+                return true;
+
+            foreach (string userGroup in userGroups)
+                if (userGroup.Equals(group, StringComparison.OrdinalIgnoreCase))
+                    return true;
+
+            return false;
+        }
+
+        /// <summary>
+        /// Determines if user is in one of the provided of groups.
+        /// </summary>
+        /// <param name="groups">List of group names.</param>
+        /// <returns><c>true</c> if user is in one of the <paramref name="groups"/>; otherwise, <c>false</c>.</returns>
+        public bool UserIsInGroup(string[] groups)
+        {
+            return groups.Any(UserIsInGroup);
+        }
+
+        /// <summary>
+        /// Configures a simple view with common view bag parameters.
+        /// </summary>
+        /// <param name="requestContext">Url.RequestContext for view.</param>
+        /// <param name="viewBag">Current view bag.</param>
+        /// <remarks>
+        /// This is normally called from controller before returning view action result.
+        /// </remarks>
+        public void ConfigureView(RequestContext requestContext, dynamic viewBag)
+        {
+            viewBag.RouteID = requestContext.RouteData.Values["id"] as string;
+            viewBag.PageControlScripts = new StringBuilder();
+
+            // Setup default roles if none are defined. Important to only check for null here as empty string will
+            // be treated as none-allowed, e.g., read-only for modeled views
+            if (viewBag.EditRoles == null)
+                viewBag.EditRoles = "*";
+
+            if (viewBag.AddNewRoles == null)
+                viewBag.AddNewRoles = viewBag.EditRoles;
+
+            if (viewBag.DeleteRoles == null)
+                viewBag.DeleteRoles = viewBag.EditRoles;
+
+            // Check current allowed roles for user
+            viewBag.CanEdit = UserIsInRole(viewBag.EditRoles);
+            viewBag.CanAddNew = UserIsInRole(viewBag.AddNewRoles);
+            viewBag.CanDelete = UserIsInRole(viewBag.DeleteRoles);
+        }
+
+        /// <summary>
+        /// Configures a view establishing user roles based on modeled table <typeparamref name="TModel"/> and SignalR <typeparamref name="THub"/>.
+        /// </summary>
+        /// <typeparam name="TModel">Modeled database table (or view).</typeparam>
+        /// <typeparam name="THub">SignalR hub that implements <see cref="IRecordOperationsHub"/>.</typeparam>
+        /// <param name="requestContext">Url.RequestContext for view.</param>
+        /// <param name="viewBag">Current view bag.</param>
+        /// <remarks>
+        /// This is normally called from controller before returning view action result.
+        /// </remarks>
+        public void ConfigureView<TModel, THub>(RequestContext requestContext, dynamic viewBag) where TModel : class, new() where THub : IRecordOperationsHub, new()
+        {
+            // Attempt to establish roles based on hub defined security for specified modeled table
+            EstablishUserRolesForPage<TModel, THub>(viewBag);
+
+            ConfigureView(requestContext, viewBag);
+
+            // See if modeled table has a flag field that represents a deleted row
+            string isDeletedField = GetIsDeletedFlag<TModel>();
+
+            if (!string.IsNullOrWhiteSpace(isDeletedField))
+            {
+                // See if user has requested to show deleted records
+                viewBag.ShowDeleted = viewBag.RouteID?.Equals("ShowDeleted", StringComparison.OrdinalIgnoreCase) ?? false;
+                viewBag.IsDeletedField = isDeletedField;
+            }
         }
 
         /// <summary>
