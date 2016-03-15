@@ -29,12 +29,15 @@ namespace GSF.Data.Model
     /// Defines an attribute that will define the field name that represents a record marked for deletion.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    public class IsDeletedFlagAttribute : Attribute
+    public sealed class IsDeletedFlagAttribute : Attribute
     {
         /// <summary>
         /// Field name used as is deleted record marker.
         /// </summary>
-        public readonly string FieldName;
+        public string FieldName
+        {
+            get;
+        }
 
         /// <summary>
         /// Creates a new <see cref="IsDeletedFlagAttribute"/>.

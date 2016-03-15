@@ -29,12 +29,15 @@ namespace GSF.Data.Model
     /// Defines an attribute that will mark a property as a primary key field for a modeled table.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
-    public class PrimaryKeyAttribute : Attribute
+    public sealed class PrimaryKeyAttribute : Attribute
     {
         /// <summary>
         /// Gets flag that determines if primary key field is an identity field.
         /// </summary>
-        public readonly bool IsIdentity;
+        public bool IsIdentity
+        {
+            get;
+        }
 
         /// <summary>
         /// Creates a new <see cref="PrimaryKeyAttribute"/>.

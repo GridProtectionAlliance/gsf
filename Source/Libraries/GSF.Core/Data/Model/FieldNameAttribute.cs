@@ -30,12 +30,15 @@ namespace GSF.Data.Model
     /// the property name.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
-    public class FieldNameAttribute : Attribute
+    public sealed class FieldNameAttribute : Attribute
     {
         /// <summary>
         /// Gets field name to use for property.
         /// </summary>
-        public readonly string FieldName;
+        public string FieldName
+        {
+            get;
+        }
 
         /// <summary>
         /// Creates a new <see cref="FieldNameAttribute"/>.

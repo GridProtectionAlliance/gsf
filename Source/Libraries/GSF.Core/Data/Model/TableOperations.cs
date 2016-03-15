@@ -698,7 +698,7 @@ namespace GSF.Data.Model
             FieldNameAttribute fieldNameAttribute;
             property.TryGetAttribute(out fieldNameAttribute);
 
-            return !string.IsNullOrEmpty(fieldNameAttribute?.FieldName)
+            return !string.IsNullOrEmpty(fieldNameAttribute.FieldName)
                 ? fieldNameAttribute.FieldName
                 : property.Name;
         }

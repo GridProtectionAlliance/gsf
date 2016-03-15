@@ -29,12 +29,15 @@ namespace GSF.Data.Model
     /// Defines an attribute that will define a UI label to used for a modeled table field.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
-    public class LabelAttribute : Attribute
+    public sealed class LabelAttribute : Attribute
     {
         /// <summary>
         /// Gets UI label for modeled table field.
         /// </summary>
-        public readonly string Label;
+        public string Label
+        {
+            get;
+        }
 
         /// <summary>
         /// Creates a new <see cref="LabelAttribute"/>.

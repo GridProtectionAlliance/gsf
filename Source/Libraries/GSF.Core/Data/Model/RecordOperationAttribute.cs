@@ -69,17 +69,23 @@ namespace GSF.Data.Model
     /// Marks a method as a specific <see cref="RecordOperation"/> for a modeled table.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method)]
-    public class RecordOperationAttribute : Attribute
+    public sealed class RecordOperationAttribute : Attribute
     {
         /// <summary>
         /// Gets or sets <see cref="Type"/> of modeled table.
         /// </summary>
-        public readonly Type ModelType;
+        public Type ModelType
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets or sets <see cref="RecordOperation"/> the method represents.
         /// </summary>
-        public readonly RecordOperation Operation;
+        public RecordOperation Operation
+        {
+            get;
+        }
 
         /// <summary>
         /// Creates a new <see cref="RecordOperationAttribute"/>

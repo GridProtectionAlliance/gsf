@@ -33,12 +33,15 @@ namespace GSF.Data.Model
     /// Are you sure you want to delete "PrimaryLabel.FieldName.Value"?
     /// </remarks>
     [AttributeUsage(AttributeTargets.Class)]
-    public class PrimaryLabelAttribute : Attribute
+    public sealed class PrimaryLabelAttribute : Attribute
     {
         /// <summary>
         /// Field name used as primary label.
         /// </summary>
-        public readonly string FieldName;
+        public string FieldName
+        {
+            get;
+        }
 
         /// <summary>
         /// Creates a new <see cref="PrimaryLabelAttribute"/>.

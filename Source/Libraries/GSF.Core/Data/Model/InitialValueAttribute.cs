@@ -34,12 +34,15 @@ namespace GSF.Data.Model
     /// <c>[InitialValue("(new Date()).addDays(30)")]</c>
     /// </remarks>
     [AttributeUsage(AttributeTargets.Property)]
-    public class InitialValueAttribute : Attribute
+    public sealed class InitialValueAttribute : Attribute
     {
         /// <summary>
         /// Gets Javascript based initial value for modeled table field.
         /// </summary>
-        public readonly string InitialValue;
+        public string InitialValue
+        {
+            get;
+        }
 
         /// <summary>
         /// Creates a new <see cref="InitialValueAttribute"/>/
