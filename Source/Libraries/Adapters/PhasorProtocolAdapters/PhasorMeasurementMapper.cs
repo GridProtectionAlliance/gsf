@@ -2316,41 +2316,50 @@ namespace PhasorProtocolAdapters
                 StatisticsEngine.Register(source, sourceName, sourceCategory, sourceAcronym);
         }
 
+        // Compare last configuration to new received configuration frame to see if there have been any changes
         private bool CheckForConfigurationChanges()
         {
-            IConfigurationFrame newConfigFrame = m_frameParser?.ConfigurationFrame;
+            IConfigurationFrame newConfigurationFrame = m_frameParser?.ConfigurationFrame;
             bool configurationChanged = false;
 
-            if ((object)newConfigFrame == null)
+            if ((object)newConfigurationFrame == null)
                 return false;
 
-            // Compare last configuration to new received configuration frame to see if there have been any changes
-            if ((object) m_lastConfigurationFrame == null)
+            if ((object)m_lastConfigurationFrame == null)
             {
                 m_configurationChanges++;
                 configurationChanged = true;
             }
             else
             {
-                // Make sure timestamps are identical since this should not count against comparison
-                m_lastConfigurationFrame.Timestamp = newConfigFrame.Timestamp;
-
-                // Generate binary images for the configuration frames
-                byte[] lastConfigFrameBuffer = new byte[m_lastConfigurationFrame.BinaryLength];
-                byte[] newConfigFrameBuffer = new byte[newConfigFrame.BinaryLength];
-
-                m_lastConfigurationFrame.GenerateBinaryImage(lastConfigFrameBuffer, 0);
-                newConfigFrame.GenerateBinaryImage(newConfigFrameBuffer, 0);
-
-                // Compare the binary images - if they are different, this counts as a configuration change
-                if (lastConfigFrameBuffer.CompareTo(newConfigFrameBuffer) != 0)
+                // Check binary image lengths first, if these are different there is already a change
+                if (m_lastConfigurationFrame.BinaryLength != newConfigurationFrame.BinaryLength)
                 {
                     m_configurationChanges++;
                     configurationChanged = true;
                 }
+                else
+                {
+                    // Make sure timestamps are identical since this should not count against comparison
+                    m_lastConfigurationFrame.Timestamp = newConfigurationFrame.Timestamp;
+
+                    // Generate binary images for the configuration frames
+                    byte[] lastConfigFrameBuffer = new byte[m_lastConfigurationFrame.BinaryLength];
+                    byte[] newConfigFrameBuffer = new byte[newConfigurationFrame.BinaryLength];
+
+                    m_lastConfigurationFrame.GenerateBinaryImage(lastConfigFrameBuffer, 0);
+                    newConfigurationFrame.GenerateBinaryImage(newConfigFrameBuffer, 0);
+
+                    // Compare the binary images - if they are different, this counts as a configuration change
+                    if (!lastConfigFrameBuffer.SequenceEqual(newConfigFrameBuffer))
+                    {
+                        m_configurationChanges++;
+                        configurationChanged = true;
+                    }
+                }
             }
 
-            m_lastConfigurationFrame = newConfigFrame;
+            m_lastConfigurationFrame = newConfigurationFrame;
 
             return configurationChanged;
         }
