@@ -41,7 +41,6 @@ namespace GSF.EMAX
         private string m_fileName;
         private bool m_disposed;
         private FileStream[] m_fileStreams;
-        private int m_streamIndex;
         private DateTime m_timestamp;
         private double[] m_values;
         private ushort[] m_eventGroups;
@@ -260,8 +259,6 @@ namespace GSF.EMAX
                 if (skipBytes.Length > 0)
                     m_fileStreams[i].Read(skipBytes, 0, skipBytes.Length);
             }
-
-            m_streamIndex = 0;
         }
 
         /// <summary>
@@ -296,92 +293,94 @@ namespace GSF.EMAX
             if ((object)m_controlFile == null)
                 throw new InvalidOperationException("No EMAX schema has been defined, cannot read records.");
 
-            if (m_streamIndex > m_fileStreams.Length)
-                throw new EndOfStreamException("All EMAX data has been read, cannot read more records.");
-
             byte[] buffer = null;
 
-            FileStream currentFile = m_fileStreams[m_streamIndex];
-            int recordLength = m_controlFile.FrameLength;
+            FileStream currentFile;
+            int recordLength;
             ushort[] clockWords = new ushort[4];
             ushort value;
-            int index = 0;
+            int index;
             double scalingFactor;
 
-            buffer = new byte[recordLength];
-
-            // Read next record from file
-            int bytesRead = currentFile.Read(buffer, 0, recordLength);
-
-            // See if we have reached the end of this file
-            if (bytesRead == 0)
+            for (int streamIndex = 0; streamIndex < m_fileStreams.Length; streamIndex++)
             {
-                m_streamIndex++;
+                currentFile = m_fileStreams[streamIndex];
+                recordLength = m_controlFile.FrameLength[streamIndex];
+                index = 0;
 
-                // There is more to read if there is another file
-                return m_streamIndex < m_fileStreams.Length && ReadNext();
-            }
+                if ((object)buffer == null || buffer.Length < recordLength)
+                    buffer = new byte[recordLength];
 
-            if (bytesRead == recordLength || bytesRead == recordLength - OffsetBytes)
-            {
-                // Parse all analog record values
-                for (int i = 0; i < m_values.Length; i++)
+                // Read next record from file
+                int bytesRead = currentFile.Read(buffer, 0, recordLength);
+
+                if (bytesRead == 0)
+                    return false;
+
+                if (bytesRead == recordLength || bytesRead == recordLength - OffsetBytes)
                 {
-                    // Read next value
-                    value = LittleEndian.ToUInt16(buffer, index);
+                    int start = streamIndex * 64;
+                    int end = Math.Min(start + 64, m_values.Length);
 
-                    if (m_controlFile.ScalingFactors.TryGetValue(i, out scalingFactor))
+                    // Parse all analog record values
+                    for (int i = start; i < end; i++)
                     {
-                        if (value >= 32768)
-                            m_values[i] = (65535 - value) / 32768.0D * scalingFactor;
+                        // Read next value
+                        value = LittleEndian.ToUInt16(buffer, index);
+
+                        if (m_controlFile.ScalingFactors.TryGetValue(i, out scalingFactor))
+                        {
+                            if (value >= 32768)
+                                m_values[i] = (65535 - value) / 32768.0D * scalingFactor;
+                            else
+                                m_values[i] = -value / 32768.0D * scalingFactor;
+                        }
+                        else if (m_controlFile.DataSize == DataSize.Bits12)
+                        {
+                            m_values[i] = value >> 4;
+                        }
                         else
-                            m_values[i] = -value / 32768.0D * scalingFactor;
-                    }
-                    else if (m_controlFile.DataSize == DataSize.Bits12)
-                    {
-                        m_values[i] = value >> 4;
-                    }
-                    else
-                    {
-                        m_values[i] = value;
+                        {
+                            m_values[i] = value;
+                        }
+
+                        index += 2;
                     }
 
-                    index += 2;
-                }
+                    // There are always either 32 or 64 data words depending on the number of configured channels
+                    index = (m_controlFile.AnalogChannelCount <= 32) ? 32 : 64;
+                    index *= sizeof(ushort);
 
-                // There are always either 32 or 64 data words depending on the number of configured channels
-                index = (m_controlFile.AnalogChannelCount <= 32) ? 32 : 64;
-                index *= sizeof(ushort);
-
-                // Read event group values (first set)
-                for (int i = 0; i < 4; i++)
-                {
-                    m_eventGroups[i] = LittleEndian.ToUInt16(buffer, index);
-                    index += 2;
-                }
-
-                // Read timestamp from next four word values
-                for (int i = 0; i < 4; i++)
-                {
-                    clockWords[i] = LittleEndian.ToUInt16(buffer, index);
-                    index += 2;
-                }
-
-                m_timestamp = ParseTimestamp(clockWords);
-
-                if (ControlFile.ConfiguredAnalogChannels > 32 && ControlFile.SystemSettings.samples_per_second <= 5760)
-                {
-                    // Read next set of event group values
-                    for (int i = 4; i < 8; i++)
+                    // Read event group values (first set)
+                    for (int i = 0; i < 4; i++)
                     {
                         m_eventGroups[i] = LittleEndian.ToUInt16(buffer, index);
                         index += 2;
                     }
+
+                    // Read timestamp from next four word values
+                    for (int i = 0; i < 4; i++)
+                    {
+                        clockWords[i] = LittleEndian.ToUInt16(buffer, index);
+                        index += 2;
+                    }
+
+                    m_timestamp = ParseTimestamp(clockWords);
+
+                    if (ControlFile.ConfiguredAnalogChannels > 32 && ControlFile.SystemSettings.samples_per_second <= 5760)
+                    {
+                        // Read next set of event group values
+                        for (int i = 4; i < 8; i++)
+                        {
+                            m_eventGroups[i] = LittleEndian.ToUInt16(buffer, index);
+                            index += 2;
+                        }
+                    }
                 }
-            }
-            else
-            {
-                throw new InvalidOperationException("Failed to read enough bytes from EMAX file for a record as defined by control file - possible control file/data file mismatch or file corruption.");
+                else
+                {
+                    throw new InvalidOperationException("Failed to read enough bytes from EMAX file for a record as defined by control file - possible control file/data file mismatch or file corruption.");
+                }
             }
 
             return true;
