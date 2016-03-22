@@ -146,6 +146,7 @@ namespace PhasorProtocolAdapters
 
         // Fields
         private MultiProtocolFrameParser m_frameParser;
+        private IConfigurationFrame m_lastConfigurationFrame;
         private Dictionary<string, DefinedMeasurement> m_definedMeasurements;
         private ConcurrentDictionary<ushort, DeviceStatisticsHelper<ConfigurationCell>> m_definedDevices;
         private ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>> m_labelDefinedDevices;
@@ -572,7 +573,7 @@ namespace PhasorProtocolAdapters
                 {
                     try
                     {
-                        DataRow[] filteredRows = DataSource.Tables["InputAdapters"].Select(string.Format("AdapterName = '{0}'", m_sharedMapping));
+                        DataRow[] filteredRows = DataSource.Tables["InputAdapters"].Select($"AdapterName = '{m_sharedMapping}'");
 
                         if (filteredRows.Length > 0)
                         {
@@ -580,13 +581,14 @@ namespace PhasorProtocolAdapters
                         }
                         else
                         {
-                            OnProcessException(new InvalidOperationException(string.Format("Failed to find input adapter ID for shared mapping \"{0}\", mapping was not assigned.", m_sharedMapping)));
+                            OnProcessException(new InvalidOperationException($"Failed to find input adapter ID for shared mapping \"{m_sharedMapping}\", mapping was not assigned."));
                             m_sharedMapping = null;
                         }
                     }
                     catch (Exception ex)
                     {
-                        OnProcessException(new InvalidOperationException(string.Format("Failed to find input adapter ID for shared mapping \"{0}\" due to exception: {1} Mapping was not assigned.", m_sharedMapping, ex.Message), ex));
+                        OnProcessException(new InvalidOperationException(
+                            $"Failed to find input adapter ID for shared mapping \"{m_sharedMapping}\" due to exception: {ex.Message} Mapping was not assigned.", ex));
                         m_sharedMapping = null;
                     }
                 }
@@ -1035,7 +1037,7 @@ namespace PhasorProtocolAdapters
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException(string.Format("Defaulting to UTC. Failed to find system time zone for ID \"{0}\": {1}", setting, ex.Message), ex));
+                    OnProcessException(new InvalidOperationException($"Defaulting to UTC. Failed to find system time zone for ID \"{setting}\": {ex.Message}", ex));
                     m_timezone = TimeZoneInfo.Utc;
                 }
             }
@@ -1189,7 +1191,7 @@ namespace PhasorProtocolAdapters
                 deviceStatus.AppendLine();
 
                 // Making a connection to a concentrator that can support multiple devices
-                foreach (DataRow row in DataSource.Tables["InputStreamDevices"].Select(string.Format("ParentID={0}", SharedMappingID)))
+                foreach (DataRow row in DataSource.Tables["InputStreamDevices"].Select($"ParentID={SharedMappingID}"))
                 {
                     // Create new configuration cell parsing needed ID code and label from input stream configuration
                     definedDevice = new ConfigurationCell(ushort.Parse(row["AccessID"].ToString()));
@@ -1214,7 +1216,7 @@ namespace PhasorProtocolAdapters
                             // For devices that do not have unique labels when forcing label mapping, we fall back on its ID code for unique lookup
                             if (m_definedDevices.ContainsKey(definedDevice.IDCode))
                             {
-                                OnProcessException(new InvalidOperationException(string.Format("ERROR: Device ID \"{0}\", labeled \"{1}\", was not unique in the {2} input stream. Data from devices that are not distinctly defined by ID code or label will not be correctly parsed until uniquely identified.", definedDevice.IDCode, definedDevice.StationName, Name)));
+                                OnProcessException(new InvalidOperationException($"ERROR: Device ID \"{definedDevice.IDCode}\", labeled \"{definedDevice.StationName}\", was not unique in the {Name} input stream. Data from devices that are not distinctly defined by ID code or label will not be correctly parsed until uniquely identified."));
                             }
                             else
                             {
@@ -1241,7 +1243,7 @@ namespace PhasorProtocolAdapters
 
                             if (m_labelDefinedDevices.ContainsKey(definedDevice.StationName))
                             {
-                                OnProcessException(new InvalidOperationException(string.Format("ERROR: Device ID \"{0}\", labeled \"{1}\", was not unique in the {2} input stream. Data from devices that are not distinctly defined by ID code or label will not be correctly parsed until uniquely identified.", definedDevice.IDCode, definedDevice.StationName, Name)));
+                                OnProcessException(new InvalidOperationException($"ERROR: Device ID \"{definedDevice.IDCode}\", labeled \"{definedDevice.StationName}\", was not unique in the {Name} input stream. Data from devices that are not distinctly defined by ID code or label will not be correctly parsed until uniquely identified."));
                             }
                             else
                             {
@@ -1328,7 +1330,7 @@ namespace PhasorProtocolAdapters
             Dictionary<string, DefinedMeasurement> definedMeasurements = new Dictionary<string, DefinedMeasurement>();
 
             // Have to use a Convert expression for DeviceID column in Select function here since SQLite doesn't report data types for COALESCE based columns
-            foreach (DataRow row in DataSource.Tables["ActiveMeasurements"].Select(string.Format("Convert(DeviceID, 'System.String')='{0}'", SharedMappingID)))
+            foreach (DataRow row in DataSource.Tables["ActiveMeasurements"].Select($"Convert(DeviceID, 'System.String')='{SharedMappingID}'"))
             {
                 signalReference = row["SignalReference"].ToString();
 
@@ -1354,7 +1356,7 @@ namespace PhasorProtocolAdapters
                     }
                     catch (Exception ex)
                     {
-                        OnProcessException(new InvalidOperationException(string.Format("Failed to load signal reference \"{0}\" due to exception: {1}", signalReference, ex.Message), ex));
+                        OnProcessException(new InvalidOperationException($"Failed to load signal reference \"{signalReference}\" due to exception: {ex.Message}", ex));
                     }
                 }
             }
@@ -1505,7 +1507,7 @@ namespace PhasorProtocolAdapters
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException(string.Format("Failed to delete cached configuration \"{0}\": {1}", ConfigurationCacheFileName, ex.Message), ex));
+                    OnProcessException(new InvalidOperationException($"Failed to delete cached configuration \"{ConfigurationCacheFileName}\": {ex.Message}", ex));
                 }
             }
         }
@@ -1539,7 +1541,7 @@ namespace PhasorProtocolAdapters
                         m_frameParser.ConfigurationFrame = configFrame;
                         StartMeasurementCounter();
                         m_receivedConfigFrame = true;
-                        m_configurationChanges++;
+                        CheckForConfigurationChanges();
                     }
                     else
                     {
@@ -1548,7 +1550,7 @@ namespace PhasorProtocolAdapters
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException(string.Format("Failed to load cached configuration \"{0}\": {1}", ConfigurationCacheFileName, ex.Message), ex));
+                    OnProcessException(new InvalidOperationException($"Failed to load cached configuration \"{ConfigurationCacheFileName}\": {ex.Message}", ex));
                 }
             }
         }
@@ -1586,7 +1588,7 @@ namespace PhasorProtocolAdapters
                         StartMeasurementCounter();
 
                         m_receivedConfigFrame = true;
-                        m_configurationChanges++;
+                        CheckForConfigurationChanges();
                     }
                     else
                     {
@@ -1595,7 +1597,7 @@ namespace PhasorProtocolAdapters
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException(string.Format("Failed to load configuration \"{0}\": {1}", configurationFileName, ex.Message), ex));
+                    OnProcessException(new InvalidOperationException($"Failed to load configuration \"{configurationFileName}\": {ex.Message}", ex));
                 }
             }
         }
@@ -1644,8 +1646,8 @@ namespace PhasorProtocolAdapters
                         uptime = connectionTime.ToDays().ToString("0.00") + " days";
                     }
 
-                    string uptimeStats = string.Format("Up for {0}, {1} errors", uptime, totalDataErrors);
-                    string runtimeStats = string.Format(" {0} {1} fps", ((DateTime)m_lastReportTime).ToString("MM/dd/yyyy HH:mm:ss.fff"), m_frameParser.CalculatedFrameRate.ToString("0.00"));
+                    string uptimeStats = $"Up for {uptime}, {totalDataErrors} errors";
+                    string runtimeStats = $" {((DateTime) m_lastReportTime).ToString("MM/dd/yyyy HH:mm:ss.fff")} {m_frameParser.CalculatedFrameRate.ToString("0.00")} fps";
 
                     uptimeStats = uptimeStats.TruncateRight(maxLength - runtimeStats.Length).PadLeft(maxLength - runtimeStats.Length, '\xA0');
 
@@ -1900,7 +1902,7 @@ namespace PhasorProtocolAdapters
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException(string.Format("Exception encountered while mapping \"{0}\" data frame cell \"{1}\" elements to measurements: {2}", Name, parsedDevice.StationName.ToNonNullString("[undefined]"), ex.Message), ex));
+                    OnProcessException(new InvalidOperationException($"Exception encountered while mapping \"{Name}\" data frame cell \"{parsedDevice.StationName.ToNonNullString("[undefined]")}\" elements to measurements: {ex.Message}", ex));
                 }
             }
 
@@ -2070,7 +2072,7 @@ namespace PhasorProtocolAdapters
 
                     foreach (DeviceStatisticsHelper<ConfigurationCell> statisticsHelper in StatisticsHelpers)
                     {
-                        measurementsPerFrame = measurementTable.Select(string.Format("SignalReference LIKE '{0}-%' AND SignalType <> 'FLAG' AND SignalType <> 'STAT'", statisticsHelper.Device.IDLabel)).Length;
+                        measurementsPerFrame = measurementTable.Select($"SignalReference LIKE '{statisticsHelper.Device.IDLabel}-%' AND SignalType <> 'FLAG' AND SignalType <> 'STAT'").Length;
                         statisticsHelper.ExpectedMeasurementsPerSecond = configurationFrame.FrameRate * measurementsPerFrame;
                         statisticsHelper.Reset(now);
                     }
@@ -2167,9 +2169,11 @@ namespace PhasorProtocolAdapters
         {
             lock (m_configurationOperationLock)
             {
-                if (!m_receivedConfigFrame)
+                bool configurationChanged = CheckForConfigurationChanges();
+
+                if (!m_receivedConfigFrame || configurationChanged)
                 {
-                    OnStatusMessage("Received configuration frame at {0}", DateTime.UtcNow);
+                    OnStatusMessage($"Received {(m_receivedConfigFrame ? "updated" : "initial")} configuration frame at {DateTime.UtcNow}");
 
                     try
                     {
@@ -2188,7 +2192,6 @@ namespace PhasorProtocolAdapters
                 }
             }
 
-            m_configurationChanges++;
             m_totalConfigurationFrames++;
         }
 
@@ -2228,7 +2231,7 @@ namespace PhasorProtocolAdapters
         private void m_frameParser_ConnectionException(object sender, EventArgs<Exception, int> e)
         {
             Exception ex = e.Argument1;
-            OnProcessException(new InvalidOperationException(string.Format("Connection attempt failed: {0}", ex.Message), ex));
+            OnProcessException(new InvalidOperationException($"Connection attempt failed: {ex.Message}", ex));
 
             // So long as user hasn't requested to stop, keep trying connection
             if (Enabled)
@@ -2311,6 +2314,45 @@ namespace PhasorProtocolAdapters
         {
             if (string.IsNullOrWhiteSpace(SharedMapping))
                 StatisticsEngine.Register(source, sourceName, sourceCategory, sourceAcronym);
+        }
+
+        private bool CheckForConfigurationChanges()
+        {
+            IConfigurationFrame newConfigFrame = m_frameParser?.ConfigurationFrame;
+            bool configurationChanged = false;
+
+            if ((object)newConfigFrame == null)
+                return false;
+
+            // Compare last configuration to new received configuration frame to see if there have been any changes
+            if ((object) m_lastConfigurationFrame == null)
+            {
+                m_configurationChanges++;
+                configurationChanged = true;
+            }
+            else
+            {
+                // Make sure timestamps are identical since this should not count against comparison
+                m_lastConfigurationFrame.Timestamp = newConfigFrame.Timestamp;
+
+                // Generate binary images for the configuration frames
+                byte[] lastConfigFrameBuffer = new byte[m_lastConfigurationFrame.BinaryLength];
+                byte[] newConfigFrameBuffer = new byte[newConfigFrame.BinaryLength];
+
+                m_lastConfigurationFrame.GenerateBinaryImage(lastConfigFrameBuffer, 0);
+                newConfigFrame.GenerateBinaryImage(newConfigFrameBuffer, 0);
+
+                // Compare the binary images - if they are different, this counts as a configuration change
+                if (lastConfigFrameBuffer.CompareTo(newConfigFrameBuffer) != 0)
+                {
+                    m_configurationChanges++;
+                    configurationChanged = true;
+                }
+            }
+
+            m_lastConfigurationFrame = newConfigFrame;
+
+            return configurationChanged;
         }
 
         #endregion
