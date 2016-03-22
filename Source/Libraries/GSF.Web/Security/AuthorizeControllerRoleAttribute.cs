@@ -104,9 +104,19 @@ namespace GSF.Web.Security
         /// <param name="filterContext">The filter context.</param>
         public void OnAuthorization(AuthorizationContext filterContext)
         {
-            // Initialize the security principal from caller's windows identity if uninitialized.
+            // Initialize the security principal from caller's windows identity if uninitialized, note that
+            // simply by checking current provider any existing cached security principal will be restored,
+            // if no current provider exists we create a new one - new providers are created in a critical
+            // section since may hub authorization checks may be happening in parallel
             if (SecurityProviderCache.CurrentProvider == null)
-                SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
+            {
+                lock (typeof(AuthorizeControllerRoleAttribute))
+                {
+                    // Let's see if we won the race...
+                    if (SecurityProviderCache.CurrentProvider == null)
+                        SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
+                }
+            }
 
             // Setup the principal
             filterContext.HttpContext.User = Thread.CurrentPrincipal;
