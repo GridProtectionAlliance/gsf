@@ -161,7 +161,6 @@ namespace GSF.EMAX
 
                 int cardCount;
                 int remainder;
-                int[] frameLength;
 
                 if ((object)m_frameLength != null)
                     return m_frameLength;
@@ -172,12 +171,12 @@ namespace GSF.EMAX
                 if (remainder > 0)
                     cardCount++;
 
-                frameLength = Enumerable.Repeat(largeFrame, cardCount).ToArray();
+                m_frameLength = Enumerable.Repeat(largeFrame, cardCount).ToArray();
 
                 if (0 < remainder && remainder <= 32)
-                    frameLength[cardCount - 1] = smallFrame;
+                    m_frameLength[cardCount - 1] = smallFrame;
 
-                return frameLength;
+                return m_frameLength;
             }
         }
 
