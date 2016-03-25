@@ -4548,7 +4548,11 @@ namespace GSF.ServiceProcess
 
                 ClientInfo info = requestInfo.Sender;
 
-                string message = $"  Current user: {info.ClientUser.Identity.Name.ToNonNullNorEmptyString("Undetermined")}\r\n" + $"   Client name: {info.ClientName.ToNonNullNorEmptyString("Undetermined")}\r\n" + $"  From machine: {info.MachineName.ToNonNullNorEmptyString("Undetermined")}\r\n" + $"Connected time: {(info.ConnectedAt > DateTime.MinValue ? (DateTime.UtcNow - info.ConnectedAt).ToElapsedTimeString() : m_remotingServer.RunTime.ToString())}\r\n" + $" Authenticated: {info.ClientUser.Identity.IsAuthenticated}";
+                string message = $"  Current user: {info.ClientUser.Identity.Name.ToNonNullNorEmptyString("Undetermined")}\r\n" + 
+                                 $"   Client name: {info.ClientName.ToNonNullNorEmptyString("Undetermined")}\r\n" + 
+                                 $"  From machine: {info.MachineName.ToNonNullNorEmptyString("Undetermined")}\r\n" + 
+                                 $"Connected time: {(info.ConnectedAt > DateTime.MinValue ? (DateTime.UtcNow - info.ConnectedAt).ToElapsedTimeString() : m_remotingServer.RunTime.ToString())}\r\n" + 
+                                 $" Authenticated: {info.ClientUser.Identity.IsAuthenticated}";
 
                 UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message + "\r\n\r\n");
 
