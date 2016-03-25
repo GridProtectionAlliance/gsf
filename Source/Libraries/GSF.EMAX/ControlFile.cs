@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -63,6 +64,7 @@ namespace GSF.EMAX
         public SEQUENCE_CHANNELS SequenceChannels;
         public BREAKER_TRIP_TIMES BreakerTripTimes;
 
+        private int[] m_frameLength;
         private int m_configuredAnalogChannels;
         private readonly List<StructureType> m_parsedSuccesses;
         private readonly List<Tuple<StructureType, Exception>> m_parsedFailures;
@@ -147,16 +149,34 @@ namespace GSF.EMAX
         /// <summary>
         /// Gets the calculated frame length for the <see cref="ControlFile"/>.
         /// </summary>
-        public int FrameLength
+        public int[] FrameLength
         {
             get
             {
-                // 32 data words + 4 event group words + 4 clock words
-                if (AnalogChannelCount <= 32)
-                    return sizeof(ushort) * 40;
-
                 // 64 data words + 8 event group words + 8 clock words
-                return sizeof(ushort) * 80;
+                const int largeFrame = sizeof(ushort) * 80;
+
+                // 32 data words + 4 event group words + 4 clock words
+                const int smallFrame = sizeof(ushort) * 40;
+
+                int cardCount;
+                int remainder;
+
+                if ((object)m_frameLength != null)
+                    return m_frameLength;
+
+                cardCount = AnalogChannelCount / 64;
+                remainder = AnalogChannelCount % 64;
+
+                if (remainder > 0)
+                    cardCount++;
+
+                m_frameLength = Enumerable.Repeat(largeFrame, cardCount).ToArray();
+
+                if (0 < remainder && remainder <= 32)
+                    m_frameLength[cardCount - 1] = smallFrame;
+
+                return m_frameLength;
             }
         }
 
