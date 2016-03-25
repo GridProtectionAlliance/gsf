@@ -111,6 +111,7 @@ using System.ComponentModel;
 using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -122,6 +123,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web;
 
+// ReSharper disable InconsistentlySynchronizedField
 namespace GSF.ServiceProcess
 {
     #region [ Enumerations ]
@@ -219,11 +221,11 @@ namespace GSF.ServiceProcess
             private const int LowPriority = 1;
 
             // Fields
-            private Guid m_clientID;
-            private ClientFilter m_filter;
-            private LogicalThread m_thread;
-            private List<Tuple<DateTime, int>> m_messageCounts;
-            private ServiceHelper m_serviceHelper;
+            private readonly Guid m_clientID;
+            private readonly ClientFilter m_filter;
+            private readonly LogicalThread m_thread;
+            private readonly List<Tuple<DateTime, int>> m_messageCounts;
+            private readonly ServiceHelper m_serviceHelper;
 
             #endregion
 
@@ -256,7 +258,6 @@ namespace GSF.ServiceProcess
                     List<StatusUpdate> messages = new List<StatusUpdate>();
                     int messageCount = GetRecentMessageCount();
                     int suppressedMessageCount = 0;
-                    int i = 0;
 
                     foreach (StatusUpdate update in updates.Where(m_filter.PassesFilter))
                     {
@@ -294,7 +295,6 @@ namespace GSF.ServiceProcess
 
                         // Update the message and increment the counter variable
                         messageBuilder.Append(update.Message);
-                        i++;
                     }
 
                     // If the maximum frequency has not been reached, add the final message to the list of messages;
@@ -464,10 +464,7 @@ namespace GSF.ServiceProcess
 
                 // Attempt to remove a filter from the list of pattern exclusion filters
                 if (index < m_filter.PatternExclusionFilters.Count)
-                {
                     m_filter.PatternExclusionFilters.RemoveAt(index);
-                    return;
-                }
             }
 
             #endregion
@@ -507,6 +504,11 @@ namespace GSF.ServiceProcess
         /// Specifies the default value for the <see cref="RequestHistoryLimit"/> property.
         /// </summary>
         public const int DefaultRequestHistoryLimit = 50;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="SupportFileManagementCommands"/> property.
+        /// </summary>
+        public const bool DefaultSupportFileManagementCommands = false;
 
         /// <summary>
         /// Specifies the default value for the <see cref="SupportTelnetSessions"/> property.
@@ -654,6 +656,7 @@ namespace GSF.ServiceProcess
         private bool m_monitorServiceHealth;
         private double m_healthMonitorInterval;
         private int m_requestHistoryLimit;
+        private bool m_supportFileManagementCommands;
         private bool m_supportTelnetSessions;
         private bool m_supportSystemCommands;
         private bool m_secureRemoteInteractions;
@@ -702,6 +705,7 @@ namespace GSF.ServiceProcess
             m_monitorServiceHealth = DefaultMonitorServiceHealth;
             m_healthMonitorInterval = DefaultHealthMonitorInterval;
             m_requestHistoryLimit = DefaultRequestHistoryLimit;
+            m_supportFileManagementCommands = DefaultSupportFileManagementCommands;
             m_supportTelnetSessions = DefaultSupportTelnetSessions;
             m_supportSystemCommands = DefaultSupportSystemCommands;
             m_secureRemoteInteractions = DefaultSecureRemoteInteractions;
@@ -871,9 +875,27 @@ namespace GSF.ServiceProcess
             set
             {
                 if (value < 1)
-                    throw new ArgumentOutOfRangeException("value", "Value must be greater that 0");
+                    throw new ArgumentOutOfRangeException(nameof(value), "Value must be greater that 0");
 
                 m_requestHistoryLimit = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets boolean value that indicates whether the <see cref="ServiceHelper"/> will have support for file-management commands.
+        /// </summary>
+        [Category("Security"),
+        DefaultValue(DefaultSupportFileManagementCommands),
+        Description("Indicates whether the ServiceHelper will have support for file-management commands.")]
+        public bool SupportFileManagementCommands
+        {
+            get
+            {
+                return m_supportFileManagementCommands;
+            }
+            set
+            {
+                m_supportFileManagementCommands = value;
             }
         }
 
@@ -984,7 +1006,7 @@ namespace GSF.ServiceProcess
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_settingsCategory = value;
             }
@@ -1047,13 +1069,7 @@ namespace GSF.ServiceProcess
         [Category("Components"),
         Description("ScheduleManager component used for scheduling defined ServiceProcess."),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public ScheduleManager ProcessScheduler
-        {
-            get
-            {
-                return m_processScheduler;
-            }
-        }
+        public ScheduleManager ProcessScheduler => m_processScheduler;
 
         /// <summary>
         /// Gets the <see cref="LogFile"/> component used for logging status messages to a text file.
@@ -1061,13 +1077,7 @@ namespace GSF.ServiceProcess
         [Category("Components"),
         Description("LogFile component used for logging status messages to a text file."),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public LogFile StatusLog
-        {
-            get
-            {
-                return m_statusLog;
-            }
-        }
+        public LogFile StatusLog => m_statusLog;
 
         /// <summary>
         /// Gets the <see cref="ErrorLogger"/> component used for logging errors encountered in the <see cref="ParentService"/>.
@@ -1075,13 +1085,7 @@ namespace GSF.ServiceProcess
         [Category("Components"),
         Description("ErrorLogger component used for logging errors encountered in the ParentService."),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public ErrorLogger ErrorLogger
-        {
-            get
-            {
-                return m_errorLogger;
-            }
-        }
+        public ErrorLogger ErrorLogger => m_errorLogger;
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the <see cref="ServiceHelper"/> is currently enabled.
@@ -1152,91 +1156,49 @@ namespace GSF.ServiceProcess
         [Browsable(false),
         EditorBrowsable(EditorBrowsableState.Never),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public bool IsDisposed
-        {
-            get
-            {
-                return m_disposed;
-            }
-        }
+        public bool IsDisposed => m_disposed;
 
         /// <summary>
         /// Gets a list of <see cref="ServiceProcess"/> defined in the <see cref="ServiceHelper"/>.
         /// </summary>
         [Browsable(false),
         EditorBrowsable(EditorBrowsableState.Advanced)]
-        public IList<ServiceProcess> Processes
-        {
-            get
-            {
-                return m_processes.AsReadOnly();
-            }
-        }
+        public IList<ServiceProcess> Processes => m_processes.AsReadOnly();
 
         /// <summary>
         /// Gets a list of <see cref="ClientInfo"/> for remote clients connected to the <see cref="RemotingServer"/>.
         /// </summary>
         [Browsable(false),
         EditorBrowsable(EditorBrowsableState.Advanced)]
-        public IList<ClientInfo> RemoteClients
-        {
-            get
-            {
-                return m_remoteClients.AsReadOnly();
-            }
-        }
+        public IList<ClientInfo> RemoteClients => m_remoteClients.AsReadOnly();
 
         /// <summary>
         /// Gets a list of <see cref="ClientRequestInfo"/> for requests made by <see cref="RemoteClients"/>.
         /// </summary>
         [Browsable(false),
         EditorBrowsable(EditorBrowsableState.Advanced)]
-        public IList<ClientRequestInfo> ClientRequestHistory
-        {
-            get
-            {
-                return m_clientRequestHistory.AsReadOnly();
-            }
-        }
+        public IList<ClientRequestInfo> ClientRequestHistory => m_clientRequestHistory.AsReadOnly();
 
         /// <summary>
         /// Gets a list of <see cref="ClientRequestHandler"/> registered for handling requests from <see cref="RemoteClients"/>.
         /// </summary>
         [Browsable(false),
         EditorBrowsable(EditorBrowsableState.Advanced)]
-        public IList<ClientRequestHandler> ClientRequestHandlers
-        {
-            get
-            {
-                return m_clientRequestHandlers;
-            }
-        }
+        public IList<ClientRequestHandler> ClientRequestHandlers => m_clientRequestHandlers;
 
         /// <summary>
         /// Gets a list of components that implement the <see cref="ISupportLifecycle"/> interface used by the <see cref="ParentService"/>.
         /// </summary>
         [Browsable(false),
         EditorBrowsable(EditorBrowsableState.Advanced)]
-        public IList<object> ServiceComponents
-        {
-            get
-            {
-                return m_serviceComponents;
-            }
-        }
+        public IList<object> ServiceComponents => m_serviceComponents;
 
         /// <summary>
         /// Gets the <see cref="PerformanceMonitor"/> object used for monitoring the health of the <see cref="ParentService"/>.
         /// </summary>
         [Browsable(false),
         EditorBrowsable(EditorBrowsableState.Advanced)]
-        public PerformanceMonitor PerformanceMonitor
-        {
-            get
-            {
-                return m_performanceMonitor;
-            }
-        }
+        public PerformanceMonitor PerformanceMonitor => m_performanceMonitor;
 
         /// <summary>
         /// Gets the unique identifier of the <see cref="ServiceHelper"/>.
@@ -1266,7 +1228,7 @@ namespace GSF.ServiceProcess
                 // Show the uptime for the windows service.
                 if ((object)m_remotingServer != null)
                 {
-                    status.AppendFormat("System Uptime: {0}", m_remotingServer.RunTime.ToString());
+                    status.AppendFormat("System Uptime: {0}", m_remotingServer.RunTime);
                     status.AppendLine();
                     status.AppendLine();
                 }
@@ -1387,6 +1349,7 @@ namespace GSF.ServiceProcess
             settings["MonitorServiceHealth", true].Update(m_monitorServiceHealth);
             settings["HealthMonitorInterval", true].Update(m_healthMonitorInterval);
             settings["RequestHistoryLimit", true].Update(m_requestHistoryLimit);
+            settings["SupportFileManagementCommands", true].Update(m_supportFileManagementCommands);
             settings["SupportTelnetSessions", true].Update(m_supportTelnetSessions);
             settings["SupportSystemCommands", true].Update(m_supportSystemCommands);
             settings["SecureRemoteInteractions", true].Update(m_secureRemoteInteractions);
@@ -1442,6 +1405,7 @@ namespace GSF.ServiceProcess
             settings.Add("MonitorServiceHealth", m_monitorServiceHealth, "True if the service health is to be monitored; otherwise False.");
             settings.Add("HealthMonitorInterval", m_healthMonitorInterval, "The interval, in seconds, over which to sample the performance monitor for health statistics.");
             settings.Add("RequestHistoryLimit", m_requestHistoryLimit, "Number of client request entries to be kept in the history.");
+            settings.Add("SupportFileManagementCommands", m_supportFileManagementCommands, "True to enable support for file-management commands; otherwise False.");
             settings.Add("SupportTelnetSessions", m_supportTelnetSessions, "True to enable the support for remote telnet-like sessions; otherwise False.");
             settings.Add("SupportSystemCommands", m_supportSystemCommands, "True to enable system-level access (-system switch) via the build-in commands; otherwise False.");
             settings.Add("SecureRemoteInteractions", m_secureRemoteInteractions, "True to enable security of remote client interactions; otherwise False.");
@@ -1456,6 +1420,7 @@ namespace GSF.ServiceProcess
             MonitorServiceHealth = settings["MonitorServiceHealth"].ValueAs(m_monitorServiceHealth);
             HealthMonitorInterval = settings["HealthMonitorInterval"].ValueAs(m_healthMonitorInterval);
             RequestHistoryLimit = settings["RequestHistoryLimit"].ValueAs(m_requestHistoryLimit);
+            SupportFileManagementCommands = settings["SupportFileManagementCommands"].ValueAs(m_supportFileManagementCommands);
             SupportTelnetSessions = settings["SupportTelnetSessions"].ValueAs(m_supportTelnetSessions);
             SupportSystemCommands = settings["SupportSystemCommands"].ValueAs(m_supportSystemCommands);
             SecureRemoteInteractions = settings["SecureRemoteInteractions"].ValueAs(m_secureRemoteInteractions);
@@ -1522,17 +1487,23 @@ namespace GSF.ServiceProcess
                 m_clientRequestHandlers.Add(new ClientRequestHandler("SaveSchedules", "Saves process schedules to the config file", SaveSchedules));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("LoadSchedules", "Loads process schedules from the config file", LoadSchedules));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("Filter", "Filters status messages coming from the service", UpdateClientFilter));
-                m_clientRequestHandlers.Add(new ClientRequestHandler("Files", "Manages files on the server", ManageFiles));
-                m_clientRequestHandlers.Add(new ClientRequestHandler("Transfer", "Transfers files to and from the server", TransferFile));
+
+                // Enable file management commands if configured
+                if (m_supportFileManagementCommands)
+                {
+                    m_clientRequestHandlers.Add(new ClientRequestHandler("Files", "Manages files on the server", ManageFiles));
+                    m_clientRequestHandlers.Add(new ClientRequestHandler("Transfer", "Transfers files to and from the server", TransferFile));
+                }
+
                 m_clientRequestHandlers.Add(new ClientRequestHandler("Version", "Displays current service version", ShowVersion, new[] { "ver" }));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("Time", "Displays current system time", ShowTime));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("User", "Displays current user information", ShowUser, new[] { "whoami" }));
 
-                // Enable telnet support if requested.
+                // Enable telnet support if configured
                 if (m_supportTelnetSessions)
                     m_clientRequestHandlers.Add(new ClientRequestHandler("Telnet", "Allows for a telnet session to the service server", RemoteTelnetSession, false));
 
-                // Enable health monitoring if requested.
+                // Enable health monitoring if configured
                 if (m_monitorServiceHealth)
                 {
                     try
@@ -1543,7 +1514,7 @@ namespace GSF.ServiceProcess
                     }
                     catch (UnauthorizedAccessException ex)
                     {
-                        string message = string.Format("Unable to start health monitor due to exception: {0}", ex.Message);
+                        string message = $"Unable to start health monitor due to exception: {ex.Message}";
                         LogException(new InvalidOperationException(message, ex));
                         UpdateStatus(UpdateType.Warning, "{0} Is the service account a member of the \"Performance Log Users\" group?", message);
                     }
@@ -2281,7 +2252,7 @@ namespace GSF.ServiceProcess
         private bool TrySetCurrentThreadPrincipal(ClientInfo client)
         {
             if ((object)client == null)
-                throw new ArgumentNullException("client");
+                throw new ArgumentNullException(nameof(client));
 
             WindowsPrincipal clientPrincipal;
 
@@ -2311,7 +2282,7 @@ namespace GSF.ServiceProcess
         private bool VerifySecurity(ClientInfo client)
         {
             if ((object)client == null)
-                throw new ArgumentNullException("client");
+                throw new ArgumentNullException(nameof(client));
 
             // Set current thread principal to remote client's user principal.
             if (!(Thread.CurrentPrincipal is WindowsPrincipal) && (object)client.ClientUser != null)
@@ -2353,7 +2324,7 @@ namespace GSF.ServiceProcess
             {
                 //                                                             1         2         3         4         5         6         7         8
                 //                                                    12345678901234567890123456789012345678901234567890123456789012345678901234567890
-                string warningMessage = string.Format("\r\n...\r\n\r\nMaximum status message size exceeded - suppressed over {0:N2}K characters.\r\n\r\n...\r\n", (message.Length - m_maxStatusUpdatesLength) / SI.Kilo);
+                string warningMessage = $"\r\n...\r\n\r\nMaximum status message size exceeded - suppressed over {(message.Length - m_maxStatusUpdatesLength) / SI.Kilo:N2}K characters.\r\n\r\n...\r\n";
                 int availableLength = (m_maxStatusUpdatesLength - warningMessage.Length) / 2;
 
                 if (availableLength > 0 && message.Length > availableLength)
@@ -2372,7 +2343,7 @@ namespace GSF.ServiceProcess
                     if (newLineIndex > -1 && newLineIndex + 1 < bottom.Length)
                         bottom = bottom.Substring(newLineIndex + 1).TrimStart('\r', '\n');
 
-                    message = string.Format("{0}{1}{2}", top, warningMessage, bottom);
+                    message = $"{top}{warningMessage}{bottom}";
                 }
             }
 
@@ -2535,12 +2506,12 @@ namespace GSF.ServiceProcess
                             }
                             else
                             {
-                                throw new SecurityException(string.Format("Failed to authenticate '{0}' - thread principal identity was '{1}'", client.ClientName, Thread.CurrentPrincipal.Identity.Name));
+                                throw new SecurityException($"Failed to authenticate '{client.ClientName}' - thread principal identity was '{Thread.CurrentPrincipal.Identity.Name}'");
                             }
                         }
                         else
                         {
-                            throw new SecurityException(string.Format("Failed to retrieve client principal from the socket connection: remote client '{0}' not found", client.ClientID));
+                            throw new SecurityException($"Failed to retrieve client principal from the socket connection: remote client '{client.ClientID}' not found");
                         }
                     }
                     else
@@ -2604,16 +2575,16 @@ namespace GSF.ServiceProcess
                                     if (VerifySecurity(requestInfo.Sender))
                                     {
                                         if (SecurityProviderUtility.IsResourceSecurable(resource) && !SecurityProviderUtility.IsResourceAccessible(resource))
-                                            throw new SecurityException(string.Format("Access to '{0}' is denied", requestInfo.Request.Command));
+                                            throw new SecurityException($"Access to '{requestInfo.Request.Command}' is denied");
                                     }
                                     else
                                     {
-                                        throw new SecurityException(string.Format("Failed to authenticate '{0}'", Thread.CurrentPrincipal.Identity.Name));
+                                        throw new SecurityException($"Failed to authenticate '{Thread.CurrentPrincipal.Identity.Name}'");
                                     }
                                 }
                                 else
                                 {
-                                    throw new SecurityException(string.Format("Failed to retrieve client principal from the socket connection: remote client '{0}' not found", client.ClientID));
+                                    throw new SecurityException($"Failed to retrieve client principal from the socket connection: remote client '{client.ClientID}' not found");
                                 }
                             }
 
@@ -2919,6 +2890,7 @@ namespace GSF.ServiceProcess
 #endif
                             responseMessage.Append(process.StartTime.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20));
                         }
+                        // ReSharper disable once EmptyGeneralCatchClause
                         catch
                         {
                         }
@@ -3052,7 +3024,7 @@ namespace GSF.ServiceProcess
                         responseMessage.Append(' ');
 
                         if (schedule.LastDueAt != DateTime.MinValue)
-                            responseMessage.Append(schedule.LastDueAt.ToString().PadRight(30));
+                            responseMessage.Append(schedule.LastDueAt.ToString(CultureInfo.InvariantCulture).PadRight(30));
                         else
                             responseMessage.Append("[Never]".PadRight(30));
                     }
@@ -3117,9 +3089,9 @@ namespace GSF.ServiceProcess
                         responseMessage.AppendLine();
                         responseMessage.Append(historicRequest.Request.Command.PadRight(20));
                         responseMessage.Append(' ');
-                        responseMessage.Append(historicRequest.ReceivedAt.ToString().PadRight(25));
+                        responseMessage.Append(historicRequest.ReceivedAt.ToString(CultureInfo.InvariantCulture).PadRight(25));
                         responseMessage.Append(' ');
-                        responseMessage.Append(string.Format("{0} from {1}", historicRequest.Sender.ClientUser.Identity.Name, historicRequest.Sender.MachineName).PadRight(30));
+                        responseMessage.Append($"{historicRequest.Sender.ClientUser.Identity.Name} from {historicRequest.Sender.MachineName}".PadRight(30));
                     }
                 }
                 responseMessage.AppendLine();
@@ -3538,7 +3510,7 @@ namespace GSF.ServiceProcess
                         if (reloadSettings)
                         {
                             // The user has requested to reload settings for all the components.
-                            requestInfo.Request = ClientRequest.Parse(string.Format("ReloadSettings {0}", categoryName));
+                            requestInfo.Request = ClientRequest.Parse($"ReloadSettings {categoryName}");
                             ReloadSettings(requestInfo);
                         }
 
@@ -3607,7 +3579,7 @@ namespace GSF.ServiceProcess
 
                 if (restartProcess)
                 {
-                    requestInfo.Request = ClientRequest.Parse(string.Format("Abort \"{0}\" {1}", processName, systemProcess ? "-system" : ""));
+                    requestInfo.Request = ClientRequest.Parse($"Abort \"{processName}\" {(systemProcess ? "-system" : "")}");
                     AbortProcess(requestInfo);
                 }
 
@@ -3674,7 +3646,7 @@ namespace GSF.ServiceProcess
                 if (!listProcesses)
                     return;
 
-                requestInfo.Request = ClientRequest.Parse(string.Format("Processes {0}", systemProcess ? "-system" : ""));
+                requestInfo.Request = ClientRequest.Parse($"Processes {(systemProcess ? "-system" : "")}");
                 ShowProcesses(requestInfo);
             }
         }
@@ -3801,7 +3773,7 @@ namespace GSF.ServiceProcess
                 if (!listProcesses)
                     return;
 
-                requestInfo.Request = ClientRequest.Parse(string.Format("Processes {0}", systemProcess ? "-system" : ""));
+                requestInfo.Request = ClientRequest.Parse($"Processes {(systemProcess ? "-system" : "")}");
                 ShowProcesses(requestInfo);
             }
         }
@@ -4526,9 +4498,9 @@ namespace GSF.ServiceProcess
                 //  Current system time: yyyy-MM-dd HH:mm:ss.fff, yyyy-MM-dd HH:mm:ss.fff UTC
                 // Total system runtime: xx days yy hours zz minutes ii seconds
                 if ((object)m_remotingServer != null)
-                    message = string.Format(" Current system time: {0}, {1} UTC\r\nTotal system runtime: {2}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"), m_remotingServer.RunTime.ToString());
+                    message = $" Current system time: {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}, {DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff")} UTC\r\nTotal system runtime: {m_remotingServer.RunTime}";
                 else
-                    message = string.Format("Current system time: {0}, {1} UTC", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                    message = $"Current system time: {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}, {DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff")} UTC";
 
                 UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message + "\r\n\r\n");
 
@@ -4576,17 +4548,7 @@ namespace GSF.ServiceProcess
 
                 ClientInfo info = requestInfo.Sender;
 
-                string message = string.Format(
-                    "  Current user: {0}\r\n" +
-                    "   Client name: {1}\r\n" +
-                    "  From machine: {2}\r\n" +
-                    "Connected time: {3}\r\n" +
-                    " Authenticated: {4}",
-                    info.ClientUser.Identity.Name.ToNonNullNorEmptyString("Undetermined"),
-                    info.ClientName.ToNonNullNorEmptyString("Undetermined"),
-                    info.MachineName.ToNonNullNorEmptyString("Undetermined"),
-                    info.ConnectedAt > DateTime.MinValue ? (DateTime.UtcNow - info.ConnectedAt).ToElapsedTimeString() : m_remotingServer.RunTime.ToString(),
-                    info.ClientUser.Identity.IsAuthenticated);
+                string message = $"  Current user: {info.ClientUser.Identity.Name.ToNonNullNorEmptyString("Undetermined")}\r\n" + $"   Client name: {info.ClientName.ToNonNullNorEmptyString("Undetermined")}\r\n" + $"  From machine: {info.MachineName.ToNonNullNorEmptyString("Undetermined")}\r\n" + $"Connected time: {(info.ConnectedAt > DateTime.MinValue ? (DateTime.UtcNow - info.ConnectedAt).ToElapsedTimeString() : m_remotingServer.RunTime.ToString())}\r\n" + $" Authenticated: {info.ClientUser.Identity.IsAuthenticated}";
 
                 UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message + "\r\n\r\n");
 
