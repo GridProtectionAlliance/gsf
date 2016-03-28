@@ -44,7 +44,7 @@ namespace GSF.TimeSeries.Transport
         private int m_nextRunLength;
         private long m_timeBucket;
         private PointMetaData m_lastPoint;
-        private List<PointMetaData> m_points;
+        private readonly List<PointMetaData> m_points;
 
         public MeasurementDecompressionBlock()
         {
@@ -109,10 +109,7 @@ namespace GSF.TimeSeries.Transport
                 m_stopIndex += bytesToCopy;
                 return bytesToCopy;
             }
-            else
-            {
-                return 0;
-            }
+            return 0;
         }
 
         private int RemainingBytes(int currentIndex) => m_stopIndex - currentIndex;
@@ -150,7 +147,10 @@ namespace GSF.TimeSeries.Transport
             if ((code & 7) == 5)
             {
                 point = new PointMetaData();
-                point.SignalID = *(ushort*)m_buffer[index];
+
+                fixed (byte* signalID = &m_buffer[index])
+                    point.SignalID = *(ushort*)signalID;
+
                 index += 2;
 
                 point.PointID = m_points.Count;
@@ -183,16 +183,16 @@ namespace GSF.TimeSeries.Transport
             }
 
             if ((code & 16) != 0)
-                point.LastQuality = (uint)((int)m_buffer[index++] | (int)m_buffer[index++] << 8 | (int)m_buffer[index++] << 16 | (int)m_buffer[index++] << 24);
+                point.LastQuality = (uint)(m_buffer[index++] | m_buffer[index++] << 8 | m_buffer[index++] << 16 | m_buffer[index++] << 24);
 
             if ((code & 7) == 1)
-                point.LastValue ^= (uint)((int)m_buffer[index++]);
+                point.LastValue ^= m_buffer[index++];
             else if ((code & 7) == 2)
-                point.LastValue ^= (uint)((int)m_buffer[index++] | (int)m_buffer[index++] << 8);
+                point.LastValue ^= (uint)(m_buffer[index++] | m_buffer[index++] << 8);
             else if ((code & 7) == 3)
-                point.LastValue ^= (uint)((int)m_buffer[index++] | (int)m_buffer[index++] << 8 | (int)m_buffer[index++] << 16);
+                point.LastValue ^= (uint)(m_buffer[index++] | m_buffer[index++] << 8 | m_buffer[index++] << 16);
             else if ((code & 7) == 4)
-                point.LastValue ^= (uint)((int)m_buffer[index++] | (int)m_buffer[index++] << 8 | (int)m_buffer[index++] << 16 | (int)m_buffer[index++] << 24);
+                point.LastValue ^= (uint)(m_buffer[index++] | m_buffer[index++] << 8 | m_buffer[index++] << 16 | m_buffer[index++] << 24);
 
             if ((code & 8) == 0)
             {

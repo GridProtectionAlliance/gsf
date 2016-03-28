@@ -70,6 +70,7 @@ namespace GSF.TimeSeries.Transport
         private volatile bool m_usePayloadCompression;
         private volatile bool m_useCompactMeasurementFormat;
         private CompressionModes m_compressionModes;
+        private MeasurementCompressionBlock m_compressionBlock;
         private volatile bool m_startTimeSent;
         private volatile bool m_isNaNFiltered;
         private IaonSession m_iaonSession;
@@ -629,13 +630,26 @@ namespace GSF.TimeSeries.Transport
 
                 if (usePayloadCompression && m_compressionModes.HasFlag(CompressionModes.TSSC))
                 {
-                    MeasurementCompressionBlock compressionBlock = new MeasurementCompressionBlock();
+                    if ((object)m_compressionBlock == null)
+                        m_compressionBlock = new MeasurementCompressionBlock();
+                    else
+                        m_compressionBlock.Clear();
 
                     foreach (CompactMeasurement measurement in measurements.Cast<CompactMeasurement>())
                     {
-                        if (compressionBlock.CanAddMeasurements)
-                            compressionBlock.AddMeasurement(measurement.RuntimeID, measurement.Timestamp.Value, (uint)measurement.StateFlags, (float)measurement.AdjustedValue);
+                        if (m_compressionBlock.CanAddMeasurements)
+                        {
+                            m_compressionBlock.AddMeasurement(measurement.RuntimeID, measurement.Timestamp.Value, (uint)measurement.StateFlags, (float)measurement.AdjustedValue);
+                        }
+                        else
+                        {
+                            m_compressionBlock.CopyTo(workingBuffer);
+                            m_compressionBlock.Clear();
+                            m_compressionBlock.AddMeasurement(measurement.RuntimeID, measurement.Timestamp.Value, (uint)measurement.StateFlags, (float)measurement.AdjustedValue);
+                        }
                     }
+
+                    m_compressionBlock.CopyTo(workingBuffer);
                 }
                 else
                 {

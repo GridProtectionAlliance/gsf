@@ -46,7 +46,7 @@ namespace GSF.TimeSeries.Transport
         private int m_lastMeasurementHeaderIndex;
         private long m_previousTimestamp;
         private PointMetaData m_lastPoint;
-        private Dictionary<ushort, PointMetaData> m_points;
+        private readonly Dictionary<ushort, PointMetaData> m_points;
 
         public MeasurementCompressionBlock()
         {

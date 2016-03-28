@@ -412,6 +412,7 @@ namespace GSF.TimeSeries.Transport
         private UdpClient m_dataChannel;
         private bool m_useZeroMQChannel;
         private LocalConcentrator m_localConcentrator;
+        private MeasurementDecompressionBlock m_decompressionBlock;
         private Timer m_dataStreamMonitor;
         private long m_commandChannelConnectionAttempts;
         private long m_dataChannelConnectionAttempts;
@@ -2886,8 +2887,10 @@ namespace GSF.TimeSeries.Transport
                                     {
                                         if (CompressionModes.HasFlag(CompressionModes.TSSC))
                                         {
-                                            // Use TSSC compression to decompress measurements
-                                            MeasurementDecompressionBlock decompressionBlock = new MeasurementDecompressionBlock();
+                                            // Use TSSC compression to decompress measurements                                            
+                                            if ((object)m_decompressionBlock == null)
+                                                m_decompressionBlock = new MeasurementDecompressionBlock();
+
                                             MemoryStream bufferStream = new MemoryStream(buffer, responseIndex, responseLength - responseIndex + DataPublisher.ClientResponseHeaderSize);
                                             bool eos = false;
 
@@ -2901,11 +2904,11 @@ namespace GSF.TimeSeries.Transport
                                                 float value;
                                                 byte command;
 
-                                                switch (decompressionBlock.GetMeasurement(out id, out time, out quality, out value, out command))
+                                                switch (m_decompressionBlock.GetMeasurement(out id, out time, out quality, out value, out command))
                                                 {
                                                     case DecompressionExitCode.EndOfStreamOccured:
                                                         if (bufferStream.Position != bufferStream.Length)
-                                                            decompressionBlock.Fill(bufferStream);
+                                                            m_decompressionBlock.Fill(bufferStream);
                                                         else
                                                             eos = true;
                                                         break;
