@@ -159,7 +159,7 @@ namespace GSF.TimeSeries.Transport
             public SubscribedDevice(string name)
             {
                 if ((object)name == null)
-                    throw new ArgumentNullException("name");
+                    throw new ArgumentNullException(nameof(name));
 
                 m_name = name;
                 StatisticsEngine.Register(this, name, "Device", "PMU");
@@ -177,13 +177,7 @@ namespace GSF.TimeSeries.Transport
 
             #region [ Properties ]
 
-            public string Name
-            {
-                get
-                {
-                    return m_name;
-                }
-            }
+            public string Name => m_name;
 
             public Guid StatusFlagsID
             {
@@ -690,24 +684,12 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets flag that determines if this <see cref="DataSubscriber"/> has successfully authenticated with the <see cref="DataPublisher"/>.
         /// </summary>
-        public bool Authenticated
-        {
-            get
-            {
-                return m_authenticated;
-            }
-        }
+        public bool Authenticated => m_authenticated;
 
         /// <summary>
         /// Gets total data packet bytes received during this session.
         /// </summary>
-        public long TotalBytesReceived
-        {
-            get
-            {
-                return m_totalBytesReceived;
-            }
-        }
+        public long TotalBytesReceived => m_totalBytesReceived;
 
         /// <summary>
         /// Gets or sets data loss monitoring interval, in seconds. Set to zero to disable monitoring.
@@ -916,13 +898,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets the version number of the protocol in use by this subscriber.
         /// </summary>
-        public int Version
-        {
-            get
-            {
-                return (int)(m_operationalModes & OperationalModes.VersionMask);
-            }
-        }
+        public int Version => (int)(m_operationalModes & OperationalModes.VersionMask);
 
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
@@ -932,13 +908,7 @@ namespace GSF.TimeSeries.Transport
         /// the adapter opens sockets and does not need to be engaged within an actual temporal <see cref="IaonSession"/>, therefore
         /// this method returns <c>false</c> to make sure the adapter doesn't get instantiated within a temporal session.
         /// </remarks>
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool SupportsTemporalProcessing => false;
 
         /// <summary>
         /// Gets or sets the desired processing interval, in milliseconds, for the adapter.
@@ -1122,13 +1092,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets a flag that determines if this <see cref="DataSubscriber"/> uses an asynchronous connection.
         /// </summary>
-        protected override bool UseAsyncConnect
-        {
-            get
-            {
-                return true;
-            }
-        }
+        protected override bool UseAsyncConnect => true;
 
         /// <summary>
         /// Gets or sets reference to <see cref="UdpClient"/> data channel, attaching and/or detaching to events as needed.
@@ -1213,35 +1177,17 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets the total number of measurements processed through this data publisher over the lifetime of the subscriber.
         /// </summary>
-        public long LifetimeMeasurements
-        {
-            get
-            {
-                return m_lifetimeMeasurements;
-            }
-        }
+        public long LifetimeMeasurements => m_lifetimeMeasurements;
 
         /// <summary>
         /// Gets the minimum value of the measurements per second calculation.
         /// </summary>
-        public long MinimumMeasurementsPerSecond
-        {
-            get
-            {
-                return m_minimumMeasurementsPerSecond;
-            }
-        }
+        public long MinimumMeasurementsPerSecond => m_minimumMeasurementsPerSecond;
 
         /// <summary>
         /// Gets the maximum value of the measurements per second calculation.
         /// </summary>
-        public long MaximumMeasurementsPerSecond
-        {
-            get
-            {
-                return m_maximumMeasurementsPerSecond;
-            }
-        }
+        public long MaximumMeasurementsPerSecond => m_maximumMeasurementsPerSecond;
 
         /// <summary>
         /// Gets the average value of the measurements per second calculation.
@@ -1260,24 +1206,12 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets the minimum latency calculated over the full lifetime of the subscriber.
         /// </summary>
-        public int LifetimeMinimumLatency
-        {
-            get
-            {
-                return (int)Ticks.ToMilliseconds(m_lifetimeMinimumLatency);
-            }
-        }
+        public int LifetimeMinimumLatency => (int)Ticks.ToMilliseconds(m_lifetimeMinimumLatency);
 
         /// <summary>
         /// Gets the maximum latency calculated over the full lifetime of the subscriber.
         /// </summary>
-        public int LifetimeMaximumLatency
-        {
-            get
-            {
-                return (int)Ticks.ToMilliseconds(m_lifetimeMaximumLatency);
-            }
-        }
+        public int LifetimeMaximumLatency => (int)Ticks.ToMilliseconds(m_lifetimeMaximumLatency);
 
         /// <summary>
         /// Gets the average latency calculated over the full lifetime of the subscriber.
@@ -1296,13 +1230,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets real-time as determined by either the local clock or the latest measurement received.
         /// </summary>
-        protected Ticks RealTime
-        {
-            get
-            {
-                return m_useLocalClockAsRealTime ? (Ticks)DateTime.UtcNow.Ticks : m_realTime;
-            }
-        }
+        protected Ticks RealTime => m_useLocalClockAsRealTime ? (Ticks)DateTime.UtcNow.Ticks : m_realTime;
 
         #endregion
 
@@ -1623,7 +1551,7 @@ namespace GSF.TimeSeries.Transport
                         m_dataGapRecoverer = new DataGapRecoverer();
                         m_dataGapRecoverer.SourceConnectionName = Name;
                         m_dataGapRecoverer.DataSource = DataSource;
-                        m_dataGapRecoverer.ConnectionString = string.Join("; ", string.Format("autoConnect=false; synchronizeMetadata=false{0}", string.IsNullOrWhiteSpace(m_loggingPath) ? "" : "; loggingPath=" + m_loggingPath), dataGapSettings.JoinKeyValuePairs(), connectionSettings.JoinKeyValuePairs());
+                        m_dataGapRecoverer.ConnectionString = string.Join("; ", $"autoConnect=false; synchronizeMetadata=false{(string.IsNullOrWhiteSpace(m_loggingPath) ? "" : "; loggingPath=" + m_loggingPath)}", dataGapSettings.JoinKeyValuePairs(), connectionSettings.JoinKeyValuePairs());
                         m_dataGapRecoverer.FilterExpression = this.OutputMeasurementKeys().Select(key => key.SignalID.ToString()).ToDelimitedString(';');
                         m_dataGapRecoverer.RecoveredMeasurements += m_dataGapRecoverer_RecoveredMeasurements;
                         m_dataGapRecoverer.StatusMessage += m_dataGapRecoverer_StatusMessage;
@@ -1743,7 +1671,7 @@ namespace GSF.TimeSeries.Transport
                 catch (Exception ex)
                 {
                     // Errors here may not be catastrophic, this simply limits the auto-assignment of input measurement keys desired for subscription
-                    OnProcessException(new InvalidOperationException(string.Format("Failed to apply subscribed measurements to subscription filter: {0}", ex.Message), ex));
+                    OnProcessException(new InvalidOperationException($"Failed to apply subscribed measurements to subscription filter: {ex.Message}", ex));
                 }
             }
 
@@ -1771,7 +1699,7 @@ namespace GSF.TimeSeries.Transport
                     // Have to use a Convert expression for DeviceID column in Select function
                     // here since SQLite doesn't report data types for COALESCE based columns
                     measurementIDs = DataSource.Tables["ActiveMeasurements"]
-                        .Select(string.Format("Convert(DeviceID, 'System.String') = '{0}'", ID))
+                        .Select($"Convert(DeviceID, 'System.String') = '{ID}'")
                         .Where(row => Guid.TryParse(row["SignalID"].ToNonNullString(), out signalID))
                         .Select(row => signalID);
 
@@ -1782,7 +1710,7 @@ namespace GSF.TimeSeries.Transport
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Error when filtering output measurements by device ID: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Error when filtering output measurements by device ID: {ex.Message}", ex));
             }
         }
 
@@ -2587,11 +2515,11 @@ namespace GSF.TimeSeries.Transport
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException(string.Format("Exception occurred while trying to send server command \"{0}\" to publisher: {1}", commandCode, ex.Message), ex));
+                    OnProcessException(new InvalidOperationException($"Exception occurred while trying to send server command \"{commandCode}\" to publisher: {ex.Message}", ex));
                 }
             }
             else
-                OnProcessException(new InvalidOperationException(string.Format("Subscriber is currently unconnected. Cannot send server command \"{0}\" to publisher.", commandCode)));
+                OnProcessException(new InvalidOperationException($"Subscriber is currently unconnected. Cannot send server command \"{commandCode}\" to publisher."));
 
             return false;
         }
@@ -2665,7 +2593,7 @@ namespace GSF.TimeSeries.Transport
         public override string GetShortStatus(int maxLength)
         {
             if ((object)m_commandChannel != null && m_commandChannel.CurrentState == ClientState.Connected)
-                return string.Format("Subscriber is connected and receiving {0} data points", m_synchronizedSubscription ? "synchronized" : "unsynchronized").CenterText(maxLength);
+                return $"Subscriber is connected and receiving {(m_synchronizedSubscription ? "synchronized" : "unsynchronized")} data points".CenterText(maxLength);
 
             return "Subscriber is not connected.".CenterText(maxLength);
         }
@@ -3368,18 +3296,18 @@ namespace GSF.TimeSeries.Transport
                             command.Transaction = transaction;
 
                         // Query the actual record ID based on the known run-time ID for this subscriber device
-                        int parentID = Convert.ToInt32(command.ExecuteScalar(string.Format("SELECT SourceID FROM Runtime WHERE ID = {0} AND SourceTable='Device'", ID), m_metadataSynchronizationTimeout));
+                        int parentID = Convert.ToInt32(command.ExecuteScalar($"SELECT SourceID FROM Runtime WHERE ID = {ID} AND SourceTable='Device'", m_metadataSynchronizationTimeout));
 
                         // Validate that the subscriber device is marked as a concentrator (we are about to associate children devices with it)
-                        if (!command.ExecuteScalar(string.Format("SELECT IsConcentrator FROM Device WHERE ID = {0}", parentID), m_metadataSynchronizationTimeout).ToString().ParseBoolean())
-                            command.ExecuteNonQuery(string.Format("UPDATE Device SET IsConcentrator = 1 WHERE ID = {0}", parentID), m_metadataSynchronizationTimeout);
+                        if (!command.ExecuteScalar($"SELECT IsConcentrator FROM Device WHERE ID = {parentID}", m_metadataSynchronizationTimeout).ToString().ParseBoolean())
+                            command.ExecuteNonQuery($"UPDATE Device SET IsConcentrator = 1 WHERE ID = {parentID}", m_metadataSynchronizationTimeout);
 
                         // Get any historian associated with the subscriber device
-                        object historianID = command.ExecuteScalar(string.Format("SELECT HistorianID FROM Device WHERE ID = {0}", parentID), m_metadataSynchronizationTimeout);
+                        object historianID = command.ExecuteScalar($"SELECT HistorianID FROM Device WHERE ID = {parentID}", m_metadataSynchronizationTimeout);
 
                         // Determine the active node ID - we cache this since this value won't change for the lifetime of this class
                         if (m_nodeID == Guid.Empty)
-                            m_nodeID = Guid.Parse(command.ExecuteScalar(string.Format("SELECT NodeID FROM IaonInputAdapter WHERE ID = {0}", (int)ID), m_metadataSynchronizationTimeout).ToString());
+                            m_nodeID = Guid.Parse(command.ExecuteScalar($"SELECT NodeID FROM IaonInputAdapter WHERE ID = {(int)ID}", m_metadataSynchronizationTimeout).ToString());
 
                         // Determine the protocol record auto-inc ID value for the gateway transport protocol (GEP) - this value is also cached since it shouldn't change for the lifetime of this class
                         if (m_gatewayProtocolID == 0)
@@ -4043,7 +3971,7 @@ namespace GSF.TimeSeries.Transport
                     encoding = Encoding.Default;
                     break;
                 default:
-                    throw new InvalidOperationException(string.Format("Unsupported encoding detected: {0}", operationalEncoding));
+                    throw new InvalidOperationException($"Unsupported encoding detected: {operationalEncoding}");
             }
 
             return encoding;
@@ -4091,7 +4019,7 @@ namespace GSF.TimeSeries.Transport
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException(string.Format("Exception while attempting to flush data gap recoverer log: {0}", ex.Message), ex));
+                    OnProcessException(new InvalidOperationException($"Exception while attempting to flush data gap recoverer log: {ex.Message}", ex));
                 }
             }
 
@@ -4145,8 +4073,8 @@ namespace GSF.TimeSeries.Transport
                     subscribedDeviceNames = new HashSet<string>();
                     definedDeviceNames = new HashSet<string>();
 
-                    foreach (DataRow deviceRow in dataSource.Tables["InputStreamDevices"].Select(string.Format("ParentID = {0}", ID)))
-                        definedDeviceNames.Add(string.Format("LOCAL${0}", deviceRow["Acronym"].ToNonNullString()));
+                    foreach (DataRow deviceRow in dataSource.Tables["InputStreamDevices"].Select($"ParentID = {ID}"))
+                        definedDeviceNames.Add($"LOCAL${deviceRow["Acronym"].ToNonNullString()}");
 
                     if ((object)m_statisticsHelpers != null)
                     {
@@ -4179,7 +4107,7 @@ namespace GSF.TimeSeries.Transport
                         foreach (DeviceStatisticsHelper<SubscribedDevice> statisticsHelper in subscribedDevices)
                         {
                             measurementRows = dataSource.Tables["ActiveMeasurements"]
-                                .Select(string.Format("SignalReference LIKE '{0}-%' AND SignalType <> 'STAT'", Regex.Replace(statisticsHelper.Device.Name, @"^LOCAL\$", "")));
+                                .Select($"SignalReference LIKE '{Regex.Replace(statisticsHelper.Device.Name, @"^LOCAL\$", "")}-%' AND SignalType <> 'STAT'");
 
                             foreach (DataRow measurementRow in measurementRows)
                             {
@@ -4216,7 +4144,7 @@ namespace GSF.TimeSeries.Transport
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Unable to register device statistics due to exception: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Unable to register device statistics due to exception: {ex.Message}", ex));
             }
         }
 
@@ -4235,7 +4163,7 @@ namespace GSF.TimeSeries.Transport
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Unable to unregister device statistics due to exception: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Unable to unregister device statistics due to exception: {ex.Message}", ex));
             }
         }
 
@@ -4283,13 +4211,13 @@ namespace GSF.TimeSeries.Transport
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Unable to set expected measurement counts for gathering statistics due to exception: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Unable to set expected measurement counts for gathering statistics due to exception: {ex.Message}", ex));
             }
         }
 
         private int GetFramesPerSecond(DataTable measurementTable, Guid signalID)
         {
-            DataRow row = measurementTable.Select(string.Format("SignalID = '{0}'", signalID)).FirstOrDefault();
+            DataRow row = measurementTable.Select($"SignalID = '{signalID}'").FirstOrDefault();
 
             if ((object)row != null)
             {
@@ -4345,7 +4273,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ConnectionEstablished event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for ConnectionEstablished event: {ex.Message}", ex));
             }
         }
 
@@ -4362,7 +4290,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ConnectionTerminated event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for ConnectionTerminated event: {ex.Message}", ex));
             }
         }
 
@@ -4379,7 +4307,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ConnectionAuthenticated event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for ConnectionAuthenticated event: {ex.Message}", ex));
             }
         }
 
@@ -4398,7 +4326,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ReceivedServerResponse event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for ReceivedServerResponse event: {ex.Message}", ex));
             }
         }
 
@@ -4416,7 +4344,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for MetaDataReceived event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for MetaDataReceived event: {ex.Message}", ex));
             }
         }
 
@@ -4434,7 +4362,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for DataStartTime event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for DataStartTime event: {ex.Message}", ex));
             }
         }
 
@@ -4455,7 +4383,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ProcessingComplete event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for ProcessingComplete event: {ex.Message}", ex));
             }
         }
 
@@ -4473,7 +4401,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for NotificationReceived event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for NotificationReceived event: {ex.Message}", ex));
             }
         }
 
@@ -4490,7 +4418,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ServerConfigurationChanged event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for ServerConfigurationChanged event: {ex.Message}", ex));
             }
         }
 

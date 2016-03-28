@@ -512,13 +512,7 @@ namespace GSF.TimeSeries.Transport
                 }
             }
 
-            public override bool SupportsTemporalProcessing
-            {
-                get
-                {
-                    return false;
-                }
-            }
+            public override bool SupportsTemporalProcessing => false;
 
             public override string GetShortStatus(int maxLength)
             {
@@ -1001,7 +995,7 @@ namespace GSF.TimeSeries.Transport
             set
             {
                 if (value < 1000.0D)
-                    throw new ArgumentOutOfRangeException("value", "Cipher key rotation period should not be set to less than 1000 milliseconds.");
+                    throw new ArgumentOutOfRangeException(nameof(value), "Cipher key rotation period should not be set to less than 1000 milliseconds.");
 
                 if ((object)m_cipherKeyRotationTimer != null)
                     m_cipherKeyRotationTimer.Interval = value;
@@ -1122,24 +1116,12 @@ namespace GSF.TimeSeries.Transport
         /// Gets flag that determines if <see cref="DataPublisher"/> subscriptions
         /// are automatically initialized when they are added to the collection.
         /// </summary>
-        protected override bool AutoInitialize
-        {
-            get
-            {
-                return false;
-            }
-        }
+        protected override bool AutoInitialize => false;
 
         /// <summary>
         /// Gets dictionary of connected clients.
         /// </summary>
-        internal protected ConcurrentDictionary<Guid, ClientConnection> ClientConnections
-        {
-            get
-            {
-                return m_clientConnections;
-            }
-        }
+        protected internal ConcurrentDictionary<Guid, ClientConnection> ClientConnections => m_clientConnections;
 
         /// <summary>
         /// Gets or sets reference to <see cref="TcpServer"/> command channel, attaching and/or detaching to events as needed.
@@ -1189,68 +1171,32 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets flag indicating if publisher is connected and listening.
         /// </summary>
-        public bool IsConnected
-        {
-            get
-            {
-                return m_commandChannel.Enabled;
-            }
-        }
+        public bool IsConnected => m_commandChannel.Enabled;
 
         /// <summary>
         /// Gets the total number of buffer block retransmissions on all subscriptions over the lifetime of the publisher.
         /// </summary>
-        public long BufferBlockRetransmissions
-        {
-            get
-            {
-                return m_bufferBlockRetransmissions;
-            }
-        }
+        public long BufferBlockRetransmissions => m_bufferBlockRetransmissions;
 
         /// <summary>
         /// Gets the total number of bytes sent to clients of this data publisher.
         /// </summary>
-        public long TotalBytesSent
-        {
-            get
-            {
-                return m_totalBytesSent;
-            }
-        }
+        public long TotalBytesSent => m_totalBytesSent;
 
         /// <summary>
         /// Gets the total number of measurements processed through this data publisher over the lifetime of the publisher.
         /// </summary>
-        public long LifetimeMeasurements
-        {
-            get
-            {
-                return m_lifetimeMeasurements;
-            }
-        }
+        public long LifetimeMeasurements => m_lifetimeMeasurements;
 
         /// <summary>
         /// Gets the minimum value of the measurements per second calculation.
         /// </summary>
-        public long MinimumMeasurementsPerSecond
-        {
-            get
-            {
-                return m_minimumMeasurementsPerSecond;
-            }
-        }
+        public long MinimumMeasurementsPerSecond => m_minimumMeasurementsPerSecond;
 
         /// <summary>
         /// Gets the maximum value of the measurements per second calculation.
         /// </summary>
-        public long MaximumMeasurementsPerSecond
-        {
-            get
-            {
-                return m_maximumMeasurementsPerSecond;
-            }
-        }
+        public long MaximumMeasurementsPerSecond => m_maximumMeasurementsPerSecond;
 
         /// <summary>
         /// Gets the average value of the measurements per second calculation.
@@ -1269,24 +1215,12 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets the minimum latency calculated over the full lifetime of the publisher.
         /// </summary>
-        public int LifetimeMinimumLatency
-        {
-            get
-            {
-                return (int)Ticks.ToMilliseconds(m_lifetimeMinimumLatency);
-            }
-        }
+        public int LifetimeMinimumLatency => (int)Ticks.ToMilliseconds(m_lifetimeMinimumLatency);
 
         /// <summary>
         /// Gets the maximum latency calculated over the full lifetime of the publisher.
         /// </summary>
-        public int LifetimeMaximumLatency
-        {
-            get
-            {
-                return (int)Ticks.ToMilliseconds(m_lifetimeMaximumLatency);
-            }
-        }
+        public int LifetimeMaximumLatency => (int)Ticks.ToMilliseconds(m_lifetimeMaximumLatency);
 
         /// <summary>
         /// Gets the average latency calculated over the full lifetime of the publisher.
@@ -1440,7 +1374,7 @@ namespace GSF.TimeSeries.Transport
             if (settings.TryGetValue("cacheMeasurementKeys", out m_cacheMeasurementKeys))
             {
                 // Create adapter for caching measurements that have a slower refresh interval
-                LatestMeasurementCache cache = new LatestMeasurementCache(string.Format("trackLatestMeasurements=true;lagTime=60;leadTime=60;inputMeasurementKeys={{{0}}}", m_cacheMeasurementKeys));
+                LatestMeasurementCache cache = new LatestMeasurementCache($"trackLatestMeasurements=true;lagTime=60;leadTime=60;inputMeasurementKeys={{{m_cacheMeasurementKeys}}}");
 
                 // Set up its data source first
                 cache.DataSource = DataSource;
@@ -1556,9 +1490,10 @@ namespace GSF.TimeSeries.Transport
         {
             int measurementCount;
 
-            m_routedMeasurementsHandler(this, new EventArgs<ICollection<IMeasurement>>(measurements.ToList()));
+            IList<IMeasurement> measurementList = measurements as IList<IMeasurement> ?? measurements.ToList();
+            m_routedMeasurementsHandler(this, new EventArgs<ICollection<IMeasurement>>(measurementList));
 
-            measurementCount = measurements.Count();
+            measurementCount = measurementList.Count;
             m_lifetimeMeasurements += measurementCount;
             UpdateMeasurementsPerSecond(measurementCount);
         }
@@ -1596,7 +1531,7 @@ namespace GSF.TimeSeries.Transport
         public override string GetShortStatus(int maxLength)
         {
             if ((object)m_commandChannel != null)
-                return string.Format("Publishing data to {0} clients.", m_commandChannel.ClientIDs.Length).CenterText(maxLength);
+                return $"Publishing data to {m_commandChannel.ClientIDs.Length} clients.".CenterText(maxLength);
 
             return "Currently not connected".CenterText(maxLength);
         }
@@ -1641,9 +1576,9 @@ namespace GSF.TimeSeries.Transport
                     if (!filterToTemporalSessions || hasActiveTemporalSession)
                     {
                         if (connection.Subscription is UnsynchronizedClientSubscription)
-                            timestampFormat = string.Format("{0} Format, {1}-byte timestamps", connection.Subscription.UseCompactMeasurementFormat ? "Compact" : "Full", connection.Subscription.TimestampSize);
+                            timestampFormat = $"{(connection.Subscription.UseCompactMeasurementFormat ? "Compact" : "Full")} Format, {connection.Subscription.TimestampSize}-byte timestamps";
                         else
-                            timestampFormat = string.Format("{0} Format, 8-byte frame-level timestamp", connection.Subscription.UseCompactMeasurementFormat ? "Compact" : "Full");
+                            timestampFormat = $"{(connection.Subscription.UseCompactMeasurementFormat ? "Compact" : "Full")} Format, 8-byte frame-level timestamp";
 
                         clientEnumeration.AppendFormat("  {0} - {1}\r\n          {2}\r\n          {3}\r\n          {4}\r\n          Active Temporal Session = {5}\r\n\r\n",
                                 i.ToString().PadLeft(3),
@@ -1853,7 +1788,7 @@ namespace GSF.TimeSeries.Transport
         [AdapterCommand("Sends a notification to all subscribers.", "Administrator", "Editor")]
         public virtual void SendNotification(string message)
         {
-            string notification = string.Format("[{0}] {1}", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"), message);
+            string notification = $"[{DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff")}] {message}";
 
             lock (m_clientNotificationsLock)
             {
@@ -1937,7 +1872,7 @@ namespace GSF.TimeSeries.Transport
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Failed to update latest measurement cache: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Failed to update latest measurement cache: {ex.Message}", ex));
             }
         }
 
@@ -1977,7 +1912,7 @@ namespace GSF.TimeSeries.Transport
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Failed to initialize client notification dictionary: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Failed to initialize client notification dictionary: {ex.Message}", ex));
             }
         }
 
@@ -2000,7 +1935,7 @@ namespace GSF.TimeSeries.Transport
 
         private void SerializeClientNotifications()
         {
-            string notificationsFileName = FilePath.GetAbsolutePath(string.Format("{0}Notifications.txt", Name));
+            string notificationsFileName = FilePath.GetAbsolutePath($"{Name}Notifications.txt");
 
             // Delete existing file for re-serialization
             if (File.Exists(notificationsFileName))
@@ -2019,7 +1954,7 @@ namespace GSF.TimeSeries.Transport
 
         private void DeserializeClientNotifications()
         {
-            string notificationsFileName = FilePath.GetAbsolutePath(string.Format("{0}Notifications.txt", Name));
+            string notificationsFileName = FilePath.GetAbsolutePath($"{Name}Notifications.txt");
             Dictionary<int, string> notifications;
             string notification;
             Guid subscriberID;
@@ -2108,7 +2043,7 @@ namespace GSF.TimeSeries.Transport
                 if (!RequireAuthentication)
                     return true;
 
-                subscriber = DataSource.Tables["Subscribers"].Select(string.Format("ID = '{0}' AND Enabled <> 0", subscriberID)).FirstOrDefault();
+                subscriber = DataSource.Tables["Subscribers"].Select($"ID = '{subscriberID}' AND Enabled <> 0").FirstOrDefault();
 
                 // If subscriber has been disabled or removed
                 // from the list of valid subscribers,
@@ -2117,7 +2052,7 @@ namespace GSF.TimeSeries.Transport
                     return false;
 
                 // Look up explicitly defined individual measurements
-                explicitAuthorizationFlags = DataSource.Tables["SubscriberMeasurements"].Select(string.Format("SubscriberID = '{0}' AND SignalID = '{1}'", subscriberID, signalID))
+                explicitAuthorizationFlags = DataSource.Tables["SubscriberMeasurements"].Select($"SubscriberID = '{subscriberID}' AND SignalID = '{signalID}'")
                     .Select(measurement => measurement["Allowed"].ToNonNullString("0").ParseBoolean());
 
                 foreach (bool flag in explicitAuthorizationFlags)
@@ -2132,10 +2067,10 @@ namespace GSF.TimeSeries.Transport
                     return true;
 
                 // Look up explicitly defined group based measurements
-                subscriberMeasurementGroups = DataSource.Tables["SubscriberMeasurementGroups"].Select(string.Format("SubscriberID = '{0}'", subscriberID));
+                subscriberMeasurementGroups = DataSource.Tables["SubscriberMeasurementGroups"].Select($"SubscriberID = '{subscriberID}'");
 
                 explicitGroupAuthorizationFlags = subscriberMeasurementGroups
-                    .Where(subscriberMeasurementGroup => DataSource.Tables["MeasurementGroupMeasurements"].Select(string.Format("SignalID = '{0}' AND MeasurementGroupID = {1}", signalID, subscriberMeasurementGroup["MeasurementGroupID"])).Length > 0)
+                    .Where(subscriberMeasurementGroup => DataSource.Tables["MeasurementGroupMeasurements"].Select($"SignalID = '{signalID}' AND MeasurementGroupID = {subscriberMeasurementGroup["MeasurementGroupID"]}").Length > 0)
                     .Select(subscriberMeasurementGroup => subscriberMeasurementGroup["Allowed"].ToNonNullString("0").ParseBoolean());
 
                 foreach (bool flag in explicitGroupAuthorizationFlags)
@@ -2152,7 +2087,7 @@ namespace GSF.TimeSeries.Transport
                 // Look up implicitly defined filter based measurements
                 implicitFilterAuthorizationFlags = Regex.Matches(subscriber["AccessControlFilter"].ToNonNullString().ReplaceControlCharacters(), FilterRegex, RegexOptions.IgnoreCase)
                     .Cast<Match>()
-                    .Where(match => DataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalID = '{0}' AND ({1})", signalID, match.Groups[2].Value)).Length > 0)
+                    .Where(match => DataSource.Tables["ActiveMeasurements"].Select($"SignalID = '{signalID}' AND ({match.Groups[2].Value})").Length > 0)
                     .Select(match => (match.Groups[1].Value == "ALLOW"));
 
                 foreach (bool flag in implicitFilterAuthorizationFlags)
@@ -2168,7 +2103,7 @@ namespace GSF.TimeSeries.Transport
 
                 // Look up implicitly defined group based measurements
                 return subscriberMeasurementGroups
-                    .Select(subscriberMeasurementGroup => Tuple.Create(subscriberMeasurementGroup, DataSource.Tables["MeasurementGroups"].Select(string.Format("ID = {0}", subscriberMeasurementGroup["MeasurementGroupID"]))))
+                    .Select(subscriberMeasurementGroup => Tuple.Create(subscriberMeasurementGroup, DataSource.Tables["MeasurementGroups"].Select($"ID = {subscriberMeasurementGroup["MeasurementGroupID"]}")))
                     .Where(tuple => tuple.Item2.Any(measurementGroup => AdapterBase.ParseInputMeasurementKeys(DataSource, false, measurementGroup["FilterExpression"].ToNonNullString()).Select(key => key.SignalID).Contains(signalID)))
                     .Select(tuple => tuple.Item1["Allowed"].ToNonNullString("0").ParseBoolean())
                     .DefaultIfEmpty(false)
@@ -2176,7 +2111,7 @@ namespace GSF.TimeSeries.Transport
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Failed to determine subscriber rights for {0} due to exception: {1}", GetConnectionProperty(subscriberID, cc => cc.SubscriberAcronym), ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Failed to determine subscriber rights for {GetConnectionProperty(subscriberID, cc => cc.SubscriberAcronym)} due to exception: {ex.Message}", ex));
             }
 
             return false;
@@ -2260,7 +2195,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <param name="clientID">ID of client to send response.</param>
         /// <param name="startTime">Start time, in <see cref="Ticks"/>, of first measurement transmitted.</param>
-        internal protected virtual bool SendDataStartTime(Guid clientID, Ticks startTime)
+        protected internal virtual bool SendDataStartTime(Guid clientID, Ticks startTime)
         {
             bool result = SendClientResponse(clientID, ServerResponse.DataStartTime, ServerCommand.Subscribe, BigEndian.GetBytes((long)startTime));
 
@@ -2281,7 +2216,7 @@ namespace GSF.TimeSeries.Transport
         /// <param name="response">Server response.</param>
         /// <param name="command">In response to command.</param>
         /// <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
-        internal protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command)
+        protected internal virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command)
         {
             return SendClientResponse(clientID, response, command, (byte[])null);
         }
@@ -2294,7 +2229,7 @@ namespace GSF.TimeSeries.Transport
         /// <param name="command">In response to command.</param>
         /// <param name="status">Status message to return.</param>
         /// <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
-        internal protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, string status)
+        protected internal virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, string status)
         {
             if ((object)status != null)
                 return SendClientResponse(clientID, response, command, GetClientEncoding(clientID).GetBytes(status));
@@ -2311,7 +2246,7 @@ namespace GSF.TimeSeries.Transport
         /// <param name="formattedStatus">Formatted status message to return.</param>
         /// <param name="args">Arguments for <paramref name="formattedStatus"/>.</param>
         /// <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
-        internal protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, string formattedStatus, params object[] args)
+        protected internal virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, string formattedStatus, params object[] args)
         {
             if (!string.IsNullOrWhiteSpace(formattedStatus))
                 return SendClientResponse(clientID, response, command, GetClientEncoding(clientID).GetBytes(string.Format(formattedStatus, args)));
@@ -2327,7 +2262,7 @@ namespace GSF.TimeSeries.Transport
         /// <param name="command">In response to command.</param>
         /// <param name="data">Data to return to client; null if none.</param>
         /// <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
-        internal protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, byte[] data)
+        protected internal virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, byte[] data)
         {
             return SendClientResponse(clientID, (byte)response, (byte)command, data);
         }
@@ -2336,7 +2271,7 @@ namespace GSF.TimeSeries.Transport
         /// Updates latency statistics based on the collection of latencies passed into the method.
         /// </summary>
         /// <param name="latencies">The latencies of the measurements sent by the publisher.</param>
-        internal protected virtual void UpdateLatencyStatistics(IEnumerable<long> latencies)
+        protected internal virtual void UpdateLatencyStatistics(IEnumerable<long> latencies)
         {
             foreach (long latency in latencies)
             {
@@ -2407,7 +2342,7 @@ namespace GSF.TimeSeries.Transport
                 // so attempt to add that equivalent address to the list as well
                 if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
                 {
-                    dualStackAddress = string.Format("::ffff:{0}", address.Trim());
+                    dualStackAddress = $"::ffff:{address.Trim()}";
 
                     if (IPAddress.TryParse(dualStackAddress, out ipAddress))
                         ipAddressList.Add(ipAddress);
@@ -2457,13 +2392,13 @@ namespace GSF.TimeSeries.Transport
                     }
                     catch (Exception ex)
                     {
-                        OnProcessException(new InvalidOperationException(string.Format("Failed to add subscriber \"{0}\" certificate to trusted certificates: {1}", subscriber["Acronym"].ToNonNullNorEmptyString("[UNKNOWN]"), ex.Message), ex));
+                        OnProcessException(new InvalidOperationException($"Failed to add subscriber \"{subscriber["Acronym"].ToNonNullNorEmptyString("[UNKNOWN]")}\" certificate to trusted certificates: {ex.Message}", ex));
                     }
                 }
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Failed to update certificate checker: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Failed to update certificate checker: {ex.Message}", ex));
             }
         }
 
@@ -2483,7 +2418,7 @@ namespace GSF.TimeSeries.Transport
 
                 // Determine if the connection has been disabled or removed - make sure to set authenticated to false if necessary
                 if ((object)DataSource != null && DataSource.Tables.Contains("Subscribers") &&
-                    !DataSource.Tables["Subscribers"].Select(string.Format("ID = '{0}' AND Enabled <> 0", connection.SubscriberID)).Any())
+                    !DataSource.Tables["Subscribers"].Select($"ID = '{connection.SubscriberID}' AND Enabled <> 0").Any())
                     connection.Authenticated = false;
 
                 if ((object)subscription != null)
@@ -2503,7 +2438,7 @@ namespace GSF.TimeSeries.Transport
                     if (!authorizedSignals.SetEquals(subscription.InputMeasurementKeys))
                     {
                         // Update the subscription associated with this connection based on newly acquired or revoked rights
-                        message = string.Format("Update to authorized signals caused subscription to change. Now subscribed to {0} signals.", authorizedSignals.Count);
+                        message = $"Update to authorized signals caused subscription to change. Now subscribed to {authorizedSignals.Count} signals.";
                         subscription.InputMeasurementKeys = authorizedSignals.ToArray();
                         SendClientResponse(subscription.ClientID, ServerResponse.Succeeded, ServerCommand.Subscribe, message);
                     }
@@ -2511,7 +2446,7 @@ namespace GSF.TimeSeries.Transport
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Failed to update authorized signal rights for \"{0}\" - connection will be terminated: {1}", connection.ConnectionID, ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Failed to update authorized signal rights for \"{connection.ConnectionID}\" - connection will be terminated: {ex.Message}", ex));
 
                 // If we can't assign rights, terminate connection
                 ThreadPool.QueueUserWorkItem(DisconnectClient, connection.ClientID);
@@ -2696,7 +2631,7 @@ namespace GSF.TimeSeries.Transport
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Encountered an exception while processing client disconnect: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Encountered an exception while processing client disconnect: {ex.Message}", ex));
             }
         }
 
@@ -2786,7 +2721,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ProcessingComplete event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for ProcessingComplete event: {ex.Message}", ex));
             }
         }
 
@@ -2806,7 +2741,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ClientConnected event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for ClientConnected event: {ex.Message}", ex));
             }
         }
 
@@ -2903,7 +2838,7 @@ namespace GSF.TimeSeries.Transport
 
                 if ((object)subscriber == null)
                 {
-                    message = string.Format("No subscriber is registered for {0}, cannot authenticate connection - {1} request denied.", connection.ConnectionID, ServerCommand.Authenticate);
+                    message = $"No subscriber is registered for {connection.ConnectionID}, cannot authenticate connection - {ServerCommand.Authenticate} request denied.";
                     SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
                     OnStatusMessage("WARNING: Client {0} {1} command request denied - subscriber is disabled or not registered.", connection.ConnectionID, ServerCommand.Authenticate);
                 }
@@ -2940,7 +2875,7 @@ namespace GSF.TimeSeries.Transport
                                 if (connection.Authenticated)
                                 {
                                     // Send success response
-                                    message = string.Format("Registered subscriber \"{0}\" {1} was successfully authenticated.", connection.SubscriberName, connection.ConnectionID);
+                                    message = $"Registered subscriber \"{connection.SubscriberName}\" {connection.ConnectionID} was successfully authenticated.";
                                     SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Authenticate, message);
                                     OnStatusMessage(message);
 
@@ -2952,7 +2887,7 @@ namespace GSF.TimeSeries.Transport
                                 }
                                 else
                                 {
-                                    message = string.Format("Subscriber authentication failed - {0} request denied.", ServerCommand.Authenticate);
+                                    message = $"Subscriber authentication failed - {ServerCommand.Authenticate} request denied.";
                                     SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
                                     OnStatusMessage("WARNING: Client {0} {1} command request denied - subscriber authentication failed.", connection.ConnectionID, ServerCommand.Authenticate);
                                 }
@@ -2966,7 +2901,7 @@ namespace GSF.TimeSeries.Transport
                         }
                         else
                         {
-                            message = string.Format("Received request packet with an unexpected size from {0} - {1} request denied.", connection.ConnectionID, ServerCommand.Authenticate);
+                            message = $"Received request packet with an unexpected size from {connection.ConnectionID} - {ServerCommand.Authenticate} request denied.";
                             SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
                             OnStatusMessage("WARNING: Registered subscriber \"{0}\" {1} {2} command request was denied due to oddly sized {3} byte authentication packet.", connection.SubscriberName, connection.ConnectionID, ServerCommand.Authenticate, byteLength);
                         }
@@ -3120,7 +3055,7 @@ namespace GSF.TimeSeries.Transport
                                     if ((compressionModes & CompressionModes.TSSC) > 0)
                                         throw new InvalidOperationException("Cannot use TSCC compression mode with UDP");
 
-                                    connection.DataChannel = new UdpServer(string.Format("Port=-1; Clients={0}:{1}; interface={2}", connection.IPAddress, int.Parse(setting), networkInterface));
+                                    connection.DataChannel = new UdpServer($"Port=-1; Clients={connection.IPAddress}:{int.Parse(setting)}; interface={networkInterface}");
                                     connection.DataChannel.Start();
                                 }
                             }
@@ -3199,23 +3134,23 @@ namespace GSF.TimeSeries.Transport
                             }
                             catch (Exception ex)
                             {
-                                OnProcessException(new InvalidOperationException(string.Format("ClientConnected event handler exception: {0}", ex.Message), ex));
+                                OnProcessException(new InvalidOperationException($"ClientConnected event handler exception: {ex.Message}", ex));
                             }
 
                             // Send success response
                             if (subscription.TemporalConstraintIsDefined())
                             {
                                 if ((object)subscription.InputMeasurementKeys != null)
-                                    message = string.Format("Client subscribed as {0}compact {1}synchronized with a temporal constraint and {2} signals.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un", subscription.InputMeasurementKeys.Length);
+                                    message = $"Client subscribed as {(useCompactMeasurementFormat ? "" : "non-")}compact {(useSynchronizedSubscription ? "" : "un")}synchronized with a temporal constraint and {subscription.InputMeasurementKeys.Length} signals.";
                                 else
-                                    message = string.Format("Client subscribed as {0}compact {1}synchronized with a temporal constraint, but no signals were specified. Make sure \"inputMeasurementKeys\" setting is properly defined.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
+                                    message = $"Client subscribed as {(useCompactMeasurementFormat ? "" : "non-")}compact {(useSynchronizedSubscription ? "" : "un")}synchronized with a temporal constraint, but no signals were specified. Make sure \"inputMeasurementKeys\" setting is properly defined.";
                             }
                             else
                             {
                                 if ((object)subscription.InputMeasurementKeys != null)
-                                    message = string.Format("Client subscribed as {0}compact {1}synchronized with {2} signals.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un", subscription.InputMeasurementKeys.Length);
+                                    message = $"Client subscribed as {(useCompactMeasurementFormat ? "" : "non-")}compact {(useSynchronizedSubscription ? "" : "un")}synchronized with {subscription.InputMeasurementKeys.Length} signals.";
                                 else
-                                    message = string.Format("Client subscribed as {0}compact {1}synchronized, but no signals were specified. Make sure \"inputMeasurementKeys\" setting is properly defined.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
+                                    message = $"Client subscribed as {(useCompactMeasurementFormat ? "" : "non-")}compact {(useSynchronizedSubscription ? "" : "un")}synchronized, but no signals were specified. Make sure \"inputMeasurementKeys\" setting is properly defined.";
                             }
 
                             connection.IsSubscribed = true;
@@ -3288,7 +3223,7 @@ namespace GSF.TimeSeries.Transport
                 int takeCount;
 
                 // Initialize active node ID
-                Guid nodeID = Guid.Parse(dbConnection.ExecuteScalar(string.Format("SELECT NodeID FROM IaonActionAdapter WHERE ID = {0}", ID)).ToString());
+                Guid nodeID = Guid.Parse(dbConnection.ExecuteScalar($"SELECT NodeID FROM IaonActionAdapter WHERE ID = {ID}").ToString());
 
                 // Determine whether we're sending internal and external meta-data
                 bool sendExternalMetadata = connection.OperationalModes.HasFlag(OperationalModes.ReceiveExternalMetadata);
@@ -3321,13 +3256,13 @@ namespace GSF.TimeSeries.Transport
                     List<string> filters = new List<string>();
 
                     if (table.Columns.Contains("NodeID"))
-                        filters.Add(string.Format("NodeID = '{0}'", nodeID));
+                        filters.Add($"NodeID = '{nodeID}'");
 
                     if (table.Columns.Contains("Internal") && !(sendInternalMetadata && sendExternalMetadata))
-                        filters.Add(string.Format("Internal {0} 0", sendExternalMetadata ? "=" : "<>"));
+                        filters.Add($"Internal {(sendExternalMetadata ? "=" : "<>")} 0");
 
                     if (table.Columns.Contains("OriginalSource") && !(sendInternalMetadata && sendExternalMetadata))
-                        filters.Add(string.Format("OriginalSource IS {0} NULL", sendExternalMetadata ? "NOT" : ""));
+                        filters.Add($"OriginalSource IS {(sendExternalMetadata ? "NOT" : "")} NULL");
 
                     if (filterExpressions.TryGetValue(table.TableName, out filterParameters))
                     {
@@ -3356,6 +3291,7 @@ namespace GSF.TimeSeries.Transport
                         filteredRows = table.Select(string.Join(" AND ", filters), sortField);
 
                         // Reduce data to only what the subscriber has rights to
+                        // ReSharper disable once AccessToDisposedClosure
                         if (checkSubscriberRights)
                             filteredRows = filteredRows.Where(row => SubscriberHasRights(connection.SubscriberID, adoDatabase.Guid(row, "SignalID")));
 
@@ -3396,7 +3332,7 @@ namespace GSF.TimeSeries.Transport
                     {
                         deviceAcronym = row["Acronym"].ToNonNullString();
 
-                        if (!string.IsNullOrEmpty(deviceAcronym) && (int)metadata.Tables["MeasurementDetail"].Compute("Count(DeviceAcronym)", string.Format("DeviceAcronym = '{0}'", deviceAcronym)) == 0)
+                        if (!string.IsNullOrEmpty(deviceAcronym) && (int)metadata.Tables["MeasurementDetail"].Compute("Count(DeviceAcronym)", $"DeviceAcronym = '{deviceAcronym}'") == 0)
                             rowsToRemove.Add(row);
                     }
 
@@ -3407,7 +3343,7 @@ namespace GSF.TimeSeries.Transport
                         {
                             deviceAcronym = row["DeviceAcronym"].ToNonNullString();
 
-                            if (!string.IsNullOrEmpty(deviceAcronym) && (int)metadata.Tables["DeviceDetail"].Compute("Count(Acronym)", string.Format("Acronym = '{0}'", deviceAcronym)) == 0)
+                            if (!string.IsNullOrEmpty(deviceAcronym) && (int)metadata.Tables["DeviceDetail"].Compute("Count(Acronym)", $"Acronym = '{deviceAcronym}'") == 0)
                                 rowsToRemove.Add(row);
                         }
                     }
@@ -3799,7 +3735,7 @@ namespace GSF.TimeSeries.Transport
 
                             if (RequireAuthentication && !connection.Authenticated)
                             {
-                                message = string.Format("Subscriber not authenticated - {0} request denied.", command);
+                                message = $"Subscriber not authenticated - {command} request denied.";
                                 SendClientResponse(clientID, ServerResponse.Failed, command, message);
                                 OnStatusMessage("WARNING: Client {0} {1} command request denied - subscriber not authenticated.", connection.ConnectionID, command);
                                 return;
@@ -3853,7 +3789,7 @@ namespace GSF.TimeSeries.Transport
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Encountered an exception while processing received client data: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Encountered an exception while processing received client data: {ex.Message}", ex));
             }
         }
 
@@ -3958,7 +3894,7 @@ namespace GSF.TimeSeries.Transport
         // Static Fields
 
         // Constant zero length integer byte array
-        private readonly static byte[] ZeroLengthBytes = { 0, 0, 0, 0 };
+        private static readonly byte[] ZeroLengthBytes = { 0, 0, 0, 0 };
 
         #endregion
     }

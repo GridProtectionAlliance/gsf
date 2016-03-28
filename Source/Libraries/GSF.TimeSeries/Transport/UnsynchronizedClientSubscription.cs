@@ -69,7 +69,7 @@ namespace GSF.TimeSeries.Transport
         private volatile byte m_compressionStrength;
         private volatile bool m_usePayloadCompression;
         private volatile bool m_useCompactMeasurementFormat;
-        private CompressionModes m_compressionModes;
+        private readonly CompressionModes m_compressionModes;
         private MeasurementCompressionBlock m_compressionBlock;
         private long m_lastPublishTime;
         private string m_requestedInputFilter;
@@ -124,46 +124,22 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets the <see cref="Guid"/> client TCP connection identifier of this <see cref="UnsynchronizedClientSubscription"/>.
         /// </summary>
-        public Guid ClientID
-        {
-            get
-            {
-                return m_clientID;
-            }
-        }
+        public Guid ClientID => m_clientID;
 
         /// <summary>
         /// Gets the <see cref="Guid"/> based subscriber ID of this <see cref="UnsynchronizedClientSubscription"/>.
         /// </summary>
-        public Guid SubscriberID
-        {
-            get
-            {
-                return m_subscriberID;
-            }
-        }
+        public Guid SubscriberID => m_subscriberID;
 
         /// <summary>
         /// Gets the current signal index cache of this <see cref="UnsynchronizedClientSubscription"/>.
         /// </summary>
-        public SignalIndexCache SignalIndexCache
-        {
-            get
-            {
-                return m_signalIndexCache;
-            }
-        }
+        public SignalIndexCache SignalIndexCache => m_signalIndexCache;
 
         /// <summary>
         /// Gets the input filter requested by the subscriber when establishing this <see cref="IClientSubscription"/>.
         /// </summary>
-        public string RequestedInputFilter
-        {
-            get
-            {
-                return m_requestedInputFilter;
-            }
-        }
+        public string RequestedInputFilter => m_requestedInputFilter;
 
         /// <summary>
         /// Gets or sets flag that determines if payload compression should be enabled in data packets of this <see cref="UnsynchronizedClientSubscription"/>.
@@ -317,13 +293,7 @@ namespace GSF.TimeSeries.Transport
         /// does not need to be automatically engaged within an actual temporal <see cref="IaonSession"/>, therefore this method returns
         /// <c>false</c> to make sure the adapter doesn't get automatically instantiated within a temporal session.
         /// </remarks>
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool SupportsTemporalProcessing => false;
 
         /// <summary>
         /// Gets a formatted message describing the status of this <see cref="UnsynchronizedClientSubscription"/>.
@@ -506,7 +476,7 @@ namespace GSF.TimeSeries.Transport
             if ((object)OutputMeasurements != null)
                 outputCount = OutputMeasurements.Length;
 
-            return string.Format("Total input measurements: {0}, total output measurements: {1}", inputCount, outputCount).PadLeft(maxLength);
+            return $"Total input measurements: {inputCount}, total output measurements: {outputCount}".PadLeft(maxLength);
         }
 
         /// <summary>
@@ -746,7 +716,7 @@ namespace GSF.TimeSeries.Transport
             }
             catch (Exception ex)
             {
-                string message = string.Format("Error processing measurements: {0}", ex.Message);
+                string message = $"Error processing measurements: {ex.Message}";
                 OnProcessException(new InvalidOperationException(message, ex));
             }
         }
