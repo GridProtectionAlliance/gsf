@@ -569,7 +569,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         " UpdatedBy = {12}, UpdatedOn = {13} WHERE ID = {14}", "nodeID", "adapterID", "idCode", "acronym", "bpaAcronym", "name",
                         "phasorDataFormat", "frequencyDataFormat", "analogDataFormat", "coordinateFormat", "loadOrder", "enabled", "updatedBy", "updatedOn", "id");
 
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, outputStreamDevice.NodeID, outputStreamDevice.AdapterID, outputStreamDevice.IDCode,
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(outputStreamDevice.NodeID), outputStreamDevice.AdapterID, outputStreamDevice.IDCode,
                         outputStreamDevice.Acronym, outputStreamDevice.BpaAcronym.ToNotNull(), outputStreamDevice.Name, outputStreamDevice.PhasorDataFormat.ToNotNull(),
                         outputStreamDevice.FrequencyDataFormat.ToNotNull(), outputStreamDevice.AnalogDataFormat.ToNotNull(), outputStreamDevice.CoordinateFormat.ToNotNull(),
                         outputStreamDevice.LoadOrder, database.Bool(outputStreamDevice.Enabled), CommonFunctions.CurrentUser,
