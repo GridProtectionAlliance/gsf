@@ -67,6 +67,15 @@ namespace GSF.TimeSeries.Transport
 
         public int BufferLength => m_index;
 
+        public void Reset()
+        {
+            m_lastPoint = new PointMetaData();
+            m_lastPoint.PointID = -1;
+            m_previousTimestamp = 0;
+            m_points.Clear();
+            Clear();
+        }
+
         public void Clear()
         {
             m_lastMeasurementHeaderIndex = -1;

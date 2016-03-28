@@ -467,6 +467,10 @@ namespace GSF.TimeSeries.Transport
             if (!Enabled)
                 m_startTimeSent = false;
 
+            // Reset compressor on successful resubscription
+            if ((object)m_compressionBlock != null)
+                m_compressionBlock.Reset();
+
             base.Start();
 
             if ((object)m_baseTimeRotationTimer != null && m_includeTime)

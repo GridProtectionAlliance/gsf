@@ -58,6 +58,17 @@ namespace GSF.TimeSeries.Transport
             m_buffer = new byte[BufferSize];
         }
 
+        public void Reset()
+        {
+            m_lastPoint = new PointMetaData();
+            m_lastPoint.PointID = -1;
+            m_timeBucket = 0;
+            m_nextRunLength = 0;
+            m_startIndex = 0;
+            m_stopIndex = 0;
+            m_points.Clear();
+        }
+
         public void Fill(Stream stream)
         {
             if (m_startIndex != m_stopIndex)
