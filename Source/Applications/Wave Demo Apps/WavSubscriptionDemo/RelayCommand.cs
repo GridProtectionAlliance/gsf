@@ -41,7 +41,7 @@ using System;
 using System.Diagnostics;
 using System.Windows.Input;
 
-namespace NAudioWpfDemo
+namespace WavSubscriptionDemo
 {
     // from Josh Smith's Crack .NET
     /// <summary>

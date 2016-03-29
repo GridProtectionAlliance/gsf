@@ -45,7 +45,7 @@ using System.Windows.Input;
 using GSF;
 using Microsoft.Win32;
 
-namespace NAudioWpfDemo
+namespace WavSubscriptionDemo
 {
     class ControlPanelViewModel : INotifyPropertyChanged, IDisposable
     {

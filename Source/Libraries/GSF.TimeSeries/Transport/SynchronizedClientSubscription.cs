@@ -412,8 +412,8 @@ namespace GSF.TimeSeries.Transport
             if (m_isNaNFiltered)
                 measurements = measurements.Where(measurement => !double.IsNaN(measurement.Value));
 
-            // Order measurements by signal type for better compression when enabled
-            if (m_usePayloadCompression)
+            // Order measurements by signal type for better compression for non-TSSC compression modes
+            if (m_usePayloadCompression && !m_compressionModes.HasFlag(CompressionModes.TSSC))
                 base.QueueMeasurementsForProcessing(measurements.OrderBy(m => m.GetSignalType(DataSource)));
             else
                 base.QueueMeasurementsForProcessing(measurements);

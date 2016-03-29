@@ -45,7 +45,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
-namespace NAudioWpfDemo
+namespace WavSubscriptionDemo
 {
     /// <summary>
     /// Interaction logic for PolylineWaveFormControl.xaml

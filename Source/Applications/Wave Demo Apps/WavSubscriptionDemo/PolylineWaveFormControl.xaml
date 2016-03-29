@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="NAudioWpfDemo.PolylineWaveFormControl"
+﻿<UserControl x:Class="WavSubscriptionDemo.PolylineWaveFormControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
      Foreground="Yellow">

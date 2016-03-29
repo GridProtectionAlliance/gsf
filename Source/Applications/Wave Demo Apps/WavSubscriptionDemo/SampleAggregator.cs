@@ -41,7 +41,7 @@ using System;
 using System.Diagnostics;
 using System.Windows;
 
-namespace NAudioWpfDemo
+namespace WavSubscriptionDemo
 {
     class SampleAggregator
     {

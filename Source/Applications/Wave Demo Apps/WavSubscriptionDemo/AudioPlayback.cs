@@ -55,7 +55,7 @@ using GSF.TimeSeries.Transport;
 using NAudio.Wave;
 using Timer = System.Timers.Timer;
 
-namespace NAudioWpfDemo
+namespace WavSubscriptionDemo
 {
     /// <summary>
     /// Represents the states that playback can be in.
@@ -192,13 +192,7 @@ namespace NAudioWpfDemo
         /// <see cref="AudioPlayback"/> buffers a full second of data before
         /// starting playback.
         /// </remarks>
-        public int SampleRate
-        {
-            get
-            {
-                return m_sampleRate;
-            }
-        }
+        public int SampleRate => m_sampleRate;
 
         /// <summary>
         /// Connects to the stream server defined by the <see cref="ConnectionUri"/>.
@@ -253,84 +247,81 @@ namespace NAudioWpfDemo
         /// <param name="songName">The name of the song to be played.</param>
         public void Play(string songName)
         {
-            if (m_dataSubscriber != null && m_metadata != null)
+            if (m_dataSubscriber == null || m_metadata == null)
+                return;
+
+            UnsynchronizedSubscriptionInfo info;
+
+            StringBuilder filterExpression = new StringBuilder();
+            DataTable deviceTable = m_metadata.Tables["DeviceDetail"];
+            DataTable measurementTable = m_metadata.Tables["MeasurementDetail"];
+
+            Dictionary<string, string> uriSettings;
+            string dataChannel = null;
+            int uriIndex = ConnectionUri.IndexOf(URI_SEPARATOR, StringComparison.Ordinal);
+
+            m_channelIndexes = new ConcurrentDictionary<Guid, int>();
+            m_sampleRate = DEFAULT_SAMPLE_RATE;
+            m_numChannels = DEFAULT_NUM_CHANNELS;
+
+            // Get sample rate from metadata.
+            string sampleRate = deviceTable?.Rows.Cast<DataRow>()
+                .Single(row => row["Acronym"].ToNonNullString() == songName)["FramesPerSecond"].ToNonNullString();
+
+            if (!string.IsNullOrEmpty(sampleRate))
+                m_sampleRate = int.Parse(sampleRate);
+
+            // Get measurements from metadata.
+            if (measurementTable != null)
             {
-                UnsynchronizedSubscriptionInfo info;
+                IEnumerable<DataRow> measurementRows = measurementTable.Rows.Cast<DataRow>()
+                    .Where(row => row["DeviceAcronym"].ToNonNullString() == songName)
+                    .Where(row => row["SignalAcronym"].ToNonNullString() == "ALOG" || row["SignalAcronym"].ToNonNullString() == "VPHM")
+                    .Where(row => row["Enabled"].ToNonNullString().ParseBoolean())
+                    .OrderBy(row => row["ID"].ToNonNullString());
 
-                StringBuilder filterExpression = new StringBuilder();
-                DataTable deviceTable = m_metadata.Tables["DeviceDetail"];
-                DataTable measurementTable = m_metadata.Tables["MeasurementDetail"];
+                m_numChannels = 0;
 
-                Dictionary<string, string> uriSettings;
-                string dataChannel = null;
-                int uriIndex = ConnectionUri.IndexOf(URI_SEPARATOR);
-
-                m_channelIndexes = new ConcurrentDictionary<Guid, int>();
-                m_sampleRate = DEFAULT_SAMPLE_RATE;
-                m_numChannels = DEFAULT_NUM_CHANNELS;
-
-                // Get sample rate from metadata.
-                if (deviceTable != null)
+                foreach (DataRow row in measurementRows)
                 {
-                    string sampleRate = deviceTable.Rows.Cast<DataRow>()
-                        .Single(row => row["Acronym"].ToNonNullString() == songName)["FramesPerSecond"].ToNonNullString();
+                    Guid measurementID = Guid.Parse(row["SignalID"].ToNonNullString());
 
-                    if (!string.IsNullOrEmpty(sampleRate))
-                        m_sampleRate = int.Parse(sampleRate);
+                    if (m_numChannels > 0)
+                        filterExpression.Append(';');
+
+                    filterExpression.Append(measurementID);
+                    m_channelIndexes[measurementID] = m_numChannels;
+                    m_numChannels++;
                 }
-
-                // Get measurements from metadata.
-                if (measurementTable != null)
-                {
-                    IEnumerable<DataRow> measurementRows = measurementTable.Rows.Cast<DataRow>()
-                        .Where(row => row["DeviceAcronym"].ToNonNullString() == songName)
-                        .Where(row => row["SignalAcronym"].ToNonNullString() == "ALOG" || row["SignalAcronym"].ToNonNullString() == "VPHM")
-                        .Where(row => row["Enabled"].ToNonNullString().ParseBoolean())
-                        .OrderBy(row => row["ID"].ToNonNullString());
-
-                    m_numChannels = 0;
-
-                    foreach (DataRow row in measurementRows)
-                    {
-                        Guid measurementID = Guid.Parse(row["SignalID"].ToNonNullString());
-
-                        if (m_numChannels > 0)
-                            filterExpression.Append(';');
-
-                        filterExpression.Append(measurementID);
-                        m_channelIndexes[measurementID] = m_numChannels;
-                        m_numChannels++;
-                    }
-                }
-
-                // Create UDP data channel if specified.
-                if (uriIndex >= 0)
-                {
-                    uriSettings = ConnectionUri.Substring(uriIndex + URI_SEPARATOR.Length).ParseKeyValuePairs('&');
-
-                    if (uriSettings.ContainsKey("udp"))
-                        dataChannel = string.Format("dataChannel={{port={0}; interface={1}}}", uriSettings["udp"], IPv6Enabled ? "::0" : "0.0.0.0");
-                }
-
-                m_buffer = new ConcurrentQueue<IMeasurement>();
-                m_dumpTimer = CreateDumpTimer();
-                m_statTimer = CreateStatTimer();
-                m_waveProvider = new BufferedWaveProvider(new WaveFormat(m_sampleRate < MINIMUM_SAMPLE_RATE ? MINIMUM_SAMPLE_RATE : m_sampleRate, m_numChannels));
-                m_wavePlayer = CreateWavePlayer(m_waveProvider);
-                m_waveProvider.DiscardOnBufferOverflow = true;
-
-                info = new UnsynchronizedSubscriptionInfo(false)
-                {
-                    FilterExpression = filterExpression.ToString(),
-                    ExtraConnectionStringParameters = dataChannel
-                };
-
-                m_statTimer.Start();
-                m_wavePlayer.Play();
-                m_dataSubscriber.UnsynchronizedSubscribe(info);
-                m_timeoutTimer.Start();
-                OnStateChanged(PlaybackState.Buffering);
             }
+
+            // Create UDP data channel if specified.
+            if (uriIndex >= 0)
+            {
+                uriSettings = ConnectionUri.Substring(uriIndex + URI_SEPARATOR.Length).ParseKeyValuePairs('&');
+
+                if (uriSettings.ContainsKey("udp"))
+                    dataChannel = $"dataChannel={{port={uriSettings["udp"]}; interface={(IPv6Enabled ? "::0" : "0.0.0.0")}}}";
+            }
+
+            m_buffer = new ConcurrentQueue<IMeasurement>();
+            m_dumpTimer = CreateDumpTimer();
+            m_statTimer = CreateStatTimer();
+            m_waveProvider = new BufferedWaveProvider(new WaveFormat(m_sampleRate < MINIMUM_SAMPLE_RATE ? MINIMUM_SAMPLE_RATE : m_sampleRate, m_numChannels));
+            m_wavePlayer = CreateWavePlayer(m_waveProvider);
+            m_waveProvider.DiscardOnBufferOverflow = true;
+
+            info = new UnsynchronizedSubscriptionInfo(false)
+            {
+                FilterExpression = filterExpression.ToString(),
+                ExtraConnectionStringParameters = dataChannel
+            };
+
+            m_statTimer.Start();
+            m_wavePlayer.Play();
+            m_dataSubscriber.UnsynchronizedSubscribe(info);
+            m_timeoutTimer.Start();
+            OnStateChanged(PlaybackState.Buffering);
         }
 
         /// <summary>
@@ -350,10 +341,7 @@ namespace NAudioWpfDemo
             ReleaseWavePlayer(player);
             ReleaseStatTimer(statTimer);
 
-            if (m_dataSubscriber != null)
-            {
-                m_dataSubscriber.Unsubscribe();
-            }
+            m_dataSubscriber?.Unsubscribe();
 
             OnStateChanged(PlaybackState.Stopped);
         }
@@ -370,15 +358,13 @@ namespace NAudioWpfDemo
         // Triggers the GotSongList event.
         private void OnGotSongList(List<string> songList)
         {
-            if (GotSongList != null)
-                GotSongList(this, new EventArgs<List<string>>(songList));
+            GotSongList?.Invoke(this, new EventArgs<List<string>>(songList));
         }
 
         // Triggers the StateChanged event.
         private void OnStateChanged(PlaybackState state, string message = null)
         {
-            if (StateChanged != null)
-                StateChanged(this, new EventArgs<PlaybackState, string>(state, message));
+            StateChanged?.Invoke(this, new EventArgs<PlaybackState, string>(state, message));
         }
 
         // ------ Data Subscriber Methods ------
@@ -388,7 +374,7 @@ namespace NAudioWpfDemo
         private DataSubscriber CreateDataSubscriber()
         {
             DataSubscriber subscriber = new DataSubscriber();
-            int index = ConnectionUri.IndexOf(URI_SEPARATOR);
+            int index = ConnectionUri.IndexOf(URI_SEPARATOR, StringComparison.Ordinal);
             string server = (index >= 0) ? ConnectionUri.Substring(0, index) : ConnectionUri;
 
             subscriber.StatusMessage += DataSubscriber_StatusMessage;
@@ -399,7 +385,7 @@ namespace NAudioWpfDemo
             subscriber.DataStartTime += DataSubscriber_DataStartTime;
             subscriber.NewMeasurements += DataSubscriber_NewMeasurements;
 
-            subscriber.ConnectionString = string.Format("server={0}; interface={1};{2} localCertificate={3}; remoteCertificate={4}; validPolicyErrors={5}; validChainFlags={6}", server, IPv6Enabled ? "::0" : "0.0.0.0", UseZeroMQChannel ? " useZeroMQChannel=true;" : "", FilePath.GetAbsolutePath("Local.cer"), FilePath.GetAbsolutePath("Remote.cer"), ~SslPolicyErrors.None, ~X509ChainStatusFlags.NoError);
+            subscriber.ConnectionString = $"server={server}; interface={(IPv6Enabled ? "::0" : "0.0.0.0")};{(UseZeroMQChannel ? " useZeroMQChannel=true;" : "")} localCertificate={FilePath.GetAbsolutePath("Local.cer")}; remoteCertificate={FilePath.GetAbsolutePath("Remote.cer")}; validPolicyErrors={~SslPolicyErrors.None}; validChainFlags={~X509ChainStatusFlags.NoError}";
             subscriber.SecurityMode = EnableEncryption ? SecurityMode.TLS : SecurityMode.None;
 
             if (EnableCompression)
@@ -440,8 +426,7 @@ namespace NAudioWpfDemo
         // because the metadata is received through the subscriber event.
         private void ReleaseMetadata(DataSet metadata)
         {
-            if (metadata != null)
-                metadata.Dispose();
+            metadata?.Dispose();
         }
 
         // Handles the subscriber's StatusMessage event.
@@ -471,6 +456,7 @@ namespace NAudioWpfDemo
 
                 //if (EnableEncryption)
                 //    m_dataSubscriber.SendServerCommand(ServerCommand.RotateCipherKeys);
+
                 m_timeoutTimer.Start();
             }
         }
@@ -488,10 +474,7 @@ namespace NAudioWpfDemo
             DataTable deviceTable;
 
             // Stop the timeout timer because the connection was successful.
-            if (m_timeoutTimer != null)
-            {
-                m_timeoutTimer.Stop();
-            }
+            m_timeoutTimer?.Stop();
 
             m_metadata = e.Argument;
             deviceTable = m_metadata.Tables["DeviceDetail"];
@@ -557,11 +540,7 @@ namespace NAudioWpfDemo
             // so change the playback state to playing.
             if (m_dumpTimer != null && !m_dumpTimer.IsRunning && m_buffer.Count / 2 > m_sampleRate)
             {
-                if (m_timeoutTimer != null)
-                {
-                    m_timeoutTimer.Stop();
-                }
-
+                m_timeoutTimer?.Stop();
                 m_dumpTimer.Start();
                 OnStateChanged(PlaybackState.Playing);
             }
@@ -657,8 +636,7 @@ namespace NAudioWpfDemo
             m_lastTotalBytesReceived = 0L;
             m_lastStatCalcTime = 0L;
 
-            if (StatsUpdated != null)
-                StatsUpdated(this, new EventArgs<int, int, float, double>(0, 0, 0.0F, double.NaN));
+            StatsUpdated?.Invoke(this, new EventArgs<int, int, float, double>(0, 0, 0.0F, double.NaN));
         }
 
         // Handles the timeout timer's Elapsed event.
@@ -671,86 +649,77 @@ namespace NAudioWpfDemo
         // Handles the dump timer's Tick event.
         private void DumpTimer_Tick(object sender, EventArgs e)
         {
-            byte[] buffer = BufferPool.TakeBuffer(65536);
+            byte[] buffer = new byte[65536];
+            List<IMeasurement[]> dumpMeasurements = new List<IMeasurement[]>();
+            IMeasurement dequeuedMeasurement;
+            int count = 0;
 
-            try
+            // Remove all the measurements from the buffer and place them in the list of samples.
+            while (m_buffer.Count > m_numChannels)
             {
-                List<IMeasurement[]> dumpMeasurements = new List<IMeasurement[]>();
-                IMeasurement dequeuedMeasurement;
-                int count = 0;
+                IMeasurement[] sample = new IMeasurement[m_numChannels];
 
-                // Remove all the measurements from the buffer and place them in the list of samples.
-                while (m_buffer.Count > m_numChannels)
+                for (int i = 0; i < m_numChannels; i++)
                 {
-                    IMeasurement[] sample = new IMeasurement[m_numChannels];
+                    Guid id;
+                    int index;
 
-                    for (int i = 0; i < m_numChannels; i++)
-                    {
-                        Guid id;
-                        int index;
-
-                        m_buffer.TryDequeue(out dequeuedMeasurement);
-                        id = dequeuedMeasurement.ID;
-                        index = m_channelIndexes[id];
-                        sample[index] = dequeuedMeasurement;
-                    }
-
-                    dumpMeasurements.Add(sample);
+                    m_buffer.TryDequeue(out dequeuedMeasurement);
+                    id = dequeuedMeasurement.ID;
+                    index = m_channelIndexes[id];
+                    sample[index] = dequeuedMeasurement;
                 }
 
-                foreach (IMeasurement[] sample in dumpMeasurements)
+                dumpMeasurements.Add(sample);
+            }
+
+            foreach (IMeasurement[] sample in dumpMeasurements)
+            {
+                // Put the sample in the buffer.
+                for (int i = 0; i < m_numChannels; i++)
                 {
-                    // Put the sample in the buffer.
-                    for (int i = 0; i < m_numChannels; i++)
-                    {
-                        byte[] channelValue;
+                    byte[] channelValue;
 
-                        // Assuming 16-bit integer samples for WAV files
-                        if (sample[i] != null)
-                            channelValue = LittleEndian.GetBytes((short)sample[i].Value);
-                        else
-                            channelValue = new byte[2];
+                    // Assuming 16-bit integer samples for WAV files
+                    if (sample[i] != null)
+                        channelValue = LittleEndian.GetBytes((short)sample[i].Value);
+                    else
+                        channelValue = new byte[2];
 
-                        Buffer.BlockCopy(channelValue, 0, buffer, count, 2);
-                        count += 2;
-                    }
-
-                    // If the buffer is full, send it to the
-                    // sound card and start a new buffer.
-                    if (count + (m_numChannels * 2) > buffer.Length)
-                    {
-                        m_waveProvider.AddSamples(buffer, 0, count);
-                        count = 0;
-                    }
-
-                    // Notify the user interface of new samples.
-                    if (OnSample != null)
-                    {
-                        const float volume = 0.000035F;
-                        float left = (sample[0] != null) ? (float)sample[0].Value : 0.0F;
-                        float right = m_numChannels > 1 ? ((sample[1] != null) ? (float)sample[1].Value : 0.0F) : left;
-                        OnSample(this, new SampleEventArgs(left * volume, right * volume));
-                    }
+                    Buffer.BlockCopy(channelValue, 0, buffer, count, 2);
+                    count += 2;
                 }
 
-                // Send remaining samples to the sound card.
-                if (count > 0)
+                // If the buffer is full, send it to the
+                // sound card and start a new buffer.
+                if (count + (m_numChannels * 2) > buffer.Length)
+                {
                     m_waveProvider.AddSamples(buffer, 0, count);
+                    count = 0;
+                }
 
-                // If the buffer was empty, we're missing a full quarter second of data!
-                // Go back to buffering, stop the dump timer, and start the timeout timer.
-                //if (dumpMeasurements.Count == 0 && m_dumpTimer != null)
-                //{
-                //    OnStateChanged(PlaybackState.Buffering);
-                //    m_dumpTimer.Stop();
-                //    m_timeoutTimer.Start();
-                //}
+                // Notify the user interface of new samples.
+                if (OnSample != null)
+                {
+                    const float volume = 0.000035F;
+                    float left = (sample[0] != null) ? (float)sample[0].Value : 0.0F;
+                    float right = m_numChannels > 1 ? ((sample[1] != null) ? (float)sample[1].Value : 0.0F) : left;
+                    OnSample(this, new SampleEventArgs(left * volume, right * volume));
+                }
             }
-            finally
-            {
-                if ((object)buffer != null)
-                    BufferPool.ReturnBuffer(buffer);
-            }
+
+            // Send remaining samples to the sound card.
+            if (count > 0)
+                m_waveProvider.AddSamples(buffer, 0, count);
+
+            // If the buffer was empty, we're missing a full quarter second of data!
+            // Go back to buffering, stop the dump timer, and start the timeout timer.
+            //if (dumpMeasurements.Count == 0 && m_dumpTimer != null)
+            //{
+            //    OnStateChanged(PlaybackState.Buffering);
+            //    m_dumpTimer.Stop();
+            //    m_timeoutTimer.Start();
+            //}
         }
 
         // Handles the stat timer's Elapsed event. Calculates the statistics since the last

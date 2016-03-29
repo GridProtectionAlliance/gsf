@@ -41,7 +41,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace NAudioWpfDemo
+namespace WavSubscriptionDemo
 {
     /// <summary>
     /// Interaction logic for ControlPanel.xaml

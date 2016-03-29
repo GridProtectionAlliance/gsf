@@ -38,7 +38,7 @@
 #endregion
 
 
-namespace NAudioWpfDemo
+namespace WavSubscriptionDemo
 {
     public interface IWaveFormRenderer
     {

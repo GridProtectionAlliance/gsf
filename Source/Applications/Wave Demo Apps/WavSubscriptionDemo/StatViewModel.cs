@@ -25,7 +25,6 @@
 
 using System.ComponentModel;
 using GSF;
-using NAudioWpfDemo;
 
 namespace WavSubscriptionDemo
 {

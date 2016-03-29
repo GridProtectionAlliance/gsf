@@ -36,7 +36,6 @@ using System.Windows.Media;
 using GSF;
 using GSF.Reflection;
 using GSF.Windows.Forms;
-using NAudioWpfDemo;
 
 namespace WavSubscriptionDemo
 {

@@ -42,7 +42,7 @@ using System.Collections.Generic;
 using GSF;
 using NAudio.Wave;
 
-namespace NAudioWpfDemo
+namespace WavSubscriptionDemo
 {
     /// <summary>
     /// Audio Graph

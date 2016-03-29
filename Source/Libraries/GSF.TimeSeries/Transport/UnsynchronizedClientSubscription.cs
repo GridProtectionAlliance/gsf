@@ -549,8 +549,8 @@ namespace GSF.TimeSeries.Transport
             }
             else
             {
-                // Order measurements by signal type for better compression when enabled
-                if (m_usePayloadCompression)
+                // Order measurements by signal type for better compression for non-TSSC compression modes
+                if (m_usePayloadCompression && !m_compressionModes.HasFlag(CompressionModes.TSSC))
                     ProcessMeasurements(measurements.OrderBy(measurement => measurement.GetSignalType(DataSource)));
                 else
                     ProcessMeasurements(measurements);
