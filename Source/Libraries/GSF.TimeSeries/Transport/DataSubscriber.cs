@@ -2352,6 +2352,10 @@ namespace GSF.TimeSeries.Transport
             else
                 OnProcessException(new InvalidOperationException("Cannot make publisher subscription without a connection string."));
 
+            // Reset decompressor on successful resubscription
+            if (success && (object)m_decompressionBlock != null)
+                m_decompressionBlock.Reset();
+
             return success;
         }
 
@@ -2675,10 +2679,6 @@ namespace GSF.TimeSeries.Transport
                                         OnConnectionAuthenticated();
                                         break;
                                     case ServerCommand.Subscribe:
-                                        // Reset decompressor on successful resubscription
-                                        if ((object)m_decompressionBlock != null)
-                                            m_decompressionBlock.Reset();
-
                                         OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
                                         m_subscribed = true;
                                         break;
@@ -2711,10 +2711,6 @@ namespace GSF.TimeSeries.Transport
                                         OnStatusMessage("Received server confirmation for unsolicited request to \"{0}\" command: {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
                                         break;
                                     case ServerCommand.Subscribe:
-                                        // Reset decompressor on successful resubscription
-                                        if ((object)m_decompressionBlock != null)
-                                            m_decompressionBlock.Reset();
-
                                         OnStatusMessage("Received unsolicited response to \"{0}\" command: {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
                                         break;
                                     default:
@@ -4626,23 +4622,13 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                byte[] buffer;
                 int length = e.Argument;
+                byte[] buffer = new byte[length];
 
                 m_lastBytesReceived = length;
 
-                buffer = BufferPool.TakeBuffer(length);
-
-                try
-                {
-                    m_commandChannel.Read(buffer, 0, length);
-                    ProcessServerResponse(buffer, length);
-                }
-                finally
-                {
-                    if ((object)buffer != null)
-                        BufferPool.ReturnBuffer(buffer);
-                }
+                m_commandChannel.Read(buffer, 0, length);
+                ProcessServerResponse(buffer, length);
             }
             catch (Exception ex)
             {
@@ -4682,23 +4668,13 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                byte[] buffer;
                 int length = e.Argument;
+                byte[] buffer = new byte[length];
 
                 m_lastBytesReceived = length;
 
-                buffer = BufferPool.TakeBuffer(length);
-
-                try
-                {
-                    m_dataChannel.Read(buffer, 0, length);
-                    ProcessServerResponse(buffer, length);
-                }
-                finally
-                {
-                    if ((object)buffer != null)
-                        BufferPool.ReturnBuffer(buffer);
-                }
+                m_dataChannel.Read(buffer, 0, length);
+                ProcessServerResponse(buffer, length);
             }
             catch (Exception ex)
             {

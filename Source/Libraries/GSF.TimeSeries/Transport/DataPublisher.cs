@@ -1559,7 +1559,6 @@ namespace GSF.TimeSeries.Transport
             StringBuilder clientEnumeration = new StringBuilder();
             Guid[] clientIDs = (Guid[])m_commandChannel.ClientIDs.Clone();
             ClientConnection connection;
-            string timestampFormat;
             bool hasActiveTemporalSession;
 
             if (filterToTemporalSessions)
@@ -1575,18 +1574,11 @@ namespace GSF.TimeSeries.Transport
 
                     if (!filterToTemporalSessions || hasActiveTemporalSession)
                     {
-                        if (connection.Subscription is UnsynchronizedClientSubscription)
-                            timestampFormat = $"{(connection.Subscription.UseCompactMeasurementFormat ? "Compact" : "Full")} Format, {connection.Subscription.TimestampSize}-byte timestamps";
-                        else
-                            timestampFormat = $"{(connection.Subscription.UseCompactMeasurementFormat ? "Compact" : "Full")} Format, 8-byte frame-level timestamp";
 
-                        clientEnumeration.AppendFormat("  {0} - {1}\r\n          {2}\r\n          {3}\r\n          {4}\r\n          Active Temporal Session = {5}\r\n\r\n",
-                                i.ToString().PadLeft(3),
-                                connection.ConnectionID,
-                                connection.SubscriberInfo,
-                                timestampFormat,
-                                connection.OperationalModes,
-                                hasActiveTemporalSession ? "Yes" : "No");
+                        clientEnumeration.Append(
+                            $"  {i.ToString().PadLeft(3)} - {connection.ConnectionID}\r\n"+
+                            $"          {connection.SubscriberInfo}\r\n"+ GetOperationalModes(connection) +
+                            $"          Active Temporal Session = {(hasActiveTemporalSession ? "Yes" : "No")}\r\n\r\n");
                     }
                 }
             }
@@ -1595,6 +1587,48 @@ namespace GSF.TimeSeries.Transport
             return clientEnumeration.ToString();
         }
 
+        private string GetOperationalModes(ClientConnection connection)
+        {
+            StringBuilder description = new StringBuilder();
+            OperationalModes operationalModes = connection.OperationalModes;
+            CompressionModes compressionModes = (CompressionModes)(operationalModes & OperationalModes.CompressionModeMask);
+            bool tsscEnabled = (compressionModes & CompressionModes.TSSC) > 0;
+            bool gzipEnabled = (compressionModes & CompressionModes.GZip) > 0;
+
+            if ((operationalModes & OperationalModes.CompressPayloadData) > 0)
+            {
+                description.Append($"          CompressPayloadData[{(tsscEnabled ? "TSSC" : "Pattern")}]\r\n");
+            }
+            else
+            {
+                if (connection.Subscription.UseCompactMeasurementFormat)
+                    description.Append("          CompactPayloadData[");
+                else
+                    description.Append("          FullSizePayloadData[");
+
+                if (connection.Subscription is UnsynchronizedClientSubscription)
+                    description.Append($"{connection.Subscription.TimestampSize}-byte Timestamps]\r\n");
+                else
+                    description.Append("8-byte Frame-level Timestamps]\r\n");
+            }
+
+            if ((operationalModes & OperationalModes.CompressSignalIndexCache) > 0 && gzipEnabled)
+                description.Append("          CompressSignalIndexCache\r\n");
+
+            if ((operationalModes & OperationalModes.CompressMetadata) > 0 && gzipEnabled)
+                description.Append("          CompressMetadata\r\n");
+
+            if ((operationalModes & OperationalModes.UseCommonSerializationFormat) > 0)
+                description.Append("          UseCommonSerializationFormat\r\n");
+
+            if ((operationalModes & OperationalModes.ReceiveExternalMetadata) > 0)
+                description.Append("          ReceiveExternalMetadata\r\n");
+
+            if ((operationalModes & OperationalModes.ReceiveInternalMetadata) > 0)
+                description.Append("          ReceiveInternalMetadata\r\n");
+
+            return description.ToString();
+        }
 
         /// <summary>
         /// Rotates cipher keys for specified client connection.

@@ -388,10 +388,21 @@ namespace WavSubscriptionDemo
             subscriber.ConnectionString = $"server={server}; interface={(IPv6Enabled ? "::0" : "0.0.0.0")};{(UseZeroMQChannel ? " useZeroMQChannel=true;" : "")} localCertificate={FilePath.GetAbsolutePath("Local.cer")}; remoteCertificate={FilePath.GetAbsolutePath("Remote.cer")}; validPolicyErrors={~SslPolicyErrors.None}; validChainFlags={~X509ChainStatusFlags.NoError}";
             subscriber.SecurityMode = EnableEncryption ? SecurityMode.TLS : SecurityMode.None;
 
+            subscriber.OperationalModes = DataSubscriber.DefaultOperationalModes;
+            subscriber.CompressionModes = CompressionModes.GZip;
+
             if (EnableCompression)
-                subscriber.CompressionModes |= CompressionModes.TSSC;
-            else
-                subscriber.OperationalModes = DataSubscriber.DefaultOperationalModes & ~OperationalModes.CompressPayloadData;
+            {
+                subscriber.OperationalModes |= OperationalModes.CompressPayloadData;
+
+                bool usingUDP = false;
+
+                if (index >= 0)
+                    usingUDP = ConnectionUri.Substring(index + URI_SEPARATOR.Length).ParseKeyValuePairs('&').ContainsKey("udp");
+
+                if (!usingUDP)
+                    subscriber.CompressionModes |= CompressionModes.TSSC; // TSSC mode requires TCP connection
+            }
 
             subscriber.ReceiveInternalMetadata = true;
             subscriber.ReceiveExternalMetadata = true;
