@@ -129,7 +129,7 @@ namespace GSF.Web.Security
                 throw new SecurityException($"Authentication failed for user '{userName}': {SecurityProviderCache.CurrentProvider.AuthenticationFailureReason}");
 
             if (AllowedRoles.Length > 0 && !AllowedRoles.Any(role => filterContext.HttpContext.User.IsInRole(role)))
-                throw new SecurityException($"Access is denied for user '{userName}' defined: minimum required roles = {AllowedRoles.ToDelimitedString(", ")}.");
+                throw new SecurityException($"Access is denied for user '{userName}': minimum required roles = {AllowedRoles.ToDelimitedString(", ")}.");
 
             // Make sure current user ID is cached
             if (!AuthorizationCache.UserIDs.ContainsKey(userName))
