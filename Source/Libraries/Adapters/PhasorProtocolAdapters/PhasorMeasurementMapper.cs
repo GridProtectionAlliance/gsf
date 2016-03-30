@@ -1777,23 +1777,27 @@ namespace PhasorProtocolAdapters
             // to be useful, the local clock must be fairly accurate
             long latency = frame.ReceivedTimestamp.Value - timestamp;
 
-            if (m_minimumLatency > latency || m_minimumLatency == 0)
-                m_minimumLatency = latency;
+            // Throw out latencies that exceed one hour as invalid
+            if (Math.Abs(latency) <= Time.SecondsPerHour)
+            {
+                if (m_minimumLatency > latency || m_minimumLatency == 0)
+                    m_minimumLatency = latency;
 
-            if (m_maximumLatency < latency || m_maximumLatency == 0)
-                m_maximumLatency = latency;
+                if (m_maximumLatency < latency || m_maximumLatency == 0)
+                    m_maximumLatency = latency;
 
-            m_totalLatency += latency;
-            m_latencyFrames++;
+                m_totalLatency += latency;
+                m_latencyFrames++;
 
-            if (m_lifetimeMinimumLatency > latency || m_lifetimeMinimumLatency == 0)
-                m_lifetimeMinimumLatency = latency;
+                if (m_lifetimeMinimumLatency > latency || m_lifetimeMinimumLatency == 0)
+                    m_lifetimeMinimumLatency = latency;
 
-            if (m_lifetimeMaximumLatency < latency || m_lifetimeMaximumLatency == 0)
-                m_lifetimeMaximumLatency = latency;
+                if (m_lifetimeMaximumLatency < latency || m_lifetimeMaximumLatency == 0)
+                    m_lifetimeMaximumLatency = latency;
 
-            m_lifetimeTotalLatency += latency;
-            m_lifetimeLatencyFrames++;
+                m_lifetimeTotalLatency += latency;
+                m_lifetimeLatencyFrames++;
+            }
 
             // Map quality flags (QF) from device frame, if any
             MapMeasurementAttributes(mappedMeasurements, m_qualityFlagsSignalReferenceName, frame.GetQualityFlagsMeasurement());

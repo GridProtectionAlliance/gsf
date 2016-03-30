@@ -2309,6 +2309,10 @@ namespace GSF.TimeSeries.Transport
         {
             foreach (long latency in latencies)
             {
+                // Throw out latencies that exceed one hour as invalid
+                if (Math.Abs(latency) > Time.SecondsPerHour)
+                    continue;
+
                 if (m_lifetimeMinimumLatency > latency || m_lifetimeMinimumLatency == 0)
                     m_lifetimeMinimumLatency = latency;
 

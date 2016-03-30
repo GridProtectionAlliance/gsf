@@ -38,6 +38,7 @@ using System.Timers;
 using GSF.Units;
 using Timer = System.Timers.Timer;
 
+// ReSharper disable PossibleMultipleEnumeration
 namespace GSF.TimeSeries
 {
     #region [ Enumerations ]
@@ -87,7 +88,7 @@ namespace GSF.TimeSeries
     /// This class synchronizes (i.e., sorts by timestamp) real-time measurements.
     /// </para>
     /// <para>
-    /// Note that your lag time should be defined as it relates to the rate at which data data is coming
+    /// Note that your lag time should be defined as it relates to the rate at which data is coming
     /// into the concentrator. Make sure you allow enough time for transmission of data over the network
     /// allowing any needed time for possible network congestion.  Lead time should be defined as your
     /// confidence in the accuracy of your local clock (e.g., if you set lead time to 2, this means you
@@ -250,7 +251,7 @@ namespace GSF.TimeSeries
                     {
                         if (disposing)
                         {
-                            if (m_timer != null)
+                            if ((object)m_timer != null)
                             {
                                 if (m_processingInterval == -1)
                                     m_timer.Tick -= SetTimerPeriod;
@@ -558,12 +559,12 @@ namespace GSF.TimeSeries
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", "LagTime must be greater than zero, but it can be less than one");
+                    throw new ArgumentOutOfRangeException(nameof(value), "LagTime must be greater than zero, but it can be less than one");
 
                 m_lagTime = value;
                 m_lagTicks = (long)(m_lagTime * Ticks.PerSecond);
 
-                if (LagTimeUpdated != null)
+                if ((object)LagTimeUpdated != null)
                     LagTimeUpdated(m_lagTime);
             }
         }
@@ -597,11 +598,11 @@ namespace GSF.TimeSeries
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", "LeadTime must be greater than zero, but it can be less than one");
+                    throw new ArgumentOutOfRangeException(nameof(value), "LeadTime must be greater than zero, but it can be less than one");
 
                 m_leadTime = value;
 
-                if (LeadTimeUpdated != null)
+                if ((object)LeadTimeUpdated != null)
                     LeadTimeUpdated(m_leadTime);
             }
         }
@@ -643,11 +644,11 @@ namespace GSF.TimeSeries
         {
             get
             {
-                if (m_frameQueue != null)
+                if ((object)m_frameQueue != null)
                 {
                     TrackingFrame last = m_frameQueue.Last;
 
-                    if (last != null)
+                    if ((object)last != null)
                         return last.SourceFrame;
                 }
 
@@ -687,7 +688,7 @@ namespace GSF.TimeSeries
                         DetachFromFrameRateTimer(m_framesPerSecond, m_processingInterval);
 
                         // Make sure to release publication wait handle if it's currently waiting...
-                        if (m_publicationWaitHandle != null)
+                        if ((object)m_publicationWaitHandle != null)
                             m_publicationWaitHandle.Set();
                     }
                 }
@@ -709,7 +710,7 @@ namespace GSF.TimeSeries
             set
             {
                 if (value < 1)
-                    throw new ArgumentOutOfRangeException("value", "Frames per second must be greater than 0");
+                    throw new ArgumentOutOfRangeException(nameof(value), "Frames per second must be greater than 0");
 
                 if (m_framesPerSecond != value)
                 {
@@ -723,7 +724,7 @@ namespace GSF.TimeSeries
                     // this comes out to be 40 milliseconds at 30 frames per second and 20 milliseconds at 60 frames per second
                     m_maximumPublicationTimeout = Math.Max((int)Math.Round((m_ticksPerFrame + m_ticksPerFrame * 0.2D) / Ticks.PerMillisecond), 1);
 
-                    if (m_frameQueue != null)
+                    if ((object)m_frameQueue != null)
                         m_frameQueue.FramesPerSecond = m_framesPerSecond;
 
                     if (m_usePrecisionTimer)
@@ -734,7 +735,7 @@ namespace GSF.TimeSeries
                     else
                     {
                         // Make sure to release publication wait handle if it's currently waiting...
-                        if (m_publicationWaitHandle != null)
+                        if ((object)m_publicationWaitHandle != null)
                             m_publicationWaitHandle.Set();
                     }
                 }
@@ -829,7 +830,7 @@ namespace GSF.TimeSeries
                         m_usePrecisionTimer = false;
 
                         // Make sure to release publication wait handle if it's currently waiting...
-                        if (m_publicationWaitHandle != null)
+                        if ((object)m_publicationWaitHandle != null)
                             m_publicationWaitHandle.Set();
                     }
                     else if (m_processingInterval > 0)
@@ -852,7 +853,7 @@ namespace GSF.TimeSeries
                             DetachFromFrameRateTimer(m_framesPerSecond, m_processingInterval);
 
                             // Make sure to release publication wait handle if it's currently waiting...
-                            if (m_publicationWaitHandle != null)
+                            if ((object)m_publicationWaitHandle != null)
                                 m_publicationWaitHandle.Set();
                         }
                     }
@@ -913,7 +914,7 @@ namespace GSF.TimeSeries
         ///     </item>
         /// </list>
         /// Assigning values less than zero will be set to zero since minimum possible concentrator resolution is one tick (100-nanoseconds). Assigning
-        /// values values greater than <see cref="Ticks"/>.<see cref="Ticks.PerSecond"/> will be set to <see cref="Ticks"/>.<see cref="Ticks.PerSecond"/>
+        /// values greater than <see cref="Ticks"/>.<see cref="Ticks.PerSecond"/> will be set to <see cref="Ticks"/>.<see cref="Ticks.PerSecond"/>
         /// since maximum possible concentrator resolution is one second (i.e., 1 frame per second).
         /// </remarks>
         public long TimeResolution
@@ -935,7 +936,7 @@ namespace GSF.TimeSeries
                 m_timeOffset = (m_timeResolution > 1 ? m_timeResolution / 2 : 1);
 
                 // Assign desired time resolution to frame queue
-                if (m_frameQueue != null)
+                if ((object)m_frameQueue != null)
                     m_frameQueue.TimeResolution = m_timeResolution;
             }
         }
@@ -957,7 +958,7 @@ namespace GSF.TimeSeries
                 m_downsamplingMethod = value;
 
                 // Assign desired down-sampling method to frame queue
-                if (m_frameQueue != null)
+                if ((object)m_frameQueue != null)
                     m_frameQueue.DownsamplingMethod = m_downsamplingMethod;
             }
         }
@@ -1236,7 +1237,7 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Gets the the most accurate time value that is available. If <see cref="UseLocalClockAsRealTime"/> = <c>true</c>, then
+        /// Gets the most accurate time value that is available. If <see cref="UseLocalClockAsRealTime"/> = <c>true</c>, then
         /// this function will return <see cref="DateTime.UtcNow"/>. Otherwise, this function will return the timestamp of the
         /// most recent measurement, or <see cref="DateTime.UtcNow"/> if no measurement timestamps are within time deviation
         /// tolerances as specified by the <see cref="LeadTime"/> value.
@@ -1447,7 +1448,7 @@ namespace GSF.TimeSeries
         {
             get
             {
-                if (m_frameQueue != null)
+                if ((object)m_frameQueue != null)
                     return m_frameQueue.ExamineQueueState(m_expectedMeasurements);
 
                 return "";
@@ -1468,7 +1469,7 @@ namespace GSF.TimeSeries
 
                 status.AppendFormat("     Data concentration is: {0}", Enabled ? "Enabled" : "Disabled");
                 status.AppendLine();
-                status.AppendFormat("    Total process run time: {0}", RunTime.ToString());
+                status.AppendFormat("    Total process run time: {0}", RunTime);
                 status.AppendLine();
                 status.AppendFormat("    Measurement wait delay: {0} seconds (lag time)", m_lagTime);
                 status.AppendLine();
@@ -1482,6 +1483,7 @@ namespace GSF.TimeSeries
                 status.AppendLine();
                 status.AppendFormat("  Using clock as real-time: {0}", m_useLocalClockAsRealTime);
                 status.AppendLine();
+
                 if (!m_useLocalClockAsRealTime)
                 {
                     status.Append("      Local clock accuracy: ");
@@ -1489,15 +1491,16 @@ namespace GSF.TimeSeries
                     status.Append(" second deviation from latest time");
                     status.AppendLine();
                 }
-                status.AppendFormat("     Ignore bad timestamps: {0}", m_ignoreBadTimestamps);
+
+                status.AppendFormat("     Ignore bad timestamps: {0}", IgnoreBadTimestamps);
                 status.AppendLine();
-                status.AppendFormat("    Allow sorts by arrival: {0}", !m_ignoreBadTimestamps && m_allowSortsByArrival);
+                status.AppendFormat("    Allow sorts by arrival: {0}", !IgnoreBadTimestamps && m_allowSortsByArrival);
                 status.AppendLine();
-                status.AppendFormat(" Use preemptive publishing: {0}", m_allowPreemptivePublishing);
+                status.AppendFormat(" Use preemptive publishing: {0}", AllowPreemptivePublishing);
                 status.AppendLine();
-                status.AppendFormat("  Time reasonability check: {0}", m_performTimestampReasonabilityCheck ? "Enabled" : "Disabled");
+                status.AppendFormat("  Time reasonability check: {0}", PerformTimestampReasonabilityCheck ? "Enabled" : "Disabled");
                 status.AppendLine();
-                status.AppendFormat(" Tracking publication time: {0}", m_trackPublishedTimestamp);
+                status.AppendFormat(" Tracking publication time: {0}", TrackPublishedTimestamp);
                 status.AppendLine();
                 status.AppendFormat("  Process by received time: {0}", m_processByReceivedTimestamp);
                 status.AppendLine();
@@ -1511,11 +1514,12 @@ namespace GSF.TimeSeries
                 status.AppendLine();
                 status.AppendFormat("    Published measurements: {0}", PublishedMeasurements);
                 status.AppendLine();
-                status.AppendFormat("     Expected measurements: {0} ({1} / frame)", PublishedFrames * m_expectedMeasurements, m_expectedMeasurements);
+                status.AppendFormat("     Expected measurements: {0} ({1} / frame)", PublishedFrames * ExpectedMeasurements, ExpectedMeasurements);
                 status.AppendLine();
                 status.Append("Last discarded measurement: ");
 
                 Interlocked.Exchange(ref lastDiscardedMeasurement, m_lastDiscardedMeasurement);
+
                 if ((object)lastDiscardedMeasurement == null)
                 {
                     status.Append("<none>");
@@ -1528,6 +1532,7 @@ namespace GSF.TimeSeries
                     status.AppendLine();
                     status.AppendFormat(" Latency of last discarded: {0} seconds", LastDiscardedMeasurementLatency.ToSeconds().ToString("0.0000"));
                 }
+
                 status.AppendLine();
                 status.AppendFormat("  Average publication time: {0} milliseconds", (AveragePublicationTimePerFrame / SI.Milli).ToString("0.0000"));
                 status.AppendLine();
@@ -1535,31 +1540,36 @@ namespace GSF.TimeSeries
                 status.AppendLine();
                 status.AppendFormat(" Down-sampling application: {0}", (DownsampledMeasurements / (double)ProcessedMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
-                status.AppendFormat(" User function utilization: {0} of available time used", (1.0D - (m_ticksPerFrame - (double)AveragePublicationTimePerFrame.ToTicks()) / m_ticksPerFrame).ToString("##0.0000%"));
+                status.AppendFormat(" User function utilization: {0} of available time used", (1.0D - (TicksPerFrame - (double)AveragePublicationTimePerFrame.ToTicks()) / TicksPerFrame).ToString("##0.0000%"));
                 status.AppendLine();
-                status.AppendFormat("Published measurement loss: {0}", (DiscardedMeasurements / (double)ProcessedMeasurements).ToString("##0.0000%"));
+                status.AppendFormat("Published measurement loss: {0}", (DiscardedMeasurements / (double)ReceivedMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
-                status.AppendFormat("    Total sorts by arrival: {0}", MeasurementsSortedByArrival);
-                status.AppendLine();
-                status.AppendFormat(" Measurement time accuracy: {0}", (1.0D - MeasurementsSortedByArrival / (double)ReceivedMeasurements).ToString("##0.0000%"));
-                status.AppendLine();
+
+                if (m_allowSortsByArrival)
+                {
+                    status.AppendFormat("    Total sorts by arrival: {0}", MeasurementsSortedByArrival);
+                    status.AppendLine();
+                    status.AppendFormat(" Measurement time accuracy: {0}", (1.0D - MeasurementsSortedByArrival / (double)ReceivedMeasurements).ToString("##0.0000%"));
+                    status.AppendLine();
+                }
+
                 status.AppendFormat("   Missed sorts by timeout: {0}", MissedSortsByTimeout);
                 status.AppendLine();
                 status.AppendFormat("      Loss due to timeouts: {0}", (MissedSortsByTimeout / (double)ProcessedMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
                 status.AppendFormat("     Using precision timer: {0}", m_usePrecisionTimer);
                 status.AppendLine();
-                status.AppendFormat("       Wait handle timeout: {0} milliseconds", m_maximumPublicationTimeout);
+                status.AppendFormat("       Wait handle timeout: {0} milliseconds", MaximumPublicationTimeout);
                 status.AppendLine();
                 status.AppendFormat("   Wait handle expirations: {0}", WaitHandleExpirations);
                 status.AppendLine();
                 status.AppendFormat("    Total published frames: {0}", PublishedFrames);
                 status.AppendLine();
-                status.AppendFormat("        Defined frame rate: {0} frames/sec, {1} ticks/frame", m_framesPerSecond, m_ticksPerFrame.ToString("0.00"));
+                status.AppendFormat("        Defined frame rate: {0} frames/sec, {1} ticks/frame", m_framesPerSecond, TicksPerFrame.ToString("0.00"));
                 status.AppendLine();
                 status.AppendFormat(" Estimated mean frame rate: {0} frames/sec", (PublishedFrames / (RunTime - m_lagTime)).ToString("0.00"));
                 status.AppendLine();
-                status.AppendFormat("       Processing interval: {0}", ProcessingInterval < 0 ? ((Ticks)m_ticksPerFrame).ToMilliseconds().ToString("0.00") + " milliseconds" : (ProcessingInterval == 0 ? "As fast as possible" : ProcessingInterval + " milliseconds"));
+                status.AppendFormat("       Processing interval: {0}", ProcessingInterval < 0 ? ((Ticks)TicksPerFrame).ToMilliseconds().ToString("0.00") + " milliseconds" : (ProcessingInterval == 0 ? "As fast as possible" : ProcessingInterval + " milliseconds"));
                 status.AppendLine();
 
                 lock (s_frameRateTimers)
@@ -1569,7 +1579,7 @@ namespace GSF.TimeSeries
 
                     if (s_frameRateTimers.TryGetValue(key, out timer))
                     {
-                        status.AppendFormat("     Timer reference count: {0} concentrator{1} for the {2}fps @ {3:0.00}ms timer", timer.ReferenceCount, timer.ReferenceCount > 1 ? "s" : "", m_framesPerSecond, ProcessingInterval < 0 ? ((Ticks)m_ticksPerFrame).ToMilliseconds() : (double)ProcessingInterval);
+                        status.AppendFormat("     Timer reference count: {0} concentrator{1} for the {2}fps @ {3:0.00}ms timer", timer.ReferenceCount, timer.ReferenceCount > 1 ? "s" : "", m_framesPerSecond, ProcessingInterval < 0 ? ((Ticks)TicksPerFrame).ToMilliseconds() : (double)ProcessingInterval);
                         status.AppendLine();
                     }
 
@@ -1630,7 +1640,7 @@ namespace GSF.TimeSeries
 
                         m_publicationThread = null;
 
-                        if (m_publicationWaitHandle != null)
+                        if ((object)m_publicationWaitHandle != null)
                         {
                             AutoResetEvent publicationWaitHandle = m_publicationWaitHandle;
                             m_publicationWaitHandle = null;
@@ -1638,24 +1648,24 @@ namespace GSF.TimeSeries
                             publicationWaitHandle.Dispose();
                         }
 
-                        if (m_frameQueue != null)
+                        if ((object)m_frameQueue != null)
                         {
                             m_frameQueue.Dispose();
+                            m_frameQueue = null;
                         }
-                        m_frameQueue = null;
 
-                        if (m_monitorTimer != null)
+                        if ((object)m_monitorTimer != null)
                         {
                             m_monitorTimer.Elapsed -= MonitorUnpublishedSamples;
                             m_monitorTimer.Dispose();
+                            m_monitorTimer = null;
                         }
-                        m_monitorTimer = null;
 
-                        if (m_latestMeasurements != null)
+                        if ((object)m_latestMeasurements != null)
                         {
                             m_latestMeasurements.Dispose();
+                            m_latestMeasurements = null;
                         }
-                        m_latestMeasurements = null;
 
                         m_lastDiscardedMeasurement = null;
 
@@ -1667,7 +1677,7 @@ namespace GSF.TimeSeries
                 {
                     m_disposed = true;  // Prevent duplicate dispose.
 
-                    if (Disposed != null)
+                    if ((object)Disposed != null)
                         Disposed(this, EventArgs.Empty);
                 }
             }
@@ -1705,10 +1715,10 @@ namespace GSF.TimeSeries
             {
                 m_enabled = false;
 
-                if (m_monitorTimer != null)
+                if ((object)m_monitorTimer != null)
                     m_monitorTimer.Stop();
 
-                if (m_frameQueue != null)
+                if ((object)m_frameQueue != null)
                     m_frameQueue.Clear();
 
                 m_stopTime = DateTime.UtcNow.Ticks;
@@ -2006,7 +2016,7 @@ namespace GSF.TimeSeries
             }
 
             // Provide discarded measurements to consumers, if any
-            if (discardedMeasurements != null)
+            if ((object)discardedMeasurements != null)
                 OnDiscardingMeasurements(discardedMeasurements);
         }
 
@@ -2061,7 +2071,7 @@ namespace GSF.TimeSeries
         /// </remarks>
         protected virtual void OnProcessException(Exception ex)
         {
-            if (ProcessException != null)
+            if ((object)ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(ex));
         }
 
@@ -2071,7 +2081,7 @@ namespace GSF.TimeSeries
         /// <param name="seconds">Total number of unpublished seconds of data.</param>
         protected virtual void OnUnpublishedSamples(int seconds)
         {
-            if (UnpublishedSamples != null)
+            if ((object)UnpublishedSamples != null)
                 UnpublishedSamples(this, new EventArgs<int>(seconds));
         }
 
@@ -2084,7 +2094,7 @@ namespace GSF.TimeSeries
         /// </remarks>
         protected virtual void OnDiscardingMeasurements(IEnumerable<IMeasurement> measurements)
         {
-            if (DiscardingMeasurements != null)
+            if ((object)DiscardingMeasurements != null)
                 DiscardingMeasurements(this, new EventArgs<IEnumerable<IMeasurement>>(measurements));
         }
 
@@ -2105,7 +2115,7 @@ namespace GSF.TimeSeries
             int frameIndex;
 
             // Keep thread alive...
-            while (m_publicationWaitHandle != null)
+            while ((object)m_publicationWaitHandle != null)
             {
                 // Keep publishing frames so long as they are ready for publication. This handles case where
                 // system may be falling behind because user function is taking too long - exit when no
@@ -2154,7 +2164,7 @@ namespace GSF.TimeSeries
                         startTime = DateTime.UtcNow.Ticks;
 
                         // Calculate index of this frame within its second - note that we have to calculate this
-                        // value instead of using frameIndex since it is is possible for multiple frames to be
+                        // value instead of using frameIndex since it is possible for multiple frames to be
                         // published within one frame period if the system is stressed
                         frameIndex = (int)(((double)timestamp.DistanceBeyondSecond() + m_timeOffset) / m_ticksPerFrame);
 
@@ -2209,7 +2219,7 @@ namespace GSF.TimeSeries
                 }
 
                 // Wait for next publication signal, timing out if signal takes too long
-                if (m_usePrecisionTimer && m_publicationWaitHandle != null && !m_publicationWaitHandle.WaitOne(m_maximumPublicationTimeout))
+                if (m_usePrecisionTimer && (object)m_publicationWaitHandle != null && !m_publicationWaitHandle.WaitOne(m_maximumPublicationTimeout))
                     m_waitHandleExpirations++;
                 else
                     Thread.Sleep(1);
