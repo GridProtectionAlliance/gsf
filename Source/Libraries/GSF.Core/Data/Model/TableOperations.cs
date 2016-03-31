@@ -696,11 +696,11 @@ namespace GSF.Data.Model
         private static string GetFieldName(PropertyInfo property)
         {
             FieldNameAttribute fieldNameAttribute;
-            property.TryGetAttribute(out fieldNameAttribute);
 
-            return !string.IsNullOrEmpty(fieldNameAttribute.FieldName)
-                ? fieldNameAttribute.FieldName
-                : property.Name;
+            if (property.TryGetAttribute(out fieldNameAttribute) && !string.IsNullOrEmpty(fieldNameAttribute?.FieldName))
+                return fieldNameAttribute.FieldName;
+
+            return property.Name;
         }
 
         private static string ValueList(IReadOnlyList<object> values)

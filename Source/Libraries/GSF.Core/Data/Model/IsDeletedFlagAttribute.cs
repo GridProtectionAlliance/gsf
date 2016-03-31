@@ -32,7 +32,7 @@ namespace GSF.Data.Model
     public sealed class IsDeletedFlagAttribute : Attribute
     {
         /// <summary>
-        /// Field name used as is deleted record marker.
+        /// Field name used as is-deleted record marker.
         /// </summary>
         public string FieldName
         {
@@ -42,7 +42,7 @@ namespace GSF.Data.Model
         /// <summary>
         /// Creates a new <see cref="IsDeletedFlagAttribute"/>.
         /// </summary>
-        /// <param name="fieldName">Field name used as is deleted record marker.</param>
+        /// <param name="fieldName">Field name used as is-deleted record marker.</param>
         public IsDeletedFlagAttribute(string fieldName)
         {
             FieldName = fieldName;
