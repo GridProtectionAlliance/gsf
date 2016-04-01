@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
@@ -140,13 +141,75 @@ namespace GSF.Web.Security
         #region [ Security Functions ]
 
         /// <summary>
-        /// Gets the specified user account record.
+        /// Finds the specified user account record.
         /// </summary>
         /// <param name="id">ID of requested user.</param>
         /// <returns>Specified user account record.</returns>
         public UserAccount QueryUserAccount(Guid id)
         {
             return m_dataContext.Table<UserAccount>().LoadRecord(id);
+        }
+
+        /// <summary>
+        /// Finds the specified user account record by SID or database account name.
+        /// </summary>
+        /// <param name="accountName">SID or database account name of requested user.</param>
+        /// <returns>Specified user account record.</returns>
+        public UserAccount QueryUserAccountByName(string accountName)
+        {
+            return m_dataContext.Table<UserAccount>().QueryRecords(restriction:
+                new RecordRestriction("Name = {0}", accountName)).FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Searches user accounts by resolved names.
+        /// </summary>
+        /// <param name="searchText">Search text to lookup.</param>
+        /// <returns>Search results as "Labels" - serialized as JSON [{ label : "value" }, ...]; useful for dynamic lookup lists.</returns>
+        public IEnumerable<Label> SearchUserAccounts(string searchText)
+        {
+            return m_dataContext
+                .Table<UserAccount>()
+                .QueryRecords()
+                .Select(record => UserInfo.SIDToAccountName(record.Name ?? ""))
+                .Where(name => name.StartsWith(searchText, StringComparison.InvariantCultureIgnoreCase))
+                .Select(Label.Create);
+        }
+
+        /// <summary>
+        /// Finds the specified security group record.
+        /// </summary>
+        /// <param name="id">ID of requested group.</param>
+        /// <returns>Specified security group record.</returns>
+        public SecurityGroup QuerySecurityGroup(Guid id)
+        {
+            return m_dataContext.Table<SecurityGroup>().LoadRecord(id);
+        }
+
+        /// <summary>
+        /// Finds the specified security group record by SID or database account name.
+        /// </summary>
+        /// <param name="accountName">SID or database account name of requested group.</param>
+        /// <returns>Specified security group record.</returns>
+        public SecurityGroup QuerySecurityGroupByName(string accountName)
+        {
+            return m_dataContext.Table<SecurityGroup>().QueryRecords(restriction:
+                new RecordRestriction("Name = {0}", accountName)).FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Searches security groups by resolved names.
+        /// </summary>
+        /// <param name="searchText">Search text to lookup.</param>
+        /// <returns>Search results as "Labels" - serialized as JSON [{ label : "value" }, ...]; useful for dynamic lookup lists.</returns>
+        public IEnumerable<Label> SearchSecurityGroups(string searchText)
+        {
+            return m_dataContext
+                .Table<SecurityGroup>()
+                .QueryRecords()
+                .Select(record => UserInfo.SIDToAccountName(record.Name ?? ""))
+                .Where(name => name.StartsWith(searchText, StringComparison.InvariantCultureIgnoreCase))
+                .Select(Label.Create);
         }
 
         /// <summary>
