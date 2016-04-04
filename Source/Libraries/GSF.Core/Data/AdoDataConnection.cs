@@ -637,7 +637,7 @@ namespace GSF.Data
         {
             object value = ExecuteScalar(timeout, sqlFormat, parameters);
 
-            if (value == DBNull.Value)
+            if ((object)value == null || value == DBNull.Value)
                 return defaultValue;
 
             Type type = typeof(T);
