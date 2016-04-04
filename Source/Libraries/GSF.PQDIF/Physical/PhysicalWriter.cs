@@ -135,7 +135,8 @@ namespace GSF.PQDIF.Physical
             using (BinaryWriter bodyWriter = new BinaryWriter(bodyStream))
             {
                 // Write the record body to the memory stream
-                WriteCollection(bodyWriter, record.Body.Collection);
+                if ((object)record.Body != null)
+                    WriteCollection(bodyWriter, record.Body.Collection);
 
                 // Read and compress the body to a byte array
                 bodyImage = bodyStream.ToArray();
