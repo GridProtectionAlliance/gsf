@@ -25,7 +25,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -61,6 +60,11 @@ namespace GSF.PQDIF.Physical
         /// Used to capture an event, measurements etc.
         /// </summary>
         Observation,
+
+        /// <summary>
+        /// Represents a record-level tag which identifies a blank record.
+        /// </summary>
+        Blank,
 
         /// <summary>
         /// Represents a record-level tag which is unknown to this library.
@@ -196,7 +200,8 @@ namespace GSF.PQDIF.Physical
                 { new Guid("89738606-f1c3-11cf-9d89-0080c72e70a3"), RecordType.Container },
                 { new Guid("89738619-f1c3-11cf-9d89-0080c72e70a3"), RecordType.DataSource },
                 { new Guid("b48d858c-f5f5-11cf-9d89-0080c72e70a3"), RecordType.MonitorSettings },
-                { new Guid("8973861a-f1c3-11cf-9d89-0080c72e70a3"), RecordType.Observation }
+                { new Guid("8973861a-f1c3-11cf-9d89-0080c72e70a3"), RecordType.Observation },
+                { new Guid("89738618-f1c3-11cf-9d89-0080c72e70a3"), RecordType.Blank }
             };
         }
 
