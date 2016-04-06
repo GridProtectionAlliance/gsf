@@ -103,6 +103,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         public Adapters(int itemsPerPage, AdapterType adapterType, bool autoSave = true)
             : base(0, autoSave) // Set items per page to zero to avoid load in the base class.
         {
+            AppDomain.CurrentDomain.AssemblyResolve += AppDomain_AssemblyResolve;
             ItemsPerPage = itemsPerPage;
             m_adapterType = adapterType;
             SearchDirectory = FilePath.GetAbsolutePath("");
@@ -419,6 +420,14 @@ namespace GSF.TimeSeries.UI.ViewModels
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Unloads the <see cref="Adapters"/> class.
+        /// </summary>
+        public void Unload()
+        {
+            AppDomain.CurrentDomain.AssemblyResolve -= AppDomain_AssemblyResolve;
         }
 
         /// <summary>
@@ -834,6 +843,33 @@ namespace GSF.TimeSeries.UI.ViewModels
         {
             OnPropertyChanged("AdapterTypeSelectedIndex");
             OnPropertyChanged("CustomConfigurationButtonVisibility");
+        }
+
+        private Assembly AppDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            try
+            {
+                AssemblyName assemblyName = new AssemblyName(args.Name);
+                string assemblyFile = Path.Combine(m_searchDirectory, $"{assemblyName.Name}.dll");
+                Assembly assembly;
+
+                if (!File.Exists(assemblyFile))
+                    assemblyFile = Path.Combine(m_searchDirectory, $"{assemblyName.Name}.exe");
+
+                if (!File.Exists(assemblyFile))
+                    return null;
+
+                assembly = Assembly.LoadFrom(assemblyFile);
+
+                if (!assembly.GetName().ToString().Equals(assemblyName.ToString()))
+                    return null;
+
+                return assembly;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         #endregion

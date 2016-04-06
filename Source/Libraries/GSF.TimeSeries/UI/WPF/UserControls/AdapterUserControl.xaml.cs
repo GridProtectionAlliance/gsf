@@ -270,6 +270,11 @@ namespace GSF.TimeSeries.UI.UserControls
                 CustomConfigurationPopup.IsOpen = false;
         }
 
+        private void UserControl_Unloaded(object sender, RoutedEventArgs e)
+        {
+            m_dataContext.Unload();
+        }
+
         #endregion
     }
 }
