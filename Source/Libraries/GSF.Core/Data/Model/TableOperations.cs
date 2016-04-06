@@ -634,7 +634,7 @@ namespace GSF.Data.Model
                         addNewProperties.Add(property);
                     }
 
-                    whereFormat.Append($"{(whereFormat.Length > 0 ? "AND " : "")}{fieldName}={{{primaryKeyIndex++}}}");
+                    whereFormat.Append($"{(whereFormat.Length > 0 ? " AND " : "")}{fieldName}={{{primaryKeyIndex++}}}");
                     primaryKeyFields.Append($"{(primaryKeyFields.Length > 0 ? ", " : "")}{fieldName}");
                     primaryKeyProperties.Add(property);
                 }
@@ -656,7 +656,7 @@ namespace GSF.Data.Model
                 foreach (PropertyInfo property in s_properties.Values)
                 {
                     string fieldName = s_fieldNames[property.Name];
-                    whereFormat.Append($"{(whereFormat.Length > 0 ? "AND " : "")}{fieldName}={{{primaryKeyIndex++}}}");
+                    whereFormat.Append($"{(whereFormat.Length > 0 ? " AND " : "")}{fieldName}={{{primaryKeyIndex++}}}");
                     primaryKeyFields.Append($"{(primaryKeyFields.Length > 0 ? ", " : "")}{fieldName}");
                     primaryKeyProperties.Add(property);
                 }
