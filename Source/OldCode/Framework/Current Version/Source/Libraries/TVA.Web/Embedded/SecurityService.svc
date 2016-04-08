@@ -1,1 +1,0 @@
-﻿<%@ ServiceHost Language="C#" Debug="true" Service="TVA.Web.Embedded.SecurityService" CodeBehind="SecurityService.svc.cs" Factory="TVA.Web.Embedded.SecurityServiceHostFactory, TVA.Web" %>
