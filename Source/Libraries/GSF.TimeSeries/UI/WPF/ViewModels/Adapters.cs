@@ -29,6 +29,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
 using GSF.IO;
@@ -106,7 +107,7 @@ namespace GSF.TimeSeries.UI.ViewModels
             AppDomain.CurrentDomain.AssemblyResolve += AppDomain_AssemblyResolve;
             ItemsPerPage = itemsPerPage;
             m_adapterType = adapterType;
-            SearchDirectory = FilePath.GetAbsolutePath("");
+            SearchDirectory = FilePath.GetAbsolutePath("").EnsureEnd(Path.DirectorySeparatorChar);
             Load();
         }
 
@@ -191,7 +192,7 @@ namespace GSF.TimeSeries.UI.ViewModels
                 if (string.IsNullOrEmpty(CurrentItem.TypeName))
                     return "Adapter Type";
 
-                return string.Format("Adapter Type: {0} from {1}", CurrentItem.TypeName, CurrentItem.AssemblyName);
+                return string.Format("Adapter Type: {0} from {1}", CurrentItem.TypeName, Path.GetFileName(CurrentItem.AssemblyName));
             }
         }
 
@@ -208,17 +209,30 @@ namespace GSF.TimeSeries.UI.ViewModels
             }
             set
             {
-                // Getting this ahead of time allows us to reselect the previously
-                // selected parameter if it still exists in the parameter list.
-                AdapterConnectionStringParameter selectedParameter = m_selectedParameter;
+                try
+                {
+                    // Attempting to update parameter values without suppressing connection
+                    // string updates would result in an infinite loop. We should not be modifying
+                    // the connection string directly at the same time the user is, anyway.
+                    m_suppressConnectionStringUpdates = true;
 
-                m_parameterList = value;
-                OnPropertyChanged("ParameterList");
+                    // Getting this ahead of time allows us to reselect the previously
+                    // selected parameter if it still exists in the parameter list.
+                    AdapterConnectionStringParameter selectedParameter = m_selectedParameter;
 
-                // Reselect the previously selected parameter, and update
-                // the connection string parameters if necessary.
-                UpdateConnectionStringParameters(m_parameterList, CurrentItem.ConnectionString.ToNonNullString().ParseKeyValuePairs());
-                SelectedParameter = selectedParameter;
+                    m_parameterList = value;
+                    OnPropertyChanged("ParameterList");
+
+                    // Reselect the previously selected parameter, and update
+                    // the connection string parameters if necessary.
+                    UpdateConnectionStringParameters(m_parameterList, CurrentItem.ConnectionString.ToNonNullString().ParseKeyValuePairs());
+                    SelectedParameter = selectedParameter;
+                }
+                finally
+                {
+                    // Indicate that we want to stop suppressing connection string updates.
+                    m_suppressConnectionStringUpdates = false;
+                }
             }
         }
 
@@ -235,6 +249,9 @@ namespace GSF.TimeSeries.UI.ViewModels
             }
             set
             {
+                if (m_searchDirectory?.Equals(value, StringComparison.OrdinalIgnoreCase) ?? false)
+                    return;
+
                 m_searchDirectory = value;
                 OnPropertyChanged("SearchDirectory");
 
@@ -437,37 +454,31 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// <param name="e">Event arguments.</param>
         protected override void m_currentItem_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+            string pattern;
+
             base.m_currentItem_PropertyChanged(sender, e);
 
             // Occurs when CurrentItem.TypeName changes.
             if (e.PropertyName == "TypeName")
             {
-                try
+                Type selectedType;
+
+                // If there exists a type in the adapter type list that
+                // matches the type name, also update the assembly name.
+                selectedType = m_adapterTypeList
+                    .Select(tuple => tuple.Item1)
+                    .SingleOrDefault(type => type.FullName == CurrentItem.TypeName);
+
+                if ((object)selectedType != null)
                 {
-                    Type selectedType;
-
-                    // The user is simply changing the adapter type.
-                    // This action should not cause connection string updates.
-                    m_suppressConnectionStringUpdates = true;
-
-                    // If there exists a type in the adapter type list that
-                    // matches the type name, also update the assembly name.
-                    selectedType = m_adapterTypeList
-                        .Select(tuple => tuple.Item1)
-                        .SingleOrDefault(type => type.FullName == CurrentItem.TypeName);
-
-                    if ((object)selectedType != null)
-                        CurrentItem.AssemblyName = Path.GetFileName(selectedType.Assembly.Location);
-
-                    // Also update the parameter list. Since the type has changed,
-                    // the current list of parameters generated by searching the
-                    // selected type is no longer valid.
-                    ParameterList = GetParameterList(CurrentItem.AssemblyName, CurrentItem.TypeName);
+                    pattern = Regex.Escape(FilePath.GetAbsolutePath("").EnsureEnd(Path.DirectorySeparatorChar));
+                    CurrentItem.AssemblyName = Regex.Replace(selectedType.Assembly.Location, $"^{pattern}", "", RegexOptions.IgnoreCase);
                 }
-                finally
-                {
-                    m_suppressConnectionStringUpdates = false;
-                }
+
+                // Also update the parameter list. Since the type has changed,
+                // the current list of parameters generated by searching the
+                // selected type is no longer valid.
+                ParameterList = GetParameterList(CurrentItem.AssemblyName, CurrentItem.TypeName);
 
                 OnAdapterTypeSelectedIndexChanged();
                 OnPropertyChanged("TypeInfo");
@@ -485,26 +496,10 @@ namespace GSF.TimeSeries.UI.ViewModels
             // Occurs when CurrentItem.ConnectionString changes.
             if (e.PropertyName == "ConnectionString")
             {
-                Dictionary<string, string> settings = CurrentItem.ConnectionString.ToNonNullString().ParseKeyValuePairs();
-
-                try
-                {
-                    // Attempting to update parameter values without suppressing connection
-                    // string updates would result in an infinite loop. We should not be modifying
-                    // the connection string directly at the same time the user is, anyway.
-                    m_suppressConnectionStringUpdates = true;
-
-                    // When the connection string changes, we need to keep all related
-                    // elements synchronized. Since we can't easily determine exactly
-                    // what has changed, simply update everything.
-                    ParameterList = GetParameterList(CurrentItem.AssemblyName, CurrentItem.TypeName);
-                    UpdateConnectionStringParameters(m_parameterList, settings);
-                }
-                finally
-                {
-                    // Indicate that we want to stop suppressing connection string updates.
-                    m_suppressConnectionStringUpdates = false;
-                }
+                // When the connection string changes, we need to keep all related
+                // elements synchronized. Since we can't easily determine exactly
+                // what has changed, simply update everything.
+                ParameterList = GetParameterList(CurrentItem.AssemblyName, CurrentItem.TypeName);
             }
         }
 
@@ -558,10 +553,12 @@ namespace GSF.TimeSeries.UI.ViewModels
                         RuntimeID = CommonFunctions.GetRuntimeID("CustomOutputAdapter", CurrentItem.ID);
                 }
 
+                // Modify search path to the path of the assembly of the selected item
+                SearchDirectory = FilePath.GetDirectoryName(FilePath.GetAbsolutePath(CurrentItem.AssemblyName ?? ""));
+
                 // If the current item changes, but the connection string does not, the
                 // parameter list and parameters won't be updated. We take care of that here.
                 ParameterList = GetParameterList(CurrentItem.AssemblyName, CurrentItem.TypeName);
-                UpdateConnectionStringParameters(m_parameterList, CurrentItem.ConnectionString.ToNonNullString().ParseKeyValuePairs());
                 OnAdapterTypeSelectedIndexChanged();
                 OnPropertyChanged("TypeInfo");
             }
@@ -692,13 +689,13 @@ namespace GSF.TimeSeries.UI.ViewModels
         {
             if (assemblyName != null && typeName != null)
             {
-                ConnectionStringParameterAttribute connectionStringParameterAttribute;
+                Attribute connectionStringParameterAttribute;
 
                 // For convenience, start by searching the type
                 // list for a type matching the parameters.
                 Type adapterType = m_adapterTypeList
                     .Select(tuple => tuple.Item1)
-                    .Where(type => Path.GetFileName(type.Assembly.Location).Equals(assemblyName, StringComparison.CurrentCultureIgnoreCase))
+                    .Where(type => type.Assembly.Location.Equals(FilePath.GetAbsolutePath(assemblyName), StringComparison.OrdinalIgnoreCase))
                     .SingleOrDefault(type => type.FullName == typeName);
 
                 // Attempt to find that assembly and retrieve the type.
@@ -709,7 +706,7 @@ namespace GSF.TimeSeries.UI.ViewModels
                 {
                     // Get the list of properties with ConnectionStringParameterAttribute annotations.
                     IEnumerable<PropertyInfo> infoList = adapterType.GetProperties()
-                        .Where(info => info.TryGetAttribute(out connectionStringParameterAttribute));
+                        .Where(info => info.TryGetAttribute(typeof(ConnectionStringParameterAttribute).FullName, out connectionStringParameterAttribute));
 
                     // Get the list of connection string keys which do not match
                     // the names of the properties in the previously obtained list.
