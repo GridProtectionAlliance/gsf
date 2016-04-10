@@ -143,9 +143,8 @@ namespace GSF.PQDIF.Physical
         /// <summary>                
         /// Sets the value at the given index as the physical type defined by <see cref="Element.TypeOfValue"/>.
         /// </summary>
-        /// <param name="index">The index of the value.</param>
         /// <param name="value">The new value to be stored.</param>
-        public void Set(int index, object value)
+        public void Set(object value)
         {
             char c;
             byte[] bytes;

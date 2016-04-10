@@ -68,8 +68,10 @@
 
 using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using GSF.Units;
 #if DNF46
 using System.Numerics;
@@ -476,6 +478,91 @@ namespace GSF
         /// <returns>ComplexNumber representing the result of the operation.</returns>
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static ComplexNumber op_Exponent(ComplexNumber z, double y) => Pow(z, y);
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        /// <summary>
+        /// Converts the string representation of a complex number to its complex number equivalent.
+        /// </summary>
+        /// <param name="str">A string that contains a number to convert.</param>
+        /// <returns>A complex number that is equivalent to the numeric value or symbols specified in <paramref name="str"/>.</returns>
+        public static ComplexNumber Parse(string str)
+        {
+            // Regex pattern to match a single number
+            const string NumberPattern = @"(?<Number>[+-]?(?:[ij][0-9eE\.]+|[0-9eE\.]+[ij]?))";
+
+            // Regex pattern to match the operator
+            const string OperatorPattern = @"(?<Operator>[+-])";
+
+            // Regex pattern to match the whole complex number
+            //
+            const string Pattern = @"^" +               // Start of string
+                                   @"\s*" +             // Whitespace
+                                   NumberPattern +      // Number
+                                   @"\s*" +             // Whitespace
+                                   "(?:" +              // Start of optional of noncapturing group
+                                   OperatorPattern +    // Operator
+                                   @"\s*" +             // Whitespace
+                                   NumberPattern +      // Number
+                                   @"\s*" +             // Whitespace
+                                   ")?" +               // End of optional noncapturing group
+                                   "$";                 // End of string
+
+            Match match;
+            CaptureCollection numberCaptures;
+            CaptureCollection operatorCaptures;
+
+            double op = 1.0;
+            double real = 0.0D;
+            double imaginary = 0.0D;
+
+            // Parses the string as a double by first removing the i or j
+            Func<string, double> parse = s => double.Parse(Regex.Replace(s, "[ij]", ""));
+            Func<string, bool> isImaginary = s => Regex.IsMatch(s, "[ij]");
+
+            match = Regex.Match(str, Pattern);
+
+            // String format is invalid if regex does not match
+            if (!match.Success)
+                throw new FormatException("Input string was not in a correct format.");
+
+            // Get the captures for the Number and Operator groups
+            numberCaptures = match.Groups["Number"].Captures;
+            operatorCaptures = match.Groups["Operator"].Captures;
+
+            // If the string defines two numbers, ensure that exactly one of them is imaginary
+            if (numberCaptures.Count == 2 && !(isImaginary(numberCaptures[0].Value) ^ isImaginary(numberCaptures[1].Value)))
+                throw new FormatException("Input string was not in a correct format.");
+
+            // Parse the first capture group to the
+            // appropriate part of the complex number
+            if (isImaginary(numberCaptures[0].Value))
+                imaginary = parse(numberCaptures[0].Value);
+            else
+                real = parse(numberCaptures[0].Value);
+            
+            if (numberCaptures.Count == 2)
+            {
+                // Determine if the sign needs to be
+                // inverted based on the operator
+                if (operatorCaptures[0].Value == "-")
+                    op = -1.0;
+
+                // Parse the second capture group to the
+                // appropriate part of the complex number
+                if (isImaginary(numberCaptures[1].Value))
+                    imaginary = op * parse(numberCaptures[1].Value);
+                else
+                    real = op * parse(numberCaptures[1].Value);
+            }
+
+            // Return the complex number
+            return new ComplexNumber(real, imaginary);
+        }
 
         #endregion
     }
