@@ -43,7 +43,7 @@ namespace GSF.Collections
         /// Creates a new <see cref="PagedList{T}"/>.
         /// </summary>
         /// <param name="source">Source enumeration to paginate.</param>
-        /// <param name="page">Page number.</param>
+        /// <param name="page">Page number (1-based).</param>
         /// <param name="pageSize">Page size.</param>
         public PagedList(IEnumerable<T> source, int page, int pageSize)
         {

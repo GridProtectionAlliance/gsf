@@ -165,15 +165,19 @@ namespace GSF.Web.Security
         /// Searches user accounts by resolved names.
         /// </summary>
         /// <param name="searchText">Search text to lookup.</param>
-        /// <returns>Search results as "Labels" - serialized as JSON [{ label : "value" }, ...]; useful for dynamic lookup lists.</returns>
-        public IEnumerable<Label> SearchUserAccounts(string searchText)
+        /// <returns>Search results as "IDLabel" instances - serialized as JSON [{ id : "value", label : "name" }, ...]; useful for dynamic lookup lists.</returns>
+        public IEnumerable<IDLabel> SearchUserAccounts(string searchText)
         {
             return m_dataContext
                 .Table<UserAccount>()
                 .QueryRecords()
-                .Select(record => UserInfo.SIDToAccountName(record.Name ?? ""))
-                .Where(name => name.StartsWith(searchText, StringComparison.InvariantCultureIgnoreCase))
-                .Select(Label.Create);
+                .Select(record =>
+                {
+                    record.Name = UserInfo.SIDToAccountName(record.Name ?? "");
+                    return record;
+                })
+                .Where(record => record.Name?.StartsWith(searchText, StringComparison.InvariantCultureIgnoreCase) ?? false)
+                .Select(record => IDLabel.Create(record.ID.ToString(), record.Name));
         }
 
         /// <summary>

@@ -140,7 +140,7 @@ namespace GSF.Data.Model
         /// </summary>
         /// <param name="sortField">Field name to order-by.</param>
         /// <param name="ascending">Sort ascending flag; set to <c>false</c> for descending.</param>
-        /// <param name="page">Page number of records to return.</param>
+        /// <param name="page">Page number of records to return (1-based).</param>
         /// <param name="pageSize">Current page size.</param>
         /// <param name="restriction">Record restriction to apply, if any.</param>
         /// <returns>An enumerable of modeled table row instances for queried records.</returns>
@@ -149,6 +149,9 @@ namespace GSF.Data.Model
         /// </remarks>
         public IEnumerable<T> QueryRecords(string sortField, bool ascending, int page, int pageSize, RecordRestriction restriction = null)
         {
+            if (string.IsNullOrWhiteSpace(sortField))
+                sortField = s_fieldNames[s_primaryKeyProperties[0].Name];
+
             if ((object)m_primaryKeyCache == null || string.Compare(sortField, m_lastSortField, StringComparison.OrdinalIgnoreCase) != 0)
             {
                 string orderByExpression = $"{sortField}{(ascending ? "" : " DESC")}";

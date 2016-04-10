@@ -1,5 +1,5 @@
 //******************************************************************************************************
-//  Label.cs - Gbtc
+//  IDLabel.cs - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -24,35 +24,43 @@
 namespace GSF.Web.Model
 {
     /// <summary>
-    /// Defines a label object for JSON serialized data in dynamic lookups.
+    /// Defines a ID and label object for JSON serialized data in dynamic lookups.
     /// </summary>
     /// <remarks>
-    /// Useful for creating serialized JSON like "[{ label : "name" }, ...]" that can be used in dynamic lookup lists.
+    /// Useful for creating serialized JSON like "[{ id: "value", label : "name" }, ...]" that can be used in dynamic lookup lists.
     /// </remarks>
-    public class Label
+    public class IDLabel
     {
+        /// <summary>
+        /// ID value.
+        /// </summary>
+        public string id;
+
         /// <summary>
         /// Label value.
         /// </summary>
         public string label;
 
         /// <summary>
-        /// Creates a new <see cref="Label"/>.
+        /// Creates a new <see cref="IDLabel"/>.
         /// </summary>
+        /// <param name="id">ID value.</param>
         /// <param name="label">Label value.</param>
-        public Label(string label)
+        public IDLabel(string id, string label)
         {
+            this.id = id;
             this.label = label;
         }
 
         /// <summary>
-        /// Creates a new <see cref="Label"/> instance.
+        /// Creates a new <see cref="IDLabel"/> instance.
         /// </summary>
+        /// <param name="id">ID value.</param>
         /// <param name="label">Label value.</param>
         /// <returns>New <see cref="Label"/> instance.</returns>
-        public static Label Create(string label)
+        public static IDLabel Create(string id, string label)
         {
-            return new Label(label);
+            return new IDLabel(id, label);
         }
     }
 }

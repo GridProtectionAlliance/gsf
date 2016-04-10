@@ -76,7 +76,7 @@ namespace GSF.Collections
         /// </summary>
         /// <typeparam name="T">Type of <see cref="IEnumerable{T}"/> to paginate.</typeparam>
         /// <param name="source">Source enumeration to paginate.</param>
-        /// <param name="page">Page number.</param>
+        /// <param name="page">Page number (1-based).</param>
         /// <param name="pageSize">Page size.</param>
         /// <returns>Set of items on a given <paramref name="page"/> for specified <paramref name="pageSize"/>.</returns>
         public static PagedList<T> ToPagedList<T>(this IEnumerable<T> source, int page, int pageSize)
