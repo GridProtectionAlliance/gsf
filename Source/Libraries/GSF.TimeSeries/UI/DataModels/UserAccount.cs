@@ -467,7 +467,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 }
                 else
                 {
-                    existing = Convert.ToInt32(database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT COUNT(*) FROM UserAccount WHERE Name = {0} AND ID <> {1}", "name", "id"), DefaultTimeout, userAccountSID, userAccount.ID));
+                    existing = database.ExecuteScalar<int>("SELECT COUNT(*) FROM UserAccount WHERE Name = {0} AND ID <> {1}", userAccountSID, userAccount.ID);
 
                     if (existing > 0)
                         throw new InvalidOperationException(ErrorMessage);
