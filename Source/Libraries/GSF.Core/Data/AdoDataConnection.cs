@@ -575,9 +575,23 @@ namespace GSF.Data
         [StringFormatMethod("sqlFormat")]
         public IDataReader ExecuteReader(int timeout, string sqlFormat, params object[] parameters)
         {
+            return ExecuteReader(CommandBehavior.Default, timeout, sqlFormat, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="Connection"/>, and builds a <see cref="IDataReader"/>.
+        /// </summary>
+        /// <param name="behavior">One of the <see cref="CommandBehavior"/> values.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
+        /// <returns>A <see cref="IDataReader"/> object.</returns>
+        [StringFormatMethod("sqlFormat")]
+        public IDataReader ExecuteReader(CommandBehavior behavior, int timeout, string sqlFormat, params object[] parameters)
+        {
             string sql = GenericParameterizedQueryString(sqlFormat, parameters);
             FixParameters(parameters);
-            return m_connection.ExecuteReader(sql, timeout, parameters);
+            return m_connection.ExecuteReader(sql, behavior, timeout, parameters);
         }
 
         /// <summary>
