@@ -101,11 +101,12 @@ namespace GSF.Data.Model
         /// </summary>
         /// <param name="orderByExpression">Field name expression used for sort order, include ASC or DESC as needed - does not include ORDER BY; defaults to primary keys.</param>
         /// <param name="restriction">Record restriction to apply, if any.</param>
+        /// <param name="limit">Limit of number of record to return.</param>
         /// <returns>An enumerable of modeled table row instances for queried records.</returns>
         /// <remarks>
-        /// If no record restriction is provided, all rows will be returned.
+        /// If no record <paramref name="restriction"/> or <paramref name="limit"/> is provided, all rows will be returned.
         /// </remarks>
-        public IEnumerable<T> QueryRecords(string orderByExpression = null, RecordRestriction restriction = null)
+        public IEnumerable<T> QueryRecords(string orderByExpression = null, RecordRestriction restriction = null, int limit = -1)
         {
             if (string.IsNullOrWhiteSpace(orderByExpression))
                 orderByExpression = s_primaryKeyFields;
@@ -114,14 +115,27 @@ namespace GSF.Data.Model
 
             try
             {
+                if (limit < 1)
+                {
+                    // No record limit specified
+                    if ((object)restriction == null)
+                    {
+                        sqlExpression = string.Format(s_orderBySql, orderByExpression);
+                        return m_connection.RetrieveData(sqlExpression).AsEnumerable().Select(row => LoadRecord(GetPrimaryKeys(row)));
+                    }
+
+                    sqlExpression = string.Format(s_orderByWhereSql, restriction.FilterExpression, orderByExpression);
+                    return m_connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable().Select(row => LoadRecord(GetPrimaryKeys(row)));
+                }
+
                 if ((object)restriction == null)
                 {
                     sqlExpression = string.Format(s_orderBySql, orderByExpression);
-                    return m_connection.RetrieveData(sqlExpression).AsEnumerable().Select(row => LoadRecord(GetPrimaryKeys(row)));
+                    return m_connection.RetrieveData(sqlExpression).AsEnumerable().Take(limit).Select(row => LoadRecord(GetPrimaryKeys(row)));
                 }
 
                 sqlExpression = string.Format(s_orderByWhereSql, restriction.FilterExpression, orderByExpression);
-                return m_connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable().Select(row => LoadRecord(GetPrimaryKeys(row)));
+                return m_connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable().Take(limit).Select(row => LoadRecord(GetPrimaryKeys(row)));
             }
             catch (Exception ex)
             {
