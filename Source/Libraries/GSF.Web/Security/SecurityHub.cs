@@ -157,8 +157,7 @@ namespace GSF.Web.Security
         /// <returns>Specified user account record.</returns>
         public UserAccount QueryUserAccountByName(string accountName)
         {
-            return m_dataContext.Table<UserAccount>().QueryRecords(restriction:
-                new RecordRestriction("Name = {0}", accountName)).FirstOrDefault();
+            return m_dataContext.Table<UserAccount>().QueryRecords(restriction: new RecordRestriction("Name = {0}", accountName)).FirstOrDefault();
         }
         
         /// <summary>
@@ -179,6 +178,18 @@ namespace GSF.Web.Security
         /// <returns>Search results as "IDLabel" instances - serialized as JSON [{ id : "value", label : "name" }, ...]; useful for dynamic lookup lists.</returns>
         public IEnumerable<IDLabel> SearchUserAccounts(string searchText, int limit)
         {
+            if (limit < 1)
+                return m_dataContext
+                    .Table<UserAccount>()
+                    .QueryRecords()
+                    .Select(record =>
+                    {
+                        record.Name = UserInfo.SIDToAccountName(record.Name ?? "");
+                        return record;
+                    })
+                    .Where(record => record.Name?.StartsWith(searchText, StringComparison.InvariantCultureIgnoreCase) ?? false)
+                    .Select(record => IDLabel.Create(record.ID.ToString(), record.Name));
+
             return m_dataContext
                 .Table<UserAccount>()
                 .QueryRecords()
