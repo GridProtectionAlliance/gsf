@@ -125,7 +125,7 @@ namespace GSF.Data.Model
             }
             catch (Exception ex)
             {
-                InvalidOperationException opex = new InvalidOperationException($"Exception during record query for {typeof(T).Name} \"{sqlExpression ?? "undefined"}, {ValueList(restriction?.Parameters)}: {ex.Message}", ex);
+                InvalidOperationException opex = new InvalidOperationException($"Exception during record query for {typeof(T).Name} \"{sqlExpression ?? "undefined"}, {ValueList(restriction?.Parameters)}\": {ex.Message}", ex);
 
                 if ((object)m_exceptionHandler == null)
                     throw opex;
@@ -173,7 +173,7 @@ namespace GSF.Data.Model
                 }
                 catch (Exception ex)
                 {
-                    InvalidOperationException opex = new InvalidOperationException($"Exception during record query for {typeof(T).Name} \"{sqlExpression ?? "undefined"}, {ValueList(restriction?.Parameters)}: {ex.Message}", ex);
+                    InvalidOperationException opex = new InvalidOperationException($"Exception during record query for {typeof(T).Name} \"{sqlExpression ?? "undefined"}, {ValueList(restriction?.Parameters)}\": {ex.Message}", ex);
 
                     if ((object)m_exceptionHandler == null)
                         throw opex;
