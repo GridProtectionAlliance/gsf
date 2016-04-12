@@ -83,7 +83,17 @@ namespace GSF.Web.Model
         /// <returns>record operation methods for specified modeled table.</returns>
         public Tuple<string, string>[] GetRecordOperations<TModel>() where TModel : class, new()
         {
-            return m_recordOperations[typeof(TModel)];
+            return GetRecordOperations(typeof(TModel));
+        }
+
+        /// <summary>
+        /// Gets record operation methods for specified modeled table type.
+        /// </summary>
+        /// <param name="model">Model type.</param>
+        /// <returns>record operation methods for specified modeled table type.</returns>
+        public Tuple<string, string>[] GetRecordOperations(Type model)
+        {
+            return m_recordOperations[model];
         }
 
         #endregion
