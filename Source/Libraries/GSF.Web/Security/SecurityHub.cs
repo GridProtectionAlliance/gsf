@@ -160,13 +160,24 @@ namespace GSF.Web.Security
             return m_dataContext.Table<UserAccount>().QueryRecords(restriction:
                 new RecordRestriction("Name = {0}", accountName)).FirstOrDefault();
         }
-
+        
         /// <summary>
-        /// Searches user accounts by resolved names.
+        /// Searches user accounts by resolved names with no limit on total returned records.
         /// </summary>
         /// <param name="searchText">Search text to lookup.</param>
         /// <returns>Search results as "IDLabel" instances - serialized as JSON [{ id : "value", label : "name" }, ...]; useful for dynamic lookup lists.</returns>
         public IEnumerable<IDLabel> SearchUserAccounts(string searchText)
+        {
+            return SearchUserAccounts(searchText, -1);
+        }
+
+        /// <summary>
+        /// Searches user accounts by resolved names limited to the specified number of records.
+        /// </summary>
+        /// <param name="searchText">Search text to lookup.</param>
+        /// <param name="limit">Limit of number of record to return.</param>
+        /// <returns>Search results as "IDLabel" instances - serialized as JSON [{ id : "value", label : "name" }, ...]; useful for dynamic lookup lists.</returns>
+        public IEnumerable<IDLabel> SearchUserAccounts(string searchText, int limit)
         {
             return m_dataContext
                 .Table<UserAccount>()
@@ -177,6 +188,7 @@ namespace GSF.Web.Security
                     return record;
                 })
                 .Where(record => record.Name?.StartsWith(searchText, StringComparison.InvariantCultureIgnoreCase) ?? false)
+                .Take(limit)
                 .Select(record => IDLabel.Create(record.ID.ToString(), record.Name));
         }
 
