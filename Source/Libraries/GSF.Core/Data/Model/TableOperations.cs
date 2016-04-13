@@ -88,6 +88,11 @@ namespace GSF.Data.Model
         #region [ Properties ]
 
         /// <summary>
+        /// Gets the table name defined for the modeled table.
+        /// </summary>
+        public string TableName => s_tableName;
+
+        /// <summary>
         /// Gets flag that determines if modeled table has a primary key that is an identity field.
         /// </summary>
         public bool HasPrimaryKeyIdentityField => s_hasPrimaryKeyIdentityField;
@@ -588,6 +593,7 @@ namespace GSF.Data.Model
         #region [ Static ]
 
         // Static Fields
+        private static readonly string s_tableName;
         private static readonly Dictionary<string, PropertyInfo> s_properties;
         private static readonly Dictionary<string, string> s_fieldNames;
         private static readonly Dictionary<string, string> s_propertyNames;
@@ -618,10 +624,18 @@ namespace GSF.Data.Model
             List<PropertyInfo> addNewProperties = new List<PropertyInfo>();
             List<PropertyInfo> updateProperties = new List<PropertyInfo>();
             List<PropertyInfo> primaryKeyProperties = new List<PropertyInfo>();
-            string tableName = typeof(T).Name;
             int primaryKeyIndex = 0;
             int addNewFieldIndex = 0;
             int updateFieldIndex = 0;
+
+            // Table name will default to class name of modeled table
+            s_tableName = typeof(T).Name;
+
+            // Check for overridden table name
+            TableNameAttribute tableNameAttribute;
+
+            if (typeof(T).TryGetAttribute(out tableNameAttribute) && !string.IsNullOrWhiteSpace(tableNameAttribute.TableName))
+                s_tableName = tableNameAttribute.TableName;
 
             s_properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(property => property.CanRead && property.CanWrite)
@@ -694,13 +708,13 @@ namespace GSF.Data.Model
             for (int i = 0; i < primaryKeyIndex; i++)
                 updateWhereOffsets.Add($"{{{updateFieldIndex + i}}}");
 
-            s_countSql = string.Format(CountSqlFormat, tableName);
-            s_orderBySql = string.Format(OrderBySqlFormat, primaryKeyFields, tableName);
-            s_orderByWhereSql = string.Format(OrderByWhereSqlFormat, primaryKeyFields, tableName);
-            s_selectSql = string.Format(SelectSqlFormat, tableName, whereFormat);
-            s_addNewSql = string.Format(AddNewSqlFormat, tableName, addNewFields, addNewFormat);
-            s_updateSql = string.Format(UpdateSqlFormat, tableName, updateFormat, string.Format(whereFormat.ToString(), updateWhereOffsets.ToArray()));
-            s_deleteSql = string.Format(DeleteSqlFormat, tableName, whereFormat);
+            s_countSql = string.Format(CountSqlFormat, s_tableName);
+            s_orderBySql = string.Format(OrderBySqlFormat, primaryKeyFields, s_tableName);
+            s_orderByWhereSql = string.Format(OrderByWhereSqlFormat, primaryKeyFields, s_tableName);
+            s_selectSql = string.Format(SelectSqlFormat, s_tableName, whereFormat);
+            s_addNewSql = string.Format(AddNewSqlFormat, s_tableName, addNewFields, addNewFormat);
+            s_updateSql = string.Format(UpdateSqlFormat, s_tableName, updateFormat, string.Format(whereFormat.ToString(), updateWhereOffsets.ToArray()));
+            s_deleteSql = string.Format(DeleteSqlFormat, s_tableName, whereFormat);
             s_updateWhereSql = s_updateSql.Substring(0, s_updateSql.IndexOf(" WHERE ", StringComparison.Ordinal) + 7);
             s_deleteWhereSql = s_deleteSql.Substring(0, s_deleteSql.IndexOf(" WHERE ", StringComparison.Ordinal) + 7);
 
