@@ -1244,6 +1244,8 @@ namespace GSF.Collections
                     // again from the beginning of the chain
                     RebuildLookupTable(m_headerNode.Capacity);
                     position = GetPosition(firstHash);
+                    emptyPointer = 0L;
+                    emptyNodes = 0;
                 }
                 else
                 {
