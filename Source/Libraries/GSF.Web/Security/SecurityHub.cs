@@ -55,9 +55,16 @@ namespace GSF.Web.Security
         /// <summary>
         /// Creates a new <see cref="SecurityHub"/>.
         /// </summary>
-        public SecurityHub()
+        public SecurityHub() : this(new DataContext("securityProvider"))
         {
-            m_dataContext = new DataContext();
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="SecurityHub"/> with the specified <see cref="DataContext"/>.
+        /// </summary>
+        public SecurityHub(DataContext dataContext)
+        {
+            m_dataContext = dataContext;
         }
 
         #endregion
