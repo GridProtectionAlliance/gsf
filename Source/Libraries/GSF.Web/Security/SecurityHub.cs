@@ -113,6 +113,14 @@ namespace GSF.Web.Security
         /// </summary>
         public static readonly Guid DefaultNodeID;
 
+        // Static Methods
+
+        /// <summary>
+        /// Gets statically cached instance of <see cref="RecordOperationsCache"/> for <see cref="SecurityHub"/> instances.
+        /// </summary>
+        /// <returns>Statically cached instance of <see cref="RecordOperationsCache"/> for <see cref="SecurityHub"/> instances.</returns>
+        public static RecordOperationsCache GetRecordOperationsCache() => s_recordOperationsCache;
+
         // Static Constructor
         static SecurityHub()
         {
