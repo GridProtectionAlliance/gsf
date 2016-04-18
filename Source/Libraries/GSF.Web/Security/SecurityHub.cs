@@ -55,9 +55,16 @@ namespace GSF.Web.Security
         /// <summary>
         /// Creates a new <see cref="SecurityHub"/>.
         /// </summary>
-        public SecurityHub()
+        public SecurityHub() : this(new DataContext("securityProvider"))
         {
-            m_dataContext = new DataContext();
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="SecurityHub"/> with the specified <see cref="DataContext"/>.
+        /// </summary>
+        public SecurityHub(DataContext dataContext)
+        {
+            m_dataContext = dataContext;
         }
 
         #endregion
@@ -106,6 +113,14 @@ namespace GSF.Web.Security
         /// </summary>
         public static readonly Guid DefaultNodeID;
 
+        // Static Methods
+
+        /// <summary>
+        /// Gets statically cached instance of <see cref="RecordOperationsCache"/> for <see cref="SecurityHub"/> instances.
+        /// </summary>
+        /// <returns>Statically cached instance of <see cref="RecordOperationsCache"/> for <see cref="SecurityHub"/> instances.</returns>
+        public static RecordOperationsCache GetRecordOperationsCache() => s_recordOperationsCache;
+
         // Static Constructor
         static SecurityHub()
         {
@@ -115,7 +130,7 @@ namespace GSF.Web.Security
             DefaultNodeID = Guid.Parse(systemSettings["NodeID"].Value.ToNonNullString(Guid.NewGuid().ToString()));
 
             // Determine whether the node exists in the database and create it if it doesn't
-            using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
+            using (AdoDataConnection connection = new AdoDataConnection("securityProvider"))
             {
                 const string NodeCountFormat = "SELECT COUNT(*) FROM Node";
                 const string NodeInsertFormat = "INSERT INTO Node(Name, Description, Enabled) VALUES('Default', 'Default node', 1)";

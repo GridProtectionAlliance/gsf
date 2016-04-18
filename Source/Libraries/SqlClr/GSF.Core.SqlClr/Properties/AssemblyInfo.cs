@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("DNP3ConfigGenerator")]
+[assembly: AssemblyTitle("GSF.Core.SqlClr")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("DNP3ConfigGenerator")]
-[assembly: AssemblyCopyright("Copyright ©  2014")]
+[assembly: AssemblyProduct("GSF.Core.SqlClr")]
+[assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("c8ae6fcd-d4f7-4f68-b267-ba53c55fa78a")]
+[assembly: Guid("d7a6a6a8-32c0-4a1c-b7c4-f6dee841d2e1")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -34,4 +34,3 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("2.1.216.0")]
 [assembly: AssemblyVersion("2.1.216.0")]
 [assembly: AssemblyFileVersion("2.1.216.0")]
-[assembly: AssemblyInformationalVersion("2.1.216-beta")]
