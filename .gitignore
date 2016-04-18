@@ -219,3 +219,4 @@ FakesAssemblies/
 _Pvt_Extensions
 *.DotSettings
 *.DotSettings
+/Source/GridSolutionsFramework.VC.db
