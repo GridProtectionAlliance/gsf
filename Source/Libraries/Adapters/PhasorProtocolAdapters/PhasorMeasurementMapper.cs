@@ -1778,7 +1778,7 @@ namespace PhasorProtocolAdapters
             long latency = frame.ReceivedTimestamp.Value - timestamp;
 
             // Throw out latencies that exceed one hour as invalid
-            if (Math.Abs(latency) <= Time.SecondsPerHour)
+            if (Math.Abs(latency) <= Time.SecondsPerHour * Ticks.PerSecond)
             {
                 if (m_minimumLatency > latency || m_minimumLatency == 0)
                     m_minimumLatency = latency;
