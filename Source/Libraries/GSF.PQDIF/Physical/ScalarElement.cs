@@ -489,7 +489,7 @@ namespace GSF.PQDIF.Physical
             // number of days between those two dates is 25567 days; a two day difference. That is why we
             // need to also add two days here when creating PQDIF timestamps.
             LittleEndian.CopyBytes((uint)daySpan.TotalDays + 2u, m_value, 0);
-            LittleEndian.CopyBytes(secondSpan.TotalSeconds, m_value, 0);
+            LittleEndian.CopyBytes(secondSpan.TotalSeconds, m_value, 4);
         }
 
         /// <summary>
