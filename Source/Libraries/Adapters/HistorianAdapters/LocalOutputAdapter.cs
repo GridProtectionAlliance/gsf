@@ -222,6 +222,33 @@ namespace HistorianAdapters
         }
 
         /// <summary>
+        /// Gets or sets <see cref="DataSet"/> based data source available to this <see cref="LocalOutputAdapter"/>.
+        /// </summary>
+        public override DataSet DataSource
+        {
+            get
+            {
+                return base.DataSource;
+            }
+            set
+            {
+                base.DataSource = value;
+
+                if ((object)m_archive != null)
+                {
+                    ConfigurationFile configFile = ConfigurationFile.Current;
+                    CategorizedSettingsElementCollection settings = configFile.Settings[m_archive.SettingsCategory];
+                    settings.Add("FileSize", m_archive.FileSize, "Size (in MB) of the file. Typical size = 100.");
+                    settings.Add("DataBlockSize", m_archive.DataBlockSize, "Size (in KB) of the data blocks in the file.");
+                    settings.Add("RolloverPreparationThreshold", m_archive.RolloverPreparationThreshold, "Percentage file full when the rollover preparation should begin.");
+                    m_archive.FileSize = settings["FileSize"].ValueAs(m_archive.FileSize);
+                    m_archive.DataBlockSize = settings["DataBlockSize"].ValueAs(m_archive.DataBlockSize);
+                    m_archive.RolloverPreparationThreshold = settings["RolloverPreparationThreshold"].ValueAs(m_archive.RolloverPreparationThreshold);
+                }
+            }
+        }
+
+        /// <summary>
         /// Returns the detailed status of the data output source.
         /// </summary>
         public override string Status
