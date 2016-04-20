@@ -25,6 +25,7 @@ using System;
 using System.IO;
 using System.Linq;
 using GSF.IO;
+using GSF.IO.Checksums;
 using Ionic.Zlib;
 
 namespace GSF.PQDIF.Physical
@@ -127,6 +128,7 @@ namespace GSF.PQDIF.Physical
         public void WriteRecord(Record record, bool lastRecord = false)
         {
             byte[] bodyImage;
+            Adler32 checksum;
 
             if (m_disposed)
                 throw new ObjectDisposedException(GetType().Name);
@@ -143,6 +145,14 @@ namespace GSF.PQDIF.Physical
 
                 if (m_compressionAlgorithm == CompressionAlgorithm.Zlib && m_compressionStyle == CompressionStyle.RecordLevel)
                     bodyImage = ZlibStream.CompressBuffer(bodyImage);
+
+                // Create the checksum after compression
+                checksum = new Adler32();
+                checksum.Update(bodyImage);
+
+                // Write the record body to the memory stream
+                if ((object)record.Body != null)
+                    record.Body.Checksum = checksum.Value;
             }
 
             // Fix the pointer to the next
@@ -157,6 +167,7 @@ namespace GSF.PQDIF.Physical
             record.Header.HeaderSize = 64;
             record.Header.BodySize = bodyImage.Length;
             record.Header.NextRecordPosition = (int)m_stream.Length + record.Header.HeaderSize + record.Header.BodySize;
+            record.Header.Checksum = checksum.Value;
 
             // Write up to the next record position
             m_writer.Write(record.Header.RecordSignature.ToByteArray());
