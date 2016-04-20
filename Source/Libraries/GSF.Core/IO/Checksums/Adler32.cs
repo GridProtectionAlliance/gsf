@@ -98,12 +98,12 @@ namespace GSF.IO.Checksums
         /// <param name="value">The <see cref="byte"/> value to use for the update.</param>
         public void Update(byte value)
         {
+            if (m_loopCount >= MaxLoops)
+                ApplyMod();
+
             m_a += value;
             m_b += m_a;
             m_loopCount++;
-
-            if (m_loopCount > MaxLoops)
-                ApplyMod();
         }
 
         /// <summary>
@@ -123,13 +123,15 @@ namespace GSF.IO.Checksums
         /// <param name="count">The number of data bytes to update the checksum with.</param>
         public void Update(byte[] buffer, int offset, int count)
         {
-            int remainingLoops = MaxLoops - m_loopCount;
-            int numLoops = Math.Min(remainingLoops, count);
-
+            int remainingLoops;
+            int numLoops;
             int i = 0;
 
             while (i < count)
             {
+                if (m_loopCount >= MaxLoops)
+                    ApplyMod();
+
                 remainingLoops = MaxLoops - m_loopCount;
                 numLoops = Math.Min(remainingLoops, count - i);
 
@@ -141,7 +143,6 @@ namespace GSF.IO.Checksums
                 }
 
                 m_loopCount += numLoops;
-                ApplyMod();
             }
         }
 
@@ -155,7 +156,5 @@ namespace GSF.IO.Checksums
         }
 
         #endregion
-
-
     }
 }
