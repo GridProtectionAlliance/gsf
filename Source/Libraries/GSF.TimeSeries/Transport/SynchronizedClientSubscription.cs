@@ -353,7 +353,7 @@ namespace GSF.TimeSeries.Transport
             else
                 m_bufferBlockRetransmissionTimeout = 5.0D;
 
-            if (Settings.TryGetValue("requestNaNValueFiltering", out setting))
+            if (Settings.TryGetValue("requestNaNValueFilter", out setting))
                 m_isNaNFiltered = m_parent.AllowNaNValueFilter && setting.ParseBoolean();
             else
                 m_isNaNFiltered = false;

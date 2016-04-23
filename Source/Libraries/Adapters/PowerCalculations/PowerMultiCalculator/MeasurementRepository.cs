@@ -22,9 +22,8 @@
 //******************************************************************************************************
 
 using System;
-using GSF;
+using System.Threading;
 using GSF.Data;
-using GSF.TimeSeries.UI;
 
 namespace PowerCalculations.PowerMultiCalculator
 {
@@ -52,9 +51,9 @@ namespace PowerCalculations.PowerMultiCalculator
 				{
 					database.ExecuteNonQuery("INSERT INTO Measurement (DeviceID, PointTag, SignalTypeID, " +
                         "SignalReference, Adder, Multiplier, Description, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES " + 
-                        "({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11})", measurement.DeviceID.ToNotNull(), measurement.PointTag, 
-                        measurement.SignalTypeID, measurement.SignalReference, measurement.Adder, measurement.Multiplier, measurement.Description.ToNotNull(), 
-                        database.Bool(measurement.Enabled), CommonFunctions.CurrentUser, database.UtcNow, CommonFunctions.CurrentUser, database.UtcNow);
+                        "({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11})", ToNotNull(measurement.DeviceID), measurement.PointTag, 
+                        measurement.SignalTypeID, measurement.SignalReference, measurement.Adder, measurement.Multiplier, ToNotNull(measurement.Description), 
+                        database.Bool(measurement.Enabled), Thread.CurrentPrincipal.Identity.Name, database.UtcNow, Thread.CurrentPrincipal.Identity.Name, database.UtcNow);
 
                     measurement.SignalID = database.ExecuteScalar<Guid>("SELECT SignalID FROM Measurement WHERE PointTag={0}", measurement.PointTag);
 				}
@@ -62,9 +61,9 @@ namespace PowerCalculations.PowerMultiCalculator
 				{
 					database.ExecuteNonQuery("UPDATE Measurement SET DeviceID = {0}, PointTag = {1}, " +
                         "SignalTypeID = {2}, SignalReference = {3}, Adder = {4}, Multiplier = {5}, Description = {6}, " +
-                        "Enabled = {7}, UpdatedBy = {8}, UpdatedOn = {9} WHERE SignalId = {10}", measurement.DeviceID.ToNotNull(), measurement.PointTag,
-						measurement.SignalTypeID, measurement.SignalReference, measurement.Adder, measurement.Multiplier, measurement.Description.ToNotNull(), 
-                        database.Bool(measurement.Enabled), CommonFunctions.CurrentUser, database.UtcNow, measurement.SignalID);
+                        "Enabled = {7}, UpdatedBy = {8}, UpdatedOn = {9} WHERE SignalId = {10}", ToNotNull(measurement.DeviceID), measurement.PointTag,
+						measurement.SignalTypeID, measurement.SignalReference, measurement.Adder, measurement.Multiplier, ToNotNull(measurement.Description), 
+                        database.Bool(measurement.Enabled), Thread.CurrentPrincipal.Identity.Name, database.UtcNow, measurement.SignalID);
 				}
 			}
 			finally
@@ -81,7 +80,7 @@ namespace PowerCalculations.PowerMultiCalculator
 
 			try
 			{
-				database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+				database = new AdoDataConnection("systemSettings");
 				return true;
 			}
 			catch
@@ -90,6 +89,17 @@ namespace PowerCalculations.PowerMultiCalculator
 			}
 		}
 
-		#endregion
-	}
+        private static object ToNotNull(object value)
+        {
+            if ((object)value == null)
+                return (object)DBNull.Value;
+
+            if (value is int && (int)value == 0)
+                return (object)DBNull.Value;
+
+            return value;
+        }
+
+        #endregion
+    }
 }
