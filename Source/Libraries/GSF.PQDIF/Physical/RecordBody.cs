@@ -39,6 +39,7 @@ namespace GSF.PQDIF.Physical
 
         // Fields
         private CollectionElement m_collection;
+        private uint m_checksum;
 
         #endregion
 
@@ -57,6 +58,21 @@ namespace GSF.PQDIF.Physical
             set
             {
                 m_collection = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the CRC32 checksum of the record body.
+        /// </summary>
+        public uint Checksum
+        {
+            get
+            {
+                return m_checksum;
+            }
+            set
+            {
+                m_checksum = value;
             }
         }
 

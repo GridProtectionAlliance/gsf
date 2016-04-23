@@ -25,6 +25,7 @@
 
 using System;
 using System.IO;
+using GSF.IO.Checksums;
 using Ionic.Zlib;
 
 namespace GSF.PQDIF.Physical
@@ -278,11 +279,15 @@ namespace GSF.PQDIF.Physical
         private RecordBody ReadRecordBody(int byteSize)
         {
             byte[] bytes;
+            Adler32 checksum;
 
             if (byteSize == 0)
                 return null;
 
             bytes = m_fileReader.ReadBytes(byteSize);
+
+            checksum = new Adler32();
+            checksum.Update(bytes);
 
             if (m_compressionAlgorithm == CompressionAlgorithm.Zlib && m_compressionStyle != CompressionStyle.None)
                 bytes = ZlibStream.UncompressBuffer(bytes);
@@ -292,7 +297,8 @@ namespace GSF.PQDIF.Physical
             {
                 return new RecordBody()
                 {
-                    Collection = ReadCollection(reader)
+                    Collection = ReadCollection(reader),
+                    Checksum = checksum.Value
                 };
             }
         }
