@@ -24,6 +24,8 @@
 //       inside WPF applications.
 //  12/20/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  04/27/2016 - J. Ritchie Carroll 
+//      Added ValidateCurrentProvider method to simplify CurrentProvider usage patten; code clean-up.
 //
 //******************************************************************************************************
 
@@ -68,24 +70,12 @@ namespace GSF.Security
             /// <summary>
             /// Gets the <see cref="ISecurityProvider"/> managed by this <see cref="CacheContext"/>.
             /// </summary>
-            public ISecurityProvider Provider
-            {
-                get
-                {
-                    return m_provider;
-                }
-            }
+            public ISecurityProvider Provider => m_provider;
 
             /// <summary>
             /// Gets the <see cref="DateTime"/> of when the <see cref="CacheContext"/> was created.
             /// </summary>
-            public DateTime CacheCreationTime
-            {
-                get
-                {
-                    return m_cacheCreationTime;
-                }
-            }
+            public DateTime CacheCreationTime => m_cacheCreationTime;
         }
 
         // Constants
@@ -162,9 +152,7 @@ namespace GSF.Security
                 CacheContext cache;
 
                 lock (s_cache)
-                {
                     s_cache.TryGetValue(Thread.CurrentPrincipal.Identity.Name, out cache);
-                }
 
                 if ((object)cache == null)
                     return null;
@@ -189,9 +177,7 @@ namespace GSF.Security
                     {
                         // Cache provider to in-process memory.
                         lock (s_cache)
-                        {
                             s_cache[value.UserData.LoginID] = new CacheContext(value);
-                        }
                     }
                 }
                 else
@@ -210,12 +196,13 @@ namespace GSF.Security
                         // Remove previously cached provider from session state.
                         HttpContext.Current.Session[typeof(ISecurityProvider).Name] = null;
                     }
-                    else if (s_cache.ContainsKey(identity.Provider.UserData.LoginID))
+                    else
                     {
-                        // Remove previously cached provider from in-process memory.
                         lock (s_cache)
                         {
-                            s_cache.Remove(identity.Provider.UserData.LoginID);
+                            // Remove previously cached provider from in-process memory if it already exists
+                            if (s_cache.ContainsKey(identity.Provider.UserData.LoginID))
+                                s_cache.Remove(identity.Provider.UserData.LoginID);
                         }
                     }
                 }
@@ -225,7 +212,27 @@ namespace GSF.Security
         // Static Methods
 
         /// <summary>
-        /// Attempts to get cached <see cref="ISecurityProvider"/> for the given username.
+        /// Validates that current provider is ready, creating it if necessary.
+        /// </summary>
+        /// <param name="username">User name of the user for whom the<see cref= "ISecurityProvider" /> is to be created; defaults to current user.</param>
+        public static void ValidateCurrentProvider(string username = null)
+        {
+            // Initialize the security principal from caller's windows identity if uninitialized, note that
+            // simply by checking current provider any existing cached security principal will be restored,
+            // if no current provider exists we create a new one
+            if (CurrentProvider == null)
+            {
+                lock (typeof(SecurityProviderCache))
+                {
+                    // Let's see if we won the race...
+                    if (CurrentProvider == null)
+                        CurrentProvider = SecurityProviderUtility.CreateProvider(username);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Attempts to get cached <see cref="ISecurityProvider"/> for the given <paramref name="username"/>.
         /// </summary>
         /// <param name="username">Name of the user.</param>
         /// <param name="provider">Security provider to return.</param>
@@ -233,8 +240,13 @@ namespace GSF.Security
         public static bool TryGetCachedProvider(string username, out ISecurityProvider provider)
         {
             CacheContext cacheContext;
-            bool result = s_cache.TryGetValue(username, out cacheContext);
+            bool result;
+
+            lock (s_cache)
+                result = s_cache.TryGetValue(username, out cacheContext);
+
             provider = result ? cacheContext.Provider : null;
+
             return result;
         }
 
@@ -266,9 +278,7 @@ namespace GSF.Security
 
             // Reset the current principal
             WindowsIdentity currentIdentity = WindowsIdentity.GetCurrent();
-
-            if ((object)currentIdentity != null)
-                Thread.CurrentPrincipal = new WindowsPrincipal(currentIdentity);
+            Thread.CurrentPrincipal = new WindowsPrincipal(currentIdentity);
 
             // Create a new provider associated with current identity
             provider = SecurityProviderUtility.CreateProvider(currentPrincipal.Identity.Name);
