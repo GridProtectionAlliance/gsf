@@ -55,6 +55,15 @@ namespace GSF.Data.Model
         private readonly Action<Exception> m_exceptionHandler;
         private IEnumerable<DataRow> m_primaryKeyCache;
         private string m_lastSortField;
+        private readonly string m_countSql;
+        private readonly string m_orderBySql;
+        private readonly string m_orderByWhereSql;
+        private readonly string m_selectSql;
+        private readonly string m_addNewSql;
+        private readonly string m_updateSql;
+        private readonly string m_updateWhereSql;
+        private readonly string m_deleteSql;
+        private readonly string m_deleteWhereSql;
 
         #endregion
 
@@ -66,7 +75,70 @@ namespace GSF.Data.Model
         /// <param name="connection"><see cref="AdoDataConnection"/> instance to use for database operations.</param>
         public TableOperations(AdoDataConnection connection)
         {
+            if ((object)connection == null)
+                throw new ArgumentNullException(nameof(connection));
+
             m_connection = connection;
+            m_countSql = s_countSql;
+            m_orderBySql = s_orderBySql;
+            m_orderByWhereSql = s_orderByWhereSql;
+            m_selectSql = s_selectSql;
+            m_addNewSql = s_addNewSql;
+            m_updateSql = s_updateSql;
+            m_updateWhereSql = s_updateWhereSql;
+            m_deleteSql = s_deleteSql;
+            m_deleteWhereSql = s_deleteWhereSql;
+
+            // When any escape targets are defined for the modeled identifiers, i.e., table or field names,
+            // the static SQL statements are defined with ANSI standard escape delimiters. We check if the
+            // user model has opted to instead use common database escape delimiters, or no delimiters, that
+            // will apply to the active database type and make any needed adjustments. As a result it will
+            // be slightly faster to construct class when ASNI standard delimiters are used.
+            if ((object)s_escapedTableNameTargets != null)
+            {
+                string derivedTableName = DeriveTableName(s_tableName);
+                string ansiEscapedTableName = m_connection.EscapeIdentifier(s_tableName, true);
+
+                if (!derivedTableName.Equals(ansiEscapedTableName, StringComparison.OrdinalIgnoreCase))
+                {
+                    m_countSql = m_countSql.Replace(ansiEscapedTableName, derivedTableName);
+                    m_orderBySql = m_orderBySql.Replace(ansiEscapedTableName, derivedTableName);
+                    m_orderByWhereSql = m_orderByWhereSql.Replace(ansiEscapedTableName, derivedTableName);
+                    m_selectSql = m_selectSql.Replace(ansiEscapedTableName, derivedTableName);
+                    m_addNewSql = m_addNewSql.Replace(ansiEscapedTableName, derivedTableName);
+                    m_updateSql = m_updateSql.Replace(ansiEscapedTableName, derivedTableName);
+                    m_updateWhereSql = m_updateWhereSql.Replace(ansiEscapedTableName, derivedTableName);
+                    m_deleteSql = m_deleteSql.Replace(ansiEscapedTableName, derivedTableName);
+                    m_deleteWhereSql = m_deleteWhereSql.Replace(ansiEscapedTableName, derivedTableName);
+                }
+            }
+
+            if (s_escapedFieldNameTargets.Count > 0)
+            {
+                Dictionary<DatabaseType, bool> escapedFieldNameTargets;
+
+                foreach (string fieldName in s_fieldNames.Values)
+                {
+                    if (s_escapedFieldNameTargets.TryGetValue(fieldName, out escapedFieldNameTargets))
+                    {
+                        string derivedFieldName = DeriveFieldName(fieldName);
+                        string ansiEscapedFieldName = m_connection.EscapeIdentifier(fieldName, true);
+
+                        if (!derivedFieldName.Equals(ansiEscapedFieldName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            m_countSql = m_countSql.Replace(ansiEscapedFieldName, derivedFieldName);
+                            m_orderBySql = m_orderBySql.Replace(ansiEscapedFieldName, derivedFieldName);
+                            m_orderByWhereSql = m_orderByWhereSql.Replace(ansiEscapedFieldName, derivedFieldName);
+                            m_selectSql = m_selectSql.Replace(ansiEscapedFieldName, derivedFieldName);
+                            m_addNewSql = m_addNewSql.Replace(ansiEscapedFieldName, derivedFieldName);
+                            m_updateSql = m_updateSql.Replace(ansiEscapedFieldName, derivedFieldName);
+                            m_updateWhereSql = m_updateWhereSql.Replace(ansiEscapedFieldName, derivedFieldName);
+                            m_deleteSql = m_deleteSql.Replace(ansiEscapedFieldName, derivedFieldName);
+                            m_deleteWhereSql = m_deleteWhereSql.Replace(ansiEscapedFieldName, derivedFieldName);
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -88,9 +160,9 @@ namespace GSF.Data.Model
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the table name defined for the modeled table.
+        /// Gets the table name defined for the modeled table, includes any escaping as defined in model.
         /// </summary>
-        public string TableName => s_tableName;
+        public string TableName => DeriveTableName(s_tableName);
 
         /// <summary>
         /// Gets flag that determines if modeled table has a primary key that is an identity field.
@@ -125,21 +197,21 @@ namespace GSF.Data.Model
                     // No record limit specified
                     if ((object)restriction == null)
                     {
-                        sqlExpression = string.Format(s_orderBySql, orderByExpression);
+                        sqlExpression = string.Format(m_orderBySql, orderByExpression);
                         return m_connection.RetrieveData(sqlExpression).AsEnumerable().Select(row => LoadRecord(GetPrimaryKeys(row)));
                     }
 
-                    sqlExpression = string.Format(s_orderByWhereSql, restriction.FilterExpression, orderByExpression);
+                    sqlExpression = string.Format(m_orderByWhereSql, restriction.FilterExpression, orderByExpression);
                     return m_connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable().Select(row => LoadRecord(GetPrimaryKeys(row)));
                 }
 
                 if ((object)restriction == null)
                 {
-                    sqlExpression = string.Format(s_orderBySql, orderByExpression);
+                    sqlExpression = string.Format(m_orderBySql, orderByExpression);
                     return m_connection.RetrieveData(sqlExpression).AsEnumerable().Take(limit).Select(row => LoadRecord(GetPrimaryKeys(row)));
                 }
 
-                sqlExpression = string.Format(s_orderByWhereSql, restriction.FilterExpression, orderByExpression);
+                sqlExpression = string.Format(m_orderByWhereSql, restriction.FilterExpression, orderByExpression);
                 return m_connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable().Take(limit).Select(row => LoadRecord(GetPrimaryKeys(row)));
             }
             catch (Exception ex)
@@ -180,12 +252,12 @@ namespace GSF.Data.Model
                 {
                     if ((object)restriction == null)
                     {
-                        sqlExpression = string.Format(s_orderBySql, orderByExpression);
+                        sqlExpression = string.Format(m_orderBySql, orderByExpression);
                         m_primaryKeyCache = m_connection.RetrieveData(sqlExpression).AsEnumerable();
                     }
                     else
                     {
-                        sqlExpression = string.Format(s_orderByWhereSql, restriction.FilterExpression, orderByExpression);
+                        sqlExpression = string.Format(m_orderByWhereSql, restriction.FilterExpression, orderByExpression);
                         m_primaryKeyCache = m_connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable();
                     }
 
@@ -217,13 +289,13 @@ namespace GSF.Data.Model
             try
             {
                 if ((object)restriction == null)
-                    return m_connection.ExecuteScalar<int>(s_countSql);
+                    return m_connection.ExecuteScalar<int>(m_countSql);
 
-                return m_connection.ExecuteScalar<int>($"{s_countSql} WHERE {restriction.FilterExpression}", restriction.Parameters);
+                return m_connection.ExecuteScalar<int>($"{m_countSql} WHERE {restriction.FilterExpression}", restriction.Parameters);
             }
             catch (Exception ex)
             {
-                InvalidOperationException opex = new InvalidOperationException($"Exception during record count query for {typeof(T).Name} \"{s_countSql}\": {ex.Message}", ex);
+                InvalidOperationException opex = new InvalidOperationException($"Exception during record count query for {typeof(T).Name} \"{m_countSql}\": {ex.Message}", ex);
 
                 if ((object)m_exceptionHandler == null)
                     throw opex;
@@ -243,7 +315,7 @@ namespace GSF.Data.Model
             try
             {
                 T record = new T();
-                DataRow row = m_connection.RetrieveRow(s_selectSql, primaryKeys);
+                DataRow row = m_connection.RetrieveRow(m_selectSql, primaryKeys);
 
                 // Make sure record exists, return null instead of a blank record
                 if (s_hasPrimaryKeyIdentityField && GetPrimaryKeys(row).All(Common.IsDefaultValue))
@@ -270,7 +342,7 @@ namespace GSF.Data.Model
             }
             catch (Exception ex)
             {
-                InvalidOperationException opex = new InvalidOperationException($"Exception during record load for {typeof(T).Name} \"{s_selectSql}, {ValueList(primaryKeys)}\": {ex.Message}", ex);
+                InvalidOperationException opex = new InvalidOperationException($"Exception during record load for {typeof(T).Name} \"{m_selectSql}, {ValueList(primaryKeys)}\": {ex.Message}", ex);
 
                 if ((object)m_exceptionHandler == null)
                     throw opex;
@@ -299,7 +371,7 @@ namespace GSF.Data.Model
         {
             try
             {
-                int affectedRecords = m_connection.ExecuteNonQuery(s_deleteSql, primaryKeys);
+                int affectedRecords = m_connection.ExecuteNonQuery(m_deleteSql, primaryKeys);
 
                 if (affectedRecords > 0)
                     m_primaryKeyCache = null;
@@ -308,7 +380,7 @@ namespace GSF.Data.Model
             }
             catch (Exception ex)
             {
-                InvalidOperationException opex = new InvalidOperationException($"Exception during record delete for {typeof(T).Name} \"{s_deleteSql}, {ValueList(primaryKeys)}\": {ex.Message}", ex);
+                InvalidOperationException opex = new InvalidOperationException($"Exception during record delete for {typeof(T).Name} \"{m_deleteSql}, {ValueList(primaryKeys)}\": {ex.Message}", ex);
 
                 if ((object)m_exceptionHandler == null)
                     throw opex;
@@ -327,7 +399,7 @@ namespace GSF.Data.Model
         {
             try
             {
-                int affectedRecords = m_connection.ExecuteNonQuery($"{s_deleteWhereSql}{restriction.FilterExpression}", restriction.Parameters);
+                int affectedRecords = m_connection.ExecuteNonQuery($"{m_deleteWhereSql}{restriction.FilterExpression}", restriction.Parameters);
 
                 if (affectedRecords > 0)
                     m_primaryKeyCache = null;
@@ -336,7 +408,7 @@ namespace GSF.Data.Model
             }
             catch (Exception ex)
             {
-                InvalidOperationException opex = new InvalidOperationException($"Exception during record delete for {typeof(T).Name} \"{s_deleteWhereSql}, {ValueList(restriction.Parameters)}\": {ex.Message}", ex);
+                InvalidOperationException opex = new InvalidOperationException($"Exception during record delete for {typeof(T).Name} \"{m_deleteWhereSql}, {ValueList(restriction.Parameters)}\": {ex.Message}", ex);
 
                 if ((object)m_exceptionHandler == null)
                     throw opex;
@@ -370,11 +442,11 @@ namespace GSF.Data.Model
                     foreach (PropertyInfo property in s_primaryKeyProperties)
                         values.Add(property.GetValue(record));
 
-                    return m_connection.ExecuteNonQuery(s_updateSql, values.ToArray());
+                    return m_connection.ExecuteNonQuery(m_updateSql, values.ToArray());
                 }
                 catch (Exception ex)
                 {
-                    InvalidOperationException opex = new InvalidOperationException($"Exception during record update for {typeof(T).Name} \"{s_updateSql}, {ValueList(values)}\": {ex.Message}", ex);
+                    InvalidOperationException opex = new InvalidOperationException($"Exception during record update for {typeof(T).Name} \"{m_updateSql}, {ValueList(values)}\": {ex.Message}", ex);
 
                     if ((object)m_exceptionHandler == null)
                         throw opex;
@@ -397,11 +469,11 @@ namespace GSF.Data.Model
                 for (int i = 0; i < restriction.Parameters.Length; i++)
                     updateWhereOffsets.Add($"{{{updateFieldIndex + i}}}");
 
-                return m_connection.ExecuteNonQuery($"{s_updateWhereSql}{string.Format(restriction.FilterExpression, updateWhereOffsets.ToArray())}", values.ToArray());
+                return m_connection.ExecuteNonQuery($"{m_updateWhereSql}{string.Format(restriction.FilterExpression, updateWhereOffsets.ToArray())}", values.ToArray());
             }
             catch (Exception ex)
             {
-                InvalidOperationException opex = new InvalidOperationException($"Exception during record update for {typeof(T).Name} \"{s_updateWhereSql}, {ValueList(values)}\": {ex.Message}", ex);
+                InvalidOperationException opex = new InvalidOperationException($"Exception during record update for {typeof(T).Name} \"{m_updateWhereSql}, {ValueList(values)}\": {ex.Message}", ex);
 
                 if ((object)m_exceptionHandler == null)
                     throw opex;
@@ -425,7 +497,7 @@ namespace GSF.Data.Model
                 foreach (PropertyInfo property in s_addNewProperties)
                     values.Add(property.GetValue(record));
 
-                int affectedRecords = m_connection.ExecuteNonQuery(s_addNewSql, values.ToArray());
+                int affectedRecords = m_connection.ExecuteNonQuery(m_addNewSql, values.ToArray());
 
                 if (affectedRecords > 0)
                     m_primaryKeyCache = null;
@@ -434,7 +506,7 @@ namespace GSF.Data.Model
             }
             catch (Exception ex)
             {
-                InvalidOperationException opex = new InvalidOperationException($"Exception during record insert for {typeof(T).Name} \"{s_addNewSql}, {ValueList(values)}\": {ex.Message}", ex);
+                InvalidOperationException opex = new InvalidOperationException($"Exception during record insert for {typeof(T).Name} \"{m_addNewSql}, {ValueList(values)}\": {ex.Message}", ex);
 
                 if ((object)m_exceptionHandler == null)
                     throw opex;
@@ -501,16 +573,16 @@ namespace GSF.Data.Model
         }
 
         /// <summary>
-        /// Gets the field names for the table.
+        /// Gets the field names for the table, includes any escaping as defined in model.
         /// </summary>
         /// <returns>Array of field names.</returns>
         public string[] GetFieldNames()
         {
-            return s_fieldNames.Values.ToArray();
+            return s_fieldNames.Values.Select(DeriveFieldName).ToArray();
         }
 
         /// <summary>
-        /// Get the primary key field names for the table.
+        /// Get the primary key field names for the table, includes any escaping as defined in model.
         /// </summary>
         /// <returns>Array of primary key field names.</returns>
         public string[] GetPrimaryKeyFieldNames()
@@ -588,6 +660,32 @@ namespace GSF.Data.Model
             return null;
         }
 
+        // Derive table name, escaping it if needed
+        private string DeriveTableName(string tableName)
+        {
+            if ((object)s_escapedTableNameTargets == null)
+                return tableName;
+
+            bool useAnsiQuotes;
+
+            if (s_escapedTableNameTargets.TryGetValue(m_connection.DatabaseType, out useAnsiQuotes))
+                return m_connection.EscapeIdentifier(tableName, useAnsiQuotes);
+
+            return tableName;
+        }
+
+        // Derive field name, escaping it if needed
+        private string DeriveFieldName(string fieldName)
+        {
+            Dictionary<DatabaseType, bool> escapedFieldNameTargets;
+            bool useAnsiQuotes = false;
+
+            if (s_escapedFieldNameTargets.TryGetValue(fieldName, out escapedFieldNameTargets) && (escapedFieldNameTargets?.TryGetValue(m_connection.DatabaseType, out useAnsiQuotes) ?? false))
+                return m_connection.EscapeIdentifier(fieldName, useAnsiQuotes);
+
+            return fieldName;
+        }
+
         #endregion
 
         #region [ Static ]
@@ -601,6 +699,8 @@ namespace GSF.Data.Model
         private static readonly PropertyInfo[] s_addNewProperties;
         private static readonly PropertyInfo[] s_updateProperties;
         private static readonly PropertyInfo[] s_primaryKeyProperties;
+        private static readonly Dictionary<DatabaseType, bool> s_escapedTableNameTargets;
+        private static readonly Dictionary<string, Dictionary<DatabaseType, bool>> s_escapedFieldNameTargets;
         private static readonly string s_countSql;
         private static readonly string s_orderBySql;
         private static readonly string s_orderByWhereSql;
@@ -637,11 +737,18 @@ namespace GSF.Data.Model
             if (typeof(T).TryGetAttribute(out tableNameAttribute) && !string.IsNullOrWhiteSpace(tableNameAttribute.TableName))
                 s_tableName = tableNameAttribute.TableName;
 
+            // Check for escaped table name targets
+            UseEscapedNameAttribute[] useEscapedNameAttributes;
+
+            if (typeof(T).TryGetAttributes(out useEscapedNameAttributes))
+                s_escapedTableNameTargets = DeriveEscapedNameTargets(useEscapedNameAttributes);
+
             s_properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(property => property.CanRead && property.CanWrite)
                 .ToDictionary(property => property.Name, StringComparer.OrdinalIgnoreCase);
 
             s_fieldNames = s_properties.ToDictionary(kvp => kvp.Key, kvp => GetFieldName(kvp.Value), StringComparer.OrdinalIgnoreCase);
+            s_escapedFieldNameTargets = new Dictionary<string, Dictionary<DatabaseType, bool>>(StringComparer.OrdinalIgnoreCase);
             s_propertyNames = s_fieldNames.ToDictionary(kvp => kvp.Value, kvp => kvp.Key, StringComparer.OrdinalIgnoreCase);
             s_attributes = new Dictionary<PropertyInfo, HashSet<Type>>();
             s_hasPrimaryKeyIdentityField = false;
@@ -651,6 +758,16 @@ namespace GSF.Data.Model
                 string fieldName = s_fieldNames[property.Name];
                 PrimaryKeyAttribute primaryKeyAttribute;
                 property.TryGetAttribute(out primaryKeyAttribute);
+
+                if (property.TryGetAttributes(out useEscapedNameAttributes))
+                {
+                    s_escapedFieldNameTargets[fieldName] = DeriveEscapedNameTargets(useEscapedNameAttributes);
+
+                    // If any database has been targeted for escaping the field name, pre-apply the standard ANSI escaped
+                    // field name in the static SQL expressions. This will provide a unique replaceable identifier should
+                    // the common database delimiters, or no delimiters, be applicable for an active database connection
+                    fieldName = $"\"{fieldName}\"";
+                }
 
                 if ((object)primaryKeyAttribute != null)
                 {
@@ -687,6 +804,10 @@ namespace GSF.Data.Model
                 foreach (PropertyInfo property in s_properties.Values)
                 {
                     string fieldName = s_fieldNames[property.Name];
+
+                    if (s_escapedFieldNameTargets.ContainsKey(fieldName))
+                        fieldName = $"\"{fieldName}\"";
+
                     whereFormat.Append($"{(whereFormat.Length > 0 ? " AND " : "")}{fieldName}={{{primaryKeyIndex++}}}");
                     primaryKeyFields.Append($"{(primaryKeyFields.Length > 0 ? ", " : "")}{fieldName}");
                     primaryKeyProperties.Add(property);
@@ -708,13 +829,21 @@ namespace GSF.Data.Model
             for (int i = 0; i < primaryKeyIndex; i++)
                 updateWhereOffsets.Add($"{{{updateFieldIndex + i}}}");
 
-            s_countSql = string.Format(CountSqlFormat, s_tableName);
-            s_orderBySql = string.Format(OrderBySqlFormat, primaryKeyFields, s_tableName);
-            s_orderByWhereSql = string.Format(OrderByWhereSqlFormat, primaryKeyFields, s_tableName);
-            s_selectSql = string.Format(SelectSqlFormat, s_tableName, whereFormat);
-            s_addNewSql = string.Format(AddNewSqlFormat, s_tableName, addNewFields, addNewFormat);
-            s_updateSql = string.Format(UpdateSqlFormat, s_tableName, updateFormat, string.Format(whereFormat.ToString(), updateWhereOffsets.ToArray()));
-            s_deleteSql = string.Format(DeleteSqlFormat, s_tableName, whereFormat);
+            // If any database has been targeted for escaping the table name, pre-apply the standard ANSI escaped
+            // table name in the static SQL expressions. This will provide a unique replaceable identifier should
+            // the common database delimiters, or no delimiters, be applicable for an active database connection
+            string tableName = s_tableName;
+
+            if ((object)s_escapedTableNameTargets != null)
+                tableName = $"\"{tableName}\"";
+
+            s_countSql = string.Format(CountSqlFormat, tableName);
+            s_orderBySql = string.Format(OrderBySqlFormat, primaryKeyFields, tableName);
+            s_orderByWhereSql = string.Format(OrderByWhereSqlFormat, primaryKeyFields, tableName);
+            s_selectSql = string.Format(SelectSqlFormat, tableName, whereFormat);
+            s_addNewSql = string.Format(AddNewSqlFormat, tableName, addNewFields, addNewFormat);
+            s_updateSql = string.Format(UpdateSqlFormat, tableName, updateFormat, string.Format(whereFormat.ToString(), updateWhereOffsets.ToArray()));
+            s_deleteSql = string.Format(DeleteSqlFormat, tableName, whereFormat);
             s_updateWhereSql = s_updateSql.Substring(0, s_updateSql.IndexOf(" WHERE ", StringComparison.Ordinal) + 7);
             s_deleteWhereSql = s_deleteSql.Substring(0, s_deleteSql.IndexOf(" WHERE ", StringComparison.Ordinal) + 7);
 
@@ -732,6 +861,37 @@ namespace GSF.Data.Model
                 return fieldNameAttribute.FieldName;
 
             return property.Name;
+        }
+
+        private static Dictionary<DatabaseType, bool> DeriveEscapedNameTargets(UseEscapedNameAttribute[] useEscapedNameAttributes)
+        {
+            if (useEscapedNameAttributes == null || useEscapedNameAttributes.Length == 0)
+                return null;
+
+            DatabaseType[] databaseTypes;
+            bool allDatabasesTargeted = false;
+
+            // If any attribute has no database target type specified, then all database types are assumed
+            if (useEscapedNameAttributes.Any(attribute => attribute.TargetDatabaseType == null))
+            {
+                allDatabasesTargeted = true;
+                databaseTypes = Enum.GetValues(typeof(DatabaseType)).Cast<DatabaseType>().ToArray();
+            }
+            else
+            {
+                databaseTypes = useEscapedNameAttributes.Select(attribute => attribute.TargetDatabaseType.GetValueOrDefault()).Distinct().ToArray();
+            }
+
+            Dictionary<DatabaseType, bool> escapedNameTargets = new Dictionary<DatabaseType, bool>(databaseTypes.Length);
+
+            foreach (DatabaseType databaseType in databaseTypes)
+            {
+                UseEscapedNameAttribute useEscapedNameAttribute = useEscapedNameAttributes.FirstOrDefault(attribute => attribute.TargetDatabaseType == databaseType);
+                bool useAnsiQuotes = ((object)useEscapedNameAttribute != null && useEscapedNameAttribute.UseAnsiQuotes) || (allDatabasesTargeted && databaseType != DatabaseType.MySQL);
+                escapedNameTargets[databaseType] = useAnsiQuotes;
+            }
+
+            return escapedNameTargets;
         }
 
         private static string ValueList(IReadOnlyList<object> values)

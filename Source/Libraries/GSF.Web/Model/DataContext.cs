@@ -285,7 +285,6 @@ namespace GSF.Web.Model
             return m_tableOperations.GetOrAdd(typeof(TModel), type => new TableOperations<TModel>(Connection, m_exceptionHandler)) as TableOperations<TModel>;
         }
 
-
         /// <summary>
         /// Gets script resource.
         /// </summary>

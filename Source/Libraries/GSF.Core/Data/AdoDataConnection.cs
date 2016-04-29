@@ -825,6 +825,36 @@ namespace GSF.Data
         }
 
         /// <summary>
+        /// Escapes an identifier, e.g., a table or field name, using the common delimiter for the connected <see cref="AdoDataConnection"/>
+        /// database type or the standard ANSI escaping delimiter, i.e., double-quotes, based on the <paramref name="useAnsiQuotes"/> flag.
+        /// </summary>
+        /// <param name="identifier">Field name to escape.</param>
+        /// <param name="useAnsiQuotes">Force use of double-quote for identifier delimiter, per SQL-99 standard, regardless of database type.</param>
+        /// <returns>Escaped field name.</returns>
+        /// <exception cref="ArgumentException"><paramref name="identifier"/> value cannot be null, empty or whitespace.</exception>
+        public string EscapeIdentifier(string identifier, bool useAnsiQuotes = false)
+        {
+            if (string.IsNullOrWhiteSpace(identifier))
+                throw new ArgumentException("Value cannot be null, empty or whitespace.", nameof(identifier));
+
+            identifier = identifier.Trim();
+
+            if (useAnsiQuotes)
+                return $"\"{identifier}\"";
+
+            switch (m_databaseType)
+            {
+                case DatabaseType.SQLServer:
+                case DatabaseType.Access:
+                    return $"[{identifier}]";
+                case DatabaseType.MySQL:
+                    return $"`{identifier}`";
+                default:
+                    return $"\"{identifier}\"";
+            }
+        }
+
+        /// <summary>
         /// Returns proper <see cref="System.Boolean"/> implementation for connected <see cref="AdoDataConnection"/> database type.
         /// </summary>
         /// <param name="value"><see cref="System.Boolean"/> to format per database type.</param>
