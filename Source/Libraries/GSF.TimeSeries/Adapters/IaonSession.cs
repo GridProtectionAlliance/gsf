@@ -24,7 +24,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Concurrent;
 using System.Data;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -119,7 +118,6 @@ namespace GSF.TimeSeries.Adapters
         private InputAdapterCollection m_inputAdapters;
         private ActionAdapterCollection m_actionAdapters;
         private OutputAdapterCollection m_outputAdapters;
-        private readonly ConcurrentDictionary<object, string> m_derivedNameCache;
         private MeasurementKey[] m_inputMeasurementKeysRestriction;
         private readonly int m_measurementWarningThreshold;
         private readonly int m_measurementDumpingThreshold;
@@ -155,9 +153,6 @@ namespace GSF.TimeSeries.Adapters
             m_measurementWarningThreshold = thresholdSettings["MeasurementWarningThreshold"].ValueAsInt32();
             m_measurementDumpingThreshold = thresholdSettings["MeasurementDumpingThreshold"].ValueAsInt32();
             m_defaultSampleSizeWarningThreshold = thresholdSettings["DefaultSampleSizeWarningThreshold"].ValueAsInt32();
-
-            // Create a cache for derived adapter names
-            m_derivedNameCache = new ConcurrentDictionary<object, string>();
 
             // Create a new set of routing tables
             m_routingTables = new RoutingTables();
@@ -501,24 +496,21 @@ namespace GSF.TimeSeries.Adapters
         /// <returns>Derived name of specified object.</returns>
         public virtual string GetDerivedName(object sender)
         {
-            return m_derivedNameCache.GetOrAdd(sender, key =>
-            {
-                string name = null;
-                IProvideStatus statusProvider = key as IProvideStatus;
+            string name = null;
+            IProvideStatus statusProvider = sender as IProvideStatus;
 
-                if ((object)statusProvider != null)
-                    name = statusProvider.Name;
-                else if (key is string)
-                    name = (string)key;
+            if ((object)statusProvider != null)
+                name = statusProvider.Name;
+            else if (sender is string)
+                name = (string)sender;
 
-                if (string.IsNullOrWhiteSpace(name))
-                    name = key.GetType().Name;
+            if (string.IsNullOrWhiteSpace(name))
+                name = sender.GetType().Name;
 
-                if (!string.IsNullOrWhiteSpace(m_name))
-                    name += "#" + m_name;
+            if (!string.IsNullOrWhiteSpace(m_name))
+                name += "#" + m_name;
 
-                return name;
-            });
+            return name;
         }
 
         /// <summary>

@@ -458,9 +458,17 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 if ((object)keys != null && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
+
                     query = string.Format("SELECT NodeID, AdapterID, ID, IDCode, Acronym, BpaAcronym, Name, PhasorDataFormat, " +
                         "FrequencyDataFormat, AnalogDataFormat, CoordinateFormat, LoadOrder, Enabled, Virtual " +
                         "FROM OutputStreamDeviceDetail WHERE ID IN ({0})", commaSeparatedKeys);
+
+                    if (database.IsMySQL)
+                    {
+                        query = string.Format("SELECT NodeID, AdapterID, ID, IDCode, Acronym, BpaAcronym, Name, PhasorDataFormat, " +
+                            "FrequencyDataFormat, AnalogDataFormat, CoordinateFormat, LoadOrder, Enabled, `Virtual` " +
+                            "FROM OutputStreamDeviceDetail WHERE ID IN ({0})", commaSeparatedKeys);
+                    }
 
                     outputStreamDeviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
                     outputStreamDeviceList = new OutputStreamDevice[outputStreamDeviceTable.Rows.Count];
@@ -837,7 +845,6 @@ namespace GSF.PhasorProtocols.UI.DataModels
         }
 
         #endregion
-
     }
 }
 
