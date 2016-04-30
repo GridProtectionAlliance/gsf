@@ -36,7 +36,7 @@ namespace GSF.Data.Model
     /// only be applied to the specific database - however, the attribute allows multiple instances
     /// on the same identifier so you could specify that escaping only be applied to two databases,
     /// for example: [UseEscapedName(DatabaseType.SQLServer), UseEscapedName(DatabaseType.MySQL)].
-    /// In the event multiple attributes have been applied to a modeled identifier where once instance
+    /// In the event multiple attributes have been applied to a modeled identifier where one instance
     /// has specified no target database type and others have, the system will assume to target all
     /// databases for escaping the name and ignore the specific targets.
     /// </remarks>

@@ -830,7 +830,7 @@ namespace GSF.Data
         /// </summary>
         /// <param name="identifier">Field name to escape.</param>
         /// <param name="useAnsiQuotes">Force use of double-quote for identifier delimiter, per SQL-99 standard, regardless of database type.</param>
-        /// <returns>Escaped field name.</returns>
+        /// <returns>Escaped identifier name.</returns>
         /// <exception cref="ArgumentException"><paramref name="identifier"/> value cannot be null, empty or whitespace.</exception>
         public string EscapeIdentifier(string identifier, bool useAnsiQuotes = false)
         {

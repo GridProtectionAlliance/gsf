@@ -199,7 +199,7 @@ namespace GSF.Data.Model
                         return m_connection.RetrieveData(sqlExpression).AsEnumerable().Select(row => LoadRecord(GetPrimaryKeys(row)));
                     }
 
-                    sqlExpression = string.Format(m_orderByWhereSql, EscapeFieldNames(restriction.FilterExpression), orderByExpression);
+                    sqlExpression = string.Format(m_orderByWhereSql, UpdateFieldNames(restriction.FilterExpression), orderByExpression);
                     return m_connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable().Select(row => LoadRecord(GetPrimaryKeys(row)));
                 }
 
@@ -209,7 +209,7 @@ namespace GSF.Data.Model
                     return m_connection.RetrieveData(sqlExpression).AsEnumerable().Take(limit).Select(row => LoadRecord(GetPrimaryKeys(row)));
                 }
 
-                sqlExpression = string.Format(m_orderByWhereSql, EscapeFieldNames(restriction.FilterExpression), orderByExpression);
+                sqlExpression = string.Format(m_orderByWhereSql, UpdateFieldNames(restriction.FilterExpression), orderByExpression);
                 return m_connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable().Take(limit).Select(row => LoadRecord(GetPrimaryKeys(row)));
             }
             catch (Exception ex)
@@ -255,7 +255,7 @@ namespace GSF.Data.Model
                     }
                     else
                     {
-                        sqlExpression = string.Format(m_orderByWhereSql, EscapeFieldNames(restriction.FilterExpression), orderByExpression);
+                        sqlExpression = string.Format(m_orderByWhereSql, UpdateFieldNames(restriction.FilterExpression), orderByExpression);
                         m_primaryKeyCache = m_connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable();
                     }
 
@@ -289,7 +289,7 @@ namespace GSF.Data.Model
                 if ((object)restriction == null)
                     return m_connection.ExecuteScalar<int>(m_countSql);
 
-                return m_connection.ExecuteScalar<int>($"{m_countSql} WHERE {EscapeFieldNames(restriction.FilterExpression)}", restriction.Parameters);
+                return m_connection.ExecuteScalar<int>($"{m_countSql} WHERE {UpdateFieldNames(restriction.FilterExpression)}", restriction.Parameters);
             }
             catch (Exception ex)
             {
@@ -397,7 +397,7 @@ namespace GSF.Data.Model
         {
             try
             {
-                int affectedRecords = m_connection.ExecuteNonQuery($"{m_deleteWhereSql}{EscapeFieldNames(restriction.FilterExpression)}", restriction.Parameters);
+                int affectedRecords = m_connection.ExecuteNonQuery($"{m_deleteWhereSql}{UpdateFieldNames(restriction.FilterExpression)}", restriction.Parameters);
 
                 if (affectedRecords > 0)
                     m_primaryKeyCache = null;
@@ -467,7 +467,7 @@ namespace GSF.Data.Model
                 for (int i = 0; i < restriction.Parameters.Length; i++)
                     updateWhereOffsets.Add($"{{{updateFieldIndex + i}}}");
 
-                return m_connection.ExecuteNonQuery($"{m_updateWhereSql}{string.Format(EscapeFieldNames(restriction.FilterExpression), updateWhereOffsets.ToArray())}", values.ToArray());
+                return m_connection.ExecuteNonQuery($"{m_updateWhereSql}{string.Format(UpdateFieldNames(restriction.FilterExpression), updateWhereOffsets.ToArray())}", values.ToArray());
             }
             catch (Exception ex)
             {
@@ -689,8 +689,9 @@ namespace GSF.Data.Model
             return fieldName;
         }
 
+        // Update field names in expression, escaping or unescaping as needed as defined by model
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private string EscapeFieldNames(string filterExpression)
+        private string UpdateFieldNames(string filterExpression)
         {
             if ((object)s_escapedFieldNameTargets != null)
             {
