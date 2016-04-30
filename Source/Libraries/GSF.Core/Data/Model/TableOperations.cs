@@ -304,16 +304,22 @@ namespace GSF.Data.Model
         /// <returns>Total record count for the modeled table.</returns>
         public int QueryRecordCount(RecordRestriction restriction = null)
         {
+            string sqlExpression = null;
+
             try
             {
                 if ((object)restriction == null)
-                    return m_connection.ExecuteScalar<int>(m_countSql);
+                {
+                    sqlExpression = m_countSql;
+                    return m_connection.ExecuteScalar<int>(sqlExpression);
+                }
 
-                return m_connection.ExecuteScalar<int>($"{m_countSql} WHERE {UpdateFieldNames(restriction.FilterExpression)}", restriction.Parameters);
+                sqlExpression = $"{m_countSql} WHERE {UpdateFieldNames(restriction.FilterExpression)}";
+                return m_connection.ExecuteScalar<int>(sqlExpression, restriction.Parameters);
             }
             catch (Exception ex)
             {
-                InvalidOperationException opex = new InvalidOperationException($"Exception during record count query for {typeof(T).Name} \"{m_countSql}\": {ex.Message}", ex);
+                InvalidOperationException opex = new InvalidOperationException($"Exception during record count query for {typeof(T).Name} \"{sqlExpression ?? "undefined"}, {ValueList(restriction?.Parameters)}\": {ex.Message}", ex);
 
                 if ((object)m_exceptionHandler == null)
                     throw opex;
@@ -413,11 +419,18 @@ namespace GSF.Data.Model
         /// </summary>
         /// <param name="restriction">Record restriction to apply</param>
         /// <returns>Number of rows affected.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="restriction"/> cannot be <c>null</c>.</exception>
         public int DeleteRecord(RecordRestriction restriction)
         {
+            if ((object)restriction == null)
+                throw new ArgumentNullException(nameof(restriction));
+
+            string sqlExpression = null;
+
             try
             {
-                int affectedRecords = m_connection.ExecuteNonQuery($"{m_deleteWhereSql}{UpdateFieldNames(restriction.FilterExpression)}", restriction.Parameters);
+                sqlExpression = $"{m_deleteWhereSql}{UpdateFieldNames(restriction.FilterExpression)}";
+                int affectedRecords = m_connection.ExecuteNonQuery(sqlExpression, restriction.Parameters);
 
                 if (affectedRecords > 0)
                     m_primaryKeyCache = null;
@@ -426,7 +439,7 @@ namespace GSF.Data.Model
             }
             catch (Exception ex)
             {
-                InvalidOperationException opex = new InvalidOperationException($"Exception during record delete for {typeof(T).Name} \"{m_deleteWhereSql}, {ValueList(restriction.Parameters)}\": {ex.Message}", ex);
+                InvalidOperationException opex = new InvalidOperationException($"Exception during record delete for {typeof(T).Name} \"{sqlExpression ?? "undefined"}, {ValueList(restriction.Parameters)}\": {ex.Message}", ex);
 
                 if ((object)m_exceptionHandler == null)
                     throw opex;
@@ -474,6 +487,8 @@ namespace GSF.Data.Model
                 }
             }
 
+            string sqlExpression = null;
+
             try
             {
                 foreach (PropertyInfo property in s_updateProperties)
@@ -487,11 +502,12 @@ namespace GSF.Data.Model
                 for (int i = 0; i < restriction.Parameters.Length; i++)
                     updateWhereOffsets.Add($"{{{updateFieldIndex + i}}}");
 
-                return m_connection.ExecuteNonQuery($"{m_updateWhereSql}{string.Format(UpdateFieldNames(restriction.FilterExpression), updateWhereOffsets.ToArray())}", values.ToArray());
+                sqlExpression = $"{m_updateWhereSql}{string.Format(UpdateFieldNames(restriction.FilterExpression), updateWhereOffsets.ToArray())}";
+                return m_connection.ExecuteNonQuery(sqlExpression, values.ToArray());
             }
             catch (Exception ex)
             {
-                InvalidOperationException opex = new InvalidOperationException($"Exception during record update for {typeof(T).Name} \"{m_updateWhereSql}, {ValueList(values)}\": {ex.Message}", ex);
+                InvalidOperationException opex = new InvalidOperationException($"Exception during record update for {typeof(T).Name} \"{sqlExpression}, {ValueList(values)}\": {ex.Message}", ex);
 
                 if ((object)m_exceptionHandler == null)
                     throw opex;
