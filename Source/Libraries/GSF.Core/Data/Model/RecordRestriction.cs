@@ -33,8 +33,11 @@ namespace GSF.Data.Model
         // Fields
 
         /// <summary>
-        /// Defines filter SQL expression for restriction - does not include WHERE.
+        /// Defines filter SQL expression for restriction - does not include WHERE. When escaping is needed for field names, use standard ANSI quotes.
         /// </summary>
+        /// <remarks>
+        /// If needed, field names that are escaped with standard ANSI quotes in the filter expression will be updated to reflect what is defined in the user model.
+        /// </remarks>
         public string FilterExpression;
 
         /// <summary>
@@ -56,8 +59,11 @@ namespace GSF.Data.Model
         /// <summary>
         /// Creates a new parameterized <see cref="RecordRestriction"/> with the specified filter and parameters.
         /// </summary>
-        /// <param name="filterExpression">Filter SQL expression for restriction - does not include WHERE.</param>
+        /// <param name="filterExpression">Filter SQL expression for restriction - does not include WHERE. When escaping is needed for field names, use standard ANSI quotes.</param>
         /// <param name="parameters">Restriction parameter values.</param>
+        /// <remarks>
+        /// If needed, field names that are escaped with standard ANSI quotes in the <paramref name="filterExpression"/> will be updated to reflect what is defined in the user model.
+        /// </remarks>
         public RecordRestriction(string filterExpression, params object[] parameters)
         {
             FilterExpression = filterExpression;
