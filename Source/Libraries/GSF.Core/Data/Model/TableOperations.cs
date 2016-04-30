@@ -56,6 +56,7 @@ namespace GSF.Data.Model
         private readonly Action<Exception> m_exceptionHandler;
         private IEnumerable<DataRow> m_primaryKeyCache;
         private string m_lastSortField;
+        private bool m_useCaseSensitiveFieldNames;
         private readonly string m_countSql;
         private readonly string m_orderBySql;
         private readonly string m_orderByWhereSql;
@@ -166,6 +167,25 @@ namespace GSF.Data.Model
         /// Gets flag that determines if modeled table has a primary key that is an identity field.
         /// </summary>
         public bool HasPrimaryKeyIdentityField => s_hasPrimaryKeyIdentityField;
+
+        /// <summary>
+        /// Gets or sets flag that determines is field names should be treated as case sensitive. Defaults to <c>false</c>.
+        /// </summary>
+        /// <remarks>
+        /// In cases where modeled table fields have applied <see cref="UseEscapedNameAttribute"/>, this flag will be used
+        /// to properly update escaped field names that may be case sensitive.
+        /// </remarks>
+        public bool UseCaseSensitiveFieldNames
+        {
+            get
+            {
+                return m_useCaseSensitiveFieldNames;
+            }
+            set
+            {
+                m_useCaseSensitiveFieldNames = value;
+            }
+        }
 
         #endregion
 
@@ -701,8 +721,16 @@ namespace GSF.Data.Model
                     string derivedFieldName = DeriveFieldName(fieldName, escapedFieldNameTarget.Value);
                     string ansiEscapedFieldName = $"\"{fieldName}\"";
 
-                    if (!derivedFieldName.Equals(ansiEscapedFieldName, StringComparison.OrdinalIgnoreCase))
-                        filterExpression = filterExpression.ReplaceCaseInsensitive(ansiEscapedFieldName, derivedFieldName);
+                    if (m_useCaseSensitiveFieldNames)
+                    {
+                        if (!derivedFieldName.Equals(ansiEscapedFieldName))
+                            filterExpression = filterExpression.Replace(ansiEscapedFieldName, derivedFieldName);
+                    }
+                    else
+                    {
+                        if (!derivedFieldName.Equals(ansiEscapedFieldName, StringComparison.OrdinalIgnoreCase))
+                            filterExpression = filterExpression.ReplaceCaseInsensitive(ansiEscapedFieldName, derivedFieldName);
+                    }
                 }
             }
 
