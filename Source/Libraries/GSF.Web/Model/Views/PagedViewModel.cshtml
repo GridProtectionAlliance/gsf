@@ -20,13 +20,12 @@
 //       Generated original version of source code.
 //
 //*****************************************************************************************************@
-@using System
-@using System.Collections.Generic
-@using System.Security.Policy
 @using System.Text
 @using GSF
 @using GSF.Web
 @using GSF.Web.Model
+@using RazorEngine.Templating
+@inherits TemplateBase
 @{
     if (ViewBag.PageControlScripts == null)
     {
@@ -87,6 +86,9 @@
 
         if (value.EndsWith("IES", StringComparison.Ordinal))
             return value.Substring(0, value.Length - 3) + "Y";
+
+        if (value.EndsWith("ces", StringComparison.OrdinalIgnoreCase))
+            return value.Substring(0, value.Length - 1);
 
         if (value.EndsWith("es", StringComparison.OrdinalIgnoreCase))
             return value.Substring(0, value.Length - 2);
@@ -186,7 +188,7 @@
                     <span data-bind="visible: recordMode()===RecordMode.View">View</span>
                     <span data-bind="visible: recordMode()===RecordMode.Edit">Edit</span>
                     <span data-bind="visible: recordMode()===RecordMode.AddNew">Add New</span>
-                    @SingularForm(ViewBag.Title ?? "")
+                    @(ViewBag.AddNewEditTitle ?? SingularForm(ViewBag.Title ?? ""))
                 </h4>
             </div>
             <div class="modal-body auto-height" data-bind="with: currentRecord, validationOptions: {messageTemplate: 'validationMessageTemplate'}, css: {'modal-readonly': recordMode()===RecordMode.View}">
@@ -308,7 +310,7 @@
     if (dataContext.DefinedDateFields.Count > 0) {
         pageControlScripts.AppendFormat(@"
 
-        $(viewModel).on(""derivingObservableRecord"", function(event, observableRecord) {{
+        $(viewModel).on(""beforeEdit"", function(event, observableRecord) {{
             // Convert date objects to strings");
 
         foreach (string dateField in dataContext.DefinedDateFields) {
@@ -319,7 +321,7 @@
 
         pageControlScripts.AppendFormat(@"
 
-        $(viewModel).on(""derivingJSRecord"", function(event, observableRecord) {{
+        $(viewModel).on(""beforeSave"", function(event, observableRecord) {{
             // Convert date strings back to date objects before serialization");
 
         foreach (string dateField in dataContext.DefinedDateFields) {

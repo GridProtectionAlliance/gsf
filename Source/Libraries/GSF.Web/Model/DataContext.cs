@@ -80,7 +80,8 @@ namespace GSF.Web.Model
         private readonly Dictionary<Type, object> m_tableOperations;
         private readonly Action<Exception> m_exceptionHandler;
         private readonly Dictionary<string, Tuple<string, string>> m_fieldValidationParameters;
-        private readonly List<Tuple<string, string>> m_fieldValueInitializers; 
+        private readonly List<Tuple<string, string>> m_fieldValueInitializers;
+        private readonly List<Tuple<string, string, string, bool>> m_readonlyHotLinkFields;
         private readonly List<string> m_definedDateFields; 
         private readonly string m_settingsCategory;
         private readonly bool m_disposeConnection;
@@ -109,6 +110,7 @@ namespace GSF.Web.Model
             m_exceptionHandler = exceptionHandler;
             m_fieldValidationParameters = new Dictionary<string, Tuple<string, string>>();
             m_fieldValueInitializers = new List<Tuple<string, string>>();
+            m_readonlyHotLinkFields = new List<Tuple<string, string, string, bool>>();
             m_definedDateFields = new List<string>();
             m_settingsCategory = "systemSettings";
             m_disposeConnection = disposeConnection || connection == null;
@@ -153,6 +155,11 @@ namespace GSF.Web.Model
         /// Gets field value initializers, if any.
         /// </summary>
         public List<Tuple<string, string>> FieldValueInitializers => m_fieldValueInitializers;
+
+        /// <summary>
+        /// Gets any text input fields that should render clickable URLs and e-mail addresses when in view mode.
+        /// </summary>
+        public List<Tuple<string, string, string, bool>> ReadonlyHotLinkFields => m_readonlyHotLinkFields;
 
         /// <summary>
         /// Gets defined date fields, if any.
@@ -694,6 +701,22 @@ namespace GSF.Web.Model
         }
 
         /// <summary>
+        /// Renders a read-only field with enabled hot links for a given text input field when in view mode.
+        /// </summary>
+        /// <param name="fieldID">ID of input field.</param>
+        /// <param name="readOnlyDivID">ID of read-only div.</param>
+        /// <param name="fieldName">Field name.</param>
+        /// <param name="isTextArea"><c>true</c> if field is a textarea; otherwise, <c>false</c> for input[type="text"].</param>
+        /// <remarks>
+        /// These fields will be rendered with clickable URL and e-mail addresses when viewing a record and normal text
+        /// when adding or updating a record.
+        /// </remarks>
+        public void AddReadOnlyHotLinkField(string fieldID, string readOnlyDivID, string fieldName, bool isTextArea)
+        {
+            m_readonlyHotLinkFields.Add(new Tuple<string, string, string, bool>(fieldID, readOnlyDivID, fieldName, isTextArea));
+        }
+
+        /// <summary>
         /// Generates template based input date field based on reflected modeled table field attributes.
         /// </summary>
         /// <typeparam name="TModel">Modeled table.</typeparam>
@@ -805,8 +828,9 @@ namespace GSF.Web.Model
         /// <param name="dependencyFieldName">Defines default "enabled" subordinate data-bindings based a single boolean field, e.g., a check-box.</param>
         /// <param name="toolTip">Tool tip text to apply to field, if any.</param>
         /// <param name="initialFocus">Use field for initial focus.</param>
+        /// <param name="enableHotLinks">Enable clickable URLs and e-mail addresses in view mode.</param>
         /// <returns>Generated HTML for new input field based on modeled table field attributes.</returns>
-        public string AddInputField<TModel>(string fieldName, string inputType = null, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string requiredDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string toolTip = null, bool initialFocus = false) where TModel : class, new()
+        public string AddInputField<TModel>(string fieldName, string inputType = null, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string requiredDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string toolTip = null, bool initialFocus = false, bool enableHotLinks = true) where TModel : class, new()
         {
             TableOperations<TModel> tableOperations = Table<TModel>();
             StringLengthAttribute stringLengthAttribute;
@@ -848,7 +872,7 @@ namespace GSF.Web.Model
             AddFieldValueInitializer<TModel>(fieldName);
 
             return AddInputField(fieldName, tableOperations.FieldHasAttribute<RequiredAttribute>(fieldName),
-                stringLengthAttribute?.MaximumLength ?? 0, inputType, fieldLabel, fieldID, groupDataBinding, labelDataBinding, requiredDataBinding, customDataBinding, dependencyFieldName, toolTip, initialFocus);
+                stringLengthAttribute?.MaximumLength ?? 0, inputType, fieldLabel, fieldID, groupDataBinding, labelDataBinding, requiredDataBinding, customDataBinding, dependencyFieldName, toolTip, initialFocus, enableHotLinks);
         }
 
         /// <summary>
@@ -867,8 +891,9 @@ namespace GSF.Web.Model
         /// <param name="dependencyFieldName">Defines default "enabled" subordinate data-bindings based a single boolean field, e.g., a check-box.</param>
         /// <param name="toolTip">Tool tip text to apply to field, if any.</param>
         /// <param name="initialFocus">Use field for initial focus.</param>
+        /// <param name="enableHotLinks">Enable clickable URLs and e-mail addresses in view mode.</param>
         /// <returns>Generated HTML for new input field based on specified parameters.</returns>
-        public string AddInputField(string fieldName, bool required, int maxLength = 0, string inputType = null, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string requiredDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string toolTip = null, bool initialFocus = false)
+        public string AddInputField(string fieldName, bool required, int maxLength = 0, string inputType = null, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string requiredDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string toolTip = null, bool initialFocus = false, bool enableHotLinks = true)
         {
             RazorView<TLanguage> addInputFieldTemplate = new RazorView<TLanguage>(AddInputFieldTemplate, m_exceptionHandler);
             DynamicViewBag viewBag = addInputFieldTemplate.ViewBag;
@@ -878,6 +903,12 @@ namespace GSF.Web.Model
 
             if (initialFocus)
                 m_initialFocusField = fieldID;
+
+            if (enableHotLinks)
+            {
+                AddReadOnlyHotLinkField(fieldID, $"readonly{fieldID}", fieldName, false);
+                customDataBinding = $"{(string.IsNullOrWhiteSpace(customDataBinding) ? "" : $"{customDataBinding}, ")}visible: $parent.recordMode()!==RecordMode.View";
+            }
 
             viewBag.AddValue("FieldName", fieldName);
             viewBag.AddValue("Required", required);
@@ -910,8 +941,9 @@ namespace GSF.Web.Model
         /// <param name="dependencyFieldName">Defines default "enabled" subordinate data-bindings based a single boolean field, e.g., a check-box.</param>
         /// <param name="toolTip">Tool tip text to apply to field, if any.</param>
         /// <param name="initialFocus">Use field for initial focus.</param>
+        /// <param name="enableHotLinks">Enable clickable URLs and e-mail addresses in view mode.</param>
         /// <returns>Generated HTML for new text area field based on modeled table field attributes.</returns>
-        public string AddTextAreaField<TModel>(string fieldName, int rows = 2, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string requiredDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string toolTip = null, bool initialFocus = false) where TModel : class, new()
+        public string AddTextAreaField<TModel>(string fieldName, int rows = 2, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string requiredDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string toolTip = null, bool initialFocus = false, bool enableHotLinks = true) where TModel : class, new()
         {
             TableOperations<TModel> tableOperations = Table<TModel>();
             StringLengthAttribute stringLengthAttribute;
@@ -943,7 +975,7 @@ namespace GSF.Web.Model
             AddFieldValueInitializer<TModel>(fieldName);
 
             return AddTextAreaField(fieldName, tableOperations.FieldHasAttribute<RequiredAttribute>(fieldName),
-                stringLengthAttribute?.MaximumLength ?? 0, rows, fieldLabel, fieldID, groupDataBinding, labelDataBinding, requiredDataBinding, customDataBinding, dependencyFieldName, toolTip, initialFocus);
+                stringLengthAttribute?.MaximumLength ?? 0, rows, fieldLabel, fieldID, groupDataBinding, labelDataBinding, requiredDataBinding, customDataBinding, dependencyFieldName, toolTip, initialFocus, enableHotLinks);
         }
 
         /// <summary>
@@ -962,8 +994,9 @@ namespace GSF.Web.Model
         /// <param name="dependencyFieldName">Defines default "enabled" subordinate data-bindings based a single boolean field, e.g., a check-box.</param>
         /// <param name="toolTip">Tool tip text to apply to field, if any.</param>
         /// <param name="initialFocus">Use field for initial focus.</param>
+        /// <param name="enableHotLinks">Enable clickable URLs and e-mail addresses in view mode.</param>
         /// <returns>Generated HTML for new text area field based on specified parameters.</returns>
-        public string AddTextAreaField(string fieldName, bool required, int maxLength = 0, int rows = 2, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string requiredDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string toolTip = null, bool initialFocus = false)
+        public string AddTextAreaField(string fieldName, bool required, int maxLength = 0, int rows = 2, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string requiredDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string toolTip = null, bool initialFocus = false, bool enableHotLinks = true)
         {
             RazorView<TLanguage> addTextAreaTemplate = new RazorView<TLanguage>(AddTextAreaFieldTemplate, m_exceptionHandler);
             DynamicViewBag viewBag = addTextAreaTemplate.ViewBag;
@@ -973,6 +1006,12 @@ namespace GSF.Web.Model
 
             if (initialFocus)
                 m_initialFocusField = fieldID;
+
+            if (enableHotLinks)
+            {
+                AddReadOnlyHotLinkField(fieldID, $"readonly{fieldID}", fieldName, true);
+                customDataBinding = $"{(string.IsNullOrWhiteSpace(customDataBinding) ? "" : $"{customDataBinding}, ")}visible: $parent.recordMode()!==RecordMode.View";
+            }
 
             viewBag.AddValue("FieldName", fieldName);
             viewBag.AddValue("Required", required);

@@ -53,7 +53,7 @@ namespace GSF.Data.Model
 
         // Fields
         private readonly AdoDataConnection m_connection;
-        private readonly Action<Exception> m_exceptionHandler;
+        private Action<Exception> m_exceptionHandler;
         private IEnumerable<DataRow> m_primaryKeyCache;
         private string m_lastSortField;
         private bool m_useCaseSensitiveFieldNames;
@@ -167,6 +167,26 @@ namespace GSF.Data.Model
         /// Gets flag that determines if modeled table has a primary key that is an identity field.
         /// </summary>
         public bool HasPrimaryKeyIdentityField => s_hasPrimaryKeyIdentityField;
+
+        /// <summary>
+        /// Gets or sets delegate used to handle table operation exceptions.
+        /// </summary>
+        /// <remarks>
+        /// When exception handler is provided, table operations will not throw exceptions for database calls, any
+        /// encountered exceptions will be passed to handler for processing. Otherwise, exceptions will be thrown
+        /// on the call stack.
+        /// </remarks>
+        public Action<Exception> ExceptionHandler
+        {
+            get
+            {
+                return m_exceptionHandler;
+            }
+            set
+            {
+                m_exceptionHandler = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets flag that determines is field names should be treated as case sensitive. Defaults to <c>false</c>.

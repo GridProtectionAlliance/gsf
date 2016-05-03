@@ -321,6 +321,18 @@
   <ItemGroup>
     <EmbeddedResource Include="Model\Scripts\gsf.web.client.js" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Model\Scripts\js.cookie.js" />
+    <EmbeddedResource Include="Model\Scripts\knockout-3.4.0.debug.js" />
+    <EmbeddedResource Include="Model\Scripts\knockout-3.4.0.js" />
+    <EmbeddedResource Include="Model\Scripts\knockout.mapping-latest.debug.js" />
+    <EmbeddedResource Include="Model\Scripts\knockout.mapping-latest.js" />
+    <EmbeddedResource Include="Model\Scripts\knockout.validation.js" />
+    <EmbeddedResource Include="Model\Scripts\knockout.validation.min.js" />
+    <EmbeddedResource Include="Model\Scripts\ko-reactor.js" />
+    <EmbeddedResource Include="Model\Scripts\ko-reactor.min.js" />
+    <EmbeddedResource Include="Model\Scripts\ko.observableDictionary.js" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>CALL "$(ProjectDir)PostBuildSetup.bat" "$(ProjectDir)bin" "$(TargetDir)*.dll"</PostBuildEvent>
