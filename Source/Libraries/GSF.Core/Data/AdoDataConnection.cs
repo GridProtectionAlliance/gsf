@@ -71,6 +71,11 @@ namespace GSF.Data
         SQLite,
 
         /// <summary>
+        /// Underlying ADO database type is PostgreSQL.
+        /// </summary>
+        PostgreSQL,
+
+        /// <summary>
         /// Underlying ADO database type is unknown.
         /// </summary>
         Other
@@ -460,6 +465,11 @@ namespace GSF.Data
         /// Gets a value to indicate whether source database is SQLite.
         /// </summary>
         public bool IsSqlite => m_databaseType == DatabaseType.SQLite;
+
+        /// <summary>
+        /// Gets a value to indicate whether source database is PostgreSQL.
+        /// </summary>
+        public bool IsPostgreSQL => m_databaseType == DatabaseType.PostgreSQL;
 
         #endregion
 
@@ -861,7 +871,7 @@ namespace GSF.Data
         /// <returns>Proper <see cref="System.Boolean"/> implementation for connected <see cref="AdoDataConnection"/> database type.</returns>
         public object Bool(bool value)
         {
-            if (IsOracle)
+            if (IsOracle || IsPostgreSQL)
                 return value ? 1 : 0;
 
             return value;
@@ -877,7 +887,7 @@ namespace GSF.Data
             if (IsJetEngine)
                 return "{" + value + "}";
 
-            if (IsSqlite || IsOracle)
+            if (IsSqlite || IsOracle || IsPostgreSQL)
                 return value.ToString().ToLower();
 
             //return "P" + guid.ToString();
@@ -933,6 +943,9 @@ namespace GSF.Data
                         break;
                     case "sqlitedataadapter":
                         type = DatabaseType.SQLite;
+                        break;
+                    case "npgsqldataadapter":
+                        type = DatabaseType.PostgreSQL;
                         break;
                     case "oledbdataadapter":
                         if ((object)m_connectionString != null && m_connectionString.ToLowerInvariant().Contains("microsoft.jet.oledb"))

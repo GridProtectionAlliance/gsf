@@ -106,7 +106,12 @@ namespace GSF.TimeSeries.UI.ViewModels
         {
             AppDomain.CurrentDomain.AssemblyResolve += AppDomain_AssemblyResolve;
             ItemsPerPage = itemsPerPage;
+
+            // Must attach to PropertyChanged event after setting m_adapterType!
+            // Do not override OnPropertyChanged or you will regret it!
             m_adapterType = adapterType;
+            PropertyChanged += Adapters_PropertyChanged;
+
             SearchDirectory = FilePath.GetAbsolutePath("").EnsureEnd(Path.DirectorySeparatorChar);
             Load();
         }
@@ -533,11 +538,9 @@ namespace GSF.TimeSeries.UI.ViewModels
             }
         }
 
-        protected override void OnPropertyChanged(string propertyName)
+        private void Adapters_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            base.OnPropertyChanged(propertyName);
-
-            if (propertyName == "CurrentItem")
+            if (e.PropertyName == "CurrentItem")
             {
                 if (CurrentItem == null)
                 {

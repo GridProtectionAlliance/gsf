@@ -205,31 +205,29 @@ namespace PowerCalculations.PowerMultiCalculator
             m_lastReactivePowerCalculations = new ConcurrentQueue<IMeasurement>();
             m_lastApparentPowerCalculations = new ConcurrentQueue<IMeasurement>();
 
+            string query = "SELECT " +
+                           //            1                   2                     3                   4                     5
+                           "ID, CircuitDescription, VoltageAngleSignalID, VoltageMagSignalID, CurrentAngleSignalID, CurrentMagSignalID, " +
+                           //         6                        7                            8
+                           "ActivePowerOutputSignalID, ReactivePowerOutputSignalID, ApparentPowerOutputSignalID FROM PowerCalculation " +
+                           "WHERE NodeId = {0} AND Enabled <> 0 ";
+
             using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
-            using (IDbCommand cmd = database.Connection.CreateCommand())
+            using (IDataReader rdr = database.ExecuteReader(query, ConfigurationFile.Current.Settings["systemSettings"]["NodeID"].ValueAs<Guid>()))
             {
-                cmd.CommandText = "SELECT " +
-                    //            1                   2                     3                   4                     5
-                    "ID, CircuitDescription, VoltageAngleSignalID, VoltageMagSignalID, CurrentAngleSignalID, CurrentMagSignalID, " +
-                    //         6                        7                            8
-                    "ActivePowerOutputSignalID, ReactivePowerOutputSignalID, ApparentPowerOutputSignalID FROM PowerCalculation " + 
-                    $"WHERE NodeId = '{ConfigurationFile.Current.Settings["systemSettings"]["NodeID"].ValueAs<Guid>()}' AND Enabled <> 0 ";
-
-                IDataReader rdr = cmd.ExecuteReader();
-
                 while (rdr.Read())
                 {
                     m_configuredCalculations.Add(new PowerCalculation
                     {
                         PowerCalculationID = rdr.GetInt32(0),
                         CircuitDescription = rdr.GetString(1),
-                        VoltageAngleSignalID = MeasurementKey.LookUpBySignalID(rdr.GetGuid(2)),
-                        VoltageMagnitudeSignalID = MeasurementKey.LookUpBySignalID(rdr.GetGuid(3)),
-                        CurrentAngleSignalID = MeasurementKey.LookUpBySignalID(rdr.GetGuid(4)),
-                        CurrentMagnitudeSignalID = MeasurementKey.LookUpBySignalID(rdr.GetGuid(5)),
-                        ActivePowerOutputMeasurement = AddOutputMeasurement(rdr.GetGuid(6), outputMeasurements),
-                        ReactivePowerOutputMeasurement = AddOutputMeasurement(rdr.GetGuid(7), outputMeasurements),
-                        ApparentPowerOutputMeasurement = AddOutputMeasurement(rdr.GetGuid(8), outputMeasurements)
+                        VoltageAngleSignalID = MeasurementKey.LookUpBySignalID(Guid.Parse(rdr[2].ToString())),
+                        VoltageMagnitudeSignalID = MeasurementKey.LookUpBySignalID(Guid.Parse(rdr[3].ToString())),
+                        CurrentAngleSignalID = MeasurementKey.LookUpBySignalID(Guid.Parse(rdr[4].ToString())),
+                        CurrentMagnitudeSignalID = MeasurementKey.LookUpBySignalID(Guid.Parse(rdr[5].ToString())),
+                        ActivePowerOutputMeasurement = AddOutputMeasurement(Guid.Parse(rdr[6].ToString()), outputMeasurements),
+                        ReactivePowerOutputMeasurement = AddOutputMeasurement(Guid.Parse(rdr[7].ToString()), outputMeasurements),
+                        ApparentPowerOutputMeasurement = AddOutputMeasurement(Guid.Parse(rdr[8].ToString()), outputMeasurements)
                     });
                 }
             }
