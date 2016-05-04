@@ -2289,8 +2289,7 @@ namespace GSF.ServiceProcess
                 Thread.CurrentPrincipal = client.ClientUser;
 
             // Retrieve previously initialized security provider of the remote client's user.
-            if ((object)SecurityProviderCache.CurrentProvider == null)
-                SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
+            SecurityProviderCache.ValidateCurrentProvider();
 
             // Initialize security provider for the remote client's user from specified credentials.
             if ((!Thread.CurrentPrincipal.Identity.IsAuthenticated || (object)client.ClientUser == null) && !string.IsNullOrEmpty(client.ClientUserCredentials))

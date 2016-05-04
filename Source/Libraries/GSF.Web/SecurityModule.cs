@@ -297,11 +297,11 @@ namespace GSF.Web
         {
             // Check if access to resource is to be secured.
             string resource = GetResourceName();
+
             if (!IsAccessSecured(resource))
                 return;
 
-            if (SecurityProviderCache.CurrentProvider == null)
-                SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
+            SecurityProviderCache.ValidateCurrentProvider();
 
             if (!m_application.User.Identity.IsAuthenticated)
                 // Failed to authenticate user.
