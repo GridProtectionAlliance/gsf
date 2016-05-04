@@ -594,6 +594,7 @@ namespace DataMigrationUtility
                         break;
                     case DatabaseType.MySQL:
                     case DatabaseType.SQLite:
+                    case DatabaseType.PostgreSQL:
                         usingIdentityInsert = true;
                         break;
                     default:
