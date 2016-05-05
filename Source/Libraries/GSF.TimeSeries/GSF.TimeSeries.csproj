@@ -259,6 +259,11 @@
     <None Include="Data\SQLite\SampleDataSet.sql" />
     <None Include="Data\SQLite\sqlite3.exe" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Data\PostgreSQL\GSFSchema.sql" />
+    <Content Include="Data\PostgreSQL\InitialDataSet.sql" />
+    <Content Include="Data\PostgreSQL\SampleDataSet.sql" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>CALL "$(ProjectDir)PostBuildSetup.bat" "$(TargetDir)Data" "$(ProjectDir)Data\*.*"</PostBuildEvent>
