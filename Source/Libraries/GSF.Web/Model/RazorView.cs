@@ -151,7 +151,7 @@ namespace GSF.Web.Model
     /// Defines a view class for data context based Razor template implementations.
     /// </summary>
     /// <typeparam name="TLanguage"><see cref="LanguageConstraint"/> type to use for Razor views.</typeparam>
-    public class RazorView<TLanguage> where TLanguage : LanguageConstraint, new()
+    public class RazorView<TLanguage> : IRazorView where TLanguage : LanguageConstraint, new()
     {
         #region [ Members ]
 
