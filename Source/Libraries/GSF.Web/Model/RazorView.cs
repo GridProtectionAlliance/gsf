@@ -325,6 +325,7 @@ namespace GSF.Web.Model
         // Static Constructor
         static RazorView()
         {
+            // The current thinking for this class is that there will only be one set of Razor views per application instance
             TLanguage languageType = new TLanguage();
 
             // Get configured template path

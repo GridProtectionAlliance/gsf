@@ -218,6 +218,7 @@
     <Compile Include="Hosting\NamespaceDoc.cs" />
     <Compile Include="Hosting\VirtualFileBaseCollection.cs" />
     <Compile Include="Embedded\ISecurityService.cs" />
+    <Compile Include="Hosting\WebPageController.cs" />
     <Compile Include="IgnoreServicesSecurityModule.cs" />
     <Compile Include="Model\DataContext.cs" />
     <Compile Include="Model\IRazorView.cs" />
