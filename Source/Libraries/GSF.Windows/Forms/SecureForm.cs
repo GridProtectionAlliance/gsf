@@ -119,16 +119,15 @@ namespace GSF.Windows.Forms
                 Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
 
             // Setup the security provider for role-based security.
-            if ((object)SecurityProviderCache.CurrentProvider == null)
-                SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
+            SecurityProviderCache.ValidateCurrentProvider();
 
             // Verify that the current thread principal has been authenticated.
             if (!Thread.CurrentPrincipal.Identity.IsAuthenticated)
-                throw new SecurityException(string.Format("Authentication failed for user '{0}'", Thread.CurrentPrincipal.Identity.Name));
+                throw new SecurityException($"Authentication failed for user '{Thread.CurrentPrincipal.Identity.Name}'");
 
             // Perform a top-level permission check on the resource being accessed.
             if (!SecurityProviderUtility.IsResourceAccessible(resource))
-                throw new SecurityException(string.Format("Access to '{0}' is denied", resource));
+                throw new SecurityException($"Access to '{resource}' is denied");
         }
 
         #endregion

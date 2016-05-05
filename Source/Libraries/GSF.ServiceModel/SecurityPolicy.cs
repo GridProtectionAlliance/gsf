@@ -261,8 +261,7 @@ namespace GSF.ServiceModel
             if (SecurityProviderUtility.IsResourceSecurable(resource))
             {
                 // Initialize the security principal from caller's windows identity if uninitialized.
-                if (SecurityProviderCache.CurrentProvider == null)
-                    SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
+                SecurityProviderCache.ValidateCurrentProvider();
 
                 // Setup the principal to be attached to the thread on which WCF service will execute.
                 evaluationContext.Properties["Principal"] = Thread.CurrentPrincipal;

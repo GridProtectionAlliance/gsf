@@ -223,16 +223,13 @@ namespace GSF.Windows
                 Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
 
             // Setup the security provider for role-based security, if needed
-            if (SecurityProviderCache.CurrentProvider == null)
+            try
             {
-                try
-                {
-                    SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
-                }
-                catch (Exception ex)
-                {
-                    ShowSecurityDialog(DisplayType.AccessDenied, "Error loading security provider: " + ex.Message);
-                }
+                SecurityProviderCache.ValidateCurrentProvider();
+            }
+            catch (Exception ex)
+            {
+                ShowSecurityDialog(DisplayType.AccessDenied, "Error loading security provider: " + ex.Message);
             }
 
             ISecurityProvider provider = SecurityProviderCache.CurrentProvider;

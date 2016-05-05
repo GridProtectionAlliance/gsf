@@ -189,7 +189,7 @@ namespace GSF.Data.Model
         }
 
         /// <summary>
-        /// Gets or sets flag that determines is field names should be treated as case sensitive. Defaults to <c>false</c>.
+        /// Gets or sets flag that determines if field names should be treated as case sensitive. Defaults to <c>false</c>.
         /// </summary>
         /// <remarks>
         /// In cases where modeled table fields have applied <see cref="UseEscapedNameAttribute"/>, this flag will be used
@@ -361,7 +361,7 @@ namespace GSF.Data.Model
                 T record = new T();
                 DataRow row = m_connection.RetrieveRow(m_selectSql, primaryKeys);
 
-                // Make sure record exists, return null instead of a blank record
+                // Make sure record exists, if not return null instead of a blank record
                 if (s_hasPrimaryKeyIdentityField && GetPrimaryKeys(row).All(Common.IsDefaultValue))
                     return null;
 

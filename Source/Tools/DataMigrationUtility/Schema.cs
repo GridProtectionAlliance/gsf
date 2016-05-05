@@ -2083,12 +2083,23 @@ namespace DataMigrationUtility
                 case DatabaseType.SQLServer:
                     m_identitySQL = "SELECT IDENT_CURRENT('" + Name + "')";
                     break;
+
                 case DatabaseType.Oracle:
                     m_identitySQL = "SELECT SEQ_" + Name + ".CURRVAL from dual";
                     break;
+
                 case DatabaseType.SQLite:
                     m_identitySQL = "SELECT last_insert_rowid()";
                     break;
+
+                case DatabaseType.PostgreSQL:
+                    if ((object)AutoIncField != null)
+                        m_identitySQL = "SELECT currval(pg_get_serial_sequence('" + Name.ToLower() + "', '" + AutoIncField.Name.ToLower() + "'))";
+                    else
+                        m_identitySQL = "SELECT lastval()";
+
+                    break;
+
                 default:
                     m_identitySQL = "SELECT @@IDENTITY";
                     break;
@@ -2539,6 +2550,8 @@ namespace DataMigrationUtility
                     return "[" + name + "]";
                 case DatabaseType.Oracle:
                     return "\"" + name.ToUpper() + "\"";
+                case DatabaseType.PostgreSQL:
+                    return "\"" + name.ToLower() + "\"";
             }
 
             return "\"" + name + "\"";
