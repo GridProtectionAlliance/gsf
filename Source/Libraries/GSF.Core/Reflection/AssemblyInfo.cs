@@ -323,6 +323,18 @@ namespace GSF.Reflection
         }
 
         /// <summary>
+        /// Gets a boolean value indicating if the <see cref="Assembly"/> was built in debug mode.
+        /// </summary>
+        public bool Debuggable
+        {
+            get
+            {
+                DebuggableAttribute attribute = m_assemblyInstance.GetCustomAttributes<DebuggableAttribute>().FirstOrDefault();
+                return (object)attribute != null && attribute.IsJITOptimizerDisabled;
+            }
+        }
+
+        /// <summary>
         /// Gets the GUID that is used as an ID if the <see cref="Assembly"/> is exposed to COM.
         /// </summary>
         public string Guid
