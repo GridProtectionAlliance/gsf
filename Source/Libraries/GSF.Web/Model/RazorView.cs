@@ -23,175 +23,59 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net.Http;
-using System.Reflection;
 using System.Threading.Tasks;
 using System.Web;
-using System.Web.Hosting;
 using GSF.Collections;
-using GSF.Configuration;
-using GSF.IO;
-using RazorEngine;
-using RazorEngine.Configuration;
+using GSF.Data;
 using RazorEngine.Templating;
 
 // ReSharper disable StaticMemberInGenericType
 namespace GSF.Web.Model
 {
     /// <summary>
-    /// Defines resolutions modes for Razor view template files.
-    /// </summary>
-    public enum RazorViewResolutionMode
-    {
-        /// <summary>
-        /// Resolves template files from a path.
-        /// </summary>
-        ResolvePath,
-        /// <summary>
-        /// Resolves template files from a path and watches for changes.
-        /// </summary>
-        /// <remarks>
-        /// This should only be used in debug mode.
-        /// </remarks>
-        WatchingResolvePath,
-        /// <summary>
-        /// Resolves template files from an embedded resource.
-        /// </summary>
-        EmbeddedResource
-    }
-
-    /// <summary>
-    /// Defines a language constraint for a <see cref="RazorView{TLanguage}"/>.
-    /// </summary>
-    public abstract class LanguageConstraint
-    {
-        /// <summary>
-        /// Gets target language for the <see cref="LanguageConstraint"/> implementation.
-        /// </summary>
-        public abstract Language TargetLanguage
-        {
-            get;
-        }
-
-        /// <summary>
-        /// Gets resolution mode of <see cref="RazorView{TLanguage}"/>.
-        /// </summary>
-        public virtual RazorViewResolutionMode ResolutionMode => RazorViewResolutionMode.ResolvePath;
-    }
-
-    /// <summary>
-    /// Defines a C# based language constraint.
-    /// </summary>
-    public class CSharp : LanguageConstraint
-    {
-        /// <summary>
-        /// Gets target language for the <see cref="LanguageConstraint"/> implementation - C#.
-        /// </summary>
-        public override Language TargetLanguage => Language.CSharp;
-    }
-
-    /// <summary>
-    /// Defines a C# based language constraint in debug mode.
-    /// </summary>
-    public class CSharpDebug : CSharp
-    {
-        /// <summary>
-        /// Gets resolution mode of <see cref="RazorView{TLanguage}"/> - watching resolve path for debugging operations.
-        /// </summary>
-        public override RazorViewResolutionMode ResolutionMode => RazorViewResolutionMode.WatchingResolvePath;
-    }
-
-    /// <summary>
-    /// Defines a C# based language constraint for embedded resources.
-    /// </summary>
-    public class CSharpEmbeddedResource : CSharp
-    {
-        /// <summary>
-        /// Gets resolution mode of <see cref="RazorView{TLanguage}"/> - embedded resources.
-        /// </summary>
-        public override RazorViewResolutionMode ResolutionMode => RazorViewResolutionMode.EmbeddedResource;
-    }
-
-    /// <summary>
-    /// Defines a Visual Basic based language constraint.
-    /// </summary>
-    public class VisualBasic : LanguageConstraint
-    {
-        /// <summary>
-        /// Gets target language for the <see cref="LanguageConstraint"/> implementation - Visual Basic.
-        /// </summary>
-        public override Language TargetLanguage => Language.VisualBasic;
-    }
-
-    /// <summary>
-    /// Defines a Visual Basic based language constraint in debug mode.
-    /// </summary>
-    public class VisualBasicDebug : VisualBasic
-    {
-        /// <summary>
-        /// Gets resolution mode of <see cref="RazorView{TLanguage}"/> - watching resolve path for debugging operations.
-        /// </summary>
-        public override RazorViewResolutionMode ResolutionMode => RazorViewResolutionMode.WatchingResolvePath;
-    }
-
-    /// <summary>
-    /// Defines a Visual Basic based language constraint for embedded resources.
-    /// </summary>
-    public class VisualBasicEmbeddedResource : VisualBasic
-    {
-        /// <summary>
-        /// Gets resolution mode of <see cref="RazorView{TLanguage}"/> - embedded resources.
-        /// </summary>
-        public override RazorViewResolutionMode ResolutionMode => RazorViewResolutionMode.EmbeddedResource;
-    }
-
-    /// <summary>
     /// Defines a view class for data context based Razor template implementations.
     /// </summary>
-    /// <typeparam name="TLanguage"><see cref="LanguageConstraint"/> type to use for Razor views.</typeparam>
-    public class RazorView<TLanguage> : IRazorView where TLanguage : LanguageConstraint, new()
+    public class RazorView
     {
         #region [ Members ]
 
         // Fields
+        private readonly IRazorEngine m_razorEngine;
+
         private readonly DynamicViewBag m_viewBag = new DynamicViewBag();
         private Dictionary<string, string> m_parameters;
 
         #endregion
 
         #region [ Constructors ]
-
         /// <summary>
-        /// Creates a new <see cref="RazorView{TLanguage}"/>.
+        /// Creates a new <see cref="RazorView"/>.
         /// </summary>
-        public RazorView()
-        {
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="RazorView{TLanguage}"/> with the specified exception handler.
-        /// </summary>
+        /// <param name="razorEngine"><see cref="IRazorEngine"/> instance to use.</param>
         /// <param name="templateName">Name of template file, typically a .cshtml or .vbhtml file.</param>
         /// <param name="exceptionHandler">Delegate to handle exceptions, if any.</param>
-        public RazorView(string templateName, Action<Exception> exceptionHandler = null)
+        public RazorView(IRazorEngine razorEngine, string templateName, Action<Exception> exceptionHandler = null) : this(razorEngine, templateName, null, null, null, exceptionHandler)
         {
-            TemplateName = templateName;
-            ExceptionHandler = exceptionHandler;
         }
 
         /// <summary>
-        /// Creates a new <see cref="RazorView{TLanguage}"/> with the specified parameters.
+        /// Creates a new <see cref="RazorView"/>.
         /// </summary>
+        /// <param name="razorEngine"><see cref="IRazorEngine"/> instance to use.</param>
         /// <param name="templateName">Name of template file, typically a .cshtml or .vbhtml file.</param>
         /// <param name="model">Reference to model to use when rendering template.</param>
         /// <param name="modelType">Type of <paramref name="model"/>.</param>
+        /// <param name="connection"><see cref="AdoDataConnection"/> to use, if any.</param>
         /// <param name="exceptionHandler">Delegate to handle exceptions, if any.</param>
-        public RazorView(string templateName, object model, Type modelType, Action<Exception> exceptionHandler = null) : this(templateName, exceptionHandler)
+        public RazorView(IRazorEngine razorEngine, string templateName, object model = null, Type modelType = null, AdoDataConnection connection = null, Action<Exception> exceptionHandler = null)
         {
+            m_razorEngine = razorEngine;
+            TemplateName = templateName;
             Model = model;
             ModelType = modelType;
+            Connection = connection;
+            ExceptionHandler = exceptionHandler;
         }
 
         #endregion
@@ -218,14 +102,6 @@ namespace GSF.Web.Model
         /// Gets or sets type of <see cref="Model"/>.
         /// </summary>
         public Type ModelType
-        {
-            get; set;
-        }
-
-        /// <summary>
-        /// Gets or sets delegate used to handle exceptions.
-        /// </summary>
-        public Action<Exception> ExceptionHandler
         {
             get; set;
         }
@@ -259,6 +135,43 @@ namespace GSF.Web.Model
             }
         }
 
+        /// <summary>
+        /// Gets reference to <see cref="IRazorEngine"/> used by this <see cref="RazorView"/>.
+        /// </summary>
+        public IRazorEngine RazorEngine => m_razorEngine;
+
+        /// <summary>
+        /// Gets or sets data connection to provide to <see cref="DataContext"/>, if any.
+        /// </summary>
+        public AdoDataConnection Connection
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets delegate used to handle exceptions.
+        /// </summary>
+        public Action<Exception> ExceptionHandler
+        {
+            get; set;
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="IRazorEngine"/> to use for the <see cref="DataContext"/> provided to the view; defaults to <c>null</c>.
+        /// </summary>
+        /// <remarks>
+        /// This should typically not be changed. When value is <c>null</c>, the data context will use the default
+        /// <see cref="RazorEngine{TLanguage}"/> instance for <see cref="CSharpEmbeddedResource"/> which is used
+        /// to generate template based HTML input fields for a view. The default HTML input templates are defined
+        /// as embedded resources in GSF.Web.
+        /// </remarks>
+        public IRazorEngine DataContextRazorEngine
+        {
+            get;
+            set;
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -269,10 +182,10 @@ namespace GSF.Web.Model
         /// <returns>Rendered result.</returns>
         public string Execute()
         {
-            using (DataContext<TLanguage> dataContext = new DataContext<TLanguage>(exceptionHandler: ExceptionHandler))
+            using (DataContext dataContext = new DataContext(Connection, razorEngine: DataContextRazorEngine, exceptionHandler: ExceptionHandler))
             {
                 m_viewBag.AddValue("DataContext", dataContext);
-                return s_engineService.RunCompile(TemplateName, ModelType, Model, m_viewBag);
+                return m_razorEngine.RunCompile(TemplateName, ModelType, Model, m_viewBag);
             }
         }
 
@@ -282,7 +195,7 @@ namespace GSF.Web.Model
         /// <returns>Rendered result.</returns>
         public string Execute(HttpRequestMessage requestMessage, dynamic postData)
         {
-            using (DataContext<TLanguage> dataContext = new DataContext<TLanguage>(exceptionHandler: ExceptionHandler))
+            using (DataContext dataContext = new DataContext(Connection, razorEngine: DataContextRazorEngine, exceptionHandler: ExceptionHandler))
             {
                 m_viewBag.AddValue("DataContext", dataContext);
                 m_viewBag.AddValue("Request", requestMessage);
@@ -297,7 +210,7 @@ namespace GSF.Web.Model
                     m_viewBag.AddValue("PostData", postData);
                 }
 
-                return s_engineService.RunCompile(TemplateName, ModelType, Model, m_viewBag);
+                return m_razorEngine.RunCompile(TemplateName, ModelType, Model, m_viewBag);
             }
         }
 
@@ -308,142 +221,6 @@ namespace GSF.Web.Model
         public Task ExecuteAsync(HttpRequestMessage requestMessage, dynamic postData)
         {
             return Task.Run(() => Execute(requestMessage, postData));
-        }
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Fields
-        private static readonly IRazorEngineService s_engineService;
-
-        /// <summary>
-        /// Defines default settings path for template files.
-        /// </summary>
-        public static readonly string TemplatePath;
-
-        // Static Constructor
-        static RazorView()
-        {
-            // The current thinking for this class is that there will only be one set of Razor views per application instance
-            TLanguage languageType = new TLanguage();
-
-            // Get configured template path
-            CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
-
-            switch (languageType.ResolutionMode)
-            {
-                case RazorViewResolutionMode.ResolvePath:
-                case RazorViewResolutionMode.WatchingResolvePath:
-                    if (Common.GetApplicationType() == ApplicationType.Web)
-                    {
-                        systemSettings.Add("TemplatePath", "~/Views/Shared/Templates/", "Path for data context based razor field templates.");
-                        TemplatePath = HostingEnvironment.MapPath(systemSettings["TemplatePath"].Value).EnsureEnd('/');
-                    }
-                    else
-                    {
-                        systemSettings.Add("TemplatePath", "wwwroot/Templates/", "Path for data context based razor field templates.");
-                        TemplatePath = FilePath.GetAbsolutePath(systemSettings["TemplatePath"].Value);
-                    }
-
-                    if (languageType.ResolutionMode == RazorViewResolutionMode.ResolvePath)
-                    {
-                        s_engineService = RazorEngineService.Create(new TemplateServiceConfiguration
-                        {
-                            Language = languageType.TargetLanguage,
-                            TemplateManager = new ResolvePathTemplateManager(new[] { TemplatePath }),
-                            Debug = false
-                        });
-                    }
-                    else
-                    {
-                        // The watching resolve path template manager should not be used in production since
-                        // assemblies cannot be unloaded from an AppDomain. Every time a change to a .cshtml
-                        // file is picked up by the watcher it is compiled and loaded into the AppDomain and
-                        // the old one cannot be removed (.NET restriction), the net result is a memory leak
-                        InvalidatingCachingProvider cachingProvider = new InvalidatingCachingProvider();
-
-                        s_engineService = RazorEngineService.Create(new TemplateServiceConfiguration
-                        {
-                            Language = languageType.TargetLanguage,
-                            CachingProvider = cachingProvider,
-                            TemplateManager = new WatchingResolvePathTemplateManager(new[] { TemplatePath }, cachingProvider),
-                            Debug = true
-                        });
-                    }
-                    break;
-                case RazorViewResolutionMode.EmbeddedResource:
-                    systemSettings.Add("EmbeddedTemplatePath", "GSF.Web.Model.Views.", "Embedded name space path for data context based razor field templates.");
-                    TemplatePath = systemSettings["EmbeddedTemplatePath"].Value.EnsureEnd('.');
-
-                    s_engineService = RazorEngineService.Create(new TemplateServiceConfiguration
-                    {
-                        Language = languageType.TargetLanguage,
-                        TemplateManager = new DelegateTemplateManager(name =>
-                        {
-                            string resourceName = name;
-
-                            if (!resourceName.Contains("."))
-                                resourceName = TemplatePath + name;
-
-                            Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
-
-                            if ((object)stream == null)
-                                return "";
-
-                            using (StreamReader reader = new StreamReader(stream))
-                                return reader.ReadToEnd();
-                        }),
-                        Debug = false
-                    });                   
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// Kicks off a task to pre-compile Razor templates.
-        /// </summary>
-        /// <param name="exceptionHandler">Exception handler used to report issues, if any.</param>
-        public static Task PreCompile(Action<Exception> exceptionHandler = null)
-        {
-            return Task.Run(() =>
-            {
-                TLanguage languageType = new TLanguage();
-
-                if (languageType.ResolutionMode == RazorViewResolutionMode.EmbeddedResource)
-                {
-                    foreach (string fileName in Assembly.GetExecutingAssembly().GetManifestResourceNames().Where(fileName => fileName.StartsWith(TemplatePath)))
-                    {
-                        try
-                        {
-                            s_engineService.Compile(fileName.Substring(TemplatePath.Length));
-                        }
-                        catch (Exception ex)
-                        {
-                            if ((object)exceptionHandler != null)
-                                exceptionHandler(new InvalidOperationException($"Failed to pre-compile razor template \"{fileName}\": {ex.Message}", ex));
-                        }
-                    }
-                }
-                else
-                {
-                    string webRootFolder = FilePath.AddPathSuffix(TemplatePath);
-                    string[] razorFiles = FilePath.GetFileList($"{webRootFolder}*.{(languageType.TargetLanguage == Language.CSharp ? "cs" : "vb")}html");
-
-                    foreach (string fileName in razorFiles)
-                    {
-                        try
-                        {
-                            s_engineService.Compile(FilePath.GetFileName(fileName));
-                        }
-                        catch (Exception ex)
-                        {
-                            if ((object)exceptionHandler != null)
-                                exceptionHandler(new InvalidOperationException($"Failed to pre-compile razor template \"{fileName}\": {ex.Message}", ex));
-                        }
-                    }
-                }
-            });
         }
 
         #endregion

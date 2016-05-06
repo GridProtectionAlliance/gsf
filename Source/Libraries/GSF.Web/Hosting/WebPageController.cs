@@ -32,6 +32,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
+using GSF.Data;
 using GSF.IO;
 using GSF.IO.Checksums;
 using GSF.Reflection;
@@ -58,15 +59,42 @@ namespace GSF.Web.Hosting
         /// </summary>
         public event EventHandler<string> StatusMessage;
 
+        // Fields
+        private readonly string m_webRootPath;
+        private readonly IRazorEngine m_razorEngineCS;
+        private readonly IRazorEngine m_razorEngineVB;
+        private readonly ConcurrentDictionary<string, uint> m_etagCache;
+        private readonly SafeFileWatcher m_fileWatcher;
+        private bool m_disposed;
+
         #endregion
 
         #region [ Constructors ]
-        
+
         /// <summary>
         /// Creates a new <see cref="WebPageController"/>.
         /// </summary>
-        public WebPageController()
+        /// <param name="webRootPath">Root path for web page; defaults to template path for <paramref name="razorEngineCS"/>.</param>
+        /// <param name="razorEngineCS">Razor engine instance for .cshtml templates; uses default instance if not provided.</param>
+        /// <param name="razorEngineVB">Razor engine instance for .vbhtml templates; uses default instance if not provided.</param>
+        public WebPageController(string webRootPath = null, IRazorEngine razorEngineCS = null, IRazorEngine razorEngineVB = null)
         {
+            bool releaseMode = !AssemblyInfo.EntryAssembly.Debuggable;
+            m_razorEngineCS = razorEngineCS ?? (releaseMode ? RazorEngine<CSharp>.Default : RazorEngine<CSharpDebug>.Default as IRazorEngine);
+            m_razorEngineVB = razorEngineVB ?? (releaseMode ? RazorEngine<VisualBasic>.Default : RazorEngine<VisualBasicDebug>.Default as IRazorEngine);
+            m_webRootPath = FilePath.AddPathSuffix(webRootPath ?? m_razorEngineCS.TemplatePath);
+            m_etagCache = new ConcurrentDictionary<string, uint>(StringComparer.InvariantCultureIgnoreCase);
+
+            m_fileWatcher = new SafeFileWatcher(m_webRootPath)
+            {
+                IncludeSubdirectories = true,
+                EnableRaisingEvents = true
+            };
+
+            m_fileWatcher.Changed += m_fileWatcher_FileChange;
+            m_fileWatcher.Deleted += m_fileWatcher_FileChange;
+            m_fileWatcher.Renamed += m_fileWatcher_FileChange;
+
             DefaultWebPage = "index.html";
             ClientCacheEnabled = true;
         }
@@ -74,7 +102,7 @@ namespace GSF.Web.Hosting
         #endregion
 
         #region [ Properties ]
-        
+
         /// <summary>
         /// Gets or sets default web page to use for this <see cref="WebPageController"/>.
         /// </summary>
@@ -85,7 +113,7 @@ namespace GSF.Web.Hosting
         }
 
         /// <summary>
-        /// Gets or sets the Razor model instance for this <see cref="WebPageController"/>.
+        /// Gets or sets the <see cref="RazorView"/> model instance for this <see cref="WebPageController"/>, if any.
         /// </summary>
         public object RazorModel
         {
@@ -94,9 +122,18 @@ namespace GSF.Web.Hosting
         }
 
         /// <summary>
-        /// Gets or sets the Razor model <see cref="Type"/> for this <see cref="WebPageController"/>.
+        /// Gets or sets the <see cref="RazorView"/> model <see cref="Type"/> for this <see cref="WebPageController"/>, if any.
         /// </summary>
         public Type RazorModelType
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets data connection to provide to <see cref="RazorView"/> instances in this <see cref="WebPageController"/>, if any.
+        /// </summary>
+        public AdoDataConnection RazorConnection
         {
             get;
             set;
@@ -114,6 +151,27 @@ namespace GSF.Web.Hosting
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="WebPageController"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                        m_fileWatcher?.Dispose();
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
+                }
+            }
+        }
 
         /// <summary>
         /// Default page request handler.
@@ -157,22 +215,22 @@ namespace GSF.Web.Hosting
             switch (fileExtension)
             {
                 case ".cshtml":
-                    content = await s_razorViewCS(pageName, RazorModel, RazorModelType, OnExecutionException).ExecuteAsync(Request, postData);
+                    content = await new RazorView(m_razorEngineCS, pageName, RazorModel, RazorModelType, RazorConnection, OnExecutionException).ExecuteAsync(Request, postData);
                     response.Content = new StringContent(content, Encoding.UTF8, "text/html");
                     break;
                 case ".vbhtml":
-                    content = await s_razorViewVB(pageName, RazorModel, RazorModelType, OnExecutionException).ExecuteAsync(Request, postData);
+                    content = await new RazorView(m_razorEngineVB, pageName, RazorModel, RazorModelType, RazorConnection, OnExecutionException).ExecuteAsync(Request, postData);
                     response.Content = new StringContent(content, Encoding.UTF8, "text/html");
                     break;
                 default:
-                    string fileName = FilePath.GetAbsolutePath($"{FilePath.AddPathSuffix(s_templatePath)}{pageName.Replace('/', Path.DirectorySeparatorChar)}");
+                    string fileName = FilePath.GetAbsolutePath($"{m_webRootPath}{pageName.Replace('/', Path.DirectorySeparatorChar)}");
 
                     if (File.Exists(fileName))
                     {
                         FileStream fileData = null;
                         uint responseHash = 0;
 
-                        if (ClientCacheEnabled && !s_etagCache.TryGetValue(fileName, out responseHash))
+                        if (ClientCacheEnabled && !m_etagCache.TryGetValue(fileName, out responseHash))
                         {
                             // Calculate check-sum for file
                             await Task.Run(() =>
@@ -191,7 +249,7 @@ namespace GSF.Web.Hosting
                                 }
 
                                 responseHash = calculatedHash.Value;
-                                s_etagCache.TryAdd(fileName, responseHash);
+                                m_etagCache.TryAdd(fileName, responseHash);
                                 fileData.Seek(0, SeekOrigin.Begin);
 
                                 OnStatusMessage($"Cache [{responseHash}] added for file \"{fileName}\"");
@@ -200,7 +258,7 @@ namespace GSF.Web.Hosting
 
                         if (PublishResponseContent(response, responseHash))
                         {
-                            if ((object)fileData == null)
+                            if (fileData == null)
                                 fileData = File.OpenRead(fileName);
 
                             response.Content = await Task.Run(() => new StreamContent(fileData));
@@ -257,6 +315,14 @@ namespace GSF.Web.Hosting
         private void OnStatusMessage(string message)
         {
             StatusMessage?.Invoke(this, message);
+        }
+
+        private void m_fileWatcher_FileChange(object sender, FileSystemEventArgs e)
+        {
+            uint responseHash;
+
+            if (m_etagCache.TryRemove(e.FullPath, out responseHash))
+                OnStatusMessage($"Cache [{responseHash}] cleared for file \"{e.FullPath}\"");
         }
 
         #region [ Sub-folder Handlers ]
@@ -407,90 +473,6 @@ namespace GSF.Web.Hosting
         }
 
         #endregion
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Events
-
-        /// <summary>
-        /// Exposes any execution exceptions that occur during static <see cref="WebPageController"/> initialization.
-        /// </summary>
-        public static event EventHandler<Exception> InitializationExceptions;
-
-        /// <summary>
-        /// Exposes any status messages that get reported from static <see cref="WebPageController"/> initialization.
-        /// </summary>
-        public static event EventHandler<string> InitializationMessages;
-
-        // Static Fields
-        private static readonly string s_templatePath;
-        private static readonly Func<string, object, Type, Action<Exception>, IRazorView> s_razorViewCS;
-        private static readonly Func<string, object, Type, Action<Exception>, IRazorView> s_razorViewVB;
-        private static readonly ConcurrentDictionary<string, uint> s_etagCache;
-        private static readonly FileSystemWatcher s_fileWatcher;
-
-        // Static Constructor
-        static WebPageController()
-        {
-            bool isDebugMode = AssemblyInfo.EntryAssembly.Debuggable;
-
-            if (isDebugMode)
-            {
-                s_templatePath = RazorView<CSharpDebug>.TemplatePath;
-                s_razorViewCS = (templateName, model, modelType, exceptionHandler) => new RazorView<CSharpDebug>(templateName, model, modelType, exceptionHandler);
-                s_razorViewVB = (templateName, model, modelType, exceptionHandler) => new RazorView<VisualBasicDebug>(templateName, model, modelType, exceptionHandler);
-            }
-            else
-            {
-                s_templatePath = RazorView<CSharp>.TemplatePath;
-                s_razorViewCS = (templateName, model, modelType, exceptionHandler) => new RazorView<CSharp>(templateName, model, modelType, exceptionHandler);
-                s_razorViewVB = (templateName, model, modelType, exceptionHandler) => new RazorView<VisualBasic>(templateName, model, modelType, exceptionHandler);
-            }
-
-            s_etagCache = new ConcurrentDictionary<string, uint>(StringComparer.InvariantCultureIgnoreCase);
-
-            s_fileWatcher = new FileSystemWatcher(s_templatePath)
-            {
-                IncludeSubdirectories = true,
-                EnableRaisingEvents = true
-            };
-
-            s_fileWatcher.Changed += s_fileWatcher_FileChange;
-            s_fileWatcher.Deleted += s_fileWatcher_FileChange;
-            s_fileWatcher.Renamed += s_fileWatcher_FileChange;
-
-
-            if (isDebugMode)
-            {
-                RazorView<CSharpDebug>.PreCompile(OnInitializationExceptions);
-                RazorView<VisualBasicDebug>.PreCompile(OnInitializationExceptions);
-            }
-            else
-            {
-                RazorView<CSharp>.PreCompile(OnInitializationExceptions);
-                RazorView<VisualBasic>.PreCompile(OnInitializationExceptions);
-            }
-        }
-
-        private static void s_fileWatcher_FileChange(object sender, FileSystemEventArgs e)
-        {
-            uint responseHash;
-
-            if (s_etagCache.TryRemove(e.FullPath, out responseHash))
-                OnInitializationMessages($"Cache [{responseHash}] cleared for file \"{e.FullPath}\"");
-        }
-
-        private static void OnInitializationExceptions(Exception exception)
-        {
-            InitializationExceptions?.Invoke(null, exception);
-        }
-
-        private static void OnInitializationMessages(string message)
-        {
-            InitializationMessages?.Invoke(null, message);
-        }
 
         #endregion
     }

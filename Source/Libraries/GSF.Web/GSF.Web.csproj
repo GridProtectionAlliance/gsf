@@ -221,11 +221,14 @@
     <Compile Include="Hosting\WebPageController.cs" />
     <Compile Include="IgnoreServicesSecurityModule.cs" />
     <Compile Include="Model\DataContext.cs" />
-    <Compile Include="Model\IRazorView.cs" />
+    <Compile Include="Model\IRazorEngine.cs" />
     <Compile Include="Model\IRecordOperationsHub.cs" />
     <Compile Include="Model\Label.cs" />
     <Compile Include="Model\IDLabel.cs" />
+    <Compile Include="Model\LanguageConstraint.cs" />
     <Compile Include="Model\NamespaceDoc.cs" />
+    <Compile Include="Model\RazorEngine.cs" />
+    <Compile Include="Model\RazorViewResolutionMode.cs" />
     <Compile Include="Model\RecordOperationsCache.cs" />
     <Compile Include="NamespaceDoc.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

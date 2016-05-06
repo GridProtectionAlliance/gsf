@@ -41,42 +41,19 @@ using RazorEngine.Templating;
 namespace GSF.Web.Model
 {
     /// <summary>
-    /// Defines a default data context object based on embedded resources.
+    /// Defines a data context for Razor views.
     /// </summary>
-    public class DataContext : DataContext<CSharpEmbeddedResource>
-    {
-        /// <summary>
-        /// Creates a new <see cref="DataContext"/>.
-        /// </summary>
-        /// <param name="connection"><see cref="AdoDataConnection"/> to use; defaults to a new connection.</param>
-        /// <param name="disposeConnection">Set to <c>true</c> to dispose the provided <paramref name="connection"/>.</param>
-        /// <param name="exceptionHandler">Delegate to handle exceptions.</param>
-        public DataContext(AdoDataConnection connection = null, bool disposeConnection = false, Action<Exception> exceptionHandler = null) :
-            base(connection, disposeConnection, exceptionHandler)
-        {
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="DataContext"/> using the specified <paramref name="settingsCategory"/>.
-        /// </summary>
-        /// <param name="settingsCategory">Setting category that contains the connection settings.</param>
-        /// <param name="exceptionHandler">Delegate to handle exceptions.</param>
-        public DataContext(string settingsCategory, Action<Exception> exceptionHandler = null) : 
-            base(settingsCategory, exceptionHandler)
-        {
-        }
-    }
-
-    /// <summary>
-    /// Defines a data context for modeled tables.
-    /// </summary>
-    /// <typeparam name="TLanguage"><see cref="LanguageConstraint"/> type to use for Razor views.</typeparam>
-    public class DataContext<TLanguage> : IDisposable where TLanguage : LanguageConstraint, new()
+    /// <remarks>
+    /// This class is used by views to render HTML form input templates, paged view model configurations,
+    /// provide access to modeled table operations and general database access.
+    /// </remarks>
+    public class DataContext : IDisposable
     {
         #region [ Members ]
 
         // Fields
         private AdoDataConnection m_connection;
+        private readonly IRazorEngine m_razorEngine;
         private readonly Dictionary<Type, object> m_tableOperations;
         private readonly Action<Exception> m_exceptionHandler;
         private readonly Dictionary<string, Tuple<string, string>> m_fieldValidationParameters;
@@ -98,14 +75,16 @@ namespace GSF.Web.Model
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="DataContext{TLanguage}"/>.
+        /// Creates a new <see cref="DataContext"/>.
         /// </summary>
         /// <param name="connection"><see cref="AdoDataConnection"/> to use; defaults to a new connection.</param>
         /// <param name="disposeConnection">Set to <c>true</c> to dispose the provided <paramref name="connection"/>.</param>
+        /// <param name="razorEngine">Razor engine instance to use for data context; set to <c>null</c> to use default embedded resources instance.</param>
         /// <param name="exceptionHandler">Delegate to handle exceptions.</param>
-        public DataContext(AdoDataConnection connection = null, bool disposeConnection = false, Action<Exception> exceptionHandler = null)
+        public DataContext(AdoDataConnection connection = null, bool disposeConnection = false, IRazorEngine razorEngine = null, Action<Exception> exceptionHandler = null)
         {
             m_connection = connection;
+            m_razorEngine = razorEngine ?? RazorEngine<CSharpEmbeddedResource>.Default;
             m_tableOperations = new Dictionary<Type, object>();
             m_exceptionHandler = exceptionHandler;
             m_fieldValidationParameters = new Dictionary<string, Tuple<string, string>>();
@@ -117,12 +96,14 @@ namespace GSF.Web.Model
         }
 
         /// <summary>
-        /// Creates a new <see cref="DataContext{TLanguage}"/> using the specified <paramref name="settingsCategory"/>.
+        /// Creates a new <see cref="DataContext"/> using the specified <paramref name="settingsCategory"/>.
         /// </summary>
         /// <param name="settingsCategory">Setting category that contains the connection settings.</param>
+        /// <param name="razorEngine">Razor engine instance to use for data context; set to <c>null</c> to use default embedded resources instance.</param>
         /// <param name="exceptionHandler">Delegate to handle exceptions.</param>
-        public DataContext(string settingsCategory, Action<Exception> exceptionHandler = null)
+        public DataContext(string settingsCategory, IRazorEngine razorEngine = null, Action<Exception> exceptionHandler = null)
         {
+            m_razorEngine = razorEngine ?? RazorEngine<CSharpEmbeddedResource>.Default;
             m_tableOperations = new Dictionary<Type, object>();
             m_exceptionHandler = exceptionHandler;
             m_fieldValidationParameters = new Dictionary<string, Tuple<string, string>>();
@@ -137,7 +118,12 @@ namespace GSF.Web.Model
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the <see cref="AdoDataConnection"/> for this <see cref="DataContext{TLanguage}"/>.
+        /// Gets reference to <see cref="IRazorEngine"/> used by this <see cref="DataContext"/>.
+        /// </summary>
+        public IRazorEngine RazorEngine => m_razorEngine;
+
+        /// <summary>
+        /// Gets the <see cref="AdoDataConnection"/> for this <see cref="DataContext"/>, creating a new one if needed.
         /// </summary>
         public AdoDataConnection Connection => m_connection ?? (m_connection = new AdoDataConnection(m_settingsCategory));
 
@@ -178,7 +164,7 @@ namespace GSF.Web.Model
         {
             get
             {
-                return m_addDateFieldTemplate ?? (m_addDateFieldTemplate = $"{RazorView<TLanguage>.TemplatePath}AddDateField.cshtml");
+                return m_addDateFieldTemplate ?? (m_addDateFieldTemplate = $"{m_razorEngine.TemplatePath}AddDateField.cshtml");
             }
             set
             {
@@ -193,7 +179,7 @@ namespace GSF.Web.Model
         {
             get
             {
-                return m_addInputFieldTemplate ?? (m_addInputFieldTemplate = $"{RazorView<TLanguage>.TemplatePath}AddInputField.cshtml");
+                return m_addInputFieldTemplate ?? (m_addInputFieldTemplate = $"{m_razorEngine.TemplatePath}AddInputField.cshtml");
             }
             set
             {
@@ -208,7 +194,7 @@ namespace GSF.Web.Model
         {
             get
             {
-                return m_addTextAreaFieldTemplate ?? (m_addTextAreaFieldTemplate = $"{RazorView<TLanguage>.TemplatePath}AddTextAreaField.cshtml");
+                return m_addTextAreaFieldTemplate ?? (m_addTextAreaFieldTemplate = $"{m_razorEngine.TemplatePath}AddTextAreaField.cshtml");
             }
             set
             {
@@ -223,7 +209,7 @@ namespace GSF.Web.Model
         {
             get
             {
-                return m_addSelectFieldTemplate ?? (m_addSelectFieldTemplate = $"{RazorView<TLanguage>.TemplatePath}AddSelectField.cshtml");
+                return m_addSelectFieldTemplate ?? (m_addSelectFieldTemplate = $"{m_razorEngine.TemplatePath}AddSelectField.cshtml");
             }
             set
             {
@@ -238,7 +224,7 @@ namespace GSF.Web.Model
         {
             get
             {
-                return m_addCheckBoxFieldTemplate ?? (m_addCheckBoxFieldTemplate = $"{RazorView<TLanguage>.TemplatePath}AddCheckBoxField.cshtml");
+                return m_addCheckBoxFieldTemplate ?? (m_addCheckBoxFieldTemplate = $"{m_razorEngine.TemplatePath}AddCheckBoxField.cshtml");
             }
             set
             {
@@ -251,7 +237,7 @@ namespace GSF.Web.Model
         #region [ Methods ]
 
         /// <summary>
-        /// Releases all the resources used by the <see cref="DataContext{TLanguage}"/> object.
+        /// Releases all the resources used by the <see cref="DataContext"/> object.
         /// </summary>
         public void Dispose()
         {
@@ -260,7 +246,7 @@ namespace GSF.Web.Model
         }
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="DataContext{TLanguage}"/> object and optionally releases the managed resources.
+        /// Releases the unmanaged resources used by the <see cref="DataContext"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
@@ -786,7 +772,7 @@ namespace GSF.Web.Model
         /// <returns>Generated HTML for new date based input field based on specified parameters.</returns>
         public string AddDateField(string fieldName, bool required, int maxLength = 0, string inputType = null, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string requiredDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string toolTip = null, bool initialFocus = false)
         {
-            RazorView<TLanguage> addDateFieldTemplate = new RazorView<TLanguage>(AddDateFieldTemplate, m_exceptionHandler);
+            RazorView addDateFieldTemplate = new RazorView(m_razorEngine, AddDateFieldTemplate, m_exceptionHandler);
             DynamicViewBag viewBag = addDateFieldTemplate.ViewBag;
 
             if (string.IsNullOrEmpty(fieldID))
@@ -895,7 +881,7 @@ namespace GSF.Web.Model
         /// <returns>Generated HTML for new input field based on specified parameters.</returns>
         public string AddInputField(string fieldName, bool required, int maxLength = 0, string inputType = null, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string requiredDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string toolTip = null, bool initialFocus = false, bool enableHotLinks = true)
         {
-            RazorView<TLanguage> addInputFieldTemplate = new RazorView<TLanguage>(AddInputFieldTemplate, m_exceptionHandler);
+            RazorView addInputFieldTemplate = new RazorView(m_razorEngine, AddInputFieldTemplate, m_exceptionHandler);
             DynamicViewBag viewBag = addInputFieldTemplate.ViewBag;
 
             if (string.IsNullOrEmpty(fieldID))
@@ -998,7 +984,7 @@ namespace GSF.Web.Model
         /// <returns>Generated HTML for new text area field based on specified parameters.</returns>
         public string AddTextAreaField(string fieldName, bool required, int maxLength = 0, int rows = 2, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string requiredDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string toolTip = null, bool initialFocus = false, bool enableHotLinks = true)
         {
-            RazorView<TLanguage> addTextAreaTemplate = new RazorView<TLanguage>(AddTextAreaFieldTemplate, m_exceptionHandler);
+            RazorView addTextAreaTemplate = new RazorView(m_razorEngine, AddTextAreaFieldTemplate, m_exceptionHandler);
             DynamicViewBag viewBag = addTextAreaTemplate.ViewBag;
 
             if (string.IsNullOrEmpty(fieldID))
@@ -1087,7 +1073,7 @@ namespace GSF.Web.Model
         /// <returns>Generated HTML for new text field based on specified parameters.</returns>
         public string AddSelectField<TOption>(string fieldName, bool required, string optionValueFieldName, string optionLabelFieldName = null, string optionSortFieldName = null, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string optionDataBinding = null, string toolTip = null, bool initialFocus = false, RecordRestriction restriction = null) where TOption : class, new()
         {
-            RazorView<TLanguage> addSelectFieldTemplate = new RazorView<TLanguage>(AddSelectFieldTemplate, m_exceptionHandler);
+            RazorView addSelectFieldTemplate = new RazorView(m_razorEngine, AddSelectFieldTemplate, m_exceptionHandler);
             DynamicViewBag viewBag = addSelectFieldTemplate.ViewBag;
             TableOperations<TOption> optionTableOperations = Table<TOption>();
             Dictionary<string, string> options = new Dictionary<string, string>();
@@ -1169,7 +1155,7 @@ namespace GSF.Web.Model
         /// <returns>Generated HTML for new check box field based on specified parameters.</returns>
         public string AddCheckBoxField(string fieldName, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string toolTip = null, bool initialFocus = false)
         {
-            RazorView<TLanguage> addCheckBoxFieldTemplate = new RazorView<TLanguage>(AddCheckBoxFieldTemplate, m_exceptionHandler);
+            RazorView addCheckBoxFieldTemplate = new RazorView(m_razorEngine, AddCheckBoxFieldTemplate, m_exceptionHandler);
             DynamicViewBag viewBag = addCheckBoxFieldTemplate.ViewBag;
 
             if (string.IsNullOrEmpty(fieldID))
