@@ -46,9 +46,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
-#if !MONO
 using System.Linq;
-#endif
 using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
