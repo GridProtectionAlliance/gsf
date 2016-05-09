@@ -690,7 +690,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 index += 7;
 
                 // Get whole seconds of timestamp
-                long timestamp = (new UnixTimeTag((double)secondOfCentury)).ToDateTime().Ticks;
+                long timestamp = (new UnixTimeTag((decimal)secondOfCentury)).ToDateTime().Ticks;
 
                 // Add fraction seconds of timestamp
                 decimal fractionalSeconds = fractionOfSecond / (decimal)header.Timebase;

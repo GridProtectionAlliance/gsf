@@ -212,7 +212,7 @@ namespace GSF.Historian.Files
             {
                 // Binary image has sufficient data.
                 HistorianID = LittleEndian.ToInt32(buffer, startIndex);
-                StartTime = new TimeTag(LittleEndian.ToDouble(buffer, startIndex + 4));
+                StartTime = new TimeTag((decimal)LittleEndian.ToDouble(buffer, startIndex + 4));
 
                 return FixedLength;
             }

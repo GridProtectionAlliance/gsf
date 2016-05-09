@@ -81,7 +81,7 @@ namespace GSF
         /// Creates a new <see cref="NtpTimeTag"/>, given number of seconds since 1/1/1900.
         /// </summary>
         /// <param name="seconds">Number of seconds since 1/1/1900.</param>
-        public NtpTimeTag(double seconds)
+        public NtpTimeTag(decimal seconds)
             : base(GetBaseDateOffsetTicks(seconds), seconds)
         {
         }
@@ -92,7 +92,7 @@ namespace GSF
         /// <param name="seconds">Number of seconds since 1/1/1900.</param>
         /// <param name="fraction">Number of fractional seconds, in whole picoseconds.</param>
         public NtpTimeTag(uint seconds, uint fraction)
-            : base(GetBaseDateOffsetTicks(seconds), seconds + (fraction / (double)uint.MaxValue))
+            : base(GetBaseDateOffsetTicks(seconds), seconds + (fraction / (decimal)uint.MaxValue))
         {
         }
 
@@ -172,9 +172,9 @@ namespace GSF
         /// </summary>
         /// <param name="seconds">Seconds value.</param>
         /// <returns>Proper NTP offset.</returns>
-        public static long GetBaseDateOffsetTicks(double seconds)
+        public static long GetBaseDateOffsetTicks(decimal seconds)
         {
-            return GetBaseDateOffsetTicks(Ticks.FromSeconds(seconds));
+            return GetBaseDateOffsetTicks((Ticks)(seconds * Ticks.PerSecond));
         }
 
         /// <summary>

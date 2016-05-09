@@ -96,7 +96,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
             timetag = new NtpTimeTag(secondOfCentury, 0);
 
             // Data frames have subsecond time information, so we add this fraction of time to current seconds value
-            timetag.Value += sampleCount * 50.0D / 1000.0D;
+            timetag = new NtpTimeTag(timetag.Value + sampleCount * 50.0M / 1000.0M);
 
             // Cache timestamp value
             m_timestamp = timetag.ToDateTime().Ticks;

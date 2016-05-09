@@ -97,7 +97,7 @@ namespace GSF.PhasorProtocols.IEEE1344
 
             // Data frames have subsecond time information, so we add this fraction of time to current seconds value
             if (TypeID == IEEE1344.FrameType.DataFrame && configurationFrame != null)
-                timetag.Value += SampleCount / Math.Truncate((double)Common.MaximumSampleCount / (double)configurationFrame.Period) / (double)configurationFrame.FrameRate;
+                timetag = new NtpTimeTag(timetag.Value + SampleCount / Math.Truncate((decimal)Common.MaximumSampleCount / (decimal)configurationFrame.Period) / (decimal)configurationFrame.FrameRate);
 
             // Cache timestamp value
             m_timestamp = timetag.ToDateTime().Ticks;

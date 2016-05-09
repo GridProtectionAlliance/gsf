@@ -309,7 +309,7 @@ namespace GSF.Historian.Files
                 Flags = LittleEndian.ToInt16(buffer, startIndex + 4);
                 Value = LittleEndian.ToSingle(buffer, startIndex + 6);
                 Time = new TimeTag(LittleEndian.ToInt32(buffer, startIndex) +   // Seconds
-                        ((double)(m_flags.GetMaskedValue(MillisecondMask) >> 5) / 1000));   // Milliseconds
+                        ((decimal)(m_flags.GetMaskedValue(MillisecondMask) >> 5) / 1000));   // Milliseconds
 
                 return FixedLength;
             }

@@ -61,7 +61,7 @@ namespace GSF.Historian
         /// Initializes a new instance of the <see cref="TimeTag"/> class.
         /// </summary>
         /// <param name="seconds">Number of seconds since the <see cref="BaseDate"/>.</param>
-        public TimeTag(double seconds)
+        public TimeTag(decimal seconds)
             : base(BaseDate.Ticks, seconds)
         {
         }
@@ -99,8 +99,8 @@ namespace GSF.Historian
         /// </remarks>
         public int CompareTo(TimeTag other)
         {
-            double tVal = Value;
-            double oVal = other.Value;
+            decimal tVal = Value;
+            decimal oVal = other.Value;
             return tVal < oVal ? -1 : tVal > oVal ? 1 : 0;
         }
 
@@ -130,8 +130,8 @@ namespace GSF.Historian
         static TimeTag()
         {
             BaseDate = new DateTime(1995, 1, 1, 0, 0, 0);
-            MinValue = new TimeTag(0.0);
-            MaxValue = new TimeTag(2147483647.999);
+            MinValue = new TimeTag(0.0M);
+            MaxValue = new TimeTag(2147483647.999M);
         }
 
         // Static Properties

@@ -139,7 +139,7 @@ namespace GSF.Historian.Packets
                 Flags = LittleEndian.ToInt16(buffer, startIndex + 8);
                 Value = LittleEndian.ToSingle(buffer, startIndex + 10);
                 Time = new TimeTag(LittleEndian.ToInt32(buffer, startIndex + 4) +   // Seconds
-                        ((double)(Flags.GetMaskedValue(MillisecondMask) >> 5) / 1000));         // Milliseconds
+                        ((decimal)(Flags.GetMaskedValue(MillisecondMask) >> 5) / 1000));         // Milliseconds
 
                 return FixedLength;
             }

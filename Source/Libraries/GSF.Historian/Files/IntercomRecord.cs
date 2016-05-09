@@ -240,12 +240,12 @@ namespace GSF.Historian.Files
                 // Binary image has sufficient data.
                 DataBlocksUsed = LittleEndian.ToInt32(buffer, startIndex);
                 RolloverInProgress = LittleEndian.ToBoolean(buffer, startIndex + 4);
-                LatestDataTime = new TimeTag(LittleEndian.ToDouble(buffer, startIndex + 8));
+                LatestDataTime = new TimeTag((decimal)LittleEndian.ToDouble(buffer, startIndex + 8));
                 LatestDataID = LittleEndian.ToInt32(buffer, startIndex + 16);
 
                 for (int i = 0; i < m_sourceLatestDataTime.Count; i++)
                 {
-                    m_sourceLatestDataTime[i] = new TimeTag(LittleEndian.ToDouble(buffer, startIndex + 20 + (i * 8)));
+                    m_sourceLatestDataTime[i] = new TimeTag((decimal)LittleEndian.ToDouble(buffer, startIndex + 20 + (i * 8)));
                 }
 
                 return FixedLength;

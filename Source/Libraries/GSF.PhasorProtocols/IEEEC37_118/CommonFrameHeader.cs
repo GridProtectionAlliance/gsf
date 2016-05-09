@@ -110,7 +110,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             uint fractionOfSecond = BigEndian.ToUInt32(buffer, startIndex + 10);
 
             // Without timebase, the best timestamp you can get is down to the whole second
-            m_timestamp = (new UnixTimeTag((double)secondOfCentury)).ToDateTime().Ticks;
+            m_timestamp = (new UnixTimeTag((decimal)secondOfCentury)).ToDateTime().Ticks;
 
             if ((object)configurationFrame != null)
             {

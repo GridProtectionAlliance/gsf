@@ -197,7 +197,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 long ticksBeyondSecond;
 
                 // Without timebase, the best timestamp you can get is down to the whole second
-                m_timestamp = (new UnixTimeTag((double)secondOfCentury)).ToDateTime().Ticks;
+                m_timestamp = (new UnixTimeTag((decimal)secondOfCentury)).ToDateTime().Ticks;
 
                 // "Actual fractional seconds" are obtained by taking fractionOfSecond and dividing by timebase.
                 // Since we are converting to ticks, we need to multiply by Ticks.PerSecond.

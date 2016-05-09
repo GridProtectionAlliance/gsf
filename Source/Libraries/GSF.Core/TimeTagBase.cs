@@ -78,7 +78,7 @@ namespace GSF
 
         // Fields
         private readonly long m_baseDateOffsetTicks;
-        private double m_seconds;
+        private readonly decimal m_seconds;
 
         #endregion
 
@@ -89,10 +89,10 @@ namespace GSF
         /// </summary>
         /// <param name="baseDateOffsetTicks">Ticks of timetag base.</param>
         /// <param name="seconds">Number of seconds since base time.</param>
-        protected TimeTagBase(long baseDateOffsetTicks, double seconds)
+        protected TimeTagBase(long baseDateOffsetTicks, decimal seconds)
         {
             m_baseDateOffsetTicks = baseDateOffsetTicks;
-            Value = seconds;
+            m_seconds = seconds;
         }
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace GSF
         {
             // Zero base 100-nanosecond ticks from 1/1/1970 and convert to seconds.
             m_baseDateOffsetTicks = baseDateOffsetTicks;
-            Value = (timestamp - m_baseDateOffsetTicks).ToSeconds();
+            m_seconds = (timestamp - m_baseDateOffsetTicks) / (decimal)Ticks.PerSecond;
         }
 
         /// <summary>
@@ -116,7 +116,7 @@ namespace GSF
         {
             // Deserializes timetag
             m_baseDateOffsetTicks = info.GetInt64("baseDateOffsetTicks");
-            m_seconds = info.GetDouble("seconds");
+            m_seconds = info.GetDecimal("seconds");
         }
 
         #endregion
@@ -126,15 +126,11 @@ namespace GSF
         /// <summary>
         /// Gets or sets number of seconds (including any fractional seconds) since base time.
         /// </summary>
-        public virtual double Value
+        public virtual decimal Value
         {
             get
             {
                 return m_seconds;
-            }
-            set
-            {
-                m_seconds = value;
             }
         }
 

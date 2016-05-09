@@ -240,7 +240,7 @@ namespace GSF.Historian.Packets
 
                 // We have a binary image with the correct packet id.
                 HistorianID = LittleEndian.ToInt32(buffer, startIndex + 2);
-                Time = new TimeTag(LittleEndian.ToDouble(buffer, startIndex + 6));
+                Time = new TimeTag((decimal)LittleEndian.ToDouble(buffer, startIndex + 6));
                 Quality = (Quality)(LittleEndian.ToInt32(buffer, startIndex + 14));
                 Value = LittleEndian.ToSingle(buffer, startIndex + 18);
 

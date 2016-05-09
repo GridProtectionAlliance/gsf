@@ -133,8 +133,8 @@ namespace GSF.Historian.Files
             {
                 buffer.ValidateParameters(startIndex, length);
 
-                double startTime = LittleEndian.ToDouble(buffer, startIndex);
-                double stopTime = LittleEndian.ToDouble(buffer, startIndex + 8);
+                decimal startTime = (decimal)LittleEndian.ToDouble(buffer, startIndex);
+                decimal stopTime = (decimal)LittleEndian.ToDouble(buffer, startIndex + 8);
 
                 // Validate file time tags
                 if (startTime < TimeTag.MinValue.Value || startTime > TimeTag.MaxValue.Value)
@@ -720,7 +720,7 @@ namespace GSF.Historian.Files
                     TimeTag searchEndTime = endTime;
 
                     if (blockPointers.Count > 0)
-                        searchEndTime = new TimeTag(blockPointers.First().StartTime.Value - 1.0D);
+                        searchEndTime = new TimeTag(blockPointers.First().StartTime.Value - 1.0M);
 
                     ArchiveDataBlockPointer borderMatch = m_dataBlockPointers.LastOrDefault(dataBlockPointer => dataBlockPointer.Matches(historianID, TimeTag.MinValue, searchEndTime));
 

@@ -499,7 +499,7 @@ namespace GSF.Historian.Files
         private FileStream m_fileStream;
         private List<ArchiveDataBlock> m_dataBlocks;
         private List<Info> m_historicArchiveFiles;
-        private readonly Dictionary<int, double> m_delayedAlarmProcessing;
+        private readonly Dictionary<int, decimal> m_delayedAlarmProcessing;
         private volatile bool m_rolloverInProgress;
         private long m_activeFileReaders;
 
@@ -548,7 +548,7 @@ namespace GSF.Historian.Files
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
 
-            m_delayedAlarmProcessing = new Dictionary<int, double>();
+            m_delayedAlarmProcessing = new Dictionary<int, decimal>();
             m_rolloverWaitHandle = new ManualResetEvent(true);
             m_rolloverPreparationThread = new Thread(PrepareForRollover);
             m_buildHistoricFileListThread = new Thread(BuildHistoricFileList);
@@ -3288,14 +3288,14 @@ namespace GSF.Historian.Files
                             if (metadata.AlarmFlags.Value.CheckBits(BitExtensions.BitVal((int)state.CurrentData.Quality)))
                             {
                                 // Current data quality warrants alarming based on the alarming settings.
-                                float delay = 0;
+                                decimal delay = 0;
                                 switch (metadata.GeneralFlags.DataType)
                                 {
                                     case DataType.Analog:
-                                        delay = metadata.AnalogFields.AlarmDelay;
+                                        delay = (decimal)metadata.AnalogFields.AlarmDelay;
                                         break;
                                     case DataType.Digital:
-                                        delay = metadata.DigitalFields.AlarmDelay;
+                                        delay = (decimal)metadata.DigitalFields.AlarmDelay;
                                         break;
                                 }
 
@@ -3303,7 +3303,7 @@ namespace GSF.Historian.Files
                                 if (delay > 0)
                                 {
                                     // Wait before dispatching alarm.
-                                    double first;
+                                    decimal first;
                                     if (m_delayedAlarmProcessing.TryGetValue(dataPoint.HistorianID, out first))
                                     {
                                         if (state.CurrentData.Time.Value - first > delay)
@@ -3353,9 +3353,9 @@ namespace GSF.Historian.Files
                                 double slope2;
                                 double currentSlope;
 
-                                slope1 = (state.CurrentData.Value - (state.ArchivedData.Value + compressionLimit)) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
-                                slope2 = (state.CurrentData.Value - (state.ArchivedData.Value - compressionLimit)) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
-                                currentSlope = (state.CurrentData.Value - state.ArchivedData.Value) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
+                                slope1 = (state.CurrentData.Value - (state.ArchivedData.Value + compressionLimit)) / (double)(state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
+                                slope2 = (state.CurrentData.Value - (state.ArchivedData.Value - compressionLimit)) / (double)(state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
+                                currentSlope = (state.CurrentData.Value - state.ArchivedData.Value) / (double)(state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
 
                                 if (slope1 >= state.Slope1)
                                     state.Slope1 = slope1;
@@ -3477,8 +3477,8 @@ namespace GSF.Historian.Files
                     {
                         if (state.CurrentData.Time.Value != state.ArchivedData.Time.Value)
                         {
-                            state.Slope1 = (state.CurrentData.Value - (state.ArchivedData.Value + compressionLimit)) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
-                            state.Slope2 = (state.CurrentData.Value - (state.ArchivedData.Value - compressionLimit)) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
+                            state.Slope1 = (state.CurrentData.Value - (state.ArchivedData.Value + compressionLimit)) / (double)(state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
+                            state.Slope2 = (state.CurrentData.Value - (state.ArchivedData.Value - compressionLimit)) / (double)(state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
                         }
                         else
                         {
