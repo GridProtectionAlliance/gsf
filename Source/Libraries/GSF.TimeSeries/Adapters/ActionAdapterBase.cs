@@ -861,6 +861,9 @@ namespace GSF.TimeSeries.Adapters
             if (settings.TryGetValue("timeResolution", out setting))
                 TimeResolution = long.Parse(setting);
 
+            if (settings.TryGetValue("roundToNearestTimestamp", out setting))
+                RoundToNearestTimestamp = setting.ParseBoolean();
+
             if (settings.TryGetValue("allowPreemptivePublishing", out setting))
                 AllowPreemptivePublishing = setting.ParseBoolean();
 
