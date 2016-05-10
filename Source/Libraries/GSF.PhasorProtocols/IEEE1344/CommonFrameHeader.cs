@@ -78,10 +78,9 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <summary>
         /// Creates a new <see cref="CommonFrameHeader"/> from given <paramref name="buffer"/>.
         /// </summary>
-        /// <param name="configurationFrame">IEEE 1344 <see cref="ConfigurationFrame"/> if already parsed.</param>
         /// <param name="buffer">Buffer that contains data to parse.</param>
         /// <param name="startIndex">Start index into buffer where valid data begins.</param>
-        public CommonFrameHeader(ConfigurationFrame configurationFrame, byte[] buffer, int startIndex)
+        public CommonFrameHeader(byte[] buffer, int startIndex)
         {
             uint secondOfCentury = BigEndian.ToUInt32(buffer, startIndex);
             m_sampleCount = BigEndian.ToUInt16(buffer, startIndex + 4);
@@ -94,10 +93,6 @@ namespace GSF.PhasorProtocols.IEEE1344
             // NTP timestamps based on NtpTimeTag class are designed to work for dates between
             // 1968-01-20 and 2104-02-26 based on recommended bit interpretation in RFC-2030.
             NtpTimeTag timetag = new NtpTimeTag(secondOfCentury, 0);
-
-            // Data frames have subsecond time information, so we add this fraction of time to current seconds value
-            if (TypeID == IEEE1344.FrameType.DataFrame && configurationFrame != null)
-                timetag = new NtpTimeTag(timetag.Value + SampleCount / Math.Truncate((decimal)Common.MaximumSampleCount / (decimal)configurationFrame.Period) / (decimal)configurationFrame.FrameRate);
 
             // Cache timestamp value
             m_timestamp = timetag.ToDateTime().Ticks;

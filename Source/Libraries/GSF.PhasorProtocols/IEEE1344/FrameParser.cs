@@ -82,6 +82,9 @@ namespace GSF.PhasorProtocols.IEEE1344
         private FrameImageCollector m_configurationFrameImages;
         private FrameImageCollector m_headerFrameImages;
 
+        private ushort m_lastSampleCount;
+        private ushort m_samplesPerFrame;
+
         #endregion
 
         #region [ Constructors ]
@@ -94,6 +97,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         public FrameParser(CheckSumValidationFrameTypes checkSumValidationFrameTypes = CheckSumValidationFrameTypes.AllFrames, bool trustHeaderLength = true)
             : base(checkSumValidationFrameTypes, trustHeaderLength)
         {
+            m_samplesPerFrame = ushort.MaxValue;
         }
 
         #endregion
@@ -175,7 +179,7 @@ namespace GSF.PhasorProtocols.IEEE1344
             if (length >= CommonFrameHeader.FixedLength + 2)
             {
                 // Parse common frame header
-                CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(m_configurationFrame, buffer, offset);
+                CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(buffer, offset);
 
                 // As an optimization, we also make sure entire frame buffer image is available to be parsed - by doing this
                 // we eliminate the need to validate length on all subsequent data elements that comprise the frame
@@ -256,6 +260,39 @@ namespace GSF.PhasorProtocols.IEEE1344
                 if (commonHeader != null && commonHeader.IsLastFrame)
                     base.OnReceivedHeaderFrame(frame);
             }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="FrameParserBase{TFrameIdentifier}.ReceivedDataFrame"/> event.
+        /// </summary>
+        /// <param name="frame"><see cref="IDataFrame"/> to send to <see cref="FrameParserBase{TFrameIdentifier}.ReceivedDataFrame"/> event.</param>
+        protected override void OnReceivedDataFrame(IDataFrame frame)
+        {
+            DataFrame dataFrame = frame as DataFrame;
+
+            if ((object)dataFrame != null)
+            {
+                // Keep track of the minimum number of samples between
+                // data frames as the number of samples per frame
+                ushort sampleCount = dataFrame.CommonHeader.SampleCount;
+                ushort diff = (ushort)(sampleCount - m_lastSampleCount);
+
+                if (diff < m_samplesPerFrame)
+                    m_samplesPerFrame = diff;
+
+                m_lastSampleCount = sampleCount;
+
+                // Calculate subsecond time information based on sample count,
+                // then add this fraction of time to current seconds value
+                if ((object)dataFrame.ConfigurationFrame != null)
+                {
+                    int frameIndex = sampleCount / m_samplesPerFrame;
+                    long subsecondTicks = frameIndex * Ticks.PerSecond / dataFrame.ConfigurationFrame.FrameRate;
+                    dataFrame.CommonHeader.Timestamp += subsecondTicks;
+                }
+            }
+
+            base.OnReceivedDataFrame(frame);
         }
 
         /// <summary>
