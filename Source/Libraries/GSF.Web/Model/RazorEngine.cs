@@ -22,12 +22,13 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Web.Hosting;
+using GSF.Collections;
 using GSF.Configuration;
 using GSF.IO;
 using RazorEngine;
@@ -55,7 +56,7 @@ namespace GSF.Web.Model
         /// <summary>
         /// Creates a new <see cref="RazorEngine{TLanguage}"/> instance.
         /// </summary>
-        /// <param name="templatePath">Template path for view files, if applicable.</param>
+        /// <param name="templatePath">Template path for view files.</param>
         public RazorEngine(string templatePath)
         {
             if (string.IsNullOrEmpty(templatePath))
@@ -134,6 +135,11 @@ namespace GSF.Web.Model
         {
             get;
         }
+
+        /// <summary>
+        /// Gets the <see cref="IRazorEngineService"/> instance used by the <see cref="RazorEngine{TLanguage}"/>.
+        /// </summary>
+        public IRazorEngineService EngineService => m_engineService;
 
         #endregion
 
@@ -264,7 +270,7 @@ namespace GSF.Web.Model
 
         // Static Fields
         private static RazorEngine<TLanguage> s_defaultEngine;
-        private static readonly ConcurrentDictionary<string, RazorEngine<TLanguage>> s_configuredEngine;
+        private static readonly Dictionary<string, RazorEngine<TLanguage>> s_configuredEngines;
 
         // Static Properties
 
@@ -276,7 +282,7 @@ namespace GSF.Web.Model
         // Static Constructor
         static RazorEngine()
         {
-            s_configuredEngine = new ConcurrentDictionary<string, RazorEngine<TLanguage>>(StringComparer.OrdinalIgnoreCase);
+            s_configuredEngines = new Dictionary<string, RazorEngine<TLanguage>>(StringComparer.OrdinalIgnoreCase);
         }
 
         // Static Methods
@@ -288,41 +294,44 @@ namespace GSF.Web.Model
         /// <returns>Shared <see cref="RazorEngine{TLanguage}"/> instance created based on configured template path.</returns>
         public static RazorEngine<TLanguage> GetConfiguredEngine(string settingsCategory = null)
         {
-            if (string.IsNullOrWhiteSpace(settingsCategory))
-                settingsCategory = "systemSettings";
-
-            return s_configuredEngine.GetOrAdd(settingsCategory, category =>
+            lock (typeof(LanguageConstraint))
             {
-                string templatePath = null;
+                if (string.IsNullOrWhiteSpace(settingsCategory))
+                    settingsCategory = "systemSettings";
 
-                // Get configured template path
-                CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings[category];
-
-                TLanguage languageType = new TLanguage();
-
-                switch (languageType.ResolutionMode)
+                return s_configuredEngines.GetOrAdd(settingsCategory, category =>
                 {
-                    case RazorViewResolutionMode.ResolvePath:
-                    case RazorViewResolutionMode.WatchingResolvePath:
-                        if (Common.GetApplicationType() == ApplicationType.Web)
-                        {
-                            systemSettings.Add("TemplatePath", "~/Views/Shared/Templates/", "Path for data context based razor field templates.");
-                            templatePath = HostingEnvironment.MapPath(systemSettings["TemplatePath"].Value).EnsureEnd('/');
-                        }
-                        else
-                        {
-                            systemSettings.Add("TemplatePath", "wwwroot/Templates/", "Path for data context based razor field templates.");
-                            templatePath = FilePath.GetAbsolutePath(systemSettings["TemplatePath"].Value);
-                        }
-                        break;
-                    case RazorViewResolutionMode.EmbeddedResource:
-                        systemSettings.Add("EmbeddedTemplatePath", "GSF.Web.Model.Views.", "Embedded name space path for data context based razor field templates.");
-                        templatePath = systemSettings["EmbeddedTemplatePath"].Value.EnsureEnd('.');
-                        break;
-                }
+                    string templatePath = null;
 
-                return new RazorEngine<TLanguage>(templatePath);
-            });
+                    // Get configured template path
+                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[category];
+
+                    TLanguage languageType = new TLanguage();
+
+                    switch (languageType.ResolutionMode)
+                    {
+                        case RazorViewResolutionMode.ResolvePath:
+                        case RazorViewResolutionMode.WatchingResolvePath:
+                            if (Common.GetApplicationType() == ApplicationType.Web)
+                            {
+                                settings.Add("TemplatePath", "~/Views/Shared/Templates/", "Path for data context based razor field templates.");
+                                templatePath = HostingEnvironment.MapPath(settings["TemplatePath"].Value).EnsureEnd('/');
+                            }
+                            else
+                            {
+                                settings.Add("TemplatePath", "wwwroot/Templates/", "Path for data context based razor field templates.");
+                                templatePath = FilePath.GetAbsolutePath(settings["TemplatePath"].Value);
+                            }
+                            break;
+                        case RazorViewResolutionMode.EmbeddedResource:
+                            settings.Add("EmbeddedTemplatePath", "GSF.Web.Model.Views.", "Embedded name space path for data context based razor field templates.");
+                            templatePath = settings["EmbeddedTemplatePath"].Value.EnsureEnd('.');
+                            break;
+                    }
+
+                    return new RazorEngine<TLanguage>(templatePath);
+                });
+            }
         }
 
         #endregion

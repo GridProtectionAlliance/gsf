@@ -66,15 +66,15 @@ namespace GSF.Web.Model
         /// <param name="templateName">Name of template file, typically a .cshtml or .vbhtml file.</param>
         /// <param name="model">Reference to model to use when rendering template.</param>
         /// <param name="modelType">Type of <paramref name="model"/>.</param>
-        /// <param name="connection"><see cref="AdoDataConnection"/> to use, if any.</param>
+        /// <param name="database"><see cref="AdoDataConnection"/> to use, if any.</param>
         /// <param name="exceptionHandler">Delegate to handle exceptions, if any.</param>
-        public RazorView(IRazorEngine razorEngine, string templateName, object model = null, Type modelType = null, AdoDataConnection connection = null, Action<Exception> exceptionHandler = null)
+        public RazorView(IRazorEngine razorEngine, string templateName, object model = null, Type modelType = null, AdoDataConnection database = null, Action<Exception> exceptionHandler = null)
         {
             m_razorEngine = razorEngine;
             TemplateName = templateName;
             Model = model;
             ModelType = modelType;
-            Connection = connection;
+            Database = database;
             ExceptionHandler = exceptionHandler;
         }
 
@@ -141,9 +141,9 @@ namespace GSF.Web.Model
         public IRazorEngine RazorEngine => m_razorEngine;
 
         /// <summary>
-        /// Gets or sets data connection to provide to <see cref="DataContext"/>, if any.
+        /// Gets or sets database connection to provide to <see cref="DataContext"/>, if any.
         /// </summary>
-        public AdoDataConnection Connection
+        public AdoDataConnection Database
         {
             get;
             set;
@@ -166,7 +166,7 @@ namespace GSF.Web.Model
         /// to generate template based HTML input fields for a view. The default HTML input templates are defined
         /// as embedded resources in GSF.Web.
         /// </remarks>
-        public IRazorEngine DataContextRazorEngine
+        public IRazorEngine DataContextEngine
         {
             get;
             set;
@@ -182,7 +182,7 @@ namespace GSF.Web.Model
         /// <returns>Rendered result.</returns>
         public string Execute()
         {
-            using (DataContext dataContext = new DataContext(Connection, razorEngine: DataContextRazorEngine, exceptionHandler: ExceptionHandler))
+            using (DataContext dataContext = new DataContext(Database, razorEngine: DataContextEngine, exceptionHandler: ExceptionHandler))
             {
                 m_viewBag.AddValue("DataContext", dataContext);
                 return m_razorEngine.RunCompile(TemplateName, ModelType, Model, m_viewBag);
@@ -193,12 +193,12 @@ namespace GSF.Web.Model
         /// Compiles and executes view template for specified request message and post data.
         /// </summary>
         /// <returns>Rendered result.</returns>
-        public string Execute(HttpRequestMessage requestMessage, dynamic postData)
+        public string Execute(HttpRequestMessage request, dynamic postData)
         {
-            using (DataContext dataContext = new DataContext(Connection, razorEngine: DataContextRazorEngine, exceptionHandler: ExceptionHandler))
+            using (DataContext dataContext = new DataContext(Database, razorEngine: DataContextEngine, exceptionHandler: ExceptionHandler))
             {
                 m_viewBag.AddValue("DataContext", dataContext);
-                m_viewBag.AddValue("Request", requestMessage);
+                m_viewBag.AddValue("Request", request);
 
                 if ((object)postData == null)
                 {

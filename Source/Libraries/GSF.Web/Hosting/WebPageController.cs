@@ -22,20 +22,12 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Concurrent;
-using System.IO;
-using System.Net;
+using System.Collections.Generic;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
-using System.Web;
 using System.Web.Http;
+using System.Web.Http.Dependencies;
 using GSF.Data;
-using GSF.IO;
-using GSF.IO.Checksums;
-using GSF.Reflection;
 using GSF.Web.Model;
 
 namespace GSF.Web.Hosting
@@ -47,56 +39,86 @@ namespace GSF.Web.Hosting
     {
         #region [ Members ]
 
-        // Events
+        // Nested Types
 
-        /// <summary>
-        /// Exposes execution exceptions that occur in <see cref="WebPageController"/> instances.
-        /// </summary>
-        public event EventHandler<Exception> ExecutionException;
+        // Web page controller dependency resolver
+        private sealed class WebPageControllerResolver : IDependencyResolver
+        {
+            private readonly WebServer m_webServer;
+            private readonly string m_defaultWebPage;
+            private readonly object m_model;
+            private readonly Type m_modelType;
+            private readonly AdoDataConnection m_database;
 
-        /// <summary>
-        /// Exposes status messages that get reported from <see cref="WebPageController"/> instances.
-        /// </summary>
-        public event EventHandler<string> StatusMessage;
+            public WebPageControllerResolver(WebServer webServer, string defaultWebPage, object model, Type modelType, AdoDataConnection database)
+            {
+                m_webServer = webServer;
+                m_defaultWebPage = defaultWebPage;
+                m_model = model;
+                m_modelType = modelType;
+                m_database = database;
+            }
+
+            void IDisposable.Dispose()
+            {
+            }
+
+            public object GetService(Type serviceType)
+            {
+                if (serviceType == typeof(WebPageController))
+                    return new WebPageController(m_webServer)
+                    {
+                        DefaultWebPage = m_defaultWebPage,
+                        Model = m_model,
+                        ModelType = m_modelType,
+                        Database = m_database
+                    };
+
+                return null;
+            }
+
+            public IEnumerable<object> GetServices(Type serviceType)
+            {
+                if (serviceType == typeof(WebPageController))
+                    return new[]
+                    {
+                        new WebPageController(m_webServer)
+                        {
+                            DefaultWebPage = m_defaultWebPage,
+                            Model = m_model,
+                            ModelType = m_modelType,
+                            Database = m_database
+                        }
+                    };
+
+                return new List<object>();
+            }
+
+            public IDependencyScope BeginScope() => this;
+        }
 
         // Fields
-        private readonly string m_webRootPath;
-        private readonly IRazorEngine m_razorEngineCS;
-        private readonly IRazorEngine m_razorEngineVB;
-        private readonly ConcurrentDictionary<string, uint> m_etagCache;
-        private readonly SafeFileWatcher m_fileWatcher;
-        private bool m_disposed;
+        private readonly WebServer m_webServer;
 
         #endregion
 
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="WebPageController"/>.
+        /// Creates a new <see cref="WebPageController"/> using the default configured <see cref="WebServer"/> instance.
         /// </summary>
-        /// <param name="webRootPath">Root path for web page; defaults to template path for <paramref name="razorEngineCS"/>.</param>
-        /// <param name="razorEngineCS">Razor engine instance for .cshtml templates; uses default instance if not provided.</param>
-        /// <param name="razorEngineVB">Razor engine instance for .vbhtml templates; uses default instance if not provided.</param>
-        public WebPageController(string webRootPath = null, IRazorEngine razorEngineCS = null, IRazorEngine razorEngineVB = null)
+        public WebPageController() : this(null)
         {
-            bool releaseMode = !AssemblyInfo.EntryAssembly.Debuggable;
-            m_razorEngineCS = razorEngineCS ?? (releaseMode ? RazorEngine<CSharp>.Default : RazorEngine<CSharpDebug>.Default as IRazorEngine);
-            m_razorEngineVB = razorEngineVB ?? (releaseMode ? RazorEngine<VisualBasic>.Default : RazorEngine<VisualBasicDebug>.Default as IRazorEngine);
-            m_webRootPath = FilePath.AddPathSuffix(webRootPath ?? m_razorEngineCS.TemplatePath);
-            m_etagCache = new ConcurrentDictionary<string, uint>(StringComparer.InvariantCultureIgnoreCase);
+        }
 
-            m_fileWatcher = new SafeFileWatcher(m_webRootPath)
-            {
-                IncludeSubdirectories = true,
-                EnableRaisingEvents = true
-            };
-
-            m_fileWatcher.Changed += m_fileWatcher_FileChange;
-            m_fileWatcher.Deleted += m_fileWatcher_FileChange;
-            m_fileWatcher.Renamed += m_fileWatcher_FileChange;
-
+        /// <summary>
+        /// Creates a new <see cref="WebPageController"/> using specified <paramref name="webServer"/>.
+        /// </summary>
+        /// <param name="webServer"><see cref="WebServer"/> instance to use for controller; uses default instance if not provided.</param>
+        public WebPageController(WebServer webServer)
+        {
+            m_webServer = webServer ?? WebServer.Default;
             DefaultWebPage = "index.html";
-            ClientCacheEnabled = true;
         }
 
         #endregion
@@ -115,7 +137,7 @@ namespace GSF.Web.Hosting
         /// <summary>
         /// Gets or sets the <see cref="RazorView"/> model instance for this <see cref="WebPageController"/>, if any.
         /// </summary>
-        public object RazorModel
+        public object Model
         {
             get;
             set;
@@ -124,54 +146,29 @@ namespace GSF.Web.Hosting
         /// <summary>
         /// Gets or sets the <see cref="RazorView"/> model <see cref="Type"/> for this <see cref="WebPageController"/>, if any.
         /// </summary>
-        public Type RazorModelType
+        public Type ModelType
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Gets or sets data connection to provide to <see cref="RazorView"/> instances in this <see cref="WebPageController"/>, if any.
+        /// Gets or sets database connection to provide to <see cref="RazorView"/> instances in this <see cref="WebPageController"/>, if any.
         /// </summary>
-        public AdoDataConnection RazorConnection
+        public AdoDataConnection Database
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if cache control is enabled for browser clients; default to <c>true</c>.
+        /// Gets the <see cref="Hosting.WebServer"/> instance used by this <see cref="WebPageController"/>.
         /// </summary>
-        public bool ClientCacheEnabled
-        {
-            get;
-            set;
-        }
+        public WebServer WebServer => m_webServer;
 
         #endregion
 
         #region [ Methods ]
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="WebPageController"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                        m_fileWatcher?.Dispose();
-                }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
-            }
-        }
 
         /// <summary>
         /// Default page request handler.
@@ -191,7 +188,7 @@ namespace GSF.Web.Hosting
         [Route("{pageName}"), HttpGet]
         public Task<HttpResponseMessage> GetPage(string pageName)
         {
-            return RenderResponse(pageName);
+            return m_webServer.RenderResponse(Request, pageName, Model, ModelType, Database);
         }
 
         /// <summary>
@@ -203,126 +200,7 @@ namespace GSF.Web.Hosting
         [Route("{pageName}"), HttpPost]
         public Task<HttpResponseMessage> PostPage(string pageName, dynamic postData)
         {
-            return RenderResponse(pageName, postData);
-        }
-
-        private async Task<HttpResponseMessage> RenderResponse(string pageName, dynamic postData = null)
-        {
-            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
-
-            string content, fileExtension = FilePath.GetExtension(pageName).ToLowerInvariant();
-
-            switch (fileExtension)
-            {
-                case ".cshtml":
-                    content = await new RazorView(m_razorEngineCS, pageName, RazorModel, RazorModelType, RazorConnection, OnExecutionException).ExecuteAsync(Request, postData);
-                    response.Content = new StringContent(content, Encoding.UTF8, "text/html");
-                    break;
-                case ".vbhtml":
-                    content = await new RazorView(m_razorEngineVB, pageName, RazorModel, RazorModelType, RazorConnection, OnExecutionException).ExecuteAsync(Request, postData);
-                    response.Content = new StringContent(content, Encoding.UTF8, "text/html");
-                    break;
-                default:
-                    string fileName = FilePath.GetAbsolutePath($"{m_webRootPath}{pageName.Replace('/', Path.DirectorySeparatorChar)}");
-
-                    if (File.Exists(fileName))
-                    {
-                        FileStream fileData = null;
-                        uint responseHash = 0;
-
-                        if (ClientCacheEnabled && !m_etagCache.TryGetValue(fileName, out responseHash))
-                        {
-                            // Calculate check-sum for file
-                            await Task.Run(() =>
-                            {
-                                const int BufferSize = 32768;
-                                byte[] buffer = new byte[BufferSize];
-                                Crc32 calculatedHash = new Crc32();
-
-                                fileData = File.OpenRead(fileName);
-                                int bytesRead = fileData.Read(buffer, 0, BufferSize);
-
-                                while (bytesRead > 0)
-                                {
-                                    calculatedHash.Update(buffer, 0, bytesRead);
-                                    bytesRead = fileData.Read(buffer, 0, BufferSize);
-                                }
-
-                                responseHash = calculatedHash.Value;
-                                m_etagCache.TryAdd(fileName, responseHash);
-                                fileData.Seek(0, SeekOrigin.Begin);
-
-                                OnStatusMessage($"Cache [{responseHash}] added for file \"{fileName}\"");
-                            });
-                        }
-
-                        if (PublishResponseContent(response, responseHash))
-                        {
-                            if (fileData == null)
-                                fileData = File.OpenRead(fileName);
-
-                            response.Content = await Task.Run(() => new StreamContent(fileData));
-                            response.Content.Headers.ContentType = new MediaTypeHeaderValue(MimeMapping.GetMimeMapping(pageName));
-                        }
-                        else
-                        {
-                            fileData?.Dispose();
-                        }
-                    }
-                    else
-                    {
-                        response.StatusCode = HttpStatusCode.NotFound;
-                    }
-                    break;
-            }
-
-            return response;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool PublishResponseContent(HttpResponseMessage response, long responseHash)
-        {
-            if (!ClientCacheEnabled)
-                return true;
-
-            // See if client's version of cached resource is up to date
-            foreach (EntityTagHeaderValue headerValue in Request.Headers.IfNoneMatch)
-            {
-                long requestHash;
-
-                if (long.TryParse(headerValue.Tag?.Substring(1, headerValue.Tag.Length - 2), out requestHash) && responseHash == requestHash)
-                {
-                    response.StatusCode = HttpStatusCode.NotModified;
-                    return false;
-                }
-            }
-
-            response.Headers.CacheControl = new CacheControlHeaderValue
-            {
-                Public = true,
-                MaxAge = new TimeSpan(31536000 * TimeSpan.TicksPerSecond)
-            };
-
-            response.Headers.ETag = new EntityTagHeaderValue($"\"{responseHash}\"");
-            return true;
-        }
-
-        private void OnExecutionException(Exception exception)
-        {
-            ExecutionException?.Invoke(this, exception);
-        }
-
-        private void OnStatusMessage(string message)
-        {
-            StatusMessage?.Invoke(this, message);
-        }
-
-        private void m_fileWatcher_FileChange(object sender, FileSystemEventArgs e)
-        {
-            uint responseHash;
-
-            if (m_etagCache.TryRemove(e.FullPath, out responseHash))
-                OnStatusMessage($"Cache [{responseHash}] cleared for file \"{e.FullPath}\"");
+            return m_webServer.RenderResponse(Request, pageName, Model, ModelType, Database, postData);
         }
 
         #region [ Sub-folder Handlers ]
@@ -473,6 +351,26 @@ namespace GSF.Web.Hosting
         }
 
         #endregion
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        /// <summary>
+        /// Gets a dependency resolver.
+        /// </summary>
+        /// <param name="webServer"><see cref="WebServer"/> instance to use for controller; uses default instance if not provided.</param>
+        /// <param name="defaultWebPage">Default web page name to use for controller; uses "index.html" if not provided.</param>
+        /// <param name="model">Reference to model to use when rendering Razor templates, if any.</param>
+        /// <param name="modelType">Type of <paramref name="model"/>, if any.</param>
+        /// <param name="connection"><see cref="AdoDataConnection"/> to use, if any.</param>
+        /// <returns>Dependency resolver for the specified parameters.</returns>
+        public static IDependencyResolver GetDependencyResolver(WebServer webServer, string defaultWebPage = null, object model = null, Type modelType = null, AdoDataConnection connection = null)
+        {
+            return new WebPageControllerResolver(webServer, defaultWebPage, model, modelType, connection);
+        }
 
         #endregion
     }
