@@ -61,6 +61,7 @@ namespace GSF.TimeSeries
         private volatile TrackingFrame m_last;                          // Reference to last published frame
         private int m_framesPerSecond;                                  // Cached frames per second
         private long m_timeResolution;                                  // Cached time resolution (max sorting resolution in ticks)
+        private bool m_roundToNearestTimestamp;                         // Determines whether to round to nearest timestamp
         private DownsamplingMethod m_downsamplingMethod;                // Cached down-sampling method
         private bool m_disposed;                                        // Object disposed flag
 
@@ -130,6 +131,22 @@ namespace GSF.TimeSeries
             set
             {
                 m_timeResolution = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a value to indicate whether to round to the nearest
+        /// frame timestamp rather than rounding down to the nearest timestamps.
+        /// </summary>
+        public bool RoundToNearestTimestamp
+        {
+            get
+            {
+                return m_roundToNearestTimestamp;
+            }
+            set
+            {
+                m_roundToNearestTimestamp = value;
             }
         }
 
@@ -402,7 +419,7 @@ namespace GSF.TimeSeries
             long destinationTicks;
 
             // Calculate destination ticks for this frame
-            destinationTicks = Ticks.AlignToSubsecondDistribution(ticks, m_framesPerSecond, m_timeResolution);
+            destinationTicks = m_roundToNearestTimestamp ? Ticks.RoundToSubsecondDistribution(ticks, m_framesPerSecond) : Ticks.AlignToSubsecondDistribution(ticks, m_framesPerSecond, m_timeResolution);
 
             // Make sure ticks are newer than latest published ticks...
             if (destinationTicks > Thread.VolatileRead(ref m_publishedTicks))

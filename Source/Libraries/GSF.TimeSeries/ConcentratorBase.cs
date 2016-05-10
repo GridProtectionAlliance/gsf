@@ -418,6 +418,7 @@ namespace GSF.TimeSeries
         private double m_lagTime;                           // Allowed past time deviation tolerance, in seconds
         private double m_leadTime;                          // Allowed future time deviation tolerance, in seconds
         private long m_timeResolution;                      // Maximum sorting resolution in ticks
+        private bool m_roundToNearestTimestamp;             // Determines whether to round to nearest timestamp
         private int m_processingInterval;                   // Defines a specific processing interval for data, if desired
         private DownsamplingMethod m_downsamplingMethod;    // Down-sampling method to use if input is at a higher-resolution than output
         private double m_timeOffset;                        // Half the distance of the time resolution used for index calculation
@@ -938,6 +939,22 @@ namespace GSF.TimeSeries
                 // Assign desired time resolution to frame queue
                 if ((object)m_frameQueue != null)
                     m_frameQueue.TimeResolution = m_timeResolution;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a value to indicate whether the concentrator should round to the
+        /// nearest frame timestamp rather than rounding down to the nearest timestamps.
+        /// </summary>
+        public bool RoundToNearestTimestamp
+        {
+            get
+            {
+                return m_roundToNearestTimestamp;
+            }
+            set
+            {
+                m_roundToNearestTimestamp = value;
             }
         }
 
