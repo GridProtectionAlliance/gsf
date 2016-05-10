@@ -375,7 +375,6 @@ namespace HistorianView
         private FileType m_exportFileType;
         private int m_exportFrameRate;
         private double m_exportNominalFrequency;
-        private long m_exportTimeResolution;
         private bool m_alignTimestampsInExport;
 
         private readonly ICollection<MenuItem> m_contextMenuItems;
@@ -401,7 +400,6 @@ namespace HistorianView
 
             m_exportFrameRate = 30;
             m_exportNominalFrequency = 60.0D;
-            m_exportTimeResolution = 330000L;
             m_alignTimestampsInExport = true;
 
             m_currentTimeCheckBox.IsChecked = true;
@@ -636,7 +634,6 @@ namespace HistorianView
             DateTime dateTimeValue;
             int intValue;
             double doubleValue;
-            long longValue;
 
             // If the hdv file doesn't exist, there's nothing to do
             if (!File.Exists(filePath))
@@ -707,12 +704,6 @@ namespace HistorianView
                     case "nominalFrequency":
                         if (double.TryParse((string)exportAttribute, out doubleValue))
                             m_exportNominalFrequency = doubleValue;
-
-                        break;
-
-                    case "timeResolution":
-                        if (long.TryParse((string)exportAttribute, out longValue))
-                            m_exportTimeResolution = longValue;
 
                         break;
 
@@ -803,7 +794,6 @@ namespace HistorianView
                     new XAttribute("fileType", m_exportFileType),
                     new XAttribute("frameRate", m_exportFrameRate),
                     new XAttribute("nominalFrequency", m_exportNominalFrequency),
-                    new XAttribute("timeResolution", m_exportTimeResolution),
                     new XAttribute("alignTimestamps", m_alignTimestampsInExport)));
 
             // Save information about the currently open archives
@@ -941,7 +931,6 @@ namespace HistorianView
             dialog.FileType = m_exportFileType;
             dialog.FrameRate = m_exportFrameRate;
             dialog.NominalFrequency = m_exportNominalFrequency;
-            dialog.TimeResolution = m_exportTimeResolution;
             dialog.AlignTimestamps = m_alignTimestampsInExport;
 
             if (dialog.ShowDialog() == true)
@@ -956,7 +945,6 @@ namespace HistorianView
                     m_exportFileType = dialog.FileType;
                     m_exportFrameRate = dialog.FrameRate;
                     m_exportNominalFrequency = dialog.NominalFrequency;
-                    m_exportTimeResolution = dialog.TimeResolution;
                     m_alignTimestampsInExport = dialog.AlignTimestamps;
 
                     try
@@ -999,7 +987,7 @@ namespace HistorianView
                                 int rowIndex;
 
                                 if (m_alignTimestampsInExport)
-                                    time = new TimeTag(new DateTime(Ticks.AlignToSubsecondDistribution(point.Time.ToDateTime().Ticks, m_exportFrameRate, m_exportTimeResolution)));
+                                    time = new TimeTag(new DateTime(Ticks.RoundToSubsecondDistribution(point.Time.ToDateTime().Ticks, m_exportFrameRate)));
 
                                 // Get or create the list of rows for the timetag of the current point.
                                 if (!data.TryGetValue(time, out rowList))

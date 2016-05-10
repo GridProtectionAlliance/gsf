@@ -16,7 +16,6 @@
             <RowDefinition />
             <RowDefinition />
             <RowDefinition />
-            <RowDefinition />
         </Grid.RowDefinitions>
         
         <Grid.ColumnDefinitions>
@@ -37,21 +36,15 @@
             <Label Content="frames per second" />
         </StackPanel>
         
-        <Label Grid.Row="2" Grid.Column="0" Content="Time Resolution" Style="{StaticResource CellStyle}" />
-        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Style="{StaticResource CellStyle}">
-            <TextBox Name="TimeResolutionTextBox" Width="75" Text="330000" TextChanged="TimeResolutionTextBox_TextChanged" />
-            <Button Name="RecommendedTimeResolutionButton" Margin="10,0,0,0" Content="Recommended: 330000" Click="RecommendedTimeResolutionButton_Click" />
-        </StackPanel>
-        
-        <Label Name="NominalFrequencyLabel" Grid.Row="3" Grid.Column="0" Content="Nominal Frequency" Style="{StaticResource CellStyle}" Visibility="Collapsed" />
+        <Label Name="NominalFrequencyLabel" Grid.Row="2" Grid.Column="0" Content="Nominal Frequency" Style="{StaticResource CellStyle}" Visibility="Collapsed" />
         <StackPanel Name="NominalFrequencyStackPanel" Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Style="{StaticResource CellStyle}" Visibility="Collapsed">
             <TextBox Name="NominalFrequencyTextBox" Width="50" HorizontalContentAlignment="Right" Text="60" TextChanged="NominalFrequencyTextBox_TextChanged" />
             <Label Content="Hz" />
         </StackPanel>
         
-        <CheckBox Name="AlignTimestampsCheckBox" Grid.Row="4" Grid.Column="1" Content="Align timestamps" IsChecked="True" Style="{StaticResource CellStyle}" Checked="AlignTimestampsCheckBox_Checked" Unchecked="AlignTimestampsCheckBox_Unchecked" />
+        <CheckBox Name="AlignTimestampsCheckBox" Grid.Row="3" Grid.Column="1" Content="Align timestamps" IsChecked="True" Style="{StaticResource CellStyle}" Checked="AlignTimestampsCheckBox_Checked" Unchecked="AlignTimestampsCheckBox_Unchecked" />
 
-        <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Style="{StaticResource CellStyle}">
+        <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Style="{StaticResource CellStyle}">
             <StackPanel.Resources>
                 <Style TargetType="Button">
                     <Setter Property="Margin" Value="5, 0" />

@@ -23,7 +23,6 @@
 
 using System.Windows;
 using System.Windows.Controls;
-using GSF;
 
 namespace HistorianView
 {
@@ -58,8 +57,6 @@ namespace HistorianView
         // Fields
         private int m_frameRate;
         private double m_nominalFrequency;
-        private long m_timeResolution;
-        private long m_recommendedTimeResolution;
 
         #endregion
 
@@ -71,7 +68,6 @@ namespace HistorianView
         public ExportDialog()
         {
             InitializeComponent();
-            m_recommendedTimeResolution = m_timeResolution;
         }
 
         #endregion
@@ -124,21 +120,6 @@ namespace HistorianView
         }
 
         /// <summary>
-        /// Gets or sets the time resolution entered into the text box.
-        /// </summary>
-        public long TimeResolution
-        {
-            get
-            {
-                return m_timeResolution;
-            }
-            set
-            {
-                TimeResolutionTextBox.Text = value.ToString();
-            }
-        }
-
-        /// <summary>
         /// Gets or sets the flag that indicates whether timestamps in the export should be aligned by frame rate.
         /// </summary>
         public bool AlignTimestamps
@@ -185,7 +166,6 @@ namespace HistorianView
         private void FrameRateTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             int frameRate;
-            long recommendedTimeResolution;
 
             if (string.IsNullOrEmpty(FrameRateTextBox.Text))
             {
@@ -198,19 +178,6 @@ namespace HistorianView
             {
                 // Set the frame rate to what the user entered
                 m_frameRate = frameRate;
-
-                // If the frame rate entered is valid, also update the recommended time resolution
-                if (IsInitialized && m_frameRate > 0)
-                {
-                    recommendedTimeResolution = GetRecommendedTimeResolution();
-
-                    // Only update the time resolution if it matches the recommended resolution
-                    if (m_timeResolution == m_recommendedTimeResolution)
-                        TimeResolutionTextBox.Text = recommendedTimeResolution.ToString();
-
-                    m_recommendedTimeResolution = recommendedTimeResolution;
-                    RecommendedTimeResolutionButton.Content = string.Format("Recommended: {0}", recommendedTimeResolution);
-                }
             }
             else
             {
@@ -234,45 +201,18 @@ namespace HistorianView
                 NominalFrequencyTextBox.Text = m_nominalFrequency.ToString();
         }
 
-        // Occurs when the user enters a different time resolution.
-        private void TimeResolutionTextBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            long timeResolution;
-
-            // Attempt to update the time resolution,
-            // but don't allow the user to enter invalid text
-            if (string.IsNullOrEmpty(TimeResolutionTextBox.Text))
-                m_timeResolution = m_recommendedTimeResolution;
-            else if (long.TryParse(TimeResolutionTextBox.Text, out timeResolution))
-                m_timeResolution = timeResolution;
-            else
-                TimeResolutionTextBox.Text = m_timeResolution.ToString();
-        }
-
-        // Occurs when the user clicks the button to set time resolution to the recommended value.
-        private void RecommendedTimeResolutionButton_Click(object sender, RoutedEventArgs e)
-        {
-            TimeResolutionTextBox.Text = m_recommendedTimeResolution.ToString();
-        }
-
         // Occurs when the user chooses to align timestamps.
         private void AlignTimestampsCheckBox_Checked(object sender, RoutedEventArgs e)
         {
             if (IsInitialized)
-            {
                 FrameRateTextBox.IsEnabled = true;
-                TimeResolutionTextBox.IsEnabled = true;
-            }
         }
 
         // Occurs when the user chooses not to align timestamps.
         private void AlignTimestampsCheckBox_Unchecked(object sender, RoutedEventArgs e)
         {
             if (IsInitialized)
-            {
                 FrameRateTextBox.IsEnabled = false;
-                TimeResolutionTextBox.IsEnabled = false;
-            }
         }
 
         // Occurs when the user chooses to export the data.
@@ -287,24 +227,6 @@ namespace HistorianView
                 MessageBox.Show("Frame rate must be greater than 0 frames per second.");
                 e.Handled = true;
             }
-        }
-
-        // Gets the recommended time resolution based on the currently entered frame rate.
-        // The recommended time resolution is the number of ticks per frame truncated to
-        // the least precise, non-zero unit of measure (in order of least to most precise -
-        // seconds, milliseconds, microseconds, or ticks).
-        private long GetRecommendedTimeResolution()
-        {
-            long ticksPerFrame = (Ticks.PerSecond / m_frameRate) * 100L;
-            long divisor = 1L;
-
-            while (ticksPerFrame / 1000L > 0L)
-            {
-                ticksPerFrame /= 1000L;
-                divisor *= 1000L;
-            }
-
-            return (ticksPerFrame * divisor) / 100L;
         }
 
         #endregion
