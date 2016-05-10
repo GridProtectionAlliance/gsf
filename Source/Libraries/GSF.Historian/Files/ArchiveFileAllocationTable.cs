@@ -170,8 +170,8 @@ namespace GSF.Historian.Files
 
                 buffer.ValidateParameters(startIndex, length);
 
-                Buffer.BlockCopy(LittleEndian.GetBytes(m_parent.m_fileStartTime.Value), 0, buffer, startIndex, 8);
-                Buffer.BlockCopy(LittleEndian.GetBytes(m_parent.m_fileEndTime.Value), 0, buffer, startIndex + 8, 8);
+                Buffer.BlockCopy(LittleEndian.GetBytes((double)m_parent.m_fileStartTime.Value), 0, buffer, startIndex, 8);
+                Buffer.BlockCopy(LittleEndian.GetBytes((double)m_parent.m_fileEndTime.Value), 0, buffer, startIndex + 8, 8);
                 Buffer.BlockCopy(LittleEndian.GetBytes(m_parent.m_dataPointsReceived), 0, buffer, startIndex + 16, 4);
                 Buffer.BlockCopy(LittleEndian.GetBytes(m_parent.m_dataPointsArchived), 0, buffer, startIndex + 20, 4);
                 Buffer.BlockCopy(LittleEndian.GetBytes(m_parent.m_dataBlockSize), 0, buffer, startIndex + 24, 4);

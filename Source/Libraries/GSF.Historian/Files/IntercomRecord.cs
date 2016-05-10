@@ -278,12 +278,12 @@ namespace GSF.Historian.Files
             {
                 Buffer.BlockCopy(LittleEndian.GetBytes(m_dataBlocksUsed), 0, buffer, startIndex, 4);
                 Buffer.BlockCopy(LittleEndian.GetBytes(Convert.ToInt32(m_rolloverInProgress)), 0, buffer, startIndex + 4, 4);
-                Buffer.BlockCopy(LittleEndian.GetBytes(m_latestDataTime.Value), 0, buffer, startIndex + 8, 8);
+                Buffer.BlockCopy(LittleEndian.GetBytes((double)m_latestDataTime.Value), 0, buffer, startIndex + 8, 8);
                 Buffer.BlockCopy(LittleEndian.GetBytes(m_latestDataID), 0, buffer, startIndex + 16, 4);
 
                 for (int i = 0; i < m_sourceLatestDataTime.Count; i++)
                 {
-                    Buffer.BlockCopy(LittleEndian.GetBytes(m_sourceLatestDataTime[i].Value), 0, buffer, startIndex + 20 + (i * 8), 8);
+                    Buffer.BlockCopy(LittleEndian.GetBytes((double)m_sourceLatestDataTime[i].Value), 0, buffer, startIndex + 20 + (i * 8), 8);
                 }
             }
 

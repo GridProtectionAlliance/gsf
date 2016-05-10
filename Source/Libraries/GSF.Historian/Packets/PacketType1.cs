@@ -276,7 +276,7 @@ namespace GSF.Historian.Packets
 
             Buffer.BlockCopy(LittleEndian.GetBytes(TypeID), 0, buffer, startIndex, 2);
             Buffer.BlockCopy(LittleEndian.GetBytes(m_historianID), 0, buffer, startIndex + 2, 4);
-            Buffer.BlockCopy(LittleEndian.GetBytes(m_time.Value), 0, buffer, startIndex + 6, 8);
+            Buffer.BlockCopy(LittleEndian.GetBytes((double)m_time.Value), 0, buffer, startIndex + 6, 8);
             Buffer.BlockCopy(LittleEndian.GetBytes((int)m_quality), 0, buffer, startIndex + 14, 4);
             Buffer.BlockCopy(LittleEndian.GetBytes(m_value), 0, buffer, startIndex + 18, 4);
 

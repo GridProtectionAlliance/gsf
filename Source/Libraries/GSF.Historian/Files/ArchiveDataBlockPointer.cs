@@ -239,7 +239,7 @@ namespace GSF.Historian.Files
             buffer.ValidateParameters(startIndex, length);
 
             Buffer.BlockCopy(LittleEndian.GetBytes(m_historianID), 0, buffer, startIndex, 4);
-            Buffer.BlockCopy(LittleEndian.GetBytes(m_startTime.Value), 0, buffer, startIndex + 4, 8);
+            Buffer.BlockCopy(LittleEndian.GetBytes((double)m_startTime.Value), 0, buffer, startIndex + 4, 8);
 
             return length;
         }
