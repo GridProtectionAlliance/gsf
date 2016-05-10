@@ -1085,6 +1085,9 @@ namespace HistorianView
             {
                 foreach (Ticks timestamp in currentSecondDistribution)
                 {
+                    if (timestamp > endTimeTicks)
+                        break;
+
                     if (timestamp >= startTimeTicks)
                         data.Add(new TimeTag(new DateTime(timestamp)), new List<string[]>() { new string[dataColumns] });
                 }
