@@ -1365,7 +1365,7 @@ namespace GSF.TimeSeries
             OnStop();
         }
 
-        internal void SendRequest(string userInput)
+        internal void SendRequest(Guid clientID, string userInput)
         {
             ClientRequest request = ClientRequest.Parse(userInput);
 
@@ -1374,7 +1374,7 @@ namespace GSF.TimeSeries
                 ClientRequestHandler requestHandler = m_serviceHelper.FindClientRequestHandler(request.Command);
 
                 if ((object)requestHandler != null)
-                    requestHandler.HandlerMethod(new ClientRequestInfo(new ClientInfo(), request));
+                    requestHandler.HandlerMethod(new ClientRequestInfo(new ClientInfo() { ClientID = clientID }, request));
                 else
                     DisplayStatusMessage(string.Format("Command \"{0}\" is not supported\r\n\r\n", request.Command), UpdateType.Alarm);
             }

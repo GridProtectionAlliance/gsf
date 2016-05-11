@@ -40,6 +40,7 @@ namespace GSF.TimeSeries
         // Fields
         private readonly ServiceHostBase m_serviceHost;
         private readonly ConsoleColor m_originalForegroundColor;
+        private readonly Guid m_clientID;
         private readonly object m_displayLock;
 
         #endregion
@@ -54,6 +55,7 @@ namespace GSF.TimeSeries
         {
             m_serviceHost = serviceHost;
             m_originalForegroundColor = System.Console.ForegroundColor;
+            m_clientID = Guid.NewGuid();
             m_displayLock = new object();
         }
 
@@ -76,6 +78,7 @@ namespace GSF.TimeSeries
                 Thread.CurrentPrincipal = new GenericPrincipal(new GenericIdentity(UserInfo.CurrentUserID), new[] { "Administrator" });
                 m_serviceHost.UpdatedStatus += m_serviceHost_UpdatedStatus;
                 m_serviceHost.StartHostedService();
+                m_serviceHost.SendRequest(m_clientID, "Filter -Remove 0");
 
                 while (!string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
                 {
@@ -99,7 +102,7 @@ namespace GSF.TimeSeries
                                 break;
                             default:
                                 // User wants to send a request to the service. 
-                                m_serviceHost.SendRequest(userInput);
+                                m_serviceHost.SendRequest(m_clientID, userInput);
 
                                 if (string.Compare(userInput, "Help", StringComparison.OrdinalIgnoreCase) == 0)
                                     DisplayHelp();
@@ -118,6 +121,9 @@ namespace GSF.TimeSeries
 
         private void m_serviceHost_UpdatedStatus(object sender, EventArgs<Guid, string, UpdateType> e)
         {
+            if (e.Argument1 != m_clientID)
+                return;
+
             lock (m_displayLock)
             {
                 // Output status updates from the service to the console window.
