@@ -958,7 +958,7 @@ namespace HistorianView
                             .OrderBy(wrapper => wrapper, MetadataSorter.Default)
                             .ToDictionary(
                                 wrapper => wrapper,
-                                wrapper => m_archiveReaders.Single(archive => archive.MetadataFile.Read().Any(record => wrapper.GetMetadata().CompareTo(record) == 0))
+                                wrapper => wrapper.GetArchiveReader()
                             );
 
                         Dictionary<TimeTag, List<string[]>> data = new Dictionary<TimeTag, List<string[]>>();
@@ -1698,7 +1698,9 @@ namespace HistorianView
         {
             try
             {
-                SaveSession(Path.Combine(FilePath.GetApplicationDataFolder(), "LastSession.hdv"), false);
+                string applicationDataFolder = FilePath.GetApplicationDataFolder();
+                Directory.CreateDirectory(applicationDataFolder);
+                SaveSession(Path.Combine(applicationDataFolder, "LastSession.hdv"), false);
                 ClearArchives();
             }
             catch
