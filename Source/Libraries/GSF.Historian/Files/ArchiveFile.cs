@@ -3245,7 +3245,7 @@ namespace GSF.Historian.Files
                         {
                             // Discard data that is an exact duplicate of data in line for archival.
                             if (dataPoint.Value == state.PreviousData.Value && dataPoint.Quality == state.PreviousData.Quality)
-                                return;
+                                continue;
                         }
                         else
                         {
@@ -3254,7 +3254,7 @@ namespace GSF.Historian.Files
                                 m_outOfSequenceDataQueue.Add(dataPoint);
 
                             OnOutOfSequenceDataReceived(dataPoint);
-                            return;
+                            continue;
                         }
                     }
 
