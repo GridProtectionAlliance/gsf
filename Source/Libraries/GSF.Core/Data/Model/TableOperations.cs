@@ -761,7 +761,7 @@ namespace GSF.Data.Model
             if (record == null)
                 throw new ArgumentException($"Cannot get \"{fieldName}\" field value for record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
 
-            return GetPrimaryKeys(record);
+            return GetFieldValue(record, fieldName);
         }
 
         /// <summary>
