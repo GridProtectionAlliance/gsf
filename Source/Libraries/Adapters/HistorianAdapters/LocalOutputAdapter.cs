@@ -100,6 +100,7 @@ namespace HistorianAdapters
         private string m_archivePath;
         private long m_archivedMeasurements;
         private volatile int m_adapterLoadedCount;
+        private ulong m_badDataMessageInterval;
         private readonly Dictionary<int, ulong> m_orphanCounts;
         private readonly ProcessQueue<IDataPoint> m_orphanQueue;
         private readonly Dictionary<int, ulong> m_badTimestampCounts;
@@ -123,6 +124,7 @@ namespace HistorianAdapters
             m_archive.StateFile = new StateFile();
             m_archive.IntercomFile = new IntercomFile();
             MetadataRefreshOperation.IsBackground = false;
+            m_badDataMessageInterval = 900;
             m_orphanCounts = new Dictionary<int, ulong>();
             m_orphanQueue = ProcessQueue<IDataPoint>.CreateRealTimeQueue(HandleOrphanData);
             m_badTimestampCounts = new Dictionary<int, ulong>();
@@ -351,7 +353,8 @@ namespace HistorianAdapters
             base.Initialize();
 
             Dictionary<string, string> settings = Settings;
-            string refreshMetadata;
+            string setting;
+            ulong badDataMessageInterval;
 
             // Validate settings.
             if (!settings.TryGetValue("instanceName", out m_instanceName) || string.IsNullOrWhiteSpace(m_instanceName))
@@ -360,8 +363,11 @@ namespace HistorianAdapters
             if (!settings.TryGetValue("archivePath", out m_archivePath))
                 m_archivePath = FilePath.GetAbsolutePath(FilePath.AddPathSuffix("Archive"));
 
-            if (settings.TryGetValue("refreshMetadata", out refreshMetadata) || settings.TryGetValue("autoRefreshMetadata", out refreshMetadata))
-                m_autoRefreshMetadata = refreshMetadata.ParseBoolean();
+            if (settings.TryGetValue("refreshMetadata", out setting) || settings.TryGetValue("autoRefreshMetadata", out setting))
+                m_autoRefreshMetadata = setting.ParseBoolean();
+
+            if (settings.TryGetValue("badDataMessageInterval", out setting) && ulong.TryParse(setting, out badDataMessageInterval))
+                m_badDataMessageInterval = badDataMessageInterval;
 
             //if (settings.TryGetValue("useNamespaceReservation", out setting))
             //    m_useNamespaceReservation = setting.ParseBoolean();
@@ -576,6 +582,10 @@ namespace HistorianAdapters
                 RefreshMetadata();
             else
                 OnConnected();
+
+            m_orphanQueue.Start();
+            m_badTimestampQueue.Start();
+            m_outOfSequenceQueue.Start();
         }
 
         /// <summary>
@@ -700,12 +710,12 @@ namespace HistorianAdapters
             int id = point.HistorianID;
             ulong total = m_orphanCounts.GetOrAdd(id, 0UL);
 
-            if (total % 100UL == 0UL)
+            if (total % m_badDataMessageInterval == 0UL)
             {
                 if (total > 0UL)
-                    OnStatusMessage("Received {0} points of orphaned data for {1}:{2}. Measurements which are no longer defined in the metadata will not be archived.", total, m_instanceName, id);
+                    OnStatusMessage("Received {0} points of orphaned data for {1}:{2} @{3:yyyy-MM-dd HH:mm:ss.fffffff}. Measurements which are no longer defined in the metadata will not be archived.", total, m_instanceName, id, point.Time);
                 else
-                    OnStatusMessage("Received orphaned data for point {0}:{1}. Measurements which are no longer defined in the metadata will not be archived.", m_instanceName, id);
+                    OnStatusMessage("Received orphaned data for point {0}:{1} @{2:yyyy-MM-dd HH:mm:ss.fffffff}. Measurements which are no longer defined in the metadata will not be archived.", m_instanceName, id, point.Time);
             }
 
             m_orphanCounts[id] = total + 1UL;
@@ -726,12 +736,12 @@ namespace HistorianAdapters
             int id = point.HistorianID;
             ulong total = m_badTimestampCounts.GetOrAdd(id, 0UL);
 
-            if (total % 100UL == 0UL)
+            if (total % m_badDataMessageInterval == 0UL)
             {
                 if (total > 0UL)
-                    OnStatusMessage("Received {0} points of data for {1}:{2} with an unreasonable future timestamp. Data with a timestamp beyond {3:0.00} minutes of the local clock will not be archived. Check local system clock and data source clock for accuracy.", total, m_instanceName, id, m_archive.LeadTimeTolerance);
+                    OnStatusMessage("Received {0} points of data for {1}:{2} @{3:yyyy-MM-dd HH:mm:ss.fffffff} with an unreasonable future timestamp. Data with a timestamp beyond {4:0.00} minutes of the local clock will not be archived. Check local system clock and data source clock for accuracy.", total, m_instanceName, id, point.Time, m_archive.LeadTimeTolerance);
                 else
-                    OnStatusMessage("Received data for point {0}:{1} with an unreasonable future timestamp. Data with a timestamp beyond {2:0.00} minutes of the local clock will not be archived. Check local system clock and data source clock for accuracy.", m_instanceName, id, m_archive.LeadTimeTolerance);
+                    OnStatusMessage("Received data for point {0}:{1} @{2:yyyy-MM-dd HH:mm:ss.fffffff} with an unreasonable future timestamp. Data with a timestamp beyond {3:0.00} minutes of the local clock will not be archived. Check local system clock and data source clock for accuracy.", m_instanceName, id, point.Time, m_archive.LeadTimeTolerance);
             }
 
             m_badTimestampCounts[id] = total + 1UL;
@@ -752,12 +762,12 @@ namespace HistorianAdapters
             int id = point.HistorianID;
             ulong total = m_outOfSequenceCounts.GetOrAdd(id, 0UL);
 
-            if (total % 100UL == 0UL)
+            if (total % m_badDataMessageInterval == 0UL)
             {
                 if (total > 0UL)
-                    OnStatusMessage("Received {0} points of out-of-sequence data for {1}:{2}. Data received out of order will not be archived, per configuration.", total, m_instanceName, id);
+                    OnStatusMessage("Received {0} points of out-of-sequence data for {1}:{2} @{3:yyyy-MM-dd HH:mm:ss.fffffff}. Data received out of order will not be archived, per configuration.", total, m_instanceName, id, point.Time);
                 else
-                    OnStatusMessage("Received out-of-sequence data for {0}:{1}. Data received out of order will not be archived, per configuration.", m_instanceName, id);
+                    OnStatusMessage("Received out-of-sequence data for {0}:{1} @{2:yyyy-MM-dd HH:mm:ss.fffffff}. Data received out of order will not be archived, per configuration.", m_instanceName, id, point.Time);
             }
 
             m_outOfSequenceCounts[id] = total + 1UL;
