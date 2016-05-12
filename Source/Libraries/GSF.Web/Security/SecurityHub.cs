@@ -417,10 +417,11 @@ namespace GSF.Web.Security
         /// <summary>
         /// Queries count of user accounts.
         /// </summary>
+        /// <param name="filterText">Text to use for filtering.</param>
         /// <returns>Count of user accounts.</returns>
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(UserAccount), RecordOperation.QueryRecordCount)]
-        public int QueryUserAccountCount()
+        public int QueryUserAccountCount(string filterText)
         {
             return m_dataContext.Table<UserAccount>().QueryRecordCount();
         }
@@ -432,10 +433,11 @@ namespace GSF.Web.Security
         /// <param name="ascending">Current sort direction.</param>
         /// <param name="page">Current page number.</param>
         /// <param name="pageSize">Current page size.</param>
+        /// <param name="filterText">Text to use for filtering.</param>
         /// <returns>Page of user accounts.</returns>
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(UserAccount), RecordOperation.QueryRecords)]
-        public IEnumerable<UserAccount> QueryUserAccounts(string sortField, bool ascending, int page, int pageSize)
+        public IEnumerable<UserAccount> QueryUserAccounts(string sortField, bool ascending, int page, int pageSize, string filterText)
         {
             return m_dataContext.Table<UserAccount>().QueryRecords(sortField, ascending, page, pageSize);
         }
@@ -505,10 +507,11 @@ namespace GSF.Web.Security
         /// <summary>
         /// Queries count of security groups.
         /// </summary>
+        /// <param name="filterText">Text to use for filtering.</param>
         /// <returns>Count of security groups.</returns>
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(SecurityGroup), RecordOperation.QueryRecordCount)]
-        public int QuerySecurityGroupCount()
+        public int QuerySecurityGroupCount(string filterText)
         {
             return m_dataContext.Table<SecurityGroup>().QueryRecordCount();
         }
@@ -520,10 +523,11 @@ namespace GSF.Web.Security
         /// <param name="ascending">Current sort direction.</param>
         /// <param name="page">Current page number.</param>
         /// <param name="pageSize">Current page size.</param>
+        /// <param name="filterText">Text to use for filtering.</param>
         /// <returns>Page of security groups.</returns>
         [AuthorizeHubRole("Administrator")]
         [RecordOperation(typeof(SecurityGroup), RecordOperation.QueryRecords)]
-        public IEnumerable<SecurityGroup> QuerySecurityGroups(string sortField, bool ascending, int page, int pageSize)
+        public IEnumerable<SecurityGroup> QuerySecurityGroups(string sortField, bool ascending, int page, int pageSize, string filterText)
         {
             return m_dataContext.Table<SecurityGroup>().QueryRecords(sortField, ascending, page, pageSize);
         }
