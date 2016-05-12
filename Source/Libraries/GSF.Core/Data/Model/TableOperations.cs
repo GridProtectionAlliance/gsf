@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -38,7 +39,7 @@ namespace GSF.Data.Model
     /// Defines database operations for a modeled table.
     /// </summary>
     /// <typeparam name="T">Modeled table.</typeparam>
-    public class TableOperations<T> where T : class, new()
+    public class TableOperations<T> : ITableOperations where T : class, new()
     {
         #region [ Members ]
 
@@ -264,6 +265,11 @@ namespace GSF.Data.Model
             }
         }
 
+        IEnumerable ITableOperations.QueryRecords(string orderByExpression, RecordRestriction restriction, int limit)
+        {
+            return QueryRecords(orderByExpression, restriction, limit);
+        }
+
         /// <summary>
         /// Queries database and returns modeled table records for the specified sorting and paging parameters.
         /// </summary>
@@ -315,6 +321,11 @@ namespace GSF.Data.Model
             }
 
             return m_primaryKeyCache.ToPagedList(page, pageSize).Select(row => LoadRecord(row.ItemArray)).Where(record => record != null);
+        }
+
+        IEnumerable ITableOperations.QueryRecords(string sortField, bool ascending, int page, int pageSize, RecordRestriction restriction)
+        {
+            return QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 
         /// <summary>
@@ -396,6 +407,11 @@ namespace GSF.Data.Model
             }
         }
 
+        object ITableOperations.LoadRecord(params object[] primaryKeys)
+        {
+            return LoadRecord(primaryKeys);
+        }
+
         /// <summary>
         /// Deletes the specified modeled table <paramref name="record"/> from the database.
         /// </summary>
@@ -404,6 +420,16 @@ namespace GSF.Data.Model
         public int DeleteRecord(T record)
         {
             return DeleteRecord(GetPrimaryKeys(record));
+        }
+
+        int ITableOperations.DeleteRecord(object value)
+        {
+            T record = value as T;
+
+            if (record == null)
+                throw new ArgumentException($"Cannot delete record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
+
+            return DeleteRecord(record);
         }
 
         /// <summary>
@@ -537,6 +563,16 @@ namespace GSF.Data.Model
             }
         }
 
+        int ITableOperations.UpdateRecord(object value, RecordRestriction restriction)
+        {
+            T record = value as T;
+
+            if (record == null)
+                throw new ArgumentException($"Cannot update record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
+
+            return UpdateRecord(record);
+        }
+
         /// <summary>
         /// Adds the specified modeled table <paramref name="record"/> to the database.
         /// </summary>
@@ -570,6 +606,16 @@ namespace GSF.Data.Model
             }
         }
 
+        int ITableOperations.AddNewRecord(object value)
+        {
+            T record = value as T;
+
+            if (record == null)
+                throw new ArgumentException($"Cannot add new record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
+
+            return AddNewRecord(record);
+        }
+
         /// <summary>
         /// Gets the primary key values from the specified <paramref name="record"/>.
         /// </summary>
@@ -596,6 +642,16 @@ namespace GSF.Data.Model
                 m_exceptionHandler(opex);
                 return new object[0];
             }
+        }
+
+        object[] ITableOperations.GetPrimaryKeys(object value)
+        {
+            T record = value as T;
+
+            if (record == null)
+                throw new ArgumentException($"Cannot get primary keys for record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
+
+            return GetPrimaryKeys(record);
         }
 
         /// <summary>
@@ -696,6 +752,16 @@ namespace GSF.Data.Model
                 return property.GetValue(record);
 
             return null;
+        }
+
+        object ITableOperations.GetFieldValue(object value, string fieldName)
+        {
+            T record = value as T;
+
+            if (record == null)
+                throw new ArgumentException($"Cannot get \"{fieldName}\" field value for record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
+
+            return GetPrimaryKeys(record);
         }
 
         /// <summary>

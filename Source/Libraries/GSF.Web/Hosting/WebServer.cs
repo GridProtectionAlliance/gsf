@@ -66,6 +66,7 @@ namespace GSF.Web.Hosting
         private readonly IRazorEngine m_razorEngineCS;
         private readonly IRazorEngine m_razorEngineVB;
         private readonly ConcurrentDictionary<string, uint> m_etagCache;
+        private readonly ConcurrentDictionary<string, Tuple<Type, Type>> m_pagedViewModelTypes;
         private readonly SafeFileWatcher m_fileWatcher;
         private bool m_disposed;
 
@@ -86,6 +87,7 @@ namespace GSF.Web.Hosting
             m_razorEngineVB = razorEngineVB ?? (releaseMode ? RazorEngine<VisualBasic>.Default : RazorEngine<VisualBasicDebug>.Default as IRazorEngine);
             m_webRootPath = FilePath.AddPathSuffix(webRootPath ?? m_razorEngineCS.TemplatePath);
             m_etagCache = new ConcurrentDictionary<string, uint>(StringComparer.InvariantCultureIgnoreCase);
+            m_pagedViewModelTypes = new ConcurrentDictionary<string, Tuple<Type, Type>>(StringComparer.InvariantCultureIgnoreCase);
 
             m_fileWatcher = new SafeFileWatcher(m_webRootPath)
             {
@@ -127,6 +129,14 @@ namespace GSF.Web.Hosting
         /// Gets the Visual Basic Razor engine instance used by this <see cref="WebServer"/>.
         /// </summary>
         public IRazorEngine RazorEngineVB => m_razorEngineVB;
+
+        /// <summary>
+        /// Defines associated page view model types and data hub types for Razor pages, if any.
+        /// </summary>
+        /// <remarks>
+        /// This dictionary associates Razor views based on a paged view model with associated <see cref="Type"/> values.
+        /// </remarks>
+        public ConcurrentDictionary<string, Tuple<Type, Type>> PagedViewModelTypes => m_pagedViewModelTypes;
 
         #endregion
 
@@ -176,15 +186,18 @@ namespace GSF.Web.Hosting
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
 
             string content, fileExtension = FilePath.GetExtension(pageName).ToLowerInvariant();
+            Tuple<Type, Type> pagedViewModelTypes;
 
             switch (fileExtension)
             {
                 case ".cshtml":
-                    content = await new RazorView(m_razorEngineCS, pageName, model, modelType, database, OnExecutionException).ExecuteAsync(request, postData);
+                    m_pagedViewModelTypes.TryGetValue(pageName, out pagedViewModelTypes);
+                    content = await new RazorView(m_razorEngineCS, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException).ExecuteAsync(request, postData);
                     response.Content = new StringContent(content, Encoding.UTF8, "text/html");
                     break;
                 case ".vbhtml":
-                    content = await new RazorView(m_razorEngineVB, pageName, model, modelType, database, OnExecutionException).ExecuteAsync(request, postData);
+                    m_pagedViewModelTypes.TryGetValue(pageName, out pagedViewModelTypes);
+                    content = await new RazorView(m_razorEngineVB, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException).ExecuteAsync(request, postData);
                     response.Content = new StringContent(content, Encoding.UTF8, "text/html");
                     break;
                 default:

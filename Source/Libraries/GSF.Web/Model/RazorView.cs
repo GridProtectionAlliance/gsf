@@ -55,7 +55,7 @@ namespace GSF.Web.Model
         /// <param name="razorEngine"><see cref="IRazorEngine"/> instance to use.</param>
         /// <param name="templateName">Name of template file, typically a .cshtml or .vbhtml file.</param>
         /// <param name="exceptionHandler">Delegate to handle exceptions, if any.</param>
-        public RazorView(IRazorEngine razorEngine, string templateName, Action<Exception> exceptionHandler = null) : this(razorEngine, templateName, null, null, null, exceptionHandler)
+        public RazorView(IRazorEngine razorEngine, string templateName, Action<Exception> exceptionHandler = null) : this(razorEngine, templateName, null, null, null, null, null, exceptionHandler)
         {
         }
 
@@ -66,14 +66,18 @@ namespace GSF.Web.Model
         /// <param name="templateName">Name of template file, typically a .cshtml or .vbhtml file.</param>
         /// <param name="model">Reference to model to use when rendering template.</param>
         /// <param name="modelType">Type of <paramref name="model"/>.</param>
+        /// <param name="pagedViewModelDataType">Type of data class for views based on paged view model, if any.</param>
+        /// <param name="pagedViewModelHubType">Type of SignalR hub for views based on paged view model, if any.</param>
         /// <param name="database"><see cref="AdoDataConnection"/> to use, if any.</param>
         /// <param name="exceptionHandler">Delegate to handle exceptions, if any.</param>
-        public RazorView(IRazorEngine razorEngine, string templateName, object model = null, Type modelType = null, AdoDataConnection database = null, Action<Exception> exceptionHandler = null)
+        public RazorView(IRazorEngine razorEngine, string templateName, object model = null, Type modelType = null, Type pagedViewModelDataType = null, Type pagedViewModelHubType = null, AdoDataConnection database = null, Action<Exception> exceptionHandler = null)
         {
             m_razorEngine = razorEngine;
             TemplateName = templateName;
             Model = model;
             ModelType = modelType;
+            PagedViewModelDataType = pagedViewModelDataType;
+            PagedViewModelHubType = pagedViewModelHubType;
             Database = database;
             ExceptionHandler = exceptionHandler;
         }
@@ -102,6 +106,22 @@ namespace GSF.Web.Model
         /// Gets or sets type of <see cref="Model"/>.
         /// </summary>
         public Type ModelType
+        {
+            get; set;
+        }
+
+        /// <summary>
+        /// Gets or sets type of data model for views based on paged view model.
+        /// </summary>
+        public Type PagedViewModelDataType
+        {
+            get; set;
+        }
+
+        /// <summary>
+        /// Gets or sets type of SignalR hub for views based on paged view model.
+        /// </summary>
+        public Type PagedViewModelHubType
         {
             get; set;
         }
@@ -184,6 +204,9 @@ namespace GSF.Web.Model
         {
             using (DataContext dataContext = new DataContext(Database, razorEngine: DataContextEngine, exceptionHandler: ExceptionHandler))
             {
+                if ((object)PagedViewModelDataType != null && (object)PagedViewModelHubType != null)
+                    dataContext.ConfigureView(PagedViewModelDataType, PagedViewModelHubType, null as string, m_viewBag);
+
                 m_viewBag.AddValue("DataContext", dataContext);
                 return m_razorEngine.RunCompile(TemplateName, ModelType, Model, m_viewBag);
             }
@@ -197,6 +220,9 @@ namespace GSF.Web.Model
         {
             using (DataContext dataContext = new DataContext(Database, razorEngine: DataContextEngine, exceptionHandler: ExceptionHandler))
             {
+                if ((object)PagedViewModelDataType != null && (object)PagedViewModelHubType != null)
+                    dataContext.ConfigureView(PagedViewModelDataType, PagedViewModelHubType, request, m_viewBag);
+
                 m_viewBag.AddValue("DataContext", dataContext);
                 m_viewBag.AddValue("Request", request);
 

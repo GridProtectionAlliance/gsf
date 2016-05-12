@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Web.Routing;
@@ -279,6 +280,16 @@ namespace GSF.Web.Model
         }
 
         /// <summary>
+        /// Gets the table operations for the specified modeled table type <paramref name="model"/>.
+        /// </summary>
+        /// <param name="model">Modeled database table (or view) type.</param>
+        /// <returns>Table operations for the specified modeled table type <paramref name="model"/>.</returns>
+        public ITableOperations Table(Type model)
+        {
+            return m_tableOperations.GetOrAdd(model, type => Activator.CreateInstance(typeof(TableOperations<>).MakeGenericType(model), Connection, m_exceptionHandler)) as ITableOperations;
+        }
+
+        /// <summary>
         /// Gets script resource.
         /// </summary>
         /// <param name="scriptName">Script name.</param>
@@ -301,12 +312,22 @@ namespace GSF.Web.Model
         /// <returns>Field name targeted as the primary label for the modeled table.</returns>
         public string GetPrimaryLabelField<TModel>() where TModel : class, new()
         {
+            return GetPrimaryLabelField(typeof(TModel));
+        }
+
+        /// <summary>
+        /// Gets the field name targeted as the primary label for the modeled table.
+        /// </summary>
+        /// <param name="model">Modeled database table (or view) type.</param>
+        /// <returns>Field name targeted as the primary label for the modeled table.</returns>
+        public string GetPrimaryLabelField(Type model)
+        {
             PrimaryLabelAttribute primaryLabelAttribute;
 
-            if (typeof(TModel).TryGetAttribute(out primaryLabelAttribute) && !string.IsNullOrWhiteSpace(primaryLabelAttribute.FieldName))
+            if (model.TryGetAttribute(out primaryLabelAttribute) && !string.IsNullOrWhiteSpace(primaryLabelAttribute.FieldName))
                 return primaryLabelAttribute.FieldName;
 
-            string[] fieldNames = Table<TModel>().GetFieldNames();
+            string[] fieldNames = Table(model).GetFieldNames();
             return fieldNames.Length > 0 ? fieldNames[0] : "";
         }
 
@@ -317,9 +338,19 @@ namespace GSF.Web.Model
         /// <returns>Field name targeted to mark a record as deleted.</returns>
         public string GetIsDeletedFlag<TModel>() where TModel : class, new()
         {
+            return GetIsDeletedFlag(typeof(TModel));
+        }
+
+        /// <summary>
+        /// Gets the field name targeted to mark a record as deleted.
+        /// </summary>
+        /// <param name="model">Modeled database table (or view) type.</param>
+        /// <returns>Field name targeted to mark a record as deleted.</returns>
+        public string GetIsDeletedFlag(Type model)
+        {
             IsDeletedFlagAttribute isDeletedFlagAttribute;
 
-            if (typeof(TModel).TryGetAttribute(out isDeletedFlagAttribute) && !string.IsNullOrWhiteSpace(isDeletedFlagAttribute.FieldName))
+            if (model.TryGetAttribute(out isDeletedFlagAttribute) && !string.IsNullOrWhiteSpace(isDeletedFlagAttribute.FieldName))
                 return isDeletedFlagAttribute.FieldName;
 
             return null;
@@ -412,14 +443,115 @@ namespace GSF.Web.Model
         /// <summary>
         /// Configures a simple view with common view bag parameters.
         /// </summary>
-        /// <param name="requestContext">Url.RequestContext for view.</param>
+        /// <param name="request">HTTP request message for view used to derive route ID, if any.</param>
         /// <param name="viewBag">Current view bag.</param>
         /// <remarks>
         /// This is normally called from controller before returning view action result.
+        /// For self-hosted web servers, route ID is passed as a command line parameter, e.g.: myview.cshtml?RouteID=ShowDeleted
+        /// </remarks>
+        public void ConfigureView(HttpRequestMessage request, dynamic viewBag)
+        {
+            ConfigureView(request.QueryParameters()["RouteID"], viewBag);
+        }
+
+        /// <summary>
+        /// Configures a view establishing user roles based on modeled table <typeparamref name="TModel"/> and SignalR <typeparamref name="THub"/>.
+        /// </summary>
+        /// <param name="request">HTTP request message for view used to derive route ID, if any.</param>
+        /// <param name="viewBag">Current view bag.</param>
+        /// <typeparam name="TModel">Modeled database table (or view).</typeparam>
+        /// <typeparam name="THub">SignalR hub that implements <see cref="IRecordOperationsHub"/>.</typeparam>
+        /// <remarks>
+        /// This is normally called from controller before returning view action result.
+        /// For self-hosted web servers, route ID is passed as a command line parameter, e.g.: myview.cshtml?RouteID=ShowDeleted
+        /// </remarks>
+        public void ConfigureView<TModel, THub>(HttpRequestMessage request, dynamic viewBag) where TModel : class, new() where THub : IRecordOperationsHub, new()
+        {
+            ConfigureView(typeof(TModel), typeof(THub), request, viewBag);
+        }
+
+        /// <summary>
+        /// Configures a view establishing user roles based on modeled table <paramref name="model"/> and SignalR <paramref name="hub"/>.
+        /// </summary>
+        /// <param name="model">Modeled database table (or view) type.</param>
+        /// <param name="hub">Type of SignalR hub that implements <see cref="IRecordOperationsHub"/>.</param>
+        /// <param name="request">HTTP request message for view used to derive route ID, if any.</param>
+        /// <param name="viewBag">Current view bag.</param>
+        /// <remarks>
+        /// This is normally called from controller before returning view action result.
+        /// For self-hosted web servers, route ID is passed as a command line parameter, e.g.: myview.cshtml?RouteID=ShowDeleted
+        /// </remarks>
+        public void ConfigureView(Type model, Type hub, HttpRequestMessage request, dynamic viewBag)
+        {
+            ConfigureView(model, hub, request.QueryParameters()["RouteID"], viewBag);
+        }
+
+        /// <summary>
+        /// Configures a simple view with common view bag parameters.
+        /// </summary>
+        /// <param name="requestContext">Url.RequestContext for view used to derive route ID, if any.</param>
+        /// <param name="viewBag">Current view bag.</param>
+        /// <remarks>
+        /// This is normally called from controller before returning view action result.
+        /// For normal MVC views the common route is "{controller}/{action}/{id}", the {id} of
+        /// the route is the route ID parameter derived from the route data. In many use
+        /// cases this is a primary key or action value for the page, e.g., "ShowDeleted".
         /// </remarks>
         public void ConfigureView(RequestContext requestContext, dynamic viewBag)
         {
-            viewBag.RouteID = requestContext.RouteData.Values["id"] as string;
+            ConfigureView(requestContext.RouteData.Values["id"] as string, viewBag);
+        }
+
+        /// <summary>
+        /// Configures a view establishing user roles based on modeled table <typeparamref name="TModel"/> and SignalR <typeparamref name="THub"/>.
+        /// </summary>
+        /// <param name="requestContext">Url.RequestContext for view used to derive route ID, if any.</param>
+        /// <param name="viewBag">Current view bag.</param>
+        /// <typeparam name="TModel">Modeled database table (or view).</typeparam>
+        /// <typeparam name="THub">SignalR hub that implements <see cref="IRecordOperationsHub"/>.</typeparam>
+        /// <remarks>
+        /// This is normally called from controller before returning view action result.
+        /// For normal MVC views the common route is "{controller}/{action}/{id}", the {id} of
+        /// the route is the route ID parameter derived from the route data. In many use
+        /// cases this is a primary key or action value for the page, e.g., "ShowDeleted".
+        /// </remarks>
+        public void ConfigureView<TModel, THub>(RequestContext requestContext, dynamic viewBag) where TModel : class, new() where THub : IRecordOperationsHub, new()
+        {
+            ConfigureView(typeof(TModel), typeof(THub), requestContext, viewBag);
+        }
+
+        /// <summary>
+        /// Configures a view establishing user roles based on modeled table <paramref name="model"/> and SignalR <paramref name="hub"/>.
+        /// </summary>
+        /// <param name="model">Modeled database table (or view) type.</param>
+        /// <param name="hub">Type of SignalR hub that implements <see cref="IRecordOperationsHub"/>.</param>
+        /// <param name="requestContext">Url.RequestContext for view used to derive route ID, if any.</param>
+        /// <param name="viewBag">Current view bag.</param>
+        /// <remarks>
+        /// This is normally called from controller before returning view action result.
+        /// For normal MVC views the common route is "{controller}/{action}/{id}", the {id} of
+        /// the route is the route ID parameter derived from the route data. In many use
+        /// cases this is a primary key or action value for the page, e.g., "ShowDeleted".
+        /// </remarks>
+        public void ConfigureView(Type model, Type hub, RequestContext requestContext, dynamic viewBag)
+        {
+            ConfigureView(model, hub, requestContext.RouteData.Values["id"] as string, viewBag);
+        }
+
+        /// <summary>
+        /// Configures a simple view with common view bag parameters.
+        /// </summary>
+        /// <param name="routeID">Route ID for view, if any (e.g., AddNew or ShowDeleted).</param>
+        /// <param name="viewBag">Current view bag.</param>
+        /// <remarks>
+        /// This is normally called from controller before returning view action result.
+        /// For normal MVC views the common route is "{controller}/{action}/{id}", the {id} of
+        /// the route is what is requested as the <paramref name="routeID"/> parameter. In many
+        /// use cases this is a primary key or action value for the page, e.g., "ShowDeleted".
+        /// </remarks>
+        public void ConfigureView(string routeID, dynamic viewBag)
+        {
+            viewBag.RouteID = routeID;
             viewBag.PageControlScripts = new StringBuilder();
 
             // Setup default roles if none are defined. Important to only check for null here as empty string will
@@ -442,22 +574,43 @@ namespace GSF.Web.Model
         /// <summary>
         /// Configures a view establishing user roles based on modeled table <typeparamref name="TModel"/> and SignalR <typeparamref name="THub"/>.
         /// </summary>
+        /// <param name="routeID">Route ID for view, if any (e.g., AddNew or ShowDeleted).</param>
+        /// <param name="viewBag">Current view bag.</param>
         /// <typeparam name="TModel">Modeled database table (or view).</typeparam>
         /// <typeparam name="THub">SignalR hub that implements <see cref="IRecordOperationsHub"/>.</typeparam>
-        /// <param name="requestContext">Url.RequestContext for view.</param>
+        /// <remarks>
+        /// This is normally called from controller before returning view action result.
+        /// For normal MVC views the common route is "{controller}/{action}/{id}", the {id} of
+        /// the route is what is requested as the <paramref name="routeID"/> parameter. In many
+        /// use cases this is a primary key or action value for the page, e.g., "ShowDeleted".
+        /// </remarks>
+        public void ConfigureView<TModel, THub>(string routeID, dynamic viewBag) where TModel : class, new() where THub : IRecordOperationsHub, new()
+        {
+            ConfigureView(typeof(TModel), typeof(THub), routeID, viewBag);
+        }
+
+        /// <summary>
+        /// Configures a view establishing user roles based on modeled table <paramref name="model"/> and SignalR <paramref name="hub"/>.
+        /// </summary>
+        /// <param name="model">Modeled database table (or view) type.</param>
+        /// <param name="hub">Type of SignalR hub that implements <see cref="IRecordOperationsHub"/>.</param>
+        /// <param name="routeID">Route ID for view, if any (e.g., AddNew or ShowDeleted).</param>
         /// <param name="viewBag">Current view bag.</param>
         /// <remarks>
         /// This is normally called from controller before returning view action result.
+        /// For normal MVC views the common route is "{controller}/{action}/{id}", the {id} of
+        /// the route is what is requested as the <paramref name="routeID"/> parameter. In many
+        /// use cases this is a primary key or action value for the page, e.g., "ShowDeleted".
         /// </remarks>
-        public void ConfigureView<TModel, THub>(RequestContext requestContext, dynamic viewBag) where TModel : class, new() where THub : IRecordOperationsHub, new()
+        public void ConfigureView(Type model, Type hub, string routeID, dynamic viewBag)
         {
             // Attempt to establish roles based on hub defined security for specified modeled table
-            EstablishUserRolesForPage<TModel, THub>(viewBag);
+            EstablishUserRolesForPage(model, hub, viewBag);
 
-            ConfigureView(requestContext, viewBag);
+            ConfigureView(routeID, viewBag);
 
             // See if modeled table has a flag field that represents a deleted row
-            string isDeletedField = GetIsDeletedFlag<TModel>();
+            string isDeletedField = GetIsDeletedFlag(model);
 
             if (!string.IsNullOrWhiteSpace(isDeletedField))
             {
@@ -481,12 +634,30 @@ namespace GSF.Web.Model
         /// </remarks>
         public void EstablishUserRolesForPage<TModel, THub>(dynamic viewBag) where TModel : class, new() where THub : IRecordOperationsHub, new()
         {
-            RecordOperationsCache cache = s_recordOperationCaches.GetOrAdd(typeof(THub), type =>
+            EstablishUserRolesForPage(typeof(TModel), typeof(THub), viewBag);
+        }
+
+        /// <summary>
+        /// Looks up proper user roles for paged based on modeled security in <see cref="RecordOperationsCache"/>.
+        /// </summary>
+        /// <param name="model">Modeled database table (or view) type.</param>
+        /// <param name="hub">Type of SignalR hub that implements <see cref="IRecordOperationsHub"/>.</param>
+        /// <param name="viewBag">ViewBag for the current view.</param>
+        /// <remarks>
+        /// Typically used in paged view model scenarios and invoked by controller prior to view rendering.
+        /// Security is controlled at hub level, so failure to call will not impact security but may result
+        /// in screen enabling and/or showing controls that the user does not actually have access to and
+        /// upon attempted use will result in a security error.
+        /// </remarks>
+        public void EstablishUserRolesForPage(Type model, Type hub, dynamic viewBag)
+        {
+            RecordOperationsCache cache = s_recordOperationCaches.GetOrAdd(hub, type =>
             {
-                using (THub hub = new THub())
-                    return hub.RecordOperationsCache;
+                using (IRecordOperationsHub operationsHub = Activator.CreateInstance(hub) as IRecordOperationsHub)
+                    return operationsHub?.RecordOperationsCache;
             });
-            EstablishUserRolesForPage<TModel>(cache, viewBag);
+
+            EstablishUserRolesForPage(model, cache, viewBag);
         }
 
         /// <summary>
@@ -503,8 +674,25 @@ namespace GSF.Web.Model
         /// </remarks>
         public void EstablishUserRolesForPage<TModel>(RecordOperationsCache cache, dynamic viewBag) where TModel : class, new()
         {
+            EstablishUserRolesForPage(typeof(TModel), cache, viewBag);
+        }
+
+        /// <summary>
+        /// Looks up proper user roles for paged based on modeled security in <see cref="RecordOperationsCache"/>.
+        /// </summary>
+        /// <param name="model">Modeled database table (or view) type.</param>
+        /// <param name="cache">Data hub record operations cache.</param>
+        /// <param name="viewBag">ViewBag for the current view.</param>
+        /// <remarks>
+        /// Typically used in paged view model scenarios and invoked by controller prior to view rendering.
+        /// Security is controlled at hub level, so failure to call will not impact security but may result
+        /// in screen enabling and/or showing controls that the user does not actually have access to and
+        /// upon attempted use will result in a security error.
+        /// </remarks>
+        public void EstablishUserRolesForPage(Type model, RecordOperationsCache cache, dynamic viewBag)
+        {
             // Get any authorized roles as defined in hub for key records operations of modeled table
-            Tuple<string, string>[] recordOperations = cache.GetRecordOperations<TModel>();
+            Tuple<string, string>[] recordOperations = cache.GetRecordOperations(model);
 
             // Create a function to check if a method exists for operation - if none is defined, read-only access will be assumed (e.g. for a view)
             Func<RecordOperation, string> getRoles = operationType =>
