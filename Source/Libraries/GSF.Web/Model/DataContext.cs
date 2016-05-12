@@ -783,15 +783,15 @@ namespace GSF.Web.Model
 
             if (!string.IsNullOrWhiteSpace(queryRecordCountMethod))
                 javascript.Append($@"
-                    viewModel.setQueryRecordCount(function () {{
-                        return {hubName}.{queryRecordCountMethod}({keyValues});
+                    viewModel.setQueryRecordCount(function (filterText) {{
+                        return {hubName}.{queryRecordCountMethod}({(keyValues == null ? "" : $"{keyValues}, ")} filterText);
                     }});
                 ".FixForwardSpacing());
 
             if (!string.IsNullOrWhiteSpace(queryRecordsMethod))
                 javascript.Append($@"
-                    viewModel.setQueryRecords(function (sortField, ascending, page, pageSize) {{
-                        return {hubName}.{queryRecordsMethod}({(keyValues == null ? "" : $"{keyValues}, ")}sortField, ascending, page, pageSize);
+                    viewModel.setQueryRecords(function (sortField, ascending, page, pageSize, filterText) {{
+                        return {hubName}.{queryRecordsMethod}({(keyValues == null ? "" : $"{keyValues}, ")}sortField, ascending, page, pageSize, filterText);
                     }});
                 ".FixForwardSpacing());
 
