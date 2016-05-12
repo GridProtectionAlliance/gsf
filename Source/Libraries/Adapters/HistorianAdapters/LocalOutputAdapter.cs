@@ -100,6 +100,8 @@ namespace HistorianAdapters
         private string m_archivePath;
         private long m_archivedMeasurements;
         private volatile int m_adapterLoadedCount;
+        private readonly Dictionary<int, ulong> m_orphanCounts;
+        private readonly ProcessQueue<IDataPoint> m_orphanQueue;
         private readonly Dictionary<int, ulong> m_badTimestampCounts;
         private readonly ProcessQueue<IDataPoint> m_badTimestampQueue;
         private readonly Dictionary<int, ulong> m_outOfSequenceCounts;
@@ -121,6 +123,8 @@ namespace HistorianAdapters
             m_archive.StateFile = new StateFile();
             m_archive.IntercomFile = new IntercomFile();
             MetadataRefreshOperation.IsBackground = false;
+            m_orphanCounts = new Dictionary<int, ulong>();
+            m_orphanQueue = ProcessQueue<IDataPoint>.CreateRealTimeQueue(HandleOrphanData);
             m_badTimestampCounts = new Dictionary<int, ulong>();
             m_badTimestampQueue = ProcessQueue<IDataPoint>.CreateRealTimeQueue(HandleBadTimestampData);
             m_outOfSequenceCounts = new Dictionary<int, ulong>();
@@ -404,6 +408,7 @@ namespace HistorianAdapters
             m_archive.OffloadComplete += m_archive_OffloadComplete;
             m_archive.OffloadException += m_archive_OffloadException;
 
+            m_archive.OrphanDataReceived += m_archive_OrphanDataReceived;
             m_archive.FutureDataReceived += m_archive_FutureDataReceived;
             m_archive.OutOfSequenceDataReceived += m_archive_OutOfSequenceDataReceived;
 
@@ -678,6 +683,32 @@ namespace HistorianAdapters
         private void m_archive_OffloadException(object sender, EventArgs<Exception> e)
         {
             OnProcessException(new InvalidOperationException(string.Format("Archive offload exception: {0}", e.Argument.Message), e.Argument));
+        }
+
+        private void m_archive_OrphanDataReceived(object sender, EventArgs<IDataPoint> e)
+        {
+            // In case we are receiving many points with bad timestamps, we throttle user messages
+            if ((object)m_orphanQueue != null)
+                m_orphanQueue.Add(e.Argument);
+        }
+
+        private void HandleOrphanData(IDataPoint point)
+        {
+            if ((object)point == null)
+                return;
+
+            int id = point.HistorianID;
+            ulong total = m_orphanCounts.GetOrAdd(id, 0UL);
+
+            if (total % 100UL == 0UL)
+            {
+                if (total > 0UL)
+                    OnStatusMessage("Received {0} points of orphaned data for {1}:{2}. Measurements which are no longer defined in the metadata will not be archived.", total, m_instanceName, id);
+                else
+                    OnStatusMessage("Received orphaned data for point {0}:{1}. Measurements which are no longer defined in the metadata will not be archived.", m_instanceName, id);
+            }
+
+            m_orphanCounts[id] = total + 1UL;
         }
 
         private void m_archive_FutureDataReceived(object sender, EventArgs<IDataPoint> e)
