@@ -3502,105 +3502,129 @@ namespace GSF.Historian.Files
             if (m_buildHistoricFileListThread.IsAlive)
                 m_buildHistoricFileListThread.Join();
 
-            Dictionary<int, List<IDataPoint>> sortedPointData = new Dictionary<int, List<IDataPoint>>();
+            Dictionary<Info, Dictionary<int, List<IDataPoint>>> historicFileData = new Dictionary<Info, Dictionary<int, List<IDataPoint>>>();
 
-            // First we'll separate all point data by ID.
-            for (int i = 0; i < items.Length; i++)
-            {
-                if (!sortedPointData.ContainsKey(items[i].HistorianID))
-                {
-                    sortedPointData.Add(items[i].HistorianID, new List<IDataPoint>());
-                }
-
-                sortedPointData[items[i].HistorianID].Add(items[i]);
-            }
-
-            foreach (int pointID in sortedPointData.Keys)
-            {
-                // We'll sort the point data for the current point ID by time.
-                sortedPointData[pointID].Sort();
-
-                ArchiveFile historicFile = null;
-                ArchiveDataBlock historicFileBlock = null;
-
+            // Separate all point data into bins by historic file and point ID
+            foreach (IDataPoint dataPoint in items) {
                 try
                 {
-                    for (int i = 0; i < sortedPointData[pointID].Count; i++)
+                    Info historicFileInfo;
+                    Dictionary<int, List<IDataPoint>> sortedPointData;
+                    List<IDataPoint> pointData;
+
+                    lock (m_historicArchiveFiles)
                     {
-                        if ((object)historicFile == null)
-                        {
-                            // We'll try to find a historic file when the current point data belongs.
-                            Info historicFileInfo;
+                        // Attempt to find a historic archive file where the data point belongs
+                        historicFileInfo = m_historicArchiveFiles.Find(info => FindHistoricArchiveFileForWrite(info, dataPoint.Time));
+                    }
 
-                            lock (m_historicArchiveFiles)
-                            {
-                                historicFileInfo = m_historicArchiveFiles.Find(info => FindHistoricArchiveFileForWrite(info, sortedPointData[pointID][i].Time));
-                            }
-
-                            if ((object)historicFileInfo != null)
-                            {
-                                // Found a historic file where the data can be written.
-                                historicFile = new ArchiveFile();
-                                historicFile.FileName = historicFileInfo.FileName;
-                                historicFile.StateFile = m_stateFile;
-                                historicFile.IntercomFile = m_intercomFile;
-                                historicFile.MetadataFile = m_metadataFile;
-                                historicFile.Open();
-                            }
-                        }
-
-                        if ((object)historicFile != null)
-                        {
-                            if (sortedPointData[pointID][i].Time.CompareTo(historicFile.Fat.FileStartTime) >= 0 && sortedPointData[pointID][i].Time.CompareTo(historicFile.Fat.FileEndTime) <= 0)
-                            {
-                                // The current point data belongs to the current historic archive file.
-                                if ((object)historicFileBlock == null || historicFileBlock.SlotsAvailable == 0)
-                                {
-                                    // Request a new or previously used data block for point data.
-                                    historicFileBlock = historicFile.Fat.RequestDataBlock(pointID, sortedPointData[pointID][i].Time, -1);
-                                }
-
-                                historicFileBlock.Write(sortedPointData[pointID][i]);
-                                historicFile.Fat.DataPointsReceived++;
-                                historicFile.Fat.DataPointsArchived++;
-
-                                if (i == sortedPointData[pointID].Count() - 1)
-                                {
-                                    // Last piece of data for the point, so we close the currently open file.
-                                    historicFile.Save();
-                                    historicFile.Dispose();
-                                    historicFile = null;
-                                    historicFileBlock = null;
-                                }
-                            }
-                            else
-                            {
-                                // The current point data doesn't belong to the current historic archive file, so we have
-                                // to write all the point data we have so far for the current historic archive file to it.
-                                i--;
-                                historicFile.Dispose();
-                                historicFile = null;
-                                historicFileBlock = null;
-                            }
-                        }
+                    // If a historic file exists, sort the data point into the proper bin
+                    if ((object)historicFileInfo != null)
+                    {
+                        sortedPointData = historicFileData.GetOrAdd(historicFileInfo, info => new Dictionary<int, List<IDataPoint>>());
+                        pointData = sortedPointData.GetOrAdd(dataPoint.HistorianID, id => new List<IDataPoint>());
+                        pointData.Add(dataPoint);
                     }
                 }
                 catch (Exception ex)
                 {
-                    // Free-up used memory.
-                    if ((object)historicFile != null)
+                    // Notify of the exception
+                    OnDataWriteException(ex);
+                }
+            }
+
+            foreach (Info historicFileInfo in historicFileData.Keys)
+            {
+                Dictionary<int, List<IDataPoint>> sortedPointData = historicFileData[historicFileInfo];
+                int overflowBlocks = 0;
+
+                using (ArchiveFile historicFile = new ArchiveFile())
+                {
+                    try
+                    {
+                        // Open the historic file
+                        historicFile.FileName = historicFileInfo.FileName;
+                        historicFile.StateFile = m_stateFile;
+                        historicFile.IntercomFile = m_intercomFile;
+                        historicFile.MetadataFile = m_metadataFile;
+                        historicFile.Open();
+                    }
+                    catch (Exception ex)
+                    {
+                        // Notify of the exception
+                        OnDataWriteException(ex);
+                    }
+
+                    // Calculate the number of additional data blocks needed to store all the data
+                    foreach (int pointID in sortedPointData.Keys)
                     {
                         try
                         {
-                            historicFile.Dispose();
+                            ArchiveDataBlock lastDataBlock = historicFile.Fat.FindLastDataBlock(pointID);
+                            int blockCapacity = m_fat.DataBlockSize * 1024 / ArchiveDataPoint.FixedLength;
+                            int overflowPoints = sortedPointData[pointID].Count + (lastDataBlock?.SlotsUsed ?? 0) - (lastDataBlock?.Capacity ?? 0);
+                            overflowBlocks += (overflowPoints + blockCapacity - 1) / blockCapacity;
                         }
-                        catch
+                        catch (Exception ex)
                         {
+                            // Notify of the exception
+                            OnDataWriteException(ex);
                         }
                     }
 
-                    // Notify of the exception.
-                    OnDataWriteException(ex);
+                    try
+                    {
+                        // Extend the file by the needed amount
+                        if (overflowBlocks > 0)
+                            historicFile.Fat.Extend(overflowBlocks);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Notify of the exception
+                        OnDataWriteException(ex);
+                    }
+
+                    foreach (int pointID in sortedPointData.Keys)
+                    {
+                        try
+                        {
+                            ArchiveDataBlock historicFileBlock = null;
+
+                            // Sort the point data for the current point ID by time
+                            sortedPointData[pointID].Sort();
+
+                            foreach (IDataPoint dataPoint in sortedPointData[pointID])
+                            {
+                                if ((object)historicFileBlock == null || historicFileBlock.SlotsAvailable == 0)
+                                {
+                                    // Request a new or previously used data block for point data
+                                    historicFileBlock = historicFile.Fat.RequestDataBlock(pointID, dataPoint.Time, -1);
+                                }
+
+                                // Write the data point into the data block
+                                historicFileBlock.Write(dataPoint);
+                                historicFile.Fat.DataPointsReceived++;
+                                historicFile.Fat.DataPointsArchived++;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // Notify of the exception
+                            OnDataWriteException(ex);
+                        }
+                    }
+
+                    try
+                    {
+                        // Save the file after all
+                        // data has been written to it
+                        historicFile.Save();
+                    }
+                    catch (Exception ex)
+                    {
+                        // Notify of the exception
+                        OnDataWriteException(ex);
+                    }
                 }
             }
         }
