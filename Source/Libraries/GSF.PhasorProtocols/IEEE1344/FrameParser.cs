@@ -277,7 +277,7 @@ namespace GSF.PhasorProtocols.IEEE1344
                 ushort sampleCount = dataFrame.CommonHeader.SampleCount;
                 ushort diff = (ushort)(sampleCount - m_lastSampleCount);
 
-                if (diff < m_samplesPerFrame)
+                if (diff != 0 && diff < m_samplesPerFrame)
                     m_samplesPerFrame = diff;
 
                 m_lastSampleCount = sampleCount;
