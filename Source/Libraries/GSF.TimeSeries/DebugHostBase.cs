@@ -111,6 +111,7 @@ namespace GSF.TimeSeries
                 m_productName = AssemblyInfo.EntryAssembly.Title;
                 this.Text = string.Format(this.Text, m_productName);
                 notifyIcon.Text = string.Format(notifyIcon.Text, m_productName);
+                notifyIcon.Icon = this.Icon;
                 LabelNotice.Text = string.Format(LabelNotice.Text, m_productName);
                 exitToolStripMenuItem.Text = string.Format(exitToolStripMenuItem.Text, m_productName);
 
