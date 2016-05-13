@@ -151,7 +151,7 @@
                                 Tag="HMC - Time Resolution.png" ToolTipService.ToolTip="Click here for help on Time Resolution" Click="ButtonHelp_Click"/>
                             <TextBlock Style="{StaticResource RequiredMarker}"/>
                         </StackPanel>
-                        <TextBox Grid.Row="0" Grid.Column="1" Text="{tsfBinding:Column Path=TimeResolution}" Width="{StaticResource XSmallItemSize}" />
+                        <TextBox Grid.Row="0" Grid.Column="1" Text="{tsfBinding:Column Path=TimeResolution}" Width="{StaticResource XSmallItemSize}" IsEnabled="{Binding Path=RoundToNearestTimestamp, Converter={StaticResource NotConverter}}" />
                         <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="2" HorizontalAlignment="Right">
                             <TextBlock Text="Downsampling" Style="{StaticResource RequiredLabel}"/>
                             <Button Content="?" Margin="2,0,0,0" Template="{StaticResource RoundButtonTemplate}" Background="{StaticResource BlueRadialGradientBrush}" Foreground="#FFFFFF" Width="16" Height="16" FontWeight="Bold" FontSize="{StaticResource SmallTextSize}"
@@ -230,6 +230,7 @@
                         </StackPanel>
 
                         <CheckBox Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2" Content="Perform Timestamp Reasonability Check" IsChecked="{tsfBinding:Column Path=PerformTimestampReasonabilityCheck}" />
+                        <CheckBox Grid.Row="7" Grid.Column="3" Content="Round to Nearest Timestamp" IsChecked="{tsfBinding:Column Path=RoundToNearestTimestamp}" />
                     </Grid>
                 </Expander>
 

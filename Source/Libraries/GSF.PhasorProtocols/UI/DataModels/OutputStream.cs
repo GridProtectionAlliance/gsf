@@ -80,6 +80,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         private string m_nodeName;
         private string m_typeName;
         private bool m_performTimestampReasonabilityCheck;
+        private bool m_roundToNearestTimestamp;
         private DateTime m_createdOn;
         private string m_createdBy;
         private DateTime m_updatedOn;
@@ -189,7 +190,20 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             set
             {
-                m_connectionString = value;
+                Dictionary<string, string> settings = value.ParseKeyValuePairs();
+                string setting;
+
+                if (settings.TryGetValue(nameof(RoundToNearestTimestamp), out setting))
+                {
+                    RoundToNearestTimestamp = setting.ParseBoolean();
+                    settings.Remove(nameof(RoundToNearestTimestamp));
+                    m_connectionString = settings.JoinKeyValuePairs();
+                }
+                else
+                {
+                    m_connectionString = value;
+                }
+
                 OnPropertyChanged("ConnectionString");
             }
         }
@@ -644,6 +658,24 @@ namespace GSF.PhasorProtocols.UI.DataModels
         }
 
         /// <summary>
+        /// Gets or sets <see cref="OutputStream"/>'s PerformTimestampReasonabilityCheck flag.
+        /// </summary>
+        [Required(ErrorMessage = "Output stream perform timestamp reasonability check is a required field, please provide a value.")]
+        [DefaultValue(false)]
+        public bool RoundToNearestTimestamp
+        {
+            get
+            {
+                return m_roundToNearestTimestamp;
+            }
+            set
+            {
+                m_roundToNearestTimestamp = value;
+                OnPropertyChanged("RoundToNearestTimestamp");
+            }
+        }
+
+        /// <summary>
         /// Gets or sets <see cref="OutputStream"/> CreatedOn.
         /// </summary>
         // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
@@ -902,6 +934,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <returns>String, for display use, indicating success.</returns>
         public static string Save(AdoDataConnection database, OutputStream outputStream, bool mirrorMode)
         {
+            string connectionString;
             bool createdConnection = false;
             string query;
 
@@ -909,6 +942,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 OutputStream oldOutputStream;
                 createdConnection = CreateConnection(ref database);
+
+                connectionString = outputStream.ConnectionString;
+
+                if (outputStream.RoundToNearestTimestamp)
+                    connectionString += "; RoundToNearestTimestamp=True";
 
                 if (outputStream.ID == 0)
                 {
@@ -924,7 +962,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         "performTimeReasonabilityCheck", "updatedBy", "updatedOn", "createdBy", "createdOn");
 
                     database.Connection.ExecuteNonQuery(query,
-                        database.CurrentNodeID(), outputStream.Acronym.Replace(" ", "").ToUpper(), outputStream.Name.ToNotNull(), outputStream.Type - 1, outputStream.ConnectionString.ToNotNull(),
+                        database.CurrentNodeID(), outputStream.Acronym.Replace(" ", "").ToUpper(), outputStream.Name.ToNotNull(), outputStream.Type - 1, connectionString.ToNotNull(),
                         outputStream.IDCode, outputStream.CommandChannel.ToNotNull(), outputStream.DataChannel.ToNotNull(), database.Bool(outputStream.AutoPublishConfigFrame), database.Bool(outputStream.AutoStartDataChannel),
                         outputStream.NominalFrequency, outputStream.FramesPerSecond, outputStream.LagTime, outputStream.LeadTime, database.Bool(outputStream.UseLocalClockAsRealTime), database.Bool(outputStream.AllowSortsByArrival),
                         outputStream.LoadOrder, database.Bool(outputStream.Enabled), database.Bool(outputStream.IgnoreBadTimeStamps), outputStream.TimeResolution, database.Bool(outputStream.AllowPreemptivePublishing),
@@ -948,7 +986,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         "analogScalingValue", "digitalMaskValue", "performTimeReasonabilityCheck", "updatedBy", "updatedOn", "id");
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout,
-                        database.Guid(outputStream.NodeID), outputStream.Acronym.Replace(" ", "").ToUpper(), outputStream.Name.ToNotNull(), outputStream.Type - 1, outputStream.ConnectionString.ToNotNull(),
+                        database.Guid(outputStream.NodeID), outputStream.Acronym.Replace(" ", "").ToUpper(), outputStream.Name.ToNotNull(), outputStream.Type - 1, connectionString.ToNotNull(),
                         outputStream.IDCode, outputStream.CommandChannel.ToNotNull(), outputStream.DataChannel.ToNotNull(), database.Bool(outputStream.AutoPublishConfigFrame), database.Bool(outputStream.AutoStartDataChannel),
                         outputStream.NominalFrequency, outputStream.FramesPerSecond, outputStream.LagTime, outputStream.LeadTime, database.Bool(outputStream.UseLocalClockAsRealTime),
                         database.Bool(outputStream.AllowSortsByArrival), outputStream.LoadOrder, database.Bool(outputStream.Enabled), database.Bool(outputStream.IgnoreBadTimeStamps), outputStream.TimeResolution,
