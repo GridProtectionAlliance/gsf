@@ -3553,6 +3553,11 @@ namespace GSF.Historian.Files
                     {
                         // Notify of the exception
                         OnDataWriteException(ex);
+
+                        // If we fail to open the historic file,
+                        // then we cannot write any of these data
+                        // points to it so we might as well move on
+                        continue;
                     }
 
                     // Calculate the number of additional data blocks needed to store all the data
@@ -3561,7 +3566,7 @@ namespace GSF.Historian.Files
                         try
                         {
                             ArchiveDataBlock lastDataBlock = historicFile.Fat.FindLastDataBlock(pointID);
-                            int blockCapacity = m_fat.DataBlockSize * 1024 / ArchiveDataPoint.FixedLength;
+                            int blockCapacity = historicFile.DataBlockSize * 1024 / ArchiveDataPoint.FixedLength;
                             int overflowPoints = sortedPointData[pointID].Count + (lastDataBlock?.SlotsUsed ?? 0) - (lastDataBlock?.Capacity ?? 0);
                             overflowBlocks += (overflowPoints + blockCapacity - 1) / blockCapacity;
                         }
