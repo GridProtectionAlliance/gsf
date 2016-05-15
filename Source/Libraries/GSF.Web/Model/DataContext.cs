@@ -1081,7 +1081,7 @@ namespace GSF.Web.Model
             if (enableHotLinks)
             {
                 AddReadOnlyHotLinkField(fieldID, $"readonly{fieldID}", fieldName, false);
-                customDataBinding = $"{(string.IsNullOrWhiteSpace(customDataBinding) ? "" : $"{customDataBinding}, ")}visible: $parent.recordMode()!==RecordMode.View";
+                customDataBinding = $"{(string.IsNullOrWhiteSpace(customDataBinding) ? "" : $"{customDataBinding}, ")}visible: $root.recordMode()!==RecordMode.View";
             }
 
             viewBag.AddValue("FieldName", fieldName);
@@ -1184,7 +1184,7 @@ namespace GSF.Web.Model
             if (enableHotLinks)
             {
                 AddReadOnlyHotLinkField(fieldID, $"readonly{fieldID}", fieldName, true);
-                customDataBinding = $"{(string.IsNullOrWhiteSpace(customDataBinding) ? "" : $"{customDataBinding}, ")}visible: $parent.recordMode()!==RecordMode.View";
+                customDataBinding = $"{(string.IsNullOrWhiteSpace(customDataBinding) ? "" : $"{customDataBinding}, ")}visible: $root.recordMode()!==RecordMode.View";
             }
 
             viewBag.AddValue("FieldName", fieldName);
