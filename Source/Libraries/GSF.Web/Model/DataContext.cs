@@ -451,7 +451,9 @@ namespace GSF.Web.Model
         /// </remarks>
         public void ConfigureView(HttpRequestMessage request, dynamic viewBag)
         {
-            ConfigureView(request.QueryParameters()["RouteID"], viewBag);
+            string routeID;
+            request.QueryParameters().TryGetValue("RouteID", out routeID);
+            ConfigureView(routeID, viewBag);
         }
 
         /// <summary>
@@ -483,7 +485,9 @@ namespace GSF.Web.Model
         /// </remarks>
         public void ConfigureView(Type model, Type hub, HttpRequestMessage request, dynamic viewBag)
         {
-            ConfigureView(model, hub, request.QueryParameters()["RouteID"], viewBag);
+            string routeID;
+            request.QueryParameters().TryGetValue("RouteID", out routeID);
+            ConfigureView(model, hub, routeID, viewBag);
         }
 
         /// <summary>
