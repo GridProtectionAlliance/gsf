@@ -339,6 +339,16 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public const string DefaultLoggingPath = "ConfigurationCache";
 
+        /// <summary>
+        /// Specifies the default value for the <see cref="AllowedParsingExceptions"/> property.
+        /// </summary>
+        public const int DefaultAllowedParsingExceptions = 10;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="ParsingExceptionWindow"/> property.
+        /// </summary>
+        public const long DefaultParsingExceptionWindow = 50000000L; // 5 seconds
+
         private const int EvenKey = 0;      // Even key/IV index
         private const int OddKey = 1;       // Odd key/IV index
         private const int KeyIndex = 0;     // Index of cipher key component in keyIV array
@@ -398,6 +408,11 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public event EventHandler ServerConfigurationChanged;
 
+        /// <summary>
+        /// Occurs when number of parsing exceptions exceed <see cref="AllowedParsingExceptions"/> during <see cref="ParsingExceptionWindow"/>.
+        /// </summary>
+        public event EventHandler ExceededParsingExceptionThreshold;
+
         // Fields
         private volatile Dictionary<Guid, DeviceStatisticsHelper<SubscribedDevice>> m_subscribedDevicesLookup;
         private volatile List<DeviceStatisticsHelper<SubscribedDevice>> m_statisticsHelpers;
@@ -453,6 +468,10 @@ namespace GSF.TimeSeries.Transport
         private RunTimeLog m_runTimeLog;
         private bool m_dataGapRecoveryEnabled;
         private DataGapRecoverer m_dataGapRecoverer;
+        private int m_parsingExceptionCount;
+        private long m_lastParsingExceptionTime;
+        private int m_allowedParsingExceptions;
+        private Ticks m_parsingExceptionWindow;
         //private Ticks m_lastMeasurementCheck;
         //private Ticks m_minimumMissingMeasurementThreshold = 5;
         //private double m_transmissionDelayTimeAdjustment = 5.0;
@@ -507,6 +526,8 @@ namespace GSF.TimeSeries.Transport
             m_encoding = Encoding.Unicode;
             m_operationalModes = DefaultOperationalModes;
             m_metadataSynchronizationTimeout = DefaultMetadataSynchronizationTimeout;
+            m_allowedParsingExceptions = DefaultAllowedParsingExceptions;
+            m_parsingExceptionWindow = DefaultParsingExceptionWindow;
 
             string loggingPath = FilePath.GetDirectoryName(FilePath.GetAbsolutePath(DefaultLoggingPath));
 
@@ -979,6 +1000,36 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Gets or sets number of parsing exceptions allowed during <see cref="ParsingExceptionWindow"/> before connection is reset.
+        /// </summary>
+        public int AllowedParsingExceptions
+        {
+            get
+            {
+                return m_allowedParsingExceptions;
+            }
+            set
+            {
+                m_allowedParsingExceptions = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets time duration, in <see cref="Ticks"/>, to monitor parsing exceptions.
+        /// </summary>
+        public Ticks ParsingExceptionWindow
+        {
+            get
+            {
+                return m_parsingExceptionWindow;
+            }
+            set
+            {
+                m_parsingExceptionWindow = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets <see cref="DataSet"/> based data source available to this <see cref="DataSubscriber"/>.
         /// </summary>
         public override DataSet DataSource
@@ -1395,6 +1446,14 @@ namespace GSF.TimeSeries.Transport
                 if (m_autoConnect)
                     m_autoSynchronizeMetadata = true;
             }
+
+            // Define the maximum allowed exceptions before resetting the connection
+            if (settings.TryGetValue("allowedParsingExceptions", out setting))
+                m_allowedParsingExceptions = int.Parse(setting);
+
+            // Define the window of time over which parsing exceptions are tolerated
+            if (settings.TryGetValue("parsingExceptionWindow", out setting))
+                m_parsingExceptionWindow = Ticks.FromSeconds(double.Parse(setting));
 
             // Check if synchronize meta-data is explicitly enabled or disabled
             if (settings.TryGetValue("synchronizeMetadata", out setting))
@@ -4420,6 +4479,54 @@ namespace GSF.TimeSeries.Transport
                 // We protect our code from consumer thrown exceptions
                 OnProcessException(new InvalidOperationException($"Exception in consumer handler for ServerConfigurationChanged event: {ex.Message}", ex));
             }
+        }
+
+        /// <summary>
+        /// Raises <see cref="AdapterBase.ProcessException"/> event.
+        /// </summary>
+        /// <param name="ex">Processing <see cref="Exception"/>.</param>
+        protected override void OnProcessException(Exception ex)
+        {
+            base.OnProcessException(ex);
+
+            if (DateTime.UtcNow.Ticks - m_lastParsingExceptionTime > m_parsingExceptionWindow)
+            {
+                // Exception window has passed since last exception, so we reset counters
+                m_lastParsingExceptionTime = DateTime.UtcNow.Ticks;
+                m_parsingExceptionCount = 0;
+            }
+
+            m_parsingExceptionCount++;
+
+            if (m_parsingExceptionCount > m_allowedParsingExceptions)
+            {
+                try
+                {
+                    // When the parsing exception threshold has been exceeded, connection is restarted
+                    Start();
+                }
+                catch (Exception restartException)
+                {
+                    string message = $"Error while restarting subscriber connection due to excessive exceptions: {restartException.Message}";
+                    base.OnProcessException(new InvalidOperationException(message, restartException));
+                }
+                finally
+                {
+                    // Notify consumer of parsing exception threshold deviation
+                    OnExceededParsingExceptionThreshold();
+                    m_lastParsingExceptionTime = 0;
+                    m_parsingExceptionCount = 0;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ExceededParsingExceptionThreshold"/> event.
+        /// </summary>
+        private void OnExceededParsingExceptionThreshold()
+        {
+            if ((object)ExceededParsingExceptionThreshold != null)
+                ExceededParsingExceptionThreshold(this, EventArgs.Empty);
         }
 
         // Updates the measurements per second counters after receiving another set of measurements.
