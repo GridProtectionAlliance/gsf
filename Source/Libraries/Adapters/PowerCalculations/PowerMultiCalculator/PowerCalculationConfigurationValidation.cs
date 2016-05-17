@@ -130,18 +130,36 @@ namespace PowerCalculations.PowerMultiCalculator
         {
             statusMessage("Checking for calculations with null output measurements...");
 
-            string query = 
-                "SELECT pc.ID, pc.CircuitDescription, pc.ActivePowerOutputSignalID, pc.ApparentPowerOutputSignalID, pc.ReactivePowerOutputSignalID, " +
-                "v.Acronym as vendoracronym,  d.Acronym as deviceacronym, c.Acronym as companyacronym, d.id as deviceid, d.historianid as historianid, " + 
-                "(SELECT p.Label FROM Phasor p JOIN Measurement m on m.SignalID = pc.currentanglesignalid and m.DeviceID = p.DeviceID AND m.PhasorSourceIndex = p.SourceIndex) as currentLabel " + 
-                "FROM PowerCalculation pc " + 
-                "join measurement m on m.SignalID = pc.voltageanglesignalid " + 
-                "left outer join device d on m.deviceid = d.id " + 
-                "left outer join VendorDevice vd on vd.id = d.VendorDeviceID " + 
-                "left outer join vendor v on vd.VendorID = v.id " + 
-                "left outer join company c on d.CompanyID = c.id " + 
-                $"WHERE pc.Enabled = 1 and pc.nodeid={nodeIDQueryString} " + 
-                "AND (pc.ActivePowerOutputSignalID IS NULL OR pc.ReactivePowerOutputSignalID IS NULL OR pc.ApparentPowerOutputSignalID IS NULL)";
+            string query =
+                $"SELECT " +
+                $"    pc.ID, " +
+                $"    pc.CircuitDescription, " +
+                $"    pc.ActivePowerOutputSignalID, " +
+                $"    pc.ApparentPowerOutputSignalID, " +
+                $"    pc.ReactivePowerOutputSignalID, " +
+                $"    v.Acronym AS vendoracronym, " +
+                $"    d.Acronym AS deviceacronym, " +
+                $"    c.Acronym AS companyacronym, " +
+                $"    d.id AS deviceid, " +
+                $"    d.historianid AS historianid, " +
+                $"    p.Label AS currentLabel " +
+                $"FROM " +
+                $"    PowerCalculation pc JOIN " +
+                $"    Measurement vm ON vm.SignalID = pc.voltageanglesignalid JOIN " +
+                $"    Measurement im ON im.SignalID = pc.CurrentAngleSignalID LEFT OUTER JOIN " +
+                $"    Phasor p ON im.DeviceID = p.DeviceID AND im.PhasorSourceIndex = p.SourceIndex LEFT OUTER JOIN " +
+                $"    Device d ON vm.deviceid = d.id LEFT OUTER JOIN " +
+                $"    VendorDevice vd ON vd.id = d.VendorDeviceID LEFT OUTER JOIN " +
+                $"    Vendor v ON vd.VendorID = v.id LEFT OUTER JOIN " +
+                $"    Company c ON d.CompanyID = c.id " +
+                $"WHERE " +
+                $"    pc.Enabled = 1 AND " +
+                $"    pc.nodeid = {nodeIDQueryString} AND " +
+                $"    ( " +
+                $"        pc.ActivePowerOutputSignalID IS NULL OR " +
+                $"        pc.ReactivePowerOutputSignalID IS NULL OR " +
+                $"        pc.ApparentPowerOutputSignalID IS NULL " +
+                $"    )";
 
             Dictionary<int, PowerMeasurement> activePowerUpdates = new Dictionary<int, PowerMeasurement>();
             Dictionary<int, PowerMeasurement> reactivePowerUpdates = new Dictionary<int, PowerMeasurement>();
@@ -291,19 +309,17 @@ namespace PowerCalculations.PowerMultiCalculator
         {
             statusMessage("Validating if non-null output measurements have correct signal type...");
 
-            string query = 
-                "UPDATE PowerCalculation SET Enabled=0 WHERE ID IN (select pc.ID " + 
-                "from PowerCalculation pc " + 
-                "left join measurement m1 " + 
-                "on pc.activepoweroutputsignalid = m1.signalid " + 
-                "left join measurement m2 " + 
-                "on pc.reactivepoweroutputsignalid = m2.signalid " + 
-                "left join Measurement m3 " + 
-                "on pc.apparentpoweroutputsignalid = m3.signalid " + 
-                $"where pc.Enabled=1 AND pc.NodeID={nodeIDQueryString} " + 
-                "  and (m1.signaltypeid != 10  " + 
-                "   or m2.signaltypeid != 10  " + 
-                "   or m3.signaltypeid != 10))";
+            string query =
+                $"UPDATE PowerCalculation " +
+                $"SET Enabled = 0 " +
+                $"WHERE " +
+                $"    Enabled = 1 AND " +
+                $"    NodeID = {nodeIDQueryString} AND " +
+                $"    ( " +
+                $"        (SELECT Acronym FROM Measurement JOIN SignalType ON Measurement.SignalTypeID = SignalType.ID WHERE SignalID = ActivePowerOutputSignalID) <> 'CALC' OR " +
+                $"        (SELECT Acronym FROM Measurement JOIN SignalType ON Measurement.SignalTypeID = SignalType.ID WHERE SignalID = ActivePowerOutputSignalID) <> 'CALC' OR " +
+                $"        (SELECT Acronym FROM Measurement JOIN SignalType ON Measurement.SignalTypeID = SignalType.ID WHERE SignalID = ActivePowerOutputSignalID) <> 'CALC' " +
+                $"    )";
 
             const string failureMessage = "One or more power calculations are defined with non-null output measurements having the wrong signal type. Power calculations will be disabled.";
 
@@ -320,19 +336,13 @@ namespace PowerCalculations.PowerMultiCalculator
         {
             statusMessage("Validating if non-null output measurements are enabled...");
 
-            string query = 
-                "UPDATE PowerCalculation SET Enabled=0 WHERE ID IN (select pc.ID " + 
-                "from PowerCalculation pc " + 
-                "left join measurement m1 " + 
-                "on pc.activepoweroutputsignalid = m1.signalid " + 
-                "left join measurement m2 " + 
-                "on pc.reactivepoweroutputsignalid = m2.signalid " + 
-                "left join Measurement m3 " + 
-                "on pc.apparentpoweroutputsignalid = m3.signalid " + 
-                $"where pc.Enabled=1 AND pc.NodeID={nodeIDQueryString} " + 
-                "  and (m1.enabled=0  " + 
-                "   or m2.enabled=0  " + 
-                "   or m3.enabled=0))";
+            string query =
+                $"UPDATE PowerCalculation " +
+                $"SET Enabled = 0 " +
+                $"WHERE " +
+                $"    Enabled = 1 AND " +
+                $"    NodeID = {nodeIDQueryString} AND " +
+                $"    (SELECT COUNT(*) FROM Measurement WHERE Enabled = 0 AND SignalID IN (ActivePowerOutputSignalID, ReactivePowerOutputSignalID, ApparentPowerOutputSignalID)) > 0";
 
             const string failureMessage = "One or more power calculations are defined with output measurements that are disabled. Power calculations will be disabled.";
 
@@ -371,21 +381,17 @@ namespace PowerCalculations.PowerMultiCalculator
             statusMessage("Validating if input measurements have correct signal type...");
 
             string query =
-                "UPDATE PowerCalculation SET Enabled=0 WHERE ID IN (select pc.ID " + 
-                "from PowerCalculation pc " + 
-                "left join measurement m1 " + 
-                "on pc.voltageanglesignalid = m1.signalid " + 
-                "left join measurement m2 " + 
-                "on pc.VoltageMagSignalID = m2.signalid " + 
-                "left join Measurement m3 " + 
-                "on pc.CurrentAngleSignalID = m3.signalid " + 
-                "left join measurement m4 " + 
-                "on pc.CurrentMagSignalID = m4.signalid " + 
-                $"where pc.Enabled=1 AND pc.NodeID={nodeIDQueryString} " + 
-                "  and (m1.signaltypeid != 4  " + 
-                "   or m2.signaltypeid != 3  " + 
-                "   or m3.signaltypeid != 2  " + 
-                "   or m4.signaltypeid != 1))";
+                $"UPDATE PowerCalculation " +
+                $"SET Enabled = 0 " +
+                $"WHERE " +
+                $"    Enabled = 1 AND " +
+                $"    NodeID = {nodeIDQueryString} AND " +
+                $"    ( " +
+                $"        (SELECT Acronym FROM Measurement JOIN SignalType ON Measurement.SignalTypeID = SignalType.ID WHERE SignalID = VoltageAngleSignalID) <> 'VPHA' OR " +
+                $"        (SELECT Acronym FROM Measurement JOIN SignalType ON Measurement.SignalTypeID = SignalType.ID WHERE SignalID = VoltageMagSignalID) <> 'VPHM' OR " +
+                $"        (SELECT Acronym FROM Measurement JOIN SignalType ON Measurement.SignalTypeID = SignalType.ID WHERE SignalID = CurrentAngleSignalID) <> 'IPHA' OR " +
+                $"        (SELECT Acronym FROM Measurement JOIN SignalType ON Measurement.SignalTypeID = SignalType.ID WHERE SignalID = CurrentMagSignalID) <> 'IPHM' " +
+                $"    )";
 
             const string failureMessage = "One or more power calculations are defined with input measurements having the wrong signal type. Power calculations will be disabled.";
 
@@ -403,21 +409,12 @@ namespace PowerCalculations.PowerMultiCalculator
             statusMessage("Validating if input measurements are enabled...");
 
             string query =
-                "UPDATE PowerCalculation SET Enabled=0 WHERE ID IN (select pc.ID " + 
-                "from PowerCalculation pc " + 
-                "left join measurement m1 " + 
-                "on pc.voltageanglesignalid = m1.signalid " + 
-                "left join measurement m2 " + 
-                "on pc.VoltageMagSignalID = m2.signalid " + 
-                "left join Measurement m3 " + 
-                "on pc.CurrentAngleSignalID = m3.signalid " + 
-                "left join measurement m4 " + 
-                "on pc.CurrentMagSignalID = m4.signalid " + 
-                $"where pc.Enabled=1 AND pc.NodeID={nodeIDQueryString} " + 
-                "  and (m1.enabled=0  " + 
-                "   or m2.enabled=0  " + 
-                "   or m3.enabled=0  " + 
-                "   or m4.enabled=0))";
+                $"UPDATE PowerCalculation " +
+                $"SET Enabled = 0 " +
+                $"WHERE " +
+                $"    Enabled = 1 AND " +
+                $"    NodeID = {nodeIDQueryString} AND " +
+                $"    (SELECT COUNT(*) FROM Measurement WHERE Enabled = 0 AND SignalID IN (VoltageAngleSignalID, VoltageMagSignalID, CurrentAngleSignalID, CurrentMagSignalID)) > 0";
 
             const string failureMessage = "One or more power calculations are defined with input measurements that are disabled. Power calculations will be disabled.";
 
