@@ -1687,7 +1687,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 }
 
                 // Find and remove child devices which are not included in this configuration update
-                foreach (Device device in Device.GetDevices(database, $"WHERE ParentID = {PdcID}"))
+                foreach (Device device in Device.GetDevices(database, $"WHERE ParentID = {PdcID}") ?? Enumerable.Empty<Device>())
                 {
                     if (!ItemsSource.Any(child => child.Include && device.Acronym == child.Acronym))
                         Device.Delete(database, device);
