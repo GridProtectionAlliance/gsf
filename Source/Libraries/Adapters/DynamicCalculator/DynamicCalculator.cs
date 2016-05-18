@@ -151,7 +151,7 @@ namespace DynamicCalculator
         /// </summary>
         [ConnectionStringParameter,
         Description("Define the list of types which define methods to be imported into the expression parser."),
-        DefaultValue("AssemblyName={mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}, TypeName=System.Math")]
+        DefaultValue("AssemblyName={mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}, TypeName=System.Math")]
         public string Imports
         {
             get
@@ -237,7 +237,7 @@ namespace DynamicCalculator
             if (settings.TryGetValue("imports", out setting))
                 Imports = setting;
             else
-                Imports = "AssemblyName={mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}, TypeName=System.Math";
+                Imports = "AssemblyName={mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}, TypeName=System.Math";
 
             if (settings.TryGetValue("supportsTemporalProcessing", out setting))
                 m_supportsTemporalProcessing = setting.ParseBoolean();

@@ -81,7 +81,7 @@ namespace DynamicCalculator
             m_keyMapping = new Dictionary<MeasurementKey, string>();
             m_nonAliasedTokens = new SortedDictionary<int, string>();
             m_expressionContext = new ExpressionContext();
-            m_mailClient = new Mail(null, null);
+            m_mailClient = new Mail();
         }
 
         #endregion
@@ -468,6 +468,9 @@ namespace DynamicCalculator
 
             if (settings.TryGetValue("bccRecipients", out setting) && !string.IsNullOrWhiteSpace(setting))
                 BccRecipients = setting;
+
+            if (string.IsNullOrWhiteSpace(ToRecipients) && string.IsNullOrWhiteSpace(CcRecipients) && string.IsNullOrWhiteSpace(BccRecipients))
+                throw new ArgumentException("At least one destination e-mail address for one of ToRecipients, CcRecipients or BccRecipients must be defined");
 
             if (settings.TryGetValue("isBodyHtml", out setting) && !string.IsNullOrWhiteSpace(setting))
                 IsBodyHtml = setting.ParseBoolean();
