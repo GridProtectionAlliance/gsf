@@ -1226,8 +1226,11 @@ namespace GSF.Web.Model
         /// <param name="toolTip">Tool tip text to apply to field, if any.</param>
         /// <param name="initialFocus">Use field for initial focus.</param>
         /// <param name="restriction">Record restriction to apply, if any.</param>
+        /// <param name="showNoRecordOption">Flag that determines if an option representing no records should be shown if select query returns no values.</param>
+        /// <param name="noRecordValue">Value for no records option when select query returns no values; defaults to "-1".</param>
+        /// <param name="noRecordText">Text for no records option when select query returns no values; defaults to "No records".</param>
         /// <returns>Generated HTML for new text field based on modeled table field attributes.</returns>
-        public string AddSelectField<TModel, TOption>(string fieldName, string optionValueFieldName, string optionLabelFieldName = null, string optionSortFieldName = null, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string optionDataBinding = null, string toolTip = null, bool initialFocus = false, RecordRestriction restriction = null) where TModel : class, new() where TOption : class, new()
+        public string AddSelectField<TModel, TOption>(string fieldName, string optionValueFieldName, string optionLabelFieldName = null, string optionSortFieldName = null, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string optionDataBinding = null, string toolTip = null, bool initialFocus = false, RecordRestriction restriction = null, bool showNoRecordOption = true, string noRecordValue = "-1", string noRecordText = "No records") where TModel : class, new() where TOption : class, new()
         {
             if (string.IsNullOrEmpty(fieldLabel))
             {
@@ -1240,7 +1243,7 @@ namespace GSF.Web.Model
             AddFieldValueInitializer<TModel>(fieldName);
 
             return AddSelectField<TOption>(fieldName, Table<TModel>().FieldHasAttribute<RequiredAttribute>(fieldName),
-                optionValueFieldName, optionLabelFieldName, optionSortFieldName, fieldLabel, fieldID, groupDataBinding, labelDataBinding, customDataBinding, dependencyFieldName, optionDataBinding, toolTip, initialFocus, restriction);
+                optionValueFieldName, optionLabelFieldName, optionSortFieldName, fieldLabel, fieldID, groupDataBinding, labelDataBinding, customDataBinding, dependencyFieldName, optionDataBinding, toolTip, initialFocus, restriction, showNoRecordOption, noRecordValue, noRecordText);
         }
 
         /// <summary>
@@ -1262,8 +1265,11 @@ namespace GSF.Web.Model
         /// <param name="toolTip">Tool tip text to apply to field, if any.</param>
         /// <param name="initialFocus">Use field for initial focus.</param>
         /// <param name="restriction">Record restriction to apply, if any.</param>
+        /// <param name="showNoRecordOption">Flag that determines if an option representing no records should be shown if select query returns no values.</param>
+        /// <param name="noRecordValue">Value for no records option when select query returns no values; defaults to "-1".</param>
+        /// <param name="noRecordText">Text for no records option when select query returns no values; defaults to "No records".</param>
         /// <returns>Generated HTML for new text field based on specified parameters.</returns>
-        public string AddSelectField<TOption>(string fieldName, bool required, string optionValueFieldName, string optionLabelFieldName = null, string optionSortFieldName = null, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string optionDataBinding = null, string toolTip = null, bool initialFocus = false, RecordRestriction restriction = null) where TOption : class, new()
+        public string AddSelectField<TOption>(string fieldName, bool required, string optionValueFieldName, string optionLabelFieldName = null, string optionSortFieldName = null, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string optionDataBinding = null, string toolTip = null, bool initialFocus = false, RecordRestriction restriction = null, bool showNoRecordOption = true, string noRecordValue = "-1", string noRecordText = "No records") where TOption : class, new()
         {
             RazorView addSelectFieldTemplate = new RazorView(m_razorEngine, AddSelectFieldTemplate, m_exceptionHandler);
             DynamicViewBag viewBag = addSelectFieldTemplate.ViewBag;
@@ -1297,6 +1303,9 @@ namespace GSF.Web.Model
                 if (record != null)
                     options.Add(optionTableOperations.GetFieldValue(record, optionValueFieldName).ToString(), optionTableOperations.GetFieldValue(record, optionLabelFieldName).ToNonNullString(fieldLabel));
             }
+
+            if (options.Count == 0 && showNoRecordOption)
+                options.Add(noRecordValue, noRecordText);
 
             viewBag.AddValue("Options", options);
 
