@@ -106,6 +106,15 @@ namespace GSF.Net.Smtp
         /// Initializes a new instance of the <see cref="Mail"/> class.
         /// </summary>
         /// <param name="from">The e-mail address of the <see cref="Mail"/> message sender.</param>
+        public Mail(string from)
+            : this(from, "", DefaultSmtpServer)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Mail"/> class.
+        /// </summary>
+        /// <param name="from">The e-mail address of the <see cref="Mail"/> message sender.</param>
         /// <param name="toRecipients">A comma-separated or semicolon-seperated e-mail address list of the <see cref="Mail"/> message recipients.</param>
         public Mail(string from, string toRecipients)
             : this(from, toRecipients, DefaultSmtpServer)
@@ -169,10 +178,6 @@ namespace GSF.Net.Smtp
             }
             set
             {
-                // This is a required field.
-                if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
-
                 m_toRecipients = value;
             }
         }
@@ -436,9 +441,10 @@ namespace GSF.Net.Smtp
             emailMessage.IsBodyHtml = m_isBodyHtml;
 
             // Add the specified To recipients for the mail message.
-            foreach (string toRecipient in m_toRecipients.Split(';', ','))
+            if (!string.IsNullOrEmpty(m_toRecipients))
             {
-                emailMessage.To.Add(toRecipient.Trim());
+                foreach (string toRecipient in m_toRecipients.Split(';', ','))
+                    emailMessage.To.Add(toRecipient.Trim());
             }
 
             if (!string.IsNullOrEmpty(m_ccRecipients))
