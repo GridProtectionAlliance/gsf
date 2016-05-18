@@ -112,8 +112,7 @@ namespace GSF
         /// <returns>True if the ranges overlap; false otherwise.</returns>
         public bool Overlaps(Range<T> range, Comparison<T> comparison)
         {
-            return (comparison(m_start, range.m_start) <= 0 && comparison(range.m_start, m_end) <= 0) ||
-                   (comparison(range.m_start, m_start) <= 0 && comparison(m_start, range.m_end) <= 0);
+            return comparison(m_start, range.m_end) <= 0 && comparison(range.m_start, m_end) <= 0;
         }
 
         /// <summary>
@@ -282,6 +281,5 @@ namespace GSF
         }
 
         #endregion
-
     }
 }
