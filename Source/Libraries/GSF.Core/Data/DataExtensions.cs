@@ -2341,21 +2341,22 @@ namespace GSF.Data
         /// <returns>The value, of type T, of the <see cref="DataColumn"/> specified by <paramref name="field"/>.</returns>
         public static T ConvertField<T>(this DataRow row, string field, T defaultValue)
         {
-            Type type = typeof(T);
-
-            // Nullable types cannot be used in type conversion, but we can use Nullable.GetUnderlyingType()
-            // to determine whether the type is nullable and convert to the underlying type instead
-            type = Nullable.GetUnderlyingType(type) ?? type;
-
-            if (type == typeof(Guid))
-                return (T)(row.ConvertGuidField(field, (Guid?)(defaultValue as object)) as object);
-
             object value = row.Field<object>(field);
 
             if (value == null || value == DBNull.Value)
                 return defaultValue;
 
-            return (T)Convert.ChangeType(value, type);
+            if (value is T)
+                return (T)value;
+
+            Type type = typeof(T);
+
+            if (type == typeof(Guid))
+                return (T)(object)Guid.Parse(value.ToString());
+
+            // Nullable types cannot be used in type conversion, but we can use Nullable.GetUnderlyingType()
+            // to determine whether the type is nullable and convert to the underlying type instead
+            return (T)Convert.ChangeType(value, Nullable.GetUnderlyingType(type) ?? type);
         }
 
         /// <summary>
@@ -2385,19 +2386,20 @@ namespace GSF.Data
         /// <returns>The value of the <see cref="DataColumn"/> specified by <paramref name="field"/>.</returns>
         public static object ConvertField(this DataRow row, string field, Type type, object defaultValue)
         {
-            // Nullable types cannot be used in type conversion, but we can use Nullable.GetUnderlyingType()
-            // to determine whether the type is nullable and convert to the underlying type instead
-            type = Nullable.GetUnderlyingType(type) ?? type;
-
-            if (type == typeof(Guid))
-                return row.ConvertGuidField(field, (Guid?)defaultValue);
-
             object value = row.Field<object>(field);
 
             if (value == null || value == DBNull.Value)
                 return defaultValue;
 
-            return Convert.ChangeType(value, type);
+            if (type.IsInstanceOfType(value))
+                return value;
+
+            Type underlyingType = Nullable.GetUnderlyingType(type) ?? type;
+
+            if (underlyingType == typeof(Guid))
+                return Guid.Parse(value.ToString());
+
+            return Convert.ChangeType(value, underlyingType);
         }
 
         /// <summary>
@@ -2435,7 +2437,7 @@ namespace GSF.Data
             if (value is Guid)
                 return (Guid)value;
 
-            return Guid.Parse(row.Field<object>(field).ToString());
+            return Guid.Parse(value.ToString());
         }
 
         #endregion
