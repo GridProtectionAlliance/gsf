@@ -380,7 +380,7 @@ namespace GSF.Data.Model
                 {
                     try
                     {
-                        property.SetValue(record, row.ConvertField(s_fieldNames[property.Name], property.PropertyType), null);
+                        property.SetValue(record, m_connection.ConvertField(row, s_fieldNames[property.Name], property.PropertyType), null);
                     }
                     catch (Exception ex)
                     {

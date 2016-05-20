@@ -923,6 +923,96 @@ namespace GSF.Data
             return string.Format(format, parameters);
         }
 
+        /// <summary>
+        /// Provides strongly-typed access to each of the column values in the specified row.
+        /// Automatically applies type conversion to the column values.
+        /// </summary>
+        /// <typeparam name="T">A generic parameter that specifies the return type of the column.</typeparam>
+        /// <param name="row">The input <see cref="DataRow"/>, which acts as the this instance for the extension method.</param>
+        /// <param name="field">The name of the column to return the value of.</param>
+        /// <returns>The value, of type T, of the <see cref="DataColumn"/> specified by <paramref name="field"/>.</returns>
+        public T ConvertField<T>(DataRow row, string field)
+        {
+            return ConvertField(row, field, default(T));
+        }
+
+        /// <summary>
+        /// Provides strongly-typed access to each of the column values in the specified row.
+        /// Automatically applies type conversion to the column values.
+        /// </summary>
+        /// <typeparam name="T">A generic parameter that specifies the return type of the column.</typeparam>
+        /// <param name="row">The input <see cref="DataRow"/>, which acts as the this instance for the extension method.</param>
+        /// <param name="field">The name of the column to return the value of.</param>
+        /// <param name="defaultValue">The value to be substituted if <see cref="DBNull.Value"/> is retrieved.</param>
+        /// <returns>The value, of type T, of the <see cref="DataColumn"/> specified by <paramref name="field"/>.</returns>
+        public T ConvertField<T>(DataRow row, string field, T defaultValue)
+        {
+            Type type = typeof(T);
+            object value = type == typeof(Guid) ? Guid(row, field) : row.Field<object>(field);
+
+            if (value == null || value == DBNull.Value)
+                return defaultValue;
+
+            // Nullable types cannot be used in type conversion, but we can use Nullable.GetUnderlyingType()
+            // to determine whether the type is nullable and convert to the underlying type instead
+            return (T)Convert.ChangeType(value, Nullable.GetUnderlyingType(type) ?? type);
+        }
+
+        /// <summary>
+        /// Automatically applies type conversion to column values when only a type is available.
+        /// </summary>
+        /// <param name="row">The input <see cref="DataRow"/>, which acts as the this instance for the extension method.</param>
+        /// <param name="field">The name of the column to return the value of.</param>
+        /// <param name="type">Type of the column.</param>
+        /// <returns>The value of the <see cref="DataColumn"/> specified by <paramref name="field"/>.</returns>
+        public object ConvertField(DataRow row, string field, Type type)
+        {
+            object defaultValue = null;
+
+            if (type.IsValueType)
+                defaultValue = Activator.CreateInstance(type);
+
+            return ConvertField(row, field, type, defaultValue);
+        }
+
+        /// <summary>
+        /// Automatically applies type conversion to column values when only a type is available.
+        /// </summary>
+        /// <param name="row">The input <see cref="DataRow"/>, which acts as the this instance for the extension method.</param>
+        /// <param name="field">The name of the column to return the value of.</param>
+        /// <param name="type">Type of the column.</param>
+        /// <param name="defaultValue">The value to be substituted if <see cref="DBNull.Value"/> is retrieved.</param>
+        /// <returns>The value of the <see cref="DataColumn"/> specified by <paramref name="field"/>.</returns>
+        public object ConvertField(DataRow row, string field, Type type, object defaultValue)
+        {
+            object value = type == typeof(Guid) ? Guid(row, field) : row.Field<object>(field);
+
+            if (value == null || value == DBNull.Value)
+                return defaultValue;
+
+            return Convert.ChangeType(value, Nullable.GetUnderlyingType(type) ?? type);
+        }
+
+        /// <summary>
+        /// Provides strongly-typed access to each of the column values in the specified row.
+        /// Automatically applies type conversion to the column values.
+        /// </summary>
+        /// <typeparam name="T">A generic parameter that specifies the return type of the column.</typeparam>
+        /// <param name="row">The input <see cref="DataRow"/>, which acts as the this instance for the extension method.</param>
+        /// <param name="field">The name of the column to return the value of.</param>
+        /// <returns>The value, of type T, of the <see cref="DataColumn"/> specified by <paramref name="field"/>.</returns>
+        public T? ConvertNullableField<T>(DataRow row, string field) where T : struct
+        {
+            Type type = typeof(T);
+            object value = type == typeof(Guid) ? Guid(row, field) : row.Field<object>(field);
+
+            if ((object)value == null)
+                return null;
+
+            return (T)Convert.ChangeType(value, type);
+        }
+
+
         [SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase")]
         private DatabaseType GetDatabaseType()
         {
