@@ -717,6 +717,18 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 AlarmMonitor monitor = AlarmMonitor.Default;
 
+                if (alarm.SetPointEnabled && (object)alarm.SetPoint == null)
+                    throw new InvalidOperationException($"Set Point is required for alarms of type \"{((AlarmOperation)alarm.Operation).GetDescription()}\". Please define a Set Point.");
+
+                if (alarm.ToleranceEnabled && (object)alarm.Tolerance == null)
+                    throw new InvalidOperationException($"Tolerance is required for alarms of type \"{((AlarmOperation)alarm.Operation).GetDescription()}\". Please define a Tolerance.");
+
+                if (alarm.DelayEnabled && (object)alarm.Delay == null)
+                    throw new InvalidOperationException($"Delay is required for alarms of type \"{((AlarmOperation)alarm.Operation).GetDescription()}\". Please define a Delay.");
+
+                if (alarm.HysteresisEnabled && (object)alarm.Hysteresis == null)
+                    throw new InvalidOperationException($"Hysteresis is required for alarms of type \"{((AlarmOperation)alarm.Operation).GetDescription()}\". Please define a Hysteresis.");
+
                 if (alarm.ID == 0)
                 {
                     string query = database.ParameterizedQueryString("INSERT INTO Alarm (NodeID, TagName, SignalID, AssociatedMeasurementID, Description, Severity, Operation, SetPoint, Tolerance, Delay, " +
