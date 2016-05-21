@@ -277,7 +277,7 @@ namespace GSF.Net.Ftp
             long onePercentage;
             long bytesReadFromLastProgressEvent;
             byte[] buffer = new byte[4 * 1024 + 1];
-            ProcessProgress<long> progress = new ProcessProgress<long>("FTP " + m_transferDirection + " File Transfer", "Transfering file \"" + m_remoteFile + "\"...", m_totalBytes, 0);
+            ProcessProgress<long> progress = new ProcessProgress<long>("FTP " + m_transferDirection + " File Transfer", "Transferring file \"" + m_remoteFile + "\"...", m_totalBytes, 0);
 
             onePercentage = m_totalBytes / 100;
             bytesReadFromLastProgressEvent = 0;
