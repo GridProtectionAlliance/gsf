@@ -1486,7 +1486,7 @@ namespace GSF.TimeSeries
 
                 status.AppendFormat("     Data concentration is: {0}", Enabled ? "Enabled" : "Disabled");
                 status.AppendLine();
-                status.AppendFormat("    Total process run time: {0}", RunTime);
+                status.AppendFormat("    Total process run time: {0}", RunTime.ToString(2));
                 status.AppendLine();
                 status.AppendFormat("    Measurement wait delay: {0} seconds (lag time)", m_lagTime);
                 status.AppendLine();
