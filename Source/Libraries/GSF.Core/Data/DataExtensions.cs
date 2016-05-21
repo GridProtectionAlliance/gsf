@@ -2346,17 +2346,22 @@ namespace GSF.Data
             if (value == null || value == DBNull.Value)
                 return defaultValue;
 
+            // If the value is an instance of the given type,
+            // no type conversion is necessary
             if (value is T)
                 return (T)value;
 
             Type type = typeof(T);
 
-            if (type == typeof(Guid))
-                return (T)(object)Guid.Parse(value.ToString());
-
             // Nullable types cannot be used in type conversion, but we can use Nullable.GetUnderlyingType()
             // to determine whether the type is nullable and convert to the underlying type instead
-            return (T)Convert.ChangeType(value, Nullable.GetUnderlyingType(type) ?? type);
+            Type underlyingType = Nullable.GetUnderlyingType(type) ?? type;
+
+            // Handle Guids as a special case since they do not implement IConvertible
+            if (underlyingType == typeof(Guid))
+                return (T)(object)Guid.Parse(value.ToString());
+
+            return (T)Convert.ChangeType(value, underlyingType);
         }
 
         /// <summary>
@@ -2391,11 +2396,16 @@ namespace GSF.Data
             if (value == null || value == DBNull.Value)
                 return defaultValue;
 
+            // If the value is an instance of the given type,
+            // no type conversion is necessary
             if (type.IsInstanceOfType(value))
                 return value;
 
+            // Nullable types cannot be used in type conversion, but we can use Nullable.GetUnderlyingType()
+            // to determine whether the type is nullable and convert to the underlying type instead
             Type underlyingType = Nullable.GetUnderlyingType(type) ?? type;
 
+            // Handle Guids as a special case since they do not implement IConvertible
             if (underlyingType == typeof(Guid))
                 return Guid.Parse(value.ToString());
 
