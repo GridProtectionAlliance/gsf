@@ -219,12 +219,16 @@ namespace GSF.Communication
         private Encoding m_textEncoding;
         private ClientState m_currentState;
         private readonly TransportProtocol m_transportProtocol;
+        private readonly TransportStatistics m_transportStatistics;
         private Ticks m_connectTime;
         private Ticks m_disconnectTime;
         private ManualResetEvent m_connectHandle;
         private int m_readIndex;
         private bool m_initialized;
         private bool m_disposed;
+
+        private Action<int> m_updateBytesSent;
+        private Action<int> m_updateBytesReceived;
 
         #endregion
 
@@ -242,7 +246,9 @@ namespace GSF.Communication
             m_receiveBufferSize = DefaultReceiveBufferSize;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
-
+            m_transportStatistics = new TransportStatistics();
+            m_updateBytesSent = TrackStatistics ? UpdateBytesSent : new Action<int>(bytes => { });
+            m_updateBytesReceived = TrackStatistics ? UpdateBytesReceived : new Action<int>(bytes => { });
         }
 
         /// <summary>
@@ -525,6 +531,28 @@ namespace GSF.Communication
             get
             {
                 return m_settingsCategory;
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="TransportStatistics"/> for the client connection.
+        /// </summary>
+        public TransportStatistics Statistics
+        {
+            get
+            {
+                return m_transportStatistics;
+            }
+        }
+
+        /// <summary>
+        /// Determines whether the base class should track statistics.
+        /// </summary>
+        protected virtual bool TrackStatistics
+        {
+            get
+            {
+                return true;
             }
         }
 
@@ -818,7 +846,13 @@ namespace GSF.Communication
         public virtual WaitHandle SendAsync(byte[] data, int offset, int length)
         {
             if (m_currentState == ClientState.Connected)
+            {
+                // Update transport statistics
+                m_updateBytesSent(length);
+
+                // Initiate send operation
                 return SendDataAsync(data, offset, length);
+            }
 
             throw new InvalidOperationException("Client is not connected");
         }
@@ -829,6 +863,28 @@ namespace GSF.Communication
         public virtual void Disconnect()
         {
             m_currentState = ClientState.Disconnected;
+        }
+
+        /// <summary>
+        /// Updates the <see cref="Statistics"/> pertaining to bytes sent.
+        /// </summary>
+        /// <param name="bytes"></param>
+        protected void UpdateBytesSent(int bytes)
+        {
+            m_transportStatistics.LastSend = DateTime.UtcNow;
+            m_transportStatistics.LastBytesSent = bytes;
+            m_transportStatistics.TotalBytesSent += bytes;
+        }
+
+        /// <summary>
+        /// Updates the <see cref="Statistics"/> pertaining to bytes received.
+        /// </summary>
+        /// <param name="bytes"></param>
+        protected void UpdateBytesReceived(int bytes)
+        {
+            m_transportStatistics.LastReceive = DateTime.UtcNow;
+            m_transportStatistics.LastBytesReceived = bytes;
+            m_transportStatistics.TotalBytesReceived += bytes;
         }
 
         /// <summary>
@@ -993,6 +1049,9 @@ namespace GSF.Communication
         {
             try
             {
+                // Update transport statistics
+                m_updateBytesReceived(size);
+
                 // Reset buffer index used by read method
                 m_readIndex = 0;
 

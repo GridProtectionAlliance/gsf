@@ -697,6 +697,17 @@ namespace GSF.Communication
             }
         }
 
+        /// <summary>
+        /// Determines whether the base class should track statistics.
+        /// </summary>
+        protected override bool TrackStatistics
+        {
+            get
+            {
+                return false;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -1275,6 +1286,7 @@ namespace GSF.Communication
 
                 // Update statistics and bytes received
                 bytesReceived = receiveState.SslStream.EndRead(asyncResult);
+                UpdateBytesReceived(bytesReceived);
                 receiveState.Offset += bytesReceived;
 
                 // Sanity check to determine if the server disconnected gracefully
@@ -1384,6 +1396,7 @@ namespace GSF.Communication
 
                 // Update bytes received
                 bytesReceived = receiveState.SslStream.EndRead(asyncResult);
+                UpdateBytesReceived(bytesReceived);
                 receiveState.PayloadLength = bytesReceived;
 
                 // Sanity check to determine if the server disconnected gracefully
@@ -1642,6 +1655,7 @@ namespace GSF.Communication
                 }
 
                 // Notify that the send operation is complete
+                UpdateBytesSent(payload.Length);
                 OnSendDataComplete();
             }
             catch (ObjectDisposedException)
