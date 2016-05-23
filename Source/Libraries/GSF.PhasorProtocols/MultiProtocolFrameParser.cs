@@ -1169,6 +1169,17 @@ namespace GSF.PhasorProtocols
             }
 
             /// <summary>
+            /// Gets the <see cref="TransportStatistics"/> for the client connection.
+            /// </summary>
+            public TransportStatistics Statistics
+            {
+                get
+                {
+                    return m_udpClient.Statistics;
+                }
+            }
+
+            /// <summary>
             /// Gets the descriptive status of the client.
             /// </summary>
             public string Status
