@@ -41,6 +41,17 @@ namespace GSF.Data.Model
         }
 
         /// <summary>
+        /// Gets the table name defined for the modeled table without any escape characters.
+        /// </summary>
+        /// <remarks>
+        /// A table name will only be escaped if the model requested escaping with the <see cref="UseEscapedNameAttribute"/>.
+        /// </remarks>
+        string UnescapedTableName
+        {
+            get;
+        }
+
+        /// <summary>
         /// Gets flag that determines if modeled table has a primary key that is an identity field.
         /// </summary>
         bool HasPrimaryKeyIdentityField
@@ -116,11 +127,11 @@ namespace GSF.Data.Model
         object LoadRecord(params object[] primaryKeys);
 
         /// <summary>
-        /// Deletes the specified modeled table <paramref name="record"/> from the database.
+        /// Creates a new modeled table record queried from the specified <paramref name="row"/>.
         /// </summary>
-        /// <param name="record">Record to delete.</param>
-        /// <returns>Number of rows affected.</returns>
-        int DeleteRecord(object record);
+        /// <param name="row"><see cref="DataRow"/> of queried data to be loaded.</param>
+        /// <returns>New modeled table record queried from the specified <paramref name="row"/>.</returns>
+        object LoadRecord(DataRow row);
 
         /// <summary>
         /// Deletes the record referenced by the specified <paramref name="primaryKeys"/>.
@@ -128,6 +139,20 @@ namespace GSF.Data.Model
         /// <param name="primaryKeys">Primary keys values of the record to load.</param>
         /// <returns>Number of rows affected.</returns>
         int DeleteRecord(params object[] primaryKeys);
+
+        /// <summary>
+        /// Deletes the specified modeled table <paramref name="record"/> from the database.
+        /// </summary>
+        /// <param name="record">Record to delete.</param>
+        /// <returns>Number of rows affected.</returns>
+        int DeleteRecord(object record);
+
+        /// <summary>
+        /// Deletes the record referenced by the specified <paramref name="row"/>.
+        /// </summary>
+        /// <param name="row"><see cref="DataRow"/> of queried data to be deleted.</param>
+        /// <returns>Number of rows affected.</returns>
+        int DeleteRecord(DataRow row);
 
         /// <summary>
         /// Deletes the records referenced by the specified <paramref name="restriction"/>.
@@ -150,11 +175,30 @@ namespace GSF.Data.Model
         int UpdateRecord(object record, RecordRestriction restriction = null);
 
         /// <summary>
+        /// Updates the database with the specified <paramref name="row"/>.
+        /// </summary>
+        /// <param name="row"><see cref="DataRow"/> of queried data to be updated.</param>
+        /// <param name="restriction">Record restriction to apply, if any.</param>
+        /// <returns>Number of rows affected.</returns>
+        /// <remarks>
+        /// Record restriction is only used for custom update expressions or in cases where modeled
+        /// table has no defined primary keys.
+        /// </remarks>
+        int UpdateRecord(DataRow row, RecordRestriction restriction = null);
+
+        /// <summary>
         /// Adds the specified modeled table <paramref name="record"/> to the database.
         /// </summary>
         /// <param name="record">Record to add.</param>
         /// <returns>Number of rows affected.</returns>
         int AddNewRecord(object record);
+
+        /// <summary>
+        /// Adds the specified <paramref name="row"/> to the database.
+        /// </summary>
+        /// <param name="row"><see cref="DataRow"/> of queried data to be added.</param>
+        /// <returns>Number of rows affected.</returns>
+        int AddNewRecord(DataRow row);
 
         /// <summary>
         /// Gets the primary key values from the specified <paramref name="record"/>.
@@ -171,16 +215,24 @@ namespace GSF.Data.Model
         object[] GetPrimaryKeys(DataRow row);
 
         /// <summary>
-        /// Gets the field names for the table, includes any escaping as defined in model.
+        /// Gets the field names for the table; if <paramref name="escaped"/> is <c>true</c>, also includes any escaping as defined in model.
         /// </summary>
+        /// <param name="escaped">Flag that determines if field names should include any escaping as defined in the model.</param>
         /// <returns>Array of field names.</returns>
-        string[] GetFieldNames();
+        /// <remarks>
+        /// A field name will only be escaped if the model requested escaping with the <see cref="UseEscapedNameAttribute"/>.
+        /// </remarks>
+        string[] GetFieldNames(bool escaped);
 
         /// <summary>
-        /// Get the primary key field names for the table, includes any escaping as defined in model.
+        /// Get the primary key field names for the table; if <paramref name="escaped"/> is <c>true</c>, also includes any escaping as defined in model.
         /// </summary>
+        /// <param name="escaped">Flag that determines if field names should include any escaping as defined in the model.</param>
         /// <returns>Array of primary key field names.</returns>
-        string[] GetPrimaryKeyFieldNames();
+        /// <remarks>
+        /// A field name will only be escaped if the model requested escaping with the <see cref="UseEscapedNameAttribute"/>.
+        /// </remarks>
+        string[] GetPrimaryKeyFieldNames(bool escaped);
 
         /// <summary>
         /// Attempts to get the specified <paramref name="attribute"/> for a field.

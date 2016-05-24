@@ -327,7 +327,7 @@ namespace GSF.Web.Model
             if (model.TryGetAttribute(out primaryLabelAttribute) && !string.IsNullOrWhiteSpace(primaryLabelAttribute.FieldName))
                 return primaryLabelAttribute.FieldName;
 
-            string[] fieldNames = Table(model).GetFieldNames();
+            string[] fieldNames = Table(model).GetFieldNames(false);
             return fieldNames.Length > 0 ? fieldNames[0] : "";
         }
 
@@ -743,7 +743,7 @@ namespace GSF.Web.Model
         public string RenderViewModelConfiguration<TModel>(RecordOperationsCache cache, dynamic viewBag, string defaultSortField = null, string hubName = "dataHub", params object[] parentKeys) where TModel : class, new()
         {
             StringBuilder javascript = new StringBuilder();
-            string[] primaryKeyFields = Table<TModel>().GetPrimaryKeyFieldNames();
+            string[] primaryKeyFields = Table<TModel>().GetPrimaryKeyFieldNames(false);
             string defaultSortAscending = "true";
 
             defaultSortField = defaultSortField ?? primaryKeyFields[0];
