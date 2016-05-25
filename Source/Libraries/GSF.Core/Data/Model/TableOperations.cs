@@ -170,7 +170,7 @@ namespace GSF.Data.Model
         /// <remarks>
         /// A table name will only be escaped if the model requested escaping with the <see cref="UseEscapedNameAttribute"/>.
         /// </remarks>
-        public string UnescapedTableName => GetUnescapedTableName();
+        public string UnescapedTableName => s_tableName;
 
         /// <summary>
         /// Gets flag that determines if modeled table has a primary key that is an identity field.
@@ -629,7 +629,7 @@ namespace GSF.Data.Model
         /// table has no defined primary keys.
         /// </remarks>
         public int UpdateRecord(DataRow row, RecordRestriction restriction = null)
-        {
+        {            
             return UpdateRecord(LoadRecord(row), restriction);
         }
 
@@ -765,7 +765,8 @@ namespace GSF.Data.Model
             if (escaped)
                 return s_fieldNames.Values.Select(fieldName => GetEscapedFieldName(fieldName)).ToArray();
 
-            return s_fieldNames.Values.Select(GetUnescapedFieldName).ToArray();
+            // Fields in the field names dictionary are stored in unescaped format
+            return s_fieldNames.Values.ToArray();
         }
 
         /// <summary>
@@ -915,16 +916,6 @@ namespace GSF.Data.Model
                 return m_connection.EscapeIdentifier(s_tableName, useAnsiQuotes);
 
             return s_tableName;
-        }
-
-        // Derive table name, unescaping it if it was escaped by the model
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private string GetUnescapedTableName()
-        {
-            if ((object)s_escapedTableNameTargets == null)
-                return s_tableName;
-
-            return s_tableName.Substring(1, s_tableName.Length - 2);
         }
 
         // Derive field name, escaping it if requested by model
