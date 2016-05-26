@@ -851,7 +851,7 @@ namespace GSF.Data.Model
             PropertyInfo property;
             HashSet<Type> attributes;
 
-            if (!attributeType.IsInstanceOfType(typeof(Attribute)))
+            if (!attributeType.IsSubclassOf(typeof(Attribute)))
                 throw new ArgumentException($"The specified type \"{attributeType.Name}\" is not an Attribute.", nameof(attributeType));
 
             if (s_propertyNames.TryGetValue(fieldName, out propertyName) && s_properties.TryGetValue(propertyName, out property) && s_attributes.TryGetValue(property, out attributes))
