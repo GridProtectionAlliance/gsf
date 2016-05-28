@@ -1220,6 +1220,7 @@ namespace GSF.Web.Model
         /// <param name="fieldID">ID to use for select field; defaults to select + <paramref name="fieldName"/>.</param>
         /// <param name="groupDataBinding">Data-bind operations to apply to outer form-group div, if any.</param>
         /// <param name="labelDataBinding">Data-bind operations to apply to label, if any.</param>
+        /// <param name="requiredDataBinding">Boolean data-bind operation to apply to required state, if any.</param>
         /// <param name="customDataBinding">Extra custom data-binding operations to apply to field, if any.</param>
         /// <param name="dependencyFieldName">Defines default "enabled" subordinate data-bindings based a single boolean field, e.g., a check-box.</param>
         /// <param name="optionDataBinding">Data-bind operations to apply to each option value, if any.</param>
@@ -1230,7 +1231,7 @@ namespace GSF.Web.Model
         /// <param name="noRecordValue">Value for no records option when select query returns no values; defaults to "-1".</param>
         /// <param name="noRecordText">Text for no records option when select query returns no values; defaults to "No records".</param>
         /// <returns>Generated HTML for new text field based on modeled table field attributes.</returns>
-        public string AddSelectField<TModel, TOption>(string fieldName, string optionValueFieldName, string optionLabelFieldName = null, string optionSortFieldName = null, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string optionDataBinding = null, string toolTip = null, bool initialFocus = false, RecordRestriction restriction = null, bool showNoRecordOption = true, string noRecordValue = "-1", string noRecordText = "No records") where TModel : class, new() where TOption : class, new()
+        public string AddSelectField<TModel, TOption>(string fieldName, string optionValueFieldName, string optionLabelFieldName = null, string optionSortFieldName = null, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string requiredDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string optionDataBinding = null, string toolTip = null, bool initialFocus = false, RecordRestriction restriction = null, bool showNoRecordOption = false, string noRecordValue = "-1", string noRecordText = "No records") where TModel : class, new() where TOption : class, new()
         {
             if (string.IsNullOrEmpty(fieldLabel))
             {
@@ -1243,7 +1244,7 @@ namespace GSF.Web.Model
             AddFieldValueInitializer<TModel>(fieldName);
 
             return AddSelectField<TOption>(fieldName, Table<TModel>().FieldHasAttribute<RequiredAttribute>(fieldName),
-                optionValueFieldName, optionLabelFieldName, optionSortFieldName, fieldLabel, fieldID, groupDataBinding, labelDataBinding, customDataBinding, dependencyFieldName, optionDataBinding, toolTip, initialFocus, restriction, showNoRecordOption, noRecordValue, noRecordText);
+                optionValueFieldName, optionLabelFieldName, optionSortFieldName, fieldLabel, fieldID, groupDataBinding, labelDataBinding, requiredDataBinding, customDataBinding, dependencyFieldName, optionDataBinding, toolTip, initialFocus, restriction, showNoRecordOption, noRecordValue, noRecordText);
         }
 
         /// <summary>
@@ -1259,6 +1260,7 @@ namespace GSF.Web.Model
         /// <param name="fieldID">ID to use for select field; defaults to select + <paramref name="fieldName"/>.</param>
         /// <param name="groupDataBinding">Data-bind operations to apply to outer form-group div, if any.</param>
         /// <param name="labelDataBinding">Data-bind operations to apply to label, if any.</param>
+        /// <param name="requiredDataBinding">Boolean data-bind operation to apply to required state, if any.</param>
         /// <param name="customDataBinding">Extra custom data-binding operations to apply to field, if any.</param>
         /// <param name="dependencyFieldName">Defines default "enabled" subordinate data-bindings based a single boolean field, e.g., a check-box.</param>
         /// <param name="optionDataBinding">Data-bind operations to apply to each option value, if any.</param>
@@ -1269,7 +1271,7 @@ namespace GSF.Web.Model
         /// <param name="noRecordValue">Value for no records option when select query returns no values; defaults to "-1".</param>
         /// <param name="noRecordText">Text for no records option when select query returns no values; defaults to "No records".</param>
         /// <returns>Generated HTML for new text field based on specified parameters.</returns>
-        public string AddSelectField<TOption>(string fieldName, bool required, string optionValueFieldName, string optionLabelFieldName = null, string optionSortFieldName = null, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string optionDataBinding = null, string toolTip = null, bool initialFocus = false, RecordRestriction restriction = null, bool showNoRecordOption = true, string noRecordValue = "-1", string noRecordText = "No records") where TOption : class, new()
+        public string AddSelectField<TOption>(string fieldName, bool required, string optionValueFieldName, string optionLabelFieldName = null, string optionSortFieldName = null, string fieldLabel = null, string fieldID = null, string groupDataBinding = null, string labelDataBinding = null, string requiredDataBinding = null, string customDataBinding = null, string dependencyFieldName = null, string optionDataBinding = null, string toolTip = null, bool initialFocus = false, RecordRestriction restriction = null, bool showNoRecordOption = false, string noRecordValue = "-1", string noRecordText = "No records") where TOption : class, new()
         {
             RazorView addSelectFieldTemplate = new RazorView(m_razorEngine, AddSelectFieldTemplate, m_exceptionHandler);
             DynamicViewBag viewBag = addSelectFieldTemplate.ViewBag;
@@ -1293,6 +1295,7 @@ namespace GSF.Web.Model
             viewBag.AddValue("FieldID", fieldID);
             viewBag.AddValue("GroupDataBinding", groupDataBinding);
             viewBag.AddValue("LabelDataBinding", labelDataBinding);
+            viewBag.AddValue("RequiredDataBinding", requiredDataBinding);
             viewBag.AddValue("CustomDataBinding", customDataBinding);
             viewBag.AddValue("DependencyFieldName", dependencyFieldName);
             viewBag.AddValue("ToolTip", toolTip);

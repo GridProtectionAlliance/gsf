@@ -30,6 +30,7 @@
     string fieldID = ViewBag.FieldID;
     string groupDataBinding = ViewBag.GroupDataBinding;
     string labelDataBinding = ViewBag.LabelDataBinding;
+    string requiredDataBinding = ViewBag.RequiredDataBinding;
     string customDataBinding = ViewBag.CustomDataBinding;
     string dependencyFieldName = ViewBag.DependencyFieldName;
     string toolTip = ViewBag.ToolTip;
@@ -47,6 +48,11 @@
         {
             labelDataBinding = string.Format("css: {{disabled: !{0}()}}", dependencyFieldName);
         }
+
+        if (required && string.IsNullOrEmpty(requiredDataBinding))
+        {
+            requiredDataBinding = string.Format("{0}()", dependencyFieldName);
+        }
     }
 
     if (!string.IsNullOrEmpty(groupDataBinding))
@@ -57,6 +63,11 @@
     if (!string.IsNullOrEmpty(labelDataBinding))
     {
         labelDataBinding = string.Format(" data-bind=\"{0}\"", labelDataBinding);
+    }
+
+    if (!string.IsNullOrEmpty(requiredDataBinding))
+    {
+        requiredDataBinding = string.Format(" && {0}", requiredDataBinding);
     }
 
     if (!string.IsNullOrEmpty(customDataBinding))
@@ -74,13 +85,31 @@
         optionDataBinding = string.Format(" data-bind=\"{0}\"", optionDataBinding);
     }
 }
-<div class="form-group"@Raw(groupDataBinding)@Raw(toolTip)>
-    @if (fieldLabel.Length > 0) {
-    <label for="@Raw(fieldID)" @Raw(labelDataBinding)>@Raw(fieldLabel):</label>
-    }
-    <select class="form-control" id="@Raw(fieldID)" data-bind="value: @Raw(fieldName), valueAllowUnset: @((!required).ToString().ToLower()), attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}@Raw(customDataBinding)">
-        @foreach (KeyValuePair<string, string> item in options) {
-            <option value="@item.Key"@Raw(optionDataBinding)>@item.Value</option>
+@if (required) {
+    @Raw(string.IsNullOrEmpty(groupDataBinding) ? "" : string.Format("<div{0}>\r\n", groupDataBinding))
+    <div class="form-group" data-bind="css: {'has-error': !isNumber(@(Raw(fieldName))())@(Raw(requiredDataBinding)), 'has-feedback': !isNumber(@(Raw(fieldName))())@(Raw(requiredDataBinding))}"@Raw(toolTip)>        
+        @if (fieldLabel.Length > 0) {
+        <label for="@Raw(fieldID)"@Raw(labelDataBinding)>@Raw(fieldLabel):</label>
         }
-    </select>
-</div>
+        <select class="form-control" id="@Raw(fieldID)" data-bind="value: @Raw(fieldName), valueAllowUnset: true, attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}@Raw(customDataBinding)"@(string.IsNullOrEmpty(requiredDataBinding) ? " required" : "")>
+            @foreach (KeyValuePair<string, string> item in options) {
+            <option value="@item.Key"@Raw(optionDataBinding)>@item.Value</option>
+            }
+        </select>
+        <span class="glyphicon glyphicon-remove form-control-feedback" style="right: 10px" data-bind="visible: !isNumber(@(Raw(fieldName))())@(Raw(requiredDataBinding))"></span>        
+    </div>
+    @Raw(string.IsNullOrEmpty(groupDataBinding) ? "" : "</div>\r\n")
+}
+else
+{
+    <div class="form-group"@Raw(groupDataBinding)@Raw(toolTip)>
+        @if (fieldLabel.Length > 0) {
+        <label for="@Raw(fieldID)"@Raw(labelDataBinding)>@Raw(fieldLabel):</label>
+        }
+        <select class="form-control" id="@Raw(fieldID)" data-bind="value: @Raw(fieldName), attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}@Raw(customDataBinding)">
+            @foreach (KeyValuePair<string, string> item in options) {
+            <option value="@item.Key"@Raw(optionDataBinding)>@item.Value</option>
+            }
+        </select>
+    </div>
+}
