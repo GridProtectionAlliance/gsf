@@ -238,6 +238,14 @@ namespace GSF.Communication
             get;
         }
 
+        /// <summary>
+        /// Gets the <see cref="TransportStatistics"/> for the client connection.
+        /// </summary>
+        TransportStatistics Statistics
+        {
+            get;
+        }
+
         #endregion
 
         #region [ Methods ]

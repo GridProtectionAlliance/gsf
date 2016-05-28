@@ -100,7 +100,7 @@ namespace GSF.Data.Model
             // be slightly faster to construct this class when ANSI standard escape delimiters are used.
             if ((object)s_escapedTableNameTargets != null)
             {
-                string derivedTableName = DeriveTableName(s_tableName);
+                string derivedTableName = GetEscapedTableName();
                 string ansiEscapedTableName = $"\"{s_tableName}\"";
 
                 if (!derivedTableName.Equals(ansiEscapedTableName))
@@ -122,7 +122,7 @@ namespace GSF.Data.Model
                 foreach (KeyValuePair<string, Dictionary<DatabaseType, bool>> escapedFieldNameTarget in s_escapedFieldNameTargets)
                 {
                     string fieldName = escapedFieldNameTarget.Key;
-                    string derivedFieldName = DeriveFieldName(fieldName, escapedFieldNameTarget.Value);
+                    string derivedFieldName = GetEscapedFieldName(fieldName, escapedFieldNameTarget.Value);
                     string ansiEscapedFieldName = $"\"{fieldName}\"";
 
                     if (!derivedFieldName.Equals(ansiEscapedFieldName))
@@ -162,7 +162,15 @@ namespace GSF.Data.Model
         /// <summary>
         /// Gets the table name defined for the modeled table, includes any escaping as defined in model.
         /// </summary>
-        public string TableName => DeriveTableName(s_tableName);
+        public string TableName => GetEscapedTableName();
+        
+        /// <summary>
+        /// Gets the table name defined for the modeled table without any escape characters.
+        /// </summary>
+        /// <remarks>
+        /// A table name will only be escaped if the model requested escaping with the <see cref="UseEscapedNameAttribute"/>.
+        /// </remarks>
+        public string UnescapedTableName => s_tableName;
 
         /// <summary>
         /// Gets flag that determines if modeled table has a primary key that is an identity field.
@@ -369,8 +377,35 @@ namespace GSF.Data.Model
         {
             try
             {
+                return LoadRecord(m_connection.RetrieveRow(m_selectSql, primaryKeys));
+            }
+            catch (Exception ex)
+            {
+                InvalidOperationException opex = new InvalidOperationException($"Exception during record load for {typeof(T).Name} \"{m_selectSql}, {ValueList(primaryKeys)}\": {ex.Message}", ex);
+
+                if ((object)m_exceptionHandler == null)
+                    throw opex;
+
+                m_exceptionHandler(opex);
+                return null;
+            }
+        }
+
+        object ITableOperations.LoadRecord(params object[] primaryKeys)
+        {
+            return LoadRecord(primaryKeys);
+        }
+
+        /// <summary>
+        /// Creates a new modeled table record queried from the specified <paramref name="row"/>.
+        /// </summary>
+        /// <param name="row"><see cref="DataRow"/> of queried data to be loaded.</param>
+        /// <returns>New modeled table record queried from the specified <paramref name="row"/>.</returns>
+        public T LoadRecord(DataRow row)
+        {
+            try
+            {
                 T record = new T();
-                DataRow row = m_connection.RetrieveRow(m_selectSql, primaryKeys);
 
                 // Make sure record exists, if not return null instead of a blank record
                 if (s_hasPrimaryKeyIdentityField && GetPrimaryKeys(row).All(Common.IsDefaultValue))
@@ -397,7 +432,7 @@ namespace GSF.Data.Model
             }
             catch (Exception ex)
             {
-                InvalidOperationException opex = new InvalidOperationException($"Exception during record load for {typeof(T).Name} \"{m_selectSql}, {ValueList(primaryKeys)}\": {ex.Message}", ex);
+                InvalidOperationException opex = new InvalidOperationException($"Exception during record load for {typeof(T).Name} from data row: {ex.Message}", ex);
 
                 if ((object)m_exceptionHandler == null)
                     throw opex;
@@ -407,29 +442,9 @@ namespace GSF.Data.Model
             }
         }
 
-        object ITableOperations.LoadRecord(params object[] primaryKeys)
+        object ITableOperations.LoadRecord(DataRow row)
         {
-            return LoadRecord(primaryKeys);
-        }
-
-        /// <summary>
-        /// Deletes the specified modeled table <paramref name="record"/> from the database.
-        /// </summary>
-        /// <param name="record">Record to delete.</param>
-        /// <returns>Number of rows affected.</returns>
-        public int DeleteRecord(T record)
-        {
-            return DeleteRecord(GetPrimaryKeys(record));
-        }
-
-        int ITableOperations.DeleteRecord(object value)
-        {
-            T record = value as T;
-
-            if (record == null)
-                throw new ArgumentException($"Cannot delete record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
-
-            return DeleteRecord(record);
+            return LoadRecord(row);
         }
 
         /// <summary>
@@ -458,6 +473,36 @@ namespace GSF.Data.Model
                 m_exceptionHandler(opex);
                 return 0;
             }
+        }
+
+        /// <summary>
+        /// Deletes the specified modeled table <paramref name="record"/> from the database.
+        /// </summary>
+        /// <param name="record">Record to delete.</param>
+        /// <returns>Number of rows affected.</returns>
+        public int DeleteRecord(T record)
+        {
+            return DeleteRecord(GetPrimaryKeys(record));
+        }
+
+        int ITableOperations.DeleteRecord(object value)
+        {
+            T record = value as T;
+
+            if (record == null)
+                throw new ArgumentException($"Cannot delete record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
+
+            return DeleteRecord(record);
+        }
+
+        /// <summary>
+        /// Deletes the record referenced by the specified <paramref name="row"/>.
+        /// </summary>
+        /// <param name="row"><see cref="DataRow"/> of queried data to be deleted.</param>
+        /// <returns>Number of rows affected.</returns>
+        public int DeleteRecord(DataRow row)
+        {
+            return DeleteRecord(GetPrimaryKeys(row));
         }
 
         /// <summary>
@@ -574,6 +619,21 @@ namespace GSF.Data.Model
         }
 
         /// <summary>
+        /// Updates the database with the specified <paramref name="row"/>.
+        /// </summary>
+        /// <param name="row"><see cref="DataRow"/> of queried data to be updated.</param>
+        /// <param name="restriction">Record restriction to apply, if any.</param>
+        /// <returns>Number of rows affected.</returns>
+        /// <remarks>
+        /// Record restriction is only used for custom update expressions or in cases where modeled
+        /// table has no defined primary keys.
+        /// </remarks>
+        public int UpdateRecord(DataRow row, RecordRestriction restriction = null)
+        {            
+            return UpdateRecord(LoadRecord(row), restriction);
+        }
+
+        /// <summary>
         /// Adds the specified modeled table <paramref name="record"/> to the database.
         /// </summary>
         /// <param name="record">Record to add.</param>
@@ -614,6 +674,16 @@ namespace GSF.Data.Model
                 throw new ArgumentException($"Cannot add new record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
 
             return AddNewRecord(record);
+        }
+
+        /// <summary>
+        /// Adds the specified <paramref name="row"/> to the database.
+        /// </summary>
+        /// <param name="row"><see cref="DataRow"/> of queried data to be added.</param>
+        /// <returns>Number of rows affected.</returns>
+        public int AddNewRecord(DataRow row)
+        {
+            return AddNewRecord(LoadRecord(row));
         }
 
         /// <summary>
@@ -683,21 +753,36 @@ namespace GSF.Data.Model
         }
 
         /// <summary>
-        /// Gets the field names for the table, includes any escaping as defined in model.
+        /// Gets the field names for the table; if <paramref name="escaped"/> is <c>true</c>, also includes any escaping as defined in model.
         /// </summary>
+        /// <param name="escaped">Flag that determines if field names should include any escaping as defined in the model; defaults to <c>true</c>.</param>
         /// <returns>Array of field names.</returns>
-        public string[] GetFieldNames()
+        /// <remarks>
+        /// A field name will only be escaped if the model requested escaping with the <see cref="UseEscapedNameAttribute"/>.
+        /// </remarks>
+        public string[] GetFieldNames(bool escaped = true)
         {
-            return s_fieldNames.Values.Select(fieldName => DeriveFieldName(fieldName)).ToArray();
+            if (escaped)
+                return s_fieldNames.Values.Select(fieldName => GetEscapedFieldName(fieldName)).ToArray();
+
+            // Fields in the field names dictionary are stored in unescaped format
+            return s_fieldNames.Values.ToArray();
         }
 
         /// <summary>
-        /// Get the primary key field names for the table, includes any escaping as defined in model.
+        /// Get the primary key field names for the table; if <paramref name="escaped"/> is <c>true</c>, also includes any escaping as defined in model.
         /// </summary>
+        /// <param name="escaped">Flag that determines if field names should include any escaping as defined in the model; defaults to <c>true</c>.</param>
         /// <returns>Array of primary key field names.</returns>
-        public string[] GetPrimaryKeyFieldNames()
+        /// <remarks>
+        /// A field name will only be escaped if the model requested escaping with the <see cref="UseEscapedNameAttribute"/>.
+        /// </remarks>
+        public string[] GetPrimaryKeyFieldNames(bool escaped = true)
         {
-            return s_primaryKeyFields.Split(',').Select(fieldName => fieldName.Trim()).ToArray();
+            if (escaped)
+                return s_primaryKeyFields.Split(',').Select(fieldName => GetEscapedFieldName(fieldName.Trim())).ToArray();
+
+            return s_primaryKeyFields.Split(',').Select(fieldName => GetUnescapedFieldName(fieldName.Trim())).ToArray();
         }
 
         /// <summary>
@@ -705,7 +790,7 @@ namespace GSF.Data.Model
         /// </summary>
         /// <typeparam name="TAttribute">Type of attribute to attempt to get.</typeparam>
         /// <param name="fieldName">Name of field to use for attribute lookup.</param>
-        /// <param name="attribute">Type of attribute to lookup.</param>
+        /// <param name="attribute">Attribute that was found, if any.</param>
         /// <returns><c>true</c> if attribute was found; otherwise, <c>false</c>.</returns>
         public bool TryGetFieldAttribute<TAttribute>(string fieldName, out TAttribute attribute) where TAttribute : Attribute
         {
@@ -720,6 +805,29 @@ namespace GSF.Data.Model
         }
 
         /// <summary>
+        /// Attempts to get the specified <paramref name="attributeType"/> for a field.
+        /// </summary>
+        /// <param name="fieldName">Name of field to use for attribute lookup.</param>
+        /// <param name="attributeType">Type of attribute to attempt to get.</param>
+        /// <param name="attribute">Attribute that was found, if any.</param>
+        /// <returns><c>true</c> if attribute was found; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ArgumentException"><paramref name="attributeType"/> is not an <see cref="Attribute"/>.</exception>
+        public bool TryGetFieldAttribute(string fieldName, Type attributeType, out Attribute attribute)
+        {
+            string propertyName;
+            PropertyInfo property;
+
+            if (!attributeType.IsInstanceOfType(typeof(Attribute)))
+                throw new ArgumentException($"The specified type \"{attributeType.Name}\" is not an Attribute.", nameof(attributeType));
+
+            if (s_propertyNames.TryGetValue(fieldName, out propertyName) && s_properties.TryGetValue(propertyName, out property) && property.TryGetAttribute(attributeType, out attribute))
+                return true;
+
+            attribute = null;
+            return false;
+        }
+
+        /// <summary>
         /// Determines if the specified field has an associated attribute.
         /// </summary>
         /// <typeparam name="TAttribute">Type of attribute to search for.</typeparam>
@@ -727,14 +835,29 @@ namespace GSF.Data.Model
         /// <returns><c>true</c> if field has attribute; otherwise, <c>false</c>.</returns>
         public bool FieldHasAttribute<TAttribute>(string fieldName) where TAttribute : Attribute
         {
+            return FieldHasAttribute(fieldName, typeof(TAttribute));
+        }
+
+        /// <summary>
+        /// Determines if the specified field has an associated attribute.
+        /// </summary>
+        /// <param name="fieldName">Name of field to use for attribute lookup.</param>
+        /// <param name="attributeType">Type of attribute to search for.</param>
+        /// <returns><c>true</c> if field has attribute; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ArgumentException"><paramref name="attributeType"/> is not an <see cref="Attribute"/>.</exception>
+        public bool FieldHasAttribute(string fieldName, Type attributeType)
+        {
             string propertyName;
             PropertyInfo property;
             HashSet<Type> attributes;
 
-            if (s_propertyNames.TryGetValue(fieldName, out propertyName) && s_properties.TryGetValue(propertyName, out property) && s_attributes.TryGetValue(property, out attributes))
-                return attributes.Contains(typeof(TAttribute));
+            if (!attributeType.IsSubclassOf(typeof(Attribute)))
+                throw new ArgumentException($"The specified type \"{attributeType.Name}\" is not an Attribute.", nameof(attributeType));
 
-           return false;
+            if (s_propertyNames.TryGetValue(fieldName, out propertyName) && s_properties.TryGetValue(propertyName, out property) && s_attributes.TryGetValue(property, out attributes))
+                return attributes.Contains(attributeType);
+
+            return false;
         }
 
         /// <summary>
@@ -781,21 +904,23 @@ namespace GSF.Data.Model
         }
 
         // Derive table name, escaping it if requested by model
-        private string DeriveTableName(string tableName)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private string GetEscapedTableName()
         {
             if ((object)s_escapedTableNameTargets == null)
-                return tableName;
+                return s_tableName;
 
             bool useAnsiQuotes;
 
             if (s_escapedTableNameTargets.TryGetValue(m_connection.DatabaseType, out useAnsiQuotes))
-                return m_connection.EscapeIdentifier(tableName, useAnsiQuotes);
+                return m_connection.EscapeIdentifier(s_tableName, useAnsiQuotes);
 
-            return tableName;
+            return s_tableName;
         }
 
         // Derive field name, escaping it if requested by model
-        private string DeriveFieldName(string fieldName, Dictionary<DatabaseType, bool> escapedFieldNameTargets = null)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private string GetEscapedFieldName(string fieldName, Dictionary<DatabaseType, bool> escapedFieldNameTargets = null)
         {
             if ((object)s_escapedFieldNameTargets == null)
                 return fieldName;
@@ -811,6 +936,21 @@ namespace GSF.Data.Model
             return fieldName;
         }
 
+        // Derive field name, unescaping it if it was escaped by the model
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private string GetUnescapedFieldName(string fieldName)
+        {
+            if ((object)s_escapedFieldNameTargets == null)
+                return fieldName;
+
+            Dictionary<DatabaseType, bool> escapedFieldNameTargets;
+
+            if (!s_escapedFieldNameTargets.TryGetValue(fieldName, out escapedFieldNameTargets))
+                return fieldName;
+
+            return fieldName.Substring(1, fieldName.Length - 2);
+        }
+
         // Update field names in expression, escaping or unescaping as needed as defined by model
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private string UpdateFieldNames(string filterExpression)
@@ -820,7 +960,7 @@ namespace GSF.Data.Model
                 foreach (KeyValuePair<string, Dictionary<DatabaseType, bool>> escapedFieldNameTarget in s_escapedFieldNameTargets)
                 {
                     string fieldName = escapedFieldNameTarget.Key;
-                    string derivedFieldName = DeriveFieldName(fieldName, escapedFieldNameTarget.Value);
+                    string derivedFieldName = GetEscapedFieldName(fieldName, escapedFieldNameTarget.Value);
                     string ansiEscapedFieldName = $"\"{fieldName}\"";
 
                     if (m_useCaseSensitiveFieldNames)

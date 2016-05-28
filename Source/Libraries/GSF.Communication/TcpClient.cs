@@ -536,6 +536,17 @@ namespace GSF.Communication
         }
 
         /// <summary>
+        /// Determines whether the base class should track statistics.
+        /// </summary>
+        protected override bool TrackStatistics
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Gets the descriptive status of the client.
         /// </summary>
         public override string Status
@@ -1045,6 +1056,7 @@ namespace GSF.Communication
                     throw new SocketException((int)SocketError.Disconnecting);
 
                 // Update statistics and bytes received.
+                UpdateBytesReceived(receiveState.ReceiveArgs.BytesTransferred);
                 receiveState.Offset += receiveState.ReceiveArgs.BytesTransferred;
 
                 if (receiveState.PayloadLength < 0)
@@ -1140,7 +1152,8 @@ namespace GSF.Communication
                 if (receiveState.ReceiveArgs.BytesTransferred == 0)
                     throw new SocketException((int)SocketError.Disconnecting);
 
-                // Update bytes received
+                // Update statistics and bytes received
+                UpdateBytesReceived(receiveState.ReceiveArgs.BytesTransferred);
                 receiveState.PayloadLength = receiveState.ReceiveArgs.BytesTransferred;
 
                 // Notify of received data and resume receive operation.
@@ -1389,7 +1402,8 @@ namespace GSF.Communication
                     // disposed of the wait handle
                 }
 
-                // Notify that the send operation is complete
+                // Update statistics and notify that the send operation is complete
+                UpdateBytesSent(sendState.SendArgs.BytesTransferred);
                 OnSendDataComplete();
             }
             catch (ObjectDisposedException)

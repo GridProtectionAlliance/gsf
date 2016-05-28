@@ -457,6 +457,7 @@ namespace GSF.TimeSeries.Transport
         private bool m_autoSynchronizeMetadata;
         private bool m_useTransactionForMetadata;
         private bool m_useLocalClockAsRealTime;
+        private bool m_metadataRefreshPending;
         private int m_metadataSynchronizationTimeout;
         private readonly LongSynchronizedOperation m_synchronizeMetadataOperation;
         private volatile DataSet m_receivedMetadata;
@@ -2556,6 +2557,7 @@ namespace GSF.TimeSeries.Transport
 
                         // Send command packet to publisher
                         m_commandChannel.SendAsync(commandPacket.ToArray(), 0, (int)commandPacket.Length);
+                        m_metadataRefreshPending = (commandCode == ServerCommand.MetaDataRefresh);
                     }
 
                     // Track server command in pending request queue
@@ -2646,6 +2648,8 @@ namespace GSF.TimeSeries.Transport
 
             if ((object)m_subscribedDevicesTimer != null)
                 m_subscribedDevicesTimer.Stop();
+
+            m_metadataRefreshPending = false;
         }
 
         /// <summary>
@@ -2753,6 +2757,7 @@ namespace GSF.TimeSeries.Transport
                                     case ServerCommand.MetaDataRefresh:
                                         OnStatusMessage("Success code received in response to server command \"{0}\": latest meta-data received.", commandCode);
                                         OnMetaDataReceived(DeserializeMetadata(buffer.BlockCopy(responseIndex, responseLength)));
+                                        m_metadataRefreshPending = false;
                                         break;
                                 }
                             }
@@ -2764,6 +2769,7 @@ namespace GSF.TimeSeries.Transport
                                         // Meta-data refresh may be unsolicited
                                         OnStatusMessage("Received server confirmation for unsolicited request to \"{0}\" command: latest meta-data received.", commandCode);
                                         OnMetaDataReceived(DeserializeMetadata(buffer.BlockCopy(responseIndex, responseLength)));
+                                        m_metadataRefreshPending = false;
                                         break;
                                     case ServerCommand.RotateCipherKeys:
                                         // Key rotation may be unsolicited
@@ -2783,6 +2789,9 @@ namespace GSF.TimeSeries.Transport
                                 OnStatusMessage("Failure code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
                             else
                                 OnProcessException(new InvalidOperationException("Publisher sent a failed code for an unsolicited server command: " + commandCode));
+
+                            if (commandCode == ServerCommand.MetaDataRefresh)
+                                m_metadataRefreshPending = false;
                             break;
                         case ServerResponse.DataPacket:
                             long now = DateTime.UtcNow.Ticks;
@@ -4083,6 +4092,7 @@ namespace GSF.TimeSeries.Transport
             }
 
             DataChannel = null;
+            m_metadataRefreshPending = false;
 
             // If user didn't initiate disconnect, restart the connection
             if (Enabled)
@@ -4632,7 +4642,12 @@ namespace GSF.TimeSeries.Transport
 
         private void m_dataStreamMonitor_Elapsed(object sender, ElapsedEventArgs e)
         {
-            if (m_monitoredBytesReceived == 0)
+            bool dataReceived = m_monitoredBytesReceived > 0;
+
+            if ((object)m_dataChannel == null && m_metadataRefreshPending)
+                dataReceived = (DateTime.UtcNow - m_commandChannel.Statistics.LastReceive).Seconds < DataLossInterval;
+
+            if (!dataReceived)
             {
                 // If we've received no data in the last time-span, we restart connect cycle...
                 m_dataStreamMonitor.Enabled = false;

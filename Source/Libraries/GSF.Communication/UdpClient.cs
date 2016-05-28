@@ -436,6 +436,17 @@ namespace GSF.Communication
         }
 
         /// <summary>
+        /// Determines whether the base class should track statistics.
+        /// </summary>
+        protected override bool TrackStatistics
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Gets the descriptive status of the client.
         /// </summary>
         public override string Status
@@ -983,6 +994,7 @@ namespace GSF.Communication
                     throw new SocketException((int)m_sendArgs.SocketError);
 
                 // Update statistics.
+                UpdateBytesSent(m_sendArgs.BytesTransferred);
                 m_udpClient.Statistics.UpdateBytesSent(m_sendArgs.BytesTransferred);
 
                 // Send operation is complete.
@@ -1077,6 +1089,7 @@ namespace GSF.Communication
                     throw new SocketException((int)m_receiveArgs.SocketError);
 
                 // Update statistics and pointers.
+                UpdateBytesReceived(m_receiveArgs.BytesTransferred);
                 m_udpClient.Statistics.UpdateBytesReceived(m_receiveArgs.BytesTransferred);
                 m_udpClient.BytesReceived = m_udpClient.Statistics.LastBytesReceived;
 
