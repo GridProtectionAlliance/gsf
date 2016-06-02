@@ -3,10 +3,6 @@
 
 The Grid Solutions Framework (GSF) is an extensive open source collection of .NET code used by electric power utilities and various open source projects. GSF contains a large variety of code useful for any .NET project consisting of hundreds of class libraries that extend or expand the functionality included in the .NET Framework with a focus on tools and protocol parsers that are useful for the electric power industry.
 
-[Online Documentation](https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/)
-
-[NuGet Packages](https://www.nuget.org/packages?q=Grid+Solutions+Framework)
-
 [Time-series Application Components](http://www.gridprotectionalliance.org/docs/products/gsf/tsl-components-2015.pdf)
 
 Example Components:
@@ -29,4 +25,36 @@ Example Components:
 
 The Grid Solutions Framework, administered by the [Grid Protection Alliance](https://www.gridprotectionalliance.org/) (GPA), is a combination of the existing Time Series Framework and TVA Code Library projects that were hosted on CodePlex.  In creating the GSF, new code components have been added and the libraries have been refactored to make this integrated framework more secure and significantly better performing.
 
-The [open Phasor Data Concentrator](http://www.openpdc.com/) (openPDC), [Secure Information Exchange Gateway](http://www.siegate.com/) (SIEGate) and [open Historian](http://www.openhistorian.com/) (openHistorian) are examples of projects that use the Grid Solutions Framework.
+The [open Phasor Data Concentrator](https://github.com/GridProtectionAlliance/openPDC) (openPDC), [Secure Information Exchange Gateway](https://github.com/GridProtectionAlliance/SIEGate) (SIEGate) and [open Historian](https://github.com/GridProtectionAlliance/openHistorian) are examples of projects that use the Grid Solutions Framework.
+
+# Documentation
+
+[Online Documentation](https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/)
+
+[NuGet Packages](https://www.nuget.org/packages?q=GSF)
+
+# Deployment
+
+1. Make sure your system meets all the [requirements](#requirements) below.
+* Open the project you want to leverage the GSF on in Visual Studio.
+* In the solution explorer, right-click on the project or solution.
+* Click on manage Nuget packages.
+* Search for GSF.
+* Install the library you want to use.
+* Enjoy.
+
+
+## Requirements
+
+* 64-bit Windows 7 or newer.
+* .NET 4.6 or newer.
+* Visual Studio 2012 or higher.
+* NuGet (usually included in Visual Studio).
+
+# Contributing
+If you would like to contribute please:
+
+1. Read our [styleguide.](https://www.gridprotectionalliance.org/docs/GPA_Coding_Guidelines_2011_03.pdf)
+* Fork the repository.
+* Code like a boss.
+* Create a pull request.
