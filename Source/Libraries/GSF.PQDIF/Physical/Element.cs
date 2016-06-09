@@ -24,7 +24,6 @@
 //******************************************************************************************************
 
 using System;
-using System.IO;
 
 namespace GSF.PQDIF.Physical
 {
@@ -68,6 +67,7 @@ namespace GSF.PQDIF.Physical
         // Fields
         private Guid m_tagOfElement;
         private PhysicalType m_typeOfValue;
+        private bool m_isError = false;
 
         #endregion
 
@@ -114,6 +114,22 @@ namespace GSF.PQDIF.Physical
             set
             {
                 m_typeOfValue = value;
+            }
+        }
+
+
+        /// <summary>
+        /// Gets whether there is an error with this element.
+        /// </summary>
+        public virtual bool IsError
+        {
+            get
+            {
+                return m_isError;
+            }
+            set
+            {
+                m_isError = value;
             }
         }
 

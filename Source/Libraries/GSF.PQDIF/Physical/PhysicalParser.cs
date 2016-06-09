@@ -27,6 +27,7 @@ using System;
 using System.IO;
 using GSF.IO.Checksums;
 using Ionic.Zlib;
+using System.Collections.Generic;
 
 namespace GSF.PQDIF.Physical
 {
@@ -108,6 +109,7 @@ namespace GSF.PQDIF.Physical
         private CompressionAlgorithm m_compressionAlgorithm;
 
         private bool m_hasNextRecord;
+        private List<Exception> m_exceptionList;
 
         #endregion
 
@@ -120,6 +122,7 @@ namespace GSF.PQDIF.Physical
         public PhysicalParser(string fileName)
         {
             FileName = fileName;
+            m_exceptionList = new List<Exception>();
         }
 
         #endregion
@@ -141,6 +144,17 @@ namespace GSF.PQDIF.Physical
                     throw new ArgumentNullException("value");
 
                 m_fileName = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets all the exceptions encountered while parsing.
+        /// </summary>
+        public List<Exception> ExceptionList
+        {
+            get
+            {
+                return m_exceptionList;
             }
         }
 
@@ -324,6 +338,10 @@ namespace GSF.PQDIF.Physical
             if (!isEmbedded || typeOfElement != ElementType.Scalar)
             {
                 link = recordBodyReader.ReadInt32();
+
+                if (link < 0 || link > recordBodyReader.BaseStream.Length)
+                    throw new System.InvalidOperationException("Element link is outside the bounds of the file");
+
                 recordBodyReader.BaseStream.Seek(link, SeekOrigin.Begin);
             }
 
@@ -358,9 +376,37 @@ namespace GSF.PQDIF.Physical
         {
             int size = recordBodyReader.ReadInt32();
             CollectionElement collection = new CollectionElement();
+            collection.ReadSize = size;
+
 
             for (int i = 0; i < size; i++)
-                collection.AddElement(ReadElement(recordBodyReader));
+            {
+                long nextLink = recordBodyReader.BaseStream.Position + 28L;
+
+                try
+                {
+                    collection.AddElement(ReadElement(recordBodyReader));
+                }
+                catch (Exception e)
+                {
+                    ExceptionList.Add(e); 
+
+                    Element badElement = new UnknownElement(0);
+                    badElement.IsError = true;
+                    collection.AddElement(badElement);
+
+                    if (nextLink > recordBodyReader.BaseStream.Length)
+                    {
+                        recordBodyReader.BaseStream.Seek(0, SeekOrigin.End);
+                        break;
+                    }
+                    else
+                    {
+                        recordBodyReader.BaseStream.Seek(nextLink, SeekOrigin.Begin);
+                    }
+                }
+            }
+
 
             return collection;
         }

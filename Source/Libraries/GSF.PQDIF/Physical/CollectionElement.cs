@@ -20,12 +20,13 @@
 //       Generated original version of source code.
 //  12/17/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  06/09/2016 - Stephen Jenks, Grid Protection Alliance
+//       Added readSize member
 //
 //******************************************************************************************************
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -42,6 +43,7 @@ namespace GSF.PQDIF.Physical
 
         // Fields
         private readonly IList<Element> m_elements;
+        private int m_readSize; // In case the actual size differs from the read size.
 
         #endregion
 
@@ -67,6 +69,24 @@ namespace GSF.PQDIF.Physical
             get
             {
                 return m_elements.Count;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the size that the file says the collection is.
+        /// This may differ from the actual size if, upon parsing the 
+        /// file the end of file is reached before the collection becomes
+        /// as large as the read size.
+        /// </summary>
+        public int ReadSize
+        {
+            get
+            {
+                return m_readSize;
+            }
+            set
+            {
+                m_readSize = value;
             }
         }
 
