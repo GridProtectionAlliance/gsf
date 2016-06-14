@@ -110,6 +110,7 @@ namespace GSF.PQDIF.Physical
 
         private bool m_hasNextRecord;
         private List<Exception> m_exceptionList;
+        private int m_maximumExceptionsAllowed = 100;
 
         #endregion
 
@@ -191,6 +192,23 @@ namespace GSF.PQDIF.Physical
                     throw new ArgumentException("PKZIP compression has been deprecated and is not supported", "value");
 
                 m_compressionAlgorithm = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum number of exceptions
+        /// in the exception list before parser will quit.
+        /// </summary>
+        public int MaximumExceptionsAllowed
+        {
+            get
+            {
+                return m_maximumExceptionsAllowed;
+            }
+
+            set
+            {
+                m_maximumExceptionsAllowed = value;
             }
         }
 
@@ -377,8 +395,8 @@ namespace GSF.PQDIF.Physical
             int size = recordBodyReader.ReadInt32();
             CollectionElement collection = new CollectionElement();
             collection.ReadSize = size;
-
-
+            long endLink = size * 28L + recordBodyReader.BaseStream.Position;
+            
             for (int i = 0; i < size; i++)
             {
                 long nextLink = recordBodyReader.BaseStream.Position + 28L;
@@ -389,13 +407,17 @@ namespace GSF.PQDIF.Physical
                 }
                 catch (Exception e)
                 {
-                    ExceptionList.Add(e); 
-
+                    ExceptionList.Add(e);
                     Element badElement = new UnknownElement(0);
                     badElement.IsError = true;
                     collection.AddElement(badElement);
 
-                    if (nextLink > recordBodyReader.BaseStream.Length)
+                    if (ExceptionList.Count > MaximumExceptionsAllowed)
+                    {
+                        recordBodyReader.BaseStream.Seek(Math.Min(endLink, recordBodyReader.BaseStream.Length), SeekOrigin.Begin);
+                        break;
+                    }
+                    else if (nextLink > recordBodyReader.BaseStream.Length)
                     {
                         recordBodyReader.BaseStream.Seek(0, SeekOrigin.End);
                         break;
