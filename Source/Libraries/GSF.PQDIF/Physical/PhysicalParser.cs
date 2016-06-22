@@ -199,6 +199,7 @@ namespace GSF.PQDIF.Physical
         /// Gets or sets the maximum number of exceptions
         /// in the exception list before parser will quit.
         /// </summary>
+        /// <remarks>Enter a negative value to disable this safeguard.</remarks>
         public int MaximumExceptionsAllowed
         {
             get
@@ -209,6 +210,17 @@ namespace GSF.PQDIF.Physical
             set
             {
                 m_maximumExceptionsAllowed = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets a value that indicates whether the maximum number of exceptions has been reached.
+        /// </summary>
+        public bool MaximumExceptionsReached
+        {
+            get
+            {
+                return (m_maximumExceptionsAllowed >= 0) && (m_exceptionList.Count > m_maximumExceptionsAllowed);
             }
         }
 
@@ -251,7 +263,7 @@ namespace GSF.PQDIF.Physical
 
             // If the link to the next record points outside the bounds of the file,
             // set it to zero to indicate that this is the last record in the file
-            if (header.NextRecordPosition < 0 || header.NextRecordPosition > m_fileReader.BaseStream.Length || ExceptionList.Count > MaximumExceptionsAllowed)
+            if (header.NextRecordPosition < 0 || header.NextRecordPosition >= m_fileReader.BaseStream.Length || MaximumExceptionsReached)
                 header.NextRecordPosition = 0;
 
             m_hasNextRecord = header.NextRecordPosition != 0;
@@ -340,53 +352,81 @@ namespace GSF.PQDIF.Physical
         {
             Element element;
 
-            Guid tagOfElement = new Guid(recordBodyReader.ReadBytes(16));
-            ElementType typeOfElement = (ElementType)recordBodyReader.ReadByte();
-            PhysicalType typeOfValue = (PhysicalType)recordBodyReader.ReadByte();
-            bool isEmbedded = recordBodyReader.ReadByte() != 0;
+            Guid tagOfElement = Guid.Empty;
+            ElementType typeOfElement = 0;
+            PhysicalType typeOfValue = 0;
+            bool isEmbedded;
 
-            // Read reserved byte
-            recordBodyReader.ReadByte();
+            // Calculate the location of the next element
+            // after this one in case we encounter any errors
+            long nextLink = recordBodyReader.BaseStream.Position + 28L;
 
-            long link;
-            long returnLink;
-
-            returnLink = recordBodyReader.BaseStream.Position + 8L;
-
-            if (!isEmbedded || typeOfElement != ElementType.Scalar)
+            try
             {
-                link = recordBodyReader.ReadInt32();
+                tagOfElement = new Guid(recordBodyReader.ReadBytes(16));
+                typeOfElement = (ElementType)recordBodyReader.ReadByte();
+                typeOfValue = (PhysicalType)recordBodyReader.ReadByte();
+                isEmbedded = recordBodyReader.ReadByte() != 0;
 
-                if (link < 0 || link > recordBodyReader.BaseStream.Length)
-                    throw new System.InvalidOperationException("Element link is outside the bounds of the file");
+                // Read reserved byte
+                recordBodyReader.ReadByte();
 
-                recordBodyReader.BaseStream.Seek(link, SeekOrigin.Begin);
+                long link;
+                long returnLink;
+
+                returnLink = recordBodyReader.BaseStream.Position + 8L;
+
+                if (!isEmbedded || typeOfElement != ElementType.Scalar)
+                {
+                    link = recordBodyReader.ReadInt32();
+
+                    if (link < 0 || link >= recordBodyReader.BaseStream.Length)
+                        throw new InvalidOperationException("Element link is outside the bounds of the file");
+
+                    recordBodyReader.BaseStream.Seek(link, SeekOrigin.Begin);
+                }
+
+                switch (typeOfElement)
+                {
+                    case ElementType.Collection:
+                        element = ReadCollection(recordBodyReader);
+                        break;
+
+                    case ElementType.Scalar:
+                        element = ReadScalar(recordBodyReader, typeOfValue);
+                        break;
+
+                    case ElementType.Vector:
+                        element = ReadVector(recordBodyReader, typeOfValue);
+                        break;
+
+                    default:
+                        element = new UnknownElement(typeOfElement);
+                        element.TypeOfValue = typeOfValue;
+                        break;
+                }
+
+                element.TagOfElement = tagOfElement;
+                recordBodyReader.BaseStream.Seek(returnLink, SeekOrigin.Begin);
+
+                return element;
             }
-
-            switch (typeOfElement)
+            catch (Exception ex)
             {
-                case ElementType.Collection:
-                    element = ReadCollection(recordBodyReader);
-                    break;
+                m_exceptionList.Add(ex);
 
-                case ElementType.Scalar:
-                    element = ReadScalar(recordBodyReader, typeOfValue);
-                    break;
+                // Jump to the location of the next element after this one
+                if (nextLink < recordBodyReader.BaseStream.Length)
+                    recordBodyReader.BaseStream.Seek(nextLink, SeekOrigin.Begin);
+                else
+                    recordBodyReader.BaseStream.Seek(0L, SeekOrigin.End);
 
-                case ElementType.Vector:
-                    element = ReadVector(recordBodyReader, typeOfValue);
-                    break;
-
-                default:
-                    element = new UnknownElement(typeOfElement);
-                    element.TypeOfValue = typeOfValue;
-                    break;
+                return new ErrorElement(typeOfElement, ex)
+                {
+                    TagOfElement = tagOfElement,
+                    TypeOfValue = typeOfValue
+                };
             }
-
-            element.TagOfElement = tagOfElement;
-            recordBodyReader.BaseStream.Seek(returnLink, SeekOrigin.Begin);
-
-            return element;
         }
 
         // Reads a collection element from the PQDIF file.
@@ -395,40 +435,14 @@ namespace GSF.PQDIF.Physical
             int size = recordBodyReader.ReadInt32();
             CollectionElement collection = new CollectionElement();
             collection.ReadSize = size;
-            long endLink = size * 28L + recordBodyReader.BaseStream.Position;
             
             for (int i = 0; i < size; i++)
             {
-                long nextLink = recordBodyReader.BaseStream.Position + 28L;
+                collection.AddElement(ReadElement(recordBodyReader));
 
-                try
-                {
-                    collection.AddElement(ReadElement(recordBodyReader));
-                }
-                catch (Exception e)
-                {
-                    ExceptionList.Add(e);
-                    Element badElement = new ErrorElement(e);
-                    badElement.IsError = true;
-                    collection.AddElement(badElement);
-
-                    if (ExceptionList.Count > MaximumExceptionsAllowed)
-                    {
-                        recordBodyReader.BaseStream.Seek(Math.Min(endLink, recordBodyReader.BaseStream.Length), SeekOrigin.Begin);
-                        break;
-                    }
-                    else if (nextLink > recordBodyReader.BaseStream.Length)
-                    {
-                        recordBodyReader.BaseStream.Seek(0, SeekOrigin.End);
-                        break;
-                    }
-                    else
-                    {
-                        recordBodyReader.BaseStream.Seek(nextLink, SeekOrigin.Begin);
-                    }
-                }
+                if (recordBodyReader.BaseStream.Position >= recordBodyReader.BaseStream.Length || MaximumExceptionsReached)
+                    break;
             }
-
 
             return collection;
         }

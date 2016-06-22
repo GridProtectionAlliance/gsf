@@ -30,12 +30,11 @@ using System.Threading.Tasks;
 namespace GSF.PQDIF.Physical
 {
     /// <summary>
-    ///  Represents an <see cref="Element"/> that the parser
-    ///  ran into an exception while trying to parse.
+    /// Represents an <see cref="Element"/> that the parser
+    /// ran into an exception while trying to parse.
     /// </summary>
     public class ErrorElement : Element
     {
-
         #region [ Members ]
 
         private ElementType m_typeOfElement;
@@ -43,20 +42,29 @@ namespace GSF.PQDIF.Physical
 
         #endregion
 
-
         #region [ Constructors ]
+
         /// <summary>
         /// Creates a new instance of the <see cref="ErrorElement" /> class.
         /// </summary>
-        /// <param name="exception"></param>
+        /// <param name="exception">The exception that occurred when parsing an element.</param>
         public ErrorElement(Exception exception)
+            : this(0, exception)
         {
-            m_typeOfElement = 0;
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="ErrorElement" /> class.
+        /// </summary>
+        /// <param name="typeOfElement">The type of the element being parsed when the error occurred.</param>
+        /// <param name="exception">The exception that occurred when parsing an element.</param>
+        public ErrorElement(ElementType typeOfElement, Exception exception)
+        {
+            m_typeOfElement = typeOfElement;
             m_exception = exception;
         }
 
         #endregion
-
 
         #region [ Properties ]
 
@@ -84,7 +92,5 @@ namespace GSF.PQDIF.Physical
         }
 
         #endregion
-
-
     }
 }

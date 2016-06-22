@@ -117,22 +117,6 @@ namespace GSF.PQDIF.Physical
             }
         }
 
-
-        /// <summary>
-        /// Gets whether there is an error with this element.
-        /// </summary>
-        public virtual bool IsError
-        {
-            get
-            {
-                return m_isError;
-            }
-            set
-            {
-                m_isError = value;
-            }
-        }
-
         #endregion
     }
 }
