@@ -955,6 +955,10 @@ namespace GSF.TimeSeries
             set
             {
                 m_roundToNearestTimestamp = value;
+
+                // Assign desired setting to frame queue
+                if ((object)m_frameQueue != null)
+                    m_frameQueue.RoundToNearestTimestamp = m_roundToNearestTimestamp;
             }
         }
 

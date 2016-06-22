@@ -109,7 +109,9 @@ void gsfts::Transport::DataSubscriber::ReadPayloadHeader(const boost::system::er
 	// Parse payload header
 	packetSizePtr = (int32_t*)&m_commandChannelBuffer[PacketSizeOffset];
 	packetSize = m_endianConverter.ConvertLittleEndian(*packetSizePtr);
-	m_commandChannelBuffer.reserve(packetSize);
+
+	if (packetSize > m_commandChannelBuffer.size())
+		m_commandChannelBuffer.resize(packetSize);
 
 	// Read packet (payload body)
 	// This read method is guaranteed not to return until the
