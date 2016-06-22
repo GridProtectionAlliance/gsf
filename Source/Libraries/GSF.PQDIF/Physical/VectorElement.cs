@@ -58,6 +58,9 @@ namespace GSF.PQDIF.Physical
             }
             set
             {
+                if (value < 0)
+                    throw new ArgumentException("Size must be >= 0", nameof(value));
+
                 if (m_size != value)
                 {
                     m_size = value;
@@ -602,7 +605,7 @@ namespace GSF.PQDIF.Physical
         // the size of the vector and the physical type of the values.
         private void Reallocate()
         {
-            if (TypeOfValue != 0 && m_size > 0)
+            if (TypeOfValue != 0)
                 m_values = new byte[m_size * TypeOfValue.GetByteSize()];
         }
 
