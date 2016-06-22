@@ -251,7 +251,7 @@ namespace GSF.PQDIF.Physical
 
             // If the link to the next record points outside the bounds of the file,
             // set it to zero to indicate that this is the last record in the file
-            if (header.NextRecordPosition < 0 || header.NextRecordPosition > m_fileReader.BaseStream.Length)
+            if (header.NextRecordPosition < 0 || header.NextRecordPosition > m_fileReader.BaseStream.Length || ExceptionList.Count > MaximumExceptionsAllowed)
                 header.NextRecordPosition = 0;
 
             m_hasNextRecord = header.NextRecordPosition != 0;
@@ -408,7 +408,7 @@ namespace GSF.PQDIF.Physical
                 catch (Exception e)
                 {
                     ExceptionList.Add(e);
-                    Element badElement = new UnknownElement(0);
+                    Element badElement = new ErrorElement(e);
                     badElement.IsError = true;
                     collection.AddElement(badElement);
 

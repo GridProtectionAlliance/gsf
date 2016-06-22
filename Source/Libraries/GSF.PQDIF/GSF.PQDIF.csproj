@@ -106,6 +106,7 @@
     <Compile Include="Logical\LogicalParser.cs" />
     <Compile Include="Logical\MonitorSettingsRecord.cs" />
     <Compile Include="Logical\ObservationRecord.cs" />
+    <Compile Include="Physical\ErrorElement.cs" />
     <Compile Include="Physical\PhysicalParser.cs" />
     <Compile Include="Physical\PhysicalType.cs" />
     <Compile Include="Logical\QuantityType.cs" />
