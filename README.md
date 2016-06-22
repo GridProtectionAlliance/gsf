@@ -31,7 +31,7 @@ The [open Phasor Data Concentrator](https://github.com/GridProtectionAlliance/op
 
 [Online Documentation](https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/)
 
-[NuGet Packages](https://www.nuget.org/packages?q=GSF)
+[NuGet Packages](https://www.nuget.org/packages?q=%22Grid+Solutions+Framework%22)
 
 # Deployment
 
