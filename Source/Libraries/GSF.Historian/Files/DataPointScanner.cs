@@ -67,7 +67,7 @@ namespace GSF.Historian.Files
 
         #endregion
 
-        #region [ Properties]
+        #region [ Properties ]
 
         /// <summary>
         /// Gets the historian ID associated with this <see cref="DataPointScanner"/>.

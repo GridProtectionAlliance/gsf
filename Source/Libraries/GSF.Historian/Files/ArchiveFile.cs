@@ -2092,6 +2092,15 @@ namespace GSF.Historian.Files
 
                         // Atomically increment total number of readers for active file
                         Interlocked.Increment(ref m_activeFileReaders);
+
+                        // Handle race conditions between rollover
+                        // and incrementing the active readers
+                        while (m_rolloverInProgress)
+                        {
+                            Interlocked.Decrement(ref m_activeFileReaders);
+                            m_rolloverWaitHandle.WaitOne();
+                            Interlocked.Increment(ref m_activeFileReaders);
+                        }
                     }
                     else
                     {
