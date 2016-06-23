@@ -67,7 +67,7 @@ namespace GSF.TimeSeries.Adapters
         private Timer m_connectionTimer;
         private bool m_isConnected;
         private bool m_disposed;
-        private bool m_enableConnectionErrors;
+        private bool m_enableConnectionErrors = true;
 
         #endregion
 
