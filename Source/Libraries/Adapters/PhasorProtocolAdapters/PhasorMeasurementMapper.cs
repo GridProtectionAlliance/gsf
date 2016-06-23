@@ -901,6 +901,18 @@ namespace PhasorProtocolAdapters
             }
         }
 
+        /// <summary>
+        /// When false, this adapter will not log any connection errors through OnProcessException. When true, all errors get logged.
+        /// </summary>
+        [ConnectionStringParameter,
+         Description("Enable to allow this adapter to log connection errors. Disable to ignore connection errors."),
+        DefaultValue(true)]
+        public new bool EnableConnectionErrors
+        {
+            get { return base.EnableConnectionErrors; }
+            set { base.EnableConnectionErrors = value; }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -1137,6 +1149,9 @@ namespace PhasorProtocolAdapters
 
             if (!(settings.TryGetValue("timeResolution", out setting) && long.TryParse(setting, out m_timeResolution)))
                 m_timeResolution = 10000L;
+
+            if (settings.TryGetValue("enableConnectionErrors", out setting))
+                EnableConnectionErrors = setting.ParseBoolean();
 
             // Provide access ID to frame parser as this may be necessary to make a phasor connection
             frameParser.DeviceID = m_accessID;
@@ -2235,7 +2250,10 @@ namespace PhasorProtocolAdapters
         private void m_frameParser_ConnectionException(object sender, EventArgs<Exception, int> e)
         {
             Exception ex = e.Argument1;
-            OnProcessException(new InvalidOperationException($"Connection attempt failed: {ex.Message}", ex));
+            if (EnableConnectionErrors)
+            {
+                OnProcessException(new InvalidOperationException($"Connection attempt failed: {ex.Message}", ex));
+            }
 
             // So long as user hasn't requested to stop, keep trying connection
             if (Enabled)
@@ -2249,7 +2267,10 @@ namespace PhasorProtocolAdapters
 
         private void m_frameParser_ExceededParsingExceptionThreshold(object sender, EventArgs e)
         {
-            OnStatusMessage("\r\nConnection is being reset due to an excessive number of exceptions...\r\n");
+            if (EnableConnectionErrors)
+            {
+                OnStatusMessage("\r\nConnection is being reset due to an excessive number of exceptions...\r\n");
+            }
 
             // So long as user hasn't already requested to stop, we restart connection
             if (Enabled)

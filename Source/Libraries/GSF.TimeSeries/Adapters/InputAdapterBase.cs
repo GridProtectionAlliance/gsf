@@ -67,6 +67,7 @@ namespace GSF.TimeSeries.Adapters
         private Timer m_connectionTimer;
         private bool m_isConnected;
         private bool m_disposed;
+        private bool m_enableConnectionErrors;
 
         #endregion
 
@@ -242,6 +243,15 @@ namespace GSF.TimeSeries.Adapters
             }
         }
 
+        /// <summary>
+        /// When false, connection errors do not get logged through OnProcessException. When true, connection errors will be logged normally.
+        /// </summary>
+        protected bool EnableConnectionErrors
+        {
+            get { return m_enableConnectionErrors; }
+            set { m_enableConnectionErrors = value; }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -351,7 +361,8 @@ namespace GSF.TimeSeries.Adapters
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Exception occurred during disconnect: {0}", ex.Message), ex));
+                if(EnableConnectionErrors)
+                    OnProcessException(new InvalidOperationException(string.Format("Exception occurred during disconnect: {0}", ex.Message), ex));
             }
         }
 
@@ -434,7 +445,8 @@ namespace GSF.TimeSeries.Adapters
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Connection attempt failed: {0}", ex.Message), ex));
+                if(EnableConnectionErrors)
+                    OnProcessException(new InvalidOperationException(string.Format("Connection attempt failed: {0}", ex.Message), ex));
 
                 // So long as user hasn't requested to stop, keep trying connection
                 if (Enabled)
