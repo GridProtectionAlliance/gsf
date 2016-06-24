@@ -27,9 +27,11 @@ The Grid Solutions Framework, administered by the [Grid Protection Alliance](htt
 
 The [open Phasor Data Concentrator](https://github.com/GridProtectionAlliance/openPDC) (openPDC), [Secure Information Exchange Gateway](https://github.com/GridProtectionAlliance/SIEGate) (SIEGate) and [open Historian](https://github.com/GridProtectionAlliance/openHistorian) are examples of projects that use the Grid Solutions Framework.
 
-# Documentation
+# Documentation and Support
 
-[Online Documentation](https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/)
+* [Online Documentation](https://www.gridprotectionalliance.org/NightlyBuilds/GridSolutionsFramework/Help/)
+* Get in contact with our development team on our new [discussion board](http://discussions.gridprotectionalliance.org/c/gpa-products/gsf).
+* Check out the [wiki](https://gridprotectionalliance.org/wiki/doku.php?id=gsf:overview).
 
 [NuGet Packages](https://www.nuget.org/packages?q=%22Grid+Solutions+Framework%22)
 
@@ -58,3 +60,6 @@ If you would like to contribute please:
 * Fork the repository.
 * Code like a boss.
 * Create a pull request.
+ 
+# License
+The Grid Solutions Framework is licensed under the [MIT license](https://opensource.org/licenses/MIT).
