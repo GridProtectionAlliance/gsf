@@ -33,10 +33,14 @@
 //******************************************************************************************************
 
 using System;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Threading;
+using GSF.Identity;
 using GSF.Security.Cryptography;
 
 namespace GSF.Threading
@@ -48,6 +52,40 @@ namespace GSF.Threading
     {
         private const int MutexHash = 0;
         private const int SemaphoreHash = 1;
+
+        /// <summary>
+        /// Gets a uniquely named inter-process <see cref="Mutex"/> associated with the running application, typically used to detect whether an instance
+        /// of the application is already running.
+        /// </summary>
+        /// <param name="perUser">Indicates whether to generate a different name for the <see cref="Mutex"/> dependent upon the user running the application.</param>
+        /// <returns>A uniquely named inter-process <see cref="Mutex"/> specific to the application; <see cref="Mutex"/> is created if it does not exist.</returns>
+        /// <remarks>
+        /// <para>
+        /// This function uses a hash of the assembly's GUID when creating the <see cref="Mutex"/>, if it is available. If it is not available, it uses a hash
+        /// of the simple name of the assembly. Although the name is hashed to help guarantee uniqueness, it is still entirely possible that another application
+        /// may use that name with the same hashing algorithm to generate its <see cref="Mutex"/> name. Therefore, it is best to ensure that the
+        /// <see cref="GuidAttribute"/> is defined in the AssemblyInfo of your application.
+        /// </para>
+        /// <para>
+        /// The <see cref="Mutex"/> created is "Global" meaning that it will be accessible to all active application sessions including terminal service
+        /// sessions. This is accomplished internally by prefixing the <see cref="Mutex"/> name with "Global\". Do not use this helper function if you need
+        /// to create a specifically named or non-global <see cref="Mutex"/>, such as when you need to interact with another application using a
+        /// <see cref="Mutex"/> that does not use this function.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="UnauthorizedAccessException">The named mutex exists, but the user does not have the minimum needed security access rights to use it.</exception>
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        public static Mutex GetNamedMutex(bool perUser = true)
+        {
+            Assembly entryAssembly = Assembly.GetEntryAssembly();
+            GuidAttribute attribute = (GuidAttribute)entryAssembly.GetCustomAttributes(typeof(GuidAttribute), true).FirstOrDefault();
+            string name = attribute?.Value.ToString() ?? entryAssembly.GetName().Name;
+
+            if (perUser)
+                name += UserInfo.CurrentUserID;
+
+            return GetNamedMutex(name);
+        }
 
         /// <summary>
         /// Gets a uniquely named inter-process <see cref="Mutex"/> associated with the specified <paramref name="name"/> that identifies a source object
@@ -128,6 +166,42 @@ namespace GSF.Threading
 #endif
 
             return namedMutex;
+        }
+
+        /// <summary>
+        /// Gets a uniquely named inter-process <see cref="Semaphore"/> associated with the running application, typically used to detect whether some number of
+        /// instances of the application are already running.
+        /// </summary>
+        /// <param name="perUser">Indicates whether to generate a different name for the <see cref="Semaphore"/> dependent upon the user running the application.</param>
+        /// <param name="maximumCount">The maximum number of requests for the semaphore that can be granted concurrently.</param>
+        /// <param name="initialCount">The initial number of requests for the semaphore that can be granted concurrently, or -1 to default to <paramref name="maximumCount"/>.</param>
+        /// <returns>A uniquely named inter-process <see cref="Semaphore"/> specific to <paramref name="name"/>; <see cref="Semaphore"/> is created if it does not exist.</returns>
+        /// <remarks>
+        /// <para>
+        /// This function uses a hash of the assembly's GUID when creating the <see cref="Semaphore"/>, if it is available. If it is not available, it uses a hash
+        /// of the simple name of the assembly. Although the name is hashed to help guarantee uniqueness, it is still entirely possible that another application
+        /// may use that name with the same hashing algorithm to generate its <see cref="Semaphore"/> name. Therefore, it is best to ensure that the
+        /// <see cref="GuidAttribute"/> is defined in the AssemblyInfo of your application.
+        /// </para>
+        /// <para>
+        /// The <see cref="Semaphore"/> created is "Global" meaning that it will be accessible to all active application sessions including terminal service
+        /// sessions. This is accomplished internally by prefixing the <see cref="Semaphore"/> name with "Global\". Do not use this helper function if you need
+        /// to create a specifically named or non-global <see cref="Semaphore"/>, such as when you need to interact with another application using a
+        /// <see cref="Semaphore"/> that does not use this function.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="UnauthorizedAccessException">The named semaphore exists, but the user does not have the minimum needed security access rights to use it.</exception>
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        public static Semaphore GetNamedSemaphore(bool perUser = true, int maximumCount = 10, int initialCount = -1)
+        {
+            Assembly entryAssembly = Assembly.GetEntryAssembly();
+            GuidAttribute attribute = (GuidAttribute)entryAssembly.GetCustomAttributes(typeof(GuidAttribute), true).FirstOrDefault();
+            string name = attribute?.Value.ToString() ?? entryAssembly.GetName().Name;
+
+            if (perUser)
+                name += UserInfo.CurrentUserID;
+
+            return GetNamedSemaphore(name, maximumCount, initialCount);
         }
 
         /// <summary>
