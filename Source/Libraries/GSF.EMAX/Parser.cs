@@ -25,6 +25,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using GSF.IO;
 
 namespace GSF.EMAX
@@ -46,6 +47,7 @@ namespace GSF.EMAX
         private ushort[] m_eventGroups;
         private DateTime m_baseTime;
         private TimeZoneInfo m_sourceTimeZone;
+        private bool m_timeError;
 
         #endregion
 
@@ -129,6 +131,18 @@ namespace GSF.EMAX
             get
             {
                 return m_timestamp;
+            }
+        }
+
+        /// <summary>
+        /// Gets a flag that indicates whether the parser encountered an error
+        /// while parsing the timestamp in the last call to <see cref="ReadNext"/>.
+        /// </summary>
+        public bool TimeError
+        {
+            get
+            {
+                return m_timeError;
             }
         }
 
@@ -247,18 +261,11 @@ namespace GSF.EMAX
                 throw new InvalidOperationException("Specified file name does not have a valid EMAX extension: " + m_fileName);
             }
 
-            byte[] skipBytes = new byte[OffsetBytes];
-
             // Create a new file stream for each file
             m_fileStreams = new FileStream[fileNames.Length];
 
             for (int i = 0; i < fileNames.Length; i++)
-            {
                 m_fileStreams[i] = new FileStream(fileNames[i], FileMode.Open, FileAccess.Read, FileShare.Read);
-
-                if (skipBytes.Length > 0)
-                    m_fileStreams[i].Read(skipBytes, 0, skipBytes.Length);
-            }
         }
 
         /// <summary>
@@ -306,7 +313,7 @@ namespace GSF.EMAX
             {
                 currentFile = m_fileStreams[streamIndex];
                 recordLength = m_controlFile.FrameLength[streamIndex];
-                index = 0;
+                index = 4;
 
                 if ((object)buffer == null || buffer.Length < recordLength)
                     buffer = new byte[recordLength];
@@ -317,7 +324,7 @@ namespace GSF.EMAX
                 if (bytesRead == 0)
                     return false;
 
-                if (bytesRead == recordLength || bytesRead == recordLength - OffsetBytes)
+                if (bytesRead == recordLength)
                 {
                     int start = streamIndex * 64;
                     int end = Math.Min(start + 64, m_values.Length);
@@ -396,6 +403,11 @@ namespace GSF.EMAX
 
             int days, hours, minutes, seconds, milliseconds, microseconds;
             byte highByte, lowByte;
+
+            m_timeError = clockWords.All(clockWord => clockWord == 0xFFFF);
+
+            if (m_timeError)
+                return DateTime.MaxValue;
 
             highByte = clockWords[0].HighByte();
             lowByte = clockWords[0].LowByte();

@@ -257,6 +257,9 @@ namespace GSF.EMAX
 
                 while (parser.ReadNext())
                 {
+                    if (parser.TimeError)
+                        continue;
+
                     // Set currentSecond to this frame's timestamp
                     m_currentSecond = parser.Timestamp;
 
@@ -271,6 +274,22 @@ namespace GSF.EMAX
                     // Update previousMilliseconds and count
                     previousMilliseconds = milliseconds;
                     count++;
+                }
+
+                if (m_currentSecond == DateTime.MinValue)
+                {
+                    // If there was an error reading the timestamps in the parser,
+                    // calculate the timestamp from the data in the CTL file
+                    DateTime faultTime = parser.ControlFile.SystemParameters.FaultTime;
+                    short faultMilliseconds = parser.ControlFile.SystemParameters.mS_time;
+                    short prefaultSamples = parser.ControlFile.SystemParameters.prefault_samples;
+                    short startOffsetSamples = parser.ControlFile.SystemParameters.start_offset_samples;
+
+                    // Set currentSecond to the timestamp of the first frame
+                    m_currentSecond = faultTime.AddMilliseconds(faultMilliseconds).AddSeconds(-(prefaultSamples + startOffsetSamples) / (double)sampleRate);
+
+                    // Get total milliseconds since epoch
+                    milliseconds = m_currentSecond.Ticks / Ticks.PerMillisecond;
                 }
 
                 // Remove subseconds from currentSecond
@@ -327,15 +346,24 @@ namespace GSF.EMAX
                 // Calculate the timestamp
                 m_calculatedTimestamp = m_currentSecond.AddTicks(m_subsecondDistribution[m_currentIndex]);
 
-                // Correct the values
-                frequency = m_parser.ControlFile.SystemParameters.frequency;
-                diff = Math.Abs(m_calculatedTimestamp.Subtract(m_parser.Timestamp).TotalSeconds);
-                halfCycles = (int)Math.Round(diff * frequency * 2.0D);
+                if (!m_parser.TimeError)
+                {
+                    // Correct the values
+                    frequency = m_parser.ControlFile.SystemParameters.frequency;
+                    diff = Math.Abs(m_calculatedTimestamp.Subtract(m_parser.Timestamp).TotalSeconds);
+                    halfCycles = (int)Math.Round(diff * frequency * 2.0D);
 
-                if (halfCycles % 2 == 0)
-                    Array.Copy(Values, m_correctedValues, m_correctedValues.Length);
+                    if (halfCycles % 2 == 0)
+                        Array.Copy(Values, m_correctedValues, m_correctedValues.Length);
+                    else
+                        Values.Select(v => -v).ToList().CopyTo(m_correctedValues);
+                }
                 else
-                    Values.Select(v => -v).ToList().CopyTo(m_correctedValues);
+                {
+                    // We can't determine whether the values need correction
+                    // without a proper timestamp from the underlying parser
+                    Array.Copy(Values, m_correctedValues, m_correctedValues.Length);
+                }
 
                 // Move to the next subsecond in the distribution
                 m_currentIndex++;
