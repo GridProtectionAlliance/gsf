@@ -186,6 +186,7 @@ namespace GSF.PhasorProtocols.UI.Modal
             ConfigurationCell device = new ConfigurationCell(m_configurationFrame, 0);
             device.IDCode = (ushort)m_configurationFrame.Cells.Count;
             device.StationName = "Device " + (device.IDCode + 1);
+            device.FrequencyDefinition = new FrequencyDefinition(device, "Freq");
 
             m_configurationFrame.Cells.Add(device);
             listBoxDevices.SelectedIndex = (m_configurationFrame.Cells.Count - 1);
