@@ -37,13 +37,10 @@ namespace GSF.TimeSeries.Adapters
         int RouteCount { get; }
 
         /// <summary>
-        /// Calculates new routes for the supplied list of producers and consumers.
-        /// This new mapping table will replace the existing one when complete.
+        /// Patches the existing routing table with the supplied adapters.
         /// </summary>
-        /// <param name="previousMapping">the most recent mapping table that will get replaced by this one.</param>
         /// <param name="producerAdapters">all of the producers</param>
         /// <param name="consumerAdapters">all of the consumers</param>
-        /// <returns>The new mapping table that will replace the old one.</returns>
-        IRouteMappingTables CalculateNewRoutingTable(IRouteMappingTables previousMapping, RoutingTablesAdaptersList producerAdapters, RoutingTablesAdaptersList consumerAdapters);
+        void PatchRoutingTable(RoutingTablesAdaptersList producerAdapters, RoutingTablesAdaptersList consumerAdapters);
     }
 }

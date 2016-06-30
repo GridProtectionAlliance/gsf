@@ -194,7 +194,6 @@ namespace GSF.TimeSeries.Adapters
                         return;
                     }
                 }
-
             }
 
             public void RoutingComplete()
@@ -202,7 +201,102 @@ namespace GSF.TimeSeries.Adapters
                 if (Queue.Count > 0)
                     m_task.Start();
             }
+        }
 
+        private class GlobalCache
+        {
+            public readonly Dictionary<Guid, List<Consumer>> GlobalSignalLookup;
+            public readonly Dictionary<IAdapter, Consumer> GlobalDestinationLookup;
+            public readonly List<Consumer> BroadcastConsumers;
+            public readonly int Version;
+
+            public GlobalCache(Dictionary<IAdapter, Consumer> consumers, int version)
+            {
+                GlobalSignalLookup = new Dictionary<Guid, List<Consumer>>();
+                GlobalDestinationLookup = consumers;
+                BroadcastConsumers = new List<Consumer>();
+                Version = version;
+
+                // Generate routes for all signals received by each consumer adapter
+                foreach (var kvp in consumers)
+                {
+                    var consumerAdapter = kvp.Key;
+                    var consumer = kvp.Value;
+
+                    if ((object)consumerAdapter.InputMeasurementKeys != null)
+                    {
+                        // Create routes for each of the consumer's input signals
+                        foreach (Guid signalID in consumerAdapter.InputMeasurementKeys.Select(key => key.SignalID))
+                        {
+                            GlobalSignalLookup.GetOrAdd(signalID, id => new List<Consumer>()).Add(consumer);
+                        }
+                    }
+                    else
+                    {
+                        // Add this consumer to the broadcast routes to begin receiving all measurements
+                        BroadcastConsumers.Add(consumer);
+                    }
+                }
+
+                // Broadcast consumers receive all measurements, so add them to every signal route
+                foreach (List<Consumer> consumerList in GlobalSignalLookup.Values)
+                {
+                    consumerList.AddRange(BroadcastConsumers);
+                }
+            }
+        }
+
+
+        private class LocalCache
+        {
+            public bool Enabled;
+            private RoutingMappingHighLatencyLowCpu m_route;
+            public LocalCache(RoutingMappingHighLatencyLowCpu route, IAdapter adapter)
+            {
+                Enabled = true;
+                m_route = route;
+
+                var inputAdapter = adapter as IInputAdapter;
+
+                if ((object)inputAdapter != null)
+                    inputAdapter.NewMeasurements += Route;
+                else
+                    ((IActionAdapter)adapter).NewMeasurements += Route;
+            }
+
+            private void Route(object sender, EventArgs<ICollection<IMeasurement>> measurements)
+            {
+                if (!Enabled || measurements?.Argument == null)
+                    return;
+                var lst = ToArrayOptimized(measurements.Argument);
+                m_route.Route(lst);
+            }
+
+            private static class ArrayHelper<T>
+            {
+                public static T[] Empty = new T[0];
+            }
+
+            /// <summary>Creates an array from the <see cref="IEnumerable{T}"/>. 
+            /// Twice as fast as <see cref="Enumerable.ToArray{T}"/> if <see cref="source"/>
+            /// implements <see cref="ICollection{T}"/></summary>
+            public static T[] ToArrayOptimized<T>(IEnumerable<T> source)
+            {
+                if (source == null)
+                    throw new ArgumentNullException("source");
+
+                ICollection<T> collection = source as ICollection<T>;
+                if (collection != null)
+                {
+                    int count = collection.Count;
+                    if (count == 0)
+                        return ArrayHelper<T>.Empty;
+                    var array = new T[count];
+                    collection.CopyTo(array, 0);
+                    return array;
+                }
+                return new List<T>(source).ToArray();
+            }
         }
 
         private class Consumer
@@ -229,11 +323,10 @@ namespace GSF.TimeSeries.Adapters
             }
         }
 
+
         // Fields
-        private HashSet<IAdapter> m_producerAdapters;
-        private Dictionary<Guid, List<Consumer>> m_globalSignalLookup;
-        private Dictionary<IAdapter, Consumer> m_globalDestinationLookup;
-        private List<Consumer> m_broadcastConsumers;
+
+        private Dictionary<IAdapter, LocalCache> m_producerLookup;
 
         private readonly ScheduledTask m_task;
         private readonly ConcurrentQueue<IMeasurement[]> m_list;
@@ -243,6 +336,8 @@ namespace GSF.TimeSeries.Adapters
         private long m_measurementsRoutedDiscarded;
         private long m_routeOperations;
         private int m_routeLatency;
+
+        private GlobalCache m_globalCache;
         private Action<string> m_onStatusMessage;
         private Action<Exception> m_onProcessException;
 
@@ -261,18 +356,44 @@ namespace GSF.TimeSeries.Adapters
 
             m_onStatusMessage = onStatusMessage;
             m_onProcessException = onProcessException;
-
-            m_producerAdapters = new HashSet<IAdapter>();
-            m_globalSignalLookup = new Dictionary<Guid, List<Consumer>>();
-            m_globalDestinationLookup = new Dictionary<IAdapter, Consumer>();
-            m_broadcastConsumers = new List<Consumer>();
+            m_producerLookup = new Dictionary<IAdapter, LocalCache>();
+            m_globalCache = new GlobalCache(new Dictionary<IAdapter, Consumer>(), 0);
         }
 
-        public int RouteCount => m_globalSignalLookup.Count;
+        public int RouteCount => m_globalCache.GlobalSignalLookup.Count;
 
-        public IRouteMappingTables CalculateNewRoutingTable(IRouteMappingTables previousMapping, RoutingTablesAdaptersList producerAdapters, RoutingTablesAdaptersList consumerAdapters)
+        public void PatchRoutingTable(RoutingTablesAdaptersList producerAdapters, RoutingTablesAdaptersList consumerAdapters)
         {
-            throw new NotImplementedException();
+            if (producerAdapters == null)
+                throw new ArgumentNullException(nameof(producerAdapters));
+            if (consumerAdapters == null)
+                throw new ArgumentNullException(nameof(consumerAdapters));
+
+            foreach (var producerAdapter in producerAdapters.NewAdapter)
+            {
+                m_producerLookup.Add(producerAdapter, new LocalCache(this, producerAdapter));
+            }
+
+            foreach (var producerAdapter in producerAdapters.OldAdapter)
+            {
+                m_producerLookup[producerAdapter].Enabled = false;
+                m_producerLookup.Remove(producerAdapter);
+            }
+
+            Dictionary<IAdapter, Consumer> consumerLookup = new Dictionary<IAdapter, Consumer>(m_globalCache.GlobalDestinationLookup);
+
+
+            foreach (var consumerAdapter in consumerAdapters.NewAdapter)
+            {
+                consumerLookup.Add(consumerAdapter, new Consumer(consumerAdapter));
+            }
+
+            foreach (var consumerAdapter in consumerAdapters.OldAdapter)
+            {
+                consumerLookup.Remove(consumerAdapter);
+            }
+
+            m_globalCache = new GlobalCache(consumerLookup, m_globalCache.Version + 1);
         }
 
         void m_task_Disposing(object sender, EventArgs e)
@@ -303,6 +424,7 @@ namespace GSF.TimeSeries.Adapters
                             m_measurementsRoutedOutput, m_measurementsRoutedDiscarded));
             }
 
+            var map = m_globalCache;
 
             try
             {
@@ -314,14 +436,15 @@ namespace GSF.TimeSeries.Adapters
                     foreach (var measurement in measurements)
                     {
                         List<Consumer> consumers;
-                        if (!m_globalSignalLookup.TryGetValue(measurement.ID, out consumers))
+                        if (!map.GlobalSignalLookup.TryGetValue(measurement.ID, out consumers))
                         {
-                            consumers = m_broadcastConsumers;
+                            consumers = map.BroadcastConsumers;
                         }
 
                         // Add this measurement to the producers' list
-                        foreach (var consumer in consumers)
+                        for (int index = 0; index < consumers.Count; index++)
                         {
+                            var consumer = consumers[index];
                             if (consumer.Manager != null)
                             {
                                 m_measurementsRoutedOutput++;
@@ -337,104 +460,21 @@ namespace GSF.TimeSeries.Adapters
             }
             finally
             {
-                foreach (var consumer in m_globalDestinationLookup.Values)
+                foreach (var consumer in map.GlobalDestinationLookup.Values)
                 {
-                    if (consumer.Manager != null)
-                        consumer.Manager.RoutingComplete();
+                    consumer.Manager?.RoutingComplete();
                 }
             }
         }
 
-        public void Route(object sender, EventArgs<ICollection<IMeasurement>> measurements)
+        private void Route(IMeasurement[] measurements)
         {
-            if (measurements == null)
-                return;
-            if (measurements.Argument == null)
-                return;
-            var lst = ToArrayOptimized(measurements.Argument);
-            if (lst.Length > 0)
+            if (measurements.Length > 0)
             {
-                m_list.Enqueue(lst);
+                m_list.Enqueue(measurements);
             }
         }
 
-
-        public IRouteMappingTables CloneEmptyMap()
-        {
-            return this;
-        }
-
-        public void CalculateRoutes(IEnumerable<IAdapter> producerAdapters, IEnumerable<IAdapter> consumerAdapters)
-        {
-            Consumer consumer;
-
-            // Attach to NewMeasurements event of all producer adapters
-            foreach (IAdapter producerAdapter in producerAdapters)
-            {
-                if (m_producerAdapters.Contains(producerAdapter))
-                {
-                    IInputAdapter inputAdapter = producerAdapter as IInputAdapter;
-
-                    if ((object)inputAdapter != null)
-                        inputAdapter.NewMeasurements += Route ;
-                    else
-                        ((IActionAdapter)producerAdapter).NewMeasurements += Route;
-                }
-            }
-
-            // Generate routes for all signals received by each consumer adapter
-            foreach (IAdapter consumerAdapter in consumerAdapters)
-            {
-                // Search the old global cache for an existing consumer for this adapter
-                if (m_globalDestinationLookup.TryGetValue(consumerAdapter, out consumer))
-                    consumer = new Consumer(consumerAdapter);
-
-                if ((object)consumerAdapter.InputMeasurementKeys != null)
-                {
-                    // Create routes for each of the consumer's input signals
-                    foreach (Guid signalID in consumerAdapter.InputMeasurementKeys.Select(key => key.SignalID))
-                        m_globalSignalLookup.GetOrAdd(signalID, id => new List<Consumer>()).Add(consumer);
-                }
-                else
-                {
-                    // Add this consumer to the broadcast routes to begin receiving all measurements
-                    m_broadcastConsumers.Add(consumer);
-                }
-
-                // Add this adapter to the global destinations lookup
-                m_globalDestinationLookup.Add(consumerAdapter, consumer);
-            }
-
-            // Broadcast consumers receive all measurements, so add them to every signal route
-            foreach (List<Consumer> consumerList in m_globalSignalLookup.Values)
-                consumerList.AddRange(m_broadcastConsumers);
-        }
-
-        private static class ArrayHelper<T>
-        {
-            public static T[] Empty = new T[0];
-        }
-
-        /// <summary>Creates an array from the <see cref="IEnumerable{T}"/>. 
-        /// Twice as fast as <see cref="Enumerable.ToArray{T}"/> if <see cref="source"/>
-        /// implements <see cref="ICollection{T}"/></summary>
-        public static T[] ToArrayOptimized<T>(IEnumerable<T> source)
-        {
-            if (source == null)
-                throw new ArgumentNullException("source");
-
-            ICollection<T> collection = source as ICollection<T>;
-            if (collection != null)
-            {
-                int count = collection.Count;
-                if (count == 0)
-                    return ArrayHelper<T>.Empty;
-                var array = new T[count];
-                collection.CopyTo(array, 0);
-                return array;
-            }
-            return new List<T>(source).ToArray();
-        }
 
     }
 }

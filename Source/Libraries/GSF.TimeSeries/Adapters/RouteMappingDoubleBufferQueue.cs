@@ -25,6 +25,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using GSF.Collections;
 
 namespace GSF.TimeSeries.Adapters
@@ -37,6 +38,49 @@ namespace GSF.TimeSeries.Adapters
     {
         // Nested Types
 
+        private class GlobalCache
+        {
+            public Dictionary<Guid, List<Consumer>> GlobalSignalLookup;
+            public Dictionary<IAdapter, Consumer> GlobalDestinationLookup;
+            public List<Consumer> BroadcastConsumers;
+            public int Version;
+
+            public GlobalCache(Dictionary<IAdapter, Consumer> consumers, int version)
+            {
+                GlobalSignalLookup = new Dictionary<Guid, List<Consumer>>();
+                GlobalDestinationLookup = consumers;
+                BroadcastConsumers = new List<Consumer>();
+                Version = version;
+
+                // Generate routes for all signals received by each consumer adapter
+                foreach (var kvp in consumers)
+                {
+                    var consumerAdapter = kvp.Key;
+                    var consumer = kvp.Value;
+
+                    if ((object)consumerAdapter.InputMeasurementKeys != null)
+                    {
+                        // Create routes for each of the consumer's input signals
+                        foreach (Guid signalID in consumerAdapter.InputMeasurementKeys.Select(key => key.SignalID))
+                        {
+                            GlobalSignalLookup.GetOrAdd(signalID, id => new List<Consumer>()).Add(consumer);
+                        }
+                    }
+                    else
+                    {
+                        // Add this consumer to the broadcast routes to begin receiving all measurements
+                        BroadcastConsumers.Add(consumer);
+                    }
+                }
+
+                // Broadcast consumers receive all measurements, so add them to every signal route
+                foreach (List<Consumer> consumerList in GlobalSignalLookup.Values)
+                {
+                    consumerList.AddRange(BroadcastConsumers);
+                }
+            }
+        }
+
         private class LocalCache
         {
             private Dictionary<Guid, List<Producer>> m_localSignalLookup;
@@ -45,22 +89,35 @@ namespace GSF.TimeSeries.Adapters
             private object m_localCacheLock;
             private int m_version;
 
-            public LocalCache(RouteMappingDoubleBufferQueue routingTables)
+            public LocalCache(RouteMappingDoubleBufferQueue routingTables, IAdapter producerAdapter)
             {
                 m_localCacheLock = new object();
                 m_localSignalLookup = new Dictionary<Guid, List<Producer>>();
                 m_localDestinationLookup = new Dictionary<Consumer, Producer>();
                 m_routingTables = routingTables;
+
+                IInputAdapter inputAdapter = producerAdapter as IInputAdapter;
+
+                if ((object)inputAdapter != null)
+                    inputAdapter.NewMeasurements += Route;
+                else
+                    ((IActionAdapter)producerAdapter).NewMeasurements += Route;
+
             }
 
-            public void Route(IEnumerable<IMeasurement> measurements)
+            private void Route(object sender, EventArgs<ICollection<IMeasurement>> e)
             {
-                RouteMappingDoubleBufferQueue globalCache;
+                ICollection<IMeasurement> measurements = e?.Argument;
+
+                if (measurements == null)
+                    return;
+
+                GlobalCache globalCache;
                 List<Producer> producers;
                 List<Consumer> consumers;
 
                 // Get the global cache from the routing tables
-                globalCache = m_routingTables.m_getCurrentRouteMappingTables() as RouteMappingDoubleBufferQueue;
+                globalCache = Interlocked.CompareExchange(ref m_routingTables.m_globalCache, null, null);
 
                 // Return if routes are still being calculated
                 if ((object)globalCache == null)
@@ -71,20 +128,20 @@ namespace GSF.TimeSeries.Adapters
                     // Check the version of the local cache against that of the global cache.
                     // We need to clear the local cache if the versions don't match because
                     // that means routes have changed
-                    if (m_version != globalCache.m_version)
+                    if (m_version != globalCache.Version)
                     {
                         // Dump the signal lookup
                         m_localSignalLookup.Clear();
 
                         // Best if we hang onto producers for adapters that still have routes
-                        foreach (Consumer consumer in m_localDestinationLookup.Keys.Where(consumer => !globalCache.m_globalDestinationLookup.ContainsKey(consumer.Adapter)).ToList())
+                        foreach (Consumer consumer in m_localDestinationLookup.Keys.Where(consumer => !globalCache.GlobalDestinationLookup.ContainsKey(consumer.Adapter)).ToList())
                         {
                             m_localDestinationLookup[consumer].QueueProducer.Dispose();
                             m_localDestinationLookup.Remove(consumer);
                         }
 
                         // Update the local cache version
-                        m_version = globalCache.m_version;
+                        m_version = globalCache.Version;
                     }
 
                     foreach (IMeasurement measurement in measurements)
@@ -93,8 +150,8 @@ namespace GSF.TimeSeries.Adapters
                         if (!m_localSignalLookup.TryGetValue(measurement.ID, out producers))
                         {
                             // Not in the local cache - check the global cache and fall back on broadcast consumers
-                            if (!globalCache.m_globalSignalLookup.TryGetValue(measurement.ID, out consumers))
-                                consumers = globalCache.m_broadcastConsumers;
+                            if (!globalCache.GlobalSignalLookup.TryGetValue(measurement.ID, out consumers))
+                                consumers = globalCache.BroadcastConsumers;
 
                             // Get a producer for each of the consumers
                             producers = consumers
@@ -164,137 +221,64 @@ namespace GSF.TimeSeries.Adapters
             }
         }
 
-        // Fields
-        private readonly Dictionary<Guid, List<Consumer>> m_globalSignalLookup;
-        private readonly Dictionary<IAdapter, Consumer> m_globalDestinationLookup;
-        private readonly List<Consumer> m_broadcastConsumers;
-        private readonly int m_version;
-
+        private GlobalCache m_globalCache;
         private readonly Action<string> m_onStatusMessage;
         private readonly Action<Exception> m_onProcessException;
-        private readonly Func<IRouteMappingTables> m_getCurrentRouteMappingTables;
-
-        private RouteMappingDoubleBufferQueue(int version)
-        {
-            m_globalSignalLookup = new Dictionary<Guid, List<Consumer>>();
-            m_globalDestinationLookup = new Dictionary<IAdapter, Consumer>();
-            m_broadcastConsumers = new List<Consumer>();
-            m_version = version;
-        }
 
         /// <summary>
         /// Instances a new <see cref="RouteMappingDoubleBufferQueue"/>.
         /// </summary>
-        /// <param name="getCurrentRouteMappingTables">A callback to get the most latest implementation of the Routing Map.</param>
         /// <param name="onStatusMessage">Raise status messages on this callback</param>
         /// <param name="onProcessException">Raise exceptions on this callback</param>
-        public RouteMappingDoubleBufferQueue(Func<IRouteMappingTables> getCurrentRouteMappingTables, Action<string> onStatusMessage, Action<Exception> onProcessException)
-            : this(0)
+        public RouteMappingDoubleBufferQueue(Action<string> onStatusMessage, Action<Exception> onProcessException)
         {
-            if (getCurrentRouteMappingTables == null)
-                throw new ArgumentNullException(nameof(getCurrentRouteMappingTables));
             if (onStatusMessage == null)
                 throw new ArgumentNullException(nameof(onStatusMessage));
             if (onProcessException == null)
                 throw new ArgumentNullException(nameof(onProcessException));
 
-            m_getCurrentRouteMappingTables = getCurrentRouteMappingTables;
             m_onStatusMessage = onStatusMessage;
             m_onProcessException = onProcessException;
-        }
-
-        private RouteMappingDoubleBufferQueue(RouteMappingDoubleBufferQueue previousMapping, RoutingTablesAdaptersList producerAdapters, RoutingTablesAdaptersList consumerAdapters)
-            : this(previousMapping.m_version + 1)
-        {
-            m_getCurrentRouteMappingTables = previousMapping.m_getCurrentRouteMappingTables;
-            m_onStatusMessage = previousMapping.m_onStatusMessage;
-            m_onProcessException = previousMapping.m_onProcessException;
-
-            // Attach to NewMeasurements event of all producer adapters that are new
-            foreach (IAdapter producerAdapter in producerAdapters.NewAdapter)
-            {
-                IInputAdapter inputAdapter = producerAdapter as IInputAdapter;
-
-                if ((object)inputAdapter != null)
-                    inputAdapter.NewMeasurements += GetRoutedMeasurementsHandler();
-                else
-                    ((IActionAdapter)producerAdapter).NewMeasurements += GetRoutedMeasurementsHandler();
-            }
-
-            // Copy existing consumer adapters.
-            foreach (IAdapter consumerAdapter in consumerAdapters.ExistingAdapter)
-            {
-                m_globalDestinationLookup.Add(consumerAdapter, previousMapping.m_globalDestinationLookup[consumerAdapter]);
-            }
-
-            // Create new consumer adapters
-            foreach (IAdapter consumerAdapter in consumerAdapters.NewAdapter)
-            {
-                // Add this adapter to the global destinations lookup
-                m_globalDestinationLookup.Add(consumerAdapter, new Consumer(consumerAdapter, m_onProcessException));
-            }
-
-            // Generate routes for all signals received by each consumer adapter
-            foreach (KeyValuePair<IAdapter, Consumer> kvp in m_globalDestinationLookup)
-            {
-                IAdapter consumerAdapter = kvp.Key;
-                Consumer consumer = kvp.Value;
-
-                if ((object)consumerAdapter.InputMeasurementKeys != null)
-                {
-                    // Create routes for each of the consumer's input signals
-                    foreach (Guid signalID in consumerAdapter.InputMeasurementKeys.Select(key => key.SignalID))
-                        m_globalSignalLookup.GetOrAdd(signalID, id => new List<Consumer>()).Add(consumer);
-                }
-                else
-                {
-                    // Add this consumer to the broadcast routes to begin receiving all measurements
-                    m_broadcastConsumers.Add(consumer);
-                }
-            }
-
-            // Broadcast consumers receive all measurements, so add them to every signal route
-            foreach (List<Consumer> consumerList in m_globalSignalLookup.Values)
-                consumerList.AddRange(m_broadcastConsumers);
-
+            m_globalCache = new GlobalCache(new Dictionary<IAdapter, Consumer>(), 0);
         }
 
         /// <summary>
         /// Gets the number of routes in this routing table.
         /// </summary>
-        public int RouteCount => m_globalSignalLookup.Count;
+        public int RouteCount => m_globalCache.GlobalSignalLookup.Count;
 
         /// <summary>
-        /// Calculates new routes for the supplied list of producers and consumers.
-        /// This new mapping table will replace the existing one when complete.
+        /// Patches the existing routing table with the supplied adapters.
         /// </summary>
-        /// <param name="previousMapping">the most recent mapping table that will get replaced by this one.</param>
         /// <param name="producerAdapters">all of the producers</param>
         /// <param name="consumerAdapters">all of the consumers</param>
-        /// <returns>The new mapping table that will replace the old one.</returns>
-        public IRouteMappingTables CalculateNewRoutingTable(IRouteMappingTables previousMapping, RoutingTablesAdaptersList producerAdapters, RoutingTablesAdaptersList consumerAdapters)
+        public void PatchRoutingTable(RoutingTablesAdaptersList producerAdapters, RoutingTablesAdaptersList consumerAdapters)
         {
-            var prevMapping = previousMapping as RouteMappingDoubleBufferQueue;
-            if (previousMapping == null)
-                throw new ArgumentNullException(nameof(previousMapping));
             if (producerAdapters == null)
                 throw new ArgumentNullException(nameof(producerAdapters));
             if (consumerAdapters == null)
                 throw new ArgumentNullException(nameof(consumerAdapters));
-            if (prevMapping == null)
-                throw new ArgumentException(nameof(previousMapping), "The previous map must be of type RouteMappingDoubleBufferQueue");
 
-            return new RouteMappingDoubleBufferQueue(prevMapping, producerAdapters, consumerAdapters);
-        }
+            // Attach to NewMeasurements event of all producer adapters that are new
+            foreach (IAdapter producerAdapter in producerAdapters.NewAdapter)
+            {
+                new LocalCache(this, producerAdapter);
+            }
 
-        /// <summary>
-        /// Gets a handler for measurements that routes measurements to the appropriate consumers.
-        /// </summary>
-        /// <returns>The measurement handler used for routing.</returns>
-        private EventHandler<EventArgs<ICollection<IMeasurement>>> GetRoutedMeasurementsHandler()
-        {
-            LocalCache localCache = new LocalCache(this);
-            return (sender, args) => localCache.Route(args.Argument);
+            Dictionary<IAdapter, Consumer> consumerLookup = new Dictionary<IAdapter, Consumer>(m_globalCache.GlobalDestinationLookup);
+
+            // Create new consumer adapters
+            foreach (var consumerAdapter in consumerAdapters.NewAdapter)
+            {
+                consumerLookup.Add(consumerAdapter, new Consumer(consumerAdapter, m_onProcessException));
+            }
+            // Remove old adapters
+            foreach (var consumerAdapter in consumerAdapters.OldAdapter)
+            {
+                consumerLookup.Remove(consumerAdapter);
+            }
+
+            m_globalCache = new GlobalCache(consumerLookup, m_globalCache.Version + 1);
         }
     }
 }
