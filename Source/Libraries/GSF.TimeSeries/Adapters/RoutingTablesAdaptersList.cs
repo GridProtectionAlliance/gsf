@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System.Collections.Generic;
+using System.Linq;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -48,12 +49,22 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         public readonly List<IAdapter> NewAndExistingAdapters;
 
-        public RoutingTablesAdaptersList()
+        /// <summary>
+        /// Creates a <see cref="RoutingTablesAdaptersList"/>
+        /// </summary>
+        /// <param name="previousAdapterList">A complete list of all the adapters that existed before.</param>
+        /// <param name="currentAdapterList">A complete list of all the adapters that exist now</param>
+        public RoutingTablesAdaptersList(HashSet<IAdapter> previousAdapterList, HashSet<IAdapter> currentAdapterList)
         {
             NewAdapter = new List<IAdapter>();
             ExistingAdapter = new List<IAdapter>();
             OldAdapter = new List<IAdapter>();
             NewAndExistingAdapters = new List<IAdapter>();
+
+            NewAndExistingAdapters.AddRange(currentAdapterList);
+            NewAdapter.AddRange(currentAdapterList.Where(x => !previousAdapterList.Contains(x)));
+            OldAdapter.AddRange(previousAdapterList.Where(x => !currentAdapterList.Contains(x)));
+            ExistingAdapter.AddRange(currentAdapterList.Where(x => previousAdapterList.Contains(x)));
         }
     }
 }

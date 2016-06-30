@@ -649,7 +649,6 @@ namespace GSF.TimeSeries.Transport
         private Timer m_commandChannelRestartTimer;
         private Timer m_cipherKeyRotationTimer;
         private RoutingTables m_routingTables;
-        private readonly EventHandler<EventArgs<ICollection<IMeasurement>>> m_routedMeasurementsHandler;
         private string m_metadataTables;
         private string m_cacheMeasurementKeys;
         private SecurityMode m_securityMode;
@@ -720,7 +719,6 @@ namespace GSF.TimeSeries.Transport
             m_routingTables.ActionAdapters = this;
             m_routingTables.StatusMessage += m_routingTables_StatusMessage;
             m_routingTables.ProcessException += m_routingTables_ProcessException;
-            m_routedMeasurementsHandler = m_routingTables.GetRoutedMeasurementsHandler();
 
             // Setup a timer for restarting the command channel if it fails
             m_commandChannelRestartTimer = new Timer(2000.0D);
@@ -1491,7 +1489,7 @@ namespace GSF.TimeSeries.Transport
             int measurementCount;
 
             IList<IMeasurement> measurementList = measurements as IList<IMeasurement> ?? measurements.ToList();
-            m_routedMeasurementsHandler(this, new EventArgs<ICollection<IMeasurement>>(measurementList));
+            m_routingTables.InjectMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurementList));
 
             measurementCount = measurementList.Count;
             m_lifetimeMeasurements += measurementCount;

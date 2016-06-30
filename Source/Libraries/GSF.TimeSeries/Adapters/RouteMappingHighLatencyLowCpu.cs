@@ -35,7 +35,7 @@ namespace GSF.TimeSeries.Adapters
     /// <summary>
     /// Represents an alternative routing table that has intentional delays to lower overall CPU utilization.
     /// </summary>
-    public class RoutingMappingHighLatencyLowCpu : IRouteMappingTables
+    public class RouteMappingHighLatencyLowCpu : IRouteMappingTables
     {
         private class ArrayEnumerator<T> : IEnumerator<T>
         {
@@ -246,25 +246,25 @@ namespace GSF.TimeSeries.Adapters
             }
         }
 
-
         private class LocalCache
         {
             public bool Enabled;
-            private RoutingMappingHighLatencyLowCpu m_route;
-            public LocalCache(RoutingMappingHighLatencyLowCpu route, IAdapter adapter)
+            private RouteMappingHighLatencyLowCpu m_route;
+            public LocalCache(RouteMappingHighLatencyLowCpu route, IAdapter adapter)
             {
                 Enabled = true;
                 m_route = route;
 
-                var inputAdapter = adapter as IInputAdapter;
+                IInputAdapter inputAdapter = adapter as IInputAdapter;
+                IActionAdapter actionAdapter = adapter as IActionAdapter;
 
                 if ((object)inputAdapter != null)
                     inputAdapter.NewMeasurements += Route;
-                else
-                    ((IActionAdapter)adapter).NewMeasurements += Route;
+                else if ((object)actionAdapter != null)
+                    actionAdapter.NewMeasurements += Route;
             }
 
-            private void Route(object sender, EventArgs<ICollection<IMeasurement>> measurements)
+            public void Route(object sender, EventArgs<ICollection<IMeasurement>> measurements)
             {
                 if (!Enabled || measurements?.Argument == null)
                     return;
@@ -322,8 +322,7 @@ namespace GSF.TimeSeries.Adapters
                 }
             }
         }
-
-
+        
         // Fields
 
         private Dictionary<IAdapter, LocalCache> m_producerLookup;
@@ -340,8 +339,13 @@ namespace GSF.TimeSeries.Adapters
         private GlobalCache m_globalCache;
         private Action<string> m_onStatusMessage;
         private Action<Exception> m_onProcessException;
+        private LocalCache m_injectMeasurementsLocalCache;
 
-        public RoutingMappingHighLatencyLowCpu(int routeLatency, Action<string> onStatusMessage, Action<Exception> onProcessException)
+        /// <summary>
+        /// Creates a <see cref="RouteMappingHighLatencyLowCpu"/>
+        /// </summary>
+        /// <param name="routeLatency">The desired wait latency. Must be between 1 and 500ms inclusive</param>
+        public RouteMappingHighLatencyLowCpu(int routeLatency)
         {
             if (routeLatency < 1 || routeLatency > 500)
                 throw new ArgumentOutOfRangeException("routeLatency", "Must be between 1 and 500ms");
@@ -354,14 +358,39 @@ namespace GSF.TimeSeries.Adapters
             m_task.Disposing += m_task_Disposing;
             m_task.Start(m_routeLatency);
 
-            m_onStatusMessage = onStatusMessage;
-            m_onProcessException = onProcessException;
+            m_onStatusMessage = x => { };
+            m_onProcessException = x => { };
             m_producerLookup = new Dictionary<IAdapter, LocalCache>();
             m_globalCache = new GlobalCache(new Dictionary<IAdapter, Consumer>(), 0);
+            m_injectMeasurementsLocalCache = new LocalCache(this, null);
         }
 
+        /// <summary>
+        /// Gets the number of routes in this routing table.
+        /// </summary>
         public int RouteCount => m_globalCache.GlobalSignalLookup.Count;
 
+        /// <summary>
+        /// Assigns the status messaging callbacks.
+        /// </summary>
+        /// <param name="onStatusMessage">Raise status messages on this callback</param>
+        /// <param name="onProcessException">Raise exceptions on this callback</param>
+        public void Initialize(Action<string> onStatusMessage, Action<Exception> onProcessException)
+        {
+            if (onStatusMessage == null)
+                throw new ArgumentNullException(nameof(onStatusMessage));
+            if (onProcessException == null)
+                throw new ArgumentNullException(nameof(onProcessException));
+
+            m_onStatusMessage = onStatusMessage;
+            m_onProcessException = onProcessException;
+        }
+
+        /// <summary>
+        /// Patches the existing routing table with the supplied adapters.
+        /// </summary>
+        /// <param name="producerAdapters">all of the producers</param>
+        /// <param name="consumerAdapters">all of the consumers</param>
         public void PatchRoutingTable(RoutingTablesAdaptersList producerAdapters, RoutingTablesAdaptersList consumerAdapters)
         {
             if (producerAdapters == null)
@@ -473,6 +502,17 @@ namespace GSF.TimeSeries.Adapters
             {
                 m_list.Enqueue(measurements);
             }
+        }
+
+        /// <summary>
+        /// This method will directly inject measurements into the routing table and use a shared local input adapter. For
+        /// contention reasons, it is not recommended this be its default use case, but it is necessary at times.
+        /// </summary>
+        /// <param name="sender">the sender object</param>
+        /// <param name="measurements">the event arguments</param>
+        public void InjectMeasurements(object sender, EventArgs<ICollection<IMeasurement>> measurements)
+        {
+            m_injectMeasurementsLocalCache.Route(sender, measurements);
         }
 
 

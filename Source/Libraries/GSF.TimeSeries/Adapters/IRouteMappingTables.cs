@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.Remoting.Channels;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -37,10 +38,27 @@ namespace GSF.TimeSeries.Adapters
         int RouteCount { get; }
 
         /// <summary>
+        /// Assigns the status messaging callbacks.
+        /// </summary>
+        /// <param name="onStatusMessage">Raise status messages on this callback</param>
+        /// <param name="onProcessException">Raise exceptions on this callback</param>
+        void Initialize(Action<string> onStatusMessage, Action<Exception> onProcessException);
+
+
+        /// <summary>
         /// Patches the existing routing table with the supplied adapters.
         /// </summary>
         /// <param name="producerAdapters">all of the producers</param>
         /// <param name="consumerAdapters">all of the consumers</param>
         void PatchRoutingTable(RoutingTablesAdaptersList producerAdapters, RoutingTablesAdaptersList consumerAdapters);
+
+        /// <summary>
+        /// This method will directly inject measurements into the routing table and use a shared local input adapter. For
+        /// contention reasons, it is not recommended this be its default use case, but it is necessary at times.
+        /// </summary>
+        /// <param name="sender">the sender object</param>
+        /// <param name="measurements">the event arguments</param>
+        void InjectMeasurements(object sender, EventArgs<ICollection<IMeasurement>> measurements);
+
     }
 }

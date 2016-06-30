@@ -30,9 +30,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using GSF.Annotations;
-using GSF.Collections;
 using GSF.Threading;
 using GSF.Units;
 
@@ -46,142 +44,6 @@ namespace GSF.TimeSeries.Adapters
         #region [ Members ]
 
         // Nested Types
-
-        private class GlobalCache
-        {
-            public HashSet<IAdapter> ProducerAdapters;
-            public Dictionary<Guid, List<Consumer>> GlobalSignalLookup;
-            public Dictionary<IAdapter, Consumer> GlobalDestinationLookup;
-            public List<Consumer> BroadcastConsumers;
-            public int Version;
-        }
-
-        private class LocalCache
-        {
-            private Dictionary<Guid, List<Producer>> m_localSignalLookup;
-            private Dictionary<Consumer, Producer> m_localDestinationLookup;
-            private RoutingTables m_routingTables;
-            private object m_localCacheLock;
-            private int m_version;
-
-            public LocalCache(RoutingTables routingTables)
-            {
-                m_localCacheLock = new object();
-                m_localSignalLookup = new Dictionary<Guid, List<Producer>>();
-                m_localDestinationLookup = new Dictionary<Consumer, Producer>();
-                m_routingTables = routingTables;
-            }
-
-            public void Route(IEnumerable<IMeasurement> measurements)
-            {
-                GlobalCache globalCache;
-                List<Producer> producers;
-                List<Consumer> consumers;
-
-                // Get the global cache from the routing tables
-                globalCache = Interlocked.CompareExchange(ref m_routingTables.m_globalCache, null, null);
-
-                // Return if routes are still being calculated
-                if ((object)globalCache == null)
-                    return;
-
-                lock (m_localCacheLock)
-                {
-                    // Check the version of the local cache against that of the global cache.
-                    // We need to clear the local cache if the versions don't match because
-                    // that means routes have changed
-                    if (m_version != globalCache.Version)
-                    {
-                        // Dump the signal lookup
-                        m_localSignalLookup.Clear();
-
-                        // Best if we hang onto producers for adapters that still have routes
-                        foreach (Consumer consumer in m_localDestinationLookup.Keys.Where(consumer => !globalCache.GlobalDestinationLookup.ContainsKey(consumer.Adapter)).ToList())
-                        {
-                            m_localDestinationLookup[consumer].QueueProducer.Dispose();
-                            m_localDestinationLookup.Remove(consumer);
-                        }
-
-                        // Update the local cache version
-                        m_version = globalCache.Version;
-                    }
-
-                    foreach (IMeasurement measurement in measurements)
-                    {
-                        // Attempt to look up the signal in the local cache
-                        if (!m_localSignalLookup.TryGetValue(measurement.ID, out producers))
-                        {
-                            // Not in the local cache - check the global cache and fall back on broadcast consumers
-                            if (!globalCache.GlobalSignalLookup.TryGetValue(measurement.ID, out consumers))
-                                consumers = globalCache.BroadcastConsumers;
-
-                            // Get a producer for each of the consumers
-                            producers = consumers
-                                .Select(consumer => m_localDestinationLookup.GetOrAdd(consumer, c => new Producer(c.Manager)))
-                                .ToList();
-
-                            // Add this signal to the local cache
-                            m_localSignalLookup.Add(measurement.ID, producers);
-                        }
-
-                        // Add this measurement to the producers' list
-                        foreach (Producer producer in producers)
-                            producer.Measurements.Add(measurement);
-                    }
-
-                    // Produce measurements to consumers in the local destination
-                    // cache which have measurements to be received
-                    foreach (Producer producer in m_localDestinationLookup.Values)
-                    {
-                        if (producer.Measurements.Count > 0)
-                        {
-                            producer.QueueProducer.Produce(producer.Measurements);
-                            producer.Measurements.Clear();
-                        }
-                    }
-                }
-            }
-        }
-
-        private class Producer
-        {
-            public readonly List<IMeasurement> Measurements;
-            public readonly DoubleBufferedQueueProducer<IMeasurement> QueueProducer;
-
-            public Producer(DoubleBufferedQueueManager<IMeasurement> manager)
-            {
-                Measurements = new List<IMeasurement>();
-                QueueProducer = manager.GetProducer();
-            }
-        }
-
-        private class Consumer
-        {
-            public readonly IAdapter Adapter;
-            public readonly DoubleBufferedQueueManager<IMeasurement> Manager;
-
-            public Consumer(IAdapter adapter, Action<Exception> exceptionAction)
-            {
-                IActionAdapter actionAdapter = adapter as IActionAdapter;
-                IOutputAdapter outputAdapter;
-
-                Adapter = adapter;
-
-                if ((object)actionAdapter != null)
-                {
-                    Manager = new DoubleBufferedQueueManager<IMeasurement>(measurements => actionAdapter.QueueMeasurementsForProcessing(new List<IMeasurement>(measurements)), exceptionAction);
-                }
-                else
-                {
-                    outputAdapter = adapter as IOutputAdapter;
-
-                    if ((object)outputAdapter != null)
-                        Manager = new DoubleBufferedQueueManager<IMeasurement>(measurements => outputAdapter.QueueMeasurementsForProcessing(new List<IMeasurement>(measurements)), exceptionAction);
-                    else
-                        Manager = new DoubleBufferedQueueManager<IMeasurement>(() => { });
-                }
-            }
-        }
 
         // Events
 
@@ -206,9 +68,13 @@ namespace GSF.TimeSeries.Adapters
         private ActionAdapterCollection m_actionAdapters;
         private OutputAdapterCollection m_outputAdapters;
 
-        private GlobalCache m_globalCache;
         private LongSynchronizedOperation m_calculateRoutingTablesOperation;
         private volatile MeasurementKey[] m_inputMeasurementKeysRestriction;
+        private readonly IRouteMappingTables m_routeMappingTables;
+
+        private HashSet<IAdapter> m_prevCalculatedConsumers;
+        private HashSet<IAdapter> m_prevCalculatedProducers;
+
 
         private bool m_disposed;
 
@@ -219,8 +85,13 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Creates a new instance of the <see cref="RoutingTables"/> class.
         /// </summary>
-        public RoutingTables()
+        public RoutingTables(IRouteMappingTables mappingTable = null)
         {
+            m_prevCalculatedConsumers = new HashSet<IAdapter>();
+            m_prevCalculatedProducers = new HashSet<IAdapter>();
+            m_routeMappingTables = mappingTable ?? new RouteMappingDoubleBufferQueue();
+            m_routeMappingTables.Initialize(OnStatusMessage, OnProcessException);
+
             m_calculateRoutingTablesOperation = new LongSynchronizedOperation(CalculateRoutingTables)
             {
                 IsBackground = true
@@ -347,8 +218,7 @@ namespace GSF.TimeSeries.Adapters
             long startTime = DateTime.UtcNow.Ticks;
             Time elapsedTime;
 
-            int destinationCount = 0;
-            int routeCount;
+
 
             IInputAdapter[] inputAdapterCollection = null;
             IActionAdapter[] actionAdapterCollection = null;
@@ -393,91 +263,32 @@ namespace GSF.TimeSeries.Adapters
 
             try
             {
-                GlobalCache globalCache;
-
-                Dictionary<Guid, List<Consumer>> globalSignalLookup;
-                Dictionary<IAdapter, Consumer> globalDestinationLookup;
-                List<Consumer> broadcastConsumers;
-
+                HashSet<IAdapter> consumerAdapters;
                 HashSet<IAdapter> producerAdapters;
-                IInputAdapter inputAdapter;
-
-                IEnumerable<IAdapter> consumerAdapters;
-                Consumer consumer;
-
-                // Get the global cache from the last routing tables calculation
-                globalCache = Interlocked.CompareExchange(ref m_globalCache, null, null);
-
-                // Create collections to be entered into the new global cache
-                globalSignalLookup = new Dictionary<Guid, List<Consumer>>();
-                globalDestinationLookup = new Dictionary<IAdapter, Consumer>();
-                broadcastConsumers = new List<Consumer>();
 
                 // Get a full list of all producer (input/action) adapters
                 producerAdapters = new HashSet<IAdapter>((inputAdapterCollection ?? Enumerable.Empty<IAdapter>())
                     .Concat(actionAdapterCollection ?? Enumerable.Empty<IAdapter>()));
 
-                // Attach to NewMeasurements event of all producer adapters
-                foreach (IAdapter producerAdapter in producerAdapters)
-                {
-                    if ((object)globalCache == null || !globalCache.ProducerAdapters.Contains(producerAdapter))
-                    {
-                        inputAdapter = producerAdapter as IInputAdapter;
-
-                        if ((object)inputAdapter != null)
-                            inputAdapter.NewMeasurements += GetRoutedMeasurementsHandler();
-                        else
-                            ((IActionAdapter)producerAdapter).NewMeasurements += GetRoutedMeasurementsHandler();
-                    }
-                }
-
                 // Get a full list of all consumer (action/output) adapters
-                consumerAdapters = (actionAdapterCollection ?? Enumerable.Empty<IAdapter>())
-                    .Concat(outputAdapterCollection ?? Enumerable.Empty<IAdapter>());
+                consumerAdapters = new HashSet<IAdapter>((actionAdapterCollection ?? Enumerable.Empty<IAdapter>())
+                    .Concat(outputAdapterCollection ?? Enumerable.Empty<IAdapter>()));
 
-                // Generate routes for all signals received by each consumer adapter
-                foreach (IAdapter consumerAdapter in consumerAdapters)
-                {
-                    // Search the old global cache for an existing consumer for this adapter
-                    if ((object)globalCache == null || !globalCache.GlobalDestinationLookup.TryGetValue(consumerAdapter, out consumer))
-                        consumer = new Consumer(consumerAdapter, OnProcessException);
 
-                    if ((object)consumerAdapter.InputMeasurementKeys != null)
-                    {
-                        // Create routes for each of the consumer's input signals
-                        foreach (Guid signalID in consumerAdapter.InputMeasurementKeys.Select(key => key.SignalID))
-                            globalSignalLookup.GetOrAdd(signalID, id => new List<Consumer>()).Add(consumer);
-                    }
-                    else
-                    {
-                        // Add this consumer to the broadcast routes to begin receiving all measurements
-                        broadcastConsumers.Add(consumer);
-                    }
+                var producerChanges = new RoutingTablesAdaptersList(m_prevCalculatedProducers, producerAdapters);
+                var consumerChanges = new RoutingTablesAdaptersList(m_prevCalculatedConsumers, consumerAdapters);
 
-                    // Add this adapter to the global destinations lookup
-                    globalDestinationLookup.Add(consumerAdapter, consumer);
-                    destinationCount++;
-                }
-
-                // Broadcast consumers receive all measurements, so add them to every signal route
-                foreach (List<Consumer> consumerList in globalSignalLookup.Values)
-                    consumerList.AddRange(broadcastConsumers);
-
-                // Swap the new global cache with the old one and increment the version number
-                Interlocked.Exchange(ref m_globalCache, new GlobalCache()
-                {
-                    ProducerAdapters = producerAdapters,
-                    GlobalSignalLookup = globalSignalLookup,
-                    GlobalDestinationLookup = globalDestinationLookup,
-                    BroadcastConsumers = broadcastConsumers,
-                    Version = (object)globalCache != null ? globalCache.Version + 1 : 0
-                });
+                m_routeMappingTables.PatchRoutingTable(producerChanges, consumerChanges);
+                m_prevCalculatedProducers = producerAdapters;
+                m_prevCalculatedConsumers = consumerAdapters;
 
                 // Start or stop any connect on demand adapters
                 HandleConnectOnDemandAdapters(new HashSet<MeasurementKey>(m_inputMeasurementKeysRestriction ?? Enumerable.Empty<MeasurementKey>()), inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
 
                 elapsedTime = Ticks.ToSeconds(DateTime.UtcNow.Ticks - startTime);
-                routeCount = globalSignalLookup.Count;
+
+                int routeCount = m_routeMappingTables.RouteCount;
+                int destinationCount = consumerAdapters.Count;
 
                 OnStatusMessage("Calculated {0} route{1} for {2} destination{3} in {4}.", routeCount, (routeCount == 1) ? "" : "s", destinationCount, (destinationCount == 1) ? "" : "s", elapsedTime.ToString(2));
             }
@@ -493,13 +304,14 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets a handler for measurements that routes measurements to the appropriate consumers.
+        /// This method will directly inject measurements into the routing table and use a shared local input adapter. For
+        /// contention reasons, it is not recommended this be its default use case, but it is necessary at times.
         /// </summary>
-        /// <returns>The measurement handler used for routing.</returns>
-        public virtual EventHandler<EventArgs<ICollection<IMeasurement>>> GetRoutedMeasurementsHandler()
+        /// <param name="sender">the sender object</param>
+        /// <param name="measurements">the event arguments</param>
+        public void InjectMeasurements(object sender, EventArgs<ICollection<IMeasurement>> measurements)
         {
-            LocalCache localCache = new LocalCache(this);
-            return (sender, args) => localCache.Route(args.Argument);
+            m_routeMappingTables.InjectMeasurements(sender, measurements);
         }
 
         /// <summary>

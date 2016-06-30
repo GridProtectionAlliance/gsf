@@ -97,15 +97,15 @@ namespace GSF.TimeSeries.Adapters
                 m_routingTables = routingTables;
 
                 IInputAdapter inputAdapter = producerAdapter as IInputAdapter;
+                IActionAdapter actionAdapter = producerAdapter as IActionAdapter;
 
                 if ((object)inputAdapter != null)
                     inputAdapter.NewMeasurements += Route;
-                else
-                    ((IActionAdapter)producerAdapter).NewMeasurements += Route;
-
+                else if ((object)actionAdapter != null)
+                    actionAdapter.NewMeasurements += Route;
             }
 
-            private void Route(object sender, EventArgs<ICollection<IMeasurement>> e)
+            public void Route(object sender, EventArgs<ICollection<IMeasurement>> e)
             {
                 ICollection<IMeasurement> measurements = e?.Argument;
 
@@ -222,15 +222,27 @@ namespace GSF.TimeSeries.Adapters
         }
 
         private GlobalCache m_globalCache;
-        private readonly Action<string> m_onStatusMessage;
-        private readonly Action<Exception> m_onProcessException;
+        private Action<string> m_onStatusMessage;
+        private Action<Exception> m_onProcessException;
+        private LocalCache m_injectMeasurementsLocalCache;
 
         /// <summary>
         /// Instances a new <see cref="RouteMappingDoubleBufferQueue"/>.
         /// </summary>
+        public RouteMappingDoubleBufferQueue()
+        {
+            m_onStatusMessage = x => { };
+            m_onProcessException = x => { };
+            m_globalCache = new GlobalCache(new Dictionary<IAdapter, Consumer>(), 0);
+            m_injectMeasurementsLocalCache = new LocalCache(this, null);
+        }
+
+        /// <summary>
+        /// Assigns the status messaging callbacks.
+        /// </summary>
         /// <param name="onStatusMessage">Raise status messages on this callback</param>
         /// <param name="onProcessException">Raise exceptions on this callback</param>
-        public RouteMappingDoubleBufferQueue(Action<string> onStatusMessage, Action<Exception> onProcessException)
+        public void Initialize(Action<string> onStatusMessage, Action<Exception> onProcessException)
         {
             if (onStatusMessage == null)
                 throw new ArgumentNullException(nameof(onStatusMessage));
@@ -239,7 +251,6 @@ namespace GSF.TimeSeries.Adapters
 
             m_onStatusMessage = onStatusMessage;
             m_onProcessException = onProcessException;
-            m_globalCache = new GlobalCache(new Dictionary<IAdapter, Consumer>(), 0);
         }
 
         /// <summary>
@@ -279,6 +290,11 @@ namespace GSF.TimeSeries.Adapters
             }
 
             m_globalCache = new GlobalCache(consumerLookup, m_globalCache.Version + 1);
+        }
+
+        public void InjectMeasurements(object sender, EventArgs<ICollection<IMeasurement>> measurements)
+        {
+            m_injectMeasurementsLocalCache.Route(sender, measurements);
         }
     }
 }

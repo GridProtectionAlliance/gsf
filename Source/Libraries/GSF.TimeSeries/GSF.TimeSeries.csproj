@@ -119,7 +119,7 @@
     <Compile Include="Adapters\IRouteMappingTables.cs" />
     <Compile Include="Adapters\RouteMappingDoubleBufferQueue.cs" />
     <Compile Include="Adapters\RoutingTablesAdaptersList.cs" />
-    <Compile Include="Adapters\RoutingMappingHighLatencyLowCpu.cs" />
+    <Compile Include="Adapters\RouteMappingHighLatencyLowCpu.cs" />
     <Compile Include="Adapters\RoutingTables.cs" />
     <Compile Include="Alarm.cs" />
     <Compile Include="ConcentratorBase.cs" />
