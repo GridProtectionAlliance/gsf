@@ -283,15 +283,22 @@ namespace GSF.TimeSeries.Adapters
             {
                 consumerLookup.Add(consumerAdapter, new Consumer(consumerAdapter, m_onProcessException));
             }
+
             // Remove old adapters
             foreach (var consumerAdapter in consumerAdapters.OldAdapter)
             {
                 consumerLookup.Remove(consumerAdapter);
             }
 
-            m_globalCache = new GlobalCache(consumerLookup, m_globalCache.Version + 1);
+            Interlocked.Exchange(ref m_globalCache, new GlobalCache(consumerLookup, m_globalCache.Version + 1));
         }
 
+        /// <summary>
+        /// This method will directly inject measurements into the routing table and use a shared local input adapter. For
+        /// contention reasons, it is not recommended this be its default use case, but it is necessary at times.
+        /// </summary>
+        /// <param name="sender">the sender object</param>
+        /// <param name="measurements">the event arguments</param>
         public void InjectMeasurements(object sender, EventArgs<ICollection<IMeasurement>> measurements)
         {
             m_injectMeasurementsLocalCache.Route(sender, measurements);

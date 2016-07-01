@@ -218,8 +218,6 @@ namespace GSF.TimeSeries.Adapters
             long startTime = DateTime.UtcNow.Ticks;
             Time elapsedTime;
 
-
-
             IInputAdapter[] inputAdapterCollection = null;
             IActionAdapter[] actionAdapterCollection = null;
             IOutputAdapter[] outputAdapterCollection = null;
@@ -273,7 +271,6 @@ namespace GSF.TimeSeries.Adapters
                 // Get a full list of all consumer (action/output) adapters
                 consumerAdapters = new HashSet<IAdapter>((actionAdapterCollection ?? Enumerable.Empty<IAdapter>())
                     .Concat(outputAdapterCollection ?? Enumerable.Empty<IAdapter>()));
-
 
                 var producerChanges = new RoutingTablesAdaptersList(m_prevCalculatedProducers, producerAdapters);
                 var consumerChanges = new RoutingTablesAdaptersList(m_prevCalculatedConsumers, consumerAdapters);
