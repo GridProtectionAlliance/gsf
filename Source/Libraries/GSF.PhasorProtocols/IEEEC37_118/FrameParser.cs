@@ -467,6 +467,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                         derivedCell.IDLabel = idLabel.TruncateLeft(derivedCell.IDLabelLength);
 
                     derivedCell.PhasorCoordinateFormat = sourceCell.PhasorCoordinateFormat;
+                    derivedCell.PhasorAngleFormat = sourceCell.PhasorAngleFormat;
                     derivedCell.PhasorDataFormat = sourceCell.PhasorDataFormat;
                     derivedCell.FrequencyDataFormat = sourceCell.FrequencyDataFormat;
                     derivedCell.AnalogDataFormat = sourceCell.AnalogDataFormat;
