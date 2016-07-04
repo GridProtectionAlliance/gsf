@@ -466,11 +466,14 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                     if (!string.IsNullOrWhiteSpace(idLabel))
                         derivedCell.IDLabel = idLabel.TruncateLeft(derivedCell.IDLabelLength);
 
+                    derivedCell.PhasorCoordinateFormat = sourceCell.PhasorCoordinateFormat;
+                    derivedCell.PhasorDataFormat = sourceCell.PhasorDataFormat;
+                    derivedCell.FrequencyDataFormat = sourceCell.FrequencyDataFormat;
+                    derivedCell.AnalogDataFormat = sourceCell.AnalogDataFormat;
+
                     // Create equivalent derived phasor definitions
                     foreach (IPhasorDefinition sourcePhasor in sourceCell.PhasorDefinitions)
-                    {
                         derivedCell.PhasorDefinitions.Add(new PhasorDefinition(derivedCell, sourcePhasor.Label, sourcePhasor.ScalingValue, sourcePhasor.Offset, sourcePhasor.PhasorType, null));
-                    }
 
                     // Create equivalent derived frequency definition
                     sourceFrequency = sourceCell.FrequencyDefinition;
@@ -480,15 +483,11 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
                     // Create equivalent derived analog definitions (assuming analog type = SinglePointOnWave)
                     foreach (IAnalogDefinition sourceAnalog in sourceCell.AnalogDefinitions)
-                    {
                         derivedCell.AnalogDefinitions.Add(new AnalogDefinition(derivedCell, sourceAnalog.Label, sourceAnalog.ScalingValue, sourceAnalog.Offset, sourceAnalog.AnalogType));
-                    }
 
                     // Create equivalent derived digital definitions
                     foreach (IDigitalDefinition sourceDigital in sourceCell.DigitalDefinitions)
-                    {
                         derivedCell.DigitalDefinitions.Add(new DigitalDefinition(derivedCell, sourceDigital.Label, 0, 0));
-                    }
 
                     // Add cell to frame
                     derivedFrame.Cells.Add(derivedCell);
