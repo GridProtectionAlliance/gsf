@@ -214,6 +214,7 @@
     <Compile Include="IO\OutageLogProcessor.cs" />
     <Compile Include="IO\RunTimeLog.cs" />
     <Compile Include="IO\SafeFileWatcher.cs" />
+    <Compile Include="ITrackable.cs" />
     <Compile Include="NativeBinaryValue.cs" />
     <Compile Include="BinaryValueBase.cs" />
     <Compile Include="BitExtensions.cs" />
@@ -376,6 +377,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Range.cs" />
     <Compile Include="Reflection\NamespaceDoc.cs" />
+    <Compile Include="Trackable.cs" />
     <Compile Include="ReusableObjectPool.cs" />
     <Compile Include="Scheduling\NamespaceDoc.cs" />
     <Compile Include="Searching\AsyncSearcher.cs" />
