@@ -533,7 +533,15 @@ namespace GSF.IO
                         filePath = Path.Combine(HostingEnvironment.ApplicationPhysicalPath, filePath);
                         break;
                     default:
-                        filePath = Path.Combine(GetDirectoryName(AssemblyInfo.EntryAssembly.Location), filePath);
+                        try
+                        {
+                            filePath = Path.Combine(GetDirectoryName(AssemblyInfo.EntryAssembly.Location), filePath);
+                        }
+                        catch
+                        {
+                            // Fall back on executing assembly path if entry assembly is not available
+                            filePath = Path.Combine(GetDirectoryName(AssemblyInfo.ExecutingAssembly.Location), filePath);
+                        }
                         break;
                 }
             }
