@@ -302,6 +302,8 @@ namespace GSF.PQDIF.Logical
 
             for (int i = 0; i < values.Count; i++)
                 seriesValuesElement.Set(i, values[i]);
+
+            SeriesValues = seriesValuesElement;
         }
 
         /// <summary>
@@ -325,6 +327,8 @@ namespace GSF.PQDIF.Logical
             seriesValuesElement.Set(0, start);
             seriesValuesElement.Set(1, count);
             seriesValuesElement.Set(2, increment);
+
+            SeriesValues = seriesValuesElement;
         }
 
         /// <summary>
@@ -401,13 +405,16 @@ namespace GSF.PQDIF.Logical
                     values.Add(valuesVector.Get(i));
             }
 
-            for (int i = 0; i < values.Count; i++)
+            if (valuesVector.TypeOfValue != PhysicalType.Timestamp)
             {
-                value = values[i];
-                values[i] = offset + (value * scale);
-            }
+                for (int i = 0; i < values.Count; i++)
+                {
+                    value = values[i];
+                    values[i] = offset + (value * scale);
+                }
 
-            ApplyTransducerRatio(values);
+                ApplyTransducerRatio(values);
+            }
 
             return values;
         }
