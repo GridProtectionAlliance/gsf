@@ -25,6 +25,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -184,9 +185,10 @@ namespace GSF.Web.Hosting
         public async Task<HttpResponseMessage> RenderResponse(HttpRequestMessage request, string pageName, object model = null, Type modelType = null, AdoDataConnection database = null, dynamic postData = null)
         {
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
-
             string content, fileExtension = FilePath.GetExtension(pageName).ToLowerInvariant();
             Tuple<Type, Type> pagedViewModelTypes;
+
+            response.RequestMessage = request;
 
             switch (fileExtension)
             {
@@ -199,6 +201,9 @@ namespace GSF.Web.Hosting
                     m_pagedViewModelTypes.TryGetValue(pageName, out pagedViewModelTypes);
                     content = await new RazorView(m_razorEngineVB, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException).ExecuteAsync(request, postData);
                     response.Content = new StringContent(content, Encoding.UTF8, "text/html");
+                    break;
+                case ".ashx":
+                    await ProcessHTTPHandler(pageName, request, response);
                     break;
                 default:
                     string fileName = FilePath.GetAbsolutePath($"{m_webRootPath}{pageName.Replace('/', Path.DirectorySeparatorChar)}");
@@ -283,6 +288,51 @@ namespace GSF.Web.Hosting
 
             response.Headers.ETag = new EntityTagHeaderValue($"\"{responseHash}\"");
             return true;
+        }
+
+        private Task ProcessHTTPHandler(string pageName, HttpRequestMessage request, HttpResponseMessage response)
+        {
+            return Task.Run(() =>
+            {
+                string fileName = FilePath.GetAbsolutePath($"{m_webRootPath}{pageName.Replace('/', Path.DirectorySeparatorChar)}");
+                string handlerHeader;
+                string className;
+
+                if (!File.Exists(fileName))
+                {
+                    response.StatusCode = HttpStatusCode.NotFound;
+                    return;
+                }
+
+                // Parse class name from ASHX handler header parameters
+                using (StreamReader reader = File.OpenText(fileName))
+                    handlerHeader = reader.ReadToEnd().RemoveCrLfs().Trim();
+
+                // Clean up header formatting to make parsing easier
+                handlerHeader = handlerHeader.RemoveDuplicateWhiteSpace().Replace(" =", "=").Replace("= ", "=");
+
+                string[] tokens = handlerHeader.Split(' ');
+
+                if (!tokens.Any(token => token.Equals("WebHandler", StringComparison.OrdinalIgnoreCase)))
+                    throw new InvalidOperationException($"Expected \"WebHandler\" file type not found in ASHX file header: {handlerHeader}");
+
+                Dictionary<string, string> parameters = handlerHeader.ReplaceCaseInsensitive("WebHandler", "").Replace("<%@", "").Replace("%>", "").Trim().ParseKeyValuePairs(' ');
+
+                if (!parameters.TryGetValue("Class", out className))
+                    throw new InvalidOperationException($"Missing \"Class\" parameter in ASHX file header: {handlerHeader}");
+
+                // Remove quotes from class name
+                className = className.Substring(1, className.Length - 2).Trim();
+
+                // ReSharper disable once AssignNullToNotNullAttribute
+                IHostedHttpHandler handler = Activator.CreateInstance(Type.GetType(className)) as IHostedHttpHandler;
+
+                if (handler == null)
+                    throw new InvalidOperationException($"Failed to create hosted HTTP handler \"{className}\" - make sure class implements IHostedHttpHandler interface.");
+
+                // Allow handler to process request
+                handler.ProcessRequest(request, response);
+            });
         }
 
         private void OnExecutionException(Exception exception)

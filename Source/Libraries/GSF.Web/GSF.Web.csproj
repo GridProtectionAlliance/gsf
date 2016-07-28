@@ -215,6 +215,7 @@
     <Compile Include="Hosting\EmbeddedResourceFileAttribute.cs" />
     <Compile Include="Hosting\EmbeddedResourcePathProvider.cs" />
     <Compile Include="Hosting\EmbeddedResourceVirtualFile.cs" />
+    <Compile Include="Hosting\IHostedHttpHandler.cs" />
     <Compile Include="Hosting\NamespaceDoc.cs" />
     <Compile Include="Hosting\VirtualFileBaseCollection.cs" />
     <Compile Include="Embedded\ISecurityService.cs" />

@@ -23,8 +23,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using System.Web;
 using GSF.Collections;
 
@@ -35,6 +39,102 @@ namespace GSF.Web
     /// </summary>
     public static class WebExtensions
     {
+        // Nested Types
+
+        // Defines a multi-part stream provider that will parse out files and form data
+        private class FileStreamStreamProvider : MultipartStreamProvider
+        {
+            #region [ Members ]
+
+            // Fields
+            private readonly NameValueCollection m_formData;
+            private readonly List<HttpContent> m_fileData;
+            private readonly List<bool> m_isFormData;
+
+            #endregion
+
+            #region [ Constructors ]
+            public FileStreamStreamProvider(NameValueCollection formData)
+            {
+                m_formData = formData;
+                m_fileData = new List<HttpContent>();
+                m_isFormData = new List<bool>();
+            }
+
+            #endregion
+
+            #region [ Properties ]
+
+            // Gets any form data passed as part of the multipart form data
+            public NameValueCollection FormData => m_formData;
+
+            /// Gets list of uploaded files
+            public List<HttpContent> FileData => m_fileData;
+
+            #endregion
+
+            #region [ Methods ]
+
+            // Gets the stream where to write the body part to. This method is called when a MIME multipart body part has been parsed
+            public override Stream GetStream(HttpContent parent, HttpContentHeaders headers)
+            {
+                // For form data, Content-Disposition header is a requirement
+                ContentDispositionHeaderValue contentDisposition = headers.ContentDisposition;
+
+                if (contentDisposition == null)
+                    throw new InvalidOperationException("Expected \"Content-Disposition\" header field not found in MIME multipart body.");
+
+                // Post process this body part as form data if no file name is specified
+                m_isFormData.Add(string.IsNullOrEmpty(contentDisposition.FileName));
+
+                return new MemoryStream();
+            }
+
+            // Executes the post processing operation reading the non-file contents as form data
+            public override async Task ExecutePostProcessingAsync()
+            {
+                for (int i = 0; i < Contents.Count; i++)
+                {
+                    if (m_isFormData[i])
+                    {
+                        // Ignore form data if user did not request it...
+                        if (m_formData == null)
+                            continue;
+
+                        HttpContent formContent = Contents[i];
+                        ContentDispositionHeaderValue contentDisposition = formContent.Headers.ContentDisposition;
+                        string fieldName = UnquoteToken(contentDisposition.Name) ?? "";
+
+                        // Read out any form data
+                        string fieldValue = await formContent.ReadAsStringAsync();
+                        FormData.Add(fieldName, fieldValue);
+                    }
+                    else
+                    {
+                        m_fileData.Add(Contents[i]);
+                    }
+                }
+            }
+
+            #endregion
+
+            #region [ Static ]
+
+            // Static Methods
+            private static string UnquoteToken(string token)
+            {
+                if (string.IsNullOrWhiteSpace(token))
+                    return token;
+
+                if (token.StartsWith("\"", StringComparison.Ordinal) && token.EndsWith("\"", StringComparison.Ordinal) && token.Length > 1)
+                    return token.Substring(1, token.Length - 2);
+
+                return token;
+            }
+
+            #endregion
+        }
+
         /// <summary>
         /// Performs JavaScript encoding on given string.
         /// </summary>
@@ -70,6 +170,31 @@ namespace GSF.Web
         public static Dictionary<string, string> QueryParameters(this HttpRequestMessage request)
         {
             return request.GetQueryNameValuePairs().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        }
+
+        /// <summary>
+        /// Gets a collection of uploaded file data from an <see cref="HttpRequestMessage"/>.
+        /// </summary>
+        /// <param name="request"><see cref="HttpRequestMessage"/> request data that contains uploaded files.</param>
+        /// <param name="formData">Optional form data from <paramref name="request"/> if needed.</param>
+        /// <returns></returns>
+        public static IList<HttpContent> GetFiles(this HttpRequestMessage request, NameValueCollection formData = null)
+        {
+            Task<IList<HttpContent>> task = GetFilesAsync(request, formData);
+            task.Wait();
+            return task.Result;
+        }
+
+        /// <summary>
+        /// Asynchronously gets a collection of uploaded file data from an <see cref="HttpRequestMessage"/>.
+        /// </summary>
+        /// <param name="request"><see cref="HttpRequestMessage"/> request data that contains uploaded files.</param>
+        /// <param name="formData">Optional form data from <paramref name="request"/> if needed.</param>
+        /// <returns></returns>
+        public static async Task<IList<HttpContent>> GetFilesAsync(this HttpRequestMessage request, NameValueCollection formData = null)
+        {
+            FileStreamStreamProvider provider = await request.Content.ReadAsMultipartAsync(new FileStreamStreamProvider(formData));
+            return provider.FileData;
         }
 
         /// <summary>
