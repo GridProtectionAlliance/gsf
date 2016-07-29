@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace GSF.Web.Hosting
 {
@@ -35,6 +36,6 @@ namespace GSF.Web.Hosting
         /// </summary>
         /// <param name="request">HTTP request message.</param>
         /// <param name="response">HTTP response message.</param>
-        void ProcessRequest(HttpRequestMessage request, HttpResponseMessage response);
+        Task ProcessRequest(HttpRequestMessage request, HttpResponseMessage response);
     }
 }

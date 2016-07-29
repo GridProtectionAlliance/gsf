@@ -291,50 +291,47 @@ namespace GSF.Web.Hosting
             return true;
         }
 
-        private Task ProcessHTTPHandler(string pageName, HttpRequestMessage request, HttpResponseMessage response)
+        private async Task ProcessHTTPHandler(string pageName, HttpRequestMessage request, HttpResponseMessage response)
         {
-            return Task.Run(() =>
+            string fileName = FilePath.GetAbsolutePath($"{m_webRootPath}{pageName.Replace('/', Path.DirectorySeparatorChar)}");
+            string handlerHeader;
+            string className;
+
+            if (!File.Exists(fileName))
             {
-                string fileName = FilePath.GetAbsolutePath($"{m_webRootPath}{pageName.Replace('/', Path.DirectorySeparatorChar)}");
-                string handlerHeader;
-                string className;
+                response.StatusCode = HttpStatusCode.NotFound;
+                return;
+            }
 
-                if (!File.Exists(fileName))
-                {
-                    response.StatusCode = HttpStatusCode.NotFound;
-                    return;
-                }
+            // Parse class name from ASHX handler header parameters
+            using (StreamReader reader = File.OpenText(fileName))
+                handlerHeader = reader.ReadToEnd().RemoveCrLfs().Trim();
 
-                // Parse class name from ASHX handler header parameters
-                using (StreamReader reader = File.OpenText(fileName))
-                    handlerHeader = reader.ReadToEnd().RemoveCrLfs().Trim();
+            // Clean up header formatting to make parsing easier
+            handlerHeader = handlerHeader.RemoveDuplicateWhiteSpace().Replace(" =", "=").Replace("= ", "=");
 
-                // Clean up header formatting to make parsing easier
-                handlerHeader = handlerHeader.RemoveDuplicateWhiteSpace().Replace(" =", "=").Replace("= ", "=");
+            string[] tokens = handlerHeader.Split(' ');
 
-                string[] tokens = handlerHeader.Split(' ');
+            if (!tokens.Any(token => token.Equals("WebHandler", StringComparison.OrdinalIgnoreCase)))
+                throw new InvalidOperationException($"Expected \"WebHandler\" file type not found in ASHX file header: {handlerHeader}");
 
-                if (!tokens.Any(token => token.Equals("WebHandler", StringComparison.OrdinalIgnoreCase)))
-                    throw new InvalidOperationException($"Expected \"WebHandler\" file type not found in ASHX file header: {handlerHeader}");
+            Dictionary<string, string> parameters = handlerHeader.ReplaceCaseInsensitive("WebHandler", "").Replace("<%@", "").Replace("%>", "").Trim().ParseKeyValuePairs(' ');
 
-                Dictionary<string, string> parameters = handlerHeader.ReplaceCaseInsensitive("WebHandler", "").Replace("<%@", "").Replace("%>", "").Trim().ParseKeyValuePairs(' ');
+            if (!parameters.TryGetValue("Class", out className))
+                throw new InvalidOperationException($"Missing \"Class\" parameter in ASHX file header: {handlerHeader}");
 
-                if (!parameters.TryGetValue("Class", out className))
-                    throw new InvalidOperationException($"Missing \"Class\" parameter in ASHX file header: {handlerHeader}");
+            // Remove quotes from class name
+            className = className.Substring(1, className.Length - 2).Trim();
 
-                // Remove quotes from class name
-                className = className.Substring(1, className.Length - 2).Trim();
+            // ReSharper disable once AssignNullToNotNullAttribute
+            Assembly entryAssembly = AssemblyInfo.EntryAssembly.Assembly;
+            IHostedHttpHandler handler = Activator.CreateInstance(entryAssembly.GetType(className)) as IHostedHttpHandler;
 
-                // ReSharper disable once AssignNullToNotNullAttribute
-                Assembly entryAssembly = AssemblyInfo.EntryAssembly.Assembly;
-                IHostedHttpHandler handler = Activator.CreateInstance(entryAssembly.GetType(className)) as IHostedHttpHandler;
+            if (handler == null)
+                throw new InvalidOperationException($"Failed to create hosted HTTP handler \"{className}\" - make sure class implements IHostedHttpHandler interface.");
 
-                if (handler == null)
-                    throw new InvalidOperationException($"Failed to create hosted HTTP handler \"{className}\" - make sure class implements IHostedHttpHandler interface.");
-
-                // Allow handler to process request
-                handler.ProcessRequest(request, response);
-            });
+            // Allow handler to process request
+            await handler.ProcessRequest(request, response);
         }
 
         private void OnExecutionException(Exception exception)
