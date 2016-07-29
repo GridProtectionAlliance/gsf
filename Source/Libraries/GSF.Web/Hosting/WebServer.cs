@@ -309,13 +309,13 @@ namespace GSF.Web.Hosting
 
             // Clean up header formatting to make parsing easier
             handlerHeader = handlerHeader.RemoveDuplicateWhiteSpace().Replace(" =", "=").Replace("= ", "=");
-
+            
             string[] tokens = handlerHeader.Split(' ');
 
             if (!tokens.Any(token => token.Equals("WebHandler", StringComparison.OrdinalIgnoreCase)))
                 throw new InvalidOperationException($"Expected \"WebHandler\" file type not found in ASHX file header: {handlerHeader}");
 
-            Dictionary<string, string> parameters = handlerHeader.ReplaceCaseInsensitive("WebHandler", "").Replace("<%@", "").Replace("%>", "").Trim().ParseKeyValuePairs(' ');
+            Dictionary<string, string> parameters = handlerHeader.ReplaceCaseInsensitive("WebHandler", "").Replace("<%", "").Replace("%>", "").Replace("@", "").Trim().ParseKeyValuePairs(' ');
 
             if (!parameters.TryGetValue("Class", out className))
                 throw new InvalidOperationException($"Missing \"Class\" parameter in ASHX file header: {handlerHeader}");
