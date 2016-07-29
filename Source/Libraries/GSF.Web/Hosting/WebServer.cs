@@ -29,6 +29,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -325,7 +326,8 @@ namespace GSF.Web.Hosting
                 className = className.Substring(1, className.Length - 2).Trim();
 
                 // ReSharper disable once AssignNullToNotNullAttribute
-                IHostedHttpHandler handler = Activator.CreateInstance(Type.GetType(className)) as IHostedHttpHandler;
+                Assembly entryAssembly = AssemblyInfo.EntryAssembly.Assembly;
+                IHostedHttpHandler handler = Activator.CreateInstance(entryAssembly.GetType(className)) as IHostedHttpHandler;
 
                 if (handler == null)
                     throw new InvalidOperationException($"Failed to create hosted HTTP handler \"{className}\" - make sure class implements IHostedHttpHandler interface.");
