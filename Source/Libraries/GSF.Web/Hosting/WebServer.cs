@@ -331,7 +331,7 @@ namespace GSF.Web.Hosting
                 throw new InvalidOperationException($"Failed to create hosted HTTP handler \"{className}\" - make sure class implements IHostedHttpHandler interface.");
 
             // Allow handler to process request
-            await handler.ProcessRequest(request, response);
+            await handler.ProcessRequestAsync(request, response);
         }
 
         private void OnExecutionException(Exception exception)

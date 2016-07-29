@@ -173,19 +173,6 @@ namespace GSF.Web
         }
 
         /// <summary>
-        /// Gets a collection of uploaded file data from an <see cref="HttpRequestMessage"/>.
-        /// </summary>
-        /// <param name="request"><see cref="HttpRequestMessage"/> request data that contains uploaded files.</param>
-        /// <param name="formData">Optional form data from <paramref name="request"/> if needed.</param>
-        /// <returns></returns>
-        public static IList<HttpContent> GetFiles(this HttpRequestMessage request, NameValueCollection formData = null)
-        {
-            Task<IList<HttpContent>> task = GetFilesAsync(request, formData);
-            task.Wait();
-            return task.Result;
-        }
-
-        /// <summary>
         /// Asynchronously gets a collection of uploaded file data from an <see cref="HttpRequestMessage"/>.
         /// </summary>
         /// <param name="request"><see cref="HttpRequestMessage"/> request data that contains uploaded files.</param>
