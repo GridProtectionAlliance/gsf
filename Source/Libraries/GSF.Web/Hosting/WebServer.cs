@@ -176,14 +176,14 @@ namespace GSF.Web.Hosting
         /// <summary>
         /// Renders an HTTP response for a given request.
         /// </summary>
-        /// <param name="request">HTTP request instance.</param>
+        /// <param name="request">HTTP request message.</param>
         /// <param name="pageName">Name of page to render.</param>
+        /// <param name="isPost"><c>true</c>if <paramref name="request"/> is HTTP post; otherwise, <c>false</c>.</param>
         /// <param name="model">Reference to model to use when rendering Razor templates, if any.</param>
         /// <param name="modelType">Type of <paramref name="model"/>, if any.</param>
         /// <param name="database"><see cref="AdoDataConnection"/> to use, if any.</param>
-        /// <param name="postData">Any posted data if request is a POST type.</param>
-        /// <returns></returns>
-        public async Task<HttpResponseMessage> RenderResponse(HttpRequestMessage request, string pageName, object model = null, Type modelType = null, AdoDataConnection database = null, dynamic postData = null)
+        /// <returns>HTTP response for provided request.</returns>
+        public async Task<HttpResponseMessage> RenderResponse(HttpRequestMessage request, string pageName, bool isPost, object model = null, Type modelType = null, AdoDataConnection database = null)
         {
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
             string content, fileExtension = FilePath.GetExtension(pageName).ToLowerInvariant();
@@ -195,12 +195,12 @@ namespace GSF.Web.Hosting
             {
                 case ".cshtml":
                     m_pagedViewModelTypes.TryGetValue(pageName, out pagedViewModelTypes);
-                    content = await new RazorView(m_razorEngineCS, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException).ExecuteAsync(request, postData);
+                    content = await new RazorView(m_razorEngineCS, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException).ExecuteAsync(request, isPost);
                     response.Content = new StringContent(content, Encoding.UTF8, "text/html");
                     break;
                 case ".vbhtml":
                     m_pagedViewModelTypes.TryGetValue(pageName, out pagedViewModelTypes);
-                    content = await new RazorView(m_razorEngineVB, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException).ExecuteAsync(request, postData);
+                    content = await new RazorView(m_razorEngineVB, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException).ExecuteAsync(request, isPost);
                     response.Content = new StringContent(content, Encoding.UTF8, "text/html");
                     break;
                 case ".ashx":

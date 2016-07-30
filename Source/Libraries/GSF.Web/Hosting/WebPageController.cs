@@ -188,19 +188,18 @@ namespace GSF.Web.Hosting
         [Route("{pageName}"), HttpGet]
         public Task<HttpResponseMessage> GetPage(string pageName)
         {
-            return m_webServer.RenderResponse(Request, pageName, Model, ModelType, Database);
+            return m_webServer.RenderResponse(Request, pageName, false, Model, ModelType, Database);
         }
 
         /// <summary>
         /// Common post request handler.
         /// </summary>
         /// <param name="pageName">Page name to render.</param>
-        /// <param name="postData">Post data.</param>
         /// <returns>Rendered page result for given page.</returns>
         [Route("{pageName}"), HttpPost]
-        public Task<HttpResponseMessage> PostPage(string pageName, dynamic postData)
+        public Task<HttpResponseMessage> PostPage(string pageName)
         {
-            return m_webServer.RenderResponse(Request, pageName, Model, ModelType, Database, postData);
+            return m_webServer.RenderResponse(Request, pageName, true, Model, ModelType, Database);
         }
 
         #region [ Sub-folder Handlers ]
@@ -222,12 +221,11 @@ namespace GSF.Web.Hosting
         /// </summary>
         /// <param name="folder1">First folder.</param>
         /// <param name="pageName">Page name to render.</param>
-        /// <param name="postData">Post data.</param>
         /// <returns>Rendered page result for given page and path.</returns>
         [Route("{folder1}/{pageName}"), HttpPost]
-        public Task<HttpResponseMessage> PostPage(string folder1, string pageName, dynamic postData)
+        public Task<HttpResponseMessage> PostPage(string folder1, string pageName)
         {
-            return PostPage($"{folder1}/{pageName}", postData);
+            return PostPage($"{folder1}/{pageName}");
         }
 
         /// <summary>
@@ -249,12 +247,11 @@ namespace GSF.Web.Hosting
         /// <param name="folder1">First folder.</param>
         /// <param name="folder2">Second folder.</param>
         /// <param name="pageName">Page name to render.</param>
-        /// <param name="postData">Post data.</param>
         /// <returns>Rendered page result for given page and path.</returns>
         [Route("{folder1}/{folder2}/{pageName}"), HttpPost]
-        public Task<HttpResponseMessage> PostPage(string folder1, string folder2, string pageName, dynamic postData)
+        public Task<HttpResponseMessage> PostPage(string folder1, string folder2, string pageName)
         {
-            return PostPage($"{folder1}/{folder2}/{pageName}", postData);
+            return PostPage($"{folder1}/{folder2}/{pageName}");
         }
 
         /// <summary>
@@ -278,12 +275,11 @@ namespace GSF.Web.Hosting
         /// <param name="folder2">Second folder.</param>
         /// <param name="folder3">Third folder.</param>
         /// <param name="pageName">Page name to render.</param>
-        /// <param name="postData">Post data.</param>
         /// <returns>Rendered page result for given page and path.</returns>
         [Route("{folder1}/{folder2}/{folder3}/{pageName}"), HttpPost]
-        public Task<HttpResponseMessage> PostPage(string folder1, string folder2, string folder3, string pageName, dynamic postData)
+        public Task<HttpResponseMessage> PostPage(string folder1, string folder2, string folder3, string pageName)
         {
-            return PostPage($"{folder1}/{folder2}/{folder3}/{pageName}", postData);
+            return PostPage($"{folder1}/{folder2}/{folder3}/{pageName}");
         }
 
         /// <summary>
@@ -309,12 +305,11 @@ namespace GSF.Web.Hosting
         /// <param name="folder3">Third folder.</param>
         /// <param name="folder4">Fourth folder.</param>
         /// <param name="pageName">Page name to render.</param>
-        /// <param name="postData">Post data.</param>
         /// <returns>Rendered page result for given page and path.</returns>
         [Route("{folder1}/{folder2}/{folder3}/{folder4}/{pageName}"), HttpPost]
-        public Task<HttpResponseMessage> PostPage(string folder1, string folder2, string folder3, string folder4, string pageName, dynamic postData)
+        public Task<HttpResponseMessage> PostPage(string folder1, string folder2, string folder3, string folder4, string pageName)
         {
-            return PostPage($"{folder1}/{folder2}/{folder3}/{folder4}/{pageName}", postData);
+            return PostPage($"{folder1}/{folder2}/{folder3}/{folder4}/{pageName}");
         }
 
         /// <summary>
@@ -342,12 +337,11 @@ namespace GSF.Web.Hosting
         /// <param name="folder4">Fourth folder.</param>
         /// <param name="folder5">Fifth folder.</param>
         /// <param name="pageName">Page name to render.</param>
-        /// <param name="postData">Post data.</param>
         /// <returns>Rendered page result for given page and path.</returns>
         [Route("{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{pageName}"), HttpPost]
-        public Task<HttpResponseMessage> PostPage(string folder1, string folder2, string folder3, string folder4, string folder5, string pageName, dynamic postData)
+        public Task<HttpResponseMessage> PostPage(string folder1, string folder2, string folder3, string folder4, string folder5, string pageName)
         {
-            return PostPage($"{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{pageName}", postData);
+            return PostPage($"{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{pageName}");
         }
 
         #endregion

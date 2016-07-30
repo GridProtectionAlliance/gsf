@@ -233,6 +233,7 @@
     <Compile Include="Model\RazorViewResolutionMode.cs" />
     <Compile Include="Model\RecordOperationsCache.cs" />
     <Compile Include="NamespaceDoc.cs" />
+    <Compile Include="PostData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SecurityModule.cs" />
     <Compile Include="Embedded\SecurityPortal.aspx.cs">

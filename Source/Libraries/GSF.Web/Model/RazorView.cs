@@ -215,8 +215,10 @@ namespace GSF.Web.Model
         /// <summary>
         /// Compiles and executes view template for specified request message and post data.
         /// </summary>
+        /// <param name="request">HTTP request message.</param>
+        /// <param name="isPost"><c>true</c>if <paramref name="request"/> is HTTP post; otherwise, <c>false</c>.</param>
         /// <returns>Rendered result.</returns>
-        public string Execute(HttpRequestMessage request, dynamic postData)
+        public string Execute(HttpRequestMessage request, bool isPost)
         {
             using (DataContext dataContext = new DataContext(Database, razorEngine: DataContextEngine, exceptionHandler: ExceptionHandler))
             {
@@ -225,16 +227,7 @@ namespace GSF.Web.Model
 
                 m_viewBag.AddValue("DataContext", dataContext);
                 m_viewBag.AddValue("Request", request);
-
-                if ((object)postData == null)
-                {
-                    m_viewBag.AddValue("IsPost", false);
-                }
-                else
-                {
-                    m_viewBag.AddValue("IsPost", true);
-                    m_viewBag.AddValue("PostData", postData);
-                }
+                m_viewBag.AddValue("IsPost", isPost);
 
                 return m_razorEngine.RunCompile(TemplateName, ModelType, Model, m_viewBag);
             }
@@ -243,10 +236,12 @@ namespace GSF.Web.Model
         /// <summary>
         /// Asynchronously compiles and executes view template for specified request message and post data.
         /// </summary>
+        /// <param name="request">HTTP request message.</param>
+        /// <param name="isPost"><c>true</c>if <paramref name="request"/> is HTTP post; otherwise, <c>false</c>.</param>
         /// <returns>Task that will provide rendered result.</returns>
-        public Task ExecuteAsync(HttpRequestMessage requestMessage, dynamic postData)
+        public Task<string> ExecuteAsync(HttpRequestMessage request, bool isPost)
         {
-            return Task.Run(() => Execute(requestMessage, postData));
+            return Task.Run(() => Execute(request, isPost));
         }
 
         #endregion
