@@ -52,6 +52,7 @@ namespace GSF.Web
             #endregion
 
             #region [ Constructors ]
+
             public PostDataStreamProvider()
             {
                 m_postData = new PostData();

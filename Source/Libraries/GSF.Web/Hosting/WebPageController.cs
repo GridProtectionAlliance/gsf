@@ -344,6 +344,196 @@ namespace GSF.Web.Hosting
             return PostPage($"{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{pageName}");
         }
 
+        /// <summary>
+        /// Sub-folder request handler - depth 6.
+        /// </summary>
+        /// <param name="folder1">First folder.</param>
+        /// <param name="folder2">Second folder.</param>
+        /// <param name="folder3">Third folder.</param>
+        /// <param name="folder4">Fourth folder.</param>
+        /// <param name="folder5">Fifth folder.</param>
+        /// <param name="folder6">Sixth folder.</param>
+        /// <param name="pageName">Page name to render.</param>
+        /// <returns>Rendered page result for given page and path.</returns>
+        [Route("{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{folder6}/{pageName}"), HttpGet]
+        public Task<HttpResponseMessage> GetPage(string folder1, string folder2, string folder3, string folder4, string folder5, string folder6, string pageName)
+        {
+            return GetPage($"{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{folder6}/{pageName}");
+        }
+
+        /// <summary>
+        /// Sub-folder post handler - depth 6.
+        /// </summary>
+        /// <param name="folder1">First folder.</param>
+        /// <param name="folder2">Second folder.</param>
+        /// <param name="folder3">Third folder.</param>
+        /// <param name="folder4">Fourth folder.</param>
+        /// <param name="folder5">Fifth folder.</param>
+        /// <param name="folder6">Sixth folder.</param>
+        /// <param name="pageName">Page name to render.</param>
+        /// <returns>Rendered page result for given page and path.</returns>
+        [Route("{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{folder6}/{pageName}"), HttpPost]
+        public Task<HttpResponseMessage> PostPage(string folder1, string folder2, string folder3, string folder4, string folder5, string folder6, string pageName)
+        {
+            return PostPage($"{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{folder6}/{pageName}");
+        }
+
+        /// <summary>
+        /// Sub-folder request handler - depth 7.
+        /// </summary>
+        /// <param name="folder1">First folder.</param>
+        /// <param name="folder2">Second folder.</param>
+        /// <param name="folder3">Third folder.</param>
+        /// <param name="folder4">Fourth folder.</param>
+        /// <param name="folder5">Fifth folder.</param>
+        /// <param name="folder6">Sixth folder.</param>
+        /// <param name="folder7">Seventh folder.</param>
+        /// <param name="pageName">Page name to render.</param>
+        /// <returns>Rendered page result for given page and path.</returns>
+        [Route("{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{folder6}/{folder7}/{pageName}"), HttpGet]
+        public Task<HttpResponseMessage> GetPage(string folder1, string folder2, string folder3, string folder4, string folder5, string folder6, string folder7, string pageName)
+        {
+            return GetPage($"{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{folder6}/{folder7}/{pageName}");
+        }
+
+        /// <summary>
+        /// Sub-folder post handler - depth 7.
+        /// </summary>
+        /// <param name="folder1">First folder.</param>
+        /// <param name="folder2">Second folder.</param>
+        /// <param name="folder3">Third folder.</param>
+        /// <param name="folder4">Fourth folder.</param>
+        /// <param name="folder5">Fifth folder.</param>
+        /// <param name="folder6">Sixth folder.</param>
+        /// <param name="folder7">Seventh folder.</param>
+        /// <param name="pageName">Page name to render.</param>
+        /// <returns>Rendered page result for given page and path.</returns>
+        [Route("{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{folder6}/{folder7}/{pageName}"), HttpPost]
+        public Task<HttpResponseMessage> PostPage(string folder1, string folder2, string folder3, string folder4, string folder5, string folder6, string folder7, string pageName)
+        {
+            return PostPage($"{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{folder6}/{folder7}/{pageName}");
+        }
+
+        /// <summary>
+        /// Sub-folder request handler - depth 8.
+        /// </summary>
+        /// <param name="folder1">First folder.</param>
+        /// <param name="folder2">Second folder.</param>
+        /// <param name="folder3">Third folder.</param>
+        /// <param name="folder4">Fourth folder.</param>
+        /// <param name="folder5">Fifth folder.</param>
+        /// <param name="folder6">Sixth folder.</param>
+        /// <param name="folder7">Seventh folder.</param>
+        /// <param name="folder8">Eighth folder.</param>
+        /// <param name="pageName">Page name to render.</param>
+        /// <returns>Rendered page result for given page and path.</returns>
+        [Route("{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{folder6}/{folder7}/{folder8}/{pageName}"), HttpGet]
+        public Task<HttpResponseMessage> GetPage(string folder1, string folder2, string folder3, string folder4, string folder5, string folder6, string folder7, string folder8, string pageName)
+        {
+            return GetPage($"{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{folder6}/{folder7}/{folder8}/{pageName}");
+        }
+
+        /// <summary>
+        /// Sub-folder post handler - depth 8.
+        /// </summary>
+        /// <param name="folder1">First folder.</param>
+        /// <param name="folder2">Second folder.</param>
+        /// <param name="folder3">Third folder.</param>
+        /// <param name="folder4">Fourth folder.</param>
+        /// <param name="folder5">Fifth folder.</param>
+        /// <param name="folder6">Sixth folder.</param>
+        /// <param name="folder7">Seventh folder.</param>
+        /// <param name="folder8">Eighth folder.</param>
+        /// <param name="pageName">Page name to render.</param>
+        /// <returns>Rendered page result for given page and path.</returns>
+        [Route("{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{folder6}/{folder7}/{folder8}/{pageName}"), HttpPost]
+        public Task<HttpResponseMessage> PostPage(string folder1, string folder2, string folder3, string folder4, string folder5, string folder6, string folder7, string folder8, string pageName)
+        {
+            return PostPage($"{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{folder6}/{folder7}/{folder8}/{pageName}");
+        }
+
+        /// <summary>
+        /// Sub-folder request handler - depth 9.
+        /// </summary>
+        /// <param name="folder1">First folder.</param>
+        /// <param name="folder2">Second folder.</param>
+        /// <param name="folder3">Third folder.</param>
+        /// <param name="folder4">Fourth folder.</param>
+        /// <param name="folder5">Fifth folder.</param>
+        /// <param name="folder6">Sixth folder.</param>
+        /// <param name="folder7">Seventh folder.</param>
+        /// <param name="folder8">Eighth folder.</param>
+        /// <param name="folder9">Ninth folder.</param>
+        /// <param name="pageName">Page name to render.</param>
+        /// <returns>Rendered page result for given page and path.</returns>
+        [Route("{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{folder6}/{folder7}/{folder8}/{folder9}/{pageName}"), HttpGet]
+        public Task<HttpResponseMessage> GetPage(string folder1, string folder2, string folder3, string folder4, string folder5, string folder6, string folder7, string folder8, string folder9, string pageName)
+        {
+            return GetPage($"{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{folder6}/{folder7}/{folder8}/{folder9}/{pageName}");
+        }
+
+        /// <summary>
+        /// Sub-folder post handler - depth 9.
+        /// </summary>
+        /// <param name="folder1">First folder.</param>
+        /// <param name="folder2">Second folder.</param>
+        /// <param name="folder3">Third folder.</param>
+        /// <param name="folder4">Fourth folder.</param>
+        /// <param name="folder5">Fifth folder.</param>
+        /// <param name="folder6">Sixth folder.</param>
+        /// <param name="folder7">Seventh folder.</param>
+        /// <param name="folder8">Eighth folder.</param>
+        /// <param name="folder9">Ninth folder.</param>
+        /// <param name="pageName">Page name to render.</param>
+        /// <returns>Rendered page result for given page and path.</returns>
+        [Route("{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{folder6}/{folder7}/{folder8}/{folder9}/{pageName}"), HttpPost]
+        public Task<HttpResponseMessage> PostPage(string folder1, string folder2, string folder3, string folder4, string folder5, string folder6, string folder7, string folder8, string folder9, string pageName)
+        {
+            return PostPage($"{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{folder6}/{folder7}/{folder8}/{folder9}/{pageName}");
+        }
+
+        /// <summary>
+        /// Sub-folder request handler - depth 10.
+        /// </summary>
+        /// <param name="folder1">First folder.</param>
+        /// <param name="folder2">Second folder.</param>
+        /// <param name="folder3">Third folder.</param>
+        /// <param name="folder4">Fourth folder.</param>
+        /// <param name="folder5">Fifth folder.</param>
+        /// <param name="folder6">Sixth folder.</param>
+        /// <param name="folder7">Seventh folder.</param>
+        /// <param name="folder8">Eighth folder.</param>
+        /// <param name="folder9">Ninth folder.</param>
+        /// <param name="folder10">Tenth folder.</param>
+        /// <param name="pageName">Page name to render.</param>
+        /// <returns>Rendered page result for given page and path.</returns>
+        [Route("{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{folder6}/{folder7}/{folder8}/{folder9}/{folder10}/{pageName}"), HttpGet]
+        public Task<HttpResponseMessage> GetPage(string folder1, string folder2, string folder3, string folder4, string folder5, string folder6, string folder7, string folder8, string folder9, string folder10, string pageName)
+        {
+            return GetPage($"{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{folder6}/{folder7}/{folder8}/{folder9}/{folder10}/{pageName}");
+        }
+
+        /// <summary>
+        /// Sub-folder post handler - depth 10.
+        /// </summary>
+        /// <param name="folder1">First folder.</param>
+        /// <param name="folder2">Second folder.</param>
+        /// <param name="folder3">Third folder.</param>
+        /// <param name="folder4">Fourth folder.</param>
+        /// <param name="folder5">Fifth folder.</param>
+        /// <param name="folder6">Sixth folder.</param>
+        /// <param name="folder7">Seventh folder.</param>
+        /// <param name="folder8">Eighth folder.</param>
+        /// <param name="folder9">Ninth folder.</param>
+        /// <param name="folder10">Tenth folder.</param>
+        /// <param name="pageName">Page name to render.</param>
+        /// <returns>Rendered page result for given page and path.</returns>
+        [Route("{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{folder6}/{folder7}/{folder8}/{folder9}/{folder10}/{pageName}"), HttpPost]
+        public Task<HttpResponseMessage> PostPage(string folder1, string folder2, string folder3, string folder4, string folder5, string folder6, string folder7, string folder8, string folder9, string folder10, string pageName)
+        {
+            return PostPage($"{folder1}/{folder2}/{folder3}/{folder4}/{folder5}/{folder6}/{folder7}/{folder8}/{folder9}/{folder10}/{pageName}");
+        }
+
         #endregion
 
         #endregion
