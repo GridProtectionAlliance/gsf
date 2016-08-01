@@ -23,7 +23,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -42,22 +41,21 @@ namespace GSF.Web
         // Nested Types
 
         // Defines a multi-part stream provider that will parse out files and form data
-        private class FileStreamStreamProvider : MultipartStreamProvider
+        private class PostDataStreamProvider : MultipartStreamProvider
         {
             #region [ Members ]
 
             // Fields
-            private readonly NameValueCollection m_formData;
-            private readonly List<HttpContent> m_fileData;
+            private readonly PostData m_postData;
             private readonly List<bool> m_isFormData;
 
             #endregion
 
             #region [ Constructors ]
-            public FileStreamStreamProvider(NameValueCollection formData)
+
+            public PostDataStreamProvider()
             {
-                m_formData = formData;
-                m_fileData = new List<HttpContent>();
+                m_postData = new PostData();
                 m_isFormData = new List<bool>();
             }
 
@@ -65,11 +63,8 @@ namespace GSF.Web
 
             #region [ Properties ]
 
-            // Gets any form data passed as part of the multipart form data
-            public NameValueCollection FormData => m_formData;
-
-            /// Gets list of uploaded files
-            public List<HttpContent> FileData => m_fileData;
+            // Gets any data passed as part of the multipart form data
+            public PostData PostData => m_postData;
 
             #endregion
 
@@ -97,21 +92,17 @@ namespace GSF.Web
                 {
                     if (m_isFormData[i])
                     {
-                        // Ignore form data if user did not request it...
-                        if (m_formData == null)
-                            continue;
-
                         HttpContent formContent = Contents[i];
                         ContentDispositionHeaderValue contentDisposition = formContent.Headers.ContentDisposition;
                         string fieldName = UnquoteToken(contentDisposition.Name) ?? "";
 
                         // Read out any form data
                         string fieldValue = await formContent.ReadAsStringAsync();
-                        FormData.Add(fieldName, fieldValue);
+                        m_postData.FormData.Add(fieldName, fieldValue);
                     }
                     else
                     {
-                        m_fileData.Add(Contents[i]);
+                        m_postData.FileData.Add(Contents[i]);
                     }
                 }
             }
@@ -173,15 +164,27 @@ namespace GSF.Web
         }
 
         /// <summary>
-        /// Asynchronously gets a collection of uploaded file data from an <see cref="HttpRequestMessage"/>.
+        /// Gets a collection of uploaded post data from an <see cref="HttpRequestMessage"/>.
         /// </summary>
-        /// <param name="request"><see cref="HttpRequestMessage"/> request data that contains uploaded files.</param>
-        /// <param name="formData">Optional form data from <paramref name="request"/> if needed.</param>
-        /// <returns></returns>
-        public static async Task<IList<HttpContent>> GetFilesAsync(this HttpRequestMessage request, NameValueCollection formData = null)
+        /// <param name="request"><see cref="HttpRequestMessage"/> request data that contains form data and/or uploaded files.</param>
+        /// <returns>Parsed post data.</returns>
+        public static PostData GetPostData(this HttpRequestMessage request)
         {
-            FileStreamStreamProvider provider = await request.Content.ReadAsMultipartAsync(new FileStreamStreamProvider(formData));
-            return provider.FileData;
+            // Providing non-async version to simplify processing within Razor script
+            Task<PostData> getPostDataTask = GetPostDataAsync(request);
+            getPostDataTask.Wait();
+            return getPostDataTask.Result;
+        }
+
+        /// <summary>
+        /// Asynchronously gets a collection of uploaded post data from an <see cref="HttpRequestMessage"/>.
+        /// </summary>
+        /// <param name="request"><see cref="HttpRequestMessage"/> request data that contains form data and/or uploaded files.</param>
+        /// <returns>Parsed post data.</returns>
+        public static async Task<PostData> GetPostDataAsync(this HttpRequestMessage request)
+        {
+            PostDataStreamProvider provider = await request.Content.ReadAsMultipartAsync(new PostDataStreamProvider());
+            return provider.PostData;
         }
 
         /// <summary>
