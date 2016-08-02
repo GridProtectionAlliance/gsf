@@ -760,7 +760,7 @@ namespace GSF.Web.Model
                 viewModel.defaultSortField = ""{defaultSortField}"";
                 viewModel.defaultSortAscending = {defaultSortAscending};
                 viewModel.labelField = ""{GetPrimaryLabelField<TModel>()}"";
-                viewModel.sourceModelName = ""{typeof(TModel).Name}"";
+                viewModel.modelName = ""{typeof(TModel).Name}"";
                 viewModel.primaryKeyFields = [{primaryKeyFields.Select(fieldName => $"\"{fieldName}\"").ToDelimitedString(", ")}];
             ".FixForwardSpacing());
 
