@@ -147,7 +147,7 @@
 {
     if (string.IsNullOrEmpty(fieldName))
     {
-            <th class="@Raw(classes ?? "text-center")" nowrap>@Raw(labelName ?? "")</th>
+        <th class="@Raw(classes ?? "text-center")" nowrap>@Raw(labelName ?? "")</th>
     }
     else
     {
@@ -189,7 +189,7 @@
                 </tr>
             </thead>
             <tbody data-bind="foreach: pageRecords">
-                <tr style="visibility: hidden" id="recordRow" @Raw(ViewBag.ShowDeleted ?? false ? string.Format(" data-bind=\"css: {{'danger': {0}}}\"", ViewBag.IsDeletedField) : "")>
+                <tr style="visibility: hidden" id="recordRow"@Raw(ViewBag.ShowDeleted ?? false ? string.Format(" data-bind=\"css: {{'danger': {0}}}\"", ViewBag.IsDeletedField) : "")>
                     @Raw(ViewBag.BodyRows)
                 </tr>
             </tbody>
@@ -331,11 +331,13 @@
         viewModel.canAddNew({1});
         viewModel.canDelete({2});
 
-        viewModel.initialFocusField = ""{3}"";",
+        viewModel.initialFocusField = ""{3}"";
+        viewModel.pageName = ""{4}"";",
         canEdit.ToString().ToLower(),
         canAddNew.ToString().ToLower(),
         canDelete.ToString().ToLower(),
-        dataContext.InitialFocusField
+        dataContext.InitialFocusField,
+        RemoveSpaces(ViewBag.Title)
     );
 
     if (dataContext.FieldValueInitializers.Count > 0) {

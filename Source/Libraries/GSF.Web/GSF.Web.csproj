@@ -341,6 +341,10 @@
     <EmbeddedResource Include="Model\Scripts\ko-reactor.min.js" />
     <EmbeddedResource Include="Model\Scripts\ko.observableDictionary.js" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Model\Scripts\gsf.web.knockout.js" />
+    <EmbeddedResource Include="Model\Scripts\gsf.web.primeui.js" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>CALL "$(ProjectDir)PostBuildSetup.bat" "$(ProjectDir)bin" "$(TargetDir)*.dll"</PostBuildEvent>
