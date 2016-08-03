@@ -55,7 +55,7 @@ namespace GSF.Web.Model
         // Constants
 
         /// <summary>
-        /// Defines the regular expression used to validate URLs
+        /// Defines the regular expression used to validate URLs. 
         /// </summary>
         public const string UrlValidation = @"(?i)\b((?:[a-z][\w-]+:(?:\/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'"".,<>?«»“”‘’]))";
 
