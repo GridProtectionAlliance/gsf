@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Data;
+using System.Threading;
 using GSF.Data;
 
 namespace GSF.TimeSeries
@@ -47,6 +48,7 @@ namespace GSF.TimeSeries
         private uint m_id;
         private string m_source;
         private readonly int m_hashCode;
+        private readonly int m_runtimeID;
 
         #endregion
 
@@ -58,6 +60,7 @@ namespace GSF.TimeSeries
             m_id = id;
             m_source = source;
             m_hashCode = base.GetHashCode();
+            m_runtimeID = Interlocked.Increment(ref s_nextRuntimeID) - 1; //Returns the incremented value. Hints the -1
         }
 
         #endregion
@@ -100,6 +103,24 @@ namespace GSF.TimeSeries
             }
         }
 
+        /// <summary>
+        /// A unique ID that is assigned at runtime to identify this instance of <see cref="MeasurementKey"/>. 
+        /// This value will change between runtimes, so it cannot be used to compare <see cref="MeasurementKey"/>s
+        /// that are running out of process or in a separate <see cref="AppDomain"/>.
+        /// </summary>
+        /// <remarks>
+        /// Since each <see cref="SignalID"/> is only tied to a single <see cref="MeasurementKey"/> object, 
+        /// this provides another unique identifier that is zero indexed. 
+        /// This allows certain optimizations such as array lookups.
+        /// </remarks>
+        public int RuntimeID
+        {
+            get
+            {
+                return m_runtimeID;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -130,6 +151,7 @@ namespace GSF.TimeSeries
         private static readonly ConcurrentDictionary<Guid, MeasurementKey> IDCache = new ConcurrentDictionary<Guid, MeasurementKey>();
         private static readonly ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>> KeyCache = new ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>>(StringComparer.OrdinalIgnoreCase);
         private static readonly object SyncEdits = new object();
+        private static int s_nextRuntimeID = 0;
 
         /// <summary>
         /// Represents an undefined measurement key.
