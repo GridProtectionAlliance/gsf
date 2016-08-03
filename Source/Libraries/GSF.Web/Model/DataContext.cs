@@ -298,13 +298,13 @@ namespace GSF.Web.Model
         }
 
         /// <summary>
-        /// Gets script resource.
+        /// Gets text-based embedded resource.
         /// </summary>
-        /// <param name="scriptName">Script name.</param>
-        /// <returns>Script resource contents.</returns>
-        public string GetScriptResource(string scriptName)
+        /// <param name="resourceName">Resource name, e.g.: "GSF.Web.Model.Scripts.gsf.web.client.js".</param>
+        /// <returns>String based resource contents.</returns>
+        public string GetEmbeddedResource(string resourceName)
         {
-            Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"GSF.Web.Model.Scripts.{scriptName}");
+            Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
 
             if ((object)stream == null)
                 return "";
