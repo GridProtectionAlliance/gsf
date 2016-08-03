@@ -52,6 +52,13 @@ namespace GSF.Web.Model
     {
         #region [ Members ]
 
+        // Constants
+
+        /// <summary>
+        /// Defines the 
+        /// </summary>
+        public const string UrlValidation = @"(?i)\b((?:[a-z][\w-]+:(?:\/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'"".,<>?«»“”‘’]))";
+
         // Fields
         private AdoDataConnection m_connection;
         private readonly IRazorEngine m_razorEngine;
