@@ -191,7 +191,7 @@ namespace GSF.Web.Hosting
             Tuple<Type, Type> pagedViewModelTypes;
 
             if (embeddedResource)
-                pageName = pageName.Substring(1).Replace('\\', '.');
+                pageName = pageName.Substring(1).Replace('/', '.');
 
             response.RequestMessage = request;
 
