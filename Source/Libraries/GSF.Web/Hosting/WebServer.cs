@@ -434,7 +434,7 @@ namespace GSF.Web.Hosting
                 // Check for local resource first, then fall back on a resource in source assembly
                 return s_embeddedResources.Contains(resourceName) ?
                     Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName) :
-                    Assembly.GetEntryAssembly().GetManifestResourceStream(resourceName);
+                    Assembly.GetEntryAssembly()?.GetManifestResourceStream(resourceName);
             }
             catch
             {

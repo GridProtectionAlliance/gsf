@@ -211,6 +211,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Embedded\EmbeddedResourceProvider.cs" />
     <Compile Include="Embedded\NamespaceDoc.cs" />
     <Compile Include="Hosting\EmbeddedResourceFileAttribute.cs" />
     <Compile Include="Hosting\EmbeddedResourcePathProvider.cs" />
@@ -223,6 +224,7 @@
     <Compile Include="Hosting\WebServer.cs" />
     <Compile Include="IgnoreServicesSecurityModule.cs" />
     <Compile Include="Model\DataContext.cs" />
+    <Compile Include="Model\HtmlHelper.cs" />
     <Compile Include="Model\IRazorEngine.cs" />
     <Compile Include="Model\IRecordOperationsHub.cs" />
     <Compile Include="Model\Label.cs" />
