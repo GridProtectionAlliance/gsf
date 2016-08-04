@@ -31,6 +31,7 @@ using System.Web.Hosting;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.IO;
+using GSF.Web.Hosting;
 using RazorEngine;
 using RazorEngine.Configuration;
 using RazorEngine.Templating;
@@ -108,7 +109,7 @@ namespace GSF.Web.Model
                             if (!resourceName.Contains("."))
                                 resourceName = templatePath + name;
 
-                            Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
+                            Stream stream = WebServer.OpenEmbeddedResourceStream(resourceName);
 
                             if ((object)stream == null)
                                 return "";

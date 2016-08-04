@@ -187,7 +187,11 @@ namespace GSF.Web.Hosting
         {
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
             string content, fileExtension = FilePath.GetExtension(pageName).ToLowerInvariant();
+            bool embeddedResource = pageName.StartsWith("@");
             Tuple<Type, Type> pagedViewModelTypes;
+
+            if (embeddedResource)
+                pageName = pageName.Substring(1).Replace('/', '.');
 
             response.RequestMessage = request;
 
@@ -195,68 +199,75 @@ namespace GSF.Web.Hosting
             {
                 case ".cshtml":
                     m_pagedViewModelTypes.TryGetValue(pageName, out pagedViewModelTypes);
-                    content = await new RazorView(m_razorEngineCS, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException).ExecuteAsync(request, isPost);
+                    content = await new RazorView(embeddedResource ? RazorEngine<CSharpEmbeddedResource>.Default : m_razorEngineCS, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException).ExecuteAsync(request, isPost);
                     response.Content = new StringContent(content, Encoding.UTF8, "text/html");
                     break;
                 case ".vbhtml":
                     m_pagedViewModelTypes.TryGetValue(pageName, out pagedViewModelTypes);
-                    content = await new RazorView(m_razorEngineVB, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException).ExecuteAsync(request, isPost);
+                    content = await new RazorView(embeddedResource ? RazorEngine<VisualBasicEmbeddedResource>.Default : m_razorEngineVB, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException).ExecuteAsync(request, isPost);
                     response.Content = new StringContent(content, Encoding.UTF8, "text/html");
                     break;
                 case ".ashx":
                     await ProcessHTTPHandler(pageName, request, response);
                     break;
                 default:
-                    string fileName = FilePath.GetAbsolutePath($"{m_webRootPath}{pageName.Replace('/', Path.DirectorySeparatorChar)}");
-
-                    if (File.Exists(fileName))
+                    await Task.Run(() =>
                     {
-                        FileStream fileData = null;
-                        uint responseHash = 0;
+                        string fileName;
+                        Stream source;
 
-                        if (ClientCacheEnabled && !m_etagCache.TryGetValue(fileName, out responseHash))
+                        if (embeddedResource)
                         {
-                            // Calculate check-sum for file
-                            await Task.Run(() =>
+                            fileName = pageName;
+                            source = OpenEmbeddedResourceStream(pageName);
+                        }
+                        else
+                        {
+                            fileName = FilePath.GetAbsolutePath($"{m_webRootPath}{pageName.Replace('/', Path.DirectorySeparatorChar)}");
+                            source = File.Exists(fileName) ? File.OpenRead(fileName) : null;
+                        }
+
+                        if ((object)source != null)
+                        {
+                            uint responseHash = 0;
+
+                            if (ClientCacheEnabled && !m_etagCache.TryGetValue(fileName, out responseHash))
                             {
+                                // Calculate check-sum for file
                                 const int BufferSize = 32768;
                                 byte[] buffer = new byte[BufferSize];
                                 Crc32 calculatedHash = new Crc32();
 
-                                fileData = File.OpenRead(fileName);
-                                int bytesRead = fileData.Read(buffer, 0, BufferSize);
+                                int bytesRead = source.Read(buffer, 0, BufferSize);
 
                                 while (bytesRead > 0)
                                 {
                                     calculatedHash.Update(buffer, 0, bytesRead);
-                                    bytesRead = fileData.Read(buffer, 0, BufferSize);
+                                    bytesRead = source.Read(buffer, 0, BufferSize);
                                 }
 
                                 responseHash = calculatedHash.Value;
                                 m_etagCache.TryAdd(fileName, responseHash);
-                                fileData.Seek(0, SeekOrigin.Begin);
+                                source.Seek(0, SeekOrigin.Begin);
 
                                 OnStatusMessage($"Cache [{responseHash}] added for file \"{fileName}\"");
-                            });
-                        }
+                            }
 
-                        if (PublishResponseContent(request, response, responseHash))
-                        {
-                            if (fileData == null)
-                                fileData = File.OpenRead(fileName);
-
-                            response.Content = await Task.Run(() => new StreamContent(fileData));
-                            response.Content.Headers.ContentType = new MediaTypeHeaderValue(MimeMapping.GetMimeMapping(pageName));
+                            if (PublishResponseContent(request, response, responseHash))
+                            {
+                                response.Content = new StreamContent(source);
+                                response.Content.Headers.ContentType = new MediaTypeHeaderValue(MimeMapping.GetMimeMapping(pageName));
+                            }
+                            else
+                            {
+                                source.Dispose();
+                            }
                         }
                         else
                         {
-                            fileData?.Dispose();
+                            response.StatusCode = HttpStatusCode.NotFound;
                         }
-                    }
-                    else
-                    {
-                        response.StatusCode = HttpStatusCode.NotFound;
-                    }
+                    });
                     break;
             }
 
@@ -359,6 +370,7 @@ namespace GSF.Web.Hosting
         // Static Fields
         private static WebServer s_defaultServer;
         private static readonly Dictionary<string, WebServer> s_configuredServers;
+        private static readonly HashSet<string> s_embeddedResources;
 
         // Static Properties
 
@@ -371,6 +383,7 @@ namespace GSF.Web.Hosting
         static WebServer()
         {
             s_configuredServers = new Dictionary<string, WebServer>(StringComparer.OrdinalIgnoreCase);
+            s_embeddedResources = new HashSet<string>(Assembly.GetExecutingAssembly().GetManifestResourceNames(), StringComparer.Ordinal);
         }
 
         // Static Methods
@@ -401,6 +414,31 @@ namespace GSF.Web.Hosting
                         ClientCacheEnabled = settings["ClientCacheEnabled"].Value.ParseBoolean()
                     };
                 });
+            }
+        }
+
+        /// <summary>
+        /// Opens a stream to an embedded resource.
+        /// </summary>
+        /// <param name="resourceName">Resource to open.</param>
+        /// <returns>Stream to embedded resource if found; otherwise, <c>null</c>.</returns>
+        /// <remarks>
+        /// This function will first try loading resources out of the local assembly, if not found it
+        /// will fall back on loading resource from entry assembly.
+        /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Stream OpenEmbeddedResourceStream(string resourceName)
+        {
+            try
+            {
+                // Check for local resource first, then fall back on a resource in source assembly
+                return s_embeddedResources.Contains(resourceName) ?
+                    Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName) :
+                    Assembly.GetEntryAssembly().GetManifestResourceStream(resourceName);
+            }
+            catch
+            {
+                return null;
             }
         }
 
