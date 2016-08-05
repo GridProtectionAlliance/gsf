@@ -21,19 +21,22 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Web.Hosting;
 
 namespace GSF.Web.Embedded
 {
     /// <summary>
-    /// Represents a <see cref="VirtualPathProvider"/> that extends an existing provider adding access to embedded resources.
+    /// Represents a <see cref="VirtualPathProvider"/> that allows access to embedded resources.
     /// </summary>
     /// <remarks>
-    /// To use, add the following to Application_Start function:
+    /// <para>
+    /// This provider responds to requests for embedded resources when the virtual path begins with an "@", e.g.,
+    /// http://localhost/@GSF.Web.Model.Scripts.gsf.web.client.js
+    /// </para>
+    /// <para>
+    /// To use, add the following to the Global.asax.cs Application_Start function:
     /// <code>
     ///     // Add additional virtual path provider to allow access to embedded resources
     ///     HostingEnvironment.RegisterVirtualPathProvider(new EmbeddedResourceProvider());
@@ -42,10 +45,16 @@ namespace GSF.Web.Embedded
     /// <code>
     /// &lt;system.webServer&gt;
     ///   &lt;handlers&gt;
-    ///     &lt;add name="EmbeddedResourceHandler-GSF" path="@GSF/Web/Model/Scripts/*" verb="*" type="System.Web.StaticFileHandler" allowPathInfo="true" /&gt;
+    ///     &lt;!-- Add embedded resource handler for GSF script resources using slash delimiters --&gt;
+    ///     &lt;add name="EmbeddedResourceHandler-GSFScripts" path="@GSF/Web/Model/Scripts/*" verb="*" type="System.Web.StaticFileHandler" allowPathInfo="true" /&gt;
+    ///     &lt;!-- Add embedded resource handler for GSF view resources using slash delimiters --&gt;
+    ///     &lt;add name="EmbeddedResourceHandler-GSFViews" path="@GSF/Web/Model/Views/*" verb="*" type="System.Web.StaticFileHandler" allowPathInfo="true" /&gt;
+    ///     &lt;!-- Add embedded resource handler for fully qualified type names using dot delimiters (this should be defined last) --&gt;
+    ///     &lt;add name="EmbeddedResourceHandler-FQName" path="@*" verb="*" type="System.Web.StaticFileHandler" allowPathInfo="true" /&gt;
     ///   &lt;/handlers&gt;
     /// &lt;/system.webServer&gt;
     /// </code>
+    /// </para>
     /// </remarks>
     public class EmbeddedResourceProvider : VirtualPathProvider
     {
@@ -59,7 +68,7 @@ namespace GSF.Web.Embedded
             {
             }
 
-            public override Stream Open() => OpenEmbeddedResourceStream(VirtualPath);
+            public override Stream Open() => WebExtensions.OpenEmbeddedResourceStream(VirtualPath);
         }
 
         #endregion
@@ -77,7 +86,7 @@ namespace GSF.Web.Embedded
         /// </remarks>
         public override bool FileExists(string virtualPath)
         {
-            return IsEmbeddedResource(ParseResourceNameFromVirtualPath(virtualPath)) || Previous.FileExists(virtualPath);
+            return WebExtensions.EmbeddedResourceExists(ParseResourceNameFromVirtualPath(virtualPath)) || Previous.FileExists(virtualPath);
         }
 
         /// <summary>
@@ -88,54 +97,21 @@ namespace GSF.Web.Embedded
         public override VirtualFile GetFile(string virtualPath)
         {
             string resourceName = ParseResourceNameFromVirtualPath(virtualPath);
-            return IsEmbeddedResource(resourceName) ? new EmbeddedResource(resourceName) : Previous.GetFile(virtualPath);
+            return WebExtensions.EmbeddedResourceExists(resourceName) ? new EmbeddedResource(resourceName) : Previous.GetFile(virtualPath);
         }
 
         #endregion
 
         #region [ Static ]
 
-        // Static Fields
-        private static readonly HashSet<string> s_executingAssemblyResources;
-        private static readonly HashSet<string> s_entryAssemblyResources;
-
-        // Static Constructor
-        static EmbeddedResourceProvider()
-        {
-            s_executingAssemblyResources = new HashSet<string>(Assembly.GetExecutingAssembly().GetManifestResourceNames(), StringComparer.Ordinal);
-            s_entryAssemblyResources = new HashSet<string>(Assembly.GetEntryAssembly()?.GetManifestResourceNames() ?? new[] { "" }, StringComparer.Ordinal);
-        }
-
-        // Static Methods
-        private static Stream OpenEmbeddedResourceStream(string resourceName)
-        {
-            try
-            {
-                // Check for local resource first, then fall back on a resource in source assembly
-                return s_executingAssemblyResources.Contains(resourceName) ?
-                    Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName) :
-                    Assembly.GetEntryAssembly()?.GetManifestResourceStream(resourceName);
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        private static bool IsEmbeddedResource(string resourceName)
-        {
-            return s_executingAssemblyResources.Contains(resourceName) || s_entryAssemblyResources.Contains(resourceName);
-        }
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string ParseResourceNameFromVirtualPath(string virtualPath)
         {
             if (virtualPath.StartsWith("~/@"))
                 virtualPath = virtualPath.Substring(3);
-
-            if (virtualPath.StartsWith("/@"))
+            else if (virtualPath.StartsWith("/@"))
                 virtualPath = virtualPath.Substring(2);
-
-            if (virtualPath.StartsWith("@"))
+            else if (virtualPath.StartsWith("@"))
                 virtualPath = virtualPath.Substring(1);
 
             return virtualPath.Replace('/', '.');

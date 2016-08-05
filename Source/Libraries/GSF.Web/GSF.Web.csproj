@@ -224,6 +224,7 @@
     <Compile Include="Hosting\WebServer.cs" />
     <Compile Include="IgnoreServicesSecurityModule.cs" />
     <Compile Include="Model\DataContext.cs" />
+    <Compile Include="Model\ExtendedTemplateBase.cs" />
     <Compile Include="Model\HtmlHelper.cs" />
     <Compile Include="Model\IRazorEngine.cs" />
     <Compile Include="Model\IRecordOperationsHub.cs" />
@@ -234,6 +235,7 @@
     <Compile Include="Model\RazorEngine.cs" />
     <Compile Include="Model\RazorViewResolutionMode.cs" />
     <Compile Include="Model\RecordOperationsCache.cs" />
+    <Compile Include="Model\UrlHelper.cs" />
     <Compile Include="NamespaceDoc.cs" />
     <Compile Include="PostData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

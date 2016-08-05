@@ -219,7 +219,7 @@ namespace GSF.Web.Hosting
                         if (embeddedResource)
                         {
                             fileName = pageName;
-                            source = OpenEmbeddedResourceStream(pageName);
+                            source = WebExtensions.OpenEmbeddedResourceStream(pageName);
                         }
                         else
                         {
@@ -370,7 +370,6 @@ namespace GSF.Web.Hosting
         // Static Fields
         private static WebServer s_defaultServer;
         private static readonly Dictionary<string, WebServer> s_configuredServers;
-        private static readonly HashSet<string> s_embeddedResources;
 
         // Static Properties
 
@@ -383,7 +382,6 @@ namespace GSF.Web.Hosting
         static WebServer()
         {
             s_configuredServers = new Dictionary<string, WebServer>(StringComparer.OrdinalIgnoreCase);
-            s_embeddedResources = new HashSet<string>(Assembly.GetExecutingAssembly().GetManifestResourceNames(), StringComparer.Ordinal);
         }
 
         // Static Methods
@@ -414,31 +412,6 @@ namespace GSF.Web.Hosting
                         ClientCacheEnabled = settings["ClientCacheEnabled"].Value.ParseBoolean()
                     };
                 });
-            }
-        }
-
-        /// <summary>
-        /// Opens a stream to an embedded resource.
-        /// </summary>
-        /// <param name="resourceName">Resource to open.</param>
-        /// <returns>Stream to embedded resource if found; otherwise, <c>null</c>.</returns>
-        /// <remarks>
-        /// This function will first try loading resources out of the local assembly, if not found it
-        /// will fall back on loading resource from entry assembly.
-        /// </remarks>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Stream OpenEmbeddedResourceStream(string resourceName)
-        {
-            try
-            {
-                // Check for local resource first, then fall back on a resource in source assembly
-                return s_embeddedResources.Contains(resourceName) ?
-                    Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName) :
-                    Assembly.GetEntryAssembly()?.GetManifestResourceStream(resourceName);
-            }
-            catch
-            {
-                return null;
             }
         }
 

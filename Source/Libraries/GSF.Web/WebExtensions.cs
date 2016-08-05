@@ -25,11 +25,20 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Web;
+using System.Web.Mvc;
 using GSF.Collections;
+using GSF.IO;
+using GSF.Web.Embedded;
+using GSF.Web.Model;
+using RazorEngine.Templating;
+using HtmlHelper = System.Web.Mvc.HtmlHelper;
 
 namespace GSF.Web
 {
@@ -126,6 +135,21 @@ namespace GSF.Web
             #endregion
         }
 
+        // Static Fields
+        private static readonly HashSet<string> s_executingAssemblyResources;
+        private static readonly HashSet<string> s_callingAssemblyResources;
+        private static readonly HashSet<string> s_entryAssemblyResources;
+
+        // Static Constructor
+        static WebExtensions()
+        {
+            s_executingAssemblyResources = new HashSet<string>(Assembly.GetExecutingAssembly().GetManifestResourceNames(), StringComparer.Ordinal);
+            s_callingAssemblyResources = new HashSet<string>(Assembly.GetCallingAssembly().GetManifestResourceNames(), StringComparer.Ordinal);
+            s_entryAssemblyResources = new HashSet<string>(Assembly.GetEntryAssembly()?.GetManifestResourceNames() ?? new[] { "" }, StringComparer.Ordinal);
+        }
+
+        // Static Methods
+
         /// <summary>
         /// Performs JavaScript encoding on given string.
         /// </summary>
@@ -151,6 +175,33 @@ namespace GSF.Web
         public static string UrlEncode(this string text)
         {
             return HttpUtility.UrlEncode(text.ToNonNullString());
+        }
+
+        /// <summary>
+        /// Corrects script alignment with a desired number of forward spaces.
+        /// </summary>
+        /// <param name="script">Script text.</param>
+        /// <param name="spaces">Desired forward spaces.</param>
+        /// <returns>Script with corrected forward alignment.</returns>
+        public static string FixForwardSpacing(this string script, int spaces = 4)
+        {
+            Tuple<string, int>[] linesAndLengths = script
+                .Split(new[] { Environment.NewLine }, StringSplitOptions.None)
+                .Select(line => new Tuple<string, int>(line, line.Length - line.TrimStart(' ').Length))
+                .ToArray();
+
+            int minLength = linesAndLengths
+                .Select(lineAndLength => (int?)lineAndLength.Item2)
+                .Where(length => length.GetValueOrDefault() > 0)
+                .Min() ?? 0;
+
+            string forwardSpacing = new string(' ', spaces);
+
+            return linesAndLengths
+                .Select(lineAndLength => lineAndLength.Item2 > 0 ?
+                    $"{forwardSpacing}{(lineAndLength.Item2 > minLength ? lineAndLength.Item1.Substring(minLength) : lineAndLength.Item1)}" :
+                    lineAndLength.Item1.ToNonNullNorEmptyString())
+                .ToDelimitedString(Environment.NewLine);
         }
 
         /// <summary>
@@ -188,30 +239,147 @@ namespace GSF.Web
         }
 
         /// <summary>
-        /// Corrects script alignment with a desired number of forward spaces.
+        /// Converts relative URL to an absolute URL.
         /// </summary>
-        /// <param name="script">Script text.</param>
-        /// <param name="spaces">Desired forward spaces.</param>
-        /// <returns>Script with corrected forward alignment.</returns>
-        public static string FixForwardSpacing(this string script, int spaces = 4)
+        /// <param name="helper">MVC HTML helper instance.</param>
+        /// <param name="url">Relative URL.</param>
+        /// <returns>Absolute URL.</returns>
+        public static string ToAbsoluteUrl(this HtmlHelper helper, string url)
         {
-            Tuple<string, int>[] linesAndLengths = script
-                .Split(new[] { Environment.NewLine }, StringSplitOptions.None)
-                .Select(line => new Tuple<string, int>(line, line.Length - line.TrimStart(' ').Length))
-                .ToArray();
+            if (string.IsNullOrEmpty(url))
+                return "";
 
-            int minLength = linesAndLengths
-                .Select(lineAndLength => (int?)lineAndLength.Item2)
-                .Where(length => length.GetValueOrDefault() > 0)
-                .Min() ?? 0;
+            if (HttpContext.Current == null)
+                return "";
 
-            string forwardSpacing = new string(' ', spaces);
+            if (url.StartsWith("/"))
+                url = url.Insert(0, "~");
 
-            return linesAndLengths
-                .Select(lineAndLength => lineAndLength.Item2 > 0 ?
-                    $"{forwardSpacing}{(lineAndLength.Item2 > minLength ? lineAndLength.Item1.Substring(minLength) : lineAndLength.Item1)}" :
-                    lineAndLength.Item1.ToNonNullNorEmptyString())
-                .ToDelimitedString(Environment.NewLine);
+            if (!url.StartsWith("~/"))
+                url = url.Insert(0, "~/");
+
+            Uri uri = HttpContext.Current.Request.Url;
+            string port = uri.Port == 80 ? "" : ":" + uri.Port;
+
+            return $"{uri.Scheme}://{uri.Host}{port}{VirtualPathUtility.ToAbsolute(url)}";
+        }
+
+        /// <summary>
+        /// Includes an HTTP resource directly into an MVC view page.
+        /// </summary>
+        /// <param name="helper">MVC HTML helper instance.</param>
+        /// <param name="url">URL of resource to include.</param>
+        /// <returns>Resolved URL resource as an MvcHtmlString.</returns>
+        public static MvcHtmlString IncludeUrl(this HtmlHelper helper, string url)
+        {
+            if (string.IsNullOrEmpty(url))
+                return new MvcHtmlString("");
+
+            HttpWebRequest request = WebRequest.CreateHttp(url);
+            request.Credentials = CredentialCache.DefaultCredentials;
+
+            using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
+            using (Stream stream = response?.GetResponseStream())
+            {
+                if ((object)stream == null)
+                    return new MvcHtmlString($"<!-- No response from {url} -->");
+
+                using (StreamReader reader = new StreamReader(stream))
+                    return new MvcHtmlString(reader.ReadToEnd());
+            }
+        }
+
+        /// <summary>
+        /// Includes an embedded resource directly into an MVC view page.
+        /// </summary>
+        /// <param name="helper">MVC HTML helper instance.</param>
+        /// <param name="resourceName">Resource to include.</param>
+        /// <returns>Resource as an MvcHtmlString.</returns>
+        public static MvcHtmlString IncludeResouce(this HtmlHelper helper, string resourceName)
+        {
+            if (string.IsNullOrEmpty(resourceName))
+                return new MvcHtmlString("");
+
+            Stream stream = OpenEmbeddedResourceStream(resourceName);
+
+            if ((object)stream == null)
+                return new MvcHtmlString("");
+
+            using (StreamReader reader = new StreamReader(stream))
+                return new MvcHtmlString(reader.ReadToEnd());
+        }
+
+        /// <summary>
+        /// Renders a Razor view from an embedded resource.
+        /// </summary>
+        /// <param name="helper">MVC HTML helper instance.</param>
+        /// <param name="resourceName">Embedded resource name.</param>
+        /// <param name="modelType">Type of model.</param>
+        /// <param name="model">Model instance.</param>
+        /// <returns>Rendered resource as an MvcHtmlString.</returns>
+        /// <remarks>
+        /// If needed by view, define ViewBag.DataContext before rendering resource.
+        /// </remarks>
+        public static MvcHtmlString RenderResource(this HtmlHelper helper, string resourceName, Type modelType = null, object model = null)
+        {
+            DynamicViewBag viewBag = new DynamicViewBag(helper.ViewData);
+            bool isPost = HttpContext.Current.Request.HttpMethod.Equals("POST", StringComparison.OrdinalIgnoreCase);
+
+            viewBag.AddValue("IsPost", isPost);
+            viewBag.AddValue("Request", HttpContext.Current.Items["MS_HttpRequestMessage"] ?? new HttpRequestMessage(isPost ? HttpMethod.Post : HttpMethod.Get, HttpContext.Current.Request.Url));
+
+            if (FilePath.GetExtension(resourceName).Equals(".vbhtml", StringComparison.OrdinalIgnoreCase))
+                return new MvcHtmlString(RazorEngine<VisualBasicEmbeddedResource>.Default.RunCompile(resourceName, modelType, model, viewBag));
+
+            return new MvcHtmlString(RazorEngine<CSharpEmbeddedResource>.Default.RunCompile(resourceName, modelType, model, viewBag));
+        }
+
+        /// <summary>
+        /// Renders a Razor view from an embedded resource.
+        /// </summary>
+        /// <typeparam name="T">Type of model.</typeparam>
+        /// <param name="helper">MVC HTML helper instance.</param>
+        /// <param name="resourceName">Embedded resource name.</param>
+        /// <param name="model">Model instance.</param>
+        /// <returns>Rendered resource as an MvcHtmlString.</returns>
+        /// <remarks>
+        /// If needed by view, define ViewBag.DataContext before rendering resource.
+        /// </remarks>
+        public static MvcHtmlString RenderResource<T>(this HtmlHelper helper, string resourceName, T model = default(T))
+        {
+            return RenderResource(helper, resourceName, typeof(T), model);
+        }
+
+        /// <summary>
+        /// Determines if specified embedded resource exists.
+        /// </summary>
+        /// <param name="resourceName">Fully qualified name of resource to check.</param>
+        /// <returns><c>true</c> if resource exists; otherwise, <c>false</c>.</returns>
+        public static bool EmbeddedResourceExists(string resourceName)
+        {
+            return
+                s_executingAssemblyResources.Contains(resourceName) ||
+                s_callingAssemblyResources.Contains(resourceName) ||
+                s_entryAssemblyResources.Contains(resourceName);
+        }
+
+        /// <summary>
+        /// Opens a stream to an embedded resource.
+        /// </summary>
+        /// <param name="resourceName">Fully qualified name of resource to open.</param>
+        /// <returns>Stream to embedded resource if found; otherwise, <c>null</c>.</returns>
+        public static Stream OpenEmbeddedResourceStream(string resourceName)
+        {
+            if (s_executingAssemblyResources.Contains(resourceName))
+                return Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
+
+            if (s_callingAssemblyResources.Contains(resourceName))
+                return Assembly.GetCallingAssembly().GetManifestResourceStream(resourceName);
+
+            if (s_entryAssemblyResources.Contains(resourceName))
+                return Assembly.GetEntryAssembly().GetManifestResourceStream(resourceName);
+
+            return null;
         }
     }
 }

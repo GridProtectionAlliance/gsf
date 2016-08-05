@@ -298,22 +298,6 @@ namespace GSF.Web.Model
         }
 
         /// <summary>
-        /// Gets text-based embedded resource.
-        /// </summary>
-        /// <param name="resourceName">Resource name, e.g.: "GSF.Web.Model.Scripts.gsf.web.client.js".</param>
-        /// <returns>String based resource contents.</returns>
-        public string GetEmbeddedResource(string resourceName)
-        {
-            Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
-
-            if ((object)stream == null)
-                return "";
-
-            using (StreamReader reader = new StreamReader(stream))
-                return reader.ReadToEnd();
-        }
-
-        /// <summary>
         /// Gets the field name targeted as the primary label for the modeled table.
         /// </summary>
         /// <typeparam name="TModel">Modeled database table (or view).</typeparam>

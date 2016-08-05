@@ -20,17 +20,18 @@
 //       Generated original version of source code.
 //
 //*****************************************************************************************************@
-@using System
-@using System.Collections.Generic
 @using System.Net.Http
 @using System.Text
 @using GSF
 @using GSF.Web
 @using GSF.Web.Model
-@using RazorEngine.Templating
-@inherits TemplateBase
+@inherits ExtendedTemplateBase
 @{
     DataContext dataContext = ViewBag.DataContext;
+
+    if (dataContext == null) {
+        throw new ArgumentNullException("ViewBag.DataContext", "DataContext was not defined in ViewBag");
+    }
 
     if (ViewBag.PageControlScripts == null) {
         ViewBag.PageControlScripts = new StringBuilder();
@@ -39,26 +40,21 @@
     // Setup page control scripts
     StringBuilder pageControlScripts = ViewBag.PageControlScripts;
 
-#if DEBUG
-    pageControlScripts.Append(@"
-    <script src=""Scripts/knockout-3.4.0.debug.js""></script>
-    <script src=""Scripts/knockout.mapping-latest.debug.js""></script>
-    <script src=""Scripts/knockout.validation.js""></script>
-    ");
-#else
-    pageControlScripts.Append(@"
-    <script src=""Scripts/knockout-3.4.0.js""></script>
-    <script src=""Scripts/knockout.mapping-latest.js""></script>
-    <script src=""Scripts/knockout.validation.min.js""></script>
-    ");
-#endif
+    pageControlScripts.Append(string.Format(@"
+    <script src=""{0}""></script>
+    <script src=""{1}""></script>
+    <script src=""{2}""></script>
+    ",
+    Url.Content("~/Scripts/knockout-3.4.0.js"),
+    Url.Content("~/Scripts/knockout.mapping-latest.js"),
+    Url.Content("~/Scripts/knockout.validation.min.js")));
 
     pageControlScripts.Append(@"
-    <script src=""@GSF.Web.Model.Scripts.ko-reactor.min.js""></script>
-    <script src=""@GSF.Web.Model.Scripts.ko.observableDictionary.js""></script>
-    <script src=""@GSF.Web.Model.Scripts.js.cookie.js""></script>
-    <script src=""@GSF.Web.Model.Scripts.gsf.web.knockout.js""></script>
-    <script src=""@GSF.Web.Model.Scripts.pagedViewModel.js""></script>
+    <script src=""/@GSF/Web/Model/Scripts/ko-reactor.min.js""></script>
+    <script src=""/@GSF/Web/Model/Scripts/ko.observableDictionary.js""></script>
+    <script src=""/@GSF/Web/Model/Scripts/js.cookie.js""></script>
+    <script src=""/@GSF/Web/Model/Scripts/gsf.web.knockout.js""></script>
+    <script src=""/@GSF/Web/Model/Scripts/pagedViewModel.js""></script>
     <script id=""validationMessageTemplate"" type=""text/html""><!--
         --><em class=""validationPrompt"" data-bind=""validationMessage: field""></em>
     </script>
