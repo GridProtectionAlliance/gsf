@@ -494,7 +494,7 @@ namespace GSF.Web.Security
             if (!record.UseADAuthentication && !string.IsNullOrWhiteSpace(record.Password))
                 record.Password = SecurityProviderUtility.EncryptPassword(record.Password);
 
-            record.DefaultNodeID = SecurityHub.DefaultNodeID;
+            record.DefaultNodeID = DefaultNodeID;
             record.UpdatedBy = UserInfo.CurrentUserID;
             record.UpdatedOn = DateTime.UtcNow;
             m_dataContext.Table<UserAccount>().UpdateRecord(record);
