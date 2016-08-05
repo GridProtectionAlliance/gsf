@@ -334,9 +334,11 @@ namespace GSF.Web.Hosting
             // Remove quotes from class name
             className = className.Substring(1, className.Length - 2).Trim();
 
-            // ReSharper disable once AssignNullToNotNullAttribute
-            Assembly entryAssembly = AssemblyInfo.EntryAssembly.Assembly;
-            IHostedHttpHandler handler = Activator.CreateInstance(entryAssembly.GetType(className)) as IHostedHttpHandler;
+            IHostedHttpHandler handler = null;
+            Assembly entryAssembly = Assembly.GetEntryAssembly();
+
+            if ((object)entryAssembly != null)
+                handler = Activator.CreateInstance(entryAssembly.GetType(className)) as IHostedHttpHandler;
 
             if (handler == null)
                 throw new InvalidOperationException($"Failed to create hosted HTTP handler \"{className}\" - make sure class implements IHostedHttpHandler interface.");

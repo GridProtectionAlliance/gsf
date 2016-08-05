@@ -987,7 +987,7 @@ namespace GSF.Web.Model
         /// </summary>
         /// <typeparam name="TModel">Modeled table.</typeparam>
         /// <param name="fieldName">Field name for input text field.</param>
-        /// <param name="inputType">Input field type, defaults to text.</param>
+        /// <param name="inputType">Input field type, defaults to appropriate model field type.</param>
         /// <param name="fieldLabel">Label name for input text field, pulls from <see cref="LabelAttribute"/> if defined, otherwise defaults to <paramref name="fieldName"/>.</param>
         /// <param name="fieldID">ID to use for input field; defaults to input + <paramref name="fieldName"/>.</param>
         /// <param name="groupDataBinding">Data-bind operations to apply to outer form-group div, if any.</param>
@@ -1009,10 +1009,20 @@ namespace GSF.Web.Model
             {
                 Type fieldType = tableOperations.GetFieldType(fieldName);
 
-                if (IsNumericType(fieldType))
+                if (IsIntegerType(fieldType))
+                {
                     inputType = "number";
+                    customDataBinding = string.IsNullOrEmpty(customDataBinding) ? "integer" : $"integer, {customDataBinding}";
+                }
+                else if (IsNumericType(fieldType))
+                {
+                    inputType = "number";
+                    customDataBinding = string.IsNullOrEmpty(customDataBinding) ? "numeric" : $"numeric, {customDataBinding}";
+                }
                 else if (fieldType == typeof(DateTime))
+                {
                     inputType = "date";
+                }
             } 
 
             if (string.IsNullOrEmpty(fieldLabel))
@@ -1385,7 +1395,8 @@ namespace GSF.Web.Model
         }
 
         // Static Methods
-        private static bool IsNumericType(Type type)
+
+        private static bool IsIntegerType(Type type)
         {
             return
                 type == typeof(byte) ||
@@ -1397,7 +1408,12 @@ namespace GSF.Web.Model
                 type == typeof(int) ||
                 type == typeof(uint) ||
                 type == typeof(long) ||
-                type == typeof(ulong) ||
+                type == typeof(ulong);
+        }
+
+        private static bool IsNumericType(Type type)
+        {
+            return
                 type == typeof(float) ||
                 type == typeof(double) ||
                 type == typeof(decimal);

@@ -67,7 +67,9 @@ namespace GSF.Web.Model
         /// <returns>Raw string value that is not HTML encoded.</returns>
         public IEncodedString Raw(string value) => new RawString(value);
 
-        /// <summary>Includes the template with the specified name.</summary>
+        /// <summary>
+        /// Includes the template with the specified name.
+        /// </summary>
         /// <param name="name">The name of the template type in cache.</param>
         /// <param name="model">The model or NULL if there is no model for the template.</param>
         /// <param name="modelType"></param>

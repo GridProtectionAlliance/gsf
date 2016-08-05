@@ -67,3 +67,19 @@ ko.bindingHandlers.integer = {
         });
     }
 };
+
+// Handle special validation error message location when using bootstrap add-on fields
+ko.bindingHandlers.validationCore = {
+    init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        const parent = $(element).parent().closest(".input-group");
+        const message = document.createElement("em");
+        message.className = "validationMessage small";
+
+        if (parent.length > 0)
+            $(parent).after(message);
+        else
+            $(element).after(message);
+
+        ko.applyBindingsToNode(message, { validationMessage: valueAccessor() });
+    }
+};
