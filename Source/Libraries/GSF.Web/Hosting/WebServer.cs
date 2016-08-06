@@ -66,7 +66,7 @@ namespace GSF.Web.Hosting
         private readonly string m_webRootPath;
         private readonly IRazorEngine m_razorEngineCS;
         private readonly IRazorEngine m_razorEngineVB;
-        private readonly ConcurrentDictionary<string, uint> m_etagCache;
+        private readonly ConcurrentDictionary<string, long> m_etagCache;
         private readonly ConcurrentDictionary<string, Type> m_handlerTypeCache;
         private readonly ConcurrentDictionary<string, Tuple<Type, Type>> m_pagedViewModelTypes;
         private readonly SafeFileWatcher m_fileWatcher;
@@ -88,7 +88,7 @@ namespace GSF.Web.Hosting
             m_razorEngineCS = razorEngineCS ?? (releaseMode ? RazorEngine<CSharp>.Default : RazorEngine<CSharpDebug>.Default as IRazorEngine);
             m_razorEngineVB = razorEngineVB ?? (releaseMode ? RazorEngine<VisualBasic>.Default : RazorEngine<VisualBasicDebug>.Default as IRazorEngine);
             m_webRootPath = FilePath.AddPathSuffix(webRootPath ?? m_razorEngineCS.TemplatePath);
-            m_etagCache = new ConcurrentDictionary<string, uint>(StringComparer.InvariantCultureIgnoreCase);
+            m_etagCache = new ConcurrentDictionary<string, long>(StringComparer.InvariantCultureIgnoreCase);
             m_handlerTypeCache = new ConcurrentDictionary<string, Type>(StringComparer.InvariantCultureIgnoreCase);
             m_pagedViewModelTypes = new ConcurrentDictionary<string, Tuple<Type, Type>>(StringComparer.InvariantCultureIgnoreCase);
 
@@ -230,7 +230,7 @@ namespace GSF.Web.Hosting
 
                         if ((object)source != null)
                         {
-                            uint responseHash = 0;
+                            long responseHash = 0;
 
                             if (ClientCacheEnabled && !m_etagCache.TryGetValue(fileName, out responseHash))
                             {
@@ -273,34 +273,6 @@ namespace GSF.Web.Hosting
             }
 
             return response;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool PublishResponseContent(HttpRequestMessage request, HttpResponseMessage response, long responseHash)
-        {
-            if (!ClientCacheEnabled)
-                return true;
-
-            // See if client's version of cached resource is up to date
-            foreach (EntityTagHeaderValue headerValue in request.Headers.IfNoneMatch)
-            {
-                long requestHash;
-
-                if (long.TryParse(headerValue.Tag?.Substring(1, headerValue.Tag.Length - 2), out requestHash) && responseHash == requestHash)
-                {
-                    response.StatusCode = HttpStatusCode.NotModified;
-                    return false;
-                }
-            }
-
-            response.Headers.CacheControl = new CacheControlHeaderValue
-            {
-                Public = true,
-                MaxAge = new TimeSpan(31536000 * TimeSpan.TicksPerSecond)
-            };
-
-            response.Headers.ETag = new EntityTagHeaderValue($"\"{responseHash}\"");
-            return true;
         }
 
         private async Task ProcessHTTPHandler(string pageName, HttpRequestMessage request, HttpResponseMessage response)
@@ -353,8 +325,52 @@ namespace GSF.Web.Hosting
             if ((object)handler == null)
                 throw new InvalidOperationException($"Failed to create hosted HTTP handler \"{handlerType?.FullName}\" - make sure class implements IHostedHttpHandler interface.");
 
-            // Allow handler to process request
-            await handler.ProcessRequestAsync(request, response);
+            if (ClientCacheEnabled && handler.UseClientCache)
+            {
+                long responseHash;
+
+                if (!m_etagCache.TryGetValue(fileName, out responseHash))
+                {
+                    responseHash = handler.GetContentHash(request);
+                    m_etagCache.TryAdd(fileName, responseHash);
+                    OnStatusMessage($"Cache [{responseHash}] added for file \"{fileName}\"");
+                }
+
+                if (PublishResponseContent(request, response, responseHash))
+                    await handler.ProcessRequestAsync(request, response);
+            }
+            else
+            {
+                await handler.ProcessRequestAsync(request, response);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool PublishResponseContent(HttpRequestMessage request, HttpResponseMessage response, long responseHash)
+        {
+            if (!ClientCacheEnabled)
+                return true;
+
+            // See if client's version of cached resource is up to date
+            foreach (EntityTagHeaderValue headerValue in request.Headers.IfNoneMatch)
+            {
+                long requestHash;
+
+                if (long.TryParse(headerValue.Tag?.Substring(1, headerValue.Tag.Length - 2), out requestHash) && responseHash == requestHash)
+                {
+                    response.StatusCode = HttpStatusCode.NotModified;
+                    return false;
+                }
+            }
+
+            response.Headers.CacheControl = new CacheControlHeaderValue
+            {
+                Public = true,
+                MaxAge = new TimeSpan(31536000 * TimeSpan.TicksPerSecond)
+            };
+
+            response.Headers.ETag = new EntityTagHeaderValue($"\"{responseHash}\"");
+            return true;
         }
 
         private void OnExecutionException(Exception exception)
@@ -369,7 +385,7 @@ namespace GSF.Web.Hosting
 
         private void m_fileWatcher_FileChange(object sender, FileSystemEventArgs e)
         {
-            uint responseHash;
+            long responseHash;
             Type handlerType;
 
             if (m_etagCache.TryRemove(e.FullPath, out responseHash))

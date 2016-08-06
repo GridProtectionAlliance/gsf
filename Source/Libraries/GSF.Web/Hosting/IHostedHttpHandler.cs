@@ -37,5 +37,23 @@ namespace GSF.Web.Hosting
         /// <param name="request">HTTP request message.</param>
         /// <param name="response">HTTP response message.</param>
         Task ProcessRequestAsync(HttpRequestMessage request, HttpResponseMessage response);
+
+        /// <summary>
+        /// Determines if client cache should be enabled for rendered handler content.
+        /// </summary>
+        /// <remarks>
+        /// If rendered handler content does not change often, the server and client will use the
+        /// <see cref="GetContentHash"/> to determine if the client needs to refresh the content.
+        /// </remarks>
+        bool UseClientCache { get;  }
+
+        /// <summary>
+        /// Gets hash of response content based on any <paramref name="request"/> parameters.
+        /// </summary>
+        /// <param name="request">HTTP request message.</param>
+        /// <remarks>
+        /// Value is only used when <see cref="UseClientCache"/> is <c>true</c>.
+        /// </remarks>
+        long GetContentHash(HttpRequestMessage request);
     }
 }
