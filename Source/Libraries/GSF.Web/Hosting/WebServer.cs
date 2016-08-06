@@ -209,7 +209,7 @@ namespace GSF.Web.Hosting
                     response.Content = new StringContent(content, Encoding.UTF8, "text/html");
                     break;
                 case ".ashx":
-                    await ProcessHTTPHandler(pageName, request, response);
+                    await ProcessHTTPHandler(pageName, embeddedResource, request, response);
                     break;
                 default:
                     await Task.Run(() =>
@@ -275,46 +275,48 @@ namespace GSF.Web.Hosting
             return response;
         }
 
-        private async Task ProcessHTTPHandler(string pageName, HttpRequestMessage request, HttpResponseMessage response)
+        private async Task ProcessHTTPHandler(string pageName, bool embeddedResource, HttpRequestMessage request, HttpResponseMessage response)
         {
-            string fileName = FilePath.GetAbsolutePath($"{m_webRootPath}{pageName.Replace('/', Path.DirectorySeparatorChar)}");
-
-            if (!File.Exists(fileName))
-            {
-                response.StatusCode = HttpStatusCode.NotFound;
-                return;
-            }
-
+            string fileName = embeddedResource ? pageName : FilePath.GetAbsolutePath($"{m_webRootPath}{pageName.Replace('/', Path.DirectorySeparatorChar)}");
             Type handlerType;
 
             if (!m_handlerTypeCache.TryGetValue(fileName, out handlerType))
             {
-                string handlerHeader, className;
+                if (embeddedResource ? !WebExtensions.EmbeddedResourceExists(pageName) : !File.Exists(fileName))
+                {
+                    response.StatusCode = HttpStatusCode.NotFound;
+                    return;
+                }
 
-                // Parse class name from ASHX handler header parameters
-                using (StreamReader reader = File.OpenText(fileName))
-                    handlerHeader = reader.ReadToEnd().RemoveCrLfs().Trim();
+                using (Stream source = embeddedResource ? WebExtensions.OpenEmbeddedResourceStream(pageName) : File.OpenRead(fileName))
+                {
+                    string handlerHeader, className;
 
-                // Clean up header formatting to make parsing easier
-                handlerHeader = handlerHeader.RemoveDuplicateWhiteSpace().Replace(" =", "=").Replace("= ", "=");
+                    // Parse class name from ASHX handler header parameters
+                    using (StreamReader reader = new StreamReader(source))
+                        handlerHeader = reader.ReadToEnd().RemoveCrLfs().Trim();
 
-                string[] tokens = handlerHeader.Split(' ');
+                    // Clean up header formatting to make parsing easier
+                    handlerHeader = handlerHeader.RemoveDuplicateWhiteSpace().Replace(" =", "=").Replace("= ", "=");
 
-                if (!tokens.Any(token => token.Equals("WebHandler", StringComparison.OrdinalIgnoreCase)))
-                    throw new InvalidOperationException($"Expected \"WebHandler\" file type not found in ASHX file header: {handlerHeader}");
+                    string[] tokens = handlerHeader.Split(' ');
 
-                Dictionary<string, string> parameters = handlerHeader.ReplaceCaseInsensitive("WebHandler", "").Replace("<%", "").Replace("%>", "").Replace("@", "").Trim().ParseKeyValuePairs(' ');
+                    if (!tokens.Any(token => token.Equals("WebHandler", StringComparison.OrdinalIgnoreCase)))
+                        throw new InvalidOperationException($"Expected \"WebHandler\" file type not found in ASHX file header: {handlerHeader}");
 
-                if (!parameters.TryGetValue("Class", out className))
-                    throw new InvalidOperationException($"Missing \"Class\" parameter in ASHX file header: {handlerHeader}");
+                    Dictionary<string, string> parameters = handlerHeader.ReplaceCaseInsensitive("WebHandler", "").Replace("<%", "").Replace("%>", "").Replace("@", "").Trim().ParseKeyValuePairs(' ');
 
-                // Remove quotes from class name
-                className = className.Substring(1, className.Length - 2).Trim();
+                    if (!parameters.TryGetValue("Class", out className))
+                        throw new InvalidOperationException($"Missing \"Class\" parameter in ASHX file header: {handlerHeader}");
 
-                handlerType = AssemblyInfo.FindType(className);
-                m_handlerTypeCache.TryAdd(fileName, handlerType);
+                    // Remove quotes from class name
+                    className = className.Substring(1, className.Length - 2).Trim();
 
-                OnStatusMessage($"Cached handler type [{handlerType?.FullName}] for file \"{fileName}\"");
+                    handlerType = AssemblyInfo.FindType(className);
+                    m_handlerTypeCache.TryAdd(fileName, handlerType);
+
+                    OnStatusMessage($"Cached handler type [{handlerType?.FullName}] for file \"{fileName}\"");
+                }
             }
 
             IHostedHttpHandler handler = null;
