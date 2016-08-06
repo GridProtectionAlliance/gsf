@@ -255,9 +255,9 @@ namespace GSF.Web.Hosting
                                 break;
                             }
 
-                            await Task.Run(() =>
+                            await Task.Run(async () =>
                             {
-                                using (Stream source = OpenResource(fileName, embeddedResource))
+                                using (Stream source = await OpenResource(fileName, embeddedResource))
                                 {
                                     // Calculate check-sum for file
                                     const int BufferSize = 32768;
@@ -282,7 +282,7 @@ namespace GSF.Web.Hosting
 
                         if (PublishResponseContent(request, response, responseHash))
                         {
-                            response.Content = new StreamContent(OpenResource(fileName, embeddedResource));
+                            response.Content = new StreamContent(await OpenResource(fileName, embeddedResource));
                             response.Content.Headers.ContentType = new MediaTypeHeaderValue(MimeMapping.GetMimeMapping(pageName));
                         }
                     }
@@ -294,7 +294,7 @@ namespace GSF.Web.Hosting
                             break;
                         }
 
-                        response.Content = new StreamContent(OpenResource(fileName, embeddedResource));
+                        response.Content = new StreamContent(await OpenResource(fileName, embeddedResource));
                         response.Content.Headers.ContentType = new MediaTypeHeaderValue(MimeMapping.GetMimeMapping(pageName));
                     }
                     break;
@@ -316,7 +316,7 @@ namespace GSF.Web.Hosting
                     return;
                 }
 
-                using (Stream source = OpenResource(fileName, embeddedResource))
+                using (Stream source = await OpenResource(fileName, embeddedResource))
                 {
                     string handlerHeader, className;
 
@@ -379,7 +379,7 @@ namespace GSF.Web.Hosting
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private Stream OpenResource(string fileName, bool embeddedResource)
+        private async Task<Stream> OpenResource(string fileName, bool embeddedResource)
         {
             Stream stream = embeddedResource ? WebExtensions.OpenEmbeddedResourceStream(fileName) : File.OpenRead(fileName);
 
@@ -398,13 +398,23 @@ namespace GSF.Web.Hosting
             {
                 case ".js":
                     if (MinifyJavascript)
-                        using (StreamReader reader = new StreamReader(stream))
-                            minimizedStream = minifier.MinifyJavaScript(reader.ReadToEnd()).ToStream(Encoding.UTF8);
+                    {
+                        await Task.Run(() =>
+                        {
+                            using (StreamReader reader = new StreamReader(stream))
+                                minimizedStream = minifier.MinifyJavaScript(reader.ReadToEnd()).ToStream(Encoding.UTF8);
+                        });                        
+                    }
                     break;
                 case ".css":
                     if (MinifyStyleSheets)
-                        using (StreamReader reader = new StreamReader(stream))
-                            minimizedStream = minifier.MinifyStyleSheet(reader.ReadToEnd()).ToStream(Encoding.UTF8);
+                    {
+                        await Task.Run(() =>
+                        {
+                            using (StreamReader reader = new StreamReader(stream))
+                                minimizedStream = minifier.MinifyStyleSheet(reader.ReadToEnd()).ToStream(Encoding.UTF8);
+                        });                        
+                    }
                     break;
             }
 
