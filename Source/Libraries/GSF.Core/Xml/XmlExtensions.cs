@@ -33,8 +33,13 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Data;
+using System.IO;
+using System.Linq;
 using System.Xml;
+using System.Xml.Linq;
+using System.Xml.Xsl;
 
 namespace GSF.Xml
 {
@@ -200,6 +205,96 @@ namespace GSF.Xml
             }
 
             return dataSet;
+        }
+
+        /// <summary>
+        /// Transforms an XML document using the given XSL template.
+        /// </summary>
+        /// <param name="document">The document to be transformed.</param>
+        /// <param name="transform">The template that defines how the data should be transformed.</param>
+        /// <returns>The result of the transformation.</returns>
+        public static string ApplyXSLTransform(this string document, string transform)
+        {
+            using (StringReader documentReader = new StringReader(document))
+            using (StringReader transformReader = new StringReader(transform))
+            using (XmlReader xmlDocumentReader = XmlReader.Create(documentReader))
+            using (XmlReader xmlTransformReader = XmlReader.Create(transformReader))
+            using (StringWriter resultWriter = new StringWriter())
+            {
+                XslCompiledTransform compiler = new XslCompiledTransform();
+                compiler.Load(xmlTransformReader);
+                compiler.Transform(xmlDocumentReader, null, resultWriter);
+                return resultWriter.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Transforms all elements in the given document matching the given
+        /// <paramref name="name"/> using the given <paramref name="selector"/>
+        /// function to perform the transformation.
+        /// </summary>
+        /// <param name="document">The document to be modified.</param>
+        /// <param name="name">The name of the elements to be transformed.</param>
+        /// <param name="selector">The function that defines the transformation.</param>
+        public static void TransformAll(this XDocument document, XName name, Func<XElement, object> selector)
+        {
+            document
+                .Descendants(name)
+                .ToList()
+                .ForEach(element => element.ReplaceWith(selector(element)));
+        }
+
+        /// <summary>
+        /// Transforms all elements in the given document matching the given
+        /// <paramref name="name"/> using the given <paramref name="selector"/>
+        /// function to perform the transformation.
+        /// </summary>
+        /// <param name="document">The document to be modified.</param>
+        /// <param name="name">The name of the elements to be transformed.</param>
+        /// <param name="selector">The function that defines the transformation.</param>
+        public static void TransformAll(this XDocument document, XName name, Func<XElement, int, object> selector)
+        {
+            document
+                .Descendants(name)
+                .Select((Element, Index) => new { Element, Index })
+                .ToList()
+                .ForEach(obj => obj.Element.ReplaceWith(selector(obj.Element, obj.Index)));
+        }
+
+        /// <summary>
+        /// Formats the contents of an XML element and returns the result.
+        /// </summary>
+        /// <param name="element">The elements whose contents are to be formatted.</param>
+        /// <returns>The formatted contents of the elements.</returns>
+        /// <remarks>
+        /// The format to be used is determined by the <c>type</c> and <c>spec</c>
+        /// attributes of the element. The <c>type</c> attribute should be the fully
+        /// qualified type name of an <see cref="IFormattable"/> type. The <c>spec</c>
+        /// attribute defines the format string to be used when formatting the contents.
+        /// If <c>type</c> or <c>spec</c> are not defined or if <c>type</c> resovles to
+        /// a type that is not <see cref="IFormattable"/>, the contents are not formatted
+        /// and are returned as-is.
+        /// </remarks>
+        public static object Format(this XElement element)
+        {
+            IFormattable formattable;
+
+            Type elementType;
+            string formatString;
+            string value;
+
+            elementType = Type.GetType((string)element.Attribute("type"), false);
+            formatString = (string)element.Attribute("spec");
+
+            if ((object)elementType == null || (object)formatString == null)
+                return element.Nodes();
+
+            if (!typeof(IFormattable).IsAssignableFrom(elementType))
+                return element.Nodes();
+
+            value = (string)element;
+            formattable = (IFormattable)Convert.ChangeType(value, elementType);
+            return new XText(formattable.ToString(formatString, null));
         }
     }
 }
