@@ -335,10 +335,10 @@ namespace GSF.Web.Hosting
             className = className.Substring(1, className.Length - 2).Trim();
 
             IHostedHttpHandler handler = null;
-            Assembly entryAssembly = Assembly.GetEntryAssembly();
+            Type handlerType = AssemblyInfo.FindType(className);
 
-            if ((object)entryAssembly != null)
-                handler = Activator.CreateInstance(entryAssembly.GetType(className)) as IHostedHttpHandler;
+            if ((object)handlerType != null)
+                handler = Activator.CreateInstance(handlerType) as IHostedHttpHandler;
 
             if (handler == null)
                 throw new InvalidOperationException($"Failed to create hosted HTTP handler \"{className}\" - make sure class implements IHostedHttpHandler interface.");

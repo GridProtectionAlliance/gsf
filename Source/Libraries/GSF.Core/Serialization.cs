@@ -49,6 +49,7 @@ using System.Runtime.Serialization.Json;
 using System.ServiceModel;
 using System.Xml.Serialization;
 using GSF.IO;
+using GSF.Reflection;
 
 namespace GSF
 {
@@ -313,22 +314,29 @@ namespace GSF
                 if (newTypeName.Equals("GSF.PhasorProtocols.LineFrequency", StringComparison.Ordinal))
                     newTypeName = "GSF.Units.EE.LineFrequency";
 
-                // Search each assembly in the current application
-                // domain for the type with the transformed name
-                foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+                try
                 {
-                    try
+                    // Search each assembly in the current application domain for the type with the transformed name
+                    return AssemblyInfo.FindType(newTypeName);
+                }
+                catch
+                {
+                    // Fall back on more brute force search when simple search fails
+                    foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
                     {
-                        newType = assembly.GetType(newTypeName);
+                        try
+                        {
+                            newType = assembly.GetType(newTypeName);
 
-                        if ((object)newType != null)
-                            return newType;
-                    }
-                    catch
-                    {
-                        // Ignore errors that occur when attempting to load
-                        // types from assemblies as we may still be able to
-                        // load the type from a different assembly
+                            if ((object)newType != null)
+                                return newType;
+                        }
+                        catch
+                        {
+                            // Ignore errors that occur when attempting to load
+                            // types from assemblies as we may still be able to
+                            // load the type from a different assembly
+                        }
                     }
                 }
 

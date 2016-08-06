@@ -28,7 +28,7 @@ using System.Net.Http;
 namespace GSF.Web
 {
     /// <summary>
-    /// Represents parsed HTTP post data from multipart form data.
+    /// Represents parsed HTTP post data from multi-part form data.
     /// </summary>
     public class PostData
     {
@@ -56,12 +56,12 @@ namespace GSF.Web
         #region [ Properties ]
 
         /// <summary>
-        /// Gets any form data passed as part of the multipart form data.
+        /// Gets any form data passed as part of the multi-part form data.
         /// </summary>
         public NameValueCollection FormData => m_formData;
 
         /// <summary>
-        /// Gets any uploaded file data passed as part of the multipart form data.
+        /// Gets any uploaded file data passed as part of the multi-part form data.
         /// </summary>
         public List<HttpContent> FileData => m_fileData;
 

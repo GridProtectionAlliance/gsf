@@ -561,7 +561,22 @@ namespace GSF.Reflection
 
         // Static Properties
 
-        /// <summary>Gets the <see cref="AssemblyInfo"/> object of the assembly that invoked the currently executing method.</summary>
+        /// <summary>
+        /// Finds the specified <paramref name="typeName"/> searching through all loaded assemblies.
+        /// </summary>
+        /// <param name="typeName">Fully qualified type name.</param>
+        /// <returns>The <see cref="Type"/> found; otherwise <c>null</c>.</returns>
+        public static Type FindType(string typeName)
+        {
+            return AppDomain.CurrentDomain.GetAssemblies()
+                    .Where(assembly => !assembly.IsDynamic)
+                    .SelectMany(assembly => assembly.GetTypes())
+                    .FirstOrDefault(type => type.FullName.Equals(typeName));
+        }
+
+        /// <summary>
+        /// Gets the <see cref="AssemblyInfo"/> object of the assembly that invoked the currently executing method.
+        /// </summary>
         public static AssemblyInfo CallingAssembly
         {
             get
@@ -603,7 +618,9 @@ namespace GSF.Reflection
             }
         }
 
-        /// <summary>Gets the <see cref="AssemblyInfo"/> object of the process executable in the default application domain.</summary>
+        /// <summary>
+        /// Gets the <see cref="AssemblyInfo"/> object of the process executable in the default application domain.
+        /// </summary>
         public static AssemblyInfo EntryAssembly
         {
             get
@@ -621,7 +638,9 @@ namespace GSF.Reflection
             }
         }
 
-        /// <summary>Gets the <see cref="AssemblyInfo"/> object of the assembly that contains the code that is currently executing.</summary>
+        /// <summary>
+        /// Gets the <see cref="AssemblyInfo"/> object of the assembly that contains the code that is currently executing.
+        /// </summary>
         public static AssemblyInfo ExecutingAssembly
         {
             get
@@ -636,7 +655,9 @@ namespace GSF.Reflection
 
         // Static Methods
 
-        /// <summary>Loads the specified assembly that is embedded as a resource in the assembly.</summary>
+        /// <summary>
+        /// Loads the specified assembly that is embedded as a resource in the assembly.
+        /// </summary>
         /// <param name="assemblyName">Name of the assembly to load.</param>
         /// <remarks>This cannot be used to load GSF.Core itself.</remarks>
         [SecurityCritical]

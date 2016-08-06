@@ -70,21 +70,21 @@ namespace GSF.Web
 
             #region [ Properties ]
 
-            // Gets any data passed as part of the multipart form data
+            // Gets any data passed as part of the multi-part form data
             public PostData PostData => m_postData;
 
             #endregion
 
             #region [ Methods ]
 
-            // Gets the stream where to write the body part to. This method is called when a MIME multipart body part has been parsed
+            // Gets the stream where to write the body part to. This method is called when a MIME multi-part body part has been parsed
             public override Stream GetStream(HttpContent parent, HttpContentHeaders headers)
             {
                 // For form data, Content-Disposition header is a requirement
                 ContentDispositionHeaderValue contentDisposition = headers.ContentDisposition;
 
-                if (contentDisposition == null)
-                    throw new InvalidOperationException("Expected \"Content-Disposition\" header field not found in MIME multipart body.");
+                if ((object)contentDisposition == null)
+                    throw new InvalidOperationException("Expected \"Content-Disposition\" header field not found in MIME multi-part body.");
 
                 // Post process this body part as form data if no file name is specified
                 m_isFormData.Add(string.IsNullOrEmpty(contentDisposition.FileName));
