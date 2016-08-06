@@ -209,86 +209,85 @@ namespace GSF.Web.Hosting
                     response.Content = new StringContent(content, Encoding.UTF8, "text/html");
                     break;
                 case ".ashx":
-                    await ProcessHTTPHandler(pageName, embeddedResource, request, response);
+                    await ProcessHTTPHandlerAsync(pageName, embeddedResource, request, response);
                     break;
                 default:
-                    await Task.Run(() =>
+                    string fileName = GetResourceFileName(pageName, embeddedResource);
+
+                    if (ClientCacheEnabled)
                     {
-                        string fileName;
-                        Stream source;
+                        long responseHash;
 
-                        if (embeddedResource)
+                        if (!m_etagCache.TryGetValue(fileName, out responseHash))
                         {
-                            fileName = pageName;
-                            source = WebExtensions.OpenEmbeddedResourceStream(pageName);
-                        }
-                        else
-                        {
-                            fileName = FilePath.GetAbsolutePath($"{m_webRootPath}{pageName.Replace('/', Path.DirectorySeparatorChar)}");
-                            source = File.Exists(fileName) ? File.OpenRead(fileName) : null;
-                        }
-
-                        if ((object)source != null)
-                        {
-                            long responseHash = 0;
-
-                            if (ClientCacheEnabled && !m_etagCache.TryGetValue(fileName, out responseHash))
+                            if (!ResourceExists(fileName, embeddedResource))
                             {
-                                // Calculate check-sum for file
-                                const int BufferSize = 32768;
-                                byte[] buffer = new byte[BufferSize];
-                                Crc32 calculatedHash = new Crc32();
+                                response.StatusCode = HttpStatusCode.NotFound;
+                                break;
+                            }
 
-                                int bytesRead = source.Read(buffer, 0, BufferSize);
-
-                                while (bytesRead > 0)
+                            await Task.Run(() =>
+                            {
+                                using (Stream source = OpenResource(fileName, embeddedResource))
                                 {
-                                    calculatedHash.Update(buffer, 0, bytesRead);
-                                    bytesRead = source.Read(buffer, 0, BufferSize);
+                                    // Calculate check-sum for file
+                                    const int BufferSize = 32768;
+                                    byte[] buffer = new byte[BufferSize];
+                                    Crc32 calculatedHash = new Crc32();
+
+                                    int bytesRead = source.Read(buffer, 0, BufferSize);
+
+                                    while (bytesRead > 0)
+                                    {
+                                        calculatedHash.Update(buffer, 0, bytesRead);
+                                        bytesRead = source.Read(buffer, 0, BufferSize);
+                                    }
+
+                                    responseHash = calculatedHash.Value;
+                                    m_etagCache.TryAdd(fileName, responseHash);
+
+                                    OnStatusMessage($"Cache [{responseHash}] added for file \"{fileName}\"");
                                 }
-
-                                responseHash = calculatedHash.Value;
-                                m_etagCache.TryAdd(fileName, responseHash);
-                                source.Seek(0, SeekOrigin.Begin);
-
-                                OnStatusMessage($"Cache [{responseHash}] added for file \"{fileName}\"");
-                            }
-
-                            if (PublishResponseContent(request, response, responseHash))
-                            {
-                                response.Content = new StreamContent(source);
-                                response.Content.Headers.ContentType = new MediaTypeHeaderValue(MimeMapping.GetMimeMapping(pageName));
-                            }
-                            else
-                            {
-                                source.Dispose();
-                            }
+                            });
                         }
-                        else
+
+                        if (PublishResponseContent(request, response, responseHash))
+                        {
+                            response.Content = new StreamContent(OpenResource(fileName, embeddedResource));
+                            response.Content.Headers.ContentType = new MediaTypeHeaderValue(MimeMapping.GetMimeMapping(pageName));
+                        }
+                    }
+                    else
+                    {
+                        if (!ResourceExists(fileName, embeddedResource))
                         {
                             response.StatusCode = HttpStatusCode.NotFound;
+                            break;
                         }
-                    });
+
+                        response.Content = new StreamContent(OpenResource(fileName, embeddedResource));
+                        response.Content.Headers.ContentType = new MediaTypeHeaderValue(MimeMapping.GetMimeMapping(pageName));
+                    }
                     break;
             }
 
             return response;
         }
 
-        private async Task ProcessHTTPHandler(string pageName, bool embeddedResource, HttpRequestMessage request, HttpResponseMessage response)
+        private async Task ProcessHTTPHandlerAsync(string pageName, bool embeddedResource, HttpRequestMessage request, HttpResponseMessage response)
         {
-            string fileName = embeddedResource ? pageName : FilePath.GetAbsolutePath($"{m_webRootPath}{pageName.Replace('/', Path.DirectorySeparatorChar)}");
+            string fileName = GetResourceFileName(pageName, embeddedResource);
             Type handlerType;
 
             if (!m_handlerTypeCache.TryGetValue(fileName, out handlerType))
             {
-                if (embeddedResource ? !WebExtensions.EmbeddedResourceExists(pageName) : !File.Exists(fileName))
+                if (!ResourceExists(fileName, embeddedResource))
                 {
                     response.StatusCode = HttpStatusCode.NotFound;
                     return;
                 }
 
-                using (Stream source = embeddedResource ? WebExtensions.OpenEmbeddedResourceStream(pageName) : File.OpenRead(fileName))
+                using (Stream source = OpenResource(fileName, embeddedResource))
                 {
                     string handlerHeader, className;
 
@@ -336,6 +335,24 @@ namespace GSF.Web.Hosting
             {
                 await handler.ProcessRequestAsync(request, response);
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private string GetResourceFileName(string pageName, bool embeddedResource)
+        {
+            return embeddedResource ? pageName : FilePath.GetAbsolutePath($"{m_webRootPath}{pageName.Replace('/', Path.DirectorySeparatorChar)}");
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool ResourceExists(string fileName, bool embeddedResource)
+        {
+            return embeddedResource ? WebExtensions.EmbeddedResourceExists(fileName) : File.Exists(fileName);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private Stream OpenResource(string fileName, bool embeddedResource)
+        {
+            return embeddedResource ? WebExtensions.OpenEmbeddedResourceStream(fileName) : File.OpenRead(fileName);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
