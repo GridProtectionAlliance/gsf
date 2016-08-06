@@ -327,16 +327,7 @@ namespace GSF.Web.Hosting
 
             if (ClientCacheEnabled && handler.UseClientCache)
             {
-                long responseHash;
-
-                if (!m_etagCache.TryGetValue(fileName, out responseHash))
-                {
-                    responseHash = handler.GetContentHash(request);
-                    m_etagCache.TryAdd(fileName, responseHash);
-                    OnStatusMessage($"Cache [{responseHash}] added for file \"{fileName}\"");
-                }
-
-                if (PublishResponseContent(request, response, responseHash))
+                if (PublishResponseContent(request, response, handler.GetContentHash(request)))
                     await handler.ProcessRequestAsync(request, response);
             }
             else
