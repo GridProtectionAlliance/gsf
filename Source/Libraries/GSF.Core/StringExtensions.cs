@@ -220,6 +220,24 @@ namespace GSF
         }
 
         /// <summary>
+        /// Converts string into a stream using the specified <paramref name="encoding"/>.
+        /// </summary>
+        /// <param name="value">Input to string to convert to a string.</param>
+        /// <param name="encoding">String encoding to use; defaults to <see cref="Encoding.Default"/>.</param>
+        /// <returns>String <paramref name="value"/> encoded onto a stream.</returns>
+        public static Stream ToStream(this string value, Encoding encoding = null)
+        {
+            MemoryStream stream = new MemoryStream();
+            StreamWriter writer = new StreamWriter(stream, encoding ?? Encoding.Default);
+
+            writer.Write(value);
+            writer.Flush();
+            stream.Position = 0;
+
+            return stream;
+        }
+
+        /// <summary>
         /// Turns source string into an array of string segments - each with a set maximum width - for parsing or displaying.
         /// </summary>
         /// <param name="value">Input string to break up into segments.</param>

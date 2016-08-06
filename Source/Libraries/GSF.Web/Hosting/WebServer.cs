@@ -40,6 +40,7 @@ using GSF.IO;
 using GSF.IO.Checksums;
 using GSF.Reflection;
 using GSF.Web.Model;
+using Microsoft.Ajax.Utilities;
 
 namespace GSF.Web.Hosting
 {
@@ -64,6 +65,7 @@ namespace GSF.Web.Hosting
 
         // Fields
         private readonly string m_webRootPath;
+        private readonly bool m_releaseMode;
         private readonly IRazorEngine m_razorEngineCS;
         private readonly IRazorEngine m_razorEngineVB;
         private readonly ConcurrentDictionary<string, long> m_etagCache;
@@ -84,9 +86,9 @@ namespace GSF.Web.Hosting
         /// <param name="razorEngineVB">Razor engine instance for .vbhtml templates; uses default instance if not provided.</param>
         public WebServer(string webRootPath = null, IRazorEngine razorEngineCS = null, IRazorEngine razorEngineVB = null)
         {
-            bool releaseMode = !AssemblyInfo.EntryAssembly.Debuggable;
-            m_razorEngineCS = razorEngineCS ?? (releaseMode ? RazorEngine<CSharp>.Default : RazorEngine<CSharpDebug>.Default as IRazorEngine);
-            m_razorEngineVB = razorEngineVB ?? (releaseMode ? RazorEngine<VisualBasic>.Default : RazorEngine<VisualBasicDebug>.Default as IRazorEngine);
+            m_releaseMode = !AssemblyInfo.EntryAssembly.Debuggable;
+            m_razorEngineCS = razorEngineCS ?? (m_releaseMode ? RazorEngine<CSharp>.Default : RazorEngine<CSharpDebug>.Default as IRazorEngine);
+            m_razorEngineVB = razorEngineVB ?? (m_releaseMode ? RazorEngine<VisualBasic>.Default : RazorEngine<VisualBasicDebug>.Default as IRazorEngine);
             m_webRootPath = FilePath.AddPathSuffix(webRootPath ?? m_razorEngineCS.TemplatePath);
             m_etagCache = new ConcurrentDictionary<string, long>(StringComparer.InvariantCultureIgnoreCase);
             m_handlerTypeCache = new ConcurrentDictionary<string, Type>(StringComparer.InvariantCultureIgnoreCase);
@@ -113,6 +115,33 @@ namespace GSF.Web.Hosting
         /// Gets or sets flag that determines if cache control is enabled for browser clients; default to <c>true</c>.
         /// </summary>
         public bool ClientCacheEnabled
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets value that determines if minification should be applied to rendered Javascript files.
+        /// </summary>
+        public bool MinifyJavascript
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets value that determines if minification should be applied to rendered CSS files.
+        /// </summary>
+        public bool MinifyStyleSheets
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets value that determines if minification should be applied when running a Debug build.
+        /// </summary>
+        public bool UseMinifyInDebug
         {
             get;
             set;
@@ -352,7 +381,34 @@ namespace GSF.Web.Hosting
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Stream OpenResource(string fileName, bool embeddedResource)
         {
-            return embeddedResource ? WebExtensions.OpenEmbeddedResourceStream(fileName) : File.OpenRead(fileName);
+            Stream stream = embeddedResource ? WebExtensions.OpenEmbeddedResourceStream(fileName) : File.OpenRead(fileName);
+
+            if (!(m_releaseMode || UseMinifyInDebug) || !(MinifyJavascript || MinifyStyleSheets))
+                return stream;
+
+            string extension = FilePath.GetExtension(fileName)?.Trim().ToLowerInvariant();
+
+            if (string.IsNullOrWhiteSpace(extension))
+                return stream;
+
+            Minifier minifier = new Minifier();
+            Stream minimizedStream = null;
+
+            switch (extension)
+            {
+                case ".js":
+                    if (MinifyJavascript)
+                        using (StreamReader reader = new StreamReader(stream))
+                            minimizedStream = minifier.MinifyJavaScript(reader.ReadToEnd()).ToStream(Encoding.UTF8);
+                    break;
+                case ".css":
+                    if (MinifyStyleSheets)
+                        using (StreamReader reader = new StreamReader(stream))
+                            minimizedStream = minifier.MinifyStyleSheet(reader.ReadToEnd()).ToStream(Encoding.UTF8);
+                    break;
+            }
+
+            return minimizedStream ?? stream;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -448,10 +504,16 @@ namespace GSF.Web.Hosting
                     CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[category];
                     settings.Add("WebRootPath", "wwwroot", "The root path for the hosted web server files. Location will be relative to install folder if full path is not specified.");
                     settings.Add("ClientCacheEnabled", "true", "Determines if cache control is enabled for web server when rendering content to browser clients.");
+                    settings.Add("MinifyJavascript", "true", "Determines if minification should be applied to rendered Javascript files.");
+                    settings.Add("MinifyStyleSheets", "true", "Determines if minification should be applied to rendered CSS files.");
+                    settings.Add("UseMinifyInDebug", "false", "Determines if minification should be applied when running a Debug build.");
 
                     return new WebServer(FilePath.GetAbsolutePath(settings["WebRootPath"].Value), razorEngineCS, razorEngineVB)
                     {
-                        ClientCacheEnabled = settings["ClientCacheEnabled"].Value.ParseBoolean()
+                        ClientCacheEnabled = settings["ClientCacheEnabled"].Value.ParseBoolean(),
+                        MinifyJavascript = settings["MinifyJavascript"].Value.ParseBoolean(),
+                        MinifyStyleSheets = settings["MinifyStyleSheets"].Value.ParseBoolean(),
+                        UseMinifyInDebug = settings["UseMinifyInDebug"].Value.ParseBoolean()
                     };
                 });
             }

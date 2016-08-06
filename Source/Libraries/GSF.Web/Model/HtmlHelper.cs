@@ -170,42 +170,11 @@ namespace GSF.Web.Model
         /// <param name="resourceName">Embedded resource name.</param>
         /// <param name="model">Model instance.</param>
         /// <returns>Rendered resource as an encoded string.</returns>
-        public IEncodedString RenderResource<T>(string resourceName, T model = default(T))
+        public IEncodedString RenderResource<T>(string resourceName, T model)
         {
             return RenderResource(resourceName, typeof(T), model);
         }
 
         #endregion
-    }
-
-    /// <summary>
-    /// Defines a modeled HTML helper class for <see cref="IRazorEngine"/> views.
-    /// </summary>
-    /// <remarks>
-    /// This class provides Razor view compatibility functions so that the same view syntax, e.g.,
-    /// @Html.Raw(""), can be used in both self-hosted and ASP.NET hosted web sites.
-    /// </remarks>
-    /// <typeparam name="T">Type of model.</typeparam>
-    public class HtmlHelper<T> : HtmlHelper
-    {
-        #region [ Constructors ]
-
-        // Creates a new HTML helper class associated with parent template
-        internal HtmlHelper(TemplateBase parent) : base(parent)
-        {
-        }
-
-        #endregion
-
-        /// <summary>
-        /// Renders a Razor view from an embedded resource.
-        /// </summary>
-        /// <param name="resourceName">Embedded resource name.</param>
-        /// <param name="model">Model instance.</param>
-        /// <returns>Rendered resource as an encoded string.</returns>
-        public IEncodedString RenderResource(string resourceName, T model = default(T))
-        {
-            return base.RenderResource(resourceName, typeof(T), model);
-        }
     }
 }

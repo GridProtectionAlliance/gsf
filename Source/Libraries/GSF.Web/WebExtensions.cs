@@ -343,7 +343,7 @@ namespace GSF.Web
         /// <remarks>
         /// If needed by view, define ViewBag.DataContext before rendering resource.
         /// </remarks>
-        public static MvcHtmlString RenderResource<T>(this HtmlHelper helper, string resourceName, T model = default(T))
+        public static MvcHtmlString RenderResource<T>(this HtmlHelper helper, string resourceName, T model)
         {
             return RenderResource(helper, resourceName, typeof(T), model);
         }

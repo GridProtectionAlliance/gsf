@@ -74,7 +74,7 @@ namespace GSF.Web.Model
         #region [ Members ]
 
         // Fields
-        private readonly HtmlHelper<T> m_htmlHelper;
+        private readonly HtmlHelper m_htmlHelper;
         private readonly UrlHelper m_urlHelper;
 
         #endregion
@@ -86,7 +86,7 @@ namespace GSF.Web.Model
         /// </summary>
         protected ExtendedTemplateBase()
         {
-            m_htmlHelper = new HtmlHelper<T>(this);
+            m_htmlHelper = new HtmlHelper(this);
             m_urlHelper = new UrlHelper();
         }
 
@@ -97,7 +97,7 @@ namespace GSF.Web.Model
         /// <summary>
         /// Gets HTML based helper functions.
         /// </summary>
-        public HtmlHelper<T> Html => m_htmlHelper;
+        public HtmlHelper Html => m_htmlHelper;
 
         /// <summary>
         /// Gets URL based helper functions.
