@@ -29,7 +29,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -68,6 +67,7 @@ namespace GSF.Web.Hosting
         private readonly IRazorEngine m_razorEngineCS;
         private readonly IRazorEngine m_razorEngineVB;
         private readonly ConcurrentDictionary<string, uint> m_etagCache;
+        private readonly ConcurrentDictionary<string, Type> m_handlerTypeCache;
         private readonly ConcurrentDictionary<string, Tuple<Type, Type>> m_pagedViewModelTypes;
         private readonly SafeFileWatcher m_fileWatcher;
         private bool m_disposed;
@@ -89,6 +89,7 @@ namespace GSF.Web.Hosting
             m_razorEngineVB = razorEngineVB ?? (releaseMode ? RazorEngine<VisualBasic>.Default : RazorEngine<VisualBasicDebug>.Default as IRazorEngine);
             m_webRootPath = FilePath.AddPathSuffix(webRootPath ?? m_razorEngineCS.TemplatePath);
             m_etagCache = new ConcurrentDictionary<string, uint>(StringComparer.InvariantCultureIgnoreCase);
+            m_handlerTypeCache = new ConcurrentDictionary<string, Type>(StringComparer.InvariantCultureIgnoreCase);
             m_pagedViewModelTypes = new ConcurrentDictionary<string, Tuple<Type, Type>>(StringComparer.InvariantCultureIgnoreCase);
 
             m_fileWatcher = new SafeFileWatcher(m_webRootPath)
@@ -305,8 +306,6 @@ namespace GSF.Web.Hosting
         private async Task ProcessHTTPHandler(string pageName, HttpRequestMessage request, HttpResponseMessage response)
         {
             string fileName = FilePath.GetAbsolutePath($"{m_webRootPath}{pageName.Replace('/', Path.DirectorySeparatorChar)}");
-            string handlerHeader;
-            string className;
 
             if (!File.Exists(fileName))
             {
@@ -314,34 +313,45 @@ namespace GSF.Web.Hosting
                 return;
             }
 
-            // Parse class name from ASHX handler header parameters
-            using (StreamReader reader = File.OpenText(fileName))
-                handlerHeader = reader.ReadToEnd().RemoveCrLfs().Trim();
+            Type handlerType;
 
-            // Clean up header formatting to make parsing easier
-            handlerHeader = handlerHeader.RemoveDuplicateWhiteSpace().Replace(" =", "=").Replace("= ", "=");
-            
-            string[] tokens = handlerHeader.Split(' ');
+            if (!m_handlerTypeCache.TryGetValue(fileName, out handlerType))
+            {
+                string handlerHeader, className;
 
-            if (!tokens.Any(token => token.Equals("WebHandler", StringComparison.OrdinalIgnoreCase)))
-                throw new InvalidOperationException($"Expected \"WebHandler\" file type not found in ASHX file header: {handlerHeader}");
+                // Parse class name from ASHX handler header parameters
+                using (StreamReader reader = File.OpenText(fileName))
+                    handlerHeader = reader.ReadToEnd().RemoveCrLfs().Trim();
 
-            Dictionary<string, string> parameters = handlerHeader.ReplaceCaseInsensitive("WebHandler", "").Replace("<%", "").Replace("%>", "").Replace("@", "").Trim().ParseKeyValuePairs(' ');
+                // Clean up header formatting to make parsing easier
+                handlerHeader = handlerHeader.RemoveDuplicateWhiteSpace().Replace(" =", "=").Replace("= ", "=");
 
-            if (!parameters.TryGetValue("Class", out className))
-                throw new InvalidOperationException($"Missing \"Class\" parameter in ASHX file header: {handlerHeader}");
+                string[] tokens = handlerHeader.Split(' ');
 
-            // Remove quotes from class name
-            className = className.Substring(1, className.Length - 2).Trim();
+                if (!tokens.Any(token => token.Equals("WebHandler", StringComparison.OrdinalIgnoreCase)))
+                    throw new InvalidOperationException($"Expected \"WebHandler\" file type not found in ASHX file header: {handlerHeader}");
+
+                Dictionary<string, string> parameters = handlerHeader.ReplaceCaseInsensitive("WebHandler", "").Replace("<%", "").Replace("%>", "").Replace("@", "").Trim().ParseKeyValuePairs(' ');
+
+                if (!parameters.TryGetValue("Class", out className))
+                    throw new InvalidOperationException($"Missing \"Class\" parameter in ASHX file header: {handlerHeader}");
+
+                // Remove quotes from class name
+                className = className.Substring(1, className.Length - 2).Trim();
+
+                handlerType = AssemblyInfo.FindType(className);
+                m_handlerTypeCache.TryAdd(fileName, handlerType);
+
+                OnStatusMessage($"Cached handler type [{handlerType?.FullName}] for file \"{fileName}\"");
+            }
 
             IHostedHttpHandler handler = null;
-            Type handlerType = AssemblyInfo.FindType(className);
 
             if ((object)handlerType != null)
                 handler = Activator.CreateInstance(handlerType) as IHostedHttpHandler;
 
-            if (handler == null)
-                throw new InvalidOperationException($"Failed to create hosted HTTP handler \"{className}\" - make sure class implements IHostedHttpHandler interface.");
+            if ((object)handler == null)
+                throw new InvalidOperationException($"Failed to create hosted HTTP handler \"{handlerType?.FullName}\" - make sure class implements IHostedHttpHandler interface.");
 
             // Allow handler to process request
             await handler.ProcessRequestAsync(request, response);
@@ -360,9 +370,13 @@ namespace GSF.Web.Hosting
         private void m_fileWatcher_FileChange(object sender, FileSystemEventArgs e)
         {
             uint responseHash;
+            Type handlerType;
 
             if (m_etagCache.TryRemove(e.FullPath, out responseHash))
                 OnStatusMessage($"Cache [{responseHash}] cleared for file \"{e.FullPath}\"");
+
+            if (m_handlerTypeCache.TryRemove(e.FullPath, out handlerType))
+                OnStatusMessage($"Cleared handler type [{handlerType?.FullName}] from cache for file \"{e.FullPath}\"");
         }
 
         #endregion
