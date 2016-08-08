@@ -230,6 +230,7 @@
     <Compile Include="Model\DataContext.cs" />
     <Compile Include="Model\ExtendedTemplateBase.cs" />
     <Compile Include="Model\HtmlHelper.cs" />
+    <Compile Include="Model\HubOperations\DirectoryBrowserOperations.cs" />
     <Compile Include="Model\IRazorEngine.cs" />
     <Compile Include="Model\IRecordOperationsHub.cs" />
     <Compile Include="Model\Label.cs" />
