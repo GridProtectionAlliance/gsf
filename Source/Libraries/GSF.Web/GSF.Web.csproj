@@ -321,6 +321,7 @@
   <ItemGroup>
     <None Include="GSF.Web.nuspec" />
     <EmbeddedResource Include="Model\Views\PagedViewModel.cshtml" />
+    <EmbeddedResource Include="Model\Views\DirectoryBrowser.cshtml" />
     <None Include="packages.config" />
     <EmbeddedResource Include="Model\Views\AddCheckBoxField.cshtml" />
     <EmbeddedResource Include="Model\Views\AddDateField.cshtml" />

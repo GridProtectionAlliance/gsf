@@ -386,7 +386,7 @@ namespace GSF.Web.Hosting
             if (!(m_releaseMode || UseMinifyInDebug) || !(MinifyJavascript || MinifyStyleSheets))
                 return stream;
 
-            string extension = FilePath.GetExtension(fileName)?.Trim().ToLowerInvariant();
+            string extension = FilePath.GetExtension(fileName).Trim().ToLowerInvariant();
 
             if (string.IsNullOrWhiteSpace(extension))
                 return stream;
