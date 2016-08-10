@@ -26,13 +26,11 @@
 @using GSF.Web.Model
 @inherits ExtendedTemplateBase
 @{
-    if (ViewBag.PageStyleSheets == null)
-    {
+    if (ViewBag.PageStyleSheets == null) {
         ViewBag.PageStyleSheets = new StringBuilder();
     }
 
-    if (ViewBag.PageControlScripts == null)
-    {
+    if (ViewBag.PageControlScripts == null) {
         ViewBag.PageControlScripts = new StringBuilder();
     }
 

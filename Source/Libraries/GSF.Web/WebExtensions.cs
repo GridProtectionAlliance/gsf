@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -132,6 +133,17 @@ namespace GSF.Web
 
             #endregion
         }
+
+        // Defines a GetMemberBinder implementation to get DynamicViewBag properties by name
+        private class MemberBinder : GetMemberBinder
+        {
+            public MemberBinder(string name) : base(name, false)
+            {
+            }
+
+            public override DynamicMetaObject FallbackGetMember(DynamicMetaObject target, DynamicMetaObject errorSuggestion) => null;
+        }
+
 
         // Static Fields
         private static readonly HashSet<string> s_executingAssemblyResources;
@@ -320,16 +332,30 @@ namespace GSF.Web
         /// </remarks>
         public static MvcHtmlString RenderResource(this HtmlHelper helper, string resourceName, Type modelType = null, object model = null)
         {
+            MvcHtmlString result;
             DynamicViewBag viewBag = new DynamicViewBag(helper.ViewData);
             bool isPost = HttpContext.Current.Request.HttpMethod.Equals("POST", StringComparison.OrdinalIgnoreCase);
 
             viewBag.AddValue("IsPost", isPost);
             viewBag.AddValue("Request", HttpContext.Current.Items["MS_HttpRequestMessage"] ?? new HttpRequestMessage(isPost ? HttpMethod.Post : HttpMethod.Get, HttpContext.Current.Request.Url));
-
+           
             if (FilePath.GetExtension(resourceName).Equals(".vbhtml", StringComparison.OrdinalIgnoreCase))
-                return new MvcHtmlString(RazorEngine<VisualBasicEmbeddedResource>.Default.RunCompile(resourceName, modelType, model, viewBag));
+                result = new MvcHtmlString(RazorEngine<VisualBasicEmbeddedResource>.Default.RunCompile(resourceName, modelType, model, viewBag));
+            else
+                result = new MvcHtmlString(RazorEngine<CSharpEmbeddedResource>.Default.RunCompile(resourceName, modelType, model, viewBag));
 
-            return new MvcHtmlString(RazorEngine<CSharpEmbeddedResource>.Default.RunCompile(resourceName, modelType, model, viewBag));
+            // Copy any new or updated view bag elements back to MVC view data dictionary
+            foreach (string memberName in viewBag.GetDynamicMemberNames())
+            {
+                object value;
+
+                viewBag.TryGetMember(new MemberBinder(memberName), out value);
+
+                if (value != null)
+                    helper.ViewData[memberName] = value;
+            }
+
+            return result;
         }
 
         /// <summary>

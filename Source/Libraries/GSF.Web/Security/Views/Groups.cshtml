@@ -19,15 +19,39 @@
 //  03/03/2016 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
+//
+//******************************************************************************************************
+//  To use in an ASP.NET destination project, include a Groups.cshtml view with following content:
+//
+//  @using GSF.Web
+//  @section StyleSheets{@Html.Raw(ViewBag.StyleSheetsSection?.ToString())}
+//  @{ViewBag.HelpTarget = Url.Action("Help", "Main");}
+//  @Html.RenderResource("GSF.Web.Security.Views.Groups.cshtml")
+//  @section Scripts{@Html.Raw(ViewBag.ScriptsSection?.ToString())}
+//
+//******************************************************************************************************
+//  To use in a self-hosted web project, include a Groups.cshtml view with following content:
+//
+//  @using GSF.Web.Model
+//  @inherits ExtendedTemplateBase<AppModel>
+//  @section StyleSheets{@Html.Raw(ViewBag.StyleSheetsSection.ToString())}
+//  @{Layout = "Layout.cshtml";}
+//  @Html.RenderResource("GSF.Web.Security.Views.Groups.cshtml")
+//  @section Scripts{@Html.Raw(ViewBag.ScriptsSection.ToString())}
+//
 //*****************************************************************************************************@
+@using GSF.Configuration
 @using GSF.Data.Model
+@using GSF.Security
 @using GSF.Security.Model
 @using GSF.Web.Model
+@using GSF.Web.Security
+@inherits ExtendedTemplateBase
 @section StyleSheets{
     <style>
          .account-feedback-wrapper {
              position: relative;
-             display: table
+             display: table;
          }
 
          .account-feedback-message {
@@ -36,30 +60,46 @@
              display: table-cell;
              left: 10px;
              width: 425px;
-             display: none
+             display: none;
          }
 
          .account-feedback-icon {
              font-size: large;
              vertical-align: middle;
-             margin-top: -5px
+             margin-top: -5px;
          }
     </style>
 }
 @{
+    // Layout will depend on rendering environment, so do not specify one
     DataContext dataContext = ViewBag.DataContext;
+    ViewBag.Title = "Groups";
 
     // Define column headers, use null for field name to make column non-sortable
     ViewBag.HeaderColumns = new[]
     {   //    { "Field", "Label", "Classes" }
         new[] { null, "Group Name", "text-center valign-middle" },
-        new[] { null, "Is&nbsp;AD&nbsp;Group", "text-center" },
+        new[] { null, "Is&nbsp;AD&nbsp;Group", "text-center valign-middle" },
         new[] { "CreatedOn", "Date&nbsp;Added", "text-center" },
         new[] { null, "Group Roles", "text-center valign-middle" }
     };
 
+    if (ViewBag.HelpTarget == null) {
+        ViewBag.HelpTarget = "Help.cshtml";
+    }
+
+    // Make sure default settings exist
+    ConfigurationFile config = ConfigurationFile.Current;
+    CategorizedSettingsElementCollection settings = config.Settings[SecurityProviderBase.DefaultSettingsCategory];
+
+    settings.Add("ApplicationName", SecurityProviderBase.DefaultApplicationName, "Name of the application being secured as defined in the backend security data store.");
+
+    // Get configured settings
+    string applicationName = settings["ApplicationName"].ValueAs(SecurityProviderBase.DefaultApplicationName);
+
     ViewBag.BodyRows = BodyRows().ToString();
     ViewBag.AddNewEditDialog = AddNewEditDialog(dataContext).ToString();
+    ViewBag.AddNewEditTitle = "Group";
 }
 @helper BodyRows()
 {
@@ -84,7 +124,7 @@
 @helper AddNewEditDialog(DataContext dataContext)
 {
     <div class="col-md-12">
-        @Html.Raw(dataContext.AddInputField<SecurityGroup>("Name", fieldLabel: $"Name{AccountValidationFeedback().ToString().Trim()}", customDataBinding: "attr: {'acct-valid': validateAccount($data)}", initialFocus: true))
+        @Raw(dataContext.AddInputField<SecurityGroup>("Name", fieldLabel: "Name" + AccountValidationFeedback().ToString().Trim(), customDataBinding: "attr: {'acct-valid': validateAccount($data), 'autocomplete': 'off'}", initialFocus: true))
         <div class="panel panel-default" data-bind="css: {'panel-readonly': $root.recordMode()===RecordMode.View, 'panel-primary': UseDBAuthentication}">
             <div class="panel-heading">
                 <div class="row">
@@ -103,12 +143,12 @@
                 </div>
             </div>
             <div class="panel-body" data-bind="visible: UseDBAuthentication">
-                @Html.Raw(dataContext.AddTextAreaField<SecurityGroup>("Description", 4, dependencyFieldName: "UseDBAuthentication"))
+                @Raw(dataContext.AddTextAreaField<SecurityGroup>("Description", 4, dependencyFieldName: "UseDBAuthentication"))
             </div>
         </div>
     </div>
 }
-@Html.Partial("PagedViewModel")
+@Html.RenderResource("GSF.Web.Model.Views.PagedViewModel.cshtml")
 <div id="editRolesDialog" class="modal fade" role="dialog">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -123,7 +163,7 @@
                         <div class="center-block">
                             <div id="loadingRoles">Loading role assignments&nbsp;&nbsp;<span class="glyphicon glyphicon-refresh glyphicon-spin"></span><hr class="full-break" /></div>
                             <table class="table-condensed table-center">
-                            @foreach (ApplicationRole role in dataContext.Table<ApplicationRole>().QueryRecords("Name", new RecordRestriction("NodeID={0}", Model.Global.NodeID))) {
+                            @foreach (ApplicationRole role in dataContext.Table<ApplicationRole>().QueryRecords("Name", new RecordRestriction("NodeID={0}", SecurityHub.DefaultNodeID))) {
                                 <tr>
                                     <td class="text-left valign-middle">
                                         <div class="checkbox" style="margin: 0">
@@ -135,7 +175,7 @@
                             </table>
                             <br />
                             <div class="text-center">
-                                <a href="@Url.Action("Help", "Main")#Roles" target="_blank">@Model.Global.ApplicationName Role Definitions</a>
+                                <a href="@ViewBag.HelpTarget#Roles" target="_blank">@applicationName Role Definitions</a>
                             </div>
                         </div>
                     </form>
@@ -152,7 +192,7 @@
     <script>
         "use strict";
 
-        @Html.Raw(dataContext.RenderViewModelConfiguration<SecurityGroup>(ViewBag))
+        @Raw(dataContext.RenderViewModelConfiguration<SecurityGroup, SecurityHub>(ViewBag))
         var AccountState = {
             Invalid: 0,
             Valid: 1,
@@ -209,6 +249,7 @@
         var messages = [];
         var nextMessageName = undefined;
         var showingMessage = false;
+
         messages.push("resolvingAccount");
         messages.push("accountValid");
         messages.push("accountInvalid");
@@ -285,7 +326,7 @@
             newRecord.AccountName = ko.observable("");
         });
 
-        $(viewModel).on("derivingObservableRecord", function (event, observableRecord) {
+        $(viewModel).on("beforeEdit", function (event, observableRecord) {
             // Load human readable account name into Name field
             if (observableRecord.AccountName)
                 observableRecord.Name(observableRecord.AccountName());
@@ -294,7 +335,7 @@
             observableRecord.UseDBAuthentication = ko.observable(!useADAuthentication(notNull(observableRecord.Name())));
         });
 
-        $(viewModel).on("derivingJSRecord", function (event, observableRecord, promises) {
+        $(viewModel).on("beforeSave", function (event, observableRecord, promises) {
             const isADGroup = !observableRecord.UseDBAuthentication();
 
             // Remove virtual observable fields before serialization for record updates
@@ -367,4 +408,8 @@
             });
         });
     </script>
+}
+@{
+    ViewBag.StyleSheetsSection = RenderSection("StyleSheets").ToString();
+    ViewBag.ScriptsSection = RenderSection("Scripts").ToString();
 }
