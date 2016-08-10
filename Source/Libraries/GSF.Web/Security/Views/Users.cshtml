@@ -108,7 +108,9 @@
 }
 @helper BodyRows()
 {
-    <td width="65%" class="text-center valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: AccountName(), attr: {title: Name}, click: $parent.viewPageRecord"></button></td>
+    <td width="20%" class="text-center valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: FirstName"></button></td>
+    <td width="20%" class="text-center valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: LastName"></button></td>
+    <td width="25%" class="text-center valign-middle" nowrap><button type="button" class="btn btn-link" data-bind="text: AccountName(), attr: {title: Name}, click: $parent.viewPageRecord"></button></td>
     <td width="10%" class="text-center valign-middle"><input type="checkbox" id="checkEnabled" data-bind="checked: UseADAuthentication" disabled></td>
     <td width="10%" class="text-center valign-middle" data-bind="text: CreatedOn.formatDate(DateFormat)"></td>
     <td width="10%" class="text-center valign-middle"><button type="button" class="btn btn-default btn-sm" data-bind="click: openRolesEditor.bind($data), enable: $parent.canEdit() && $parent.dataHubIsConnected()">Roles...</button></td>
