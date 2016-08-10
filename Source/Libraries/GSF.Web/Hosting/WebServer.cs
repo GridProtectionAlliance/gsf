@@ -31,6 +31,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using GSF.Collections;
@@ -209,11 +210,12 @@ namespace GSF.Web.Hosting
         /// <param name="request">HTTP request message.</param>
         /// <param name="pageName">Name of page to render.</param>
         /// <param name="isPost"><c>true</c>if <paramref name="request"/> is HTTP post; otherwise, <c>false</c>.</param>
+        /// <param name="cancellationToken">Propagates notification from client that operations should be canceled.</param>
         /// <param name="model">Reference to model to use when rendering Razor templates, if any.</param>
         /// <param name="modelType">Type of <paramref name="model"/>, if any.</param>
         /// <param name="database"><see cref="AdoDataConnection"/> to use, if any.</param>
         /// <returns>HTTP response for provided request.</returns>
-        public async Task<HttpResponseMessage> RenderResponse(HttpRequestMessage request, string pageName, bool isPost, object model = null, Type modelType = null, AdoDataConnection database = null)
+        public async Task<HttpResponseMessage> RenderResponse(HttpRequestMessage request, string pageName, bool isPost, CancellationToken cancellationToken, object model = null, Type modelType = null, AdoDataConnection database = null)
         {
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
             string content, fileExtension = FilePath.GetExtension(pageName).ToLowerInvariant();
@@ -229,16 +231,16 @@ namespace GSF.Web.Hosting
             {
                 case ".cshtml":
                     m_pagedViewModelTypes.TryGetValue(pageName, out pagedViewModelTypes);
-                    content = await new RazorView(embeddedResource ? RazorEngine<CSharpEmbeddedResource>.Default : m_razorEngineCS, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException).ExecuteAsync(request, isPost);
+                    content = await new RazorView(embeddedResource ? RazorEngine<CSharpEmbeddedResource>.Default : m_razorEngineCS, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException).ExecuteAsync(request, isPost, cancellationToken);
                     response.Content = new StringContent(content, Encoding.UTF8, "text/html");
                     break;
                 case ".vbhtml":
                     m_pagedViewModelTypes.TryGetValue(pageName, out pagedViewModelTypes);
-                    content = await new RazorView(embeddedResource ? RazorEngine<VisualBasicEmbeddedResource>.Default : m_razorEngineVB, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException).ExecuteAsync(request, isPost);
+                    content = await new RazorView(embeddedResource ? RazorEngine<VisualBasicEmbeddedResource>.Default : m_razorEngineVB, pageName, model, modelType, pagedViewModelTypes?.Item1, pagedViewModelTypes?.Item2, database, OnExecutionException).ExecuteAsync(request, isPost, cancellationToken);
                     response.Content = new StringContent(content, Encoding.UTF8, "text/html");
                     break;
                 case ".ashx":
-                    await ProcessHTTPHandlerAsync(pageName, embeddedResource, request, response);
+                    await ProcessHTTPHandlerAsync(pageName, embeddedResource, request, response, cancellationToken);
                     break;
                 default:
                     string fileName = GetResourceFileName(pageName, embeddedResource);
@@ -257,19 +259,19 @@ namespace GSF.Web.Hosting
 
                             await Task.Run(async () =>
                             {
-                                using (Stream source = await OpenResource(fileName, embeddedResource))
+                                using (Stream source = await OpenResourceAsync(fileName, embeddedResource, cancellationToken))
                                 {
                                     // Calculate check-sum for file
                                     const int BufferSize = 32768;
                                     byte[] buffer = new byte[BufferSize];
                                     Crc32 calculatedHash = new Crc32();
 
-                                    int bytesRead = source.Read(buffer, 0, BufferSize);
+                                    int bytesRead = await source.ReadAsync(buffer, 0, BufferSize, cancellationToken);
 
                                     while (bytesRead > 0)
                                     {
                                         calculatedHash.Update(buffer, 0, bytesRead);
-                                        bytesRead = source.Read(buffer, 0, BufferSize);
+                                        bytesRead = await source.ReadAsync(buffer, 0, BufferSize, cancellationToken);
                                     }
 
                                     responseHash = calculatedHash.Value;
@@ -277,12 +279,12 @@ namespace GSF.Web.Hosting
 
                                     OnStatusMessage($"Cache [{responseHash}] added for file \"{fileName}\"");
                                 }
-                            });
+                            }, cancellationToken);
                         }
 
                         if (PublishResponseContent(request, response, responseHash))
                         {
-                            response.Content = new StreamContent(await OpenResource(fileName, embeddedResource));
+                            response.Content = new StreamContent(await OpenResourceAsync(fileName, embeddedResource, cancellationToken));
                             response.Content.Headers.ContentType = new MediaTypeHeaderValue(MimeMapping.GetMimeMapping(pageName));
                         }
                     }
@@ -294,7 +296,7 @@ namespace GSF.Web.Hosting
                             break;
                         }
 
-                        response.Content = new StreamContent(await OpenResource(fileName, embeddedResource));
+                        response.Content = new StreamContent(await OpenResourceAsync(fileName, embeddedResource, cancellationToken));
                         response.Content.Headers.ContentType = new MediaTypeHeaderValue(MimeMapping.GetMimeMapping(pageName));
                     }
                     break;
@@ -303,7 +305,7 @@ namespace GSF.Web.Hosting
             return response;
         }
 
-        private async Task ProcessHTTPHandlerAsync(string pageName, bool embeddedResource, HttpRequestMessage request, HttpResponseMessage response)
+        private async Task ProcessHTTPHandlerAsync(string pageName, bool embeddedResource, HttpRequestMessage request, HttpResponseMessage response, CancellationToken cancellationToken)
         {
             string fileName = GetResourceFileName(pageName, embeddedResource);
             Type handlerType;
@@ -316,13 +318,13 @@ namespace GSF.Web.Hosting
                     return;
                 }
 
-                using (Stream source = await OpenResource(fileName, embeddedResource))
+                using (Stream source = await OpenResourceAsync(fileName, embeddedResource, cancellationToken))
                 {
                     string handlerHeader, className;
 
                     // Parse class name from ASHX handler header parameters
                     using (StreamReader reader = new StreamReader(source))
-                        handlerHeader = reader.ReadToEnd().RemoveCrLfs().Trim();
+                        handlerHeader = (await reader.ReadToEndAsync()).RemoveCrLfs().Trim();
 
                     // Clean up header formatting to make parsing easier
                     handlerHeader = handlerHeader.RemoveDuplicateWhiteSpace().Replace(" =", "=").Replace("= ", "=");
@@ -341,9 +343,9 @@ namespace GSF.Web.Hosting
                     className = className.Substring(1, className.Length - 2).Trim();
 
                     handlerType = AssemblyInfo.FindType(className);
-                    m_handlerTypeCache.TryAdd(fileName, handlerType);
 
-                    OnStatusMessage($"Cached handler type [{handlerType?.FullName}] for file \"{fileName}\"");
+                    if (m_handlerTypeCache.TryAdd(fileName, handlerType))
+                        OnStatusMessage($"Cached handler type [{handlerType?.FullName}] for file \"{fileName}\"");
                 }
             }
 
@@ -358,11 +360,11 @@ namespace GSF.Web.Hosting
             if (ClientCacheEnabled && handler.UseClientCache)
             {
                 if (PublishResponseContent(request, response, handler.GetContentHash(request)))
-                    await handler.ProcessRequestAsync(request, response);
+                    await handler.ProcessRequestAsync(request, response, cancellationToken);
             }
             else
             {
-                await handler.ProcessRequestAsync(request, response);
+                await handler.ProcessRequestAsync(request, response, cancellationToken);
             }
         }
 
@@ -379,7 +381,7 @@ namespace GSF.Web.Hosting
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task<Stream> OpenResource(string fileName, bool embeddedResource)
+        private async Task<Stream> OpenResourceAsync(string fileName, bool embeddedResource, CancellationToken cancellationToken)
         {
             Stream stream = embeddedResource ? WebExtensions.OpenEmbeddedResourceStream(fileName) : File.OpenRead(fileName);
 
@@ -399,21 +401,21 @@ namespace GSF.Web.Hosting
                 case ".js":
                     if (MinifyJavascript)
                     {
-                        await Task.Run(() =>
+                        await Task.Run(async () =>
                         {
                             using (StreamReader reader = new StreamReader(stream))
-                                minimizedStream = minifier.MinifyJavaScript(reader.ReadToEnd()).ToStream(Encoding.UTF8);
-                        });                        
+                                minimizedStream = await minifier.MinifyJavaScript(await reader.ReadToEndAsync()).ToStreamAsync();
+                        }, cancellationToken);                        
                     }
                     break;
                 case ".css":
                     if (MinifyStyleSheets)
                     {
-                        await Task.Run(() =>
+                        await Task.Run(async () =>
                         {
                             using (StreamReader reader = new StreamReader(stream))
-                                minimizedStream = minifier.MinifyStyleSheet(reader.ReadToEnd()).ToStream(Encoding.UTF8);
-                        });                        
+                                minimizedStream = await minifier.MinifyStyleSheet(await reader.ReadToEndAsync()).ToStreamAsync();
+                        }, cancellationToken);                        
                     }
                     break;
             }

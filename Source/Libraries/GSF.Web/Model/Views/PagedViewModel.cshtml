@@ -22,6 +22,7 @@
 //*****************************************************************************************************@
 @using System.Net.Http
 @using System.Text
+@using System.Web.UI.WebControls
 @using GSF
 @using GSF.Web
 @using GSF.Web.Model
@@ -60,8 +61,8 @@
         --><em class=""validationPrompt"" data-bind=""validationMessage: field""></em>
     </script>
     <script>
-        $(function () {
-            $(""#clearSortOrder"").click(function () {
+        $(function() {
+            $(""#clearSortOrder"").click(function() {
                 viewModel.updateSortOrder(viewModel.defaultSortField, viewModel.defaultSortAscending);
             });
     ");
@@ -70,6 +71,9 @@
 
     // Hide the add new button
     bool hideAddNewButton = ViewBag.HideAddNewButton ?? false;
+
+    // Hide export to CSV button
+    bool hideExportCSVButton = ViewBag.HideExportCSVButton ?? false;
 
     // Hide unauthorized controls as disallowed by Edit/AddNew/Delete roles - otherwise unauthorized controls will be disabled
     bool hideUnauthorizedControls = ViewBag.HideUnauthorizedControls ?? false;
@@ -132,7 +136,7 @@
     string RenderSortScript(string fieldName, bool ascending)
     {
         const string ScriptFormat = @"
-            $(""#sort{0} #{1}"").click(function () {{
+            $(""#sort{0} #{1}"").click(function() {{
                 viewModel.updateSortOrder(""{0}"", {2});
             }});
         ";
@@ -196,12 +200,19 @@
         </div>
     </div>
     <div class="pull-right" id="pageControlsRow">
+        @if (!hideExportCSVButton)
+        {
+            <a role="button" class="btn btn-sm btn-default pull-right" id="exportCSVButton" hub-dependent>
+                <span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;Export&nbsp;CSV
+            </a>
+            <span>&nbsp;&nbsp;</span>
+        }
         @if (!hideAddNewButton && (canAddNew || !hideUnauthorizedControls)) {
             <button type="button" class="btn btn-sm btn-primary pull-right" id="addRecordButton" @Raw(canAddNew ? "data-bind=\"enable: dataHubIsConnected\"" : "disabled")>
                 <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Add&nbsp;New
             </button>
-            <br />
-            <hr class="half-break" />
+            <br/>
+            <hr class="half-break"/>
         }
         <div class="btn-group btn-group-sm">
             <button type="button" class="btn btn-default" id="firstPageButton" data-bind="css: {'disabled': onFirstPage()}, enable: dataHubIsConnected() && !onFirstPage()"><span class="glyphicon glyphicon-backward"></span></button>
@@ -292,29 +303,33 @@
     }
 
     pageControlScripts.Append(@"
-            $(""#addRecordButton"").click(function () {
+            $(""#addRecordButton"").click(function() {
                 viewModel.addPageRecord();
             });
 
-            $(""#editRecordButton"").click(function () {
+            $(""#editRecordButton"").click(function() {
                 viewModel.recordMode(RecordMode.Edit);
             });
 
-            $(""#saveRecordButton"").click(function () {
+            $(""#saveRecordButton"").click(function() {
                 viewModel.savePageRecord();
             });
 
-            $(""#cancelRecordButton"").click(function () {
+            $(""#cancelRecordButton"").click(function() {
                 viewModel.cancelPageRecord();
             });
 
-            $(""#dismissDialogButton"").click(function () {
+            $(""#dismissDialogButton"").click(function() {
                 viewModel.cancelPageRecord();
             });
 
             $(""#addNewEditDialog"").modal({show: false, backdrop: ""static"", keyboard: false});
 
-            $(window).on(""beforeunload"", function () {
+            $(""#exportCSVButton"").click(function() {
+                window.open(""/@GSF/Web/Model/Handlers/CsvDownloadHandler.ashx?ModelName="" + viewModel.modelName);
+            });
+
+            $(window).on(""beforeunload"", function() {
                 if ($(""#addNewEditDialog"").hasClass(""in"") && viewModel.isDirty())
                     return ""There are unsaved changes to this record."";
 
@@ -376,7 +391,7 @@
     }
 
     if (dataContext.FieldValidationParameters.Count > 0) {
-        pageControlScripts.Append("\r\n\r\n        viewModel.setApplyValidationParameters(function () {");
+        pageControlScripts.Append("\r\n\r\n        viewModel.setApplyValidationParameters(function() {");
 
         foreach (KeyValuePair<string, Tuple<string, string>> fieldValidation in dataContext.FieldValidationParameters) {
             pageControlScripts.AppendFormat("\r\n            {0}.extend({{ pattern: {{ message: \"{1}\", params: \"{2}\" }} }});",
@@ -390,7 +405,7 @@
 
     pageControlScripts.Append(@"
 
-        $(""#addNewEditDialog"").on(""shown.bs.modal"", function () {
+        $(""#addNewEditDialog"").on(""shown.bs.modal"", function() {
             $(""#addNewEditDialog .input-group.date"").datepicker({
                 todayBtn: ""linked"",
                 enableOnReadonly: false,

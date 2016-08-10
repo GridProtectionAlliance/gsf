@@ -95,6 +95,7 @@ using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace GSF
 {
@@ -211,6 +212,8 @@ namespace GSF
 
                 // Handle objects that have type converters (e.g., Enum, Color, Point, etc.)
                 TypeConverter converter = TypeDescriptor.GetConverter(type);
+
+                // ReSharper disable once AssignNullToNotNullAttribute
                 return (T)converter.ConvertFromString(null, culture, value);
             }
             catch
@@ -223,15 +226,39 @@ namespace GSF
         /// Converts string into a stream using the specified <paramref name="encoding"/>.
         /// </summary>
         /// <param name="value">Input to string to convert to a string.</param>
-        /// <param name="encoding">String encoding to use; defaults to <see cref="Encoding.Default"/>.</param>
+        /// <param name="encoding">String encoding to use; defaults to <see cref="Encoding.UTF8"/>.</param>
         /// <returns>String <paramref name="value"/> encoded onto a stream.</returns>
         public static Stream ToStream(this string value, Encoding encoding = null)
         {
             MemoryStream stream = new MemoryStream();
-            StreamWriter writer = new StreamWriter(stream, encoding ?? Encoding.Default);
 
-            writer.Write(value);
-            writer.Flush();
+            using (StreamWriter writer = new StreamWriter(stream, encoding ?? Encoding.UTF8, 4096, true))
+            {
+                writer.Write(value);
+                writer.Flush();
+            }
+
+            stream.Position = 0;
+
+            return stream;
+        }
+
+        /// <summary>
+        /// Asynchronously converts string into a stream using the specified <paramref name="encoding"/>.
+        /// </summary>
+        /// <param name="value">Input to string to convert to a string.</param>
+        /// <param name="encoding">String encoding to use; defaults to <see cref="Encoding.UTF8"/>.</param>
+        /// <returns>String <paramref name="value"/> encoded onto a stream.</returns>
+        public static async Task<Stream> ToStreamAsync(this string value, Encoding encoding = null)
+        {
+            MemoryStream stream = new MemoryStream();
+
+            using (StreamWriter writer = new StreamWriter(stream, encoding ?? Encoding.UTF8, 4096, true))
+            {
+                await writer.WriteAsync(value);
+                await writer.FlushAsync();
+            }
+
             stream.Position = 0;
 
             return stream;
@@ -247,7 +274,7 @@ namespace GSF
         public static string[] GetSegments(this string value, int segmentSize)
         {
             if (segmentSize <= 0)
-                throw new ArgumentOutOfRangeException("segmentSize", "segmentSize must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(segmentSize), "segmentSize must be greater than zero.");
 
             if (string.IsNullOrEmpty(value))
                 return new[] { "" };
@@ -286,7 +313,7 @@ namespace GSF
         public static string JoinKeyValuePairs(this IDictionary<string, string> pairs, char parameterDelimiter = ';', char keyValueDelimiter = '=', char startValueDelimiter = '{', char endValueDelimiter = '}')
         {
             if ((object)pairs == null)
-                throw new ArgumentNullException("pairs");
+                throw new ArgumentNullException(nameof(pairs));
 
             char[] delimiters = { parameterDelimiter, keyValueDelimiter };
             List<string> values = new List<string>();
@@ -299,7 +326,7 @@ namespace GSF
                 if (value.IndexOfAny(delimiters) >= 0)
                     value = startValueDelimiter + value + endValueDelimiter;
 
-                values.Add(string.Format("{0}{1}{2}", key, keyValueDelimiter, value));
+                values.Add($"{key}{keyValueDelimiter}{value}");
             }
 
             return string.Join(parameterDelimiter + " ", values);
@@ -341,7 +368,7 @@ namespace GSF
         public static Dictionary<string, string> ParseKeyValuePairs(this string value, char parameterDelimiter = ';', char keyValueDelimiter = '=', char startValueDelimiter = '{', char endValueDelimiter = '}', bool ignoreDuplicateKeys = true)
         {
             if (value == (string)null)
-                throw new ArgumentNullException("value");
+                throw new ArgumentNullException(nameof(value));
 
             if (parameterDelimiter == keyValueDelimiter ||
                 parameterDelimiter == startValueDelimiter ||
@@ -402,7 +429,7 @@ namespace GSF
                     }
                     else
                     {
-                        throw new FormatException(string.Format("Failed to parse key/value pairs: invalid delimiter mismatch. Encountered end value delimiter \'{0}\' before start value delimiter \'{1}\'.", endValueDelimiter, startValueDelimiter));
+                        throw new FormatException($"Failed to parse key/value pairs: invalid delimiter mismatch. Encountered end value delimiter \'{endValueDelimiter}\' before start value delimiter \'{startValueDelimiter}\'.");
                     }
                 }
 
@@ -437,7 +464,7 @@ namespace GSF
                 if (valueEscaped)
                     delimiterDepth = 1;
 
-                throw new FormatException(string.Format("Failed to parse key/value pairs: invalid delimiter mismatch. Encountered more {0} than {1}.", delimiterDepth > 0 ? "start value delimiters \'" + startValueDelimiter + "\'" : "end value delimiters \'" + endValueDelimiter + "\'", delimiterDepth < 0 ? "start value delimiters \'" + startValueDelimiter + "\'" : "end value delimiters \'" + endValueDelimiter + "\'"));
+                throw new FormatException($"Failed to parse key/value pairs: invalid delimiter mismatch. Encountered more {(delimiterDepth > 0 ? "start value delimiters \'" + startValueDelimiter + "\'" : "end value delimiters \'" + endValueDelimiter + "\'")} than {(delimiterDepth < 0 ? "start value delimiters \'" + startValueDelimiter + "\'" : "end value delimiters \'" + endValueDelimiter + "\'")}.");
             }
 
             // Parse key/value pairs from escaped value
@@ -469,7 +496,7 @@ namespace GSF
                     {
                         // Add key elements with unescaped value throwing an exception for encountered duplicate keys
                         if (keyValuePairs.ContainsKey(key))
-                            throw new ArgumentException(string.Format("Failed to parse key/value pairs: duplicate key encountered. Key \"{0}\" is not unique within the string: \"{1}\"", key, value));
+                            throw new ArgumentException($"Failed to parse key/value pairs: duplicate key encountered. Key \"{key}\" is not unique within the string: \"{value}\"");
 
                         keyValuePairs.Add(key, unescapedValue);
                     }
@@ -518,7 +545,7 @@ namespace GSF
         {
             // <pex>
             if (characterTestFunction == (Func<char, bool>)null)
-                throw new ArgumentNullException("characterTestFunction");
+                throw new ArgumentNullException(nameof(characterTestFunction));
             // </pex>
 
             if (string.IsNullOrEmpty(value))
@@ -550,7 +577,7 @@ namespace GSF
         {
             // <pex>
             if (characterTestFunction == (Func<char, bool>)null)
-                throw new ArgumentNullException("characterTestFunction");
+                throw new ArgumentNullException(nameof(characterTestFunction));
             // </pex>
 
             if (string.IsNullOrEmpty(value))
@@ -645,7 +672,7 @@ namespace GSF
         {
             // <pex>
             if (value == (string)null)
-                throw new ArgumentNullException("value");
+                throw new ArgumentNullException(nameof(value));
             // </pex>
 
             return value.Replace(Environment.NewLine, replacementCharacter.ToString()).ReplaceCharacters(replacementCharacter, c => c == '\r' || c == '\n');
@@ -1006,7 +1033,7 @@ namespace GSF
         {
             // <pex>
             if (value == (string)null)
-                throw new ArgumentNullException("value");
+                throw new ArgumentNullException(nameof(value));
             // </pex>
 
             return Convert.ToChar(Convert.ToUInt16(value.Replace("\\u", "0x"), 16));

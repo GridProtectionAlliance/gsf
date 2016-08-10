@@ -21,9 +21,13 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Web.Caching;
 using System.Web.Hosting;
+using GSF.IO;
 
 namespace GSF.Web.Embedded
 {
@@ -49,6 +53,8 @@ namespace GSF.Web.Embedded
     ///     &lt;add name="EmbeddedResourceHandler-GSFScripts" path="@GSF/Web/Model/Scripts/*" verb="*" type="System.Web.StaticFileHandler" allowPathInfo="true" /&gt;
     ///     &lt;!-- Add embedded resource handler for GSF view resources using slash delimiters --&gt;
     ///     &lt;add name="EmbeddedResourceHandler-GSFViews" path="@GSF/Web/Model/Views/*" verb="*" type="System.Web.StaticFileHandler" allowPathInfo="true" /&gt;
+    ///     &lt;!-- Add embedded resource handler for GSF handler resources using slash delimiters --&gt;
+    ///     &lt;add name="EmbeddedResourceHandler-GSFHandlers" path="@GSF/Web/Model/Handlers/*" verb="*" type="System.Web.UI.SimpleHandlerFactory" allowPathInfo="true" /&gt;
     ///     &lt;!-- Add embedded resource handler for fully qualified type names using dot delimiters (this should be defined last) --&gt;
     ///     &lt;add name="EmbeddedResourceHandler-FQName" path="@*" verb="*" type="System.Web.StaticFileHandler" allowPathInfo="true" /&gt;
     ///   &lt;/handlers&gt;
@@ -68,7 +74,7 @@ namespace GSF.Web.Embedded
             {
             }
 
-            public override Stream Open() => WebExtensions.OpenEmbeddedResourceStream(VirtualPath);
+            public override Stream Open() => WebExtensions.OpenEmbeddedResourceStream(ParseResourceNameFromVirtualPath(VirtualPath));
         }
 
         #endregion
@@ -96,8 +102,40 @@ namespace GSF.Web.Embedded
         /// <param name="virtualPath">The path to the virtual file.</param>
         public override VirtualFile GetFile(string virtualPath)
         {
-            string resourceName = ParseResourceNameFromVirtualPath(virtualPath);
-            return WebExtensions.EmbeddedResourceExists(resourceName) ? new EmbeddedResource(resourceName) : Previous.GetFile(virtualPath);
+            return WebExtensions.EmbeddedResourceExists(ParseResourceNameFromVirtualPath(virtualPath)) ? new EmbeddedResource(virtualPath) : Previous.GetFile(virtualPath);
+        }
+
+        /// <summary>
+        /// Gets a value that indicates whether a directory exists in the virtual file system.
+        /// </summary>
+        /// <returns>true if the directory exists in the virtual file system; otherwise, false.</returns>
+        /// <param name="virtualDir">The path to the virtual directory.</param>
+        public override bool DirectoryExists(string virtualDir)
+        {
+            // Assume any given resource path exists - GetFile will validate full namespace for resource
+            return IsEmbeddedResource(virtualDir) || Previous.DirectoryExists(virtualDir);
+        }
+
+        /// <summary>
+        /// Gets a virtual directory from the virtual file system.
+        /// </summary>
+        /// <returns>A descendant of the <see cref="VirtualDirectory" /> class that represents a directory in the virtual file system.</returns>
+        /// <param name="virtualDir">The path to the virtual directory.</param>
+        public override VirtualDirectory GetDirectory(string virtualDir)
+        {
+            return Previous.GetDirectory(virtualDir);
+        }
+
+        /// <summary>
+        /// Creates a cache dependency based on the specified virtual paths.
+        /// </summary>
+        /// <returns>A <see cref="CacheDependency" /> object for the specified virtual resources.</returns>
+        /// <param name="virtualPath">The path to the primary virtual resource.</param>
+        /// <param name="virtualPathDependencies">An array of paths to other resources required by the primary virtual resource.</param>
+        /// <param name="utcStart">The UTC time at which the virtual resources were read.</param>
+        public override CacheDependency GetCacheDependency(string virtualPath, IEnumerable virtualPathDependencies, DateTime utcStart)
+        {
+            return IsEmbeddedResource(virtualPath) ? null : Previous.GetCacheDependency(virtualPath, virtualPathDependencies, utcStart);
         }
 
         #endregion
@@ -115,6 +153,21 @@ namespace GSF.Web.Embedded
                 virtualPath = virtualPath.Substring(1);
 
             return virtualPath.Replace('/', '.');
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool IsEmbeddedResource(string virtualPath)
+        {
+            if (virtualPath.StartsWith("~/@"))
+                return true;
+
+            if (virtualPath.StartsWith("/@"))
+                return true;
+
+            if (virtualPath.StartsWith("@"))
+                return true;
+
+            return false;
         }
 
         #endregion

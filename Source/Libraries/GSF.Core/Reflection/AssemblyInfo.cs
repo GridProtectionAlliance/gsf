@@ -570,7 +570,16 @@ namespace GSF.Reflection
         {
             return AppDomain.CurrentDomain.GetAssemblies()
                     .Where(assembly => !assembly.IsDynamic)
-                    .SelectMany(assembly => assembly.GetTypes())
+                    .SelectMany(assembly => {
+                        try
+                        {
+                            return assembly.GetTypes();
+                        }
+                        catch (ReflectionTypeLoadException ex)
+                        {
+                            return ex.Types.Where(x => x != null);
+                        }
+                    })
                     .FirstOrDefault(type => type.FullName.Equals(typeName));
         }
 

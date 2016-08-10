@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using GSF.Collections;
@@ -238,10 +239,11 @@ namespace GSF.Web.Model
         /// </summary>
         /// <param name="request">HTTP request message.</param>
         /// <param name="isPost"><c>true</c>if <paramref name="request"/> is HTTP post; otherwise, <c>false</c>.</param>
+        /// <param name="cancellationToken">Propagates notification from client that operations should be canceled.</param>
         /// <returns>Task that will provide rendered result.</returns>
-        public Task<string> ExecuteAsync(HttpRequestMessage request, bool isPost)
+        public Task<string> ExecuteAsync(HttpRequestMessage request, bool isPost, CancellationToken cancellationToken)
         {
-            return Task.Run(() => Execute(request, isPost));
+            return Task.Run(() => Execute(request, isPost), cancellationToken);
         }
 
         #endregion

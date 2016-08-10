@@ -230,6 +230,9 @@
     <Compile Include="IgnoreServicesSecurityModule.cs" />
     <Compile Include="Model\DataContext.cs" />
     <Compile Include="Model\ExtendedTemplateBase.cs" />
+    <Compile Include="Model\Handlers\CsvDownloadHandler.ashx.cs">
+      <DependentUpon>CsvDownloadHandler.ashx</DependentUpon>
+    </Compile>
     <Compile Include="Model\HtmlHelper.cs" />
     <Compile Include="Model\HubOperations\DirectoryBrowserOperations.cs" />
     <Compile Include="Model\IRazorEngine.cs" />
@@ -324,6 +327,7 @@
     <None Include="GSF.Web.nuspec" />
     <EmbeddedResource Include="Model\Views\PagedViewModel.cshtml" />
     <EmbeddedResource Include="Model\Views\DirectoryBrowser.cshtml" />
+    <EmbeddedResource Include="Model\Handlers\CsvDownloadHandler.ashx" />
     <None Include="packages.config" />
     <EmbeddedResource Include="Model\Views\AddCheckBoxField.cshtml" />
     <EmbeddedResource Include="Model\Views\AddDateField.cshtml" />

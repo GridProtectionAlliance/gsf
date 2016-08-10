@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace GSF.Web.Hosting
@@ -36,7 +37,8 @@ namespace GSF.Web.Hosting
         /// </summary>
         /// <param name="request">HTTP request message.</param>
         /// <param name="response">HTTP response message.</param>
-        Task ProcessRequestAsync(HttpRequestMessage request, HttpResponseMessage response);
+        /// <param name="cancellationToken">Propagates notification from client that operations should be canceled.</param>
+        Task ProcessRequestAsync(HttpRequestMessage request, HttpResponseMessage response, CancellationToken cancellationToken);
 
         /// <summary>
         /// Determines if client cache should be enabled for rendered handler content.
