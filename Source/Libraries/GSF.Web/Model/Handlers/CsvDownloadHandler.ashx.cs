@@ -101,7 +101,7 @@ namespace GSF.Web.Model.Handlers
             response.AddHeader("Content-Disposition", "attachment;filename=" + GetModelFileName(modelName));
             response.BufferOutput = true;
 
-            CopyModelAsCsvToStreamAsync(model, response.OutputStream, CancellationToken.None).ContinueWith(task =>
+            CopyModelAsCsvToStreamAsync(model, response.OutputStream, () => !response.IsClientConnected).ContinueWith(task =>
             {
                 if ((object)task.Exception != null)
                     throw task.Exception;
@@ -121,7 +121,7 @@ namespace GSF.Web.Model.Handlers
             string modelName = request.RequestUri.ParseQueryString()["ModelName"];
             Type model = AssemblyInfo.FindType(modelName);
 
-            response.Content = new PushStreamContent(async (stream, content, context) => await CopyModelAsCsvToStreamAsync(model, stream, cancellationToken), new MediaTypeHeaderValue(CsvContentType));
+            response.Content = new PushStreamContent(async (stream, content, context) => await CopyModelAsCsvToStreamAsync(model, stream, () => cancellationToken.IsCancellationRequested), new MediaTypeHeaderValue(CsvContentType));
             response.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment")
             {
                 FileName = GetModelFileName(modelName)
@@ -132,7 +132,7 @@ namespace GSF.Web.Model.Handlers
 
         private string GetModelFileName(string modelName) => $"{modelName}Export.csv";
 
-        private async Task CopyModelAsCsvToStreamAsync(Type model, Stream responseStream, CancellationToken cancellationToken)
+        private async Task CopyModelAsCsvToStreamAsync(Type model, Stream responseStream, Func<bool> isCancelled)
         {
             using (DataContext dataContext = new DataContext())
             using (StreamWriter writer = new StreamWriter(responseStream))
@@ -150,11 +150,11 @@ namespace GSF.Web.Model.Handlers
                 int totalPages = Math.Max((int)Math.Ceiling(recordCount / (double)PageSize), 1);
 
                 // Write data pages
-                for (int page = 0; page < totalPages && !cancellationToken.IsCancellationRequested; page++)
+                for (int page = 0; page < totalPages && !isCancelled(); page++)
                 {
                     foreach (object record in table.QueryRecords(null, true, page + 1, PageSize))
                     {
-                        if (cancellationToken.IsCancellationRequested)
+                        if (isCancelled())
                             break;
 
                         await writer.WriteLineAsync(string.Join(",", fieldNames.Select(fieldName => $"\"{table.GetFieldValue(record, fieldName)}\"")));

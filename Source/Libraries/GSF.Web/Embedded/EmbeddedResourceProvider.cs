@@ -27,7 +27,6 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Web.Caching;
 using System.Web.Hosting;
-using GSF.IO;
 
 namespace GSF.Web.Embedded
 {
