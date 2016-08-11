@@ -24,9 +24,12 @@
 using System;
 using System.Collections;
 using System.IO;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Web.Caching;
+using System.Web.Compilation;
 using System.Web.Hosting;
+using GSF.Reflection;
 
 namespace GSF.Web.Embedded
 {
@@ -42,7 +45,7 @@ namespace GSF.Web.Embedded
     /// To use, add the following to the Global.asax.cs Application_Start function:
     /// <code>
     ///     // Add additional virtual path provider to allow access to embedded resources
-    ///     HostingEnvironment.RegisterVirtualPathProvider(new EmbeddedResourceProvider());
+    ///     EmbeddedResourceProvider.Register();
     /// </code>
     /// Then add the namespace paths to the embedded resources for which you need access to the Web.config &lt;system.webServer&gt; section:
     /// <code>
@@ -141,32 +144,46 @@ namespace GSF.Web.Embedded
 
         #region [ Static ]
 
+        /// <summary>
+        /// Registers the <see cref="EmbeddedResourceProvider"/> within a <see cref="HostingEnvironment"/>.
+        /// </summary>
+        /// <remarks>
+        /// This function will properly register the <see cref="EmbeddedResourceProvider"/> even when being run from
+        /// within a pre-compiled web application.
+        /// </remarks>
+        public static void Register()
+        {
+            if (BuildManager.IsPrecompiledApp)
+            {
+                // HACK: Call internal registration function for virtual path provider in pre-compiled web application
+                Type hostingEnvironment = AssemblyInfo.FindType("System.Web.Hosting.HostingEnvironment");
+
+                if ((object)hostingEnvironment == null)
+                    throw new InvalidOperationException("Failed to register EmbeddedResourceProvider: could not find type \"System.Web.Hosting.HostingEnvironment\".");
+
+                MethodInfo internalRegisterVirtualPathProvider = hostingEnvironment.GetMethod("RegisterVirtualPathProviderInternal", BindingFlags.NonPublic | BindingFlags.Static);
+
+                if ((object)internalRegisterVirtualPathProvider == null)
+                    throw new InvalidOperationException("Failed to register EmbeddedResourceProvider: could not find internal static method \"System.Web.Hosting.HostingEnvironment.RegisterVirtualPathProviderInternal()\".");
+
+                internalRegisterVirtualPathProvider.Invoke(null, new object[] { new EmbeddedResourceProvider() });
+            }
+            else
+            {
+                HostingEnvironment.RegisterVirtualPathProvider(new EmbeddedResourceProvider());
+            }
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string ParseResourceNameFromVirtualPath(string virtualPath)
         {
-            if (virtualPath.StartsWith("~/@"))
-                virtualPath = virtualPath.Substring(3);
-            else if (virtualPath.StartsWith("/@"))
-                virtualPath = virtualPath.Substring(2);
-            else if (virtualPath.StartsWith("@"))
-                virtualPath = virtualPath.Substring(1);
-
-            return virtualPath.Replace('/', '.');
+            return virtualPath.Substring(virtualPath.IndexOf('@') + 1).Replace('/', '.');
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsEmbeddedResource(string virtualPath)
         {
-            if (virtualPath.StartsWith("~/@"))
-                return true;
-
-            if (virtualPath.StartsWith("/@"))
-                return true;
-
-            if (virtualPath.StartsWith("@"))
-                return true;
-
-            return false;
+            return virtualPath.StartsWith("@") || virtualPath.Contains("/@");
         }
 
         #endregion

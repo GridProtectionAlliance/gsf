@@ -51,11 +51,11 @@
     );
 
     pageControlScripts.Append(@"
-    <script src=""/@GSF/Web/Model/Scripts/ko-reactor.min.js""></script>
-    <script src=""/@GSF/Web/Model/Scripts/ko.observableDictionary.js""></script>
-    <script src=""/@GSF/Web/Model/Scripts/js.cookie.js""></script>
-    <script src=""/@GSF/Web/Model/Scripts/gsf.web.knockout.js""></script>
-    <script src=""/@GSF/Web/Model/Scripts/pagedViewModel.js""></script>
+    <script src=""@GSF/Web/Model/Scripts/ko-reactor.min.js""></script>
+    <script src=""@GSF/Web/Model/Scripts/ko.observableDictionary.js""></script>
+    <script src=""@GSF/Web/Model/Scripts/js.cookie.js""></script>
+    <script src=""@GSF/Web/Model/Scripts/gsf.web.knockout.js""></script>
+    <script src=""@GSF/Web/Model/Scripts/pagedViewModel.js""></script>
     <script id=""validationMessageTemplate"" type=""text/html""><!--
         --><em class=""validationPrompt"" data-bind=""validationMessage: field""></em>
     </script>
@@ -201,18 +201,18 @@
     <div class="pull-right" id="pageControlsRow">
         @if (!hideExportCSVButton || (!hideAddNewButton && (canAddNew || !hideUnauthorizedControls)))
         {
-            if (!hideExportCSVButton)
-            {
-                <a role="button" class="btn btn-sm btn-default" id="exportCSVButton" hub-dependent>
-                    <span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;Export&nbsp;CSV
-                </a>
-                <span>&nbsp;&nbsp;</span>
-            }
             if (!hideAddNewButton && (canAddNew || !hideUnauthorizedControls))
             {
-                <button type="button" class="btn btn-sm btn-primary" id="addRecordButton" @Raw(canAddNew ? "data-bind=\"enable: dataHubIsConnected\"" : "disabled")>
+                <button type="button" class="btn btn-sm btn-primary pull-right" id="addRecordButton" @Raw(canAddNew ? "data-bind=\"enable: dataHubIsConnected\"" : "disabled")>
                     <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Add&nbsp;New
                 </button>
+            }
+            if (!hideExportCSVButton)
+            {
+                <span class="pull-right">&nbsp;</span>
+                <a role="button" class="btn btn-sm btn-default pull-right" id="exportCSVButton" hub-dependent>
+                    <span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;Export&nbsp;CSV
+                </a>
             }
             <br />
             <hr class="half-break" />
@@ -329,7 +329,7 @@
             $(""#addNewEditDialog"").modal({show: false, backdrop: ""static"", keyboard: false});
 
             $(""#exportCSVButton"").click(function() {
-                window.open(""/@GSF/Web/Model/Handlers/CsvDownloadHandler.ashx?ModelName="" + encodeURIComponent(viewModel.modelName) + ""&HubName="" + encodeURIComponent(viewModel.hubName));
+                window.open(""@GSF/Web/Model/Handlers/CsvDownloadHandler.ashx?ModelName="" + encodeURIComponent(viewModel.modelName) + ""&HubName="" + encodeURIComponent(viewModel.hubName));
             });
 
             $(window).on(""beforeunload"", function() {
