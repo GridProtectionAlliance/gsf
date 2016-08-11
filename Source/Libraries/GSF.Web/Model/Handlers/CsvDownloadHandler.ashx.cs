@@ -24,15 +24,19 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using GSF.Security;
 using GSF.Web.Hosting;
 using System.Net.Http.Headers;
+using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
+using GSF.Collections;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Reflection;
@@ -90,10 +94,9 @@ namespace GSF.Web.Model.Handlers
         public void ProcessRequest(HttpContext context)
         {
             HttpResponse response = HttpContext.Current.Response;
-            SecurityProviderCache.ValidateCurrentProvider();
-
-            string modelName = context.Request.QueryString["ModelName"];
-            Type model = AssemblyInfo.FindType(modelName);
+            NameValueCollection parameters = context.Request.QueryString;
+            string modelName = parameters["ModelName"];
+            string hubName = parameters["HubName"];
 
             response.ClearContent();
             response.Clear();
@@ -101,7 +104,7 @@ namespace GSF.Web.Model.Handlers
             response.AddHeader("Content-Disposition", "attachment;filename=" + GetModelFileName(modelName));
             response.BufferOutput = true;
 
-            CopyModelAsCsvToStreamAsync(model, response.OutputStream, () => !response.IsClientConnected).ContinueWith(task =>
+            CopyModelAsCsvToStreamAsync(modelName, hubName, response.OutputStream, () => !response.IsClientConnected).ContinueWith(task =>
             {
                 if ((object)task.Exception != null)
                     throw task.Exception;
@@ -117,11 +120,11 @@ namespace GSF.Web.Model.Handlers
         /// <param name="cancellationToken">Propagates notification from client that operations should be canceled.</param>
         public Task ProcessRequestAsync(HttpRequestMessage request, HttpResponseMessage response, CancellationToken cancellationToken)
         {
-            SecurityProviderCache.ValidateCurrentProvider();
-            string modelName = request.RequestUri.ParseQueryString()["ModelName"];
-            Type model = AssemblyInfo.FindType(modelName);
+            NameValueCollection parameters = request.RequestUri.ParseQueryString();
+            string modelName = parameters["ModelName"];
+            string hubName = parameters["HubName"];
 
-            response.Content = new PushStreamContent(async (stream, content, context) => await CopyModelAsCsvToStreamAsync(model, stream, () => cancellationToken.IsCancellationRequested), new MediaTypeHeaderValue(CsvContentType));
+            response.Content = new PushStreamContent(async (stream, content, context) => await CopyModelAsCsvToStreamAsync(modelName, hubName, stream, () => cancellationToken.IsCancellationRequested), new MediaTypeHeaderValue(CsvContentType));
             response.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment")
             {
                 FileName = GetModelFileName(modelName)
@@ -132,19 +135,66 @@ namespace GSF.Web.Model.Handlers
 
         private string GetModelFileName(string modelName) => $"{modelName}Export.csv";
 
-        private async Task CopyModelAsCsvToStreamAsync(Type model, Stream responseStream, Func<bool> isCancelled)
+        private async Task CopyModelAsCsvToStreamAsync(string modelName, string hubName, Stream responseStream, Func<bool> isCancelled)
         {
+            SecurityProviderCache.ValidateCurrentProvider();
+
+            if (string.IsNullOrEmpty(modelName))
+                throw new ArgumentNullException(nameof(modelName), "Cannot download CSV data: no model type name was specified.");
+
+            if (string.IsNullOrEmpty(hubName))
+                throw new ArgumentNullException(nameof(hubName), "Cannot download CSV data: no hub type name was specified.");
+
+            Type modelType = AssemblyInfo.FindType(modelName);
+
+            if ((object)modelType == null)
+                throw new InvalidOperationException($"Cannot download CSV data: failed to find model type \"{modelName}\" in loaded assemblies.");
+
+            Type hubType = AssemblyInfo.FindType(hubName);
+
+            if ((object)hubType == null)
+                throw new InvalidOperationException($"Cannot download CSV data: failed to find hub type \"{hubName}\" in loaded assemblies.");
+
+            string queryRoles;
+
+            try
+            {
+                using (IRecordOperationsHub hub = Activator.CreateInstance(hubType) as IRecordOperationsHub)
+                {
+                    if ((object)hub == null)
+                        throw new SecurityException($"Cannot download CSV data: hub type \"{hubName}\" is not a IRecordOperationsHub, access cannot be validated.");
+
+                    try
+                    {
+                        // Get any authorized query roles as defined in hub records operations for modeled table, default to read allowed for query
+                        Tuple<string, string> recordOperation = hub.RecordOperationsCache.GetRecordOperations(modelType)[(int)RecordOperation.QueryRecords];
+                        queryRoles = string.IsNullOrEmpty(recordOperation?.Item1) ? "*" : recordOperation.Item2 ?? "*";
+                    }
+                    catch (KeyNotFoundException ex)
+                    {
+                        throw new SecurityException($"Cannot download CSV data: hub type \"{hubName}\" does not define record operations for \"{modelName}\", access cannot be validated.", ex);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new SecurityException($"Cannot download CSV data: failed to instantiate hub type \"{hubName}\", access cannot be validated.", ex);
+            }
+
             using (DataContext dataContext = new DataContext())
             using (StreamWriter writer = new StreamWriter(responseStream))
             {
+                if (!dataContext.UserIsInRole(queryRoles))
+                    throw new SecurityException($"Cannot download CSV data: access is denied for user \"{Thread.CurrentPrincipal.Identity.Name}\", minimum required roles = {queryRoles.ToDelimitedString(", ")}.");
+
                 AdoDataConnection connection = dataContext.Connection;
-                ITableOperations table = dataContext.Table(model);
+                ITableOperations table = dataContext.Table(modelType);
                 string[] fieldNames = table.GetFieldNames(false);
 
                 // Write column headers
                 await writer.WriteLineAsync(string.Join(",", fieldNames.Select(fieldName => connection.EscapeIdentifier(fieldName, true))));
 
-                // Read queried records in page sets so there is not a memory burden and initial query delay on very large data sets
+                // Read queried records in page sets so there is not a memory burden and long initial query delay on very large data sets
                 const int PageSize = 500;
                 int recordCount = table.QueryRecordCount();
                 int totalPages = Math.Max((int)Math.Ceiling(recordCount / (double)PageSize), 1);

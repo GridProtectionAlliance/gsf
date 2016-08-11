@@ -707,17 +707,20 @@ namespace GSF.Web.Model
         /// <typeparam name="THub">SignalR hub that implements <see cref="IRecordOperationsHub"/>.</typeparam>
         /// <param name="viewBag">ViewBag for the view.</param>
         /// <param name="defaultSortField">Default sort field name, defaults to first primary key field. Prefix field name with a minus, i.e., '-', to default to descending sort.</param>
-        /// <param name="hubName">Javascript hub name, defaults to camel-cased <typeparamref name="THub"/> type name.</param>
+        /// <param name="hubScriptName">Javascript hub name, defaults to camel-cased <typeparamref name="THub"/> type name.</param>
         /// <param name="parentKeys">Primary keys values of the parent record to load.</param>
         /// <returns>Rendered paged view model configuration script.</returns>
-        public string RenderViewModelConfiguration<TModel, THub>(dynamic viewBag, string defaultSortField = null, string hubName = null, params object[] parentKeys) where TModel : class, new() where THub : IRecordOperationsHub, new()
+        public string RenderViewModelConfiguration<TModel, THub>(dynamic viewBag, string defaultSortField = null, string hubScriptName = null, params object[] parentKeys) where TModel : class, new() where THub : IRecordOperationsHub, new()
         {
-            RecordOperationsCache cache = s_recordOperationCaches.GetOrAdd(typeof(THub), type =>
+            Type hubType = typeof(THub);
+
+            RecordOperationsCache cache = s_recordOperationCaches.GetOrAdd(hubType, type =>
             {
                 using (THub hub = new THub())
                     return hub.RecordOperationsCache;
             });
-            return RenderViewModelConfiguration<TModel>(cache, viewBag, defaultSortField, hubName ?? ToCamelCase(typeof(THub).Name), parentKeys);
+
+            return RenderViewModelConfiguration<TModel>(cache, viewBag, defaultSortField, hubType.FullName, hubScriptName ?? ToCamelCase(hubType.Name), parentKeys);
         }
 
         /// <summary>
@@ -727,10 +730,11 @@ namespace GSF.Web.Model
         /// <param name="cache">Data hub record operations cache.</param>
         /// <param name="viewBag">ViewBag for the view.</param>
         /// <param name="defaultSortField">Default sort field name, defaults to first primary key field. Prefix field name with a minus, i.e., '-', to default to descending sort.</param>
-        /// <param name="hubName">Javascript hub name, defaults to "dataHub".</param>
+        /// <param name="hubClassName">Full class name of hub instance, defaults to "GSF.Web.Security.SecurityHub".</param>
+        /// <param name="hubScriptName">Javascript hub name, defaults to "securityHub".</param>
         /// <param name="parentKeys">Primary keys values of the parent record to load.</param>
         /// <returns>Rendered paged view model configuration script.</returns>
-        public string RenderViewModelConfiguration<TModel>(RecordOperationsCache cache, dynamic viewBag, string defaultSortField = null, string hubName = "dataHub", params object[] parentKeys) where TModel : class, new()
+        public string RenderViewModelConfiguration<TModel>(RecordOperationsCache cache, dynamic viewBag, string defaultSortField = null, string hubClassName = "GSF.Web.Security.SecurityHub", string hubScriptName = "securityHub", params object[] parentKeys) where TModel : class, new()
         {
             StringBuilder javascript = new StringBuilder();
             string[] primaryKeyFields = Table<TModel>().GetPrimaryKeyFieldNames(false);
@@ -750,6 +754,7 @@ namespace GSF.Web.Model
                 viewModel.defaultSortAscending = {defaultSortAscending};
                 viewModel.labelField = ""{GetPrimaryLabelField<TModel>()}"";
                 viewModel.modelName = ""{typeof(TModel).FullName}"";
+                viewModel.hubName = ""{hubClassName}"";
                 viewModel.primaryKeyFields = [{primaryKeyFields.Select(fieldName => $"\"{fieldName}\"").ToDelimitedString(", ")}];
             ".FixForwardSpacing());
 
@@ -779,42 +784,42 @@ namespace GSF.Web.Model
             if (!string.IsNullOrWhiteSpace(queryRecordCountMethod))
                 javascript.Append($@"
                     viewModel.setQueryRecordCount(function (filterText) {{
-                        return {hubName}.{queryRecordCountMethod}({(keyValues == null ? "" : $"{keyValues}, ")} filterText);
+                        return {hubScriptName}.{queryRecordCountMethod}({(keyValues == null ? "" : $"{keyValues}, ")} filterText);
                     }});
                 ".FixForwardSpacing());
 
             if (!string.IsNullOrWhiteSpace(queryRecordsMethod))
                 javascript.Append($@"
                     viewModel.setQueryRecords(function (sortField, ascending, page, pageSize, filterText) {{
-                        return {hubName}.{queryRecordsMethod}({(keyValues == null ? "" : $"{keyValues}, ")}sortField, ascending, page, pageSize, filterText);
+                        return {hubScriptName}.{queryRecordsMethod}({(keyValues == null ? "" : $"{keyValues}, ")}sortField, ascending, page, pageSize, filterText);
                     }});
                 ".FixForwardSpacing());
 
             if (!string.IsNullOrWhiteSpace(deleteRecordMethod))
                 javascript.Append($@"
                     viewModel.setDeleteRecord(function (keyValues) {{
-                        return {hubName}.{deleteRecordMethod}({Enumerable.Range(0, Table<TModel>().GetPrimaryKeyFieldNames().Length).Select(index => $"keyValues[{index}]").ToDelimitedString(", ")});
+                        return {hubScriptName}.{deleteRecordMethod}({Enumerable.Range(0, Table<TModel>().GetPrimaryKeyFieldNames().Length).Select(index => $"keyValues[{index}]").ToDelimitedString(", ")});
                     }});
                 ".FixForwardSpacing());
 
             if (!string.IsNullOrWhiteSpace(createNewRecordMethod))
                 javascript.Append($@"
                     viewModel.setNewRecord(function () {{
-                        return {hubName}.{createNewRecordMethod}();
+                        return {hubScriptName}.{createNewRecordMethod}();
                     }});
                 ".FixForwardSpacing());
 
             if (!string.IsNullOrWhiteSpace(addNewRecordMethod))
                 javascript.Append($@"
                     viewModel.setAddNewRecord(function (record) {{
-                        return {hubName}.{addNewRecordMethod}(record);
+                        return {hubScriptName}.{addNewRecordMethod}(record);
                     }});
                 ".FixForwardSpacing());
 
             if (!string.IsNullOrWhiteSpace(updateMethod))
                 javascript.Append($@"
                     viewModel.setUpdateRecord(function (record) {{
-                        return {hubName}.{updateMethod}(record);
+                        return {hubScriptName}.{updateMethod}(record);
                     }});
                 ".FixForwardSpacing());
 

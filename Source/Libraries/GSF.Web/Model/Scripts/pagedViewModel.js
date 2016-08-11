@@ -40,7 +40,8 @@ function PagedViewModel() {
     self.defaultSortField = "{id}";                                 // Default sort field
     self.defaultSortAscending = true;                               // Default sort ascending flag
     self.initialFocusField = "";                                    // Initial add/edit field with focus
-    self.modelName = "{name}";                                      // Name of source model
+    self.modelName = "{name}";                                      // Full class name of source model
+    self.hubName = "{name}";                                        // Full class name of data hub
     self.pageName = "{name}";                                       // Name of page implementing model (helps with unique cookie name)
     self.filterText = "";                                           // Search filter text
 
