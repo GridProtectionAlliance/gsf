@@ -144,20 +144,33 @@ namespace GSF.Threading
 
             WaitOrTimerCallback callback = (state, timeout) =>
             {
+                // Even if the callback timed out, another thread may cancel
+                // the cancellation token before we are able to dispose of it
+                // so we explicitly cancel the token in order to be sure
+                timeout = timeout && !cancellationToken.Cancel();
+
+                // Both the callback thread and the caller thread will
+                // attempt to set the wait handle lock to null, and the
+                // last one to to do so has to unregister and dispose
                 if (Interlocked.Exchange(ref waitHandleLock, null) == null)
                 {
                     waitHandle.Unregister(null);
                     cancellationToken.Dispose();
                 }
 
+                // If we didn't time out, then the action
+                // was cancelled by another thread
                 if (!timeout)
                     return;
-
+                
                 action();
             };
 
             waitHandle = ThreadPool.RegisterWaitForSingleObject(waitObj, callback, null, delay, true);
 
+            // Both the callback thread and the caller thread will
+            // attempt to set the wait handle lock to null, and the
+            // last one to to do so has to unregister and dispose
             if (Interlocked.Exchange(ref waitHandleLock, null) == null)
             {
                 waitHandle.Unregister(null);
