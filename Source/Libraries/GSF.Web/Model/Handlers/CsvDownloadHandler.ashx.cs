@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
@@ -32,6 +33,7 @@ using System.Net.Http;
 using GSF.Security;
 using GSF.Web.Hosting;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
@@ -94,22 +96,27 @@ namespace GSF.Web.Model.Handlers
         public void ProcessRequest(HttpContext context)
         {
             HttpResponse response = HttpContext.Current.Response;
-            NameValueCollection parameters = context.Request.QueryString;
-            string modelName = parameters["ModelName"];
-            string hubName = parameters["HubName"];
+            NameValueCollection requestParameters = context.Request.QueryString;
 
             response.ClearContent();
             response.Clear();
             response.AddHeader("Content-Type", CsvContentType);
-            response.AddHeader("Content-Disposition", "attachment;filename=" + GetModelFileName(modelName));
+            response.AddHeader("Content-Disposition", "attachment;filename=" + GetModelFileName(requestParameters["ModelName"]));
             response.BufferOutput = true;
-
-            CopyModelAsCsvToStreamAsync(modelName, hubName, response.OutputStream, () => !response.IsClientConnected).ContinueWith(task =>
+            
+            try
             {
-                if ((object)task.Exception != null)
-                    throw task.Exception;
-            }, 
-            TaskContinuationOptions.OnlyOnFaulted);
+                CopyModelAsCsvToStreamAsync(requestParameters, response.OutputStream, () => !response.IsClientConnected, () => response.FlushAsync()).ContinueWith(task =>
+                {
+                    if ((object)task.Exception != null)
+                        throw task.Exception;
+                },
+                TaskContinuationOptions.OnlyOnFaulted);
+            }
+            finally
+            {
+                response.End();
+            }
         }
 
         /// <summary>
@@ -120,24 +127,40 @@ namespace GSF.Web.Model.Handlers
         /// <param name="cancellationToken">Propagates notification from client that operations should be canceled.</param>
         public Task ProcessRequestAsync(HttpRequestMessage request, HttpResponseMessage response, CancellationToken cancellationToken)
         {
-            NameValueCollection parameters = request.RequestUri.ParseQueryString();
-            string modelName = parameters["ModelName"];
-            string hubName = parameters["HubName"];
+            NameValueCollection requestParameters = request.RequestUri.ParseQueryString();
 
-            response.Content = new PushStreamContent(async (stream, content, context) => await CopyModelAsCsvToStreamAsync(modelName, hubName, stream, () => cancellationToken.IsCancellationRequested), new MediaTypeHeaderValue(CsvContentType));
+            response.Content = new PushStreamContent(async (stream, content, context) => 
+            {
+                try
+                {
+                    await CopyModelAsCsvToStreamAsync(requestParameters, stream, () => cancellationToken.IsCancellationRequested);
+                }
+                finally
+                {
+                    stream.Close();
+                }
+            }, new MediaTypeHeaderValue(CsvContentType));
+
             response.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment")
             {
-                FileName = GetModelFileName(modelName)
+                FileName = GetModelFileName(requestParameters["ModelName"])
             };
 
             return Task.CompletedTask;
         }
 
-        private string GetModelFileName(string modelName) => $"{modelName}Export.csv";
-
-        private async Task CopyModelAsCsvToStreamAsync(string modelName, string hubName, Stream responseStream, Func<bool> isCancelled)
+        private async Task CopyModelAsCsvToStreamAsync(NameValueCollection requestParameters, Stream responseStream, Func<bool> isCancelled, Func<Task> flushResponse = null)
         {
             SecurityProviderCache.ValidateCurrentProvider();
+
+            string modelName = requestParameters["ModelName"];
+            string hubName = requestParameters["HubName"];
+            string filterText = requestParameters["FilterText"];
+            string sortField = requestParameters["SortField"];
+            bool sortAscending = requestParameters["SortAscending"].ParseBoolean();
+            bool showDeleted = requestParameters["ShowDeleted"].ParseBoolean();
+            string[] parentKeys = requestParameters["ParentKeys"].Split(',');
+            const int PageSize = 250;
 
             if (string.IsNullOrEmpty(modelName))
                 throw new ArgumentNullException(nameof(modelName), "Cannot download CSV data: no model type name was specified.");
@@ -155,62 +178,157 @@ namespace GSF.Web.Model.Handlers
             if ((object)hubType == null)
                 throw new InvalidOperationException($"Cannot download CSV data: failed to find hub type \"{hubName}\" in loaded assemblies.");
 
+            IRecordOperationsHub hub;
+
+            // Record operation tuple defines method name and allowed roles
+            Tuple<string, string> queryRecordCountOperation;
+            Tuple<string, string> queryRecordsOperation;
             string queryRoles;
 
             try
             {
-                using (IRecordOperationsHub hub = Activator.CreateInstance(hubType) as IRecordOperationsHub)
-                {
-                    if ((object)hub == null)
-                        throw new SecurityException($"Cannot download CSV data: hub type \"{hubName}\" is not a IRecordOperationsHub, access cannot be validated.");
+                hub = Activator.CreateInstance(hubType) as IRecordOperationsHub;
 
-                    try
-                    {
-                        // Get any authorized query roles as defined in hub records operations for modeled table, default to read allowed for query
-                        Tuple<string, string> recordOperation = hub.RecordOperationsCache.GetRecordOperations(modelType)[(int)RecordOperation.QueryRecords];
-                        queryRoles = string.IsNullOrEmpty(recordOperation?.Item1) ? "*" : recordOperation.Item2 ?? "*";
-                    }
-                    catch (KeyNotFoundException ex)
-                    {
-                        throw new SecurityException($"Cannot download CSV data: hub type \"{hubName}\" does not define record operations for \"{modelName}\", access cannot be validated.", ex);
-                    }
+                if ((object)hub == null)
+                    throw new SecurityException($"Cannot download CSV data: hub type \"{hubName}\" is not a IRecordOperationsHub, access cannot be validated.");
+
+                Tuple<string, string>[] recordOperations;
+
+                try
+                {
+                    // Get any authorized query roles as defined in hub records operations for modeled table, default to read allowed for query
+                    recordOperations = hub.RecordOperationsCache.GetRecordOperations(modelType);
+
+                    if ((object)recordOperations == null)
+                        throw new NullReferenceException();
                 }
+                catch (KeyNotFoundException ex)
+                {
+                    throw new SecurityException($"Cannot download CSV data: hub type \"{hubName}\" does not define record operations for \"{modelName}\", access cannot be validated.", ex);
+                }
+
+                // Get record operation for querying record count
+                queryRecordCountOperation = recordOperations[(int)RecordOperation.QueryRecordCount];
+
+                if ((object)queryRecordCountOperation == null)
+                    throw new NullReferenceException();
+
+                // Get record operation for querying records
+                queryRecordsOperation = recordOperations[(int)RecordOperation.QueryRecords];
+
+                if ((object)queryRecordsOperation == null)
+                    throw new NullReferenceException();
+
+                // Get any defined role restrictions for record query operation - access to CSV download will based on these roles
+                queryRoles = string.IsNullOrEmpty(queryRecordsOperation.Item1) ? "*" : queryRecordsOperation.Item2 ?? "*";
             }
             catch (Exception ex)
             {
-                throw new SecurityException($"Cannot download CSV data: failed to instantiate hub type \"{hubName}\", access cannot be validated.", ex);
+                throw new SecurityException($"Cannot download CSV data: failed to instantiate hub type \"{hubName}\" or access record operations, access cannot be validated.", ex);
             }
 
             using (DataContext dataContext = new DataContext())
             using (StreamWriter writer = new StreamWriter(responseStream))
             {
+                // Validate current user has access to requested data
                 if (!dataContext.UserIsInRole(queryRoles))
-                    throw new SecurityException($"Cannot download CSV data: access is denied for user \"{Thread.CurrentPrincipal.Identity.Name}\", minimum required roles = {queryRoles.ToDelimitedString(", ")}.");
+                    throw new SecurityException($"Cannot download CSV data: access is denied for user \"{Thread.CurrentPrincipal.Identity?.Name ?? "Undefined"}\", minimum required roles = {queryRoles.ToDelimitedString(", ")}.");
 
                 AdoDataConnection connection = dataContext.Connection;
                 ITableOperations table = dataContext.Table(modelType);
                 string[] fieldNames = table.GetFieldNames(false);
 
+                Func<Task> flushAsync = async () =>
+                {
+                    // ReSharper disable once AccessToDisposedClosure
+                    await writer.FlushAsync();
+
+                    if ((object)flushResponse != null)
+                        await flushResponse();
+                };
+
                 // Write column headers
                 await writer.WriteLineAsync(string.Join(",", fieldNames.Select(fieldName => connection.EscapeIdentifier(fieldName, true))));
+                await flushAsync();
+
+                // See if modeled table has a flag field that represents a deleted row
+                bool hasDeletedField = !string.IsNullOrEmpty(dataContext.GetIsDeletedFlag(modelType));
+
+                // Get query operation methods
+                MethodInfo queryRecordCount = hubType.GetMethod(queryRecordCountOperation.Item1);
+                MethodInfo queryRecords = hubType.GetMethod(queryRecordsOperation.Item1);
+
+                // Setup query parameters
+                List<object> queryRecordCountParameters = new List<object>();
+                List<object> queryRecordsParameters = new List<object>();
+
+                // Add current show deleted state parameter, if model defines a show deleted field
+                if (hasDeletedField)
+                    queryRecordCountParameters.Add(showDeleted);
+
+                // Add any parent key restriction parameters
+                if (parentKeys.Length > 0 && parentKeys[0].Length > 0)
+                    queryRecordCountParameters.AddRange(parentKeys);
+
+                // Add parameters for query records from query record count parameters - they match up to this point
+                queryRecordsParameters.AddRange(queryRecordCountParameters);
+
+                // Add sort field parameter
+                queryRecordsParameters.Add(sortField);
+
+                // Add ascending sort order parameter
+                queryRecordsParameters.Add(sortAscending);
+
+                // Track parameter index for current page to query
+                int pageParameterIndex = queryRecordsParameters.Count;
+
+                // Add page index parameter
+                queryRecordsParameters.Add(0);
+
+                // Add page size parameter
+                queryRecordsParameters.Add(PageSize);
+
+                // Add filter text parameter
+                queryRecordCountParameters.Add(filterText);
+                queryRecordsParameters.Add(filterText);
 
                 // Read queried records in page sets so there is not a memory burden and long initial query delay on very large data sets
-                const int PageSize = 500;
-                int recordCount = table.QueryRecordCount();
+                int recordCount = (int)queryRecordCount.Invoke(hub, queryRecordCountParameters.ToArray());
                 int totalPages = Math.Max((int)Math.Ceiling(recordCount / (double)PageSize), 1);
 
                 // Write data pages
                 for (int page = 0; page < totalPages && !isCancelled(); page++)
                 {
-                    foreach (object record in table.QueryRecords(null, true, page + 1, PageSize))
+                    // Update desired page to query
+                    queryRecordsParameters[pageParameterIndex] = page + 1;
+
+                    // Query page records
+                    IEnumerable records = queryRecords.Invoke(hub, queryRecordsParameters.ToArray()) as IEnumerable ?? Enumerable.Empty<object>();
+                    int exportCount = 0;
+
+                    // Export page records
+                    foreach (object record in records)
                     {
-                        if (isCancelled())
+                        // Periodically check for client cancellation
+                        if (exportCount++ % (PageSize / 4) == 0 && isCancelled())
                             break;
 
                         await writer.WriteLineAsync(string.Join(",", fieldNames.Select(fieldName => $"\"{table.GetFieldValue(record, fieldName)}\"")));
                     }
+
+                    await flushAsync();
                 }
             }
+        }
+
+        private static string GetModelFileName(string modelName)
+        {
+            int lastDotIndex = modelName.LastIndexOf('.');
+
+            if (lastDotIndex > -1 && lastDotIndex < modelName.Length - 1)
+                modelName = modelName.Substring(lastDotIndex + 1);
+
+            return $"{modelName}Export.csv";
         }
 
         #endregion

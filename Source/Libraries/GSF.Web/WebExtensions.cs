@@ -233,7 +233,14 @@ namespace GSF.Web
         {
             // Providing non-async version to simplify processing within Razor script
             Task<PostData> getPostDataTask = GetPostDataAsync(request);
-            getPostDataTask.Wait();
+
+            getPostDataTask.ContinueWith(task =>
+            {
+                if ((object)task.Exception != null)
+                    throw task.Exception;
+            },
+            TaskContinuationOptions.OnlyOnFaulted);
+
             return getPostDataTask.Result;
         }
 

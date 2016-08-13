@@ -213,6 +213,7 @@
                 <a role="button" class="btn btn-sm btn-default pull-right" id="exportCSVButton" hub-dependent>
                     <span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;Export&nbsp;CSV
                 </a>
+                <a id="exportCSVLink" download hidden></a>
             }
             <br />
             <hr class="half-break" />
@@ -305,41 +306,52 @@
         ", Raw(SearchFilter().ToString().RemoveDuplicateWhiteSpace().Replace("\r\n", "")));
     }
 
-    pageControlScripts.Append(@"
-            $(""#addRecordButton"").click(function() {
+    pageControlScripts.AppendFormat(@"
+            $(""#addRecordButton"").click(function() {{
                 viewModel.addPageRecord();
-            });
+            }});
 
-            $(""#editRecordButton"").click(function() {
+            $(""#editRecordButton"").click(function() {{
                 viewModel.recordMode(RecordMode.Edit);
-            });
+            }});
 
-            $(""#saveRecordButton"").click(function() {
+            $(""#saveRecordButton"").click(function() {{
                 viewModel.savePageRecord();
-            });
+            }});
 
-            $(""#cancelRecordButton"").click(function() {
+            $(""#cancelRecordButton"").click(function() {{
                 viewModel.cancelPageRecord();
-            });
+            }});
 
-            $(""#dismissDialogButton"").click(function() {
+            $(""#dismissDialogButton"").click(function() {{
                 viewModel.cancelPageRecord();
-            });
+            }});
 
-            $(""#addNewEditDialog"").modal({show: false, backdrop: ""static"", keyboard: false});
+            $(""#addNewEditDialog"").modal({{show: false, backdrop: ""static"", keyboard: false}});
 
-            $(""#exportCSVButton"").click(function() {
-                window.open(""@GSF/Web/Model/Handlers/CsvDownloadHandler.ashx?ModelName="" + encodeURIComponent(viewModel.modelName) + ""&HubName="" + encodeURIComponent(viewModel.hubName));
-            });
+            $(""#exportCSVButton"").click(function() {{
+                $(""#exportCSVLink"").attr(""href"", ""@GSF/Web/Model/Handlers/CsvDownloadHandler.ashx"" +
+                    ""?ModelName="" + encodeURIComponent(viewModel.modelName) + 
+                    ""&HubName="" + encodeURIComponent(viewModel.hubName) + 
+                    ""&FilterText="" + encodeURIComponent(viewModel.filterText) + 
+                    ""&SortField="" + encodeURIComponent(viewModel.sortField()) + 
+                    ""&SortAscending="" + encodeURIComponent(viewModel.sortAscending()) + 
+                    ""&ShowDeleted={0}&ParentKeys={1}"");
 
-            $(window).on(""beforeunload"", function() {
+                $(""#exportCSVLink"")[0].click();
+            }});
+
+            $(window).on(""beforeunload"", function() {{
                 if ($(""#addNewEditDialog"").hasClass(""in"") && viewModel.isDirty())
                     return ""There are unsaved changes to this record."";
 
                 return undefined;
-            });
-        });
-    ");
+            }});
+        }});
+    ",
+        ViewBag.ShowDeleted ?? false,
+        WebExtensions.UrlEncode((ViewBag.ParentKeys ?? "").ToString())
+    );
 
     pageControlScripts.AppendFormat(@"
         viewModel.canEdit({0});

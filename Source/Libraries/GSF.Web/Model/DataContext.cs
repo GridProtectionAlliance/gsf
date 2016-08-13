@@ -775,7 +775,10 @@ namespace GSF.Web.Model
             string keyValues = null;
 
             if (parentKeys.Length > 0)
+            {
                 keyValues = parentKeys.ToDelimitedString(", ");
+                viewBag.ParentKeys = keyValues;
+            }
 
             // If modeled table has IsDeletedField marker, the showDeleted parameter should come first in DataHub operations
             if (showDeletedValue != null)
