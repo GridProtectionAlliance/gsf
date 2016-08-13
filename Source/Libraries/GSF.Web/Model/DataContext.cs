@@ -559,6 +559,9 @@ namespace GSF.Web.Model
             if (viewBag.DeleteRoles == null)
                 viewBag.DeleteRoles = viewBag.EditRoles;
 
+            // Ensure that the user's roles have been properly initialized
+            SecurityProviderCache.ValidateCurrentProvider();
+
             // Check current allowed roles for user
             viewBag.CanEdit = UserIsInRole(viewBag.EditRoles);
             viewBag.CanAddNew = UserIsInRole(viewBag.AddNewRoles);
