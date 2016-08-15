@@ -149,7 +149,7 @@ namespace GSF.Web.Model.Handlers
             return Task.CompletedTask;
         }
 
-        private async Task CopyModelAsCsvToStreamAsync(NameValueCollection requestParameters, Stream responseStream, Func<bool> isCancelled, Func<Task> flushResponse = null)
+        private async Task CopyModelAsCsvToStreamAsync(NameValueCollection requestParameters, Stream responseStream, Func<bool> isCancelled, Func<Task> flushResponseAsync = null)
         {
             SecurityProviderCache.ValidateCurrentProvider();
 
@@ -243,8 +243,8 @@ namespace GSF.Web.Model.Handlers
                     // ReSharper disable once AccessToDisposedClosure
                     await writer.FlushAsync();
 
-                    if ((object)flushResponse != null)
-                        await flushResponse();
+                    if ((object)flushResponseAsync != null)
+                        await flushResponseAsync();
                 };
 
                 // Write column headers

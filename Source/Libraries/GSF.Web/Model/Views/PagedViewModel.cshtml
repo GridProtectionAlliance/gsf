@@ -101,6 +101,13 @@
 
     // Check if search filter should be enabled for page
     bool showSearchFilter = ViewBag.ShowSearchFilter ?? false;
+
+    // Allow custom foreach bindings for page records
+    string pageRecordsForEachBinding = "";
+
+    if (ViewBag.PageRecordsForEachBinding != null) {
+        pageRecordsForEachBinding = ", " + ViewBag.PageRecordsForEachBinding;
+    }
 }
 @functions
 {
@@ -188,7 +195,7 @@
                     </th>
                 </tr>
             </thead>
-            <tbody data-bind="foreach: pageRecords">
+            <tbody data-bind="foreach: {data: pageRecords@(Raw(pageRecordsForEachBinding))}">
                 <tr style="visibility: hidden" id="recordRow"@Raw(ViewBag.ShowDeleted ?? false ? string.Format(" data-bind=\"css: {{'danger': {0}}}\"", ViewBag.IsDeletedField) : "")>
                     @Raw(ViewBag.BodyRows)
                 </tr>
