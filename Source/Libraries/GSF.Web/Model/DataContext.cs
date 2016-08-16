@@ -833,6 +833,62 @@ namespace GSF.Web.Model
         }
 
         /// <summary>
+        /// Renders client-side Javascript function for looking up single values from a table.
+        /// </summary>
+        /// <typeparam name="TModel">Modeled database table (or view).</typeparam>
+        /// <param name="valueFieldName">Table field name as defined in the table.</param>
+        /// <param name="keyFieldName">Name of primary key field, defaults to "ID".</param>
+        /// <param name="lookupFunctionName">Name of lookup function, defaults to lookup + <typeparamref name="TModel"/> name + <paramref name="valueFieldName"/> + Value.</param>
+        /// <param name="arrayName">Name of value array, defaults to camel cased <typeparamref name="TModel"/> name + <paramref name="valueFieldName"/> + Values.</param>
+        /// <returns>Client-side Javascript lookup function.</returns>
+        public string RenderLookupFunction<TModel>(string valueFieldName, string keyFieldName = "ID", string lookupFunctionName = null, string arrayName = null) where TModel : class, new()
+        {
+            StringBuilder javascript = new StringBuilder();
+
+            if (string.IsNullOrWhiteSpace(lookupFunctionName))
+                lookupFunctionName = $"lookup{typeof(TModel).Name}{valueFieldName}Value";
+
+            if (string.IsNullOrWhiteSpace(arrayName))
+                arrayName = $"{typeof(TModel).Name.ToCamelCase()}{valueFieldName}Values";
+
+            TableOperations<TModel> operations = Table<TModel>();
+            bool keyIsString = operations.GetFieldType(keyFieldName) == typeof(string);
+            bool valueIsString = operations.GetFieldType(valueFieldName) == typeof(string);
+
+            javascript.AppendLine($"var {arrayName} = [];");
+            javascript.AppendLine();
+
+            foreach (TModel record in operations.QueryRecords())
+            {
+                string key = operations.GetFieldValue(record, keyFieldName)?.ToString();
+
+                if (string.IsNullOrEmpty(key))
+                    continue;
+
+                key = key.JavaScriptEncode();
+
+                if (keyIsString)
+                    key = $"\"{key}\"";
+
+                string value = operations.GetFieldValue(record, valueFieldName)?.ToString() ?? "";
+
+                value = value.JavaScriptEncode();
+
+                if (valueIsString)
+                    value = $"\"{value}\"";
+
+                javascript.AppendLine($"        {arrayName}[{key}] = {value};");
+            }
+
+            javascript.AppendLine();
+            javascript.AppendLine($"        function {lookupFunctionName}(value) {{");
+            javascript.AppendLine($"            return {arrayName}[value];");
+            javascript.AppendLine("        }");
+
+            return javascript.ToString();
+        }
+
+        /// <summary>
         /// Adds a new pattern based validation and option error message to a field.
         /// </summary>
         /// <param name="observableFieldReference">Observable field reference (from JS view model).</param>
