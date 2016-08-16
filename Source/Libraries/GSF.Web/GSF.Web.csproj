@@ -227,6 +227,8 @@
     <Compile Include="Embedded\ISecurityService.cs" />
     <Compile Include="Hosting\WebPageController.cs" />
     <Compile Include="Hosting\WebServer.cs" />
+    <Compile Include="Hubs\HubClientOperationsBase.cs" />
+    <Compile Include="Hubs\IHubClient.cs" />
     <Compile Include="IgnoreServicesSecurityModule.cs" />
     <Compile Include="Model\DataContext.cs" />
     <Compile Include="Model\ExtendedTemplateBase.cs" />
