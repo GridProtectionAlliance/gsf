@@ -29,6 +29,9 @@ namespace GSF.Web.Hubs
     /// <summary>
     /// Interface that defines needed operations for hub client implementations.
     /// </summary>
+    /// <remarks>
+    /// This interface is useful for defining classes that should persist per SignalR session.
+    /// </remarks>
     public interface IHubClient : IDisposable
     {
         /// <summary>
