@@ -723,7 +723,7 @@ namespace GSF.Web.Model
                     return hub.RecordOperationsCache;
             });
 
-            return RenderViewModelConfiguration<TModel>(cache, viewBag, defaultSortField, hubType.FullName, hubScriptName ?? ToCamelCase(hubType.Name), parentKeys);
+            return RenderViewModelConfiguration<TModel>(cache, viewBag, defaultSortField, hubType.FullName, hubScriptName ?? hubType.Name.ToCamelCase(), parentKeys);
         }
 
         /// <summary>
@@ -768,12 +768,12 @@ namespace GSF.Web.Model
 
             // Get method names for records operations of modeled table
             Tuple<string, string>[] recordOperations = cache.GetRecordOperations<TModel>();
-            string queryRecordCountMethod = ToCamelCase(recordOperations[(int)RecordOperation.QueryRecordCount]?.Item1);
-            string queryRecordsMethod = ToCamelCase(recordOperations[(int)RecordOperation.QueryRecords]?.Item1);
-            string deleteRecordMethod = ToCamelCase(recordOperations[(int)RecordOperation.DeleteRecord]?.Item1);
-            string createNewRecordMethod = ToCamelCase(recordOperations[(int)RecordOperation.CreateNewRecord]?.Item1);
-            string addNewRecordMethod = ToCamelCase(recordOperations[(int)RecordOperation.AddNewRecord]?.Item1);
-            string updateMethod = ToCamelCase(recordOperations[(int)RecordOperation.UpdateRecord]?.Item1);
+            string queryRecordCountMethod = recordOperations[(int)RecordOperation.QueryRecordCount]?.Item1.ToCamelCase();
+            string queryRecordsMethod = recordOperations[(int)RecordOperation.QueryRecords]?.Item1.ToCamelCase();
+            string deleteRecordMethod = recordOperations[(int)RecordOperation.DeleteRecord]?.Item1.ToCamelCase();
+            string createNewRecordMethod = recordOperations[(int)RecordOperation.CreateNewRecord]?.Item1.ToCamelCase();
+            string addNewRecordMethod = recordOperations[(int)RecordOperation.AddNewRecord]?.Item1.ToCamelCase();
+            string updateMethod = recordOperations[(int)RecordOperation.UpdateRecord]?.Item1.ToCamelCase();
 
             string keyValues = null;
 
@@ -1428,11 +1428,6 @@ namespace GSF.Web.Model
                 type == typeof(float) ||
                 type == typeof(double) ||
                 type == typeof(decimal);
-        }
-
-        private static string ToCamelCase(string methodName)
-        {
-            return methodName == null ? null : $"{char.ToLower(methodName[0])}{methodName.Substring(1)}";
         }
 
         #endregion
