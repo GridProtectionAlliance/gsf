@@ -146,11 +146,11 @@ namespace GSF
         /// </summary>
         /// <typeparam name="T"><see cref="Type"/> to convert string to.</typeparam>
         /// <param name="value">Source string to convert to type.</param>
-        /// <returns><see cref="String"/> converted to specified <see cref="Type"/>; default value of specified type T if conversion fails.</returns>
+        /// <returns><see cref="string"/> converted to specified <see cref="Type"/>; default value of specified type T if conversion fails.</returns>
         /// <remarks>
-        /// This function makes use of a <see cref="TypeConverter"/> to convert this <see cref="String"/> to the specified type T,
+        /// This function makes use of a <see cref="TypeConverter"/> to convert this <see cref="string"/> to the specified type T,
         /// the best way to make sure <paramref name="value"/> can be converted back to its original type is to use the same
-        /// <see cref="TypeConverter"/> to convert the original object to a <see cref="String"/>; see the
+        /// <see cref="TypeConverter"/> to convert the original object to a <see cref="string"/>; see the
         /// <see cref="Common.TypeConvertToString(object)"/> method for an easy way to do this.
         /// </remarks>
         public static T ConvertToType<T>(this string value)
@@ -164,11 +164,11 @@ namespace GSF
         /// <typeparam name="T"><see cref="Type"/> to convert string to.</typeparam>
         /// <param name="value">Source string to convert to type.</param>
         /// <param name="type"><see cref="Type"/> to convert string to.</param>
-        /// <returns><see cref="String"/> converted to specified <see cref="Type"/>; default value of specified type T if conversion fails.</returns>
+        /// <returns><see cref="string"/> converted to specified <see cref="Type"/>; default value of specified type T if conversion fails.</returns>
         /// <remarks>
-        /// This function makes use of a <see cref="TypeConverter"/> to convert this <see cref="String"/> to the specified <paramref name="type"/>,
+        /// This function makes use of a <see cref="TypeConverter"/> to convert this <see cref="string"/> to the specified <paramref name="type"/>,
         /// the best way to make sure <paramref name="value"/> can be converted back to its original type is to use the same
-        /// <see cref="TypeConverter"/> to convert the original object to a <see cref="String"/>; see the
+        /// <see cref="TypeConverter"/> to convert the original object to a <see cref="string"/>; see the
         /// <see cref="Common.TypeConvertToString(object)"/> method for an easy way to do this.
         /// </remarks>
         public static T ConvertToType<T>(this string value, Type type)
@@ -183,11 +183,11 @@ namespace GSF
         /// <param name="value">Source string to convert to type.</param>
         /// <param name="type"><see cref="Type"/> to convert string to.</param>
         /// <param name="culture"><see cref="CultureInfo"/> to use for the conversion.</param>
-        /// <returns><see cref="String"/> converted to specified <see cref="Type"/>; default value of specified type T if conversion fails.</returns>
+        /// <returns><see cref="string"/> converted to specified <see cref="Type"/>; default value of specified type T if conversion fails.</returns>
         /// <remarks>
-        /// This function makes use of a <see cref="TypeConverter"/> to convert this <see cref="String"/> to the specified <paramref name="type"/>,
+        /// This function makes use of a <see cref="TypeConverter"/> to convert this <see cref="string"/> to the specified <paramref name="type"/>,
         /// the best way to make sure <paramref name="value"/> can be converted back to its original type is to use the same
-        /// <see cref="TypeConverter"/> to convert the original object to a <see cref="String"/>; see the
+        /// <see cref="TypeConverter"/> to convert the original object to a <see cref="string"/>; see the
         /// <see cref="Common.TypeConvertToString(object)"/> method for an easy way to do this.
         /// </remarks>
         public static T ConvertToType<T>(this string value, Type type, CultureInfo culture)
@@ -1047,7 +1047,7 @@ namespace GSF
         /// <para>Performs a base-64 style of string encoding useful for data obfuscation or safe XML data string transmission.</para>
         /// <para>Note: This function encodes a "String". Use the Convert.ToBase64String function to encode a binary data buffer.</para>
         /// </remarks>
-        /// <returns>A <see cref="String"></see> value representing the encoded input of <paramref name="value"/>.</returns>
+        /// <returns>A <see cref="string"></see> value representing the encoded input of <paramref name="value"/>.</returns>
         public static string Base64Encode(this string value)
         {
             return Convert.ToBase64String(Encoding.Unicode.GetBytes(value));
@@ -1059,7 +1059,7 @@ namespace GSF
         /// <param name="value">Input string.</param>
         /// <remarks>Note: This function decodes value back into a "String". Use the Convert.FromBase64String function to decode a base-64 encoded
         /// string back into a binary data buffer.</remarks>
-        /// <returns>A <see cref="String"></see> value representing the decoded input of <paramref name="value"/>.</returns>
+        /// <returns>A <see cref="string"></see> value representing the decoded input of <paramref name="value"/>.</returns>
         public static string Base64Decode(this string value)
         {
             return Encoding.Unicode.GetString(Convert.FromBase64String(value));
@@ -1089,10 +1089,10 @@ namespace GSF
         }
 
         /// <summary>
-        /// Converts the given <see cref="SecureString"/> into a <see cref="String"/>.
+        /// Converts the given <see cref="SecureString"/> into a <see cref="string"/>.
         /// </summary>
         /// <param name="value">The <see cref="SecureString"/> to be converted.</param>
-        /// <returns>The given <see cref="SecureString"/> as a <see cref="String"/>.</returns>
+        /// <returns>The given <see cref="SecureString"/> as a <see cref="string"/>.</returns>
         /// <remarks>
         /// This method is UNSAFE, as it stores your secure string data in clear text in memory.
         /// Since strings are immutable, that memory cannot be cleaned up until all references to
@@ -1124,9 +1124,11 @@ namespace GSF
         /// Converts the provided string into title case (upper case first letter of each word).
         /// </summary>
         /// <param name="value">Input string.</param>
-        /// <remarks>Note: This function performs "ToLower" in input string then applies TextInfo.ToTitleCase for CurrentCulture. This way, even
-        /// strings formatted in all-caps will still be properly formatted.</remarks>
-        /// <returns>A <see cref="String"/> that has the first letter of each word capitalized.</returns>
+        /// <remarks>
+        /// Note: This function performs "ToLower" in input string then applies TextInfo.ToTitleCase for CurrentCulture.
+        /// This way, even strings formatted in all-caps will still be properly formatted.
+        /// </remarks>
+        /// <returns>A <see cref="string"/> that has the first letter of each word capitalized.</returns>
         public static string ToTitleCase(this string value)
         {
             if (string.IsNullOrEmpty(value))
@@ -1136,11 +1138,47 @@ namespace GSF
         }
 
         /// <summary>
+        /// Converts first letter of string to upper-case.
+        /// </summary>
+        /// <param name="value">String to convert to pascal case.</param>
+        /// <returns><paramref name="value"/> with first letter as upper-case.</returns>
+        /// <remarks>
+        /// This function will automatically trim <paramref name="value"/>.
+        /// </remarks>
+        public static string ToPascalCase(this string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return "";
+
+            value = value.Trim();
+
+            return char.ToUpperInvariant(value[0]) + (value.Length > 1 ? value.Substring(1) : "");
+        }
+
+        /// <summary>
+        /// Converts first letter of string to lower-case.
+        /// </summary>
+        /// <param name="value">String to convert to pascal case.</param>
+        /// <returns><paramref name="value"/> with first letter as lower-case.</returns>
+        /// <remarks>
+        /// This function will automatically trim <paramref name="value"/>.
+        /// </remarks>
+        public static string ToCamelCase(this string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return "";
+
+            value = value.Trim();
+
+            return char.ToLowerInvariant(value[0]) + (value.Length > 1 ? value.Substring(1) : "");
+        }
+
+        /// <summary>
         /// Truncates the provided string from the left if it is longer that specified length.
         /// </summary>
-        /// <param name="value">A <see cref="String"/> value that is to be truncated.</param>
+        /// <param name="value">A <see cref="string"/> value that is to be truncated.</param>
         /// <param name="maxLength">The maximum number of characters that <paramref name="value"/> can be.</param>
-        /// <returns>A <see cref="String"/> that is the truncated version of the <paramref name="value"/> string.</returns>
+        /// <returns>A <see cref="string"/> that is the truncated version of the <paramref name="value"/> string.</returns>
         public static string TruncateLeft(this string value, int maxLength)
         {
             if (string.IsNullOrEmpty(value))
@@ -1155,9 +1193,9 @@ namespace GSF
         /// <summary>
         /// Truncates the provided string from the right if it is longer that specified length.
         /// </summary>
-        /// <param name="value">A <see cref="String"/> value that is to be truncated.</param>
+        /// <param name="value">A <see cref="string"/> value that is to be truncated.</param>
         /// <param name="maxLength">The maximum number of characters that <paramref name="value"/> can be.</param>
-        /// <returns>A <see cref="String"/> that is the truncated version of the <paramref name="value"/> string.</returns>
+        /// <returns>A <see cref="string"/> that is the truncated version of the <paramref name="value"/> string.</returns>
         public static string TruncateRight(this string value, int maxLength)
         {
             if (string.IsNullOrEmpty(value))
@@ -1177,7 +1215,7 @@ namespace GSF
         /// <remarks>
         /// Handles multiple lines of text separated by Environment.NewLine.
         /// </remarks>
-        /// <param name="value">A <see cref="String"/> to be centered.</param>
+        /// <param name="value">A <see cref="string"/> to be centered.</param>
         /// <param name="maxLength">An <see cref="Int32"/> that is the maximum length of padding.</param>
         /// <returns>The centered string value.</returns>
         public static string CenterText(this string value, int maxLength)
@@ -1193,7 +1231,7 @@ namespace GSF
         /// <remarks>
         /// Handles multiple lines of text separated by <c>Environment.NewLine</c>.
         /// </remarks>
-        /// <param name="value">A <see cref="String"/> to be centered.</param>
+        /// <param name="value">A <see cref="string"/> to be centered.</param>
         /// <param name="maxLength">An <see cref="Int32"/> that is the maximum length of padding.</param>
         /// <param name="paddingCharacter">The <see cref="char"/> value to pad with.</param>
         /// <returns>The centered string value.</returns>
