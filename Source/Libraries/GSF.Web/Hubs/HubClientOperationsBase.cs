@@ -84,7 +84,7 @@ namespace GSF.Web.Hubs
         /// </remarks>
         public void EndSession()
         {
-            EndSession(m_hub.Context.ConnectionId);
+            EndSession(m_hub?.Context?.ConnectionId);
         }
 
         #endregion
@@ -117,8 +117,8 @@ namespace GSF.Web.Hubs
             T client;
 
             // Dispose of hub client when SignalR session is disconnected
-            if (s_hubClients.TryRemove(connectionID, out client))
-                client.Dispose();
+            if (!string.IsNullOrEmpty(connectionID) && s_hubClients.TryRemove(connectionID, out client))
+                client?.Dispose();
         }
 
         #endregion

@@ -50,7 +50,7 @@ namespace GSF.Web.Hubs
         /// <remarks>
         /// This property can be used to call registered Javascript hub functions.
         /// </remarks>
-        public dynamic HubClient => m_hubClient ?? (m_hubClient = HubInstance.Clients.Client(HubInstance.Context.ConnectionId));
+        public dynamic HubClient => m_hubClient ?? (m_hubClient = HubInstance?.Clients?.Client(HubInstance?.Context?.ConnectionId));
 
         /// <summary>
         /// Gets or sets reference to SignalR hub instance.
@@ -105,6 +105,7 @@ namespace GSF.Web.Hubs
                     if (disposing)
                     {
                         m_hubClient = null;
+                        HubInstance = null;
                         LogStatusMessageFunction = null;
                         LogExceptionFunction = null;
                     }
