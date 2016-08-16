@@ -1158,7 +1158,7 @@ namespace GSF
         /// <summary>
         /// Converts first letter of string to lower-case.
         /// </summary>
-        /// <param name="value">String to convert to pascal case.</param>
+        /// <param name="value">String to convert to camel case.</param>
         /// <returns><paramref name="value"/> with first letter as lower-case.</returns>
         /// <remarks>
         /// This function will automatically trim <paramref name="value"/>.
