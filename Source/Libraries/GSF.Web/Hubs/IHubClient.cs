@@ -44,6 +44,15 @@ namespace GSF.Web.Hubs
         }
 
         /// <summary>
+        /// Gets or sets the connection ID of the calling client.
+        /// </summary>
+        string ConnectionID
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets or sets delegate to use to log status messages.
         /// </summary>
         Action<string, UpdateType> LogStatusMessageFunction

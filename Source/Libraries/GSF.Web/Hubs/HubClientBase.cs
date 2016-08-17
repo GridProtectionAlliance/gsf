@@ -50,12 +50,21 @@ namespace GSF.Web.Hubs
         /// <remarks>
         /// This property can be used to call registered Javascript hub functions.
         /// </remarks>
-        public dynamic HubScript => m_hubScript ?? (m_hubScript = HubInstance?.Clients?.Client(HubInstance?.Context?.ConnectionId));
+        public dynamic HubScript => m_hubScript ?? (m_hubScript = HubInstance?.Clients?.Client(ConnectionID));
 
         /// <summary>
         /// Gets or sets reference to SignalR hub instance.
         /// </summary>
         public IHub HubInstance
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the connection ID of the calling client.
+        /// </summary>
+        public string ConnectionID
         {
             get;
             set;

@@ -71,6 +71,7 @@ namespace GSF.Web.Hubs
                 new T
                 {
                     HubInstance = m_hub,
+                    ConnectionID = connectionID,
                     LogStatusMessageFunction = m_logStatusMessageFunction,
                     LogExceptionFunction = m_logExceptionFunction
                 })
