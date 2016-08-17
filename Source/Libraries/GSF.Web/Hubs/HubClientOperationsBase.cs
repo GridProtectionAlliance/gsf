@@ -70,7 +70,7 @@ namespace GSF.Web.Hubs
             m_hubClient = s_hubClients.GetOrAdd(m_hub.Context.ConnectionId, connectionID =>
                 new T
                 {
-                    HubInstance = m_hub.Clients.Client(connectionID),
+                    HubInstance = m_hub,
                     LogStatusMessageFunction = m_logStatusMessageFunction,
                     LogExceptionFunction = m_logExceptionFunction
                 })
