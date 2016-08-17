@@ -34,6 +34,7 @@ using GSF.Data;
 using GSF.Data.Model;
 using GSF.Reflection;
 using GSF.Security;
+using GSF.Web.Hubs;
 using RazorEngine.Templating;
 
 // ReSharper disable once StaticMemberInGenericType

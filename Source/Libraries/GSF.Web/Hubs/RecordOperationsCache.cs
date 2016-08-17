@@ -28,8 +28,9 @@ using GSF.Collections;
 using GSF.Data.Model;
 using GSF.Reflection;
 using GSF.Web.Security;
+using Microsoft.AspNet.SignalR.Hubs;
 
-namespace GSF.Web.Model
+namespace GSF.Web.Hubs
 {
     /// <summary>
     /// Defines class that caches data hub operations.
@@ -97,5 +98,19 @@ namespace GSF.Web.Model
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Defines class that caches data hub operations for the specified type <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">Specific <see cref="IHub"/> type for record operations cache.</typeparam>
+    public class RecordOperationsCache<T> : RecordOperationsCache where T : IHub
+    {
+        /// <summary>
+        /// Creates a new <see cref="RecordOperationsCache{T}"/>.
+        /// </summary>
+        public RecordOperationsCache() : base(typeof(T))
+        {
+        }
     }
 }

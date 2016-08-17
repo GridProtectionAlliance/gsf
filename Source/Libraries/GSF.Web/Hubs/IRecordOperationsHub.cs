@@ -23,7 +23,7 @@
 
 using System;
 
-namespace GSF.Web.Model
+namespace GSF.Web.Hubs
 {
     /// <summary>
     /// Defines an interface for SignalR hubs to indicate support for record operations.

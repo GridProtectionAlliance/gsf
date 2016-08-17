@@ -30,8 +30,8 @@ using GSF.Data.Model;
 using GSF.Identity;
 using GSF.Security;
 using GSF.Security.Model;
+using GSF.Web.Hubs;
 using GSF.Web.Model;
-using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Hubs;
 
 namespace GSF.Web.Security
@@ -40,65 +40,48 @@ namespace GSF.Web.Security
     /// Defines a SignalR security hub for managing users, groups and SID management.
     /// </summary>
     [AuthorizeHubRole]
-    public class SecurityHub : Hub, IRecordOperationsHub
+    public class SecurityHub : RecordOperationsHub<SecurityHub>
     {
-        #region [ Members ]
-
-        // Fields
-        private readonly DataContext m_dataContext;
-        private bool m_disposed;
-
-        #endregion
-
         #region [ Constructors ]
 
         /// <summary>
         /// Creates a new <see cref="SecurityHub"/>.
         /// </summary>
-        public SecurityHub() : this(new DataContext("securityProvider"))
+        public SecurityHub() : 
+            this(null, null, null)
         {
         }
 
         /// <summary>
-        /// Creates a new <see cref="SecurityHub"/> with the specified <see cref="DataContext"/>.
+        /// Creates a new <see cref="SecurityHub"/> with the specified logging functions.
         /// </summary>
-        public SecurityHub(DataContext dataContext)
+        /// <param name="logStatusMessageFunction">Delegate to use to log status messages, if any.</param>
+        /// <param name="logExceptionFunction">Delegate to use to log exceptions, if any.</param>
+        public SecurityHub(Action<string, UpdateType> logStatusMessageFunction, Action<Exception> logExceptionFunction) :
+            this(null, logStatusMessageFunction, logExceptionFunction)
         {
-            m_dataContext = dataContext;
         }
 
-        #endregion
-
-        #region [ Properties ]
-
         /// <summary>
-        /// Gets <see cref="IRecordOperationsHub.RecordOperationsCache"/> for SignalR hub.
+        /// Creates a new <see cref="SecurityHub"/> with the specified <see cref="DataContext"/> and logging functions.
         /// </summary>
-        public RecordOperationsCache RecordOperationsCache => s_recordOperationsCache;
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="SecurityHub"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
+        /// <param name="dataContext">Data context to use for this hub; set to <c>null</c> for default security provider context.</param>
+        /// <param name="logStatusMessageFunction">Delegate to use to log status messages, if any.</param>
+        /// <param name="logExceptionFunction">Delegate to use to log exceptions, if any.</param>
+        public SecurityHub(DataContext dataContext, Action<string, UpdateType> logStatusMessageFunction, Action<Exception> logExceptionFunction) : 
+            this(dataContext, logStatusMessageFunction, logExceptionFunction, true)
         {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                        m_dataContext?.Dispose();
-                }
-                finally
-                {
-                    m_disposed = true; // Prevent duplicate dispose.
-                    base.Dispose(disposing); // Call base class Dispose().
-                }
-            }
+            // Capture initial defaults
+            if ((object)logStatusMessageFunction != null && (object)s_logStatusMessageFunction == null)
+                s_logStatusMessageFunction = logStatusMessageFunction;
+
+            if ((object)logExceptionFunction != null && (object)s_logExceptionFunction == null)
+                s_logExceptionFunction = logExceptionFunction;
+        }
+
+        private SecurityHub(DataContext dataContext, Action<string, UpdateType> logStatusMessageFunction, Action<Exception> logExceptionFunction, bool overload) :
+            base(dataContext ?? new DataContext("securityProvider"), logStatusMessageFunction ?? s_logStatusMessageFunction, logExceptionFunction ?? s_logExceptionFunction)
+        {
         }
 
         #endregion
@@ -106,20 +89,13 @@ namespace GSF.Web.Security
         #region [ Static ]
 
         // Static Fields
-        private static readonly RecordOperationsCache s_recordOperationsCache;
+        private static Action<string, UpdateType> s_logStatusMessageFunction;
+        private static Action<Exception> s_logExceptionFunction;
 
         /// <summary>
         /// Gets current default Node ID for security.
         /// </summary>
         public static readonly Guid DefaultNodeID;
-
-        // Static Methods
-
-        /// <summary>
-        /// Gets statically cached instance of <see cref="RecordOperationsCache"/> for <see cref="SecurityHub"/> instances.
-        /// </summary>
-        /// <returns>Statically cached instance of <see cref="RecordOperationsCache"/> for <see cref="SecurityHub"/> instances.</returns>
-        public static RecordOperationsCache GetRecordOperationsCache() => s_recordOperationsCache;
 
         // Static Constructor
         static SecurityHub()
@@ -144,9 +120,6 @@ namespace GSF.Web.Security
                     connection.ExecuteNonQuery(NodeUpdateFormat, connection.Guid(DefaultNodeID));
                 }
             }
-
-            // Analyze and cache record operations of security hub
-            s_recordOperationsCache = new RecordOperationsCache(typeof(SecurityHub));
         }
 
         #endregion
@@ -162,7 +135,7 @@ namespace GSF.Web.Security
         /// <returns>Specified user account record.</returns>
         public UserAccount QueryUserAccount(Guid id)
         {
-            return m_dataContext.Table<UserAccount>().LoadRecord(id);
+            return DataContext.Table<UserAccount>().LoadRecord(id);
         }
 
         /// <summary>
@@ -172,7 +145,7 @@ namespace GSF.Web.Security
         /// <returns>Specified user account record.</returns>
         public UserAccount QueryUserAccountByName(string accountName)
         {
-            return m_dataContext.Table<UserAccount>().QueryRecords(restriction: new RecordRestriction("Name = {0}", accountName)).FirstOrDefault();
+            return DataContext.Table<UserAccount>().QueryRecords(restriction: new RecordRestriction("Name = {0}", accountName)).FirstOrDefault();
         }
         
         /// <summary>
@@ -194,7 +167,7 @@ namespace GSF.Web.Security
         public IEnumerable<IDLabel> SearchUserAccounts(string searchText, int limit)
         {
             if (limit < 1)
-                return m_dataContext
+                return DataContext
                     .Table<UserAccount>()
                     .QueryRecords()
                     .Select(record =>
@@ -205,7 +178,7 @@ namespace GSF.Web.Security
                     .Where(record => record.Name?.StartsWith(searchText, StringComparison.InvariantCultureIgnoreCase) ?? false)
                     .Select(record => IDLabel.Create(record.ID.ToString(), record.Name));
 
-            return m_dataContext
+            return DataContext
                 .Table<UserAccount>()
                 .QueryRecords()
                 .Select(record =>
@@ -225,7 +198,7 @@ namespace GSF.Web.Security
         /// <returns>Specified security group record.</returns>
         public SecurityGroup QuerySecurityGroup(Guid id)
         {
-            return m_dataContext.Table<SecurityGroup>().LoadRecord(id);
+            return DataContext.Table<SecurityGroup>().LoadRecord(id);
         }
 
         /// <summary>
@@ -235,7 +208,7 @@ namespace GSF.Web.Security
         /// <returns>Specified security group record.</returns>
         public SecurityGroup QuerySecurityGroupByName(string accountName)
         {
-            return m_dataContext.Table<SecurityGroup>().QueryRecords(restriction:
+            return DataContext.Table<SecurityGroup>().QueryRecords(restriction:
                 new RecordRestriction("Name = {0}", accountName)).FirstOrDefault();
         }
 
@@ -246,7 +219,7 @@ namespace GSF.Web.Security
         /// <returns>Search results as "Labels" - serialized as JSON [{ label : "value" }, ...]; useful for dynamic lookup lists.</returns>
         public IEnumerable<Label> SearchSecurityGroups(string searchText)
         {
-            return m_dataContext
+            return DataContext
                 .Table<SecurityGroup>()
                 .QueryRecords()
                 .Select(record => UserInfo.SIDToAccountName(record.Name ?? ""))
@@ -260,7 +233,7 @@ namespace GSF.Web.Security
         /// <returns>Current application role records.</returns>
         public IEnumerable<ApplicationRole> QueryApplicationRoles()
         {
-            return m_dataContext.Table<ApplicationRole>().QueryRecords("Name", new RecordRestriction("NodeID={0}", DefaultNodeID));
+            return DataContext.Table<ApplicationRole>().QueryRecords("Name", new RecordRestriction("NodeID={0}", DefaultNodeID));
         }
 
         /// <summary>
@@ -271,7 +244,7 @@ namespace GSF.Web.Security
         /// <returns><c>true</c> if user is in role; otherwise, <c>false</c>.</returns>
         public bool UserIsInRole(Guid userID, Guid roleID)
         {
-            return m_dataContext.Table<ApplicationRoleUserAccount>().QueryRecordCount(new RecordRestriction("UserAccountID={0} AND ApplicationRoleID={1}", userID, roleID)) > 0;
+            return DataContext.Table<ApplicationRoleUserAccount>().QueryRecordCount(new RecordRestriction("UserAccountID={0} AND ApplicationRoleID={1}", userID, roleID)) > 0;
         }
 
         /// <summary>
@@ -287,7 +260,7 @@ namespace GSF.Web.Security
             if (UserIsInRole(userID, roleID))
                 return false;
 
-            return m_dataContext.Table<ApplicationRoleUserAccount>().AddNewRecord(new ApplicationRoleUserAccount
+            return DataContext.Table<ApplicationRoleUserAccount>().AddNewRecord(new ApplicationRoleUserAccount
             {
                 ApplicationRoleID = roleID,
                 UserAccountID = userID
@@ -307,7 +280,7 @@ namespace GSF.Web.Security
             if (!UserIsInRole(userID, roleID))
                 return false;
 
-            return m_dataContext.Table<ApplicationRoleUserAccount>().DeleteRecord(new RecordRestriction("UserAccountID={0} AND ApplicationRoleID={1}", userID, roleID)) > 0;
+            return DataContext.Table<ApplicationRoleUserAccount>().DeleteRecord(new RecordRestriction("UserAccountID={0} AND ApplicationRoleID={1}", userID, roleID)) > 0;
         }
 
         /// <summary>
@@ -339,7 +312,7 @@ namespace GSF.Web.Security
         /// <returns><c>true</c> if group is in role; otherwise, <c>false</c>.</returns>
         public bool GroupIsInRole(Guid groupID, Guid roleID)
         {
-            return m_dataContext.Table<ApplicationRoleSecurityGroup>().QueryRecordCount(new RecordRestriction("SecurityGroupID={0} AND ApplicationRoleID={1}", groupID, roleID)) > 0;
+            return DataContext.Table<ApplicationRoleSecurityGroup>().QueryRecordCount(new RecordRestriction("SecurityGroupID={0} AND ApplicationRoleID={1}", groupID, roleID)) > 0;
         }
 
         /// <summary>
@@ -355,7 +328,7 @@ namespace GSF.Web.Security
             if (GroupIsInRole(groupID, roleID))
                 return false;
 
-            return m_dataContext.Table<ApplicationRoleSecurityGroup>().AddNewRecord(new ApplicationRoleSecurityGroup
+            return DataContext.Table<ApplicationRoleSecurityGroup>().AddNewRecord(new ApplicationRoleSecurityGroup
             {
                 ApplicationRoleID = roleID,
                 SecurityGroupID = groupID
@@ -375,7 +348,7 @@ namespace GSF.Web.Security
             if (!GroupIsInRole(groupID, roleID))
                 return false;
 
-            return m_dataContext.Table<ApplicationRoleSecurityGroup>().DeleteRecord(new RecordRestriction("SecurityGroupID={0} AND ApplicationRoleID={1}", groupID, roleID)) > 0;
+            return DataContext.Table<ApplicationRoleSecurityGroup>().DeleteRecord(new RecordRestriction("SecurityGroupID={0} AND ApplicationRoleID={1}", groupID, roleID)) > 0;
         }
 
         /// <summary>
@@ -423,7 +396,7 @@ namespace GSF.Web.Security
         [RecordOperation(typeof(UserAccount), RecordOperation.QueryRecordCount)]
         public int QueryUserAccountCount(string filterText)
         {
-            return m_dataContext.Table<UserAccount>().QueryRecordCount();
+            return DataContext.Table<UserAccount>().QueryRecordCount();
         }
 
         /// <summary>
@@ -439,7 +412,7 @@ namespace GSF.Web.Security
         [RecordOperation(typeof(UserAccount), RecordOperation.QueryRecords)]
         public IEnumerable<UserAccount> QueryUserAccounts(string sortField, bool ascending, int page, int pageSize, string filterText)
         {
-            return m_dataContext.Table<UserAccount>().QueryRecords(sortField, ascending, page, pageSize);
+            return DataContext.Table<UserAccount>().QueryRecords(sortField, ascending, page, pageSize);
         }
 
         /// <summary>
@@ -450,7 +423,7 @@ namespace GSF.Web.Security
         [RecordOperation(typeof(UserAccount), RecordOperation.DeleteRecord)]
         public void DeleteUserAccount(Guid id)
         {
-            m_dataContext.Table<UserAccount>().DeleteRecord(id);
+            DataContext.Table<UserAccount>().DeleteRecord(id);
         }
 
         /// <summary>
@@ -475,12 +448,12 @@ namespace GSF.Web.Security
             if (!record.UseADAuthentication && !string.IsNullOrWhiteSpace(record.Password))
                 record.Password = SecurityProviderUtility.EncryptPassword(record.Password);
 
-            record.DefaultNodeID = SecurityHub.DefaultNodeID;
+            record.DefaultNodeID = DefaultNodeID;
             record.CreatedBy = UserInfo.CurrentUserID;
             record.CreatedOn = DateTime.UtcNow;
             record.UpdatedBy = record.CreatedBy;
             record.UpdatedOn = record.CreatedOn;
-            m_dataContext.Table<UserAccount>().AddNewRecord(record);
+            DataContext.Table<UserAccount>().AddNewRecord(record);
         }
 
         /// <summary>
@@ -497,7 +470,7 @@ namespace GSF.Web.Security
             record.DefaultNodeID = DefaultNodeID;
             record.UpdatedBy = UserInfo.CurrentUserID;
             record.UpdatedOn = DateTime.UtcNow;
-            m_dataContext.Table<UserAccount>().UpdateRecord(record);
+            DataContext.Table<UserAccount>().UpdateRecord(record);
         }
 
         #endregion
@@ -513,7 +486,7 @@ namespace GSF.Web.Security
         [RecordOperation(typeof(SecurityGroup), RecordOperation.QueryRecordCount)]
         public int QuerySecurityGroupCount(string filterText)
         {
-            return m_dataContext.Table<SecurityGroup>().QueryRecordCount();
+            return DataContext.Table<SecurityGroup>().QueryRecordCount();
         }
 
         /// <summary>
@@ -529,7 +502,7 @@ namespace GSF.Web.Security
         [RecordOperation(typeof(SecurityGroup), RecordOperation.QueryRecords)]
         public IEnumerable<SecurityGroup> QuerySecurityGroups(string sortField, bool ascending, int page, int pageSize, string filterText)
         {
-            return m_dataContext.Table<SecurityGroup>().QueryRecords(sortField, ascending, page, pageSize);
+            return DataContext.Table<SecurityGroup>().QueryRecords(sortField, ascending, page, pageSize);
         }
 
         /// <summary>
@@ -540,7 +513,7 @@ namespace GSF.Web.Security
         [RecordOperation(typeof(SecurityGroup), RecordOperation.DeleteRecord)]
         public void DeleteSecurityGroup(Guid id)
         {
-            m_dataContext.Table<SecurityGroup>().DeleteRecord(id);
+            DataContext.Table<SecurityGroup>().DeleteRecord(id);
         }
 
         /// <summary>
@@ -566,7 +539,7 @@ namespace GSF.Web.Security
             record.CreatedOn = DateTime.UtcNow;
             record.UpdatedBy = record.CreatedBy;
             record.UpdatedOn = record.CreatedOn;
-            m_dataContext.Table<SecurityGroup>().AddNewRecord(record);
+            DataContext.Table<SecurityGroup>().AddNewRecord(record);
         }
 
         /// <summary>
@@ -579,7 +552,7 @@ namespace GSF.Web.Security
         {
             record.UpdatedBy = UserInfo.CurrentUserID;
             record.UpdatedOn = DateTime.UtcNow;
-            m_dataContext.Table<SecurityGroup>().UpdateRecord(record);
+            DataContext.Table<SecurityGroup>().UpdateRecord(record);
         }
 
         #endregion

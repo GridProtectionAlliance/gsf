@@ -230,6 +230,7 @@
     <Compile Include="Hubs\HubClientBase.cs" />
     <Compile Include="Hubs\HubClientOperationsBase.cs" />
     <Compile Include="Hubs\IHubClient.cs" />
+    <Compile Include="Hubs\RecordOperationsHub.cs" />
     <Compile Include="IgnoreServicesSecurityModule.cs" />
     <Compile Include="Model\DataContext.cs" />
     <Compile Include="Model\ExtendedTemplateBase.cs" />
@@ -239,14 +240,14 @@
     <Compile Include="Model\HtmlHelper.cs" />
     <Compile Include="Model\HubOperations\DirectoryBrowserOperations.cs" />
     <Compile Include="Model\IRazorEngine.cs" />
-    <Compile Include="Model\IRecordOperationsHub.cs" />
+    <Compile Include="Hubs\IRecordOperationsHub.cs" />
     <Compile Include="Model\Label.cs" />
     <Compile Include="Model\IDLabel.cs" />
     <Compile Include="Model\LanguageConstraint.cs" />
     <Compile Include="Model\NamespaceDoc.cs" />
     <Compile Include="Model\RazorEngine.cs" />
     <Compile Include="Model\RazorViewResolutionMode.cs" />
-    <Compile Include="Model\RecordOperationsCache.cs" />
+    <Compile Include="Hubs\RecordOperationsCache.cs" />
     <Compile Include="Model\UrlHelper.cs" />
     <Compile Include="NamespaceDoc.cs" />
     <Compile Include="PostData.cs" />

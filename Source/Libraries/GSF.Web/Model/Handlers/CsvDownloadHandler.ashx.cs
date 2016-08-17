@@ -30,8 +30,6 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using GSF.Security;
-using GSF.Web.Hosting;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Security;
@@ -42,6 +40,9 @@ using GSF.Collections;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Reflection;
+using GSF.Security;
+using GSF.Web.Hosting;
+using GSF.Web.Hubs;
 
 namespace GSF.Web.Model.Handlers
 {
