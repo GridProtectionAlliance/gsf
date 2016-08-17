@@ -37,7 +37,7 @@ namespace GSF.Web.Hubs
         #region [ Members ]
 
         // Fields
-        private dynamic m_hubClient;
+        private dynamic m_hubScript;
         private bool m_disposed;
 
         #endregion
@@ -45,12 +45,12 @@ namespace GSF.Web.Hubs
         #region [ Properties ]
 
         /// <summary>
-        /// Gets reference to SignalR hub client instance.
+        /// Gets reference to SignalR hub client browser DOM functionality.
         /// </summary>
         /// <remarks>
         /// This property can be used to call registered Javascript hub functions.
         /// </remarks>
-        public dynamic HubClient => m_hubClient ?? (m_hubClient = HubInstance?.Clients?.Client(HubInstance?.Context?.ConnectionId));
+        public dynamic HubScript => m_hubScript ?? (m_hubScript = HubInstance?.Clients?.Client(HubInstance?.Context?.ConnectionId));
 
         /// <summary>
         /// Gets or sets reference to SignalR hub instance.
@@ -104,7 +104,7 @@ namespace GSF.Web.Hubs
                 {
                     if (disposing)
                     {
-                        m_hubClient = null;
+                        m_hubScript = null;
                         HubInstance = null;
                         LogStatusMessageFunction = null;
                         LogExceptionFunction = null;
@@ -131,7 +131,7 @@ namespace GSF.Web.Hubs
         {
             // Send status message to hub client
             if (logToClient)
-                HubClient?.sendInfoMessage(message, type == UpdateType.Information ? 2000 : -1);
+                HubScript?.sendInfoMessage(message, type == UpdateType.Information ? 2000 : -1);
 
             // Send status message to program host
             LogStatusMessageFunction?.Invoke(message, type);
@@ -151,7 +151,7 @@ namespace GSF.Web.Hubs
         {
             // Send exception to hub client
             if (logToClient)
-                HubClient?.sendErrorMessage(ex.Message, -1);
+                HubScript?.sendErrorMessage(ex.Message, -1);
 
             // Send exception to program host
             LogExceptionFunction?.Invoke(ex);
