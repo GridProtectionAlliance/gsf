@@ -713,6 +713,27 @@ $.fn.paddingWidth = function() {
     return this.outerWidth(true) - this.width();
 }
 
+$.fn.autoSizeSelect = function() {
+    return this.each(function() {
+        $(this).change(function() {
+            const arrowWidth = 30;
+            const $this = $(this);
+
+            // Create test element
+            const text = $this.find("option:selected").text();
+            const $test = $("<span>").html(text);
+
+            // Add to body, get width, and get out
+            $test.appendTo('body');
+            const width = $test.width();
+            $test.remove();
+
+            // Set select width
+            $this.width(width + arrowWidth);        
+        }).change();
+    });
+}
+
 // Cell truncations should only be used with .table-cell-hard-wrap style
 $.fn.truncateToWidth = function(text, rows) {
     if (isEmpty(text))

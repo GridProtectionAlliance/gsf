@@ -94,7 +94,7 @@ namespace GSF.Web.Hubs
 
         // Static Fields
 
-        // References to session based historian query hub clients - since a SignalR session can persist through
+        // References to session based IHubClient implementations - since a SignalR session can persist through
         // any number of hub instances, this dictionary is used to track IHubClient instances
         private static readonly ConcurrentDictionary<string, T> s_hubClients;
 
