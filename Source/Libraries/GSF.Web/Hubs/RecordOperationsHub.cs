@@ -43,7 +43,7 @@ namespace GSF.Web.Hubs
         private readonly DataContext m_dataContext;
         private readonly Action<string, UpdateType> m_logStatusMessageFunction;
         private readonly Action<Exception> m_logExceptionFunction;
-        private dynamic m_hubClient;
+        private dynamic m_clientScript;
         private bool m_disposed;
 
         #endregion
@@ -91,12 +91,12 @@ namespace GSF.Web.Hubs
         public RecordOperationsCache RecordOperationsCache => s_recordOperationsCache;
 
         /// <summary>
-        /// Gets reference to SignalR hub client instance.
+        /// Gets reference to SignalR hub client browser DOM functionality.
         /// </summary>
         /// <remarks>
         /// This property can be used to call registered Javascript hub functions.
         /// </remarks>
-        public dynamic HubClient => m_hubClient ?? (m_hubClient = Clients?.Client(Context?.ConnectionId));
+        public dynamic ClientScript => m_clientScript ?? (m_clientScript = Clients?.Client(Context?.ConnectionId));
 
         /// <summary>
         /// Gets <see cref="Model.DataContext"/> created for this <see cref="RecordOperationsHub{T}"/> instance.
@@ -171,7 +171,7 @@ namespace GSF.Web.Hubs
         {
             // Send status message to hub client
             if (logToClient)
-                HubClient?.sendInfoMessage(message, type == UpdateType.Information ? 2000 : -1);
+                ClientScript?.sendInfoMessage(message, type == UpdateType.Information ? 2000 : -1);
 
             // Send status message to program host
             m_logStatusMessageFunction?.Invoke(message, type);
@@ -191,7 +191,7 @@ namespace GSF.Web.Hubs
         {
             // Send exception to hub client
             if (logToClient)
-                HubClient?.sendErrorMessage(ex.Message, -1);
+                ClientScript?.sendErrorMessage(ex.Message, -1);
 
             // Send exception to program host
             m_logExceptionFunction?.Invoke(ex);

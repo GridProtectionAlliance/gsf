@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 // ReSharper disable NativeTypePrototypeExtending
+// ReSharper disable UndeclaredGlobalVariableUsing
 
 // Grid Solutions Framework Core Web Client Script Functions
 "use strict";
@@ -713,6 +714,7 @@ $.fn.paddingWidth = function() {
     return this.outerWidth(true) - this.width();
 }
 
+// Call function once at start-up to auto-size drop-down to selected option contents
 $.fn.autoSizeSelect = function() {
     return this.each(function() {
         $(this).change(function() {
@@ -724,7 +726,7 @@ $.fn.autoSizeSelect = function() {
             const $test = $("<span>").html(text);
 
             // Add to body, get width, and get out
-            $test.appendTo('body');
+            $test.appendTo("body");
             const width = $test.width();
             $test.remove();
 
@@ -745,7 +747,6 @@ $.fn.truncateToWidth = function(text, rows) {
     textMetrics.font = this.css("font");
 
     var targetWidth = this.innerWidth();
-    var textWidth = textMetrics.measureText(text).width;
 
     if (rows > 1)
         targetWidth *= ((isIE ? 0.45 : 0.75) * rows);

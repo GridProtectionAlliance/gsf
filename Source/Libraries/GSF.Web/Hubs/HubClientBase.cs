@@ -37,7 +37,7 @@ namespace GSF.Web.Hubs
         #region [ Members ]
 
         // Fields
-        private dynamic m_hubScript;
+        private dynamic m_clientScript;
         private bool m_disposed;
 
         #endregion
@@ -50,7 +50,7 @@ namespace GSF.Web.Hubs
         /// <remarks>
         /// This property can be used to call registered Javascript hub functions.
         /// </remarks>
-        public dynamic HubScript => m_hubScript ?? (m_hubScript = HubInstance?.Clients?.Client(ConnectionID));
+        public dynamic ClientScript => m_clientScript ?? (m_clientScript = HubInstance?.Clients?.Client(ConnectionID));
 
         /// <summary>
         /// Gets or sets reference to SignalR hub instance.
@@ -113,7 +113,7 @@ namespace GSF.Web.Hubs
                 {
                     if (disposing)
                     {
-                        m_hubScript = null;
+                        m_clientScript = null;
                         HubInstance = null;
                         LogStatusMessageFunction = null;
                         LogExceptionFunction = null;
@@ -140,7 +140,7 @@ namespace GSF.Web.Hubs
         {
             // Send status message to hub client
             if (logToClient)
-                HubScript?.sendInfoMessage(message, type == UpdateType.Information ? 2000 : -1);
+                ClientScript?.sendInfoMessage(message, type == UpdateType.Information ? 2000 : -1);
 
             // Send status message to program host
             LogStatusMessageFunction?.Invoke(message, type);
@@ -160,7 +160,7 @@ namespace GSF.Web.Hubs
         {
             // Send exception to hub client
             if (logToClient)
-                HubScript?.sendErrorMessage(ex.Message, -1);
+                ClientScript?.sendErrorMessage(ex.Message, -1);
 
             // Send exception to program host
             LogExceptionFunction?.Invoke(ex);

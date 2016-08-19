@@ -20,6 +20,7 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+// ReSharper disable UndeclaredGlobalVariableUsing
 
 // Grid Solutions Framework Core Web Knockout Extension Script Functions
 "use strict";

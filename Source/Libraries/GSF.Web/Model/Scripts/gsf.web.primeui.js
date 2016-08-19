@@ -20,6 +20,7 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+// ReSharper disable UndeclaredGlobalVariableUsing
 
 // Grid Solutions Framework Core Web PrimeUI Extension Script Functions
 "use strict";

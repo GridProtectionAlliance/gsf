@@ -20,6 +20,7 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+// ReSharper disable UndeclaredGlobalVariableUsing
 
 // Paged view model base class scripts
 "use strict";
