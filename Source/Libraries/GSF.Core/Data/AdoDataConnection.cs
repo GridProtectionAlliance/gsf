@@ -966,14 +966,22 @@ namespace GSF.Data
 
         private void FixParameters(object[] parameters)
         {
-            for (int i = 0; i < parameters.Length; i++)
+            using (IDbCommand command = m_connection.CreateCommand())
             {
-                if (parameters[i] == null)
-                    parameters[i] = DBNull.Value;
-                else if (parameters[i] is bool)
-                    parameters[i] = Bool((bool)parameters[i]);
-                else if (parameters[i] is Guid)
-                    parameters[i] = Guid((Guid)parameters[i]);
+                for (int i = 0; i < parameters.Length; i++)
+                {
+                    if (parameters[i] == null)
+                        parameters[i] = DBNull.Value;
+                    else if (parameters[i] is bool)
+                        parameters[i] = Bool((bool)parameters[i]);
+                    else if (parameters[i] is Guid)
+                        parameters[i] = Guid((Guid)parameters[i]);
+
+                    IDbDataParameter parameter = command.CreateParameter();
+                    parameter.ParameterName = "@p" + i;
+                    parameter.Value = parameters[i];
+                    parameters[i] = parameter;
+                }
             }
         }
 

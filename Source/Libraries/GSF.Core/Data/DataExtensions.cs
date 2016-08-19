@@ -2736,9 +2736,9 @@ namespace GSF.Data
                     if (!command.Parameters.Contains(token))
                         command.AddParameterWithValue(token, values[i++]);
                 }
-
-                command.CommandText = sql;
             }
+
+            command.CommandText = sql;
         }
 
         private static bool IsValidToken(string token)
