@@ -34,8 +34,8 @@ ko.bindingHandlers.numeric = {
                 (event.keyCode === 65 && event.ctrlKey) ||
                 // E + - . ,
                 (event.keyCode === 69 || event.keyCode === 107 || event.keyCode === 109 || event.keyCode === 110 || event.keyCode === 190 || event.keyCode === 188) ||
-                // home, end, left, right
-                (event.keyCode >= 35 && event.keyCode <= 39)) {
+                // home, end, left, right, up, down
+                (event.keyCode >= 35 && event.keyCode <= 40)) {
                 return;
             }
             else {
@@ -55,8 +55,8 @@ ko.bindingHandlers.integer = {
             if (event.keyCode === 46 || event.keyCode === 8 || event.keyCode === 9 || event.keyCode === 27 || event.keyCode === 13 ||
                 // Ctrl+A
                 (event.keyCode === 65 && event.ctrlKey) ||
-                // home, end, left, right
-                (event.keyCode >= 35 && event.keyCode <= 39)) {
+                // home, end, left, right, up, down
+                (event.keyCode >= 35 && event.keyCode <= 40)) {
                 return;
             }
             else {
