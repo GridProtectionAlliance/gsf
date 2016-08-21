@@ -26,39 +26,54 @@ using System;
 namespace GSF.Data.Model
 {
     /// <summary>
+    /// Represents types of searches available for <see cref="SearchableAttribute"/>.
+    /// </summary>
+    public enum SearchType
+    {
+        /// <summary>
+        /// Use default search type for field type.
+        /// </summary>
+        Default,
+        /// <summary>
+        /// Use SQL LIKE expression to match field.
+        /// </summary>
+        LikeExpression,
+        /// <summary>
+        /// Match full text of field.
+        /// </summary>
+        FullValueMatch,
+    }
+
+    /// <summary>
     /// Defines an attribute that will mark a property as a searchable field for a modeled table.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public sealed class SearchableAttribute : Attribute
     {
         /// <summary>
-        /// Gets flag that determines if search field should be queried with a SQL LIKE expression.
+        /// Gets or sets type of search that should be used for field queried.
         /// </summary>
-        /// <remarks>
-        /// If flag is <c>true</c> a SQL LIKE expression will be used to search field; otherwise, field must match exactly.
-        /// </remarks>
-        public bool? UseLikeExpression
+        public SearchType SearchType
         {
             get;
+            set;
         }
 
         /// <summary>
         /// Creates a new <see cref="SearchableAttribute"/>.
         /// </summary>
-        /// <remarks>
-        /// <see cref="UseLikeExpression"/> is assumed to be <c>true</c> for string fields.
-        /// </remarks>
         public SearchableAttribute()
         {
+            SearchType = SearchType.Default;
         }
 
         /// <summary>
-        /// Creates a new <see cref="SearchableAttribute"/> with specified use SQL LIKE expression state.
+        /// Creates a new <see cref="SearchableAttribute"/> with specified <paramref name="searchType"/>.
         /// </summary>
-        /// <param name="useLikeExpression">Flag that determines if this searchable field should be queried with a SQL LIKE expression.</param>
-        public SearchableAttribute(bool useLikeExpression)
+        /// <param name="searchType">Type of search that should be used for field queried.</param>
+        public SearchableAttribute(SearchType searchType)
         {
-            UseLikeExpression = useLikeExpression;
+            SearchType = searchType;
         }
     }
 }

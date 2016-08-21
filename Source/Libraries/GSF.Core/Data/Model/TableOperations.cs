@@ -1167,16 +1167,16 @@ namespace GSF.Data.Model
                     if (searchFilterSql.Length > 0)
                         searchFilterSql.Append(" OR ");
 
-                    if (searchableAttribute.UseLikeExpression.HasValue)
+                    if (searchableAttribute.SearchType == SearchType.Default)
                     {
-                        if (searchableAttribute.UseLikeExpression.GetValueOrDefault())
+                        if (property.PropertyType == typeof(string))
                             searchFilterSql.Append($"{fieldName} LIKE {{0}}");
                         else
                             searchFilterSql.Append($"{fieldName}={{1}}");
                     }
                     else
                     {
-                        if (property.PropertyType == typeof(string))
+                        if (searchableAttribute.SearchType == SearchType.LikeExpression)
                             searchFilterSql.Append($"{fieldName} LIKE {{0}}");
                         else
                             searchFilterSql.Append($"{fieldName}={{1}}");
