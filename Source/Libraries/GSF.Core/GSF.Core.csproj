@@ -202,6 +202,7 @@
     <Compile Include="Data\Model\RecordRestriction.cs" />
     <Compile Include="Data\Model\TableOperations.cs" />
     <Compile Include="Collections\PagedList.cs" />
+    <Compile Include="Drawing\Point.cs" />
     <Compile Include="Encoding7Bit.cs" />
     <Compile Include="Identity\IUserInfo.cs" />
     <Compile Include="Identity\UnixUserInfo.cs" />
