@@ -67,6 +67,7 @@ namespace GSF.Data.Model
         private readonly string m_updateWhereSql;
         private readonly string m_deleteSql;
         private readonly string m_deleteWhereSql;
+        private readonly string m_searchFilterSql;
 
         #endregion
 
@@ -92,6 +93,7 @@ namespace GSF.Data.Model
             m_updateWhereSql = s_updateWhereSql;
             m_deleteSql = s_deleteSql;
             m_deleteWhereSql = s_deleteWhereSql;
+            m_searchFilterSql = s_searchFilterSql;
 
             // When any escape targets are defined for the modeled identifiers, i.e., table or field names,
             // the static SQL statements are defined with ANSI standard escape delimiters. We check if the
@@ -135,6 +137,7 @@ namespace GSF.Data.Model
                         m_updateWhereSql = m_updateWhereSql.Replace(ansiEscapedFieldName, derivedFieldName);
                         m_deleteSql = m_deleteSql.Replace(ansiEscapedFieldName, derivedFieldName);
                         m_deleteWhereSql = m_deleteWhereSql.Replace(ansiEscapedFieldName, derivedFieldName);
+                        m_searchFilterSql = m_searchFilterSql.Replace(ansiEscapedFieldName, derivedFieldName);
                     }
                 }
             }
@@ -163,7 +166,7 @@ namespace GSF.Data.Model
         /// Gets the table name defined for the modeled table, includes any escaping as defined in model.
         /// </summary>
         public string TableName => GetEscapedTableName();
-        
+
         /// <summary>
         /// Gets the table name defined for the modeled table without any escape characters.
         /// </summary>
@@ -279,6 +282,28 @@ namespace GSF.Data.Model
         }
 
         /// <summary>
+        /// Queries database and returns modeled table records for the specified sorting, paging and search parameters.
+        /// </summary>
+        /// <param name="sortField">Field name to order-by.</param>
+        /// <param name="ascending">Sort ascending flag; set to <c>false</c> for descending.</param>
+        /// <param name="page">Page number of records to return (1-based).</param>
+        /// <param name="pageSize">Current page size.</param>
+        /// <param name="searchText">Text to search.</param>
+        /// <returns>An enumerable of modeled table row instances for queried records.</returns>
+        /// <remarks>
+        /// This function is used for record paging. Primary keys are cached server-side, typically per user session, to maintain desired per-page sort order.
+        /// </remarks>
+        public IEnumerable<T> QueryRecords(string sortField, bool ascending, int page, int pageSize, string searchText)
+        {
+            return QueryRecords(sortField, ascending, page, pageSize, GetSearchRestriction(searchText));
+        }
+
+        IEnumerable ITableOperations.QueryRecords(string sortField, bool ascending, int page, int pageSize, string searchText)
+        {
+            return QueryRecords(sortField, ascending, page, pageSize, searchText);
+        }
+
+        /// <summary>
         /// Queries database and returns modeled table records for the specified sorting and paging parameters.
         /// </summary>
         /// <param name="sortField">Field name to order-by.</param>
@@ -334,6 +359,16 @@ namespace GSF.Data.Model
         IEnumerable ITableOperations.QueryRecords(string sortField, bool ascending, int page, int pageSize, RecordRestriction restriction)
         {
             return QueryRecords(sortField, ascending, page, pageSize, restriction);
+        }
+
+        /// <summary>
+        /// Gets the total record count for the modeled table based on search parameter.
+        /// </summary>
+        /// <param name="searchText">Text to search.</param>
+        /// <returns>Total record count for the modeled table.</returns>
+        public int QueryRecordCount(string searchText)
+        {
+            return QueryRecordCount(GetSearchRestriction(searchText));
         }
 
         /// <summary>
@@ -629,7 +664,7 @@ namespace GSF.Data.Model
         /// table has no defined primary keys.
         /// </remarks>
         public int UpdateRecord(DataRow row, RecordRestriction restriction = null)
-        {            
+        {
             return UpdateRecord(LoadRecord(row), restriction);
         }
 
@@ -903,6 +938,38 @@ namespace GSF.Data.Model
             return null;
         }
 
+        /// <summary>
+        /// Generates a <see cref="RecordRestriction"/> based on fields marked with <see cref="SearchableAttribute"/> and specified <paramref name="searchText"/>.
+        /// </summary>
+        /// <param name="searchText">Text to search.</param>
+        /// <returns><see cref="RecordRestriction"/> based on fields marked with <see cref="SearchableAttribute"/> and specified <paramref name="searchText"/>.</returns>
+        public RecordRestriction GetSearchRestriction(string searchText)
+        {
+            if (string.IsNullOrWhiteSpace(m_searchFilterSql) || string.IsNullOrWhiteSpace(searchText))
+                return null;
+
+            searchText = searchText.Trim();
+
+            string[] keyWords = searchText.RemoveDuplicateWhiteSpace().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (keyWords.Length == 1)
+                return new RecordRestriction(m_searchFilterSql, $"%{searchText}%", searchText);
+
+            StringBuilder multiKeyWordFilter = new StringBuilder();
+
+            for (int i = 0; i < keyWords.Length * 2; i+=2)
+            {
+                if (i > 0)
+                    multiKeyWordFilter.Append(" AND ");
+
+                multiKeyWordFilter.Append('(');
+                multiKeyWordFilter.AppendFormat(m_searchFilterSql, $"{{{i}}}", $"{{{i + 1}}}");
+                multiKeyWordFilter.Append(')');
+            }
+
+            return new RecordRestriction(multiKeyWordFilter.ToString(), keyWords.SelectMany(keyWord => new object[] { $"%{keyWord}%", keyWord }).ToArray());
+        }
+
         // Derive table name, escaping it if requested by model
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private string GetEscapedTableName()
@@ -1004,6 +1071,7 @@ namespace GSF.Data.Model
         private static readonly string s_deleteSql;
         private static readonly string s_deleteWhereSql;
         private static readonly string s_primaryKeyFields;
+        private static readonly string s_searchFilterSql;
         private static readonly bool s_hasPrimaryKeyIdentityField;
 
         // Static Constructor
@@ -1014,6 +1082,7 @@ namespace GSF.Data.Model
             StringBuilder updateFormat = new StringBuilder();
             StringBuilder whereFormat = new StringBuilder();
             StringBuilder primaryKeyFields = new StringBuilder();
+            StringBuilder searchFilterSql = new StringBuilder();
             List<PropertyInfo> addNewProperties = new List<PropertyInfo>();
             List<PropertyInfo> updateProperties = new List<PropertyInfo>();
             List<PropertyInfo> primaryKeyProperties = new List<PropertyInfo>();
@@ -1049,7 +1118,10 @@ namespace GSF.Data.Model
             {
                 string fieldName = s_fieldNames[property.Name];
                 PrimaryKeyAttribute primaryKeyAttribute;
+                SearchableAttribute searchableAttribute;
+
                 property.TryGetAttribute(out primaryKeyAttribute);
+                property.TryGetAttribute(out searchableAttribute);
 
                 if (property.TryGetAttributes(out useEscapedNameAttributes))
                 {
@@ -1088,6 +1160,27 @@ namespace GSF.Data.Model
                     updateFormat.Append($"{(updateFormat.Length > 0 ? ", " : "")}{fieldName}={{{updateFieldIndex++}}}");
                     addNewProperties.Add(property);
                     updateProperties.Add(property);
+                }
+
+                if ((object)searchableAttribute != null)
+                {
+                    if (searchFilterSql.Length > 0)
+                        searchFilterSql.Append(" OR ");
+
+                    if (searchableAttribute.UseLikeExpression.HasValue)
+                    {
+                        if (searchableAttribute.UseLikeExpression.GetValueOrDefault())
+                            searchFilterSql.Append($"{fieldName} LIKE {{0}}");
+                        else
+                            searchFilterSql.Append($"{fieldName}={{1}}");
+                    }
+                    else
+                    {
+                        if (property.PropertyType == typeof(string))
+                            searchFilterSql.Append($"{fieldName} LIKE {{0}}");
+                        else
+                            searchFilterSql.Append($"{fieldName}={{1}}");
+                    }
                 }
 
                 s_attributes.Add(property, new HashSet<Type>(property.CustomAttributes.Select(attributeData => attributeData.AttributeType)));
@@ -1141,6 +1234,7 @@ namespace GSF.Data.Model
             s_deleteSql = string.Format(DeleteSqlFormat, tableName, whereFormat);
             s_updateWhereSql = s_updateSql.Substring(0, s_updateSql.IndexOf(" WHERE ", StringComparison.Ordinal) + 7);
             s_deleteWhereSql = s_deleteSql.Substring(0, s_deleteSql.IndexOf(" WHERE ", StringComparison.Ordinal) + 7);
+            s_searchFilterSql = searchFilterSql.ToString();
 
             s_addNewProperties = addNewProperties.ToArray();
             s_updateProperties = updateProperties.ToArray();

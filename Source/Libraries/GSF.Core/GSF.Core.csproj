@@ -188,6 +188,7 @@
     <Compile Include="Console\CommandResponse.cs" />
     <Compile Include="Collections\IPagedList.cs" />
     <Compile Include="Data\Model\ITableOperations.cs" />
+    <Compile Include="Data\Model\SearchableAttribute.cs" />
     <Compile Include="Data\Model\UseEscapedNameAttribute.cs" />
     <Compile Include="Data\Model\TableNameAttribute.cs" />
     <Compile Include="Data\Model\FieldNameAttribute.cs" />

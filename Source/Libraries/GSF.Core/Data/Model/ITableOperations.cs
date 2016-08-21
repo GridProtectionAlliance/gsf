@@ -99,6 +99,20 @@ namespace GSF.Data.Model
         IEnumerable QueryRecords(string orderByExpression = null, RecordRestriction restriction = null, int limit = -1);
 
         /// <summary>
+        /// Queries database and returns modeled table records for the specified sorting, paging and search parameters.
+        /// </summary>
+        /// <param name="sortField">Field name to order-by.</param>
+        /// <param name="ascending">Sort ascending flag; set to <c>false</c> for descending.</param>
+        /// <param name="page">Page number of records to return (1-based).</param>
+        /// <param name="pageSize">Current page size.</param>
+        /// <param name="searchText">Text to search.</param>
+        /// <returns>An enumerable of modeled table row instances for queried records.</returns>
+        /// <remarks>
+        /// This function is used for record paging. Primary keys are cached server-side, typically per user session, to maintain desired per-page sort order.
+        /// </remarks>
+        IEnumerable QueryRecords(string sortField, bool ascending, int page, int pageSize, string searchText);
+
+        /// <summary>
         /// Queries database and returns modeled table records for the specified sorting and paging parameters.
         /// </summary>
         /// <param name="sortField">Field name to order-by.</param>
@@ -111,6 +125,13 @@ namespace GSF.Data.Model
         /// This function is used for record paging. Primary keys are cached server-side, typically per user session, to maintain desired per-page sort order.
         /// </remarks>
         IEnumerable QueryRecords(string sortField, bool ascending, int page, int pageSize, RecordRestriction restriction = null);
+
+        /// <summary>
+        /// Gets the total record count for the modeled table based on search parameter.
+        /// </summary>
+        /// <param name="searchText">Text to search.</param>
+        /// <returns>Total record count for the modeled table.</returns>
+        int QueryRecordCount(string searchText);
 
         /// <summary>
         /// Gets the total record count for the modeled table.
