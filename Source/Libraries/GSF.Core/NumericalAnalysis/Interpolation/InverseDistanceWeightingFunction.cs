@@ -77,6 +77,65 @@ namespace GSF.NumericalAnalysis.Interpolation
 
         #endregion
 
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets the collection of x-coordinates of points at which the values are known.
+        /// </summary>
+        public double[] XCoordinates
+        {
+            get
+            {
+                return m_xCoordinates;
+            }
+        }
+
+        /// <summary>
+        /// Gets the collection of y-coordinates of points at which the values are known.
+        /// </summary>
+        public double[] YCoordinates
+        {
+            get
+            {
+                return m_yCoordinates;
+            }
+        }
+
+        /// <summary>
+        /// Gets the collection of values of points at which the values are known.
+        /// </summary>
+        public double[] Values
+        {
+            get
+            {
+                return m_values;
+            }
+        }
+
+        /// <summary>
+        /// Gets the power applied to the inverse distance to control the speed of value's decay.
+        /// </summary>
+        public double Power
+        {
+            get
+            {
+                return m_power;
+            }
+        }
+
+        /// <summary>
+        /// Gets the function to be used to calculate the distance between two points.
+        /// </summary>
+        public DistanceFunc DistanceFunction
+        {
+            get
+            {
+                return m_distanceFunction;
+            }
+        }
+
+        #endregion
+
         #region [ Methods ]
 
         /// <summary>
@@ -116,18 +175,6 @@ namespace GSF.NumericalAnalysis.Interpolation
         }
 
         /// <summary>
-        /// Sets the function to be used to calculate the distance between two points.
-        /// </summary>
-        /// <param name="distanceFunction">The function used to calculate distance between two points.</param>
-        /// <returns>A reference to the inverse distance weighting function.</returns>
-        public InverseDistanceWeightingFunction SetDistanceFunction(DistanceFunc distanceFunction)
-        {
-            m_converter = null;
-            m_distanceFunction = distanceFunction ?? DefaultDistanceFunction;
-            return this;
-        }
-
-        /// <summary>
         /// Sets the power applied to the inverse distance to control the speed of value's decay.
         /// </summary>
         /// <param name="power">The power applied to the inverse of the distance.</param>
@@ -137,6 +184,18 @@ namespace GSF.NumericalAnalysis.Interpolation
         {
             m_converter = null;
             m_power = power;
+            return this;
+        }
+
+        /// <summary>
+        /// Sets the function to be used to calculate the distance between two points.
+        /// </summary>
+        /// <param name="distanceFunction">The function used to calculate distance between two points.</param>
+        /// <returns>A reference to the inverse distance weighting function.</returns>
+        public InverseDistanceWeightingFunction SetDistanceFunction(DistanceFunc distanceFunction)
+        {
+            m_converter = null;
+            m_distanceFunction = distanceFunction ?? DefaultDistanceFunction;
             return this;
         }
 

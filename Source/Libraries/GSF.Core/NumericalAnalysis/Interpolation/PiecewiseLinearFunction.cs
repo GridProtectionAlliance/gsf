@@ -57,38 +57,71 @@ namespace GSF.NumericalAnalysis.Interpolation
     /// </remarks>
     public class PiecewiseLinearFunction
     {
+        #region [ Members ]
+
+        // Fields
         private Func<double, double> m_converter;
-        private double[] m_domainValues;
-        private double[] m_rangeValues;
+        private double[] m_domain;
+        private double[] m_range;
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets the x-values of the pivot points in the piecewise linear function.
+        /// </summary>
+        public double[] Domain
+        {
+            get
+            {
+                return m_domain;
+            }
+        }
+
+        /// <summary>
+        /// Gets the y-values of the pivot points in the piecewise linear function.
+        /// </summary>
+        public double[] Range
+        {
+            get
+            {
+                return m_range;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
 
         /// <summary>
         /// Sets the x-values of the pivot points in the piecewise linear function.
         /// </summary>
-        /// <param name="domainValues">The x-values of the pivot points.</param>
+        /// <param name="domain">The x-values of the pivot points.</param>
         /// <returns>A reference to the piecewise linear function.</returns>
-        public PiecewiseLinearFunction SetDomain(params double[] domainValues)
+        public PiecewiseLinearFunction SetDomain(params double[] domain)
         {
             m_converter = null;
-            m_domainValues = domainValues;
+            m_domain = domain;
             return this;
         }
 
         /// <summary>
         /// Sets the y-values of the pivot points in the piecewise linear function.
         /// </summary>
-        /// <param name="rangeValues">The y-values of the pivot points.</param>
+        /// <param name="range">The y-values of the pivot points.</param>
         /// <returns>A refernce to the picewise linear function.</returns>
-        public PiecewiseLinearFunction SetRange(params double[] rangeValues)
+        public PiecewiseLinearFunction SetRange(params double[] range)
         {
             m_converter = null;
-            m_rangeValues = rangeValues;
+            m_range = range;
             return this;
         }
 
         private Func<double, double> GetConverter()
         {
-            double[] domain = m_domainValues ?? new double[0];
-            double[] range = m_rangeValues ?? new double[0];
+            double[] domain = m_domain ?? new double[0];
+            double[] range = m_range ?? new double[0];
 
             if (domain.Length != range.Length)
                 throw new InvalidOperationException($"Domain of size {domain.Length} does not match range of size {range.Length}.");
@@ -129,6 +162,10 @@ namespace GSF.NumericalAnalysis.Interpolation
             });
         }
 
+        #endregion
+
+        #region [ Operators ]
+
         /// <summary>
         /// Converts the <see cref="PiecewiseLinearFunction"/> object to a
         /// <see cref="Func{Double, Double}"/> to start converting values.
@@ -143,5 +180,7 @@ namespace GSF.NumericalAnalysis.Interpolation
         {
             return func.GetConverter();
         }
+
+        #endregion
     }
 }
