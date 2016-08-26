@@ -1152,6 +1152,12 @@ namespace GSF.Interop
         public static extern bool CloseHandle(IntPtr hndl);
 
         /// <summary>
+        /// Win32 CopyMemory function.
+        /// </summary>
+        [DllImport("kernel32.dll", EntryPoint = "CopyMemory")]
+        public static extern void CopyMemory(IntPtr destination, IntPtr source, uint length);
+
+        /// <summary>
         /// Win32 FormatMessage function.
         /// </summary>
         [SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#"), SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "4#"), SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "6#"), SuppressMessage("Microsoft.Interoperability", "CA1401:PInvokesShouldNotBeVisible"), DllImport("kernel32.dll")]

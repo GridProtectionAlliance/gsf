@@ -34,6 +34,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+using GSF.Interop;
 using GSF.IO;
 
 namespace GSF.Drawing
@@ -364,6 +365,33 @@ namespace GSF.Drawing
             finally
             {
                 gchPixelData?.Free();
+            }
+        }
+
+        /// <summary>
+        /// Converts from a bitmap image to an array of pixel data.
+        /// </summary>
+        /// <param name="bitmap">The bitmap image to be converted.</param>
+        /// <returns>The pixel data contained in the image.</returns>
+        public static uint[] ToPixelData(this Bitmap bitmap)
+        {
+            uint[] pixelData = new uint[bitmap.Width * bitmap.Height];
+            BitmapData bitmapData = null;
+            GCHandle? gchPixelData = null;
+
+            try
+            {
+                gchPixelData = GCHandle.Alloc(pixelData, GCHandleType.Pinned);
+                bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppPArgb);
+                WindowsApi.CopyMemory(bitmapData.Scan0, gchPixelData.GetValueOrDefault().AddrOfPinnedObject(), (uint)(bitmapData.Stride * bitmapData.Height));
+                return pixelData;
+            }
+            finally
+            {
+                gchPixelData?.Free();
+
+                if ((object)bitmapData != null)
+                    bitmap.UnlockBits(bitmapData);
             }
         }
     }
