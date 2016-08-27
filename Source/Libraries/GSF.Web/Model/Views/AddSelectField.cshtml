@@ -35,6 +35,9 @@
     string dependencyFieldName = ViewBag.DependencyFieldName;
     string toolTip = ViewBag.ToolTip;
     string optionDataBinding = ViewBag.OptionDataBinding;
+    bool allowUnset = ViewBag.AllowUnset;
+    string unsetCaption = ViewBag.UnsetCaption;
+    string valueUnsetOptions;
     Dictionary<string, string> options = ViewBag.Options;
 
     if (!string.IsNullOrEmpty(dependencyFieldName))
@@ -84,6 +87,13 @@
     {
         optionDataBinding = string.Format(" data-bind=\"{0}\"", optionDataBinding);
     }
+
+    valueUnsetOptions = allowUnset.ToString().ToLower();
+
+    if (allowUnset && !string.IsNullOrWhiteSpace(unsetCaption))
+    {
+        valueUnsetOptions = string.Format("{0}, optionsCaption: '{1}'", valueUnsetOptions, unsetCaption);
+    }
 }
 @if (required) {
     @Raw(string.IsNullOrEmpty(groupDataBinding) ? "" : string.Format("<div{0}>\r\n", groupDataBinding))
@@ -91,7 +101,7 @@
         @if (fieldLabel.Length > 0) {
         <label for="@Raw(fieldID)"@Raw(labelDataBinding)>@Raw(fieldLabel):</label>
         }
-        <select class="form-control" id="@Raw(fieldID)" data-bind="value: @Raw(fieldName), valueAllowUnset: true, attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}@Raw(customDataBinding)"@(string.IsNullOrEmpty(requiredDataBinding) ? " required" : "")>
+        <select class="form-control" id="@Raw(fieldID)" data-bind="value: @Raw(fieldName), valueAllowUnset: @Raw(valueUnsetOptions), attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}@Raw(customDataBinding)"@(string.IsNullOrEmpty(requiredDataBinding) ? " required" : "")>
             @foreach (KeyValuePair<string, string> item in options) {
             <option value="@item.Key"@Raw(optionDataBinding)>@item.Value</option>
             }
@@ -106,7 +116,7 @@ else
         @if (fieldLabel.Length > 0) {
         <label for="@Raw(fieldID)"@Raw(labelDataBinding)>@Raw(fieldLabel):</label>
         }
-        <select class="form-control" id="@Raw(fieldID)" data-bind="value: @Raw(fieldName), attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}@Raw(customDataBinding)">
+        <select class="form-control" id="@Raw(fieldID)" data-bind="value: @Raw(fieldName), valueAllowUnset: @Raw(valueUnsetOptions), attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}@Raw(customDataBinding)">
             @foreach (KeyValuePair<string, string> item in options) {
             <option value="@item.Key"@Raw(optionDataBinding)>@item.Value</option>
             }
