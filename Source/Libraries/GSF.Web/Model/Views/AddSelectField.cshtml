@@ -88,6 +88,10 @@
         optionDataBinding = string.Format(" data-bind=\"{0}\"", optionDataBinding);
     }
 
+    if (required) {
+        allowUnset = true;
+    }
+
     valueUnsetOptions = allowUnset.ToString().ToLower();
 
     if (allowUnset && !string.IsNullOrWhiteSpace(unsetCaption))
