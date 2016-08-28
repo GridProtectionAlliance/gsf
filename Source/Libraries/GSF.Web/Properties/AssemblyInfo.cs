@@ -28,8 +28,8 @@ using System.Web.UI;
 using GSF.Web.Hosting;
 
 // Assembly identity attributes.
-[assembly: AssemblyVersion("2.1.310.0")]
-[assembly: AssemblyInformationalVersion("2.1.310-beta")]
+[assembly: AssemblyVersion("2.1.311.0")]
+[assembly: AssemblyInformationalVersion("2.1.311-beta")]
 
 // Informational attributes.
 [assembly: AssemblyCompany("Grid Protection Alliance")]
