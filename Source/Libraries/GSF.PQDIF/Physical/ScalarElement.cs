@@ -467,7 +467,7 @@ namespace GSF.PQDIF.Physical
             // timestamps. However, the constant defined in the standard is 25569 days, whereas the actual
             // number of days between those two dates is 25567 days; a two day difference. That is why we
             // need to also subtract two days here when parsing PQDIF timestamps.
-            return DateTime.SpecifyKind(epoch.AddDays(days - 2u).AddSeconds(seconds), DateTimeKind.Utc);
+            return epoch.AddDays(days - 2u).AddSeconds(seconds);
         }
 
         /// <summary>
