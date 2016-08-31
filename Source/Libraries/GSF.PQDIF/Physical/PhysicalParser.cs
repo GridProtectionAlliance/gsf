@@ -109,6 +109,7 @@ namespace GSF.PQDIF.Physical
         private CompressionAlgorithm m_compressionAlgorithm;
 
         private bool m_hasNextRecord;
+        private HashSet<long> m_headerAddresses;
         private List<Exception> m_exceptionList;
         private int m_maximumExceptionsAllowed = 100;
 
@@ -123,6 +124,7 @@ namespace GSF.PQDIF.Physical
         public PhysicalParser(string fileName)
         {
             FileName = fileName;
+            m_headerAddresses = new HashSet<long>();
             m_exceptionList = new List<Exception>();
         }
 
@@ -255,18 +257,21 @@ namespace GSF.PQDIF.Physical
             RecordHeader header;
             RecordBody body;
 
+            if (!m_hasNextRecord)
+                Reset();
+
             header = ReadRecordHeader();
             body = ReadRecordBody(header.BodySize);
 
             if ((object)body != null)
                 body.Collection.TagOfElement = header.RecordTypeTag;
+            
+            m_hasNextRecord =
+                header.NextRecordPosition > 0 &&
+                header.NextRecordPosition < m_fileReader.BaseStream.Length &&
+                m_headerAddresses.Add(header.NextRecordPosition) &&
+                !MaximumExceptionsReached;
 
-            // If the link to the next record points outside the bounds of the file,
-            // set it to zero to indicate that this is the last record in the file
-            if (header.NextRecordPosition < 0 || header.NextRecordPosition >= m_fileReader.BaseStream.Length || MaximumExceptionsReached)
-                header.NextRecordPosition = 0;
-
-            m_hasNextRecord = header.NextRecordPosition != 0;
             m_fileReader.BaseStream.Seek(header.NextRecordPosition, SeekOrigin.Begin);
 
             return new Record(header, body);
@@ -277,8 +282,12 @@ namespace GSF.PQDIF.Physical
         /// </summary>
         public void Reset()
         {
+            m_compressionAlgorithm = CompressionAlgorithm.None;
+            m_compressionStyle = CompressionStyle.None;
             m_fileReader.BaseStream.Seek(0, SeekOrigin.Begin);
             m_hasNextRecord = true;
+            m_headerAddresses.Clear();
+            m_exceptionList.Clear();
         }
 
         /// <summary>
