@@ -1466,6 +1466,12 @@ namespace GSF.ServiceProcess
             if ((object)m_remotingServer == null)
                 throw new InvalidOperationException("RemotingServer property of ServiceHelper component is not set");
 
+            // Open log file if file logging is enabled.
+            // Make sure to do this before calling OnServiceStarting
+            // in case messages need to be logged by the handler.
+            if (m_logStatusUpdates)
+                m_statusLog.Open();
+
             OnServiceStarting(args);
 
             lock (m_clientRequestHandlers)
@@ -1530,10 +1536,6 @@ namespace GSF.ServiceProcess
                 m_serviceComponents.Add(m_errorLogger.ErrorLog);
                 m_serviceComponents.Add(m_remotingServer);
             }
-
-            // Open log file if file logging is enabled.
-            if (m_logStatusUpdates)
-                m_statusLog.Open();
 
             // Start all of the core components.
             m_processScheduler.Start();

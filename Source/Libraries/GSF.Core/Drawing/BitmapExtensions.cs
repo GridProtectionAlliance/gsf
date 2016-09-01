@@ -383,7 +383,7 @@ namespace GSF.Drawing
             {
                 gchPixelData = GCHandle.Alloc(pixelData, GCHandleType.Pinned);
                 bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppPArgb);
-                WindowsApi.CopyMemory(bitmapData.Scan0, gchPixelData.GetValueOrDefault().AddrOfPinnedObject(), (uint)(bitmapData.Stride * bitmapData.Height));
+                WindowsApi.CopyMemory(gchPixelData.GetValueOrDefault().AddrOfPinnedObject(), bitmapData.Scan0, (uint)(bitmapData.Stride * bitmapData.Height));
                 return pixelData;
             }
             finally

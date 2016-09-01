@@ -314,12 +314,12 @@ namespace GSF.Web.Model
                         case RazorViewResolutionMode.WatchingResolvePath:
                             if (Common.GetApplicationType() == ApplicationType.Web)
                             {
-                                settings.Add("TemplatePath", "~/Views/Shared/Templates/", "Path for data context based razor field templates.");
+                                settings.Add("TemplatePath", "~/Views/Shared", "Path for data context based razor field templates.");
                                 templatePath = HostingEnvironment.MapPath(settings["TemplatePath"].Value).EnsureEnd('/');
                             }
                             else
                             {
-                                settings.Add("TemplatePath", "wwwroot/Templates/", "Path for data context based razor field templates.");
+                                settings.Add("TemplatePath", "Eval(systemSettings.WebRootPath)", "Path for data context based razor field templates.");
                                 templatePath = FilePath.GetAbsolutePath(settings["TemplatePath"].Value);
                             }
                             break;
