@@ -278,6 +278,15 @@ namespace GSF.PQDIF.Physical
         }
 
         /// <summary>
+        /// Jumps in the file to the location of the record with the given header.
+        /// </summary>
+        /// <param name="header">The header to seek to.</param>
+        public void Seek(RecordHeader header)
+        {
+            m_fileReader.BaseStream.Seek(header.Position, SeekOrigin.Begin);
+        }
+
+        /// <summary>
         /// Sets the parser back to the beginning of the file.
         /// </summary>
         public void Reset()
@@ -318,6 +327,7 @@ namespace GSF.PQDIF.Physical
         {
             return new RecordHeader()
             {
+                Position = (int)m_fileReader.BaseStream.Position,
                 RecordSignature = new Guid(m_fileReader.ReadBytes(16)),
                 RecordTypeTag = new Guid(m_fileReader.ReadBytes(16)),
                 HeaderSize = m_fileReader.ReadInt32(),

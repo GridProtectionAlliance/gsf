@@ -24,9 +24,7 @@
 //******************************************************************************************************
 
 using System;
-using System.IO;
 using System.Text;
-using GSF.IO.Checksums;
 
 namespace GSF.PQDIF.Physical
 {
@@ -41,6 +39,8 @@ namespace GSF.PQDIF.Physical
         #region [ Members ]
 
         // Fields
+        private int m_position;
+
         private Guid m_recordSignature;
         private Guid m_recordTypeTag;
         private int m_headerSize;
@@ -52,6 +52,21 @@ namespace GSF.PQDIF.Physical
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the position of this record.
+        /// </summary>
+        public int Position
+        {
+            get
+            {
+                return m_position;
+            }
+            set
+            {
+                m_position = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the record's globally unique identifier.
