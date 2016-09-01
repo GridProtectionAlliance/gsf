@@ -131,11 +131,11 @@ namespace GSF.Web.Model.Handlers
         {
             NameValueCollection requestParameters = request.RequestUri.ParseQueryString();
 
-            response.Content = new PushStreamContent((stream, content, context) => 
+            response.Content = new PushStreamContent(async (stream, content, context) => 
             {
                 try
                 {
-                    return CopyModelAsCsvToStreamAsync(requestParameters, stream, () => cancellationToken.IsCancellationRequested);
+                    await CopyModelAsCsvToStreamAsync(requestParameters, stream, () => cancellationToken.IsCancellationRequested);
                 }
                 finally
                 {
@@ -230,7 +230,7 @@ namespace GSF.Web.Model.Handlers
             }
 
             using (DataContext dataContext = new DataContext())
-            using (StreamWriter writer = new StreamWriter(responseStream, new UTF8Encoding(false, false), 5242880))
+            using (StreamWriter writer = new StreamWriter(responseStream))
             {
                 // Validate current user has access to requested data
                 if (!dataContext.UserIsInRole(queryRoles))
