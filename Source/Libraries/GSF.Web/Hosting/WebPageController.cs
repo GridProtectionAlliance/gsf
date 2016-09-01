@@ -119,7 +119,7 @@ namespace GSF.Web.Hosting
         public WebPageController(WebServer webServer)
         {
             m_webServer = webServer ?? WebServer.Default;
-            DefaultWebPage = "index.html";
+            DefaultWebPage = "Index.html";
         }
 
         #endregion

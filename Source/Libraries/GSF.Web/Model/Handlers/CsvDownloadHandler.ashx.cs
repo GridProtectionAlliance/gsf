@@ -33,6 +33,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Security;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
@@ -130,11 +131,11 @@ namespace GSF.Web.Model.Handlers
         {
             NameValueCollection requestParameters = request.RequestUri.ParseQueryString();
 
-            response.Content = new PushStreamContent(async (stream, content, context) => 
+            response.Content = new PushStreamContent((stream, content, context) => 
             {
                 try
                 {
-                    await CopyModelAsCsvToStreamAsync(requestParameters, stream, () => cancellationToken.IsCancellationRequested);
+                    return CopyModelAsCsvToStreamAsync(requestParameters, stream, () => cancellationToken.IsCancellationRequested);
                 }
                 finally
                 {
@@ -229,7 +230,7 @@ namespace GSF.Web.Model.Handlers
             }
 
             using (DataContext dataContext = new DataContext())
-            using (StreamWriter writer = new StreamWriter(responseStream))
+            using (StreamWriter writer = new StreamWriter(responseStream, new UTF8Encoding(false, false), 5242880))
             {
                 // Validate current user has access to requested data
                 if (!dataContext.UserIsInRole(queryRoles))
