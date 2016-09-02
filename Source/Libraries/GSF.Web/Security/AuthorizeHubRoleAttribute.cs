@@ -99,9 +99,9 @@ namespace GSF.Web.Security
             // Get current user name
             string userName = user.Identity.Name;
 
-            SecurityProviderCache.ValidateCurrentProvider();
-
             // Setup the principal
+            Thread.CurrentPrincipal = user;
+            SecurityProviderCache.ValidateCurrentProvider();
             user = Thread.CurrentPrincipal;
 
             // Verify that the current thread principal has been authenticated.
