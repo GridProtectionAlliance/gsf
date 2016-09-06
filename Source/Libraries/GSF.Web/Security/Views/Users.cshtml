@@ -158,21 +158,25 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div data-bind="visible: UseDBAuthentication">
-                        @Raw(dataContext.AddInputField<UserAccount>("Password", "password", dependencyFieldName: "UseDBAuthentication"))
+                            @Raw(dataContext.AddInputField<UserAccount>("Password", "password", dependencyFieldName: "UseDBAuthentication"))
                         </div>
                         @Raw(dataContext.AddInputField<UserAccount>("FirstName"))
                         @Raw(dataContext.AddInputField<UserAccount>("LastName"))
                     </div>
-                    <div class="col-md-6" data-bind="visible: UseDBAuthentication">
-                        @Raw(dataContext.AddInputField<UserAccount>("Phone", dependencyFieldName: "UseDBAuthentication"))
-                        @Raw(dataContext.AddInputField<UserAccount>("Email", dependencyFieldName: "UseDBAuthentication"))
-                        @Raw(dataContext.AddDateField<UserAccount>("ChangePasswordOn", dependencyFieldName: "UseDBAuthentication"))
-                        @{
-                            dataContext.AddPageDefinedFieldInitialization("Password", "\"\"",
-                                /* RegEx Pattern: */ passwordRequirementsRegex,
-                                /* Error Message: */ passwordRequirementsError);
-                            dataContext.AddPageDefinedFieldInitialization("ChangePasswordOn", "(new Date()).addDays(90)");
-                        }
+                    <div class="col-md-6">
+                        <div data-bind="visible: UseDBAuthentication">
+                            @Raw(dataContext.AddInputField<UserAccount>("Phone", dependencyFieldName: "UseDBAuthentication"))
+                        </div>
+                        @Raw(dataContext.AddInputField<UserAccount>("Email"))
+                        <div data-bind="visible: UseDBAuthentication">
+                            @Raw(dataContext.AddDateField<UserAccount>("ChangePasswordOn", dependencyFieldName: "UseDBAuthentication"))
+                            @{
+                                dataContext.AddPageDefinedFieldInitialization("Password", "\"\"",
+                                    /* RegEx Pattern: */ passwordRequirementsRegex,
+                                    /* Error Message: */ passwordRequirementsError);
+                                dataContext.AddPageDefinedFieldInitialization("ChangePasswordOn", "(new Date()).addDays(90)");
+                            }
+                        </div>
                     </div>
                 </div>
             </div>
