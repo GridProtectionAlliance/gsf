@@ -31,9 +31,12 @@ function getPrimeUIWidget(jqueryElement, widgetType) {
 }
 
 // Adds auto-complete lookup functionality to an input field element associated with a paged-view model 
-function initializeAutoCompleteLookupField(fieldName, loadRecordsHubFunction, isObservable, addShowAllDropDown, limit) {
+function initializeAutoCompleteLookupField(fieldName, loadRecordsHubFunction, isObservable, addInputGroup, addShowAllDropDown, limit) {
     if (isObservable === undefined)
         isObservable = true;
+
+    if (addInputGroup === undefined)
+        addInputGroup = true;
 
     if (addShowAllDropDown === undefined)
         addShowAllDropDown = true;
@@ -47,7 +50,7 @@ function initializeAutoCompleteLookupField(fieldName, loadRecordsHubFunction, is
     // Turn off browser remembered field values when doing auto-complete lookups
     inputField.attr("autocomplete", "off");
 
-    if (isObservable)
+    if (addInputGroup)
         inputField.wrap("<div class=\"input-group\"></div>");
 
     if (addShowAllDropDown && viewModel.canEdit()) {
