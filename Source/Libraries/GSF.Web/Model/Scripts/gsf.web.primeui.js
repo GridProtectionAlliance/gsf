@@ -52,7 +52,7 @@ function initializeAutoCompleteLookupField(fieldName, loadRecordsHubFunction, is
 
     if (addShowAllDropDown && viewModel.canEdit()) {
         // Insert drop-down button after input field
-        inputField.after("<span id=\"" + inputFieldID + "ShowAll\" class=\"input-group-addon\" data-bind=\"style: {'cursor': ($root.recordMode()===RecordMode.View ? 'not-allowed' : 'pointer')}\"><i class=\"glyphicon glyphicon-triangle-bottom\"></i></span>");
+        inputField.after("<span id=\"" + inputFieldID + "ShowAll\" class=\"input-group-addon\" data-bind=\"style: {'cursor': ($root.recordMode()===RecordMode.View ? 'not-allowed' : 'pointer')}, visible: $root.recordMode()!==RecordMode.View\"><i class=\"glyphicon glyphicon-triangle-bottom\"></i></span>");
 
         const inputFieldDropDown = $("#" + inputFieldID + "ShowAll");
 
