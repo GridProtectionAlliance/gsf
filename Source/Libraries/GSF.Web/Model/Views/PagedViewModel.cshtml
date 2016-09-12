@@ -125,6 +125,9 @@
         if (value.EndsWith("les", StringComparison.OrdinalIgnoreCase))
             return value.Substring(0, value.Length - 1);
 
+        if (value.EndsWith("pes", StringComparison.OrdinalIgnoreCase))
+            return value.Substring(0, value.Length - 1);
+
         if (value.EndsWith("es", StringComparison.OrdinalIgnoreCase))
             return value.Substring(0, value.Length - 2);
 
