@@ -106,18 +106,21 @@ namespace GSF.Web.Security
             DefaultNodeID = Guid.Parse(systemSettings["NodeID"].Value.ToNonNullString(Guid.NewGuid().ToString()));
 
             // Determine whether the node exists in the database and create it if it doesn't
-            using (AdoDataConnection connection = new AdoDataConnection("securityProvider"))
+            if (DefaultNodeID != Guid.Empty)
             {
-                const string NodeCountFormat = "SELECT COUNT(*) FROM Node";
-                const string NodeInsertFormat = "INSERT INTO Node(Name, Description, Enabled) VALUES('Default', 'Default node', 1)";
-                const string NodeUpdateFormat = "UPDATE Node SET ID = {0}";
-
-                int nodeCount = connection.ExecuteScalar<int?>(NodeCountFormat) ?? 0;
-
-                if (nodeCount == 0)
+                using (AdoDataConnection connection = new AdoDataConnection("securityProvider"))
                 {
-                    connection.ExecuteNonQuery(NodeInsertFormat);
-                    connection.ExecuteNonQuery(NodeUpdateFormat, connection.Guid(DefaultNodeID));
+                    const string NodeCountFormat = "SELECT COUNT(*) FROM Node";
+                    const string NodeInsertFormat = "INSERT INTO Node(Name, Description, Enabled) VALUES('Default', 'Default node', 1)";
+                    const string NodeUpdateFormat = "UPDATE Node SET ID = {0}";
+
+                    int nodeCount = connection.ExecuteScalar<int?>(NodeCountFormat) ?? 0;
+
+                    if (nodeCount == 0)
+                    {
+                        connection.ExecuteNonQuery(NodeInsertFormat);
+                        connection.ExecuteNonQuery(NodeUpdateFormat, connection.Guid(DefaultNodeID));
+                    }
                 }
             }
         }
