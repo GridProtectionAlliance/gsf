@@ -31,7 +31,7 @@ namespace GSF.Threading
     /// </summary>
     public static class ActionExtensions
     {
-        // Cancellatin token to cancel delayed operations.
+        // Cancellation token to cancel delayed operations.
         private class DelayCancellationToken : ICancellationToken
         {
             #region [ Members ]
@@ -51,6 +51,28 @@ namespace GSF.Threading
             public DelayCancellationToken(ManualResetEvent waitObj)
             {
                 WaitObj = waitObj;
+            }
+
+            #endregion
+
+            #region [ Properties ]
+
+            public bool IsCancelled
+            {
+                get
+                {
+                    if (Interlocked.CompareExchange(ref m_state, 0, 0) != Idle)
+                        return true;
+
+                    try
+                    {
+                        return WaitObj.WaitOne(0);
+                    }
+                    catch
+                    {
+                        return true;
+                    }
+                }
             }
 
             #endregion
@@ -147,7 +169,7 @@ namespace GSF.Threading
                 // Even if the callback timed out, another thread may cancel
                 // the cancellation token before we are able to dispose of it
                 // so we explicitly cancel the token in order to be sure
-                timeout = timeout && !cancellationToken.Cancel();
+                timeout = timeout && cancellationToken.Cancel();
 
                 // Both the callback thread and the caller thread will
                 // attempt to set the wait handle lock to null, and the

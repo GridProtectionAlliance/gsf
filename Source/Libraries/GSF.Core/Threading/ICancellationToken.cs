@@ -18,27 +18,30 @@
 //  ----------------------------------------------------------------------------------------------------
 //  02/02/2016 - Stephen C. Wills
 //       Generated original version of source code.
+//  09/13/2016 - J. Ritchie Carroll
+//       Added Cancelled property as an interface requirement.
 //
 //******************************************************************************************************
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GSF.Threading
 {
     /// <summary>
-    /// Represents a token that can be used
-    /// to cancel an asynchronous operation.
+    /// Represents a token that can be used to cancel an asynchronous operation.
     /// </summary>
     public interface ICancellationToken
     {
         /// <summary>
+        /// Gets a value that indicates whether the operation has been cancelled.
+        /// </summary>
+        bool IsCancelled
+        {
+            get;
+        }
+
+        /// <summary>
         /// Cancels the operation.
         /// </summary>
-        /// <returns>True if the operation was previously cancelled; otherwise false.</returns>
+        /// <returns><c>true</c> if the operation was cancelled; otherwise <c>false</c>.</returns>
         bool Cancel();
     }
 }

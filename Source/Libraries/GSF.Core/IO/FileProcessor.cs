@@ -227,7 +227,7 @@ namespace GSF.IO
             /// <returns>True if the enumerator was successfully advanced to the next element; false if the enumerator has passed the end of the collection.</returns>
             public bool MoveNext()
             {
-                m_lastMove = (!m_cancellationToken.Cancelled) && m_enumerator.MoveNext();
+                m_lastMove = (!m_cancellationToken.IsCancelled) && m_enumerator.MoveNext();
                 m_current = m_lastMove ? m_enumerator.Current : null;
                 return m_lastMove;
             }
@@ -558,7 +558,7 @@ namespace GSF.IO
                         // Check the state of cancellation for the
                         // enumeration thread on the processing
                         // thread as well to speed up cancellation
-                        if (wrapper.CancellationToken.Cancelled)
+                        if (wrapper.CancellationToken.IsCancelled)
                         {
                             enumerationThread.Push(DeactivateThread);
                             return;

@@ -333,7 +333,7 @@ namespace GSF.Threading
 
             // If the priority has changed, attempt to cancel the currently queued action.
             // If the action was not previously cancelled, requeue the action at the given priority
-            if (queuedPriority != priority && !cancellationToken.Cancel())
+            if (queuedPriority != priority && cancellationToken.Cancel())
                 ExecuteActionAsync(priority);
         }
 
@@ -353,9 +353,7 @@ namespace GSF.Threading
                 // By cancelling it now, we let requeue operations know that the
                 // action is currently executing and will soon be requeued anyway
                 if (m_cancellationToken.Cancel())
-                    return;
-
-                ExecuteAction(m_action);
+                    ExecuteAction(m_action);
             });
         }
 
