@@ -108,6 +108,8 @@
     if (ViewBag.PageRecordsForEachBinding != null) {
         pageRecordsForEachBinding = ", " + ViewBag.PageRecordsForEachBinding;
     }
+
+    string recordsTitle = ViewBag.RecordsTitle ?? "Records";
 }
 @functions
 {
@@ -284,6 +286,11 @@
             setTimeout(viewModel.addPageRecord, 250);
         ");
     }
+
+    pageControlScripts.AppendFormat(@"
+        $(""#titleText"").html(""{0}: <span data-bind='text: recordCount'>calculating...</span>"");",
+        recordsTitle
+    );
 
     if (showIsDeletedToggleLink) {
         if (showingDeletedRecords) {
