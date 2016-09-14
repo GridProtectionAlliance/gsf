@@ -545,8 +545,6 @@ var viewModel = new PagedViewModel();
 (function($, viewPort) {
     $("#bodyContainer").addClass("fill-height");
 
-    $("#titleText").html("Records: <span data-bind='text: recordCount'>calculating...</span>");
-
     $("#firstPageButton").click(function() {
         viewModel.currentPage(1);
     });
