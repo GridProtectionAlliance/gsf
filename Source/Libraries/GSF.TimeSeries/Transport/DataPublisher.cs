@@ -2047,6 +2047,109 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Determines what signals a subscriber has rights to
+        /// </summary>
+        /// <param name="subscriberID"><see cref="Guid"/> based subscriber ID.</param>
+        /// <returns></returns>
+        HashSet<Guid> BuildLookup(Guid subscriberID)
+        {
+            //TODO: Wrap in a try catch
+
+            HashSet<Guid> authorizedSignals = new HashSet<Guid>();
+
+            const string filterRegex = @"(ALLOW|DENY)\s+WHERE\s+([^;]*)";
+
+            DataRow subscriber;
+            DataRow[] subscriberMeasurementGroups;
+
+            //================================================================
+            //Check if authentication is required
+
+            if (!RequireAuthentication)
+            {
+                //TODO: Put all signals in authorizedSignals;
+            }
+
+            //==================================================================
+            //Check if subscriber is disabled or removed
+
+            // If subscriber has been disabled or removed
+            // from the list of valid subscribers,
+            // they no longer have rights to any signals
+            // so return an empty HashSet
+            subscriber = DataSource.Tables["Subscribers"].Select($"ID = '{subscriberID}' AND Enabled <> 0").FirstOrDefault();
+            if ((object)subscriber == null)
+                return authorizedSignals;
+
+            //=================================================================
+            // Check group implicitly authorized signals
+
+            subscriberMeasurementGroups = DataSource.Tables["SubscriberMeasurementGroups"].Select($"SubscriberID = '{subscriberID}'");
+
+
+            //TODO: Finish
+
+
+            //=================================================================
+            //Check implicitly authorized signals
+
+            //For each filter get the DataRow[] where each row matches match.Groups[2].Value 
+            IEnumerable<DataRow[]> allowFilters = Regex.Matches(subscriber["AccessControlFilter"].ToNonNullString().ReplaceControlCharacters(), filterRegex, RegexOptions.IgnoreCase)
+                .Cast<Match>()
+                .Where(match => match.Groups[1].Value == "ALLOW")
+                .Select(match => DataSource.Tables["ActiveMeasurements"].Select($"({match.Groups[2].Value})"));
+            IEnumerable<DataRow[]> denyFilters = Regex.Matches(subscriber["AccessControlFilter"].ToNonNullString().ReplaceControlCharacters(), filterRegex, RegexOptions.IgnoreCase)
+                .Cast<Match>()
+                .Where(match => match.Groups[1].Value == "DENY")
+                .Select(match => DataSource.Tables["ActiveMeasurements"].Select($"({match.Groups[2].Value})"));
+
+            foreach (DataRow[] filterRows in allowFilters)
+                foreach (DataRow row in filterRows)
+                    authorizedSignals.Add(row.ConvertField<Guid>("SignalID"));
+
+            foreach (DataRow[] filterRows in denyFilters)
+                foreach (DataRow row in filterRows)
+                    authorizedSignals.Remove(row.ConvertField<Guid>("SignalID"));
+
+            //==================================================================
+            //Check explicit group authorizations
+
+            // Add explicitly authorized group signals
+            foreach (DataRow subscriberMeasurementGroup in subscriberMeasurementGroups)
+                if (subscriberMeasurementGroup.ConvertField<bool>("Allowed"))
+                {
+                    DataRow[] measurementGroupMeasurements = DataSource.Tables["MeasurementGroupMeasurements"].Select($"MeasurementGroupID = {subscriberMeasurementGroup.ConvertField<int>("MeasurementGroupID")}");
+                    foreach (DataRow measurementGroupMeasurement in measurementGroupMeasurements)
+                        authorizedSignals.Add(measurementGroupMeasurement.ConvertField<Guid>("SignalID"));
+                }
+
+            // Remove explicitly unauthorized group signals
+            foreach (DataRow subscriberMeasurementGroup in subscriberMeasurementGroups)
+                if (!subscriberMeasurementGroup.ConvertField<bool>("Allowed"))
+                {
+                    DataRow[] measurementGroupMeasurements = DataSource.Tables["MeasurementGroupMeasurements"].Select($"MeasurementGroupID = {subscriberMeasurementGroup.ConvertField<int>("MeasurementGroupID")}");
+                    foreach (DataRow measurementGroupMeasurement in measurementGroupMeasurements)
+                        authorizedSignals.Remove(measurementGroupMeasurement.ConvertField<Guid>("SignalID"));
+                }
+
+            //===================================================================
+            // Check explicit authorizations
+            DataRow[] explicitAuthorizations = DataSource.Tables["SubscriberMeasurements"].Select($"SubscriberID = '{subscriberID}'");
+
+            // Add all explicitly authorized signals to authorizedSignals
+            foreach (DataRow explicitAuthorization in explicitAuthorizations)
+                if (explicitAuthorization.ConvertField<bool>("Allowed"))
+                    authorizedSignals.Add(explicitAuthorization.ConvertField<Guid>("SignalID"));
+
+            // Remove all explicitly unauthorized signals from authorizedSignals
+            foreach (DataRow explicitAthorization in explicitAuthorizations)
+                if (!explicitAthorization.ConvertField<bool>("Allowed"))
+                    authorizedSignals.Remove(explicitAthorization.ConvertField<Guid>("SignalID"));
+
+            return authorizedSignals;
+        }
+
+        /// <summary>
         /// Determines if subscriber has rights to specified <paramref name="signalID"/>.
         /// </summary>
         /// <param name="subscriberID"><see cref="Guid"/> based subscriber ID.</param>
