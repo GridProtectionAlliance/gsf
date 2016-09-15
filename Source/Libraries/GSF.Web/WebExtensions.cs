@@ -221,7 +221,7 @@ namespace GSF.Web
         /// <returns></returns>
         public static Dictionary<string, string> QueryParameters(this HttpRequestMessage request)
         {
-            return request.GetQueryNameValuePairs().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            return request.GetQueryNameValuePairs().ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
