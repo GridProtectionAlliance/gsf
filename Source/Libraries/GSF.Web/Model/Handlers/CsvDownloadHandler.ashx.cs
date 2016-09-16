@@ -240,6 +240,12 @@ namespace GSF.Web.Model.Handlers
                 throw new SecurityException($"Cannot download CSV data: failed to instantiate hub type \"{hubName}\" or access record operations, access cannot be validated.", ex);
             }
 
+            DataContext dataContext = hub.DataContext;
+
+            // Validate current user has access to requested data
+            if (!dataContext.UserIsInRole(queryRoles))
+                throw new SecurityException($"Cannot download CSV data: access is denied for user \"{Thread.CurrentPrincipal.Identity?.Name ?? "Undefined"}\", minimum required roles = {queryRoles.ToDelimitedString(", ")}.");
+
             const int TargetBufferSize = 524288;
 
             StringBuilder readBuffer = new StringBuilder(TargetBufferSize * 2);
@@ -252,16 +258,9 @@ namespace GSF.Web.Model.Handlers
             string[] fieldNames;
             bool hasDeletedField;
 
-            using (DataContext dataContext = new DataContext())
-            {
-                // Validate current user has access to requested data
-                if (!dataContext.UserIsInRole(queryRoles))
-                    throw new SecurityException($"Cannot download CSV data: access is denied for user \"{Thread.CurrentPrincipal.Identity?.Name ?? "Undefined"}\", minimum required roles = {queryRoles.ToDelimitedString(", ")}.");
-
-                table = dataContext.Table(modelType);
-                fieldNames = table.GetFieldNames(false);
-                hasDeletedField = !string.IsNullOrEmpty(dataContext.GetIsDeletedFlag(modelType));
-            }
+            table = dataContext.Table(modelType);
+            fieldNames = table.GetFieldNames(false);
+            hasDeletedField = !string.IsNullOrEmpty(dataContext.GetIsDeletedFlag(modelType));
 
             Task readTask = Task.Factory.StartNew(() =>
             {

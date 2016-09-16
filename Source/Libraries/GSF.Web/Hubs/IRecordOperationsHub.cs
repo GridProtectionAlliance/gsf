@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using GSF.Web.Model;
 
 namespace GSF.Web.Hubs
 {
@@ -37,6 +38,14 @@ namespace GSF.Web.Hubs
         /// Implementors should statically cache instance since reflected cache content will not change.
         /// </remarks>
         RecordOperationsCache RecordOperationsCache
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets <see cref="Model.DataContext"/> created for this <see cref="IRecordOperationsHub"/> implementation.
+        /// </summary>
+        DataContext DataContext
         {
             get;
         }
