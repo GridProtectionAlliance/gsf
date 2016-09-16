@@ -4499,7 +4499,7 @@ namespace GSF.ServiceProcess
                 //  Current system time: yyyy-MM-dd HH:mm:ss.fff, yyyy-MM-dd HH:mm:ss.fff UTC
                 // Total system runtime: xx days yy hours zz minutes ii seconds
                 if ((object)m_remotingServer != null)
-                    message = $" Current system time: {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}, {DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff")} UTC\r\nTotal system runtime: {m_remotingServer.RunTime}";
+                    message = $" Current system time: {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}, {DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff")} UTC\r\nTotal system runtime: {m_remotingServer.RunTime.ToString(3)}";
                 else
                     message = $"Current system time: {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}, {DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff")} UTC";
 
