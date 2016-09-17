@@ -107,7 +107,7 @@ namespace GSF.Threading
         /// <summary>
         /// Gets a value that indicates whether the operation has been cancelled.
         /// </summary>
-        public bool IsCancelled => m_token.IsCancellationRequested;
+        public virtual bool IsCancelled => m_token.IsCancellationRequested;
 
         #endregion
 
@@ -121,7 +121,7 @@ namespace GSF.Threading
         /// The token can only be cancelled if a <see cref="CancellationTokenSource"/> was provided.
         /// </remarks>
         /// <exception cref="InvalidOperationException"><see cref="CancellationTokenSource"/> not available, token cannot be cancelled.</exception>
-        public bool Cancel()
+        public virtual bool Cancel()
         {
             if ((object)m_source == null)
                 throw new InvalidOperationException("Token cannot be cancelled.");
@@ -180,6 +180,25 @@ namespace GSF.Threading
             return new CompatibleCancellationToken(source);
         }
 
+        /// <summary>
+        /// Implicitly converts a <see cref="CompatibleCancellationToken"/> to an associated <see cref="System.Threading.CancellationToken"/>.
+        /// </summary>
+        /// <param name="token">Existing GSF cancellation token that is converted to an associated <see cref="System.Threading.CancellationToken"/>.</param>
+        /// <returns>A <see cref="System.Threading.CancellationToken"/> based on an existing GSF cancellation token.</returns>
+        public static implicit operator System.Threading.CancellationToken(CompatibleCancellationToken token)
+        {
+            return token.GetToken();
+        }
+
+        /// <summary>
+        /// Implicitly converts a <see cref="CompatibleCancellationToken"/> to an associated <see cref="CancellationTokenSource"/>.
+        /// </summary>
+        /// <param name="token">Existing GSF cancellation token that is converted to an associated <see cref="CancellationTokenSource"/>.</param>
+        /// <returns>A <see cref="CancellationToken"/> based on an existing GSF cancellation token.</returns>
+        public static implicit operator CancellationTokenSource(CompatibleCancellationToken token)
+        {
+            return token.GetTokenSource();
+        }
         #endregion
     }
 }

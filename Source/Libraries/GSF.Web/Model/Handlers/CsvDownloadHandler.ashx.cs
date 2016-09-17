@@ -41,11 +41,12 @@ using GSF.Collections;
 using GSF.Data.Model;
 using GSF.Reflection;
 using GSF.Security;
+using GSF.Threading;
 using GSF.Web.Hosting;
 using GSF.Web.Hubs;
+using CancellationToken = System.Threading.CancellationToken;
 
-// ReSharper disable AccessToDisposedClosure
-// ReSharper disable ImplicitlyCapturedClosure
+// ReSharper disable once AccessToDisposedClosure
 namespace GSF.Web.Model.Handlers
 {
     /// <summary>
@@ -54,6 +55,19 @@ namespace GSF.Web.Model.Handlers
     public class CsvDownloadHandler : IHttpHandler, IHostedHttpHandler
     {
         #region [ Members ]
+
+        // Nested Types
+        private class HttpResponseCancellationToken : CompatibleCancellationToken
+        {
+            private readonly HttpResponse m_reponse;
+
+            public HttpResponseCancellationToken(HttpResponse response) : base(CancellationToken.None)
+            {
+                m_reponse = response;
+            }
+
+            public override bool IsCancelled => !m_reponse.IsClientConnected;
+        }
 
         // Constants
         private const string CsvContentType = "text/csv";
@@ -99,6 +113,7 @@ namespace GSF.Web.Model.Handlers
         public void ProcessRequest(HttpContext context)
         {
             HttpResponse response = HttpContext.Current.Response;
+            HttpResponseCancellationToken cancellationToken = new HttpResponseCancellationToken(response);
             NameValueCollection requestParameters = context.Request.QueryString;
 
             response.ClearContent();
@@ -109,12 +124,7 @@ namespace GSF.Web.Model.Handlers
 
             try
             {
-                CopyModelAsCsvToStreamAsync(requestParameters, response.OutputStream, () => !response.IsClientConnected, response.FlushAsync, CancellationToken.None).ContinueWith(task =>
-                {
-                    if ((object)task.Exception != null)
-                        throw task.Exception;
-                },
-                TaskContinuationOptions.OnlyOnFaulted);
+                CopyModelAsCsvToStream(requestParameters, response.OutputStream, response.Flush, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -137,11 +147,11 @@ namespace GSF.Web.Model.Handlers
         {
             NameValueCollection requestParameters = request.RequestUri.ParseQueryString();
 
-            response.Content = new PushStreamContent(async (stream, content, context) =>
+            response.Content = new PushStreamContent((stream, content, context) =>
             {
                 try
                 {
-                    await CopyModelAsCsvToStreamAsync(requestParameters, stream, () => cancellationToken.IsCancellationRequested, null, cancellationToken);
+                    CopyModelAsCsvToStream(requestParameters, stream, null, cancellationToken);
                 }
                 catch (Exception ex)
                 {
@@ -163,7 +173,7 @@ namespace GSF.Web.Model.Handlers
             return Task.CompletedTask;
         }
 
-        private async Task CopyModelAsCsvToStreamAsync(NameValueCollection requestParameters, Stream responseStream, Func<bool> isCancelled, Func<Task> flushResponseAsync, CancellationToken cancellationToken)
+        private void CopyModelAsCsvToStream(NameValueCollection requestParameters, Stream responseStream, Action flushResponse, CompatibleCancellationToken cancellationToken)
         {
             SecurityProviderCache.ValidateCurrentProvider();
 
@@ -311,7 +321,7 @@ namespace GSF.Web.Model.Handlers
                     int totalPages = Math.Max((int)Math.Ceiling(recordCount / (double)PageSize), 1);
 
                     // Read data pages
-                    for (int page = 0; page < totalPages && !isCancelled(); page++)
+                    for (int page = 0; page < totalPages && !cancellationToken.IsCancelled; page++)
                     {
                         // Update desired page to query
                         queryRecordsParameters[pageParameterIndex] = page + 1;
@@ -324,7 +334,7 @@ namespace GSF.Web.Model.Handlers
                         foreach (object record in records)
                         {
                             // Periodically check for client cancellation
-                            if (exportCount++ % (PageSize / 4) == 0 && isCancelled())
+                            if (exportCount++ % (PageSize / 4) == 0 && cancellationToken.IsCancelled)
                                 break;
 
                             readBuffer.AppendLine(string.Join(",", fieldNames.Select(fieldName => $"\"{table.GetFieldValue(record, fieldName)}\"")));
@@ -354,26 +364,26 @@ namespace GSF.Web.Model.Handlers
             },
             cancellationToken);
 
-            Task writeTask = Task.Factory.StartNew(async () =>
+            Task writeTask = Task.Factory.StartNew(() =>
             {
                 using (StreamWriter writer = new StreamWriter(responseStream))
                 {
                     //Ticks exportStart = DateTime.UtcNow.Ticks;
                     string[] localBuffer;
 
-                    Func<Task> flushAsync = async () =>
+                    Action flushStream = () =>
                     {
-                        await writer.FlushAsync();
+                        writer.Flush();
 
-                        if ((object)flushResponseAsync != null)
-                            await flushResponseAsync();
+                        if ((object)flushResponse != null)
+                            flushResponse();
                     };
 
                     // Write column headers
-                    await writer.WriteLineAsync(string.Join(",", fieldNames.Select(fieldName => $"\"{fieldName}\"")));
-                    await flushAsync();
+                    writer.WriteLine(string.Join(",", fieldNames.Select(fieldName => $"\"{fieldName}\"")));
+                    flushStream();
 
-                    while ((writeBuffer.Count > 0 || !readComplete) && !isCancelled())
+                    while ((writeBuffer.Count > 0 || !readComplete) && !cancellationToken.IsCancelled)
                     {
                         bufferReady.Wait(cancellationToken);
                         bufferReady.Reset();
@@ -385,18 +395,17 @@ namespace GSF.Web.Model.Handlers
                         }
 
                         foreach (string buffer in localBuffer)
-                            await writer.WriteAsync(buffer);
+                            writer.Write(buffer);
                     }
 
                     // Flush stream
-                    await flushAsync();
+                    flushStream();
                     //Debug.WriteLine("Export time: " + (DateTime.UtcNow.Ticks - exportStart).ToElapsedTimeString(3));
                 }
             },
             cancellationToken);
 
-            await readTask;
-            await writeTask;
+            Task.WaitAll(readTask, writeTask);
         }
 
         /// <summary>
