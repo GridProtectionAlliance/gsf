@@ -40,6 +40,14 @@
     // Setup page control scripts
     StringBuilder pageControlScripts = ViewBag.PageControlScripts;
 
+    pageControlScripts.AppendFormat(@"
+    <script>
+        $(""#titleText"").html(""{0}: <span data-bind='text: recordCount'>calculating...</span>"");
+    </script>
+    ",
+        ViewBag.RecordsTitle ?? "Records"
+    );
+
     pageControlScripts.Append(string.Format(@"
     <script src=""{0}""></script>
     <script src=""{1}""></script>
@@ -108,8 +116,6 @@
     if (ViewBag.PageRecordsForEachBinding != null) {
         pageRecordsForEachBinding = ", " + ViewBag.PageRecordsForEachBinding;
     }
-
-    string recordsTitle = ViewBag.RecordsTitle ?? "Records";
 }
 @functions
 {
@@ -286,11 +292,6 @@
             setTimeout(viewModel.addPageRecord, 250);
         ");
     }
-
-    pageControlScripts.AppendFormat(@"
-        $(""#titleText"").html(""{0}: <span data-bind='text: recordCount'>calculating...</span>"");",
-        recordsTitle
-    );
 
     if (showIsDeletedToggleLink) {
         if (showingDeletedRecords) {

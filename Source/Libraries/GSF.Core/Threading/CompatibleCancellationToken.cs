@@ -199,6 +199,7 @@ namespace GSF.Threading
         {
             return token.GetTokenSource();
         }
+
         #endregion
     }
 }
