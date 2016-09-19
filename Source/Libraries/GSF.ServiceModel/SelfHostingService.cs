@@ -481,6 +481,7 @@ namespace GSF.ServiceModel
                 settings["PublishMetadata", true].Update(m_publishMetadata);
                 settings["AllowCrossDomainAccess", true].Update(m_allowCrossDomainAccess);
                 settings["AllowedDomainList", true].Update(m_allowedDomainList);
+                settings["Enabled", true].Update(m_serviceEnabled);
 
                 config.Save();
             }
@@ -506,7 +507,7 @@ namespace GSF.ServiceModel
                 settings.Add("PublishMetadata", m_publishMetadata, "True if the web service metadata is to be published at all the endpoints; otherwise False.");
                 settings.Add("AllowCrossDomainAccess", m_allowCrossDomainAccess, "True to allow Silverlight and Flash cross-domain access to the web service.");
                 settings.Add("AllowedDomainList", m_allowedDomainList, "Comma separated list of domain names for Silverlight and Flash cross-domain access to use when allowCrossDomainAccess is true. Use * for domain wildcards, e.g., *.consoto.com.");
-                settings.Add("Enabled", "True", "Determines if web service should be enabled at startup.");
+                settings.Add("Enabled", ServiceEnabled.ToString(), "Determines if web service should be enabled at startup.");
 
                 Endpoints = settings["Endpoints"].ValueAs(m_endpoints);
                 ContractInterface = settings["Contract"].ValueAs(m_contractInterface);
@@ -518,7 +519,7 @@ namespace GSF.ServiceModel
 
                 // Technically removing all end points will "disable" a web service since it would bind to nothing, however,
                 // this allows you to keep configured end points and still disable the service from configuration
-                m_serviceEnabled = settings["Enabled"].ValueAsBoolean(true);
+                m_serviceEnabled = settings["Enabled"].ValueAsBoolean(ServiceEnabled);
             }
         }
 

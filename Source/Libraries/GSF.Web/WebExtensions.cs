@@ -36,6 +36,7 @@ using System.Web.Mvc;
 using GSF.Collections;
 using GSF.IO;
 using GSF.Web.Model;
+using Newtonsoft.Json;
 using RazorEngine.Templating;
 using HtmlHelper = System.Web.Mvc.HtmlHelper;
 
@@ -185,6 +186,17 @@ namespace GSF.Web
         public static string UrlEncode(this string text)
         {
             return HttpUtility.UrlEncode(text.ToNonNullString());
+        }
+
+        /// <summary>
+        /// Parses a JSON timestamp into a .NET <see cref="DateTime"/>.
+        /// </summary>
+        /// <param name="timestamp">JSON timestamp.</param>
+        /// <returns>.NET <see cref="DateTime"/> parsed from JSON <paramref name="timestamp"/>.</returns>
+        public static DateTime ParseJsonTimestamp(this string timestamp)
+        {
+            DateTimeOffset dto = JsonConvert.DeserializeObject<DateTimeOffset>($"\"{timestamp}\"");
+            return dto.UtcDateTime;
         }
 
         /// <summary>

@@ -469,6 +469,13 @@ namespace GSF.Historian.Files
         Description("Occurs when IDataPoint triggers an alarm notification.")]
         public event EventHandler<EventArgs<StateRecord>> ProcessAlarmNotification;
 
+        /// <summary>
+        /// Occurs when associated Metadata file is updated.
+        /// </summary>
+        [Category("Metadata"),
+        Description("Occurs when associated Metadata file is updated.")]
+        public event EventHandler MetadataUpdated;
+
         // Fields
 
         // Component
@@ -2472,6 +2479,15 @@ namespace GSF.Historian.Files
         }
 
         /// <summary>
+        /// Raises the <see cref="MetadataUpdated"/> event.
+        /// </summary>
+        protected virtual void OnMetadataUpdated()
+        {
+            if ((object)MetadataUpdated != null)
+                MetadataUpdated(this, EventArgs.Empty);
+        }
+
+        /// <summary>
         /// Releases the unmanaged resources used by the <see cref="ArchiveFile"/> and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
@@ -3654,6 +3670,7 @@ namespace GSF.Historian.Files
 
         private void MetadataFile_FileModified(object sender, EventArgs e)
         {
+            OnMetadataUpdated();
             SyncStateFile(null);
         }
 

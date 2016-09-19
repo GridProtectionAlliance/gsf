@@ -80,7 +80,7 @@ namespace GSF.Historian.DataServices
         /// <summary>
         /// Gets or sets the <see cref="IArchive"/> used by the web service for its data.
         /// </summary>
-        public IArchive Archive
+        public virtual IArchive Archive
         {
             get
             {

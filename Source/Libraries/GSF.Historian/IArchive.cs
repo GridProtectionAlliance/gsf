@@ -29,6 +29,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
 
 namespace GSF.Historian
@@ -39,7 +40,10 @@ namespace GSF.Historian
     /// <seealso cref="IDataPoint"/>
     public interface IArchive
     {
-        #region [ Methods ]
+        /// <summary>
+        /// Occurs when associated Metadata file is updated.
+        /// </summary>
+        event EventHandler MetadataUpdated;
 
         /// <summary>
         /// Opens the repository.
@@ -84,12 +88,31 @@ namespace GSF.Historian
         /// <summary>
         /// Reads time-series data from the repository.
         /// </summary>
+        /// <param name="historianID">Historian identifier for which time-series data are to be retrieved.</param>
+        /// <param name="startTime">Start <see cref="DateTime"/> (in UTC) for the time-series data to be retrieved.</param>
+        /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
+        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more time-series data.</returns>
+        IEnumerable<IDataPoint> ReadData(int historianID, DateTime startTime, bool timeSorted = true);
+
+        /// <summary>
+        /// Reads time-series data from the repository.
+        /// </summary>
         /// <param name="historianIDs">Historian identifiers for which <see cref="IDataPoint"/>s are to be read.</param>
         /// <param name="startTime"><see cref="System.String"/> representation of the start time (in UTC) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
         /// <param name="endTime"><see cref="System.String"/> representation of the end time (in UTC) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
         /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="IDataPoint"/>s.</returns>
         IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, string startTime, string endTime, bool timeSorted = true);
+
+        /// <summary>
+        /// Reads time-series data from the repository.
+        /// </summary>
+        /// <param name="historianIDs">Historian identifiers for which <see cref="IDataPoint"/>s are to be read.</param>
+        /// <param name="startTime"><see cref="System.String"/> representation of the start time (in UTC) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
+        /// <param name="endTime"><see cref="System.String"/> representation of the end time (in UTC) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
+        /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
+        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="IDataPoint"/>s.</returns>
+        IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, DateTime startTime, DateTime endTime, bool timeSorted = true);
 
         /// <summary>
         /// Read meta information for the specified <paramref name="historianID"/>.
@@ -118,7 +141,5 @@ namespace GSF.Historian
         /// <param name="historianID">Historian identifier.</param>
         /// <returns>A <see cref="byte"/> array containing state information summary.</returns>
         byte[] ReadStateDataSummary(int historianID);
-
-        #endregion
     }
 }
