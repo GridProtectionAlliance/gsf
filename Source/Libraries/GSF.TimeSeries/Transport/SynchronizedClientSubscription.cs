@@ -343,10 +343,25 @@ namespace GSF.TimeSeries.Transport
         {
             string setting;
 
+            if (Settings.TryGetValue("inputMeasurementKeys", out setting))
+            {
+                // IMPORTANT: The allowSelect argument of ParseInputMeasurementKeys must be null
+                //            in order to prevent SQL injection via the subscription filter expression
+                InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, false, setting);
+                m_requestedInputFilter = setting;
+
+                // IMPORTANT: We need to remove the setting before calling base.Initialize()
+                //            or else we will still be subject to SQL injection
+                Settings.Remove("inputMeasurementKeys");
+            }
+            else
+            {
+                InputMeasurementKeys = new MeasurementKey[0];
+                m_requestedInputFilter = null;
+            }
+
             base.Initialize();
             base.UsePrecisionTimer = false;
-
-            Settings.TryGetValue("inputMeasurementKeys", out m_requestedInputFilter);
 
             if (Settings.TryGetValue("bufferBlockRetransmissionTimeout", out setting))
                 m_bufferBlockRetransmissionTimeout = double.Parse(setting);

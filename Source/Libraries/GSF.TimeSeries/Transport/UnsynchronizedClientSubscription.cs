@@ -377,14 +377,26 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public override void Initialize()
         {
-            base.Initialize();
-
             string setting;
 
             if (Settings.TryGetValue("inputMeasurementKeys", out setting))
+            {
+                // IMPORTANT: The allowSelect argument of ParseInputMeasurementKeys must be null
+                //            in order to prevent SQL injection via the subscription filter expression
+                InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, false, setting);
                 m_requestedInputFilter = setting;
+
+                // IMPORTANT: We need to remove the setting before calling base.Initialize()
+                //            or else we will still be subject to SQL injection
+                Settings.Remove("inputMeasurementKeys");
+            }
             else
+            {
+                InputMeasurementKeys = new MeasurementKey[0];
                 m_requestedInputFilter = null;
+            }
+
+            base.Initialize();
 
             if (Settings.TryGetValue("publishInterval", out setting))
                 m_publishInterval = int.Parse(setting);
