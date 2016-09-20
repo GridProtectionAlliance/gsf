@@ -29,13 +29,11 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using GSF.Collections;
 using GSF.Data;
-using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Transport.UI.DataModels;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.Commands;
@@ -63,6 +61,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         private readonly SubscriberStatusQuery m_subscriberStatusQuery;
         private readonly object m_subscriberStatusQueryLock;
         private readonly List<Guid> m_subscriberIDs;
+        private Func<Guid, bool> m_rightsLookup;
         private SecurityMode m_securityMode;
         private byte[] m_remoteCertificateData;
 
@@ -368,32 +367,22 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// <param name="measurementIDs">Collection of measurements to be allowed.</param>
         public void AddAllowedMeasurements(ICollection<Guid> measurementIDs)
         {
-            List<Guid> filteredIDs = measurementIDs
-                .Where(id => !CurrentItem.AllowedMeasurements.ContainsKey(id))
-                .Where(id => !CurrentItem.DeniedMeasurements.ContainsKey(id))
-                .ToList();
+            int currentCount = Subscriber.GetMeasurementCount(null, CurrentItem.ID, true);
+            int addedCount = Subscriber.AddMeasurements(null, CurrentItem.ID, measurementIDs, true);
 
-            if (filteredIDs.Count > 0)
+            if (addedCount > 0)
             {
-                string result = Subscriber.AddMeasurements(null, CurrentItem.ID, filteredIDs, true);
-                //Popup(result, "Allow Measurements", MessageBoxImage.Information);
-                DisplayStatusMessage(result);
+                DisplayStatusMessage("Measurements successfully added to allowed measurements list for subscriber");
 
                 // Log changes to event log
-                int currentCount = CurrentItem.AllowedMeasurements.Count;
-                int addedCount = filteredIDs.Count;
-                CommonFunctions.LogEvent(string.Format("Allowed {0} new measurements in addition to the {1} already allowed for subscriber {2} [{3}] for a total of {4} now allowed. See audit log for complete details.\r\n\r\nAdded measurements: {5}", addedCount, currentCount, CurrentItem.Name.ToNonNullNorWhiteSpace("Subscriber"), CurrentItem.Acronym, currentCount + addedCount, ShortFormattedList(filteredIDs.Select(GetMeasurementName))), 0);
+                CommonFunctions.LogEvent(string.Format("Allowed {0} new measurements in addition to the {1} already allowed for subscriber {2} [{3}] for a total of {4} now allowed. See audit log for complete details.\r\n\r\nAction taken to add the following measurements: {5}", addedCount, currentCount, CurrentItem.Name.ToNonNullNorWhiteSpace("Subscriber"), CurrentItem.Acronym, currentCount + addedCount, ShortFormattedList(measurementIDs.Select(GetMeasurementName))), 0);
             }
             else
             {
-                Popup("Selected measurements already exists or no measurements were selected.", "Allow Measurements", MessageBoxImage.Information);
+                Popup("Selected measurements already exist or no measurements were selected.", "Allow Measurements", MessageBoxImage.Information);
             }
 
-            if (MeasurementsAdded != null)
-                MeasurementsAdded(this, null);
-
-            CurrentItem.AllowedMeasurements = Subscriber.GetAllowedMeasurements(null, CurrentItem.ID);
-            CurrentItem.AvailableMeasurements = Subscriber.GetAvailableMeasurements(null, CurrentItem.ID);
+            MeasurementsAdded?.Invoke(this, null);
 
             try
             {
@@ -413,17 +402,13 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// <param name="measurementIDs">Collection of measurements to be disallowed.</param>
         public void RemoveAllowedMeasurements(ICollection<Guid> measurementIDs)
         {
-            string result = Subscriber.RemoveMeasurements(null, CurrentItem.ID, measurementIDs.ToList());
+            int currentCount = Subscriber.GetMeasurementCount(null, CurrentItem.ID, true);
+            int removedCount = Subscriber.RemoveMeasurements(null, CurrentItem.ID, measurementIDs);
 
-            //Popup(result, "Remove Measurements", MessageBoxImage.Information);
-            DisplayStatusMessage(result);
+            DisplayStatusMessage("Measurements successfully removed from allowed measurements list for subscriber");
 
             // Log changes to event log
-            int currentCount = CurrentItem.AllowedMeasurements.Count;
-            int removedCount = measurementIDs.Count;
-            CommonFunctions.LogEvent(string.Format("Removed {0} measurements from the {1} currently allowed for subscriber {2} [{3}] for a total of {4} now allowed. See audit log for complete details.\r\n\r\nRemoved measurements: {5}.", removedCount, currentCount, CurrentItem.Name.ToNonNullNorWhiteSpace("Subscriber"), CurrentItem.Acronym, currentCount - removedCount, ShortFormattedList(measurementIDs.Select(GetMeasurementName))), 0);
-
-            CurrentItem.AllowedMeasurements = Subscriber.GetAllowedMeasurements(null, CurrentItem.ID);
+            CommonFunctions.LogEvent(string.Format("Removed {0} measurements from the {1} currently allowed for subscriber {2} [{3}] for a total of {4} now allowed. See audit log for complete details.\r\n\r\nAction taken to remove the following measurements: {5}.", removedCount, currentCount, CurrentItem.Name.ToNonNullNorWhiteSpace("Subscriber"), CurrentItem.Acronym, currentCount - removedCount, ShortFormattedList(measurementIDs.Select(GetMeasurementName))), 0);
 
             try
             {
@@ -443,32 +428,22 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// <param name="measurementIDs">Collection of measurements to be denied.</param>
         public void AddDeniedMeasurements(ICollection<Guid> measurementIDs)
         {
-            List<Guid> filteredIDs = measurementIDs
-                .Where(id => !CurrentItem.AllowedMeasurements.ContainsKey(id))
-                .Where(id => !CurrentItem.DeniedMeasurements.ContainsKey(id))
-                .ToList();
+            int currentCount = Subscriber.GetMeasurementCount(null, CurrentItem.ID, false);
+            int addedCount = Subscriber.AddMeasurements(null, CurrentItem.ID, measurementIDs, false);
 
-            if (filteredIDs.Count > 0)
+            if (addedCount > 0)
             {
-                string result = Subscriber.AddMeasurements(null, CurrentItem.ID, filteredIDs, false);
-                //Popup(result, "Allow Measurements", MessageBoxImage.Information);
-                DisplayStatusMessage(result);
+                DisplayStatusMessage("Measurements successfully added to denied measurements list for subscriber");
 
                 // Log changes to event log
-                int currentCount = CurrentItem.AllowedMeasurements.Count;
-                int addedCount = filteredIDs.Count;
-                CommonFunctions.LogEvent(string.Format("Denied {0} new measurements in addition to the {1} already denied for subscriber {2} [{3}] for a total of {4} now denied. See audit log for complete details.\r\n\r\nDenied measurements: {5}", addedCount, currentCount, CurrentItem.Name.ToNonNullNorWhiteSpace("Subscriber"), CurrentItem.Acronym, currentCount + addedCount, ShortFormattedList(filteredIDs.Select(GetMeasurementName))), 0);
+                CommonFunctions.LogEvent(string.Format("Denied {0} new measurements in addition to the {1} already denied for subscriber {2} [{3}] for a total of {4} now denied. See audit log for complete details.\r\n\r\nAction taken to add the following measurements: {5}", addedCount, currentCount, CurrentItem.Name.ToNonNullNorWhiteSpace("Subscriber"), CurrentItem.Acronym, currentCount + addedCount, ShortFormattedList(measurementIDs.Select(GetMeasurementName))), 0);
             }
             else
             {
-                Popup("Selected measurements already exists or no measurements were selected.", "Allow Measurements", MessageBoxImage.Information);
+                Popup("Selected measurements already exist or no measurements were selected.", "Deny Measurements", MessageBoxImage.Information);
             }
 
-            if (MeasurementsAdded != null)
-                MeasurementsAdded(this, null);
-
-            CurrentItem.DeniedMeasurements = Subscriber.GetDeniedMeasurements(null, CurrentItem.ID);
-            CurrentItem.AvailableMeasurements = Subscriber.GetAvailableMeasurements(null, CurrentItem.ID);
+            MeasurementsAdded?.Invoke(this, null);
 
             try
             {
@@ -488,17 +463,13 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// <param name="measurementIDs">Collection of measurements to be removed.</param>
         public void RemoveDeniedMeasurements(ICollection<Guid> measurementIDs)
         {
-            string result = Subscriber.RemoveMeasurements(null, CurrentItem.ID, measurementIDs.ToList());
+            int currentCount = Subscriber.GetMeasurementCount(null, CurrentItem.ID, false);
+            int removedCount = Subscriber.RemoveMeasurements(null, CurrentItem.ID, measurementIDs);
 
-            //Popup(result, "Remove Measurements", MessageBoxImage.Information);
-            DisplayStatusMessage(result);
+            DisplayStatusMessage("Measurements successfully removed from allowed measurements list for subscriber");
 
             // Log changes to event log
-            int currentCount = CurrentItem.AllowedMeasurements.Count;
-            int removedCount = measurementIDs.Count;
-            CommonFunctions.LogEvent(string.Format("Removed {0} measurements from the {1} currently denied for subscriber {2} [{3}] for a total of {4} now denied. See audit log for complete details.\r\n\r\nRemoved measurements: {5}.", removedCount, currentCount, CurrentItem.Name.ToNonNullNorWhiteSpace("Subscriber"), CurrentItem.Acronym, currentCount - removedCount, ShortFormattedList(measurementIDs.Select(GetMeasurementName))), 0);
-
-            CurrentItem.DeniedMeasurements = Subscriber.GetDeniedMeasurements(null, CurrentItem.ID);
+            CommonFunctions.LogEvent(string.Format("Removed {0} measurements from the {1} currently denied for subscriber {2} [{3}] for a total of {4} now denied. See audit log for complete details.\r\n\r\nAction taken to remove the following measurements: {5}.", removedCount, currentCount, CurrentItem.Name.ToNonNullNorWhiteSpace("Subscriber"), CurrentItem.Acronym, currentCount - removedCount, ShortFormattedList(measurementIDs.Select(GetMeasurementName))), 0);
 
             try
             {
@@ -519,88 +490,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// <returns><c>true</c> if subscriber has rights to specified <paramref name="signalID"/>; otherwise <c>false</c>.</returns>
         public bool SubscriberHasRights(Guid signalID)
         {
-            // TODO: Abstract publisher ACL logic -- except subscriber enabled flag does not need to be checked
-            const string FilterRegex = @"(ALLOW|DENY)\s+WHERE\s+([^;]*)";
-
-            DataRow subscriber;
-            DataRow[] subscriberMeasurementGroups;
-
-            IEnumerable<bool> explicitAuthorizationFlags;
-            IEnumerable<bool> explicitGroupAuthorizationFlags;
-            IEnumerable<bool> implicitFilterAuthorizationFlags;
-
-            bool explicitlyAuthorized = false;
-            bool explicitlyAuthorizedByGroup = false;
-            bool implicitlyAuthorizedByFilter = false;
-
-            // This is different from the ACL logic used by the system --
-            // because we are only calculating effective permissions to aid with configuration,
-            // we do not care whether the Subscriber is enabled
-            subscriber = m_subscriberPermissionsDataSet.Tables["Subscribers"].Select(string.Format("ID = '{0}'", CurrentItem.ID)).FirstOrDefault();
-
-            // If subscriber has been disabled or removed
-            // from the list of valid subscribers,
-            // they no longer have rights to any signals
-            if ((object)subscriber == null)
-                return false;
-
-            // Look up explicitly defined individual measurements
-            explicitAuthorizationFlags = m_subscriberPermissionsDataSet.Tables["SubscriberMeasurements"].Select(string.Format("SubscriberID = '{0}' AND SignalID = '{1}'", CurrentItem.ID, signalID))
-                .Select(measurement => measurement["Allowed"].ToNonNullString("0").ParseBoolean());
-
-            foreach (bool flag in explicitAuthorizationFlags)
-            {
-                if (flag)
-                    explicitlyAuthorized = true;
-                else
-                    return false;
-            }
-
-            if (explicitlyAuthorized)
-                return true;
-
-            // Look up explicitly defined group based measurements
-            subscriberMeasurementGroups = m_subscriberPermissionsDataSet.Tables["SubscriberMeasurementGroups"].Select(string.Format("SubscriberID = '{0}'", CurrentItem.ID));
-
-            explicitGroupAuthorizationFlags = subscriberMeasurementGroups
-                .Where(subscriberMeasurementGroup => m_subscriberPermissionsDataSet.Tables["MeasurementGroupMeasurements"].Select(string.Format("SignalID = '{0}' AND MeasurementGroupID = {1}", signalID, subscriberMeasurementGroup["MeasurementGroupID"])).Length > 0)
-                .Select(subscriberMeasurementGroup => subscriberMeasurementGroup["Allowed"].ToNonNullString("0").ParseBoolean());
-
-            foreach (bool flag in explicitGroupAuthorizationFlags)
-            {
-                if (flag)
-                    explicitlyAuthorizedByGroup = true;
-                else
-                    return false;
-            }
-
-            if (explicitlyAuthorizedByGroup)
-                return true;
-
-            // Look up implicitly defined filter based measurements
-            implicitFilterAuthorizationFlags = Regex.Matches(subscriber["AccessControlFilter"].ToNonNullString().ReplaceControlCharacters(), FilterRegex, RegexOptions.IgnoreCase)
-                .Cast<Match>()
-                .Where(match => m_subscriberPermissionsDataSet.Tables["ActiveMeasurements"].Select(string.Format("SignalID = '{0}' AND ({1})", signalID, match.Groups[2].Value)).Length > 0)
-                .Select(match => (match.Groups[1].Value == "ALLOW"));
-
-            foreach (bool flag in implicitFilterAuthorizationFlags)
-            {
-                if (flag)
-                    implicitlyAuthorizedByFilter = true;
-                else
-                    return false;
-            }
-
-            if (implicitlyAuthorizedByFilter)
-                return true;
-
-            // Look up implicitly defined group based measurements
-            return subscriberMeasurementGroups
-                .Select(subscriberMeasurementGroup => Tuple.Create(subscriberMeasurementGroup, m_subscriberPermissionsDataSet.Tables["MeasurementGroups"].Select(string.Format("ID = {0}", subscriberMeasurementGroup["MeasurementGroupID"]))))
-                .Where(tuple => tuple.Item2.Any(measurementGroup => AdapterBase.ParseInputMeasurementKeys(m_subscriberPermissionsDataSet, false, measurementGroup["FilterExpression"].ToNonNullString()).Select(key => key.SignalID).Contains(signalID)))
-                .Select(tuple => tuple.Item1["Allowed"].ToNonNullString("0").ParseBoolean())
-                .DefaultIfEmpty(false)
-                .All(allowed => allowed);
+            return m_rightsLookup(signalID);
         }
 
         /// <summary>
@@ -616,19 +506,15 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                 List<int> measurementGroupIDs = new List<int>();
 
                 foreach (object item in items)
-                {
                     measurementGroupIDs.Add(((KeyValuePair<int, string>)item).Key);
-                }
 
-                string result = Subscriber.AddMeasurementGroups(null, CurrentItem.ID, measurementGroupIDs, true);
+                int currentCount = Subscriber.GetGroupCount(null, CurrentItem.ID, true);
+                int addedCount = Subscriber.AddMeasurementGroups(null, CurrentItem.ID, measurementGroupIDs, true);
 
-                //Popup(result, "Allow Measurement Groups", MessageBoxImage.Information);
-                DisplayStatusMessage(result);
+                DisplayStatusMessage("Measurement groups successfully added to allowed measurement groups list for subscriber");
 
                 // Log changes to event log
-                int currentCount = CurrentItem.AllowedMeasurements.Count;
-                int addedCount = measurementGroupIDs.Count;
-                CommonFunctions.LogEvent(string.Format("Allowed {0} new measurement groups in addition to the {1} already allowed for subscriber {2} [{3}] for a total of {4} now allowed. See audit log for complete details.\r\n\r\nAdded measurement groups: {5}", addedCount, currentCount, CurrentItem.Name.ToNonNullNorWhiteSpace("Subscriber"), CurrentItem.Acronym, currentCount + addedCount, ShortFormattedList(measurementGroupIDs.Select(GetGroupName))), 0);
+                CommonFunctions.LogEvent(string.Format("Allowed {0} new measurement groups in addition to the {1} already allowed for subscriber {2} [{3}] for a total of {4} now allowed. See audit log for complete details.\r\n\r\nAction taken to add the following measurement groups: {5}", addedCount, currentCount, CurrentItem.Name.ToNonNullNorWhiteSpace("Subscriber"), CurrentItem.Acronym, currentCount + addedCount, ShortFormattedList(measurementGroupIDs.Select(GetGroupName))), 0);
 
                 CurrentItem.AllowedMeasurementGroups = Subscriber.GetAllowedMeasurementGroups(null, CurrentItem.ID);
                 CurrentItem.AvailableMeasurementGroups = Subscriber.GetAvailableMeasurementGroups(null, CurrentItem.ID);
@@ -659,19 +545,15 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                 List<int> measurementGroupIDs = new List<int>();
 
                 foreach (object item in items)
-                {
                     measurementGroupIDs.Add(((KeyValuePair<int, string>)item).Key);
-                }
 
-                string result = Subscriber.RemoveMeasurementGroups(null, CurrentItem.ID, measurementGroupIDs);
+                int currentCount = Subscriber.GetGroupCount(null, CurrentItem.ID, true);
+                int removedCount = Subscriber.RemoveMeasurementGroups(null, CurrentItem.ID, measurementGroupIDs);
 
-                //Popup(result, "Remove Measurement Groups", MessageBoxImage.Information);
-                DisplayStatusMessage(result);
+                DisplayStatusMessage("Measurement groups successfully removed from allowed measurement groups list for subscriber");
 
                 // Log changes to event log
-                int currentCount = CurrentItem.AllowedMeasurements.Count;
-                int removedCount = measurementGroupIDs.Count;
-                CommonFunctions.LogEvent(string.Format("Removed {0} measurement group from the {1} currently allowed for subscriber {2} [{3}] for a total of {4} now allowed. See audit log for complete details.\r\n\r\nRemoved measurement groups: {5}.", removedCount, currentCount, CurrentItem.Name.ToNonNullNorWhiteSpace("Subscriber"), CurrentItem.Acronym, currentCount - removedCount, ShortFormattedList(measurementGroupIDs.Select(GetGroupName))), 0);
+                CommonFunctions.LogEvent(string.Format("Removed {0} measurement group from the {1} currently allowed for subscriber {2} [{3}] for a total of {4} now allowed. See audit log for complete details.\r\n\r\nAction taken to remove the following measurement groups: {5}.", removedCount, currentCount, CurrentItem.Name.ToNonNullNorWhiteSpace("Subscriber"), CurrentItem.Acronym, currentCount - removedCount, ShortFormattedList(measurementGroupIDs.Select(GetGroupName))), 0);
 
                 CurrentItem.AllowedMeasurementGroups = Subscriber.GetAllowedMeasurementGroups(null, CurrentItem.ID);
                 CurrentItem.AvailableMeasurementGroups = Subscriber.GetAvailableMeasurementGroups(null, CurrentItem.ID);
@@ -702,19 +584,15 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                 List<int> measurementGroupIDs = new List<int>();
 
                 foreach (object item in items)
-                {
                     measurementGroupIDs.Add(((KeyValuePair<int, string>)item).Key);
-                }
 
-                string result = Subscriber.AddMeasurementGroups(null, CurrentItem.ID, measurementGroupIDs, false);
+                int currentCount = Subscriber.GetGroupCount(null, CurrentItem.ID, false);
+                int addedCount = Subscriber.AddMeasurementGroups(null, CurrentItem.ID, measurementGroupIDs, false);
 
-                //Popup(result, "Deny Measurement Groups", MessageBoxImage.Information);
-                DisplayStatusMessage(result);
+                DisplayStatusMessage("Measurement groups successfully added to denied measurement groups list for subscriber");
 
                 // Log changes to event log
-                int currentCount = CurrentItem.AllowedMeasurements.Count;
-                int addedCount = measurementGroupIDs.Count;
-                CommonFunctions.LogEvent(string.Format("Denied {0} new measurement groups in addition to the {1} already denied for subscriber {2} [{3}] for a total of {4} now denied. See audit log for complete details.\r\n\r\nDenied measurement groups: {5}", addedCount, currentCount, CurrentItem.Name.ToNonNullNorWhiteSpace("Subscriber"), CurrentItem.Acronym, currentCount + addedCount, ShortFormattedList(measurementGroupIDs.Select(GetGroupName))), 0);
+                CommonFunctions.LogEvent(string.Format("Denied {0} new measurement groups in addition to the {1} already denied for subscriber {2} [{3}] for a total of {4} now denied. See audit log for complete details.\r\n\r\nAction taken to add the following measurement groups: {5}", addedCount, currentCount, CurrentItem.Name.ToNonNullNorWhiteSpace("Subscriber"), CurrentItem.Acronym, currentCount + addedCount, ShortFormattedList(measurementGroupIDs.Select(GetGroupName))), 0);
 
                 CurrentItem.AvailableMeasurementGroups = Subscriber.GetAvailableMeasurementGroups(null, CurrentItem.ID);
                 CurrentItem.DeniedMeasurementGroups = Subscriber.GetDeniedMeasurementGroups(null, CurrentItem.ID);
@@ -745,19 +623,15 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                 List<int> measurementGroupIDs = new List<int>();
 
                 foreach (object item in items)
-                {
                     measurementGroupIDs.Add(((KeyValuePair<int, string>)item).Key);
-                }
 
-                string result = Subscriber.RemoveMeasurementGroups(null, CurrentItem.ID, measurementGroupIDs);
+                int currentCount = Subscriber.GetGroupCount(null, CurrentItem.ID, false);
+                int removedCount = Subscriber.RemoveMeasurementGroups(null, CurrentItem.ID, measurementGroupIDs);
 
-                //Popup(result, "Remove Measurement Groups", MessageBoxImage.Information);
-                DisplayStatusMessage(result);
+                DisplayStatusMessage("Measurement groups successfully removed from denied measurement groups list for subscriber");
 
                 // Log changes to event log
-                int currentCount = CurrentItem.AllowedMeasurements.Count;
-                int removedCount = measurementGroupIDs.Count;
-                CommonFunctions.LogEvent(string.Format("Removed {0} measurement group from the {1} currently denied for subscriber {2} [{3}] for a total of {4} now denied. See audit log for complete details.\r\n\r\nRemoved measurement groups: {5}.", removedCount, currentCount, CurrentItem.Name.ToNonNullNorWhiteSpace("Subscriber"), CurrentItem.Acronym, currentCount - removedCount, ShortFormattedList(measurementGroupIDs.Select(GetGroupName))), 0);
+                CommonFunctions.LogEvent(string.Format("Removed {0} measurement group from the {1} currently denied for subscriber {2} [{3}] for a total of {4} now denied. See audit log for complete details.\r\n\r\nAction taken to remove the following measurement groups: {5}.", removedCount, currentCount, CurrentItem.Name.ToNonNullNorWhiteSpace("Subscriber"), CurrentItem.Acronym, currentCount - removedCount, ShortFormattedList(measurementGroupIDs.Select(GetGroupName))), 0);
 
                 CurrentItem.AvailableMeasurementGroups = Subscriber.GetAvailableMeasurementGroups(null, CurrentItem.ID);
                 CurrentItem.DeniedMeasurementGroups = Subscriber.GetDeniedMeasurementGroups(null, CurrentItem.ID);
@@ -787,7 +661,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         // Attempt to get measurement name from signal ID
         private string GetMeasurementName(Guid signalID)
         {
-            DataModelMeasurement measurement = CurrentItem.AvailableMeasurements.FirstOrDefault(m => m.SignalID == signalID);
+            DataModelMeasurement measurement = DataModelMeasurement.GetMeasurement(null, signalID);
 
             if ((object)measurement != null)
                 return string.Format("{0} [{1}:{2}]", measurement.PointTag, measurement.HistorianAcronym, measurement.PointID);
@@ -798,8 +672,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         // Attempt to get group name from group ID
         private string GetGroupName(int groupID)
         {
-            string name;
-            return CurrentItem.AvailableMeasurementGroups.TryGetValue(groupID, out name) ? name : "Group";
+            return MeasurementGroup.GetMeasurementGroup(null, groupID)?.Name ?? "Group";
         }
 
         // Convert enumerated list to a delimited list limiting the total enumerations
@@ -811,22 +684,20 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         // Determines the effective permissions of each of the measurements in the current page
         private void UpdateEffectivePermissions()
         {
-            Dictionary<string, Exception> exceptions = new Dictionary<string, Exception>();
-
-            foreach (DataModelMeasurement measurement in CurrentAvailableMeasurementsPage)
+            try
             {
-                try
-                {
-                    measurement.Selected = SubscriberHasRights(measurement.SignalID);
-                }
-                catch (Exception ex)
-                {
-                    exceptions[ex.Message] = ex;
-                }
-            }
+                m_rightsLookup = !IsNewRecord
+                    ? new SubscriberRightsLookup(m_subscriberPermissionsDataSet, CurrentItem.ID).HasRightsFunc
+                    : (id => false);
 
-            foreach (Exception exception in exceptions.Values)
-                CommonFunctions.LogException(null, "Subscriber Effective Permissions", exception);
+                foreach (DataModelMeasurement measurement in CurrentAvailableMeasurementsPage)
+                    measurement.Selected = m_rightsLookup(measurement.SignalID);
+            }
+            catch (Exception ex)
+            {
+                CommonFunctions.LogException(null, "Subscriber Effective Permissions", ex);
+                m_rightsLookup = id => false;
+            }
         }
 
         // Loads the data set used to determine effective permissions

@@ -1130,6 +1130,65 @@ namespace GSF.TimeSeries.UI.DataModels
         }
 
         /// <summary>
+        /// Retrieves a <see cref="Measurement"/> information from the database based on the signal ID of the measurement.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="signalID">Signal ID of the measurement.</param>
+        /// <returns><see cref="Measurement"/> information.</returns>
+        public static Measurement GetMeasurement(AdoDataConnection database, Guid signalID)
+        {
+            bool createdConnection = false;
+            DataTable measurementTable;
+            DataRow row;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+                measurementTable = database.RetrieveData(DefaultTimeout, "SELECT * FROM MeasurementDetail WHERE SignalID = {0}", signalID);
+
+                if (measurementTable.Rows.Count == 0)
+                    return null;
+
+                row = measurementTable.Rows[0];
+
+                Measurement measurement = new Measurement()
+                {
+                    SignalID = database.Guid(row, "SignalID"),
+                    HistorianID = row.ConvertNullableField<int>("HistorianID"),
+                    PointID = row.ConvertField<int>("PointID"),
+                    DeviceID = row.ConvertNullableField<int>("DeviceID"),
+                    PointTag = row.Field<string>("PointTag"),
+                    AlternateTag = row.Field<string>("AlternateTag"),
+                    SignalTypeID = row.ConvertField<int>("SignalTypeID"),
+                    PhasorSourceIndex = row.ConvertNullableField<int>("PhasorSourceIndex"),
+                    SignalReference = row.Field<string>("SignalReference"),
+                    Adder = row.ConvertField<double>("Adder"),
+                    Multiplier = row.ConvertField<double>("Multiplier"),
+                    Description = row.Field<string>("Description"),
+                    Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                    m_historianAcronym = row.Field<string>("HistorianAcronym"),
+                    m_deviceAcronym = row.Field<object>("DeviceAcronym") == null ? string.Empty : row.Field<string>("DeviceAcronym"),
+                    m_signalName = row.Field<string>("SignalName"),
+                    m_signalAcronym = row.Field<string>("SignalAcronym"),
+                    m_signalSuffix = row.Field<string>("SignalTypeSuffix"),
+                    m_phasorLabel = row.Field<string>("PhasorLabel"),
+                    m_framesPerSecond = Convert.ToInt32(row.Field<object>("FramesPerSecond") ?? 30),
+                    m_id = row.Field<string>("ID"),
+                    m_companyAcronym = row.Field<object>("CompanyAcronym") == null ? string.Empty : row.Field<string>("CompanyAcronym"),
+                    m_companyName = row.Field<object>("CompanyName") == null ? string.Empty : row.Field<string>("CompanyName"),
+                    Selected = false
+                };
+
+                return measurement;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
         /// Retrieves a <see cref="Measurement"/> information from the database based on query string filter.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>

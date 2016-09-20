@@ -64,9 +64,6 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
         private string m_updatedBy;
 
         // Fields below are used only for Subscriber Measurements screen.
-        private Dictionary<Guid, string> m_allowedMeasurements;
-        private Dictionary<Guid, string> m_deniedMeasurements;
-        private ObservableCollection<Measurement> m_availableMeasurements;
         private Dictionary<int, string> m_allowedMeasurementGroups;
         private Dictionary<int, string> m_deniedMeasurementGroups;
         private Dictionary<int, string> m_availableMeasurementGroups;
@@ -109,56 +106,6 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
             {
                 m_version = value;
                 OnPropertyChanged("Version");
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets <see cref="Subscriber"/>'s allowed measurements.
-        /// </summary>
-        // Field is populated by many to many database relationship with measurement table, so no validation applied.
-        public Dictionary<Guid, string> AllowedMeasurements
-        {
-            get
-            {
-                return m_allowedMeasurements;
-            }
-            set
-            {
-                m_allowedMeasurements = value;
-                OnPropertyChanged("AllowedMeasurements");
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets <see cref="Subscriber"/>'s denied measurements.
-        /// </summary>
-        // Field is populated by many to many database relationship with measurement table, so no validation applied.
-        public Dictionary<Guid, string> DeniedMeasurements
-        {
-            get
-            {
-                return m_deniedMeasurements;
-            }
-            set
-            {
-                m_deniedMeasurements = value;
-                OnPropertyChanged("DeniedMeasurements");
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets <see cref="Subscriber"/>'s available measurements.
-        /// </summary>
-        public ObservableCollection<Measurement> AvailableMeasurements
-        {
-            get
-            {
-                return m_availableMeasurements;
-            }
-            set
-            {
-                m_availableMeasurements = value;
-                OnPropertyChanged("AvailableMeasurements");
             }
         }
 
@@ -537,9 +484,6 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
                         ValidChainFlags = Enum.TryParse(row.Field<string>("ValidChainFlags"), out validChainFlags) ? validChainFlags : (X509ChainStatusFlags?)null,
                         AccessControlFilter = row.Field<string>("AccessControlFilter"),
                         Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
-                        AllowedMeasurements = GetAllowedMeasurements(database, database.Guid(row, "ID")),
-                        DeniedMeasurements = GetDeniedMeasurements(database, database.Guid(row, "ID")),
-                        AvailableMeasurements = GetAvailableMeasurements(database, database.Guid(row, "ID")),
                         AllowedMeasurementGroups = GetAllowedMeasurementGroups(database, database.Guid(row, "ID")),
                         DeniedMeasurementGroups = GetDeniedMeasurementGroups(database, database.Guid(row, "ID")),
                         AvailableMeasurementGroups = GetAvailableMeasurementGroups(database, database.Guid(row, "ID")),
@@ -555,81 +499,6 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
                 if (createdConnection && database != null)
                     database.Dispose();
             }
-        }
-
-        /// <summary>
-        /// Retrieves <see cref="Dictionary{T1,T2}"/> type collection of <see cref="Measurement"/> allowed for <see cref="Subscriber"/>.
-        /// </summary>
-        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="subscriberID">ID of the <see cref="Subscriber"/> to filter data.</param>
-        /// <returns><see cref="Dictionary{T1,T2}"/> type collection of SignalID and PointTag of <see cref="Measurement"/>.</returns>
-        public static Dictionary<Guid, string> GetAllowedMeasurements(AdoDataConnection database, Guid subscriberID)
-        {
-            Dictionary<Guid, string> allowedMeasurements;
-            DataTable allowedMeasurementTable;
-            bool createdConnection = false;
-            string query;
-
-            try
-            {
-                createdConnection = CreateConnection(ref database);
-                allowedMeasurements = new Dictionary<Guid, string>();
-                query = database.ParameterizedQueryString("SELECT SignalID, PointTag FROM SubscriberMeasurementDetail WHERE SubscriberID = {0} AND Allowed = {1} ORDER BY PointTag", "subscriberID", "allowed");
-                allowedMeasurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Guid(subscriberID), database.Bool(true));
-
-                foreach (DataRow row in allowedMeasurementTable.Rows)
-                    allowedMeasurements[database.Guid(row, "SignalID")] = row.Field<string>("PointTag");
-
-                return allowedMeasurements;
-            }
-            finally
-            {
-                if (createdConnection && database != null)
-                    database.Dispose();
-            }
-        }
-
-        /// <summary>
-        /// Retrieves <see cref="Dictionary{T1,T2}"/> type collection of <see cref="Measurement"/> denied for <see cref="Subscriber"/>.
-        /// </summary>
-        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="subscriberID">ID of the <see cref="Subscriber"/> to filter data.</param>
-        /// <returns><see cref="Dictionary{T1,T2}"/> type collection of SignalID and PointTag of <see cref="Measurement"/>.</returns>
-        public static Dictionary<Guid, string> GetDeniedMeasurements(AdoDataConnection database, Guid subscriberID)
-        {
-            Dictionary<Guid, string> deniedMeasurements;
-            DataTable deniedMeasurementTable;
-            bool createdConnection = false;
-            string query;
-
-            try
-            {
-                createdConnection = CreateConnection(ref database);
-                deniedMeasurements = new Dictionary<Guid, string>();
-                query = database.ParameterizedQueryString("SELECT SignalID, PointTag FROM SubscriberMeasurementDetail WHERE SubscriberID = {0} AND Allowed = {1} ORDER BY PointTag", "subscriberID", "allowed");
-                deniedMeasurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Guid(subscriberID), database.Bool(false));
-
-                foreach (DataRow row in deniedMeasurementTable.Rows)
-                    deniedMeasurements[database.Guid(row, "SignalID")] = row.Field<string>("PointTag");
-
-                return deniedMeasurements;
-            }
-            finally
-            {
-                if (createdConnection && database != null)
-                    database.Dispose();
-            }
-        }
-
-        /// <summary>
-        /// Retrieves <see cref="Measurement"/> collection which are not assigned to <see cref="Subscriber"/>.
-        /// </summary>
-        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="subscriberID">ID of the <see cref="Subscriber"/> to filter data.</param>
-        /// <returns><see cref="ObservableCollection{T}"/> style list of <see cref="Measurement"/>.</returns>
-        public static ObservableCollection<Measurement> GetAvailableMeasurements(AdoDataConnection database, Guid subscriberID)
-        {
-            return Measurement.GetMeasurementsBySubscriber(database, subscriberID);
         }
 
         /// <summary>
@@ -729,6 +598,31 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
         }
 
         /// <summary>
+        /// Counts measurements assigned to <see cref="Subscriber"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="subscriberID">ID of the <see cref="Subscriber"/> for which to count measurements.</param>
+        /// <param name="allowed">boolean flag to indicate if measurements are allowed or denied.</param>
+        /// <returns>string, indicating success for UI display.</returns>
+        public static int GetMeasurementCount(AdoDataConnection database, Guid subscriberID, bool allowed)
+        {
+            const string QueryFormat = "SELECT COUNT(*) FROM SubscriberMeasurement WHERE SubscriberID = {0} AND Allowed = {1}";
+
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+                return database.ExecuteNonQuery(DefaultTimeout, QueryFormat, subscriberID, allowed);
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
         /// Adds measurements to <see cref="Subscriber"/>.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
@@ -736,10 +630,15 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
         /// <param name="measurementsToBeAdded">List of <see cref="Measurement"/> IDs to be added.</param>
         /// <param name="allowed">boolean flag to indicate if measurements are allowed or denied.</param>
         /// <returns>string, indicating success for UI display.</returns>
-        public static string AddMeasurements(AdoDataConnection database, Guid subscriberID, List<Guid> measurementsToBeAdded, bool allowed)
+        public static int AddMeasurements(AdoDataConnection database, Guid subscriberID, ICollection<Guid> measurementsToBeAdded, bool allowed)
         {
+            const string QueryFormat =
+                "INSERT INTO SubscriberMeasurement(NodeID, SubscriberID, SignalID, Allowed, UpdatedOn, UpdatedBy, CreatedOn, CreatedBy) " +
+                "SELECT {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7} " +
+                "WHERE (SELECT COUNT(*) FROM SubscriberMeasurement WHERE SubscriberID = {1} AND SignalID = {2}) = 0";
+
             bool createdConnection = false;
-            string query;
+            int rowsAffected = 0;
 
             try
             {
@@ -747,18 +646,11 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
 
                 foreach (Guid id in measurementsToBeAdded)
                 {
-                    query = database.ParameterizedQueryString("INSERT INTO SubscriberMeasurement (NodeID, SubscriberID, SignalID, Allowed, UpdatedOn, UpdatedBy, " +
-                        "CreatedOn, CreatedBy) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})", "nodeID", "subscriberID", "signalID", "allowed", "updatedOn",
-                        "updatedBy", "createdOn", "createdBy");
-
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.CurrentNodeID(), database.Guid(subscriberID), database.Guid(id),
-                        database.Bool(allowed), database.UtcNow, CommonFunctions.CurrentUser, database.UtcNow, CommonFunctions.CurrentUser);
+                    rowsAffected += database.ExecuteNonQuery(DefaultTimeout, QueryFormat, CommonFunctions.CurrentNodeID(), subscriberID, id,
+                        allowed, database.UtcNow, CommonFunctions.CurrentUser, database.UtcNow, CommonFunctions.CurrentUser);
                 }
 
-                if (allowed)
-                    return "Measurements added to allowed measurements list for subscriber successfully";
-                else
-                    return "Measurements added to denied measurements list for subscriber successfully";
+                return rowsAffected;
             }
             finally
             {
@@ -774,22 +666,46 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
         /// <param name="subscriberID">ID of the <see cref="Subscriber"/> from which measurements to be removed.</param>
         /// <param name="measurementsToBeRemoved">List of <see cref="Measurement"/> IDs to be removed.</param>
         /// <returns>string, indicating success for UI display.</returns>
-        public static string RemoveMeasurements(AdoDataConnection database, Guid subscriberID, List<Guid> measurementsToBeRemoved)
+        public static int RemoveMeasurements(AdoDataConnection database, Guid subscriberID, ICollection<Guid> measurementsToBeRemoved)
         {
+            string QueryFormat = "DELETE FROM SubscriberMeasurement WHERE SubscriberID = {0} AND SignalID = {1}";
+
             bool createdConnection = false;
-            string query;
+            int rowsAffected = 0;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 foreach (Guid id in measurementsToBeRemoved)
-                {
-                    query = database.ParameterizedQueryString("DELETE FROM SubscriberMeasurement WHERE SubscriberID = {0} AND SignalID = {1}", "subscriberID", "signalID");
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(subscriberID), database.Guid(id));
-                }
+                    rowsAffected += database.ExecuteNonQuery(DefaultTimeout, QueryFormat, subscriberID, id);
 
-                return "Selected measurements removed successfully";
+                return rowsAffected;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Counts measurements assigned to <see cref="Subscriber"/>.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="subscriberID">ID of the <see cref="Subscriber"/> for which to count measurements.</param>
+        /// <param name="allowed">boolean flag to indicate if measurements are allowed or denied.</param>
+        /// <returns>string, indicating success for UI display.</returns>
+        public static int GetGroupCount(AdoDataConnection database, Guid subscriberID, bool allowed)
+        {
+            const string QueryFormat = "SELECT COUNT(*) FROM SubscriberMeasurementGroup WHERE SubscriberID = {0} AND Allowed = {1}";
+
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+                return database.ExecuteNonQuery(DefaultTimeout, QueryFormat, subscriberID, allowed);
             }
             finally
             {
@@ -806,10 +722,15 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
         /// <param name="measurementGroupsToBeAdded">List of <see cref="MeasurementGroup"/> IDs to be added.</param>
         /// <param name="allowed">boolean flag to indicate if measurement groups are allowed or denied.</param>
         /// <returns>string, indicating success for UI display.</returns>
-        public static string AddMeasurementGroups(AdoDataConnection database, Guid subscriberID, List<int> measurementGroupsToBeAdded, bool allowed)
+        public static int AddMeasurementGroups(AdoDataConnection database, Guid subscriberID, List<int> measurementGroupsToBeAdded, bool allowed)
         {
+            const string QueryFormat =
+                "INSERT INTO SubscriberMeasurementGroup (NodeID, SubscriberID, MeasurementGroupID, Allowed, UpdatedOn, UpdatedBy, CreatedOn, CreatedBy) " +
+                "SELECT {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7} " +
+                "WHERE (SELECT COUNT(*) FROM SubscriberMeasurementGroup WHERE SubscriberID = {1} AND MeasurementGroupID = {2}) = 0";
+
             bool createdConnection = false;
-            string query;
+            int rowsAffected = 0;
 
             try
             {
@@ -817,18 +738,11 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
 
                 foreach (int id in measurementGroupsToBeAdded)
                 {
-                    query = database.ParameterizedQueryString("INSERT INTO SubscriberMeasurementGroup (NodeID, SubscriberID, MeasurementGroupID, Allowed, UpdatedOn, " +
-                        "UpdatedBy, CreatedOn, CreatedBy) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})", "nodeID", "subscriberID", "measurementGroupID",
-                        "allowed", "updatedOn", "updatedBy", "createdOn", "createdBy");
-
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.CurrentNodeID(), database.Guid(subscriberID), id, database.Bool(allowed),
+                    rowsAffected += database.ExecuteNonQuery(DefaultTimeout, QueryFormat, CommonFunctions.CurrentNodeID(), subscriberID, id, allowed,
                         database.UtcNow, CommonFunctions.CurrentUser, database.UtcNow, CommonFunctions.CurrentUser);
                 }
 
-                if (allowed)
-                    return "Measurement groups added to allowed measurement groups list for subscriber successfully";
-                else
-                    return "Measurement groups added to denied measurement groups list for subscriber successfully";
+                return rowsAffected;
             }
             finally
             {
@@ -844,22 +758,21 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
         /// <param name="subscriberID">ID of the <see cref="Subscriber"/> to which measurement groups to be removed.</param>
         /// <param name="measurementGroupsToBeRemoved">List of <see cref="MeasurementGroup"/> IDs to be removed.</param>
         /// <returns>string, indicating success for UI display.</returns>
-        public static string RemoveMeasurementGroups(AdoDataConnection database, Guid subscriberID, List<int> measurementGroupsToBeRemoved)
+        public static int RemoveMeasurementGroups(AdoDataConnection database, Guid subscriberID, List<int> measurementGroupsToBeRemoved)
         {
+            const string QueryFormat = "DELETE FROM SubscriberMeasurementGroup WHERE SubscriberID = {0} AND MeasurementGroupID = {1}";
+
             bool createdConnection = false;
-            string query;
+            int rowsAffected = 0;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 foreach (int id in measurementGroupsToBeRemoved)
-                {
-                    query = database.ParameterizedQueryString("DELETE FROM SubscriberMeasurementGroup WHERE SubscriberID = {0} AND MeasurementGroupID = {1}", "subscriberID", "measurementGroupID");
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(subscriberID), id);
-                }
+                    rowsAffected += database.ExecuteNonQuery(DefaultTimeout, QueryFormat, subscriberID, id);
 
-                return "Measurement groups removed from allowed measurement groups list for subscriber successfully";
+                return rowsAffected;
             }
             finally
             {

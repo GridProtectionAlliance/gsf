@@ -50,8 +50,6 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
         private string m_createdBy;
         private DateTime m_updatedOn;
         private string m_updatedBy;
-        private Dictionary<Guid, string> m_currentMeasurements;
-        private ObservableCollection<Measurement> m_possibleMeasurements;
 
         #endregion
 
@@ -207,38 +205,6 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
             }
         }
 
-        /// <summary>
-        /// Gets or sets <see cref="MeasurementGroup"/>'s member measurements.
-        /// </summary>
-        public Dictionary<Guid, string> CurrentMeasurements
-        {
-            get
-            {
-                return m_currentMeasurements;
-            }
-            set
-            {
-                m_currentMeasurements = value;
-                OnPropertyChanged("CurrentMeasurements");
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets measurements not yet assigned to <see cref="MeasurementGroup"/>. 
-        /// </summary>
-        public ObservableCollection<Measurement> PossibleMeasurements
-        {
-            get
-            {
-                return m_possibleMeasurements;
-            }
-            set
-            {
-                m_possibleMeasurements = value;
-                OnPropertyChanged("PossibleMeasurements");
-            }
-        }
-
         #endregion
 
         #region [ Static ]
@@ -273,14 +239,52 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
                         Name = row.Field<string>("Name"),
                         Description = row.Field<object>("Description").ToNonNullString(),
                         FilterExpression = row.Field<object>("FilterExpression").ToNonNullString(),
-                        CurrentMeasurements = GetCurrentMeasurements(database, row.ConvertField<int>("ID")),
-                        PossibleMeasurements = GetPossibleMeasurements(database, row.ConvertField<int>("ID"))
                     });
                 }
 
                 measurementGroupList.Insert(0, new MeasurementGroup());
 
                 return measurementGroupList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Retrieves <see cref="MeasurementGroup"/> information for the group with the given ID.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="groupID">The ID of the measurement group to be retrieved.</param>
+        /// <returns>Measurement group with the given ID.</returns>
+        public static MeasurementGroup GetMeasurementGroup(AdoDataConnection database, int groupID)
+        {
+            DataTable measurementGroupTable;
+            bool createdConnection = false;
+            DataRow row;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+                measurementGroupTable = database.RetrieveData(DefaultTimeout, "SELECT * FROM MeasurementGroup WHERE ID = {0}", groupID);
+
+                if (measurementGroupTable.Rows.Count == 0)
+                    return null;
+
+                row = measurementGroupTable.Rows[0];
+
+                MeasurementGroup measurementGroup = new MeasurementGroup()
+                {
+                    NodeID = database.Guid(row, "NodeID"),
+                    ID = row.ConvertField<int>("ID"),
+                    Name = row.Field<string>("Name"),
+                    Description = row.Field<object>("Description").ToNonNullString(),
+                    FilterExpression = row.Field<object>("FilterExpression").ToNonNullString(),
+                };
+
+                return measurementGroup;
             }
             finally
             {
@@ -375,22 +379,24 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
         /// <param name="measurementGroupID">ID of the <see cref="MeasurementGroup"/> to add <see cref="Measurement"/> to.</param>
         /// <param name="measurementsToBeAdded">List of <see cref="Measurement"/> signal ids to be added.</param>
         /// <returns>string, indicating success for UI display.</returns>
-        public static string AddMeasurements(AdoDataConnection database, int measurementGroupID, List<Guid> measurementsToBeAdded)
+        public static int AddMeasurements(AdoDataConnection database, int measurementGroupID, ICollection<Guid> measurementsToBeAdded)
         {
+            string QueryFormat =
+                "INSERT INTO MeasurementGroupMeasurement (NodeID, MeasurementGroupID, SignalID) " +
+                "SELECT {0}, {1}, {2} " +
+                "WHERE (SELECT COUNT(*) FROM MeasurementGroupMeasurement WHERE MeasurementGroupID = {1} AND SignalID = {2}) = 0";
+
             bool createdConnection = false;
-            string query;
+            int rowsAffected = 0;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 foreach (Guid id in measurementsToBeAdded)
-                {
-                    query = database.ParameterizedQueryString("INSERT INTO MeasurementGroupMeasurement (NodeID, MeasurementGroupID, SignalID) VALUES ({0}, {1}, {2})", "nodeID", "measurementGroupID", "signalID");
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.CurrentNodeID(), measurementGroupID, database.Guid(id));
-                }
+                    rowsAffected += database.ExecuteNonQuery(DefaultTimeout, QueryFormat, CommonFunctions.CurrentNodeID(), measurementGroupID, id);
 
-                return "Measurements added to group successfully";
+                return rowsAffected;
             }
             finally
             {

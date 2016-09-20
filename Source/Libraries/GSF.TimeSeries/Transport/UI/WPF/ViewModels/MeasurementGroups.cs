@@ -132,20 +132,12 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// <param name="measurementIDs">Collection of signal identifiers for the measurements to be added.</param>
         public void AddMeasurement(ICollection<Guid> measurementIDs)
         {
-            List<Guid> filteredIDs = measurementIDs.Where(id => !CurrentItem.CurrentMeasurements.ContainsKey(id)).ToList();
+            int result = MeasurementGroup.AddMeasurements(null, CurrentItem.ID, measurementIDs);
 
-            if (measurementIDs.Count > 0)
-            {
-                string result = MeasurementGroup.AddMeasurements(null, CurrentItem.ID, filteredIDs);
-                Popup(result, "Add Group Measurements", MessageBoxImage.Information);
-            }
+            if (result > 0)
+                Popup("Measurements added to group successfully", "Add Group Measurements", MessageBoxImage.Information);
             else
-            {
                 Popup("Selected measurements already exist in group or no measurements were selected.", "Add Group Measurements", MessageBoxImage.Information);
-            }
-
-            CurrentItem.CurrentMeasurements = MeasurementGroup.GetCurrentMeasurements(null, CurrentItem.ID);
-            CurrentItem.PossibleMeasurements = MeasurementGroup.GetPossibleMeasurements(null, CurrentItem.ID);
         }
 
         /// <summary>
@@ -157,9 +149,6 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             string result = MeasurementGroup.RemoveMeasurements(null, CurrentItem.ID, measurementIDs.ToList());
 
             Popup(result, "Remove Group Measurements", MessageBoxImage.Information);
-
-            CurrentItem.CurrentMeasurements = MeasurementGroup.GetCurrentMeasurements(null, CurrentItem.ID);
-            CurrentItem.PossibleMeasurements = MeasurementGroup.GetPossibleMeasurements(null, CurrentItem.ID);
         }
 
         #endregion

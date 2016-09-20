@@ -72,6 +72,19 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
 
         private void AddMeasurementsButton_Click(object sender, RoutedEventArgs e)
         {
+            int count = AvailableMeasurementsPager.SelectedMeasurements.Count;
+
+            if (count > 1000)
+            {
+                string message = 
+                    $"You have selected {count} measurements. " +
+                    $"It may take some time to complete this operation. " +
+                    $"Would you like to continue?";
+
+                if (!m_dataContext.Confirm(message, "Too many measurements"))
+                    return;
+            }
+
             if (AllowedTab.IsSelected)
             {
                 m_dataContext.AddAllowedMeasurements(AvailableMeasurementsPager.SelectedMeasurements);
@@ -88,6 +101,21 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
 
         private void RemoveMeasurementsButton_Click(object sender, RoutedEventArgs e)
         {
+            int count = AllowedTab.IsSelected
+                ? AllowedMeasurementsPager.SelectedMeasurements.Count
+                : DeniedMeasurementsPager.SelectedMeasurements.Count;
+
+            if (count > 1000)
+            {
+                string message =
+                    $"You have selected {count} measurements. " +
+                    $"It may take some time to complete this operation. " +
+                    $"Would you like to continue?";
+
+                if (!m_dataContext.Confirm(message, "Too many measurements"))
+                    return;
+            }
+
             if (AllowedTab.IsSelected)
             {
                 m_dataContext.RemoveAllowedMeasurements(AllowedMeasurementsPager.SelectedMeasurements);
