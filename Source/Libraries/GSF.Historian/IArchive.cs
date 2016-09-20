@@ -90,9 +90,10 @@ namespace GSF.Historian
         /// </summary>
         /// <param name="historianID">Historian identifier for which time-series data are to be retrieved.</param>
         /// <param name="startTime">Start <see cref="DateTime"/> (in UTC) for the time-series data to be retrieved.</param>
+        /// <param name="endTime">End <see cref="DateTime"/> (in UTC) for the time-series data to be retrieved.</param>
         /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more time-series data.</returns>
-        IEnumerable<IDataPoint> ReadData(int historianID, DateTime startTime, bool timeSorted = true);
+        IEnumerable<IDataPoint> ReadData(int historianID, DateTime startTime, DateTime endTime, bool timeSorted = true);
 
         /// <summary>
         /// Reads time-series data from the repository.
@@ -108,8 +109,8 @@ namespace GSF.Historian
         /// Reads time-series data from the repository.
         /// </summary>
         /// <param name="historianIDs">Historian identifiers for which <see cref="IDataPoint"/>s are to be read.</param>
-        /// <param name="startTime"><see cref="System.String"/> representation of the start time (in UTC) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
-        /// <param name="endTime"><see cref="System.String"/> representation of the end time (in UTC) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
+        /// <param name="startTime">Start <see cref="DateTime"/> (in UTC) for the time-series data to be retrieved.</param>
+        /// <param name="endTime">End <see cref="DateTime"/> (in UTC) for the time-series data to be retrieved.</param>
         /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="IDataPoint"/>s.</returns>
         IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, DateTime startTime, DateTime endTime, bool timeSorted = true);
