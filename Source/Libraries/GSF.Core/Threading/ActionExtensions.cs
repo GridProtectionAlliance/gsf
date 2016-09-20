@@ -84,19 +84,19 @@ namespace GSF.Threading
                 // If the token is not idle, that means that either a Cancel
                 // operation is in progress or the token has been disposed
                 if (Interlocked.CompareExchange(ref m_state, Busy, Idle) != Idle)
-                    return true;
+                    return false;
 
                 try
                 {
                     // Determine whether the wait
                     // handle has already been set
                     if (WaitObj.WaitOne(0))
-                        return true;
+                        return false;
 
                     // Set the wait handle and return a value indicating
                     // that the token was not previously cancelled
                     WaitObj.Set();
-                    return false;
+                    return true;
                 }
                 finally
                 {
