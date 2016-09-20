@@ -38,6 +38,27 @@ using GSF.TimeSeries.Adapters;
 namespace DynamicCalculator
 {
     /// <summary>
+    /// Represents the source of a timestamp.
+    /// </summary>
+    public enum TimestampSource
+    {
+        /// <summary>
+        /// An incoming frame timestamp.
+        /// </summary>
+        Frame,
+
+        /// <summary>
+        /// Real-time as defined by the concentration engine.
+        /// </summary>
+        RealTime,
+
+        /// <summary>
+        /// The system's local clock.
+        /// </summary>
+        LocalClock
+    }
+
+    /// <summary>
     /// The DynamicCalculator is an action adapter which takes multiple
     /// input measurements and performs a calculation on those measurements
     /// to generate its own calculated measurement.
@@ -53,6 +74,7 @@ namespace DynamicCalculator
         private string m_imports;
         private bool m_supportsTemporalProcessing;
         private bool m_skipNanOutput;
+        private TimestampSource m_timestampSource;
 
         private readonly HashSet<string> m_variableNames;
         private readonly Dictionary<MeasurementKey, string> m_keyMapping;
@@ -202,6 +224,24 @@ namespace DynamicCalculator
             }
         }
 
+        /// <summary>
+        /// Gets or sets the source of the timestamps of the calculated values.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the source of the timestamps of the calculated values."),
+        DefaultValue(TimestampSource.Frame)]
+        public TimestampSource TimestampSource
+        {
+            get
+            {
+                return m_timestampSource;
+            }
+            set
+            {
+                m_timestampSource = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -252,6 +292,11 @@ namespace DynamicCalculator
                 m_skipNanOutput = setting.ParseBoolean();
             else
                 m_skipNanOutput = false; //default to previous behavour
+
+            if (settings.TryGetValue("timestampSource", out setting))
+                m_timestampSource = (TimestampSource)Enum.Parse(typeof(TimestampSource), setting);
+            else
+                m_timestampSource = TimestampSource.Frame;
         }
 
         /// <summary>
@@ -265,6 +310,7 @@ namespace DynamicCalculator
             ConcurrentDictionary<MeasurementKey, IMeasurement> measurements;
             IMeasurement measurement;
             string name;
+            long timestamp;
 
             measurements = frame.Measurements;
             m_expressionContext.Variables.Clear();
@@ -284,8 +330,25 @@ namespace DynamicCalculator
             if ((object)m_expression == null)
                 m_expression = m_expressionContext.CompileDynamic(m_aliasedExpressionText);
 
+            // Get the timestamp of the measurement to be generated
+            switch (m_timestampSource)
+            {
+                default:
+                case TimestampSource.Frame:
+                    timestamp = frame.Timestamp;
+                    break;
+
+                case TimestampSource.RealTime:
+                    timestamp = RealTime;
+                    break;
+
+                case TimestampSource.LocalClock:
+                    timestamp = DateTime.UtcNow.Ticks;
+                    break;
+            }
+
             // Evaluate the expression and generate the measurement
-            GenerateCalculatedMeasurement(m_expression.Evaluate() as IConvertible);
+            GenerateCalculatedMeasurement(timestamp, m_expression.Evaluate() as IConvertible);
         }
 
         // Adds a variable to the key-variable map.
@@ -383,14 +446,14 @@ namespace DynamicCalculator
         }
 
         // Generates a measurement with the given value and sends it into the system
-        private void GenerateCalculatedMeasurement(IConvertible value)
+        private void GenerateCalculatedMeasurement(long timestamp, IConvertible value)
         {
             IMeasurement calculatedMeasurement;
 
             if ((object)value == null)
                 throw new InvalidOperationException("Calculation must not return a type that does not convert to double.");
 
-            calculatedMeasurement = Measurement.Clone(OutputMeasurements[0], Convert.ToDouble(value), DateTime.UtcNow.Ticks);
+            calculatedMeasurement = Measurement.Clone(OutputMeasurements[0], Convert.ToDouble(value), timestamp);
             OnNewMeasurement(calculatedMeasurement);
         }
 
