@@ -341,13 +341,14 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public override void Initialize()
         {
+            MeasurementKey[] inputMeasurementKeys;
             string setting;
 
             if (Settings.TryGetValue("inputMeasurementKeys", out setting))
             {
                 // IMPORTANT: The allowSelect argument of ParseInputMeasurementKeys must be null
                 //            in order to prevent SQL injection via the subscription filter expression
-                InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, false, setting);
+                inputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, false, setting);
                 m_requestedInputFilter = setting;
 
                 // IMPORTANT: We need to remove the setting before calling base.Initialize()
@@ -356,12 +357,16 @@ namespace GSF.TimeSeries.Transport
             }
             else
             {
-                InputMeasurementKeys = new MeasurementKey[0];
+                inputMeasurementKeys = new MeasurementKey[0];
                 m_requestedInputFilter = null;
             }
 
             base.Initialize();
-            base.UsePrecisionTimer = false;
+
+            // Set the InputMeasurementKeys and UsePrecisionTimer properties after calling
+            // base.Initialize() so that the base class does not overwrite our settings
+            InputMeasurementKeys = inputMeasurementKeys;
+            UsePrecisionTimer = false;
 
             if (Settings.TryGetValue("bufferBlockRetransmissionTimeout", out setting))
                 m_bufferBlockRetransmissionTimeout = double.Parse(setting);
