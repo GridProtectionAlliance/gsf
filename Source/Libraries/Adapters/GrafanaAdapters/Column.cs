@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Table.cs - Gbtc
+//  Column.cs - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -21,29 +21,31 @@
 //
 //******************************************************************************************************
 
-using System.Collections.Generic;
-
-namespace GSF.Historian.DataServices.Grafana
+namespace GrafanaAdapters
 {
-
     /// <summary>
-    /// Defines a Grafana table.
+    /// Defines a Grafana table column.
     /// </summary>
-    public class Table
+    public class Column
     {
         /// <summary>
-        /// Table columns.
+        /// Column title.
         /// </summary>
-        public List<Column> columns { get; set; }
+        public string text { get; set; }
 
         /// <summary>
-        /// Table rows.
-        /// </summary>
-        public List<List<double?>> rows { get; set; }
-
-        /// <summary>
-        /// Table type (typically set to "table").
+        /// Column type, e.g., "time", "mean", "sum", etc.
         /// </summary>
         public string type { get; set; }
+
+        /// <summary>
+        /// Flag that determines if column is sortable.
+        /// </summary>
+        public bool sort { get; set; }
+
+        /// <summary>
+        /// Flag that determines if column is sorted descending.
+        /// </summary>
+        public bool desc { get; set; }
     }
 }

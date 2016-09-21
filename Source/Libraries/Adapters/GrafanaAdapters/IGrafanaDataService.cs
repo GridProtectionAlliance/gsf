@@ -26,7 +26,7 @@ using System.ServiceModel;
 using System.ServiceModel.Web;
 using System.Threading.Tasks;
 
-namespace GSF.Historian.DataServices.Grafana
+namespace GrafanaAdapters
 {
     /// <summary>
     /// Defines needed API calls for a Grafana data source.
@@ -52,13 +52,13 @@ namespace GSF.Historian.DataServices.Grafana
         /// </summary>
         /// <param name="request">Search target.</param>
         [OperationContract, WebInvoke(UriTemplate = "/search", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        string[] Search(Target request);
+        Task<string[]> Search(Target request);
 
         /// <summary>
         /// Queries openHistorian for annotations in a time-range (e.g., Alarms).
         /// </summary>
         /// <param name="request">Annotation request.</param>
         [OperationContract, WebInvoke(UriTemplate = "/annotations", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        List<AnnotationResponse> Annotations(AnnotationRequest request);
+        Task<List<AnnotationResponse>> Annotations(AnnotationRequest request);
     }
 }

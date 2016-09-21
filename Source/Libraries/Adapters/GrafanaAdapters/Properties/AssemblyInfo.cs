@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  AnnotationResponse.cs - Gbtc
+//  AssemblyInfo.cs - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,41 +16,36 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/12/2016 - Ritchie Carroll
+//  09/20/2016 - Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-namespace GSF.Historian.DataServices.Grafana
-{
-    /// <summary>
-    /// Defines a Grafana annotation response.
-    /// </summary>
-    public class AnnotationResponse
-    {
-        /// <summary>
-        /// Annotation in-response-to request.
-        /// </summary>
-        public Annotation annotation { get; set; }
+using System;
+using System.Reflection;
+using System.Runtime.InteropServices;
 
-        /// <summary>
-        /// Annotation title.
-        /// </summary>
-        public string title { get; set; }
+// Assembly identity attributes.
+[assembly: AssemblyVersion("2.1.326.0")]
+[assembly: AssemblyInformationalVersion("2.1.326-beta")]
 
-        /// <summary>
-        /// Annotation time.
-        /// </summary>
-        public double time { get; set; }
+// Informational attributes.
+[assembly: AssemblyCompany("Grid Protection Alliance")]
+[assembly: AssemblyCopyright("Copyright © GPA, 2016.  All Rights Reserved.")]
+[assembly: AssemblyProduct("Grid Solutions Framework")]
 
-        /// <summary>
-        /// Annotation text.
-        /// </summary>
-        public string text { get; set; }
+// Assembly manifest attributes.
+#if DEBUG
+[assembly: AssemblyConfiguration("Debug Build")]
+#else
+[assembly: AssemblyConfiguration("Release Build")]
+#endif
 
-        /// <summary>
-        /// Annotation tags.
-        /// </summary>
-        public string tags { get; set; }
-    }
-}
+[assembly: AssemblyDefaultAlias("GrafanaAdapters")]
+[assembly: AssemblyDescription("Grafana Adapters")]
+[assembly: AssemblyTitle("GrafanaAdapters")]
+
+// Other configuration attributes.
+[assembly: CLSCompliant(false)]
+[assembly: ComVisible(false)]
+[assembly: Guid("3c8d8504-1880-4cc4-ab1a-8793f3625a31")]

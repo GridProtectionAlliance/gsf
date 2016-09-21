@@ -58,6 +58,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
@@ -359,6 +360,9 @@ namespace HistorianAdapters
             // Validate settings.
             if (!settings.TryGetValue("instanceName", out m_instanceName) || string.IsNullOrWhiteSpace(m_instanceName))
                 m_instanceName = Name.ToLower();
+
+            // Track instance in static dictionary
+            Instances[InstanceName] = this;
 
             if (!settings.TryGetValue("archivePath", out m_archivePath))
                 m_archivePath = FilePath.GetAbsolutePath(FilePath.AddPathSuffix("Archive"));
@@ -935,6 +939,11 @@ namespace HistorianAdapters
         #endregion
 
         #region [ Static ]
+
+        /// <summary>
+        /// Accesses local output adapter instances.
+        /// </summary>
+        public static readonly ConcurrentDictionary<string, LocalOutputAdapter> Instances = new ConcurrentDictionary<string, LocalOutputAdapter>(StringComparer.OrdinalIgnoreCase);
 
         // Static Methods
 

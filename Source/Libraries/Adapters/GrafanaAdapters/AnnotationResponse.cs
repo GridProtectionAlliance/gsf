@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Column.cs - Gbtc
+//  AnnotationResponse.cs - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -21,31 +21,36 @@
 //
 //******************************************************************************************************
 
-namespace GSF.Historian.DataServices.Grafana
+namespace GrafanaAdapters
 {
     /// <summary>
-    /// Defines a Grafana table column.
+    /// Defines a Grafana annotation response.
     /// </summary>
-    public class Column
+    public class AnnotationResponse
     {
         /// <summary>
-        /// Column title.
+        /// Annotation in-response-to request.
+        /// </summary>
+        public Annotation annotation { get; set; }
+
+        /// <summary>
+        /// Annotation title.
+        /// </summary>
+        public string title { get; set; }
+
+        /// <summary>
+        /// Annotation time.
+        /// </summary>
+        public double time { get; set; }
+
+        /// <summary>
+        /// Annotation text.
         /// </summary>
         public string text { get; set; }
 
         /// <summary>
-        /// Column type, e.g., "time", "mean", "sum", etc.
+        /// Annotation tags.
         /// </summary>
-        public string type { get; set; }
-
-        /// <summary>
-        /// Flag that determines if column is sortable.
-        /// </summary>
-        public bool sort { get; set; }
-
-        /// <summary>
-        /// Flag that determines if column is sorted descending.
-        /// </summary>
-        public bool desc { get; set; }
+        public string tags { get; set; }
     }
 }

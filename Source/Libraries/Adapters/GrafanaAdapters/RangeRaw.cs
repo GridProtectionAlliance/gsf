@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Range.cs - Gbtc
+//  RangeRaw.cs - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -21,19 +21,21 @@
 //
 //******************************************************************************************************
 
-namespace GSF.Historian.DataServices.Grafana
+namespace GrafanaAdapters
 {
     /// <summary>
-    /// Defines a Grafana query range.
+    /// Defines a Grafana relative query range.
     /// </summary>
-    public class Range
+    public class RangeRaw
     {
         /// <summary>
-        /// From time for range.
+        /// Relative from time for raw range.
         /// </summary>
         public string from { get; set; }
 
-        // To time for range.
+        /// <summary>
+        /// Relative to time for raw range.
+        /// </summary>
         public string to { get; set; }
     }
 }

@@ -24,14 +24,19 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.ServiceModel;
 using System.Threading.Tasks;
-using GSF.Collections;
+using GSF;
+using GSF.Historian;
+using GSF.Historian.DataServices;
 using GSF.Historian.Files;
+using GSF.TimeSeries.Adapters;
 using GSF.Web;
+using HistorianAdapters;
 
-namespace GSF.Historian.DataServices.Grafana
+namespace GrafanaAdapters
 {
     /// <summary>
     /// Represents a REST based API for a simple JSON based Grafana data source.
@@ -42,6 +47,7 @@ namespace GSF.Historian.DataServices.Grafana
         #region [ Members ]
 
         // Fields
+        private string m_instanceName;
         private volatile bool m_initializedMetadata;
         private bool m_disposed;
 
@@ -113,6 +119,17 @@ namespace GSF.Historian.DataServices.Grafana
         }
 
         /// <summary>
+        /// Initializes the web service.
+        /// </summary>
+        public override void Initialize()
+        {
+            // Get historian instance name as assigned to settings category by data services host
+            m_instanceName = SettingsCategory.Substring(0, SettingsCategory.IndexOf(this.GetType().Name, StringComparison.OrdinalIgnoreCase));
+
+            base.Initialize();
+        }
+
+        /// <summary>
         /// Validates that openHistorian Grafana data source is responding as expected.
         /// </summary>
         public void TestDataSource()
@@ -125,13 +142,13 @@ namespace GSF.Historian.DataServices.Grafana
         /// <param name="request">Query request.</param>
         public Task<List<TimeSeriesValues>> Query(QueryRequest request)
         {
-            // Abort if services is not enabled.
-            if (!Enabled || (object)Archive == null)
-                return null;
-
             // Task allows processing of multiple simultaneous queries
             return Task.Factory.StartNew(() =>
             {
+                // Abort if services is not enabled.
+                if (!Enabled || (object)Archive == null)
+                    return null;
+
                 if (!request.format?.Equals("json", StringComparison.OrdinalIgnoreCase) ?? false)
                     throw new InvalidOperationException("Only JSON formatted query requests are currently supported.");
 
@@ -140,23 +157,56 @@ namespace GSF.Historian.DataServices.Grafana
                 DateTime startTime = request.range.from.ParseJsonTimestamp();
                 DateTime stopTime = request.range.to.ParseJsonTimestamp();
                 HashSet<string> targets = new HashSet<string>(request.targets.Select(requestTarget => requestTarget.target));
+
+                foreach (string requestTarget in request.targets.Select(requestTarget => requestTarget.target))
+                {
+                    if (string.IsNullOrWhiteSpace(requestTarget))
+                        continue;
+
+                    foreach (string targetItem in requestTarget.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        string target = targetItem.Trim();
+
+                        if (target.StartsWith("FILTER", StringComparison.OrdinalIgnoreCase))
+                        {
+                            string tableName, expression, sortField;
+                            int takeCount;
+
+                            if (AdapterBase.ParseFilterExpression(target, out tableName, out expression, out sortField, out takeCount))
+                            {
+                                if (takeCount == int.MaxValue)
+                                    takeCount = 10;
+
+                                targets.UnionWith(LocalOutputAdapter.Instances[m_instanceName].DataSource.Tables[tableName].Select(expression, sortField).Take(takeCount).Select(row => $"{row["ID"]}"));
+                            }
+                        }
+                        else
+                        {
+                            targets.Add(target);
+                        }
+                    }
+                }
+
                 Dictionary<int, string> targetMap = targets.Select(target => new KeyValuePair<int, string>(s_metadata.FirstOrDefault(kvp => target.Split(' ')[0].Equals(kvp.Value, StringComparison.OrdinalIgnoreCase)).Key, target)).Where(kvp => kvp.Key > 0).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-                Dictionary<int, TimeSeriesValues> queriedTimeSeriesValues = new Dictionary<int, TimeSeriesValues>();
+                List<TimeSeriesValues> queriedTimeSeriesValues = new List<TimeSeriesValues>();
                 long baseTicks = UnixTimeTag.BaseTicks.Value;
 
                 if (targetMap.Count > 0)
                 {
-                    int[] measurementIDs = targetMap.Keys.ToArray();
-
-                    // TODO: Change to decimated data read
-                    foreach (IDataPoint point in Archive.ReadData(measurementIDs, startTime, stopTime, false))
+                    foreach (int measurementID in targetMap.Keys)
                     {
-                        queriedTimeSeriesValues.GetOrAdd(point.HistorianID, id => new TimeSeriesValues { target = targetMap[id], datapoints = new List<double[]>() })
-                            .datapoints.Add(new[] { point.Value, (point.Time.ToDateTime().Ticks - baseTicks) / (double)Ticks.PerMillisecond });
+                        TimeSeriesValues series = new TimeSeriesValues { target = targetMap[measurementID], datapoints = new List<double[]>() };
+                        IDataPoint[] data = Archive.ReadData(measurementID, startTime, stopTime, false).ToArray();
+                        int interval = data.Length / request.maxDataPoints + 1;
+                        int pointCount = 0;
+
+                        series.datapoints.AddRange(data.Where(point => pointCount++ % interval == 0).Select(point => new[] { point.Value, (point.Time.ToDateTime().Ticks - baseTicks) / (double)Ticks.PerMillisecond }));
+
+                        queriedTimeSeriesValues.Add(series);
                     }
                 }
 
-                return new List<TimeSeriesValues>(queriedTimeSeriesValues.Values);
+                return queriedTimeSeriesValues;
             });
         }
 
@@ -164,18 +214,44 @@ namespace GSF.Historian.DataServices.Grafana
         /// Search openHistorian for a target.
         /// </summary>
         /// <param name="request">Search target.</param>
-        public string[] Search(Target request)
+        public Task<string[]> Search(Target request)
         {
-            return s_metadata.Take(500).Select(entry => entry.Value).ToArray();
-        }
+            return Task.Factory.StartNew(() =>
+            {
+                DataTable measurements = LocalOutputAdapter.Instances[m_instanceName].DataSource.Tables["ActiveMeasurements"];
+
+                return s_metadata.Take(200)
+                        .Select(entry => entry.Value)
+                        .Select(id => measurements.Select($"ID = '{id}'").FirstOrDefault())
+                        .Where(row => (object)row != null)
+                        .Select(row => $"{row["ID"]} [{row["PointTag"]}]")
+                        .ToArray();
+            });
+        }    
 
         /// <summary>
         /// Queries openHistorian for annotations in a time-range (e.g., Alarms).
         /// </summary>
         /// <param name="request">Annotation request.</param>
-        public List<AnnotationResponse> Annotations(AnnotationRequest request)
+        public async Task<List<AnnotationResponse>> Annotations(AnnotationRequest request)
         {
-            return new List<AnnotationResponse>();
+            bool useFilterExpression;
+            AnnotationType type = request.ParseQueryType(out useFilterExpression);
+            DataSet metadata = LocalOutputAdapter.Instances[m_instanceName].DataSource;
+            DataRow[] definitions = request.ParseSourceDefinitions(type, metadata, useFilterExpression);
+            List<TimeSeriesValues> annotationData = await Query(request.ExtractQueryRequest(type.GetTargets(definitions), 100));
+            List<AnnotationResponse> responses = new List<AnnotationResponse>();
+
+            foreach (TimeSeriesValues values in annotationData)
+            {
+                responses.Add(new AnnotationResponse
+                {
+                    annotation = request.annotation,
+                    title = "Get Title"
+                });
+            }
+
+            return responses;
         }
 
         private void InitializeMetadata()

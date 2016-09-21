@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  AnnotationRequest.cs - Gbtc
+//  QueryRequest.cs - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -21,17 +21,19 @@
 //
 //******************************************************************************************************
 
-namespace GSF.Historian.DataServices.Grafana
+using System.Collections.Generic;
+
+namespace GrafanaAdapters
 {
     /// <summary>
-    /// Defines a Grafana annotation request.
+    /// Defines a Grafana query request.
     /// </summary>
-    public class AnnotationRequest
+    public class QueryRequest
     {
         /// <summary>
-        /// Annotation request details.
+        /// Panel ID of request.
         /// </summary>
-        public Annotation annotation { get; set; }
+        public int panelId { get; set; }
 
         /// <summary>
         /// Request range.
@@ -42,5 +44,25 @@ namespace GSF.Historian.DataServices.Grafana
         /// Relative request range.
         /// </summary>
         public RangeRaw rangeRaw { get; set; }
+
+        /// <summary>
+        /// Request interval.
+        /// </summary>
+        public string interval { get; set; }
+
+        /// <summary>
+        /// Request targets.
+        /// </summary>
+        public List<Target> targets { get; set; }
+
+        /// <summary>
+        /// Request format (typically json).
+        /// </summary>
+        public string format { get; set; }
+
+        /// <summary>
+        /// Maximum data points to return.
+        /// </summary>
+        public int maxDataPoints { get; set; }
     }
 }

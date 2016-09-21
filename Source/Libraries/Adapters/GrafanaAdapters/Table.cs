@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  TimeSeriesValues.cs - Gbtc
+//  Table.cs - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -23,27 +23,27 @@
 
 using System.Collections.Generic;
 
-namespace GSF.Historian.DataServices.Grafana
+namespace GrafanaAdapters
 {
+
     /// <summary>
-    /// Defines a Grafana time-series value.
+    /// Defines a Grafana table.
     /// </summary>
-    public class TimeSeriesValues
+    public class Table
     {
         /// <summary>
-        /// Defines a Grafana time-series value point source.
+        /// Table columns.
         /// </summary>
-        public string target;
+        public List<Column> columns { get; set; }
 
         /// <summary>
-        /// Defines a Grafana time-series value data.
+        /// Table rows.
         /// </summary>
-        /// <remarks>
-        /// "datapoints":[
-        ///       [622,1450754160000],
-        ///       [365,1450754220000]
-        /// ]
-        /// </remarks>
-        public List<double[]> datapoints;
+        public List<List<double?>> rows { get; set; }
+
+        /// <summary>
+        /// Table type (typically set to "table").
+        /// </summary>
+        public string type { get; set; }
     }
 }

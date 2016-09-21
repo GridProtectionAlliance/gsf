@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Target.cs - Gbtc
+//  TimeSeriesValues.cs - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -21,21 +21,29 @@
 //
 //******************************************************************************************************
 
-namespace GSF.Historian.DataServices.Grafana
+using System.Collections.Generic;
+
+namespace GrafanaAdapters
 {
     /// <summary>
-    /// Defines a Grafana query request target.
+    /// Defines a Grafana time-series value.
     /// </summary>
-    public class Target
+    public class TimeSeriesValues
     {
         /// <summary>
-        /// Reference ID.
+        /// Defines a Grafana time-series value point source.
         /// </summary>
-        public string refId { get; set; }
+        public string target;
 
         /// <summary>
-        /// Target point/tag name.
+        /// Defines a Grafana time-series value data.
         /// </summary>
-        public string target { get; set; }
+        /// <remarks>
+        /// "datapoints":[
+        ///       [622,1450754160000],
+        ///       [365,1450754220000]
+        /// ]
+        /// </remarks>
+        public List<double[]> datapoints;
     }
 }

@@ -106,7 +106,6 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Data.OracleClient" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Serialization">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
@@ -115,12 +114,6 @@
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.ServiceModel.Web">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Xml.Linq">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data.DataSetExtensions">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Data" />
@@ -133,18 +126,6 @@
     <Compile Include="DataListener.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="DataServices\Grafana\Annotation.cs" />
-    <Compile Include="DataServices\Grafana\AnnotationRequest.cs" />
-    <Compile Include="DataServices\Grafana\AnnotationResponse.cs" />
-    <Compile Include="DataServices\Grafana\Column.cs" />
-    <Compile Include="DataServices\Grafana\GrafanaDataService.cs" />
-    <Compile Include="DataServices\Grafana\IGrafanaDataService.cs" />
-    <Compile Include="DataServices\Grafana\QueryRequest.cs" />
-    <Compile Include="DataServices\Grafana\Range.cs" />
-    <Compile Include="DataServices\Grafana\RangeRaw.cs" />
-    <Compile Include="DataServices\Grafana\Table.cs" />
-    <Compile Include="DataServices\Grafana\Target.cs" />
-    <Compile Include="DataServices\Grafana\TimeSeriesValues.cs" />
     <Compile Include="DataServices\SerializableReadRequestData.cs" />
     <Compile Include="Exporters\CsvExporter.cs" />
     <Compile Include="Exporters\DataMonitorExporter.cs" />
@@ -279,10 +260,6 @@
     <ProjectReference Include="..\GSF.TimeSeries\GSF.TimeSeries.csproj">
       <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
       <Name>GSF.TimeSeries</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\GSF.Web\GSF.Web.csproj">
-      <Project>{0501c2dc-3428-4413-ae92-f0d82ff3dbbc}</Project>
-      <Name>GSF.Web</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

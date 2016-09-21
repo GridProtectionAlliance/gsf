@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Annotation.cs - Gbtc
+//  Target.cs - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -21,36 +21,21 @@
 //
 //******************************************************************************************************
 
-namespace GSF.Historian.DataServices.Grafana
+namespace GrafanaAdapters
 {
     /// <summary>
-    /// Defines a Grafana annotation.
+    /// Defines a Grafana query request target.
     /// </summary>
-    public class Annotation
+    public class Target
     {
         /// <summary>
-        /// Annotation name.
+        /// Reference ID.
         /// </summary>
-        public string name { get; set; }
+        public string refId { get; set; }
 
         /// <summary>
-        /// Annotation data source.
+        /// Target point/tag name.
         /// </summary>
-        public string datasource { get; set; }
-
-        /// <summary>
-        /// Annotation enabled flag.
-        /// </summary>
-        public bool enable { get; set; }
-
-        /// <summary>
-        /// Annotation icon color.
-        /// </summary>
-        public string iconColor { get; set; }
-
-        /// <summary>
-        /// Annotation query.
-        /// </summary>
-        public string query { get; set; }
+        public string target { get; set; }
     }
 }

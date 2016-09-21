@@ -82,6 +82,9 @@
     // Hide export to CSV button
     bool hideExportCSVButton = ViewBag.HideExportCSVButton ?? false;
 
+    // Define label for export CSV button
+    string exportCSVLabel = (ViewBag.ExportCSVLabel ?? "Export&nbsp;CSV").Replace(" ", "&nbsp;");
+
     // Hide unauthorized controls as disallowed by Edit/AddNew/Delete roles - otherwise unauthorized controls will be disabled
     bool hideUnauthorizedControls = ViewBag.HideUnauthorizedControls ?? false;
 
@@ -229,7 +232,7 @@
             {
                 <span class="pull-right">&nbsp;</span>
                 <a role="button" class="btn btn-sm btn-default pull-right" id="exportCSVButton" hub-dependent>
-                    <span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;Export&nbsp;CSV
+                    <span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;@Raw(exportCSVLabel)
                 </a>
                 <a id="exportCSVLink" download hidden></a>
             }
