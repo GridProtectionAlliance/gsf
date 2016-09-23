@@ -1,12 +1,12 @@
 ﻿//******************************************************************************************************
-//  Annotation.cs - Gbtc
+//  AnnotationType.cs - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
-//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
-//  file except in compliance with the License. You may obtain a copy of the License at:
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
 //
 //      http://opensource.org/licenses/MIT
 //
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/12/2016 - Ritchie Carroll
+//  09/22/2016 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -24,33 +24,23 @@
 namespace GrafanaAdapters
 {
     /// <summary>
-    /// Defines a Grafana annotation.
+    /// Supported annotation types for GSF Time-series Framework.
     /// </summary>
-    public class Annotation
+    public enum AnnotationType
     {
         /// <summary>
-        /// Annotation name.
+        /// Raised alarm annotation.
         /// </summary>
-        public string name { get; set; }
+        RaisedAlarms,
 
         /// <summary>
-        /// Annotation data source.
+        /// Cleared alarm annotation.
         /// </summary>
-        public string datasource { get; set; }
+        ClearedAlarms,
 
         /// <summary>
-        /// Annotation enabled flag.
+        /// Undefined annotation.
         /// </summary>
-        public bool enable { get; set; }
-
-        /// <summary>
-        /// Annotation icon color.
-        /// </summary>
-        public string iconColor { get; set; }
-
-        /// <summary>
-        /// Annotation query.
-        /// </summary>
-        public string query { get; set; }
+        Undefined
     }
 }

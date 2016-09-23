@@ -22,33 +22,67 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.ServiceModel;
+using System.Threading;
 using System.Threading.Tasks;
 using GSF;
 using GSF.Historian;
 using GSF.Historian.DataServices;
-using GSF.Historian.Files;
-using GSF.TimeSeries.Adapters;
-using GSF.Web;
 using HistorianAdapters;
 
 namespace GrafanaAdapters
 {
     /// <summary>
-    /// Represents a REST based API for a simple JSON based Grafana data source.
+    /// Represents a REST based API for a simple JSON based Grafana data source for the openHistorian 1.0.
     /// </summary>
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
     public class GrafanaDataService : DataService, IGrafanaDataService
     {
         #region [ Members ]
 
+        // Nested Types
+        private class HistorianDataSource : GrafanaDataSourceBase
+        {
+            private readonly GrafanaDataService m_parent;
+
+            public HistorianDataSource(GrafanaDataService parent)
+            {
+                m_parent = parent;
+            }
+
+            protected override List<TimeSeriesValues> QueryTimeSeriesValues(DateTime startTime, DateTime stopTime, int maxDataPoints, Dictionary<ulong, string> targetMap, CancellationToken cancellationToken)
+            {
+                List<TimeSeriesValues> queriedTimeSeriesValues = new List<TimeSeriesValues>();
+                long baseTicks = UnixTimeTag.BaseTicks.Value;
+
+                if (targetMap.Count > 0)
+                {
+                    foreach (ulong measurementID in targetMap.Keys)
+                    {
+                        if (cancellationToken.IsCancellationRequested)
+                            break;
+
+                        TimeSeriesValues series = new TimeSeriesValues { target = targetMap[measurementID], datapoints = new List<double[]>() };
+                        IDataPoint[] data = m_parent.Archive.ReadData((int)measurementID, startTime, stopTime, false).ToArray();
+                        int interval = data.Length / maxDataPoints + 1;
+                        int pointCount = 0;
+
+                        series.datapoints.AddRange(data.Where(point => pointCount++ % interval == 0).Select(point => new[] { point.Value, (point.Time.ToDateTime().Ticks - baseTicks) / (double)Ticks.PerMillisecond }));
+
+                        queriedTimeSeriesValues.Add(series);
+                    }
+                }
+
+                return queriedTimeSeriesValues;
+            }
+        }
+
         // Fields
-        private string m_instanceName;
-        private volatile bool m_initializedMetadata;
+        private readonly HistorianDataSource m_dataSource;
+        private CancellationTokenSource m_cancellationSource;
         private bool m_disposed;
 
         #endregion
@@ -60,13 +94,34 @@ namespace GrafanaAdapters
         /// </summary>
         public GrafanaDataService()
         {
-            Endpoints = "http.rest://localhost:6052/api/grafana/";
+            m_dataSource = new HistorianDataSource(this);
+            m_cancellationSource = new CancellationTokenSource();
+            Endpoints = "http.rest://localhost:6057/api/grafana/";
             ServiceEnabled = false;
         }
 
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the web service is currently enabled.
+        /// </summary>
+        public override bool Enabled
+        {
+            get
+            {
+                return base.Enabled;
+            }
+            set
+            {
+                base.Enabled = value;
+
+                // Cancel any running queries if web service gets disabled
+                if (!value)
+                    Interlocked.Exchange(ref m_cancellationSource, new CancellationTokenSource()).Dispose();
+            }
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="IArchive"/> used by the web service for its data.
@@ -77,16 +132,18 @@ namespace GrafanaAdapters
             {
                 return base.Archive;
             }
-
             set
             {
-                if ((object)base.Archive != null)
-                    base.Archive.MetadataUpdated -= ArchiveMetadataUpdated;
-
                 base.Archive = value;
 
-                if ((object)base.Archive != null)
-                    base.Archive.MetadataUpdated += ArchiveMetadataUpdated;
+                // Update data source metadata when an archive is defined, adapter should exist by then
+                if ((object)m_dataSource.Metadata == null && Enabled)
+                {
+                    LocalOutputAdapter adapter;
+
+                    if (LocalOutputAdapter.Instances.TryGetValue(m_dataSource.InstanceName, out adapter))
+                        m_dataSource.Metadata = adapter.DataSource;
+                }
             }
         }
 
@@ -105,10 +162,7 @@ namespace GrafanaAdapters
                 try
                 {
                     if (disposing)
-                    {
-                        if ((object)Archive != null)
-                            Archive.MetadataUpdated -= ArchiveMetadataUpdated;
-                    }
+                        m_cancellationSource.Dispose();
                 }
                 finally
                 {
@@ -124,7 +178,7 @@ namespace GrafanaAdapters
         public override void Initialize()
         {
             // Get historian instance name as assigned to settings category by data services host
-            m_instanceName = SettingsCategory.Substring(0, SettingsCategory.IndexOf(this.GetType().Name, StringComparison.OrdinalIgnoreCase));
+            m_dataSource.InstanceName = SettingsCategory.Substring(0, SettingsCategory.IndexOf(GetType().Name, StringComparison.OrdinalIgnoreCase));
 
             base.Initialize();
         }
@@ -142,72 +196,11 @@ namespace GrafanaAdapters
         /// <param name="request">Query request.</param>
         public Task<List<TimeSeriesValues>> Query(QueryRequest request)
         {
-            // Task allows processing of multiple simultaneous queries
-            return Task.Factory.StartNew(() =>
-            {
-                // Abort if services is not enabled.
-                if (!Enabled || (object)Archive == null)
-                    return null;
+            // Abort if services are not enabled
+            if (!Enabled || (object)Archive == null)
+                return null;
 
-                if (!request.format?.Equals("json", StringComparison.OrdinalIgnoreCase) ?? false)
-                    throw new InvalidOperationException("Only JSON formatted query requests are currently supported.");
-
-                InitializeMetadata();
-
-                DateTime startTime = request.range.from.ParseJsonTimestamp();
-                DateTime stopTime = request.range.to.ParseJsonTimestamp();
-                HashSet<string> targets = new HashSet<string>(request.targets.Select(requestTarget => requestTarget.target));
-
-                foreach (string requestTarget in request.targets.Select(requestTarget => requestTarget.target))
-                {
-                    if (string.IsNullOrWhiteSpace(requestTarget))
-                        continue;
-
-                    foreach (string targetItem in requestTarget.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
-                    {
-                        string target = targetItem.Trim();
-
-                        if (target.StartsWith("FILTER", StringComparison.OrdinalIgnoreCase))
-                        {
-                            string tableName, expression, sortField;
-                            int takeCount;
-
-                            if (AdapterBase.ParseFilterExpression(target, out tableName, out expression, out sortField, out takeCount))
-                            {
-                                if (takeCount == int.MaxValue)
-                                    takeCount = 10;
-
-                                targets.UnionWith(LocalOutputAdapter.Instances[m_instanceName].DataSource.Tables[tableName].Select(expression, sortField).Take(takeCount).Select(row => $"{row["ID"]}"));
-                            }
-                        }
-                        else
-                        {
-                            targets.Add(target);
-                        }
-                    }
-                }
-
-                Dictionary<int, string> targetMap = targets.Select(target => new KeyValuePair<int, string>(s_metadata.FirstOrDefault(kvp => target.Split(' ')[0].Equals(kvp.Value, StringComparison.OrdinalIgnoreCase)).Key, target)).Where(kvp => kvp.Key > 0).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-                List<TimeSeriesValues> queriedTimeSeriesValues = new List<TimeSeriesValues>();
-                long baseTicks = UnixTimeTag.BaseTicks.Value;
-
-                if (targetMap.Count > 0)
-                {
-                    foreach (int measurementID in targetMap.Keys)
-                    {
-                        TimeSeriesValues series = new TimeSeriesValues { target = targetMap[measurementID], datapoints = new List<double[]>() };
-                        IDataPoint[] data = Archive.ReadData(measurementID, startTime, stopTime, false).ToArray();
-                        int interval = data.Length / request.maxDataPoints + 1;
-                        int pointCount = 0;
-
-                        series.datapoints.AddRange(data.Where(point => pointCount++ % interval == 0).Select(point => new[] { point.Value, (point.Time.ToDateTime().Ticks - baseTicks) / (double)Ticks.PerMillisecond }));
-
-                        queriedTimeSeriesValues.Add(series);
-                    }
-                }
-
-                return queriedTimeSeriesValues;
-            });
+            return m_dataSource.Query(request, m_cancellationSource.Token);
         }
 
         /// <summary>
@@ -216,77 +209,21 @@ namespace GrafanaAdapters
         /// <param name="request">Search target.</param>
         public Task<string[]> Search(Target request)
         {
-            return Task.Factory.StartNew(() =>
-            {
-                DataTable measurements = LocalOutputAdapter.Instances[m_instanceName].DataSource.Tables["ActiveMeasurements"];
-
-                return s_metadata.Take(200)
-                        .Select(entry => entry.Value)
-                        .Select(id => measurements.Select($"ID = '{id}'").FirstOrDefault())
-                        .Where(row => (object)row != null)
-                        .Select(row => $"{row["ID"]} [{row["PointTag"]}]")
-                        .ToArray();
-            });
+            return m_dataSource.Search(request);
         }    
 
         /// <summary>
         /// Queries openHistorian for annotations in a time-range (e.g., Alarms).
         /// </summary>
         /// <param name="request">Annotation request.</param>
-        public async Task<List<AnnotationResponse>> Annotations(AnnotationRequest request)
+        public Task<List<AnnotationResponse>> Annotations(AnnotationRequest request)
         {
-            bool useFilterExpression;
-            AnnotationType type = request.ParseQueryType(out useFilterExpression);
-            DataSet metadata = LocalOutputAdapter.Instances[m_instanceName].DataSource;
-            DataRow[] definitions = request.ParseSourceDefinitions(type, metadata, useFilterExpression);
-            List<TimeSeriesValues> annotationData = await Query(request.ExtractQueryRequest(type.GetTargets(definitions), 100));
-            List<AnnotationResponse> responses = new List<AnnotationResponse>();
+            // Abort if services are not enabled
+            if (!Enabled || (object)Archive == null)
+                return null;
 
-            foreach (TimeSeriesValues values in annotationData)
-            {
-                responses.Add(new AnnotationResponse
-                {
-                    annotation = request.annotation,
-                    title = "Get Title"
-                });
-            }
-
-            return responses;
+            return m_dataSource.Annotations(request, m_cancellationSource.Token);
         }
-
-        private void InitializeMetadata()
-        {
-            // Abort if services is not enabled or Archive is not defined
-            if (m_initializedMetadata || !Enabled || (object)Archive == null)
-                return;
-
-            m_initializedMetadata = true;
-
-            int id = 0;
-
-            while (true)
-            {
-                byte[] buffer = Archive.ReadMetaData(++id);
-
-                if ((object)buffer == null)
-                    break;
-
-                SerializableMetadataRecord newRecord = new SerializableMetadataRecord(new MetadataRecord(id, MetadataFileLegacyMode.Enabled, buffer, 0, buffer.Length));
-                s_metadata[newRecord.HistorianID] = $"{newRecord.PlantCode}:{newRecord.HistorianID}";
-            }
-        }
-
-        private void ArchiveMetadataUpdated(object sender, EventArgs e)
-        {
-            m_initializedMetadata = false;
-        }
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Fields
-        private static readonly ConcurrentDictionary<int, string> s_metadata = new ConcurrentDictionary<int, string>();
 
         #endregion
     }

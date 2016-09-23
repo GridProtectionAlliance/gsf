@@ -31,6 +31,16 @@ namespace GrafanaAdapters
     public class TimeSeriesValues
     {
         /// <summary>
+        /// Data point index for value.
+        /// </summary>
+        public const int Value = 0;
+
+        /// <summary>
+        /// Data point index for time.
+        /// </summary>
+        public const int Time = 1;
+
+        /// <summary>
         /// Defines a Grafana time-series value point source.
         /// </summary>
         public string target;
