@@ -23,7 +23,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.ServiceModel;
 using System.Threading;
@@ -134,22 +133,31 @@ namespace GrafanaAdapters
             }
             set
             {
+                if ((object)base.Archive != null)
+                    base.Archive.MetadataUpdated -= Archive_MetadataUpdated;
+
                 base.Archive = value;
+
+                if ((object)base.Archive != null)
+                    base.Archive.MetadataUpdated += Archive_MetadataUpdated;
 
                 // Update data source metadata when an archive is defined, adapter should exist by then
                 if ((object)m_dataSource.Metadata == null && Enabled)
-                {
-                    LocalOutputAdapter adapter;
-
-                    if (LocalOutputAdapter.Instances.TryGetValue(m_dataSource.InstanceName, out adapter))
-                        m_dataSource.Metadata = adapter.DataSource;
-                }
+                    Archive_MetadataUpdated(this, EventArgs.Empty);
             }
         }
 
         #endregion
 
         #region [ Methods ]
+
+        private void Archive_MetadataUpdated(object sender, EventArgs e)
+        {
+            LocalOutputAdapter adapter;
+
+            if (LocalOutputAdapter.Instances.TryGetValue(m_dataSource.InstanceName, out adapter))
+                m_dataSource.Metadata = adapter.DataSource;
+        }
 
         /// <summary>
         /// Releases the unmanaged resources used by the <see cref="GrafanaDataService"/> object and optionally releases the managed resources.
