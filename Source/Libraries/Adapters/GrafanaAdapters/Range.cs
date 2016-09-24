@@ -33,7 +33,9 @@ namespace GrafanaAdapters
         /// </summary>
         public string from { get; set; }
 
-        // To time for range.
+        /// <summary>
+        /// To time for range. 
+        /// </summary>
         public string to { get; set; }
     }
 }

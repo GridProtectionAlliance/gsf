@@ -34,8 +34,10 @@ namespace GSF.TimeSeries.Adapters
     /// <summary>
     /// Represents an alternative routing table that has intentional delays to lower overall CPU utilization.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable")]
     public class RouteMappingHighLatencyLowCpu : IRouteMappingTables
     {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable")]
         private class Consumer
         {
             private readonly ScheduledTask m_task;
@@ -162,12 +164,12 @@ namespace GSF.TimeSeries.Adapters
             }
 
             /// <summary>Creates an array from the <see cref="IEnumerable{T}"/>. 
-            /// Twice as fast as <see cref="Enumerable.ToArray{T}"/> if <see cref="source"/>
+            /// Twice as fast as <see cref="Enumerable.ToArray{T}"/> if <param name="source"/>
             /// implements <see cref="ICollection{T}"/></summary>
             public static T[] ToArrayOptimized<T>(IEnumerable<T> source)
             {
                 if (source == null)
-                    throw new ArgumentNullException("source");
+                    throw new ArgumentNullException(nameof(source));
 
                 ICollection<T> collection = source as ICollection<T>;
                 if (collection != null)
@@ -210,7 +212,7 @@ namespace GSF.TimeSeries.Adapters
         public RouteMappingHighLatencyLowCpu(int routeLatency)
         {
             if (routeLatency < 1 || routeLatency > 500)
-                throw new ArgumentOutOfRangeException("routeLatency", "Must be between 1 and 500ms");
+                throw new ArgumentOutOfRangeException(nameof(routeLatency), "Must be between 1 and 500ms");
 
             m_maxPendingMeasurements = 1000;
             m_routeLatency = routeLatency;

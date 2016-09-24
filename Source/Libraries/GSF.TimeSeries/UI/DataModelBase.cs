@@ -408,22 +408,24 @@ namespace GSF.TimeSeries.UI
         {
             if (database == null)
             {
-                try
-                {
-                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    throw;
-                    if (!MessageFlag)
-                    {
-                        m_messageFlag = true;
-                        MessageBox.Show("ERROR: " + ex.Message, "Create Database Connection", MessageBoxButton.OK);
-                        m_messageFlag = false;
-                    }
-                    return false;
-                }
+                database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                return true;
+                //try
+                //{
+                //    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                //    return true;
+                //}
+                //catch (Exception ex)
+                //{
+                //    throw;
+                //    if (!MessageFlag)
+                //    {
+                //        m_messageFlag = true;
+                //        MessageBox.Show("ERROR: " + ex.Message, "Create Database Connection", MessageBoxButton.OK);
+                //        m_messageFlag = false;
+                //    }
+                //    return false;
+                //}
             }
 
             return false;

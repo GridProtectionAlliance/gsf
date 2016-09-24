@@ -31,6 +31,8 @@ using GSF.IO.Compression;
 using GSF.Units;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+#pragma warning disable CS0618 // Type or member is obsolete
+
 namespace GSF.Core.Tests
 {
     /// <summary>

@@ -69,6 +69,11 @@ namespace GSF.Geo
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Calculates distance between this and another <see cref="GeoCoordinate"/> value.
+        /// </summary>
+        /// <param name="other">Other <see cref="GeoCoordinate"/>.</param>
+        /// <returns>Distance between two <see cref="GeoCoordinate"/> values.</returns>
         public double Distance(GeoCoordinate other)
         {
             const double RadianConversionFactor = Math.PI / 180.0D;

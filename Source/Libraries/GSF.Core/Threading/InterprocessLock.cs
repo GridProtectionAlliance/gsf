@@ -79,7 +79,7 @@ namespace GSF.Threading
         {
             Assembly entryAssembly = Assembly.GetEntryAssembly();
             GuidAttribute attribute = (GuidAttribute)entryAssembly.GetCustomAttributes(typeof(GuidAttribute), true).FirstOrDefault();
-            string name = attribute?.Value.ToString() ?? entryAssembly.GetName().Name;
+            string name = attribute?.Value ?? entryAssembly.GetName().Name;
 
             if (perUser)
                 name += UserInfo.CurrentUserID;
@@ -117,7 +117,7 @@ namespace GSF.Threading
         public static Mutex GetNamedMutex(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentNullException("name", "Argument cannot be empty, null or white space.");
+                throw new ArgumentNullException(nameof(name), "Argument cannot be empty, null or white space.");
 
             Mutex namedMutex;
             bool mutexWasCreated;
@@ -175,7 +175,7 @@ namespace GSF.Threading
         /// <param name="perUser">Indicates whether to generate a different name for the <see cref="Semaphore"/> dependent upon the user running the application.</param>
         /// <param name="maximumCount">The maximum number of requests for the semaphore that can be granted concurrently.</param>
         /// <param name="initialCount">The initial number of requests for the semaphore that can be granted concurrently, or -1 to default to <paramref name="maximumCount"/>.</param>
-        /// <returns>A uniquely named inter-process <see cref="Semaphore"/> specific to <paramref name="name"/>; <see cref="Semaphore"/> is created if it does not exist.</returns>
+        /// <returns>A uniquely named inter-process <see cref="Semaphore"/> specific to entry assembly; <see cref="Semaphore"/> is created if it does not exist.</returns>
         /// <remarks>
         /// <para>
         /// This function uses a hash of the assembly's GUID when creating the <see cref="Semaphore"/>, if it is available. If it is not available, it uses a hash
@@ -196,7 +196,7 @@ namespace GSF.Threading
         {
             Assembly entryAssembly = Assembly.GetEntryAssembly();
             GuidAttribute attribute = (GuidAttribute)entryAssembly.GetCustomAttributes(typeof(GuidAttribute), true).FirstOrDefault();
-            string name = attribute?.Value.ToString() ?? entryAssembly.GetName().Name;
+            string name = attribute?.Value ?? entryAssembly.GetName().Name;
 
             if (perUser)
                 name += UserInfo.CurrentUserID;
@@ -236,7 +236,7 @@ namespace GSF.Threading
         public static Semaphore GetNamedSemaphore(string name, int maximumCount = 10, int initialCount = -1)
         {
             if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentNullException("name", "Argument cannot be empty, null or white space.");
+                throw new ArgumentNullException(nameof(name), "Argument cannot be empty, null or white space.");
 
             Semaphore namedSemaphore;
             bool semaphoreWasCreated;
