@@ -82,15 +82,19 @@ namespace GrafanaAdapters
                 HashSet<string> targets = new HashSet<string>(request.targets.Select(target => target.target));
 
                 foreach (string target in request.targets.Select(target => target.target))
-                {
-                    if (string.IsNullOrWhiteSpace(target))
-                        continue;
+                    targets.UnionWith(AdapterBase.ParseInputMeasurementKeys(Metadata, false, target).Select(key => key.ToString()));
 
-                    foreach (string targetItem in target.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
-                        targets.UnionWith(AdapterBase.ParseInputMeasurementKeys(Metadata, false, targetItem.Split(' ')[0]).Select(key => key.ToString()));
+                Dictionary<ulong, string> targetMap = new Dictionary<ulong, string>();
+
+                foreach (string target in targets)
+                {
+                    MeasurementKey key = MeasurementKey.LookUpOrCreate(target);
+
+                    if (key != MeasurementKey.Undefined)
+                        targetMap[key.ID] = target;
                 }
 
-                return QueryTimeSeriesValues(startTime, stopTime, request.maxDataPoints, targets.Select(target => new KeyValuePair<ulong, string>((ulong)MeasurementKey.LookUpOrCreate(target).ID, target)).Where(kvp => kvp.Key > 0).ToDictionary(kvp => kvp.Key, kvp => kvp.Value), cancellationToken);
+                return QueryTimeSeriesValues(startTime, stopTime, request.maxDataPoints, targetMap, cancellationToken);
             },
             cancellationToken);
         }
@@ -117,7 +121,7 @@ namespace GrafanaAdapters
                 return Metadata.Tables["ActiveMeasurements"]
                     .Select($"ID LIKE '{InstanceName}:%'")
                     .Take(MaximumSearchTargetsPerRequest)
-                    .Select(row => $"{row["ID"]} [{row["PointTag"]}]")
+                    .Select(row => $"{row["ID"]}")
                     .ToArray();
             });
         }
