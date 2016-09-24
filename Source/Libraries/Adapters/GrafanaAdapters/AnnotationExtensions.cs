@@ -175,27 +175,35 @@ namespace GrafanaAdapters
             if ((object)annotation == null)
                 throw new ArgumentNullException(nameof(annotation));
 
-            string query = annotation.query ?? "";
-            AnnotationType type = AnnotationType.Undefined;
             useFilterExpression = false;
 
-            if (query.StartsWith("#RaisedAlarms", StringComparison.OrdinalIgnoreCase))
+            AnnotationType type = AnnotationType.Undefined;
+            string tableName, expression, sortField, query = annotation.query ?? "";
+            int takeCount;
+
+            if (AdapterBase.ParseFilterExpression(query, out tableName, out expression, out sortField, out takeCount))
             {
-                type = AnnotationType.RaisedAlarms;
-            }
-            else if (query.StartsWith("FILTER RaisedAlarms", StringComparison.OrdinalIgnoreCase))
-            {
-                type = AnnotationType.RaisedAlarms;
                 useFilterExpression = true;
+
+                switch (tableName.ToUpperInvariant())
+                {
+                    case "RAISEDALARMS":
+                        type = AnnotationType.RaisedAlarms;
+                        break;
+                    case "CLEAREDALARMS":
+                        type = AnnotationType.ClearedAlarms;
+                        break;
+                    default:
+                        throw new InvalidOperationException("Invalid FILTER table for annotation query expression.");
+                }
+            }
+            else if (query.StartsWith("#RaisedAlarms", StringComparison.OrdinalIgnoreCase))
+            {
+                type = AnnotationType.RaisedAlarms;
             }
             else if (query.StartsWith("#ClearedAlarms", StringComparison.OrdinalIgnoreCase))
             {
                 type = AnnotationType.ClearedAlarms;
-            }
-            else if (query.StartsWith("FILTER ClearedAlarms", StringComparison.OrdinalIgnoreCase))
-            {
-                type = AnnotationType.ClearedAlarms;
-                useFilterExpression = true;
             }
 
             if (type == AnnotationType.Undefined)
@@ -238,7 +246,7 @@ namespace GrafanaAdapters
                 throw new InvalidOperationException("Unrecognized type or syntax for annotation query expression.");
 
             string query = annotation.query ?? "";
-            DataRow[] events;
+            DataRow[] rows;
 
             if (useFilterExpression)
             {
@@ -246,16 +254,27 @@ namespace GrafanaAdapters
                 int takeCount;
 
                 if (AdapterBase.ParseFilterExpression(query, out tableName, out expression, out sortField, out takeCount))
-                    events = source.Tables[tableName.Translate()].Select(expression, sortField).Take(takeCount).ToArray();
+                    rows = source.Tables[tableName.Translate()].Select(expression, sortField).Take(takeCount).ToArray();
                 else
                     throw new InvalidOperationException("Invalid FILTER syntax for annotation query expression.");
             }
             else
             {
-                events = source.Tables[type.TableName().Translate()].Rows.Cast<DataRow>().ToArray();
+                // Assume all records if no filter expression was provided
+                rows = source.Tables[type.TableName().Translate()].Rows.Cast<DataRow>().ToArray();
             }
 
-            return events.Select(row => new KeyValuePair<string, DataRow>(GetTargetFromGuid(row[type.TargetFieldName()].ToString()), row)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            Dictionary<string, DataRow> definitions = new Dictionary<string, DataRow>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (DataRow row in rows)
+            {
+                MeasurementKey key = GetTargetFromGuid(row[type.TargetFieldName()].ToString());
+
+                if (key != MeasurementKey.Undefined)
+                    definitions[key.ID.ToString()] = row;
+            }
+
+            return definitions;
         }
 
         /// <summary>
@@ -274,6 +293,6 @@ namespace GrafanaAdapters
             return request.annotation.ParseSourceDefinitions(type, source, useFilterExpression);
         }
 
-        private static string GetTargetFromGuid(string guidID) => MeasurementKey.LookUpBySignalID(Guid.Parse(guidID)).ToString();
+        private static MeasurementKey GetTargetFromGuid(string guidID) => MeasurementKey.LookUpBySignalID(Guid.Parse(guidID));
     }
 }
