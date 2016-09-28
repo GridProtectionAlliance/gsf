@@ -220,7 +220,11 @@ namespace GSF.ServiceModel
         private bool m_allowCrossDomainAccess;
         private string m_allowedDomainList;
         private bool m_windowsAuthentication;
+        private bool m_jsonFaultHandlingEnabled;
+        private bool m_faultExceptionEnabled;
         private bool m_automaticFormatSelectionEnabled;
+        private WebMessageFormat m_defaultOutgoingRequestFormat;
+        private WebMessageFormat m_defaultOutgoingResponseFormat;
         private bool m_serviceEnabled;
         private bool m_disposed;
         private bool m_initialized;
@@ -241,6 +245,9 @@ namespace GSF.ServiceModel
             m_allowCrossDomainAccess = false;
             m_allowedDomainList = "*";
             m_serviceEnabled = true;
+            m_faultExceptionEnabled = true;
+            m_defaultOutgoingRequestFormat = WebMessageFormat.Xml;
+            m_defaultOutgoingResponseFormat = WebMessageFormat.Xml;
         }
 
         /// <summary>
@@ -430,6 +437,21 @@ namespace GSF.ServiceModel
         }
 
         /// <summary>
+        /// Gets or sets a value that determines if JSON formatted fault messages should be returned during exceptions.
+        /// </summary>
+        public bool JsonFaultHandlingEnabled
+        {
+            get
+            {
+                return m_jsonFaultHandlingEnabled;
+            }
+            set
+            {
+                m_jsonFaultHandlingEnabled = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets a value that determines if automatic format selection is enabled for Web HTTP bindings.
         /// </summary>
         /// <remarks>
@@ -444,6 +466,54 @@ namespace GSF.ServiceModel
             set
             {
                 m_automaticFormatSelectionEnabled = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the flag that specifies whether a FaultException is generated when an internal server error(HTTP status code: 500) occurs for Web HTTP bindings.
+        /// </summary>
+        /// <remarks>
+        /// Set to <c>false</c> if you need service implementation to return non-XML (e.g., JSON) formatted exception messages.
+        /// </remarks>
+        public bool FaultExceptionEnabled
+        {
+            get
+            {
+                return m_faultExceptionEnabled;
+            }
+            set
+            {
+                m_faultExceptionEnabled = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets and sets the default outgoing request format for Web HTTP bindings.
+        /// </summary>
+        public WebMessageFormat DefaultOutgoingRequestFormat
+        {
+            get
+            {
+                return m_defaultOutgoingRequestFormat;
+            }
+            set
+            {
+                m_defaultOutgoingRequestFormat = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets and sets the default outgoing response format for Web HTTP bindings.
+        /// </summary>
+        public WebMessageFormat DefaultOutgoingResponseFormat
+        {
+            get
+            {
+                return m_defaultOutgoingResponseFormat;
+            }
+            set
+            {
+                m_defaultOutgoingResponseFormat = value;
             }
         }
 
@@ -668,13 +738,15 @@ namespace GSF.ServiceModel
                     if (serviceBinding is WebHttpBinding)
                     {
                         // Special handling for REST endpoint.
-                        WebHttpBehavior restBehavior = new WebHttpBehavior();
+                        WebHttpBehavior restBehavior = m_jsonFaultHandlingEnabled ? new JsonFaultWebHttpBehavior() : new WebHttpBehavior();
 #if !MONO
                         if (m_publishMetadata)
                             restBehavior.HelpEnabled = true;
 #endif
-
+                        restBehavior.FaultExceptionEnabled = m_faultExceptionEnabled;
                         restBehavior.AutomaticFormatSelectionEnabled = m_automaticFormatSelectionEnabled;
+                        restBehavior.DefaultOutgoingRequestFormat = m_defaultOutgoingRequestFormat;
+                        restBehavior.DefaultOutgoingResponseFormat = m_defaultOutgoingResponseFormat;
 
                         serviceEndpoint.Behaviors.Add(restBehavior);
                     }

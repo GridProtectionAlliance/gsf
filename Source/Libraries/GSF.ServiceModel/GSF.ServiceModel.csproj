@@ -117,12 +117,15 @@
     <Compile Include="Activation\SecureServiceHostFactory.cs" />
     <Compile Include="IPolicyRetriever.cs" />
     <Compile Include="ISelfHostingService.cs" />
+    <Compile Include="JsonFaultHandler.cs" />
+    <Compile Include="JsonFaultWebHttpBehavior.cs" />
     <Compile Include="NamespaceDoc.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Activation\SecureDataServiceHostFactory.cs" />
     <Compile Include="SecurityPolicy.cs" />
     <Compile Include="SelfHostingService.cs" />
     <Compile Include="Service.cs" />
+    <Compile Include="JsonFault.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GSF.Core\GSF.Core.csproj">

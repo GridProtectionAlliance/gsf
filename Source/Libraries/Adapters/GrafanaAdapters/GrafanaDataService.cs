@@ -99,7 +99,7 @@ namespace GrafanaAdapters
             ServiceEnabled = false;
 
             // Make sure exceptions are reported in JSON format
-            AutomaticFormatSelectionEnabled = false;
+            JsonFaultHandlingEnabled = true;
         }
 
         #endregion
@@ -205,35 +205,35 @@ namespace GrafanaAdapters
         /// Queries openHistorian as a Grafana data source.
         /// </summary>
         /// <param name="request">Query request.</param>
-        public Task<List<TimeSeriesValues>> Query(QueryRequest request)
+        public async Task<List<TimeSeriesValues>> Query(QueryRequest request)
         {
             // Abort if services are not enabled
             if (!Enabled || (object)Archive == null)
                 return null;
 
-            return m_dataSource.Query(request, m_cancellationSource.Token);
+            return await m_dataSource.Query(request, m_cancellationSource.Token);
         }
 
         /// <summary>
         /// Search openHistorian for a target.
         /// </summary>
         /// <param name="request">Search target.</param>
-        public Task<string[]> Search(Target request)
+        public async Task<string[]> Search(Target request)
         {
-            return m_dataSource.Search(request);
-        }    
+            return await m_dataSource.Search(request);
+        }
 
         /// <summary>
         /// Queries openHistorian for annotations in a time-range (e.g., Alarms).
         /// </summary>
         /// <param name="request">Annotation request.</param>
-        public Task<List<AnnotationResponse>> Annotations(AnnotationRequest request)
+        public async Task<List<AnnotationResponse>> Annotations(AnnotationRequest request)
         {
             // Abort if services are not enabled
             if (!Enabled || (object)Archive == null)
                 return null;
 
-            return m_dataSource.Annotations(request, m_cancellationSource.Token);
+            return await m_dataSource.Annotations(request, m_cancellationSource.Token);
         }
 
         #endregion
