@@ -97,6 +97,9 @@ namespace GrafanaAdapters
             m_cancellationSource = new CancellationTokenSource();
             Endpoints = "http.rest://localhost:6057/api/grafana/";
             ServiceEnabled = false;
+
+            // Make sure exceptions are reported in JSON format
+            AutomaticFormatSelectionEnabled = false;
         }
 
         #endregion

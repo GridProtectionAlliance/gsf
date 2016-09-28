@@ -57,6 +57,9 @@
 //  12/11/2013 - Pinal C. Patel
 //       Added WindowsAuthentication property to allow Windows Authentication to be enabled explicitly
 //       even if SecurityPolicy is not configured to allow for more flexibility.
+//  09/28/2016 - J. Ritchie Carroll
+//       Added AutomaticFormatSelectionEnabled property to allow for non-XML based, e.g., JSON,
+//       formats for exception messages.
 //
 //******************************************************************************************************
 
@@ -217,6 +220,7 @@ namespace GSF.ServiceModel
         private bool m_allowCrossDomainAccess;
         private string m_allowedDomainList;
         private bool m_windowsAuthentication;
+        private bool m_automaticFormatSelectionEnabled;
         private bool m_serviceEnabled;
         private bool m_disposed;
         private bool m_initialized;
@@ -310,7 +314,7 @@ namespace GSF.ServiceModel
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_contractInterface = value;
             }
@@ -422,6 +426,24 @@ namespace GSF.ServiceModel
             set
             {
                 m_serviceEnabled = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a value that determines if automatic format selection is enabled for Web HTTP bindings.
+        /// </summary>
+        /// <remarks>
+        /// Set to <c>false</c> if you need service implementation to return non-XML (e.g., JSON) formatted exception messages.
+        /// </remarks>
+        public bool AutomaticFormatSelectionEnabled
+        {
+            get
+            {
+                return m_automaticFormatSelectionEnabled;
+            }
+            set
+            {
+                m_automaticFormatSelectionEnabled = value;
             }
         }
 
@@ -558,7 +580,7 @@ namespace GSF.ServiceModel
                 Match match = Regex.Match(endpoint, regex, RegexOptions.IgnoreCase);
 
                 if (match.Success && match.Groups["host"].Success)
-                    return string.Format("http://{0}", match.Groups["host"]);
+                    return $"http://{match.Groups["host"]}";
             }
 
             // Return an empty string if endpoints are not in a valid format.
@@ -611,7 +633,7 @@ namespace GSF.ServiceModel
                     Type securityPolicyType = Type.GetType(m_securityPolicy);
 
                     if ((object)securityPolicyType == null)
-                        throw new NullReferenceException(string.Format("Failed get security policy type '{0}' for self-hosting service - check config file settings.", m_securityPolicy.ToNonNullNorWhiteSpace("[undefined]")));
+                        throw new NullReferenceException($"Failed get security policy type '{m_securityPolicy.ToNonNullNorWhiteSpace("[undefined]")}' for self-hosting service - check config file settings.");
 
                     policies.Add((IAuthorizationPolicy)Activator.CreateInstance(securityPolicyType));
                     serviceBehavior.ExternalAuthorizationPolicies = policies.AsReadOnly();
@@ -639,7 +661,7 @@ namespace GSF.ServiceModel
                     Type contractInterfaceType = Type.GetType(m_contractInterface);
 
                     if ((object)contractInterfaceType == null)
-                        throw new NullReferenceException(string.Format("Failed to get contract interface type '{0}' for self-hosting service - check config file settings.", m_contractInterface.ToNonNullNorWhiteSpace("[undefined]")));
+                        throw new NullReferenceException($"Failed to get contract interface type '{m_contractInterface.ToNonNullNorWhiteSpace("[undefined]")}' for self-hosting service - check config file settings.");
 
                     serviceEndpoint = m_serviceHost.AddServiceEndpoint(contractInterfaceType, serviceBinding, serviceAddress);
 
@@ -651,6 +673,9 @@ namespace GSF.ServiceModel
                         if (m_publishMetadata)
                             restBehavior.HelpEnabled = true;
 #endif
+
+                        restBehavior.AutomaticFormatSelectionEnabled = m_automaticFormatSelectionEnabled;
+
                         serviceEndpoint.Behaviors.Add(restBehavior);
                     }
                     else if (m_publishMetadata)
