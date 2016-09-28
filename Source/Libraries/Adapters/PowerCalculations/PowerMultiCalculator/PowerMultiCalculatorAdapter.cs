@@ -41,6 +41,28 @@ using GSF.Units.EE;
 namespace PowerCalculations.PowerMultiCalculator
 {
     /// <summary>
+    /// Represents the strategy used to adjust voltage values for power
+    /// calculations based on the nature of the voltage measurement.
+    /// </summary>
+    public enum VoltageAdjustmentStrategy
+    {
+        /// <summary>
+        /// Factor of 3 adjustment (S=3*V*I)
+        /// </summary>
+        LineToNeutral,
+
+        /// <summary>
+        /// Factor of Sqrt(3) adjustment (S=Sqrt(3)*V*I)
+        /// </summary>
+        LineToLine,
+
+        /// <summary>
+        /// No adjustment (S=V*I)
+        /// </summary>
+        None
+    }
+
+    /// <summary>
     /// Performs MW, MVA, and MVAR calculations based on current and voltage phasors input to the adapter
     /// </summary>
     [Description("PowerMultiCalculatorAdapter: Performs MW, MVAR and MVA calculations based on current and voltage phasors input to the adapter")]
@@ -97,20 +119,12 @@ namespace PowerCalculations.PowerMultiCalculator
         public bool AlwaysProduceResult { get; set; }
 
         /// <summary>
-        /// Gets or sets flag indicating whether or not this adapter should multiply all calculation results by sqrt(3)
+        /// Gets or sets the strategy used to adjust voltage values for based on the nature of the voltage measurements.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines flag that determines if adapter should apply a sqrt(3) adjustment to all results.")]
-        [DefaultValue(false)]
-        public bool ApplySqrt3Adjustment { get; set; }
-
-        /// <summary>
-        /// Gets or sets flag indicating whether or not this adapter should divide all calculation results by sqrt(3)
-        /// </summary>
-        [ConnectionStringParameter]
-        [Description("Defines flag that determines if adapter should remove the sqrt(3) adjustment from all results.")]
-        [DefaultValue(false)]
-        public bool RemoveSqrt3Adjustment { get; set; }
+        [Description("Defines strategy used to adjust voltage values for based on the nature of the voltage measurements.")]
+        [DefaultValue(VoltageAdjustmentStrategy.LineToNeutral)]
+        public VoltageAdjustmentStrategy AdjustmentStrategy { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if adapter should enable temporal processing support.
@@ -241,16 +255,14 @@ namespace PowerCalculations.PowerMultiCalculator
                 OutputMeasurements = outputMeasurements.ToArray();
 
             Dictionary<string, string> settings = Settings;
+            VoltageAdjustmentStrategy adjustmentStrategy;
             string setting;
 
             if (settings.TryGetValue("AlwaysProduceResult", out setting))
                 AlwaysProduceResult = setting.ParseBoolean();
 
-            if (settings.TryGetValue("ApplySqrt3Adjustment", out setting))
-                ApplySqrt3Adjustment = setting.ParseBoolean();
-
-            if (settings.TryGetValue("RemoveSqrt3Adjustment", out setting))
-                RemoveSqrt3Adjustment = setting.ParseBoolean();
+            if (settings.TryGetValue("AdjustmentStrategy", out setting) && Enum.TryParse(setting, out adjustmentStrategy))
+                AdjustmentStrategy = adjustmentStrategy;
 
             if (settings.TryGetValue("EnableTemporalProcessing", out setting))
                 EnableTemporalProcessing = setting.ParseBoolean();
@@ -285,11 +297,16 @@ namespace PowerCalculations.PowerMultiCalculator
                     {
                         voltageMagnitude = measurement.AdjustedValue;
 
-                        if (ApplySqrt3Adjustment)
-                            voltageMagnitude *= SqrtOf3;
+                        switch (AdjustmentStrategy)
+                        {
+                            case VoltageAdjustmentStrategy.LineToNeutral:
+                                voltageMagnitude *= 3;
+                                break;
 
-                        if (RemoveSqrt3Adjustment)
-                            voltageMagnitude /= SqrtOf3;
+                            case VoltageAdjustmentStrategy.LineToLine:
+                                voltageMagnitude *= SqrtOf3;
+                                break;
+                        }
 
                         if (measurements.TryGetValue(powerCalculation.VoltageAngleSignalID, out measurement) && measurement.ValueQualityIsGood())
                         {
