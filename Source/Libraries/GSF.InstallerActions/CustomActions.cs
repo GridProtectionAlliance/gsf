@@ -35,6 +35,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Linq;
+using GSF.Configuration;
 using GSF.Data;
 using GSF.Identity;
 using GSF.Interop;
@@ -70,7 +71,7 @@ namespace GSF.InstallerActions
             bool isManagedServiceAccount;
             bool isManagedServiceAccountValid;
 
-            session.Log("Begin AuthenticateServiceAccountAction");
+            session["LOGMESSAGE"] = "Begin AuthenticateServiceAccountAction";
 
             serviceAccount = session["SERVICEACCOUNT"];
             servicePassword = session["SERVICEPASSWORD"];
@@ -131,7 +132,7 @@ namespace GSF.InstallerActions
                     session["SERVICEAUTHENTICATED"] = null;
             }
 
-            session.Log("End AuthenticateServiceAccountAction");
+            session["LOGMESSAGE"] = "End AuthenticateServiceAccountAction";
 
             return ActionResult.Success;
         }
@@ -279,7 +280,7 @@ namespace GSF.InstallerActions
         {
             Thread staThread;
 
-            session.Log("Begin BrowseFileAction");
+            session["LOGMESSAGE"] = "Begin BrowseFileAction";
 
             staThread = new Thread(() =>
             {
@@ -301,7 +302,7 @@ namespace GSF.InstallerActions
             staThread.Start();
             staThread.Join();
 
-            session.Log("End BrowseFileAction");
+            session["LOGMESSAGE"] = "End BrowseFileAction";
 
             return ActionResult.Success;
         }
@@ -314,9 +315,9 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult CheckFileExistenceAction(Session session)
         {
-            session.Log("Begin CheckFileExistenceAction");
+            session["LOGMESSAGE"] = "Begin CheckFileExistenceAction";
             session["FILEEXISTS"] = File.Exists(session["FILEPATH"]) ? "yes" : null;
-            session.Log("End CheckFileExistenceAction");
+            session["LOGMESSAGE"] = "End CheckFileExistenceAction";
             return ActionResult.Success;
         }
 
@@ -382,14 +383,14 @@ namespace GSF.InstallerActions
         {
             int passwordLength;
 
-            session.Log("Begin PasswordGenerationAction");
+            session["LOGMESSAGE"] = "Begin PasswordGenerationAction";
 
             if (int.TryParse(session["GENPASSWORDLENGTH"], out passwordLength))
                 session["GENERATEDPASSWORD"] = PasswordGenerator.Default.GeneratePassword(passwordLength);
             else
                 session["GENERATEDPASSWORD"] = PasswordGenerator.Default.GeneratePassword();
 
-            session.Log("End PasswordGenerationAction");
+            session["LOGMESSAGE"] = "End PasswordGenerationAction";
 
             return ActionResult.Success;
         }
@@ -405,7 +406,7 @@ namespace GSF.InstallerActions
             string connectionString;
             string dataProviderString;
 
-            session.Log("Begin TestDatabaseConnectionAction");
+            session["LOGMESSAGE"] = "Begin TestDatabaseConnectionAction";
 
             // Get properties from the installer session
             connectionString = session["CONNECTIONSTRING"];
@@ -430,7 +431,7 @@ namespace GSF.InstallerActions
                 session["DATABASECONNECTED"] = null;
             }
 
-            session.Log("End TestDatabaseConnectionAction");
+            session["LOGMESSAGE"] = "End TestDatabaseConnectionAction";
 
             return ActionResult.Success;
         }
@@ -515,6 +516,81 @@ namespace GSF.InstallerActions
             }
 
             session.Log("End DatabaseScriptAction");
+
+            return ActionResult.Success;
+        }
+
+        /// <summary>
+        /// Custom action to start a process.
+        /// </summary>
+        /// <param name="session">Session object containing data from the installer.</param>
+        /// <returns>Result of the custom action.</returns>
+        [CustomAction]
+        public static ActionResult StartProcessAction(Session session)
+        {
+            string processStartInfo;
+            Dictionary<string, string> infoLookup;
+            Action<string, Action<string>> findAndExecute;
+            ProcessStartInfo info;
+
+            session["LOGMESSAGE"] = "Begin StartProcessAction";
+
+            // Get properties from the installer session
+            processStartInfo = session["PROCESSSTARTINFO"];
+
+            try
+            {
+                infoLookup = processStartInfo.ParseKeyValuePairs();
+
+                findAndExecute = (key, action) =>
+                {
+                    string value;
+
+                    if (infoLookup.TryGetValue(key, out value))
+                        action(value);
+                };
+
+                info = new ProcessStartInfo();
+
+                findAndExecute("FileName", value => info.FileName = value);
+                findAndExecute("Arguments", value => info.Arguments = value);
+                findAndExecute("WorkingDirectory", value => info.WorkingDirectory = value);
+                findAndExecute("Verb", value => info.Verb = value);
+                findAndExecute("WindowStyle", value => info.WindowStyle = (ProcessWindowStyle)Enum.Parse(typeof(ProcessWindowStyle), value));
+                findAndExecute("UserName", value => info.UserName = value);
+                findAndExecute("Password", value => info.Password = value.ToSecureString());
+                findAndExecute("CreateNoWindow", value => info.CreateNoWindow = Convert.ToBoolean(value));
+                findAndExecute("LoadUserProfile", value => info.LoadUserProfile = Convert.ToBoolean(value));
+                findAndExecute("UseShellExecute", value => info.UseShellExecute = Convert.ToBoolean(value));
+
+                // Start the process
+                using (Process process = Process.Start(info))
+                {
+                    findAndExecute("WaitForExit", value =>
+                    {
+                        process.OutputDataReceived += (sender, args) => session["LOGMESSAGE"] = args.Data;
+
+                        process.ErrorDataReceived += (sender, args) =>
+                        {
+                            string message = $"Error in executing process: {args.Data}";
+                            session["LOGMESSAGE"] = message;
+                            LogInstallMessage(session, EventLogEntryType.Error, message);
+                        };
+
+                        process.WaitForExit();
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the error and return failure code
+                string message = $"Failed to start process: {ex.Message}";
+                session["LOGMESSAGE"] = message;
+                LogInstallMessage(session, EventLogEntryType.Error, message);
+                return ActionResult.Failure;
+            }
+
+            session["LOGMESSAGE"] = "End StartProcessAction";
 
             return ActionResult.Success;
         }
