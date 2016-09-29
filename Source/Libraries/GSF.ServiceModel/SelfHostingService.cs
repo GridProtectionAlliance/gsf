@@ -454,9 +454,6 @@ namespace GSF.ServiceModel
         /// <summary>
         /// Gets or sets a value that determines if automatic format selection is enabled for Web HTTP bindings.
         /// </summary>
-        /// <remarks>
-        /// Set to <c>false</c> if you need service implementation to return non-XML (e.g., JSON) formatted exception messages.
-        /// </remarks>
         public bool AutomaticFormatSelectionEnabled
         {
             get
@@ -472,9 +469,6 @@ namespace GSF.ServiceModel
         /// <summary>
         /// Gets or sets the flag that specifies whether a FaultException is generated when an internal server error(HTTP status code: 500) occurs for Web HTTP bindings.
         /// </summary>
-        /// <remarks>
-        /// Set to <c>false</c> if you need service implementation to return non-XML (e.g., JSON) formatted exception messages.
-        /// </remarks>
         public bool FaultExceptionEnabled
         {
             get
