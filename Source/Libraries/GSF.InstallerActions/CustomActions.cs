@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -35,6 +36,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Linq;
+using System.Xml.XPath;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Identity;
@@ -133,6 +135,48 @@ namespace GSF.InstallerActions
             }
 
             session["LOGMESSAGE"] = "End AuthenticateServiceAccountAction";
+
+            return ActionResult.Success;
+        }
+
+        /// <summary>
+        /// Custom action to write to an XML file.
+        /// </summary>
+        /// <param name="session">Session object containing data from the installer.</param>
+        /// <returns>Result of the custom action.</returns>
+        [CustomAction]
+        public static ActionResult XmlFileAction(Session session)
+        {
+            string filePath;
+            string xmlPath;
+            string value;
+
+            session.Log("Begin XmlFileAction");
+
+            filePath = session.CustomActionData["FilePath"];
+            xmlPath = session.CustomActionData["XMLPath"];
+            value = session.CustomActionData["Value"];
+
+            if (File.Exists(filePath))
+            {
+                try
+                {
+                    XDocument document = XDocument.Load(filePath);
+                    IEnumerable query = (IEnumerable)document.XPathEvaluate(xmlPath);
+                    query.OfType<XElement>().ToList().ForEach(element => element.Value = value);
+                    query.OfType<XAttribute>().ToList().ForEach(attribute => attribute.Value = value);
+                    document.Save(filePath);
+                }
+                catch (Exception ex)
+                {
+                    LogInstallMessage(session, EventLogEntryType.Error, $"Failed to update XML file: {ex.Message}");
+                    session.Log($"FilePath = {filePath}");
+                    session.Log($"XMLPath = {xmlPath}");
+                    session.Log($"Value = {value}");
+                }
+            }
+
+            session.Log("End XmlFileAction");
 
             return ActionResult.Success;
         }
