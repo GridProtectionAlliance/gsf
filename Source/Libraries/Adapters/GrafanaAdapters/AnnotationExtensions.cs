@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using GSF;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
@@ -105,6 +106,7 @@ namespace GrafanaAdapters
                     throw new InvalidOperationException("Cannot determine data point applicability for specified annotation type.");
             }
         }
+
         /// <summary>
         /// Populates an annotation response title, text and tags for specified annotation <paramref name="type"/>.
         /// </summary>
@@ -113,8 +115,9 @@ namespace GrafanaAdapters
         /// <param name="target">Target of annotation response.</param>
         /// <param name="definition">Associated metadata definition for response.</param>
         /// <param name="datapoint">Time series values data point for response.</param>
+        /// <param name="source">Metadata of source definitions.</param>
         /// <returns>Populates an annotation response title, text and tags for specified annotation <paramref name="type"/>.</returns>
-        public static void PopulateResponse(this AnnotationType type, AnnotationResponse response, string target, DataRow definition, double[] datapoint)
+        public static void PopulateResponse(this AnnotationType type, AnnotationResponse response, string target, DataRow definition, double[] datapoint, DataSet source)
         {
             if ((object)response == null)
                 throw new ArgumentNullException(nameof(response));
@@ -134,7 +137,7 @@ namespace GrafanaAdapters
                 case AnnotationType.ClearedAlarms:
                     response.title = $"Alarm {(type == AnnotationType.RaisedAlarms ? "Raised" : "Cleared")}";
                     response.text = $"{definition["Description"]}<br>Severity = {definition["Severity"]}<br>{definition["TagName"]}";
-                    response.tags = $"{GetTargetFromGuid(definition["SignalID"].ToString())}, {target}";
+                    response.tags = $"{FormatTarget(definition["SignalID"], source)}, {target}";
                     break;
                 default:
                     throw new InvalidOperationException("Cannot populate response information for specified annotation type.");
@@ -293,6 +296,68 @@ namespace GrafanaAdapters
             return request.annotation.ParseSourceDefinitions(type, source, useFilterExpression);
         }
 
+        /// <summary>
+        /// Looks up point tag from measurement <paramref name="key"/> value.
+        /// </summary>
+        /// <param name="key"><see cref="MeasurementKey"/> to lookup.</param>
+        /// <param name="source">Source metadata.</param>
+        /// <returns>Point tag name from source metadata.</returns>
+        /// <remarks>
+        /// This function uses the <see cref="DataTable.Select(string)"/> function which uses a linear
+        /// search algorithm that can be slow for large data sets, it is recommended that any results
+        /// for calls to this function be cached to improve performance.
+        /// </remarks>
+        internal static string TagFromKey(this MeasurementKey key, DataSet source)
+        {
+            try
+            {
+                DataRow[] filteredRows = source.Tables["ActiveMeasurements"].Select($"ID = '{key}'");
+
+                if (filteredRows.Length > 0)
+                    return filteredRows[0]["PointTag"].ToNonNullString(key.ToString());
+
+                return key.ToString();
+            }
+            catch
+            {
+                return key.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Looks up measurement key from point tag.
+        /// </summary>
+        /// <param name="pointTag">Point tag to lookup.</param>
+        /// <param name="source">Source metadata.</param>
+        /// <returns>Measurement key from source metadata.</returns>
+        /// <remarks>
+        /// This function uses the <see cref="DataTable.Select(string)"/> function which uses a linear
+        /// search algorithm that can be slow for large data sets, it is recommended that any results
+        /// for calls to this function be cached to improve performance.
+        /// </remarks>
+        internal static MeasurementKey KeyFromTag(this string pointTag, DataSet source)
+        {
+            try
+            {
+                DataRow[] filteredRows = source.Tables["ActiveMeasurements"].Select($"PointTag = '{pointTag}'");
+
+                if (filteredRows.Length > 0)
+                    return MeasurementKey.LookUpOrCreate(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), filteredRows[0]["ID"].ToString());
+
+                return MeasurementKey.Undefined;
+            }
+            catch
+            {
+                return MeasurementKey.Undefined;
+            }
+        }
+
         private static MeasurementKey GetTargetFromGuid(string guidID) => MeasurementKey.LookUpBySignalID(Guid.Parse(guidID));
+
+        private static string FormatTarget(object value, DataSet source)
+        {
+            string target = value.ToNonNullNorWhiteSpace(Guid.Empty.ToString());
+            return GrafanaDataSourceBase.GetOrAddTargetCache(target, () => GetTargetFromGuid(target).TagFromKey(source));
+        }
     }
 }

@@ -22,9 +22,11 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Runtime.Caching;
 using System.Threading;
 using System.Threading.Tasks;
 using GSF.TimeSeries;
@@ -79,16 +81,16 @@ namespace GrafanaAdapters
 
                 DateTime startTime = request.range.from.ParseJsonTimestamp();
                 DateTime stopTime = request.range.to.ParseJsonTimestamp();
-                HashSet<string> targets = new HashSet<string>(request.targets.Select(target => target.target));
+                HashSet<string> targets = new HashSet<string>(request.targets.Select(target => target.target), StringComparer.OrdinalIgnoreCase);
 
                 foreach (string target in request.targets.Select(target => target.target))
-                    targets.UnionWith(AdapterBase.ParseInputMeasurementKeys(Metadata, false, target).Select(key => key.ToString()));
+                    targets.UnionWith(GetOrAddTargetCache(target, () => AdapterBase.ParseInputMeasurementKeys(Metadata, false, target).Select(key => key.TagFromKey(Metadata)).ToArray()));
 
                 Dictionary<ulong, string> targetMap = new Dictionary<ulong, string>();
 
                 foreach (string target in targets)
                 {
-                    MeasurementKey key = MeasurementKey.LookUpOrCreate(target);
+                    MeasurementKey key = GetOrAddTargetCache(target, () => target.KeyFromTag(Metadata));
 
                     if (key != MeasurementKey.Undefined)
                         targetMap[key.ID] = target;
@@ -116,12 +118,15 @@ namespace GrafanaAdapters
         /// <param name="request">Search target.</param>
         public Task<string[]> Search(Target request)
         {
+            // TODO: Make openHistorian Grafana data source metric query more interactive, adding drop-downs and/or query builders
+
+            // For now, just return a truncated list of tag names
             return Task.Factory.StartNew(() =>
             {
                 return Metadata.Tables["ActiveMeasurements"]
                     .Select($"ID LIKE '{InstanceName}:%'")
                     .Take(MaximumSearchTargetsPerRequest)
-                    .Select(row => $"{row["ID"]}")
+                    .Select(row => $"{row["PointTag"]}")
                     .ToArray();
             });
         }
@@ -155,7 +160,7 @@ namespace GrafanaAdapters
                             time = datapoint[TimeSeriesValues.Time]
                         };
 
-                        type.PopulateResponse(response, target, definition, datapoint);
+                        type.PopulateResponse(response, target, definition, datapoint, Metadata);
 
                         responses.Add(response);
                     }
@@ -163,6 +168,40 @@ namespace GrafanaAdapters
             }
 
             return responses;
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly MemoryCache s_targetCache;
+        private static readonly ConcurrentDictionary<string, MeasurementKey> s_tagCache;
+
+        // Static Constructor
+        static GrafanaDataSourceBase()
+        {
+            s_targetCache = new MemoryCache("GrafanaTargetCache");
+            s_tagCache = new ConcurrentDictionary<string, MeasurementKey>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        // Static Methods
+
+        // Gets cached targets
+        internal static T GetOrAddTargetCache<T>(string target, Func<T> valueFactory)
+        {
+            Lazy<T> newValue = new Lazy<T>(valueFactory);
+            Lazy<T> oldValue = s_targetCache.AddOrGetExisting(target, newValue, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(1.0D) }) as Lazy<T>;
+
+            try
+            {
+                return (oldValue ?? newValue).Value;
+            }
+            catch
+            {
+                s_targetCache.Remove(target);
+                throw;
+            }
         }
 
         #endregion
