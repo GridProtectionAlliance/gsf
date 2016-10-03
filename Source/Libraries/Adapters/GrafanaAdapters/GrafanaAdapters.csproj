@@ -76,6 +76,7 @@
     <Compile Include="RangeRaw.cs" />
     <Compile Include="Table.cs" />
     <Compile Include="Target.cs" />
+    <Compile Include="TargetCache.cs" />
     <Compile Include="TimeSeriesValues.cs" />
   </ItemGroup>
   <ItemGroup>
