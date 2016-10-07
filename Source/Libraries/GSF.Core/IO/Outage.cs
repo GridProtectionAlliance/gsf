@@ -30,14 +30,14 @@ namespace GSF.IO
     /// <summary>
     /// Represents an outage as a start time and an end time.
     /// </summary>
-    public class Outage : Range<DateTime>
+    public class Outage : Range<DateTimeOffset>
     {
         #region [ Constructors ]
 
         /// <summary>
         /// Creates a new <see cref="Outage"/> with the same start and end time as the given range.
         /// </summary>
-        public Outage(Range<DateTime> range)
+        public Outage(Range<DateTimeOffset> range)
             : this(range.Start, range.End)
         {
         }
@@ -47,7 +47,7 @@ namespace GSF.IO
         /// </summary>
         /// <param name="startTime">Start time for outage.</param>
         /// <param name="endTime">End time for outage.</param>
-        public Outage(DateTime startTime, DateTime endTime)
+        public Outage(DateTimeOffset startTime, DateTimeOffset endTime)
             : base(startTime, endTime)
         {
             if (startTime > endTime)

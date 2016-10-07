@@ -742,7 +742,7 @@ namespace GSF.TimeSeries.Transport
         /// Data gap will not be logged for processing if the <paramref name="startTime"/> and <paramref name="endTime"/> do not represent
         /// a valid time span for recovery according to <see cref="MinimumRecoverySpan"/> and <see cref="MaximumRecoverySpan"/>.
         /// </remarks>
-        public bool LogDataGap(DateTime startTime, DateTime endTime)
+        public bool LogDataGap(DateTimeOffset startTime, DateTimeOffset endTime)
         {
             if (m_disposed)
                 throw new InvalidOperationException("Data gap recoverer has been disposed. Cannot log data gap for processing.");

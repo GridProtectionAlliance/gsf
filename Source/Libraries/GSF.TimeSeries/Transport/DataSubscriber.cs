@@ -2821,7 +2821,7 @@ namespace GSF.TimeSeries.Transport
                                     else
                                     {
                                         // Mark the start of any data transmissions
-                                        m_runTimeLog.StartTime = DateTime.UtcNow;
+                                        m_runTimeLog.StartTime = DateTimeOffset.UtcNow;
                                         m_runTimeLog.Enabled = true;
                                     }
                                 }
@@ -2830,7 +2830,7 @@ namespace GSF.TimeSeries.Transport
                                 // represents a gap in data - if data gap recovery is enabled, we log
                                 // this as a gap for recovery:
                                 if (m_dataGapRecoveryEnabled && (object)m_dataGapRecoverer != null)
-                                    m_dataGapRecoverer.LogDataGap(m_runTimeLog.StopTime, DateTime.UtcNow);
+                                    m_dataGapRecoverer.LogDataGap(m_runTimeLog.StopTime, DateTimeOffset.UtcNow);
                             }
 
                             // Track total data packet bytes received from any channel
@@ -4073,7 +4073,7 @@ namespace GSF.TimeSeries.Transport
             // Mark end of any data transmission in run-time log
             if ((object)m_runTimeLog != null && m_runTimeLog.Enabled)
             {
-                m_runTimeLog.StopTime = DateTime.UtcNow;
+                m_runTimeLog.StopTime = DateTimeOffset.UtcNow;
                 m_runTimeLog.Enabled = false;
             }
 

@@ -80,9 +80,9 @@ namespace GSF.IO
         private readonly Timer m_flushTimer;
         private readonly object m_readerWriterLock;
         private string m_fileName;
-        private DateTime m_startTime;
-        private DateTime m_stopTime;
-        private DateTime m_runningTime;
+        private DateTimeOffset m_startTime;
+        private DateTimeOffset m_stopTime;
+        private DateTimeOffset m_runningTime;
         private bool m_disposed;
 
         #endregion
@@ -137,7 +137,7 @@ namespace GSF.IO
         /// <summary>
         /// Gets last known start-time.
         /// </summary>
-        public DateTime StartTime
+        public DateTimeOffset StartTime
         {
             get
             {
@@ -152,7 +152,7 @@ namespace GSF.IO
         /// <summary>
         /// Gets last known stop-time.
         /// </summary>
-        public DateTime StopTime
+        public DateTimeOffset StopTime
         {
             get
             {
@@ -167,7 +167,7 @@ namespace GSF.IO
         /// <summary>
         /// Gets last known running-time (10-second resolution).
         /// </summary>
-        public DateTime RunningTime
+        public DateTimeOffset RunningTime
         {
             get
             {
@@ -348,30 +348,30 @@ namespace GSF.IO
                                 Dictionary<string, string> settings = fileData.Replace(Environment.NewLine, ";").ParseKeyValuePairs();
                                 string setting;
 
-                                if (!settings.TryGetValue(LastStartTimeKey, out setting) || !DateTime.TryParseExact(setting.Trim(), DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out m_startTime))
-                                    m_startTime = DateTime.UtcNow;
+                                if (!settings.TryGetValue(LastStartTimeKey, out setting) || !DateTimeOffset.TryParseExact(setting.Trim(), DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out m_startTime))
+                                    m_startTime = DateTimeOffset.UtcNow;
 
-                                if (!settings.TryGetValue(LastStopTimeKey, out setting) || !DateTime.TryParseExact(setting.Trim(), DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out m_stopTime))
-                                    m_stopTime = DateTime.UtcNow;
+                                if (!settings.TryGetValue(LastStopTimeKey, out setting) || !DateTimeOffset.TryParseExact(setting.Trim(), DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out m_stopTime))
+                                    m_stopTime = DateTimeOffset.UtcNow;
 
-                                if (!settings.TryGetValue(LastRunningTimeKey, out setting) || !DateTime.TryParseExact(setting.Trim(), DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out m_runningTime))
-                                    m_runningTime = DateTime.UtcNow;
+                                if (!settings.TryGetValue(LastRunningTimeKey, out setting) || !DateTimeOffset.TryParseExact(setting.Trim(), DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out m_runningTime))
+                                    m_runningTime = DateTimeOffset.UtcNow;
                             }
                             else
                             {
-                                m_startTime = m_stopTime = m_runningTime = DateTime.UtcNow;
+                                m_startTime = m_stopTime = m_runningTime = DateTimeOffset.UtcNow;
                             }
                         }
                     }
                     else
                     {
-                        m_startTime = m_stopTime = m_runningTime = DateTime.UtcNow;
+                        m_startTime = m_stopTime = m_runningTime = DateTimeOffset.UtcNow;
                     }
                 }
             }
             catch (Exception ex)
             {
-                m_startTime = m_stopTime = m_runningTime = DateTime.UtcNow;
+                m_startTime = m_stopTime = m_runningTime = DateTimeOffset.UtcNow;
                 OnProcessException(new InvalidOperationException("Failed to read run-time log: " + ex.Message, ex));
             }
         }
@@ -422,7 +422,7 @@ namespace GSF.IO
 
         private void m_flushTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            m_runningTime = DateTime.UtcNow;
+            m_runningTime = DateTimeOffset.UtcNow;
             WriteLog();
         }
 
