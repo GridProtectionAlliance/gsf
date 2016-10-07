@@ -11,7 +11,7 @@ This syntax is similar to a SQL `WHERE` clause, but does not implement the full 
 ## Available Options and Clauses
 | Keyword | Example | Description | Required?|
 |---------|---------|-------------|----------|
-| FILTER | See [Examples](#Examples) | Starts the filter expression | Yes|
+| FILTER | See [Examples](#examples) | Starts the filter expression | Yes|
 | TOP #| TOP 100 | Selects only the first number of items | No|
 | WHERE &lt;Expression&gt; | WHERE SignalType='FREQ' | Uses [DataTable.Select(string)](https://msdn.microsoft.com/en-us/library/det4aw50(v=vs.110).aspx) | Yes |
 | ORDER BY &lt;ColumnName&gt; | ORDER BY SignalType | Uses [DataTable.Select(string, string)](https://msdn.microsoft.com/en-us/library/way3dy9w(v=vs.110).aspx) | No |
