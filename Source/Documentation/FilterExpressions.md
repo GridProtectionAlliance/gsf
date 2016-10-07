@@ -5,7 +5,7 @@ This syntax is similar to a SQL `WHERE` clause, but does not implement the full 
 
 ## Filtering Syntax
 ```sql
-{FILTER <TableName> WHERE <Expression> [ORDER BY <SortField>]}
+{FILTER <TableName> [TOP #] WHERE <Expression> [ORDER BY <SortField>]}
 ```
 
 ## Available Options and Clauses
