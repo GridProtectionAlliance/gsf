@@ -1,4 +1,4 @@
-﻿//******
+﻿//******************************************************************************************************
 //  DataGapRecoverer.cs - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
@@ -122,7 +122,7 @@ namespace GSF.TimeSeries.Transport
 
         // Fields
         private readonly UnsynchronizedSubscriptionInfo m_subscriptionInfo;
-        private ManualResetEventSlim m_dataGapRecoveryCompleted;
+        private readonly ManualResetEventSlim m_dataGapRecoveryCompleted;
         private DataSubscriber m_temporalSubscription;
         private OutageLogProcessor m_dataGapLogProcessor;
         private OutageLog m_dataGapLog;
@@ -545,13 +545,13 @@ namespace GSF.TimeSeries.Transport
             {
                 StringBuilder status = new StringBuilder();
 
-                status.AppendFormat(" Data recovery start delay: {0} seconds", RecoveryStartDelay.ToString(2));
+                status.AppendFormat(" Data recovery start delay: {0}", RecoveryStartDelay.ToString(2));
                 status.AppendLine();
-                status.AppendFormat("  Data monitoring interval: {0} seconds", DataMonitoringInterval.ToString(2));
+                status.AppendFormat("  Data monitoring interval: {0}", DataMonitoringInterval.ToString(2));
                 status.AppendLine();
-                status.AppendFormat("Minimum data recovery span: {0} seconds", MinimumRecoverySpan.ToString(2));
+                status.AppendFormat("Minimum data recovery span: {0}", MinimumRecoverySpan.ToString(2));
                 status.AppendLine();
-                status.AppendFormat("Maximum data recovery span: {0} seconds", MaximumRecoverySpan.ToString(2));
+                status.AppendFormat("Maximum data recovery span: {0}", MaximumRecoverySpan.ToString(2));
                 status.AppendLine();
                 status.AppendFormat("Recovery filter expression: {0}", FilterExpression.TruncateRight(51));
                 status.AppendLine();
@@ -613,7 +613,6 @@ namespace GSF.TimeSeries.Transport
                             m_abnormalTermination = true;
                             m_dataGapRecoveryCompleted.Set();
                             m_dataGapRecoveryCompleted.Dispose();
-                            m_dataGapRecoveryCompleted = null;
                         }
 
                         if ((object)m_dataStreamMonitor != null)
@@ -978,8 +977,7 @@ namespace GSF.TimeSeries.Transport
             }
             finally
             {
-                if ((object)m_dataGapRecoveryCompleted != null)
-                    m_dataGapRecoveryCompleted.Set();
+                m_dataGapRecoveryCompleted.Set();
             }
         }
 
@@ -987,9 +985,7 @@ namespace GSF.TimeSeries.Transport
         {
             OnStatusMessage("Temporal data recovery processing completed.");
 
-            if ((object)m_dataGapRecoveryCompleted != null)
-                m_dataGapRecoveryCompleted.Set();
-
+            m_dataGapRecoveryCompleted.Set();
             m_dataStreamMonitor.Enabled = false;
         }
 
@@ -1020,9 +1016,7 @@ namespace GSF.TimeSeries.Transport
 
                 m_abnormalTermination = true;
 
-                if ((object)m_dataGapRecoveryCompleted != null)
-                    m_dataGapRecoveryCompleted.Set();
-
+                m_dataGapRecoveryCompleted.Set();
                 m_dataStreamMonitor.Enabled = false;
             }
         }
@@ -1044,9 +1038,7 @@ namespace GSF.TimeSeries.Transport
                 // If we've received no measurements in the last time-span, we cancel current process...
                 m_dataStreamMonitor.Enabled = false;
                 OnStatusMessage("\r\nWARNING: No data received in {0} seconds, canceling current data recovery operation...\r\n", (m_dataStreamMonitor.Interval / 1000.0D).ToString("0.0"));
-
-                if ((object)m_dataGapRecoveryCompleted != null)
-                    m_dataGapRecoveryCompleted.Set();
+                m_dataGapRecoveryCompleted.Set();
             }
 
             // Reset measurements received count being monitored
