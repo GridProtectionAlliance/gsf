@@ -107,25 +107,25 @@ For selection of input and output measurements for adapters, `ActiveMeasurements
 ### Alarms
 | ColumnName       | DataType  |
 |------------------|-----------|
-|ID| int|
-|TagName| string|
-|SignalID| Guid|
-|AssociatedMeasurementID| Guid|
-|Description| string|
-|Severity| int|
-|Operation| int|
-|SetPoint| double|
-|Tolerance| double|
-|Delay| double|
-|Hysteresis| double|
-|LoadOrder| int|
-|Enabled| bool|
-|CreatedOn| DateTime|
-|CreatedBy| string|
-|UpdatedOn| DateTime|
-|UpdatedBy| string|
+| ID | int |
+| TagName | string |
+| SignalID | Guid |
+| AssociatedMeasurementID | Guid |
+| Description | string |
+| [Severity](#alarmseverityvalues) | int |
+| Operation | int |
+| SetPoint | double |
+| Tolerance | double |
+| Delay | double |
+| Hysteresis | double |
+| LoadOrder | int |
+| Enabled | bool |
+| CreatedOn | DateTime |
+| CreatedBy | string |
+| UpdatedOn | DateTime |
+| UpdatedBy | string |
 
-#### Alarm Severity Values
+#### AlarmSeverityValues
 | Value | Acronym | Description |
 |:-----:|:-------:|-------------|
 | 0 | None | Alarm is of no importance |
