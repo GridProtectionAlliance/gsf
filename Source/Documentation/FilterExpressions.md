@@ -125,6 +125,21 @@ For selection of input and output measurements for adapters, `ActiveMeasurements
 |UpdatedOn| DateTime|
 |UpdatedBy| string|
 
+#### Alarm Severity Values
+| Value | Acronym | Description |
+|:-----:|:-------:|-------------|
+| 0 | None | Alarm is of no importance |
+| 50 | Info | Alarm is informative, but not dangerous |
+| 150 | Low | Alarm is not very important | 
+| 300 | MedLow | Alarm is somewhat important |
+| 500 | Med | Alarm is moderately important |
+| 700 | MedHigh | Alarm is important |
+| 850 | High | Alarm is very important |
+| 900 | Range | Alarm for a value that is unreasonable |
+| 950 | Critical | Alarm signifies a dangerous situation |
+| 980 | FlatLine | Alarm value is latched |
+| 1000 | Error | Alarm reports bad data |
+
 ### ConfigurationDataSet
 | ColumnName       | DataType  |
 |------------------|-----------|
