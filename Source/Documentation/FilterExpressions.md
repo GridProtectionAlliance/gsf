@@ -5,14 +5,14 @@ This syntax is similar to a SQL `WHERE` clause, but does not implement the full 
 
 ## Filtering Syntax
 ```sql
-{FILTER <TableName> [TOP X] WHERE <Expression> [ORDER BY <SortField>]}
+FILTER <TableName> [TOP n] WHERE <Expression> [ORDER BY <SortField>]
 ```
 
 ## Available Options and Clauses
 | Keyword | Example | Description | Required?|
-|---------|---------|-------------|----------|
+|---------|---------|-------------|:----------:|
 | FILTER | See [Examples](#examples) | Starts the filter expression | Yes|
-| TOP #| TOP 100 | Selects only the first number of items | No|
+| TOP n| TOP 100 | Selects only the first number of items | No|
 | WHERE &lt;Expression&gt; | WHERE SignalType='FREQ' | Uses [DataTable.Select(string)](https://msdn.microsoft.com/en-us/library/det4aw50(v=vs.110).aspx) | Yes |
 | ORDER BY &lt;ColumnName&gt; | ORDER BY SignalType | Uses [DataTable.Select(string, string)](https://msdn.microsoft.com/en-us/library/way3dy9w(v=vs.110).aspx) | No |
 
@@ -21,21 +21,21 @@ This syntax is similar to a SQL `WHERE` clause, but does not implement the full 
 An example input filter to only pass measurements with the company of `GSF` and type of `Frequency(FREQ)`.
 ```sql
 inputMeasurementKeys = {
-  FILTER ActiveMeasurements WHERE Company='GSF' AND SignalType='FREQ' ORDER BY ID
+    FILTER ActiveMeasurements WHERE Company='GSF' AND SignalType='FREQ' ORDER BY ID
 };
 ```
 
 An example input filter to only pass `Statistics(STAT)` measurments.
 ```sql
 inputMeasurementKeys = {
-  FILTER ActiveMeasurements WHERE SignalType = 'STAT'
+    FILTER ActiveMeasurements WHERE SignalType = 'STAT'
 };
 ```
 
 An example output filter to only send `Current Angle` and `Voltage Angle` for the `Positive Sequence(+)` measurments.
 ```sql
 outputMeasurements = {
-  FILTER ActiveMeasurements WHERE SignalType IN ('IPHA','VPHA') AND Phase='+' ORDER BY PhasorID
+    FILTER ActiveMeasurements WHERE SignalType IN ('IPHA','VPHA') AND Phase='+' ORDER BY PhasorID
 };
 ```
 
