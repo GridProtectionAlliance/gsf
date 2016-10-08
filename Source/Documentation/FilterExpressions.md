@@ -20,30 +20,34 @@ This syntax is similar to a SQL `WHERE` clause, but does not implement the full 
 
 An example input filter to only pass measurements with the company of `GSF` and type of `Frequency(FREQ)`.
 ```sql
-inputMeasurementKeys={
+inputMeasurementKeys = {
   FILTER ActiveMeasurements WHERE Company='GSF' AND SignalType='FREQ' ORDER BY ID
 };
 ```
 
 An example input filter to only pass `Statistics(STAT)` measurments.
 ```sql
-inputMeasurementKeys={
+inputMeasurementKeys = {
   FILTER ActiveMeasurements WHERE SignalType = 'STAT'
 };
 ```
 
 An example output filter to only send `Current Angle` and `Voltage Angle` for the `Positive Sequence(+)` measurments.
 ```sql
-outputMeasurements={
-  FILTER ActiveMeasurements WHERE SignalType IN ('IPHA','VPHA') AND Phase='+'
-  };
+outputMeasurements = {
+  FILTER ActiveMeasurements WHERE SignalType IN ('IPHA','VPHA') AND Phase='+' ORDER BY PhasorID
+};
 ```
+
+See [more examples](http://www.csharp-examples.net/dataview-rowfilter/) of allowed `DataTable.Select()` syntax.
 
 ## Available Table Definitions
 
-Only the `ActiveMeasurments` table is available in most cases. Other tables are included here for reference.
+Available table defintions are defined in the `ConfigurationEntity` table of the host [Time-Series Library](https://www.gridprotectionalliance.org/technology.asp#TSL) application configuration database.
 
- * [ActiveMeasurments](#activemeasurments) 
+For selection of input and output measurements for adapters, `ActiveMeasurements` is the most common source. Other commonly defined tables are listed here for reference as well.
+
+ * [ActiveMeasurements](#activemeasurements) 
  * [ActionAdapters](#actionadapters) 
  * [Alarms](#alarms) 
  * [ConfigurationDataSet](#configurationdataset) 
@@ -62,7 +66,7 @@ Only the `ActiveMeasurments` table is available in most cases. Other tables are 
  * [SubscriberMeasurements](#subscribermeasurements) 
  * [Subscribers](#subscribers) 
 
-### ActiveMeasurments
+### ActiveMeasurements
 | ColumnName       | DataType  |
 |------------------|-----------|
 |SourceNodeID| Guid|
