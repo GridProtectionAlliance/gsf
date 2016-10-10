@@ -112,7 +112,7 @@ For selection of input and output measurements for adapters, `ActiveMeasurements
 | SignalID | Guid |
 | AssociatedMeasurementID | Guid |
 | Description | string |
-| [Severity](#alarmseverityvalues) | int |
+| [Severity](#alarm-severity-values) | int |
 | Operation | int |
 | SetPoint | double |
 | Tolerance | double |
@@ -125,7 +125,7 @@ For selection of input and output measurements for adapters, `ActiveMeasurements
 | UpdatedOn | DateTime |
 | UpdatedBy | string |
 
-#### AlarmSeverityValues
+#### Alarm Severity Values
 | Value | Acronym | Description |
 |:-----:|:-------:|-------------|
 | 0 | None | Alarm is of no importance |
