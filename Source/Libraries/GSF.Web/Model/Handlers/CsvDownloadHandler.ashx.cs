@@ -179,6 +179,7 @@ namespace GSF.Web.Model.Handlers
 
             string modelName = requestParameters["ModelName"];
             string hubName = requestParameters["HubName"];
+            string connectionID = requestParameters["ConnectionID"];
             string filterText = requestParameters["FilterText"];
             string sortField = requestParameters["SortField"];
             bool sortAscending = requestParameters["SortAscending"].ParseBoolean();
@@ -210,10 +211,14 @@ namespace GSF.Web.Model.Handlers
 
             try
             {
+                // Create a local record operations hub instance so that CSV export can query same record set that is visible in active hub context
                 hub = Activator.CreateInstance(hubType) as IRecordOperationsHub;
 
                 if ((object)hub == null)
                     throw new SecurityException($"Cannot download CSV data: hub type \"{hubName}\" is not a IRecordOperationsHub, access cannot be validated.");
+
+                // Assign provided connection ID from active hub context to our local hub instance so that any session based data will be available to query functions
+                hub.ConnectionID = connectionID;
 
                 Tuple<string, string>[] recordOperations;
 

@@ -65,17 +65,40 @@ namespace GSF.Web.Hubs
         /// <summary>
         /// Gets instance of hub client for current SignalR session.
         /// </summary>
-        protected T HubClient => m_hubClient ??
-        (
-            m_hubClient = s_hubClients.GetOrAdd(m_hub.Context.ConnectionId, connectionID =>
-                new T
+        protected T HubClient
+        {
+            get
+            {
+                if ((object)m_hubClient != null)
+                    return m_hubClient;
+
+                // Attempt to get connection ID from active hub context
+                string connectionID = m_hub?.Context?.ConnectionId;
+
+                if (string.IsNullOrEmpty(connectionID))
+                {
+                    // If no connection ID was available, check to see if base hub is a record operations hub,
+                    // if so, see if there is an assigned connection ID to use, such as may be the case if the
+                    // hub instance is being used outside of a SignalR context, like an IHostedHttpHandler
+                    IRecordOperationsHub recordOperationsHub = m_hub as IRecordOperationsHub;
+
+                    connectionID = recordOperationsHub?.ConnectionID;
+
+                    if (string.IsNullOrEmpty(connectionID))
+                        return null;
+                }
+
+                m_hubClient = s_hubClients.GetOrAdd(connectionID, id => new T
                 {
                     HubInstance = m_hub,
                     ConnectionID = connectionID,
                     LogStatusMessageFunction = m_logStatusMessageFunction,
                     LogExceptionFunction = m_logExceptionFunction
-                })
-        );
+                });
+
+                return m_hubClient;
+            }
+        }
 
         /// <summary>
         /// Disposes any associated <see cref="IHubClient"/> when SignalR session is disconnected.

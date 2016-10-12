@@ -37,17 +37,16 @@ namespace GSF.Web.Hubs
         /// <remarks>
         /// Implementors should statically cache instance since reflected cache content will not change.
         /// </remarks>
-        RecordOperationsCache RecordOperationsCache
-        {
-            get;
-        }
+        RecordOperationsCache RecordOperationsCache { get; }
 
         /// <summary>
         /// Gets <see cref="Model.DataContext"/> created for this <see cref="IRecordOperationsHub"/> implementation.
         /// </summary>
-        DataContext DataContext
-        {
-            get;
-        }
+        DataContext DataContext { get; }
+
+        /// <summary>
+        /// Gets active connection ID from current hub context or assigns one to use.
+        /// </summary>
+        string ConnectionID { get; set;}
     }
 }

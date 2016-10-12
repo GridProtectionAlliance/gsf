@@ -351,15 +351,24 @@
             $(""#addNewEditDialog"").modal({{show: false, backdrop: ""static"", keyboard: false}});
 
             $(""#exportCSVButton"").click(function() {{
-                $(""#exportCSVLink"").attr(""href"", ""/@GSF/Web/Model/Handlers/CsvDownloadHandler.ashx"" +
-                    ""?ModelName="" + encodeURIComponent(viewModel.modelName) + 
-                    ""&HubName="" + encodeURIComponent(viewModel.hubName) + 
-                    ""&FilterText="" + encodeURIComponent(viewModel.filterText) + 
-                    ""&SortField="" + encodeURIComponent(viewModel.sortField()) + 
-                    ""&SortAscending="" + encodeURIComponent(viewModel.sortAscending()) + 
-                    ""&ShowDeleted={0}&ParentKeys={1}"");
+                if (!hubIsConnected)
+                    return;
 
-                $(""#exportCSVLink"")[0].click();
+                dataHub.getConnectionID().done(function(connectionID) {{
+                    $(""#exportCSVLink"").attr(""href"", ""/@GSF/Web/Model/Handlers/CsvDownloadHandler.ashx"" +
+                        ""?ModelName="" + encodeURIComponent(viewModel.modelName) + 
+                        ""&HubName="" + encodeURIComponent(viewModel.hubName) + 
+                        ""&ConnectionID="" + encodeURIComponent(connectionID) + 
+                        ""&FilterText="" + encodeURIComponent(viewModel.filterText) + 
+                        ""&SortField="" + encodeURIComponent(viewModel.sortField()) + 
+                        ""&SortAscending="" + encodeURIComponent(viewModel.sortAscending()) + 
+                        ""&ShowDeleted={0}&ParentKeys={1}"");
+
+                    $(""#exportCSVLink"")[0].click();
+                }}).
+                fail(function(error) {{
+                    showErrorMessage(error);
+                }});
             }});
 
             $(window).on(""beforeunload"", function() {{
