@@ -21,6 +21,9 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Text.RegularExpressions;
+
 namespace GSF.SELEventParser
 {
     public class EventReport
@@ -96,6 +99,63 @@ namespace GSF.SELEventParser
             {
                 m_analogSection = value;
             }
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        public static EventReport Parse(string[] lines, ref int index)
+        {
+            EventReport eventReport = new EventReport();
+            int firmwareIndex;
+
+            // Parse the report header
+            eventReport.Header = Header.Parse(lines, ref index);
+
+            // Skip to the next nonblank line
+            EventFile.SkipBlanks(lines, ref index);
+
+            // Get the index of the line where
+            // the firmware information is located
+            firmwareIndex = index;
+
+            // Parse the firmware and event number
+            eventReport.Firmware = Firmware.Parse(lines, ref firmwareIndex);
+            eventReport.EventNumber = ParseEventNumber(lines, ref index);
+            index = Math.Max(firmwareIndex, index);
+
+            // Skip to the next nonblank line
+            EventFile.SkipBlanks(lines, ref index);
+
+            // Parse the analog section of the report
+            eventReport.AnalogSection = AnalogSection.Parse(eventReport.Header.EventTime, lines, ref index);
+
+            return eventReport;
+        }
+
+        private static int ParseEventNumber(string[] lines, ref int index)
+        {
+            const string EventNumberRegex = @"Event Number = (\d+)";
+
+            // Match the regular expression to get the event number
+            Match eventNumberMatch = Regex.Match(lines[index], EventNumberRegex);
+
+            if (eventNumberMatch.Success)
+            {
+                // Match was successful so
+                // advance to the next line
+                index++;
+
+                // Get the event number
+                return Convert.ToInt32(eventNumberMatch.Groups[1].Value);
+            }
+
+            // Unable to get event number
+            // so default to zero
+            return 0;
         }
 
         #endregion

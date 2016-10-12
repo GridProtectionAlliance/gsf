@@ -22,15 +22,23 @@
 //******************************************************************************************************
 
 using System;
+using System.Text.RegularExpressions;
 
 namespace GSF.SELEventParser
 {
     public class Header
     {
+        #region [ Members ]
+
+        // Fields
         private string m_relayID;
         private DateTime m_eventTime;
         private string m_stationID;
         private int m_serialNumber;
+
+        #endregion
+
+        #region [ Properties ]
 
         public string RelayID
         {
@@ -79,5 +87,68 @@ namespace GSF.SELEventParser
                 m_serialNumber = value;
             }
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        public static Header Parse(string[] lines, ref int index)
+        {
+            const string HeaderLine1 = @"(\S.*)\s+Date:\s+(\S+)\s+Time:\s+(\S+)";
+            const string HeaderLine2 = @"(\S.*)(?:\s+Serial Number: (\d+))?";
+
+            Header header = new Header();
+
+            Match regexMatch;
+            DateTime eventTime;
+            string eventTimeString;
+            int serialNumber;
+
+            if (index < lines.Length)
+            {
+                // Apply regex match to get information contained on first line of header
+                regexMatch = Regex.Match(lines[index], HeaderLine1);
+
+                if (regexMatch.Success)
+                {
+                    // Get relay ID from line 1
+                    header.RelayID = regexMatch.Groups[1].Value.Trim();
+
+                    // Build date/time string for parsing
+                    eventTimeString = string.Format("{0} {1}", regexMatch.Groups[2].Value, regexMatch.Groups[3].Value);
+
+                    // Get event time from line 1
+                    if (EventFile.TryParseDateTime(eventTimeString, out eventTime))
+                        header.EventTime = eventTime;
+
+                    // Advance to the next line
+                    index++;
+
+                    if (index < lines.Length)
+                    {
+                        // Apply regex match to get information contained on second line of header
+                        regexMatch = Regex.Match(lines[index], HeaderLine2);
+
+                        if (regexMatch.Success)
+                        {
+                            // Get station ID and serial number from line 2
+                            header.StationID = regexMatch.Groups[1].Value.Trim();
+
+                            if (int.TryParse(regexMatch.Groups[2].Value, out serialNumber))
+                                header.SerialNumber = serialNumber;
+
+                            // Advance to the next line
+                            index++;
+                        }
+                    }
+                }
+            }
+
+            return header;
+        }
+
+        #endregion
     }
 }
