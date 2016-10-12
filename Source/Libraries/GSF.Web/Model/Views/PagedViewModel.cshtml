@@ -20,6 +20,7 @@
 //       Generated original version of source code.
 //
 //*****************************************************************************************************@
+@using System.Globalization
 @using System.Net.Http
 @using System.Text
 @using GSF
@@ -122,32 +123,6 @@
 }
 @functions
 {
-    string SingularForm(string value)
-    {
-        if (value.EndsWith("ies", StringComparison.Ordinal))
-            return value.Substring(0, value.Length - 3) + "y";
-
-        if (value.EndsWith("IES", StringComparison.Ordinal))
-            return value.Substring(0, value.Length - 3) + "Y";
-
-        if (value.EndsWith("ces", StringComparison.OrdinalIgnoreCase))
-            return value.Substring(0, value.Length - 1);
-
-        if (value.EndsWith("les", StringComparison.OrdinalIgnoreCase))
-            return value.Substring(0, value.Length - 1);
-
-        if (value.EndsWith("pes", StringComparison.OrdinalIgnoreCase))
-            return value.Substring(0, value.Length - 1);
-
-        if (value.EndsWith("es", StringComparison.OrdinalIgnoreCase))
-            return value.Substring(0, value.Length - 2);
-
-        if (value.EndsWith("s", StringComparison.OrdinalIgnoreCase))
-            return value.Substring(0, value.Length - 1);
-
-        return value;
-    }
-
     string RemoveSpaces(string value)
     {
         return value.RemoveWhiteSpace().RemoveInvalidFileNameCharacters();
@@ -262,7 +237,7 @@
                     <span data-bind="visible: recordMode()===RecordMode.View">View</span>
                     <span data-bind="visible: recordMode()===RecordMode.Edit">Edit</span>
                     <span data-bind="visible: recordMode()===RecordMode.AddNew">Add New</span>
-                    @(ViewBag.AddNewEditTitle ?? SingularForm(ViewBag.Title ?? ""))
+                    @(ViewBag.AddNewEditTitle ?? (ViewBag.Title ?? "").ToSingular())
                 </h4>
             </div>
             <div class="modal-body auto-height" data-bind="with: currentRecord, validationOptions: {messageTemplate: 'validationMessageTemplate'}, css: {'modal-readonly': recordMode()===RecordMode.View}">
