@@ -58,7 +58,9 @@ For selection of input and output measurements for adapters, `ActiveMeasurements
  * [MeasurementGroups](#measurementgroups) 
  * [NodeInfo](#nodeinfo) 
  * [OutputAdapters](#outputadapters) 
- * [OutputStreamDevicePhasors](#outputstreamdevicephasors) 
+ * [OutputStreamDevicePhasors](#outputstreamdevicephasors)
+ * [OutputStreamDeviceAnalogs](#outputstreamdeviceanalogs)
+ * [OutputStreamDeviceDigitals](#outputstreamdevicedigitals)
  * [OutputStreamDevices](#outputstreamdevices) 
  * [OutputStreamMeasurements](#outputstreammeasurements) 
  * [Statistics](#statistics) 
@@ -232,7 +234,10 @@ For selection of input and output measurements for adapters, `ActiveMeasurements
 |CreatedBy| string|
 |UpdatedOn| DateTime|
 |UpdatedBy| string|
-|OutputStreamDeviceAnalogs||
+
+### OutputStreamDeviceAnalogs
+| ColumnName       | DataType  |
+|------------------|-----------|
 |OutputStreamDeviceID| int|
 |ID| int|
 |Label| string|
@@ -243,7 +248,10 @@ For selection of input and output measurements for adapters, `ActiveMeasurements
 |CreatedBy| string|
 |UpdatedOn| DateTime|
 |UpdatedBy| string|
-|OutputStreamDeviceDigitals||
+
+### OutputStreamDeviceDigitals
+| ColumnName       | DataType  |
+|------------------|-----------|
 |OutputStreamDeviceID| int|
 |ID| int|
 |Label| string|
