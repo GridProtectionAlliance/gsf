@@ -3816,17 +3816,14 @@ namespace GSF.TimeSeries.Transport
                             }
 
                             // Remove any phasor records associated with existing devices in this session but no longer exist in the meta-data
-                            if (definedSourceIndicies.Count > 0)
+                            foreach (int id in deviceIDs.Values)
                             {
-                                foreach (int id in deviceIDs.Values)
-                                {
-                                    List<int> sourceIndicies;
+                                List<int> sourceIndicies;
 
-                                    if (definedSourceIndicies.TryGetValue(id, out sourceIndicies))
-                                        command.ExecuteNonQuery(deletePhasorSql + $" AND SourceIndex NOT IN ({string.Join(",", sourceIndicies)})", m_metadataSynchronizationTimeout, id);
-                                    else
-                                        command.ExecuteNonQuery(deletePhasorSql, m_metadataSynchronizationTimeout, id);
-                                }
+                                if (definedSourceIndicies.TryGetValue(id, out sourceIndicies))
+                                    command.ExecuteNonQuery(deletePhasorSql + $" AND SourceIndex NOT IN ({string.Join(",", sourceIndicies)})", m_metadataSynchronizationTimeout, id);
+                                else
+                                    command.ExecuteNonQuery(deletePhasorSql, m_metadataSynchronizationTimeout, id);
                             }
                         }
 
