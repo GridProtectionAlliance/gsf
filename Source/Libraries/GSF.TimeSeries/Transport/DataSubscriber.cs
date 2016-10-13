@@ -3751,8 +3751,7 @@ namespace GSF.TimeSeries.Transport
                         // Check to see if data for the "PhasorDetail" table was included in the meta-data
                         if (metadata.Tables.Contains("PhasorDetail"))
                         {
-                            Dictionary<int, int> maxSourceIndicies = new Dictionary<int, int>();
-                            int sourceIndex;
+                            Dictionary<int, List<int>> definedSourceIndicies = new Dictionary<int, List<int>>();
 
                             // Phasor data is normally only needed so that the user can properly generate a mirrored IEEE C37.118 output stream from the source data.
                             // This is necessary since, in this protocol, the phasors are described (i.e., labeled) as a unit (i.e., as a complex number) instead of
@@ -3768,7 +3767,7 @@ namespace GSF.TimeSeries.Transport
                             string updatePhasorSql = database.ParameterizedQueryString("UPDATE Phasor SET Label = {0}, Type = {1}, Phase = {2} WHERE DeviceID = {3} AND SourceIndex = {4}", "label", "type", "phase", "deviceID", "sourceIndex");
 
                             // Define SQL statement to delete a phasor record
-                            string deletePhasorSql = database.ParameterizedQueryString("DELETE FROM Phasor WHERE DeviceID = {0} AND SourceIndex > {1}", "deviceID", "sourceIndex");
+                            string deletePhasorSql = database.ParameterizedQueryString("DELETE FROM Phasor WHERE DeviceID = {0}", "deviceID");
 
                             foreach (DataRow row in metadata.Tables["PhasorDetail"].Rows)
                             {
@@ -3808,11 +3807,8 @@ namespace GSF.TimeSeries.Transport
                                         command.ExecuteNonQuery(updatePhasorSql, m_metadataSynchronizationTimeout, row.Field<string>("Label") ?? "undefined", (row.Field<string>("Type") ?? "V").TruncateLeft(1), (row.Field<string>("Phase") ?? "+").TruncateLeft(1), deviceID, row.ConvertField<int>("SourceIndex"));
                                     }
 
-                                    // Track largest source index for each device
-                                    maxSourceIndicies.TryGetValue(deviceID, out sourceIndex);
-
-                                    if (row.ConvertField<int>("SourceIndex") > sourceIndex)
-                                        maxSourceIndicies[deviceID] = row.ConvertField<int>("SourceIndex");
+                                    // Track defined phasors for each device
+                                    definedSourceIndicies.GetOrAdd(deviceID, id => new List<int>()).Add(row.ConvertField<int>("SourceIndex"));
                                 }
 
                                 // Periodically notify user about synchronization progress
@@ -3820,11 +3816,16 @@ namespace GSF.TimeSeries.Transport
                             }
 
                             // Remove any phasor records associated with existing devices in this session but no longer exist in the meta-data
-                            if (maxSourceIndicies.Count > 0)
+                            if (definedSourceIndicies.Count > 0)
                             {
-                                foreach (KeyValuePair<int, int> deviceIndexPair in maxSourceIndicies)
+                                foreach (int id in deviceIDs.Values)
                                 {
-                                    command.ExecuteNonQuery(deletePhasorSql, m_metadataSynchronizationTimeout, deviceIndexPair.Key, deviceIndexPair.Value);
+                                    List<int> sourceIndicies;
+
+                                    if (definedSourceIndicies.TryGetValue(id, out sourceIndicies))
+                                        command.ExecuteNonQuery(deletePhasorSql + $" AND SourceIndex NOT IN ({string.Join(",", sourceIndicies)})", m_metadataSynchronizationTimeout, id);
+                                    else
+                                        command.ExecuteNonQuery(deletePhasorSql, m_metadataSynchronizationTimeout, id);
                                 }
                             }
                         }
