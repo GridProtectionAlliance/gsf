@@ -269,10 +269,10 @@ namespace GSF.Units.EE
             if (current.Type != PhasorType.Current)
                 throw new ArgumentException("Provided current phasor is a voltage", nameof(current));
 
-            return 3 * (voltage.Value.Real * current.Value.Real + voltage.Value.Imaginary * current.Value.Imaginary);
+            return (voltage.Value.Real * current.Value.Real + voltage.Value.Imaginary * current.Value.Imaginary);
 
             // Polar version of calculation
-            //return 3 * voltage.Value.Magnitude * current.Value.Magnitude * Math.Cos(CalculateRelativePhase(voltage, current));
+            //return voltage.Value.Magnitude * current.Value.Magnitude * Math.Cos(CalculateRelativePhase(voltage, current));
         }
 
         /// <summary>
@@ -290,10 +290,10 @@ namespace GSF.Units.EE
             if (current.Type != PhasorType.Current)
                 throw new ArgumentException("Provided current phasor is a voltage", nameof(current));
 
-            return 3 * (voltage.Value.Imaginary * current.Value.Real - voltage.Value.Real * current.Value.Imaginary);
+            return (voltage.Value.Imaginary * current.Value.Real - voltage.Value.Real * current.Value.Imaginary);
 
             // Polar version of calculation
-            //return 3 * voltage.Value.Magnitude * current.Value.Magnitude * Math.Sin(CalculateRelativePhase(voltage, current));
+            //return voltage.Value.Magnitude * current.Value.Magnitude * Math.Sin(CalculateRelativePhase(voltage, current));
         }
 
         /// <summary>
