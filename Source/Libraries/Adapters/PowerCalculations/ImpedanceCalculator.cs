@@ -37,7 +37,7 @@ namespace PowerCalculations
     /// <summary>
     /// Represents an algorithm that calculates power and stability from a synchrophasor device.
     /// </summary>
-    [Description("Impedance Calculator: Calculates line impedance from two PMU sources on two ends of a line - specify Vs/Is phasors first followed by Vr/Ir phasors.")]
+    [Description("Impedance Calculator: Calculates impedance from phasors on two ends of a line - specify Vs/Is phasors followed by Vr/Ir phasors.")]
     public class ImpedanceCalculator : CalculatedMeasurementBase
     {
         #region [ Members ]
@@ -107,16 +107,16 @@ namespace PowerCalculations
             m_currentMagnitudes = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.IPHM).ToArray();
 
             if (m_voltageAngles.Length != 2)
-                throw new InvalidOperationException("Exactly two voltage angles input measurement are required for the impedance calculator, Vs first and Vr second.");
+                throw new InvalidOperationException("Exactly two voltage angle input measurements are required for the impedance calculator, note that \"Vs\" angle/magnitude pair should be specified first followed by \"Vr\" angle/magnitude pair second.");
 
             if (m_voltageMagnitudes.Length != 2)
-                throw new InvalidOperationException("Exactly two voltage magnitudes input measurement are required for the impedance calculator, Vs first and Vr second.");
+                throw new InvalidOperationException("Exactly two voltage magnitude input measurements are required for the impedance calculator, note that \"Vs\" angle/magnitude pair should be specified first followed by \"Vr\" angle/magnitude pair second.");
 
             if (m_currentAngles.Length != 2)
-                throw new InvalidOperationException("Exactly two current angle inputs measurement are required for the impedance calculator, Is first and Ir second.");
+                throw new InvalidOperationException("Exactly two current angle input measurements are required for the impedance calculator, note that \"Is\" angle/magnitude pair should be specified first followed by \"Ir\" angle/magnitude pair second.");
 
             if (m_currentMagnitudes.Length != 2)
-                throw new InvalidOperationException("Exactly two current magnitude inputs measurement are required for the impedance calculator, Is first and Ir second.");
+                throw new InvalidOperationException("Exactly two current magnitude input measurements are required for the impedance calculator, note that \"Is\" angle/magnitude pair should be specified first followed by \"Ir\" angle/magnitude pair second.");
 
             if (m_voltageAngles.Length != m_voltageMagnitudes.Length)
                 throw new InvalidOperationException("A different number of voltage magnitude and angle input measurement keys were supplied - the angles and magnitudes must be supplied in pairs, i.e., one voltage magnitude input measurement must be supplied for each voltage angle input measurement in a consecutive sequence (e.g., VA1;VM1; VA2;VM2)");
@@ -129,7 +129,7 @@ namespace PowerCalculations
 
             // Validate output measurements
             if (OutputMeasurements.Length < Enum.GetValues(typeof(Output)).Length)
-                throw new InvalidOperationException("Not enough output measurements were specified for the impedance calculator, expecting measurements for the \"Resistance\", \"Reactance\", \"Conductance\", and \"Susceptance\" - in this order.");
+                throw new InvalidOperationException("Not enough output measurements were specified for the impedance calculator, expecting measurements for the \"Resistance\", \"Reactance\", \"Conductance\" and \"Susceptance\" - in this order.");
         }
 
         /// <summary>
@@ -142,7 +142,7 @@ namespace PowerCalculations
         {
             IDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
             IMeasurement magnitude, angle;
-            ComplexNumber Zl, Yl, Vs = default(ComplexNumber), Vr = default(ComplexNumber), Is = default(ComplexNumber), Ir = default(ComplexNumber);
+            ComplexNumber Zl, Yl, Vs = 0.0, Vr = 0.0, Is = 0.0, Ir = 0.0;
             double resistance, reactance, conductance, susceptance;
             int i, count = 0;
 
