@@ -399,7 +399,9 @@ namespace GSF.Web.Security
         [RecordOperation(typeof(UserAccount), RecordOperation.QueryRecordCount)]
         public int QueryUserAccountCount(string filterText)
         {
-            return DataContext.Table<UserAccount>().QueryRecordCount();
+            TableOperations<UserAccount> tableOperations = DataContext.Table<UserAccount>();
+            RecordRestriction restriction = tableOperations.GetSearchRestriction(filterText);
+            return tableOperations.QueryRecordCount(restriction);
         }
 
         /// <summary>
@@ -415,7 +417,9 @@ namespace GSF.Web.Security
         [RecordOperation(typeof(UserAccount), RecordOperation.QueryRecords)]
         public IEnumerable<UserAccount> QueryUserAccounts(string sortField, bool ascending, int page, int pageSize, string filterText)
         {
-            return DataContext.Table<UserAccount>().QueryRecords(sortField, ascending, page, pageSize);
+            TableOperations<UserAccount> tableOperations = DataContext.Table<UserAccount>();
+            RecordRestriction restriction = tableOperations.GetSearchRestriction(filterText);
+            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
         }
 
         /// <summary>
