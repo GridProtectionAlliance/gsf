@@ -3250,6 +3250,7 @@ namespace GSF.TimeSeries.Transport
                 {
                     List<DataRow> rowsToRemove = new List<DataRow>();
                     string deviceAcronym;
+                    int? phasorSourceIndex;
 
                     // Remove device records where no associated measurements records exist
                     foreach (DataRow row in metadata.Tables["DeviceDetail"].Rows)
@@ -3269,6 +3270,19 @@ namespace GSF.TimeSeries.Transport
 
                             if (!string.IsNullOrEmpty(deviceAcronym) && (int)metadata.Tables["DeviceDetail"].Compute("Count(Acronym)", $"Acronym = '{deviceAcronym}'") == 0)
                                 rowsToRemove.Add(row);
+                        }
+
+                        if (metadata.Tables["PhasorDetail"].Columns.Contains("SourceIndex") && metadata.Tables["MeasurementDetail"].Columns.Contains("PhasorSourceIndex"))
+                        {
+                            // Remove measurement records where no associated phasor records exist
+                            foreach (DataRow row in metadata.Tables["MeasurementDetail"].Rows)
+                            {
+                                deviceAcronym = row["DeviceAcronym"].ToNonNullString();
+                                phasorSourceIndex = row.ConvertField<int?>("PhasorSourceIndex");
+
+                                if (!string.IsNullOrEmpty(deviceAcronym) && (object)phasorSourceIndex != null && (int)metadata.Tables["PhasorDetail"].Compute("Count(DeviceAcronym)", $"DeviceAcronym = '{deviceAcronym}' AND SourceIndex = {phasorSourceIndex}") == 0)
+                                    rowsToRemove.Add(row);
+                            }
                         }
                     }
 

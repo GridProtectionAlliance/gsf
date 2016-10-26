@@ -352,7 +352,7 @@ namespace DataMigrationUtility
             this.ExcludedTablesTextBox.Name = "ExcludedTablesTextBox";
             this.ExcludedTablesTextBox.Size = new System.Drawing.Size(535, 20);
             this.ExcludedTablesTextBox.TabIndex = 2;
-            this.ExcludedTablesTextBox.Text = "Runtime,ErrorLog,AuditLog,AccessLog,TrackedChange";
+            this.ExcludedTablesTextBox.Text = "Runtime,ErrorLog,AuditLog,AccessLog,AlarmLog,TrackedChange";
             // 
             // CommaSeparateValuesLabel
             // 

@@ -356,6 +356,51 @@ namespace GSF.InstallerActions
                 LogInstallMessage(session, EventLogEntryType.Error, message);
             }
 
+            // Attempt to grant rights to start and stop the service
+            try
+            {
+                string accountSID = UserInfo.UserNameToSID(serviceAccount);
+                string groupSID = UserInfo.GroupNameToSID(groupName);
+                string acl;
+
+                using (Process process = new Process())
+                {
+                    process.StartInfo.FileName = "sc";
+                    process.StartInfo.Arguments = $"sdshow {serviceName}";
+                    process.StartInfo.UseShellExecute = false;
+                    process.StartInfo.RedirectStandardOutput = true;
+                    process.Start();
+
+                    acl = process.StandardOutput.ReadToEnd().Trim();
+                    process.WaitForExit();
+
+                    if (process.ExitCode != 0)
+                        throw new Exception();
+                }
+
+                int index = acl.IndexOf("S:");
+
+                if (accountSID.StartsWith("S-") && !acl.Contains(accountSID))
+                    acl = acl.Insert(index, $"(A;;RPWPCR;;;{accountSID})");
+
+                if (groupSID.StartsWith("S-") && !acl.Contains(groupSID))
+                    acl = acl.Insert(index, $"(A;;RPWPCR;;;{groupSID})");
+
+                using (Process process = Process.Start("sc", $"sdset {serviceName} \"{acl}\""))
+                {
+                    process.WaitForExit();
+
+                    if (process.ExitCode != 0)
+                        throw new Exception();
+                }
+            }
+            catch (Exception)
+            {
+                string message = $"Failed to grant {serviceAccount} rights to restart the service!";
+                LogInstallMessage(session, InstallMessage.Error, message);
+                LogInstallMessage(session, EventLogEntryType.Error, message);
+            }
+
             if (!string.IsNullOrEmpty(servicePorts))
             {
                 LogInstallMessage(session, "Adding namespace reservations for default web services...");

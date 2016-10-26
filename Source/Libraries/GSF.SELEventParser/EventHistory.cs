@@ -75,5 +75,27 @@ namespace GSF.SELEventParser
         }
 
         #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        public static EventHistory Parse(string[] lines, ref int index)
+        {
+            EventHistory eventHistory = new EventHistory();
+
+            // Parse the report header
+            eventHistory.Header = Header.Parse(lines, ref index);
+
+            // Skip to the next nonblank line
+            EventFile.SkipBlanks(lines, ref index);
+
+            // Parse event histories
+            eventHistory.Histories = EventHistoryRecord.ParseRecords(lines, ref index);
+
+            return eventHistory;
+        }
+
+        #endregion
     }
 }

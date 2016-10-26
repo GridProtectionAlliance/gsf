@@ -279,7 +279,7 @@ namespace GSF.IO
         /// </summary>
         /// <param name="startTime">Start time of outage.</param>
         /// <param name="endTime">End time of outage.</param>
-        public void Add(Ticks startTime, Ticks endTime)
+        public void Add(DateTimeOffset startTime, DateTimeOffset endTime)
         {
             Add(new Outage(startTime, endTime));
         }
@@ -336,7 +336,7 @@ namespace GSF.IO
                     {
                         string line;
                         string[] times;
-                        DateTime startTime, endTime;
+                        DateTimeOffset startTime, endTime;
 
                         while ((object)(line = reader.ReadLine()) != null)
                         {
@@ -346,8 +346,8 @@ namespace GSF.IO
                             times = line.Split(';');
 
                             if (times.Length == 2 &&
-                                DateTime.TryParseExact(times[0].Trim(), DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out startTime) &&
-                                DateTime.TryParseExact(times[1].Trim(), DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out endTime))
+                                DateTimeOffset.TryParseExact(times[0].Trim(), DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out startTime) &&
+                                DateTimeOffset.TryParseExact(times[1].Trim(), DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out endTime))
                             {
                                 try
                                 {
@@ -355,7 +355,7 @@ namespace GSF.IO
                                 }
                                 catch (Exception ex)
                                 {
-                                    OnProcessException(new InvalidOperationException(string.Format("Failed to create outage from \"{0}\": {1}", line, ex.Message), ex));
+                                    OnProcessException(new InvalidOperationException($"Failed to create outage from \"{line}\": {ex.Message}", ex));
                                 }
                             }
                             else

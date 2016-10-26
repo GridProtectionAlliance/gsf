@@ -44,6 +44,7 @@ namespace GSF.Web.Hubs
         private readonly Action<string, UpdateType> m_logStatusMessageFunction;
         private readonly Action<Exception> m_logExceptionFunction;
         private dynamic m_clientScript;
+        private string m_connectionID;
         private bool m_disposed;
 
         #endregion
@@ -96,12 +97,30 @@ namespace GSF.Web.Hubs
         /// <remarks>
         /// This property can be used to call registered Javascript hub functions.
         /// </remarks>
-        public dynamic ClientScript => m_clientScript ?? (m_clientScript = Clients?.Client(Context?.ConnectionId));
+        public dynamic ClientScript => m_clientScript ?? (m_clientScript = Clients?.Client(ConnectionID));
 
         /// <summary>
         /// Gets <see cref="Model.DataContext"/> created for this <see cref="RecordOperationsHub{T}"/> instance.
         /// </summary>
         public DataContext DataContext => m_dataContext;
+
+        /// <summary>
+        /// Gets active connection ID from current hub context or assigns one to use.
+        /// </summary>
+        public string ConnectionID
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(m_connectionID))
+                    m_connectionID = Context?.ConnectionId;
+
+                return m_connectionID;
+            }
+            set
+            {
+                m_connectionID = value;
+            }
+        }
 
         #endregion
 
@@ -195,6 +214,18 @@ namespace GSF.Web.Hubs
 
             // Send exception to program host
             m_logExceptionFunction?.Invoke(ex);
+        }
+
+        /// <summary>
+        /// Gets connection ID for active hub context, if any.
+        /// </summary>
+        /// <returns>Connection ID for active hub context.</returns>
+        /// <remarks>
+        /// This defines a client-side script function to return connection ID for active SignalR hub context.
+        /// </remarks>
+        public string GetConnectionID()
+        {
+            return ConnectionID;
         }
 
         #endregion

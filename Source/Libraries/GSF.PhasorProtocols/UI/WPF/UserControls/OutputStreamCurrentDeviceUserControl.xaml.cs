@@ -29,6 +29,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using GSF.PhasorProtocols.UI.DataModels;
+using GSF.TimeSeries.UI;
 
 namespace GSF.PhasorProtocols.UI.UserControls
 {
@@ -164,10 +165,24 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
         private void ButtonAddMore_Click(object sender, RoutedEventArgs e)
         {
-            OutputStreamDevice.AddDevices(null, m_outputStreamID, new ObservableCollection<Device>(m_newDevices.Where(d => d.Enabled)),
-                (bool)CheckBoxAddDigitals.IsChecked, (bool)CheckBoxAddAnalogs.IsChecked);
-            LoadCurrentDevices();
-            PopupAddMore.IsOpen = false;
+            try
+            {
+                OutputStreamDevice.AddDevices(null, m_outputStreamID, new ObservableCollection<Device>(m_newDevices.Where(d => d.Enabled)),
+                    (bool)CheckBoxAddDigitals.IsChecked, (bool)CheckBoxAddAnalogs.IsChecked);
+
+                LoadCurrentDevices();
+                PopupAddMore.IsOpen = false;
+            }
+            catch (Exception ex)
+            {
+                string message = $"Error while adding device to output stream:{Environment.NewLine}{ex.Message}";
+
+                if (ex.Message.Contains("FK_OutputStreamMeasurement_Historian"))
+                    message += Environment.NewLine + Environment.NewLine + "The device may be referencing a non-existent historian.";
+
+                MessageBox.Show(Application.Current.MainWindow, message, "ERROR", MessageBoxButton.OK, MessageBoxImage.Error);
+                CommonFunctions.LogException(null, "Output Wizard Add More", ex);
+            }
         }
 
         private void ButtonCancel_Click(object sender, RoutedEventArgs e)

@@ -760,7 +760,6 @@ namespace GSF.TimeSeries
             CategorizedSettingsElementCollection remotingServerSettings = ConfigurationFile.Current.Settings["remotingServer"];
 
             m_serviceHelper = new ServiceHelper();
-            m_remotingServer = InitializeTlsServer();
 
             if (remotingServerSettings.Cast<CategorizedSettingsElement>().Any(element => element.Name.Equals("EnabledSslProtocols", StringComparison.OrdinalIgnoreCase) && !element.Value.Equals("None", StringComparison.OrdinalIgnoreCase)))
                 m_remotingServer = InitializeTlsServer();

@@ -59,16 +59,16 @@ namespace GSF.IO
         public OutageLogProcessor(OutageLog outageLog, Action<Outage> processOutageFunction, Func<Outage, bool> canProcessOutageFunction, Action<Exception> processExceptionHandler, int processingInterval)
         {
             if ((object)outageLog == null)
-                throw new ArgumentNullException("outageLog");
+                throw new ArgumentNullException(nameof(outageLog));
 
             if ((object)processOutageFunction == null)
-                throw new ArgumentNullException("processOutageFunction");
+                throw new ArgumentNullException(nameof(processOutageFunction));
 
             if ((object)canProcessOutageFunction == null)
-                throw new ArgumentNullException("canProcessOutageFunction");
+                throw new ArgumentNullException(nameof(canProcessOutageFunction));
 
             if ((object)processExceptionHandler == null)
-                throw new ArgumentNullException("processExceptionHandler");
+                throw new ArgumentNullException(nameof(processExceptionHandler));
 
             m_outageLog = outageLog;
             m_outageLog.CollectionChanged += outageLog_CollectionChanged;

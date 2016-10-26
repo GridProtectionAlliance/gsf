@@ -21,6 +21,9 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Text.RegularExpressions;
+
 namespace GSF.SELEventParser
 {
     public class Firmware
@@ -57,6 +60,41 @@ namespace GSF.SELEventParser
             {
                 m_checksum = value;
             }
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        public static Firmware Parse(string[] lines, ref int index)
+        {
+            const string FirmwareIDRegex = @"FID=(\S+)";
+            const string ChecksumRegex = @"CID=(?:0x)?(\S+)";
+
+            Firmware firmware = new Firmware();
+            Match firmwareIDMatch;
+            Match checksumMatch;
+
+            // Firmware ID and checksum are on the same line --
+            // match both regular expressions with the first line
+            firmwareIDMatch = Regex.Match(lines[index], FirmwareIDRegex);
+            checksumMatch = Regex.Match(lines[index], ChecksumRegex);
+
+            // Get the firmware ID
+            if (firmwareIDMatch.Success)
+                firmware.ID = firmwareIDMatch.Groups[1].Value;
+
+            // Get the firmware checksum
+            if (checksumMatch.Success)
+                firmware.Checksum = Convert.ToInt32(checksumMatch.Groups[1].Value, 16);
+
+            // If either match was a success, advance to the next line
+            if (firmwareIDMatch.Success || checksumMatch.Success)
+                index++;
+
+            return firmware;
         }
 
         #endregion

@@ -166,7 +166,7 @@ namespace GSF.TimeSeries
         public virtual void Start(string[] args)
         {
             string userInput = null;
-            Arguments arguments = new Arguments(string.Join(" ", Arguments.ToArgs(Environment.CommandLine).Where(arg => !arg.StartsWith("--filter=", StringComparison.OrdinalIgnoreCase))));
+            Arguments arguments = new Arguments(string.Join(" ", Arguments.ToArgs(Environment.CommandLine).Where(arg => !arg.StartsWith("--filter=", StringComparison.OrdinalIgnoreCase)).Skip(1)));
 
             if (arguments.Exists("OrderedArg1") && arguments.Exists("restart"))
             {

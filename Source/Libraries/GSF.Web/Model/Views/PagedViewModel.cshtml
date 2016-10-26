@@ -20,6 +20,7 @@
 //       Generated original version of source code.
 //
 //*****************************************************************************************************@
+@using System.Globalization
 @using System.Net.Http
 @using System.Text
 @using GSF
@@ -122,32 +123,6 @@
 }
 @functions
 {
-    string SingularForm(string value)
-    {
-        if (value.EndsWith("ies", StringComparison.Ordinal))
-            return value.Substring(0, value.Length - 3) + "y";
-
-        if (value.EndsWith("IES", StringComparison.Ordinal))
-            return value.Substring(0, value.Length - 3) + "Y";
-
-        if (value.EndsWith("ces", StringComparison.OrdinalIgnoreCase))
-            return value.Substring(0, value.Length - 1);
-
-        if (value.EndsWith("les", StringComparison.OrdinalIgnoreCase))
-            return value.Substring(0, value.Length - 1);
-
-        if (value.EndsWith("pes", StringComparison.OrdinalIgnoreCase))
-            return value.Substring(0, value.Length - 1);
-
-        if (value.EndsWith("es", StringComparison.OrdinalIgnoreCase))
-            return value.Substring(0, value.Length - 2);
-
-        if (value.EndsWith("s", StringComparison.OrdinalIgnoreCase))
-            return value.Substring(0, value.Length - 1);
-
-        return value;
-    }
-
     string RemoveSpaces(string value)
     {
         return value.RemoveWhiteSpace().RemoveInvalidFileNameCharacters();
@@ -262,7 +237,7 @@
                     <span data-bind="visible: recordMode()===RecordMode.View">View</span>
                     <span data-bind="visible: recordMode()===RecordMode.Edit">Edit</span>
                     <span data-bind="visible: recordMode()===RecordMode.AddNew">Add New</span>
-                    @(ViewBag.AddNewEditTitle ?? SingularForm(ViewBag.Title ?? ""))
+                    @(ViewBag.AddNewEditTitle ?? GSF.StringExtensions.ToSingular(ViewBag.Title ?? ""))
                 </h4>
             </div>
             <div class="modal-body auto-height" data-bind="with: currentRecord, validationOptions: {messageTemplate: 'validationMessageTemplate'}, css: {'modal-readonly': recordMode()===RecordMode.View}">
@@ -351,15 +326,24 @@
             $(""#addNewEditDialog"").modal({{show: false, backdrop: ""static"", keyboard: false}});
 
             $(""#exportCSVButton"").click(function() {{
-                $(""#exportCSVLink"").attr(""href"", ""/@GSF/Web/Model/Handlers/CsvDownloadHandler.ashx"" +
-                    ""?ModelName="" + encodeURIComponent(viewModel.modelName) + 
-                    ""&HubName="" + encodeURIComponent(viewModel.hubName) + 
-                    ""&FilterText="" + encodeURIComponent(viewModel.filterText) + 
-                    ""&SortField="" + encodeURIComponent(viewModel.sortField()) + 
-                    ""&SortAscending="" + encodeURIComponent(viewModel.sortAscending()) + 
-                    ""&ShowDeleted={0}&ParentKeys={1}"");
+                if (!hubIsConnected)
+                    return;
 
-                $(""#exportCSVLink"")[0].click();
+                dataHub.getConnectionID().done(function(connectionID) {{
+                    $(""#exportCSVLink"").attr(""href"", ""/@GSF/Web/Model/Handlers/CsvDownloadHandler.ashx"" +
+                        ""?ModelName="" + encodeURIComponent(viewModel.modelName) + 
+                        ""&HubName="" + encodeURIComponent(viewModel.hubName) + 
+                        ""&ConnectionID="" + encodeURIComponent(connectionID) + 
+                        ""&FilterText="" + encodeURIComponent(viewModel.filterText) + 
+                        ""&SortField="" + encodeURIComponent(viewModel.sortField()) + 
+                        ""&SortAscending="" + encodeURIComponent(viewModel.sortAscending()) + 
+                        ""&ShowDeleted={0}&ParentKeys={1}"");
+
+                    $(""#exportCSVLink"")[0].click();
+                }}).
+                fail(function(error) {{
+                    showErrorMessage(error);
+                }});
             }});
 
             $(window).on(""beforeunload"", function() {{

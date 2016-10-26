@@ -1258,12 +1258,13 @@ namespace PhasorProtocolAdapters
             Dictionary<string, int> signalCellIndexes = new Dictionary<string, int>();
             SignalReference signal;
             SignalReference[] signals;
+            SignalReference lastSignal = new SignalReference("__-UNKNOWN");
             MeasurementKey measurementKey;
             bool foundQualityFlagsMeasurement = false;
             bool isQualityFlagsMeasurement;
 
             // Define measurement to signals cross reference dictionary
-            foreach (DataRow measurementRow in DataSource.Tables["OutputStreamMeasurements"].Select(string.Format("AdapterID={0}", ID)))
+            foreach (DataRow measurementRow in DataSource.Tables["OutputStreamMeasurements"].Select(string.Format("AdapterID={0}", ID)).OrderBy(row => row["SignalReference"]))
             {
                 isQualityFlagsMeasurement = false;
 
@@ -1336,6 +1337,18 @@ namespace PhasorProtocolAdapters
 
                             measurementKey = MeasurementKey.LookUpOrCreate(Guid.Parse(activeMeasurementRows[0]["SignalID"].ToString()), activeMeasurementID.ToString());
                         }
+
+                        // Re-index signals at runtime in the
+                        // same way phasors are indexed at runtime
+                        if (signal.Index >= 1)
+                        {
+                            if (signal.Kind == lastSignal.Kind && signal.Acronym == lastSignal.Acronym)
+                                signal.Index = lastSignal.Index + 1;
+                            else
+                                signal.Index = 1;
+                        }
+
+                        lastSignal = signal;
 
                         // It is possible, but not as common, that a single measurement will have multiple destinations
                         // within an outgoing data stream frame, hence the following

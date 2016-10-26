@@ -215,20 +215,7 @@ namespace GSF.Net.Ftp
         private string GetLine(NetworkStream stream)
         {
             StringBuilder response = new StringBuilder(256);
-
-            while (true)
-            {
-                // Read until carriage return received
-                while (ReadAppendChar(stream, response) != '\r') { }
-
-                // Skip thru any extra carriage returns
-                while (ReadAppendChar(stream, response) == '\r') { }
-
-                // Break on new line character received
-                if (response[response.Length - 1] == '\n')
-                    break;
-            }
-
+            while (ReadAppendChar(stream, response) != '\n') { }
             return response.ToString();
         }
 

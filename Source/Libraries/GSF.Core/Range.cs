@@ -60,24 +60,12 @@ namespace GSF
         /// <summary>
         /// Gets the start value of the range.
         /// </summary>
-        public T Start
-        {
-            get
-            {
-                return m_start;
-            }
-        }
+        public T Start => m_start;
 
         /// <summary>
         /// Gets the end value of the range.
         /// </summary>
-        public T End
-        {
-            get
-            {
-                return m_end;
-            }
-        }
+        public T End => m_end;
 
         #endregion
 

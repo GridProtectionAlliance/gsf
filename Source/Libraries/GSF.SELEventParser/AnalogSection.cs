@@ -24,21 +24,31 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace GSF.SELEventParser
 {
     public class AnalogSection
     {
+        #region [ Members ]
+
+        // Fields
         private Channel<DateTime> m_timeChannel;
         private List<Channel<double>> m_analogChannels;
+
+        #endregion
+
+        #region [ Constructors ]
 
         public AnalogSection()
         {
             m_timeChannel = new Channel<DateTime>() { Name = "Time" };
             m_analogChannels = new List<Channel<double>>();
         }
+
+        #endregion
+
+        #region [ Properties ]
 
         public Channel<DateTime> TimeChannel
         {
@@ -64,9 +74,204 @@ namespace GSF.SELEventParser
             }
         }
 
+        #endregion
+
+        #region [ Methods ]
+
         public Channel<double> GetAnalogChannel(string name)
         {
             return m_analogChannels.FirstOrDefault(channel => channel.Name == name);
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        public static AnalogSection Parse(DateTime eventTime, string[] lines, ref int index)
+        {
+            const string CycleHeader = @"^\[\d+\]$";
+
+            AnalogSection analogSection = new AnalogSection();
+
+            int headerLineIndex;
+            int firstDataLineIndex;
+            int dataLineIndex;
+            int triggerLineIndex;
+
+            string[] headers = null;
+            string[] fields = null;
+            int analogEndIndex = -1;
+
+            double[] analogs;
+            double analog = 0.0;
+
+            Cycle<DateTime> currentTimeCycle = null;
+            List<Cycle<double>> currentCycles = null;
+
+            string currentLine;
+            int sampleCount = 0;
+            int eventSample = -1;
+
+            int firstCycleCount;
+            long timePerSample;
+
+            // Scan forward to the first line of data
+            firstDataLineIndex = index;
+
+            while (firstDataLineIndex < lines.Length)
+            {
+                fields = Regex.Split(lines[firstDataLineIndex], @"\s|>|\*").Where(s => s != string.Empty).ToArray();
+
+                if (fields.Length > 0 && double.TryParse(fields[0], out analog))
+                    break;
+
+                firstDataLineIndex++;
+            }
+
+            if (firstDataLineIndex >= lines.Length)
+                return analogSection;
+
+            // Scan backward to find the header line
+            headerLineIndex = firstDataLineIndex - 1;
+
+            while (headerLineIndex >= index)
+            {
+                headers = lines[headerLineIndex].Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
+
+                if (headers.Length == fields.Length)
+                    break;
+
+                headerLineIndex--;
+            }
+
+            if (headerLineIndex < index)
+                return analogSection;
+
+            // Scan forward to either the trigger or the
+            // largest current, whichever comes first,
+            // and use it to determine the analogEndIndex
+            triggerLineIndex = firstDataLineIndex;
+
+            while (firstDataLineIndex < lines.Length)
+            {
+                currentLine = lines[triggerLineIndex++];
+
+                // If the current line is empty or it matches the cycle header, skip it
+                if (string.IsNullOrWhiteSpace(currentLine) || Regex.IsMatch(currentLine, CycleHeader))
+                    continue;
+
+                // If the length of the current line is not within one character
+                // of the length of the first data line, assume we have reached
+                // the end of the section and stop scanning lines
+                if (Math.Abs(currentLine.Length - lines[firstDataLineIndex].Length) > 1)
+                    break;
+
+                // Check if this is the trigger row
+                analogEndIndex = currentLine.IndexOf('>');
+
+                if (analogEndIndex >= 0)
+                    break;
+
+                // Check if this is the largest current row
+                analogEndIndex = currentLine.IndexOf('*');
+
+                if (analogEndIndex >= 0)
+                    break;
+            }
+
+            // If analogEndIndex is valid, parse the header row again
+            if (analogEndIndex >= 0 && analogEndIndex < lines[headerLineIndex].Length)
+                headers = lines[headerLineIndex].Remove(analogEndIndex).Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
+
+            // Generate analog channels from header row
+            analogSection.AnalogChannels = headers
+                .Select(header => new Channel<double>() { Name = header })
+                .ToList();
+
+            // Scan through the lines of data
+            dataLineIndex = firstDataLineIndex;
+
+            while (dataLineIndex < lines.Length)
+            {
+                currentLine = lines[dataLineIndex++];
+
+                // Empty lines or cycle headers indicate start of next cycle
+                if (string.IsNullOrWhiteSpace(currentLine) || Regex.IsMatch(currentLine, CycleHeader))
+                {
+                    // Two empty lines in a row indicates the end of the section
+                    if ((object)currentCycles == null)
+                        break;
+
+                    currentCycles = null;
+                    continue;
+                }
+
+                // If the line does not indicate the start of a cycle,
+                // check the length to make sure we are still in the analog section
+                if (Math.Abs(currentLine.Length - lines[firstDataLineIndex].Length) > 1)
+                    break;
+
+                // Parse this line as a line of data
+                if (analogEndIndex >= 0 && analogEndIndex < currentLine.Length)
+                    currentLine = currentLine.Remove(analogEndIndex);
+
+                analogs = currentLine
+                    .Split((char[])null, StringSplitOptions.RemoveEmptyEntries)
+                    .TakeWhile(field => double.TryParse(field, out analog))
+                    .Select(field => analog)
+                    .ToArray();
+
+                // Remove analog channels whose values cannot be parsed as doubles
+                while (analogSection.AnalogChannels.Count > analogs.Length)
+                    analogSection.AnalogChannels.RemoveAt(analogSection.AnalogChannels.Count - 1);
+
+                // Ensure the existence of a list of cycles to hold the analog values
+                if ((object)currentCycles == null)
+                {
+                    currentCycles = analogSection.AnalogChannels.Select(channel => new Cycle<double>()).ToList();
+
+                    for (int i = 0; i < currentCycles.Count; i++)
+                        analogSection.AnalogChannels[i].Cycles.Add(currentCycles[i]);
+                }
+
+                // Add the analogs to their respective cycles
+                for (int i = 0; i < analogs.Length && i < currentCycles.Count; i++)
+                    currentCycles[i].Samples.Add(analogs[i]);
+
+                // Determine whether this line represents the sample that triggered the event
+                if (currentLine.Contains('>') || (eventSample == -1 && currentLine.Contains('*')))
+                    eventSample = sampleCount;
+
+                sampleCount++;
+                index = dataLineIndex;
+            }
+
+            // If we did not find any samples marked with the
+            // event time, assume it is the first sample
+            if (eventSample < 0)
+                eventSample = 0;
+
+            // Determine the time per sample, in ticks
+            firstCycleCount = analogSection.AnalogChannels.First().Cycles.First().Samples.Count;
+            timePerSample = TimeSpan.TicksPerSecond / (60L * firstCycleCount);
+
+            for (int i = 0; i < sampleCount; i++)
+            {
+                if ((i % firstCycleCount) == 0)
+                {
+                    currentTimeCycle = new Cycle<DateTime>();
+                    analogSection.TimeChannel.Cycles.Add(currentTimeCycle);
+                }
+
+                // Null reference not possible since 0 % firstCycleCount is 0
+                currentTimeCycle.Samples.Add(eventTime + TimeSpan.FromTicks(timePerSample * (i - eventSample)));
+            }
+
+            return analogSection;
+        }
+
+        #endregion
     }
 }
