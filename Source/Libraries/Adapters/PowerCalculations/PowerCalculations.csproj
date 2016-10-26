@@ -123,6 +123,8 @@
     <Compile Include="PowerMultiCalculator\PowerMeasurement.cs" />
     <Compile Include="PowerMultiCalculator\PowerMultiCalculatorAdapter.cs" />
     <Compile Include="PowerMultiCalculator\RunningAverage.cs" />
+    <Compile Include="AngleDifferenceCalculator.cs" />
+    <Compile Include="ImpedanceCalculator.cs" />
     <Compile Include="SequenceCalculator.cs" />
     <Compile Include="PowerCalculator.cs" />
     <Compile Include="PowerStability.cs" />
