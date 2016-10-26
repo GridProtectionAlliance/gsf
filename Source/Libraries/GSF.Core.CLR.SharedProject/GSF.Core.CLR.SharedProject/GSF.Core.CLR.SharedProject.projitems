@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>5ce3d6f4-d38d-4f71-acb6-79681cfe47df</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>GSF.Core.CLR.SharedProject</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Collection\ListExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\DisposableLoggingClassBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Internal\LogEventPublisherInternal.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Internal\LoggerInternal.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Internal\LogMessageAttributes.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Internal\LogMessageSaveHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Internal\LogPublisherInternal.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Internal\LogSubscriberInternal.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Internal\LogSuppressionEngine.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Internal\MessageAttributeFilter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Internal\PublisherFilter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\LogEventPublisher.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\LogEventPublisherDetails.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Logger.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\LogMessage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\LogPublisher.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\LogStackFrame.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\LogStackMessages.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\LogStackTrace.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\LogSubscriber.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\MessageClass.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\MessageFlags.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\MessageLevel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\MessageRate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\MessageSuppression.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\NewLogMessageEventHandler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Utilities\LogFileCompactor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Utilities\LogFileReader.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Utilities\LogFileWriter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Utilities\LogSubscriptionConsole.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Utilities\LogSubscriptionFileWriter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\VerboseLevel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EmptyArray.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Immutable\IImmutableObject.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Immutable\IImmutableObject`1.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Immutable\ImmutableArray`1.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Immutable\ImmutableDictionary`2.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Immutable\ImmutableList`1.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Immutable\ImmutableObjectAutoBase`1.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Immutable\ImmutableObjectBase`1.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Ionic.Zlib\CRC32.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Ionic.Zlib\Deflate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Ionic.Zlib\DeflateStream.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Ionic.Zlib\GZipStream.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Ionic.Zlib\Inflate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Ionic.Zlib\InfTree.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Ionic.Zlib\ParallelDeflateOutputStream.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Ionic.Zlib\Tree.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Ionic.Zlib\Zlib.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Ionic.Zlib\ZlibBaseStream.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Ionic.Zlib\ZlibCodec.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Ionic.Zlib\ZlibConstants.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Ionic.Zlib\ZlibStream.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PathHelpers.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Reflection\MethodBaseExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ShortTime.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Threading\DisposableCallback.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Threading\RateLimiter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Threading\SingleOccurrenceAction.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Threading\StateMachine.cs" />
+  </ItemGroup>
+</Project>

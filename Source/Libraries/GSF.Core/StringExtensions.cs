@@ -1035,6 +1035,21 @@ namespace GSF
         }
 
         /// <summary>
+        /// Test to see if the provided string is null or contains only whitespace characters.
+        /// </summary>
+        /// <param name="value">the value to test.</param>
+        /// <returns></returns>
+        public static bool IsNullOrWhiteSpace(this string value)
+        {
+            if ((value == null) || (value.Length == 0))
+                return true;
+            foreach (char c in value)
+                if (!Char.IsWhiteSpace(c))
+                    return false;
+            return true;
+        }
+
+        /// <summary>
         /// Decodes the specified Regular Expression character back into a standard Unicode character.
         /// </summary>
         /// <param name="value">Regular Expression character to decode back into a Unicode character.</param>

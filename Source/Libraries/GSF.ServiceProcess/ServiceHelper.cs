@@ -122,6 +122,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web;
+using GSF.Diagnostics;
 
 // ReSharper disable InconsistentlySynchronizedField
 namespace GSF.ServiceProcess
@@ -168,6 +169,22 @@ namespace GSF.ServiceProcess
     [ToolboxBitmap(typeof(ServiceHelper))]
     public class ServiceHelper : Component, ISupportLifecycle, ISupportInitialize, IProvideStatus, IPersistSettings
     {
+        private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(ServiceHelper), MessageClass.Framework);
+        private static readonly LogEventPublisher LogError = Log.RegisterEvent(MessageLevel.Error, MessageFlags.None, "Error Message", 0, MessageRate.PerSecond(30), 1000);
+        private static readonly LogEventPublisher LogStatusInfo = Log.RegisterEvent(MessageLevel.Info, MessageFlags.None, "Status Message Info", 0, MessageRate.PerSecond(30), 1000);
+        private static readonly LogEventPublisher LogStatusWarning = Log.RegisterEvent(MessageLevel.Warning, MessageFlags.None, "Status Message Warning", 0, MessageRate.PerSecond(30), 1000);
+        private static readonly LogEventPublisher LogStatusAlarm = Log.RegisterEvent(MessageLevel.Error, MessageFlags.None, "Status Message Alarm", 0, MessageRate.PerSecond(30), 1000);
+
+        static ServiceHelper()
+        {
+            string logPath = FilePath.GetAbsolutePath("Application Logs");
+            if (!Directory.Exists(logPath))
+                Directory.CreateDirectory(logPath);
+            Logger.FileWriter.SetPath(logPath, VerboseLevel.High);
+            Logger.FileWriter.SetLoggingFileCount(300);
+            Log.InitialStackTrace = LogStackTrace.Empty;
+        }
+
         #region [ Members ]
 
         // Nested Types
@@ -1732,6 +1749,22 @@ namespace GSF.ServiceProcess
         [StringFormatMethod("message")]
         public void UpdateStatus(Guid client, UpdateType type, string message, params object[] args)
         {
+            string formattedMessage = string.Format(message, args);
+            switch (type)
+            {
+                case UpdateType.Information:
+                    LogStatusInfo.Publish(formattedMessage, client.ToString());
+                    break;
+                case UpdateType.Warning:
+                    LogStatusWarning.Publish(formattedMessage, client.ToString());
+                    break;
+                case UpdateType.Alarm:
+                    LogStatusAlarm.Publish(formattedMessage, client.ToString());
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
+            }
+
             const int HighPriority = 2;
             const int LowPriority = 1;
             StatusUpdate update;
@@ -1739,7 +1772,7 @@ namespace GSF.ServiceProcess
             if (m_suppressUpdates)
                 return;
 
-            update = new StatusUpdate(client, type, string.Format(message, args));
+            update = new StatusUpdate(client, type, formattedMessage);
 
             if (client != Guid.Empty)
                 m_statusUpdateThread.Push(HighPriority, () => PrioritizeStatusUpdate(update));
@@ -1960,9 +1993,7 @@ namespace GSF.ServiceProcess
         {
             lock (m_clientRequestHandlers)
             {
-                return m_clientRequestHandlers.Find(
-                    handler => handler.Command.Equals(handlerCommand, StringComparison.OrdinalIgnoreCase) ||
-                    ((object)handler.Aliases != null && handler.Aliases.Any(alias => alias.Equals(handlerCommand, StringComparison.OrdinalIgnoreCase))));
+                return m_clientRequestHandlers.Find(handler => handler.Command.Equals(handlerCommand, StringComparison.OrdinalIgnoreCase) || ((object)handler.Aliases != null && handler.Aliases.Any(alias => alias.Equals(handlerCommand, StringComparison.OrdinalIgnoreCase))));
             }
         }
 
@@ -2008,6 +2039,7 @@ namespace GSF.ServiceProcess
         /// <param name="ex">Exception to log.</param>
         public void LogException(Exception ex)
         {
+            LogError.Publish(null, null, ex);
             if ((object)m_errorLogger != null)
                 m_errorLogger.Log(ex);
 
@@ -2246,8 +2278,8 @@ namespace GSF.ServiceProcess
             }
             finally
             {
-                m_disposed = true;          // Prevent duplicate dispose.
-                base.Dispose(disposing);    // Call base class Dispose().
+                m_disposed = true; // Prevent duplicate dispose.
+                base.Dispose(disposing); // Call base class Dispose().
             }
         }
 
@@ -2893,8 +2925,7 @@ namespace GSF.ServiceProcess
                         }
                         // ReSharper disable once EmptyGeneralCatchClause
                         catch
-                        {
-                        }
+                        { }
                     }
                     responseMessage.AppendLine();
                     responseMessage.AppendLine();
@@ -3146,9 +3177,7 @@ namespace GSF.ServiceProcess
                 {
                     foreach (ClientRequestHandler handler in m_clientRequestHandlers)
                     {
-                        if (m_secureRemoteInteractions &&
-                            SecurityProviderUtility.IsResourceSecurable(handler.Command) &&
-                            !SecurityProviderUtility.IsResourceAccessible(handler.Command))
+                        if (m_secureRemoteInteractions && SecurityProviderUtility.IsResourceSecurable(handler.Command) && !SecurityProviderUtility.IsResourceAccessible(handler.Command))
                             continue;
 
                         if (!handler.IsAdvertised && !showAdvancedHelp)
@@ -4211,11 +4240,7 @@ namespace GSF.ServiceProcess
             }
 
             // Determine whether the filter was actually updated
-            bool filterUpdated = mergeFilter.TypeInclusionFilters.Any() ||
-                                 mergeFilter.TypeExclusionFilters.Any() ||
-                                 mergeFilter.PatternInclusionFilters.Any() ||
-                                 mergeFilter.PatternExclusionFilters.Any() ||
-                                 removalIDs.Any();
+            bool filterUpdated = mergeFilter.TypeInclusionFilters.Any() || mergeFilter.TypeExclusionFilters.Any() || mergeFilter.PatternInclusionFilters.Any() || mergeFilter.PatternExclusionFilters.Any() || removalIDs.Any();
 
             if (!filterUpdated && !argsContainsList)
                 return;
@@ -4223,15 +4248,15 @@ namespace GSF.ServiceProcess
             // Use the status update thread to get the
             // client's config, then update the filters
             m_statusUpdateThread.Push(HighPriority, () =>
-            {
-                ClientStatusUpdateConfiguration clientConfig = m_clientStatusUpdateLookup.GetOrAdd(requestInfo.Sender.ClientID, id => new ClientStatusUpdateConfiguration(id, this));
+                                                    {
+                                                        ClientStatusUpdateConfiguration clientConfig = m_clientStatusUpdateLookup.GetOrAdd(requestInfo.Sender.ClientID, id => new ClientStatusUpdateConfiguration(id, this));
 
-                if (filterUpdated)
-                    clientConfig.UpdateFilters(mergeFilter, removalIDs);
+                                                        if (filterUpdated)
+                                                            clientConfig.UpdateFilters(mergeFilter, removalIDs);
 
-                if (argsContainsList)
-                    clientConfig.ListFilters(requestInfo);
-            });
+                                                        if (argsContainsList)
+                                                            clientConfig.ListFilters(requestInfo);
+                                                    });
         }
 
         private void ManageFiles(ClientRequestInfo requestInfo)
@@ -4549,11 +4574,7 @@ namespace GSF.ServiceProcess
 
                 ClientInfo info = requestInfo.Sender;
 
-                string message = $"  Current user: {info.ClientUser.Identity.Name.ToNonNullNorEmptyString("Undetermined")}\r\n" + 
-                                 $"   Client name: {info.ClientName.ToNonNullNorEmptyString("Undetermined")}\r\n" + 
-                                 $"  From machine: {info.MachineName.ToNonNullNorEmptyString("Undetermined")}\r\n" + 
-                                 $"Connected time: {(info.ConnectedAt > DateTime.MinValue ? (DateTime.UtcNow - info.ConnectedAt).ToElapsedTimeString() : m_remotingServer.RunTime.ToString())}\r\n" + 
-                                 $" Authenticated: {info.ClientUser.Identity.IsAuthenticated}";
+                string message = $"  Current user: {info.ClientUser.Identity.Name.ToNonNullNorEmptyString("Undetermined")}\r\n" + $"   Client name: {info.ClientName.ToNonNullNorEmptyString("Undetermined")}\r\n" + $"  From machine: {info.MachineName.ToNonNullNorEmptyString("Undetermined")}\r\n" + $"Connected time: {(info.ConnectedAt > DateTime.MinValue ? (DateTime.UtcNow - info.ConnectedAt).ToElapsedTimeString() : m_remotingServer.RunTime.ToString())}\r\n" + $" Authenticated: {info.ClientUser.Identity.IsAuthenticated}";
 
                 UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message + "\r\n\r\n");
 

@@ -47,6 +47,41 @@ namespace GSF.IO
         private const int BufferSize = 32768;
 
         /// <summary>
+        /// Writes the contents of a stream to the provided stream.
+        /// </summary>
+        /// <param name="destination">the destination stream.</param>
+        /// <param name="source">the source stream</param>
+        /// <param name="length">the number of bytes to copy. If the source is not long enough,
+        /// and end of stream exception will be thrown.</param>
+        /// <param name="buffer">A buffer to use to copy the data from one stream to another. 
+        /// This keeps the function from always allocating a new buffer for the copy</param>
+        public static void CopyTo(this Stream source, Stream destination, long length, byte[] buffer)
+        {
+            if (source == null)
+                throw new ArgumentNullException("source");
+            if (destination == null)
+                throw new ArgumentNullException("destination");
+            if (buffer == null)
+                throw new ArgumentNullException("buffer");
+            if (buffer.Length < 1)
+                throw new ArgumentException("Array length of zero", "buffer");
+            if (length < 0)
+                throw new ArgumentOutOfRangeException("length", "Cannot be negative");
+
+            while (length > 0)
+            {
+                int lengthToRead = (int)Math.Min(buffer.Length, length);
+                int bytesRead = source.Read(buffer, 0, lengthToRead);
+                if (bytesRead == 0)
+                {
+                    throw new EndOfStreamException("The end of the stream was reached before the entire length was copied.");
+                }
+                destination.Write(buffer, 0, bytesRead);
+                length -= bytesRead;
+            }
+        }
+
+        /// <summary>
         /// Copies input <see cref="Stream"/> onto output <see cref="Stream"/>.
         /// </summary>
         /// <param name="source">The input <see cref="Stream"/>.</param>
