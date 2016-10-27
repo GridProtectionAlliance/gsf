@@ -88,7 +88,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data.Entity.Design.PluralizationServices;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
@@ -103,15 +102,6 @@ namespace GSF
     /// <summary>Defines extension functions related to string manipulation.</summary>
     public static class StringExtensions
     {
-        private static readonly PluralizationService s_pluralizationService;
-
-        static StringExtensions()
-        {
-            // Pluralization service currently only supports English, if other languages are supported in the
-            // future, cached services can use to a concurrent dictionary keyed on LCID of culture
-            s_pluralizationService = PluralizationService.CreateService(CultureInfo.GetCultureInfo("en-us"));
-        }
-
         /// <summary>
         /// Parses a string intended to represent a boolean value.
         /// </summary>
@@ -1165,59 +1155,7 @@ namespace GSF
 
             return culture.TextInfo.ToTitleCase(value.ToLower());
         }
-
-        /// <summary>
-        /// Returns the singular form of the specified word.
-        /// </summary>
-        /// <param name="value">The word to be made singular.</param>
-        /// <returns>The singular form of the input parameter.</returns>
-        public static string ToSingular(this string value)
-        {
-            if (string.IsNullOrEmpty(value))
-                return "";
-
-            return s_pluralizationService.Singularize(value);
-        }
-
-        /// <summary>
-        /// Determines whether the specified word is singular.
-        /// </summary>
-        /// <param name="value">The word to be analyzed.</param>
-        /// <returns><c>true</c> if the word is singular; otherwise, <c>false</c>.</returns>
-        public static bool IsSingular(this string value)
-        {
-            if (string.IsNullOrEmpty(value))
-                return false;
-
-            return s_pluralizationService.IsSingular(value);
-        }
-
-        /// <summary>
-        /// Returns the plural form of the specified word.
-        /// </summary>
-        /// <param name="value">The word to be made plural.</param>
-        /// <returns>The plural form of the input parameter.</returns>
-        public static string ToPlural(this string value)
-        {
-            if (string.IsNullOrEmpty(value))
-                return "";
-
-            return s_pluralizationService.Pluralize(value);
-        }
-
-        /// <summary>
-        /// Determines whether the specified word is plural.
-        /// </summary>
-        /// <param name="value">The word to be analyzed.</param>
-        /// <returns><c>true</c> if the word is plural; otherwise, <c>false</c>.</returns>
-        public static bool IsPlural(this string value)
-        {
-            if (string.IsNullOrEmpty(value))
-                return false;
-
-            return s_pluralizationService.IsPlural(value);
-        }
-
+        
         /// <summary>
         /// Converts first letter of string to upper-case.
         /// </summary>

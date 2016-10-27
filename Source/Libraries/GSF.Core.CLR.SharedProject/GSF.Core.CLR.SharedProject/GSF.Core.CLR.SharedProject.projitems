@@ -9,7 +9,11 @@
     <Import_RootNamespace>GSF.Core.CLR.SharedProject</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)ArrayExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)BigEndian.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CharExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Collection\ListExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ComplexNumber.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\DisposableLoggingClassBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Internal\LogEventPublisherInternal.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Internal\LoggerInternal.cs" />
@@ -42,6 +46,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Utilities\LogSubscriptionFileWriter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\VerboseLevel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)EmptyArray.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Encoding7Bit.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EnumExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EventArgs.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GuidExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Immutable\IImmutableObject.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Immutable\IImmutableObject`1.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Immutable\ImmutableArray`1.cs" />
@@ -49,6 +57,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Immutable\ImmutableList`1.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Immutable\ImmutableObjectAutoBase`1.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Immutable\ImmutableObjectBase`1.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Int24.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Ionic.Zlib\CRC32.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Ionic.Zlib\Deflate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Ionic.Zlib\DeflateStream.cs" />
@@ -62,12 +71,59 @@
     <Compile Include="$(MSBuildThisFileDirectory)Ionic.Zlib\ZlibCodec.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Ionic.Zlib\ZlibConstants.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Ionic.Zlib\ZlibStream.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\BlockAllocatedMemoryStream.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\StreamExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LittleEndian.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NtpTimeTag.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NumericalAnalysis\Euclidean.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NumericalAnalysis\GaussianDistribution.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NumericalAnalysis\Interpolation\InverseDistanceWeightingFunction.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NumericalAnalysis\Interpolation\PiecewiseLinearFunction.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NumericalAnalysis\NamespaceDoc.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NumericalAnalysis\NumericalAnalysisExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PathHelpers.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Reflection\AssemblyExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Reflection\AssemblyInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Reflection\MemberInfoExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\MethodBaseExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Reflection\NamespaceDoc.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ShortTime.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)StringExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\DisposableCallback.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\RateLimiter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Threading\ScheduledTask.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\SingleOccurrenceAction.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\StateMachine.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Threading\ThreadContainerBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Threading\ThreadContainerDedicated.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Threading\ThreadContainerThreadpool.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Threading\WeakAction.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Ticks.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TimeTagBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UInt24.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\Angle.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\Charge.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\Current.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\EE\LineFrequency.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\EE\NamespaceDoc.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\EE\Phasor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\EE\PhasorType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\EE\SignalKind.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\EE\SignalReference.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\EE\SignalType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\Energy.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\Length.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\Mass.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\NamespaceDoc.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\Power.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\SI.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\SI2.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\Speed.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\Temperature.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\Time.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\Voltage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\Volume.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UnixTimeTag.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Word.cs" />
   </ItemGroup>
 </Project>

@@ -34,7 +34,7 @@ namespace GSF.Diagnostics
     /// <summary>
     /// Immutable List of stack messages
     /// </summary>
-    public class LogStackMessages 
+    public class LogStackMessages
         : IEquatable<LogStackMessages>
     {
         private readonly string[] m_attributes;
@@ -49,6 +49,18 @@ namespace GSF.Diagnostics
         {
             m_attributes = EmptyArray<string>.Empty;
             m_values = EmptyArray<string>.Empty;
+            m_hashCode = ComputeHashCode();
+        }
+
+        public LogStackMessages(string key, string value)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+                throw new ArgumentNullException(nameof(key));
+            if (string.IsNullOrWhiteSpace(value))
+                throw new ArgumentNullException(nameof(value));
+
+            m_attributes = new string[] { key };
+            m_values = new string[] { value };
             m_hashCode = ComputeHashCode();
         }
 

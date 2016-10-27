@@ -155,7 +155,26 @@ namespace GSF.TimeSeries.Adapters
             m_defaultSampleSizeWarningThreshold = thresholdSettings["DefaultSampleSizeWarningThreshold"].ValueAsInt32();
 
             // Create a new set of routing tables
-            m_routingTables = new RoutingTables();
+
+            try
+            {
+                if (System.IO.File.Exists(@"d:\Program Files\openPDC\UseNewRoutingAdapter.txt"))
+                {
+                    int delay = int.Parse(System.IO.File.ReadAllText(@"d:\Program Files\openPDC\UseNewRoutingAdapter.txt"));
+                    m_routingTables = new RoutingTables(new RouteMappingHighLatencyLowCpu(delay));
+                }
+                else
+                {
+                    m_routingTables = new RoutingTables();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.IO.File.AppendAllText(@"d:\Program Files\openPDC\UseNewRoutingAdapterError.txt", ex.ToString());
+                m_routingTables = new RoutingTables();
+            }
+
+
             m_routingTables.StatusMessage += m_routingTables_StatusMessage;
             m_routingTables.ProcessException += m_routingTables_ProcessException;
 

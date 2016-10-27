@@ -189,6 +189,16 @@ namespace GSF.Diagnostics
             return new StackDetailsDisposal(stack.Count);
         }
 
+        /// <summary>
+        /// Temporarily appends data to the thread's stack so the data can be propagated to any messages generated on this thread.
+        /// Be sure to call Dispose on the returned object to remove this from the stack.
+        /// </summary>
+        /// <returns></returns>
+        public static StackDetailsDisposal AppendStackDetails(string key, string value)
+        {
+            return AppendStackDetails(new LogStackMessages(key, value));
+        }
+
         public struct StackDetailsDisposal : IDisposable
         {
             public int Depth { get; private set; }

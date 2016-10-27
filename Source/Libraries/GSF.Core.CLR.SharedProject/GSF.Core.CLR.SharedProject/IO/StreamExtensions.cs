@@ -89,23 +89,7 @@ namespace GSF.IO
         [Obsolete("Since .NET 4.0, any class inheriting from Stream has a native \"CopyTo\" function; also, .NET 4.5 has a \"CopyToAsync\" method.")]
         public static void CopyStream(this Stream source, Stream destination)
         {
-            byte[] buffer = BufferPool.TakeBuffer(BufferSize);
-
-            try
-            {
-                int bytesRead = source.Read(buffer, 0, BufferSize);
-
-                while (bytesRead > 0)
-                {
-                    destination.Write(buffer, 0, bytesRead);
-                    bytesRead = source.Read(buffer, 0, BufferSize);
-                }
-            }
-            finally
-            {
-                if ((object)buffer != null)
-                    BufferPool.ReturnBuffer(buffer);
-            }
+            source.CopyTo(destination);
         }
 
         /// <summary>
