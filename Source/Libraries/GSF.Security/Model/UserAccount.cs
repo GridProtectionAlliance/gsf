@@ -49,6 +49,7 @@ namespace GSF.Security.Model
         [Label("User Name")]
         [Required]
         [StringLength(200)]
+        [Searchable]
         public string Name { get; set; }
 
         /// <summary>
@@ -63,6 +64,7 @@ namespace GSF.Security.Model
         /// </summary>
         [Label("First Name")]
         [StringLength(200)]
+        [Searchable]
         public string FirstName { get; set; }
 
         /// <summary>
@@ -70,6 +72,7 @@ namespace GSF.Security.Model
         /// </summary>
         [Label("Last Name")]
         [StringLength(200)]
+        [Searchable]
         public string LastName { get; set; }
 
         /// <summary>

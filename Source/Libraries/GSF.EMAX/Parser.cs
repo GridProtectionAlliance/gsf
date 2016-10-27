@@ -404,7 +404,16 @@ namespace GSF.EMAX
             int days, hours, minutes, seconds, milliseconds, microseconds;
             byte highByte, lowByte;
 
-            m_timeError = clockWords.All(clockWord => clockWord == 0xFFFF);
+            m_timeError = clockWords
+                .SelectMany(clockWord => new byte[]
+                {
+                    clockWord.HighByte().HighNibble(),
+                    clockWord.HighByte().LowNibble(),
+                    clockWord.LowByte().HighNibble(),
+                    clockWord.LowByte().LowNibble()
+                })
+                .Take(15)
+                .Any(b => b > 9);
 
             if (m_timeError)
                 return DateTime.MaxValue;
