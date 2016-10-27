@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using System.Windows.Forms;
 using OGE.Core.GSF.Diagnostics.UI;
 
 namespace GSF.Diagnostics.UI
@@ -8,7 +10,7 @@ namespace GSF.Diagnostics.UI
     {
         bool IsIncluded(LogMessage log);
         string Description { get; }
-        IEnumerable<Tuple<String, Action>> GetMenuButtons();
+        IEnumerable<Tuple<String, Func<bool>>> GetMenuButtons();
         void ToggleResult();
     }
 
@@ -40,12 +42,12 @@ namespace GSF.Diagnostics.UI
             }
         }
 
-        public IEnumerable<Tuple<string, Action>> GetMenuButtons()
+        public IEnumerable<Tuple<string, Func<bool>>> GetMenuButtons()
         {
             return new[]
                 {
-                    Tuple.Create<string, Action>("Include Type", () => { m_includeIfMatched = true; }),
-                    Tuple.Create<string, Action>("Exclude Type", () => { m_includeIfMatched = false; })
+                    Tuple.Create<string, Func<bool>>("Include Type", () => { m_includeIfMatched = true; return true; }),
+                    Tuple.Create<string, Func<bool>>("Exclude Type", () => { m_includeIfMatched = false; return true;})
                 };
         }
 
@@ -85,12 +87,12 @@ namespace GSF.Diagnostics.UI
             }
         }
 
-        public IEnumerable<Tuple<string, Action>> GetMenuButtons()
+        public IEnumerable<Tuple<string, Func<bool>>> GetMenuButtons()
         {
             return new[]
                 {
-                    Tuple.Create<string, Action>("Include Level", () => { m_includeIfMatched = true; }),
-                    Tuple.Create<string, Action>("Exclude Level", () => { m_includeIfMatched = false; })
+                    Tuple.Create<string, Func<bool>>("Include Level", () => { m_includeIfMatched = true; return true;}),
+                    Tuple.Create<string, Func<bool>>("Exclude Level", () => { m_includeIfMatched = false; return true;})
                 };
         }
         public void ToggleResult()
@@ -129,12 +131,12 @@ namespace GSF.Diagnostics.UI
             }
         }
 
-        public IEnumerable<Tuple<string, Action>> GetMenuButtons()
+        public IEnumerable<Tuple<string, Func<bool>>> GetMenuButtons()
         {
             return new[]
                     {
-                        Tuple.Create<string, Action>("Include Event", () => { m_includeIfMatched = true; }),
-                        Tuple.Create<string, Action>("Exclude Event", () => { m_includeIfMatched = false; })
+                        Tuple.Create<string, Func<bool>>("Include Event", () => { m_includeIfMatched = true; return true;}),
+                        Tuple.Create<string, Func<bool>>("Exclude Event", () => { m_includeIfMatched = false; return true;})
                     };
         }
         public void ToggleResult()
@@ -149,6 +151,11 @@ namespace GSF.Diagnostics.UI
         private string m_eventName;
         private bool m_includeIfMatched;
         private string m_errorText;
+
+        private bool m_isContains;
+        private bool m_isRegex;
+        private Regex m_regex;
+
         public MatchMessageName(LogMessage typeName)
         {
             m_errorText = typeName.Message;
@@ -159,7 +166,13 @@ namespace GSF.Diagnostics.UI
         public bool IsIncluded(LogMessage log)
         {
             if (log.EventPublisherDetails.TypeName == m_typeName && log.EventPublisherDetails.EventName == m_eventName)
+            {
+                if (m_isRegex)
+                    return m_includeIfMatched ^ !m_regex.IsMatch(log.Message);
+                if (m_isContains)
+                    return m_includeIfMatched ^ !log.Message.Contains(m_errorText);
                 return m_includeIfMatched ^ !log.Message.StartsWith(m_errorText);
+            }
             return !m_includeIfMatched;
         }
 
@@ -174,27 +187,47 @@ namespace GSF.Diagnostics.UI
             }
         }
 
-        public IEnumerable<Tuple<string, Action>> GetMenuButtons()
+        public IEnumerable<Tuple<string, Func<bool>>> GetMenuButtons()
         {
             return new[]
                     {
-                        Tuple.Create<string, Action>("Include Message", () =>
+                        Tuple.Create<string, Func<bool>>("Include Message", () =>
                                                                       {
                                                                           m_includeIfMatched = true;
                                                                           using (var frm = new FrmErrorFilterText(m_errorText))
                                                                           {
-                                                                              frm.ShowDialog();
-                                                                              m_errorText = frm.ErrorText;
+                                                                              if (frm.ShowDialog() == DialogResult.OK)
+                                                                              {
+                                                                                  m_isContains = frm.rdoContains.Checked;
+                                                                                  m_isRegex = frm.rdoRegex.Checked;
+                                                                                  m_errorText = frm.ErrorText;
+                                                                                  if (m_isRegex)
+                                                                                  {
+                                                                                      m_regex = new Regex(m_errorText);
+                                                                                  }
+                                                                                  return true;
+                                                                              }
+                                                                              return false;
                                                                           }
 
                                                                       }),
-                        Tuple.Create<string, Action>("Exclude Message", () =>
+                        Tuple.Create<string, Func<bool>>("Exclude Message", () =>
                                                                       {
                                                                           m_includeIfMatched = false;
-                                                                          using (var frm = new FrmErrorFilterText(m_errorText))
+                                                                           using (var frm = new FrmErrorFilterText(m_errorText))
                                                                           {
-                                                                              frm.ShowDialog();
-                                                                              m_errorText = frm.ErrorText;
+                                                                              if (frm.ShowDialog() == DialogResult.OK)
+                                                                              {
+                                                                                  m_isContains = frm.rdoContains.Checked;
+                                                                                  m_isRegex = frm.rdoRegex.Checked;
+                                                                                  m_errorText = frm.ErrorText;
+                                                                                  if (m_isRegex)
+                                                                                  {
+                                                                                      m_regex = new Regex(m_errorText);
+                                                                                  }
+                                                                                  return true;
+                                                                              }
+                                                                              return false;
                                                                           }
                                                                       })
                     };
@@ -212,6 +245,10 @@ namespace GSF.Diagnostics.UI
         private string m_eventName;
         private bool m_includeIfMatched;
         private string m_errorText;
+        private bool m_isContains;
+        private bool m_isRegex;
+        private Regex m_regex;
+
         public MatchErrorName(LogMessage typeName)
         {
             m_errorText = typeName.ExceptionString;
@@ -222,7 +259,13 @@ namespace GSF.Diagnostics.UI
         public bool IsIncluded(LogMessage log)
         {
             if (log.EventPublisherDetails.TypeName == m_typeName && log.EventPublisherDetails.EventName == m_eventName)
+            {
+                if (m_isRegex)
+                    return m_includeIfMatched ^ !m_regex.IsMatch(log.ExceptionString);
+                if (m_isContains)
+                    return m_includeIfMatched ^ !log.ExceptionString.Contains(m_errorText);
                 return m_includeIfMatched ^ !log.ExceptionString.StartsWith(m_errorText);
+            }
             return !m_includeIfMatched;
         }
 
@@ -237,27 +280,47 @@ namespace GSF.Diagnostics.UI
             }
         }
 
-        public IEnumerable<Tuple<string, Action>> GetMenuButtons()
+        public IEnumerable<Tuple<string, Func<bool>>> GetMenuButtons()
         {
             return new[]
                     {
-                        Tuple.Create<string, Action>("Include Error", () =>
+                        Tuple.Create<string, Func<bool>>("Include Error", () =>
                                                                       {
                                                                           m_includeIfMatched = true;
-                                                                          using (var frm = new FrmErrorFilterText(m_errorText))
+                                                                           using (var frm = new FrmErrorFilterText(m_errorText))
                                                                           {
-                                                                              frm.ShowDialog();
-                                                                              m_errorText = frm.ErrorText;
+                                                                              if (frm.ShowDialog() == DialogResult.OK)
+                                                                              {
+                                                                                  m_isContains = frm.rdoContains.Checked;
+                                                                                  m_isRegex = frm.rdoRegex.Checked;
+                                                                                  m_errorText = frm.ErrorText;
+                                                                                  if (m_isRegex)
+                                                                                  {
+                                                                                      m_regex = new Regex(m_errorText);
+                                                                                  }
+                                                                                  return true;
+                                                                              }
+                                                                              return false;
                                                                           }
 
                                                                       }),
-                        Tuple.Create<string, Action>("Exclude Error", () =>
+                        Tuple.Create<string, Func<bool>>("Exclude Error", () =>
                                                                       {
                                                                           m_includeIfMatched = false;
-                                                                          using (var frm = new FrmErrorFilterText(m_errorText))
+                                                                           using (var frm = new FrmErrorFilterText(m_errorText))
                                                                           {
-                                                                              frm.ShowDialog();
-                                                                              m_errorText = frm.ErrorText;
+                                                                              if (frm.ShowDialog() == DialogResult.OK)
+                                                                              {
+                                                                                  m_isContains = frm.rdoContains.Checked;
+                                                                                  m_isRegex = frm.rdoRegex.Checked;
+                                                                                  m_errorText = frm.ErrorText;
+                                                                                  if (m_isRegex)
+                                                                                  {
+                                                                                      m_regex = new Regex(m_errorText);
+                                                                                  }
+                                                                                  return true;
+                                                                              }
+                                                                              return false;
                                                                           }
                                                                       })
                     };
@@ -305,14 +368,14 @@ namespace GSF.Diagnostics.UI
             }
         }
 
-        public IEnumerable<Tuple<string, Action>> GetMenuButtons()
+        public IEnumerable<Tuple<string, Func<bool>>> GetMenuButtons()
         {
             return new[]
                     {
-                        Tuple.Create<string, Action>("Exclude Before", () => { m_before = true; }),
-                        Tuple.Create<string, Action>("Exclude After", () => { m_before = false; }),
-                        Tuple.Create<string, Action>("Exclude 5 Minutes Before", () =>{m_before = true; m_timestamp = m_timestamp.AddMinutes(-5);}),
-                        Tuple.Create<string, Action>("Exclude 5 Minutes After", () =>{m_before = false; m_timestamp = m_timestamp.AddMinutes(5);}),
+                        Tuple.Create<string, Func<bool>>("Exclude Before", () => { m_before = true; return true;}),
+                        Tuple.Create<string, Func<bool>>("Exclude After", () => { m_before = false; return true;}),
+                        Tuple.Create<string, Func<bool>>("Exclude 5 Minutes Before", () =>{m_before = true; m_timestamp = m_timestamp.AddMinutes(-5);return true;}),
+                        Tuple.Create<string, Func<bool>>("Exclude 5 Minutes After", () =>{m_before = false; m_timestamp = m_timestamp.AddMinutes(5);return true;}),
                     };
         }
         public void ToggleResult()
