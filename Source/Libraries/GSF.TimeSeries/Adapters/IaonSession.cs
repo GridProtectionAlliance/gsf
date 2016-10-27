@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -31,6 +32,7 @@ using System.Text;
 using GSF.Annotations;
 using GSF.Collections;
 using GSF.Configuration;
+using GSF.Diagnostics;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -155,22 +157,65 @@ namespace GSF.TimeSeries.Adapters
             m_defaultSampleSizeWarningThreshold = thresholdSettings["DefaultSampleSizeWarningThreshold"].ValueAsInt32();
 
             // Create a new set of routing tables
+            systemSettings.Add("RoutingTableConnectionString", "Method=Default", "Specifies the configuration options for the routing table");
+            string setting = systemSettings["RoutingTableConnectionString"].ValueAsString("");
 
             try
             {
-                if (System.IO.File.Exists(@"d:\Program Files\openPDC\UseNewRoutingAdapter.txt"))
+                Dictionary<string, string> routingTableConnectionString = setting.ParseKeyValuePairs();
+
+                if (routingTableConnectionString.ContainsKey("Method"))
                 {
-                    int delay = int.Parse(System.IO.File.ReadAllText(@"d:\Program Files\openPDC\UseNewRoutingAdapter.txt"));
-                    m_routingTables = new RoutingTables(new RouteMappingHighLatencyLowCpu(delay));
+                    string method = routingTableConnectionString["Method"];
+                    if (method.Equals("RouteMappingHighLatencyLowCpu", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        int latency = -1;
+
+                        if (routingTableConnectionString.ContainsKey("RouteLatencyMS"))
+                        {
+                            string latencyString = routingTableConnectionString["RouteLatencyMS"];
+                            if (int.TryParse(latencyString, out latency))
+                            {
+                                if (latency < 1 || latency > 500)
+                                {
+                                    Log.Publish(MessageLevel.Info, "Routing Table", "Invalid range of routing latency. Defaulting to 10 ms. (Range: 1ms to 500ms)", "Value: " + latencyString);
+                                    latency = 10;
+                                }
+                            }
+                            else
+                            {
+                                Log.Publish(MessageLevel.Info, "Routing Table", "Could not parse latency value. Defaulting to 10 ms.", "Value: " + latencyString);
+                                latency = 10;
+                            }
+                        }
+                        else
+                        {
+                            latency = 10;
+                        }
+
+                        Log.Publish(MessageLevel.Info, "Routing Table", "Using the default routing table.", "Latency: " + latency.ToString());
+                        m_routingTables = new RoutingTables(new RouteMappingHighLatencyLowCpu(latency));
+                    }
+                    else if (method.Equals("Default", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        Log.Publish(MessageLevel.Info, "Routing Table", "Using the default routing table.");
+                        m_routingTables = new RoutingTables();
+                    }
+                    else
+                    {
+                        Log.Publish(MessageLevel.Warning, "Routing Table", "Specified routing method is not recognized. The default will be used.", "Value: " + method);
+                        m_routingTables = new RoutingTables();
+                    }
                 }
                 else
                 {
+                    Log.Publish(MessageLevel.Info, "Routing Table", "Method not specified, using the default routing table.");
                     m_routingTables = new RoutingTables();
                 }
             }
             catch (Exception ex)
             {
-                System.IO.File.AppendAllText(@"d:\Program Files\openPDC\UseNewRoutingAdapterError.txt", ex.ToString());
+                Log.Publish(MessageLevel.Warning, "Routing Table", "Could not parse the routing table connection string. The default will be used.", "Value: " + setting, ex);
                 m_routingTables = new RoutingTables();
             }
 
@@ -885,6 +930,7 @@ namespace GSF.TimeSeries.Adapters
         #region [ Static ]
 
         // Static Fields
+        private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(IaonSession), MessageClass.Framework);
         private static DataSet s_currentRealTimeConfiguration;
         private static DataSet s_currentTemporalConfiguration;
 
