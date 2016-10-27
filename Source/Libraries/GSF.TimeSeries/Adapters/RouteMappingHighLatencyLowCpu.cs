@@ -27,7 +27,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using GSF.Collection;
-using GSF.Collections;
+using GSF.Diagnostics;
 using GSF.Threading;
 
 namespace GSF.TimeSeries.Adapters
@@ -119,6 +119,7 @@ namespace GSF.TimeSeries.Adapters
                                 list = new List<Consumer>();
                                 GlobalSignalLookup[key.RuntimeID] = list;
                             }
+
                             list.Add(consumer);
                         }
                     }
@@ -321,8 +322,8 @@ namespace GSF.TimeSeries.Adapters
 
             if (m_routeOperations % 1000 == 0)
             {
-                m_onStatusMessage(string.Format(
-                            "Route Operations: {0}, Input Frames: {1}, Input Measurements: {2}, Output Measurements: {3}",
+                Log.Publish(MessageLevel.Info, MessageFlags.None, "Routing Update",
+                string.Format("Route Operations: {0}, Input Frames: {1}, Input Measurements: {2}, Output Measurements: {3}",
                             m_routeOperations, m_measurementsRoutedInputFrames,
                             m_measurementsRoutedInputMeasurements,
                             m_measurementsRoutedOutput));
@@ -402,6 +403,6 @@ namespace GSF.TimeSeries.Adapters
             m_injectMeasurementsLocalCache.Route(sender, measurements);
         }
 
-
+        private readonly LogPublisher Log = Logger.CreatePublisher(typeof(RouteMappingHighLatencyLowCpu), MessageClass.Framework);
     }
 }

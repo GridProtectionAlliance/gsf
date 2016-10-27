@@ -21,8 +21,10 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace GSF.Collection
@@ -57,8 +59,10 @@ namespace GSF.Collection
             }
             set
             {
-                if (index >= m_items.Length)
+                if ((uint)index >= (uint)m_items.Length)
+                {
                     Grow(index);
+                }
 
                 m_items[index] = value;
             }
@@ -68,7 +72,9 @@ namespace GSF.Collection
         {
             lock (m_syncRoot)
             {
-                while (index <= m_items.Length)
+                if (index < 0)
+                    throw new Exception("Index cannot be negative.");
+                while (index >= m_items.Length)
                 {
                     T[] items = new T[m_items.Length * 2];
                     m_items.CopyTo(items, 0);

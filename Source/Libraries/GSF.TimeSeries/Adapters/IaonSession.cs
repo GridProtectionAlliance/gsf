@@ -193,7 +193,7 @@ namespace GSF.TimeSeries.Adapters
                             latency = 10;
                         }
 
-                        Log.Publish(MessageLevel.Info, "Routing Table", "Using the default routing table.", "Latency: " + latency.ToString());
+                        Log.Publish(MessageLevel.Info, "Routing Table", "Using RouteMappingHighLatencyLowCpu.", "Latency: " + latency.ToString());
                         m_routingTables = new RoutingTables(new RouteMappingHighLatencyLowCpu(latency));
                     }
                     else if (method.Equals("Default", StringComparison.CurrentCultureIgnoreCase))
