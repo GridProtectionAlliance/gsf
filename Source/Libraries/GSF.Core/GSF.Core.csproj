@@ -342,6 +342,7 @@
     <Compile Include="NumericalAnalysis\WaveFit.cs" />
     <Compile Include="NumericExtensions.cs" />
     <Compile Include="ObjectState.cs" />
+    <Compile Include="OptimizationOptions.cs" />
     <Compile Include="Parsing\BinaryImageBase.cs" />
     <Compile Include="Parsing\BinaryImageParserBase.cs" />
     <Compile Include="Parsing\BooleanExpression.cs" />

@@ -26,6 +26,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using GSF.Collection;
 using GSF.Collections;
 using GSF.Threading;
 
@@ -88,7 +89,7 @@ namespace GSF.TimeSeries.Adapters
 
         private class GlobalCache
         {
-            public readonly Dictionary<Guid, List<Consumer>> GlobalSignalLookup;
+            public readonly IndexedArray<List<Consumer>> GlobalSignalLookup;
             public readonly Dictionary<IAdapter, Consumer> GlobalDestinationLookup;
             public readonly Consumer[] GlobalDestinationList;
             public readonly List<Consumer> BroadcastConsumers;
@@ -96,7 +97,7 @@ namespace GSF.TimeSeries.Adapters
 
             public GlobalCache(Dictionary<IAdapter, Consumer> consumers, int version)
             {
-                GlobalSignalLookup = new Dictionary<Guid, List<Consumer>>();
+                GlobalSignalLookup = new IndexedArray<List<Consumer>>();
                 GlobalDestinationLookup = consumers;
                 BroadcastConsumers = new List<Consumer>();
                 Version = version;
@@ -110,9 +111,15 @@ namespace GSF.TimeSeries.Adapters
                     if ((object)consumerAdapter.InputMeasurementKeys != null)
                     {
                         // Create routes for each of the consumer's input signals
-                        foreach (Guid signalID in consumerAdapter.InputMeasurementKeys.Select(key => key.SignalID))
+                        foreach (MeasurementKey key in consumerAdapter.InputMeasurementKeys)
                         {
-                            GlobalSignalLookup.GetOrAdd(signalID, id => new List<Consumer>()).Add(consumer);
+                            var list = GlobalSignalLookup[key.RuntimeID];
+                            if (list == null)
+                            {
+                                list = new List<Consumer>();
+                                GlobalSignalLookup[key.RuntimeID] = list;
+                            }
+                            list.Add(consumer);
                         }
                     }
                     else
@@ -123,9 +130,9 @@ namespace GSF.TimeSeries.Adapters
                 }
 
                 // Broadcast consumers receive all measurements, so add them to every signal route
-                foreach (List<Consumer> consumerList in GlobalSignalLookup.Values)
+                foreach (List<Consumer> consumerList in GlobalSignalLookup)
                 {
-                    consumerList.AddRange(BroadcastConsumers);
+                    consumerList?.AddRange(BroadcastConsumers);
                 }
 
                 GlobalDestinationList = GlobalDestinationLookup.Values.ToArray();
@@ -227,13 +234,14 @@ namespace GSF.TimeSeries.Adapters
             m_onProcessException = x => { };
             m_producerLookup = new Dictionary<IAdapter, LocalCache>();
             m_globalCache = new GlobalCache(new Dictionary<IAdapter, Consumer>(), 0);
+            RouteCount = m_globalCache.GlobalSignalLookup.Count(x => x != null);
             m_injectMeasurementsLocalCache = new LocalCache(this, null);
         }
 
         /// <summary>
         /// Gets the number of routes in this routing table.
         /// </summary>
-        public int RouteCount => m_globalCache.GlobalSignalLookup.Count;
+        public int RouteCount { get; private set; }
 
         /// <summary>
         /// Assigns the status messaging callbacks.
@@ -288,6 +296,8 @@ namespace GSF.TimeSeries.Adapters
             }
 
             m_globalCache = new GlobalCache(consumerLookup, m_globalCache.Version + 1);
+            RouteCount = m_globalCache.GlobalSignalLookup.Count(x => x != null);
+
         }
 
         void m_task_Disposing(object sender, EventArgs e)
@@ -331,8 +341,8 @@ namespace GSF.TimeSeries.Adapters
                     m_measurementsRoutedInputMeasurements += measurements.Length;
                     foreach (var measurement in measurements)
                     {
-                        List<Consumer> consumers;
-                        if (!map.GlobalSignalLookup.TryGetValue(measurement.ID, out consumers))
+                        List<Consumer> consumers = map.GlobalSignalLookup[measurement.Key.RuntimeID];
+                        if (consumers == null)
                         {
                             consumers = map.BroadcastConsumers;
                         }

@@ -260,7 +260,23 @@ namespace GSF.Parsing
                 // Add buffer to the queue for parsing. Note that buffer is queued for parsing instead 
                 // of handling parse on this thread - this has become necessary to reduce UDP data loss
                 // that can happen in-process when system has UDP buffers building up for processing.
-                m_bufferQueue.Enqueue(new[] { identifiableBuffer });
+                if (OptimizationOptions.DisableAsyncQueueInProtocolParsing)
+                {
+                    try
+                    {
+                        ParseQueuedBuffers(new[] {identifiableBuffer});
+                    }
+                    catch (Exception ex)
+                    {
+                        ProcessExceptionHandler(this, new EventArgs<Exception>(ex));
+                    }
+                }
+                else
+                {
+                    m_bufferQueue.Enqueue(new[] { identifiableBuffer });
+                }
+
+
             }
         }
 

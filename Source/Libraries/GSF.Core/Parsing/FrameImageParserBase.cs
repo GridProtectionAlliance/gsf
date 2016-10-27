@@ -387,7 +387,7 @@ namespace GSF.Parsing
                 EventArgs<TOutputType> outputArgs = FastObjectFactory<EventArgs<TOutputType>>.CreateObjectFunction();
                 outputArgs.Argument = output;
 
-                if (output.AllowQueuedPublication)
+                if (output.AllowQueuedPublication && !OptimizationOptions.DisableAsyncQueueInProtocolParsing)
                 {
                     // Queue-up parsed output for publication
                     m_outputQueue.Enqueue(outputArgs);
@@ -395,7 +395,7 @@ namespace GSF.Parsing
                 else
                 {
                     // Publish parsed output immediately
-                    DataParsed(this, outputArgs);
+                    DataParsed?.Invoke(this, outputArgs);
                 }
             }
         }

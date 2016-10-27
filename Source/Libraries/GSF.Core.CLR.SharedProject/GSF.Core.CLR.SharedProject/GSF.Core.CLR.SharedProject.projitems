@@ -12,6 +12,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)ArrayExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BigEndian.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CharExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Collection\IndexedArray.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Collection\ListExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ComplexNumber.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\DisposableLoggingClassBase.cs" />
