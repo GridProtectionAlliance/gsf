@@ -12,6 +12,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)ArrayExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BigEndian.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CharExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Collections\IndexedArray.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Collections\IsolatedQueue.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Collections\ListExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Common.cs" />
