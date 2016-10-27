@@ -290,6 +290,10 @@ namespace GSF.EMAX
 
                     // Get total milliseconds since epoch
                     milliseconds = m_currentSecond.Ticks / Ticks.PerMillisecond;
+
+                    // Adjust the fault time based on the time zone information
+                    m_currentSecond = TimeZoneInfo.ConvertTimeFromUtc(m_currentSecond, parser.ControlFile.SystemParameters.GetTimeZoneInfo());
+                    m_currentSecond = DateTime.SpecifyKind(m_currentSecond, DateTimeKind.Unspecified);
                 }
 
                 // Remove subseconds from currentSecond
