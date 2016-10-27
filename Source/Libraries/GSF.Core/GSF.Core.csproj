@@ -183,6 +183,7 @@
     <Compile Include="Collections\FileBackedHashSet.cs" />
     <Compile Include="Collections\FileBackedLookupTable.cs" />
     <Compile Include="Collections\RollingWindow.cs" />
+    <Compile Include="Common.cs" />
     <Compile Include="Console\Command.cs" />
     <Compile Include="Console\CommandException.cs" />
     <Compile Include="Console\CommandResponse.cs" />
@@ -223,7 +224,6 @@
     <Compile Include="BitwiseCast.cs" />
     <Compile Include="ByteEncoding.cs" />
     <Compile Include="Collections\DoubleBufferedQueueManager.cs" />
-    <Compile Include="Collections\IsolatedQueue.cs" />
     <Compile Include="Collections\ListCollection.cs" />
     <Compile Include="Collections\PriorityQueue.cs" />
     <Compile Include="Collections\AsyncDoubleBufferedQueue.cs" />
@@ -235,7 +235,6 @@
     <Compile Include="Collections\NamespaceDoc.cs" />
     <Compile Include="Collections\ProcessQueue.cs" />
     <Compile Include="Collections\ProcessQueueStatistics.cs" />
-    <Compile Include="Common.cs" />
     <Compile Include="CompoundValue.cs" />
     <Compile Include="Configuration\AppSettingsBase.cs" />
     <Compile Include="Configuration\CategorizedSettingsBase.cs" />
