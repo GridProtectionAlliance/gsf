@@ -41,28 +41,6 @@ using GSF.Units.EE;
 namespace PowerCalculations.PowerMultiCalculator
 {
     /// <summary>
-    /// Represents the strategy used to adjust voltage values for power
-    /// calculations based on the nature of the voltage measurement.
-    /// </summary>
-    public enum VoltageAdjustmentStrategy
-    {
-        /// <summary>
-        /// Factor of 3 adjustment (S=3*V*I)
-        /// </summary>
-        LineToNeutral,
-
-        /// <summary>
-        /// Factor of Sqrt(3) adjustment (S=Sqrt(3)*V*I)
-        /// </summary>
-        LineToLine,
-
-        /// <summary>
-        /// No adjustment (S=V*I)
-        /// </summary>
-        None
-    }
-
-    /// <summary>
     /// Performs MW, MVA, and MVAR calculations based on current and voltage phasors input to the adapter
     /// </summary>
     [Description("PowerMultiCalculatorAdapter: Performs MW, MVAR and MVA calculations based on current and voltage phasors input to the adapter")]

@@ -26,8 +26,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using GSF;
 using GSF.Collections;
 using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 using GSF.Units.EE;
 using PhasorProtocolAdapters;
 
@@ -42,12 +44,12 @@ namespace PowerCalculations
         #region [ Members ]
 
         // Constants
-        private const int BackupQueueSize = 10;
+        private const int ValuesToShow = 4;
+        private const double PhaseResetAngle = 720.0D;
 
         // Fields
-        private double m_phaseResetAngle;
-        private Dictionary<MeasurementKey, double> m_lastAngles;
-        private Dictionary<MeasurementKey, double> m_unwrapOffsets;
+        private double[] m_lastAngles;
+        private double[] m_unwrapOffsets;
         private List<double> m_latestCalculatedAngles;
         private IMeasurement[] m_measurements;
 
@@ -56,14 +58,21 @@ namespace PowerCalculations
         #region [ Properties ]
 
         /// <summary>
+        /// Gets or sets flag indicating whether or not this adapter will produce a result for all calculations. If this value is true and a calculation fails,
+        /// the adapter will produce NaN for that calculation. If this value is false and a calculation fails, the adapter will not produce any result.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines flag that determines if adapter should always produce a result. When true, adapter will produce NaN for calculations that fail.")]
+        [DefaultValue(false)]
+        public bool AlwaysProduceResult { get; set; }
+        
+        /// <summary>
         /// Returns the detailed status of the <see cref="AngleDifferenceCalculator"/> calculator.
         /// </summary>
         public override string Status
         {
             get
             {
-                const int ValuesToShow = 4;
-
                 StringBuilder status = new StringBuilder();
 
                 status.AppendFormat("  Last " + ValuesToShow + " calculated angles:");
@@ -123,11 +132,20 @@ namespace PowerCalculations
             if (OutputMeasurements.Length < 1)
                 throw new InvalidOperationException("An output measurement was not specified for the angle difference calculator - one measurement is expected to represent the \"Calculated Angle Difference\" value.");
 
+            Dictionary<string, string> settings = Settings;
+            string setting;
+
+            if (settings.TryGetValue("AlwaysProduceResult", out setting))
+                AlwaysProduceResult = setting.ParseBoolean();
+            
             // Initialize member fields
-            m_lastAngles = new Dictionary<MeasurementKey, double>();
-            m_unwrapOffsets = new Dictionary<MeasurementKey, double>();
+            m_lastAngles = new double[2];
+            m_unwrapOffsets = new double[2];
             m_latestCalculatedAngles = new List<double>();
-            m_phaseResetAngle = MinimumMeasurementsToUse * 360.0D;
+
+            // Set last angles as uninitialized
+            m_lastAngles[0] = double.NaN;
+            m_lastAngles[1] = double.NaN;
         }
 
         /// <summary>
@@ -139,74 +157,23 @@ namespace PowerCalculations
         {
             Measurement calculatedMeasurement = Measurement.Clone(OutputMeasurements[0], frame.Timestamp);
             double angle, deltaAngle, angleDifference, lastAngle, unwrapOffset, angle1 = double.NaN, angle2 = double.NaN;
-            IMeasurement currentAngle;
-            MeasurementKey key;
-            bool dataSetChanged;
-            int i;
-
-            dataSetChanged = false;
 
             // Attempt to get minimum needed reporting set of composite angles used to calculate angle difference
             if (TryGetMinimumNeededMeasurements(frame, ref m_measurements))
             {
-                // See if data set has changed since last run
-                if (m_lastAngles.Count > 0 && m_lastAngles.Count == m_measurements.Length)
+                // Get both phase angles, unwrapping as necessary
+                for (int i = 0; i < m_measurements.Length; i++)
                 {
-                    for (i = 0; i < m_measurements.Length; i++)
-                    {
-                        if (!m_lastAngles.ContainsKey(m_measurements[i].Key))
-                        {
-                            dataSetChanged = true;
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    dataSetChanged = true;
-                }
-
-                // Reinitialize all angle calculation data if data set has changed
-                if (dataSetChanged)
-                {
-                    double angleRef, angleDelta0, angleDelta1, angleDelta2;
-
-                    // Clear last angles and unwrap offsets
-                    m_lastAngles.Clear();
-                    m_unwrapOffsets.Clear();
-
-                    // Calculate new unwrap offsets
-                    angleRef = m_measurements[0].AdjustedValue;
-
-                    for (i = 0; i < m_measurements.Length; i++)
-                    {
-                        angleDelta0 = Math.Abs(m_measurements[i].AdjustedValue - angleRef);
-                        angleDelta1 = Math.Abs(m_measurements[i].AdjustedValue + 360.0D - angleRef);
-                        angleDelta2 = Math.Abs(m_measurements[i].AdjustedValue - 360.0D - angleRef);
-
-                        if (angleDelta0 < angleDelta1 && angleDelta0 < angleDelta2)
-                            unwrapOffset = 0.0D;
-                        else if (angleDelta1 < angleDelta2)
-                            unwrapOffset = 360.0D;
-                        else
-                            unwrapOffset = -360.0D;
-
-                        m_unwrapOffsets[m_measurements[i].Key] = unwrapOffset;
-                    }
-                }
-
-                // Add up all the phase angles, unwrapping angles if necessary
-                for (i = 0; i < m_measurements.Length; i++)
-                {
-                    // Get current angle value and key
+                    // Get current angle value
                     angle = m_measurements[i].AdjustedValue;
-                    key = m_measurements[i].Key;
 
                     // Get the unwrap offset for this angle
-                    unwrapOffset = m_unwrapOffsets[key];
+                    unwrapOffset = m_unwrapOffsets[i];
 
-                    // Get angle value from last run,if there was a last run
-                    if (m_lastAngles.TryGetValue(key, out lastAngle))
+                    // Get angle value from last run, if there was a last run
+                    lastAngle = m_lastAngles[i];
+
+                    if (!double.IsNaN(lastAngle))
                     {
                         // Calculate the angle difference from last run
                         deltaAngle = angle - lastAngle;
@@ -218,13 +185,13 @@ namespace PowerCalculations
                             unwrapOffset += 360;
 
                         // Reset angle unwrap offset if needed
-                        if (unwrapOffset > m_phaseResetAngle)
-                            unwrapOffset -= m_phaseResetAngle;
-                        else if (unwrapOffset < -m_phaseResetAngle)
-                            unwrapOffset += m_phaseResetAngle;
+                        if (unwrapOffset > PhaseResetAngle)
+                            unwrapOffset -= PhaseResetAngle;
+                        else if (unwrapOffset < -PhaseResetAngle)
+                            unwrapOffset += PhaseResetAngle;
 
                         // Record last angle unwrap offset
-                        m_unwrapOffsets[key] = unwrapOffset;
+                        m_unwrapOffsets[i] = unwrapOffset;
                     }
 
                     // Pick off unwrapped angles
@@ -238,13 +205,8 @@ namespace PowerCalculations
                 angleDifference = (angle1 - angle2) % 360.0D;
 
                 // Record last angles for next run
-                m_lastAngles.Clear();
-
-                for (i = 0; i < m_measurements.Length; i++)
-                {
-                    currentAngle = m_measurements[i];
-                    m_lastAngles.Add(currentAngle.Key, currentAngle.AdjustedValue);
-                }
+                for (int i = 0; i < m_measurements.Length; i++)
+                    m_lastAngles[i] = m_measurements[i].AdjustedValue;
             }
             else
             {
@@ -259,18 +221,20 @@ namespace PowerCalculations
             if (angleDifference <= -180)
                 angleDifference += 360;
 
+            if (double.IsNaN(angleDifference) && !AlwaysProduceResult)
+                return;
+
             calculatedMeasurement.Value = angleDifference;
 
             // Expose calculated value
             OnNewMeasurements(new IMeasurement[] { calculatedMeasurement });
 
-            // Add calculated reference angle to latest angle queue as backup in case needed
-            // minimum number of angles are not available
+            // Track last few calculated reference angles
             lock (m_latestCalculatedAngles)
             {
                 m_latestCalculatedAngles.Add(angleDifference);
 
-                while (m_latestCalculatedAngles.Count > BackupQueueSize)
+                while (m_latestCalculatedAngles.Count > ValuesToShow)
                     m_latestCalculatedAngles.RemoveAt(0);
             }
         }

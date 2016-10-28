@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  10/26/2016 - J. Ritchie Carroll
+//  10/26/2016 - J. Ritchie Carroll / Vahid Salehi
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -28,6 +28,7 @@ using System.Linq;
 using System.Text;
 using GSF;
 using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 using GSF.Units;
 using GSF.Units.EE;
 using PhasorProtocolAdapters;
@@ -42,11 +43,18 @@ namespace PowerCalculations
     {
         #region [ Members ]
 
+        // Constants
+        private const double SqrtOf3 = 1.7320508075688772935274463415059D;
+        
         // Fields
         private double m_lastResistance;
         private double m_lastReactance;
         private double m_lastConductance;
         private double m_lastSusceptance;
+        private double m_lastLineImpedance;
+        private double m_lastLineImpedanceAngle;
+        private double m_lastLineAdmittance;
+        private double m_lastLineAdmittanceAngle;
         private MeasurementKey[] m_voltageAngles;
         private MeasurementKey[] m_voltageMagnitudes;
         private MeasurementKey[] m_currentAngles;
@@ -55,15 +63,30 @@ namespace PowerCalculations
         // Important: Make sure output definition defines points in the following order
         private enum Output
         {
+            // Rectangular Values
             Resistance,
             Reactance,
             Conductance,
-            Susceptance
+            Susceptance,
+
+            // Polar Values
+            LineImpedance,
+            LineImpedanceAngle,
+            LineAdmittance,
+            LineAdmittanceAngle
         }
 
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the flag that determines if line-to-line adjustment should be applied.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines flag that determines if line-to-line adjustment should be applied.")]
+        [DefaultValue(true)]
+        public bool ApplyLineToLineAdjustment { get; set; }
 
         /// <summary>
         /// Returns the detailed status of the <see cref="ImpedanceCalculator"/> monitor.
@@ -74,14 +97,25 @@ namespace PowerCalculations
             {
                 StringBuilder status = new StringBuilder();
 
+                status.AppendFormat("Latest Rectangular Values:");
                 status.AppendLine();
-                status.AppendFormat("         Latest Resistance: {0} Ohm", m_lastResistance);
+                status.AppendFormat("                Resistance: {0} Ohm", m_lastResistance);
                 status.AppendLine();
-                status.AppendFormat("          Latest Reactance: {0} Ohm", m_lastReactance);
+                status.AppendFormat("                 Reactance: {0} Ohm", m_lastReactance);
                 status.AppendLine();
-                status.AppendFormat("        Latest Conductance: {0} Mho", m_lastConductance);
+                status.AppendFormat("               Conductance: {0} Mho", m_lastConductance);
                 status.AppendLine();
-                status.AppendFormat("        Latest Susceptance: {0} Mho", m_lastSusceptance);
+                status.AppendFormat("               Susceptance: {0} Mho", m_lastSusceptance);
+                status.AppendLine();
+                status.AppendFormat("Latest Polar Values:");
+                status.AppendLine();
+                status.AppendFormat("            Line Impedance: {0} Ohm", m_lastLineImpedance);
+                status.AppendLine();
+                status.AppendFormat("      Line Impedance Angle: {0}°", m_lastLineImpedanceAngle);
+                status.AppendLine();
+                status.AppendFormat("           Line Admittance: {0} Ohm", m_lastLineAdmittance);
+                status.AppendLine();
+                status.AppendFormat("     Line Admittance Angle: {0}°", m_lastLineAdmittanceAngle);
                 status.AppendLine();
                 status.Append(base.Status);
 
@@ -129,7 +163,15 @@ namespace PowerCalculations
 
             // Validate output measurements
             if (OutputMeasurements.Length < Enum.GetValues(typeof(Output)).Length)
-                throw new InvalidOperationException("Not enough output measurements were specified for the impedance calculator, expecting measurements for the \"Resistance\", \"Reactance\", \"Conductance\" and \"Susceptance\" - in this order.");
+                throw new InvalidOperationException("Not enough output measurements were specified for the impedance calculator, expecting measurements for the \"Resistance\", \"Reactance\", \"Conductance\", \"Susceptance\", \"LineImpedance\", \"LineImpedanceAngle\", \"LineAdmittance\" and \"LineAdmittanceAngle\" - in this order.");
+
+            Dictionary<string, string> settings = Settings;
+            string setting;
+
+            if (settings.TryGetValue("ApplyLineToLineAdjustment", out setting))
+                ApplyLineToLineAdjustment = setting.ParseBoolean();
+            else
+                ApplyLineToLineAdjustment = true;
         }
 
         /// <summary>
@@ -142,33 +184,37 @@ namespace PowerCalculations
         {
             IDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
             IMeasurement magnitude, angle;
-            ComplexNumber Zl, Yl, Vs = 0.0, Vr = 0.0, Is = 0.0, Ir = 0.0;
-            double resistance, reactance, conductance, susceptance;
-            int i, count = 0;
+            ComplexNumber Vs = 0.0, Vr = 0.0, Is = 0.0, Ir = 0.0;
+            int count = 0;
 
             // Get voltage magnitude and angle pairs
-            for (i = 0; i < 2; i++)
+            for (int i = 0; i < 2; i++)
             {
                 if (measurements.TryGetValue(m_voltageMagnitudes[i], out magnitude) && measurements.TryGetValue(m_voltageAngles[i], out angle))
                 {
+                    double voltageMagnitude = magnitude.AdjustedValue;
+
+                    if (ApplyLineToLineAdjustment)
+                        voltageMagnitude *= SqrtOf3;
+
                     if (i == 0)
-                        Vs = new ComplexNumber(Angle.FromDegrees(angle.AdjustedValue), magnitude.AdjustedValue);
+                        Vs = new ComplexNumber(Angle.FromDegrees(angle.AdjustedValue), voltageMagnitude);
                     else
-                        Vr = new ComplexNumber(Angle.FromDegrees(angle.AdjustedValue), magnitude.AdjustedValue);
+                        Vr = new ComplexNumber(Angle.FromDegrees(angle.AdjustedValue), voltageMagnitude);
 
                     count++;
                 }
             }
 
             // Get current magnitude and angle pairs
-            for (i = 0; i < 2; i++)
+            for (int i = 0; i < 2; i++)
             {
                 if (measurements.TryGetValue(m_currentMagnitudes[i], out magnitude) && measurements.TryGetValue(m_currentAngles[i], out angle))
                 {
                     if (i == 0)
                         Is = new ComplexNumber(Angle.FromDegrees(angle.AdjustedValue), magnitude.AdjustedValue);
                     else
-                        Ir = new ComplexNumber(Angle.FromDegrees(angle.AdjustedValue), magnitude.AdjustedValue);
+                        Ir = new ComplexNumber(Angle.FromDegrees(angle.AdjustedValue), magnitude.AdjustedValue) * -1;
 
                     count++;
                 }
@@ -179,32 +225,50 @@ namespace PowerCalculations
                 return;
 
             // Calculate resistance and reactance
-            Zl = (ComplexNumber.Pow(Vs, 2) - ComplexNumber.Pow(Vr, 2)) / (Vs * Ir + Vr * Is);
+            ComplexNumber Zl = (Vs * Vs - Vr * Vr) / (Vs * Ir + Vr * Is);
 
-            resistance = Zl.Real;
-            reactance = Zl.Imaginary;
+            if (ApplyLineToLineAdjustment)
+                Zl /= SqrtOf3;
 
             // Calculate conductance and susceptance
-            Yl = 2 * (Is - Ir) / (Vs + Vr);
+            ComplexNumber Yl = 2 * (Is - Ir) / (Vs + Vr);
 
-            conductance = Yl.Real;
-            susceptance = Yl.Imaginary;
+            if (ApplyLineToLineAdjustment)
+                Yl *= SqrtOf3;
 
             // Provide calculated measurements for external consumption
             IMeasurement[] outputMeasurements = OutputMeasurements;
 
-            Measurement resistsanceMeasurement = Measurement.Clone(outputMeasurements[(int)Output.Resistance], resistance, frame.Timestamp);
-            Measurement reactanceMeasurement = Measurement.Clone(outputMeasurements[(int)Output.Reactance], reactance, frame.Timestamp);
-            Measurement conductanceMeasurement = Measurement.Clone(outputMeasurements[(int)Output.Conductance], conductance, frame.Timestamp);
-            Measurement susceptanceMeasurement = Measurement.Clone(outputMeasurements[(int)Output.Susceptance], susceptance, frame.Timestamp);
+            Measurement resistsanceMeasurement = Measurement.Clone(outputMeasurements[(int)Output.Resistance], Zl.Real, frame.Timestamp);
+            Measurement reactanceMeasurement = Measurement.Clone(outputMeasurements[(int)Output.Reactance], Zl.Imaginary, frame.Timestamp);
+            Measurement conductanceMeasurement = Measurement.Clone(outputMeasurements[(int)Output.Conductance], Yl.Real, frame.Timestamp);
+            Measurement susceptanceMeasurement = Measurement.Clone(outputMeasurements[(int)Output.Susceptance], Yl.Imaginary, frame.Timestamp);
+            Measurement lineImpedanceMeasurement = Measurement.Clone(outputMeasurements[(int)Output.LineImpedance], Zl.Magnitude, frame.Timestamp);
+            Measurement lineImpedanceAngleMeasurement = Measurement.Clone(outputMeasurements[(int)Output.LineImpedanceAngle], Zl.Angle.ToDegrees(), frame.Timestamp);
+            Measurement lineAdmittanceMeasurement = Measurement.Clone(outputMeasurements[(int)Output.LineAdmittance], Yl.Magnitude, frame.Timestamp);
+            Measurement lineAdmittanceAngleMeasurement = Measurement.Clone(outputMeasurements[(int)Output.LineAdmittanceAngle], Yl.Angle.ToDegrees(), frame.Timestamp);
 
-            OnNewMeasurements(new IMeasurement[] { resistsanceMeasurement, reactanceMeasurement, conductanceMeasurement, susceptanceMeasurement });
+            OnNewMeasurements(new IMeasurement[]
+            {
+                resistsanceMeasurement,
+                reactanceMeasurement,
+                conductanceMeasurement,
+                susceptanceMeasurement,
+                lineImpedanceMeasurement,
+                lineImpedanceAngleMeasurement,
+                lineAdmittanceMeasurement,
+                lineAdmittanceAngleMeasurement
+            });
 
             // Track last calculated values...
             m_lastResistance = resistsanceMeasurement.AdjustedValue;
             m_lastReactance = reactanceMeasurement.AdjustedValue;
             m_lastConductance = conductanceMeasurement.AdjustedValue;
             m_lastSusceptance = susceptanceMeasurement.AdjustedValue;
+            m_lastLineImpedance = lineImpedanceMeasurement.AdjustedValue;
+            m_lastLineImpedanceAngle = lineImpedanceAngleMeasurement.AdjustedValue;
+            m_lastLineAdmittance = lineAdmittanceMeasurement.AdjustedValue;
+            m_lastLineAdmittanceAngle = lineAdmittanceAngleMeasurement.AdjustedValue;
         }
 
         #endregion
