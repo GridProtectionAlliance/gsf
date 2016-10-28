@@ -1263,8 +1263,16 @@ namespace PhasorProtocolAdapters
             bool foundQualityFlagsMeasurement = false;
             bool isQualityFlagsMeasurement;
 
+            IEnumerable<DataRow> measurementRows = DataSource.Tables["OutputStreamMeasurements"]
+                .Select(string.Format("AdapterID={0}", ID))
+                .Select(row => new { Row = row, SigRef = new SignalReference(row["SignalReference"].ToString()) })
+                .OrderBy(obj => obj.SigRef.Acronym)
+                .ThenBy(obj => obj.SigRef.Kind)
+                .ThenBy(obj => obj.SigRef.Index)
+                .Select(obj => obj.Row);
+
             // Define measurement to signals cross reference dictionary
-            foreach (DataRow measurementRow in DataSource.Tables["OutputStreamMeasurements"].Select(string.Format("AdapterID={0}", ID)).OrderBy(row => row["SignalReference"]))
+            foreach (DataRow measurementRow in measurementRows)
             {
                 isQualityFlagsMeasurement = false;
 
