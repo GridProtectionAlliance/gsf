@@ -452,6 +452,11 @@ namespace GSF.EMAX
                             index += 2;
                         }
                     }
+                    else
+                    {
+                        for (int i = 0; i < 4; i++)
+                            m_eventGroups[i] = ushort.MaxValue;
+                    }
 
                     if (index + 4 * sizeof(ushort) <= recordLength)
                     {
@@ -464,18 +469,31 @@ namespace GSF.EMAX
 
                         m_timestamp = ParseTimestamp(clockWords);
                     }
+                    else
+                    {
+                        m_timeError = true;
+                        m_timestamp = DateTime.MaxValue;
+                    }
 
                     if (frameChannelCount == largeFrameChannelCount)
                     {
-                        // Read next set of event group values
-                        for (int i = 4; i < 8; i++)
+                        if (index + 4 * sizeof(ushort) <= recordLength)
                         {
-                            ushort eventGroup = LittleEndian.ToUInt16(buffer, index);
+                            // Read next set of event group values
+                            for (int i = 4; i < 8; i++)
+                            {
+                                ushort eventGroup = LittleEndian.ToUInt16(buffer, index);
 
-                            if (i < m_eventGroups.Length)
-                                m_eventGroups[i] = LittleEndian.ToUInt16(buffer, index);
+                                if (i < m_eventGroups.Length)
+                                    m_eventGroups[i] = LittleEndian.ToUInt16(buffer, index);
 
-                            index += 2;
+                                index += 2;
+                            }
+                        }
+                        else
+                        {
+                            for (int i = 4; i < 8; i++)
+                                m_eventGroups[i] = ushort.MaxValue;
                         }
                     }
                 }
