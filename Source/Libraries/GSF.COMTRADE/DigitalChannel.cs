@@ -64,14 +64,24 @@ namespace GSF.COMTRADE
             // Dn,ch_id,ph,ccbm,y
             string[] parts = lineImage.Split(',');
 
-            if (parts.Length != 5)
+
+            if(parts.Length == 5)
+            {
+                Index = int.Parse(parts[0].Trim());
+                Name = parts[1];
+                PhaseID = parts[2];
+                CircuitComponent = parts[3];
+                NormalState = parts[4].Trim().ParseBoolean();
+            }
+            else if(parts.Length == 3)
+            {
+                Index = int.Parse(parts[0].Trim());
+                Name = parts[1];
+                NormalState = parts[2].Trim().ParseBoolean();
+            }
+            else
                 throw new InvalidOperationException(string.Format("Unexpected number of line image elements for digital channel definition: {0} - expected 5\r\nImage = {1}", parts.Length, lineImage));
 
-            Index = int.Parse(parts[0].Trim());
-            Name = parts[1];
-            PhaseID = parts[2];
-            CircuitComponent = parts[3];
-            NormalState = parts[4].Trim().ParseBoolean();
         }
 
         #endregion

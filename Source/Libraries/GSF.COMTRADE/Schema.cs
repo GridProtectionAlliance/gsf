@@ -167,7 +167,7 @@ namespace GSF.COMTRADE
             FileType = (FileType)Enum.Parse(typeof(FileType), lines[lineNumber++], true);
 
             // Parse time factor
-            TimeFactor = double.Parse(lines[lineNumber++]);
+            TimeFactor = (lines.Length < lineNumber ? double.Parse(lines[lineNumber]) : 1);
         }
 
         #endregion

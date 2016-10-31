@@ -89,22 +89,43 @@ namespace GSF.COMTRADE
             // An,ch_id,ph,ccbm,uu,a,b,skew,min,max,primary,secondary,PS
             string[] parts = lineImage.Split(',');
 
-            if (parts.Length != 13)
+            if(parts.Length == 13)
+            {
+                Index = int.Parse(parts[0].Trim());
+                Name = parts[1];
+                PhaseID = parts[2];
+                CircuitComponent = parts[3];
+                Units = parts[4];
+                Multiplier = double.Parse(parts[5].Trim());
+                Adder = double.Parse(parts[6].Trim());
+                Skew = double.Parse(parts[7].Trim());
+                MinValue = int.Parse(parts[8].Trim());
+                MaxValue = int.Parse(parts[9].Trim());
+                PrimaryRatio = double.Parse(parts[10].Trim());
+                SecondaryRatio = double.Parse(parts[11].Trim());
+                ScalingIdentifier = parts[12].Trim()[0];
+            }
+            else if(parts.Length == 10)
+            {
+                Index = int.Parse(parts[0].Trim());
+                Name = parts[1];
+                PhaseID = parts[2];
+                CircuitComponent = parts[3];
+                Units = parts[4];
+                Multiplier = double.Parse(parts[5].Trim());
+                Adder = double.Parse(parts[6].Trim());
+                Skew = double.Parse(parts[7].Trim());
+                MinValue = int.Parse(parts[8].Trim());
+                MaxValue = int.Parse(parts[9].Trim());
+                //PrimaryRatio = 1;
+                //SecondaryRatio = 1;
+                //ScalingIdentifier = parts[12].Trim()[0];
+
+
+            }
+            else
                 throw new InvalidOperationException(string.Format("Unexpected number of line image elements for analog channel definition: {0} - expected 13\r\nImage = {1}", parts.Length, lineImage));
 
-            Index = int.Parse(parts[0].Trim());
-            Name = parts[1];
-            PhaseID = parts[2];
-            CircuitComponent = parts[3];
-            Units = parts[4];
-            Multiplier = double.Parse(parts[5].Trim());
-            Adder = double.Parse(parts[6].Trim());
-            Skew = double.Parse(parts[7].Trim());
-            MinValue = int.Parse(parts[8].Trim());
-            MaxValue = int.Parse(parts[9].Trim());
-            PrimaryRatio = double.Parse(parts[10].Trim());
-            SecondaryRatio = double.Parse(parts[11].Trim());
-            ScalingIdentifier = parts[12].Trim()[0];
         }
 
         #endregion
