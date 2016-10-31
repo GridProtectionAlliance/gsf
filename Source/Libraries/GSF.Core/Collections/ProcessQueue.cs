@@ -1407,6 +1407,14 @@ namespace GSF.Collections
                     case SynchronizedOperationType.Mixed:
                         m_synchronizedOperation = new MixedSynchronizedOperation(RealTimeThreadProc, OnProcessException);
                         break;
+
+                    case SynchronizedOperationType.DedicatedBackground:
+                        m_synchronizedOperation = new DedicatedSynchronizedOperation(RealTimeThreadProc, OnProcessException, true);
+                        break;
+
+                    case SynchronizedOperationType.DedicatedForeground:
+                        m_synchronizedOperation = new DedicatedSynchronizedOperation(RealTimeThreadProc, OnProcessException, false);
+                        break;
                 }
             }
             else

@@ -17,6 +17,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Collections\ListExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Common.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ComplexNumber.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Data\DataRowExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\DisposableLoggingClassBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Internal\LogEventPublisherInternal.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Internal\LoggerInternal.cs" />

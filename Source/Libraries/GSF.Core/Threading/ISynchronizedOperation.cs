@@ -46,7 +46,17 @@ namespace GSF.Threading
         /// <summary>
         /// <see cref="MixedSynchronizedOperation"/>
         /// </summary>
-        Mixed
+        Mixed,
+
+        /// <summary>
+        /// <see cref="DedicatedSynchronizedOperation"/> with IsBackground set to <c>false</c>
+        /// </summary>
+        DedicatedForeground,
+
+        /// <summary>
+        /// <see cref="DedicatedSynchronizedOperation"/> with IsBackground set to <c>true</c>
+        /// </summary>
+        DedicatedBackground,
     }
 
     /// <summary>

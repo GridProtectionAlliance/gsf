@@ -205,7 +205,14 @@ namespace GSF.IO
             m_operationWaitHandle = new ManualResetEvent(true);
             m_savedFilesWithTime = new Dictionary<DateTime, string>();
             m_logEntryQueue = ProcessQueue<string>.CreateRealTimeQueue(WriteLogEntries);
-            m_logEntryQueue.SynchronizedOperationType = SynchronizedOperationType.Long;
+            if (OptimizationOptions.PreferDedicatedThreads)
+            {
+                m_logEntryQueue.SynchronizedOperationType = SynchronizedOperationType.DedicatedForeground;
+            }
+            else
+            {
+                m_logEntryQueue.SynchronizedOperationType = SynchronizedOperationType.Long;
+            }
             m_flushTimer = new Timer();
             m_flushTimerInterval = 10.0D;
             m_fileStreamLock = new object();

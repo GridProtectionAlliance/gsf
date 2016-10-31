@@ -62,6 +62,8 @@ namespace GSF
 
         public static bool DisableAsyncQueueInProtocolParsing { get; private set; } = false;
 
+        public static bool PreferDedicatedThreads { get; private set; } = false;
+
         public static RoutingMethod DefaultRoutingMethod { get; private set; } = DefaultRoutingMethod;
 
         public static int RoutingLatency { get; private set; } = 50;
@@ -77,6 +79,7 @@ namespace GSF
                 setting = systemSettings["OptimizationsConnectionString"].ValueAsString("");
                 Dictionary<string, string> optimizations = setting.ParseKeyValuePairs();
 
+                LoadPreferDedicatedThreads(optimizations);
                 LoadAsyncQueueInProtocolParsing(optimizations);
                 LoadProcessorAffinity(optimizations);
                 LoadRoutingTable(optimizations);
@@ -93,6 +96,15 @@ namespace GSF
             {
                 Log.Publish(MessageLevel.Info, "Enable Optimization", "DisableAsyncQueueInProtocolParsing");
                 DisableAsyncQueueInProtocolParsing = true;
+            }
+        }
+
+        private static void LoadPreferDedicatedThreads(Dictionary<string, string> optimizations)
+        {
+            if (optimizations.ContainsKey("PreferDedicatedThreads"))
+            {
+                Log.Publish(MessageLevel.Info, "Enable Optimization", "PreferDedicatedThreads");
+                PreferDedicatedThreads = true;
             }
         }
 

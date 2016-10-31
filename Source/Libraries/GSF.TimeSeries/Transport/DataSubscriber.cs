@@ -51,6 +51,7 @@ using GSF.Reflection;
 using GSF.Security.Cryptography;
 using GSF.Threading;
 using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Data;
 using GSF.TimeSeries.Statistics;
 using GSF.Units;
 using Random = GSF.Security.Cryptography.Random;
@@ -2914,7 +2915,7 @@ namespace GSF.TimeSeries.Transport
                                                         break;
                                                     case DecompressionExitCode.CommandRead:
                                                         break;
-                                                    case DecompressionExitCode.MeasurementRead:                                                        
+                                                    case DecompressionExitCode.MeasurementRead:
                                                         // Attempt to restore signal identification
                                                         if (m_signalIndexCache.Reference.TryGetValue(id, out tuple))
                                                         {
@@ -3300,7 +3301,7 @@ namespace GSF.TimeSeries.Transport
                 }
 
                 // Start unsynchronized subscription
-                #pragma warning disable 0618
+#pragma warning disable 0618
                 UnsynchronizedSubscribe(true, false, filterExpression.ToString(), dataChannel);
             }
             else if (metaDataRefreshCompleted)
@@ -4171,12 +4172,13 @@ namespace GSF.TimeSeries.Transport
 
                     if (dataSource.Tables.Contains("ActiveMeasurements"))
                     {
+                        ActiveMeasurementsTableLookup measurementLookup = DataSourceLookups.ActiveMeasurements(dataSource);
+
                         foreach (DeviceStatisticsHelper<SubscribedDevice> statisticsHelper in subscribedDevices)
                         {
-                            measurementRows = dataSource.Tables["ActiveMeasurements"]
-                                .Select($"SignalReference LIKE '{Regex.Replace(statisticsHelper.Device.Name, @"^LOCAL\$", "")}-%' AND SignalType <> 'STAT'");
+                            string deviceName = Regex.Replace(statisticsHelper.Device.Name, @"^LOCAL\$", "");
 
-                            foreach (DataRow measurementRow in measurementRows)
+                            foreach (DataRow measurementRow in measurementLookup.LookupByDeviceNameNoStat(deviceName))
                             {
                                 if (Guid.TryParse(measurementRow["SignalID"].ToNonNullString(), out signalID))
                                 {

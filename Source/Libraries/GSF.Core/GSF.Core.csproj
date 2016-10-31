@@ -364,6 +364,7 @@
     <Compile Include="Range.cs" />
     <Compile Include="StringExtensionsOverload.cs" />
     <Compile Include="Threading\CompatibleCancellationToken.cs" />
+    <Compile Include="Threading\DedicatedSynchronizedOperation.cs" />
     <Compile Include="Trackable.cs" />
     <Compile Include="ReusableObjectPool.cs" />
     <Compile Include="Scheduling\NamespaceDoc.cs" />
