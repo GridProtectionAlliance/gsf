@@ -23,11 +23,16 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using GSF.Configuration;
 using GSF.Diagnostics;
 
 namespace GSF
 {
+
+
     /// <summary>
     /// This class will contain various optimizations that can be enabled in certain circumstances 
     /// through the SystemSettings. Since this framework is used in many settings, for stability
@@ -36,9 +41,30 @@ namespace GSF
     /// </summary>
     public static class OptimizationOptions
     {
+        /// <summary>
+        /// The routing method to use.
+        /// </summary>
+        public enum RoutingMethod
+        {
+            /// <summary>
+            /// The default method of routing
+            /// </summary>
+            Default,
+
+            /// <summary>
+            /// A custom implementation that sacrifices overall latency for lower CPU utilization.
+            /// </summary>
+            HighLatencyLowCpu,
+
+        }
+
         private readonly static LogPublisher Log = Logger.CreatePublisher(typeof(OptimizationOptions), MessageClass.Framework);
 
-        public readonly static bool DisableAsyncQueueInProtocolParsing = false;
+        public static bool DisableAsyncQueueInProtocolParsing { get; private set; } = false;
+
+        public static RoutingMethod DefaultRoutingMethod { get; private set; } = DefaultRoutingMethod;
+
+        public static int RoutingLatency { get; private set; } = 50;
 
         static OptimizationOptions()
         {
@@ -51,17 +77,98 @@ namespace GSF
                 setting = systemSettings["OptimizationsConnectionString"].ValueAsString("");
                 Dictionary<string, string> optimizations = setting.ParseKeyValuePairs();
 
-                if (optimizations.ContainsKey("DisableAsyncQueueInProtocolParsing"))
-                {
-                    Log.Publish(MessageLevel.Info, "Enable Optimization", "DisableAsyncQueueInProtocolParsing");
-                    DisableAsyncQueueInProtocolParsing = true;
-                }
+                LoadAsyncQueueInProtocolParsing(optimizations);
+                LoadProcessorAffinity(optimizations);
+                LoadRoutingTable(optimizations);
             }
             catch (Exception ex)
             {
                 Log.Publish(MessageLevel.Warning, "Could not parse Optimization Settings", setting, null, ex);
             }
+        }
 
+        private static void LoadAsyncQueueInProtocolParsing(Dictionary<string, string> optimizations)
+        {
+            if (optimizations.ContainsKey("DisableAsyncQueueInProtocolParsing"))
+            {
+                Log.Publish(MessageLevel.Info, "Enable Optimization", "DisableAsyncQueueInProtocolParsing");
+                DisableAsyncQueueInProtocolParsing = true;
+            }
+        }
+
+        private static void LoadProcessorAffinity(Dictionary<string, string> optimizations)
+        {
+            if (optimizations.ContainsKey("ProcessorAffinity"))
+            {
+                ulong value;
+                if (ulong.TryParse(optimizations["ProcessorAffinity"], out value))
+                {
+                    if (value > 0)
+                    {
+                        Process.GetCurrentProcess().ProcessorAffinity = (IntPtr)(long)value;
+                        Log.Publish(MessageLevel.Info, "Enable Optimization", "Processor Affinity set to " + Process.GetCurrentProcess().ProcessorAffinity.ToInt64().ToString("X"));
+                    }
+                    else
+                    {
+                        Log.Publish(MessageLevel.Warning, "Parsing Error", "Processor Affinity cannot be zero");
+                    }
+                }
+                else
+                {
+                    Log.Publish(MessageLevel.Warning, "Parsing Error", "Unrecognized option for ProcessAffinity: " + optimizations["ProcessorAffinity"]);
+                }
+            }
+        }
+
+        private static void LoadRoutingTable(Dictionary<string, string> optimizations)
+        {
+            if (optimizations.ContainsKey("RoutingMethod"))
+            {
+                string method = optimizations["RoutingMethod"];
+                if (method.Equals("RouteMappingHighLatencyLowCpu", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    int latency = -1;
+
+                    if (optimizations.ContainsKey("RoutingLatencyMS"))
+                    {
+                        string latencyString = optimizations["RoutingLatencyMS"];
+                        if (int.TryParse(latencyString, out latency))
+                        {
+                            if (latency < 1 || latency > 500)
+                            {
+                                Log.Publish(MessageLevel.Info, "Routing Table", "Invalid range of routing latency. Defaulting to 10 ms. (Range: 1ms to 500ms)", "Value: " + latencyString);
+                                latency = 10;
+                            }
+                        }
+                        else
+                        {
+                            Log.Publish(MessageLevel.Info, "Routing Table", "Could not parse latency value. Defaulting to 10 ms.", "Value: " + latencyString);
+                            latency = 10;
+                        }
+                    }
+                    else
+                    {
+                        latency = 10;
+                    }
+
+                    Log.Publish(MessageLevel.Info, "Routing Table", "Using RouteMappingHighLatencyLowCpu.", "Latency: " + latency.ToString());
+
+                    DefaultRoutingMethod = RoutingMethod.HighLatencyLowCpu;
+                    RoutingLatency = latency;
+                }
+                else if (method.Equals("Default", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    Log.Publish(MessageLevel.Info, "Routing Table", "Using the default routing table.");
+                }
+                else
+                {
+                    Log.Publish(MessageLevel.Warning, "Routing Table", "Specified routing method is not recognized. The default will be used.", "Value: " + method);
+                }
+            }
+            else
+            {
+                Log.Publish(MessageLevel.Info, "Routing Table", "Method not specified, using the default routing table.");
+            }
         }
     }
 }

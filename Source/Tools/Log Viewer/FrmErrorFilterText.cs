@@ -30,6 +30,7 @@ namespace OGE.Core.GSF.Diagnostics.UI
                 catch (Exception)
                 {
                     MessageBox.Show("Not a valid Regex");
+                    return;
                 }
             }
 

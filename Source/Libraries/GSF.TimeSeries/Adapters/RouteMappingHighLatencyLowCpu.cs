@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using GSF.Collection;
@@ -313,6 +314,7 @@ namespace GSF.TimeSeries.Adapters
 
         void m_task_Running(object sender, EventArgs<ScheduledTaskRunningReason> e)
         {
+
             if (e.Argument == ScheduledTaskRunningReason.Disposing)
                 return;
 

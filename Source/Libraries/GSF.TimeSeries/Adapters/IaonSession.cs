@@ -157,68 +157,15 @@ namespace GSF.TimeSeries.Adapters
             m_defaultSampleSizeWarningThreshold = thresholdSettings["DefaultSampleSizeWarningThreshold"].ValueAsInt32();
 
             // Create a new set of routing tables
-            systemSettings.Add("RoutingTableConnectionString", "Method=Default", "Specifies the configuration options for the routing table");
-            string setting = systemSettings["RoutingTableConnectionString"].ValueAsString("");
-
-            try
+            switch (OptimizationOptions.DefaultRoutingMethod)
             {
-                Dictionary<string, string> routingTableConnectionString = setting.ParseKeyValuePairs();
-
-                if (routingTableConnectionString.ContainsKey("Method"))
-                {
-                    string method = routingTableConnectionString["Method"];
-                    if (method.Equals("RouteMappingHighLatencyLowCpu", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        int latency = -1;
-
-                        if (routingTableConnectionString.ContainsKey("RouteLatencyMS"))
-                        {
-                            string latencyString = routingTableConnectionString["RouteLatencyMS"];
-                            if (int.TryParse(latencyString, out latency))
-                            {
-                                if (latency < 1 || latency > 500)
-                                {
-                                    Log.Publish(MessageLevel.Info, "Routing Table", "Invalid range of routing latency. Defaulting to 10 ms. (Range: 1ms to 500ms)", "Value: " + latencyString);
-                                    latency = 10;
-                                }
-                            }
-                            else
-                            {
-                                Log.Publish(MessageLevel.Info, "Routing Table", "Could not parse latency value. Defaulting to 10 ms.", "Value: " + latencyString);
-                                latency = 10;
-                            }
-                        }
-                        else
-                        {
-                            latency = 10;
-                        }
-
-                        Log.Publish(MessageLevel.Info, "Routing Table", "Using RouteMappingHighLatencyLowCpu.", "Latency: " + latency.ToString());
-                        m_routingTables = new RoutingTables(new RouteMappingHighLatencyLowCpu(latency));
-                    }
-                    else if (method.Equals("Default", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        Log.Publish(MessageLevel.Info, "Routing Table", "Using the default routing table.");
-                        m_routingTables = new RoutingTables();
-                    }
-                    else
-                    {
-                        Log.Publish(MessageLevel.Warning, "Routing Table", "Specified routing method is not recognized. The default will be used.", "Value: " + method);
-                        m_routingTables = new RoutingTables();
-                    }
-                }
-                else
-                {
-                    Log.Publish(MessageLevel.Info, "Routing Table", "Method not specified, using the default routing table.");
+                case OptimizationOptions.RoutingMethod.HighLatencyLowCpu:
+                    m_routingTables = new RoutingTables(new RouteMappingHighLatencyLowCpu(OptimizationOptions.RoutingLatency));
+                    break;
+                default:
                     m_routingTables = new RoutingTables();
-                }
+                    break;
             }
-            catch (Exception ex)
-            {
-                Log.Publish(MessageLevel.Warning, "Routing Table", "Could not parse the routing table connection string. The default will be used.", "Value: " + setting, ex);
-                m_routingTables = new RoutingTables();
-            }
-
 
             m_routingTables.StatusMessage += m_routingTables_StatusMessage;
             m_routingTables.ProcessException += m_routingTables_ProcessException;
@@ -506,7 +453,7 @@ namespace GSF.TimeSeries.Adapters
                 }
                 finally
                 {
-                    m_disposed = true;  // Prevent duplicate dispose.
+                    m_disposed = true; // Prevent duplicate dispose.
 
                     if (Disposed != null)
                         Disposed(this, EventArgs.Empty);

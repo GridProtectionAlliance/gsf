@@ -264,7 +264,7 @@ namespace GSF.Parsing
                 {
                     try
                     {
-                        ParseQueuedBuffers(new[] {identifiableBuffer});
+                        ParseQueuedBuffers(new[] { identifiableBuffer });
                     }
                     catch (Exception ex)
                     {
@@ -275,7 +275,7 @@ namespace GSF.Parsing
                 {
                     m_bufferQueue.Enqueue(new[] { identifiableBuffer });
                 }
-
+                
 
             }
         }
