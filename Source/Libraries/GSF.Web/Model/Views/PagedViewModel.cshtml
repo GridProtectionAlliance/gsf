@@ -237,7 +237,7 @@
                     <span data-bind="visible: recordMode()===RecordMode.View">View</span>
                     <span data-bind="visible: recordMode()===RecordMode.Edit">Edit</span>
                     <span data-bind="visible: recordMode()===RecordMode.AddNew">Add New</span>
-                    @(ViewBag.AddNewEditTitle ?? GSF.StringExtensionsOverload.ToSingular(ViewBag.Title ?? ""))
+                    @(ViewBag.AddNewEditTitle ?? GSF.StringExtensions.ToSingular(ViewBag.Title ?? ""))
                 </h4>
             </div>
             <div class="modal-body auto-height" data-bind="with: currentRecord, validationOptions: {messageTemplate: 'validationMessageTemplate'}, css: {'modal-readonly': recordMode()===RecordMode.View}">

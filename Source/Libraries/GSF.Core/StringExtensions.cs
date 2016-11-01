@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  StringExtensionsOverload.cs - Gbtc
+//  StringExtensions.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -88,18 +88,8 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data.Entity.Design.PluralizationServices;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Security;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace GSF
 {
@@ -109,11 +99,11 @@ namespace GSF
     //------------------------------------------------------------------------------------------------------------
 
     /// <summary>Defines extension functions related to string manipulation.</summary>
-    public static class StringExtensionsOverload
+    public static partial class StringExtensions
     {
         private static readonly PluralizationService s_pluralizationService;
 
-        static StringExtensionsOverload()
+        static StringExtensions()
         {
             // Pluralization service currently only supports English, if other languages are supported in the
             // future, cached services can use to a concurrent dictionary keyed on LCID of culture
