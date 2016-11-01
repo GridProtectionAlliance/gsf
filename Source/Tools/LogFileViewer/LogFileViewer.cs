@@ -1,22 +1,43 @@
-﻿using System;
+﻿//******************************************************************************************************
+//  LogFileViewer.cs - Gbtc
+//
+//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  11/01/2016 - Steven E. Chisholm
+//       Generated original version of source code.
+//
+//******************************************************************************************************
+
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Windows.Forms;
+using GSF.Diagnostics;
 
-namespace GSF.Diagnostics.UI
+namespace LogFileViewer
 {
     internal partial class LogFileViewer : Form
     {
-        private List<LogMessage> m_messages;
-        private List<IMessageMatch> m_filters;
-        private string m_logPath;
+        private readonly List<LogMessage> m_messages;
+        private readonly List<IMessageMatch> m_filters;
+        private readonly string m_logPath;
 
         public LogFileViewer(string logPath = null)
         {
@@ -38,17 +59,18 @@ namespace GSF.Diagnostics.UI
             m_logPath = logPath;
             m_filters = new List<IMessageMatch>();
             m_messages = new List<LogMessage>();
+
             InitializeComponent();
         }
 
-        private void FrmMain_Load(object sender, EventArgs e)
+        private void LogFileViewer_Load(object sender, EventArgs e)
         {
             typeof(DataGridView).InvokeMember("DoubleBuffered", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.SetProperty, null, dgvResults, new object[] { true });
         }
 
         private void RefreshFilters()
         {
-            var dt = new DataTable();
+            DataTable dt = new DataTable();
             dt.Columns.Add("Object", typeof(LogMessage));
             dt.Columns.Add("Time", typeof(DateTime));
             dt.Columns.Add("Level", typeof(string));
@@ -58,11 +80,11 @@ namespace GSF.Diagnostics.UI
             dt.Columns.Add("Details", typeof(string));
             dt.Columns.Add("Exception", typeof(string));
 
-            foreach (var message in m_messages)
+            foreach (LogMessage message in m_messages)
             {
                 if (m_filters.All(x => x.IsIncluded(message)))
                 {
-                    dt.Rows.Add(message, message.UtcTime.ToLocalTime(), message.Classification.ToString() + " - " + message.Level.ToString(),
+                    dt.Rows.Add(message, message.UtcTime.ToLocalTime(), $"{message.Classification} - {message.Level}",
                         message.EventPublisherDetails.TypeName, message.EventPublisherDetails.EventName, message.Message,
                         message.Details, message.ExceptionString);
                 }
@@ -70,6 +92,7 @@ namespace GSF.Diagnostics.UI
 
             dgvResults.DataSource = dt;
             dgvResults.Columns["Object"].Visible = false;
+
             foreach (DataGridViewColumn dc in dgvResults.Columns)
             {
                 if (dc.ValueType == typeof(DateTime))
@@ -81,21 +104,23 @@ namespace GSF.Diagnostics.UI
 
         private void BtnLoad_Click(object sender, EventArgs e)
         {
-            using (var dlg = new OpenFileDialog())
+            using (OpenFileDialog dlg = new OpenFileDialog())
             {
                 if (m_logPath != null)
                 {
                     dlg.InitialDirectory = m_logPath;
                     dlg.RestoreDirectory = true;
                 }
+
                 dlg.Filter = "Log File (Compressed)|*.Logz";
                 dlg.Multiselect = true;
+
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
                     m_messages.Clear();
-                    foreach (var file in dlg.FileNames)
+                    foreach (string file in dlg.FileNames)
                     {
-                        var messages = LogFileReader.Read(file);
+                        List<LogMessage> messages = LogFileReader.Read(file);
                         m_messages.AddRange(messages);
                     }
                 }
@@ -139,10 +164,12 @@ namespace GSF.Diagnostics.UI
         private void MakeMenu(DataGridViewCellMouseEventArgs e, IMessageMatch filter)
         {
             ContextMenuStrip menu = new ContextMenuStrip();
+
             menu.ShowImageMargin = false;
-            foreach (var item in filter.GetMenuButtons())
+
+            foreach (Tuple<string, Func<bool>> item in filter.GetMenuButtons())
             {
-                var button = new ToolStripButton(item.Item1);
+                ToolStripButton button = new ToolStripButton(item.Item1);
                 button.Click += (send1, e1) =>
                     {
                         item.Item2();
@@ -159,22 +186,25 @@ namespace GSF.Diagnostics.UI
 
         private void btnRemove_Click(object sender, EventArgs e)
         {
-            foreach (var item in LstFilters.SelectedItems.Cast<IMessageMatch>().ToArray())
+            foreach (IMessageMatch item in LstFilters.SelectedItems.Cast<IMessageMatch>().ToArray())
             {
                 m_filters.Remove(item);
                 LstFilters.Items.Remove(item);
             }
+
             RefreshFilters();
         }
 
         private void btnToggle_Click(object sender, EventArgs e)
         {
-            foreach (var item in LstFilters.SelectedItems.Cast<IMessageMatch>().ToArray())
+            foreach (IMessageMatch item in LstFilters.SelectedItems.Cast<IMessageMatch>().ToArray())
             {
                 item.ToggleResult();
             }
+
             LstFilters.DisplayMember = string.Empty;
             LstFilters.DisplayMember = "Description";
+
             RefreshFilters();
         }
 
@@ -183,7 +213,8 @@ namespace GSF.Diagnostics.UI
             if (e.Button == MouseButtons.Left && e.RowIndex >= 0)
             {
                 LogMessage item = (LogMessage)dgvResults.Rows[e.RowIndex].Cells["Object"].Value;
-                FrmShowError win = new FrmShowError();
+                ShowError win = new ShowError();
+
                 win.TxtMessage.Text = item.ToString();
                 win.Show();
                 win.TxtMessage.Select(0, 0);
@@ -192,25 +223,29 @@ namespace GSF.Diagnostics.UI
 
         private void BtnCompactFiles_Click(object sender, EventArgs e)
         {
-            using (var dlgLoad = new OpenFileDialog())
+            using (OpenFileDialog dlgLoad = new OpenFileDialog())
             {
                 if (m_logPath != null)
                 {
                     dlgLoad.InitialDirectory = m_logPath;
                     dlgLoad.RestoreDirectory = true;
                 }
+
                 dlgLoad.Filter = "Log File (Compressed)|*.Logz";
                 dlgLoad.Multiselect = true;
+
                 if (dlgLoad.ShowDialog() == DialogResult.OK)
                 {
-                    using (var dlgSave = new SaveFileDialog())
+                    using (SaveFileDialog dlgSave = new SaveFileDialog())
                     {
                         if (m_logPath != null)
                         {
                             dlgLoad.InitialDirectory = m_logPath;
                             dlgLoad.RestoreDirectory = true;
                         }
+
                         dlgSave.Filter = "Log File (Compressed)|*.Logz";
+
                         if (dlgSave.ShowDialog() == DialogResult.OK)
                         {
                             Stopwatch sw = new Stopwatch();

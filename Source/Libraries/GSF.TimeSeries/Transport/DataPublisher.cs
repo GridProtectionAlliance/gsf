@@ -661,6 +661,7 @@ namespace GSF.TimeSeries.Transport
         private bool m_allowNaNValueFilter;
         private bool m_forceNaNValueFilter;
         private bool m_useBaseTimeOffsets;
+        private int m_measurementReportingInterval;
 
         private long m_totalBytesSent;
         private long m_lifetimeMeasurements;
@@ -1031,6 +1032,27 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Gets or sets the measurement reporting interval.
+        /// </summary>
+        /// <remarks>
+        /// This is used to determined how many measurements should be processed before reporting status.
+        /// </remarks>
+        [ConnectionStringParameter,
+        DefaultValue(AdapterBase.DefaultMeasurementReportingInterval),
+        Description("Defines the measurement reporting interval used to determined how many measurements should be processed, per subscriber, before reporting status.")]
+        public int MeasurementReportingInterval
+        {
+            get
+            {
+                return m_measurementReportingInterval;
+            }
+            set
+            {
+                m_measurementReportingInterval = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets <see cref="DataSet"/> based data source used to load each <see cref="IAdapter"/>.
         /// Updates to this property will cascade to all items in this <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>
@@ -1071,7 +1093,9 @@ namespace GSF.TimeSeries.Transport
                     status.Append(m_commandChannel.Status);
 
                 status.Append(base.Status);
-                status.AppendFormat("  Buffer block retransmits: {0}", m_bufferBlockRetransmissions);
+                status.AppendFormat("        Reporting interval: {0:N0} per subscriber", MeasurementReportingInterval);
+                status.AppendLine();
+                status.AppendFormat("  Buffer block retransmits: {0:N0}", m_bufferBlockRetransmissions);
                 status.AppendLine();
 
                 return status.ToString();
@@ -1357,6 +1381,11 @@ namespace GSF.TimeSeries.Transport
 
             if (settings.TryGetValue("useBaseTimeOffsets", out setting))
                 m_useBaseTimeOffsets = setting.ParseBoolean();
+
+            if (settings.TryGetValue("measurementReportingInterval", out setting))
+                MeasurementReportingInterval = int.Parse(setting);
+            else
+                MeasurementReportingInterval = AdapterBase.DefaultMeasurementReportingInterval;
 
             // Get user specified period for cipher key rotation
             if (settings.TryGetValue("cipherKeyRotationPeriod", out setting) && double.TryParse(setting, out period))
@@ -2951,6 +2980,7 @@ namespace GSF.TimeSeries.Transport
                             // Update client subscription properties
                             subscription.ConnectionString = connectionString;
                             subscription.DataSource = DataSource;
+                            subscription.MeasurementReportingInterval = MeasurementReportingInterval;
 
                             // Pass subscriber assembly information to connection, if defined
                             if (subscription.Settings.TryGetValue("assemblyInfo", out setting))

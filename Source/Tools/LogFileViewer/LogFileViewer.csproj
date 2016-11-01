@@ -7,8 +7,8 @@
     <ProjectGuid>{B04CAC0F-CA13-4A19-8857-F55619638CD9}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Log_Viewer</RootNamespace>
-    <AssemblyName>Log Viewer</AssemblyName>
+    <RootNamespace>LogFileViewer</RootNamespace>
+    <AssemblyName>LogFileViewer</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -18,7 +18,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\Build\Output\Debug\Tools\Log Viewer\</OutputPath>
+    <OutputPath>..\..\..\Build\Output\Debug\Tools\LogFileViewer\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -28,7 +28,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\Build\Output\Release\Tools\Log Viewer\</OutputPath>
+    <OutputPath>..\..\..\Build\Output\Release\Tools\LogFileViewer\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -52,6 +52,9 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>LogFileViewer.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -66,17 +69,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FrmErrorFilterText.cs">
+    <Compile Include="ErrorFilterText.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrmErrorFilterText.Designer.cs">
-      <DependentUpon>FrmErrorFilterText.cs</DependentUpon>
+    <Compile Include="ErrorFilterText.Designer.cs">
+      <DependentUpon>ErrorFilterText.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrmShowError.cs">
+    <Compile Include="ShowError.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrmShowError.Designer.cs">
-      <DependentUpon>FrmShowError.cs</DependentUpon>
+    <Compile Include="ShowError.Designer.cs">
+      <DependentUpon>ShowError.cs</DependentUpon>
     </Compile>
     <Compile Include="LogFileViewer.cs">
       <SubType>Form</SubType>
@@ -87,11 +90,11 @@
     <Compile Include="MessageFilters.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="FrmErrorFilterText.resx">
-      <DependentUpon>FrmErrorFilterText.cs</DependentUpon>
+    <EmbeddedResource Include="ErrorFilterText.resx">
+      <DependentUpon>ErrorFilterText.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FrmShowError.resx">
-      <DependentUpon>FrmShowError.cs</DependentUpon>
+    <EmbeddedResource Include="ShowError.resx">
+      <DependentUpon>ShowError.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="LogFileViewer.resx">
       <DependentUpon>LogFileViewer.cs</DependentUpon>
@@ -104,6 +107,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -123,6 +127,9 @@
       <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
       <Name>GSF.Core</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="LogFileViewer.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

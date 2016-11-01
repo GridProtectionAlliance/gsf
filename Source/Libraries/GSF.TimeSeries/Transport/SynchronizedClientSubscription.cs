@@ -305,6 +305,12 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
+        int IClientSubscription.MeasurementReportingInterval
+        {
+            get;
+            set;
+        }
+
         #endregion
 
         #region [ Methods ]

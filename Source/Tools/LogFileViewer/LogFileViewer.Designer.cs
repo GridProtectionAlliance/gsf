@@ -1,4 +1,4 @@
-﻿namespace GSF.Diagnostics.UI
+﻿namespace LogFileViewer
 {
     partial class LogFileViewer
     {
@@ -28,8 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LogFileViewer));
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.BtnCompactFiles = new System.Windows.Forms.Button();
+            this.btnCompactFiles = new System.Windows.Forms.Button();
             this.btnToggle = new System.Windows.Forms.Button();
             this.btnRemove = new System.Windows.Forms.Button();
             this.LstFilters = new System.Windows.Forms.ListBox();
@@ -52,7 +53,7 @@
             // 
             // splitContainer1.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.BtnCompactFiles);
+            this.splitContainer1.Panel1.Controls.Add(this.btnCompactFiles);
             this.splitContainer1.Panel1.Controls.Add(this.btnToggle);
             this.splitContainer1.Panel1.Controls.Add(this.btnRemove);
             this.splitContainer1.Panel1.Controls.Add(this.LstFilters);
@@ -61,23 +62,25 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.dgvResults);
-            this.splitContainer1.Size = new System.Drawing.Size(1054, 737);
+            this.splitContainer1.Size = new System.Drawing.Size(814, 661);
             this.splitContainer1.SplitterDistance = 104;
             this.splitContainer1.TabIndex = 1;
             // 
-            // BtnCompactFiles
+            // btnCompactFiles
             // 
-            this.BtnCompactFiles.Location = new System.Drawing.Point(873, 12);
-            this.BtnCompactFiles.Name = "BtnCompactFiles";
-            this.BtnCompactFiles.Size = new System.Drawing.Size(130, 23);
-            this.BtnCompactFiles.TabIndex = 4;
-            this.BtnCompactFiles.Text = "Compact Files";
-            this.BtnCompactFiles.UseVisualStyleBackColor = true;
-            this.BtnCompactFiles.Click += new System.EventHandler(this.BtnCompactFiles_Click);
+            this.btnCompactFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnCompactFiles.Location = new System.Drawing.Point(727, 71);
+            this.btnCompactFiles.Name = "btnCompactFiles";
+            this.btnCompactFiles.Size = new System.Drawing.Size(75, 23);
+            this.btnCompactFiles.TabIndex = 4;
+            this.btnCompactFiles.Text = "Compact";
+            this.btnCompactFiles.UseVisualStyleBackColor = true;
+            this.btnCompactFiles.Click += new System.EventHandler(this.BtnCompactFiles_Click);
             // 
             // btnToggle
             // 
-            this.btnToggle.Location = new System.Drawing.Point(776, 41);
+            this.btnToggle.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnToggle.Location = new System.Drawing.Point(727, 42);
             this.btnToggle.Name = "btnToggle";
             this.btnToggle.Size = new System.Drawing.Size(75, 23);
             this.btnToggle.TabIndex = 3;
@@ -87,7 +90,8 @@
             // 
             // btnRemove
             // 
-            this.btnRemove.Location = new System.Drawing.Point(776, 12);
+            this.btnRemove.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnRemove.Location = new System.Drawing.Point(727, 13);
             this.btnRemove.Name = "btnRemove";
             this.btnRemove.Size = new System.Drawing.Size(75, 23);
             this.btnRemove.TabIndex = 2;
@@ -97,13 +101,15 @@
             // 
             // LstFilters
             // 
+            this.LstFilters.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.LstFilters.DisplayMember = "Description";
             this.LstFilters.FormattingEnabled = true;
             this.LstFilters.HorizontalScrollbar = true;
             this.LstFilters.Location = new System.Drawing.Point(93, 12);
             this.LstFilters.Name = "LstFilters";
             this.LstFilters.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.LstFilters.Size = new System.Drawing.Size(677, 82);
+            this.LstFilters.Size = new System.Drawing.Size(628, 82);
             this.LstFilters.TabIndex = 1;
             // 
             // BtnLoad
@@ -125,7 +131,7 @@
             this.dgvResults.Location = new System.Drawing.Point(0, 0);
             this.dgvResults.Name = "dgvResults";
             this.dgvResults.ReadOnly = true;
-            this.dgvResults.Size = new System.Drawing.Size(1054, 629);
+            this.dgvResults.Size = new System.Drawing.Size(814, 553);
             this.dgvResults.TabIndex = 0;
             this.dgvResults.CellMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dgvResults_CellMouseClick);
             this.dgvResults.CellMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dgvResults_CellMouseDoubleClick);
@@ -134,11 +140,13 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1054, 737);
+            this.ClientSize = new System.Drawing.Size(814, 661);
             this.Controls.Add(this.splitContainer1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MinimumSize = new System.Drawing.Size(350, 300);
             this.Name = "LogFileViewer";
-            this.Text = "LogFileViewer";
-            this.Load += new System.EventHandler(this.FrmMain_Load);
+            this.Text = "Log File Viewer";
+            this.Load += new System.EventHandler(this.LogFileViewer_Load);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
@@ -151,7 +159,7 @@
         #endregion
 
         private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.Button BtnCompactFiles;
+        private System.Windows.Forms.Button btnCompactFiles;
         private System.Windows.Forms.Button btnToggle;
         private System.Windows.Forms.Button btnRemove;
         private System.Windows.Forms.ListBox LstFilters;

@@ -48,7 +48,11 @@ namespace GSF.TimeSeries.Adapters
         #region [ Members ]
 
         // Constants
-        private const int DefaultMeasurementReportingInterval = 100000;
+
+        /// <summary>
+        /// Default measurement reporting interval.
+        /// </summary>
+        public const int DefaultMeasurementReportingInterval = 100000;
 
         /// <summary>
         /// Default initialization timeout.
@@ -572,6 +576,8 @@ namespace GSF.TimeSeries.Adapters
                 status.AppendFormat("    Processed measurements: {0:N0}", ProcessedMeasurements);
                 status.AppendLine();
                 status.AppendFormat("    Total adapter run time: {0}", RunTime.ToString(2));
+                status.AppendLine();
+                status.AppendFormat("        Reporting interval: {0:N0}", MeasurementReportingInterval);
                 status.AppendLine();
                 status.AppendFormat("       Temporal processing: {0}", SupportsTemporalProcessing ? "Supported" : "Unsupported");
                 status.AppendLine();

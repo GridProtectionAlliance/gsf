@@ -1,6 +1,6 @@
-﻿namespace GSF.Diagnostics.UI
+﻿namespace LogFileViewer
 {
-    partial class FrmShowError
+    partial class ShowError
     {
         /// <summary>
         /// Required designer variable.
@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ShowError));
             this.TxtMessage = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
@@ -46,10 +47,11 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(725, 442);
             this.Controls.Add(this.TxtMessage);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.KeyPreview = true;
-            this.Name = "FrmShowError";
+            this.Name = "ShowError";
             this.Text = "FrmShowError";
-            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.FrmShowError_KeyDown);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ShowError_KeyDown);
             this.ResumeLayout(false);
             this.PerformLayout();
 
