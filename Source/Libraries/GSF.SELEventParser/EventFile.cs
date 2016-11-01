@@ -67,6 +67,14 @@ namespace GSF.SELEventParser
             }
         }
 
+        public List<CommaSeparatedEventReport> CommaSeparatedEventReports
+        {
+            get
+            {
+                return m_sections.OfType<CommaSeparatedEventReport>().ToList();
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -89,6 +97,16 @@ namespace GSF.SELEventParser
         public bool Remove(EventHistory eventHistory)
         {
             return m_sections.Remove(eventHistory);
+        }
+
+        public void Add(CommaSeparatedEventReport commaSeparatedEventReport)
+        {
+            m_sections.Add(commaSeparatedEventReport);
+        }
+
+        public bool Remove(CommaSeparatedEventReport commaSeparatedEventReport)
+        {
+            return m_sections.Remove(commaSeparatedEventReport);
         }
 
         #endregion
@@ -117,6 +135,7 @@ namespace GSF.SELEventParser
             string command;
             EventReport parsedEventReport;
             EventHistory parsedEventHistory;
+            CommaSeparatedEventReport parsedCommaSeparatedEventReport;
 
             while (lineIndex < lines.Length)
             {
@@ -131,6 +150,12 @@ namespace GSF.SELEventParser
                     parsedEventReport = EventReport.Parse(lines, ref lineIndex);
                     parsedEventReport.Command = command;
                     parsedFile.Add(parsedEventReport);
+                }
+                else if (command.ToUpper().Contains("CEV"))
+                {
+                    parsedCommaSeparatedEventReport = CommaSeparatedEventReport.Parse(lines, ref lineIndex);
+                    parsedCommaSeparatedEventReport.Command = (command.ToUpper().Contains("FID") ? command.Split('\"')[0] : command);
+                    parsedFile.Add(parsedCommaSeparatedEventReport);
                 }
                 else if (command.ToUpper().Contains("HIS"))
                 {
