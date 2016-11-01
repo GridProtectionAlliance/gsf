@@ -47,7 +47,7 @@
     <Content Include="GSF.Core.Register.sql" />
     <Content Include="README.txt" />
   </ItemGroup>
-  <Import Project="..\..\GSF.Core.CLR.SharedProject\GSF.Core.CLR.SharedProject\GSF.Core.CLR.SharedProject.projitems" Label="Shared" />
+  <Import Project="..\..\GSF.Core.Shared\GSF.Core.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

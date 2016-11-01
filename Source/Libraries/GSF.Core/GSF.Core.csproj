@@ -447,7 +447,7 @@
     <Content Include="LICENSE.txt" />
   </ItemGroup>
   <ItemGroup />
-  <Import Project="..\GSF.Core.CLR.SharedProject\GSF.Core.CLR.SharedProject\GSF.Core.CLR.SharedProject.projitems" Label="Shared" />
+  <Import Project="..\GSF.Core.Shared\GSF.Core.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">
     <CallTarget Targets="SignBuild" />
