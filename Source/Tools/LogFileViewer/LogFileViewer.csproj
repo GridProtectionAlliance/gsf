@@ -56,6 +56,7 @@
     <ApplicationIcon>LogFileViewer.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -75,6 +76,14 @@
     <Compile Include="ErrorFilterText.Designer.cs">
       <DependentUpon>ErrorFilterText.cs</DependentUpon>
     </Compile>
+    <Compile Include="Filters\FilterType.cs" />
+    <Compile Include="Filters\IMessageMatch.cs" />
+    <Compile Include="Filters\MatchErrorName.cs" />
+    <Compile Include="Filters\MatchEventName.cs" />
+    <Compile Include="Filters\MatchMessageName.cs" />
+    <Compile Include="Filters\MatchTimestamp.cs" />
+    <Compile Include="Filters\MatchType.cs" />
+    <Compile Include="Filters\MatchVerbose.cs" />
     <Compile Include="ShowError.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -87,7 +96,6 @@
     <Compile Include="LogFileViewer.Designer.cs">
       <DependentUpon>LogFileViewer.cs</DependentUpon>
     </Compile>
-    <Compile Include="MessageFilters.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="ErrorFilterText.resx">

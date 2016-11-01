@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
@@ -30,17 +31,29 @@ using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using GSF.Diagnostics;
+using GSF.IO;
+using LogFileViewer.Filters;
+using LogFileViewer.Properties;
+using Microsoft.VisualBasic;
 
 namespace LogFileViewer
 {
     internal partial class LogFileViewer : Form
     {
-        private readonly List<LogMessage> m_messages;
-        private readonly List<IMessageMatch> m_filters;
-        private readonly string m_logPath;
+        private List<LogMessage> m_messages;
+        private List<IMessageMatch> m_filters;
+        private string m_logPath;
+        SortedList<string, byte[]> m_savedFilters = new SortedList<string, byte[]>();
 
         public LogFileViewer(string logPath = null)
         {
+            if (!Settings.Default.HasBeenUpgraded)
+            {
+                Settings.Default.Upgrade();
+                Settings.Default.HasBeenUpgraded = true;
+                Settings.Default.Save();
+            }
+
             if (logPath != null)
             {
                 try
@@ -66,6 +79,7 @@ namespace LogFileViewer
         private void LogFileViewer_Load(object sender, EventArgs e)
         {
             typeof(DataGridView).InvokeMember("DoubleBuffered", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.SetProperty, null, dgvResults, new object[] { true });
+            LoadFilters();
         }
 
         private void RefreshFilters()
@@ -131,7 +145,7 @@ namespace LogFileViewer
         private void dgvResults_CellMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
 
-            if (e.Button == MouseButtons.Right && e.RowIndex >= 0 && e.ColumnIndex >=0)
+            if (e.Button == MouseButtons.Right && e.RowIndex >= 0 && e.ColumnIndex >= 0)
             {
                 LogMessage item = (LogMessage)dgvResults.Rows[e.RowIndex].Cells["Object"].Value;
 
@@ -257,7 +271,222 @@ namespace LogFileViewer
                     }
                 }
             }
+        }
 
+        private void cmsFilters_Opening(object sender, CancelEventArgs e)
+        {
+            FillMenu();
+        }
+
+        public void LoadFilters()
+        {
+            try
+            {
+                string data = Settings.Default.SavedFilters;
+                if (string.IsNullOrEmpty(data))
+                    return;
+                byte[] dataBytes = Convert.FromBase64String(data);
+                MemoryStream ms = new MemoryStream(dataBytes);
+
+                byte version = ms.ReadNextByte();
+                switch (version)
+                {
+                    case 1:
+                        SortedList<string, byte[]> filterSets = new SortedList<string, byte[]>();
+                        int count = ms.ReadInt32();
+                        while (count > 0)
+                        {
+                            count--;
+                            string name = ms.ReadString();
+                            byte[] filter = ms.ReadBytes();
+                            filterSets[name] = filter;
+                        }
+
+                        m_savedFilters = filterSets;
+                        break;
+                    default:
+                        throw new VersionNotFoundException();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
+        }
+
+        private void SaveFilters()
+        {
+            var ms = new MemoryStream();
+            ms.Write((byte)1);
+            ms.Write(m_savedFilters.Count);
+            foreach (var filter in m_savedFilters)
+            {
+                ms.Write(filter.Key);
+                ms.WriteWithLength(filter.Value);
+            }
+
+            Settings.Default.SavedFilters = Convert.ToBase64String(ms.ToArray());
+            Settings.Default.Save();
+        }
+
+        public void FillMenu()
+        {
+            overwriteToolStripMenuItem.DropDownItems.Clear();
+            foreach (var item in m_savedFilters)
+            {
+                var button = new ToolStripButton(item.Key);
+                button.Width = 300;
+                button.Click += (send1, e1) =>
+                {
+                    SaveCurrentTemplete(item.Key);
+                };
+                overwriteToolStripMenuItem.DropDownItems.Add(button);
+            }
+
+            loadToolStripMenuItem.DropDownItems.Clear();
+            foreach (var item in m_savedFilters)
+            {
+                var button = new ToolStripButton(item.Key);
+                button.Width = 300;
+                button.Click += (send1, e1) =>
+                {
+                    LoadCurrentTemplete(item.Key);
+                };
+                loadToolStripMenuItem.DropDownItems.Add(button);
+            }
+
+            deleteToolStripMenuItem.DropDownItems.Clear();
+            foreach (var item in m_savedFilters)
+            {
+                var button = new ToolStripButton(item.Key);
+                button.Width = 300;
+                button.Click += (send1, e1) =>
+                {
+                    m_savedFilters.Remove(item.Key);
+                    SaveFilters();
+
+                };
+                deleteToolStripMenuItem.DropDownItems.Add(button);
+            }
+        }
+
+        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string item = Interaction.InputBox("Provide a name.", "Save As", "Name");
+            if (string.IsNullOrWhiteSpace(item))
+                return;
+
+            SaveCurrentTemplete(item);
+        }
+
+        private void SaveCurrentTemplete(string item)
+        {
+            var ms = new MemoryStream();
+            ms.Write((byte)1);
+            ms.Write(m_filters.Count);
+            foreach (var filter in m_filters)
+            {
+                ms.Write((byte)filter.TypeCode);
+                filter.Save(ms);
+            }
+
+            m_savedFilters[item] = ms.ToArray();
+
+            SaveFilters();
+        }
+
+        private void LoadCurrentTemplete(string item)
+        {
+            List<IMessageMatch> filters = new List<IMessageMatch>();
+            var ms = new MemoryStream(m_savedFilters[item]);
+            byte version = ms.ReadNextByte();
+            switch (version)
+            {
+                case 1:
+                    int count = ms.ReadInt32();
+                    while (count > 0)
+                    {
+                        count--;
+                        switch ((FilterType)ms.ReadNextByte())
+                        {
+                            case FilterType.Timestamp:
+                                filters.Add(new MatchTimestamp(ms));
+                                break;
+                            case FilterType.Verbose:
+                                filters.Add(new MatchVerbose(ms));
+                                break;
+                            case FilterType.Type:
+                                filters.Add(new MatchType(ms));
+                                break;
+                            case FilterType.Event:
+                                filters.Add(new MatchEventName(ms));
+                                break;
+                            case FilterType.Description:
+                                filters.Add(new MatchMessageName(ms));
+                                break;
+                            case FilterType.Error:
+                                filters.Add(new MatchErrorName(ms));
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                    }
+
+                    m_filters = filters;
+                    LstFilters.Items.Clear();
+                    LstFilters.Items.AddRange(filters.Cast<object>().ToArray());
+                    RefreshFilters();
+                    break;
+                default:
+                    throw new NotSupportedException();
+            }
+
+        }
+
+        private void btnFilteredLoad_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new OpenFileDialog())
+            {
+                if (m_logPath != null)
+                {
+                    dlg.InitialDirectory = m_logPath;
+                    dlg.RestoreDirectory = true;
+                }
+                dlg.Filter = "Log File (Compressed)|*.Logz";
+                dlg.Multiselect = true;
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    m_messages.Clear();
+                    foreach (var file in dlg.FileNames)
+                    {
+                        var messages = LogFileReader.Read(file);
+                        m_messages.AddRange(messages.Where(y => m_filters.All(x => x.IsIncluded(y))));
+                    }
+                }
+                RefreshFilters();
+            }
+        }
+
+        private void btnSaveSelected_Click(object sender, EventArgs e)
+        {
+            using (SaveFileDialog dlgSave = new SaveFileDialog())
+            {
+                dlgSave.Filter = "Log File (Compressed)|*.Logz";
+
+                if (dlgSave.ShowDialog() == DialogResult.OK)
+                {
+                    using (var fileWriter = new LogFileWriter(dlgSave.FileName))
+                    {
+                        foreach (LogMessage message in m_messages)
+                        {
+                            if (m_filters.All(x => x.IsIncluded(message)))
+                            {
+                                fileWriter.Write(message, false);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

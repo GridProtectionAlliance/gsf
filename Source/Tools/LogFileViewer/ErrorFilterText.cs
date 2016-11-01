@@ -34,8 +34,8 @@ namespace LogFileViewer
         public ErrorFilterText(string errorText)
         {
             InitializeComponent();
-            ErrorText = errorText;
-            TxtErrorName.Text = errorText;
+            ErrorText = errorText.Trim("\t \r\n".ToCharArray());
+            TxtErrorName.Text = errorText.Trim("\t \r\n".ToCharArray());
         }
 
         private void TxtErrorName_TextChanged(object sender, EventArgs e)

@@ -22,5 +22,29 @@ namespace LogFileViewer.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool HasBeenUpgraded {
+            get {
+                return ((bool)(this["HasBeenUpgraded"]));
+            }
+            set {
+                this["HasBeenUpgraded"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SavedFilters {
+            get {
+                return ((string)(this["SavedFilters"]));
+            }
+            set {
+                this["SavedFilters"] = value;
+            }
+        }
     }
 }
