@@ -1,6 +1,6 @@
-﻿namespace OGE.Core.GSF.Diagnostics.UI
+﻿namespace LogFileViewer
 {
-    partial class FrmErrorFilterText
+    partial class ErrorFilterText
     {
         /// <summary>
         /// Required designer variable.
@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ErrorFilterText));
             this.TxtErrorName = new System.Windows.Forms.TextBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
@@ -126,13 +127,14 @@
             this.BtnDone.UseVisualStyleBackColor = true;
             this.BtnDone.Click += new System.EventHandler(this.BtnDone_Click);
             // 
-            // FrmErrorFilterText
+            // ErrorFilterText
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(722, 433);
             this.Controls.Add(this.splitContainer1);
-            this.Name = "FrmErrorFilterText";
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Name = "ErrorFilterText";
             this.Text = "Text Filter";
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();

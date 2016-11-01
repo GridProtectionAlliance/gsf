@@ -1,26 +1,25 @@
 ﻿using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Log Viewer")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Log Viewer")]
-[assembly: AssemblyCopyright("Copyright ©  2016")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
+[assembly: AssemblyTitle("LogFileViewer")]
+[assembly: AssemblyDescription("Opens and Filters Binary Log Files")]
+[assembly: AssemblyCompany("Grid Protection Alliance")]
+[assembly: AssemblyProduct("Grid Solutions Framework")]
+[assembly: AssemblyCopyright("Copyright © GPA, 2016.  All Rights Reserved.")]
+
+#if DEBUG
+[assembly: AssemblyConfiguration("Debug Build")]
+#else
+[assembly: AssemblyConfiguration("Release Build")]
+#endif
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 
 // COM, set the ComVisible attribute to true on that type.
 [assembly: ComVisible(false)]
-
-// The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("b04cac0f-ca13-4a19-8857-f55619638cd9")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -31,6 +30,6 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
-// [assembly: AssemblyVersion("2.1.360.0")]
-[assembly: AssemblyVersion("2.1.360.0")]
-[assembly: AssemblyFileVersion("2.1.360.0")]
+// [assembly: AssemblyVersion("2.1.361.0")]
+[assembly: AssemblyVersion("2.1.361.0")]
+[assembly: AssemblyFileVersion("2.1.361.0")]

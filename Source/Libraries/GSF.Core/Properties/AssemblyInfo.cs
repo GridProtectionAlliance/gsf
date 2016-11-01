@@ -28,8 +28,8 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // Assembly identity attributes.
-[assembly: AssemblyVersion("2.1.360.0")]
-[assembly: AssemblyInformationalVersion("2.1.360-beta")]
+[assembly: AssemblyVersion("2.1.361.0")]
+[assembly: AssemblyInformationalVersion("2.1.361-beta")]
 
 // Informational attributes.
 [assembly: AssemblyCompany("Grid Protection Alliance")]

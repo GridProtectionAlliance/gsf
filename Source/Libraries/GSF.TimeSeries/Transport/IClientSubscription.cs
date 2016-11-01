@@ -133,6 +133,14 @@ namespace GSF.TimeSeries.Transport
         {
             get;
         }
+        /// <summary>
+        /// Gets or sets the measurement reporting interval.
+        /// </summary>
+        int MeasurementReportingInterval
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Handles the confirmation message received from the
