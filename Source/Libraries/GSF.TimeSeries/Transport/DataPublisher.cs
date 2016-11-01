@@ -1581,8 +1581,8 @@ namespace GSF.TimeSeries.Transport
                     if (!filterToTemporalSessions || hasActiveTemporalSession)
                     {
                         clientEnumeration.Append(
-                            $"  {i.ToString().PadLeft(3)} - {connection.ConnectionID}\r\n"+
-                            $"          {connection.SubscriberInfo}\r\n"+ GetOperationalModes(connection) +
+                            $"  {i.ToString().PadLeft(3)} - {connection.ConnectionID}\r\n" +
+                            $"          {connection.SubscriberInfo}\r\n" + GetOperationalModes(connection) +
                             $"          Active Temporal Session = {(hasActiveTemporalSession ? "Yes" : "No")}\r\n\r\n");
                     }
                 }
@@ -2389,7 +2389,7 @@ namespace GSF.TimeSeries.Transport
             bool success = false;
 
             // Attempt to lookup associated client connection
-            if (m_clientConnections.TryGetValue(clientID, out connection) && (object)connection != null)
+            if (m_clientConnections.TryGetValue(clientID, out connection) && (object)connection != null && !connection.HasClientNotFoundExceptionOccurred)
             {
                 try
                 {
@@ -2496,8 +2496,17 @@ namespace GSF.TimeSeries.Transport
                 catch (InvalidOperationException ex)
                 {
                     // Could still be processing threads with client data after client has been disconnected, this can be safely ignored
-                    if (!ex.Message.StartsWith("No client found"))
+                    if (ex.Message.StartsWith("No client found"))
+                    {
+                        if ((object)connection != null)
+                        {
+                            connection.HasClientNotFoundExceptionOccurred = true;
+                        }
+                    }
+                    else
+                    {
                         OnProcessException(new InvalidOperationException("Failed to send response packet to client due to exception: " + ex.Message, ex));
+                    }
                 }
                 catch (Exception ex)
                 {

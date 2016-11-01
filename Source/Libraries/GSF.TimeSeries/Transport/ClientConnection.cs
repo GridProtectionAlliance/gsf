@@ -76,6 +76,7 @@ namespace GSF.TimeSeries.Transport
         private OperationalModes m_operationalModes;
         private Encoding m_encoding;
         private bool m_disposed;
+        private bool m_hasClientNotFoundExceptionExceptionOccurred;
 
         #endregion
 
@@ -303,6 +304,29 @@ namespace GSF.TimeSeries.Transport
             set
             {
                 m_isSubscribed = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets/Sets a flag to indicate that the error "No client found for ID [Guid]" exception has been thrown. 
+        /// </summary>
+        /// <returns>
+        /// Since this message might be thrown many times before before the communication channel has a chance to disconnect
+        /// the socket, it's best to stop attempting to send data when this error has been encountered.
+        /// 
+        /// OGE has had issues when a client disconnects, tens of thousands of exceptions get thrown (every 3ms), 
+        /// This has caused the entire system to become unresponsive and causes all PMUs to drop offline.
+        /// System only recovers when the client disconnect process finally executes as this can take some time to occur.
+        /// </returns>
+        public bool HasClientNotFoundExceptionOccurred
+        {
+            get
+            {
+                return m_hasClientNotFoundExceptionExceptionOccurred;
+            }
+            set
+            {
+                m_hasClientNotFoundExceptionExceptionOccurred = value;
             }
         }
 
