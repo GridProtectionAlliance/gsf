@@ -212,7 +212,12 @@ namespace GSF.TimeSeries.Adapters
         private LocalCache m_injectMeasurementsLocalCache;
 
         private int m_pendingMeasurements;
+        /// <summary>
+        /// Once this many measurements have been queued, a route operation will not wait the mandatory wait time
+        /// and will immediately start the routing process.
+        /// </summary>
         private int m_maxPendingMeasurements;
+
 
         /// <summary>
         /// Creates a <see cref="RouteMappingHighLatencyLowCpu"/>
@@ -335,9 +340,13 @@ namespace GSF.TimeSeries.Adapters
 
             try
             {
+                int measurementsRouted = 0;
+
                 IMeasurement[] measurements;
                 while (m_list.TryDequeue(out measurements))
                 {
+                    measurementsRouted += measurements.Length;
+
                     Interlocked.Add(ref m_pendingMeasurements, -measurements.Length);
 
                     m_measurementsRoutedInputFrames++;
@@ -359,18 +368,23 @@ namespace GSF.TimeSeries.Adapters
                         }
                     }
 
-                    //Limit routing to no more than 1000 measurements per sub-route.
-                    foreach (var consumer in map.GlobalDestinationList)
+                    //Limit routing to between 100 and 200 measurements per sub-route.
+                    if (measurementsRouted > 100)
                     {
-                        if (consumer.MeasurementsToRoute.Count > 1000)
+                        measurementsRouted = 0;
+                        foreach (var consumer in map.GlobalDestinationList)
                         {
-                            foreach (var c2 in map.GlobalDestinationLookup.Values)
+                            if (consumer.MeasurementsToRoute.Count > 100)
                             {
-                                c2.RoutingComplete();
+                                foreach (var c2 in map.GlobalDestinationLookup.Values)
+                                {
+                                    c2.RoutingComplete();
+                                }
+                                break;
                             }
-                            break;
                         }
                     }
+
                 }
             }
             finally
@@ -381,6 +395,7 @@ namespace GSF.TimeSeries.Adapters
                 }
             }
         }
+
 
         private void Route(IMeasurement[] measurements)
         {

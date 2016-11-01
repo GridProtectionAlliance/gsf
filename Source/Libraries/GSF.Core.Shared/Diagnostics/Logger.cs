@@ -25,6 +25,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Security;
+using System.Security.Permissions;
 using System.Threading;
 
 namespace GSF.Diagnostics
@@ -79,7 +81,22 @@ namespace GSF.Diagnostics
             {
                 try
                 {
+                    var perm = new ReflectionPermission(PermissionState.Unrestricted);
+                    perm.Demand();
+                }
+                catch (SecurityException)
+                {
+                    //Cannot raise messages if this permission is denied.
+                    return;
+                }
+
+                try
+                {
                     EventFirstChanceException.Publish(null, null, e.Exception);
+                }
+                catch(Exception)
+                {
+                    //swallow any exceptions.
                 }
                 finally
                 {

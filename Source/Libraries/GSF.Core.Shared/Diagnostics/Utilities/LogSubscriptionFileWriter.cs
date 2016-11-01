@@ -72,6 +72,9 @@ namespace GSF.Diagnostics
 
         private void m_flushTask_Running(object sender, EventArgs<ScheduledTaskRunningReason> e)
         {
+            if (m_path == null)
+                return;
+
             LogMessage message;
             bool hasWrittenLogMessage = false;
             while (m_messageQueue.TryDequeue(out message))
