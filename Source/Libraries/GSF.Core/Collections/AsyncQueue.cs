@@ -97,6 +97,14 @@ namespace GSF.Collections
                     m_processItemOperation = new MixedSynchronizedOperation(TryProcessItem, OnProcessException);
                     break;
 
+                case SynchronizedOperationType.DedicatedBackground:
+                    m_processItemOperation = new DedicatedSynchronizedOperation(TryProcessItem, OnProcessException, true);
+                    break;
+
+                case SynchronizedOperationType.DedicatedForeground:
+                    m_processItemOperation = new DedicatedSynchronizedOperation(TryProcessItem, OnProcessException, false);
+                    break;
+
                 default:
                     throw new ArgumentOutOfRangeException("synchronizedOperationType");
             }

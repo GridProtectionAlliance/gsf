@@ -81,6 +81,7 @@
   <ItemGroup>
     <Compile Include="AnalogSection.cs" />
     <Compile Include="Channel.cs" />
+    <Compile Include="CommaSeparatedEventReport.cs" />
     <Compile Include="Cycle.cs" />
     <Compile Include="EventFile.cs" />
     <Compile Include="EventHistoryRecord.cs" />
@@ -101,7 +102,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">
-    <CallTarget Targets="SignBuild"/>
+    <CallTarget Targets="SignBuild" />
   </Target>
   <Target Name="SignBuild" Condition="'$(SIGNTOOL)' != ''">
     <Exec Command="$(SIGNTOOL) $(TargetPath)" />

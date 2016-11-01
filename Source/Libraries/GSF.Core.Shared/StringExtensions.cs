@@ -100,7 +100,7 @@ using System.Threading.Tasks;
 namespace GSF
 {
     /// <summary>Defines extension functions related to string manipulation.</summary>
-    public static class StringExtensions
+    public static partial class StringExtensions
     {
         /// <summary>
         /// Parses a string intended to represent a boolean value.

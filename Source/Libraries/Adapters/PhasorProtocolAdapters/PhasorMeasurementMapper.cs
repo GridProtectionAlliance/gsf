@@ -42,6 +42,7 @@ using GSF.PhasorProtocols;
 using GSF.PhasorProtocols.Anonymous;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Data;
 using GSF.TimeSeries.Statistics;
 using GSF.Units;
 using GSF.Units.EE;
@@ -1344,8 +1345,7 @@ namespace PhasorProtocolAdapters
 
             Dictionary<string, DefinedMeasurement> definedMeasurements = new Dictionary<string, DefinedMeasurement>();
 
-            // Have to use a Convert expression for DeviceID column in Select function here since SQLite doesn't report data types for COALESCE based columns
-            foreach (DataRow row in DataSource.Tables["ActiveMeasurements"].Select($"Convert(DeviceID, 'System.String')='{SharedMappingID}'"))
+            foreach (DataRow row in DataSourceLookups.GetLookupCache(DataSource).ActiveMeasurements.LookupByDeviceID(SharedMappingID))
             {
                 signalReference = row["SignalReference"].ToString();
 
