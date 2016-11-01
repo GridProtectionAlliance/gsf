@@ -261,7 +261,6 @@ namespace GSF.PhasorProtocols.UI.UserControls
             m_displayedMeasurement = new ObservableCollection<RealTimeMeasurement>();
             m_displayedMeasurement.CollectionChanged += m_displayedMeasurement_CollectionChanged;
             m_restartConnectionCycle = true;
-            m_numberOfDataPointsToPlot = Math.Abs(m_numberOfDataPointsToPlot);
             m_xAxisDataCollection = new int[m_numberOfDataPointsToPlot];
             m_refreshRate = Ticks.FromMilliseconds(m_chartRefreshInterval);
             TextBlockMeasurementRefreshInterval.Text = m_measurementsDataRefreshInterval.ToString();
@@ -352,13 +351,13 @@ namespace GSF.PhasorProtocols.UI.UserControls
             if (m_frequencyRangeMax.IsInfinite() || m_frequencyRangeMax.IsNaN())
                 m_frequencyRangeMax = 60.05;
 
-            // DataRect.Create didn't like it when the min > max.
-            if (m_frequencyRangeMin > m_frequencyRangeMax)
-            {
-                double temp = m_frequencyRangeMin;
-                m_frequencyRangeMin = m_frequencyRangeMax;
-                m_frequencyRangeMax = temp;
-            }
+            //// DataRect.Create didn't like it when the min > max.
+            //if (m_frequencyRangeMin > m_frequencyRangeMax)
+            //{
+            //    double temp = m_frequencyRangeMin;
+            //    m_frequencyRangeMin = m_frequencyRangeMax;
+            //    m_frequencyRangeMax = temp;
+            //}
 
             ChartPlotterDynamic.Visible = DataRect.Create(0, m_frequencyRangeMin, m_numberOfDataPointsToPlot, m_frequencyRangeMax);
             PhaseAnglePlotter.Visible = DataRect.Create(0, -180, m_numberOfDataPointsToPlot, 180);
@@ -392,12 +391,36 @@ namespace GSF.PhasorProtocols.UI.UserControls
             m_displayVoltageYAxis = IsolatedStorageManager.ReadFromIsolatedStorage("DisplayVoltageYAxis").ToString().ParseBoolean();
             m_useLocalClockAsRealtime = IsolatedStorageManager.ReadFromIsolatedStorage("UseLocalClockAsRealtime").ToString().ParseBoolean();
             m_ignoreBadTimestamps = IsolatedStorageManager.ReadFromIsolatedStorage("IgnoreBadTimestamps").ToString().ParseBoolean();
+            ValidateSettingsAfterRead();
 
             if (reloadSelectedMeasurements)
             {
                 m_selectedSignalIDs = IsolatedStorageManager.ReadFromIsolatedStorage("InputMonitoringPoints").ToString();
                 string[] signalIDs = m_selectedSignalIDs.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
                 AutoSelectMeasurements(signalIDs);
+            }
+        }
+
+        /// <summary>
+        /// Makes sure the user doesn't enter values that will crash the system.
+        /// </summary>
+        private void ValidateSettingsAfterRead()
+        {
+            m_numberOfDataPointsToPlot = Math.Abs(m_numberOfDataPointsToPlot);
+            //m_framesPerSecond = Math.Abs(m_framesPerSecond);
+            //m_lagTime = Math.Abs(m_lagTime);
+            //m_leadTime = Math.Abs(m_leadTime);
+            //m_chartRefreshInterval = Math.Abs(m_chartRefreshInterval);
+            //m_statisticsDataRefershInterval = Math.Abs(m_statisticsDataRefershInterval);
+            //m_measurementsDataRefreshInterval = Math.Abs(m_measurementsDataRefreshInterval);
+            m_frequencyRangeMin = Math.Abs(m_frequencyRangeMin);
+            m_frequencyRangeMax = Math.Abs(m_frequencyRangeMax);
+
+            if (m_frequencyRangeMin > m_frequencyRangeMax)
+            {
+                double temp = m_frequencyRangeMin;
+                m_frequencyRangeMin = m_frequencyRangeMax;
+                m_frequencyRangeMax = temp;
             }
         }
 
@@ -850,6 +873,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
         private void ButtonSaveSettings_Click(object sender, RoutedEventArgs e)
         {
+            ValidateSettingsBeforeWrite();
             IsolatedStorageManager.WriteToIsolatedStorage("InputMonitoringPoints", TextBoxLastSelectedMeasurements.Text);
             IsolatedStorageManager.WriteToIsolatedStorage("ForceIPv4", CheckBoxForceIPv4.IsChecked.GetValueOrDefault());
             IsolatedStorageManager.WriteToIsolatedStorage("NumberOfDataPointsToPlot", TextBoxNumberOFDataPointsToPlot.Text);
@@ -876,6 +900,19 @@ namespace GSF.PhasorProtocols.UI.UserControls
             PopupSettings.IsOpen = false;
 
             CommonFunctions.LoadUserControl(CommonFunctions.GetHeaderText("Graph Real-time Measurements"), typeof(InputStatusMonitorUserControl));
+        }
+
+        private void ValidateSettingsBeforeWrite()
+        {
+            double frequencyRangeMin, frequencyRangeMax;
+            double.TryParse(TextBoxFrequencyRangeMin.Text, out frequencyRangeMin);
+            double.TryParse(TextBoxFrequencyRangeMax.Text, out frequencyRangeMax);
+            if (frequencyRangeMin > frequencyRangeMax)
+            {
+                string temp = TextBoxFrequencyRangeMin.Text;
+                TextBoxFrequencyRangeMin.Text = TextBoxFrequencyRangeMax.Text;
+                TextBoxFrequencyRangeMax.Text = temp;
+            }
         }
 
         private void PopulateSettings()
