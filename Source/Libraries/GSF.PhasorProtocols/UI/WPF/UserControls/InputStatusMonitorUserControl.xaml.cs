@@ -351,13 +351,13 @@ namespace GSF.PhasorProtocols.UI.UserControls
             if (m_frequencyRangeMax.IsInfinite() || m_frequencyRangeMax.IsNaN())
                 m_frequencyRangeMax = 60.05;
 
-            //// DataRect.Create didn't like it when the min > max.
-            //if (m_frequencyRangeMin > m_frequencyRangeMax)
-            //{
-            //    double temp = m_frequencyRangeMin;
-            //    m_frequencyRangeMin = m_frequencyRangeMax;
-            //    m_frequencyRangeMax = temp;
-            //}
+            // DataRect.Create didn't like it when the min > max.
+            if (m_frequencyRangeMin > m_frequencyRangeMax)
+            {
+                double temp = m_frequencyRangeMin;
+                m_frequencyRangeMin = m_frequencyRangeMax;
+                m_frequencyRangeMax = temp;
+            }
 
             ChartPlotterDynamic.Visible = DataRect.Create(0, m_frequencyRangeMin, m_numberOfDataPointsToPlot, m_frequencyRangeMax);
             PhaseAnglePlotter.Visible = DataRect.Create(0, -180, m_numberOfDataPointsToPlot, 180);
