@@ -453,7 +453,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GSF.Geo", "Libraries\GSF.Ge
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrafanaAdapters", "Libraries\Adapters\GrafanaAdapters\GrafanaAdapters.csproj", "{3C8D8504-1880-4CC4-AB1A-8793F3625A31}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "GSF.Core.CLR.SharedProject", "Libraries\GSF.Core.CLR.SharedProject\GSF.Core.CLR.SharedProject\GSF.Core.CLR.SharedProject.shproj", "{5CE3D6F4-D38D-4F71-ACB6-79681CFE47DF}"
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "GSF.Core.Shared", "Libraries\GSF.Core.CLR.SharedProject\GSF.Core.CLR.SharedProject\GSF.Core.Shared.shproj", "{5CE3D6F4-D38D-4F71-ACB6-79681CFE47DF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Log Viewer", "Tools\Log Viewer\Log Viewer.csproj", "{B04CAC0F-CA13-4A19-8857-F55619638CD9}"
 EndProject
