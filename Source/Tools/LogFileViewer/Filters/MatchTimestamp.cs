@@ -81,11 +81,11 @@ namespace LogFileViewer.Filters
             {
                 if (m_before)
                 {
-                    return "Exclude if before: " + m_timestamp;
+                    return "Exclude if before: " + m_timestamp.ToLocalTime();
                 }
                 else
                 {
-                    return "Exclude if after: " + m_timestamp;
+                    return "Exclude if after: " + m_timestamp.ToLocalTime();
                 }
             }
         }

@@ -29,9 +29,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Forms;
 using GSF.Diagnostics;
 using GSF.IO;
+using GSF.Threading;
 using LogFileViewer.Filters;
 using LogFileViewer.Properties;
 using Microsoft.VisualBasic;
@@ -186,10 +189,12 @@ namespace LogFileViewer
                 ToolStripButton button = new ToolStripButton(item.Item1);
                 button.Click += (send1, e1) =>
                     {
-                        item.Item2();
-                        LstFilters.Items.Add(filter);
-                        m_filters.Add(filter);
-                        RefreshFilters();
+                        if (item.Item2())
+                        {
+                            LstFilters.Items.Add(filter);
+                            m_filters.Add(filter);
+                            RefreshFilters();
+                        }
                     };
                 menu.Items.Add(button);
             }
