@@ -178,6 +178,7 @@ namespace GSF.Collections
         private sealed class TemporalTask : IDisposable
         {
             private readonly ProcessQueue<T> m_parent;
+            private readonly CancellationTokenSource m_tokenSource;
             private readonly Task m_task;
             private readonly T m_item;
             private readonly T[] m_items;
@@ -188,7 +189,9 @@ namespace GSF.Collections
                 m_parent = parent;
                 m_item = item;
                 Thread.MemoryBarrier();
-                m_task = Task.Factory.StartNew(ProcessItem);
+
+                m_tokenSource = new CancellationTokenSource();
+                m_task = Task.Factory.StartNew(ProcessItem, m_tokenSource.Token);
             }
 
             private TemporalTask(ProcessQueue<T> parent, T[] items)
@@ -196,7 +199,9 @@ namespace GSF.Collections
                 m_parent = parent;
                 m_items = items;
                 Thread.MemoryBarrier();
-                m_task = Task.Factory.StartNew(ProcessItems);
+
+                m_tokenSource = new CancellationTokenSource();
+                m_task = Task.Factory.StartNew(ProcessItems, m_tokenSource.Token);
             }
 
             ~TemporalTask()
@@ -216,6 +221,8 @@ namespace GSF.Collections
                 // processor's cache is flushed, then it should be possible for m_parent and even
                 // m_item to be null. The memory barriers should prevent this reordering of events.
                 Thread.MemoryBarrier();
+
+                m_parent.CancellationToken = new CompatibleCancellationToken(m_tokenSource);
                 m_parent.ProcessItem(m_item);
             }
 
@@ -231,13 +238,19 @@ namespace GSF.Collections
                 // processor's cache is flushed, then it should be possible for m_parent and even
                 // m_items to be null. The memory barriers should prevent this reordering of events.
                 Thread.MemoryBarrier();
+
+                m_parent.CancellationToken = new CompatibleCancellationToken(m_tokenSource);
                 m_parent.ProcessItems(m_items);
             }
 
             // Blocks calling thread until specified process timeout has expired.
             private bool Wait()
             {
-                return m_task.Wait(m_parent.ProcessTimeout);
+                if (m_task.Wait(m_parent.ProcessTimeout, m_tokenSource.Token))
+                    return true;
+
+                m_tokenSource.Cancel();
+                return false;
             }
 
             void IDisposable.Dispose()
@@ -256,6 +269,8 @@ namespace GSF.Collections
                         {
                             if ((object)m_task != null && (m_task.Status == TaskStatus.RanToCompletion || m_task.Status == TaskStatus.Faulted || m_task.Status == TaskStatus.Canceled))
                                 m_task.Dispose();
+
+                            m_tokenSource?.Dispose();
                         }
                     }
                     finally
@@ -430,6 +445,7 @@ namespace GSF.Collections
 
         private ISynchronizedOperation m_synchronizedOperation;
         private SynchronizedOperationType m_synchronizedOperationType;
+        private readonly ThreadLocal<ICancellationToken> m_threadLocalCancellationToken;
 
         private IList<T> m_processList;
         private int m_maximumThreads;
@@ -530,11 +546,12 @@ namespace GSF.Collections
         protected ProcessQueue(ProcessItemFunctionSignature processItemFunction, ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, IList<T> processList, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
             if ((object)processList == null)
-                throw new ArgumentNullException("processList", "ProcessQueue<T> base list cannot be null");
+                throw new ArgumentNullException(nameof(processList), "ProcessQueue<T> base list cannot be null");
 
             m_processItemFunction = processItemFunction;    // Defining this function creates a ProcessingStyle = OneAtATime process queue
             m_processItemsFunction = processItemsFunction;  // Defining this function creates a ProcessingStyle = ManyAtOnce process queue
             m_canProcessItemFunction = canProcessItemFunction;
+            m_threadLocalCancellationToken = new ThreadLocal<ICancellationToken>(false);
             m_processList = processList;
             m_maximumThreads = maximumThreads;
             m_processTimeout = processTimeout;
@@ -1102,6 +1119,25 @@ namespace GSF.Collections
         }
 
         /// <summary>
+        /// Gets the per processing thread cancellation token to check when a <see cref="ProcessTimeout"/> is specified.
+        /// </summary>
+        /// <remarks>
+        /// This token should be checked in the user implemented <see cref="ProcessItemFunction"/> or <see cref="ProcessItemsFunction"/> to
+        /// determine if a timeout has occurred so that the code can cleanly exit.
+        /// </remarks>
+        public ICancellationToken CancellationToken
+        {
+            get
+            {
+                return m_threadLocalCancellationToken.Value;
+            }
+            private set
+            {
+                m_threadLocalCancellationToken.Value = value;
+            }
+        }
+
+        /// <summary>
         /// Gets the current run-time statistics of the <see cref="ProcessQueue{T}"/> as a single group of values.
         /// </summary>
         public virtual ProcessQueueStatistics CurrentStatistics
@@ -1306,6 +1342,8 @@ namespace GSF.Collections
                             m_processTimer.Elapsed -= ProcessTimerThreadProc;
                             m_processTimer.Dispose();
                         }
+
+                        m_threadLocalCancellationToken?.Dispose();
                         m_processTimer = null;
                         m_processList = null;
                         m_processItemFunction = null;
@@ -1780,7 +1818,7 @@ namespace GSF.Collections
                 {
                     // We manually implement this feature if process queue is not a List(Of T).
                     if ((object)collection == null)
-                        throw new ArgumentNullException("collection", "collection is null");
+                        throw new ArgumentNullException(nameof(collection), "collection is null");
 
                     foreach (T item in collection)
                     {
@@ -1877,7 +1915,7 @@ namespace GSF.Collections
 
                     // Validates start and stop index.
                     if (startIndex < 0 || count < 0 || stopIndex > InternalList.Count - 1)
-                        throw new ArgumentOutOfRangeException("index", "index and/or count is outside the range of valid indexes for the queue");
+                        throw new ArgumentOutOfRangeException(nameof(index), "index and/or count is outside the range of valid indexes for the queue");
 
                     if ((object)comparer == null)
                         comparer = Comparer<T>.Default;
@@ -1963,7 +2001,7 @@ namespace GSF.Collections
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     if ((object)converter == null)
-                        throw new ArgumentNullException("converter", "converter is null");
+                        throw new ArgumentNullException(nameof(converter), "converter is null");
 
                     return InternalList.Select(item => converter(item)).ToList();
                 }
@@ -1989,7 +2027,7 @@ namespace GSF.Collections
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     if ((object)match == null)
-                        throw new ArgumentNullException("match", "match is null");
+                        throw new ArgumentNullException(nameof(match), "match is null");
 
                     return InternalList.Any(t => match(t));
                 }
@@ -2015,7 +2053,7 @@ namespace GSF.Collections
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     if ((object)match == null)
-                        throw new ArgumentNullException("match", "match is null");
+                        throw new ArgumentNullException(nameof(match), "match is null");
 
                     T foundItem = default(T);
                     int foundIndex = FindIndex(match);
@@ -2046,7 +2084,7 @@ namespace GSF.Collections
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     if ((object)match == null)
-                        throw new ArgumentNullException("match", "match is null");
+                        throw new ArgumentNullException(nameof(match), "match is null");
 
                     return InternalList.Where(item => match(item)).ToList();
                 }
@@ -2103,10 +2141,10 @@ namespace GSF.Collections
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     if (startIndex < 0 || count < 0 || startIndex + count > InternalList.Count)
-                        throw new ArgumentOutOfRangeException("startIndex", "startIndex and/or count is outside the range of valid indexes for the queue");
+                        throw new ArgumentOutOfRangeException(nameof(startIndex), "startIndex and/or count is outside the range of valid indexes for the queue");
 
                     if ((object)match == null)
-                        throw new ArgumentNullException("match", "match is null");
+                        throw new ArgumentNullException(nameof(match), "match is null");
 
                     int foundindex = -1;
 
@@ -2141,7 +2179,7 @@ namespace GSF.Collections
                 {
                     // We manually implement this feature if process queue is not a List(Of T)
                     if ((object)match == null)
-                        throw (new ArgumentNullException("match", "match is null"));
+                        throw (new ArgumentNullException(nameof(match), "match is null"));
 
                     T foundItem = default(T);
                     int foundIndex = FindLastIndex(match);
@@ -2203,10 +2241,10 @@ namespace GSF.Collections
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     if (startIndex < 0 || count < 0 || startIndex + count > InternalList.Count)
-                        throw new ArgumentOutOfRangeException("startIndex", "startIndex and/or count is outside the range of valid indexes for the queue");
+                        throw new ArgumentOutOfRangeException(nameof(startIndex), "startIndex and/or count is outside the range of valid indexes for the queue");
 
                     if ((object)match == null)
-                        throw new ArgumentNullException("match", "match is null");
+                        throw new ArgumentNullException(nameof(match), "match is null");
 
                     int foundindex = -1;
 
@@ -2240,7 +2278,7 @@ namespace GSF.Collections
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     if ((object)action == null)
-                        throw new ArgumentNullException("action", "action is null");
+                        throw new ArgumentNullException(nameof(action), "action is null");
 
                     foreach (T item in InternalList)
                     {
@@ -2274,7 +2312,7 @@ namespace GSF.Collections
                         throw new ArgumentException("Index and count do not denote a valid range of elements in the queue");
 
                     if (index < 0 || count < 0)
-                        throw new ArgumentOutOfRangeException("index", "Index and/or count is outside the range of valid indexes for the queue");
+                        throw new ArgumentOutOfRangeException(nameof(index), "Index and/or count is outside the range of valid indexes for the queue");
 
                     List<T> items = new List<T>();
 
@@ -2323,7 +2361,7 @@ namespace GSF.Collections
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     if (index < 0 || count < 0 || index + count > InternalList.Count)
-                        throw new ArgumentOutOfRangeException("index", "Index and/or count is outside the range of valid indexes for the queue");
+                        throw new ArgumentOutOfRangeException(nameof(index), "Index and/or count is outside the range of valid indexes for the queue");
 
                     int foundindex = -1;
                     Comparer<T> comparer = Comparer<T>.Default;
@@ -2361,10 +2399,10 @@ namespace GSF.Collections
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     if (index < 0 || index > InternalList.Count - 1)
-                        throw new ArgumentOutOfRangeException("index", "index is outside the range of valid indexes for the queue");
+                        throw new ArgumentOutOfRangeException(nameof(index), "index is outside the range of valid indexes for the queue");
 
                     if ((object)collection == null)
-                        throw new ArgumentNullException("collection", "collection is null");
+                        throw new ArgumentNullException(nameof(collection), "collection is null");
 
                     foreach (T item in collection)
                     {
@@ -2423,7 +2461,7 @@ namespace GSF.Collections
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     if (index < 0 || count < 0 || index + count > InternalList.Count)
-                        throw new ArgumentOutOfRangeException("index", "Index and/or count is outside the range of valid indexes for the queue");
+                        throw new ArgumentOutOfRangeException(nameof(index), "Index and/or count is outside the range of valid indexes for the queue");
 
                     int foundindex = -1;
                     Comparer<T> comparer = Comparer<T>.Default;
@@ -2459,7 +2497,7 @@ namespace GSF.Collections
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     if ((object)match == null)
-                        throw new ArgumentNullException("match", "match is null");
+                        throw new ArgumentNullException(nameof(match), "match is null");
 
                     int removedItems = 0;
 
@@ -2496,7 +2534,7 @@ namespace GSF.Collections
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     if (index < 0 || count < 0 || index + count > InternalList.Count)
-                        throw new ArgumentOutOfRangeException("index", "Index and/or count is outside the range of valid indexes for the queue");
+                        throw new ArgumentOutOfRangeException(nameof(index), "Index and/or count is outside the range of valid indexes for the queue");
 
                     for (int x = index + count - 1; x >= index; x--)
                     {
@@ -2535,7 +2573,7 @@ namespace GSF.Collections
                         throw new ArgumentException("Index and count do not denote a valid range of elements in the queue");
 
                     if (index < 0 || count < 0)
-                        throw new ArgumentOutOfRangeException("index", "Index and/or count is outside the range of valid indexes for the queue");
+                        throw new ArgumentOutOfRangeException(nameof(index), "Index and/or count is outside the range of valid indexes for the queue");
 
                     T item;
                     int stopIndex = index + count - 1;
@@ -2636,7 +2674,7 @@ namespace GSF.Collections
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     if ((object)comparison == null)
-                        throw new ArgumentNullException("comparison", "comparison is null");
+                        throw new ArgumentNullException(nameof(comparison), "comparison is null");
 
                     // This sort implementation is a little harsh, but the normal process queue uses List(Of T) and the
                     // keyed process queue is based on a sorted list anyway (i.e., no sorting needed); so, this alternate
@@ -2672,7 +2710,7 @@ namespace GSF.Collections
                 {
                     // We manually implement this feature, if process queue is not a List(Of T).
                     if ((object)match == null)
-                        throw (new ArgumentNullException("match", "match is null"));
+                        throw (new ArgumentNullException(nameof(match), "match is null"));
 
                     return InternalList.All(item => match(item));
                 }
