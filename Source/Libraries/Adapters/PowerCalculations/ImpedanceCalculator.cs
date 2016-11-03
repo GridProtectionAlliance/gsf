@@ -140,6 +140,12 @@ namespace PowerCalculations
             m_currentAngles = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.IPHA).ToArray();
             m_currentMagnitudes = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.IPHM).ToArray();
 
+            if (m_voltageAngles.Length != m_voltageMagnitudes.Length)
+                throw new InvalidOperationException("A different number of voltage magnitude and angle input measurement keys were supplied - the angles and magnitudes must be supplied in pairs, i.e., one voltage magnitude input measurement must be supplied for each voltage angle input measurement in a consecutive sequence (e.g., VA1;VM1; VA2;VM2)");
+
+            if (m_currentAngles.Length != m_currentMagnitudes.Length)
+                throw new InvalidOperationException("A different number of current magnitude and angle input measurement keys were supplied - the angles and magnitudes must be supplied in pairs, i.e., one current magnitude input measurement must be supplied for each current angle input measurement in a consecutive sequence (e.g., IA1;IM1; IA2;IM2)");
+
             if (m_voltageAngles.Length != 2)
                 throw new InvalidOperationException("Exactly two voltage angle input measurements are required for the impedance calculator, note that \"Vs\" angle/magnitude pair should be specified first followed by \"Vr\" angle/magnitude pair second.");
 
@@ -152,12 +158,6 @@ namespace PowerCalculations
             if (m_currentMagnitudes.Length != 2)
                 throw new InvalidOperationException("Exactly two current magnitude input measurements are required for the impedance calculator, note that \"Is\" angle/magnitude pair should be specified first followed by \"Ir\" angle/magnitude pair second.");
 
-            if (m_voltageAngles.Length != m_voltageMagnitudes.Length)
-                throw new InvalidOperationException("A different number of voltage magnitude and angle input measurement keys were supplied - the angles and magnitudes must be supplied in pairs, i.e., one voltage magnitude input measurement must be supplied for each voltage angle input measurement in a consecutive sequence (e.g., VA1;VM1; VA2;VM2)");
-
-            if (m_currentAngles.Length != m_currentMagnitudes.Length)
-                throw new InvalidOperationException("A different number of current magnitude and angle input measurement keys were supplied - the angles and magnitudes must be supplied in pairs, i.e., one current magnitude input measurement must be supplied for each current angle input measurement in a consecutive sequence (e.g., IA1;IM1; IA2;IM2)");
-
             // Make sure only these phasor measurements are used as input
             InputMeasurementKeys = m_voltageAngles.Concat(m_voltageMagnitudes).Concat(m_currentAngles).Concat(m_currentMagnitudes).ToArray();
 
@@ -168,10 +168,7 @@ namespace PowerCalculations
             Dictionary<string, string> settings = Settings;
             string setting;
 
-            if (settings.TryGetValue("ApplyLineToLineAdjustment", out setting))
-                ApplyLineToLineAdjustment = setting.ParseBoolean();
-            else
-                ApplyLineToLineAdjustment = true;
+            ApplyLineToLineAdjustment = !settings.TryGetValue("ApplyLineToLineAdjustment", out setting) || setting.ParseBoolean();
         }
 
         /// <summary>
