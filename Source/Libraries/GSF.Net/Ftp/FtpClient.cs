@@ -228,6 +228,23 @@ namespace GSF.Net.Ftp
         }
 
         /// <summary>
+        /// Gets or sets the timeout, in milliseconds, for
+        /// read and write operations, defaults to 30 seconds.
+        /// </summary>
+        [Browsable(true), Category("Configuration"), Description("Specify FTP server read/write timeout, if needed."), DefaultValue(30000)]
+        public int Timeout
+        {
+            get
+            {
+                return m_currentState.Timeout;
+            }
+            set
+            {
+                m_currentState.Timeout = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets current FTP session directory.
         /// </summary>
         [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]

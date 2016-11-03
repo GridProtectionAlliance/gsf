@@ -61,6 +61,12 @@ namespace GSF.Net.Ftp
         int Port { get; set; }
 
         /// <summary>
+        /// Gets or sets the timeout, in milliseconds, for
+        /// read and write operations, defaults to 30 seconds.
+        /// </summary>
+        int Timeout { get; set; }
+
+        /// <summary>
         /// Gets or sets current FTP session directory.
         /// </summary>
         FtpDirectory CurrentDirectory { get; set; }

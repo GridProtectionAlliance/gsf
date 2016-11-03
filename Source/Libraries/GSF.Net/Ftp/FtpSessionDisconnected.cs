@@ -53,6 +53,7 @@ namespace GSF.Net.Ftp
         private FtpClient m_host;
         private string m_server;
         private int m_port;
+        private int m_timeout;
         private readonly bool m_caseInsensitive;
         private bool m_disposed;
 
@@ -62,6 +63,7 @@ namespace GSF.Net.Ftp
 
         internal FtpSessionDisconnected(FtpClient h, bool caseInsensitive)
         {
+            m_timeout = 30000;
             m_port = 21;
             m_host = h;
             m_caseInsensitive = caseInsensitive;
@@ -100,6 +102,18 @@ namespace GSF.Net.Ftp
             set
             {
                 m_port = value;
+            }
+        }
+
+        public int Timeout
+        {
+            get
+            {
+                return m_timeout;
+            }
+            set
+            {
+                m_timeout = value;
             }
         }
 
@@ -178,6 +192,7 @@ namespace GSF.Net.Ftp
 
             ctrl.Server = m_server;
             ctrl.Port = m_port;
+            ctrl.Timeout = m_timeout;
             ctrl.Connect();
 
             try

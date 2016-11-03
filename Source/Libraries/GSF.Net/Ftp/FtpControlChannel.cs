@@ -88,6 +88,7 @@ namespace GSF.Net.Ftp
         private TcpClient m_connection;
         private string m_server;
         private int m_port;
+        private int m_timeout;
         private TransferMode m_currentTransferMode;
         private FtpResponse m_lastResponse;
         private bool m_disposed;
@@ -101,6 +102,7 @@ namespace GSF.Net.Ftp
             m_connection = new TcpClient();
             m_server = "localhost";
             m_port = 21;
+            m_timeout = 30000;
             m_sessionHost = host;
             m_currentTransferMode = TransferMode.Unknown;
         }
@@ -141,6 +143,18 @@ namespace GSF.Net.Ftp
             set
             {
                 m_port = value;
+            }
+        }
+
+        internal int Timeout
+        {
+            get
+            {
+                return m_timeout;
+            }
+            set
+            {
+                m_timeout = value;
             }
         }
 
@@ -224,7 +238,11 @@ namespace GSF.Net.Ftp
 
             try
             {
-                m_lastResponse = new FtpResponse(m_connection.GetStream());
+                NetworkStream stream = m_connection.GetStream();
+
+                stream.ReadTimeout = m_timeout;
+                stream.WriteTimeout = m_timeout;
+                m_lastResponse = new FtpResponse(stream);
 
                 if (m_lastResponse.Code != FtpResponse.ServiceReady)
                     throw new FtpServerDownException("FTP service unavailable.", m_lastResponse);

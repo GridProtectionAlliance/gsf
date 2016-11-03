@@ -107,6 +107,18 @@ namespace GSF.Net.Ftp
             }
         }
 
+        public int Timeout
+        {
+            get
+            {
+                return m_ctrlChannel.Timeout;
+            }
+            set
+            {
+                throw new InvalidOperationException();
+            }
+        }
+
         public FtpDirectory RootDirectory
         {
             get
