@@ -331,7 +331,7 @@ namespace GSF.TimeSeries
             systemSettings.Add("MaxThreadPoolIOPortThreads", DefaultMaxThreadPoolSize, "Defines the maximum number of allowed thread pool I/O completion port threads (used by socket layer).");
             systemSettings.Add("ConfigurationBackups", DefaultConfigurationBackups, "Defines the total number of older backup configurations to maintain.");
             systemSettings.Add("PreferCachedConfiguration", "False", "Set to true to try the cached configuration first, before loading database configuration - typically used when cache is updated by external process.");
-            systemSettings.Add("LocalCertificate", string.Format("{0}.cer", ServiceName), "Path to the local certificate used by this server for authentication.");
+            systemSettings.Add("LocalCertificate", $"{ServiceName}.cer", "Path to the local certificate used by this server for authentication.");
             systemSettings.Add("RemoteCertificatesPath", @"Certs\Remotes", "Path to the directory where remote certificates are stored.");
             systemSettings.Add("DefaultCulture", "en-US", "Default culture to use for language, country/region and calendar formats.");
 
@@ -575,7 +575,7 @@ namespace GSF.TimeSeries
 
             // Define processes for each report (initially unscheduled)
             foreach (IReportingProcess reportingProcess in m_reportingProcesses)
-                m_serviceHelper.AddProcess(ReportingProcessHandler, string.Format("{0}Reporting", reportingProcess.ReportType));
+                m_serviceHelper.AddProcess(ReportingProcessHandler, $"{reportingProcess.ReportType}Reporting");
 
             // Add key Iaon collections as service components
             m_serviceHelper.ServiceComponents.Add(m_iaonSession.InputAdapters);
@@ -731,7 +731,7 @@ namespace GSF.TimeSeries
                 configurationFile = ConfigurationFile.Current;
                 remotingServer = configurationFile.Settings["remotingServer"];
 
-                remotingServer.Add("CertificateFile", string.Format("{0}.cer", ServiceName), "Path to the local certificate used by this server for authentication.");
+                remotingServer.Add("CertificateFile", $"{ServiceName}.cer", "Path to the local certificate used by this server for authentication.");
                 certificatePath = FilePath.GetAbsolutePath(remotingServer["CertificateFile"].Value);
 
                 certificateGenerator = new CertificateGenerator
@@ -744,7 +744,7 @@ namespace GSF.TimeSeries
                     certificate = new X509Certificate2(certificatePath);
 
                 if (!Equals(certificate, certificateGenerator.GenerateCertificate()))
-                    EventLog.WriteEntry(ServiceName, string.Format("Created self-signed certificate for service: \"{0}\"", certificatePath), EventLogEntryType.Information, 0);
+                    EventLog.WriteEntry(ServiceName, $"Created self-signed certificate for service: \"{certificatePath}\"", EventLogEntryType.Information, 0);
             }
             catch (Exception ex)
             {
@@ -817,7 +817,7 @@ namespace GSF.TimeSeries
             remotingServer.PayloadAware = true;
             remotingServer.PersistSettings = true;
             remotingServer.SettingsCategory = "RemotingServer";
-            remotingServer.TrustedCertificatesPath = string.Format("Certs{0}Remotes", Path.DirectorySeparatorChar);
+            remotingServer.TrustedCertificatesPath = $"Certs{Path.DirectorySeparatorChar}Remotes";
             remotingServer.Initialize();
 
             remotingServer.RemoteCertificateValidationCallback = (o, certificate, chain, errors) => true;
@@ -1375,7 +1375,7 @@ namespace GSF.TimeSeries
                 if ((object)requestHandler != null)
                     requestHandler.HandlerMethod(new ClientRequestInfo(new ClientInfo() { ClientID = clientID }, request));
                 else
-                    DisplayStatusMessage(string.Format("Command \"{0}\" is not supported\r\n\r\n", request.Command), UpdateType.Alarm);
+                    DisplayStatusMessage($"Command \"{request.Command}\" is not supported\r\n\r\n", UpdateType.Alarm);
             }
         }
 
@@ -2273,7 +2273,7 @@ namespace GSF.TimeSeries
                     throw new ArgumentException("ReportType not specified.");
 
                 if ((object)reportingProcess == null)
-                    throw new ArgumentException(string.Format("ReportType \"{0}\" undefined.", requestInfo.Request.Arguments["OrderedArg1"]));
+                    throw new ArgumentException($"ReportType \"{requestInfo.Request.Arguments["OrderedArg1"]}\" undefined.");
 
                 StringBuilder listBuilder;
                 List<string> reportsList;
@@ -2367,7 +2367,7 @@ namespace GSF.TimeSeries
                     throw new ArgumentException("ReportType not specified.");
 
                 if ((object)reportingProcess == null)
-                    throw new ArgumentException(string.Format("ReportType \"{0}\" undefined.", requestInfo.Request.Arguments["OrderedArg1"]));
+                    throw new ArgumentException($"ReportType \"{requestInfo.Request.Arguments["OrderedArg1"]}\" undefined.");
 
                 DateTime now = DateTime.UtcNow;
                 DateTime today = DateTime.Parse(now.ToString("yyyy-MM-dd"));
@@ -2381,21 +2381,21 @@ namespace GSF.TimeSeries
 
                     if (reportDate < today)
                     {
-                        reportPath = FilePath.GetAbsolutePath(Path.Combine(reportingProcess.ReportLocation, string.Format("{0} {1:yyyy-MM-dd}.pdf", reportingProcess.Title, reportDate)));
+                        reportPath = FilePath.GetAbsolutePath(Path.Combine(reportingProcess.ReportLocation, $"{reportingProcess.Title} {reportDate:yyyy-MM-dd}.pdf"));
 
                         if (File.Exists(reportPath))
                         {
                             File.SetLastAccessTimeUtc(reportPath, DateTime.UtcNow);
-                            SendResponseWithAttachment(requestInfo, true, File.ReadAllBytes(reportPath), string.Format("Found and returned report for {0:yyyy-MM-dd}.", reportDate));
+                            SendResponseWithAttachment(requestInfo, true, File.ReadAllBytes(reportPath), $"Found and returned report for {reportDate:yyyy-MM-dd}.");
                         }
                         else
                         {
-                            SendResponse(requestInfo, false, string.Format("Unable to find report for {0:yyyy-MM-dd}.", reportDate));
+                            SendResponse(requestInfo, false, $"Unable to find report for {reportDate:yyyy-MM-dd}.");
                         }
                     }
                     else
                     {
-                        SendResponse(requestInfo, false, string.Format("[{0:yyyy-MM-dd HH:mm:ss}] Unable to generate report for {1:yyyy-MM-dd} until {2:yyyy-MM-dd}. The statistics archive is not fully populated for that date.", now, reportDate, reportDate + TimeSpan.FromDays(1)));
+                        SendResponse(requestInfo, false, $"[{now:yyyy-MM-dd HH:mm:ss}] Unable to generate report for {reportDate:yyyy-MM-dd} until {reportDate + TimeSpan.FromDays(1):yyyy-MM-dd}. The statistics archive is not fully populated for that date.");
                     }
                 }
                 catch (Exception ex)
@@ -2441,7 +2441,7 @@ namespace GSF.TimeSeries
                     throw new ArgumentException("ReportType not specified.");
 
                 if ((object)reportingProcess == null)
-                    throw new ArgumentException(string.Format("ReportType \"{0}\" undefined.", requestInfo.Request.Arguments["OrderedArg1"]));
+                    throw new ArgumentException($"ReportType \"{requestInfo.Request.Arguments["OrderedArg1"]}\" undefined.");
 
                 try
                 {
@@ -2496,7 +2496,7 @@ namespace GSF.TimeSeries
                     throw new ArgumentException("ReportType not specified.");
 
                 if ((object)reportingProcess == null)
-                    throw new ArgumentException(string.Format("ReportType \"{0}\" undefined.", requestInfo.Request.Arguments["OrderedArg1"]));
+                    throw new ArgumentException($"ReportType \"{requestInfo.Request.Arguments["OrderedArg1"]}\" undefined.");
 
                 DateTime today = DateTime.UtcNow;
                 DateTime reportDate;
@@ -2514,7 +2514,7 @@ namespace GSF.TimeSeries
                     }
                     else
                     {
-                        SendResponse(requestInfo, false, string.Format("[{0:yyyy-MM-dd HH:mm:ss}] Unable to generate report for {1:yyyy-MM-dd} until {2:yyyy-MM-dd}. The statistics archive is not fully populated for that date.", today, reportDate, reportDate + TimeSpan.FromDays(1)));
+                        SendResponse(requestInfo, false, $"[{today:yyyy-MM-dd HH:mm:ss}] Unable to generate report for {reportDate:yyyy-MM-dd} until {reportDate + TimeSpan.FromDays(1):yyyy-MM-dd}. The statistics archive is not fully populated for that date.");
                     }
                 }
                 catch (Exception ex)
@@ -2566,16 +2566,13 @@ namespace GSF.TimeSeries
                     throw new ArgumentException("ReportType not specified.");
 
                 if ((object)reportingProcess == null)
-                    throw new ArgumentException(string.Format("ReportType \"{0}\" undefined.", requestInfo.Request.Arguments["OrderedArg1"]));
+                    throw new ArgumentException($"ReportType \"{requestInfo.Request.Arguments["OrderedArg1"]}\" undefined.");
 
                 if (requestInfo.Request.Arguments.Exists("get") || !requestInfo.Request.Arguments.Exists("set"))
                 {
                     try
                     {
-                        string configuration = string.Format(
-                            "{0} --idleReportLifetime=\" {1} \"",
-                            reportingProcess.GetArguments(),
-                            reportingProcess.IdleReportLifetime);
+                        string configuration = $"{reportingProcess.GetArguments()} --idleReportLifetime=\" {reportingProcess.IdleReportLifetime} \"";
 
                         SendResponse(requestInfo, true, configuration);
                     }
@@ -2793,7 +2790,7 @@ namespace GSF.TimeSeries
                 helpMessage.Append("       -Augmented".PadRight(20));
                 helpMessage.AppendFormat("Augments the current running configuration from the {0}, if supported", m_configurationType);
                 helpMessage.AppendLine();
-                helpMessage.Append(string.Format("       -{0}", m_configurationType).PadRight(20));
+                helpMessage.Append($"       -{m_configurationType}".PadRight(20));
                 helpMessage.AppendFormat("Loads configuration from the {0}", m_configurationType);
                 helpMessage.AppendLine();
                 helpMessage.Append("       -BinaryCache".PadRight(20));
@@ -2819,7 +2816,7 @@ namespace GSF.TimeSeries
                     {
                         // Validate current client principal
                         if (SecurityProviderUtility.IsResourceSecurable(resource) && !SecurityProviderUtility.IsResourceAccessible(resource))
-                            throw new SecurityException(string.Format("Access to '{0}' is denied", resource));
+                            throw new SecurityException($"Access to '{resource}' is denied");
                     }
 
                     invokeHandler = m_serviceHelper.FindClientRequestHandler(resource);
@@ -2959,7 +2956,7 @@ namespace GSF.TimeSeries
                     {
                         CategorizedSettingsElementCollection settings = config.Settings[categoryName];
                         StringBuilder settingsList = new StringBuilder();
-                        settingsList.Append(string.Format("List of settings under the category {0}:", categoryName));
+                        settingsList.Append($"List of settings under the category {categoryName}:");
                         settingsList.AppendLine();
                         settingsList.AppendLine();
 
@@ -3251,7 +3248,7 @@ namespace GSF.TimeSeries
             catch (Exception ex)
             {
                 LogException(ex);
-                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to send client response due to an exception: " + ex.Message + "\r\n\r\n");
+                m_serviceHelper.UpdateStatus(UpdateType.Alarm, $"Failed to send client response due to an exception: {ex.Message}\r\n\r\n");
             }
         }
 
@@ -3265,12 +3262,12 @@ namespace GSF.TimeSeries
         {
             try
             {
-                m_serviceHelper.UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, string.Format("{0}\r\n\r\n", status), args);
+                m_serviceHelper.UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, $"{status}\r\n\r\n", args);
             }
             catch (Exception ex)
             {
                 LogException(ex);
-                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to update client status \"" + status.ToNonNullString() + "\" due to an exception: " + ex.Message + "\r\n\r\n");
+                m_serviceHelper.UpdateStatus(UpdateType.Alarm, $"Failed to update client status \"{status.ToNonNullString()}\" due to an exception: {ex.Message}\r\n\r\n");
             }
         }
 
@@ -3281,15 +3278,26 @@ namespace GSF.TimeSeries
         /// <param name="type"><see cref="UpdateType"/> of message to send.</param>
         protected virtual void DisplayStatusMessage(string status, UpdateType type)
         {
+            DisplayStatusMessage(status, type, true);
+        }
+
+        /// <summary>
+        /// Displays a broadcast message to all subscribed clients.
+        /// </summary>
+        /// <param name="status">Status message to send to all clients.</param>
+        /// <param name="type"><see cref="UpdateType"/> of message to send.</param>
+        /// <param name="publishToLog">Determines if messages should be sent logging engine.</param>
+        protected virtual void DisplayStatusMessage(string status, UpdateType type, bool publishToLog)
+        {
             try
             {
                 status = status.Replace("{", "{{").Replace("}", "}}");
-                m_serviceHelper.UpdateStatus(type, string.Format("{0}\r\n\r\n", status));
+                m_serviceHelper.UpdateStatus(type, publishToLog, $"{status}\r\n\r\n");
             }
             catch (Exception ex)
             {
                 LogException(ex);
-                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to update client status \"" + status.ToNonNullString() + "\" due to an exception: " + ex.Message + "\r\n\r\n");
+                m_serviceHelper.UpdateStatus(UpdateType.Alarm, $"Failed to update client status \"{status.ToNonNullString()}\" due to an exception: {ex.Message}\r\n\r\n");
             }
         }
 
@@ -3301,14 +3309,26 @@ namespace GSF.TimeSeries
         /// <param name="args">Arguments of the formatted status message.</param>
         protected virtual void DisplayStatusMessage(string status, UpdateType type, params object[] args)
         {
+            DisplayStatusMessage(status, type, true, args);
+        }
+
+        /// <summary>
+        /// Displays a broadcast message to all subscribed clients.
+        /// </summary>
+        /// <param name="status">Formatted status message to send to all clients.</param>
+        /// <param name="type"><see cref="UpdateType"/> of message to send.</param>
+        /// <param name="publishToLog">Determines if messages should be sent logging engine.</param>
+        /// <param name="args">Arguments of the formatted status message.</param>
+        protected virtual void DisplayStatusMessage(string status, UpdateType type, bool publishToLog, params object[] args)
+        {
             try
             {
-                DisplayStatusMessage(string.Format(status, args), type);
+                DisplayStatusMessage(string.Format(status, args), type, publishToLog);
             }
             catch (Exception ex)
             {
                 LogException(ex);
-                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to update client status \"" + status.ToNonNullString() + "\" due to an exception: " + ex.Message + "\r\n\r\n");
+                m_serviceHelper.UpdateStatus(UpdateType.Alarm, $"Failed to update client status \"{status.ToNonNullString()}\" due to an exception: {ex.Message}\r\n\r\n");
             }
         }
 
