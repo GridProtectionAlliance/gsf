@@ -21,6 +21,7 @@
 //       
 //******************************************************************************************************
 
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 
@@ -40,9 +41,14 @@ namespace GSF.Threading
         private ManualResetEvent m_threadSleepWaitHandler;
         private volatile int m_sleepTime;
 
-        public ThreadContainerDedicated(WeakAction<CallbackArgs> callback, bool isBackground, ThreadPriority priority)
-            : base(callback)
+        public ThreadContainerDedicated(Action<CallbackArgs> callback, Action disposeAndWaitCallback, bool isBackground, ThreadPriority priority, bool disposeOnShutdown)
+            : base(callback, disposeAndWaitCallback, disposeOnShutdown)
         {
+            if (disposeOnShutdown || !isBackground)
+            {
+                ShutdownHandler.TryRegisterCallback(Shutdown);
+            }
+
             m_shouldReRunImmediately = false;
             m_shouldReRunAfterDelay = false;
             m_threadPausedWaitHandler = new ManualResetEvent(false);

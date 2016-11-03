@@ -211,7 +211,7 @@ namespace GSF.Diagnostics
             Empty = new LogStackTrace();
         }
 
-        public static void Initialize()
+        internal static void Initialize()
         {
 
         }

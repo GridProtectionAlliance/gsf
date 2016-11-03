@@ -90,12 +90,14 @@
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\AssemblyInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\MemberInfoExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\MethodBaseExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Reflection\MethodInfoExtensions_Compile.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\NamespaceDoc.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ShortTime.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StringExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\DisposableCallback.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\RateLimiter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\ScheduledTask.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Threading\ShutdownHandler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\SingleOccurrenceAction.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\StateMachine.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\ThreadContainerBase.cs" />

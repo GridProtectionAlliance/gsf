@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  WeakActionFast.cs - Gbtc
+//  WeakAction.cs - Gbtc
 //
-//  Copyright © 2013, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -18,44 +18,39 @@
 //  ----------------------------------------------------------------------------------------------------
 //  01/16/2013 - Steven E. Chisholm
 //       Generated original version of source code. 
+//  11/03/2016 - Steven E. Chisholm
+//       Modified the class to not require a local reference be kept by compiling the method 
+//       to prevent that data from being collected.
 //
 //******************************************************************************************************
 
 using System;
 using System.Runtime.CompilerServices;
+using GSF.Reflection;
 
 namespace GSF.Threading
 {
     /// <summary>
-    /// Provides a weak referenced action delegate.
+    /// Provides a weak referenced <see cref="Action"/> delegate.
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// Unlike many implementations of a weak action, this class does not
-    /// use reflection so calls will be faster. However, a strong reference
-    /// *must* be maintained for the <see cref="Action"/> callback passed
-    /// to this class. This reference is returned through an out parameter
-    /// in the constructor.
-    /// </para>
-    /// <para>
-    /// Careful consideration must be made when deciding where to store
-    /// the strong reference as this strong reference will need to also
-    /// lose reference. A good place would be as a member variable of the
-    /// object of the target method.
-    /// </para>
+    /// This class will store the information necessary so the callback
+    /// object will have a weak reference to it. This information is compiled
+    /// an can be quickly executed without the overhead of using reflection.
     /// </remarks>
-    [Serializable]
     public class WeakAction : WeakReference
     {
+        private bool m_isStatic;
+        private Action<object> m_compiledMethod;
         /// <summary>
-        /// Creates a high speed weak action.
+        /// Creates a WeakAction.
         /// </summary>
         /// <param name="callback">The callback.</param>
-        /// <param name="localStrongReference">A strong reference that must be maintained in the class that is the target of the action.</param>
-        public WeakAction(Action callback, out object localStrongReference)
-            : base(callback)
+        public WeakAction(Action callback)
+            : base(callback.Target)
         {
-            localStrongReference = callback;
+            m_isStatic = callback.Method.IsStatic;
+            m_compiledMethod = callback.Method.CreateAction();
         }
 
         /// <summary>
@@ -65,13 +60,18 @@ namespace GSF.Threading
         [MethodImpl(MethodImplOptions.NoInlining)]
         public bool TryInvoke()
         {
-            Action target = Target as Action;
+            if (m_isStatic)
+            {
+                m_compiledMethod(null);
+                return true;
+            }
+
+            object target = Target;
 
             if ((object)target == null)
                 return false;
 
-            target();
-
+            m_compiledMethod(target);
             return true;
         }
 
@@ -80,40 +80,35 @@ namespace GSF.Threading
         /// </summary>
         public void Clear()
         {
+            //Note, the race condition that exists here would simply cause
+            //A static method exit anyway since Target is always null for static 
+            //methods.
+            m_isStatic = false;
             Target = null;
         }
     }
 
     /// <summary>
-    /// Provides a weak referenced action delegate.
+    /// Provides a weak referenced <see cref="Action"/> delegate.
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// Unlike many implementations of a weak action, this class does not
-    /// use reflection so calls will be faster. However, a strong reference
-    /// *must* be maintained for the <see cref="Action"/> callback passed
-    /// to this class. This reference is returned through an out parameter
-    /// in the constructor.
-    /// </para>
-    /// <para>
-    /// Careful consideration must be made when deciding where to store
-    /// the strong reference as this strong reference will need to also
-    /// lose reference. A good place would be as a member variable of the
-    /// object of the target method.
-    /// </para>
+    /// This class will store the information necessary so the callback
+    /// object will have a weak reference to it. This information is compiled
+    /// an can be quickly executed without the overhead of using reflection.
     /// </remarks>
-    [Serializable]
     public class WeakAction<T> : WeakReference
     {
+        private bool m_isStatic;
+        private Action<object,T> m_compiledMethod;
         /// <summary>
-        /// Creates a high speed weak action 
+        /// Creates a WeakAction.
         /// </summary>
         /// <param name="callback">The callback.</param>
-        /// <param name="localStrongReference">A strong reference that must be maintained in the class that is the target of the action.</param>
-        public WeakAction(Action<T> callback, out object localStrongReference)
-            : base(callback)
+        public WeakAction(Action<T> callback)
+            : base(callback.Target)
         {
-            localStrongReference = callback;
+            m_isStatic = callback.Method.IsStatic;
+            m_compiledMethod = callback.Method.CreateAction<T>();
         }
 
         /// <summary>
@@ -121,15 +116,20 @@ namespace GSF.Threading
         /// </summary>
         /// <returns><c>true</c> if successful; otherwise, <c>false</c>.</returns>
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public bool TryInvoke(T args)
+        public bool TryInvoke(T param1)
         {
-            Action<T> target = Target as Action<T>;
+            if (m_isStatic)
+            {
+                m_compiledMethod(null, param1);
+                return true;
+            }
+
+            object target = Target;
 
             if ((object)target == null)
                 return false;
 
-            target(args);
-
+            m_compiledMethod(target, param1);
             return true;
         }
 
@@ -138,7 +138,12 @@ namespace GSF.Threading
         /// </summary>
         public void Clear()
         {
+            //Note, the race condition that exists here would simply cause
+            //A static method exit anyway since Target is always null for static 
+            //methods.
+            m_isStatic = false;
             Target = null;
         }
     }
+
 }

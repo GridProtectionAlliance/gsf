@@ -16,12 +16,13 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  3/8/2014 - Steven E. Chisholm
+//  03/08/2014 - Steven E. Chisholm
 //       Generated original version of source code. 
 //       
 //
 //******************************************************************************************************
 
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 
@@ -41,9 +42,14 @@ namespace GSF.Threading
         /// </summary>
         private ManualResetEvent m_waitObject;
 
-        public ThreadContainerThreadpool(WeakAction<CallbackArgs> callback)
-            : base(callback)
+        public ThreadContainerThreadpool(Action<CallbackArgs> callback, Action disposeAndWaitCallback, bool disposeOnShutdown)
+            : base(callback, disposeAndWaitCallback, disposeOnShutdown)
         {
+            if (disposeOnShutdown)
+            {
+                ShutdownHandler.TryRegisterCallback(Shutdown);
+            }
+
             m_waitObject = new ManualResetEvent(false);
         }
 

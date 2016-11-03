@@ -57,7 +57,7 @@ namespace GSF.Threading
         /// <summary>
         /// State variables for the internal state machine.
         /// </summary>
-        static class State
+        private static class State
         {
             /// <summary>
             /// Indicates that the task is not running.
@@ -92,30 +92,35 @@ namespace GSF.Threading
             public const int Invalid = -1;
         }
 
-        volatile bool m_runAgain;
+        private volatile bool m_runAgain;
 
         /// <summary>
         /// A value less than 0 means false. 
         /// </summary>
-        volatile int m_runAgainAfterDelay;
+        private volatile int m_runAgainAfterDelay;
 
-        volatile int m_state;
+        private volatile int m_state;
 
-        WeakAction<CallbackArgs> m_callback;
+        private bool m_disposeOnShutdown;
 
-        CallbackArgs m_args;
+        private readonly WeakAction<CallbackArgs> m_callback;
+        private readonly WeakAction m_disposeAndWaitCallback;
 
-        volatile bool m_startDisposalCallSuccessful = false;
+        private CallbackArgs m_args;
 
-        protected ThreadContainerBase(WeakAction<CallbackArgs> callback)
+        private volatile bool m_startDisposalCallSuccessful = false;
+
+        protected ThreadContainerBase(Action<CallbackArgs> callback, Action disposeAndWaitCallback, bool disposeOnShutdown)
         {
+            m_disposeOnShutdown = disposeOnShutdown;
             m_runAgain = false;
             m_runAgainAfterDelay = -1;
 
             m_args = new CallbackArgs();
             m_args.Clear();
 
-            m_callback = callback;
+            m_callback = new WeakAction<CallbackArgs>(callback);
+            m_disposeAndWaitCallback = new WeakAction(disposeAndWaitCallback);
             m_state = State.NotRunning;
         }
 
@@ -292,6 +297,19 @@ namespace GSF.Threading
                         wait.SpinOnce();
                         break;
                 }
+            }
+        }
+
+        protected void Shutdown()
+        {
+            //If the caller did not want to be notified on shutdown
+            // or they did but the callback failed.
+            // clear all callbacks and initiate a disposal.
+            if (!m_disposeOnShutdown && !m_disposeAndWaitCallback.TryInvoke())
+            {
+                m_callback.Clear();
+                m_disposeAndWaitCallback.Clear();
+                StartDisposal();
             }
         }
 

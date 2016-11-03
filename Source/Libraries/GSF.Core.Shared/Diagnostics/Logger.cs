@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.Security;
 using System.Security.Permissions;
 using System.Threading;
+using GSF.Threading;
 
 namespace GSF.Diagnostics
 {
@@ -55,22 +56,43 @@ namespace GSF.Diagnostics
             LogStackMessages.Initialize();
 
             s_logger = new LoggerInternal();
-
             Console = new LogSubscriptionConsole();
             FileWriter = new LogSubscriptionFileWriter(1000);
 
             AppDomain.CurrentDomain.FirstChanceException += CurrentDomain_FirstChanceException;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
-            if (AppDomain.CurrentDomain.IsDefaultAppDomain())
-                AppDomain.CurrentDomain.ProcessExit += DomainUnload;
-            else
-                AppDomain.CurrentDomain.DomainUnload += DomainUnload;
-
             Log = CreatePublisher(typeof(Logger), MessageClass.Component);
             Log.InitialStackTrace = LogStackTrace.Empty;
             EventFirstChanceException = Log.RegisterEvent(MessageLevel.NA, MessageFlags.SystemHealth, "First Chance App Domain Exception", 30, MessageRate.PerSecond(30), 1000);
             EventAppDomainException = Log.RegisterEvent(MessageLevel.Critical, MessageFlags.SystemHealth, "Unhandled App Domain Exception");
+
+            ShutdownHandler.Initialize();
+        }
+
+        /// <summary>
+        /// Ensures that the logger has been initialized. 
+        /// </summary>
+        internal static void Initialize()
+        {
+            //Handled in the static constructor.
+        }
+
+        /// <summary>
+        /// Ensures that the logger is properly shutdown.
+        /// This is called from ShutdownHandler.
+        /// </summary>
+        internal static void Shutdown()
+        {
+            try
+            {
+                s_logger.Dispose();
+                Console.Verbose = VerboseLevel.None;
+                FileWriter.Dispose();
+            }
+            catch (Exception)
+            {
+            }
         }
 
         static void CurrentDomain_FirstChanceException(object sender, System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs e)
@@ -94,7 +116,7 @@ namespace GSF.Diagnostics
                 {
                     EventFirstChanceException.Publish(null, null, e.Exception);
                 }
-                catch(Exception)
+                catch (Exception)
                 {
                     //swallow any exceptions.
                 }
@@ -121,19 +143,6 @@ namespace GSF.Diagnostics
                     int value;
                     RecursiveChecking.TryRemove(threadid, out value);
                 }
-            }
-        }
-
-        private static void DomainUnload(object sender, EventArgs e)
-        {
-            try
-            {
-                s_logger.Dispose();
-                Console.Verbose = VerboseLevel.None;
-                FileWriter.Dispose();
-            }
-            catch (Exception)
-            {
             }
         }
 

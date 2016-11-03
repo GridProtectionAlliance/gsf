@@ -102,7 +102,6 @@ namespace GSF.Threading
         // Fields
         private int m_workerThreadID;
         private readonly ThreadContainerBase m_thread;  // This cannot be null as it would cause duplicate calls to Start to throw a null reference exception
-        private object m_weakCallbackToken;             // A strong reference to the callback
         private ManualResetEvent m_waitForDispose;
         private readonly object m_disposeSync;
         private volatile bool m_disposing;
@@ -116,7 +115,9 @@ namespace GSF.Threading
         /// </summary>
         /// <param name="threadMode">The manner in which the scheduled task executes.</param>
         /// <param name="priority">The thread priority to assign if a dedicated thread is used. This is ignored if using the thread-pool.</param>
-        public ScheduledTask(ThreadingMode threadMode = ThreadingMode.ThreadPool, ThreadPriority priority = ThreadPriority.Normal)
+        /// <param name="disposeOnShutdown">Adds a handler to <see cref="ShutdownHandler"/> that requires this class to be disposed
+        /// when the application is shutdown. Note: If this object has been garbage collected, this will have no effect.</param>
+        public ScheduledTask(ThreadingMode threadMode = ThreadingMode.ThreadPool, ThreadPriority priority = ThreadPriority.Normal, bool disposeOnShutdown = false)
         {
             m_workerThreadID = -1;
             m_waitForDispose = new ManualResetEvent(false);
@@ -125,13 +126,13 @@ namespace GSF.Threading
             switch (threadMode)
             {
                 case ThreadingMode.DedicatedForeground:
-                    m_thread = new ThreadContainerDedicated(new WeakAction<ThreadContainerBase.CallbackArgs>(OnRunningCallback, out m_weakCallbackToken), false, priority);
+                    m_thread = new ThreadContainerDedicated(OnRunningCallback, Dispose, false, priority, disposeOnShutdown);
                     break;
                 case ThreadingMode.DedicatedBackground:
-                    m_thread = new ThreadContainerDedicated(new WeakAction<ThreadContainerBase.CallbackArgs>(OnRunningCallback, out m_weakCallbackToken), true, priority);
+                    m_thread = new ThreadContainerDedicated(OnRunningCallback, Dispose, true, priority, disposeOnShutdown);
                     break;
                 case ThreadingMode.ThreadPool:
-                    m_thread = new ThreadContainerThreadpool(new WeakAction<ThreadContainerBase.CallbackArgs>(OnRunningCallback, out m_weakCallbackToken));
+                    m_thread = new ThreadContainerThreadpool(OnRunningCallback, Dispose, disposeOnShutdown);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("threadMode");
@@ -228,7 +229,6 @@ namespace GSF.Threading
                 {
                     m_waitForDispose.WaitOne();
                     m_waitForDispose.Dispose();
-                    m_weakCallbackToken = null;
                     m_waitForDispose = null;
                     GC.SuppressFinalize(this);
                 }

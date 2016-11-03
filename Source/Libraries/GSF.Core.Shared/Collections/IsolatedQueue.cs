@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  IsolatedQueue.cs - Gbtc
 //
-//  Copyright © 2013, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,8 +16,10 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  1/4/2013 - Steven E. Chisholm
+//  01/04/2013 - Steven E. Chisholm
 //       Generated original version of source code. 
+//  11/02/2016 - Steven E. Chisholm
+//       Simplified implementation to reduce the likelihood of bugs.
 //
 //******************************************************************************************************
 
@@ -32,13 +34,6 @@ namespace GSF.Collections
     /// Provides a buffer of point data where reads are isolated from writes.
     /// However, reads must be synchronized with other reads and writes must be synchronized with other writes.
     /// </summary>
-    /// <remarks>
-    /// This class is about twice as fast as a ConcurrentQueue. However, it has some decent overhead, so 
-    /// small lists may not make much sense.
-    /// 
-    /// This also uses jagged arrays, and will automatically deallocate memory so is useful for 
-    /// structures that vary in size with time. 
-    /// </remarks>
     public class IsolatedQueue<T>
     {
         /// <summary>
@@ -98,31 +93,6 @@ namespace GSF.Collections
             }
 
             /// <summary>
-            /// Gets the number of items that can be enqueued.
-            /// </summary>
-            public int AvailableEnqueueLength
-            {
-                get
-                {
-                    return m_lastBlock - m_head;
-                }
-            }
-
-            /// <summary>
-            /// Resets the queue. This operation must be synchronized external 
-            /// from this class with the read and write operations. Therefore it 
-            /// is only recommended to call this once the item has been returned to a 
-            /// buffer pool of some sorts.
-            /// </summary>
-            public void Reset()
-            {
-                if (m_tail != m_head)
-                    Array.Clear(m_blocks, m_tail, m_head - m_tail);
-                m_tail = 0;
-                m_head = 0;
-            }
-
-            /// <summary>
             /// Adds the following item to the queue. Be sure to check if it is full first.
             /// </summary>
             /// <param name="item"></param>
@@ -134,21 +104,6 @@ namespace GSF.Collections
                 m_head = m_head + 1;
             }
 
-            /// <summary>
-            /// Adds the following items to the queue. Be sure to check if it is full first. 
-            /// Adjust the length if not the right size.
-            /// </summary>
-            /// <param name="items"></param>
-            /// <param name="offset"></param>
-            /// <param name="length"></param>
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Enqueue(T[] items, int offset, int length)
-            {
-                Array.Copy(items, offset, m_blocks, m_head, length);
-                //No memory barior here since .NET 2.0 ensures that writes will not be reordered.
-                m_head = m_head + length;
-            }
-
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public T Dequeue()
             {
@@ -158,30 +113,16 @@ namespace GSF.Collections
                 m_tail = m_tail + 1;
                 return item;
             }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            public int Dequeue(T[] items, ref int startingIndex, ref int length)
-            {
-                int count = Math.Min(m_head - m_tail, length);
-                Array.Copy(m_blocks, m_tail, items, startingIndex, count);
-                Array.Clear(m_blocks, m_tail, count);
-                m_tail += count;
-                startingIndex += count;
-                length -= count;
-                return count;
-            }
         }
 
-
         private readonly ConcurrentQueue<IsolatedNode> m_blocks;
-        private readonly ConcurrentQueue<IsolatedNode> m_pooledNodes;
 
         private IsolatedNode m_currentHead;
         private IsolatedNode m_currentTail;
 
         private readonly int m_unitCount;
-        private long m_enqueueCount;
-        private long m_dequeueCount;
+        private int m_enqueueCount;
+        private int m_dequeueCount;
 
         /// <summary>
         /// Creates an <see cref="IsolatedQueue{T}"/>
@@ -189,58 +130,35 @@ namespace GSF.Collections
         public IsolatedQueue()
         {
             m_unitCount = 128;
-            m_pooledNodes = new ConcurrentQueue<IsolatedNode>();
             m_blocks = new ConcurrentQueue<IsolatedNode>();
         }
 
         /// <summary>
-        /// The number of elements in the queue
+        /// The number of elements in the queue. 
         /// </summary>
-        public long Count
+        /// <returns>
+        /// Note: Due to the nature of simultaneous access. This is a representative number.
+        /// and does not mean the exact number of items in the queue unless both Enqueue and Dequeue
+        /// are not currently processing.
+        /// </returns>
+        public int Count
         {
             get
             {
-                //ToDo: Figure out how to make this value always correct on a 32-bit computer.
-                return m_enqueueCount - m_dequeueCount;
-            }
-        }
-
-        /// <summary>
-        /// Addes the provided items to the <see cref="IsolatedQueue{T}"/>.
-        /// </summary>
-        /// <param name="items">the items to add</param>
-        /// <param name="offset">the offset postion</param>
-        /// <param name="length">the length</param>
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public void Enqueue(T[] items, int offset, int length)
-        {
-            items.ValidateParameters(offset, length);
-            while (true)
-            {
-                //If the header is empty. Get a new one.
-                if (m_currentHead == null || !m_currentHead.CanEnqueue)
+                int delta = m_enqueueCount - m_dequeueCount;
+                if (delta < int.MinValue / 2)
                 {
-                    m_currentHead = GetNode();
-                    m_currentHead.Reset();
-                    Thread.MemoryBarrier();
-                    m_blocks.Enqueue(m_currentHead);
-                    m_enqueueCount++;
+                    return int.MaxValue;
                 }
-
-                //If the remainder will fit, queue it all. 
-                int enqueueLength = m_currentHead.AvailableEnqueueLength;
-                if (length <= enqueueLength)
+                if (delta > int.MaxValue / 2)
                 {
-                    m_currentHead.Enqueue(items, offset, length);
-                    m_enqueueCount += length;
-                    return;
+                    return int.MaxValue;
                 }
-
-                //Some will not fit. Enqueue what will fit, then repeat.
-                m_currentHead.Enqueue(items, offset, enqueueLength);
-                m_enqueueCount += enqueueLength;
-                offset += enqueueLength;
-                length -= enqueueLength;
+                if (delta < 0)
+                {
+                    return 0;
+                }
+                return delta;
             }
         }
 
@@ -265,8 +183,7 @@ namespace GSF.Collections
         {
             if (m_currentHead == null || !m_currentHead.CanEnqueue)
             {
-                m_currentHead = GetNode();
-                m_currentHead.Reset();
+                m_currentHead = new IsolatedNode(m_unitCount);
                 Thread.MemoryBarrier();
                 m_blocks.Enqueue(m_currentHead);
                 m_enqueueCount++;
@@ -291,66 +208,6 @@ namespace GSF.Collections
             return TryDequeueSlower(out item);
         }
 
-        /// <summary>
-        /// Dequeues all of the items into the provided array
-        /// </summary>
-        /// <param name="items">where to put the items</param>
-        /// <param name="startingIndex">the starting index</param>
-        /// <param name="length">the maximum number of times to store</param>
-        /// <returns>the number of items dequeued</returns>
-        public int Dequeue(T[] items, int startingIndex, int length)
-        {
-            items.ValidateParameters(startingIndex, length);
-            int itemCount = 0;
-
-        TryAgain:
-
-            if (m_currentTail == null)
-            {
-                if (!m_blocks.TryDequeue(out m_currentTail))
-                {
-                    return 0;
-                }
-            }
-
-            if (m_currentTail.CanDequeue)
-            {
-                //Dequeue as many items as possible
-                itemCount += m_currentTail.Dequeue(items, ref startingIndex, ref length);
-
-                //If no more items can fit in parameter: items, then exit
-                if (length == 0)
-                {
-                    m_dequeueCount += itemCount;
-                    return itemCount;
-                }
-            }
-
-            //If tail position of node is not at the end, all of the items in the Isolated Queue have been read.
-            //Note: because of a race condition, it may not still be empty,
-            //but cordinating that closely may cause drastically decrease performance.
-            if (!m_currentTail.DequeueMustMoveToNextNode)
-            {
-                m_dequeueCount += itemCount;
-                return itemCount;
-            }
-
-            //Don't reset the node on return since it is still
-            //possible for the enqueue thread to be using it. 
-            //Note: If the enqueue thread pulls it off the queue
-            //immediately, this is ok since it will be coordinated at that point.
-            ReleaseNode(m_currentTail);
-
-            if (!m_blocks.TryDequeue(out m_currentTail))
-            {
-                m_dequeueCount += itemCount;
-                return itemCount;
-            }
-
-            goto TryAgain;
-        }
-
-
         [MethodImpl(MethodImplOptions.NoInlining)]
         bool TryDequeueSlower(out T item)
         {
@@ -364,12 +221,6 @@ namespace GSF.Collections
             }
             else if (m_currentTail.DequeueMustMoveToNextNode)
             {
-                //Don't reset the node on return since it is still
-                //possible for the enqueue thread to be using it. 
-                //Note: If the enqueue thread pulls it off the queue
-                //immediately, this is ok since it will be coordinated at that point.
-                ReleaseNode(m_currentTail);
-
                 if (!m_blocks.TryDequeue(out m_currentTail))
                 {
                     item = default(T);
@@ -386,31 +237,44 @@ namespace GSF.Collections
             return false;
         }
 
-
         /// <summary>
-        /// Removes a node from the pool. If one does not exist, one is created.
+        /// Adds the provided items to the <see cref="IsolatedQueue{T}"/>.
         /// </summary>
-        /// <returns></returns>
-        IsolatedNode GetNode()
+        /// <param name="items">the items to add</param>
+        /// <param name="offset">the offset position</param>
+        /// <param name="length">the length</param>
+        public void Enqueue(T[] items, int offset, int length)
         {
-            IsolatedNode item;
-            if (m_pooledNodes.TryDequeue(out item))
-                return item;
-
-            return new IsolatedNode(m_unitCount);
+            items.ValidateParameters(offset, length);
+            for (int x = 0; x < length; x++)
+            {
+                Enqueue(items[offset + x]);
+            }
         }
 
         /// <summary>
-        /// Addes an item back to the queue.
+        /// Dequeues all of the items into the provided array
         /// </summary>
-        /// <param name="resource"></param>
-        void ReleaseNode(IsolatedNode resource)
+        /// <param name="items">where to put the items</param>
+        /// <param name="startingIndex">the starting index</param>
+        /// <param name="length">the maximum number of times to store</param>
+        /// <returns>the number of items dequeued</returns>
+        public int Dequeue(T[] items, int startingIndex, int length)
         {
-            //if the queue has too many node items. just let the old one get garbage collected.
-            if (m_pooledNodes.Count < 1000)
+            items.ValidateParameters(startingIndex, length);
+            for (int x = 0; x < length; x++)
             {
-                m_pooledNodes.Enqueue(resource);
+                T item;
+                if (TryDequeue(out item))
+                {
+                    items[x] = item;
+                }
+                else
+                {
+                    return x;
+                }
             }
+            return length;
         }
 
     }
