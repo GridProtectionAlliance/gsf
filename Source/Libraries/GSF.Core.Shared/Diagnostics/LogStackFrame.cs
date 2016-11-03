@@ -143,6 +143,10 @@ namespace GSF.Diagnostics
             stream.Write(ColumnNumber);
         }
 
+        /// <summary>
+        /// Makes a string
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
@@ -151,7 +155,7 @@ namespace GSF.Diagnostics
         }
 
         /// <summary>
-        /// Appends the details of this stack frame to the provided <see cref="stringBuilder"/>.
+        /// Appends the details of this stack frame to the provided <see param="stringBuilder"/>.
         /// </summary>
         /// <param name="stringBuilder">where to append this class information</param>
         /// <remarks>

@@ -34,9 +34,13 @@ namespace GSF.Diagnostics
     /// <summary>
     /// A log subscription that will write messages to a file
     /// </summary>
-    public class LogSubscriptionFileWriter
+    public sealed class LogSubscriptionFileWriter
         : IDisposable
     {
+        /// <summary>
+        /// When a new file has been completed.
+        /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1009:DeclareEventHandlersCorrectly")]
         public event Action<string> NewFileComplete;
 
         private readonly object m_syncRoot;
@@ -103,6 +107,10 @@ namespace GSF.Diagnostics
             }
         }
 
+        /// <summary>
+        /// Sets the maximum number of log files before a new one will delete the oldest one.
+        /// </summary>
+        /// <param name="maxFileCount"></param>
         public void SetLoggingFileCount(int maxFileCount)
         {
             lock (m_syncRoot)
@@ -187,7 +195,7 @@ namespace GSF.Diagnostics
                         }
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                 }
                 var fileName = Path.Combine(m_path, DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-ffffff") + ".logz");
@@ -197,6 +205,8 @@ namespace GSF.Diagnostics
             m_writer.Write(log, false);
         }
 
+        /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
+        /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
             m_flushTask.Dispose();
@@ -222,7 +232,7 @@ namespace GSF.Diagnostics
                 {
                     e(fileName);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
 
                 }

@@ -113,12 +113,6 @@ namespace GSF.Immutable
         /// <summary>Copies the elements of the <see cref="T:System.Collections.Generic.ICollection`1" /> to an <see cref="T:System.Array" />, starting at a particular <see cref="T:System.Array" /> index.</summary>
         /// <param name="array">The one-dimensional <see cref="T:System.Array" /> that is the destination of the elements copied from <see cref="T:System.Collections.Generic.ICollection`1" />. The <see cref="T:System.Array" /> must have zero-based indexing.</param>
         /// <param name="arrayIndex">The zero-based index in <paramref name="array" /> at which copying begins.</param>
-        /// <exception cref="T:System.ArgumentNullException">
-        ///   <paramref name="array" /> is null.</exception>
-        /// <exception cref="T:System.ArgumentOutOfRangeException">
-        ///   <paramref name="arrayIndex" /> is less than 0.</exception>
-        /// <exception cref="T:System.ArgumentException">
-        ///   <paramref name="array" /> is multidimensional.-or-The number of elements in the source <see cref="T:System.Collections.Generic.ICollection`1" /> is greater than the available space from <paramref name="arrayIndex" /> to the end of the destination <paramref name="array" />.-or-Type <paramref name="T" /> cannot be cast automatically to the type of the destination <paramref name="array" />.</exception>
         public void CopyTo(T[] array, int arrayIndex)
         {
             ((IList<T>)m_array).CopyTo(array, arrayIndex);
@@ -127,7 +121,6 @@ namespace GSF.Immutable
         /// <summary>Removes the first occurrence of a specific object from the <see cref="T:System.Collections.Generic.ICollection`1" />.</summary>
         /// <returns>true if <paramref name="item" /> was successfully removed from the <see cref="T:System.Collections.Generic.ICollection`1" />; otherwise, false. This method also returns false if <paramref name="item" /> is not found in the original <see cref="T:System.Collections.Generic.ICollection`1" />.</returns>
         /// <param name="item">The object to remove from the <see cref="T:System.Collections.Generic.ICollection`1" />.</param>
-        /// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only.</exception>
         bool ICollection<T>.Remove(T item)
         {
             throw new NotSupportedException("Cannot remove from an array");
@@ -143,6 +136,9 @@ namespace GSF.Immutable
             }
         }
 
+        /// <summary>
+        /// Sets members as readonly 
+        /// </summary>
         protected override void SetMembersAsReadOnly()
         {
             if (m_isISupportsReadonlyType)
@@ -158,6 +154,9 @@ namespace GSF.Immutable
             }
         }
 
+        /// <summary>
+        /// CloneMembersAsEditable
+        /// </summary>
         protected override void CloneMembersAsEditable()
         {
             m_array = (T[])m_array.Clone();

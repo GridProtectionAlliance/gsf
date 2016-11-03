@@ -47,7 +47,7 @@ namespace GSF.Threading
         }
 
         /// <summary>
-        /// Attempts to change the state of this machine from <see cref="prevState"/> to <see cref="nextState"/>.
+        /// Attempts to change the state of this machine from <see param="prevState"/> to <see param="nextState"/>.
         /// </summary>
         /// <param name="prevState">The state to change from</param>
         /// <param name="nextState">The state to change to</param>
@@ -79,7 +79,7 @@ namespace GSF.Threading
         }
 
         /// <summary>
-        /// Implicity conversion of the state to the integer value of the state.
+        /// Implicitly conversion of the state to the integer value of the state.
         /// </summary>
         /// <param name="machine"></param>
         /// <returns></returns>

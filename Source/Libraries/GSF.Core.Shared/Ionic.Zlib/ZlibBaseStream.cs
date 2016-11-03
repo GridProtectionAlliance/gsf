@@ -419,6 +419,7 @@ namespace Ionic.Zlib
 
 
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         public override System.Int32 Read(System.Byte[] buffer, System.Int32 offset, System.Int32 count)
         {
             // According to MS documentation, any implementation of the IO.Stream.Read function must:

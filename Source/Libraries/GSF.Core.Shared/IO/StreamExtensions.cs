@@ -138,6 +138,7 @@ namespace GSF.IO
         /// </summary>
         /// <param name="stream">Destination stream.</param>
         /// <param name="value">Object to encode.</param>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily")]
         public static void WriteObject(this Stream stream, object value)
         {
             if (value == null)

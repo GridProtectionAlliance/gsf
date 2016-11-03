@@ -274,13 +274,14 @@ namespace Ionic.Zlib
                 }
             }
         }
-                
+
         // Construct one Huffman tree and assigns the code bit strings and lengths.
         // Update the total bit length for the current block.
         // IN assertion: the field freq is set for all tree elements.
         // OUT assertions: the fields len and code are set to the optimal bit length
         //     and corresponding code. The length opt_len is updated; static_len is
         //     also updated if stree is not null. The field max_code is set.
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1500:VariableNamesShouldNotMatchFieldNames", MessageId = "max_code")]
         internal void  build_tree(DeflateManager s)
         {
             short[] tree  = dyn_tree;

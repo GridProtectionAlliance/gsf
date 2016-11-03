@@ -33,6 +33,9 @@ namespace GSF.Diagnostics
     public enum MessageFlags 
         : byte
     {
+        /// <summary>
+        /// No flags are specified.
+        /// </summary>
         None = 0,
         /// <summary>
         /// Indicates that a segment of code is not being used properly or ideally.

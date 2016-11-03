@@ -41,6 +41,7 @@ namespace GSF.Threading
     /// 
     /// 
     /// </remarks>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable")]
     public class DedicatedSynchronizedOperation : SynchronizedOperationBase
     {
         //Note: A ScheduledTask will auto-dispose of Foreground threads, 

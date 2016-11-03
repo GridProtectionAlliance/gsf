@@ -35,43 +35,73 @@ namespace GSF.Data
     {
         #region As Byte Array
 
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
         public static byte[] AsByteArray(this DataRow row, string columnName)
         {
             object value = row[columnName];
             if (value is DBNull)
                 return null;
-            if (value is byte[])
-                return (byte[])value;
+            byte[] bytes = value as byte[];
+            if (bytes != null)
+                return bytes;
             throw new NotSupportedException();
         }
 
-        public static byte[] AsByteArray(this DataRow reader, int ordinal)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
+        public static byte[] AsByteArray(this DataRow row, int ordinal)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return null;
-            if (value is byte[])
-                return (byte[])value;
+            byte[] bytes = value as byte[];
+            if (bytes != null)
+                return bytes;
             throw new NotSupportedException();
         }
 
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
         public static byte[] AsByteArray(this DataRow row, string columnName, byte[] valueIfNull)
         {
             object value = row[columnName];
             if (value is DBNull)
                 return valueIfNull;
-            if (value is byte[])
-                return (byte[])value;
+            byte[] bytes = value as byte[];
+            if (bytes != null)
+                return bytes;
             throw new NotSupportedException();
         }
 
-        public static byte[] AsByteArray(this DataRow reader, int ordinal, byte[] valueIfNull)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
+        public static byte[] AsByteArray(this DataRow row, int ordinal, byte[] valueIfNull)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return valueIfNull;
-            if (value is byte[])
-                return (byte[])value;
+            byte[] bytes = value as byte[];
+            if (bytes != null)
+                return bytes;
             throw new NotSupportedException();
         }
 
@@ -79,6 +109,12 @@ namespace GSF.Data
 
         #region [ As UInt32 ]
 
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
         public static uint? AsUInt32(this DataRow row, string columnName)
         {
             object value = row[columnName];
@@ -88,17 +124,28 @@ namespace GSF.Data
                 return (uint)value;
             return ((IConvertible)value).ToUInt32(null);
         }
-
-        public static uint? AsUInt32(this DataRow reader, int ordinal)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
+        public static uint? AsUInt32(this DataRow row, int ordinal)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return null;
             if (value is uint)
                 return (uint)value;
             return ((IConvertible)value).ToUInt32(null);
         }
-
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
         public static uint AsUInt32(this DataRow row, string columnName, uint valueIfNull)
         {
             object value = row[columnName];
@@ -108,10 +155,16 @@ namespace GSF.Data
                 return (uint)value;
             return ((IConvertible)value).ToUInt32(null);
         }
-
-        public static uint AsUInt32(this DataRow reader, int ordinal, uint valueIfNull)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
+        public static uint AsUInt32(this DataRow row, int ordinal, uint valueIfNull)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return valueIfNull;
             if (value is uint)
@@ -122,7 +175,12 @@ namespace GSF.Data
         #endregion
 
         #region [ As Int32 ]
-
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
         public static int? AsInt32(this DataRow row, string columnName)
         {
             object value = row[columnName];
@@ -132,17 +190,28 @@ namespace GSF.Data
                 return (int)value;
             return ((IConvertible)value).ToInt32(null);
         }
-
-        public static int? AsInt32(this DataRow reader, int ordinal)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
+        public static int? AsInt32(this DataRow row, int ordinal)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return null;
             if (value is int)
                 return (int)value;
             return ((IConvertible)value).ToInt32(null);
         }
-
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
         public static int AsInt32(this DataRow row, string columnName, int valueIfNull)
         {
             object value = row[columnName];
@@ -152,10 +221,16 @@ namespace GSF.Data
                 return (int)value;
             return ((IConvertible)value).ToInt32(null);
         }
-
-        public static int AsInt32(this DataRow reader, int ordinal, int valueIfNull)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
+        public static int AsInt32(this DataRow row, int ordinal, int valueIfNull)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return valueIfNull;
             if (value is int)
@@ -166,7 +241,12 @@ namespace GSF.Data
         #endregion
 
         #region [ As Byte ]
-
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
         public static byte? AsByte(this DataRow row, string columnName)
         {
             object value = row[columnName];
@@ -176,17 +256,28 @@ namespace GSF.Data
                 return (byte)value;
             return ((IConvertible)value).ToByte(null);
         }
-
-        public static byte? AsByte(this DataRow reader, int ordinal)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
+        public static byte? AsByte(this DataRow row, int ordinal)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return null;
             if (value is byte)
                 return (byte)value;
             return ((IConvertible)value).ToByte(null);
         }
-
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
         public static byte AsByte(this DataRow row, string columnName, byte valueIfNull)
         {
             object value = row[columnName];
@@ -197,9 +288,16 @@ namespace GSF.Data
             return ((IConvertible)value).ToByte(null);
         }
 
-        public static byte AsByte(this DataRow reader, int ordinal, byte valueIfNull)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
+        public static byte AsByte(this DataRow row, int ordinal, byte valueIfNull)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return valueIfNull;
             if (value is byte)
@@ -211,6 +309,12 @@ namespace GSF.Data
 
         #region [ As Int16 ]
 
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
         public static short? AsInt16(this DataRow row, string columnName)
         {
             object value = row[columnName];
@@ -220,17 +324,28 @@ namespace GSF.Data
                 return (short)value;
             return ((IConvertible)value).ToInt16(null);
         }
-
-        public static short? AsInt16(this DataRow reader, int ordinal)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
+        public static short? AsInt16(this DataRow row, int ordinal)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return null;
             if (value is short)
                 return (short)value;
             return ((IConvertible)value).ToInt16(null);
         }
-
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
         public static short AsInt16(this DataRow row, string columnName, short valueIfNull)
         {
             object value = row[columnName];
@@ -240,10 +355,16 @@ namespace GSF.Data
                 return (short)value;
             return ((IConvertible)value).ToInt16(null);
         }
-
-        public static short AsInt16(this DataRow reader, int ordinal, short valueIfNull)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
+        public static short AsInt16(this DataRow row, int ordinal, short valueIfNull)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return valueIfNull;
             if (value is short)
@@ -255,6 +376,12 @@ namespace GSF.Data
 
         #region [ As Guid ]
 
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
         public static Guid? AsGuid(this DataRow row, string columnName)
         {
             object value = row[columnName];
@@ -264,17 +391,28 @@ namespace GSF.Data
                 return (Guid)value;
             return Guid.Parse(value.ToString());
         }
-
-        public static Guid? AsGuid(this DataRow reader, int ordinal)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
+        public static Guid? AsGuid(this DataRow row, int ordinal)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return null;
             if (value is Guid)
                 return (Guid)value;
             return Guid.Parse(value.ToString());
         }
-
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
         public static Guid AsGuid(this DataRow row, string columnName, Guid valueIfNull)
         {
             object value = row[columnName];
@@ -284,10 +422,16 @@ namespace GSF.Data
                 return (Guid)value;
             return Guid.Parse(value.ToString());
         }
-
-        public static Guid AsGuid(this DataRow reader, int ordinal, Guid valueIfNull)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
+        public static Guid AsGuid(this DataRow row, int ordinal, Guid valueIfNull)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return valueIfNull;
             if (value is Guid)
@@ -299,6 +443,12 @@ namespace GSF.Data
 
         #region [ As Int64 ]
 
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
         public static long? AsInt64(this DataRow row, string columnName)
         {
             object value = row[columnName];
@@ -308,17 +458,28 @@ namespace GSF.Data
                 return (long)value;
             return ((IConvertible)value).ToInt64(null);
         }
-
-        public static long? AsInt64(this DataRow reader, int ordinal)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
+        public static long? AsInt64(this DataRow row, int ordinal)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return null;
             if (value is long)
                 return (long)value;
             return ((IConvertible)value).ToInt64(null);
         }
-
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
         public static long AsInt64(this DataRow row, string columnName, long valueIfNull)
         {
             object value = row[columnName];
@@ -328,10 +489,16 @@ namespace GSF.Data
                 return (long)value;
             return ((IConvertible)value).ToInt64(null);
         }
-
-        public static long AsInt64(this DataRow reader, int ordinal, long valueIfNull)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
+        public static long AsInt64(this DataRow row, int ordinal, long valueIfNull)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return valueIfNull;
             if (value is long)
@@ -343,6 +510,12 @@ namespace GSF.Data
 
         #region [ As Boolean ]
 
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
         public static bool? AsBoolean(this DataRow row, string columnName)
         {
             object value = row[columnName];
@@ -352,17 +525,28 @@ namespace GSF.Data
                 return (bool)value;
             return ((IConvertible)value).ToBoolean(null);
         }
-
-        public static bool? AsBoolean(this DataRow reader, int ordinal)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
+        public static bool? AsBoolean(this DataRow row, int ordinal)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return null;
             if (value is bool)
                 return (bool)value;
             return ((IConvertible)value).ToBoolean(null);
         }
-
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
         public static bool AsBoolean(this DataRow row, string columnName, bool valueIfNull)
         {
             object value = row[columnName];
@@ -372,10 +556,16 @@ namespace GSF.Data
                 return (bool)value;
             return ((IConvertible)value).ToBoolean(null);
         }
-
-        public static bool AsBoolean(this DataRow reader, int ordinal, bool valueIfNull)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
+        public static bool AsBoolean(this DataRow row, int ordinal, bool valueIfNull)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return valueIfNull;
             if (value is bool)
@@ -387,43 +577,70 @@ namespace GSF.Data
 
         #region [ As String ]
 
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
         public static string AsString(this DataRow row, string columnName)
         {
             object value = row[columnName];
             if (value is DBNull)
                 return null;
-            if (value is string)
-                return (string)value;
+            string s = value as string;
+            if (s != null)
+                return s;
             return value.ToString();
         }
-
-        public static string AsString(this DataRow reader, int ordinal)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
+        public static string AsString(this DataRow row, int ordinal)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return null;
-            if (value is string)
-                return (string)value;
+            string s = value as string;
+            if (s != null)
+                return s;
             return value.ToString();
         }
-
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
         public static string AsString(this DataRow row, string columnName, string valueIfNull)
         {
             object value = row[columnName];
             if (value is DBNull)
                 return valueIfNull;
-            if (value is string)
-                return (string)value;
+            string s = value as string;
+            if (s != null)
+                return s;
             return value.ToString();
         }
-
-        public static string AsString(this DataRow reader, int ordinal, string valueIfNull)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
+        public static string AsString(this DataRow row, int ordinal, string valueIfNull)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return valueIfNull;
-            if (value is string)
-                return (string)value;
+            string s = value as string;
+            if (s != null)
+                return s;
             return value.ToString();
         }
 
@@ -431,6 +648,12 @@ namespace GSF.Data
 
         #region [ As DateTime ]
 
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
         public static DateTime? AsDateTime(this DataRow row, string columnName)
         {
             object value = row[columnName];
@@ -440,17 +663,28 @@ namespace GSF.Data
                 return (DateTime)value;
             return ((IConvertible)value).ToDateTime(null);
         }
-
-        public static DateTime? AsDateTime(this DataRow reader, int ordinal)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
+        public static DateTime? AsDateTime(this DataRow row, int ordinal)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return null;
             if (value is DateTime)
                 return (DateTime)value;
             return ((IConvertible)value).ToDateTime(null);
         }
-
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
         public static DateTime AsDateTime(this DataRow row, string columnName, DateTime valueIfNull)
         {
             object value = row[columnName];
@@ -460,10 +694,16 @@ namespace GSF.Data
                 return (DateTime)value;
             return ((IConvertible)value).ToDateTime(null);
         }
-
-        public static DateTime AsDateTime(this DataRow reader, int ordinal, DateTime valueIfNull)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
+        public static DateTime AsDateTime(this DataRow row, int ordinal, DateTime valueIfNull)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return valueIfNull;
             if (value is DateTime)
@@ -476,6 +716,12 @@ namespace GSF.Data
 
         #region [ As Double ]
 
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
         public static double? AsDouble(this DataRow row, string columnName)
         {
             object value = row[columnName];
@@ -485,17 +731,28 @@ namespace GSF.Data
                 return (double)value;
             return ((IConvertible)value).ToDouble(null);
         }
-
-        public static double? AsDouble(this DataRow reader, int ordinal)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
+        public static double? AsDouble(this DataRow row, int ordinal)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return null;
             if (value is double)
                 return (double)value;
             return ((IConvertible)value).ToDouble(null);
         }
-
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
         public static double AsDouble(this DataRow row, string columnName, double valueIfNull)
         {
             object value = row[columnName];
@@ -505,10 +762,16 @@ namespace GSF.Data
                 return (double)value;
             return ((IConvertible)value).ToDouble(null);
         }
-
-        public static double AsDouble(this DataRow reader, int ordinal, double valueIfNull)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
+        public static double AsDouble(this DataRow row, int ordinal, double valueIfNull)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return valueIfNull;
             if (value is double)
@@ -520,6 +783,12 @@ namespace GSF.Data
 
         #region [ As Decimal ]
 
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
         public static decimal? AsDecimal(this DataRow row, string columnName)
         {
             object value = row[columnName];
@@ -529,17 +798,28 @@ namespace GSF.Data
                 return (decimal)value;
             return ((IConvertible)value).ToDecimal(null);
         }
-
-        public static decimal? AsDecimal(this DataRow reader, int ordinal)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
+        public static decimal? AsDecimal(this DataRow row, int ordinal)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return null;
             if (value is decimal)
                 return (decimal)value;
             return ((IConvertible)value).ToDecimal(null);
         }
-
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
         public static decimal AsDecimal(this DataRow row, string columnName, decimal valueIfNull)
         {
             object value = row[columnName];
@@ -549,10 +829,16 @@ namespace GSF.Data
                 return (decimal)value;
             return ((IConvertible)value).ToDecimal(null);
         }
-
-        public static decimal AsDecimal(this DataRow reader, int ordinal, decimal valueIfNull)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
+        public static decimal AsDecimal(this DataRow row, int ordinal, decimal valueIfNull)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return valueIfNull;
             if (value is decimal)
@@ -564,6 +850,12 @@ namespace GSF.Data
 
         #region [ As Single ]
 
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
         public static float? AsSingle(this DataRow row, string columnName)
         {
             object value = row[columnName];
@@ -573,17 +865,28 @@ namespace GSF.Data
                 return (float)value;
             return ((IConvertible)value).ToSingle(null);
         }
-
-        public static float? AsSingle(this DataRow reader, int ordinal)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <returns>null if DBNull, the value otherwise.</returns>
+        public static float? AsSingle(this DataRow row, int ordinal)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return null;
             if (value is float)
                 return (float)value;
             return ((IConvertible)value).ToSingle(null);
         }
-
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="columnName">the column name</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
         public static float AsSingle(this DataRow row, string columnName, float valueIfNull)
         {
             object value = row[columnName];
@@ -593,10 +896,16 @@ namespace GSF.Data
                 return (float)value;
             return ((IConvertible)value).ToSingle(null);
         }
-
-        public static float AsSingle(this DataRow reader, int ordinal, float valueIfNull)
+        /// <summary>
+        /// Attempts to type cast the specified column of a <see param="row"/> to the defined type.
+        /// </summary>
+        /// <param name="row">the row</param>
+        /// <param name="ordinal">the index of the column</param>
+        /// <param name="valueIfNull">the value to replace if null</param>
+        /// <returns><see param="valueIfNull"/> if DBNull, the value otherwise.</returns>
+        public static float AsSingle(this DataRow row, int ordinal, float valueIfNull)
         {
-            object value = reader[ordinal];
+            object value = row[ordinal];
             if (value is DBNull)
                 return valueIfNull;
             if (value is float)

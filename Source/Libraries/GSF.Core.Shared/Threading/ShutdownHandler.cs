@@ -56,7 +56,13 @@ namespace GSF.Threading
     {
         private readonly static LogPublisher Log = Logger.CreatePublisher(typeof(ShutdownHandler), MessageClass.Component);
 
+        /// <summary>
+        /// Gets if this process is shutting down.
+        /// </summary>
         public static bool IsShuttingDown { get; private set; }
+        /// <summary>
+        /// Gets if this process has already shut down.
+        /// </summary>
         public static bool HasShutdown { get; private set; }
 
         private static List<WeakAction> s_onShutdownCallbackFirst;

@@ -28,6 +28,9 @@ using System;
 
 namespace GSF.Diagnostics
 {
+    /// <summary>
+    /// Can be used to publish event messages.
+    /// </summary>
     public sealed class LogEventPublisher
     {
         private LogPublisher m_publisher;

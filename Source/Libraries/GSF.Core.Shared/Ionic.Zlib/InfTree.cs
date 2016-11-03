@@ -113,8 +113,11 @@ namespace Ionic.Zlib
                 internal int[] r = null; // table entry for structure assignment
                 internal int[] u = null; // table stack
                 internal int[] x = null; // bit offsets, then code stack
-                
-                private int huft_build(int[] b, int bindex, int n, int s, int[] d, int[] e, int[] t, int[] m, int[] hp, int[] hn, int[] v)
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1500:VariableNamesShouldNotMatchFieldNames", MessageId = "v")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1500:VariableNamesShouldNotMatchFieldNames", MessageId = "hn")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
+        private int huft_build(int[] b, int bindex, int n, int s, int[] d, int[] e, int[] t, int[] m, int[] hp, int[] hn, int[] v)
                 {
                         // Given a list of code lengths and a maximum table size, make a set of
                         // tables to decode that set of codes.  Return Z_OK on success, Z_BUF_ERROR
@@ -327,8 +330,9 @@ namespace Ionic.Zlib
                         // Return Z_BUF_ERROR if we were given an incomplete table
                         return y != 0 && g != 1?Z_BUF_ERROR:Z_OK;
                 }
-                
-                internal int inflate_trees_bits(int[] c, int[] bb, int[] tb, int[] hp, ZlibCodec z)
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1500:VariableNamesShouldNotMatchFieldNames", MessageId = "c")]
+        internal int inflate_trees_bits(int[] c, int[] bb, int[] tb, int[] hp, ZlibCodec z)
                 {
                         int result;
                         initWorkArea(19);
@@ -346,8 +350,9 @@ namespace Ionic.Zlib
                         }
                         return result;
                 }
-                
-                internal int inflate_trees_dynamic(int nl, int nd, int[] c, int[] bl, int[] bd, int[] tl, int[] td, int[] hp, ZlibCodec z)
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1500:VariableNamesShouldNotMatchFieldNames", MessageId = "c")]
+        internal int inflate_trees_dynamic(int nl, int nd, int[] c, int[] bl, int[] bd, int[] tl, int[] td, int[] hp, ZlibCodec z)
                 {
                         int result;
                         

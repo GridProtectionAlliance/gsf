@@ -88,7 +88,7 @@ namespace GSF.Threading
 
         /// <summary>
         /// Gets if the signal action is currently pending. 
-        /// This means all future calls to <see cref="TryBlockAction"/> will fail.
+        /// This means all future calls to TryBlockAction will fail.
         /// </summary>
         public bool IsCallbackPendingOnBlocks
         {
@@ -116,11 +116,11 @@ namespace GSF.Threading
 
 
         /// <summary>
-        /// Signals this class and waits for all blockers to exit before calling the <see cref="callback"/>..
-        /// If called concurrently, the calling thread blocks until the <see cref="callback"/> completes.
-        /// If called from within the <see cref="callback"/>, the function returns immediately.
+        /// Signals this class and waits for all blockers to exit before calling the <see param="callback"/>..
+        /// If called concurrently, the calling thread blocks until the <see param="callback"/> completes.
+        /// If called from within the <see param="callback"/>, the function returns immediately.
         /// 
-        /// The same thread calling this method will always call the <see cref="callback"/>.
+        /// The same thread calling this method will always call the <see param="callback"/>.
         /// 
         /// Only one callback will be executed by this class and it will be the first one to call 
         /// either <see cref="ExecuteWithoutWait"/> or <see cref="ExecuteAndWait"/>.

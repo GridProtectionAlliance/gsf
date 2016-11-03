@@ -141,6 +141,8 @@ namespace Ionic.Zlib
         }
 
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1505:AvoidUnmaintainableCode")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         internal int Process(int r)
         {
             int t; // temporary storage
@@ -800,6 +802,8 @@ namespace Ionic.Zlib
             tree = null;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1505:AvoidUnmaintainableCode")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         internal int Process(InflateBlocks blocks, int r)
         {
             int j;      // temporary storage
@@ -1162,6 +1166,7 @@ namespace Ionic.Zlib
         // at least ten.  The ten bytes are six bytes for the longest length/
         // distance pair plus four bytes for overloading the bit buffer.
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         internal int InflateFast(int bl, int bd, int[] tl, int tl_index, int[] td, int td_index, InflateBlocks s, ZlibCodec z)
         {
             int t;        // temporary pointer
@@ -1510,6 +1515,7 @@ namespace Ionic.Zlib
         }
 
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         internal int Inflate(FlushType flush)
         {
             int b;

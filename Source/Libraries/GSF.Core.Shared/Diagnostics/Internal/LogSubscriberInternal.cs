@@ -127,6 +127,8 @@ namespace GSF.Diagnostics
         /// 
         /// </summary>
         /// <param name="publisherFilter"></param>
+        /// <param name="attributeFilter"></param>
+        /// <param name="isIgnoreSubscription"></param>
         /// <returns>True if subscription has changed, false otherwise</returns>
         private bool AddSubscriptionSync(PublisherFilter publisherFilter, MessageAttributeFilter attributeFilter, bool isIgnoreSubscription)
         {
@@ -242,9 +244,8 @@ namespace GSF.Diagnostics
             {
                 NewLogMessage?.Invoke(logMessage);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                ex = ex;
                 //Swallow this exception
                 //This is because if a subscriber throws an exception, creating a new log
                 //might cause an infinite loop.

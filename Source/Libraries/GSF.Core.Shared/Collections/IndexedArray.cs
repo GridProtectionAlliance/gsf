@@ -37,6 +37,10 @@ namespace GSF.Collection
     {
         private T[] m_items;
         private object m_syncRoot;
+
+        /// <summary>
+        /// Creates an <see cref="IndexedArray{T}"/>.
+        /// </summary>
         public IndexedArray()
         {
             m_items = new T[32];

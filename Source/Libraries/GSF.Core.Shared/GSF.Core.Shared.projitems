@@ -90,7 +90,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\AssemblyInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\MemberInfoExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\MethodBaseExtensions.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Reflection\MethodInfoExtensions_Compile.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Reflection\MethodInfoExtensionsCompile.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\NamespaceDoc.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ShortTime.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StringExtensions.cs" />

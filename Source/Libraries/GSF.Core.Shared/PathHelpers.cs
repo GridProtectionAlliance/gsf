@@ -38,7 +38,7 @@ namespace GSF.IO
         /// </summary>
         /// <param name="pathName">any path.</param>
         /// <remarks>
-        /// throws a series of exceptions if the <see cref="pathName"/> is invalid.
+        /// throws a series of exceptions if the <see param="pathName"/> is invalid.
         /// </remarks>
         public static void ValidatePathName(string pathName)
         {

@@ -32,12 +32,6 @@ namespace GSF
         private const long TicksPerMillisecond = 10000;
         private const long TicksPerSecond = TicksPerMillisecond * 1000;
 
-        private static readonly long Frequency;
-        private static readonly bool IsHighResolution;
-
-        private static readonly double TickFrequency;
-        private static readonly double MillisecondFrequency;
-
         private static readonly double SecondsPerCount;
         private static readonly double MillisecondsPerCount;
         private static readonly double MicrosecondsPerCount;
@@ -50,22 +44,19 @@ namespace GSF
 
         static ShortTimeFunctions()
         {
-            Frequency = Stopwatch.Frequency;
+            var frequency = Stopwatch.Frequency;
 
-            decimal countsPerSecond = Frequency;
+            decimal countsPerSecond = frequency;
             CountsPerSecond = (double)countsPerSecond;
             CountsPerMillisecond = (double)(countsPerSecond / 1000);
             CountsPerMicrosecond = (double)(countsPerSecond / 1000000);
             CountsPerTick = (double)(countsPerSecond / 10000000);
 
-            decimal secondsPerCount = (decimal)1 / (decimal)Frequency;
+            decimal secondsPerCount = (decimal)1 / (decimal)frequency;
             SecondsPerCount = (double)secondsPerCount;
             MillisecondsPerCount = (double)(secondsPerCount * 1000);
             MicrosecondsPerCount = (double)(secondsPerCount * 1000000);
             TicksPerCount = (double)(secondsPerCount * 10000000);
-
-            IsHighResolution = Stopwatch.IsHighResolution;
-
         }
 
         public static long Now()
@@ -124,7 +115,7 @@ namespace GSF
     /// <remarks>
     /// Call times are about 40+ million calls per second.
     /// </remarks>
-    public struct ShortTime
+    public struct ShortTime : IEquatable<ShortTime>
     {
         private readonly long m_time;
 
@@ -145,21 +136,37 @@ namespace GSF
             }
         }
 
+        /// <summary>
+        /// The elapsed time in seconds.
+        /// </summary>
+        /// <returns></returns>
         public double ElapsedSeconds()
         {
             return ElapsedSeconds(Now);
         }
 
+        /// <summary>
+        /// The elapsed time in milliseconds.
+        /// </summary>
+        /// <returns></returns>
         public double ElapsedMilliseconds()
         {
             return ElapsedMilliseconds(Now);
         }
 
+        /// <summary>
+        /// The elapsed time in microseconds.
+        /// </summary>
+        /// <returns></returns>
         public double ElapsedMicroseconds()
         {
             return ElapsedMicroseconds(Now);
         }
 
+        /// <summary>
+        /// The elapsed time in ticks.
+        /// </summary>
+        /// <returns></returns>
         public double ElapsedTicks()
         {
             return ElapsedTicks(Now);
@@ -174,45 +181,74 @@ namespace GSF
             return Elapsed(Now);
         }
 
+        /// <summary>
+        /// The elapsed time in seconds
+        /// </summary>
         public double ElapsedSeconds(ShortTime futureTime)
         {
             return ShortTimeFunctions.ElapsedSeconds(m_time, futureTime.m_time);
         }
+        /// <summary>
+        /// The elapsed time in milliseconds
+        /// </summary>
         public double ElapsedMilliseconds(ShortTime futureTime)
         {
             return ShortTimeFunctions.ElapsedMilliseconds(m_time, futureTime.m_time);
         }
+        /// <summary>
+        /// The elapsed time in microseconds
+        /// </summary>
         public double ElapsedMicroseconds(ShortTime futureTime)
         {
             return ShortTimeFunctions.ElapsedMicroseconds(m_time, futureTime.m_time);
         }
+        /// <summary>
+        /// The elapsed time in ticks
+        /// </summary>
         public double ElapsedTicks(ShortTime futureTime)
         {
             return ShortTimeFunctions.ElapsedTicks(m_time, futureTime.m_time);
         }
-
+        /// <summary>
+        /// The elapsed time
+        /// </summary>
         public TimeSpan Elapsed(ShortTime futureTime)
         {
             return new TimeSpan((long)ShortTimeFunctions.ElapsedTicks(m_time, futureTime.m_time));
         }
 
+        /// <summary>
+        /// Adds milliseconds to this struct
+        /// </summary>
         public ShortTime AddMilliseconds(double duration)
         {
             return new ShortTime(ShortTimeFunctions.AddMilliseconds(m_time, duration));
         }
+        /// <summary>
+        /// Adds seconds to this struct
+        /// </summary>
         public ShortTime AddSeconds(double duration)
         {
             return new ShortTime(ShortTimeFunctions.AddSeconds(m_time, duration));
         }
+        /// <summary>
+        /// Adds ticks to this struct
+        /// </summary>
         public ShortTime AddTicks(double duration)
         {
             return new ShortTime(ShortTimeFunctions.AddTicks(m_time, duration));
         }
+        /// <summary>
+        /// Adds timespan to this struct
+        /// </summary>
         public ShortTime Add(TimeSpan duration)
         {
             return new ShortTime(ShortTimeFunctions.AddTicks(m_time, duration.Ticks));
         }
 
+        /// <summary>
+        /// The current time in <see cref="ShortTime"/>
+        /// </summary>
         public static ShortTime Now
         {
             get
@@ -221,31 +257,95 @@ namespace GSF
             }
         }
 
+        /// <summary>
+        /// Tests Less Than
+        /// </summary>
         public static bool operator <(ShortTime a, ShortTime b)
         {
             return a.m_time - b.m_time < 0; //Accounts for overflows.
         }
 
+        /// <summary>
+        /// Tests Greather Than
+        /// </summary>
         public static bool operator >(ShortTime a, ShortTime b)
         {
             return a.m_time - b.m_time > 0; //Accounts for overflows.
         }
 
+        /// <summary>
+        /// Tests Less Than or equal
+        /// </summary>
         public static bool operator <=(ShortTime a, ShortTime b)
         {
             return a.m_time - b.m_time <= 0; //Accounts for overflows.
         }
 
+        /// <summary>
+        /// Tests Greater than or equal Than
+        /// </summary>
         public static bool operator >=(ShortTime a, ShortTime b)
         {
             return a.m_time - b.m_time >= 0; //Accounts for overflows.
         }
 
+        /// <summary>
+        /// Subtracts two times.
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
         public static TimeSpan operator -(ShortTime a, ShortTime b)
         {
             return b.Elapsed(a);
         }
 
+        /// <summary>
+        /// Are 2 times equal
+        /// </summary>
+        public static bool operator ==(ShortTime a, ShortTime b)
+        {
+            return b.m_time == a.m_time;
+        }
+
+        /// <summary>
+        /// Are 2 times not equal
+        /// </summary>
+        public static bool operator !=(ShortTime a, ShortTime b)
+        {
+            return b.m_time != a.m_time;
+        }
+
+        /// <summary>Indicates whether this instance and a specified object are equal.</summary>
+        /// <returns>true if <paramref name="obj" /> and this instance are the same type and represent the same value; otherwise, false. </returns>
+        /// <param name="obj">The object to compare with the current instance. </param>
+        /// <filterpriority>2</filterpriority>
+        public override bool Equals(object obj)
+        {
+            if (obj is ShortTime)
+                return Equals((ShortTime)obj);
+            return false;
+        }
+
+        /// <summary>Indicates whether the current object is equal to another object of the same type.</summary>
+        /// <returns>true if the current object is equal to the <paramref name="other" /> parameter; otherwise, false.</returns>
+        /// <param name="other">An object to compare with this object.</param>
+        public bool Equals(ShortTime other)
+        {
+            return m_time == other.m_time;
+        }
+
+        /// <summary>Returns the hash code for this instance.</summary>
+        /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
+        /// <filterpriority>2</filterpriority>
+        public override int GetHashCode()
+        {
+            return m_time.GetHashCode();
+        }
+
+        /// <summary>
+        /// Shows the UTC time.
+        /// </summary>
         public override string ToString()
         {
             return UtcTime.ToString();

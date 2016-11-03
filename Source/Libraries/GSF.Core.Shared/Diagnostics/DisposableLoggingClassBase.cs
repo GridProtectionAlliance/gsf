@@ -48,7 +48,10 @@ namespace GSF.Diagnostics
             Log = Logger.CreatePublisher(GetType(), messageClassification);
         }
 
-        //This code is here to detect when finalizers are called rather than a class be properly disposed. 
+        /// <summary>
+        /// This code is here to detect when finalizers are called rather than a class be properly disposed. 
+        /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
         ~DisposableLoggingClassBase()
         {
             Log.Publish(MessageLevel.Warning, MessageFlags.UsageIssue, "Finalize call. Object not properly disposed.");
@@ -66,6 +69,7 @@ namespace GSF.Diagnostics
         /// <summary>
         /// Releases all the resources used by the <see cref="DisposableLoggingClassBase"/> object.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
         public void Dispose()
         {
             try
@@ -106,6 +110,9 @@ namespace GSF.Diagnostics
             }
         }
 
+        /// <summary>
+        /// Checks if the class has been disposed, throws an exception if this is the case.
+        /// </summary>
         protected void CheckDisposed()
         {
             if (m_disposed)

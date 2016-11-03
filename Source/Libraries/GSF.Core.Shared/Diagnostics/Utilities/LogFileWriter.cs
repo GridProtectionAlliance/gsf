@@ -32,11 +32,15 @@ namespace GSF.Diagnostics
     /// <summary>
     /// A log subscriber that will log messages to a file.
     /// </summary>
-    public class LogFileWriter
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
+    public sealed class LogFileWriter
         : IDisposable
     {
         private readonly MemoryStream m_tmpStream;
         private readonly object m_syncRoot;
+        /// <summary>
+        /// The file name
+        /// </summary>
         public readonly string FileName;
 
         private FileStream m_stream;
@@ -96,12 +100,15 @@ namespace GSF.Diagnostics
 
                 m_logCount++;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }
         }
 
+        /// <summary>
+        /// Flushes the stream to the disk.
+        /// </summary>
         public void Flush()
         {
             m_zipStream.Flush();
@@ -124,6 +131,7 @@ namespace GSF.Diagnostics
                         m_zipStream.Dispose();
                         m_stream.Write(false);
                         m_stream.Dispose();
+                        m_tmpStream.Dispose();
                     }
                     catch
                     {

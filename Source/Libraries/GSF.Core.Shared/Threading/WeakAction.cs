@@ -38,6 +38,7 @@ namespace GSF.Threading
     /// object will have a weak reference to it. This information is compiled
     /// an can be quickly executed without the overhead of using reflection.
     /// </remarks>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2237:MarkISerializableTypesWithSerializable")]
     public class WeakAction : WeakReference
     {
         private bool m_isStatic;
@@ -96,6 +97,7 @@ namespace GSF.Threading
     /// object will have a weak reference to it. This information is compiled
     /// an can be quickly executed without the overhead of using reflection.
     /// </remarks>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2237:MarkISerializableTypesWithSerializable")]
     public class WeakAction<T> : WeakReference
     {
         private bool m_isStatic;

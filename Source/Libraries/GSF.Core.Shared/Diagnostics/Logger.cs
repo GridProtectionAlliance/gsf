@@ -39,7 +39,15 @@ namespace GSF.Diagnostics
     {
         private static LoggerInternal s_logger;
 
+        /// <summary>
+        /// The default console based log subscriber.
+        /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly LogSubscriptionConsole Console;
+        /// <summary>
+        /// The default file based log writer.
+        /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly LogSubscriptionFileWriter FileWriter;
 
         private static readonly ConcurrentDictionary<int, int> RecursiveChecking = new ConcurrentDictionary<int, int>();
@@ -196,7 +204,7 @@ namespace GSF.Diagnostics
         /// </summary>
         /// <param name="messages"></param>
         /// <returns></returns>
-        public static StackDetailsDisposal AppendStackDetails(LogStackMessages messages)
+        public static StackDetailsDisposal AppendStackMessages(LogStackMessages messages)
         {
             int threadid = Thread.CurrentThread.ManagedThreadId;
 
@@ -220,20 +228,35 @@ namespace GSF.Diagnostics
         /// Be sure to call Dispose on the returned object to remove this from the stack.
         /// </summary>
         /// <returns></returns>
-        public static StackDetailsDisposal AppendStackDetails(string key, string value)
+        public static StackDetailsDisposal AppendStackMessages(string key, string value)
         {
-            return AppendStackDetails(new LogStackMessages(key, value));
+            return AppendStackMessages(new LogStackMessages(key, value));
         }
 
+        /// <summary>
+        /// When putting messages on the stack. This struct is returned. Be sure to dispose it.
+        /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
         public struct StackDetailsDisposal : IDisposable
         {
+            /// <summary>
+            /// The depth of the stack messages
+            /// </summary>
             public int Depth { get; private set; }
 
-            public StackDetailsDisposal(int depth)
+            /// <summary>
+            /// Creates a new StackDetailsDisposal
+            /// </summary>
+            /// <param name="depth">the stack depth</param>
+            internal StackDetailsDisposal(int depth)
             {
                 Depth = depth;
             }
 
+            /// <summary>
+            /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            /// </summary>
+            /// <filterpriority>2</filterpriority>
             public void Dispose()
             {
                 if (Depth == 0)

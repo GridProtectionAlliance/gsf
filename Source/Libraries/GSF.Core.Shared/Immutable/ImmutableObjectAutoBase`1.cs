@@ -51,6 +51,9 @@ namespace GSF.Immutable
             }
         }
 
+        /// <summary>
+        /// Requests that member fields be set to readonly. 
+        /// </summary>
         protected override void SetMembersAsReadOnly()
         {
             foreach (FieldInfo field in s_readonlyFields)
@@ -60,6 +63,9 @@ namespace GSF.Immutable
             }
         }
 
+        /// <summary>
+        /// Request that member fields be cloned and marked as editable.
+        /// </summary>
         protected override void CloneMembersAsEditable()
         {
             foreach (FieldInfo field in s_readonlyFields)

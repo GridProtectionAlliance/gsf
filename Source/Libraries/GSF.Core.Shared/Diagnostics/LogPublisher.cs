@@ -35,8 +35,8 @@ namespace GSF.Diagnostics
     /// <see cref="InitialStackMessages"/> and <see cref="InitialStackTrace"/> can be modified so messages that are generated 
     /// with this instance will have this data appended to the log message.
     /// 
-    /// The user can either call one of the <see cref="Publish"/> overloads to lazily publish a message, or they
-    /// can register a message with <see cref="RegisterEvent"/> so calling this message will incur little overhead.
+    /// The user can either call one of the Publish overloads to lazily publish a message, or they
+    /// can register a message with RegisterEvent so calling this message will incur little overhead.
     /// If registering an event, the user can check <see cref="LogEventPublisher.HasSubscribers"/> to determine if the log message can be skipped altogether. 
     /// Registering events also allows the user to specify the auto-suppression algorithm and the depth of the stack trace that will be recorded on a message being raised.
     /// 
@@ -140,7 +140,7 @@ namespace GSF.Diagnostics
         /// </summary>
         /// <param name="level">the level of the message</param>
         /// <param name="eventName">A short name about what this message is detailing. Typically this will be a few words.</param>
-        /// <param name="message"> A longer message than <see cref="eventName"/> giving more specifics about the actual message. 
+        /// <param name="message"> A longer message than <see param="eventName"/> giving more specifics about the actual message. 
         /// Typically, this will be up to 1 line of text.</param>
         /// <param name="details">A long text field with the details of the message.</param>
         /// <param name="exception">An exception object if one is provided.</param>
@@ -156,7 +156,7 @@ namespace GSF.Diagnostics
         /// <param name="level">the level of the message</param>
         /// <param name="flags">associated flags</param>
         /// <param name="eventName">A short name about what this message is detailing. Typically this will be a few words.</param>
-        /// <param name="message"> A longer message than <see cref="eventName"/> giving more specifics about the actual message. 
+        /// <param name="message"> A longer message than <see param="eventName"/> giving more specifics about the actual message. 
         /// Typically, this will be up to 1 line of text.</param>
         /// <param name="details">A long text field with the details of the message.</param>
         /// <param name="exception">An exception object if one is provided.</param>

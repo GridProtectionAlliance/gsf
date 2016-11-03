@@ -30,11 +30,29 @@ namespace GSF.Diagnostics
     /// </summary>
     public enum VerboseLevel
     {
+        /// <summary>
+        /// None
+        /// </summary>
         None = 0,
+        /// <summary>
+        /// Component=Error, Framework=Error, Application=Warning
+        /// </summary>
         Low = 1,
+        /// <summary>
+        /// Component=Warning, Framework=Warning, Application=Info
+        /// </summary>
         Medium = 2,
+        /// <summary>
+        /// Component=Info, Framework=Info, Application=Debug
+        /// </summary>
         High = 3,
+        /// <summary>
+        /// Component=Debug, Framework=Debug, Application=Debug
+        /// </summary>
         Ultra = 4,
+        /// <summary>
+        /// Component=Debug, Framework=Debug, Application=Debug, Include Suppressed Logs.
+        /// </summary>
         All = 5
     }
 }

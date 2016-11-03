@@ -98,8 +98,7 @@ namespace GSF.Immutable
         /// Adds the elements of the specified collection to the end of the <see cref="T:System.Collections.Generic.List`1"/>.
         /// </summary>
         /// <param name="collection">The collection whose elements should be added to the end of the <see cref="T:System.Collections.Generic.List`1"/>. 
-        /// The collection itself cannot be null, but it can contain elements that are null, if type <paramref name="T"/> is a reference type.</param>
-        /// <exception cref="T:System.ArgumentNullException"><paramref name="collection"/> is null.</exception>
+        /// The collection itself cannot be null, but it can contain elements that are null</param>
         public void AddRange(IEnumerable<T> collection)
         {
             TestForEditable();
@@ -114,8 +113,7 @@ namespace GSF.Immutable
             m_list.AddRange(collection);
         }
 
-        /// <summary>Removes all items from the <see cref="T:System.Collections.Generic.ICollection`1" />.</summary>
-        /// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only. </exception>
+        /// <summary>Removes all items from the collection.</summary>
         public void Clear()
         {
             TestForEditable();
@@ -133,12 +131,6 @@ namespace GSF.Immutable
         /// <summary>Copies the elements of the <see cref="T:System.Collections.Generic.ICollection`1" /> to an <see cref="T:System.Array" />, starting at a particular <see cref="T:System.Array" /> index.</summary>
         /// <param name="array">The one-dimensional <see cref="T:System.Array" /> that is the destination of the elements copied from <see cref="T:System.Collections.Generic.ICollection`1" />. The <see cref="T:System.Array" /> must have zero-based indexing.</param>
         /// <param name="arrayIndex">The zero-based index in <paramref name="array" /> at which copying begins.</param>
-        /// <exception cref="T:System.ArgumentNullException">
-        ///   <paramref name="array" /> is null.</exception>
-        /// <exception cref="T:System.ArgumentOutOfRangeException">
-        ///   <paramref name="arrayIndex" /> is less than 0.</exception>
-        /// <exception cref="T:System.ArgumentException">
-        ///   <paramref name="array" /> is multidimensional.-or-The number of elements in the source <see cref="T:System.Collections.Generic.ICollection`1" /> is greater than the available space from <paramref name="arrayIndex" /> to the end of the destination <paramref name="array" />.-or-Type <paramref name="T" /> cannot be cast automatically to the type of the destination <paramref name="array" />.</exception>
         public void CopyTo(T[] array, int arrayIndex)
         {
             m_list.CopyTo(array, arrayIndex);
@@ -147,7 +139,6 @@ namespace GSF.Immutable
         /// <summary>Removes the first occurrence of a specific object from the <see cref="T:System.Collections.Generic.ICollection`1" />.</summary>
         /// <returns>true if <paramref name="item" /> was successfully removed from the <see cref="T:System.Collections.Generic.ICollection`1" />; otherwise, false. This method also returns false if <paramref name="item" /> is not found in the original <see cref="T:System.Collections.Generic.ICollection`1" />.</returns>
         /// <param name="item">The object to remove from the <see cref="T:System.Collections.Generic.ICollection`1" />.</param>
-        /// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only.</exception>
         public bool Remove(T item)
         {
             TestForEditable();
@@ -164,6 +155,9 @@ namespace GSF.Immutable
             }
         }
 
+        /// <summary>
+        /// Requests that member fields be set to readonly. 
+        /// </summary>
         protected override void SetMembersAsReadOnly()
         {
             if (m_isISupportsReadonlyType)
@@ -179,6 +173,9 @@ namespace GSF.Immutable
             }
         }
 
+        /// <summary>
+        /// Request that member fields be cloned and marked as editable.
+        /// </summary>
         protected override void CloneMembersAsEditable()
         {
             if (m_isISupportsReadonlyType)
@@ -215,9 +212,6 @@ namespace GSF.Immutable
         /// <summary>Inserts an item to the <see cref="T:System.Collections.Generic.IList`1" /> at the specified index.</summary>
         /// <param name="index">The zero-based index at which <paramref name="item" /> should be inserted.</param>
         /// <param name="item">The object to insert into the <see cref="T:System.Collections.Generic.IList`1" />.</param>
-        /// <exception cref="T:System.ArgumentOutOfRangeException">
-        ///   <paramref name="index" /> is not a valid index in the <see cref="T:System.Collections.Generic.IList`1" />.</exception>
-        /// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.IList`1" /> is read-only.</exception>
         public void Insert(int index, T item)
         {
             TestForEditable();
@@ -233,9 +227,6 @@ namespace GSF.Immutable
 
         /// <summary>Removes the <see cref="T:System.Collections.Generic.IList`1" /> item at the specified index.</summary>
         /// <param name="index">The zero-based index of the item to remove.</param>
-        /// <exception cref="T:System.ArgumentOutOfRangeException">
-        ///   <paramref name="index" /> is not a valid index in the <see cref="T:System.Collections.Generic.IList`1" />.</exception>
-        /// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.IList`1" /> is read-only.</exception>
         public void RemoveAt(int index)
         {
             TestForEditable();
@@ -245,9 +236,6 @@ namespace GSF.Immutable
         /// <summary>Gets or sets the element at the specified index.</summary>
         /// <returns>The element at the specified index.</returns>
         /// <param name="index">The zero-based index of the element to get or set.</param>
-        /// <exception cref="T:System.ArgumentOutOfRangeException">
-        ///   <paramref name="index" /> is not a valid index in the <see cref="T:System.Collections.Generic.IList`1" />.</exception>
-        /// <exception cref="T:System.NotSupportedException">The property is set and the <see cref="T:System.Collections.Generic.IList`1" /> is read-only.</exception>
         public T this[int index]
         {
             get

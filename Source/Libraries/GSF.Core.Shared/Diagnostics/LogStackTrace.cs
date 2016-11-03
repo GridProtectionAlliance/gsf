@@ -41,6 +41,7 @@ namespace GSF.Diagnostics
         /// <summary>
         /// Gets the stack frame data
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public readonly ImmutableList<LogStackFrame> Frames;
 
         /// <summary>
@@ -83,7 +84,7 @@ namespace GSF.Diagnostics
         }
 
         /// <summary>
-        /// Loads stack trace information from the supplied <see cref="stream"/>
+        /// Loads stack trace information from the supplied <see param="stream"/>
         /// </summary>
         /// <param name="stream">where to load the stack trace information</param>
         public LogStackTrace(Stream stream)
@@ -118,7 +119,7 @@ namespace GSF.Diagnostics
         }
 
         /// <summary>
-        /// Saves stack trace information to the supplied <see cref="stream"/>
+        /// Saves stack trace information to the supplied <see param="stream"/>
         /// </summary>
         /// <param name="stream">where to save the stack trace information</param>
         public void Save(Stream stream)
@@ -204,6 +205,7 @@ namespace GSF.Diagnostics
         /// <summary>
         /// An empty stack trace.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly LogStackTrace Empty;
 
         static LogStackTrace()

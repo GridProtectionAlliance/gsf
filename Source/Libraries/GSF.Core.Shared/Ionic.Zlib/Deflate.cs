@@ -1268,6 +1268,7 @@ namespace Ionic.Zlib
         // Same as above, but achieves better compression. We use a lazy
         // evaluation for matches: a match is finally adopted only if there is
         // no better match at the next window position.
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         internal BlockState DeflateSlow(FlushType flush)
         {
             //    short hash_head = 0;    // head of hash chain
@@ -1527,6 +1528,7 @@ namespace Ionic.Zlib
             return Initialize(codec, level, bits, MEM_LEVEL_DEFAULT, CompressionStrategy.Default);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1500:VariableNamesShouldNotMatchFieldNames", MessageId = "compressionStrategy")]
         internal int Initialize(ZlibCodec codec, CompressionLevel level, int bits, CompressionStrategy compressionStrategy)
         {
             return Initialize(codec, level, bits, MEM_LEVEL_DEFAULT, compressionStrategy);
@@ -1704,6 +1706,7 @@ namespace Ionic.Zlib
 
 
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         internal int Deflate(FlushType flush)
         {
             int old_flush;

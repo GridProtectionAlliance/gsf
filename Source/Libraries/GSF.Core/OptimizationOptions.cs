@@ -58,14 +58,26 @@ namespace GSF
 
         }
 
-        private readonly static LogPublisher Log = Logger.CreatePublisher(typeof(OptimizationOptions), MessageClass.Framework);
+        private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(OptimizationOptions), MessageClass.Framework);
 
+        /// <summary>
+        /// Eliminates certain async queues in the phasor protocol parsing. 
+        /// </summary>
         public static bool DisableAsyncQueueInProtocolParsing { get; private set; } = false;
 
+        /// <summary>
+        /// Uses dedicated threads instead of LongSynchronizedOperations in certain cases.
+        /// </summary>
         public static bool PreferDedicatedThreads { get; private set; } = false;
 
-        public static RoutingMethod DefaultRoutingMethod { get; private set; } = DefaultRoutingMethod;
+        /// <summary>
+        /// Specifies the desired routing method.
+        /// </summary>
+        public static RoutingMethod DefaultRoutingMethod { get; private set; } = RoutingMethod.Default;
 
+        /// <summary>
+        /// Specifies a routing latency if the routing method recgonizes this.
+        /// </summary>
         public static int RoutingLatency { get; private set; } = 50;
 
         static OptimizationOptions()

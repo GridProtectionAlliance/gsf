@@ -52,6 +52,12 @@ namespace GSF.Diagnostics
             m_hashCode = ComputeHashCode();
         }
 
+        /// <summary>
+        /// Creates a new stack message
+        /// </summary>
+        /// <param name="key">the key</param>
+        /// <param name="value">the value</param>
+        /// <exception cref="ArgumentNullException">if key or value are null or whitespace.</exception>
         public LogStackMessages(string key, string value)
         {
             if (string.IsNullOrWhiteSpace(key))
@@ -64,21 +70,25 @@ namespace GSF.Diagnostics
             m_hashCode = ComputeHashCode();
         }
 
-        public LogStackMessages(List<LogStackMessages> details)
+        /// <summary>
+        /// Appends stack messages together.
+        /// </summary>
+        /// <param name="messages">the messages</param>
+        public LogStackMessages(List<LogStackMessages> messages)
         {
             int cnt = 0;
-            for (int x = 0; x < details.Count; x++)
+            for (int x = 0; x < messages.Count; x++)
             {
-                cnt += details[x].m_attributes.Length;
+                cnt += messages[x].m_attributes.Length;
             }
 
             m_attributes = new string[cnt];
             m_values = new string[cnt];
 
             cnt = 0;
-            for (int x = 0; x < details.Count; x++)
+            for (int x = 0; x < messages.Count; x++)
             {
-                var item = details[x];
+                var item = messages[x];
                 for (int y = 0; y < item.m_attributes.Length; y++)
                 {
                     m_attributes[cnt] = item.m_attributes[y];
@@ -89,6 +99,11 @@ namespace GSF.Diagnostics
             m_hashCode = ComputeHashCode();
         }
 
+        /// <summary>
+        /// Loads stack messages from the stream.
+        /// </summary>
+        /// <param name="stream">the stream to load from</param>
+        /// <exception cref="VersionNotFoundException">if the version is not recognized.</exception>
         public LogStackMessages(Stream stream)
         {
             int version = stream.ReadNextByte();
@@ -135,6 +150,13 @@ namespace GSF.Diagnostics
             return hashSum;
         }
 
+        /// <summary>
+        /// returns the union of this instance and the specified key/value
+        /// </summary>
+        /// <param name="key">a key</param>
+        /// <param name="value">a value</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">if Key or Value are null or whitespace.</exception>
         public LogStackMessages ConcatenateWith(string key, string value)
         {
             if (string.IsNullOrWhiteSpace(key))
@@ -145,6 +167,10 @@ namespace GSF.Diagnostics
             return new LogStackMessages(this, key, value);
         }
 
+        /// <summary>
+        /// Saves this instance to the provided stream
+        /// </summary>
+        /// <param name="stream">the stream to save.</param>
         public void Save(Stream stream)
         {
             stream.WriteByte(0);
@@ -205,6 +231,9 @@ namespace GSF.Diagnostics
             return true;
         }
 
+        /// <summary>Returns a string that represents the current object.</summary>
+        /// <returns>A string that represents the current object.</returns>
+        /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
             if (m_attributes.Length == 0)
@@ -221,6 +250,10 @@ namespace GSF.Diagnostics
             return sb.ToString();
         }
 
+        /// <summary>
+        /// An empty stack message.
+        /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly LogStackMessages Empty;
 
         static LogStackMessages()

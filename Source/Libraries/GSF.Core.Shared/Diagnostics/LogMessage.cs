@@ -38,26 +38,31 @@ namespace GSF.Diagnostics
         /// <summary>
         /// Contains details about the <see cref="LogEventPublisher"/> that published this <see cref="LogMessage"/>.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public readonly LogEventPublisherDetails EventPublisherDetails;
 
         /// <summary>
         /// The message stack that existed when the <see cref="LogPublisher"/> was originally constructed.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public readonly LogStackMessages InitialStackMessages;
 
         /// <summary>
         /// The stack trace that existed when the <see cref="LogPublisher"/> was originally constructed.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public readonly LogStackTrace InitialStackTrace;
 
         /// <summary>
         /// The message stack that existed when this <see cref="LogMessage"/> was published.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public readonly LogStackMessages CurrentStackMessages;
 
         /// <summary>
         /// The stack trace that existed when this <see cref="LogMessage"/> was published.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public readonly LogStackTrace CurrentStackTrace;
 
         /// <summary>
@@ -105,6 +110,7 @@ namespace GSF.Diagnostics
         /// Can be null. 
         /// Since the exception is not serialized to the disk, it will be null when loaded.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public readonly Exception Exception;
 
         /// <summary>
@@ -175,6 +181,9 @@ namespace GSF.Diagnostics
             Exception = exception;
         }
 
+        /// <summary>Returns a string that represents the current object.</summary>
+        /// <returns>A string that represents the current object.</returns>
+        /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
             return GetMessage();

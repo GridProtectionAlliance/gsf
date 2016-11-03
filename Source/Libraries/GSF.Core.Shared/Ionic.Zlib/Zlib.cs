@@ -263,6 +263,8 @@ namespace Ionic.Zlib
     /// A general purpose exception class for exceptions in the Zlib library.
     /// </summary>
 #if !PCL
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2237:MarkISerializableTypesWithSerializable")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1064:ExceptionsShouldBePublic")]
     [Interop.GuidAttribute("ebc25cf6-9120-4283-b972-0e5520d0000E")]
 #endif
     internal class ZlibException : System.Exception

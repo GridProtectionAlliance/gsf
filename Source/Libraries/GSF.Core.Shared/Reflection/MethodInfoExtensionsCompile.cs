@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  MethodInfoExtensions_Compile.cs - Gbtc
+//  MethodInfoExtensionsCompile.cs - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -31,24 +31,41 @@ namespace GSF.Reflection
     /// <summary>
     /// Generates compiled IL code that can execute a method of a class.
     /// </summary>
-    public static class MethodInfoExtensions_Compile
+    public static class MethodInfoExtensionsCompile
     {
+        /// <summary>
+        /// Turns a MethodInfo into an Action that can be called with objects of the type. 
+        /// </summary>
+        /// <param name="method">the method that should be compiled.</param>
+        /// <returns>The compiled method.</returns>
         public static Action<object> CreateAction(this MethodInfo method)
         {
             return SubClass.CreateAction(method);
         }
-
+        /// <summary>
+        /// Turns a MethodInfo into an Action that can be called with objects of the type. 
+        /// </summary>
+        /// <param name="method">the method that should be compiled.</param>
+        /// <returns>The compiled method.</returns>
         public static Action<object, T1> CreateAction<T1>(this MethodInfo method)
         {
             return SubClass.CreateAction<T1>(method);
         }
-
+        /// <summary>
+        /// Turns a MethodInfo into an Action that can be called with objects of the type. 
+        /// </summary>
+        /// <param name="method">the method that should be compiled.</param>
+        /// <returns>The compiled method.</returns>
         public static Action<object, T1, T2> CreateAction<T1, T2>(this MethodInfo method)
         {
             return SubClass.CreateAction<T1, T2>(method);
 
         }
-
+        /// <summary>
+        /// Turns a MethodInfo into an Action that can be called with objects of the type. 
+        /// </summary>
+        /// <param name="method">the method that should be compiled.</param>
+        /// <returns>The compiled method.</returns>
         public static Action<object, T1, T2, T3> CreateAction<T1, T2, T3>(this MethodInfo method)
         {
             return SubClass.CreateAction<T1, T2, T3>(method);
@@ -56,21 +73,45 @@ namespace GSF.Reflection
 
         #region [ MethodInfo to Func ]
 
+        /// <summary>
+        /// Turns a MethodInfo into an Func that can be called with objects of the type. 
+        /// </summary>
+        /// <param name="method">the method that should be compiled.</param>
+        /// <returns>The compiled method.</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1715:IdentifiersShouldHaveCorrectPrefix", MessageId = "T")]
         public static Func<object, R1> CreateFunc<R1>(this MethodInfo method)
         {
             return SubClass.CreateFunc<R1>(method);
         }
 
+        /// <summary>
+        /// Turns a MethodInfo into an Func that can be called with objects of the type. 
+        /// </summary>
+        /// <param name="method">the method that should be compiled.</param>
+        /// <returns>The compiled method.</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1715:IdentifiersShouldHaveCorrectPrefix", MessageId = "T")]
         public static Func<object, T1, R1> CreateFunc<T1, R1>(this MethodInfo method)
         {
             return SubClass.CreateFunc<T1, R1>(method);
         }
 
+        /// <summary>
+        /// Turns a MethodInfo into an Func that can be called with objects of the type. 
+        /// </summary>
+        /// <param name="method">the method that should be compiled.</param>
+        /// <returns>The compiled method.</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1715:IdentifiersShouldHaveCorrectPrefix", MessageId = "T")]
         public static Func<object, T1, T2, R1> CreateFunc<T1, T2, R1>(this MethodInfo method)
         {
             return SubClass.CreateFunc<T1, T2, R1>(method);
         }
 
+        /// <summary>
+        /// Turns a MethodInfo into an Func that can be called with objects of the type. 
+        /// </summary>
+        /// <param name="method">the method that should be compiled.</param>
+        /// <returns>The compiled method.</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1715:IdentifiersShouldHaveCorrectPrefix", MessageId = "T")]
         public static Func<object, T1, T2, T3, R1> CreateFunc<T1, T2, T3, R1>(this MethodInfo method)
         {
             return SubClass.CreateFunc<T1, T2, T3, R1>(method);

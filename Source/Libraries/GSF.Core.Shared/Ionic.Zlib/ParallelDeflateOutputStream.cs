@@ -802,6 +802,7 @@ namespace Ionic.Zlib
         /// <param name="disposing">
         ///   indicates whether the Dispose method was invoked by user code.
         /// </param>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_newlyCompressedBlob")]
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
