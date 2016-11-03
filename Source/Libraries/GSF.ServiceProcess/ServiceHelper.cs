@@ -169,22 +169,6 @@ namespace GSF.ServiceProcess
     [ToolboxBitmap(typeof(ServiceHelper))]
     public class ServiceHelper : Component, ISupportLifecycle, ISupportInitialize, IProvideStatus, IPersistSettings
     {
-        private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(ServiceHelper), MessageClass.Framework);
-        private static readonly LogEventPublisher LogError = Log.RegisterEvent(MessageLevel.Error, MessageFlags.None, "Error Message", 0, MessageRate.PerSecond(30), 1000);
-        private static readonly LogEventPublisher LogStatusInfo = Log.RegisterEvent(MessageLevel.Info, MessageFlags.None, "Status Message Info", 0, MessageRate.PerSecond(30), 1000);
-        private static readonly LogEventPublisher LogStatusWarning = Log.RegisterEvent(MessageLevel.Warning, MessageFlags.None, "Status Message Warning", 0, MessageRate.PerSecond(30), 1000);
-        private static readonly LogEventPublisher LogStatusAlarm = Log.RegisterEvent(MessageLevel.Error, MessageFlags.None, "Status Message Alarm", 0, MessageRate.PerSecond(30), 1000);
-
-        static ServiceHelper()
-        {
-            string logPath = FilePath.GetAbsolutePath("Application Logs");
-            if (!Directory.Exists(logPath))
-                Directory.CreateDirectory(logPath);
-            Logger.FileWriter.SetPath(logPath, VerboseLevel.High);
-            Logger.FileWriter.SetLoggingFileCount(300);
-            Log.InitialStackTrace = LogStackTrace.Empty;
-        }
-
         #region [ Members ]
 
         // Nested Types
@@ -1736,7 +1720,20 @@ namespace GSF.ServiceProcess
         [StringFormatMethod("message")]
         public void UpdateStatus(UpdateType type, string message, params object[] args)
         {
-            UpdateStatus(Guid.Empty, type, message, args);
+            UpdateStatus(type, true, message, args);
+        }
+
+        /// <summary>
+        /// Provides a status update to all <see cref="RemoteClients"/>.
+        /// </summary>
+        /// <param name="message">Text message to be transmitted to all <see cref="RemoteClients"/>.</param>
+        /// <param name="publishToLog">Determines if messages should be sent logging engine.</param>
+        /// <param name="type">One of the <see cref="UpdateType"/> values.</param>
+        /// <param name="args">Arguments to be used for formatting the <paramref name="message"/>.</param>
+        [StringFormatMethod("message")]
+        public void UpdateStatus(UpdateType type, bool publishToLog, string message, params object[] args)
+        {
+            UpdateStatus(Guid.Empty, type, publishToLog, message, args);
         }
 
         /// <summary>
@@ -1749,20 +1746,38 @@ namespace GSF.ServiceProcess
         [StringFormatMethod("message")]
         public void UpdateStatus(Guid client, UpdateType type, string message, params object[] args)
         {
+            UpdateStatus(client, type, true, message, args);
+        }
+
+        /// <summary>
+        /// Provides a status update to the specified <paramref name="client"/>.
+        /// </summary>
+        /// <param name="client">ID of the client to whom the <paramref name="message"/> is to be sent.</param>
+        /// <param name="type">One of the <see cref="UpdateType"/> values.</param>
+        /// <param name="publishToLog">Determines if messages should be sent logging engine.</param>
+        /// <param name="message">Text message to be transmitted to the <paramref name="client"/>.</param>
+        /// <param name="args">Arguments to be used for formatting the <paramref name="message"/>.</param>
+        [StringFormatMethod("message")]
+        public void UpdateStatus(Guid client, UpdateType type, bool publishToLog, string message, params object[] args)
+        {
             string formattedMessage = string.Format(message, args);
-            switch (type)
+
+            if (publishToLog)
             {
-                case UpdateType.Information:
-                    LogStatusInfo.Publish(formattedMessage, client.ToString());
-                    break;
-                case UpdateType.Warning:
-                    LogStatusWarning.Publish(formattedMessage, client.ToString());
-                    break;
-                case UpdateType.Alarm:
-                    LogStatusAlarm.Publish(formattedMessage, client.ToString());
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
+                switch (type)
+                {
+                    case UpdateType.Information:
+                        s_logStatusInfo.Publish(formattedMessage, client.ToString());
+                        break;
+                    case UpdateType.Warning:
+                        s_logStatusWarning.Publish(formattedMessage, client.ToString());
+                        break;
+                    case UpdateType.Alarm:
+                        s_logStatusAlarm.Publish(formattedMessage, client.ToString());
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(type), type, null);
+                }
             }
 
             const int HighPriority = 2;
@@ -2039,7 +2054,8 @@ namespace GSF.ServiceProcess
         /// <param name="ex">Exception to log.</param>
         public void LogException(Exception ex)
         {
-            LogError.Publish(null, null, ex);
+            s_logError.Publish(null, null, ex);
+
             if ((object)m_errorLogger != null)
                 m_errorLogger.Log(ex);
 
@@ -4248,15 +4264,15 @@ namespace GSF.ServiceProcess
             // Use the status update thread to get the
             // client's config, then update the filters
             m_statusUpdateThread.Push(HighPriority, () =>
-                                                    {
-                                                        ClientStatusUpdateConfiguration clientConfig = m_clientStatusUpdateLookup.GetOrAdd(requestInfo.Sender.ClientID, id => new ClientStatusUpdateConfiguration(id, this));
+            {
+                ClientStatusUpdateConfiguration clientConfig = m_clientStatusUpdateLookup.GetOrAdd(requestInfo.Sender.ClientID, id => new ClientStatusUpdateConfiguration(id, this));
 
-                                                        if (filterUpdated)
-                                                            clientConfig.UpdateFilters(mergeFilter, removalIDs);
+                if (filterUpdated)
+                    clientConfig.UpdateFilters(mergeFilter, removalIDs);
 
-                                                        if (argsContainsList)
-                                                            clientConfig.ListFilters(requestInfo);
-                                                    });
+                if (argsContainsList)
+                    clientConfig.ListFilters(requestInfo);
+            });
         }
 
         private void ManageFiles(ClientRequestInfo requestInfo)
@@ -4385,6 +4401,7 @@ namespace GSF.ServiceProcess
                     {
                         // File content is present.
                         target = FilePath.GetAbsolutePath(target);
+
                         if (!File.Exists(target) || overwrite)
                         {
                             // Save the received file.
@@ -4408,6 +4425,7 @@ namespace GSF.ServiceProcess
                 {
                     // Request is for uploading a file.
                     source = FilePath.GetAbsolutePath(source);
+
                     if (File.Exists(source))
                     {
                         // Send file to client.
@@ -4681,6 +4699,37 @@ namespace GSF.ServiceProcess
         }
 
         #endregion
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly LogPublisher s_log;
+        private static readonly LogEventPublisher s_logError;
+        private static readonly LogEventPublisher s_logStatusInfo;
+        private static readonly LogEventPublisher s_logStatusWarning;
+        private static readonly LogEventPublisher s_logStatusAlarm;
+
+        // Static Constructor
+        static ServiceHelper()
+        {
+            s_log = Logger.CreatePublisher(typeof(ServiceHelper), MessageClass.Framework);
+            s_logError = s_log.RegisterEvent(MessageLevel.Error, MessageFlags.None, "Error Message", 0, MessageRate.PerSecond(30), 1000);
+            s_logStatusInfo = s_log.RegisterEvent(MessageLevel.Info, MessageFlags.None, "Status Message Info", 0, MessageRate.PerSecond(30), 1000);
+            s_logStatusWarning = s_log.RegisterEvent(MessageLevel.Warning, MessageFlags.None, "Status Message Warning", 0, MessageRate.PerSecond(30), 1000);
+            s_logStatusAlarm = s_log.RegisterEvent(MessageLevel.Error, MessageFlags.None, "Status Message Alarm", 0, MessageRate.PerSecond(30), 1000);
+
+            string logPath = FilePath.GetAbsolutePath("Application Logs");
+
+            if (!Directory.Exists(logPath))
+                Directory.CreateDirectory(logPath);
+
+            Logger.FileWriter.SetPath(logPath, VerboseLevel.High);
+            Logger.FileWriter.SetLoggingFileCount(300);
+
+            s_log.InitialStackTrace = LogStackTrace.Empty;
+        }
 
         #endregion
     }
