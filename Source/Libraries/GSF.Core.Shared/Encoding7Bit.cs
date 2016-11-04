@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
 using GSF.IO;
@@ -41,7 +42,7 @@ namespace GSF
         public static int GetSizeInt15(short value1)
         {
             if (value1 < 0)
-                throw new ArgumentOutOfRangeException("value1", "Cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(value1), "Cannot be negative");
             if (value1 < 128)
                 return 1;
             return 2;
@@ -52,7 +53,7 @@ namespace GSF
         /// </summary>
         /// <param name="stream"></param>
         /// <returns></returns>
-        public unsafe static int MeasureInt15(byte* stream)
+        public static unsafe int MeasureInt15(byte* stream)
         {
             if (stream[0] < 128)
                 return 1;
@@ -65,7 +66,7 @@ namespace GSF
         /// <param name="stream"></param>
         /// <param name="position"></param>
         /// <returns></returns>
-        public unsafe static int Measure15(byte* stream, int position)
+        public static unsafe int Measure15(byte* stream, int position)
         {
             return MeasureInt15(stream + position);
         }
@@ -95,7 +96,7 @@ namespace GSF
         public static unsafe int WriteInt15(byte* stream, short value1)
         {
             if (value1 < 0)
-                throw new ArgumentOutOfRangeException("value1", "Cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(value1), "Cannot be negative");
             if (value1 < 128)
             {
                 stream[0] = (byte)value1;
@@ -113,11 +114,11 @@ namespace GSF
         /// <param name="position">a reference parameter to the starting position. 
         /// This field will be updated. when the function returns</param>
         /// <param name="value1">the value to write</param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
+        [SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
         public static unsafe void WriteInt15(byte* stream, ref int position, short value1)
         {
             if (value1 < 0)
-                throw new ArgumentOutOfRangeException("value1", "Cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(value1), "Cannot be negative");
 
             if (value1 < 128)
             {
@@ -137,11 +138,11 @@ namespace GSF
         /// <param name="position">a reference parameter to the starting position. 
         /// This field will be updated. when the function returns</param>
         /// <param name="value1">the value to write</param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
+        [SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
         public static void WriteInt15(byte[] stream, ref int position, short value1)
         {
             if (value1 < 0)
-                throw new ArgumentOutOfRangeException("value1", "Cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(value1), "Cannot be negative");
 
             if (value1 < 128)
             {
@@ -162,7 +163,7 @@ namespace GSF
         public static void WriteInt15(Action<byte> stream, short value1)
         {
             if (value1 < 0)
-                throw new ArgumentOutOfRangeException("value1", "Cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(value1), "Cannot be negative");
 
             if (value1 < 128)
             {
@@ -183,8 +184,8 @@ namespace GSF
         /// <param name="stream">the stream</param>
         /// <param name="position">the position in the stream. Position will be updated after reading</param>
         /// <returns>The value</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
-        public unsafe static short ReadInt15(byte* stream, ref int position)
+        [SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
+        public static unsafe short ReadInt15(byte* stream, ref int position)
         {
             stream += position;
             short value11;
@@ -205,7 +206,7 @@ namespace GSF
         /// <param name="stream">the stream</param>
         /// <param name="position">the position in the stream. Position will be updated after reading</param>
         /// <returns>The value</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
+        [SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
         public static short ReadInt15(byte[] stream, ref int position)
         {
             short value11;
@@ -285,7 +286,7 @@ namespace GSF
         /// </summary>
         /// <param name="stream"></param>
         /// <returns></returns>
-        public unsafe static int MeasureUInt32(byte* stream)
+        public static unsafe int MeasureUInt32(byte* stream)
         {
             if (stream[0] < 128)
                 return 1;
@@ -304,7 +305,7 @@ namespace GSF
         /// <param name="stream"></param>
         /// <param name="position"></param>
         /// <returns></returns>
-        public unsafe static int MeasureUInt32(byte* stream, int position)
+        public static unsafe int MeasureUInt32(byte* stream, int position)
         {
             return MeasureUInt32(stream + position);
         }
@@ -374,7 +375,7 @@ namespace GSF
         /// <param name="position">a reference parameter to the starting position. 
         /// This field will be updated. when the function returns</param>
         /// <param name="value1">the value to write</param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
+        [SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
         public static unsafe void Write(byte* stream, ref int position, uint value1)
         {
             if (value1 < 128)
@@ -407,7 +408,6 @@ namespace GSF
             stream[position + 3] = (byte)((value1 >> 21) | 128);
             stream[position + 4] = (byte)(value1 >> 28);
             position += 5;
-            return;
         }
 
         /// <summary>
@@ -417,7 +417,7 @@ namespace GSF
         /// <param name="position">a reference parameter to the starting position. 
         /// This field will be updated. when the function returns</param>
         /// <param name="value1">the value to write</param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
+        [SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
         public static void Write(byte[] stream, ref int position, uint value1)
         {
             if (value1 < 128)
@@ -450,7 +450,6 @@ namespace GSF
             stream[position + 3] = (byte)((value1 >> 21) | 128);
             stream[position + 4] = (byte)(value1 >> 28);
             position += 5;
-            return;
         }
 
         /// <summary>
@@ -497,8 +496,8 @@ namespace GSF
         /// <param name="stream">the stream</param>
         /// <param name="position">the position in the stream. Position will be updated after reading</param>
         /// <returns>The value</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
-        public unsafe static uint ReadUInt32(byte* stream, ref int position)
+        [SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
+        public static unsafe uint ReadUInt32(byte* stream, ref int position)
         {
             stream += position;
             uint value11;
@@ -537,7 +536,7 @@ namespace GSF
         /// <param name="stream">the stream</param>
         /// <param name="position">the position in the stream. Position will be updated after reading</param>
         /// <returns>The value</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
+        [SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
         public static uint ReadUInt32(byte[] stream, ref int position)
         {
             int pos = position;
@@ -676,7 +675,7 @@ namespace GSF
         /// </summary>
         /// <param name="stream"></param>
         /// <returns></returns>
-        public unsafe static int MeasureUInt64(byte* stream)
+        public static unsafe int MeasureUInt64(byte* stream)
         {
             if (stream[0] < 128)
                 return 1;
@@ -703,7 +702,7 @@ namespace GSF
         /// <param name="stream"></param>
         /// <param name="position"></param>
         /// <returns></returns>
-        public unsafe static int MeasureUInt64(byte* stream, int position)
+        public static unsafe int MeasureUInt64(byte* stream, int position)
         {
             return MeasureUInt64(stream + position);
         }
@@ -744,7 +743,7 @@ namespace GSF
         /// <param name="value1">the value to write</param>
         /// <returns>The number of bytes required to store the value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        unsafe public static int Write(byte* stream, ulong value1)
+        public static unsafe int Write(byte* stream, ulong value1)
         {
             if (value1 < 128)
             {
@@ -805,8 +804,8 @@ namespace GSF
         /// <param name="position">a reference parameter to the starting position. 
         /// This field will be updated. when the function returns</param>
         /// <param name="value1">the value to write</param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
-        unsafe public static void Write(byte* stream, ref int position, ulong value1)
+        [SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
+        public static unsafe void Write(byte* stream, ref int position, ulong value1)
         {
             if (value1 < 128)
             {
@@ -866,7 +865,6 @@ namespace GSF
             stream[position + 7] = (byte)(value1 >> (7 + 7 + 7 + 7 + 7 + 7 + 7) | 128);
             stream[position + 8] = (byte)(value1 >> (7 + 7 + 7 + 7 + 7 + 7 + 7 + 7));
             position += 9;
-            return;
         }
 
         /// <summary>
@@ -876,7 +874,7 @@ namespace GSF
         /// <param name="position">a reference parameter to the starting position. 
         /// This field will be updated. when the function returns</param>
         /// <param name="value1">the value to write</param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
+        [SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
         public static void Write(byte[] stream, ref int position, ulong value1)
         {
             if (value1 < 128)
@@ -937,7 +935,6 @@ namespace GSF
             stream[position + 7] = (byte)(value1 >> (7 + 7 + 7 + 7 + 7 + 7 + 7) | 128);
             stream[position + 8] = (byte)(value1 >> (7 + 7 + 7 + 7 + 7 + 7 + 7 + 7));
             position += 9;
-            return;
         }
 
         /// <summary>
@@ -996,7 +993,6 @@ namespace GSF
             }
             stream((byte)(value1 >> (7 + 7 + 7 + 7 + 7 + 7 + 7) | 128));
             stream((byte)(value1 >> (7 + 7 + 7 + 7 + 7 + 7 + 7 + 7)));
-            return;
         }
 
         #endregion
@@ -1009,8 +1005,8 @@ namespace GSF
         /// <param name="stream">the stream</param>
         /// <param name="position">the position in the stream. Position will be updated after reading</param>
         /// <returns>The value</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
-        public unsafe static ulong ReadUInt64(byte* stream, ref int position)
+        [SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
+        public static unsafe ulong ReadUInt64(byte* stream, ref int position)
         {
             stream += position;
             ulong value11;
@@ -1073,7 +1069,7 @@ namespace GSF
         /// <param name="stream">the stream</param>
         /// <param name="position">the position in the stream. Position will be updated after reading</param>
         /// <returns>The value</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
+        [SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
         public static ulong ReadUInt64(byte[] stream, ref int position)
         {
             int pos = position;

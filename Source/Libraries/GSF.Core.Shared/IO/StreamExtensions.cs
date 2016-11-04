@@ -58,15 +58,15 @@ namespace GSF.IO
         public static void CopyTo(this Stream source, Stream destination, long length, byte[] buffer)
         {
             if (source == null)
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
             if (destination == null)
-                throw new ArgumentNullException("destination");
+                throw new ArgumentNullException(nameof(destination));
             if (buffer == null)
-                throw new ArgumentNullException("buffer");
+                throw new ArgumentNullException(nameof(buffer));
             if (buffer.Length < 1)
-                throw new ArgumentException("Array length of zero", "buffer");
+                throw new ArgumentException("Array length of zero", nameof(buffer));
             if (length < 0)
-                throw new ArgumentOutOfRangeException("length", "Cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(length), "Cannot be negative");
 
             while (length > 0)
             {

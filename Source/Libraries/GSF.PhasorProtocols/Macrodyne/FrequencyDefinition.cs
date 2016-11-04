@@ -127,7 +127,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <summary>
         /// Gets or sets the <see cref="ConfigurationCell"/> parent of this <see cref="FrequencyDefinition"/>.
         /// </summary>
-        public virtual new ConfigurationCell Parent
+        public new virtual ConfigurationCell Parent
         {
             get
             {

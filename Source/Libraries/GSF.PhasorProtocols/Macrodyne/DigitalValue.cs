@@ -76,7 +76,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <summary>
         /// Gets or sets the <see cref="DataCell"/> parent of this <see cref="DigitalValue"/>.
         /// </summary>
-        public virtual new DataCell Parent
+        public new virtual DataCell Parent
         {
             get
             {
@@ -91,7 +91,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <summary>
         /// Gets or sets the <see cref="DigitalDefinition"/> associated with this <see cref="DigitalValue"/>.
         /// </summary>
-        public virtual new DigitalDefinition Definition
+        public new virtual DigitalDefinition Definition
         {
             get
             {

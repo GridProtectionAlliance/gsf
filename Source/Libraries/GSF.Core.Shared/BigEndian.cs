@@ -82,7 +82,7 @@ namespace GSF
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static bool ToBoolean(byte* buffer)
+        public static unsafe bool ToBoolean(byte* buffer)
         {
             return buffer[0] != 0;
         }
@@ -95,7 +95,7 @@ namespace GSF
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static char ToChar(byte* buffer)
+        public static unsafe char ToChar(byte* buffer)
         {
             return (char)ToInt16(buffer);
         }
@@ -108,7 +108,7 @@ namespace GSF
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static double ToDouble(byte* buffer)
+        public static unsafe double ToDouble(byte* buffer)
         {
             long int64 = ToInt64(buffer);
             return *(double*)&int64;
@@ -122,7 +122,7 @@ namespace GSF
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static short ToInt16(byte* buffer)
+        public static unsafe short ToInt16(byte* buffer)
         {
             return (short)((int)buffer[0] << 8 | (int)buffer[1]);
         }
@@ -135,7 +135,7 @@ namespace GSF
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static Int24 ToInt24(byte* buffer)
+        public static unsafe Int24 ToInt24(byte* buffer)
         {
             int int32 = buffer[0] << 16 |
                         buffer[1] << 8 |
@@ -164,7 +164,7 @@ namespace GSF
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int ToInt32(byte* buffer)
+        public static unsafe int ToInt32(byte* buffer)
         {
             return (int)buffer[0] << 24 |
                    (int)buffer[1] << 16 |
@@ -180,7 +180,7 @@ namespace GSF
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static long ToInt64(byte* buffer)
+        public static unsafe long ToInt64(byte* buffer)
         {
             return (long)buffer[0] << 56 |
                    (long)buffer[1] << 48 |
@@ -200,7 +200,7 @@ namespace GSF
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static float ToSingle(byte* buffer)
+        public static unsafe float ToSingle(byte* buffer)
         {
             int int32 = ToInt32(buffer);
             return *(float*)&int32;
@@ -214,7 +214,7 @@ namespace GSF
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static ushort ToUInt16(byte* buffer)
+        public static unsafe ushort ToUInt16(byte* buffer)
         {
             return (ushort)ToInt16(buffer);
         }
@@ -227,7 +227,7 @@ namespace GSF
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static UInt24 ToUInt24(byte* buffer)
+        public static unsafe UInt24 ToUInt24(byte* buffer)
         {
             return (UInt24)((uint)buffer[0] << 16 |
                             (uint)buffer[1] << 8 |
@@ -242,7 +242,7 @@ namespace GSF
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static uint ToUInt32(byte* buffer)
+        public static unsafe uint ToUInt32(byte* buffer)
         {
             return (uint)ToInt32(buffer);
         }
@@ -255,7 +255,7 @@ namespace GSF
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static ulong ToUInt64(byte* buffer)
+        public static unsafe ulong ToUInt64(byte* buffer)
         {
             return (ulong)ToInt64(buffer);
         }
@@ -268,7 +268,7 @@ namespace GSF
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static decimal ToDecimal(byte* buffer)
+        public static unsafe decimal ToDecimal(byte* buffer)
         {
             if (!BitConverter.IsLittleEndian)
                 return *(decimal*)(buffer);
@@ -510,7 +510,7 @@ namespace GSF
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static decimal ToDecimal(byte[] buffer, int startIndex)
+        public static unsafe decimal ToDecimal(byte[] buffer, int startIndex)
         {
             buffer.ValidateParameters(startIndex, 16);
 
@@ -561,7 +561,7 @@ namespace GSF
         public static byte[] GetBytes<T>(T value) where T : struct, IConvertible
         {
             if (!typeof(T).IsPrimitive)
-                throw new ArgumentException("Value type is not primitive", "value");
+                throw new ArgumentException("Value type is not primitive", nameof(value));
 
             IConvertible nativeValue = (IConvertible)value;
 
@@ -766,7 +766,7 @@ namespace GSF
         /// <param name="value">The number to convert.</param>
         /// <returns>An array of bytes with length 16.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static byte[] GetBytes(decimal value)
+        public static unsafe byte[] GetBytes(decimal value)
         {
             byte[] destinationArray = new byte[16];
             fixed (byte* destination = destinationArray)
@@ -821,7 +821,7 @@ namespace GSF
         public static int CopyBytes<T>(T value, byte[] destinationArray, int destinationIndex) where T : struct, IConvertible
         {
             if (!typeof(T).IsPrimitive)
-                throw new ArgumentException("Value type is not primitive", "value");
+                throw new ArgumentException("Value type is not primitive", nameof(value));
 
             IConvertible nativeValue = (IConvertible)value;
 
@@ -889,7 +889,7 @@ namespace GSF
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int CopyBytes(double value, byte[] destinationArray, int destinationIndex)
+        public static unsafe int CopyBytes(double value, byte[] destinationArray, int destinationIndex)
         {
             return CopyBytes(*(long*)&value, destinationArray, destinationIndex);
         }
@@ -1048,7 +1048,7 @@ namespace GSF
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int CopyBytes(decimal value, byte[] destinationArray, int destinationIndex)
+        public static unsafe int CopyBytes(decimal value, byte[] destinationArray, int destinationIndex)
         {
             destinationArray.ValidateParameters(destinationIndex, 16);
             fixed (byte* destination = &destinationArray[destinationIndex])
@@ -1099,10 +1099,10 @@ namespace GSF
         /// <exception cref="InvalidOperationException">Cannot get bytes for <paramref name="value"/> type.</exception>
         /// <returns>Length of bytes copied into array based on size of <typeparamref name="T"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int CopyBytes<T>(T value, byte* destination) where T : struct, IConvertible
+        public static unsafe int CopyBytes<T>(T value, byte* destination) where T : struct, IConvertible
         {
             if (!typeof(T).IsPrimitive)
-                throw new ArgumentException("Value type is not primitive", "value");
+                throw new ArgumentException("Value type is not primitive", nameof(value));
 
             IConvertible nativeValue = (IConvertible)value;
 
@@ -1142,7 +1142,7 @@ namespace GSF
         /// <param name="destination">The destination buffer.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int CopyBytes(bool value, byte* destination)
+        public static unsafe int CopyBytes(bool value, byte* destination)
         {
             destination[0] = value ? (byte)1 : (byte)0;
             return 1;
@@ -1155,7 +1155,7 @@ namespace GSF
         /// <param name="destination">The destination buffer.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int CopyBytes(char value, byte* destination)
+        public static unsafe int CopyBytes(char value, byte* destination)
         {
             return CopyBytes((short)value, destination);
         }
@@ -1167,7 +1167,7 @@ namespace GSF
         /// <param name="destination">The destination buffer.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int CopyBytes(double value, byte* destination)
+        public static unsafe int CopyBytes(double value, byte* destination)
         {
             return CopyBytes(*(long*)&value, destination);
         }
@@ -1179,7 +1179,7 @@ namespace GSF
         /// <param name="destination">The destination buffer.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int CopyBytes(short value, byte* destination)
+        public static unsafe int CopyBytes(short value, byte* destination)
         {
             destination[0] = (byte)(value >> 8);
             destination[1] = (byte)(value);
@@ -1194,7 +1194,7 @@ namespace GSF
         /// <param name="destination">The destination buffer.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int CopyBytes(Int24 value, byte* destination)
+        public static unsafe int CopyBytes(Int24 value, byte* destination)
         {
             int int32 = value;
 
@@ -1212,7 +1212,7 @@ namespace GSF
         /// <param name="destination">The destination buffer.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int CopyBytes(int value, byte* destination)
+        public static unsafe int CopyBytes(int value, byte* destination)
         {
             destination[0] = (byte)(value >> 24);
             destination[1] = (byte)(value >> 16);
@@ -1229,7 +1229,7 @@ namespace GSF
         /// <param name="destination">The destination buffer.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int CopyBytes(long value, byte* destination)
+        public static unsafe int CopyBytes(long value, byte* destination)
         {
             destination[0] = (byte)(value >> 56);
             destination[1] = (byte)(value >> 48);
@@ -1250,7 +1250,7 @@ namespace GSF
         /// <param name="destination">The destination buffer.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int CopyBytes(float value, byte* destination)
+        public static unsafe int CopyBytes(float value, byte* destination)
         {
             return CopyBytes(*(int*)&value, destination);
         }
@@ -1262,7 +1262,7 @@ namespace GSF
         /// <param name="destination">The destination buffer.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int CopyBytes(ushort value, byte* destination)
+        public static unsafe int CopyBytes(ushort value, byte* destination)
         {
             return CopyBytes((short)value, destination);
         }
@@ -1274,7 +1274,7 @@ namespace GSF
         /// <param name="destination">The destination buffer.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int CopyBytes(UInt24 value, byte* destination)
+        public static unsafe int CopyBytes(UInt24 value, byte* destination)
         {
             uint uint32 = value;
 
@@ -1292,7 +1292,7 @@ namespace GSF
         /// <param name="destination">The destination buffer.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int CopyBytes(uint value, byte* destination)
+        public static unsafe int CopyBytes(uint value, byte* destination)
         {
             return CopyBytes((int)value, destination);
         }
@@ -1304,7 +1304,7 @@ namespace GSF
         /// <param name="destination">The destination buffer.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int CopyBytes(ulong value, byte* destination)
+        public static unsafe int CopyBytes(ulong value, byte* destination)
         {
             return CopyBytes((long)value, destination);
         }
@@ -1316,7 +1316,7 @@ namespace GSF
         /// <param name="destination">The destination buffer.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int CopyBytes(decimal value, byte* destination)
+        public static unsafe int CopyBytes(decimal value, byte* destination)
         {
             if (!BitConverter.IsLittleEndian)
             {

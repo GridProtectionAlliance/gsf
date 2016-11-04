@@ -140,15 +140,15 @@ namespace GSF.Web.Hosting
 		{
 			if (containingAssembly == null)
 			{
-				throw new ArgumentNullException("containingAssembly");
+				throw new ArgumentNullException(nameof(containingAssembly));
 			}
 			if (resourcePath == null)
 			{
-				throw new ArgumentNullException("resourcePath");
+				throw new ArgumentNullException(nameof(resourcePath));
 			}
 			if (resourcePath.Length == 0)
 			{
-				throw new ArgumentOutOfRangeException("resourcePath");
+				throw new ArgumentOutOfRangeException(nameof(resourcePath));
 			}
 			this._containingAssembly = containingAssembly;
 			this._resourcePath = resourcePath;

@@ -122,7 +122,7 @@ namespace HistorianAdapters
             set
             {
                 if (string.IsNullOrWhiteSpace(value))
-                    throw new ArgumentNullException("value", "The archiveLocation setting must be specified.");
+                    throw new ArgumentNullException(nameof(value), "The archiveLocation setting must be specified.");
 
                 m_archiveLocation = FilePath.GetDirectoryName(value);
             }

@@ -271,7 +271,7 @@ namespace GSF.Threading
         void StartSlower(int delay)
         {
             if (delay < 0)
-                throw new ArgumentException("Cannot be less than zero", "delay");
+                throw new ArgumentException("Cannot be less than zero", nameof(delay));
 
             SpinWait wait = new SpinWait();
             m_runAgainAfterDelay = delay;

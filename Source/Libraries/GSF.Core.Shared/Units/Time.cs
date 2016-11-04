@@ -1120,7 +1120,7 @@ namespace GSF.Units
             const int SecondsPerYear = 31556952;
 
             if (minimumSubSecondResolution > SI.Milli)
-                throw new ArgumentOutOfRangeException("minimumSubSecondResolution", "Must be less than or equal to " + SI.Milli);
+                throw new ArgumentOutOfRangeException(nameof(minimumSubSecondResolution), "Must be less than or equal to " + SI.Milli);
 
             // Future: setup a language specific load for the default time names array
             if ((object)timeNames == null || timeNames.Length != TimeNames.Length)

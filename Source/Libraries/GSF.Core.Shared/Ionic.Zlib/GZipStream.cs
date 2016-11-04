@@ -546,7 +546,7 @@ namespace Ionic.Zlib
         /// <summary>
         /// This property sets the flush behavior on the stream.
         /// </summary>
-        virtual public FlushType FlushMode
+        public virtual FlushType FlushMode
         {
             get { return (this._baseStream._flushMode); }
             set {
@@ -591,7 +591,7 @@ namespace Ionic.Zlib
 
 
         /// <summary> Returns the total number of bytes input so far.</summary>
-        virtual public long TotalIn
+        public virtual long TotalIn
         {
             get
             {
@@ -600,7 +600,7 @@ namespace Ionic.Zlib
         }
 
         /// <summary> Returns the total number of bytes output so far.</summary>
-        virtual public long TotalOut
+        public virtual long TotalOut
         {
             get
             {

@@ -87,7 +87,7 @@ namespace GSF
         public static string ToNonNullString<T>(this T value, string nonNullValue) where T : class
         {
             if ((object)nonNullValue == null)
-                throw new ArgumentNullException("nonNullValue");
+                throw new ArgumentNullException(nameof(nonNullValue));
 
             return ((object)value == null || value is DBNull ? nonNullValue : value.ToString());
         }
@@ -116,7 +116,7 @@ namespace GSF
         public static string ToNonNullNorEmptyString<T>(this T value, string nonNullNorEmptyValue = " ") where T : class
         {
             if (string.IsNullOrEmpty(nonNullNorEmptyValue))
-                throw new ArgumentException("Must not be null or an empty string", "nonNullNorEmptyValue");
+                throw new ArgumentException("Must not be null or an empty string", nameof(nonNullNorEmptyValue));
 
             if ((object)value == null || value is DBNull)
                 return nonNullNorEmptyValue;
@@ -137,7 +137,7 @@ namespace GSF
         public static string ToNonNullNorWhiteSpace<T>(this T value, string nonNullNorWhiteSpaceValue = "_") where T : class
         {
             if (string.IsNullOrWhiteSpace(nonNullNorWhiteSpaceValue))
-                throw new ArgumentException("Must not be null, an empty string or white space", "nonNullNorWhiteSpaceValue");
+                throw new ArgumentException("Must not be null, an empty string or white space", nameof(nonNullNorWhiteSpaceValue));
 
             if ((object)value == null || value is DBNull)
                 return nonNullNorWhiteSpaceValue;

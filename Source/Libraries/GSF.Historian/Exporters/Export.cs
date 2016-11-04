@@ -143,7 +143,7 @@ namespace GSF.Historian.Exporters
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_name = value;
             }
@@ -192,7 +192,7 @@ namespace GSF.Historian.Exporters
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_exporter = value;
             }

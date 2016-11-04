@@ -279,7 +279,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets or sets the parsing state for the this <see cref="ChannelFrameBase{T}"/>.
         /// </summary>
-        new public virtual IChannelFrameParsingState<T> State
+        public new virtual IChannelFrameParsingState<T> State
         {
             get
             {

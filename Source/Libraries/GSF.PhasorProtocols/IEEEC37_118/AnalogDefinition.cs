@@ -84,7 +84,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets or sets the <see cref="ConfigurationCell"/> parent of this <see cref="AnalogDefinition"/>.
         /// </summary>
-        public virtual new ConfigurationCell Parent
+        public new virtual ConfigurationCell Parent
         {
             get
             {

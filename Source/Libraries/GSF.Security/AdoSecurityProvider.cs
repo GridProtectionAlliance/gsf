@@ -933,7 +933,7 @@ namespace GSF.Security
         #region [ Static ]
 
         // Static Fields
-        static private readonly string[] s_securityTables =
+        private static readonly string[] s_securityTables =
         {
             UserAccountTable,                   // User accounts
             SecurityGroupTable,                 // Security groups
@@ -943,7 +943,7 @@ namespace GSF.Security
             ApplicationRoleSecurityGroupTable   // Application role assignments for security groups
         };
 
-        static private readonly Guid s_nodeID;
+        private static readonly Guid s_nodeID;
 
         // Static Constructor
         static AdoSecurityProvider()

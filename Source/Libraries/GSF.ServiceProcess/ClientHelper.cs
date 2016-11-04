@@ -258,7 +258,7 @@ namespace GSF.ServiceProcess
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_username = value;
             }
@@ -280,7 +280,7 @@ namespace GSF.ServiceProcess
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_password = value;
             }
@@ -357,7 +357,7 @@ namespace GSF.ServiceProcess
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_settingsCategory = value;
             }

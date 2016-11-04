@@ -635,7 +635,7 @@ namespace GSF.Communication
                     throw new FormatException(string.Format("Server property is invalid (Example: {0})", DefaultConfigurationString));
 
                 if (m_zeroMQTransportProtocol != ZeroMQTransportProtocol.InProc && !Transport.IsPortNumberValid(port))
-                    throw new ArgumentOutOfRangeException("configurationString", string.Format("Port number must be between {0} and {1}", Transport.PortRangeLow, Transport.PortRangeHigh));
+                    throw new ArgumentOutOfRangeException(nameof(configurationString), string.Format("Port number must be between {0} and {1}", Transport.PortRangeLow, Transport.PortRangeHigh));
             }
             else
             {

@@ -148,7 +148,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets or sets the reference to parent <see cref="IDataFrame"/> of this <see cref="DataCellBase"/>.
         /// </summary>
-        public virtual new IDataFrame Parent
+        public new virtual IDataFrame Parent
         {
             get
             {
@@ -178,7 +178,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets or sets the parsing state for the this <see cref="DataCellBase"/>.
         /// </summary>
-        public virtual new IDataCellParsingState State
+        public new virtual IDataCellParsingState State
         {
             get
             {

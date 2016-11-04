@@ -854,7 +854,7 @@ namespace GSF.Media
         {
             // Validate number of samples
             if (samples.Length != m_waveFormat.Channels)
-                throw new ArgumentOutOfRangeException("samples", "You must provide one sample for each defined channel");
+                throw new ArgumentOutOfRangeException(nameof(samples), "You must provide one sample for each defined channel");
 
             LittleBinaryValue[] binaryValues;
 
@@ -890,7 +890,7 @@ namespace GSF.Media
         {
             // Validate number of samples
             if (samples.Length != m_waveFormat.Channels)
-                throw new ArgumentOutOfRangeException("samples", "You must provide one sample for each defined channel");
+                throw new ArgumentOutOfRangeException(nameof(samples), "You must provide one sample for each defined channel");
 
             int byteLength = m_waveFormat.BitsPerSample / 8;
 
@@ -1128,10 +1128,10 @@ namespace GSF.Media
             {
                 // Validate volumes
                 if (volumes.Length != waveFiles.Length)
-                    throw new ArgumentOutOfRangeException("volumes", "There must be one volume per each wave file");
+                    throw new ArgumentOutOfRangeException(nameof(volumes), "There must be one volume per each wave file");
 
                 if (volumes.Sum() > 1.0D)
-                    throw new ArgumentOutOfRangeException("volumes", "Cumulatively, volumes cannot exceed 1.0");
+                    throw new ArgumentOutOfRangeException(nameof(volumes), "Cumulatively, volumes cannot exceed 1.0");
 
                 // Deep clone first wave file - this will become the base of the new combined wave file
                 WaveFile next, source = waveFiles[0].Clone();
@@ -1200,7 +1200,7 @@ namespace GSF.Media
                 return source;
             }
 
-            throw new ArgumentException("You must provide at least two wave files to combine.", "waveFiles");
+            throw new ArgumentException("You must provide at least two wave files to combine.", nameof(waveFiles));
         }
 
         /// <summary>
@@ -1243,7 +1243,7 @@ namespace GSF.Media
                 return source;
             }
 
-            throw new ArgumentException("You must provide at least two wave files to append together.", "waveFiles");
+            throw new ArgumentException("You must provide at least two wave files to append together.", nameof(waveFiles));
         }
 
         /// <summary>

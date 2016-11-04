@@ -719,7 +719,7 @@ namespace GSF.Communication
 
             // Check if 'port' property is valid.
             if (!Transport.IsPortNumberValid(m_connectData["port"]) && int.Parse(m_connectData["port"]) != -1)
-                throw new ArgumentOutOfRangeException("connectionString", string.Format("Port number must be {0} or between {1} and {2}", -1, Transport.PortRangeLow, Transport.PortRangeHigh));
+                throw new ArgumentOutOfRangeException(nameof(connectionString), string.Format("Port number must be {0} or between {1} and {2}", -1, Transport.PortRangeLow, Transport.PortRangeHigh));
 
             if (!m_connectData.ContainsKey("multicastTimeToLive"))
                 m_connectData.Add("multicastTimeToLive", "10");

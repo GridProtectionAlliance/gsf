@@ -147,7 +147,7 @@ namespace GSF.Communication.Radius
                 }
                 else
                 {
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 }
             }
         }
@@ -175,7 +175,7 @@ namespace GSF.Communication.Radius
                 }
                 else
                 {
-                    throw new ArgumentOutOfRangeException("value", "Value must be between 0 and 65535.");
+                    throw new ArgumentOutOfRangeException(nameof(value), "Value must be between 0 and 65535.");
                 }
             }
         }
@@ -198,7 +198,7 @@ namespace GSF.Communication.Radius
                 if (value >= 1 && value <= 10)
                     m_requestAttempts = value;
                 else
-                    throw new ArgumentOutOfRangeException("value", "Value must be between 1 and 10.");
+                    throw new ArgumentOutOfRangeException(nameof(value), "Value must be between 1 and 10.");
             }
         }
 
@@ -220,7 +220,7 @@ namespace GSF.Communication.Radius
                 if (value >= 1000 && value <= 60000)
                     m_reponseTimeout = value;
                 else
-                    throw new ArgumentOutOfRangeException("value", "Value must be between 1000 and 60000.");
+                    throw new ArgumentOutOfRangeException(nameof(value), "Value must be between 1000 and 60000.");
             }
         }
 
@@ -242,7 +242,7 @@ namespace GSF.Communication.Radius
                 if (!string.IsNullOrEmpty(value))
                     m_sharedSecret = value;
                 else
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
             }
         }
 
@@ -266,7 +266,7 @@ namespace GSF.Communication.Radius
                 if (!string.IsNullOrEmpty(value))
                     m_newPinModeMessage1 = value;
                 else
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
             }
         }
 
@@ -290,7 +290,7 @@ namespace GSF.Communication.Radius
                 if (!string.IsNullOrEmpty(value))
                     m_newPinModeMessage2 = value;
                 else
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
             }
         }
 
@@ -314,7 +314,7 @@ namespace GSF.Communication.Radius
                 if (!string.IsNullOrEmpty(value))
                     m_newPinModeMessage3 = value;
                 else
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
             }
         }
 
@@ -337,7 +337,7 @@ namespace GSF.Communication.Radius
                 if (!string.IsNullOrEmpty(value))
                     m_nextTokenModeMessage = value;
                 else
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
             }
         }
 
@@ -411,7 +411,7 @@ namespace GSF.Communication.Radius
             CheckDisposed();
 
             if (string.IsNullOrEmpty(pin))
-                throw new ArgumentNullException("pin");
+                throw new ArgumentNullException(nameof(pin));
 
             byte[] reply;
             RadiusPacket response;
@@ -528,12 +528,12 @@ namespace GSF.Communication.Radius
             CheckDisposed();
 
             if ((object)response == null)
-                throw new ArgumentNullException("response");
+                throw new ArgumentNullException(nameof(response));
 
             byte[] messageBytes = response.GetAttributeValue(AttributeType.ReplyMessage);
 
             if ((object)messageBytes == null)
-                throw new ArgumentException("ReplyMessage attribute is not present", "response");
+                throw new ArgumentException("ReplyMessage attribute is not present", nameof(response));
 
             // Unfortunately, the only way of determining whether or not a user account is in the
             // "New Pin" mode is from the text present in the ReplyMessage attribute of the
@@ -560,12 +560,12 @@ namespace GSF.Communication.Radius
             CheckDisposed();
 
             if ((object)response == null)
-                throw new ArgumentNullException("response");
+                throw new ArgumentNullException(nameof(response));
 
             byte[] messageBytes = response.GetAttributeValue(AttributeType.ReplyMessage);
 
             if ((object)messageBytes == null)
-                throw new ArgumentException("ReplyMessage attribute is not present", "response");
+                throw new ArgumentException("ReplyMessage attribute is not present", nameof(response));
 
             // Unfortunately, the only way of determining whether or not a user account is in the
             // "Next Token" mode is from the text present in the ReplyMessage attribute of the

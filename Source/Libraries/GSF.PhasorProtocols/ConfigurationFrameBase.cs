@@ -107,7 +107,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets reference to the <see cref="ConfigurationCellCollection"/> for this <see cref="ConfigurationFrameBase"/>.
         /// </summary>
-        public virtual new ConfigurationCellCollection Cells
+        public new virtual ConfigurationCellCollection Cells
         {
             get
             {
@@ -118,7 +118,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets or sets the parsing state for the this <see cref="ConfigurationFrameBase"/>.
         /// </summary>
-        public virtual new IConfigurationFrameParsingState State
+        public new virtual IConfigurationFrameParsingState State
         {
             get
             {

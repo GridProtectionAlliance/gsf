@@ -148,7 +148,7 @@ namespace GSF.Historian.DataServices
             : this()
         {
             if (dataPoints == null)
-                throw new ArgumentNullException("dataPoints");
+                throw new ArgumentNullException(nameof(dataPoints));
 
             List<SerializableTimeSeriesDataPoint> serializableDataPoints = new List<SerializableTimeSeriesDataPoint>();
             foreach (IDataPoint dataPoint in dataPoints)

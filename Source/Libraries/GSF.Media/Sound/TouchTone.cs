@@ -181,7 +181,7 @@ namespace GSF.Media.Sound
                 Duration = DefaultKeyDuration;
             }
             else
-                throw new ArgumentException(string.Format("\'{0}\' is not a valid touch tone", key), "key");
+                throw new ArgumentException(string.Format("\'{0}\' is not a valid touch tone", key), nameof(key));
         }
 
         /// <summary>
@@ -192,7 +192,7 @@ namespace GSF.Media.Sound
         public TouchTone(int key)
         {
             if (key < 0 || key > 11)
-                throw new ArgumentException(string.Format("\'{0}\' is not a valid touch tone number", key), "key");
+                throw new ArgumentException(string.Format("\'{0}\' is not a valid touch tone number", key), nameof(key));
 
             Key = (TouchToneKey)key;
             Duration = DefaultKeyDuration;
@@ -327,7 +327,7 @@ namespace GSF.Media.Sound
             if (TryParseKey(key, out parsedKey))
                 return new TouchTone(parsedKey);
             else
-                throw new ArgumentException(string.Format("\'{0}\' is not a valid touch tone", key), "key");
+                throw new ArgumentException(string.Format("\'{0}\' is not a valid touch tone", key), nameof(key));
         }
 
         // Convert character into touch tone key enumeration

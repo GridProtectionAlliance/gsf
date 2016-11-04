@@ -104,7 +104,7 @@ namespace GSF
         public static bool IsAnyOf(this char value, IEnumerable<char> testChars)
         {
             if ((object)testChars == null)
-                throw new ArgumentNullException("testChars");
+                throw new ArgumentNullException(nameof(testChars));
 
             foreach (char c in testChars)
             {

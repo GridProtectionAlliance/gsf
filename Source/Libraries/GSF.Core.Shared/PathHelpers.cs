@@ -44,7 +44,7 @@ namespace GSF.IO
         {
             if (pathName.IsNullOrWhiteSpace())
             {
-                throw new ArgumentNullException("pathName", "Extension cannot be null or empty space");
+                throw new ArgumentNullException(nameof(pathName), "Extension cannot be null or empty space");
             }
 
             if (pathName.IndexOfAny(Path.GetInvalidPathChars()) >= 0)

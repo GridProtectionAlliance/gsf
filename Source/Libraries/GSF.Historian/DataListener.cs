@@ -326,7 +326,7 @@ namespace GSF.Historian
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_id = value;
             }
@@ -348,7 +348,7 @@ namespace GSF.Historian
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_server = value;
             }
@@ -521,7 +521,7 @@ namespace GSF.Historian
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_settingsCategory = value;
             }

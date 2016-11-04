@@ -265,7 +265,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 if (m_legacyMode == MetadataFileLegacyMode.Enabled)
                     m_engineeringUnits = value.TruncateRight(24);
@@ -287,7 +287,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 if (m_legacyMode == MetadataFileLegacyMode.Enabled)
                     m_equation = value.TruncateRight(256);

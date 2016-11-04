@@ -81,7 +81,7 @@ namespace PIAdapters
         public PIConnectionPool(int minimumPoolSize)
         {
             if (minimumPoolSize < 1)
-                throw new ArgumentOutOfRangeException("minimumPoolSize");
+                throw new ArgumentOutOfRangeException(nameof(minimumPoolSize));
 
             m_connectionPool = new List<PIConnection>();
             m_minimumPoolSize = minimumPoolSize;
@@ -123,7 +123,7 @@ namespace PIAdapters
             set
             {
                 if (value < 1)
-                    throw new ArgumentOutOfRangeException("value");
+                    throw new ArgumentOutOfRangeException(nameof(value));
 
                 m_accessCountPerConnection = value;
             }

@@ -123,7 +123,7 @@ namespace GSF
         public static object GetEnumValueByDescription(this string description, Type type, bool ignoreCase = false)
         {
             if (!type.IsEnum)
-                throw new ArgumentException("Type must be an enum", "type");
+                throw new ArgumentException("Type must be an enum", nameof(type));
 
             foreach (object value in Enum.GetValues(type))
             {
@@ -145,7 +145,7 @@ namespace GSF
         public static object GetEnumValueByName(this string name, Type type, bool ignoreCase = false)
         {
             if (!type.IsEnum)
-                throw new ArgumentException("Type must be an enum", "type");
+                throw new ArgumentException("Type must be an enum", nameof(type));
 
             foreach (object value in Enum.GetValues(type))
             {

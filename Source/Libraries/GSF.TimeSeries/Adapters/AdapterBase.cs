@@ -1104,7 +1104,7 @@ namespace GSF.TimeSeries.Adapters
         public static DateTime ParseTimeTag(string timetag)
         {
             if (string.IsNullOrWhiteSpace(timetag))
-                throw new ArgumentNullException("timetag", "Timetag string cannot be null or empty.");
+                throw new ArgumentNullException(nameof(timetag), "Timetag string cannot be null or empty.");
 
             DateTime dateTime;
 

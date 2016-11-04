@@ -108,7 +108,7 @@ namespace GSF.ServiceModel.Activation
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_authorizationPolicy = value;
             }
@@ -127,7 +127,7 @@ namespace GSF.ServiceModel.Activation
             {
                 if (value == null)
                 {
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 }
                 m_endpointBehaviors = value;
             }
@@ -147,7 +147,7 @@ namespace GSF.ServiceModel.Activation
             {
                 if (value == null)
                 {
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 }
                 m_serviceBehaviors = value;
             }

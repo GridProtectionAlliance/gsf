@@ -192,7 +192,7 @@ namespace GSF.Historian.DataServices
             : this()
         {
             if (metadataRecord == null)
-                throw new ArgumentNullException("metadataRecord");
+                throw new ArgumentNullException(nameof(metadataRecord));
 
             HistorianID = metadataRecord.HistorianID;
             DataType = (int)metadataRecord.GeneralFlags.DataType;

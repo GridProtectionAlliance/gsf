@@ -265,7 +265,7 @@ namespace GSF.Communication
             set
             {
                 if ((object)value == null || value.Length == 0)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_payloadMarker = value;
             }
@@ -924,7 +924,7 @@ namespace GSF.Communication
                 throw new ArgumentException(string.Format("Port property is missing (Example: {0})", DefaultConfigurationString));
 
             if (!Transport.IsPortNumberValid(m_configData["port"]))
-                throw new ArgumentOutOfRangeException("configurationString", string.Format("Port number must be between {0} and {1}", Transport.PortRangeLow, Transport.PortRangeHigh));
+                throw new ArgumentOutOfRangeException(nameof(configurationString), string.Format("Port number must be between {0} and {1}", Transport.PortRangeLow, Transport.PortRangeHigh));
         }
 
         /// <summary>

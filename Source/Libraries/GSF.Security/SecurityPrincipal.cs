@@ -55,7 +55,7 @@ namespace GSF.Security
         public SecurityPrincipal(SecurityIdentity identity)
         {
             if (identity == null)
-                throw new ArgumentNullException("identity");
+                throw new ArgumentNullException(nameof(identity));
 
             m_identity = identity;
         }

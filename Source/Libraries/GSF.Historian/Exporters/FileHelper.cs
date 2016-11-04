@@ -74,7 +74,7 @@ namespace GSF.Historian.Exporters
         public static void WriteToFile(string files, string text)
         {
             if (string.IsNullOrEmpty(files))
-                throw new ArgumentNullException("files");
+                throw new ArgumentNullException(nameof(files));
 
             // Since the text may need to be written to one or more files, the text is first written to a temporary
             // file and then copied to overwrite the specified files in order to speedup the write process.

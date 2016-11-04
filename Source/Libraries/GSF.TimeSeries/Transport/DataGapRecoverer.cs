@@ -202,7 +202,7 @@ namespace GSF.TimeSeries.Transport
             set
             {
                 if (string.IsNullOrWhiteSpace(value))
-                    throw new ArgumentOutOfRangeException("value", "SourceConnectionName cannot be null or an empty string.");
+                    throw new ArgumentOutOfRangeException(nameof(value), "SourceConnectionName cannot be null or an empty string.");
 
                 m_sourceConnectionName = value;
             }
@@ -236,7 +236,7 @@ namespace GSF.TimeSeries.Transport
             set
             {
                 if (string.IsNullOrWhiteSpace(value))
-                    throw new ArgumentOutOfRangeException("value", "ConnectionString cannot be null or an empty string.");
+                    throw new ArgumentOutOfRangeException(nameof(value), "ConnectionString cannot be null or an empty string.");
 
                 m_connectionString = value;
             }
@@ -268,7 +268,7 @@ namespace GSF.TimeSeries.Transport
             set
             {
                 if (value < 0.0D)
-                    throw new ArgumentOutOfRangeException("value", "RecoveryStartDelay cannot be a negative number.");
+                    throw new ArgumentOutOfRangeException(nameof(value), "RecoveryStartDelay cannot be a negative number.");
 
                 m_recoveryStartDelay = value;
             }
@@ -301,7 +301,7 @@ namespace GSF.TimeSeries.Transport
                     throw new ArgumentNullException();
 
                 if (value <= 0.0D)
-                    throw new ArgumentOutOfRangeException("value", "DataMonitoringInterval cannot be zero or a negative number.");
+                    throw new ArgumentOutOfRangeException(nameof(value), "DataMonitoringInterval cannot be zero or a negative number.");
 
                 m_dataStreamMonitor.Interval = value * 1000.0D;
             }
@@ -321,7 +321,7 @@ namespace GSF.TimeSeries.Transport
             set
             {
                 if (value < 0.0D)
-                    throw new ArgumentOutOfRangeException("value", "MinimumRecoverySpan cannot be a negative number.");
+                    throw new ArgumentOutOfRangeException(nameof(value), "MinimumRecoverySpan cannot be a negative number.");
 
                 m_minimumRecoverySpan = value;
             }
@@ -341,7 +341,7 @@ namespace GSF.TimeSeries.Transport
             set
             {
                 if (value <= 0.0D)
-                    throw new ArgumentOutOfRangeException("value", "MaximumRecoverySpan cannot be zero or a negative number.");
+                    throw new ArgumentOutOfRangeException(nameof(value), "MaximumRecoverySpan cannot be zero or a negative number.");
 
                 m_maximumRecoverySpan = value;
             }

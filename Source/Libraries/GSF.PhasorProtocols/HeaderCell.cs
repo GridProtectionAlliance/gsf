@@ -79,7 +79,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets or sets a reference to the parent <see cref="ICommandFrame"/> for this <see cref="HeaderCell"/>.
         /// </summary>
-        public virtual new IHeaderFrame Parent
+        public new virtual IHeaderFrame Parent
         {
             get
             {

@@ -52,7 +52,7 @@ namespace GSF.Security
         public SecurityIdentity(ISecurityProvider provider)
         {
             if ((object)provider == null)
-                throw new ArgumentNullException("provider");
+                throw new ArgumentNullException(nameof(provider));
 
             m_provider = provider;
         }

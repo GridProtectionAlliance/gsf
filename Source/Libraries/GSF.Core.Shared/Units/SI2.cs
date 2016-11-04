@@ -304,7 +304,7 @@ namespace GSF.Units
         public static string ToScaledString(long totalUnits, int decimalPlaces, string unitName, string[] symbolNames = null, long minimumFactor = SI2.Kilo, long maximumFactor = SI2.Exa)
         {
             if (decimalPlaces < 0)
-                throw new ArgumentOutOfRangeException("decimalPlaces", "decimalPlaces cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(decimalPlaces), "decimalPlaces cannot be negative");
 
             return ToScaledString(totalUnits, "R", unitName, symbolNames ?? s_symbols, decimalPlaces, minimumFactor, maximumFactor);
         }
@@ -337,12 +337,12 @@ namespace GSF.Units
             minimumIndex = GetFactorIndex(minimumFactor);
 
             if (minimumIndex < 0)
-                throw new ArgumentOutOfRangeException("minimumFactor", "Unknown SI2 factor " + minimumFactor);
+                throw new ArgumentOutOfRangeException(nameof(minimumFactor), "Unknown SI2 factor " + minimumFactor);
 
             maximumIndex = GetFactorIndex(maximumFactor);
 
             if (maximumIndex < 0)
-                throw new ArgumentOutOfRangeException("maximumFactor", "Unknown SI2 factor " + maximumFactor);
+                throw new ArgumentOutOfRangeException(nameof(maximumFactor), "Unknown SI2 factor " + maximumFactor);
 
             for (int i = maximumIndex; i >= minimumIndex; i--)
             {

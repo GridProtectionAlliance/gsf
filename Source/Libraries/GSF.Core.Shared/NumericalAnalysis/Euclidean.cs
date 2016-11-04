@@ -76,7 +76,7 @@ namespace GSF.NumericalAnalysis
         public static int GreatestCommonDenominator(this IEnumerable<int> source)
         {
             if ((object)source == null)
-                throw new ArgumentNullException("source", "source is null");
+                throw new ArgumentNullException(nameof(source), "source is null");
 
             return source.Aggregate(GreatestCommonDenominator);
         }
@@ -89,7 +89,7 @@ namespace GSF.NumericalAnalysis
         public static int GreatestCommonDenominator(params int[] source)
         {
             if ((object)source == null)
-                throw new ArgumentNullException("source", "source is null");
+                throw new ArgumentNullException(nameof(source), "source is null");
 
             return source.Aggregate(GreatestCommonDenominator);
         }
@@ -113,7 +113,7 @@ namespace GSF.NumericalAnalysis
         public static long GreatestCommonDenominator(this IEnumerable<long> source)
         {
             if ((object)source == null)
-                throw new ArgumentNullException("source", "source is null");
+                throw new ArgumentNullException(nameof(source), "source is null");
 
             return source.Aggregate(GreatestCommonDenominator);
         }
@@ -126,7 +126,7 @@ namespace GSF.NumericalAnalysis
         public static long GreatestCommonDenominator(params long[] source)
         {
             if ((object)source == null)
-                throw new ArgumentNullException("source", "source is null");
+                throw new ArgumentNullException(nameof(source), "source is null");
 
             return source.Aggregate(GreatestCommonDenominator);
         }
@@ -150,7 +150,7 @@ namespace GSF.NumericalAnalysis
         public static int LeastCommonMultiple(this IEnumerable<int> source)
         {
             if ((object)source == null)
-                throw new ArgumentNullException("source", "source is null");
+                throw new ArgumentNullException(nameof(source), "source is null");
 
             return source.Aggregate(LeastCommonMultiple);
         }
@@ -163,7 +163,7 @@ namespace GSF.NumericalAnalysis
         public static int LeastCommonMultiple(params int[] source)
         {
             if ((object)source == null)
-                throw new ArgumentNullException("source", "source is null");
+                throw new ArgumentNullException(nameof(source), "source is null");
 
             return source.Aggregate(LeastCommonMultiple);
         }
@@ -187,7 +187,7 @@ namespace GSF.NumericalAnalysis
         public static long LeastCommonMultiple(this IEnumerable<long> source)
         {
             if ((object)source == null)
-                throw new ArgumentNullException("source", "source is null");
+                throw new ArgumentNullException(nameof(source), "source is null");
 
             return source.Aggregate(LeastCommonMultiple);
         }
@@ -200,7 +200,7 @@ namespace GSF.NumericalAnalysis
         public static long LeastCommonMultiple(params long[] source)
         {
             if ((object)source == null)
-                throw new ArgumentNullException("source", "source is null");
+                throw new ArgumentNullException(nameof(source), "source is null");
 
             return source.Aggregate(LeastCommonMultiple);
         }

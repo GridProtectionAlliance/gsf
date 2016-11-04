@@ -86,7 +86,7 @@ namespace Ionic.Zlib
     [Interop.ClassInterface(Interop.ClassInterfaceType.AutoDispatch)]
 #endif
 #endif
-    sealed internal class ZlibCodec
+    internal sealed class ZlibCodec
     {
         /// <summary>
         /// The buffer from which data is taken.

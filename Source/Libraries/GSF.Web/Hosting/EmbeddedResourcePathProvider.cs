@@ -283,11 +283,11 @@ namespace GSF.Web.Hosting
         {
             if (virtualPath == null)
             {
-                throw new ArgumentNullException("virtualPath");
+                throw new ArgumentNullException(nameof(virtualPath));
             }
             if (virtualPath.Length == 0)
             {
-                throw new ArgumentOutOfRangeException("virtualPath");
+                throw new ArgumentOutOfRangeException(nameof(virtualPath));
             }
             string absolutePath = VirtualPathUtility.ToAbsolute(virtualPath);
             if (this.Files.Contains(absolutePath))
@@ -316,11 +316,11 @@ namespace GSF.Web.Hosting
         {
             if (virtualPath == null)
             {
-                throw new ArgumentNullException("virtualPath");
+                throw new ArgumentNullException(nameof(virtualPath));
             }
             if (virtualPath.Length == 0)
             {
-                throw new ArgumentOutOfRangeException("virtualPath");
+                throw new ArgumentOutOfRangeException(nameof(virtualPath));
             }
             string absolutePath = VirtualPathUtility.ToAbsolute(virtualPath);
 
@@ -390,11 +390,11 @@ namespace GSF.Web.Hosting
             // * ToAbsolute: /MyApplication/Subfolder/OtherFolder/Control.ascx
             if (virtualPath == null)
             {
-                throw new ArgumentNullException("virtualPath");
+                throw new ArgumentNullException(nameof(virtualPath));
             }
             if (virtualPath.Length == 0)
             {
-                throw new ArgumentOutOfRangeException("virtualPath");
+                throw new ArgumentOutOfRangeException(nameof(virtualPath));
             }
 
             string absolutePath = VirtualPathUtility.ToAbsolute(virtualPath);
@@ -593,11 +593,11 @@ namespace GSF.Web.Hosting
         {
             if (path == null)
             {
-                throw new ArgumentNullException("paramName");
+                throw new ArgumentNullException(nameof(paramName));
             }
             if (path.Length == 0)
             {
-                throw new ArgumentOutOfRangeException("paramName");
+                throw new ArgumentOutOfRangeException(nameof(paramName));
             }
             if (path.StartsWith(".") || path.EndsWith("."))
             {
@@ -664,7 +664,7 @@ namespace GSF.Web.Hosting
         protected virtual void ProcessEmbeddedFiles(string assemblyName)
         {
             if (string.IsNullOrEmpty(assemblyName))
-                throw new ArgumentNullException("assemblyName");
+                throw new ArgumentNullException(nameof(assemblyName));
 
             Assembly assembly = Assembly.LoadFrom(FilePath.GetAbsolutePath(assemblyName));
 

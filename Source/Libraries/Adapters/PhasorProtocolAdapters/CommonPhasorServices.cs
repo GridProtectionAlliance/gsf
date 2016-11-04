@@ -411,7 +411,7 @@ namespace PhasorProtocolAdapters
             DataRow signalTypeValues;
 
             if (!s_signalTypes.TryGetValue(signalTypeAcronym, out signalTypeValues))
-                throw new ArgumentOutOfRangeException("signalTypeAcronym", "No database definition was found for signal type \"" + signalTypeAcronym + "\"");
+                throw new ArgumentOutOfRangeException(nameof(signalTypeAcronym), "No database definition was found for signal type \"" + signalTypeAcronym + "\"");
 
             // Validate key acronyms
             if ((object)companyAcronym == null)

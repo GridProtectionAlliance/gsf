@@ -99,7 +99,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets or sets the parsing state for the this <see cref="ChannelCellBase"/>.
         /// </summary>
-        new public virtual IChannelCellParsingState State
+        public new virtual IChannelCellParsingState State
         {
             get
             {

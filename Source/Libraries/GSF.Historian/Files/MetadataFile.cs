@@ -543,7 +543,7 @@ namespace GSF.Historian.Files
         public override void Write(int recordIndex, MetadataRecord record)
         {
             if ((object)record == null)
-                throw new ArgumentNullException("record");
+                throw new ArgumentNullException(nameof(record));
 
             if (m_legacyMode == MetadataFileLegacyMode.Enabled || m_legacyMode == MetadataFileLegacyMode.Compatible)
                 base.Write(recordIndex, record);

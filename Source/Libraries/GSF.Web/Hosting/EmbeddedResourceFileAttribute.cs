@@ -112,26 +112,26 @@ namespace GSF.Web.Hosting
         {
             if (resourcePath == null)
             {
-                throw new ArgumentNullException("resourcePath");
+                throw new ArgumentNullException(nameof(resourcePath));
             }
             if (resourcePath.Length == 0)
             {
-                throw new ArgumentOutOfRangeException("resourcePath");
+                throw new ArgumentOutOfRangeException(nameof(resourcePath));
             }
             if (resourceNamespace == null)
             {
-                throw new ArgumentNullException("resourceNamespace");
+                throw new ArgumentNullException(nameof(resourceNamespace));
             }
 
             m_resourcePath = RemoveMalformedEndChars(resourcePath);
             if (m_resourcePath.Length == 0)
             {
-                throw new ArgumentOutOfRangeException("resourcePath", resourcePath, "The resource path is invalid for mapping.");
+                throw new ArgumentOutOfRangeException(nameof(resourcePath), resourcePath, "The resource path is invalid for mapping.");
             }
             m_resourceNamespace = RemoveMalformedEndChars(resourceNamespace);
             if (m_resourceNamespace.Length == 0)
             {
-                throw new ArgumentOutOfRangeException("resourceNamespace", resourceNamespace, "The resource namespace is invalid for mapping.");
+                throw new ArgumentOutOfRangeException(nameof(resourceNamespace), resourceNamespace, "The resource namespace is invalid for mapping.");
             }
         }
 

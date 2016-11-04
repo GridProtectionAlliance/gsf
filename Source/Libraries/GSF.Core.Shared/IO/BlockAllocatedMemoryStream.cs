@@ -54,6 +54,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.IO
 {
     /// <summary>
@@ -193,7 +194,7 @@ namespace GSF.IO
             buffer.ValidateParameters(startIndex, length);
 
             if (blockSize <= 0)
-                throw new ArgumentOutOfRangeException("blockSize", "Block size must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(blockSize), "Block size must be greater than zero.");
 
             m_blockSize = blockSize;
             Write(buffer, startIndex, length);
@@ -218,7 +219,7 @@ namespace GSF.IO
         public BlockAllocatedMemoryStream(int capacity, int blockSize)
         {
             if (blockSize <= 0)
-                throw new ArgumentOutOfRangeException("blockSize", "Block size must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(blockSize), "Block size must be greater than zero.");
 
             m_blockSize = blockSize;
 

@@ -54,7 +54,7 @@ namespace GSF.Threading
     /// </summary>
     public static class ShutdownHandler
     {
-        private readonly static LogPublisher Log = Logger.CreatePublisher(typeof(ShutdownHandler), MessageClass.Component);
+        private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(ShutdownHandler), MessageClass.Component);
 
         /// <summary>
         /// Gets if this process is shutting down.

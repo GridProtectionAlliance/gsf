@@ -71,10 +71,10 @@ namespace GSF.TimeSeries
             }
 
             if (lagTime <= 0)
-                throw new ArgumentOutOfRangeException("lagTime", "lagTime must be greater than zero, but it can be less than one");
+                throw new ArgumentOutOfRangeException(nameof(lagTime), "lagTime must be greater than zero, but it can be less than one");
 
             if (leadTime <= 0)
-                throw new ArgumentOutOfRangeException("leadTime", "leadTime must be greater than zero, but it can be less than one");
+                throw new ArgumentOutOfRangeException(nameof(leadTime), "leadTime must be greater than zero, but it can be less than one");
 
             m_lagTime = lagTime;
             m_leadTime = leadTime;
@@ -99,7 +99,7 @@ namespace GSF.TimeSeries
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", "LagTime must be greater than zero, but it can be less than one");
+                    throw new ArgumentOutOfRangeException(nameof(value), "LagTime must be greater than zero, but it can be less than one");
 
                 m_lagTime = value;
             }
@@ -120,7 +120,7 @@ namespace GSF.TimeSeries
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", "LeadTime must be greater than zero, but it can be less than one");
+                    throw new ArgumentOutOfRangeException(nameof(value), "LeadTime must be greater than zero, but it can be less than one");
 
                 m_leadTime = value;
             }

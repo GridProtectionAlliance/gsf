@@ -77,16 +77,16 @@ namespace GSF
         private static void RaiseValidationError<T>(T[] array, int startIndex, int length)
         {
             if ((object)array == null)
-                throw new ArgumentNullException("array");
+                throw new ArgumentNullException(nameof(array));
 
             if (startIndex < 0)
-                throw new ArgumentOutOfRangeException("startIndex", "cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(startIndex), "cannot be negative");
 
             if (length < 0)
-                throw new ArgumentOutOfRangeException("length", "cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(length), "cannot be negative");
 
             if (startIndex + length > array.Length)
-                throw new ArgumentOutOfRangeException("length", string.Format("startIndex of {0} and length of {1} will exceed array size of {2}", startIndex, length, array.Length));
+                throw new ArgumentOutOfRangeException(nameof(length), string.Format("startIndex of {0} and length of {1} will exceed array size of {2}", startIndex, length, array.Length));
         }
 
         /// <summary>
@@ -113,16 +113,16 @@ namespace GSF
         public static T[] BlockCopy<T>(this T[] array, int startIndex, int length)
         {
             if ((object)array == null)
-                throw new ArgumentNullException("array");
+                throw new ArgumentNullException(nameof(array));
 
             if (startIndex < 0)
-                throw new ArgumentOutOfRangeException("startIndex", "cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(startIndex), "cannot be negative");
 
             if (length < 0)
-                throw new ArgumentOutOfRangeException("length", "cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(length), "cannot be negative");
 
             if (startIndex >= array.Length)
-                throw new ArgumentOutOfRangeException("startIndex", "not a valid index into the array");
+                throw new ArgumentOutOfRangeException(nameof(startIndex), "not a valid index into the array");
 
             T[] copiedBytes = new T[array.Length - startIndex < length ? array.Length - startIndex : length];
 
@@ -151,10 +151,10 @@ namespace GSF
         public static T[] Combine<T>(this T[] source, T[] other)
         {
             if ((object)source == null)
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
 
             if ((object)other == null)
-                throw new ArgumentNullException("other");
+                throw new ArgumentNullException(nameof(other));
 
             return source.Combine(0, source.Length, other, 0, other.Length);
         }
@@ -189,34 +189,34 @@ namespace GSF
         public static T[] Combine<T>(this T[] source, int sourceOffset, int sourceCount, T[] other, int otherOffset, int otherCount)
         {
             if ((object)source == null)
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
 
             if ((object)other == null)
-                throw new ArgumentNullException("other");
+                throw new ArgumentNullException(nameof(other));
 
             if (sourceOffset < 0)
-                throw new ArgumentOutOfRangeException("sourceOffset", "cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(sourceOffset), "cannot be negative");
 
             if (otherOffset < 0)
-                throw new ArgumentOutOfRangeException("otherOffset", "cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(otherOffset), "cannot be negative");
 
             if (sourceCount < 0)
-                throw new ArgumentOutOfRangeException("sourceCount", "cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(sourceCount), "cannot be negative");
 
             if (otherCount < 0)
-                throw new ArgumentOutOfRangeException("otherCount", "cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(otherCount), "cannot be negative");
 
             if (sourceOffset >= source.Length)
-                throw new ArgumentOutOfRangeException("sourceOffset", "not a valid index into source array");
+                throw new ArgumentOutOfRangeException(nameof(sourceOffset), "not a valid index into source array");
 
             if (otherOffset >= other.Length)
-                throw new ArgumentOutOfRangeException("otherOffset", "not a valid index into other array");
+                throw new ArgumentOutOfRangeException(nameof(otherOffset), "not a valid index into other array");
 
             if (sourceOffset + sourceCount > source.Length)
-                throw new ArgumentOutOfRangeException("sourceCount", "exceeds source array size");
+                throw new ArgumentOutOfRangeException(nameof(sourceCount), "exceeds source array size");
 
             if (otherOffset + otherCount > other.Length)
-                throw new ArgumentOutOfRangeException("otherCount", "exceeds other array size");
+                throw new ArgumentOutOfRangeException(nameof(otherCount), "exceeds other array size");
 
             // Overflow is possible, but unlikely.  Therefore, this is omitted for performance
             // if ((int.MaxValue - sourceCount - otherCount) < 0)
@@ -322,7 +322,7 @@ namespace GSF
         public static T[] Combine<T>(this T[][] arrays)
         {
             if ((object)arrays == null)
-                throw new ArgumentNullException("arrays");
+                throw new ArgumentNullException(nameof(arrays));
 
             int size = arrays.Sum(array => array.Length);
             int length, offset = 0;
@@ -356,10 +356,10 @@ namespace GSF
         public static int IndexOfSequence<T>(this T[] array, T[] sequenceToFind) where T : IComparable<T>
         {
             if ((object)array == null)
-                throw new ArgumentNullException("array");
+                throw new ArgumentNullException(nameof(array));
 
             if ((object)sequenceToFind == null)
-                throw new ArgumentNullException("sequenceToFind");
+                throw new ArgumentNullException(nameof(sequenceToFind));
 
             return array.IndexOfSequence(sequenceToFind, 0, array.Length);
         }
@@ -375,10 +375,10 @@ namespace GSF
         public static int IndexOfSequence<T>(this T[] array, T[] sequenceToFind, int startIndex) where T : IComparable<T>
         {
             if ((object)array == null)
-                throw new ArgumentNullException("array");
+                throw new ArgumentNullException(nameof(array));
 
             if ((object)sequenceToFind == null)
-                throw new ArgumentNullException("sequenceToFind");
+                throw new ArgumentNullException(nameof(sequenceToFind));
 
             return array.IndexOfSequence(sequenceToFind, startIndex, array.Length - startIndex);
         }
@@ -402,22 +402,22 @@ namespace GSF
         public static int IndexOfSequence<T>(this T[] array, T[] sequenceToFind, int startIndex, int length) where T : IComparable<T>
         {
             if ((object)array == null)
-                throw new ArgumentNullException("array");
+                throw new ArgumentNullException(nameof(array));
 
             if ((object)sequenceToFind == null || sequenceToFind.Length == 0)
-                throw new ArgumentNullException("sequenceToFind");
+                throw new ArgumentNullException(nameof(sequenceToFind));
 
             if (startIndex < 0)
-                throw new ArgumentOutOfRangeException("startIndex", "cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(startIndex), "cannot be negative");
 
             if (length < 0)
-                throw new ArgumentOutOfRangeException("length", "cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(length), "cannot be negative");
 
             if (startIndex >= array.Length)
-                throw new ArgumentOutOfRangeException("startIndex", "not a valid index into source array");
+                throw new ArgumentOutOfRangeException(nameof(startIndex), "not a valid index into source array");
 
             if (startIndex + length > array.Length)
-                throw new ArgumentOutOfRangeException("length", "exceeds array size");
+                throw new ArgumentOutOfRangeException(nameof(length), "exceeds array size");
 
             // Overflow is possible, but unlikely.  Therefore, this is omitted for performance
             // if ((int.MaxValue - startIndex - length) < 0)
@@ -586,25 +586,25 @@ namespace GSF
                 return 1;
 
             if (sourceOffset < 0)
-                throw new ArgumentOutOfRangeException("sourceOffset", "cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(sourceOffset), "cannot be negative");
 
             if (otherOffset < 0)
-                throw new ArgumentOutOfRangeException("otherOffset", "cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(otherOffset), "cannot be negative");
 
             if (count < 0)
-                throw new ArgumentOutOfRangeException("count", "cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(count), "cannot be negative");
 
             if (sourceOffset >= source.Length)
-                throw new ArgumentOutOfRangeException("sourceOffset", "not a valid index into source array");
+                throw new ArgumentOutOfRangeException(nameof(sourceOffset), "not a valid index into source array");
 
             if (otherOffset >= other.Length)
-                throw new ArgumentOutOfRangeException("otherOffset", "not a valid index into other array");
+                throw new ArgumentOutOfRangeException(nameof(otherOffset), "not a valid index into other array");
 
             if (sourceOffset + count > source.Length)
-                throw new ArgumentOutOfRangeException("count", "exceeds source array size");
+                throw new ArgumentOutOfRangeException(nameof(count), "exceeds source array size");
 
             if (otherOffset + count > other.Length)
-                throw new ArgumentOutOfRangeException("count", "exceeds other array size");
+                throw new ArgumentOutOfRangeException(nameof(count), "exceeds other array size");
 
             // Overflow is possible, but unlikely.  Therefore, this is omitted for performance
             // if ((int.MaxValue - sourceOffset - count) < 0)
@@ -702,7 +702,7 @@ namespace GSF
         public static byte[] Combine(this byte[][] buffers)
         {
             if ((object)buffers == null)
-                throw new ArgumentNullException("buffers");
+                throw new ArgumentNullException(nameof(buffers));
 
             using (BlockAllocatedMemoryStream combinedBuffer = new BlockAllocatedMemoryStream())
             {
@@ -727,7 +727,7 @@ namespace GSF
         /// <param name="bytes">Bytes containing structure.</param>
         /// <returns>A structure from <paramref name="bytes"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static T ReadStructure<T>(this byte[] bytes) where T : struct
+        public static unsafe T ReadStructure<T>(this byte[] bytes) where T : struct
         {
             T structure;
 

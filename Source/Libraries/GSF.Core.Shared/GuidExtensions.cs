@@ -30,7 +30,7 @@ namespace GSF
     /// <summary>
     /// Extension methods for <see cref="Guid"/>.
     /// </summary>
-    public unsafe static class GuidExtensions
+    public static unsafe class GuidExtensions
     {
         #region [ Big Endian Based Encoding (ie RFC 4122) ]
 

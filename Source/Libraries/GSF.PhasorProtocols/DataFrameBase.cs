@@ -105,7 +105,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets reference to the <see cref="DataCellCollection"/> for this <see cref="DataFrameBase"/>.
         /// </summary>
-        public virtual new DataCellCollection Cells
+        public new virtual DataCellCollection Cells
         {
             get
             {
@@ -116,7 +116,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets or sets the parsing state for the this <see cref="DataFrameBase"/>.
         /// </summary>
-        public virtual new IDataFrameParsingState State
+        public new virtual IDataFrameParsingState State
         {
             get
             {

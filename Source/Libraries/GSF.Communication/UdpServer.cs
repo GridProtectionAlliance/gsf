@@ -716,7 +716,7 @@ namespace GSF.Communication
                 throw new ArgumentException(string.Format("Port is missing (Example: {0})", DefaultConfigurationString));
 
             if (!Transport.IsPortNumberValid(m_configData["port"]) && int.Parse(m_configData["port"]) != -1)
-                throw new ArgumentOutOfRangeException("configurationString", string.Format("Port number must be {0} or between {1} and {2}", -1, Transport.PortRangeLow, Transport.PortRangeHigh));
+                throw new ArgumentOutOfRangeException(nameof(configurationString), string.Format("Port number must be {0} or between {1} and {2}", -1, Transport.PortRangeLow, Transport.PortRangeHigh));
 
             if (!m_configData.ContainsKey("multicastTimeToLive"))
                 m_configData.Add("multicastTimeToLive", "10");

@@ -192,10 +192,10 @@ namespace GSF.TimeSeries
             Func<Guid, MeasurementKey, MeasurementKey> updateValueFactory;
 
             if (signalID == Guid.Empty)
-                throw new ArgumentException("Unable to update undefined measurement key", "signalID");
+                throw new ArgumentException("Unable to update undefined measurement key", nameof(signalID));
 
             if (string.IsNullOrWhiteSpace(source))
-                throw new ArgumentNullException("source", "MeasurementKey source cannot be null or empty");
+                throw new ArgumentNullException(nameof(source), "MeasurementKey source cannot be null or empty");
 
             addValueFactory = guid =>
             {

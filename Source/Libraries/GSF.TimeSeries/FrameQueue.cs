@@ -113,7 +113,7 @@ namespace GSF.TimeSeries
             set
             {
                 if (value < 1)
-                    throw new ArgumentOutOfRangeException("value", "Frames per second must be greater than 0");
+                    throw new ArgumentOutOfRangeException(nameof(value), "Frames per second must be greater than 0");
 
                 m_framesPerSecond = value;
             }

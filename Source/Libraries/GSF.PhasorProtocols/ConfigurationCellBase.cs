@@ -101,7 +101,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets or sets a reference to the parent <see cref="IConfigurationFrame"/> for this <see cref="ConfigurationCellBase"/>.
         /// </summary>
-        public virtual new IConfigurationFrame Parent
+        public new virtual IConfigurationFrame Parent
         {
             get
             {
@@ -116,7 +116,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets or sets the parsing state for the this <see cref="ConfigurationCellBase"/>.
         /// </summary>
-        public virtual new IConfigurationCellParsingState State
+        public new virtual IConfigurationCellParsingState State
         {
             get
             {

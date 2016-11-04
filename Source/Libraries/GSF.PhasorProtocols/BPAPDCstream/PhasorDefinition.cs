@@ -169,7 +169,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <summary>
         /// Gets or sets the <see cref="ConfigurationCell"/> parent of this <see cref="PhasorDefinition"/>.
         /// </summary>
-        public virtual new ConfigurationCell Parent
+        public new virtual ConfigurationCell Parent
         {
             get
             {

@@ -274,7 +274,7 @@ namespace GSF.Units
         public static string ToScaledString(double totalUnits, int decimalPlaces, string unitName, string[] symbolNames = null, double minimumFactor = SI.Yocto, double maximumFactor = SI.Yotta)
         {
             if (decimalPlaces < 0)
-                throw new ArgumentOutOfRangeException("decimalPlaces", "decimalPlaces cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(decimalPlaces), "decimalPlaces cannot be negative");
 
             return ToScaledString(totalUnits, "R", unitName, symbolNames ?? s_symbols, decimalPlaces, minimumFactor, maximumFactor);
         }
@@ -307,12 +307,12 @@ namespace GSF.Units
             minimumIndex = GetFactorIndex(minimumFactor);
 
             if (minimumIndex < 0)
-                throw new ArgumentOutOfRangeException("minimumFactor", "Unknown SI factor " + minimumFactor);
+                throw new ArgumentOutOfRangeException(nameof(minimumFactor), "Unknown SI factor " + minimumFactor);
 
             maximumIndex = GetFactorIndex(maximumFactor);
 
             if (maximumIndex < 0)
-                throw new ArgumentOutOfRangeException("maximumFactor", "Unknown SI factor " + maximumFactor);
+                throw new ArgumentOutOfRangeException(nameof(maximumFactor), "Unknown SI factor " + maximumFactor);
 
             for (int i = maximumIndex; i >= minimumIndex; i--)
             {

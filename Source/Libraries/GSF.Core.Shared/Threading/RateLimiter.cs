@@ -54,12 +54,12 @@ namespace GSF.Threading
         public void UpdateLimits(double tokensPerSecond, int maxTokensQueue)
         {
             if (double.IsNaN(tokensPerSecond))
-                throw new ArgumentException("Cannot be NaN", "tokensPerSecond");
+                throw new ArgumentException("Cannot be NaN", nameof(tokensPerSecond));
             tokensPerSecond = Math.Min(tokensPerSecond, 1000000000); //1 Billion tokens per second.
             tokensPerSecond = Math.Max(tokensPerSecond, 1.0 / 24.0 / 3600.0); //1 token per day.
 
             if (maxTokensQueue < 1)
-                throw new ArgumentOutOfRangeException("maxTokensQueue");
+                throw new ArgumentOutOfRangeException(nameof(maxTokensQueue));
 
             m_maxTokens = maxTokensQueue;
             m_tokens = maxTokensQueue;

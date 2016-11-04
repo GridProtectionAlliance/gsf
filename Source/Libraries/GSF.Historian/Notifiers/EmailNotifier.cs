@@ -78,7 +78,7 @@ namespace GSF.Historian.Notifiers
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_emailServer = value;
             }
@@ -97,7 +97,7 @@ namespace GSF.Historian.Notifiers
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_emailSender = value;
             }

@@ -267,7 +267,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 if (m_legacyMode == MetadataFileLegacyMode.Enabled)
                     m_remarks = value.TruncateRight(512);
@@ -292,7 +292,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 if (m_legacyMode == MetadataFileLegacyMode.Enabled)
                     m_hardwareInfo = value.TruncateRight(512);
@@ -318,7 +318,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 if (m_legacyMode == MetadataFileLegacyMode.Enabled)
                     m_emailAddresses = value.TruncateRight(512);
@@ -343,7 +343,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 if (m_legacyMode == MetadataFileLegacyMode.Enabled)
                     m_description = value.TruncateRight(80);
@@ -368,7 +368,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 if (m_legacyMode == MetadataFileLegacyMode.Enabled)
                     m_currentData = value.TruncateRight(80);
@@ -393,7 +393,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 if (m_legacyMode == MetadataFileLegacyMode.Enabled)
                     m_name = value.TruncateRight(40);
@@ -418,7 +418,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 if (m_legacyMode == MetadataFileLegacyMode.Enabled)
                     m_synonym1 = value.TruncateRight(40);
@@ -443,7 +443,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 if (m_legacyMode == MetadataFileLegacyMode.Enabled)
                     m_synonym2 = value.TruncateRight(40);
@@ -468,7 +468,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 if (m_legacyMode == MetadataFileLegacyMode.Enabled)
                     m_synonym3 = value.TruncateRight(40);
@@ -494,7 +494,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 if (m_legacyMode == MetadataFileLegacyMode.Enabled)
                     m_pagerNumbers = value.TruncateRight(40);
@@ -520,7 +520,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 if (m_legacyMode == MetadataFileLegacyMode.Enabled)
                     m_phoneNumbers = value.TruncateRight(40);
@@ -545,7 +545,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 if (m_legacyMode == MetadataFileLegacyMode.Enabled)
                     m_plantCode = value.TruncateRight(24);
@@ -570,7 +570,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 if (m_legacyMode == MetadataFileLegacyMode.Enabled)
                     m_system = value.TruncateRight(24);
@@ -647,7 +647,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_securityFlags = value;
             }
@@ -666,7 +666,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_generalFlags = value;
             }
@@ -685,7 +685,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_alarmFlags = value;
             }
@@ -765,7 +765,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_analogFields = value;
             }
@@ -784,7 +784,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_digitalFields = value;
             }
@@ -803,7 +803,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_composedFields = value;
             }
@@ -822,7 +822,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_constantFields = value;
             }

@@ -259,7 +259,7 @@ namespace GSF.ServiceProcess
         internal void SetClientUser(IPrincipal user)
         {
             if ((object)user == null)
-                throw new ArgumentNullException("user");
+                throw new ArgumentNullException(nameof(user));
 
             m_clientUser = user;
         }

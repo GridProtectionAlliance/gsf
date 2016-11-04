@@ -353,10 +353,10 @@ namespace GSF
         public bool TimeIsValid(Ticks currentTime, double lagTime, double leadTime)
         {
             if (lagTime <= 0)
-                throw new ArgumentOutOfRangeException("lagTime", "lagTime must be greater than zero, but it can be less than one");
+                throw new ArgumentOutOfRangeException(nameof(lagTime), "lagTime must be greater than zero, but it can be less than one");
 
             if (leadTime <= 0)
-                throw new ArgumentOutOfRangeException("leadTime", "leadTime must be greater than zero, but it can be less than one");
+                throw new ArgumentOutOfRangeException(nameof(leadTime), "leadTime must be greater than zero, but it can be less than one");
 
             double distance = (currentTime.Value - Value) / (double)Ticks.PerSecond;
 
@@ -382,10 +382,10 @@ namespace GSF
         public bool TimeIsValid(Ticks currentTime, Ticks lagTime, Ticks leadTime)
         {
             if (lagTime.Value <= 0)
-                throw new ArgumentOutOfRangeException("lagTime", "lagTime must be greater than zero");
+                throw new ArgumentOutOfRangeException(nameof(lagTime), "lagTime must be greater than zero");
 
             if (leadTime.Value <= 0)
-                throw new ArgumentOutOfRangeException("leadTime", "leadTime must be greater than zero");
+                throw new ArgumentOutOfRangeException(nameof(leadTime), "leadTime must be greater than zero");
 
             long distance = (currentTime.Value - Value);
 

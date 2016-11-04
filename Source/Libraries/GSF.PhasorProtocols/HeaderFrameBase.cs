@@ -80,7 +80,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets reference to the <see cref="HeaderCellCollection"/> for this <see cref="HeaderFrameBase"/>.
         /// </summary>
-        public virtual new HeaderCellCollection Cells
+        public new virtual HeaderCellCollection Cells
         {
             get
             {
@@ -91,7 +91,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets or sets the parsing state for the this <see cref="HeaderFrameBase"/>.
         /// </summary>
-        public virtual new IHeaderFrameParsingState State
+        public new virtual IHeaderFrameParsingState State
         {
             get
             {

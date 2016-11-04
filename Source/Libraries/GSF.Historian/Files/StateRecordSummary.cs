@@ -127,7 +127,7 @@ namespace GSF.Historian.Files
             private set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_currentData = value;
             }

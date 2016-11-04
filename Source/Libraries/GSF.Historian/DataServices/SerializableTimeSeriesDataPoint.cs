@@ -95,7 +95,7 @@ namespace GSF.Historian.DataServices
         public SerializableTimeSeriesDataPoint(IDataPoint dataPoint)
         {
             if (dataPoint == null)
-                throw new ArgumentNullException("dataPoint");
+                throw new ArgumentNullException(nameof(dataPoint));
 
             HistorianID = dataPoint.HistorianID;
             Time = dataPoint.Time.ToString("yyyy-MM-dd HH:mm:ss.fff");

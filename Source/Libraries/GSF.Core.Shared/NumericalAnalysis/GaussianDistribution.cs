@@ -62,10 +62,10 @@ namespace GSF.NumericalAnalysis
 
             //These limits are set to prevent excessive looping when a value is calculated outside this range.
             if (min > mean - 0.25 * standardDeviation)
-                throw new ArgumentOutOfRangeException("min", "must be less than 1/4 standard deviations away from the mean");
+                throw new ArgumentOutOfRangeException(nameof(min), "must be less than 1/4 standard deviations away from the mean");
 
             if (max < mean + 0.25 * standardDeviation)
-                throw new ArgumentOutOfRangeException("max", "must be greater than 1/4 standard deviations away from the mean");
+                throw new ArgumentOutOfRangeException(nameof(max), "must be greater than 1/4 standard deviations away from the mean");
 
             m_random = new Random(Guid.NewGuid().GetHashCode());
             m_mean = mean;

@@ -116,7 +116,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 if (m_legacyMode == MetadataFileLegacyMode.Enabled)
                     m_setDescription = value.TruncateRight(24);
@@ -140,7 +140,7 @@ namespace GSF.Historian.Files
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 if (m_legacyMode == MetadataFileLegacyMode.Enabled)
                     m_clearDescription = value.TruncateRight(24);

@@ -72,7 +72,7 @@ namespace GSF.TimeSeries.UI.Commands
         public RelayCommand(Action execute, Func<bool> canExecute = null)
         {
             if (execute == null)
-                throw new ArgumentNullException("execute");
+                throw new ArgumentNullException(nameof(execute));
 
             // Create lambda proxies for delegates that use no parameters
             m_execute = param => execute();
@@ -91,7 +91,7 @@ namespace GSF.TimeSeries.UI.Commands
         public RelayCommand(Action<object> execute, Predicate<object> canExecute = null)
         {
             if (execute == null)
-                throw new ArgumentNullException("execute");
+                throw new ArgumentNullException(nameof(execute));
 
             m_execute = execute;
             m_canExecute = canExecute;

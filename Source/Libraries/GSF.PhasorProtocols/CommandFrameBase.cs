@@ -90,7 +90,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets reference to the <see cref="CommandCellCollection"/> for this <see cref="CommandFrameBase"/>.
         /// </summary>
-        public virtual new CommandCellCollection Cells
+        public new virtual CommandCellCollection Cells
         {
             get
             {
@@ -101,7 +101,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets or sets the parsing state for the this <see cref="CommandFrameBase"/>.
         /// </summary>
-        public virtual new ICommandFrameParsingState State
+        public new virtual ICommandFrameParsingState State
         {
             get
             {

@@ -65,7 +65,7 @@ namespace GSF.Historian.MetadataProviders
         public MetadataUpdater(MetadataFile metadata)
         {
             if (metadata == null)
-                throw new ArgumentNullException("metadata");
+                throw new ArgumentNullException(nameof(metadata));
 
             m_metadata = metadata;
         }
@@ -98,7 +98,7 @@ namespace GSF.Historian.MetadataProviders
         public void UpdateMetadata(DataTable tableData)
         {
             if (tableData == null)
-                throw new ArgumentNullException("tableData");
+                throw new ArgumentNullException(nameof(tableData));
 
             if (tableData.Rows[0].ItemArray.Length != 43)
                 throw new ArgumentException("tableData must contain 43 columns");
@@ -262,7 +262,7 @@ namespace GSF.Historian.MetadataProviders
         public void UpdateMetadata(IDataReader readerData)
         {
             if (readerData == null)
-                throw new ArgumentNullException("readerData");
+                throw new ArgumentNullException(nameof(readerData));
 
             if (readerData.FieldCount != 43)
                 throw new ArgumentException("readerData must contain 43 columns");

@@ -128,7 +128,7 @@ namespace GSF.Net.Ftp
             set
             {
                 if (value.Length == 0)
-                    throw new ArgumentNullException("value", "Server property must not be blank.");
+                    throw new ArgumentNullException(nameof(value), "Server property must not be blank.");
 
                 m_server = value;
             }

@@ -172,10 +172,10 @@ namespace GSF.Media
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 if (value.Length != 4)
-                    throw new ArgumentOutOfRangeException("value", "TypeID must be exactly 4 characters in length");
+                    throw new ArgumentOutOfRangeException(nameof(value), "TypeID must be exactly 4 characters in length");
 
                 m_typeID = value;
             }

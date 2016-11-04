@@ -789,7 +789,7 @@ namespace Ionic.Zlib
         ///     a <c>using</c> scope in C# (<c>Using</c> in VB).
         ///   </para>
         /// </remarks>
-        new public void Dispose()
+        public new void Dispose()
         {
             TraceOutput(TraceBits.Lifecycle, "Dispose  {0:X8}", this.GetHashCode());
             _pool = null;

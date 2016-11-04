@@ -883,7 +883,7 @@ namespace GSF.Media.Music
             set
             {
                 if (value != -1.0D && (value < 0.0D || value > 1.0D))
-                    throw new ArgumentOutOfRangeException("value", "Value must be expressed as a fractional percentage between zero and one");
+                    throw new ArgumentOutOfRangeException(nameof(value), "Value must be expressed as a fractional percentage between zero and one");
 
                 m_dynamic = value;
             }
@@ -997,7 +997,7 @@ namespace GSF.Media.Music
             Note other = obj as Note;
             if ((object)other != null)
                 return Equals(other);
-            throw new ArgumentException("Object is not an Note", "obj");
+            throw new ArgumentException("Object is not an Note", nameof(obj));
         }
 
         /// <summary>Notes are compared by frequency, then by value (i.e., duration).</summary>
@@ -1108,7 +1108,7 @@ namespace GSF.Media.Music
         #region [ Static ]
 
         // Static Fields
-        static private readonly int s_lastNamedValueIndex;
+        private static readonly int s_lastNamedValueIndex;
 
         // Static Constructor
         static Note()
@@ -1163,13 +1163,13 @@ namespace GSF.Media.Music
         public static double GetFrequency(char note, int octave, bool sharp)
         {
             if (note < 'A' || note > 'G')
-                throw new ArgumentOutOfRangeException("note", "Note must be A - G");
+                throw new ArgumentOutOfRangeException(nameof(note), "Note must be A - G");
 
             if (octave < 0 || octave > 8)
-                throw new ArgumentOutOfRangeException("octave", "Octave must be between 0 and 8");
+                throw new ArgumentOutOfRangeException(nameof(octave), "Octave must be between 0 and 8");
 
             if (octave == 8 && (note < 'C' || note > 'D'))
-                throw new ArgumentOutOfRangeException("note", "Maximum note defined for octave 8 is \'D#\'");
+                throw new ArgumentOutOfRangeException(nameof(note), "Maximum note defined for octave 8 is \'D#\'");
 
             if (sharp && (note == 'B' || note == 'E'))
                 throw new ArgumentException("Sharps are not defined for notes \'B\' and \'E\'");
@@ -1272,7 +1272,7 @@ namespace GSF.Media.Music
         private static string ValidID(string noteID)
         {
             if ((object)noteID == null)
-                throw new ArgumentNullException("noteID");
+                throw new ArgumentNullException(nameof(noteID));
 
             if (noteID.Length < 2)
                 throw new ArgumentException("Invalid note ID format - expected \"Note + Octave + S?\" (e.g., A2 or C5S)");

@@ -145,7 +145,7 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
             ProcessStartInfo processInfo;
 
             if (Uri.CheckHostName(commonName) == UriHostNameType.Unknown)
-                throw new ArgumentException(string.Format("Common name \"{0}\" is not a valid host name.", commonName), "commonName");
+                throw new ArgumentException(string.Format("Common name \"{0}\" is not a valid host name.", commonName), nameof(commonName));
 
             if (!File.Exists(makeCertPath))
                 throw new FileNotFoundException("Unable to find makecert.exe", "makecert.exe");

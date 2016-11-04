@@ -41,7 +41,7 @@ namespace GSF.NumericalAnalysis
         public static double StandardDeviation(this IEnumerable<double> source)
         {
             if ((object)source == null)
-                throw new ArgumentNullException("source", "source is null");
+                throw new ArgumentNullException(nameof(source), "source is null");
 
             double sampleAverage = source.Average();
             double totalVariance = 0.0D;
@@ -68,7 +68,7 @@ namespace GSF.NumericalAnalysis
         public static decimal StandardDeviation(this IEnumerable<decimal> source)
         {
             if ((object)source == null)
-                throw new ArgumentNullException("source", "source is null");
+                throw new ArgumentNullException(nameof(source), "source is null");
 
             decimal sampleAverage = source.Average();
             decimal totalVariance = 0;
@@ -95,7 +95,7 @@ namespace GSF.NumericalAnalysis
         public static float StandardDeviation(this IEnumerable<float> source)
         {
             if ((object)source == null)
-                throw new ArgumentNullException("source", "source is null");
+                throw new ArgumentNullException(nameof(source), "source is null");
 
             float sampleAverage = source.Average();
             float totalVariance = 0.0F;

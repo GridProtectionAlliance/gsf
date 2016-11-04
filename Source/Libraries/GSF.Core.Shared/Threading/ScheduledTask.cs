@@ -135,7 +135,7 @@ namespace GSF.Threading
                     m_thread = new ThreadContainerThreadpool(OnRunningCallback, Dispose, disposeOnShutdown);
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException("threadMode");
+                    throw new ArgumentOutOfRangeException(nameof(threadMode));
             }
         }
 

@@ -619,7 +619,7 @@ namespace Ionic.Crc
         // value.
         CrcCalculatorStream(bool leaveOpen, Int64 length, System.IO.Stream stream, CRC32 crc32)
         {
-            if (stream == null) throw new ArgumentNullException("stream");
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
             _innerStream = stream;
             _crc32 = crc32 ?? new CRC32();
             _lengthLimit = length;

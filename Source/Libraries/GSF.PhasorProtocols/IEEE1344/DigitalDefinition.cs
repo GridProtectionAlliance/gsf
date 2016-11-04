@@ -87,7 +87,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <summary>
         /// Gets or sets the <see cref="ConfigurationCell"/> parent of this <see cref="DigitalDefinition"/>.
         /// </summary>
-        public virtual new ConfigurationCell Parent
+        public new virtual ConfigurationCell Parent
         {
             get
             {

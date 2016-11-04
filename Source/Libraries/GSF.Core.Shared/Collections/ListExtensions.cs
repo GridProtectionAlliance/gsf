@@ -45,9 +45,9 @@ namespace GSF.Collections
         public static void RemoveWhere<T>(this List<T> list, Func<T, bool> shouldRemove)
         {
             if (list == null)
-                throw new ArgumentNullException("list");
+                throw new ArgumentNullException(nameof(list));
             if (shouldRemove == null)
-                throw new ArgumentNullException("shouldRemove");
+                throw new ArgumentNullException(nameof(shouldRemove));
 
             for (int x = 0; x < list.Count; x++)
             {

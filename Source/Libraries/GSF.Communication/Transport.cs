@@ -322,7 +322,7 @@ namespace GSF.Communication
         public static bool IsIPv6IP(string ipAddress)
         {
             if (string.IsNullOrWhiteSpace(ipAddress))
-                throw new ArgumentNullException("ipAddress");
+                throw new ArgumentNullException(nameof(ipAddress));
 
             IPAddress address;
 
@@ -340,7 +340,7 @@ namespace GSF.Communication
         public static bool IsMulticastIP(IPAddress ipAddress)
         {
             if (ipAddress == null)
-                throw new ArgumentNullException("ipAddress");
+                throw new ArgumentNullException(nameof(ipAddress));
 
             // Check for IPv6
             if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6)

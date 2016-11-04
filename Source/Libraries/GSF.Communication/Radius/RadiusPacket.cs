@@ -209,7 +209,7 @@ namespace GSF.Communication.Radius
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 if ((object)value == null || value.Length != 16)
                     throw new ArgumentException("Value must 16-byte long.");
@@ -264,7 +264,7 @@ namespace GSF.Communication.Radius
         public int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
             if ((object)buffer == null)
-                throw new ArgumentNullException("buffer");
+                throw new ArgumentNullException(nameof(buffer));
 
             int imageLength = BinaryLength;
 

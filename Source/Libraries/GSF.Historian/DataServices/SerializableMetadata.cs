@@ -191,7 +191,7 @@ namespace GSF.Historian.DataServices
             : this()
         {
             if (metadataFile == null)
-                throw new ArgumentNullException("metadataFile");
+                throw new ArgumentNullException(nameof(metadataFile));
 
             if (!metadataFile.IsOpen)
                 throw new ArgumentException("metadataFile is closed");

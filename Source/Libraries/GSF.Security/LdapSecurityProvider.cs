@@ -368,7 +368,7 @@ namespace GSF.Security
         protected virtual bool RefreshData(List<string> groupCollection, int providerID)
         {
             if ((object)groupCollection == null)
-                throw new ArgumentNullException("groupCollection");
+                throw new ArgumentNullException(nameof(groupCollection));
 
             if (string.IsNullOrEmpty(UserData.Username))
                 return false;

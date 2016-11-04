@@ -1249,7 +1249,7 @@ namespace GSF.TimeSeries.Adapters
         /// Raises <see cref="ProcessException"/> event.
         /// </summary>
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
-        internal protected virtual void OnProcessException(Exception ex)
+        protected internal virtual void OnProcessException(Exception ex)
         {
             if ((object)ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(ex));
@@ -1282,7 +1282,7 @@ namespace GSF.TimeSeries.Adapters
         /// This overload combines string.Format and SendStatusMessage for convenience.
         /// </remarks>
         [StringFormatMethod("formattedStatus")]
-        internal protected virtual void OnStatusMessage(string formattedStatus, params object[] args)
+        protected internal virtual void OnStatusMessage(string formattedStatus, params object[] args)
         {
             try
             {

@@ -74,7 +74,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <summary>
         /// Gets or sets the <see cref="DataCell"/> parent of this <see cref="AnalogValue"/>.
         /// </summary>
-        public virtual new DataCell Parent
+        public new virtual DataCell Parent
         {
             get
             {
@@ -89,7 +89,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <summary>
         /// Gets or sets the <see cref="AnalogDefinition"/> associated with this <see cref="AnalogValue"/>.
         /// </summary>
-        public virtual new AnalogDefinition Definition
+        public new virtual AnalogDefinition Definition
         {
             get
             {

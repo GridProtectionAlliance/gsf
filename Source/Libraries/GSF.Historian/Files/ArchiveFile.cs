@@ -605,7 +605,7 @@ namespace GSF.Historian.Files
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 if (string.Compare(FilePath.GetExtension(value), FileExtension, StringComparison.OrdinalIgnoreCase) != 0 &&
                     string.Compare(FilePath.GetExtension(value), StandbyFileExtension, StringComparison.OrdinalIgnoreCase) != 0)
@@ -719,7 +719,7 @@ namespace GSF.Historian.Files
             set
             {
                 if (value < 1.0D || value > 95.0D)
-                    throw new ArgumentOutOfRangeException("value", "RolloverPreparationThreshold value must be between 1 and 95");
+                    throw new ArgumentOutOfRangeException(nameof(value), "RolloverPreparationThreshold value must be between 1 and 95");
 
                 m_rolloverPreparationThreshold = value;
             }
@@ -782,7 +782,7 @@ namespace GSF.Historian.Files
             set
             {
                 if (value <= 0.0D || value > 99.0D)
-                    throw new ArgumentOutOfRangeException("value", "ArchiveOffloadThreshold value must be between 0 and 99");
+                    throw new ArgumentOutOfRangeException(nameof(value), "ArchiveOffloadThreshold value must be between 0 and 99");
 
                 m_archiveOffloadThreshold = value;
             }
@@ -1040,7 +1040,7 @@ namespace GSF.Historian.Files
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_settingsCategory = value;
             }

@@ -67,7 +67,7 @@ namespace GSF.TimeSeries.Transport
         public SerializableMeasurement(Encoding encoding)
         {
             if ((object)encoding == null)
-                throw new ArgumentNullException("encoding", "Cannot create serializable measurement with no encoding.");
+                throw new ArgumentNullException(nameof(encoding), "Cannot create serializable measurement with no encoding.");
 
             m_encoding = encoding;
         }
