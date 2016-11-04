@@ -33,7 +33,6 @@ using System.Windows;
 using System.Windows.Media;
 using GSF.Data;
 using GSF.TimeSeries.UI;
-using GSF;
 
 namespace GSF.PhasorProtocols.UI.DataModels
 {

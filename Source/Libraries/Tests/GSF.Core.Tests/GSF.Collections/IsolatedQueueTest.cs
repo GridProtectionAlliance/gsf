@@ -27,7 +27,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using GSF.Collections;
-using GSF.Validation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GSF.Core.Tests.GSF.Collections

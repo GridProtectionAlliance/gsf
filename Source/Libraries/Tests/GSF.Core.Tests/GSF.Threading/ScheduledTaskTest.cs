@@ -21,7 +21,6 @@
 //
 //******************************************************************************************************
 
-using System;
 using System.Threading;
 using GSF.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

@@ -35,7 +35,6 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using GSF;
-using GSF.Configuration;
 using GSF.Data;
 using GSF.IO;
 using GSF.Reflection;

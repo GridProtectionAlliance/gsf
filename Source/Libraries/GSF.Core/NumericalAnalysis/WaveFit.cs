@@ -24,7 +24,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Linq;
 
 namespace GSF.NumericalAnalysis
 {

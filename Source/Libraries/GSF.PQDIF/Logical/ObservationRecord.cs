@@ -25,11 +25,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using GSF.PQDIF.Physical;
-using Ionic.Zlib;
 
 namespace GSF.PQDIF.Logical
 {

@@ -24,7 +24,6 @@
 //******************************************************************************************************
 
 using System;
-using GSF;
 using GSF.Collections;
 
 namespace GSF.COMTRADE

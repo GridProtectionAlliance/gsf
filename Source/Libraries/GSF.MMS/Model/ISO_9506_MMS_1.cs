@@ -4,7 +4,6 @@
 // Any modifications to this file will be lost upon recompilation of the source ASN.1. 
 //
 
-using System.Runtime.CompilerServices;
 using GSF.ASN1.Attributes;
 
 namespace GSF.MMS.Model

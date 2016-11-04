@@ -36,7 +36,6 @@ using System.Windows.Threading;
 using System.Xml;
 using System.Xml.Serialization;
 using GSF.Communication;
-using GSF.Configuration;
 using GSF.Data;
 using GSF.IO;
 using GSF.Identity;

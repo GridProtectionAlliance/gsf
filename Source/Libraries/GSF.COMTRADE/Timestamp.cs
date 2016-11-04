@@ -25,7 +25,6 @@
 
 using System;
 using System.Globalization;
-using GSF;
 
 namespace GSF.COMTRADE
 {

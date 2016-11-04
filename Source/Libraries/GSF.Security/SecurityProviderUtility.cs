@@ -40,11 +40,9 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading;
-using GSF.Collections;
 using GSF.Configuration;
 using GSF.Net.Smtp;
 using GSF.Security.Cryptography;
-using Random = GSF.Security.Cryptography.Random;
 
 namespace GSF.Security
 {

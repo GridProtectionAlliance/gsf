@@ -24,7 +24,6 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using GSF.Annotations;
 
 // ReSharper disable FieldCanBeMadeReadOnly.Local
 // ReSharper disable MemberCanBePrivate.Local

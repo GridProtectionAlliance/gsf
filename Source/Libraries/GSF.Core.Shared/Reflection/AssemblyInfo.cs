@@ -51,7 +51,6 @@ using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
 using System.Security;
-using GSF.IO;
 
 namespace GSF.Reflection
 {

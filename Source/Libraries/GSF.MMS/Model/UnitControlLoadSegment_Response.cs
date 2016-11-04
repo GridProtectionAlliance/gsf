@@ -4,7 +4,6 @@
 // Any modifications to this file will be lost upon recompilation of the source ASN.1. 
 //
 
-using System.Runtime.CompilerServices;
 using System.Collections.Generic;
 using GSF.ASN1;
 using GSF.ASN1.Attributes;

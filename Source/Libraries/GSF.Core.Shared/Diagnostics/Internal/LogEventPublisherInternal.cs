@@ -23,7 +23,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Diagnostics;
 
 namespace GSF.Diagnostics
 {

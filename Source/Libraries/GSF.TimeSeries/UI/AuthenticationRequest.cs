@@ -24,7 +24,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Xml.Serialization;
 
 namespace GSF.TimeSeries.UI
 {
