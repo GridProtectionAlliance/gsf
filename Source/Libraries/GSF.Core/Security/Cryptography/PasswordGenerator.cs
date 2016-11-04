@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using GSF.Collections;
 
@@ -177,6 +178,7 @@ namespace GSF.Security.Cryptography
         /// <summary>
         /// Default set of character groups used by the <see cref="PasswordGenerator"/>.
         /// </summary>
+        [SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly IReadOnlyList<CharacterGroup> DefaultCharacterGroups = new List<CharacterGroup>()
         {
             new CharacterGroup() { Characters = "abcdefghijklmnopqrstuvwxyz", MinOccurrence = 1 },
@@ -188,6 +190,7 @@ namespace GSF.Security.Cryptography
         /// <summary>
         /// Defines the default password generator.
         /// </summary>
+        [SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly PasswordGenerator Default = new PasswordGenerator();
 
         #endregion

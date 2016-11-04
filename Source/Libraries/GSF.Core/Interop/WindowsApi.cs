@@ -1107,13 +1107,13 @@ namespace GSF.Interop
         /// Win32 DuplicateTokenEx function.
         /// </summary>
         [SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "2#"), SuppressMessage("Microsoft.Interoperability", "CA1401:PInvokesShouldNotBeVisible"), SuppressMessage("Microsoft.Interoperability", "CA1414:MarkBooleanPInvokeArgumentsWithMarshalAs"), DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public extern static bool DuplicateTokenEx(IntPtr hExistingToken, uint dwDesiredAccess, [MarshalAs(UnmanagedType.Struct)] ref SECURITY_ATTRIBUTES lpTokenAttributes, SECURITY_IMPERSONATION_LEVEL ImpersonationLevel, TOKEN_TYPE TokenType, out IntPtr phNewToken);
+        public static extern bool DuplicateTokenEx(IntPtr hExistingToken, uint dwDesiredAccess, [MarshalAs(UnmanagedType.Struct)] ref SECURITY_ATTRIBUTES lpTokenAttributes, SECURITY_IMPERSONATION_LEVEL ImpersonationLevel, TOKEN_TYPE TokenType, out IntPtr phNewToken);
 
         /// <summary>
         /// Win32 DuplicateTokenEx function.
         /// </summary>
         [SuppressMessage("Microsoft.Interoperability", "CA1414:MarkBooleanPInvokeArgumentsWithMarshalAs"), SuppressMessage("Microsoft.Interoperability", "CA1401:PInvokesShouldNotBeVisible"), DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public extern static bool DuplicateTokenEx(IntPtr hExistingToken, uint dwDesiredAccess, IntPtr lpTokenAttributes, SECURITY_IMPERSONATION_LEVEL ImpersonationLevel, TOKEN_TYPE TokenType, out IntPtr phNewToken);
+        public static extern bool DuplicateTokenEx(IntPtr hExistingToken, uint dwDesiredAccess, IntPtr lpTokenAttributes, SECURITY_IMPERSONATION_LEVEL ImpersonationLevel, TOKEN_TYPE TokenType, out IntPtr phNewToken);
 
         /// <summary>
         /// Win32 AdjustTokenPrivileges function.
@@ -1155,7 +1155,7 @@ namespace GSF.Interop
         /// Win32 CopyMemory function.
         /// </summary>
         [DllImport("kernel32.dll", EntryPoint = "CopyMemory")]
-        public static extern void CopyMemory(IntPtr destination, IntPtr source, uint length);
+        internal static extern void CopyMemory(IntPtr destination, IntPtr source, uint length);
 
         /// <summary>
         /// Win32 FormatMessage function.

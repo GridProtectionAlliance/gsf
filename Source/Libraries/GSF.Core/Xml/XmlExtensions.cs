@@ -35,6 +35,7 @@
 
 using System;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -236,6 +237,7 @@ namespace GSF.Xml
         /// <param name="document">The document to be modified.</param>
         /// <param name="name">The name of the elements to be transformed.</param>
         /// <param name="selector">The function that defines the transformation.</param>
+        [SuppressMessage("Microsoft.Design", "CA1011:ConsiderPassingBaseTypesAsParameters", Justification = "This is a targeted extension for an XML document")]
         public static void TransformAll(this XDocument document, XName name, Func<XElement, object> selector)
         {
             document
@@ -252,6 +254,7 @@ namespace GSF.Xml
         /// <param name="document">The document to be modified.</param>
         /// <param name="name">The name of the elements to be transformed.</param>
         /// <param name="selector">The function that defines the transformation.</param>
+        [SuppressMessage("Microsoft.Design", "CA1011:ConsiderPassingBaseTypesAsParameters", Justification = "This is a targeted extension for an XML document")]
         public static void TransformAll(this XDocument document, XName name, Func<XElement, int, object> selector)
         {
             document

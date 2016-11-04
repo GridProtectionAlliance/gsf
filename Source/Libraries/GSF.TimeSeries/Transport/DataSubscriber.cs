@@ -4116,7 +4116,6 @@ namespace GSF.TimeSeries.Transport
             ISet<string> definedDeviceNames;
 
             DataSet dataSource;
-            DataRow[] measurementRows;
             Guid signalID;
 
             try

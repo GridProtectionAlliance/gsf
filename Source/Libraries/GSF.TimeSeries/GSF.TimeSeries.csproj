@@ -129,7 +129,9 @@
     <Compile Include="Configuration\WebServiceConfigurationLoader.cs" />
     <Compile Include="Configuration\XMLConfigurationLoader.cs" />
     <Compile Include="ConsoleHost.cs" />
+    <Compile Include="Data\ActiveMeasurementsTableLookup.cs" />
     <Compile Include="Data\DataSourceLookup.cs" />
+    <Compile Include="Data\DataSourceLookupCache.cs" />
     <Compile Include="Reports\CorrectnessReportingProcess.cs" />
     <Compile Include="Frame.cs" />
     <Compile Include="FrameQueue.cs" />

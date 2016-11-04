@@ -64,7 +64,6 @@ namespace GSF.EMAX
         public SEQUENCE_CHANNELS SequenceChannels;
         public BREAKER_TRIP_TIMES BreakerTripTimes;
 
-        private int[] m_frameLength;
         private int m_configuredAnalogChannels;
         private readonly List<StructureType> m_parsedSuccesses;
         private readonly List<Tuple<StructureType, Exception>> m_parsedFailures;

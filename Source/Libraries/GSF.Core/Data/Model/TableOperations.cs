@@ -25,6 +25,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -1075,6 +1076,7 @@ namespace GSF.Data.Model
         private static readonly bool s_hasPrimaryKeyIdentityField;
 
         // Static Constructor
+        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         static TableOperations()
         {
             StringBuilder addNewFields = new StringBuilder();

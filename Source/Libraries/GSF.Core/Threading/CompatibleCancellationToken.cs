@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 
 namespace GSF.Threading
@@ -31,6 +32,7 @@ namespace GSF.Threading
     /// that interoperates with the <see cref="System.Threading.CancellationToken"/> and can be
     /// used to cancel an asynchronous operation.
     /// </summary>
+    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable")]
     public class CompatibleCancellationToken : ICancellationToken
     {
         #region [ Members ]
@@ -48,6 +50,7 @@ namespace GSF.Threading
         /// Creates a <see cref="CompatibleCancellationToken"/> based on an existing system cancellation token source.
         /// </summary>
         /// <param name="source">Existing system cancellation token source.</param>
+        [SuppressMessage("Microsoft.Usage", "CA1816:CallGCSuppressFinalizeCorrectly")]
         public CompatibleCancellationToken(CancellationTokenSource source)
         {
             m_source = source;
@@ -65,6 +68,7 @@ namespace GSF.Threading
         /// A <see cref="CompatibleCancellationToken"/> created from an existing system cancellation token
         /// cannot be cancelled since the source for the provided token will not be available.
         /// </remarks>
+        [SuppressMessage("Microsoft.Usage", "CA1816:CallGCSuppressFinalizeCorrectly")]
         public CompatibleCancellationToken(System.Threading.CancellationToken token)
         {
             // Although you could reflect and get cancellation token source, this could be dangerous on 

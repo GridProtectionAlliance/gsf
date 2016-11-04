@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Resources;
 using System.Runtime.CompilerServices;
@@ -29,6 +29,8 @@ using System.Runtime.InteropServices;
 
 // Assembly identity attributes.
 [assembly: AssemblyVersion("2.1.366.0")]
+
+[assembly: SuppressMessage("Microsoft.Usage", "CA2243:AttributeStringLiteralsShouldParseCorrectly")]
 [assembly: AssemblyInformationalVersion("2.1.366-beta")]
 
 // Informational attributes.

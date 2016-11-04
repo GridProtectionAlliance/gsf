@@ -24,6 +24,7 @@
 using System;
 using System.Collections;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GSF.Data.Model
 {
@@ -270,6 +271,7 @@ namespace GSF.Data.Model
         /// <typeparam name="TAttribute">Type of attribute to search for.</typeparam>
         /// <param name="fieldName">Name of field to use for attribute lookup.</param>
         /// <returns><c>true</c> if field has attribute; otherwise, <c>false</c>.</returns>
+        [SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
         bool FieldHasAttribute<TAttribute>(string fieldName) where TAttribute : Attribute;
 
         /// <summary>

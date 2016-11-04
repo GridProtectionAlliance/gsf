@@ -581,7 +581,7 @@ namespace GSF.Console
                     // surrounding double quotes, and backslashes inside double-quoted
                     // expressions must be replaces by the character immediately following them
                     case '"':
-                        if (!value.EndsWith("\""))
+                        if (!value.EndsWith("\"", StringComparison.Ordinal))
                             throw new FormatException("Malformed expression - mismatched quote.");
 
                         return new string(value.Zip(value.Substring(1, value.Length - 2), (c1, c2) =>
@@ -597,7 +597,7 @@ namespace GSF.Console
                     // Expressions wrapped in single quotes must
                     // be stripped of the surrounding single quotes
                     case '\'':
-                        if (!value.EndsWith("'"))
+                        if (!value.EndsWith("'", StringComparison.Ordinal))
                             throw new FormatException("Malformed expression - mismatched quote.");
 
                         return value.Substring(1, value.Length - 2);

@@ -56,7 +56,6 @@ namespace GSF.Data.Model
         public SearchType SearchType
         {
             get;
-            set;
         }
 
         /// <summary>

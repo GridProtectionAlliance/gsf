@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GSF.Units.EE
 {
@@ -138,6 +139,7 @@ namespace GSF.Units.EE
         /// </summary>
         /// <param name="acronym">Acronym of the desired <see cref="SignalKind"/>.</param>
         /// <returns>The <see cref="SignalKind"/> for the specified <paramref name="acronym"/>.</returns>
+        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         public static SignalKind ParseSignalKind(this string acronym)
         {
             switch (acronym)

@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -45,6 +46,7 @@ namespace GSF.Parsing
         /// <summary>
         /// Represents a variable that can be tweaked at runtime.
         /// </summary>
+        [SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
         public class Variable
         {
             /// <summary>

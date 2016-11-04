@@ -899,6 +899,7 @@ namespace GSF.Data
         /// </summary>
         /// <param name="connection">The connection used to execute SQL statements.</param>
         /// <param name="scriptReader">The reader used to extract statements from the SQL script.</param>
+        [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "CommandText updates are being removed, not accepting user input")]
         public static void ExecuteTSQLScript(this IDbConnection connection, TextReader scriptReader)
         {
             string line = scriptReader.ReadLine();
@@ -952,6 +953,7 @@ namespace GSF.Data
         /// </summary>
         /// <param name="connection">The connection used to execute SQL statements.</param>
         /// <param name="scriptReader">The reader used to extract statements from the SQL script.</param>
+        [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "CommandText updates are being removed, not accepting user input")]
         public static void ExecuteMySQLScript(this IDbConnection connection, TextReader scriptReader)
         {
             string line;
@@ -969,7 +971,7 @@ namespace GSF.Data
                 {
                     string statement;
 
-                    if (line.StartsWith("DELIMITER "))
+                    if (line.StartsWith("DELIMITER ", StringComparison.OrdinalIgnoreCase))
                     {
                         delimiter = line.Split(' ')[1].Trim();
                     }
@@ -980,7 +982,7 @@ namespace GSF.Data
                         statement = statementBuilder.ToString();
                         statement = comment.Replace(statement, " ").Trim();
 
-                        if (statement.EndsWith(delimiter))
+                        if (statement.EndsWith(delimiter, StringComparison.Ordinal))
                         {
                             // Remove trailing delimiter.
                             statement = statement.Remove(statement.Length - delimiter.Length);
@@ -1016,6 +1018,7 @@ namespace GSF.Data
         /// </summary>
         /// <param name="connection">The connection used to execute SQL statements.</param>
         /// <param name="scriptReader">The reader used to extract statements from the SQL script.</param>
+        [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "CommandText updates are being removed, not accepting user input")]
         public static void ExecuteOracleScript(this IDbConnection connection, TextReader scriptReader)
         {
             string line;
@@ -1046,7 +1049,7 @@ namespace GSF.Data
                     // If the statement is a PL/SQL block and the current line is a forward slash,
                     // or if the statement is not a PL/SQL block and the statement in a semicolon,
                     // then execute and flush the statement so that the next statement can be executed.
-                    if ((isPlsqlBlock && trimLine == "/") || (!isPlsqlBlock && statement.EndsWith(";")))
+                    if ((isPlsqlBlock && trimLine == "/") || (!isPlsqlBlock && statement.EndsWith(";", StringComparison.Ordinal)))
                     {
                         // Remove trailing delimiter and newlines.
                         statement = statement.Remove(statement.Length - 1);
@@ -1064,10 +1067,10 @@ namespace GSF.Data
         }
 
         // Defines a list of keywords used to identify PL/SQL blocks.
-        private static string[] s_plsqlIdentifiers = { "CREATE FUNCTION", "CREATE OR REPLACE FUNCTION",
-                                                       "CREATE PROCEDURE", "CREATE OR REPLACE PROCEDURE",
-                                                       "CREATE PACKAGE", "CREATE OR REPLACE PACKAGE",
-                                                       "DECLARE", "BEGIN" };
+        private static readonly string[] s_plsqlIdentifiers = { "CREATE FUNCTION", "CREATE OR REPLACE FUNCTION",
+                                                                "CREATE PROCEDURE", "CREATE OR REPLACE PROCEDURE",
+                                                                "CREATE PACKAGE", "CREATE OR REPLACE PACKAGE",
+                                                                "DECLARE", "BEGIN" };
 
         #endregion
 
@@ -2598,7 +2601,7 @@ namespace GSF.Data
                 string commandText = command.CommandText;
 
                 if (string.IsNullOrEmpty(commandText))
-                    throw new ArgumentNullException("command", "command.CommandText is null");
+                    throw new ArgumentNullException(nameof(command), "command.CommandText is null");
 
                 // Add parameters for standard SQL expressions (i.e., non stored procedure expressions)
                 if (commandText.StartsWith("SELECT ", StringComparison.OrdinalIgnoreCase) ||
@@ -2729,7 +2732,7 @@ namespace GSF.Data
                 int i = 0;
 
                 if (tokens.Length != values.Length)
-                    throw new ArgumentException("Number of parameter arguments in sql expression do not match number of supplied values", "values");
+                    throw new ArgumentException("Number of parameter arguments in sql expression do not match number of supplied values", nameof(values));
 
                 foreach (string token in tokens)
                 {
@@ -2795,7 +2798,7 @@ namespace GSF.Data
             pattern = Regex.Escape(delimiter) + "(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))";
 
             // Remove any leading and trailing whitespaces, carriage returns or line feeds.
-            delimitedData = delimitedData.Trim().Trim(new[] { '\r', '\n' }).Replace("\n", "");
+            delimitedData = delimitedData.Trim().Trim('\r', '\n').Replace("\n", "");
 
             string[] lines = delimitedData.Split('\r'); //Splits delimited data into lines.
 
@@ -2810,7 +2813,7 @@ namespace GSF.Data
                 // Uses the first row as header row.
                 for (int i = 0; i < headers.Length; i++)
                 {
-                    table.Columns.Add(new DataColumn(headers[i].Trim(new[] { '\"' }))); //Remove any leading and trailing quotes from the column name.
+                    table.Columns.Add(new DataColumn(headers[i].Trim('\"'))); //Remove any leading and trailing quotes from the column name.
                 }
                 cursor++;
             }
@@ -2833,7 +2836,7 @@ namespace GSF.Data
                 for (int i = 0; i < fields.Length; i++)
                 {
                     // Removes any leading and trailing quotes from the data.
-                    row[i] = fields[i].Trim(new[] { '\"' });
+                    row[i] = fields[i].Trim('\"');
                 }
 
                 // Adds the new row.

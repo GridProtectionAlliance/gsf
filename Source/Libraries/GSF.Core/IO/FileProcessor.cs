@@ -23,7 +23,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -256,6 +256,7 @@ namespace GSF.IO
             #endregion
         }
 
+        [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable", Justification = "LogicalThreadLocal only needs disposal if being accessed from a non-logical thread")]
         private class FileEnumerator
         {
             #region [ Members ]
