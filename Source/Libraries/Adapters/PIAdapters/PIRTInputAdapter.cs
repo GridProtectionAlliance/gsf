@@ -30,6 +30,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using GSF;
@@ -270,6 +271,7 @@ namespace PIAdapters
         /// Releases the unmanaged resources used by the <see cref="PIRTInputAdapter"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed")]
         protected override void Dispose(bool disposing)
         {
             if (!m_disposed)
@@ -283,6 +285,14 @@ namespace PIAdapters
                             m_connection.Disconnected -= m_connection_Disconnected;
                             m_connection.Dispose();
                             m_connection = null;
+                        }
+
+                        m_dataPipe?.Dispose();
+
+                        if ((object)m_eventTimer != null)
+                        {
+                            m_eventTimer.Elapsed -= m_eventTimer_Elapsed;
+                            m_eventTimer.Dispose();
                         }
                     }
                 }

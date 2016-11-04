@@ -35,6 +35,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>..\..\..\..\Build\Output\$(Configuration)\Libraries\$(AssemblyName).xml</DocumentationFile>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <NoWarn>
+    </NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
     <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
@@ -61,6 +64,7 @@
     <Compile Include="CalculatedMeasurementBase.cs" />
     <Compile Include="CommonPhasorServices.cs" />
     <Compile Include="ConfigurationErrorFrame.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Iec61850_90_5\Concentrator.cs" />
     <Compile Include="IeeeC37_118\Concentrator.cs" />
     <Compile Include="PhasorDataConcentratorBase.cs" />

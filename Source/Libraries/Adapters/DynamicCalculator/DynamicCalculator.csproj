@@ -38,6 +38,7 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>..\..\..\..\Build\Output\$(Configuration)\Libraries\$(AssemblyName).xml</DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
     <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>

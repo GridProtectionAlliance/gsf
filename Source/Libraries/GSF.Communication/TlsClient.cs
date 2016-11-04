@@ -60,25 +60,18 @@ namespace GSF.Communication
             public SslStream SslStream;
             public NegotiateStream NegotiateStream;
 
-            public SocketAsyncEventArgs ConnectArgs = new SocketAsyncEventArgs();
+            public readonly SocketAsyncEventArgs ConnectArgs = new SocketAsyncEventArgs();
             public int ConnectionAttempts;
 
             public CancellationToken Token = new CancellationToken();
 
             public void Dispose()
             {
-                Dispose(ConnectArgs);
-
-                Dispose(Socket);
-                Dispose(NetworkStream);
-                Dispose(SslStream);
-                Dispose(NegotiateStream);
-            }
-
-            private static void Dispose(IDisposable obj)
-            {
-                if ((object)obj != null)
-                    obj.Dispose();
+                ConnectArgs.Dispose();
+                Socket?.Dispose();
+                NetworkStream?.Dispose();
+                SslStream?.Dispose();
+                NegotiateStream?.Dispose();
             }
         }
 

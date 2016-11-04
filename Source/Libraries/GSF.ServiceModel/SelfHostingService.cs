@@ -250,14 +250,6 @@ namespace GSF.ServiceModel
             m_defaultOutgoingResponseFormat = WebMessageFormat.Xml;
         }
 
-        /// <summary>
-        /// Releases the unmanaged resources before the web service is reclaimed by <see cref="GC"/>.
-        /// </summary>
-        ~SelfHostingService()
-        {
-            Dispose(false);
-        }
-
         #endregion
 
         #region [ Properties ]

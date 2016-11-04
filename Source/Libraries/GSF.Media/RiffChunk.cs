@@ -60,6 +60,7 @@
 #endregion
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using GSF.Parsing;
@@ -231,6 +232,7 @@ namespace GSF.Media
         }
 
         // This is not currently needed since the RIFF chunks are read using the static ReadNext
+        [SuppressMessage("Microsoft.Design", "CA1033:InterfaceMethodsShouldBeCallableByChildTypes")]
         int ISupportBinaryImage.ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
             throw new NotImplementedException();

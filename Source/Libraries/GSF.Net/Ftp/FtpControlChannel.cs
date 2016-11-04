@@ -190,13 +190,16 @@ namespace GSF.Net.Ftp
         /// </summary>
         public void Close()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            Dispose();
         }
 
-        void IDisposable.Dispose()
+        /// <summary>
+        /// Releases all the resources used by the <see cref="FtpControlChannel"/> object.
+        /// </summary>
+        public void Dispose()
         {
-            Close();
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -217,6 +220,7 @@ namespace GSF.Net.Ftp
 
                         if ((object)m_connection != null)
                             m_connection.Close();
+
                         m_connection = null;
                     }
                 }
@@ -234,6 +238,7 @@ namespace GSF.Net.Ftp
         {
             if ((object)m_connection == null)
                 return;
+
             m_connection.Connect(m_server, m_port);
 
             try

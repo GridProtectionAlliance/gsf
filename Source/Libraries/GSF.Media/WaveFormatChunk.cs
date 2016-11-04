@@ -60,6 +60,7 @@
 #endregion
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using GSF.Parsing;
 
@@ -121,6 +122,7 @@ namespace GSF.Media
         /// <param name="source">Source stream to read data from.</param>
         /// <exception cref="InvalidOperationException">WAVE format or extra parameters section too small, wave file corrupted.</exception>
         /// <exception cref="InvalidDataException">Invalid bit rate encountered - wave file bit rates must be a multiple of 8.</exception>
+        [SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public WaveFormatChunk(RiffChunk preRead, Stream source)
             : base(preRead, RiffTypeID)
         {

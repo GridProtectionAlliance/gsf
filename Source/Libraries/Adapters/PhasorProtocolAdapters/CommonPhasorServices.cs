@@ -81,6 +81,7 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Creates a new <see cref="CommonPhasorServices"/>.
         /// </summary>
+        [SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public CommonPhasorServices()
         {
             // Create wait handle to use to wait for configuration frame

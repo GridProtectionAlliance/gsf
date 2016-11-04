@@ -897,7 +897,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
 
         // Complex function used to read next signal type and label from the ETR file...
         // Note that current parsing depends on sample tag name format defined in the IEC 61850-90-5 implementation agreement
-        private bool ParseNextSampleDefinition(StreamReader reader, out SignalType signalType, out string label, out bool endOfFile)
+        private static bool ParseNextSampleDefinition(StreamReader reader, out SignalType signalType, out string label, out bool endOfFile)
         {
             string signalLabel, dataType, signalDetail;
             bool result = false;

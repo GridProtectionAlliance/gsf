@@ -278,7 +278,6 @@ namespace GSF.Windows.Forms
         private void ButtonOK_Click(object sender, EventArgs e)
         {
             Close();
-            Dispose();
         }
 
         #endregion

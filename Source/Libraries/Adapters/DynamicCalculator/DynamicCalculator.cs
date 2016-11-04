@@ -251,7 +251,7 @@ namespace DynamicCalculator
         /// </summary>
         public override void Initialize()
         {
-            string errorMessage = "{0} is missing from Settings - Example: expressionText=x+y; variableList={x = PPA:1; y = PPA:2}";
+            string errorMessage = "{0} is missing from Settings - Example: expressionText=x+y; variableList={{x = PPA:1; y = PPA:2}}";
 
             Dictionary<string, string> settings;
             string setting;
@@ -266,6 +266,7 @@ namespace DynamicCalculator
 
             if (!settings.TryGetValue("expressionText", out setting))
                 throw new ArgumentException(string.Format(errorMessage, "expressionText"));
+
             ExpressionText = settings["expressionText"];
 
             if (!settings.TryGetValue("variableList", out setting))

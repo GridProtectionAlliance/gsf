@@ -30,6 +30,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>..\..\..\Build\Output\Release\Libraries\GSF.Geo.XML</DocumentationFile>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
     <OutputPath>..\..\..\Build\Output\Mono\Libraries\</OutputPath>

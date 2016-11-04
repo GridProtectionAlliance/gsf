@@ -33,6 +33,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>..\..\..\..\Build\Output\Release\Libraries\GrafanaAdapters.XML</DocumentationFile>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />

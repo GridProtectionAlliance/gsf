@@ -1,10 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<RuleSet Name="Rules for GSF.PhasorProtocols" Description="Rule set for the GSF PhasorProtocols" ToolsVersion="10.0">
+<RuleSet Name="Ruleset for GSF.PhasorProtocols based on Microsoft Managed Recommended Rules" Description="Rule set for the GSF PhasorProtocols" ToolsVersion="14.0">
   <IncludeAll Action="Warning" />
   <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
     <Rule Id="CA1006" Action="None" />
     <Rule Id="CA1008" Action="None" />
     <Rule Id="CA1021" Action="None" />
+    <Rule Id="CA1024" Action="None" />
+    <Rule Id="CA1026" Action="None" />
     <Rule Id="CA1027" Action="None" />
     <Rule Id="CA1028" Action="None" />
     <Rule Id="CA1030" Action="None" />

@@ -52,6 +52,7 @@ namespace HistorianAdapters
         private readonly Dictionary<MetadataRecord, IEnumerable<IDataPoint>> m_actualDataRate;
         private readonly Dictionary<MetadataRecord, IEnumerable<IDataPoint>> m_dataQualityErrors;
         private readonly Dictionary<MetadataRecord, IEnumerable<IDataPoint>> m_timeQualityErrors;
+        private bool m_disposed;
 
         #endregion
 
@@ -324,19 +325,7 @@ namespace HistorianAdapters
         /// </summary>
         public void Close()
         {
-            if ((object)m_archive == null)
-                return;
-
-            m_totalFrames.Clear();
-            m_missingFrames.Clear();
-            m_connectedStats.Clear();
-            m_averageLatency.Clear();
-            m_actualDataRate.Clear();
-            m_dataQualityErrors.Clear();
-            m_timeQualityErrors.Clear();
-
-            m_archive.Close();
-            m_archive = null;
+            Dispose();
         }
 
         /// <summary>
@@ -344,8 +333,33 @@ namespace HistorianAdapters
         /// </summary>
         public void Dispose()
         {
-            Close();
+            Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="StatisticsReader"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+
+                    if (disposing)
+                    {
+                        m_archive?.Close();
+                        m_archive = null;
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
+            }
         }
 
         // Opens the archive file in order to retrieve the statistics.

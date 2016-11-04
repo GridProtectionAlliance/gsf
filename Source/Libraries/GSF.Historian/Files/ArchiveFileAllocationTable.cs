@@ -556,10 +556,20 @@ namespace GSF.Historian.Files
             return length;
         }
 
-        // This method is never used since constructor parses the point allocation table
-        int ISupportBinaryImage.ParseBinaryImage(byte[] buffer, int startIndex, int length)
+        // 
+        /// <summary>
+        /// Initializes object by parsing the specified <paramref name="buffer"/> containing a binary image.
+        /// </summary>
+        /// <param name="buffer">Buffer containing binary image to parse.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start parsing.</param>
+        /// <param name="length">Valid number of bytes within <paramref name="buffer"/> to read from <paramref name="startIndex"/>.</param>
+        /// <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
+        /// <remarks>
+        /// This method is never used since constructor parses the point allocation table.
+        /// </remarks>
+        public int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
-            throw new NotSupportedException();
+            return 0;            
         }
 
         /// <summary>

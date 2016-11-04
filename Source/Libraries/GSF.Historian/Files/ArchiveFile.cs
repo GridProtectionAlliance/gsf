@@ -93,6 +93,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.IO;
 using System.Text;
@@ -2713,6 +2714,7 @@ namespace GSF.Historian.Files
             }
         }
 
+        [SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times", Justification = "Implementation is correct")]
         private void PrepareForRollover()
         {
             try

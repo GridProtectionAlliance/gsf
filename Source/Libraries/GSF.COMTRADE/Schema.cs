@@ -120,7 +120,7 @@ namespace GSF.COMTRADE
             int totalDigitalChannels = int.Parse(parts[2].Trim().Split('D')[0]);
 
             if (totalChannels != totalAnalogChannels + totalDigitalChannels)
-                throw new InvalidOperationException(string.Format("Total defined channels must equal the sum of the total number of analog and digital channel definitions.\r\nImage = {1}", parts.Length, lines[1]));
+                throw new InvalidOperationException(string.Format("Total defined channels must equal the sum of the total number of analog and digital channel definitions.\r\nImage = {0}", lines[1]));
 
             // Parse analog definitions
             List<AnalogChannel> analogChannels = new List<AnalogChannel>();

@@ -30,6 +30,7 @@
 //
 //******************************************************************************************************
 
+using System.Diagnostics.CodeAnalysis;
 using System.ServiceModel.Activation;
 using GSF.Security;
 using GSF.ServiceModel;
@@ -107,6 +108,7 @@ namespace GSF.Web.Embedded
     /// </code>
     /// </example>
     [AspNetCompatibilityRequirements(RequirementsMode = AspNetCompatibilityRequirementsMode.Allowed)]
+    [SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
     public class SecurityService : SelfHostingService, ISecurityService
     {
         /// <summary>

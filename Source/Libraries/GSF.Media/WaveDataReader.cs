@@ -82,6 +82,7 @@ namespace GSF.Media
         private readonly int m_sampleSize;
         private readonly int m_channels;
         private readonly TypeCode m_sampleType;
+        private bool m_disposed;
 
         #endregion
 
@@ -174,18 +175,41 @@ namespace GSF.Media
         /// </summary>
         public void Close()
         {
-            m_waveStream.Close();
+            m_waveStream?.Close();
         }
 
         /// <summary>
-        /// Disposes of the underlying stream.
+        /// Releases all the resources used by the <see cref="WaveDataReader"/> object.
         /// </summary>
         public void Dispose()
         {
-            if ((object)m_waveStream != null)
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="WaveDataReader"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
             {
-                m_waveStream.Dispose();
-                m_waveStream = null;
+                try
+                {
+                    if (disposing)
+                    {
+                        if ((object)m_waveStream != null)
+                        {
+                            m_waveStream.Dispose();
+                            m_waveStream = null;
+                        }
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
             }
         }
 

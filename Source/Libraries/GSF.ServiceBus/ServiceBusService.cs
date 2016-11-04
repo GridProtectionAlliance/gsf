@@ -42,6 +42,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.ServiceModel;
 using System.ServiceModel.Description;
 using System.Text;
@@ -485,6 +486,7 @@ namespace GSF.ServiceBus
         /// <summary>
         /// Initializes a new instance of the <see cref="ServiceBusService"/> class.
         /// </summary>
+        [SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public ServiceBusService()
         {
             // Override base class settings.

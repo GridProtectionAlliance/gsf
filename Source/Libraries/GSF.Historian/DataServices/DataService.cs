@@ -39,6 +39,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.ServiceModel.Description;
 using GSF.Configuration;
 using GSF.ServiceModel;
@@ -48,6 +49,7 @@ namespace GSF.Historian.DataServices
     /// <summary>
     /// A base class for web service that can send and receive historian data over REST (Representational State Transfer) interface.
     /// </summary>
+    [SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
     public class DataService : SelfHostingService, IDataService
     {
         #region [ Members ]

@@ -270,7 +270,7 @@ namespace GSF.ServiceProcess
         /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
         /// <param name="context">The destination (see <see cref="StreamingContext"/>) for this serialization.</param>
         /// <exception cref="SecurityException">The caller does not have the required permission.</exception>
-        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             // Serialize client request fields
             info.AddValue("clientID", m_clientID);

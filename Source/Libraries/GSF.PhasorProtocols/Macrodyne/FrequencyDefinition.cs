@@ -26,6 +26,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using GSF.Units.EE;
 
@@ -35,6 +36,7 @@ namespace GSF.PhasorProtocols.Macrodyne
     /// Represents the Macrodyne implementation of a <see cref="IFrequencyDefinition"/>.
     /// </summary>
     [Serializable]
+    [SuppressMessage("Microsoft.Usage", "CA2240:ImplementISerializableCorrectly")]
     public class FrequencyDefinition : FrequencyDefinitionBase
     {
         #region [ Members ]
@@ -76,7 +78,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                 defaultFrequency = new FrequencyDefinition(null as IConfigurationCell);
 
             // If initial entry is an F - we just ignore this
-            if (string.Compare(entry[index].Trim(), "F", true) == 0)
+            if (string.Compare(entry[index].Trim(), "F", StringComparison.OrdinalIgnoreCase) == 0)
                 index++;
 
             if (entry.Length > index)
@@ -146,10 +148,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         {
             get
             {
-                if (Parent == null)
-                    return m_frequencyOffset;
-                else
-                    return base.Offset;
+                return Parent == null ? m_frequencyOffset : base.Offset;
             }
             set
             {
@@ -196,7 +195,8 @@ namespace GSF.PhasorProtocols.Macrodyne
 
             if (frequency != null)
                 return "F," + frequency.ScalingValue + "," + frequency.Offset + "," + frequency.DfDtScalingValue + "," + frequency.DfDtOffset + "," + frequency.m_dummy + "," + frequency.Label;
-            else if (definition != null)
+
+            if (definition != null)
                 return "F," + definition.ScalingValue + "," + definition.Offset + "," + definition.DfDtScalingValue + "," + definition.DfDtOffset + ",0," + definition.Label;
 
             return "";

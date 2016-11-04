@@ -291,13 +291,7 @@ namespace GSF.COMTRADE
             if ((object)m_fileStreams != null)
             {
                 foreach (FileStream fileStream in m_fileStreams)
-                {
-                    if ((object)fileStream != null)
-                    {
-                        fileStream.Close();
-                        fileStream.Dispose();
-                    }
-                }
+                    fileStream?.Dispose();
             }
 
             m_fileStreams = null;

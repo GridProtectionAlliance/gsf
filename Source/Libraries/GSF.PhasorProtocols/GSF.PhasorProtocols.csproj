@@ -68,7 +68,7 @@
     <RemoveIntegerChecks>true</RemoveIntegerChecks>
     <DefineConstants>
     </DefineConstants>
-    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
     <CodeAnalysisRules>
     </CodeAnalysisRules>
     <CodeAnalysisRuleSet>GSF.PhasorProtocols.ruleset</CodeAnalysisRuleSet>

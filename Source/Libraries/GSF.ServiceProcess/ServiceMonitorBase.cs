@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using GSF.Adapters;
 using GSF.Configuration;
 
@@ -30,6 +31,7 @@ namespace GSF.ServiceProcess
     /// <summary>
     /// Base class for service monitors.
     /// </summary>
+    [SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
     public abstract class ServiceMonitorBase : Adapter, IServiceMonitor
     {
         /// <summary>

@@ -49,6 +49,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -78,11 +79,13 @@ namespace GSF.Net.Ftp
         /// <summary>
         /// Raised when new directory line is scanned.
         /// </summary>
+        [SuppressMessage("Microsoft.Design", "CA1009:DeclareEventHandlersCorrectly")]
         public event Action<string> DirectoryListLineScan;
 
         /// <summary>
         /// Raised when there is an exception scanning a directory.
         /// </summary>
+        [SuppressMessage("Microsoft.Design", "CA1009:DeclareEventHandlersCorrectly")]
         public event Action<FtpExceptionBase> DirectoryScanException;
 
         // Fields

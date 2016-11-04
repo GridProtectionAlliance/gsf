@@ -123,12 +123,12 @@ namespace GSF.Windows.ErrorManagement
         private static void SizeBox(RichTextBox ctl)
         {
             Graphics g = null;
+
             try
             {
                 // Note that the height is taken as MAXIMUM, so size the label for maximum desired height!
                 g = Graphics.FromHwnd(ctl.Handle);
                 SizeF objSizeF = g.MeasureString(ctl.Text, ctl.Font, new SizeF(ctl.Width, ctl.Height));
-                g.Dispose();
                 ctl.Height = (int)objSizeF.Height + 5;
             }
             catch (SecurityException)
@@ -137,10 +137,7 @@ namespace GSF.Windows.ErrorManagement
             }
             finally
             {
-                if ((object)g != null)
-                {
-                    g.Dispose();
-                }
+                g?.Dispose();
             }
         }
 

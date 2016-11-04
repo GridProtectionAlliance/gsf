@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -292,6 +293,7 @@ namespace GSF.Web.Model
         /// </summary>
         /// <param name="settingsCategory">Settings category to use for template path settings; defaults to "systemSettings".</param>
         /// <returns>Shared <see cref="RazorEngine{TLanguage}"/> instance created based on configured template path.</returns>
+        [SuppressMessage("Microsoft.Reliability", "CA2002:DoNotLockOnObjectsWithWeakIdentity")]
         public static RazorEngine<TLanguage> GetConfiguredEngine(string settingsCategory = null)
         {
             lock (typeof(LanguageConstraint))

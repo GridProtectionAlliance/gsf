@@ -995,9 +995,11 @@ namespace GSF.Media.Music
         public override bool Equals(object obj)
         {
             Note other = obj as Note;
+
             if ((object)other != null)
                 return Equals(other);
-            throw new ArgumentException("Object is not an Note", nameof(obj));
+
+            return false;
         }
 
         /// <summary>Notes are compared by frequency, then by value (i.e., duration).</summary>

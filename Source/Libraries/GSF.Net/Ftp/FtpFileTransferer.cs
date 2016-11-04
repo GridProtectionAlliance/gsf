@@ -216,7 +216,6 @@ namespace GSF.Net.Ftp
                 m_ftpFileCommandRoutine(m_remoteFile);
                 m_streamCopyRoutine(remoteStream, localStream);
 
-                remoteStream.Close();
                 TestTransferResult();
 
                 m_session.Host.OnEndFileTransfer(m_localFile, m_remoteFile, m_transferDirection);
@@ -228,11 +227,8 @@ namespace GSF.Net.Ftp
             }
             finally
             {
-                if ((object)remoteStream != null)
-                    remoteStream.Close();
-
-                if ((object)localStream != null)
-                    localStream.Close();
+                remoteStream?.Dispose();
+                localStream?.Dispose();
             }
         }
 

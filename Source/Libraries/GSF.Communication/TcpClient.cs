@@ -160,7 +160,7 @@ namespace GSF.Communication
             public NegotiateStream NegotiateStream;
 #endif
 
-            public SocketAsyncEventArgs ConnectArgs = new SocketAsyncEventArgs();
+            public readonly SocketAsyncEventArgs ConnectArgs = new SocketAsyncEventArgs();
             public SocketAsyncEventArgs ReceiveArgs;
             public SocketAsyncEventArgs SendArgs;
             public int ConnectionAttempts;
@@ -169,21 +169,14 @@ namespace GSF.Communication
 
             public void Dispose()
             {
-                Dispose(ConnectArgs);
-                Dispose(ReceiveArgs);
-                Dispose(SendArgs);
-
-                Dispose(Socket);
+                ConnectArgs.Dispose();
+                ReceiveArgs?.Dispose();
+                SendArgs?.Dispose();
+                Socket?.Dispose();
 #if !MONO
-                Dispose(NetworkStream);
-                Dispose(NegotiateStream);
+                NetworkStream?.Dispose();
+                NegotiateStream?.Dispose();
 #endif
-            }
-
-            private static void Dispose(IDisposable obj)
-            {
-                if ((object)obj != null)
-                    obj.Dispose();
             }
         }
 

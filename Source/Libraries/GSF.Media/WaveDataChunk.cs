@@ -61,6 +61,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using GSF.Parsing;
 
@@ -238,6 +239,7 @@ namespace GSF.Media
         }
 
         // Data chunk is usually too large to parsed from a single binary image
+        [SuppressMessage("Microsoft.Design", "CA1033:InterfaceMethodsShouldBeCallableByChildTypes")]
         int ISupportBinaryImage.ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
             throw new NotImplementedException();

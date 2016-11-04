@@ -360,6 +360,8 @@ namespace HistorianAdapters
                             m_historianPublisher.ReceiveDataException -= HistorianPublisher_ReceiveDataException;
                             m_historianPublisher.Dispose();
                         }
+
+                        m_publisherWaitHandle.Close();
                     }
                 }
                 finally

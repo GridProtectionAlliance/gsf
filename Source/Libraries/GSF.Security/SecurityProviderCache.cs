@@ -31,6 +31,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Policy;
 using System.Security.Principal;
 using System.Threading;
@@ -215,6 +216,7 @@ namespace GSF.Security
         /// Validates that current provider is ready, creating it if necessary.
         /// </summary>
         /// <param name="username">User name of the user for whom the<see cref= "ISecurityProvider" /> is to be created; defaults to current user.</param>
+        [SuppressMessage("Microsoft.Reliability", "CA2002:DoNotLockOnObjectsWithWeakIdentity")]
         public static void ValidateCurrentProvider(string username = null)
         {
             // Initialize the security principal from caller's windows identity if uninitialized, note that

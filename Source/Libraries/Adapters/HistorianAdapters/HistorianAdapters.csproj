@@ -65,8 +65,9 @@
     <DocumentationFile>$(OutputPath)\HistorianAdapters.XML</DocumentationFile>
     <NOWARN>
     </NOWARN>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
     <DefineTrace>true</DefineTrace>
@@ -110,6 +111,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="LocalInputAdapter.cs" />
     <Compile Include="RemoteInputAdapter.cs" />
     <Compile Include="LocalOutputAdapter.cs" />

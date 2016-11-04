@@ -28,6 +28,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -109,11 +110,13 @@ namespace GSF.PhasorProtocols.Anonymous
         // Static Fields
         private static readonly ProcessQueue<Tuple<IConfigurationFrame, Action<Exception>, string>> s_configurationCacheQueue;
         private static string s_configurationCachePath;
-        private static int s_configurationBackups = -1;
+        private static int s_configurationBackups;
 
         // Static Constructor
+        [SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline")]
         static ConfigurationFrame()
         {
+            s_configurationBackups = -1;
             s_configurationCacheQueue = ProcessQueue<Tuple<IConfigurationFrame, Action<Exception>, string>>.CreateRealTimeQueue(CacheConfigurationFile);
             s_configurationCacheQueue.SynchronizedOperationType = SynchronizedOperationType.LongBackground;
             s_configurationCacheQueue.Start();

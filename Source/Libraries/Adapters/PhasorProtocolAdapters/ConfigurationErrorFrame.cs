@@ -30,6 +30,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using GSF;
 using GSF.Parsing;
@@ -46,6 +47,7 @@ namespace PhasorProtocolAdapters
     /// This class is used by <see cref="CommonPhasorServices"/> to return an error state when configuration could not be retrieved.
     /// </remarks>
     [Serializable]
+    [SuppressMessage("Microsoft.Design", "CA1033:InterfaceMethodsShouldBeCallableByChildTypes", Scope = "method")]
     public class ConfigurationErrorFrame : IConfigurationFrame
     {
         #region [ Constructors ]

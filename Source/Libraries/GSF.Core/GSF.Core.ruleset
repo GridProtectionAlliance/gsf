@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<RuleSet Name="Rules for GSF.Core" Description="Rules set for the GSF.Core" ToolsVersion="11.0">
+<RuleSet Name="Ruleset for GSF.Core based on Microsoft Managed Recommended Rules" Description="Rules set for the GSF.Core" ToolsVersion="14.0">
   <Include Path="allrules.ruleset" Action="Default" />
   <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
     <Rule Id="CA1000" Action="None" />

@@ -39,6 +39,7 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
     <DocumentationFile>..\..\..\..\Build\Output\$(Configuration)\Libraries\$(AssemblyName).xml</DocumentationFile>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="OSIsoft.AFSDK, Version=4.0.0.0, Culture=neutral, PublicKeyToken=6238be57836698e6, processorArchitecture=MSIL" />
@@ -49,6 +50,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="PIConnection.cs" />
     <Compile Include="PIConnectionPool.cs">
       <SubType>Code</SubType>

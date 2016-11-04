@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -501,7 +502,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <summary>
         /// Temporary key used by IEC 61850-90-5 draft implementations.
         /// </summary>
-        public static byte[] DummyKey = new byte[]
+        [SuppressMessage("Microsoft.Usage", "CA2211:NonConstantFieldsShouldNotBeVisible")]
+        public static byte[] DummyKey = 
         {
             0x01, 0x33, 0x34, 0x35, 0x36, 0x37, 0x01, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x66, 0x77, 0x88,
             0x01, 0x33, 0x34, 0x35, 0x36, 0x37, 0x01, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x66, 0x77, 0x88,

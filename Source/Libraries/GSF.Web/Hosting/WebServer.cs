@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -503,6 +504,7 @@ namespace GSF.Web.Hosting
         /// <param name="razorEngineCS">Razor engine instance for .cshtml templates; uses default instance if not provided.</param>
         /// <param name="razorEngineVB">Razor engine instance for .vbhtml templates; uses default instance if not provided.</param>
         /// <returns>Shared <see cref="WebServer"/> instance created based on configured options.</returns>
+        [SuppressMessage("Microsoft.Reliability", "CA2002:DoNotLockOnObjectsWithWeakIdentity")]
         public static WebServer GetConfiguredServer(string settingsCategory = null, IRazorEngine razorEngineCS = null, IRazorEngine razorEngineVB = null)
         {
             lock (typeof(WebServer))

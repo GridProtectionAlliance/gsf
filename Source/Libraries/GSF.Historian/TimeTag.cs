@@ -38,12 +38,14 @@
 
 using System;
 using System.Globalization;
+using System.Runtime.Serialization;
 
 namespace GSF.Historian
 {
     /// <summary>
     /// Represents a historian time tag as number of seconds from the <see cref="BaseDate"/>.
     /// </summary>
+    [Serializable]
     public class TimeTag : TimeTagBase, IComparable<TimeTag>
     {
         #region [ Constructors ]
@@ -72,6 +74,15 @@ namespace GSF.Historian
         /// <param name="timestamp"><see cref="DateTime"/> value on or past the <see cref="BaseDate"/>.</param>
         public TimeTag(DateTime timestamp)
             : base(BaseDate.Ticks, timestamp)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="TimeTag"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected TimeTag(SerializationInfo info, StreamingContext context) : base(info, context)
         {
         }
 

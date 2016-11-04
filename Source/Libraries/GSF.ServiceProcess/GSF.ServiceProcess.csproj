@@ -40,6 +40,7 @@
     <DocumentationFile>..\..\..\Build\Output\$(Configuration)\Libraries\$(AssemblyName).xml</DocumentationFile>
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <Prefer32Bit>false</Prefer32Bit>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
     <OutputPath>..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
@@ -81,7 +82,9 @@
     <Compile Include="ServiceHelper.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="ServiceInstallerEx.cs" />
+    <Compile Include="ServiceInstallerEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="ServiceMonitorBase.cs" />
     <Compile Include="ServiceMonitors.cs" />
     <Compile Include="ServiceProcess.cs" />

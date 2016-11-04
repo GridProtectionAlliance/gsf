@@ -36,6 +36,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -310,6 +311,7 @@ namespace GSF.Security
             return userDataCache;
         }
 
+        [SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times")]
         private static byte[] SerializeCache(Dictionary<string, UserData> cache)
         {
             using (BlockAllocatedMemoryStream stream = new BlockAllocatedMemoryStream())
@@ -349,6 +351,7 @@ namespace GSF.Security
             }
         }
 
+        [SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times")]
         private Dictionary<string, UserData> DeserializeCache(byte[] data)
         {
             Dictionary<string, UserData> cache = new Dictionary<string, UserData>(StringComparer.OrdinalIgnoreCase);

@@ -115,7 +115,8 @@ namespace GSF.PhasorProtocols
             if (!(info.GetOrDefault("AutoRepeatPlayback", "false")).ParseBoolean())
                 AutoRepeatPlayback = false;
 
-            int.TryParse(info.GetOrDefault("ByteEncodingDisplayFormat", "0"), out ByteEncodingDisplayFormat);
+            if (!int.TryParse(info.GetOrDefault("ByteEncodingDisplayFormat", "0"), out ByteEncodingDisplayFormat))
+                ByteEncodingDisplayFormat = 0;
 
             ConnectionParameters = info.GetOrDefault("ConnectionParameters", (IConnectionParameters)null);
         }
@@ -129,7 +130,7 @@ namespace GSF.PhasorProtocols
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
         /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
-        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             // Serialize connection settings values
             info.AddValue("PhasorProtocol", PhasorProtocol, typeof(PhasorProtocol));
