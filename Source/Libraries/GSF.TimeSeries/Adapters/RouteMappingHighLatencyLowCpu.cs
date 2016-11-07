@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using GSF.Collection;
+using GSF.Collections;
 using GSF.Diagnostics;
 using GSF.Threading;
 
@@ -142,12 +143,16 @@ namespace GSF.TimeSeries.Adapters
 
         private class LocalCache
         {
+            private static int s_nextRuntimeId = 0;
+
+            private int m_runtimeId;
             public bool Enabled;
             private RouteMappingHighLatencyLowCpu m_route;
             public LocalCache(RouteMappingHighLatencyLowCpu route, IAdapter adapter)
             {
                 Enabled = true;
                 m_route = route;
+                m_runtimeId = Interlocked.Increment(ref s_nextRuntimeId);
 
                 IInputAdapter inputAdapter = adapter as IInputAdapter;
                 IActionAdapter actionAdapter = adapter as IActionAdapter;
@@ -163,7 +168,7 @@ namespace GSF.TimeSeries.Adapters
                 if (!Enabled || measurements?.Argument == null)
                     return;
                 var lst = ToArrayOptimized(measurements.Argument);
-                m_route.Route(lst);
+                m_route.Route(lst, m_runtimeId);
             }
 
             private static class ArrayHelper<T>
@@ -198,7 +203,7 @@ namespace GSF.TimeSeries.Adapters
         private Dictionary<IAdapter, LocalCache> m_producerLookup;
 
         private readonly ScheduledTask m_task;
-        private readonly ConcurrentQueue<IMeasurement[]> m_list;
+        private readonly IsolatedQueue<IMeasurement[]>[] m_list;
         private long m_measurementsRoutedInputFrames;
         private long m_measurementsRoutedInputMeasurements;
         private long m_measurementsRoutedOutput;
@@ -217,19 +222,24 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         private int m_maxPendingMeasurements;
 
-
         /// <summary>
         /// Creates a <see cref="RouteMappingHighLatencyLowCpu"/>
         /// </summary>
         /// <param name="routeLatency">The desired wait latency. Must be between 1 and 500ms inclusive</param>
         public RouteMappingHighLatencyLowCpu(int routeLatency)
         {
+
             if (routeLatency < 1 || routeLatency > 500)
                 throw new ArgumentOutOfRangeException(nameof(routeLatency), "Must be between 1 and 500ms");
 
             m_maxPendingMeasurements = 1000;
             m_routeLatency = routeLatency;
-            m_list = new ConcurrentQueue<IMeasurement[]>();
+            m_list = new IsolatedQueue<IMeasurement[]>[8];
+            for (int x = 0; x < m_list.Length; x++)
+            {
+                m_list[x] = new IsolatedQueue<IMeasurement[]>();
+            }
+
             m_task = new ScheduledTask(ThreadingMode.DedicatedBackground, ThreadPriority.AboveNormal);
             m_task.Running += m_task_Running;
             m_task.UnhandledException += m_task_UnhandledException;
@@ -290,7 +300,6 @@ namespace GSF.TimeSeries.Adapters
 
             Dictionary<IAdapter, Consumer> consumerLookup = new Dictionary<IAdapter, Consumer>(m_globalCache.GlobalDestinationLookup);
 
-
             foreach (var consumerAdapter in consumerAdapters.NewAdapter)
             {
                 consumerLookup.Add(consumerAdapter, new Consumer(consumerAdapter));
@@ -341,49 +350,51 @@ namespace GSF.TimeSeries.Adapters
             {
                 int measurementsRouted = 0;
 
-                IMeasurement[] measurements;
-                while (m_list.TryDequeue(out measurements))
+                foreach (var queue in m_list)
                 {
-                    measurementsRouted += measurements.Length;
-
-                    Interlocked.Add(ref m_pendingMeasurements, -measurements.Length);
-
-                    m_measurementsRoutedInputFrames++;
-                    m_measurementsRoutedInputMeasurements += measurements.Length;
-                    foreach (var measurement in measurements)
+                    IMeasurement[] measurements;
+                    while (queue.TryDequeue(out measurements))
                     {
-                        List<Consumer> consumers = map.GlobalSignalLookup[measurement.Key.RuntimeID];
-                        if (consumers == null)
-                        {
-                            consumers = map.BroadcastConsumers;
-                        }
+                        measurementsRouted += measurements.Length;
 
-                        // Add this measurement to the producers' list
-                        for (int index = 0; index < consumers.Count; index++)
-                        {
-                            var consumer = consumers[index];
-                            m_measurementsRoutedOutput++;
-                            consumer.MeasurementsToRoute.Add(measurement);
-                        }
-                    }
+                        Interlocked.Add(ref m_pendingMeasurements, -measurements.Length);
 
-                    //Limit routing to between 100 and 200 measurements per sub-route.
-                    if (measurementsRouted > 100)
-                    {
-                        measurementsRouted = 0;
-                        foreach (var consumer in map.GlobalDestinationList)
+                        m_measurementsRoutedInputFrames++;
+                        m_measurementsRoutedInputMeasurements += measurements.Length;
+                        foreach (var measurement in measurements)
                         {
-                            if (consumer.MeasurementsToRoute.Count > 100)
+                            List<Consumer> consumers = map.GlobalSignalLookup[measurement.Key.RuntimeID];
+                            if (consumers == null)
                             {
-                                foreach (var c2 in map.GlobalDestinationLookup.Values)
+                                consumers = map.BroadcastConsumers;
+                            }
+
+                            // Add this measurement to the producers' list
+                            for (int index = 0; index < consumers.Count; index++)
+                            {
+                                var consumer = consumers[index];
+                                m_measurementsRoutedOutput++;
+                                consumer.MeasurementsToRoute.Add(measurement);
+                            }
+                        }
+
+                        //Limit routing to between 100 and 200 measurements per sub-route.
+                        if (measurementsRouted > 100)
+                        {
+                            measurementsRouted = 0;
+                            foreach (var consumer in map.GlobalDestinationList)
+                            {
+                                if (consumer.MeasurementsToRoute.Count > 100)
                                 {
-                                    c2.RoutingComplete();
+                                    foreach (var c2 in map.GlobalDestinationLookup.Values)
+                                    {
+                                        c2.RoutingComplete();
+                                    }
+                                    break;
                                 }
-                                break;
                             }
                         }
                     }
-
                 }
             }
             finally
@@ -396,11 +407,15 @@ namespace GSF.TimeSeries.Adapters
         }
 
 
-        private void Route(IMeasurement[] measurements)
+        private void Route(IMeasurement[] measurements, int runtimeId)
         {
             if (measurements.Length > 0)
             {
-                m_list.Enqueue(measurements);
+                var list = m_list[runtimeId & 7];
+                lock (list)
+                {
+                    list.Enqueue(measurements);
+                }
                 if (Interlocked.Add(ref m_pendingMeasurements, measurements.Length) > m_maxPendingMeasurements)
                 {
                     m_task.Start();
