@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using GSF.Configuration;
+using GSF.Core.Threading;
 using GSF.Diagnostics;
 
 namespace GSF
@@ -98,6 +99,8 @@ namespace GSF
             {
                 Log.Publish(MessageLevel.Warning, "Could not parse Optimization Settings", setting, null, ex);
             }
+
+            ThreadPoolMonitoring.Initialize();
         }
 
         private static void LoadAsyncQueueInProtocolParsing(Dictionary<string, string> optimizations)

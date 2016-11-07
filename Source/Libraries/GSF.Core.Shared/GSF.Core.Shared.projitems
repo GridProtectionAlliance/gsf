@@ -113,6 +113,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Threading\ThreadContainerBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\ThreadContainerDedicated.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\ThreadContainerThreadpool.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Threading\ThreadPoolMonitoring.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\WeakAction.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Ticks.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TimeTagBase.cs" />
