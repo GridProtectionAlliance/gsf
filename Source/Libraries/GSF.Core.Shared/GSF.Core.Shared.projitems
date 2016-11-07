@@ -76,6 +76,17 @@
     <Compile Include="$(MSBuildThisFileDirectory)Ionic.Zlib\ZlibConstants.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Ionic.Zlib\ZlibStream.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IO\BlockAllocatedMemoryStream.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\Checksums\Adler32.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\Checksums\ChecksumExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\Checksums\Crc16.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\Checksums\Crc32.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\Checksums\CrcCCITT.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\Checksums\NamespaceDoc.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\Checksums\Xor16.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\Checksums\Xor32.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\Checksums\Xor64.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\Checksums\Xor8.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\FilePath.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IO\StreamExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)LittleEndian.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)NtpTimeTag.cs" />
@@ -85,7 +96,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)NumericalAnalysis\Interpolation\PiecewiseLinearFunction.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)NumericalAnalysis\NamespaceDoc.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)NumericalAnalysis\NumericalAnalysisExtensions.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)PathHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\AssemblyExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\AssemblyInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\MemberInfoExtensions.cs" />

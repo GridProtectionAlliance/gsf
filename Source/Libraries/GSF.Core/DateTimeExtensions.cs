@@ -208,7 +208,7 @@ namespace GSF
         public static DateTime LocalTimeTo(this DateTime timestamp, string destinationTimeZoneStandardName)
         {
             if ((object)destinationTimeZoneStandardName == null)
-                throw new ArgumentNullException("destinationTimeZoneStandardName");
+                throw new ArgumentNullException(nameof(destinationTimeZoneStandardName));
 
             return TimeZoneInfo.ConvertTime(timestamp, TimeZoneInfo.Local, TimeZoneInfo.FindSystemTimeZoneById(destinationTimeZoneStandardName));
         }
@@ -222,7 +222,7 @@ namespace GSF
         public static DateTime LocalTimeTo(this DateTime timestamp, TimeZoneInfo destinationTimeZone)
         {
             if ((object)destinationTimeZone == null)
-                throw new ArgumentNullException("destinationTimeZone");
+                throw new ArgumentNullException(nameof(destinationTimeZone));
 
             return TimeZoneInfo.ConvertTime(timestamp, TimeZoneInfo.Local, destinationTimeZone);
         }
@@ -277,7 +277,7 @@ namespace GSF
         public static DateTime UniversalTimeTo(this DateTime universalTimestamp, string destinationTimeZoneStandardName)
         {
             if ((object)destinationTimeZoneStandardName == null)
-                throw new ArgumentNullException("destinationTimeZoneStandardName");
+                throw new ArgumentNullException(nameof(destinationTimeZoneStandardName));
 
             return TimeZoneInfo.ConvertTime(universalTimestamp, TimeZoneInfo.Utc, TimeZoneInfo.FindSystemTimeZoneById(destinationTimeZoneStandardName));
         }
@@ -292,7 +292,7 @@ namespace GSF
         public static DateTime UniversalTimeTo(this DateTime universalTimestamp, TimeZoneInfo destinationTimeZone)
         {
             if ((object)destinationTimeZone == null)
-                throw new ArgumentNullException("destinationTimeZone");
+                throw new ArgumentNullException(nameof(destinationTimeZone));
 
             return TimeZoneInfo.ConvertTime(universalTimestamp, TimeZoneInfo.Utc, destinationTimeZone);
         }
@@ -308,10 +308,10 @@ namespace GSF
         public static DateTime TimeZoneToTimeZone(this DateTime timestamp, string sourceTimeZoneStandardName, string destinationTimeZoneStandardName)
         {
             if ((object)sourceTimeZoneStandardName == null)
-                throw new ArgumentNullException("sourceTimeZoneStandardName");
+                throw new ArgumentNullException(nameof(sourceTimeZoneStandardName));
 
             if ((object)destinationTimeZoneStandardName == null)
-                throw new ArgumentNullException("destinationTimeZoneStandardName");
+                throw new ArgumentNullException(nameof(destinationTimeZoneStandardName));
 
             return TimeZoneInfo.ConvertTime(timestamp, TimeZoneInfo.FindSystemTimeZoneById(sourceTimeZoneStandardName), TimeZoneInfo.FindSystemTimeZoneById(destinationTimeZoneStandardName));
         }
@@ -327,10 +327,10 @@ namespace GSF
         public static DateTime TimeZoneToTimeZone(this DateTime timestamp, TimeZoneInfo sourceTimeZone, TimeZoneInfo destinationTimeZone)
         {
             if ((object)sourceTimeZone == null)
-                throw new ArgumentNullException("sourceTimeZone");
+                throw new ArgumentNullException(nameof(sourceTimeZone));
 
             if ((object)destinationTimeZone == null)
-                throw new ArgumentNullException("destinationTimeZone");
+                throw new ArgumentNullException(nameof(destinationTimeZone));
 
             return TimeZoneInfo.ConvertTime(timestamp, sourceTimeZone, destinationTimeZone);
         }

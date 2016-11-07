@@ -175,10 +175,10 @@ namespace GSF.Diagnostics
         internal PerformanceCounter(PerformanceCounter[] sources)
         {
             if ((object)sources == null)
-                throw new ArgumentNullException("sources");
+                throw new ArgumentNullException(nameof(sources));
 
             if (sources.Length < 1)
-                throw new ArgumentOutOfRangeException("sources");
+                throw new ArgumentOutOfRangeException(nameof(sources));
 
             PerformanceCounter initialCounter = sources[0];
 
@@ -232,7 +232,7 @@ namespace GSF.Diagnostics
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_aliasName = value;
             }
@@ -252,7 +252,7 @@ namespace GSF.Diagnostics
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_valueUnit = value;
             }
@@ -272,7 +272,7 @@ namespace GSF.Diagnostics
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", "Value must be greater than 0");
+                    throw new ArgumentOutOfRangeException(nameof(value), "Value must be greater than 0");
 
                 m_valueDivisor = value;
             }
@@ -292,7 +292,7 @@ namespace GSF.Diagnostics
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", "Value must be greater than 0");
+                    throw new ArgumentOutOfRangeException(nameof(value), "Value must be greater than 0");
 
                 m_samplingWindow = value;
             }

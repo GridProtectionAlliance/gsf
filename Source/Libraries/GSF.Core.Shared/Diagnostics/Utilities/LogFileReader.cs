@@ -41,7 +41,7 @@ namespace GSF.Diagnostics
         public static List<LogMessage> Read(string logFileName)
         {
             List<LogMessage> lst = new List<LogMessage>();
-            PathHelpers.ValidatePathName(logFileName);
+            FilePath.ValidatePathName(logFileName);
             using (var stream = new FileStream(logFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
             {
                 try

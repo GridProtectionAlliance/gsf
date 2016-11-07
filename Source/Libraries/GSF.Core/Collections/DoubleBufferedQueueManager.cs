@@ -54,10 +54,10 @@ namespace GSF.Collections
         internal DoubleBufferedQueueProducer(DoubleBufferedQueueManager<T> manager, DoubleBufferedQueue<T> queue)
         {
             if ((object)manager == null)
-                throw new ArgumentNullException("manager");
+                throw new ArgumentNullException(nameof(manager));
 
             if ((object)queue == null)
-                throw new ArgumentNullException("queue");
+                throw new ArgumentNullException(nameof(queue));
 
             m_manager = manager;
             m_queue = queue;

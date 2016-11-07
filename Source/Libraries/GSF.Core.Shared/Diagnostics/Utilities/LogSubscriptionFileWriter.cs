@@ -125,7 +125,7 @@ namespace GSF.Diagnostics
         /// <param name="logDirectory"></param>
         public void SetPath(string logDirectory)
         {
-            PathHelpers.ValidatePathName(logDirectory);
+            FilePath.ValidatePathName(logDirectory);
             lock (m_syncRoot)
             {
                 m_path = logDirectory;
@@ -138,7 +138,7 @@ namespace GSF.Diagnostics
         /// </summary>
         public void SetPath(string logDirectory, VerboseLevel level)
         {
-            PathHelpers.ValidatePathName(logDirectory);
+            FilePath.ValidatePathName(logDirectory);
             lock (m_syncRoot)
             {
                 Verbose = level;

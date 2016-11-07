@@ -93,19 +93,19 @@ namespace GSF
         protected BinaryValueBase(TypeCode typeCode, byte[] buffer, int startIndex, int length)
         {
             if ((object)buffer == null)
-                throw new ArgumentNullException("buffer");
+                throw new ArgumentNullException(nameof(buffer));
 
             if (startIndex < 0)
-                throw new ArgumentOutOfRangeException("startIndex", "cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(startIndex), "cannot be negative");
 
             if (length < 0)
-                throw new ArgumentOutOfRangeException("length", "cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(length), "cannot be negative");
 
             if (startIndex >= buffer.Length)
-                throw new ArgumentOutOfRangeException("startIndex", "not a valid index in buffer");
+                throw new ArgumentOutOfRangeException(nameof(startIndex), "not a valid index in buffer");
 
             if (startIndex + length > buffer.Length)
-                throw new ArgumentOutOfRangeException("length", "exceeds buffer size");
+                throw new ArgumentOutOfRangeException(nameof(length), "exceeds buffer size");
 
             m_typeCode = typeCode;
             m_buffer = new byte[length];

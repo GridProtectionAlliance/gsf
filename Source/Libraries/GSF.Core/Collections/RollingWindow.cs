@@ -56,7 +56,7 @@ namespace GSF.Collections
         public RollingWindow(int windowSize)
         {
             if (windowSize <= 0)
-                throw new ArgumentOutOfRangeException("windowSize", "windowSize must be at least 1");
+                throw new ArgumentOutOfRangeException(nameof(windowSize), "windowSize must be at least 1");
 
             m_windowSize = windowSize;
             m_window = new T[windowSize];
@@ -112,14 +112,14 @@ namespace GSF.Collections
             get
             {
                 if (index < 0 || index >= m_count)
-                    throw new ArgumentOutOfRangeException("index", "index must be greater than zero and less than the size of the collection");
+                    throw new ArgumentOutOfRangeException(nameof(index), "index must be greater than zero and less than the size of the collection");
 
                 return m_window[WrapIndex(m_start + index)];
             }
             set
             {
                 if (index < 0 || index >= m_count)
-                    throw new ArgumentOutOfRangeException("index", "index must be greater than zero and less than the size of the collection");
+                    throw new ArgumentOutOfRangeException(nameof(index), "index must be greater than zero and less than the size of the collection");
 
                 m_window[WrapIndex(m_start + index)] = value;
             }
@@ -155,7 +155,7 @@ namespace GSF.Collections
         public void Insert(int index, T item)
         {
             if (index < 0 || index > m_count)
-                throw new ArgumentOutOfRangeException("index", "index must be greater than zero and less than or equal to the size of the collection");
+                throw new ArgumentOutOfRangeException(nameof(index), "index must be greater than zero and less than or equal to the size of the collection");
 
             if (m_count >= m_windowSize)
                 throw new InvalidOperationException("Unable to insert item; rolling window is full");
@@ -293,10 +293,10 @@ namespace GSF.Collections
             int i;
 
             if ((object)array == null)
-                throw new ArgumentNullException("array");
+                throw new ArgumentNullException(nameof(array));
 
             if (arrayIndex < 0)
-                throw new ArgumentOutOfRangeException("arrayIndex", "arrayIndex must be greater than zero");
+                throw new ArgumentOutOfRangeException(nameof(arrayIndex), "arrayIndex must be greater than zero");
 
             if (m_count > array.Length - arrayIndex)
                 throw new ArgumentException("Not enough available space in array to copy elements from rolling window");

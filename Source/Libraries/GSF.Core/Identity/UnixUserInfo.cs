@@ -1629,7 +1629,7 @@ namespace GSF.Identity
             uint userID;
 
             if ((object)userName == null)
-                throw new ArgumentNullException("userName");
+                throw new ArgumentNullException(nameof(userName));
 
             if (GetLocalUserID(ValidateAccountName(userName), out userID) == 0)
                 return "user:" + userID;
@@ -1643,7 +1643,7 @@ namespace GSF.Identity
             uint groupID;
 
             if ((object)groupName == null)
-                throw new ArgumentNullException("groupName");
+                throw new ArgumentNullException(nameof(groupName));
 
             if (GetLocalGroupID(ValidateAccountName(groupName), out groupID) == 0)
                 return "group:" + groupID;
@@ -1925,7 +1925,7 @@ namespace GSF.Identity
         private static string[] PtrToStringArray(int count, IntPtr stringArray)
         {
             if (count < 0)
-                throw new ArgumentOutOfRangeException("count", "< 0");
+                throw new ArgumentOutOfRangeException(nameof(count), "< 0");
 
             if (stringArray == IntPtr.Zero)
                 return new string[count];

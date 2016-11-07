@@ -106,7 +106,7 @@ namespace GSF.Collections
                     break;
 
                 default:
-                    throw new ArgumentOutOfRangeException("synchronizedOperationType");
+                    throw new ArgumentOutOfRangeException(nameof(synchronizedOperationType));
             }
         }
 

@@ -70,7 +70,7 @@ namespace GSF.Threading
         protected SynchronizedOperationBase(Action action, Action<Exception> exceptionAction)
         {
             if ((object)action == null)
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
 
             m_action = action;
             m_exceptionAction = exceptionAction;

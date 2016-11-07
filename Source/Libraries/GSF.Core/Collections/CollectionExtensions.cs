@@ -533,7 +533,7 @@ namespace GSF.Collections
                 return new T[length];
 
             if (startIndex >= source.Length)
-                throw new ArgumentOutOfRangeException("startIndex", "Not a valid index into source buffer");
+                throw new ArgumentOutOfRangeException(nameof(startIndex), "Not a valid index into source buffer");
 
             // Create a new array that will be returned with the specified array elements.
             T[] copyOfSource = new T[source.Length - startIndex < length ? source.Length - startIndex : length];
@@ -737,7 +737,7 @@ namespace GSF.Collections
         private static string ToDelimitedString<TSource, TDelimiter>(IEnumerable<TSource> source, TDelimiter delimiter)
         {
             if (Common.IsReference(delimiter) && (object)delimiter == null)
-                throw new ArgumentNullException("delimiter", "delimiter cannot be null");
+                throw new ArgumentNullException(nameof(delimiter), "delimiter cannot be null");
 
             StringBuilder delimitedString = new StringBuilder();
 
@@ -774,7 +774,7 @@ namespace GSF.Collections
         public static void LoadDelimitedString<TSource>(this IList<TSource> destination, string delimitedString, char delimiter, Func<string, TSource> convertFromString)
         {
             if ((object)delimitedString == null)
-                throw new ArgumentNullException("delimitedString", "delimitedString cannot be null");
+                throw new ArgumentNullException(nameof(delimitedString), "delimitedString cannot be null");
 
             if (destination.IsReadOnly)
                 throw new ArgumentException("Cannot add items to a read only list");
@@ -795,10 +795,10 @@ namespace GSF.Collections
         public static void LoadDelimitedString<TSource>(this IList<TSource> destination, string delimitedString, string[] delimiters, Func<string, TSource> convertFromString)
         {
             if ((object)delimiters == null)
-                throw new ArgumentNullException("delimiters", "delimiters cannot be null");
+                throw new ArgumentNullException(nameof(delimiters), "delimiters cannot be null");
 
             if ((object)delimitedString == null)
-                throw new ArgumentNullException("delimitedString", "delimitedString cannot be null");
+                throw new ArgumentNullException(nameof(delimitedString), "delimitedString cannot be null");
 
             if (destination.IsReadOnly)
                 throw new ArgumentException("Cannot add items to a read only list");
@@ -932,7 +932,7 @@ namespace GSF.Collections
         private static int CompareTo(this Array array1, Array array2, IComparer comparer, bool orderIsImportant = true)
         {
             if ((object)comparer == null)
-                throw new ArgumentNullException("comparer");
+                throw new ArgumentNullException(nameof(comparer));
 
             if ((object)array1 == null && (object)array2 == null)
                 return 0;

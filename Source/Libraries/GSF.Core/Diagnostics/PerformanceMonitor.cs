@@ -159,7 +159,7 @@ namespace GSF.Diagnostics
         public PerformanceMonitor(string processName, double samplingInterval, bool addDefaultCounters = true)
         {
             if ((object)processName == null)
-                throw new ArgumentNullException("processName");
+                throw new ArgumentNullException(nameof(processName));
 
             m_processName = processName;
             m_counters = new List<PerformanceCounter>();

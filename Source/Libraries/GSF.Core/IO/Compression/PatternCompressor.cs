@@ -142,7 +142,7 @@ namespace GSF.IO.Compression
             set
             {
                 if (value > 31)
-                    throw new ArgumentOutOfRangeException("value", "Compression strength must be 0 to 31");
+                    throw new ArgumentOutOfRangeException(nameof(value), "Compression strength must be 0 to 31");
 
                 if (m_backBuffer == null || m_backBuffer.Length < value + 1)
                     m_backBuffer = new uint[value + 1];
@@ -173,7 +173,7 @@ namespace GSF.IO.Compression
             byte* iter, end;
 
             if ((object)value == null)
-                throw new ArgumentNullException("value");
+                throw new ArgumentNullException(nameof(value));
 
             bufferLength = value.BinaryLength.AlignDoubleWord();
             buffer = new byte[bufferLength];
@@ -236,19 +236,19 @@ namespace GSF.IO.Compression
             byte* start, iter, end;
 
             if ((object)buffer == null)
-                throw new ArgumentNullException("buffer", "Cannot write data to null buffer");
+                throw new ArgumentNullException(nameof(buffer), "Cannot write data to null buffer");
 
             if (length % SizeOf32Bits != 0)
-                throw new ArgumentException("Buffer length must be a multiple of four", "length");
+                throw new ArgumentException("Buffer length must be a multiple of four", nameof(length));
 
             if (offset < 0)
-                throw new ArgumentOutOfRangeException("offset", "offset must be greater than or equal to zero");
+                throw new ArgumentOutOfRangeException(nameof(offset), "offset must be greater than or equal to zero");
 
             if (length < 0)
-                throw new ArgumentOutOfRangeException("length", "length must be greater than or equal to zero");
+                throw new ArgumentOutOfRangeException(nameof(length), "length must be greater than or equal to zero");
 
             if (buffer.Length < offset + length)
-                throw new ArgumentOutOfRangeException("length", "length exceeds buffer array boundaries");
+                throw new ArgumentOutOfRangeException(nameof(length), "length exceeds buffer array boundaries");
 
             fixed (byte* pBuffer = buffer)
             {
@@ -564,22 +564,22 @@ namespace GSF.IO.Compression
             // Compression algorithm is best suited for data that differs fractionally over time (e.g., 60.05, 60.08, 60.09, 60.11...)
 
             if ((object)source == null)
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
 
             if (dataLength < 0)
-                throw new ArgumentOutOfRangeException("dataLength", "Data length must be greater than or equal to zero");
+                throw new ArgumentOutOfRangeException(nameof(dataLength), "Data length must be greater than or equal to zero");
 
             if (dataLength % SizeOf32Bits != 0)
-                throw new ArgumentException("Data length must be a multiple of 4", "dataLength");
+                throw new ArgumentException("Data length must be a multiple of 4", nameof(dataLength));
 
             if (bufferLength < dataLength + 1)
-                throw new ArgumentOutOfRangeException("bufferLength", "Buffer length must be at least one byte larger than original data length in case data cannot be compressed");
+                throw new ArgumentOutOfRangeException(nameof(bufferLength), "Buffer length must be at least one byte larger than original data length in case data cannot be compressed");
 
             if (source.Length < bufferLength)
-                throw new ArgumentOutOfRangeException("source", "Actual length of source buffer is less than specified buffer length");
+                throw new ArgumentOutOfRangeException(nameof(source), "Actual length of source buffer is less than specified buffer length");
 
             if (compressionStrength > 31)
-                throw new ArgumentOutOfRangeException("compressionStrength", "Compression strength must be 0 to 31");
+                throw new ArgumentOutOfRangeException(nameof(compressionStrength), "Compression strength must be 0 to 31");
 
             // Special case when there is not enough data to be able to compress
             if (dataLength <= 4)

@@ -253,16 +253,6 @@
     <Compile Include="Interop\VBArrayDescriptor.cs" />
     <Compile Include="Interop\WindowsApi.cs" />
     <Compile Include="BufferPool.cs" />
-    <Compile Include="IO\Checksums\Adler32.cs" />
-    <Compile Include="IO\Checksums\ChecksumExtensions.cs" />
-    <Compile Include="IO\Checksums\Crc16.cs" />
-    <Compile Include="IO\Checksums\Crc32.cs" />
-    <Compile Include="IO\Checksums\CrcCCITT.cs" />
-    <Compile Include="IO\Checksums\NamespaceDoc.cs" />
-    <Compile Include="IO\Checksums\Xor16.cs" />
-    <Compile Include="IO\Checksums\Xor32.cs" />
-    <Compile Include="IO\Checksums\Xor64.cs" />
-    <Compile Include="IO\Checksums\Xor8.cs" />
     <Compile Include="IO\Compression\CompressionExtensions.cs" />
     <Compile Include="IO\Compression\FileCompressor.cs" />
     <Compile Include="IO\Compression\NamespaceDoc.cs" />

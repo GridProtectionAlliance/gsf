@@ -471,7 +471,7 @@ namespace GSF.Adapters
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_adapterDirectory = value;
             }
@@ -490,7 +490,7 @@ namespace GSF.Adapters
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_adapterFileExtension = value;
             }
@@ -578,7 +578,7 @@ namespace GSF.Adapters
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("value");
+                    throw new ArgumentOutOfRangeException(nameof(value));
 
                 m_allowableProcessMemoryUsage = value;
             }
@@ -597,7 +597,7 @@ namespace GSF.Adapters
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("value");
+                    throw new ArgumentOutOfRangeException(nameof(value));
 
                 m_allowableProcessProcessorUsage = value;
             }
@@ -616,7 +616,7 @@ namespace GSF.Adapters
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("value");
+                    throw new ArgumentOutOfRangeException(nameof(value));
 
                 m_allowableAdapterMemoryUsage = value;
             }
@@ -635,7 +635,7 @@ namespace GSF.Adapters
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("value");
+                    throw new ArgumentOutOfRangeException(nameof(value));
 
                 m_allowableAdapterProcessorUsage = value;
             }
@@ -669,7 +669,7 @@ namespace GSF.Adapters
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_settingsCategory = value;
             }

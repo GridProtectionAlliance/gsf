@@ -267,7 +267,7 @@ namespace GSF.Console
         public static string ShellEncode(this string parameter)
         {
             if ((object)parameter == null)
-                throw new ArgumentNullException("parameter");
+                throw new ArgumentNullException(nameof(parameter));
 
             return parameter.Replace("\\", "\\\\");
         }
@@ -280,7 +280,7 @@ namespace GSF.Console
         public static string ShellDecode(this string parameter)
         {
             if ((object)parameter == null)
-                throw new ArgumentNullException("parameter");
+                throw new ArgumentNullException(nameof(parameter));
 
             return parameter.Replace("\\\\", "\\");
         }

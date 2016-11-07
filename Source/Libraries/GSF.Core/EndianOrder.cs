@@ -390,7 +390,7 @@ namespace GSF
         public bool ToBoolean(byte[] value, int startIndex)
         {
             if ((object)value == null)
-                throw new ArgumentNullException("value");
+                throw new ArgumentNullException(nameof(value));
 
             return value[startIndex] != 0;
         }
@@ -433,7 +433,7 @@ namespace GSF
         public short ToInt16(byte[] value, int startIndex)
         {
             if ((object)value == null)
-                throw new ArgumentNullException("value");
+                throw new ArgumentNullException(nameof(value));
 
             if (m_targetIsLittleEndian)
                 return (short)((int)value[startIndex] | (int)value[startIndex + 1] << 8);
@@ -469,13 +469,13 @@ namespace GSF
         public unsafe int ToInt32(byte[] value, int startIndex)
         {
             if ((object)value == null)
-                throw new ArgumentNullException("value");
+                throw new ArgumentNullException(nameof(value));
 
             if (startIndex < 0)
-                throw new ArgumentOutOfRangeException("startIndex");
+                throw new ArgumentOutOfRangeException(nameof(startIndex));
 
             if (startIndex > value.Length - sizeof(int))
-                throw new ArgumentOutOfRangeException("startIndex");
+                throw new ArgumentOutOfRangeException(nameof(startIndex));
 
             fixed (byte* lp = &value[startIndex])
             {
@@ -506,13 +506,13 @@ namespace GSF
         public unsafe long ToInt64(byte[] value, int startIndex)
         {
             if ((object)value == null)
-                throw new ArgumentNullException("value");
+                throw new ArgumentNullException(nameof(value));
 
             if (startIndex < 0)
-                throw new ArgumentOutOfRangeException("startIndex");
+                throw new ArgumentOutOfRangeException(nameof(startIndex));
 
             if (startIndex > value.Length - sizeof(long))
-                throw new ArgumentOutOfRangeException("startIndex");
+                throw new ArgumentOutOfRangeException(nameof(startIndex));
 
             fixed (byte* lp = &value[startIndex])
             {
@@ -639,7 +639,7 @@ namespace GSF
         public byte[] GetBytes<T>(T value) where T : struct, IConvertible
         {
             if (!typeof(T).IsPrimitive)
-                throw new ArgumentException("Value type is not primitive", "value");
+                throw new ArgumentException("Value type is not primitive", nameof(value));
 
             IConvertible nativeValue = (IConvertible)value;
 
@@ -873,7 +873,7 @@ namespace GSF
         public int CopyBytes<T>(T value, byte[] destinationArray, int destinationIndex) where T : struct, IConvertible
         {
             if (!typeof(T).IsPrimitive)
-                throw new ArgumentException("Value type is not primitive", "value");
+                throw new ArgumentException("Value type is not primitive", nameof(value));
 
             IConvertible nativeValue = (IConvertible)value;
 
@@ -914,7 +914,7 @@ namespace GSF
         public int CopyBytes(bool value, byte[] destinationArray, int destinationIndex)
         {
             if ((object)destinationArray == null)
-                throw new ArgumentNullException("destinationArray");
+                throw new ArgumentNullException(nameof(destinationArray));
 
             if (value)
                 destinationArray[destinationIndex] = 1;
@@ -958,7 +958,7 @@ namespace GSF
         public int CopyBytes(short value, byte[] destinationArray, int destinationIndex)
         {
             if ((object)destinationArray == null)
-                throw new ArgumentNullException("destinationArray");
+                throw new ArgumentNullException(nameof(destinationArray));
 
             if (m_targetIsLittleEndian)
             {
@@ -997,13 +997,13 @@ namespace GSF
         public unsafe int CopyBytes(int value, byte[] destinationArray, int destinationIndex)
         {
             if ((object)destinationArray == null)
-                throw new ArgumentNullException("destinationArray");
+                throw new ArgumentNullException(nameof(destinationArray));
 
             if (destinationIndex < 0)
-                throw new ArgumentOutOfRangeException("destinationIndex");
+                throw new ArgumentOutOfRangeException(nameof(destinationIndex));
 
             if (destinationIndex > destinationArray.Length - sizeof(int))
-                throw new ArgumentOutOfRangeException("destinationIndex");
+                throw new ArgumentOutOfRangeException(nameof(destinationIndex));
 
             fixed (byte* rv = &destinationArray[destinationIndex])
             {
@@ -1040,13 +1040,13 @@ namespace GSF
         public unsafe int CopyBytes(long value, byte[] destinationArray, int destinationIndex)
         {
             if ((object)destinationArray == null)
-                throw new ArgumentNullException("destinationArray");
+                throw new ArgumentNullException(nameof(destinationArray));
 
             if (destinationIndex < 0)
-                throw new ArgumentOutOfRangeException("destinationIndex");
+                throw new ArgumentOutOfRangeException(nameof(destinationIndex));
 
             if (destinationIndex > destinationArray.Length - sizeof(long))
-                throw new ArgumentOutOfRangeException("destinationIndex");
+                throw new ArgumentOutOfRangeException(nameof(destinationIndex));
 
             fixed (byte* rv = &destinationArray[destinationIndex])
             {

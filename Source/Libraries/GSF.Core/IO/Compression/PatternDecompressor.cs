@@ -61,7 +61,7 @@ namespace GSF.IO.Compression
             private set
             {
                 if (value > 31)
-                    throw new ArgumentOutOfRangeException("value", "Compression strength must be 0 to 31");
+                    throw new ArgumentOutOfRangeException(nameof(value), "Compression strength must be 0 to 31");
 
                 if (m_backBuffer == null || m_backBuffer.Length < value + 1)
                     m_backBuffer = new uint[value + 1];
@@ -211,19 +211,19 @@ namespace GSF.IO.Compression
             byte* start, iter, end;
 
             if ((object)buffer == null)
-                throw new ArgumentNullException("buffer", "Cannot write data to null buffer");
+                throw new ArgumentNullException(nameof(buffer), "Cannot write data to null buffer");
 
             if (length % SizeOf32Bits != 0)
-                throw new ArgumentException("Buffer length must be a multiple of four", "length");
+                throw new ArgumentException("Buffer length must be a multiple of four", nameof(length));
 
             if (offset < 0)
-                throw new ArgumentOutOfRangeException("offset", "offset must be greater than or equal to zero");
+                throw new ArgumentOutOfRangeException(nameof(offset), "offset must be greater than or equal to zero");
 
             if (length < 0)
-                throw new ArgumentOutOfRangeException("length", "length must be greater than or equal to zero");
+                throw new ArgumentOutOfRangeException(nameof(length), "length must be greater than or equal to zero");
 
             if (buffer.Length < offset + length)
-                throw new ArgumentOutOfRangeException("length", "length exceeds buffer array boundaries");
+                throw new ArgumentOutOfRangeException(nameof(length), "length exceeds buffer array boundaries");
 
             fixed (byte* pBuffer = buffer)
             {
@@ -547,19 +547,19 @@ namespace GSF.IO.Compression
             byte compressionStrength = 5;
 
             if (source == null)
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
 
             if (dataLength < 1)
-                throw new ArgumentOutOfRangeException("dataLength", "Data length must be greater than or equal to one");
+                throw new ArgumentOutOfRangeException(nameof(dataLength), "Data length must be greater than or equal to one");
 
             if (bufferLength < dataLength)
-                throw new ArgumentOutOfRangeException("bufferLength", "Buffer length must be at least as large as original data length");
+                throw new ArgumentOutOfRangeException(nameof(bufferLength), "Buffer length must be at least as large as original data length");
 
             if (bufferLength < maxSize)
-                throw new ArgumentOutOfRangeException("bufferLength", "Buffer length must be at least as large as is necessary to fit the maximum possible size of the decompressed data");
+                throw new ArgumentOutOfRangeException(nameof(bufferLength), "Buffer length must be at least as large as is necessary to fit the maximum possible size of the decompressed data");
 
             if (source.Length < bufferLength)
-                throw new ArgumentOutOfRangeException("source", "Actual length of source buffer is less than specified buffer length");
+                throw new ArgumentOutOfRangeException(nameof(source), "Actual length of source buffer is less than specified buffer length");
 
             if (source[0] < 0xE0)
             {

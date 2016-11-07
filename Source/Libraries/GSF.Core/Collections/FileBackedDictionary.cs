@@ -432,10 +432,10 @@ namespace GSF.Collections
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
             if ((object)array == null)
-                throw new ArgumentNullException("array");
+                throw new ArgumentNullException(nameof(array));
 
             if (arrayIndex < 0)
-                throw new ArgumentOutOfRangeException("arrayIndex");
+                throw new ArgumentOutOfRangeException(nameof(arrayIndex));
 
             if (m_lookupTable.Count > array.Length - arrayIndex)
                 throw new ArgumentException("Not enough available space in array to copy elements from dictionary");

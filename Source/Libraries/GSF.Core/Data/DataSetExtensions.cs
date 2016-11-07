@@ -153,10 +153,10 @@ namespace GSF.Data
         public static void SerializeToStream(this DataSet source, Stream destination, bool assumeStringForUnknownTypes = true)
         {
             if ((object)source == null)
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
 
             if ((object)destination == null)
-                throw new ArgumentNullException("destination");
+                throw new ArgumentNullException(nameof(destination));
 
             if (!destination.CanWrite)
                 throw new InvalidOperationException("Cannot write to a read-only stream");
@@ -299,7 +299,7 @@ namespace GSF.Data
         public static DataSet DeserializeToDataSet(this Stream source)
         {
             if ((object)source == null)
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
 
             if (!source.CanRead)
                 throw new InvalidOperationException("Cannot read from a write-only stream");

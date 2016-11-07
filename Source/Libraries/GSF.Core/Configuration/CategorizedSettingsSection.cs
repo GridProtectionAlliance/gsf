@@ -108,7 +108,7 @@ namespace GSF.Configuration
             get
             {
                 if (string.IsNullOrEmpty(name))
-                    throw new ArgumentNullException("name");
+                    throw new ArgumentNullException(nameof(name));
 
                 // We will add the requested category to the default properties collection, so that when
                 // the settings are saved off to the config file, all of the categories under which

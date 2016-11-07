@@ -360,7 +360,7 @@ namespace GSF.IO
         private CachedFileStream(int blockSize)
         {
             if (blockSize <= 0)
-                throw new ArgumentOutOfRangeException("blockSize");
+                throw new ArgumentOutOfRangeException(nameof(blockSize));
 
             if (blockSize < 8)
                 blockSize = 8;
@@ -401,7 +401,7 @@ namespace GSF.IO
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("value");
+                    throw new ArgumentOutOfRangeException(nameof(value));
 
                 m_cacheSize = value;
                 PurgeCache(m_cacheSize);
@@ -476,7 +476,7 @@ namespace GSF.IO
                     throw new ObjectDisposedException(GetType().FullName);
 
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("value");
+                    throw new ArgumentOutOfRangeException(nameof(value));
 
                 m_position = value;
             }
@@ -566,16 +566,16 @@ namespace GSF.IO
                 throw new NotSupportedException("Stream does not support reading.");
 
             if ((object)buffer == null)
-                throw new ArgumentNullException("buffer");
+                throw new ArgumentNullException(nameof(buffer));
 
             if (offset + count > buffer.Length)
                 throw new ArgumentException("Amount to be read exceeds the size of the buffer.");
 
             if (offset < 0)
-                throw new ArgumentOutOfRangeException("offset");
+                throw new ArgumentOutOfRangeException(nameof(offset));
 
             if (count < 0)
-                throw new ArgumentOutOfRangeException("count");
+                throw new ArgumentOutOfRangeException(nameof(count));
 
             if (count == 0 || m_position >= Length)
                 return 0;
@@ -621,16 +621,16 @@ namespace GSF.IO
                 throw new NotSupportedException("Stream does not support writing.");
 
             if ((object)buffer == null)
-                throw new ArgumentNullException("buffer");
+                throw new ArgumentNullException(nameof(buffer));
 
             if (offset + count > buffer.Length)
                 throw new ArgumentException("Amount to be read exceeds the size of the buffer.");
 
             if (offset < 0)
-                throw new ArgumentOutOfRangeException("offset");
+                throw new ArgumentOutOfRangeException(nameof(offset));
 
             if (count < 0)
-                throw new ArgumentOutOfRangeException("count");
+                throw new ArgumentOutOfRangeException(nameof(count));
 
             int bufferOffset = offset;
             long end = m_position + count;
@@ -700,7 +700,7 @@ namespace GSF.IO
                 throw new NotSupportedException("The stream does not support writing.");
 
             if (value < 0)
-                throw new ArgumentOutOfRangeException("value");
+                throw new ArgumentOutOfRangeException(nameof(value));
 
             // When decreasing the file size, purge the cache
             // of any blocks beyond the new length of the file

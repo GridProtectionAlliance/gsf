@@ -243,7 +243,7 @@ namespace GSF.Identity
         public UserInfo(string loginID, string ldapPath)
         {
             if (string.IsNullOrEmpty(loginID))
-                throw new ArgumentNullException("loginID");
+                throw new ArgumentNullException(nameof(loginID));
 
             string[] accountParts = loginID.Split('\\');
 
@@ -348,7 +348,7 @@ namespace GSF.Identity
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_settingsCategory = value;
             }
@@ -992,13 +992,13 @@ namespace GSF.Identity
         {
             // Check input parameters.
             if (string.IsNullOrEmpty(domain))
-                throw new ArgumentNullException("domain");
+                throw new ArgumentNullException(nameof(domain));
 
             if (string.IsNullOrEmpty(username))
-                throw new ArgumentNullException("username");
+                throw new ArgumentNullException(nameof(username));
 
             if (string.IsNullOrEmpty(password))
-                throw new ArgumentNullException("password");
+                throw new ArgumentNullException(nameof(password));
 
             // Set the credentials for privileged domain user account.
             m_privilegedDomain = domain;
@@ -1394,13 +1394,13 @@ namespace GSF.Identity
         public static bool LocalUserExists(string userName)
         {
             if ((object)userName == null)
-                throw new ArgumentNullException("userName");
+                throw new ArgumentNullException(nameof(userName));
 
             // Remove any irrelevant white space
             userName = userName.Trim();
 
             if (userName.Length == 0)
-                throw new ArgumentException("No user name was specified.", "userName");
+                throw new ArgumentException("No user name was specified.", nameof(userName));
 
             if (Common.IsPosixEnvironment)
                 return UnixUserInfo.LocalUserExists(userName);
@@ -1421,16 +1421,16 @@ namespace GSF.Identity
         public static bool CreateLocalUser(string userName, string password, string userDescription = null)
         {
             if ((object)userName == null)
-                throw new ArgumentNullException("userName");
+                throw new ArgumentNullException(nameof(userName));
 
             if ((object)password == null)
-                throw new ArgumentNullException("password");
+                throw new ArgumentNullException(nameof(password));
 
             // Remove any irrelevant white space
             userName = userName.Trim();
 
             if (userName.Length == 0)
-                throw new ArgumentException("Cannot create local user: no user name was specified.", "userName");
+                throw new ArgumentException("Cannot create local user: no user name was specified.", nameof(userName));
 
             if (Common.IsPosixEnvironment)
                 return UnixUserInfo.CreateLocalUser(userName, password, userDescription);
@@ -1449,16 +1449,16 @@ namespace GSF.Identity
         public static void SetLocalUserPassword(string userName, string password)
         {
             if ((object)userName == null)
-                throw new ArgumentNullException("userName");
+                throw new ArgumentNullException(nameof(userName));
 
             if ((object)password == null)
-                throw new ArgumentNullException("password");
+                throw new ArgumentNullException(nameof(password));
 
             // Remove any irrelevant white space
             userName = userName.Trim();
 
             if (userName.Length == 0)
-                throw new ArgumentException("Cannot set password for local user: no user name was specified.", "userName");
+                throw new ArgumentException("Cannot set password for local user: no user name was specified.", nameof(userName));
 
             if (Common.IsPosixEnvironment)
                 UnixUserInfo.SetLocalUserPassword(userName, password);
@@ -1477,13 +1477,13 @@ namespace GSF.Identity
         public static bool RemoveLocalUser(string userName)
         {
             if ((object)userName == null)
-                throw new ArgumentNullException("userName");
+                throw new ArgumentNullException(nameof(userName));
 
             // Remove any irrelevant white space
             userName = userName.Trim();
 
             if (userName.Length == 0)
-                throw new ArgumentException("Cannot remove local user: no user name was specified.", "userName");
+                throw new ArgumentException("Cannot remove local user: no user name was specified.", nameof(userName));
 
             if (Common.IsPosixEnvironment)
                 return UnixUserInfo.RemoveLocalUser(userName);
@@ -1501,13 +1501,13 @@ namespace GSF.Identity
         public static bool LocalGroupExists(string groupName)
         {
             if ((object)groupName == null)
-                throw new ArgumentNullException("groupName");
+                throw new ArgumentNullException(nameof(groupName));
 
             // Remove any irrelevant white space
             groupName = groupName.Trim();
 
             if (groupName.Length == 0)
-                throw new ArgumentException("No group name was specified.", "groupName");
+                throw new ArgumentException("No group name was specified.", nameof(groupName));
 
             groupName = ValidateGroupName(groupName);
 
@@ -1529,13 +1529,13 @@ namespace GSF.Identity
         public static bool CreateLocalGroup(string groupName, string groupDescription = null)
         {
             if ((object)groupName == null)
-                throw new ArgumentNullException("groupName");
+                throw new ArgumentNullException(nameof(groupName));
 
             // Remove any irrelevant white space
             groupName = groupName.Trim();
 
             if (groupName.Length == 0)
-                throw new ArgumentException("Cannot create local group: no group name was specified.", "groupName");
+                throw new ArgumentException("Cannot create local group: no group name was specified.", nameof(groupName));
 
             groupName = ValidateGroupName(groupName);
 
@@ -1556,13 +1556,13 @@ namespace GSF.Identity
         public static bool RemoveLocalGroup(string groupName)
         {
             if ((object)groupName == null)
-                throw new ArgumentNullException("groupName");
+                throw new ArgumentNullException(nameof(groupName));
 
             // Remove any irrelevant white space
             groupName = groupName.Trim();
 
             if (groupName.Length == 0)
-                throw new ArgumentException("Cannot remove local group: no group name was specified.", "groupName");
+                throw new ArgumentException("Cannot remove local group: no group name was specified.", nameof(groupName));
 
             groupName = ValidateGroupName(groupName);
 
@@ -1590,20 +1590,20 @@ namespace GSF.Identity
         public static bool UserIsInLocalGroup(string groupName, string userName)
         {
             if ((object)groupName == null)
-                throw new ArgumentNullException("groupName");
+                throw new ArgumentNullException(nameof(groupName));
 
             if ((object)userName == null)
-                throw new ArgumentNullException("userName");
+                throw new ArgumentNullException(nameof(userName));
 
             // Remove any irrelevant white space
             groupName = groupName.Trim();
             userName = userName.Trim();
 
             if (groupName.Length == 0)
-                throw new ArgumentException("Cannot determine if user is in local group: no group name was specified.", "groupName");
+                throw new ArgumentException("Cannot determine if user is in local group: no group name was specified.", nameof(groupName));
 
             if (userName.Length == 0)
-                throw new ArgumentException("Cannot determine if user is in local group: no user name was specified.", "userName");
+                throw new ArgumentException("Cannot determine if user is in local group: no user name was specified.", nameof(userName));
 
             groupName = ValidateGroupName(groupName);
 
@@ -1631,20 +1631,20 @@ namespace GSF.Identity
         public static bool AddUserToLocalGroup(string groupName, string userName)
         {
             if ((object)groupName == null)
-                throw new ArgumentNullException("groupName");
+                throw new ArgumentNullException(nameof(groupName));
 
             if ((object)userName == null)
-                throw new ArgumentNullException("userName");
+                throw new ArgumentNullException(nameof(userName));
 
             // Remove any irrelevant white space
             groupName = groupName.Trim();
             userName = userName.Trim();
 
             if (groupName.Length == 0)
-                throw new ArgumentException("Cannot add user to local group: no group name was specified.", "groupName");
+                throw new ArgumentException("Cannot add user to local group: no group name was specified.", nameof(groupName));
 
             if (userName.Length == 0)
-                throw new ArgumentException("Cannot add user to local group: no user name was specified.", "userName");
+                throw new ArgumentException("Cannot add user to local group: no user name was specified.", nameof(userName));
 
             groupName = ValidateGroupName(groupName);
 
@@ -1672,20 +1672,20 @@ namespace GSF.Identity
         public static bool RemoveUserFromLocalGroup(string groupName, string userName)
         {
             if ((object)groupName == null)
-                throw new ArgumentNullException("groupName");
+                throw new ArgumentNullException(nameof(groupName));
 
             if ((object)userName == null)
-                throw new ArgumentNullException("userName");
+                throw new ArgumentNullException(nameof(userName));
 
             // Remove any irrelevant white space
             groupName = groupName.Trim();
             userName = userName.Trim();
 
             if (groupName.Length == 0)
-                throw new ArgumentException("Cannot remove user from local group: no group name was specified.", "groupName");
+                throw new ArgumentException("Cannot remove user from local group: no group name was specified.", nameof(groupName));
 
             if (userName.Length == 0)
-                throw new ArgumentException("Cannot remove user from local group: no user name was specified.", "userName");
+                throw new ArgumentException("Cannot remove user from local group: no user name was specified.", nameof(userName));
 
             groupName = ValidateGroupName(groupName);
 
@@ -1706,13 +1706,13 @@ namespace GSF.Identity
         public static string[] GetLocalGroupUserList(string groupName)
         {
             if ((object)groupName == null)
-                throw new ArgumentNullException("groupName");
+                throw new ArgumentNullException(nameof(groupName));
 
             // Remove any irrelevant white space
             groupName = groupName.Trim();
 
             if (groupName.Length == 0)
-                throw new ArgumentException("Cannot get members for local group: no group name was specified.", "groupName");
+                throw new ArgumentException("Cannot get members for local group: no group name was specified.", nameof(groupName));
 
             groupName = ValidateGroupName(groupName);
 

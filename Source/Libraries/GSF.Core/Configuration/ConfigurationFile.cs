@@ -508,7 +508,7 @@ namespace GSF.Configuration
             }
             else
             {
-                throw new ArgumentNullException("configFilePath", "Path of configuration file path cannot be null");
+                throw new ArgumentNullException(nameof(configFilePath), "Path of configuration file path cannot be null");
             }
 
             return configuration;
@@ -535,7 +535,7 @@ namespace GSF.Configuration
             }
             else
             {
-                throw (new ArgumentNullException("configFilePath", "Path of configuration file path cannot be null"));
+                throw (new ArgumentNullException(nameof(configFilePath), "Path of configuration file path cannot be null"));
             }
         }
 
@@ -592,7 +592,7 @@ namespace GSF.Configuration
             }
             else
             {
-                throw new ArgumentNullException("configFilePath", "Path of configuration file path cannot be null");
+                throw new ArgumentNullException(nameof(configFilePath), "Path of configuration file path cannot be null");
             }
         }
 

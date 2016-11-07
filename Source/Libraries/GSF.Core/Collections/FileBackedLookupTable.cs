@@ -208,10 +208,10 @@ namespace GSF.Collections
                 throw new InvalidOperationException("Unable to create FileBackedLookupTable with values that are not serializable");
 
             if ((object)filePath == null)
-                throw new ArgumentNullException("filePath");
+                throw new ArgumentNullException(nameof(filePath));
 
             if (string.IsNullOrWhiteSpace(filePath))
-                throw new ArgumentException("Path is zero-length or contains only whitespace", "filePath");
+                throw new ArgumentException("Path is zero-length or contains only whitespace", nameof(filePath));
 
             m_lookupTableType = lookupTableType;
 
@@ -252,7 +252,7 @@ namespace GSF.Collections
                         invalidPathChars = Path.GetInvalidPathChars();
 
                         if (value.Any(invalidPathChars.Contains))
-                            throw new ArgumentException("Path contains one or more invalid characters", "value");
+                            throw new ArgumentException("Path contains one or more invalid characters", nameof(value));
                     }
 
                     Close();
@@ -317,7 +317,7 @@ namespace GSF.Collections
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 if (value.Length > HeaderNode.SignatureSize)
                     throw new ArgumentException("Attempt was made to set signature to a value larger than the maximum signature size of " + HeaderNode.SignatureSize);
@@ -348,7 +348,7 @@ namespace GSF.Collections
                 TValue value;
 
                 if ((object)key == null)
-                    throw new ArgumentNullException("key");
+                    throw new ArgumentNullException(nameof(key));
 
                 if (!TryGetValue(key, out value))
                     throw new KeyNotFoundException("Item with the given key was not found in the lookup table");
@@ -364,7 +364,7 @@ namespace GSF.Collections
                 long count;
 
                 if ((object)key == null)
-                    throw new ArgumentNullException("key");
+                    throw new ArgumentNullException(nameof(key));
 
                 if (IsReadOnly)
                     throw new NotSupportedException("Unable to modify read-only lookup table");
@@ -555,7 +555,7 @@ namespace GSF.Collections
             ItemNode itemNode;
 
             if ((object)key == null)
-                throw new ArgumentNullException("key");
+                throw new ArgumentNullException(nameof(key));
 
             if (IsReadOnly)
                 throw new NotSupportedException("Unable to modify read-only lookup table");
@@ -641,7 +641,7 @@ namespace GSF.Collections
             long itemPointer;
 
             if ((object)key == null)
-                throw new ArgumentNullException("key");
+                throw new ArgumentNullException(nameof(key));
 
             if (IsReadOnly)
                 throw new NotSupportedException("Unable to modify read-only lookup table");
@@ -823,7 +823,7 @@ namespace GSF.Collections
             long itemPointer;
 
             if ((object)key == null)
-                throw new ArgumentNullException("key");
+                throw new ArgumentNullException(nameof(key));
 
             if ((object)m_fileStream == null)
                 Open();
@@ -848,7 +848,7 @@ namespace GSF.Collections
             long itemPointer;
 
             if ((object)key == null)
-                throw new ArgumentNullException("key");
+                throw new ArgumentNullException(nameof(key));
 
             if ((object)m_fileStream == null)
                 Open();

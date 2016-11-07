@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  Xor8.cs - Gbtc
+//  Xor32.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -31,23 +31,23 @@ using System;
 
 namespace GSF.IO.Checksums
 {
-    /// <summary>Calculates byte length (8-bit) XOR-based check-sum on specified portion of a buffer.</summary>
-    public sealed class Xor8
+    /// <summary>Calculates double-word length (32-bit) XOR-based check-sum on specified portion of a buffer.</summary>
+    public sealed class Xor32
     {
         #region [ Members ]
 
         // Fields
-        private byte m_checksum;
+        private uint m_checksum;
 
         #endregion
 
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new instance of the Xor8Bit class.
+        /// Creates a new instance of the Xor32Bit class.
         /// The checksum starts off with a value of 0.
         /// </summary>
-        public Xor8()
+        public Xor32()
         {
             Reset();
         }
@@ -57,9 +57,9 @@ namespace GSF.IO.Checksums
         #region [ Properties ]
 
         /// <summary>
-        /// Returns the Xor 8-bit checksum computed so far.
+        /// Returns the Xor 32-bit checksum computed so far.
         /// </summary>
-        public byte Value
+        public uint Value
         {
             get
             {
@@ -80,10 +80,10 @@ namespace GSF.IO.Checksums
         }
 
         /// <summary>
-        /// Updates the checksum with a byte value.
+        /// Updates the checksum with a uint value.
         /// </summary>
-        /// <param name="value">The <see cref="byte"/> value to use for the update.</param>
-        public void Update(byte value)
+        /// <param name="value">The <see cref="uint"/> value to use for the update.</param>
+        public void Update(uint value)
         {
             m_checksum ^= value;
         }
@@ -97,7 +97,7 @@ namespace GSF.IO.Checksums
         public void Update(byte[] buffer)
         {
             if ((object)buffer == null)
-                throw new ArgumentNullException("buffer");
+                throw new ArgumentNullException(nameof(buffer));
 
             Update(buffer, 0, buffer.Length);
         }
@@ -117,23 +117,23 @@ namespace GSF.IO.Checksums
         public void Update(byte[] buffer, int offset, int count)
         {
             if ((object)buffer == null)
-                throw new ArgumentNullException("buffer");
+                throw new ArgumentNullException(nameof(buffer));
 
             if (offset < 0)
-                throw new ArgumentOutOfRangeException("offset", "cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(offset), "cannot be negative");
 
             if (count < 0)
-                throw new ArgumentOutOfRangeException("count", "cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(count), "cannot be negative");
 
             if (offset >= buffer.Length)
-                throw new ArgumentOutOfRangeException("offset", "not a valid index into buffer");
+                throw new ArgumentOutOfRangeException(nameof(offset), "not a valid index into buffer");
 
             if (offset + count > buffer.Length)
-                throw new ArgumentOutOfRangeException("count", "exceeds buffer size");
+                throw new ArgumentOutOfRangeException(nameof(count), "exceeds buffer size");
 
-            for (int x = 0; x < count; x++)
+            for (int x = 0; x < count; x += 4)
             {
-                m_checksum ^= buffer[offset + x];
+                m_checksum ^= BitConverter.ToUInt32(buffer, offset + x);
             }
         }
 

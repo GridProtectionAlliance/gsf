@@ -123,7 +123,7 @@ namespace GSF.Data
             object field;
 
             if ((object)obj == null)
-                throw new ArgumentNullException("obj");
+                throw new ArgumentNullException(nameof(obj));
 
             // This method is required by IEqualityComparer<T> - although the following 
             // should work, this is not likely the most efficient way to do this...

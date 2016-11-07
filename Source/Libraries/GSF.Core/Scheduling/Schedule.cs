@@ -185,7 +185,7 @@ namespace GSF.Scheduling
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_name = value;
             }
@@ -205,7 +205,7 @@ namespace GSF.Scheduling
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 string[] scheduleParts = value.RemoveDuplicateWhiteSpace().Split(' ');
 

@@ -56,7 +56,7 @@ namespace GSF.Threading
         public static ManagedThread QueueUserWorkItem(ThreadStart callback)
         {
             if ((object)callback == null)
-                throw (new ArgumentNullException("callback"));
+                throw (new ArgumentNullException(nameof(callback)));
 
             ManagedThread item = new ManagedThread(ThreadType.QueuedThread, callback, null, null);
 
@@ -96,7 +96,7 @@ namespace GSF.Threading
         public static ManagedThread QueueUserWorkItem(ParameterizedThreadStart callback, object state)
         {
             if ((object)callback == null)
-                throw (new ArgumentNullException("callback"));
+                throw (new ArgumentNullException(nameof(callback)));
 
             ManagedThread item = new ManagedThread(ThreadType.QueuedThread, callback, state, null);
 
@@ -138,7 +138,7 @@ namespace GSF.Threading
         public static ManagedThread QueueUserWorkItem(ContextCallback callback, object state, ExecutionContext ctx)
         {
             if ((object)callback == null)
-                throw (new ArgumentNullException("callback"));
+                throw (new ArgumentNullException(nameof(callback)));
 
             ManagedThread item = new ManagedThread(ThreadType.QueuedThread, callback, state, ctx);
 

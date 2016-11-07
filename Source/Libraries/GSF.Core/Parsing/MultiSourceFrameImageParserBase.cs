@@ -226,7 +226,7 @@ namespace GSF.Parsing
         public virtual void Parse(TSourceIdentifier source, byte[] buffer)
         {
             if ((object)buffer == null)
-                throw new ArgumentNullException("buffer");
+                throw new ArgumentNullException(nameof(buffer));
 
             Parse(source, buffer, 0, buffer.Length);
         }

@@ -131,7 +131,7 @@ namespace GSF
         public static byte Encode(byte value)
         {
             if (value > (byte)99)
-                throw new ArgumentOutOfRangeException("value", "A binary-coded decimal has a maximum value of 99 for a single byte");
+                throw new ArgumentOutOfRangeException(nameof(value), "A binary-coded decimal has a maximum value of 99 for a single byte");
 
             byte high = (byte)((value / TenP1) & 0x0F);
             byte low = (byte)((value % TenP1) & 0x0F);
@@ -149,7 +149,7 @@ namespace GSF
         public static ushort Encode(ushort value)
         {
             if (value > (ushort)9999)
-                throw new ArgumentOutOfRangeException("value", "A binary-coded decimal has a maximum value of 9,999 for two bytes");
+                throw new ArgumentOutOfRangeException(nameof(value), "A binary-coded decimal has a maximum value of 9,999 for two bytes");
 
             byte high = Encode((byte)(value / TenP2));
             byte low = Encode((byte)(value % TenP2));
@@ -167,7 +167,7 @@ namespace GSF
         public static uint Encode(uint value)
         {
             if (value > (uint)99999999)
-                throw new ArgumentOutOfRangeException("value", "A binary-coded decimal has a maximum value of 99,999,999 for four bytes");
+                throw new ArgumentOutOfRangeException(nameof(value), "A binary-coded decimal has a maximum value of 99,999,999 for four bytes");
 
             ushort high = Encode((ushort)(value / TenP4));
             ushort low = Encode((ushort)(value % TenP4));
@@ -185,7 +185,7 @@ namespace GSF
         public static ulong Encode(ulong value)
         {
             if (value > (ulong)9999999999999999)
-                throw new ArgumentOutOfRangeException("value", "A binary-coded decimal has a maximum value of 9,999,999,999,999,999 for eight bytes");
+                throw new ArgumentOutOfRangeException(nameof(value), "A binary-coded decimal has a maximum value of 9,999,999,999,999,999 for eight bytes");
 
             uint high = Encode((uint)(value / TenP8));
             uint low = Encode((uint)(value % TenP8));

@@ -580,7 +580,7 @@ namespace GSF.ErrorManagement
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_settingsCategory = value;
             }
@@ -696,7 +696,7 @@ namespace GSF.ErrorManagement
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_errorTextMethod = value;
             }
@@ -722,7 +722,7 @@ namespace GSF.ErrorManagement
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_scopeTextMethod = value;
             }
@@ -748,7 +748,7 @@ namespace GSF.ErrorManagement
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_actionTextMethod = value;
             }
@@ -770,7 +770,7 @@ namespace GSF.ErrorManagement
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_moreInfoTextMethod = value;
             }

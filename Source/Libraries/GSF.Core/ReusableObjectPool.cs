@@ -280,7 +280,7 @@ namespace GSF
         public void SetPoolSize(int size)
         {
             if (size < 1)
-                throw new ArgumentOutOfRangeException("size", "pool size must at least be one");
+                throw new ArgumentOutOfRangeException(nameof(size), "pool size must at least be one");
 
             for (int i = 0; i < size - m_objectPool.Count; i++)
             {
@@ -458,7 +458,7 @@ namespace GSF
         public static void SetPoolSize(Type type, int size)
         {
             if (size < 1)
-                throw new ArgumentOutOfRangeException("size", "pool size must at least be one");
+                throw new ArgumentOutOfRangeException(nameof(size), "pool size must at least be one");
 
             // Get or create object pool associated with specified type
             ConcurrentQueue<object> objectPool = s_objectPools.GetOrAdd(type, (objType) => new ConcurrentQueue<object>());

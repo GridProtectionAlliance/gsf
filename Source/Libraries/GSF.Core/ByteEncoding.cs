@@ -121,10 +121,10 @@ namespace GSF
                         return bytes;
                     }
 
-                    throw new ArgumentException("Input string is not a valid hex encoded string - invalid characters encountered", "hexData");
+                    throw new ArgumentException("Input string is not a valid hex encoded string - invalid characters encountered", nameof(hexData));
                 }
 
-                throw new ArgumentNullException("hexData", "Input string cannot be null or empty");
+                throw new ArgumentNullException(nameof(hexData), "Input string cannot be null or empty");
             }
 
             /// <summary>Encodes given buffer into a user presentable representation.</summary>
@@ -187,10 +187,10 @@ namespace GSF
                         return bytes;
                     }
 
-                    throw new ArgumentException("Input string is not a valid decimal encoded string - invalid characters encountered", "decData");
+                    throw new ArgumentException("Input string is not a valid decimal encoded string - invalid characters encountered", nameof(decData));
                 }
 
-                throw new ArgumentNullException("decData", "Input string cannot be null or empty");
+                throw new ArgumentNullException(nameof(decData), "Input string cannot be null or empty");
             }
 
             /// <summary>Encodes given buffer into a user presentable representation.</summary>
@@ -322,10 +322,10 @@ namespace GSF
                         return bytes;
                     }
 
-                    throw new ArgumentException("Input string is not a valid binary encoded string - invalid characters encountered", "binaryData");
+                    throw new ArgumentException("Input string is not a valid binary encoded string - invalid characters encountered", nameof(binaryData));
                 }
 
-                throw new ArgumentNullException("binaryData", "Input string cannot be null or empty");
+                throw new ArgumentNullException(nameof(binaryData), "Input string cannot be null or empty");
             }
 
             /// <summary>Encodes given buffer into a user presentable representation.</summary>
@@ -337,7 +337,7 @@ namespace GSF
             public override string GetString(byte[] bytes, int offset, int length, char spacingCharacter)
             {
                 if ((object)bytes == null)
-                    throw new ArgumentNullException("bytes", "Input buffer cannot be null");
+                    throw new ArgumentNullException(nameof(bytes), "Input buffer cannot be null");
 
                 // Initializes byte image array on first call for speed in future calls.
                 if ((object)m_byteImages == null)
@@ -475,7 +475,7 @@ namespace GSF
             public override string GetString(byte[] bytes, int offset, int length, char spacingCharacter)
             {
                 if ((object)bytes == null)
-                    throw new ArgumentNullException("bytes", "Input buffer cannot be null");
+                    throw new ArgumentNullException(nameof(bytes), "Input buffer cannot be null");
 
                 string base64String = Convert.ToBase64String(bytes, offset, length);
 
@@ -532,7 +532,7 @@ namespace GSF
             public override string GetString(byte[] bytes, int offset, int length, char spacingCharacter)
             {
                 if ((object)bytes == null)
-                    throw new ArgumentNullException("bytes", "Input buffer cannot be null");
+                    throw new ArgumentNullException(nameof(bytes), "Input buffer cannot be null");
 
                 string asciiString = Encoding.ASCII.GetString(bytes, offset, length);
 
@@ -578,7 +578,7 @@ namespace GSF
         public virtual string GetString(byte[] bytes, char spacingCharacter)
         {
             if ((object)bytes == null)
-                throw new ArgumentNullException("bytes", "Input buffer cannot be null");
+                throw new ArgumentNullException(nameof(bytes), "Input buffer cannot be null");
 
             return GetString(bytes, 0, bytes.Length, spacingCharacter);
         }
@@ -591,7 +591,7 @@ namespace GSF
         public virtual string GetString(byte[] bytes, int offset, int length)
         {
             if ((object)bytes == null)
-                throw new ArgumentNullException("bytes", "Input buffer cannot be null");
+                throw new ArgumentNullException(nameof(bytes), "Input buffer cannot be null");
 
             return GetString(bytes, offset, length, NoSpacing);
         }
@@ -610,7 +610,7 @@ namespace GSF
         public virtual byte[] GetBytes(string value)
         {
             if (string.IsNullOrEmpty(value))
-                throw new ArgumentNullException("value", "Input string cannot be null");
+                throw new ArgumentNullException(nameof(value), "Input string cannot be null");
             return GetBytes(value, NoSpacing);
         }
 
@@ -726,7 +726,7 @@ namespace GSF
         internal static string BytesToString(byte[] bytes, int offset, int length, char spacingCharacter, string format)
         {
             if ((object)bytes == null)
-                throw new ArgumentNullException("bytes", "Input buffer cannot be null");
+                throw new ArgumentNullException(nameof(bytes), "Input buffer cannot be null");
 
             StringBuilder byteString = new StringBuilder();
 

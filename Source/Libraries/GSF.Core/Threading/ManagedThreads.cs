@@ -201,7 +201,7 @@ namespace GSF.Threading
         public static void Cancel(ManagedThread item, bool allowAbort, object stateInfo)
         {
             if ((object)item == null)
-                throw new ArgumentNullException("item");
+                throw new ArgumentNullException(nameof(item));
 
             LinkedListNode<ManagedThread> node;
 

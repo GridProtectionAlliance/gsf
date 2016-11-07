@@ -58,7 +58,7 @@ namespace GSF.Diagnostics
             FileName = logFileName;
             m_saveHelper = LogMessageSaveHelper.Create();
 
-            PathHelpers.ValidatePathName(logFileName);
+            FilePath.ValidatePathName(logFileName);
             m_stream = new FileStream(logFileName, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.Read);
             m_stream.Write(282497); //VersionNumber: Compressed. With LogSaveHelper
 

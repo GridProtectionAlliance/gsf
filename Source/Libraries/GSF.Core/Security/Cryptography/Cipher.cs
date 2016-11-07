@@ -737,7 +737,7 @@ namespace GSF.Security.Cryptography
                 return source;
 
             if (string.IsNullOrEmpty(password))
-                throw new ArgumentNullException("password");
+                throw new ArgumentNullException(nameof(password));
 
             byte[][] keyIV = s_keyIVCache.GetCryptoKeyIV(password, (int)strength);
 
@@ -883,7 +883,7 @@ namespace GSF.Security.Cryptography
             using (FileStream sourceFileStream = File.Open(sourceFileName, FileMode.Open, FileAccess.Read, FileShare.Read), destFileStream = File.Create(destinationFileName))
             {
                 if (string.IsNullOrEmpty(password))
-                    throw new ArgumentNullException("password");
+                    throw new ArgumentNullException(nameof(password));
 
                 byte[][] keyIV = s_keyIVCache.GetCryptoKeyIV(password, (int)strength);
 
@@ -940,7 +940,7 @@ namespace GSF.Security.Cryptography
                 return source;
 
             if (string.IsNullOrEmpty(password))
-                throw new ArgumentNullException("password");
+                throw new ArgumentNullException(nameof(password));
 
             byte[][] keyIV = s_keyIVCache.GetCryptoKeyIV(password, (int)strength);
 
@@ -1098,7 +1098,7 @@ namespace GSF.Security.Cryptography
             using (FileStream sourceFileStream = File.Open(sourceFileName, FileMode.Open, FileAccess.Read, FileShare.Read), destFileStream = File.Create(destinationFileName))
             {
                 if (string.IsNullOrEmpty(password))
-                    throw new ArgumentNullException("password");
+                    throw new ArgumentNullException(nameof(password));
 
                 byte[][] keyIV = s_keyIVCache.GetCryptoKeyIV(password, (int)strength);
 

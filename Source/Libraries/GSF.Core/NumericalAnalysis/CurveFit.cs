@@ -64,10 +64,10 @@ namespace GSF.NumericalAnalysis
         public static double[] Compute(int polynomialOrder, IList<double> xValues, IList<double> yValues)
         {
             if ((object)xValues == null)
-                throw new ArgumentNullException("xValues");
+                throw new ArgumentNullException(nameof(xValues));
 
             if ((object)yValues == null)
-                throw new ArgumentNullException("yValues");
+                throw new ArgumentNullException(nameof(yValues));
 
             if (xValues.Count != yValues.Count)
                 throw new ArgumentException("Point count for x-values and y-values must be equal");
@@ -76,7 +76,7 @@ namespace GSF.NumericalAnalysis
                 throw new ArgumentException("Point count must be greater than requested polynomial order");
 
             if (!(polynomialOrder >= 1) && (polynomialOrder <= 7))
-                throw new ArgumentOutOfRangeException("polynomialOrder", "Polynomial order must be between 1 and 7");
+                throw new ArgumentOutOfRangeException(nameof(polynomialOrder), "Polynomial order must be between 1 and 7");
 
             // Curve fit function (courtesy of Brian Fox from DatAWare client code)
             double[] coeffs = new double[8];

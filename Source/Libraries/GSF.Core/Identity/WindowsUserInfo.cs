@@ -1390,7 +1390,7 @@ namespace GSF.Identity
             string accountAliasSID;
 
             if ((object)accountName == null)
-                throw new ArgumentNullException("accountName");
+                throw new ArgumentNullException(nameof(accountName));
 
             try
             {
@@ -1444,7 +1444,7 @@ namespace GSF.Identity
                 NTAccount account;
 
                 if ((object)sid == null)
-                    throw new ArgumentNullException("sid");
+                    throw new ArgumentNullException(nameof(sid));
 
                 securityIdentifier = new SecurityIdentifier(CleanSid(sid));
                 account = (NTAccount)securityIdentifier.Translate(typeof(NTAccount));
@@ -1478,7 +1478,7 @@ namespace GSF.Identity
                 string accountName;
 
                 if ((object)sid == null)
-                    throw new ArgumentNullException("sid");
+                    throw new ArgumentNullException(nameof(sid));
 
                 sid = CleanSid(sid);
 

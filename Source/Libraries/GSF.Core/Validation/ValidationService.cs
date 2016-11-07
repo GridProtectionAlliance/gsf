@@ -115,10 +115,10 @@ namespace GSF.Validation
         public void AddValidation(string source, IValidator validator)
         {
             if (string.IsNullOrEmpty(source))
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
 
             if ((object)validator == null)
-                throw new ArgumentNullException("validator");
+                throw new ArgumentNullException(nameof(validator));
 
             m_validations.Add(string.Format("{0}+{1}", source, validator.GetType().Name), validator);
         }

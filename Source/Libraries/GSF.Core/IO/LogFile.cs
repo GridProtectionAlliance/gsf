@@ -254,7 +254,7 @@ namespace GSF.IO
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_fileName = value;
                 ReOpen();
@@ -277,7 +277,7 @@ namespace GSF.IO
             set
             {
                 if (value < MinFileSize || value > MaxFileSize)
-                    throw new ArgumentOutOfRangeException("value", string.Format("Value must be between {0} and {1}", MinFileSize, MaxFileSize));
+                    throw new ArgumentOutOfRangeException(nameof(value), string.Format("Value must be between {0} and {1}", MinFileSize, MaxFileSize));
 
                 m_fileSize = value;
             }
@@ -376,7 +376,7 @@ namespace GSF.IO
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_settingsCategory = value;
             }

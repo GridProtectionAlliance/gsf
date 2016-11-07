@@ -97,7 +97,7 @@ namespace GSF.IO.Checksums
         public void Update(byte[] buffer)
         {
             if ((object)buffer == null)
-                throw new ArgumentNullException("buffer");
+                throw new ArgumentNullException(nameof(buffer));
 
             Update(buffer, 0, buffer.Length);
         }
@@ -117,19 +117,19 @@ namespace GSF.IO.Checksums
         public void Update(byte[] buffer, int offset, int count)
         {
             if ((object)buffer == null)
-                throw new ArgumentNullException("buffer");
+                throw new ArgumentNullException(nameof(buffer));
 
             if (offset < 0)
-                throw new ArgumentOutOfRangeException("offset", "cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(offset), "cannot be negative");
 
             if (count < 0)
-                throw new ArgumentOutOfRangeException("count", "cannot be negative");
+                throw new ArgumentOutOfRangeException(nameof(count), "cannot be negative");
 
             if (offset >= buffer.Length)
-                throw new ArgumentOutOfRangeException("offset", "not a valid index into buffer");
+                throw new ArgumentOutOfRangeException(nameof(offset), "not a valid index into buffer");
 
             if (offset + count > buffer.Length)
-                throw new ArgumentOutOfRangeException("count", "exceeds buffer size");
+                throw new ArgumentOutOfRangeException(nameof(count), "exceeds buffer size");
 
             for (int x = 0; x < count; x += 2)
             {

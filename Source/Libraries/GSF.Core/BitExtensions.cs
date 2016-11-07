@@ -436,7 +436,7 @@ namespace GSF
                 #endregion
 
                 default:
-                    throw new ArgumentOutOfRangeException("bit", "Parameter must be between 0 and 63");
+                    throw new ArgumentOutOfRangeException(nameof(bit), "Parameter must be between 0 and 63");
             }
         }
 

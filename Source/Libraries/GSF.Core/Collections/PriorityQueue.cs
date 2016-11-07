@@ -98,7 +98,7 @@ namespace GSF.Collections
         public PriorityQueue(int capacity)
         {
             if (capacity < 0)
-                throw new ArgumentOutOfRangeException("capacity");
+                throw new ArgumentOutOfRangeException(nameof(capacity));
 
             if (capacity == 0)
                 m_heap = EmptyHeap;
@@ -135,14 +135,14 @@ namespace GSF.Collections
             get
             {
                 if (index < 0 || index >= m_count)
-                    throw new ArgumentOutOfRangeException("index");
+                    throw new ArgumentOutOfRangeException(nameof(index));
 
                 return m_heap[index].Item;
             }
             set
             {
                 if (index < 0 || index >= m_count)
-                    throw new ArgumentOutOfRangeException("index");
+                    throw new ArgumentOutOfRangeException(nameof(index));
 
                 m_heap[index].Item = value;
                 m_version++;
@@ -257,7 +257,7 @@ namespace GSF.Collections
         public int GetPriority(int index)
         {
             if (index < 0 || index >= m_count)
-                throw new ArgumentOutOfRangeException("index");
+                throw new ArgumentOutOfRangeException(nameof(index));
 
             return m_heap[index].Priority;
         }
@@ -278,7 +278,7 @@ namespace GSF.Collections
             int oldPriority;
 
             if (index < 0 || index >= m_count)
-                throw new ArgumentOutOfRangeException("index");
+                throw new ArgumentOutOfRangeException(nameof(index));
 
             oldPriority = m_heap[index].Priority;
             m_heap[index].Priority = priority;
@@ -391,13 +391,13 @@ namespace GSF.Collections
         public void CopyTo(T[] array, int arrayIndex)
         {
             if ((object)array == null)
-                throw new ArgumentNullException("array");
+                throw new ArgumentNullException(nameof(array));
 
             if (arrayIndex < 0)
-                throw new ArgumentOutOfRangeException("arrayIndex");
+                throw new ArgumentOutOfRangeException(nameof(arrayIndex));
 
             if (array.Length - arrayIndex < m_count)
-                throw new ArgumentException("Not enough space in destination.", "array");
+                throw new ArgumentException("Not enough space in destination.", nameof(array));
 
             foreach (T item in this)
                 array[arrayIndex++] = item;
@@ -418,7 +418,7 @@ namespace GSF.Collections
             PriorityQueueNode swappedNode;
 
             if (index < 0 || index >= m_count)
-                throw new ArgumentOutOfRangeException("index");
+                throw new ArgumentOutOfRangeException(nameof(index));
 
             m_count--;
             m_version++;

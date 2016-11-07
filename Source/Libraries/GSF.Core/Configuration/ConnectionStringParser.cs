@@ -310,7 +310,7 @@ namespace GSF.Configuration
 
             // Null objects don't have properties
             if (settingsObject == null)
-                throw new ArgumentNullException("settingsObject", "Unable to parse connection string because settings object is invalid.");
+                throw new ArgumentNullException(nameof(settingsObject), "Unable to parse connection string because settings object is invalid.");
 
             // Get the set of properties which are part of the connection string
             connectionStringProperties = GetConnectionStringProperties(settingsObject.GetType());

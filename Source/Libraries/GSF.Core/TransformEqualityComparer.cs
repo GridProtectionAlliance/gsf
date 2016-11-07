@@ -48,7 +48,7 @@ namespace GSF
         public TransformEqualityComparer(Func<T, object> transformFunction)
         {
             if ((object)transformFunction == null)
-                throw new ArgumentNullException("transformFunction");
+                throw new ArgumentNullException(nameof(transformFunction));
 
             m_transformFunction = transformFunction;
         }

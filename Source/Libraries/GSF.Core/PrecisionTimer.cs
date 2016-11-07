@@ -252,7 +252,7 @@ namespace GSF
                     throw new ObjectDisposedException("PrecisionTimer");
 
                 if (value < Capabilities.PeriodMinimum || value > Capabilities.PeriodMaximum)
-                    throw new ArgumentOutOfRangeException("value", value, "Multimedia Timer period out of range");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Multimedia Timer period out of range");
 
                 m_period = value;
 
@@ -296,7 +296,7 @@ namespace GSF
                     throw new ObjectDisposedException("PrecisionTimer");
 
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("value", value, "Multimedia timer resolution out of range");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Multimedia timer resolution out of range");
 
                 m_resolution = value;
 

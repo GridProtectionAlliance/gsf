@@ -306,7 +306,7 @@ namespace GSF.Collections
             int removedCount;
 
             if ((object)match == null)
-                throw new ArgumentNullException("match");
+                throw new ArgumentNullException(nameof(match));
 
             removedCount = 0;
             m_lookupTable.UnmarkAll();
@@ -346,7 +346,7 @@ namespace GSF.Collections
         public void UnionWith(IEnumerable<T> other)
         {
             if ((object)other == null)
-                throw new ArgumentNullException("other");
+                throw new ArgumentNullException(nameof(other));
 
             foreach (T item in other)
                 Add(item);
@@ -361,7 +361,7 @@ namespace GSF.Collections
         public void IntersectWith(IEnumerable<T> other)
         {
             if ((object)other == null)
-                throw new ArgumentNullException("other");
+                throw new ArgumentNullException(nameof(other));
 
             m_lookupTable.UnmarkAll();
 
@@ -380,7 +380,7 @@ namespace GSF.Collections
         public void ExceptWith(IEnumerable<T> other)
         {
             if ((object)other == null)
-                throw new ArgumentNullException("other");
+                throw new ArgumentNullException(nameof(other));
 
             foreach (T item in other)
                 m_lookupTable.Remove(item);
@@ -398,7 +398,7 @@ namespace GSF.Collections
             List<T> list;
 
             if ((object)other == null)
-                throw new ArgumentNullException("other");
+                throw new ArgumentNullException(nameof(other));
 
             list = new List<T>();
             m_lookupTable.UnmarkAll();
@@ -427,7 +427,7 @@ namespace GSF.Collections
         public bool IsSubsetOf(IEnumerable<T> other)
         {
             if ((object)other == null)
-                throw new ArgumentNullException("other");
+                throw new ArgumentNullException(nameof(other));
 
             m_lookupTable.UnmarkAll();
 
@@ -448,7 +448,7 @@ namespace GSF.Collections
         public bool IsSupersetOf(IEnumerable<T> other)
         {
             if ((object)other == null)
-                throw new ArgumentNullException("other");
+                throw new ArgumentNullException(nameof(other));
 
             foreach (T item in other)
             {
@@ -471,7 +471,7 @@ namespace GSF.Collections
         public bool IsProperSupersetOf(IEnumerable<T> other)
         {
             if ((object)other == null)
-                throw new ArgumentNullException("other");
+                throw new ArgumentNullException(nameof(other));
 
             m_lookupTable.UnmarkAll();
 
@@ -498,7 +498,7 @@ namespace GSF.Collections
             bool canBeProperSubset;
 
             if ((object)other == null)
-                throw new ArgumentNullException("other");
+                throw new ArgumentNullException(nameof(other));
             
             canBeProperSubset = false;
             m_lookupTable.UnmarkAll();
@@ -523,7 +523,7 @@ namespace GSF.Collections
         public bool Overlaps(IEnumerable<T> other)
         {
             if ((object)other == null)
-                throw new ArgumentNullException("other");
+                throw new ArgumentNullException(nameof(other));
 
             foreach (T item in other)
             {
@@ -546,7 +546,7 @@ namespace GSF.Collections
         public bool SetEquals(IEnumerable<T> other)
         {
             if ((object)other == null)
-                throw new ArgumentNullException("other");
+                throw new ArgumentNullException(nameof(other));
 
             m_lookupTable.UnmarkAll();
 
@@ -579,10 +579,10 @@ namespace GSF.Collections
         public void CopyTo(T[] array, int arrayIndex)
         {
             if ((object)array == null)
-                throw new ArgumentNullException("array");
+                throw new ArgumentNullException(nameof(array));
 
             if (arrayIndex < 0)
-                throw new ArgumentOutOfRangeException("arrayIndex");
+                throw new ArgumentOutOfRangeException(nameof(arrayIndex));
 
             if (m_lookupTable.Count > array.Length - arrayIndex)
                 throw new ArgumentException("Not enough available space in array to copy elements from hash set");

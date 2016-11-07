@@ -386,10 +386,10 @@ namespace GSF
         public static void Serialize<T>(T serializableObject, SerializationFormat serializationFormat, Stream serializedOutput)
         {
             if ((object)serializedOutput == null)
-                throw new ArgumentNullException("serializedOutput");
+                throw new ArgumentNullException(nameof(serializedOutput));
 
             if ((object)serializableObject == null)
-                throw new ArgumentNullException("serializableObject");
+                throw new ArgumentNullException(nameof(serializableObject));
 
             // Serialize object to the provided stream.
             if (serializationFormat == SerializationFormat.Xml)
@@ -441,7 +441,7 @@ namespace GSF
         public static T Deserialize<T>(byte[] serializedObject, SerializationFormat serializationFormat)
         {
             if ((object)serializedObject == null)
-                throw new ArgumentNullException("serializedObject");
+                throw new ArgumentNullException(nameof(serializedObject));
 
             using (MemoryStream stream = new MemoryStream(serializedObject))
             {
@@ -461,7 +461,7 @@ namespace GSF
         public static T Deserialize<T>(Stream serializedObject, SerializationFormat serializationFormat)
         {
             if ((object)serializedObject == null)
-                throw new ArgumentNullException("serializedObject");
+                throw new ArgumentNullException(nameof(serializedObject));
 
             // Deserialize the serialized object.
             T deserializedObject;

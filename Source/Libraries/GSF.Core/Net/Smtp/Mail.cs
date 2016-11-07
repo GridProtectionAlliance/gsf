@@ -167,7 +167,7 @@ namespace GSF.Net.Smtp
             {
                 // This is a required field.
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
                 m_from = value;
             }
@@ -266,7 +266,7 @@ namespace GSF.Net.Smtp
 
                 // This is a required field.
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
 
 #if !MONO
                 // Dispose existing client.

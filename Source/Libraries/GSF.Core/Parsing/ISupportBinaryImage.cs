@@ -89,7 +89,7 @@ namespace GSF.Parsing
         public static byte[] BinaryImage(this ISupportBinaryImage imageSource)
         {
             if ((object)imageSource == null)
-                throw new ArgumentNullException("imageSource");
+                throw new ArgumentNullException(nameof(imageSource));
 
             byte[] buffer = new byte[imageSource.BinaryLength];
 
@@ -107,7 +107,7 @@ namespace GSF.Parsing
         public static void CopyBinaryImageToStream(this ISupportBinaryImage imageSource, Stream stream)
         {
             if ((object)imageSource == null)
-                throw new ArgumentNullException("imageSource");
+                throw new ArgumentNullException(nameof(imageSource));
 
             int length = imageSource.BinaryLength;
             byte[] buffer = new byte[length];
@@ -130,7 +130,7 @@ namespace GSF.Parsing
         public static int ParseBinaryImageFromStream(this ISupportBinaryImage imageSource, Stream stream)
         {
             if ((object)imageSource == null)
-                throw new ArgumentNullException("imageSource");
+                throw new ArgumentNullException(nameof(imageSource));
 
             int length = imageSource.BinaryLength;
             byte[] buffer = new byte[length];
