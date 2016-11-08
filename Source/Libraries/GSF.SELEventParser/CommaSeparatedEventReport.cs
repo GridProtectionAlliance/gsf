@@ -243,6 +243,15 @@ namespace GSF.SELEventParser
                 }
             }
 
+            foreach(string channel in fields[12].Split(' '))
+            {
+                if(channel != "\"")
+                {
+                    commaSeparatedEventReport.AnalogSection.DigitalChannels.Add(new Channel<bool>());
+                    commaSeparatedEventReport.AnalogSection.DigitalChannels[commaSeparatedEventReport.AnalogSection.DigitalChannels.Count - 1].Name = channel;
+                }
+            }
+
             commaSeparatedEventReport.InitialReadingIndex = ++index;
             int timeStepTicks = Convert.ToInt32(Math.Round(10000000.0 / commaSeparatedEventReport.AverageFrequncy / commaSeparatedEventReport.SamplesPerCycleAnalog));
 
@@ -261,6 +270,15 @@ namespace GSF.SELEventParser
                 commaSeparatedEventReport.AnalogSection.AnalogChannels[8].Samples.Add(Convert.ToDouble(lines[index].Split(',')[8])*(fields[8].ToUpper().Contains("KV")? 1000 : 1));
                 commaSeparatedEventReport.AnalogSection.AnalogChannels[9].Samples.Add(Convert.ToDouble(lines[index].Split(',')[9])*(fields[9].ToUpper().Contains("KV")? 1000 : 1));
                 commaSeparatedEventReport.AnalogSection.AnalogChannels[10].Samples.Add(Convert.ToDouble(lines[index].Split(',')[10]));
+
+                string digitals = lines[index].Split(',')[12].Replace("\"", "");
+                int forEachIndex = 0;
+                foreach (Channel<bool> channel in commaSeparatedEventReport.AnalogSection.DigitalChannels)
+                {
+
+                    channel.Samples.Add(Convert.ToString(Convert.ToInt32(digitals[forEachIndex/4].ToString(), 16), 2).PadLeft(4, '0')[forEachIndex%4] == '1');
+                    ++forEachIndex;
+                }
                 ++index;
             }
 
