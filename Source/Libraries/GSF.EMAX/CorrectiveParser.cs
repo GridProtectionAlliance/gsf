@@ -279,8 +279,10 @@ namespace GSF.EMAX
                 if (m_currentSecond == DateTime.MinValue)
                 {
                     // If there was an error reading the timestamps in the parser,
-                    // calculate the timestamp from the data in the CTL file
+                    // calculate the timestamp from the data in the control file
+                    TimeZoneInfo tzInfo = parser.ControlFile.SystemParameters.GetTimeZoneInfo();
                     DateTime faultTime = parser.ControlFile.SystemParameters.FaultTime;
+                    string daylightName = parser.ControlFile.SystemParameters.time_zone_information.DaylightName;
                     short faultMilliseconds = parser.ControlFile.SystemParameters.mS_time;
                     short prefaultSamples = parser.ControlFile.SystemParameters.prefault_samples;
                     short startOffsetSamples = parser.ControlFile.SystemParameters.start_offset_samples;
@@ -291,8 +293,15 @@ namespace GSF.EMAX
                     // Get total milliseconds since epoch
                     milliseconds = m_currentSecond.Ticks / Ticks.PerMillisecond;
 
-                    // Adjust the fault time based on the time zone information
-                    m_currentSecond = TimeZoneInfo.ConvertTimeFromUtc(m_currentSecond, parser.ControlFile.SystemParameters.GetTimeZoneInfo());
+                    // Timestamps in the control file are stored in UTC (or close to it),
+                    // but it seems that sometimes EMAX adjusts timestamps without applying DST
+                    // rules so we use the DaylightName of the time zone info as a sanity check
+                    // and fall back on the BaseUtcOffset property in these weird cases
+                    if (daylightName == tzInfo.DaylightName || daylightName != tzInfo.Id)
+                        m_currentSecond = TimeZoneInfo.ConvertTimeFromUtc(m_currentSecond, tzInfo);
+                    else
+                        m_currentSecond += tzInfo.BaseUtcOffset;
+
                     m_currentSecond = DateTime.SpecifyKind(m_currentSecond, DateTimeKind.Unspecified);
                 }
 
