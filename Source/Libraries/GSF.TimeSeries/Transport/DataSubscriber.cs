@@ -318,6 +318,61 @@ namespace GSF.TimeSeries.Transport
             #endregion
         }
 
+        /// <summary>
+        /// EventArgs implementation for handling user commands.
+        /// </summary>
+        public class UserCommandArgs : EventArgs
+        {
+            /// <summary>
+            /// Creates a new instance of the <see cref="UserCommandArgs"/> class.
+            /// </summary>
+            /// <param name="command">The code for the user command.</param>
+            /// <param name="response">The code for the server's response.</param>
+            /// <param name="solicited">Indicates whether the response was solicited.</param>
+            /// <param name="buffer">Buffer containing the message from the server.</param>
+            /// <param name="startIndex">Index into the buffer used to skip the header.</param>
+            /// <param name="length">The length of the message in the buffer, including the header.</param>
+            public UserCommandArgs(ServerCommand command, ServerResponse response, bool solicited, byte[] buffer, int startIndex, int length)
+            {
+                Command = command;
+                Response = response;
+                Solicited = solicited;
+                Buffer = buffer;
+                StartIndex = startIndex;
+                Length = length;
+            }
+
+            /// <summary>
+            /// Gets the code for the user command.
+            /// </summary>
+            public ServerCommand Command { get; private set; }
+
+            /// <summary>
+            /// Gets the code for the server's response.
+            /// </summary>
+            public ServerResponse Response { get; private set; }
+
+            /// <summary>
+            /// Gets a flag indicating whether the response was solicited.
+            /// </summary>
+            public bool Solicited { get; private set; }
+
+            /// <summary>
+            /// Gets the buffer containing the message from the server.
+            /// </summary>
+            public byte[] Buffer { get; private set; }
+
+            /// <summary>
+            /// Gets the index into the buffer used to skip the header.
+            /// </summary>
+            public int StartIndex { get; private set; }
+
+            /// <summary>
+            /// Gets the length of the message in the buffer, including the header.
+            /// </summary>
+            public int Length { get; private set; }
+        }
+
         // Constants
 
         /// <summary>
@@ -378,6 +433,11 @@ namespace GSF.TimeSeries.Transport
         /// Occurs when client receives response from the server.
         /// </summary>
         public event EventHandler<EventArgs<ServerResponse, ServerCommand>> ReceivedServerResponse;
+
+        /// <summary>
+        /// Occurs when client receives message from the server in response to a user command.
+        /// </summary>
+        public event EventHandler<UserCommandArgs> ReceivedUserCommandResponse;
 
         /// <summary>
         /// Occurs when client receives requested meta-data transmitted by data publication server.
@@ -2728,7 +2788,10 @@ namespace GSF.TimeSeries.Transport
                             DataChannel = null;
                     }
 
-                    OnReceivedServerResponse(responseCode, commandCode);
+                    if (!IsUserCommand(commandCode))
+                        OnReceivedServerResponse(responseCode, commandCode);
+                    else
+                        OnReceivedUserCommandResponse(commandCode, responseCode, solicited, buffer, responseIndex, length);
 
                     switch (responseCode)
                     {
@@ -3268,6 +3331,31 @@ namespace GSF.TimeSeries.Transport
                     OnProcessException(new InvalidOperationException("Failed to process publisher response packet due to exception: " + ex.Message, ex));
                 }
             }
+        }
+
+        private bool IsUserCommand(ServerCommand command)
+        {
+            ServerCommand[] userCommands =
+            {
+                ServerCommand.UserCommand00,
+                ServerCommand.UserCommand01,
+                ServerCommand.UserCommand02,
+                ServerCommand.UserCommand03,
+                ServerCommand.UserCommand04,
+                ServerCommand.UserCommand05,
+                ServerCommand.UserCommand06,
+                ServerCommand.UserCommand07,
+                ServerCommand.UserCommand08,
+                ServerCommand.UserCommand09,
+                ServerCommand.UserCommand10,
+                ServerCommand.UserCommand11,
+                ServerCommand.UserCommand12,
+                ServerCommand.UserCommand13,
+                ServerCommand.UserCommand14,
+                ServerCommand.UserCommand15
+            };
+
+            return userCommands.Contains(command);
         }
 
         // Handles auto-connection subscription initialization
@@ -4333,9 +4421,7 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                if ((object)ConnectionEstablished != null)
-                    ConnectionEstablished(this, EventArgs.Empty);
-
+                ConnectionEstablished?.Invoke(this, EventArgs.Empty);
                 m_lastMissingCacheWarning = 0L;
             }
             catch (Exception ex)
@@ -4352,8 +4438,7 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                if ((object)ConnectionTerminated != null)
-                    ConnectionTerminated(this, EventArgs.Empty);
+                ConnectionTerminated?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
@@ -4369,8 +4454,7 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                if ((object)ConnectionAuthenticated != null)
-                    ConnectionAuthenticated(this, EventArgs.Empty);
+                ConnectionAuthenticated?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
@@ -4388,13 +4472,35 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                if ((object)ReceivedServerResponse != null)
-                    ReceivedServerResponse(this, new EventArgs<ServerResponse, ServerCommand>(responseCode, commandCode));
+                ReceivedServerResponse?.Invoke(this, new EventArgs<ServerResponse, ServerCommand>(responseCode, commandCode));
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
                 OnProcessException(new InvalidOperationException($"Exception in consumer handler for ReceivedServerResponse event: {ex.Message}", ex));
+            }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ReceivedUserCommandResponse"/> event.
+        /// </summary>
+        /// <param name="command">The code for the user command.</param>
+        /// <param name="response">The code for the server's response.</param>
+        /// <param name="solicited">Indicates whether the response was solicited.</param>
+        /// <param name="buffer">Buffer containing the message from the server.</param>
+        /// <param name="startIndex">Index into the buffer used to skip the header.</param>
+        /// <param name="length">The length of the message in the buffer, including the header.</param>
+        protected void OnReceivedUserCommandResponse(ServerCommand command, ServerResponse response, bool solicited, byte[] buffer, int startIndex, int length)
+        {
+            try
+            {
+                UserCommandArgs args = new UserCommandArgs(command, response, solicited, buffer, startIndex, length);
+                ReceivedUserCommandResponse?.Invoke(this, args);
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for UserCommandResponse event: {ex.Message}", ex));
             }
         }
 
@@ -4406,8 +4512,7 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                if ((object)MetaDataReceived != null)
-                    MetaDataReceived(this, new EventArgs<DataSet>(metadata));
+                MetaDataReceived?.Invoke(this, new EventArgs<DataSet>(metadata));
             }
             catch (Exception ex)
             {
@@ -4424,8 +4529,7 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                if ((object)DataStartTime != null)
-                    DataStartTime(this, new EventArgs<Ticks>(startTime));
+                DataStartTime?.Invoke(this, new EventArgs<Ticks>(startTime));
             }
             catch (Exception ex)
             {
@@ -4442,8 +4546,7 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                if ((object)ProcessingComplete != null)
-                    ProcessingComplete(this, new EventArgs<string>(source));
+                ProcessingComplete?.Invoke(this, new EventArgs<string>(source));
 
                 // Also raise base class event in case this event has been subscribed
                 OnProcessingComplete();
@@ -4463,8 +4566,7 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                if ((object)NotificationReceived != null)
-                    NotificationReceived(this, new EventArgs<string>(message));
+                NotificationReceived?.Invoke(this, new EventArgs<string>(message));
             }
             catch (Exception ex)
             {
@@ -4480,8 +4582,7 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                if ((object)ServerConfigurationChanged != null)
-                    ServerConfigurationChanged(this, EventArgs.Empty);
+                ServerConfigurationChanged?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
@@ -4534,8 +4635,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         private void OnExceededParsingExceptionThreshold()
         {
-            if ((object)ExceededParsingExceptionThreshold != null)
-                ExceededParsingExceptionThreshold(this, EventArgs.Empty);
+            ExceededParsingExceptionThreshold?.Invoke(this, EventArgs.Empty);
         }
 
         // Updates the measurements per second counters after receiving another set of measurements.
