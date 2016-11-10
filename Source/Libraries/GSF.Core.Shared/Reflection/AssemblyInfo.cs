@@ -51,6 +51,7 @@ using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
 using System.Security;
+using GSF.IO;
 
 namespace GSF.Reflection
 {
@@ -722,56 +723,6 @@ namespace GSF.Reflection
             }
 
             return resourceAssembly;
-        }
-
-        #endregion
-
-        #region [ Nested Static Class - Remove once FilePath has been moved to the SharedProject ]
-
-        //ToDo: This code was copied from GSF.Core.dll. Once we figure out how to split 
-        //FilePath.cs so it can be used in SQLCLR, remove this class.
-
-        /// <summary>
-        /// Contains File and Path manipulation methods.
-        /// </summary>
-        private static class FilePath
-        {
-            /// <summary>
-            /// Gets the file name without extension from the specified file path.
-            /// </summary>
-            /// <param name="filePath">The file path from which the file name is to be obtained.</param>
-            /// <returns>File name without the extension if the file path has it; otherwise empty string.</returns>
-            public static string GetFileNameWithoutExtension(string filePath)
-            {
-                return Path.GetFileNameWithoutExtension(RemovePathSuffix(filePath));
-            }
-
-            /// <summary>
-            /// Makes sure path is not suffixed with <see cref="Path.DirectorySeparatorChar"/> or <see cref="Path.AltDirectorySeparatorChar"/>.
-            /// </summary>
-            /// <param name="filePath">The file path to be unsuffixed.</param>
-            /// <returns>Unsuffixed path.</returns>
-            public static string RemovePathSuffix(string filePath)
-            {
-                if (string.IsNullOrEmpty(filePath))
-                {
-                    filePath = "";
-                }
-                else
-                {
-                    char suffixChar = filePath[filePath.Length - 1];
-
-                    while ((suffixChar == Path.DirectorySeparatorChar || suffixChar == Path.AltDirectorySeparatorChar) && filePath.Length > 0)
-                    {
-                        filePath = filePath.Substring(0, filePath.Length - 1);
-
-                        if (filePath.Length > 0)
-                            suffixChar = filePath[filePath.Length - 1];
-                    }
-                }
-
-                return filePath;
-            }
         }
 
         #endregion
