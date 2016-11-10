@@ -34,12 +34,12 @@ using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Text;
-using System.Timers;
 using GSF;
 using GSF.Communication;
 using GSF.IO;
 using GSF.PhasorProtocols;
 using GSF.PhasorProtocols.Anonymous;
+using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Data;
@@ -154,8 +154,9 @@ namespace PhasorProtocolAdapters
         private readonly ConcurrentDictionary<string, long> m_undefinedDevices;
         private readonly ConcurrentDictionary<SignalKind, string[]> m_generatedSignalReferenceCache;
         private MissingDataMonitor m_missingDataMonitor;
-        private Timer m_dataStreamMonitor;
-        private Timer m_measurementCounter;
+        private int m_dataStreamMonitorInterval;
+        private ICancellationToken m_dataStreamMonitorCancellationToken;
+        private ICancellationToken m_measurementCounterCancellationToken;
         private bool m_allowUseOfCachedConfiguration;
         private bool m_cachedConfigLoadAttempted;
         private readonly object m_configurationOperationLock;
@@ -210,12 +211,6 @@ namespace PhasorProtocolAdapters
         {
             // Create a cached signal reference dictionary for generated signal references
             m_generatedSignalReferenceCache = new ConcurrentDictionary<SignalKind, string[]>();
-
-            // Create data stream monitoring timer
-            m_dataStreamMonitor = new Timer();
-            m_dataStreamMonitor.Elapsed += m_dataStreamMonitor_Elapsed;
-            m_dataStreamMonitor.AutoReset = true;
-            m_dataStreamMonitor.Enabled = false;
 
             m_undefinedDevices = new ConcurrentDictionary<string, long>();
             m_configurationOperationLock = new object();
@@ -666,7 +661,7 @@ namespace PhasorProtocolAdapters
                 status.AppendLine();
                 status.AppendFormat("Allow use of cached config: {0}", m_allowUseOfCachedConfiguration);
                 status.AppendLine();
-                status.AppendFormat("No data reconnect interval: {0} seconds", Ticks.FromMilliseconds(m_dataStreamMonitor.Interval).ToSeconds().ToString("0.000"));
+                status.AppendFormat("No data reconnect interval: {0} seconds", Ticks.FromMilliseconds(m_dataStreamMonitorInterval).ToSeconds().ToString("0.000"));
                 status.AppendLine();
 
                 if (m_allowUseOfCachedConfiguration)
@@ -930,22 +925,12 @@ namespace PhasorProtocolAdapters
                 {
                     if (disposing)
                     {
+                        // Disable timers
+                        m_dataStreamMonitorCancellationToken?.Cancel();
+                        m_measurementCounterCancellationToken?.Cancel();
+
                         // Detach from frame parser events and set reference to null
                         FrameParser = null;
-
-                        if ((object)m_dataStreamMonitor != null)
-                        {
-                            m_dataStreamMonitor.Elapsed -= m_dataStreamMonitor_Elapsed;
-                            m_dataStreamMonitor.Dispose();
-                            m_dataStreamMonitor = null;
-                        }
-
-                        if ((object)m_measurementCounter != null)
-                        {
-                            m_measurementCounter.Elapsed -= m_measurementCounter_Elapsed;
-                            m_measurementCounter.Dispose();
-                            m_measurementCounter = null;
-                        }
 
                         if ((object)m_definedDevices != null)
                         {
@@ -1065,9 +1050,9 @@ namespace PhasorProtocolAdapters
                 m_timeAdjustmentTicks = 0;
 
             if (settings.TryGetValue("dataLossInterval", out setting))
-                m_dataStreamMonitor.Interval = double.Parse(setting) * 1000.0D;
+                m_dataStreamMonitorInterval = (int)Math.Round(double.Parse(setting) * 1000.0D);
             else
-                m_dataStreamMonitor.Interval = 5000.0D;
+                m_dataStreamMonitorInterval = 5000;
 
             if (settings.TryGetValue("delayedConnectionInterval", out setting))
             {
@@ -1708,14 +1693,12 @@ namespace PhasorProtocolAdapters
         protected override void AttemptDisconnection()
         {
             // Stop data stream monitor
-            m_dataStreamMonitor.Enabled = false;
+            m_dataStreamMonitorCancellationToken?.Cancel();
 
             // Stop frame parser
-            if ((object)m_frameParser != null)
-                m_frameParser.Stop();
+            m_frameParser?.Stop();
 
-            if ((object)m_measurementCounter != null)
-                m_measurementCounter.Stop();
+            m_measurementCounterCancellationToken?.Cancel();
         }
 
         /// <summary>
@@ -2098,16 +2081,9 @@ namespace PhasorProtocolAdapters
                 }
             }
 
-            if ((object)m_measurementCounter == null)
-            {
-                // Create the timer if it doesn't already exist
-                m_measurementCounter = new Timer(1000.0D);
-                m_measurementCounter.Elapsed += m_measurementCounter_Elapsed;
-            }
-
             // Start the measurement counter timer
             // to start gathering statistics
-            m_measurementCounter.Start();
+            StaticTimer.Default.RegisterDataStreamMonitor(1000, MeasurementCounter_Elapsed);
         }
 
         // Updates the measurements per second counters after receiving another set of measurements.
@@ -2244,7 +2220,8 @@ namespace PhasorProtocolAdapters
             ResetStatistics();
 
             // Enable data stream monitor for connections that support commands
-            m_dataStreamMonitor.Enabled = m_frameParser.DeviceSupportsCommands || m_allowUseOfCachedConfiguration;
+            if (m_frameParser.DeviceSupportsCommands || m_allowUseOfCachedConfiguration)
+                m_dataStreamMonitorCancellationToken = StaticTimer.Default.RegisterDataStreamMonitor(m_dataStreamMonitorInterval, DataStreamMonitor_Elapsed);
         }
 
         private void m_frameParser_ConnectionException(object sender, EventArgs<Exception, int> e)
@@ -2287,24 +2264,19 @@ namespace PhasorProtocolAdapters
         {
             OnStatusMessage("NOTICE: Configuration has changed, requesting new configuration frame...");
 
-            // Reset data stream monitor to allow time for non-cached reception of new configuration frame...
-            if (m_dataStreamMonitor.Enabled)
-            {
-                m_dataStreamMonitor.Stop();
-                m_dataStreamMonitor.Start();
-            }
-
             m_receivedConfigFrame = false;
             SendCommand(DeviceCommand.SendConfigurationFrame2);
         }
 
-        private void m_dataStreamMonitor_Elapsed(object sender, ElapsedEventArgs e)
+        private void DataStreamMonitor_Elapsed()
         {
+            DateTime now = DateTime.UtcNow;
+
             if (m_bytesReceived == 0 && (m_frameParser.DeviceSupportsCommands || m_frameParser.ConnectionIsMulticast || m_frameParser.ConnectionIsListener))
             {
                 // If we've received no data in the last time-span, we restart connect cycle...
-                m_dataStreamMonitor.Enabled = false;
-                OnStatusMessage("\r\nNo data received in {0} seconds, restarting connect cycle...\r\n", (m_dataStreamMonitor.Interval / 1000.0D).ToString("0.0"));
+                m_dataStreamMonitorCancellationToken?.Cancel();
+                OnStatusMessage("\r\nNo data received in {0} seconds, restarting connect cycle...\r\n", (m_dataStreamMonitorInterval / 1000.0D).ToString("0.0"));
                 Start();
             }
             else if (!m_receivedConfigFrame && m_allowUseOfCachedConfiguration)
@@ -2322,11 +2294,11 @@ namespace PhasorProtocolAdapters
                     Start();
                 }
             }
-
+            
             m_bytesReceived = 0;
         }
 
-        private void m_measurementCounter_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
+        private void MeasurementCounter_Elapsed()
         {
             long now = DateTime.UtcNow.Ticks;
             IEnumerable<DeviceStatisticsHelper<ConfigurationCell>> statisticsHelpers = StatisticsHelpers;
