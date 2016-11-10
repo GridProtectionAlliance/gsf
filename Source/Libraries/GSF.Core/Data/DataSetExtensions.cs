@@ -149,8 +149,9 @@ namespace GSF.Data
         /// <param name="source"><see cref="DataSet"/> to serialize.</param>
         /// <param name="destination"><see cref="Stream"/> to serialize <see cref="DataSet"/> on.</param>
         /// <param name="assumeStringForUnknownTypes">Flag to determine if unknown column types should be serialized as strings.</param>
+        /// <param name="useNullableDataTypes">Flag to determine if extra information should be serialized to support null values.</param>
         [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
-        public static void SerializeToStream(this DataSet source, Stream destination, bool assumeStringForUnknownTypes = true)
+        public static void SerializeToStream(this DataSet source, Stream destination, bool assumeStringForUnknownTypes = true, bool useNullableDataTypes = true)
         {
             if ((object)source == null)
                 throw new ArgumentNullException(nameof(source));
@@ -187,9 +188,14 @@ namespace GSF.Data
                         // Only objects of a known type can be properly serialized
                         if (dataType != DataType.Object)
                         {
+                            byte dtByte = (byte)dataType;
+
+                            if (useNullableDataTypes)
+                                dtByte |= 0x80;
+
                             // Serialize column name and type
                             columnMetaData.Write(column.ColumnName);
-                            columnMetaData.Write((byte)dataType);
+                            columnMetaData.Write(dtByte);
 
                             // Track data types and column indices in parallel lists for faster DataRow serialization
                             columnIndices.Add(column.Ordinal);
@@ -217,6 +223,14 @@ namespace GSF.Data
                     for (int i = 0; i < columnIndices.Count; i++)
                     {
                         value = row[columnIndices[i]];
+
+                        if (useNullableDataTypes)
+                        {
+                            output.Write((byte)(value == DBNull.Value ? 1 : 0));
+
+                            if (value == DBNull.Value)
+                                continue;
+                        }
 
                         switch (columnDataTypes[i])
                         {
@@ -320,7 +334,9 @@ namespace GSF.Data
             {
                 List<int> columnIndices = new List<int>();
                 List<DataType> columnDataTypes = new List<DataType>();
+                List<bool> columnNullable = new List<bool>();
                 DataType dataType;
+                byte dtByte;
                 int columnCount, rowCount;
 
                 DataTable table = dataset.Tables.Add();
@@ -336,8 +352,11 @@ namespace GSF.Data
 
                     // Deserialize column name and type
                     column.ColumnName = input.ReadString();
-                    dataType = (DataType)input.ReadByte();
+
+                    dtByte = input.ReadByte();
+                    dataType = (DataType)(dtByte & 0x7F);
                     column.DataType = dataType.DeriveColumnType();
+                    columnNullable.Add((dtByte & 0x80) != 0);
 
                     // Track data types and column indices in parallel lists for faster DataRow deserialization
                     columnIndices.Add(column.Ordinal);
@@ -356,6 +375,13 @@ namespace GSF.Data
                     for (int k = 0; k < columnIndices.Count; k++)
                     {
                         value = null;
+
+                        if (columnNullable[k] && input.ReadByte() != 0)
+                        {
+                            // Set column value to DBNull
+                            row[columnIndices[k]] = DBNull.Value;
+                            continue;
+                        }
 
                         switch (columnDataTypes[k])
                         {
