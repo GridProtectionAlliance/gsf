@@ -466,6 +466,7 @@ EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Libraries\GSF.Core.Shared\GSF.Core.Shared.projitems*{5ce3d6f4-d38d-4f71-acb6-79681cfe47df}*SharedItemsImports = 13
+		Libraries\GSF.Core.Shared\GSF.Core.Shared.projitems*{b04cac0f-ca13-4a19-8857-f55619638cd9}*SharedItemsImports = 4
 		Libraries\GSF.Core.Shared\GSF.Core.Shared.projitems*{d7a6a6a8-32c0-4a1c-b7c4-f6dee841d2e1}*SharedItemsImports = 4
 		Libraries\GSF.Core.Shared\GSF.Core.Shared.projitems*{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}*SharedItemsImports = 4
 	EndGlobalSection

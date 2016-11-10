@@ -38,10 +38,11 @@
             this.TxtMessage.Location = new System.Drawing.Point(0, 0);
             this.TxtMessage.Multiline = true;
             this.TxtMessage.Name = "TxtMessage";
+            this.TxtMessage.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.TxtMessage.Size = new System.Drawing.Size(725, 442);
             this.TxtMessage.TabIndex = 1;
             // 
-            // FrmShowError
+            // ShowError
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;

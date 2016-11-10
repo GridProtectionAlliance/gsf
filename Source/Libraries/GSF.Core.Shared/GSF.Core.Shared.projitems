@@ -96,8 +96,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)NumericalAnalysis\Interpolation\PiecewiseLinearFunction.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)NumericalAnalysis\NamespaceDoc.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)NumericalAnalysis\NumericalAnalysisExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Reflection\AppDomainTypeLookup.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\AssemblyExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\AssemblyInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Reflection\AssemblyLoadedVersionNumber.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\MemberInfoExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\MethodBaseExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\MethodInfoExtensionsCompile.cs" />

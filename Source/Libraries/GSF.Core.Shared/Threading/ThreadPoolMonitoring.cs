@@ -153,71 +153,10 @@ namespace GSF.Core.Threading
         public static void Initialize()
         {
 
+
         }
 
-        //static void m_timing_Running(object sender, GSF2.EventArgs<ScheduledTaskRunningReason> e)
-        //{
-        //    if (e.Argument == ScheduledTaskRunningReason.Disposing)
-        //        return;
-
-        //    double msDelta;
-        //    switch (s_stage)
-        //    {
-        //        case 0:
-        //            Thread.MemoryBarrier();
-        //            s_time = ShortTime.Now;
-        //            Thread.MemoryBarrier();
-        //            ThreadPool.QueueUserWorkItem(RunImmediately);
-        //            s_stage = 1;
-        //            return;
-        //        case 1:
-        //            s_time = ShortTime.Now;
-        //            s_timing.Start(1);
-        //            s_stage = 2;
-        //            return;
-        //        case 2:
-        //            msDelta = (ShortTime.Now - s_time).TotalMilliseconds;
-        //            s_sb.AppendFormat("Threadpool 1ms Timer Time: {0} ms; ", msDelta.ToString("0.000"));
-        //            s_time = ShortTime.Now;
-        //            s_stage = 3;
-        //            s_timing.Start(10);
-        //            return;
-        //        case 3:
-        //            msDelta = (ShortTime.Now - s_time).TotalMilliseconds;
-        //            s_sb.AppendFormat("Threadpool 10ms Timer Time: {0} ms; ", msDelta.ToString("0.000"));
-        //            s_time = ShortTime.Now;
-        //            s_stage = 4;
-        //            s_timing.Start(100);
-        //            return;
-        //        case 4:
-        //            msDelta = (ShortTime.Now - s_time).TotalMilliseconds;
-        //            s_sb.AppendFormat("Threadpool 100ms Timer Time: {0} ms; ", msDelta.ToString("0.000"));
-        //            s_time = ShortTime.Now;
-        //            s_stage = 5;
-        //            s_timing.Start(1000);
-        //            return;
-        //        case 5:
-        //            msDelta = (ShortTime.Now - s_time).TotalMilliseconds;
-        //            s_sb.AppendFormat("Threadpool 1000ms Timer Time: {0} ms; ", msDelta.ToString("0.000"));
-        //            s_time = ShortTime.Now;
-        //            s_stage = 0;
-        //            s_timing.Start(30000);
-        //            Log.Publish(MessageClass.Application, MessageLevel.Info, MessageFlags.None, "ThreadPool Performance", s_sb.ToString());
-        //            s_sb.Clear();
-        //            return;
-        //    }
-
-        //}
-
-        //static void RunImmediately(object state)
-        //{
-        //    Thread.MemoryBarrier();
-        //    var msDelta = (ShortTime.Now - s_time).TotalMilliseconds;
-        //    Thread.MemoryBarrier();
-
-        //    s_sb.AppendFormat("Threadpool Queue Time: {0} ms; ", msDelta.ToString("0.000"));
-        //    s_timing.Start(10);
-        //}
+        
 
 
     }

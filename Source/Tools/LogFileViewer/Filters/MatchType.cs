@@ -32,11 +32,16 @@ namespace LogFileViewer.Filters
     internal class MatchType : IMessageMatch
     {
         private string m_typeName;
+        private MessageClass m_class;
+        private MessageLevel m_level;
         private bool m_includeIfMatched;
+        private bool m_typeAndLevel;
 
         public MatchType(LogMessage typeName)
         {
             m_typeName = typeName.EventPublisherDetails.TypeName;
+            m_class = typeName.Classification;
+            m_level = typeName.Level;
         }
 
         public MatchType(Stream stream)
@@ -47,6 +52,14 @@ namespace LogFileViewer.Filters
                 case 1:
                     m_typeName = stream.ReadString();
                     m_includeIfMatched = stream.ReadBoolean();
+                    m_typeAndLevel = false;
+                    break;
+                case 2:
+                    m_typeName = stream.ReadString();
+                    m_includeIfMatched = stream.ReadBoolean();
+                    m_typeAndLevel = stream.ReadBoolean();
+                    m_class = (MessageClass)stream.ReadNextByte();
+                    m_level = (MessageLevel)stream.ReadNextByte();
                     break;
                 default:
                     throw new VersionNotFoundException();
@@ -57,13 +70,22 @@ namespace LogFileViewer.Filters
 
         public void Save(Stream stream)
         {
-            stream.Write((byte)1);
+            stream.Write((byte)2);
             stream.Write(m_typeName);
             stream.Write(m_includeIfMatched);
+            stream.Write(m_typeAndLevel);
+            stream.Write((byte)m_class);
+            stream.Write((byte)m_level);
         }
 
         public bool IsIncluded(LogMessage log)
         {
+            if (m_typeAndLevel)
+            {
+                if (log.EventPublisherDetails.TypeName == m_typeName && log.Classification == m_class && log.Level == m_level)
+                    return m_includeIfMatched;
+                return !m_includeIfMatched;
+            }
             if (log.EventPublisherDetails.TypeName == m_typeName)
                 return m_includeIfMatched;
             return !m_includeIfMatched;
@@ -73,6 +95,13 @@ namespace LogFileViewer.Filters
         {
             get
             {
+                if (m_typeAndLevel)
+                {
+                    if (m_includeIfMatched)
+                        return $"Include if Type: {m_typeName} ({m_class} - {m_level})" ;
+                    else
+                        return $"Exclude if Type: {m_typeName} ({m_class} - {m_level})" ;
+                }
                 if (m_includeIfMatched)
                     return "Include if Type: " + m_typeName;
                 else
@@ -85,7 +114,9 @@ namespace LogFileViewer.Filters
             return new[]
                    {
                        Tuple.Create<string, Func<bool>>("Include Type", () => { m_includeIfMatched = true; return true; }),
-                       Tuple.Create<string, Func<bool>>("Exclude Type", () => { m_includeIfMatched = false; return true;})
+                       Tuple.Create<string, Func<bool>>("Exclude Type", () => { m_includeIfMatched = false; return true;}),
+                       Tuple.Create<string, Func<bool>>("Include Type And Level", () => { m_includeIfMatched = true; m_typeAndLevel = true; return true;}),
+                       Tuple.Create<string, Func<bool>>("Exclude Type And Level", () => { m_includeIfMatched = false; m_typeAndLevel = true; return true;})
                    };
         }
 

@@ -99,7 +99,6 @@ namespace GSF
             {
                 Log.Publish(MessageLevel.Warning, "Could not parse Optimization Settings", setting, null, ex);
             }
-
             ThreadPoolMonitoring.Initialize();
         }
 

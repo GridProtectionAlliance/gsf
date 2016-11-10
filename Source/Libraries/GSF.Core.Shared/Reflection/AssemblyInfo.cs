@@ -51,6 +51,7 @@ using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
 using System.Security;
+using GSF.IO;
 
 namespace GSF.Reflection
 {
@@ -557,7 +558,8 @@ namespace GSF.Reflection
         private static AssemblyInfo s_executingAssembly;
         private static Dictionary<string, Assembly> s_assemblyCache;
         private static bool s_addedResolver;
-
+        private static Dictionary<string, Type> s_typeCache = new Dictionary<string, Type>();
+        private static AppDomainTypeLookup s_typeLookup = new AppDomainTypeLookup();
         // Static Properties
 
         /// <summary>
@@ -567,20 +569,23 @@ namespace GSF.Reflection
         /// <returns>The <see cref="Type"/> found; otherwise <c>null</c>.</returns>
         public static Type FindType(string typeName)
         {
-            return AppDomain.CurrentDomain.GetAssemblies()
-                    .Where(assembly => !assembly.IsDynamic)
-                    .SelectMany(assembly =>
+            lock (s_typeCache)
+            {
+                if (s_typeLookup.HasChanged)
+                {
+                    foreach (Type type in s_typeLookup.FindTypes())
                     {
-                        try
-                        {
-                            return assembly.GetTypes();
-                        }
-                        catch (ReflectionTypeLoadException ex)
-                        {
-                            return ex.Types.Where(x => x != null);
-                        }
-                    })
-                    .FirstOrDefault(type => type.FullName.Equals(typeName));
+                        s_typeCache[type.FullName] = type;
+                    }
+                }
+
+                Type result;
+                if (!s_typeCache.TryGetValue(typeName, out result))
+                {
+                    result = null;
+                }
+                return result;
+            }
         }
 
         /// <summary>
@@ -726,54 +731,5 @@ namespace GSF.Reflection
 
         #endregion
 
-        #region [ Nested Static Class - Remove once FilePath has been moved to the SharedProject ]
-
-        //ToDo: This code was copied from GSF.Core.dll. Once we figure out how to split 
-        //FilePath.cs so it can be used in SQLCLR, remove this class.
-
-        /// <summary>
-        /// Contains File and Path manipulation methods.
-        /// </summary>
-        private static class FilePath
-        {
-            /// <summary>
-            /// Gets the file name without extension from the specified file path.
-            /// </summary>
-            /// <param name="filePath">The file path from which the file name is to be obtained.</param>
-            /// <returns>File name without the extension if the file path has it; otherwise empty string.</returns>
-            public static string GetFileNameWithoutExtension(string filePath)
-            {
-                return Path.GetFileNameWithoutExtension(RemovePathSuffix(filePath));
-            }
-
-            /// <summary>
-            /// Makes sure path is not suffixed with <see cref="Path.DirectorySeparatorChar"/> or <see cref="Path.AltDirectorySeparatorChar"/>.
-            /// </summary>
-            /// <param name="filePath">The file path to be unsuffixed.</param>
-            /// <returns>Unsuffixed path.</returns>
-            public static string RemovePathSuffix(string filePath)
-            {
-                if (string.IsNullOrEmpty(filePath))
-                {
-                    filePath = "";
-                }
-                else
-                {
-                    char suffixChar = filePath[filePath.Length - 1];
-
-                    while ((suffixChar == Path.DirectorySeparatorChar || suffixChar == Path.AltDirectorySeparatorChar) && filePath.Length > 0)
-                    {
-                        filePath = filePath.Substring(0, filePath.Length - 1);
-
-                        if (filePath.Length > 0)
-                            suffixChar = filePath[filePath.Length - 1];
-                    }
-                }
-
-                return filePath;
-            }
-        }
-
-        #endregion
     }
 }
