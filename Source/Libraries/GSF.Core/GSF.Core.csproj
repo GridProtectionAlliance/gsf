@@ -315,6 +315,7 @@
     <Compile Include="StringExtensions.cs" />
     <Compile Include="Threading\CompatibleCancellationToken.cs" />
     <Compile Include="Threading\DedicatedSynchronizedOperation.cs" />
+    <Compile Include="Threading\StaticTimer.cs" />
     <Compile Include="Trackable.cs" />
     <Compile Include="ReusableObjectPool.cs" />
     <Compile Include="Scheduling\NamespaceDoc.cs" />
