@@ -32,7 +32,7 @@ namespace GSF.Collection
     /// A self growing array of items. This class is thread safe.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class IndexedArray<T> : IEnumerable<T>
+    public sealed class IndexedArray<T> : IEnumerable<T>
     {
         private T[] m_items;
         private object m_syncRoot;

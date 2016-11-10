@@ -25,7 +25,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using GSF.Configuration;
-using GSF.Core.Threading;
 using GSF.Diagnostics;
 
 namespace GSF
@@ -79,6 +78,16 @@ namespace GSF
         /// </summary>
         public static int RoutingLatency { get; private set; } = 50;
 
+        /// <summary>
+        /// Specifies that threadpool monitoring will be enabled.
+        /// </summary>
+        public static bool EnableThreadPoolMonitoring { get; private set; } = false;
+
+        /// <summary>
+        /// Specifies that the threadpool monitor should also dump the stack trace of all thread.
+        /// </summary>
+        public static bool EnableThreadStackDumping { get; private set; } = false;
+
         static OptimizationOptions()
         {
             string setting = string.Empty;
@@ -90,6 +99,7 @@ namespace GSF
                 setting = systemSettings["OptimizationsConnectionString"].ValueAsString("");
                 Dictionary<string, string> optimizations = setting.ParseKeyValuePairs();
 
+                LoadThreadPoolMonitoring(optimizations);
                 LoadPreferDedicatedThreads(optimizations);
                 LoadAsyncQueueInProtocolParsing(optimizations);
                 LoadProcessorAffinity(optimizations);
@@ -99,7 +109,21 @@ namespace GSF
             {
                 Log.Publish(MessageLevel.Warning, "Could not parse Optimization Settings", setting, null, ex);
             }
-            ThreadPoolMonitoring.Initialize();
+            ThreadPoolMonitor.Initialize();
+        }
+
+        private static void LoadThreadPoolMonitoring(Dictionary<string, string> optimizations)
+        {
+            if (optimizations.ContainsKey("EnableThreadPoolMonitoring"))
+            {
+                Log.Publish(MessageLevel.Info, "Enable Optimization", "EnableThreadPoolMonitoring");
+                EnableThreadPoolMonitoring = true;
+            }
+            if (optimizations.ContainsKey("EnableThreadStackDumping"))
+            {
+                Log.Publish(MessageLevel.Info, "Enable Optimization", "EnableThreadStackDumping");
+                EnableThreadStackDumping = true;
+            }
         }
 
         private static void LoadAsyncQueueInProtocolParsing(Dictionary<string, string> optimizations)

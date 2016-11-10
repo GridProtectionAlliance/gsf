@@ -35,7 +35,7 @@ namespace GSF.Immutable
     /// unless they implement <see cref="IImmutableObject"/>.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class ImmutableArray<T>
+    public sealed class ImmutableArray<T>
         : ImmutableObjectBase<ImmutableArray<T>>, IList<T>
     {
         private readonly bool m_isISupportsReadonlyType;

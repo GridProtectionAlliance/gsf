@@ -34,7 +34,7 @@ namespace GSF.Immutable
     /// </summary>
     /// <typeparam name="TKey"></typeparam>
     /// <typeparam name="TValue"></typeparam>
-    public class ImmutableDictionary<TKey, TValue>
+    public sealed class ImmutableDictionary<TKey, TValue>
         : ImmutableObjectBase<ImmutableDictionary<TKey, TValue>>, IDictionary<TKey, TValue>
     {
         private readonly bool m_isISupportsReadonlyKeyType;

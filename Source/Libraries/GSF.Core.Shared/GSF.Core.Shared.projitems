@@ -43,6 +43,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\MessageRate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\MessageSuppression.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\NewLogMessageEventHandler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\ThreadPoolTrace.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\TimerTrace.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Utilities\LogFileCompactor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Utilities\LogFileReader.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Utilities\LogFileWriter.cs" />
@@ -115,7 +117,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Threading\ThreadContainerBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\ThreadContainerDedicated.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\ThreadContainerThreadpool.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Threading\ThreadPoolMonitoring.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\WeakAction.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Ticks.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TimeTagBase.cs" />

@@ -66,6 +66,7 @@ namespace GSF.Reflection
                 return new List<Type>();
             lock (m_syncRoot)
             {
+                m_assemblyVersionNumber = AssemblyLoadedVersionNumber.VersionNumber;
                 return LoadNewAssemblies();
             }
         }
