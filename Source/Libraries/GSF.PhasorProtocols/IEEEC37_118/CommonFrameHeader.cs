@@ -277,7 +277,12 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         {
             get
             {
-                return (uint)Math.Truncate(TimeTag.Value);
+                decimal seconds = Math.Truncate(TimeTag.Value);
+
+                if (seconds < 0 || seconds > uint.MaxValue)
+                    return 0;
+
+                return (uint)seconds;
             }
         }
 

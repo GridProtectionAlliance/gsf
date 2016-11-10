@@ -145,7 +145,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             }
             set
             {
-                // Keep timestamp updates synchrnonized...
+                // Keep timestamp updates synchronized...
                 CommonHeader.Timestamp = value;
                 base.Timestamp = value;
             }

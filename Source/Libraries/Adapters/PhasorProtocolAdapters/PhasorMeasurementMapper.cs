@@ -2372,11 +2372,28 @@ namespace PhasorProtocolAdapters
                     byte[] lastConfigFrameBuffer = new byte[m_lastConfigurationFrame.BinaryLength];
                     byte[] newConfigFrameBuffer = new byte[newConfigurationFrame.BinaryLength];
 
-                    m_lastConfigurationFrame.GenerateBinaryImage(lastConfigFrameBuffer, 0);
-                    newConfigurationFrame.GenerateBinaryImage(newConfigFrameBuffer, 0);
+                    try
+                    {
+                        m_lastConfigurationFrame.GenerateBinaryImage(lastConfigFrameBuffer, 0);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnStatusMessage("WARNING: Failed to generate a binary image for cached configuration frame - clearing cache. Exception reported: {0}", ex.Message);
+                        m_lastConfigurationFrame = null;
+                    }
+
+                    try
+                    {
+                        newConfigurationFrame.GenerateBinaryImage(newConfigFrameBuffer, 0);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnStatusMessage("WARNING: Failed to generate a binary image for received configuration frame: {0}", ex.Message);
+                        return false;
+                    }
 
                     // Compare the binary images - if they are different, this counts as a configuration change
-                    if (!lastConfigFrameBuffer.SequenceEqual(newConfigFrameBuffer))
+                    if ((object)m_lastConfigurationFrame == null || !lastConfigFrameBuffer.SequenceEqual(newConfigFrameBuffer))
                     {
                         m_configurationChanges++;
                         configurationChanged = true;
