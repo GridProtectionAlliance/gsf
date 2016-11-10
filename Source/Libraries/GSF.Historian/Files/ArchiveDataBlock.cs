@@ -49,7 +49,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using GSF.Parsing;
 
@@ -83,8 +82,15 @@ namespace GSF.Historian.Files
         /// Occurs when an <see cref="Exception"/> is encountered while reading <see cref="IDataPoint"/> from the <see cref="ArchiveDataBlock"/>.
         /// </summary>
         [Category("Data"),
-        Description("Occurs when an Exception is encountered while reading IDataPoint from the ArchiveDataBlock.")]
+        Description("Occurs when an Exception is encountered while reading an IDataPoint from the ArchiveDataBlock.")]
         public event EventHandler<EventArgs<Exception>> DataReadException;
+
+        /// <summary>
+        /// Occurs when an <see cref="Exception"/> is encountered while writing <see cref="IDataPoint"/> to the <see cref="ArchiveDataBlock"/>.
+        /// </summary>
+        [Category("Data"),
+        Description("Occurs when an Exception is encountered while writing an IDataPoint to the ArchiveDataBlock.")]
+        public event EventHandler<EventArgs<Exception>> DataWriteException;
 
         #endregion
 
@@ -106,13 +112,13 @@ namespace GSF.Historian.Files
             m_writeCursor = Location;
             m_lastActivityTime = DateTime.UtcNow;
 
+            if (!preRead)
+                return;
+
             // Scan through existing data to locate write cursor
-            if (preRead)
+            // ReSharper disable once UnusedVariable
+            foreach (IDataPoint dataPoint in Read())
             {
-                // ReSharper disable once UnusedVariable
-                foreach (IDataPoint dataPoint in Read())
-                {
-                }
             }
         }
 
@@ -123,74 +129,32 @@ namespace GSF.Historian.Files
         /// <summary>
         /// Gets the 0-based index of the <see cref="ArchiveDataBlock"/>.
         /// </summary>
-        public int Index
-        {
-            get
-            {
-                return m_index;
-            }
-        }
+        public int Index => m_index;
 
         /// <summary>
         /// Gets the start location (byte position) of the <see cref="ArchiveDataBlock"/> in the <see cref="ArchiveFile"/>.
         /// </summary>
-        public long Location
-        {
-            get
-            {
-                return (m_index * (m_parent.DataBlockSize * 1024));
-            }
-        }
+        public long Location => m_index * m_parent.DataBlockSize * 1024;
 
         /// <summary>
         /// Gets the maximum number of <see cref="ArchiveDataPoint"/>s that can be stored in the <see cref="ArchiveDataBlock"/>.
         /// </summary>
-        public int Capacity
-        {
-            get
-            {
-                return ((m_parent.DataBlockSize * 1024) / ArchiveDataPoint.FixedLength);
-            }
-        }
+        public int Capacity => m_parent.DataBlockSize * 1024 / ArchiveDataPoint.FixedLength;
 
         /// <summary>
         /// Gets the number of <see cref="ArchiveDataPoint"/>s that have been written to the <see cref="ArchiveDataBlock"/>.
         /// </summary>
-        public int SlotsUsed
-        {
-            get
-            {
-                return (int)((m_writeCursor - Location) / ArchiveDataPoint.FixedLength);
-            }
-        }
+        public int SlotsUsed => (int)((m_writeCursor - Location) / ArchiveDataPoint.FixedLength);
 
         /// <summary>
         /// Gets the number of <see cref="ArchiveDataPoint"/>s that can to written to the <see cref="ArchiveDataBlock"/>.
         /// </summary>
-        public int SlotsAvailable
-        {
-            get
-            {
-                return (Capacity - SlotsUsed);
-            }
-        }
+        public int SlotsAvailable => Capacity - SlotsUsed;
 
         /// <summary>
         /// Gets a boolean value that indicates whether the <see cref="ArchiveDataBlock"/> is being actively used.
         /// </summary>
-        public bool IsActive
-        {
-            get
-            {
-                double inactivity = DateTime.UtcNow.Subtract(m_lastActivityTime).TotalSeconds;
-
-                if (inactivity <= InactivityPeriod)
-                    return true;
-
-                Trace.WriteLine(string.Format("Inactive for {0} seconds (Last activity = {1}; Time now = {2})", inactivity, m_lastActivityTime, DateTime.UtcNow));
-                return false;
-            }
-        }
+        public bool IsActive => DateTime.UtcNow.Subtract(m_lastActivityTime).TotalSeconds <= InactivityPeriod;
 
         #endregion
 
@@ -245,33 +209,88 @@ namespace GSF.Historian.Files
         /// Writes the <paramref name="dataPoint"/> to the <see cref="ArchiveDataBlock"/>.
         /// </summary>
         /// <param name="dataPoint"><see cref="IDataPoint"/> to write.</param>
-        public void Write(IDataPoint dataPoint)
+        /// <param name="suppressExceptions">Set to <c>true</c> to suppress write exceptions; defaults to <c>false</c>.</param>
+        /// <returns>
+        /// <c>true</c> if data point was written; otherwise, <c>false</c>.
+        /// </returns>
+        /// <remarks>
+        /// If <paramref name="suppressExceptions"/> is <c>false</c>, the default value, any encountered
+        /// exception will be thrown on the call stack.
+        /// </remarks>
+        public bool Write(IDataPoint dataPoint, bool suppressExceptions = false)
         {
-            if (SlotsAvailable > 0)
+            Exception ex;
+
+            if (Write(dataPoint, out ex))
+                return true;
+
+            if (suppressExceptions)
+                return false;
+
+            throw ex;
+        }
+
+        /// <summary>
+        /// Writes the <paramref name="dataPoint"/> to the <see cref="ArchiveDataBlock"/>.
+        /// </summary>
+        /// <param name="dataPoint"><see cref="IDataPoint"/> to write.</param>
+        /// <param name="exception">Any <see cref="Exception"/> that may have been encountered while writing.</param>
+        /// <returns>
+        /// <c>true</c> if data point was written; otherwise, <c>false</c>.
+        /// </returns>
+        public bool Write(IDataPoint dataPoint, out Exception exception)
+        {
+            exception = null;
+
+            try
             {
-                // We have enough space to write the provided point data to the data block.
-                m_lastActivityTime = DateTime.UtcNow;
+                TimeTag value = dataPoint.Time;
 
-                lock (m_parent.FileData)
+                // Do not attempt to write values with a bad timestamp, this will just throw an exception
+                if (value.CompareTo(TimeTag.MinValue) < 0 || value.CompareTo(TimeTag.MaxValue) > 0)
                 {
-                    // Write the data.
-                    if (m_writeCursor != m_parent.FileData.Position)
-                        m_parent.FileData.Seek(m_writeCursor, SeekOrigin.Begin);
+                    exception = new TimeTagException("Skipping data write for point: Bad time tag, value must between 01/01/1995 and 01/19/2063");
+                }
+                else
+                {
+                    if (SlotsAvailable > 0)
+                    {
+                        // We have enough space to write the provided point data to the data block.
+                        m_lastActivityTime = DateTime.UtcNow;
 
-                    dataPoint.CopyBinaryImageToStream(m_parent.FileData);
+                        lock (m_parent.FileData)
+                        {
+                            // Write the data.
+                            if (m_writeCursor != m_parent.FileData.Position)
+                                m_parent.FileData.Seek(m_writeCursor, SeekOrigin.Begin);
 
-                    // Update the write cursor.
-                    m_writeCursor = m_parent.FileData.Position;
+                            dataPoint.CopyBinaryImageToStream(m_parent.FileData);
 
-                    // Flush the data if configured.
-                    if (!m_parent.CacheWrites)
-                        m_parent.FileData.Flush();
+                            // Update the write cursor.
+                            m_writeCursor = m_parent.FileData.Position;
+
+                            // Flush the data if configured.
+                            if (!m_parent.CacheWrites)
+                                m_parent.FileData.Flush();
+                        }
+                    }
+                    else
+                    {
+                        exception = new InvalidOperationException("Skipping data write for point: No slots available for writing new data");
+                    }
                 }
             }
-            else
+            catch (Exception ex)
             {
-                throw new InvalidOperationException("No slots available for writing new data.");
+                exception = new InvalidOperationException($"Skipping data write for point: {ex.Message}", ex);
             }
+
+            if ((object)exception == null)
+                return true;
+
+            OnDataWriteException(exception);
+
+            return false;
         }
 
         /// <summary>
@@ -282,9 +301,7 @@ namespace GSF.Historian.Files
             m_writeCursor = Location;
 
             for (int i = 1; i <= Capacity; i++)
-            {
-                Write(new ArchiveDataPoint(m_historianID));
-            }
+                Write(new ArchiveDataPoint(m_historianID), true);
 
             m_writeCursor = Location;
         }
@@ -295,8 +312,16 @@ namespace GSF.Historian.Files
         /// <param name="ex"><see cref="Exception"/> to send to <see cref="DataReadException"/> event.</param>
         protected virtual void OnDataReadException(Exception ex)
         {
-            if (DataReadException != null)
-                DataReadException(this, new EventArgs<Exception>(ex));
+            DataReadException?.Invoke(this, new EventArgs<Exception>(ex));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="DataWriteException"/> event.
+        /// </summary>
+        /// <param name="ex"><see cref="Exception"/> to send to <see cref="DataWriteException"/> event.</param>
+        protected virtual void OnDataWriteException(Exception ex)
+        {
+            DataWriteException?.Invoke(this, new EventArgs<Exception>(ex));
         }
 
         #endregion

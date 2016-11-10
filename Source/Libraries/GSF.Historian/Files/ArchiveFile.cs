@@ -3185,6 +3185,7 @@ namespace GSF.Historian.Files
         private void WriteToCurrentArchiveFile(IDataPoint[] items)
         {
             Dictionary<int, List<IDataPoint>> sortedDataPoints = new Dictionary<int, List<IDataPoint>>();
+            Exception ex;
 
             // First we'll separate all point data by ID.
             for (int i = 0; i < items.Length; i++)
@@ -3468,8 +3469,10 @@ namespace GSF.Historian.Files
                             if ((object)dataBlock != null)
                             {
                                 // Write data to the data block.
-                                dataBlock.Write(dataPoint);
-                                m_fat.DataPointsArchived++;
+                                if (dataBlock.Write(dataPoint, out ex))
+                                    m_fat.DataPointsArchived++;
+                                else
+                                    OnDataWriteException(ex);
                             }
                             else
                             {
@@ -3633,9 +3636,20 @@ namespace GSF.Historian.Files
                                 }
 
                                 // Write the data point into the data block
-                                historicFileBlock.Write(dataPoint);
-                                historicFile.Fat.DataPointsReceived++;
-                                historicFile.Fat.DataPointsArchived++;
+                                Exception ex;
+
+                                if (historicFileBlock.Write(dataPoint, out ex))
+                                {
+                                    historicFile.Fat.DataPointsReceived++;
+                                    historicFile.Fat.DataPointsArchived++;
+                                }
+                                else
+                                {
+                                    // Suppress exceptions related to bad timestamps - this handles the case where the system is attempting to write
+                                    // a historical point with a timestamp that is less than 01/01/1995, the minimum value for a TimeTag instance
+                                    if (!(ex is TimeTagException))
+                                        OnDataWriteException(ex);
+                                }
                             }
                         }
                         catch (Exception ex)

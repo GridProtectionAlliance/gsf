@@ -577,8 +577,6 @@ namespace GSF.TimeSeries.Adapters
                 status.AppendLine();
                 status.AppendFormat("    Total adapter run time: {0}", RunTime.ToString(2));
                 status.AppendLine();
-                status.AppendFormat("        Reporting interval: {0:N0}", MeasurementReportingInterval);
-                status.AppendLine();
                 status.AppendFormat("       Temporal processing: {0}", SupportsTemporalProcessing ? "Supported" : "Unsupported");
                 status.AppendLine();
                 if (SupportsTemporalProcessing)

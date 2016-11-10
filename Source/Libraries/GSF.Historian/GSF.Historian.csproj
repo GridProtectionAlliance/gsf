@@ -192,6 +192,7 @@
     <Compile Include="DataServices\DataServices.cs" />
     <Compile Include="DataServices\TimeSeriesDataService.cs" />
     <Compile Include="TimeTag.cs" />
+    <Compile Include="TimeTagException.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="DataListener.bmp" />

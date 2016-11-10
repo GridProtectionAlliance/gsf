@@ -199,7 +199,7 @@ namespace GSF.Historian.Files
             set
             {
                 if (value.CompareTo(TimeTag.MinValue) < 0 || value.CompareTo(TimeTag.MaxValue) > 0)
-                    throw new ArgumentException("Value must between 01/01/1995 and 01/19/2063");
+                    throw new TimeTagException("Value must between 01/01/1995 and 01/19/2063");
 
                 m_time = value;
                 Flags = Flags.SetMaskedValue(MillisecondMask, m_time.ToDateTime().Millisecond << 5);
