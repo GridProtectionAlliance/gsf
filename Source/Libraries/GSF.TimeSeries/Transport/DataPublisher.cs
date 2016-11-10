@@ -2600,7 +2600,7 @@ namespace GSF.TimeSeries.Transport
             bool success = false;
 
             // Attempt to lookup associated client connection
-            if (m_clientConnections.TryGetValue(clientID, out connection) && (object)connection != null && !connection.HasClientNotFoundExceptionOccurred)
+            if (m_clientConnections.TryGetValue(clientID, out connection) && (object)connection != null && !connection.ClientNotFoundExceptionOccurred)
             {
                 try
                 {
@@ -2708,16 +2708,9 @@ namespace GSF.TimeSeries.Transport
                 {
                     // Could still be processing threads with client data after client has been disconnected, this can be safely ignored
                     if (ex.Message.StartsWith("No client found"))
-                    {
-                        if ((object)connection != null)
-                        {
-                            connection.HasClientNotFoundExceptionOccurred = true;
-                        }
-                    }
+                        connection.ClientNotFoundExceptionOccurred = true;
                     else
-                    {
                         OnProcessException(new InvalidOperationException("Failed to send response packet to client due to exception: " + ex.Message, ex));
-                    }
                 }
                 catch (Exception ex)
                 {

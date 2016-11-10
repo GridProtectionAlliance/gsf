@@ -76,7 +76,7 @@ namespace GSF.TimeSeries.Transport
         private OperationalModes m_operationalModes;
         private Encoding m_encoding;
         private bool m_disposed;
-        private bool m_hasClientNotFoundExceptionExceptionOccurred;
+        private bool m_clientNotFoundExceptionExceptionOccurred;
 
         #endregion
 
@@ -308,25 +308,24 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Gets/Sets a flag to indicate that the error "No client found for ID [Guid]" exception has been thrown. 
+        /// Gets or sets flag that indicates if the socket exception for "No client found for ID [Guid]" has been thrown.
         /// </summary>
         /// <returns>
-        /// Since this message might be thrown many times before before the communication channel has a chance to disconnect
-        /// the socket, it's best to stop attempting to send data when this error has been encountered.
-        /// 
-        /// OGE has had issues when a client disconnects, tens of thousands of exceptions get thrown (every 3ms), 
-        /// This has caused the entire system to become unresponsive and causes all PMUs to drop offline.
-        /// System only recovers when the client disconnect process finally executes as this can take some time to occur.
+        /// Since this message might be thrown many times before the communications channel has had a chance to disconnect
+        /// the socket, it is best to stop attempting to send data when this error has been encountered.
         /// </returns>
-        public bool HasClientNotFoundExceptionOccurred
+        public bool ClientNotFoundExceptionOccurred
         {
+            // Users have encountered issues when a client disconnects where many thousands of exceptions get thrown, every 3ms.
+            // This can cause the entire system to become unresponsive and causes all devices to reset (no data).
+            // System only recovers when the client disconnect process finally executes as this can take some time to occur.
             get
             {
-                return m_hasClientNotFoundExceptionExceptionOccurred;
+                return m_clientNotFoundExceptionExceptionOccurred;
             }
             set
             {
-                m_hasClientNotFoundExceptionExceptionOccurred = value;
+                m_clientNotFoundExceptionExceptionOccurred = value;
             }
         }
 
