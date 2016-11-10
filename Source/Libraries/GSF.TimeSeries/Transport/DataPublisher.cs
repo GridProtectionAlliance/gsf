@@ -1601,6 +1601,9 @@ namespace GSF.TimeSeries.Transport
                 cache.Initialize();
                 cache.Initialized = true;
 
+                // Update measurement reporting interval post-initialization
+                cache.MeasurementReportingInterval = MeasurementReportingInterval;
+
                 // Trigger routing table calculation to route cached measurements to the cache
                 m_routingTables.CalculateRoutingTables(null);
 
@@ -3166,7 +3169,6 @@ namespace GSF.TimeSeries.Transport
                             // Update client subscription properties
                             subscription.ConnectionString = connectionString;
                             subscription.DataSource = DataSource;
-                            subscription.MeasurementReportingInterval = MeasurementReportingInterval;
 
                             // Pass subscriber assembly information to connection, if defined
                             if (subscription.Settings.TryGetValue("assemblyInfo", out setting))
@@ -3242,6 +3244,9 @@ namespace GSF.TimeSeries.Transport
                             // Manually initialize client subscription
                             subscription.Initialize();
                             subscription.Initialized = true;
+
+                            // Update measurement reporting interval post-initialization
+                            subscription.MeasurementReportingInterval = MeasurementReportingInterval;
 
                             // Send updated signal index cache to client with validated rights of the selected input measurement keys
                             byte[] serializedSignalIndexCache = SerializeSignalIndexCache(clientID, subscription.SignalIndexCache);
