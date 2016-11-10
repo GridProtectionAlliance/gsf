@@ -116,6 +116,7 @@ namespace GSF.TimeSeries.Transport
         /// private network (i.e., the higher security zone) can be setup to not require authentication.
         /// </remarks>
         Authenticate = 0x00,
+
         /// <summary>
         /// Meta data refresh command.
         /// </summary>
@@ -129,6 +130,7 @@ namespace GSF.TimeSeries.Transport
         /// expressions, e.g.: "FILTER MeasurementDetail WHERE SignalType &lt;&gt; 'STAT'"
         /// </remarks>
         MetaDataRefresh = 0x01,
+
         /// <summary>
         /// Subscribe command.
         /// </summary>
@@ -140,6 +142,7 @@ namespace GSF.TimeSeries.Transport
         /// to parse data when using the compact measurement format.
         /// </remarks>
         Subscribe = 0x02,
+
         /// <summary>
         /// Unsubscribe command.
         /// </summary>
@@ -147,6 +150,7 @@ namespace GSF.TimeSeries.Transport
         /// Requests that server stop sending streaming data to the client and cancel the current subscription.
         /// </remarks>
         Unsubscribe = 0x03,
+
         /// <summary>
         /// Rotate cipher keys.
         /// </summary>
@@ -154,6 +158,7 @@ namespace GSF.TimeSeries.Transport
         /// Manually requests that server send a new set of cipher keys for data packet encryption.
         /// </remarks>
         RotateCipherKeys = 0x04,
+
         /// <summary>
         /// Update processing interval.
         /// </summary>
@@ -161,6 +166,7 @@ namespace GSF.TimeSeries.Transport
         /// Manually requests server to update the processing interval with the following specified value.
         /// </remarks>
         UpdateProcessingInterval = 0x05,
+
         /// <summary>
         /// Define operational modes for subscriber connection.
         /// </summary>
@@ -169,6 +175,7 @@ namespace GSF.TimeSeries.Transport
         /// modes that affect how the subscriber and publisher will communicate.
         /// </remarks>
         DefineOperationalModes = 0x06,
+
         /// <summary>
         /// Confirm receipt of a notification.
         /// </summary>
@@ -176,13 +183,94 @@ namespace GSF.TimeSeries.Transport
         /// This message is sent in response to <see cref="ServerResponse.Notify"/>.
         /// </remarks>
         ConfirmNotification = 0x07,
+
         /// <summary>
         /// Confirm receipt of a buffer block measurement.
         /// </summary>
         /// <remarks>
         /// This message is sent in response to <see cref="ServerResponse.BufferBlock"/>.
         /// </remarks>
-        ConfirmBufferBlock = 0x08
+        ConfirmBufferBlock = 0x08,
+
+        /// <summary>
+        /// Code for handling user-defined commands.
+        /// </summary>
+        UserCommand00 = 0xD0,
+
+        /// <summary>
+        /// Code for handling user-defined commands.
+        /// </summary>
+        UserCommand01 = 0xD1,
+
+        /// <summary>
+        /// Code for handling user-defined commands.
+        /// </summary>
+        UserCommand02 = 0xD2,
+
+        /// <summary>
+        /// Code for handling user-defined commands.
+        /// </summary>
+        UserCommand03 = 0xD3,
+
+        /// <summary>
+        /// Code for handling user-defined commands.
+        /// </summary>
+        UserCommand04 = 0xD4,
+
+        /// <summary>
+        /// Code for handling user-defined commands.
+        /// </summary>
+        UserCommand05 = 0xD5,
+
+        /// <summary>
+        /// Code for handling user-defined commands.
+        /// </summary>
+        UserCommand06 = 0xD6,
+
+        /// <summary>
+        /// Code for handling user-defined commands.
+        /// </summary>
+        UserCommand07 = 0xD7,
+
+        /// <summary>
+        /// Code for handling user-defined commands.
+        /// </summary>
+        UserCommand08 = 0xD8,
+
+        /// <summary>
+        /// Code for handling user-defined commands.
+        /// </summary>
+        UserCommand09 = 0xD9,
+
+        /// <summary>
+        /// Code for handling user-defined commands.
+        /// </summary>
+        UserCommand10 = 0xDA,
+
+        /// <summary>
+        /// Code for handling user-defined commands.
+        /// </summary>
+        UserCommand11 = 0xDB,
+
+        /// <summary>
+        /// Code for handling user-defined commands.
+        /// </summary>
+        UserCommand12 = 0xDC,
+
+        /// <summary>
+        /// Code for handling user-defined commands.
+        /// </summary>
+        UserCommand13 = 0xDD,
+
+        /// <summary>
+        /// Code for handling user-defined commands.
+        /// </summary>
+        UserCommand14 = 0xDE,
+
+        /// <summary>
+        /// Code for handling user-defined commands.
+        /// </summary>
+        UserCommand15 = 0xDF
     }
 
     /// <summary>
@@ -200,6 +288,7 @@ namespace GSF.TimeSeries.Transport
         /// Informs client that its solicited server command succeeded, original command and success message follow.
         /// </remarks>
         Succeeded = 0x80,
+
         /// <summary>
         /// Command failed response.
         /// </summary>
@@ -207,6 +296,7 @@ namespace GSF.TimeSeries.Transport
         /// Informs client that its solicited server command failed, original command and failure message follow.
         /// </remarks>
         Failed = 0x81,
+
         /// <summary>
         /// Data packet response.
         /// </summary>
@@ -214,6 +304,7 @@ namespace GSF.TimeSeries.Transport
         /// Unsolicited response informs client that a data packet follows.
         /// </remarks>
         DataPacket = 0x82,
+
         /// <summary>
         /// Update signal index cache response.
         /// </summary>
@@ -221,6 +312,7 @@ namespace GSF.TimeSeries.Transport
         /// Unsolicited response requests that client update its runtime signal index cache with the one that follows.
         /// </remarks>
         UpdateSignalIndexCache = 0x83,
+
         /// <summary>
         /// Update runtime base-timestamp offsets response.
         /// </summary>
@@ -228,6 +320,7 @@ namespace GSF.TimeSeries.Transport
         /// Unsolicited response requests that client update its runtime base-timestamp offsets with those that follow.
         /// </remarks>
         UpdateBaseTimes = 0x84,
+
         /// <summary>
         /// Update runtime cipher keys response.
         /// </summary>
@@ -235,6 +328,7 @@ namespace GSF.TimeSeries.Transport
         /// Response, solicited or unsolicited, requests that client update its runtime data cipher keys with those that follow.
         /// </remarks>
         UpdateCipherKeys = 0x85,
+
         /// <summary>
         /// Data start time response packet.
         /// </summary>
@@ -242,6 +336,7 @@ namespace GSF.TimeSeries.Transport
         /// Unsolicited response provides the start time of data being processed from the first measurement.
         /// </remarks>
         DataStartTime = 0x86,
+
         /// <summary>
         /// Processing complete notification.
         /// </summary>
@@ -249,6 +344,7 @@ namespace GSF.TimeSeries.Transport
         /// Unsolicited response provides notification that input processing has completed, typically via temporal constraint.
         /// </remarks>
         ProcessingComplete = 0x87,
+
         /// <summary>
         /// Buffer block response.
         /// </summary>
@@ -256,6 +352,7 @@ namespace GSF.TimeSeries.Transport
         /// Unsolicited response informs client that a raw buffer block follows.
         /// </remarks>
         BufferBlock = 0x88,
+
         /// <summary>
         /// Notify response.
         /// </summary>
@@ -263,6 +360,7 @@ namespace GSF.TimeSeries.Transport
         /// Unsolicited response provides a notification message to the client.
         /// </remarks>
         Notify = 0x89,
+
         /// <summary>
         /// Configuration changed response.
         /// </summary>
@@ -271,6 +369,87 @@ namespace GSF.TimeSeries.Transport
         /// client may want to request a meta-data refresh.
         /// </remarks>
         ConfigurationChanged = 0x8A,
+
+        /// <summary>
+        /// Code for handling user-defined responses.
+        /// </summary>
+        UserResponse00 = 0xE0,
+
+        /// <summary>
+        /// Code for handling user-defined responses.
+        /// </summary>
+        UserResponse01 = 0xE1,
+
+        /// <summary>
+        /// Code for handling user-defined responses.
+        /// </summary>
+        UserResponse02 = 0xE2,
+
+        /// <summary>
+        /// Code for handling user-defined responses.
+        /// </summary>
+        UserResponse03 = 0xE3,
+
+        /// <summary>
+        /// Code for handling user-defined responses.
+        /// </summary>
+        UserResponse04 = 0xE4,
+
+        /// <summary>
+        /// Code for handling user-defined responses.
+        /// </summary>
+        UserResponse05 = 0xE5,
+
+        /// <summary>
+        /// Code for handling user-defined responses.
+        /// </summary>
+        UserResponse06 = 0xE6,
+
+        /// <summary>
+        /// Code for handling user-defined responses.
+        /// </summary>
+        UserResponse07 = 0xE7,
+
+        /// <summary>
+        /// Code for handling user-defined responses.
+        /// </summary>
+        UserResponse08 = 0xE8,
+
+        /// <summary>
+        /// Code for handling user-defined responses.
+        /// </summary>
+        UserResponse09 = 0xE9,
+
+        /// <summary>
+        /// Code for handling user-defined responses.
+        /// </summary>
+        UserResponse10 = 0xEA,
+
+        /// <summary>
+        /// Code for handling user-defined responses.
+        /// </summary>
+        UserResponse11 = 0xEB,
+
+        /// <summary>
+        /// Code for handling user-defined responses.
+        /// </summary>
+        UserResponse12 = 0xEC,
+
+        /// <summary>
+        /// Code for handling user-defined responses.
+        /// </summary>
+        UserResponse13 = 0xED,
+
+        /// <summary>
+        /// Code for handling user-defined responses.
+        /// </summary>
+        UserResponse14 = 0xEE,
+
+        /// <summary>
+        /// Code for handling user-defined responses.
+        /// </summary>
+        UserResponse15 = 0xEF,
+
         /// <summary>
         /// No operation keep-alive ping.
         /// </summary>
@@ -2682,8 +2861,7 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                if ((object)ProcessingComplete != null)
-                    ProcessingComplete(this, EventArgs.Empty);
+                ProcessingComplete?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
@@ -2702,8 +2880,7 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                if ((object)ClientConnected != null)
-                    ClientConnected(this, new EventArgs<Guid, string, string>(subscriberID, connectionID, subscriberInfo));
+                ClientConnected?.Invoke(this, new EventArgs<Guid, string, string>(subscriberID, connectionID, subscriberInfo));
             }
             catch (Exception ex)
             {
@@ -3512,6 +3689,19 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
+        /// <summary>
+        /// Handles custom commands defined by the user of the publisher API.
+        /// </summary>
+        /// <param name="connection">Object representing the connection to the data subscriber.</param>
+        /// <param name="command">The command issued by the subscriber.</param>
+        /// <param name="buffer">The buffer containing the entire message from the subscriber.</param>
+        /// <param name="startIndex">The index indicating where to start reading from the buffer to skip past the message header.</param>
+        /// <param name="length">The total number of bytes in the message, including the header.</param>
+        protected virtual void HandleUserCommand(ClientConnection connection, ServerCommand command, byte[] buffer, int startIndex, int length)
+        {
+            OnStatusMessage($"Received command code for user-defined command '{command}'.");
+        }
+
         private byte[] SerializeSignalIndexCache(Guid clientID, SignalIndexCache signalIndexCache)
         {
             byte[] serializedSignalIndexCache = null;
@@ -3666,8 +3856,7 @@ namespace GSF.TimeSeries.Transport
         private void subscription_ProcessingComplete(object sender, EventArgs<IClientSubscription, EventArgs> e)
         {
             // Expose notification via data publisher event subscribers
-            if ((object)ProcessingComplete != null)
-                ProcessingComplete(sender, e.Argument2);
+            ProcessingComplete?.Invoke(sender, e.Argument2);
 
             IClientSubscription subscription = e.Argument1;
             string senderType = (object)sender == null ? "N/A" : sender.GetType().Name;
@@ -3733,33 +3922,60 @@ namespace GSF.TimeSeries.Transport
                                 // Handle subscribe
                                 HandleSubscribeRequest(connection, buffer, index, length);
                                 break;
+
                             case ServerCommand.Unsubscribe:
                                 // Handle unsubscribe
                                 HandleUnsubscribeRequest(connection);
                                 break;
+
                             case ServerCommand.MetaDataRefresh:
                                 // Handle meta data refresh (per subscriber request)
                                 HandleMetadataRefresh(connection, buffer, index, length);
                                 break;
+
                             case ServerCommand.RotateCipherKeys:
                                 // Handle rotation of cipher keys (per subscriber request)
                                 connection.RotateCipherKeys();
                                 break;
+
                             case ServerCommand.UpdateProcessingInterval:
                                 // Handle request to update processing interval
                                 HandleUpdateProcessingInterval(connection, buffer, index, length);
                                 break;
+
                             case ServerCommand.DefineOperationalModes:
                                 // Handle request to define operational modes
                                 HandleDefineOperationalModes(connection, buffer, index, length);
                                 break;
+
                             case ServerCommand.ConfirmNotification:
                                 // Handle confirmation of receipt of notification
                                 HandleConfirmNotification(connection, buffer, index, length);
                                 break;
+
                             case ServerCommand.ConfirmBufferBlock:
                                 // Handle confirmation of receipt of a buffer block
                                 HandleConfirmBufferBlock(connection, buffer, index, length);
+                                break;
+
+                            case ServerCommand.UserCommand00:
+                            case ServerCommand.UserCommand01:
+                            case ServerCommand.UserCommand02:
+                            case ServerCommand.UserCommand03:
+                            case ServerCommand.UserCommand04:
+                            case ServerCommand.UserCommand05:
+                            case ServerCommand.UserCommand06:
+                            case ServerCommand.UserCommand07:
+                            case ServerCommand.UserCommand08:
+                            case ServerCommand.UserCommand09:
+                            case ServerCommand.UserCommand10:
+                            case ServerCommand.UserCommand11:
+                            case ServerCommand.UserCommand12:
+                            case ServerCommand.UserCommand13:
+                            case ServerCommand.UserCommand14:
+                            case ServerCommand.UserCommand15:
+                                // Handle confirmation of receipt of a user-defined command
+                                HandleUserCommand(connection, command, buffer, index, length);
                                 break;
                         }
                     }
