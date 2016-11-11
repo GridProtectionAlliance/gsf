@@ -25,6 +25,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using GSF.Reflection;
 
@@ -38,11 +39,11 @@ namespace GSF.Threading
     /// object will have a weak reference to it. This information is compiled
     /// an can be quickly executed without the overhead of using reflection.
     /// </remarks>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2237:MarkISerializableTypesWithSerializable")]
+    [SuppressMessage("Microsoft.Usage", "CA2237:MarkISerializableTypesWithSerializable")]
     public class WeakAction : WeakReference
     {
         private bool m_isStatic;
-        private Action<object> m_compiledMethod;
+        private readonly Action<object> m_compiledMethod;
         /// <summary>
         /// Creates a WeakAction.
         /// </summary>
@@ -73,6 +74,7 @@ namespace GSF.Threading
                 return false;
 
             m_compiledMethod(target);
+
             return true;
         }
 
@@ -97,11 +99,11 @@ namespace GSF.Threading
     /// object will have a weak reference to it. This information is compiled
     /// an can be quickly executed without the overhead of using reflection.
     /// </remarks>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2237:MarkISerializableTypesWithSerializable")]
+    [SuppressMessage("Microsoft.Usage", "CA2237:MarkISerializableTypesWithSerializable")]
     public class WeakAction<T> : WeakReference
     {
         private bool m_isStatic;
-        private Action<object,T> m_compiledMethod;
+        private readonly Action<object,T> m_compiledMethod;
         /// <summary>
         /// Creates a WeakAction.
         /// </summary>
@@ -130,6 +132,7 @@ namespace GSF.Threading
 
             if ((object)target == null)
                 return false;
+
 
             m_compiledMethod(target, param1);
             return true;

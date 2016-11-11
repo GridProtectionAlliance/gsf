@@ -43,20 +43,14 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using GSF.IO;
-using GSF.Reflection;
 
 namespace GSF
 {
     /// <summary>
     /// Extensions to all <see cref="Type"/> objects.
     /// </summary>
-    public static class TypeExtensions
+    public static partial class TypeExtensions
     {
         // Native data types that represent numbers
         private static readonly Type[] s_numericTypes = { typeof(SByte), typeof(Byte), typeof(Int16), typeof(UInt16), typeof(Int24), typeof(UInt24), typeof(Int32), typeof(UInt32), typeof(Int64), typeof(UInt64), typeof(Single), typeof(Double), typeof(Decimal) };
@@ -116,6 +110,7 @@ namespace GSF
         {
             // Recurse through types until you reach a base type of "System.Object" or "System.MarshalByRef".
 #if MONO
+            // TODO: Test with Mono to see if type comparison now works as expected
             if ((object)type.BaseType == null || type.BaseType.FullName.Equals("System.Object", StringComparison.Ordinal) || type.BaseType.FullName.Equals("System.MarshalByRefObject", StringComparison.Ordinal))
 #else
             if ((object)type.BaseType == null || type.BaseType == typeof(object) || type.BaseType == typeof(MarshalByRefObject))
@@ -123,125 +118,6 @@ namespace GSF
                 return type;
 
             return GetRootType(type.BaseType);
-        }
-
-        /// <summary>
-        /// Loads public types from assemblies in the application binaries directory that implement the specified 
-        /// <paramref name="type"/> either through class inheritance or interface implementation.
-        /// </summary>
-        /// <param name="type">The <see cref="Type"/> that must be implemented by the public types.</param>
-        /// <returns>Public types that implement the specified <paramref name="type"/>.</returns>
-        public static List<Type> LoadImplementations(this Type type)
-        {
-            return LoadImplementations(type, true);
-        }
-
-        /// <summary>
-        /// Loads public types from assemblies in the application binaries directory that implement the specified 
-        /// <paramref name="type"/> either through class inheritance or interface implementation.
-        /// </summary>
-        /// <param name="type">The <see cref="Type"/> that must be implemented by the public types.</param>
-        /// <param name="excludeAbstractTypes">true to exclude public types that are abstract; otherwise false.</param>
-        /// <returns>Public types that implement the specified <paramref name="type"/>.</returns>
-        public static List<Type> LoadImplementations(this Type type, bool excludeAbstractTypes)
-        {
-            return LoadImplementations(type, string.Empty, excludeAbstractTypes);
-        }
-
-        /// <summary>
-        /// Loads public types from assemblies in the specified <paramref name="binariesDirectory"/> that implement 
-        /// the specified <paramref name="type"/> either through class inheritance or interface implementation.
-        /// </summary>
-        /// <param name="type">The <see cref="Type"/> that must be implemented by the public types.</param>
-        /// <param name="binariesDirectory">The directory containing the assemblies to be processed.</param>
-        /// <returns>Public types that implement the specified <paramref name="type"/>.</returns>
-        public static List<Type> LoadImplementations(this Type type, string binariesDirectory)
-        {
-            return LoadImplementations(type, binariesDirectory, true);
-        }
-
-        /// <summary>
-        /// Loads public types from assemblies in the specified <paramref name="binariesDirectory"/> that implement 
-        /// the specified <paramref name="type"/> either through class inheritance or interface implementation.
-        /// </summary>
-        /// <param name="type">The <see cref="Type"/> that must be implemented by the public types.</param>
-        /// <param name="binariesDirectory">The directory containing the assemblies to be processed.</param>
-        /// <param name="excludeAbstractTypes">true to exclude public types that are abstract; otherwise false.</param>
-        /// <param name="validateReferences">True to validate references of loaded assemblies before attempting to instantiate types; false otherwise.</param>
-        /// <returns>Public types that implement the specified <paramref name="type"/>.</returns>
-        [SuppressMessage("Microsoft.Reliability", "CA2001:AvoidCallingProblematicMethods", MessageId = "System.Reflection.Assembly.LoadFrom")]
-        public static List<Type> LoadImplementations(this Type type, string binariesDirectory, bool excludeAbstractTypes, bool validateReferences = true)
-        {
-            Assembly asm;
-            List<Type> types = new List<Type>();
-
-            if (string.IsNullOrEmpty(binariesDirectory))
-            {
-                switch (Common.GetApplicationType())
-                {
-                    // The binaries directory is not specified.
-                    case ApplicationType.Web:
-                        // Use the bin directory for web applications.
-                        binariesDirectory = FilePath.GetAbsolutePath($"bin{Path.DirectorySeparatorChar}*.*");
-                        break;
-                    default:
-                        // Use application install directory for application.
-                        binariesDirectory = FilePath.GetAbsolutePath("*.*");
-                        break;
-                }
-            }
-
-            // Loop through all files in the binaries directory.
-            foreach (string bin in FilePath.GetFileList(binariesDirectory))
-            {
-                // Only process DLLs and EXEs.
-                if (!(string.Compare(FilePath.GetExtension(bin), ".dll", StringComparison.OrdinalIgnoreCase) == 0 ||
-                      string.Compare(FilePath.GetExtension(bin), ".exe", StringComparison.OrdinalIgnoreCase) == 0))
-                {
-                    continue;
-                }
-
-                try
-                {
-                    // Load the assembly in the current app domain.
-                    asm = Assembly.LoadFrom(bin);
-
-                    if (!validateReferences || asm.TryLoadAllReferences())
-                    {
-                        // Process only the public types in the assembly.
-                        foreach (Type asmType in asm.GetExportedTypes())
-                        {
-                            if (!excludeAbstractTypes || !asmType.IsAbstract)
-                            {
-                                // Either the current type is not abstract or it's OK to include abstract types.
-                                if (type.IsClass && asmType.IsSubclassOf(type))
-                                {
-                                    // The type being tested is a class and current type derives from it.
-                                    types.Add(asmType);
-                                }
-
-                                if (type.IsInterface && (object)asmType.GetInterface(type.FullName) != null)
-                                {
-                                    // The type being tested is an interface and current type implements it.
-                                    types.Add(asmType);
-                                }
-
-                                if (type.GetRootType() == typeof(Attribute) && asmType.GetCustomAttributes(type, true).Length > 0)
-                                {
-                                    // The type being tested is an attribute and current type has the attribute.
-                                    types.Add(asmType);
-                                }
-                            }
-                        }
-                    }
-                }
-                catch
-                {
-                    // Absorb any exception thrown while processing the assembly.
-                }
-            }
-
-            return types;   // Return the matching types found.
         }
     }
 }

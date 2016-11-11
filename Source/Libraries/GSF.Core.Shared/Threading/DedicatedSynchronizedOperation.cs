@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GSF.Threading
 {
@@ -37,18 +38,15 @@ namespace GSF.Threading
     /// recommended to prefer this type of operation if the speed of the operation is not
     /// critical or if completion of the operation is critical, such as when saving data
     /// to a file.
-    /// 
-    /// 
     /// </remarks>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable")]
+    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable")]
     public class DedicatedSynchronizedOperation : SynchronizedOperationBase
     {
-        //Note: A ScheduledTask will auto-dispose of Foreground threads, 
-        //so this task does not have to be disposed.
+        // Note: A ScheduledTask will auto-dispose of Foreground threads, so this task does not have to be disposed
         #region [ Members ]
 
         // Fields
-        private ScheduledTask m_task;
+        private readonly ScheduledTask m_task;
 
         #endregion
 
@@ -62,13 +60,8 @@ namespace GSF.Threading
         public DedicatedSynchronizedOperation(Action action, bool isBackground)
             : base(action)
         {
-            if (isBackground)
-                m_task = new ScheduledTask(ThreadingMode.DedicatedBackground);
-            else
-                m_task = new ScheduledTask(ThreadingMode.DedicatedForeground);
-
+            m_task = isBackground ? new ScheduledTask(ThreadingMode.DedicatedBackground) : new ScheduledTask(ThreadingMode.DedicatedForeground);
             m_task.Running += m_task_Running;
-
         }
 
         /// <summary>
@@ -80,13 +73,8 @@ namespace GSF.Threading
         public DedicatedSynchronizedOperation(Action action, Action<Exception> exceptionAction, bool isBackground)
             : base(action, exceptionAction)
         {
-            if (isBackground)
-                m_task = new ScheduledTask(ThreadingMode.DedicatedBackground);
-            else
-                m_task = new ScheduledTask(ThreadingMode.DedicatedForeground);
-
+            m_task = isBackground ? new ScheduledTask(ThreadingMode.DedicatedBackground) : new ScheduledTask(ThreadingMode.DedicatedForeground);
             m_task.Running += m_task_Running;
-
         }
 
         #endregion
