@@ -33,10 +33,21 @@ namespace GSF.Reflection
 {
     /// <summary>
     /// Defines extensions methods related to <see cref="MemberInfo"/> objects and derived types (e.g., <see cref="FieldInfo"/>,
-    /// <see cref="PropertyInfo"/>, <see cref="MethodInfo"/>, etc.)
+    /// <see cref="PropertyInfo"/>, <see cref="MethodInfo"/>, etc.).
     /// </summary>
     public static class MemberInfoExtensions
     {
+        /// <summary>
+        /// Gets the friendly class name of the provided <see cref="MemberInfo"/> object, trimming generic parameters.
+        /// </summary>
+        /// <param name="member">The <see cref="MemberInfo"/> object over which to get friendly class name.</param>
+        /// <returns>Friendly class name of the provided member, or <see cref="string.Empty"/> if <paramref name="member"/> is <c>null</c>.</returns>
+        public static string GetFriendlyClassName<TMemberInfo>(this TMemberInfo member) where TMemberInfo : MemberInfo
+        {
+            // Compiler may get confused about which extension function to use, so we specify explicitly to avoid potential recursive call
+            return (object)member != null ? TypeExtensions.GetFriendlyClassName(member.DeclaringType) : string.Empty;
+        }
+
         /// <summary>
         /// Attempts to get the specified <paramref name="attribute"/> from a <see cref="MemberInfo"/> object, returning <c>true</c> if it does.
         /// </summary>
@@ -48,9 +59,7 @@ namespace GSF.Reflection
         /// <remarks>
         /// If more than of the same type of attribute exists on the member, only the first one is returned.
         /// </remarks>
-        public static bool TryGetAttribute<TMemberInfo, TAttribute>(this TMemberInfo member, out TAttribute attribute)
-            where TMemberInfo : MemberInfo
-            where TAttribute : Attribute
+        public static bool TryGetAttribute<TMemberInfo, TAttribute>(this TMemberInfo member, out TAttribute attribute) where TMemberInfo : MemberInfo where TAttribute : Attribute
         {
             object[] customAttributes = member.GetCustomAttributes(typeof(TAttribute), true);
 
@@ -72,9 +81,7 @@ namespace GSF.Reflection
         /// <returns><c>true</c> if <paramref name="attributes"/> was found; otherwise <c>false</c>.</returns>
         /// <typeparam name="TMemberInfo"><see cref="MemberInfo"/> or derived type to get <see cref="Attribute"/> from.</typeparam>
         /// <typeparam name="TAttribute"><see cref="Type"/> of <see cref="Attribute"/> to attempt to retrieve.</typeparam>
-        public static bool TryGetAttributes<TMemberInfo, TAttribute>(this TMemberInfo member, out TAttribute[] attributes)
-            where TMemberInfo : MemberInfo
-            where TAttribute : Attribute
+        public static bool TryGetAttributes<TMemberInfo, TAttribute>(this TMemberInfo member, out TAttribute[] attributes) where TMemberInfo : MemberInfo where TAttribute : Attribute
         {
             object[] customAttributes = member.GetCustomAttributes(typeof(TAttribute), true);
 
@@ -99,8 +106,7 @@ namespace GSF.Reflection
         /// <remarks>
         /// If more than of the same type of attribute exists on the member, only the first one is returned.
         /// </remarks>
-        public static bool TryGetAttribute<TMemberInfo>(this TMemberInfo member, Type attributeType, out Attribute attribute)
-            where TMemberInfo : MemberInfo
+        public static bool TryGetAttribute<TMemberInfo>(this TMemberInfo member, Type attributeType, out Attribute attribute) where TMemberInfo : MemberInfo
         {
             object[] customAttributes = member.GetCustomAttributes(attributeType, true);
 
@@ -122,8 +128,7 @@ namespace GSF.Reflection
         /// <param name="attributes">The array of <see cref="Attribute"/> objects that were found, if any.</param>
         /// <returns><c>true</c> if <paramref name="attributes"/> was found; otherwise <c>false</c>.</returns>
         /// <typeparam name="TMemberInfo"><see cref="MemberInfo"/> or derived type to get <see cref="Attribute"/> from.</typeparam>
-        public static bool TryGetAttributes<TMemberInfo>(this TMemberInfo member, Type attributeType, out Attribute[] attributes)
-            where TMemberInfo : MemberInfo
+        public static bool TryGetAttributes<TMemberInfo>(this TMemberInfo member, Type attributeType, out Attribute[] attributes) where TMemberInfo : MemberInfo
         {
             object[] customAttributes = member.GetCustomAttributes(attributeType, true);
 
@@ -148,13 +153,11 @@ namespace GSF.Reflection
         /// <remarks>
         /// If more than of the same type of attribute exists on the member, only the first one is returned.
         /// </remarks>
-        public static bool TryGetAttribute<TMemberInfo>(this TMemberInfo member, string attributeName, out Attribute attribute)
-            where TMemberInfo : MemberInfo
+        public static bool TryGetAttribute<TMemberInfo>(this TMemberInfo member, string attributeName, out Attribute attribute) where TMemberInfo : MemberInfo
         {
             object[] customAttributes = member.GetCustomAttributes(true);
 
-            attribute = customAttributes
-                .FirstOrDefault(attr => attr.GetType().FullName == attributeName) as Attribute;
+            attribute = customAttributes.FirstOrDefault(attr => attr.GetType().FullName == attributeName) as Attribute;
 
             return (object)attribute != null;
         }
@@ -167,15 +170,11 @@ namespace GSF.Reflection
         /// <param name="attributes">The array of <see cref="Attribute"/> objects that were found, if any.</param>
         /// <returns><c>true</c> if <paramref name="attributes"/> was found; otherwise <c>false</c>.</returns>
         /// <typeparam name="TMemberInfo"><see cref="MemberInfo"/> or derived type to get <see cref="Attribute"/> from.</typeparam>
-        public static bool TryGetAttributes<TMemberInfo>(this TMemberInfo member, string attributeName, out Attribute[] attributes)
-            where TMemberInfo : MemberInfo
+        public static bool TryGetAttributes<TMemberInfo>(this TMemberInfo member, string attributeName, out Attribute[] attributes) where TMemberInfo : MemberInfo
         {
             object[] customAttributes = member.GetCustomAttributes(true);
 
-            attributes = customAttributes
-                .Where(attr => attr.GetType().FullName == attributeName)
-                .Cast<Attribute>()
-                .ToArray();
+            attributes = customAttributes.Where(attr => attr.GetType().FullName == attributeName).Cast<Attribute>().ToArray();
 
             if (attributes.Length != 0)
                 return true;

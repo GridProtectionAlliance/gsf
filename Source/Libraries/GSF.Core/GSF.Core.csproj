@@ -354,7 +354,6 @@
     <Compile Include="Threading\SynchronizedOperationBase.cs" />
     <Compile Include="TimeSpanExtensions.cs" />
     <Compile Include="TransformEqualityComparer.cs" />
-    <Compile Include="TypeExtensions.cs" />
     <Compile Include="USTimeZones.cs" />
     <Compile Include="Validation\EmailAddressValidator.cs" />
     <Compile Include="Validation\IValidator.cs" />

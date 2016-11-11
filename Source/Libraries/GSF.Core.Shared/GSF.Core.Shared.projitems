@@ -104,7 +104,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\AssemblyLoadedVersionNumber.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\MemberInfoExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\MethodBaseExtensions.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Reflection\MethodInfoExtensionsCompile.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Reflection\MethodInfoExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\NamespaceDoc.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ShortTime.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StringExtensions.cs" />
@@ -120,6 +120,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Threading\WeakAction.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Ticks.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TimeTagBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TypeExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UInt24.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Units\Angle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Units\Charge.cs" />

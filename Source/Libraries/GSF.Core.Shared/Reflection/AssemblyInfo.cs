@@ -466,6 +466,7 @@ namespace GSF.Reflection
         {
             get
             {
+                // ReSharper disable once AssignNullToNotNullAttribute
                 return File.GetLastWriteTime(m_assemblyInstance.Location);
             }
         }
@@ -485,7 +486,9 @@ namespace GSF.Reflection
 
         #region [ Methods ]
 
-        /// <summary>Gets a collection of assembly attributes exposed by the assembly.</summary>
+        /// <summary>
+        /// Gets a collection of assembly attributes exposed by the assembly.
+        /// </summary>
         /// <returns>A System.Specialized.KeyValueCollection of assembly attributes.</returns>
         public NameValueCollection GetAttributes()
         {
@@ -523,7 +526,9 @@ namespace GSF.Reflection
             return assemblyAttributes;
         }
 
-        /// <summary>Gets the specified assembly attribute if it is exposed by the assembly.</summary>
+        /// <summary>
+        /// Gets the specified assembly attribute if it is exposed by the assembly.
+        /// </summary>
         /// <param name="attributeType">Type of the attribute to get.</param>
         /// <returns>The requested assembly attribute if it exists; otherwise null.</returns>
         /// <remarks>
@@ -532,6 +537,7 @@ namespace GSF.Reflection
         public CustomAttributeData GetCustomAttribute(Type attributeType)
         {
 #if MONO
+            // TODO: Validate that these functions still do not work under Mono - they make actually return expected results with new Mono updates
             return null;
 #else
             //Returns the requested assembly attribute.
@@ -539,7 +545,9 @@ namespace GSF.Reflection
 #endif
         }
 
-        /// <summary>Gets the specified embedded resource from the assembly.</summary>
+        /// <summary>
+        /// Gets the specified embedded resource from the assembly.
+        /// </summary>
         /// <param name="resourceName">The full name (including the namespace) of the embedded resource to get.</param>
         /// <returns>The embedded resource.</returns>
         public Stream GetEmbeddedResource(string resourceName)
@@ -558,8 +566,9 @@ namespace GSF.Reflection
         private static AssemblyInfo s_executingAssembly;
         private static Dictionary<string, Assembly> s_assemblyCache;
         private static bool s_addedResolver;
-        private static Dictionary<string, Type> s_typeCache = new Dictionary<string, Type>();
-        private static AppDomainTypeLookup s_typeLookup = new AppDomainTypeLookup();
+        private static readonly Dictionary<string, Type> s_typeCache = new Dictionary<string, Type>();
+        private static readonly AppDomainTypeLookup s_typeLookup = new AppDomainTypeLookup();
+
         // Static Properties
 
         /// <summary>
@@ -571,19 +580,16 @@ namespace GSF.Reflection
         {
             lock (s_typeCache)
             {
+                Type result;
+
                 if (s_typeLookup.HasChanged)
                 {
                     foreach (Type type in s_typeLookup.FindTypes())
-                    {
                         s_typeCache[type.FullName] = type;
-                    }
                 }
 
-                Type result;
-                if (!s_typeCache.TryGetValue(typeName, out result))
-                {
-                    result = null;
-                }
+                s_typeCache.TryGetValue(typeName, out result);
+
                 return result;
             }
         }
@@ -597,7 +603,7 @@ namespace GSF.Reflection
             {
                 if ((object)s_callingAssembly == null)
                 {
-                    // We have to find the calling assembly of the caller.
+                    // We have to find the calling assembly of the caller
                     StackTrace trace = new StackTrace();
                     Assembly caller = Assembly.GetCallingAssembly();
                     Assembly current = Assembly.GetExecutingAssembly();
@@ -618,7 +624,7 @@ namespace GSF.Reflection
 
                                     if (assembly != caller && assembly != current)
                                     {
-                                        // Assembly is neither the current assembly or the calling assembly.
+                                        // Assembly is neither the current assembly or the calling assembly
                                         s_callingAssembly = new AssemblyInfo(assembly);
                                         break;
                                     }
@@ -642,6 +648,7 @@ namespace GSF.Reflection
                 if ((object)s_entryAssembly == null)
                 {
                     Assembly entryAssembly = Assembly.GetEntryAssembly();
+
                     if ((object)entryAssembly == null)
                         entryAssembly = Assembly.ReflectionOnlyLoadFrom(Process.GetCurrentProcess().MainModule.FileName);
 
@@ -659,8 +666,8 @@ namespace GSF.Reflection
         {
             get
             {
+                // Caller's assembly will be the executing assembly for the caller
                 if ((object)s_executingAssembly == null)
-                    // Caller's assembly will be the executing assembly for the caller.
                     s_executingAssembly = new AssemblyInfo(Assembly.GetCallingAssembly());
 
                 return s_executingAssembly;
@@ -673,18 +680,18 @@ namespace GSF.Reflection
         /// Loads the specified assembly that is embedded as a resource in the assembly.
         /// </summary>
         /// <param name="assemblyName">Name of the assembly to load.</param>
-        /// <remarks>This cannot be used to load GSF.Core itself.</remarks>
+        /// <remarks>Note that this function cannot be used to load GSF.Core itself, since this is where function resides.</remarks>
         [SecurityCritical]
         public static void LoadAssemblyFromResource(string assemblyName)
         {
-            // Hooks into assembly resolve event for current domain so it can load assembly from embedded resource.
+            // Hooks into assembly resolve event for current domain so it can load assembly from embedded resource
             if (!s_addedResolver)
             {
                 AppDomain.CurrentDomain.AssemblyResolve += ResolveAssemblyFromResource;
                 s_addedResolver = true;
             }
 
-            // Loads the assembly (This will invoke event that will resolve assembly from resource.).
+            // Loads the assembly (this will invoke event that will resolve assembly from resource)
             AppDomain.CurrentDomain.Load(assemblyName);
         }
 
@@ -700,13 +707,13 @@ namespace GSF.Reflection
 
             if ((object)resourceAssembly == null)
             {
-                // Loops through all of the resources in the executing assembly.
+                // Loops through all of the resources in the executing assembly
                 foreach (string name in Assembly.GetEntryAssembly().GetManifestResourceNames())
                 {
                     // Sees if the embedded resource name matches the assembly it is trying to load.
                     if (string.Compare(FilePath.GetFileNameWithoutExtension(name), EntryAssembly.RootNamespace + "." + shortName, StringComparison.OrdinalIgnoreCase) == 0)
                     {
-                        // If so, loads embedded resource assembly into a binary buffer.
+                        // If so, loads embedded resource assembly into a binary buffer
                         Stream resourceStream = Assembly.GetEntryAssembly().GetManifestResourceStream(name);
 
                         if ((object)resourceStream != null)
@@ -715,7 +722,7 @@ namespace GSF.Reflection
                             resourceStream.Read(buffer, 0, (int)resourceStream.Length);
                             resourceStream.Close();
 
-                            // Loads assembly from binary buffer.
+                            // Loads assembly from binary buffer
                             resourceAssembly = Assembly.Load(buffer);
 
                             // Add assembly to the cache
@@ -730,6 +737,5 @@ namespace GSF.Reflection
         }
 
         #endregion
-
     }
 }

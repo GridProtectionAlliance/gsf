@@ -77,13 +77,40 @@ namespace GSF
         }
 
         /// <summary>
+        /// Gets the friendly class name of the provided type, trimming generic parameters.
+        /// </summary>
+        /// <param name="type">Type to get friendly class name for.</param>
+        /// <returns>Friendly class name of the provided type, or <see cref="string.Empty"/> if <paramref name="type"/> is <c>null</c>.</returns>
+        public static string GetFriendlyClassName(this Type type)
+        {
+            string name = type?.FullName;
+
+            if (string.IsNullOrEmpty(name))
+                return string.Empty;
+
+            int length = name.Length;
+            int indexOfBracket = name.IndexOf('[');
+            int indexOfComma = name.IndexOf(',');
+
+            if (indexOfBracket >= 0)
+                length = Math.Min(indexOfBracket, length);
+
+            if (indexOfComma >= 0)
+                length = Math.Min(indexOfComma, length);
+
+            name = name.Substring(0, length).Trim();
+
+            return name;
+        }
+
+        /// <summary>
         /// Gets the root type in the inheritance hierarchy from which the specified <paramref name="type"/> inherits.
         /// </summary>
         /// <param name="type">The <see cref="Type"/> whose root type is to be found.</param>
         /// <returns>The root type in the inheritance hierarchy from which the specified <paramref name="type"/> inherits.</returns>
         /// <remarks>
-        /// Unless input <paramref name="type"/> is <see cref="Object"/> or <see cref="MarshalByRefObject"/>, the returned type will never 
-        /// be <see cref="Object"/> or <see cref="MarshalByRefObject"/>, even though all types ultimately inherit from either one of them.
+        /// Unless input <paramref name="type"/> is <see cref="object"/> or <see cref="MarshalByRefObject"/>, the returned type will never 
+        /// be <see cref="object"/> or <see cref="MarshalByRefObject"/>, even though all types ultimately inherit from either one of them.
         /// </remarks>
         public static Type GetRootType(this Type type)
         {
@@ -155,7 +182,7 @@ namespace GSF
                     // The binaries directory is not specified.
                     case ApplicationType.Web:
                         // Use the bin directory for web applications.
-                        binariesDirectory = FilePath.GetAbsolutePath(string.Format("bin{0}*.*", Path.DirectorySeparatorChar));
+                        binariesDirectory = FilePath.GetAbsolutePath($"bin{Path.DirectorySeparatorChar}*.*");
                         break;
                     default:
                         // Use application install directory for application.

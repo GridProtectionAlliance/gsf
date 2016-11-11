@@ -27,15 +27,14 @@ using System.Threading;
 namespace GSF.Reflection
 {
     /// <summary>
-    /// Maintains a version number that increments every time that <see cref="AppDomain"/>'s AssemblyLoad event
-    /// is raised.
+    /// Maintains a version number that increments every time an <see cref="AppDomain"/> AssemblyLoad event is raised.
     /// </summary>
     public static class AssemblyLoadedVersionNumber
     {
         private static int m_versionNumber;
 
         /// <summary>
-        /// The number of times that the AppDomains's assembly could have changed. Number is initialized to 1;
+        /// The number of times that the AppDomains's assembly could have changed; initial value starts at 1.
         /// </summary>
         public static int VersionNumber => m_versionNumber;
 

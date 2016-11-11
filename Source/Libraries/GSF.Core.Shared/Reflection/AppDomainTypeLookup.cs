@@ -30,7 +30,7 @@ using GSF.Diagnostics;
 namespace GSF.Reflection
 {
     /// <summary>
-    /// A lookup class that searches all assemblies in the current <see cref="AppDomain"/> for all <see cref="Type"/>.
+    /// Defines a lookup class that searches all assemblies in the current <see cref="AppDomain"/> for all <see cref="Type"/>.
     /// </summary>
     public class AppDomainTypeLookup
     {
@@ -51,7 +51,7 @@ namespace GSF.Reflection
         }
 
         /// <summary>
-        /// Gets if there's a possibility that a new assembly has been loaded and new types are available.
+        /// Gets flag that determines if there is a possibility that a new assembly has been loaded and new types are available.
         /// </summary>
         public bool HasChanged => m_assemblyVersionNumber != AssemblyLoadedVersionNumber.VersionNumber;
 
@@ -64,6 +64,7 @@ namespace GSF.Reflection
         {
             if (!HasChanged)
                 return new List<Type>();
+
             lock (m_syncRoot)
             {
                 m_assemblyVersionNumber = AssemblyLoadedVersionNumber.VersionNumber;
@@ -74,18 +75,19 @@ namespace GSF.Reflection
         private List<Type> LoadNewAssemblies()
         {
             List<Type> types = new List<Type>();
+
             try
             {
-                var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-                foreach (var assembly in assemblies)
+                Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+                foreach (Assembly assembly in assemblies)
                 {
                     if (!m_loadedAssemblies.Contains(assembly))
                     {
                         m_loadedAssemblies.Add(assembly);
+
                         if (!assembly.IsDynamic)
-                        {
                             FindAllModules(types, assembly);
-                        }
                     }
                 }
             }
@@ -93,6 +95,7 @@ namespace GSF.Reflection
             {
                 Log.Publish(MessageLevel.Critical, MessageFlags.BugReport, "Static Constructor Error", null, null, ex);
             }
+
             return types;
         }
 
@@ -100,8 +103,9 @@ namespace GSF.Reflection
         {
             Log.Publish(MessageLevel.Debug, "Loading Assembly", assembly.GetName().Name);
 
-            var modules = assembly.GetModules(false);
-            foreach (var module in modules)
+            Module[] modules = assembly.GetModules(false);
+
+            foreach (Module module in modules)
             {
                 try
                 {
@@ -117,6 +121,7 @@ namespace GSF.Reflection
         private void FindAllTypes(List<Type> newlyFoundObjects, Assembly assembly, Module module)
         {
             Type[] types;
+
             try
             {
                 types = module.GetTypes();
@@ -129,7 +134,7 @@ namespace GSF.Reflection
                 types = ex.Types;
             }
 
-            foreach (var assemblyType in types)
+            foreach (Type assemblyType in types)
             {
                 try
                 {
@@ -143,7 +148,6 @@ namespace GSF.Reflection
                     Log.Publish(MessageLevel.Critical, MessageFlags.BugReport, "Static Constructor Error", null, null, ex);
                 }
             }
-        }
-
+        }   
     }
 }
