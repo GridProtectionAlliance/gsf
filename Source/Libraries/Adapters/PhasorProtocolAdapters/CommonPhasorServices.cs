@@ -44,6 +44,7 @@ using GSF.Data;
 using GSF.IO;
 using GSF.Parsing;
 using GSF.PhasorProtocols;
+using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
@@ -158,11 +159,12 @@ namespace PhasorProtocolAdapters
                         m_frameParser = null;
 
                         // Dispose configuration of wait handle
-                        if (m_configurationWaitHandle != null)
-                            m_configurationWaitHandle.Close();
-
+                        m_configurationWaitHandle?.Close();
                         m_configurationWaitHandle = null;
+
                         m_configurationFrame = null;
+
+                        StaticTimer.CallbackException -= StaticTimer_CallbackException;
                     }
                 }
                 finally
@@ -171,6 +173,24 @@ namespace PhasorProtocolAdapters
                     base.Dispose(disposing);    // Call base class Dispose().
                 }
             }
+        }
+
+        /// <summary>
+        /// Initializes <see cref="CommonPhasorServices"/>.
+        /// </summary>
+        public override void Initialize()
+        {
+            base.Initialize();
+
+            // Attach to callback exception event so exceptions can be logged - this is
+            // safe since the CommonPhasorService is only ever deployed as a Singleton
+            StaticTimer.CallbackException += StaticTimer_CallbackException;
+        }
+
+        private void StaticTimer_CallbackException(object sender, EventArgs<Exception> e)
+        {
+            Exception ex = e.Argument;
+            OnProcessException(new InvalidOperationException($"Static timer exception: {ex.Message}", ex));
         }
 
         /// <summary>
@@ -368,6 +388,9 @@ namespace PhasorProtocolAdapters
 
         // Static Fields
         private static readonly StatisticValueStateCache s_statisticValueCache = new StatisticValueStateCache();
+
+        // Common use static timer for the Phasor Protocols Library
+        internal static readonly StaticTimer StaticTimer = new StaticTimer();
 
         // Classic
         private const string DefaultPointTagNameExpression = "{CompanyAcronym}_{DeviceAcronym}[?{SignalType.Source}=Phasor[-{SignalType.Suffix}{SignalIndex}]]:{VendorAcronym}{SignalType.Abbreviation}[?{SignalType.Source}!=Phasor[?{SignalIndex}!=-1[{SignalIndex}]]]";

@@ -24,7 +24,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 namespace GSF.Threading
 {
@@ -38,22 +37,31 @@ namespace GSF.Threading
         // Nested Types
         private class TimerAction
         {
-            private readonly WeakAction m_action;
+            private readonly Action m_action;
             private readonly CancellationToken m_cancellationToken;
 
             public TimerAction(Action action, CancellationToken cancellationToken)
             {
-                m_action = new WeakAction(action);
+                m_action = action;
                 m_cancellationToken = cancellationToken;
             }
 
             public bool IsCancelled => m_cancellationToken.IsCancelled;
 
-            public bool TryInvoke() => m_action.TryInvoke();
+            public object Target => m_action.Target;
+
+            public void Invoke() => m_action.Invoke();
         }
 
+        // Events
+
+        /// <summary>
+        /// Occurs when an exception is raised during a callback invocation.
+        /// </summary>
+        public event EventHandler<EventArgs<Exception>> CallbackException;
+
         // Fields
-        private readonly ConcurrentDictionary<int, ConcurrentQueue<TimerAction>> m_dataStreamMonitorActions;
+        private readonly ConcurrentDictionary<int, ConcurrentQueue<TimerAction>> m_timerActionQueues;
 
         #endregion
 
@@ -64,7 +72,7 @@ namespace GSF.Threading
         /// </summary>
         public StaticTimer()
         {
-            m_dataStreamMonitorActions = new ConcurrentDictionary<int, ConcurrentQueue<TimerAction>>();
+            m_timerActionQueues = new ConcurrentDictionary<int, ConcurrentQueue<TimerAction>>();
         }
 
         #endregion
@@ -75,12 +83,12 @@ namespace GSF.Threading
         /// Registers the given callback with the timer running at the given interval.
         /// </summary>
         /// <param name="interval">The interval at which to run the timer.</param>
-        /// <param name="monitorAction">The action to be performed when the timer is triggered.</param>
-        /// <returns>A cancellation token that can be used to cancel calls to timer.</returns>
-        public ICancellationToken RegisterCallback(int interval, Action monitorAction)
+        /// <param name="callback">The action to be performed when the timer is triggered.</param>
+        /// <returns>A cancellation token that can be used to remove callback from timer queue.</returns>
+        public virtual ICancellationToken RegisterCallback(int interval, Action callback)
         {
             CancellationToken cancellationToken = new CancellationToken();
-            RegisterCallback(interval, new TimerAction(monitorAction, cancellationToken));
+            RegisterCallback(interval, new TimerAction(callback, cancellationToken));
             return cancellationToken;
         }
 
@@ -89,9 +97,9 @@ namespace GSF.Threading
             ConcurrentQueue<TimerAction> newQueue = null;
             ConcurrentQueue<TimerAction> queue;
 
-            lock (m_dataStreamMonitorActions)
+            lock (m_timerActionQueues)
             {
-                queue = m_dataStreamMonitorActions.GetOrAdd(interval, i => newQueue = new ConcurrentQueue<TimerAction>());
+                queue = m_timerActionQueues.GetOrAdd(interval, i => newQueue = new ConcurrentQueue<TimerAction>());
                 queue.Enqueue(monitorAction);
             }
 
@@ -107,13 +115,23 @@ namespace GSF.Threading
             {
                 action = list[i];
 
-                // False here indicates that the action has been garbage collected
-                if (action.IsCancelled || !action.TryInvoke())
+                if (action.IsCancelled)
                 {
                     int end = list.Count - 1;
                     list[i] = list[end];
                     list.RemoveAt(end);
                     i--;
+                }
+                else
+                {
+                    try
+                    {
+                        action.Invoke();
+                    }
+                    catch (Exception ex)
+                    {
+                        OnCallbackException(action.Target, ex);
+                    }
                 }
             }
 
@@ -128,10 +146,10 @@ namespace GSF.Threading
             }
             else
             {
-                lock (m_dataStreamMonitorActions)
+                lock (m_timerActionQueues)
                 {
                     // We are retiring this async loop so we need to remove its queue from the lookup table
-                    m_dataStreamMonitorActions.TryRemove(interval, out queue);
+                    m_timerActionQueues.TryRemove(interval, out queue);
 
                     // However, actions may have been queued up in the meantime so we need to re-register
                     // them with a new async loop
@@ -141,17 +159,15 @@ namespace GSF.Threading
             }
         }
 
-        #endregion
-
-        #region [ Static ]
-
-        // Static Fields
-
         /// <summary>
-        /// Default instance of the <see cref="StaticTimer"/> class.
+        /// Raises the <see cref="CallbackException"/> event.
         /// </summary>
-        [SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification = "Default instance is immutable even if internal state is not")]
-        public static readonly StaticTimer Default = new StaticTimer();
+        /// <param name="sender">Callback target, if any.</param>
+        /// <param name="ex">Exception that was raised on callback.</param>
+        protected void OnCallbackException(object sender, Exception ex)
+        {
+            CallbackException?.Invoke(sender, new EventArgs<Exception>(ex));
+        }
 
         #endregion
     }
