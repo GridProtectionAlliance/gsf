@@ -2081,9 +2081,9 @@ namespace PhasorProtocolAdapters
                 }
             }
 
-            // Start the measurement counter timer
-            // to start gathering statistics
-            StaticTimer.Default.RegisterCallback(1000, MeasurementCounter_Elapsed);
+            // Start the measurement counter timer to start gathering statistics
+            if (m_measurementCounterCancellationToken?.IsCancelled ?? true)
+                m_measurementCounterCancellationToken = StaticTimer.Default.RegisterCallback(1000, MeasurementCounter_Elapsed);
         }
 
         // Updates the measurements per second counters after receiving another set of measurements.
@@ -2270,8 +2270,6 @@ namespace PhasorProtocolAdapters
 
         private void DataStreamMonitor_Elapsed()
         {
-            DateTime now = DateTime.UtcNow;
-
             if (m_bytesReceived == 0 && (m_frameParser.DeviceSupportsCommands || m_frameParser.ConnectionIsMulticast || m_frameParser.ConnectionIsListener))
             {
                 // If we've received no data in the last time-span, we restart connect cycle...
