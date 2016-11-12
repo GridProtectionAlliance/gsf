@@ -2083,7 +2083,7 @@ namespace PhasorProtocolAdapters
 
             // Start the measurement counter timer
             // to start gathering statistics
-            StaticTimer.Default.RegisterDataStreamMonitor(1000, MeasurementCounter_Elapsed);
+            StaticTimer.Default.RegisterCallback(1000, MeasurementCounter_Elapsed);
         }
 
         // Updates the measurements per second counters after receiving another set of measurements.
@@ -2221,7 +2221,7 @@ namespace PhasorProtocolAdapters
 
             // Enable data stream monitor for connections that support commands
             if (m_frameParser.DeviceSupportsCommands || m_allowUseOfCachedConfiguration)
-                m_dataStreamMonitorCancellationToken = StaticTimer.Default.RegisterDataStreamMonitor(m_dataStreamMonitorInterval, DataStreamMonitor_Elapsed);
+                m_dataStreamMonitorCancellationToken = StaticTimer.Default.RegisterCallback(m_dataStreamMonitorInterval, DataStreamMonitor_Elapsed);
         }
 
         private void m_frameParser_ConnectionException(object sender, EventArgs<Exception, int> e)
