@@ -75,7 +75,7 @@ namespace GSF
             if (string.IsNullOrEmpty(value))
                 return false;
 #if MONO
-            return value.EndsWith("s", StringComparison.OrdinalIgnoreCase);
+            return !value.IsPlural();
 #else
             return s_pluralizationService.IsSingular(value);
 #endif
@@ -107,7 +107,7 @@ namespace GSF
             if (string.IsNullOrEmpty(value))
                 return false;
 #if MONO
-            return !value.IsSingular();
+            return value.EndsWith("s", StringComparison.OrdinalIgnoreCase);
 #else
             return s_pluralizationService.IsPlural(value);
 #endif
