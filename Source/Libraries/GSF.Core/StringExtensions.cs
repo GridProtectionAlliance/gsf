@@ -22,8 +22,12 @@
 //
 //******************************************************************************************************
 
+#if MONO
+using System;
+#else
 using System.Data.Entity.Design.PluralizationServices;
 using System.Globalization;
+#endif
 
 namespace GSF
 {
@@ -35,6 +39,7 @@ namespace GSF
     /// <summary>Defines extension functions related to string manipulation.</summary>
     public static partial class StringExtensions
     {
+#if !MONO
         private static readonly PluralizationService s_pluralizationService;
 
         static StringExtensions()
@@ -43,7 +48,7 @@ namespace GSF
             // future, cached services can use to a concurrent dictionary keyed on LCID of culture
             s_pluralizationService = PluralizationService.CreateService(CultureInfo.GetCultureInfo("en-us"));
         }
-
+#endif
         /// <summary>
         /// Returns the singular form of the specified word.
         /// </summary>
@@ -53,8 +58,11 @@ namespace GSF
         {
             if (string.IsNullOrEmpty(value))
                 return "";
-
+#if MONO
+            return value.IsSingular() ? value : value.Substring(0, value.Length - 1);
+#else
             return s_pluralizationService.Singularize(value);
+#endif
         }
 
         /// <summary>
@@ -66,8 +74,11 @@ namespace GSF
         {
             if (string.IsNullOrEmpty(value))
                 return false;
-
+#if MONO
+            return value.EndsWith("s", StringComparison.OrdinalIgnoreCase);
+#else
             return s_pluralizationService.IsSingular(value);
+#endif
         }
 
         /// <summary>
@@ -79,8 +90,11 @@ namespace GSF
         {
             if (string.IsNullOrEmpty(value))
                 return "";
-
+#if MONO
+            return value.IsPlural() ? value : $"{value}s";
+#else
             return s_pluralizationService.Pluralize(value);
+#endif
         }
 
         /// <summary>
@@ -92,9 +106,11 @@ namespace GSF
         {
             if (string.IsNullOrEmpty(value))
                 return false;
-
+#if MONO
+            return !value.IsSingular();
+#else
             return s_pluralizationService.IsPlural(value);
+#endif
         }
-
     }
 }

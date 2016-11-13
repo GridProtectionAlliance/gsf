@@ -153,6 +153,9 @@ namespace GSF.Web.Embedded
         /// </remarks>
         public static void Register()
         {
+#if MONO
+            HostingEnvironment.RegisterVirtualPathProvider(new EmbeddedResourceProvider());
+#else
             if (BuildManager.IsPrecompiledApp)
             {
                 // HACK: Call internal registration function for virtual path provider in pre-compiled web application
@@ -172,6 +175,7 @@ namespace GSF.Web.Embedded
             {
                 HostingEnvironment.RegisterVirtualPathProvider(new EmbeddedResourceProvider());
             }
+#endif
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -186,6 +190,6 @@ namespace GSF.Web.Embedded
             return virtualPath.StartsWith("@") || virtualPath.Contains("/@");
         }
 
-        #endregion
+#endregion
     }
 }
