@@ -371,7 +371,7 @@ namespace PhasorProtocolAdapters
         private static readonly StatisticValueStateCache s_statisticValueCache = new StatisticValueStateCache();
 
         // Common use static timer for the Phasor Protocols Library
-        internal static readonly SharedTimerScheduler StaticTimer = new SharedTimerScheduler();
+        internal static readonly SharedTimerScheduler SharedTimerFactory = new SharedTimerScheduler();
 
         // Classic
         private const string DefaultPointTagNameExpression = "{CompanyAcronym}_{DeviceAcronym}[?{SignalType.Source}=Phasor[-{SignalType.Suffix}{SignalIndex}]]:{VendorAcronym}{SignalType.Abbreviation}[?{SignalType.Source}!=Phasor[?{SignalIndex}!=-1[{SignalIndex}]]]";

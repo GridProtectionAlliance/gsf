@@ -66,16 +66,19 @@ namespace GSF.Threading
         /// Initializes a new instance of the <see cref="SharedTimer"/>.
         /// </summary>
         /// <param name="scheduler">The scheduler to use</param>
-        public SharedTimer(SharedTimerScheduler scheduler)
+        /// <param name="interval">The interval of the timer, default is 100</param>
+        public SharedTimer(SharedTimerScheduler scheduler, int interval = 100)
         {
             if (scheduler == null)
                 throw new ArgumentNullException(nameof(scheduler));
             if (scheduler.IsDisposed)
                 throw new ArgumentException("Scheduler has been disposed", nameof(scheduler));
+            if (interval <= 0)
+                throw new ArgumentOutOfRangeException(nameof(interval));
 
             m_log = Logger.CreatePublisher(typeof(SharedTimerScheduler), MessageClass.Component);
             m_scheduler = scheduler;
-            m_interval = 100;
+            m_interval = interval;
             m_enabled = false;
             m_autoReset = true;
             m_callback = TimerCallback;

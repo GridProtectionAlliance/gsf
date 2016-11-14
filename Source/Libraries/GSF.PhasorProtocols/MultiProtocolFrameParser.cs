@@ -1798,7 +1798,7 @@ namespace GSF.PhasorProtocols
         private IPAddress m_multicastServerAddress;
         private PrecisionInputTimer m_inputTimer;
         private ShortSynchronizedOperation m_readNextBuffer;
-        private Timer m_rateCalcTimer;
+        private SharedTimer m_rateCalcTimer;
         private IConfigurationFrame m_configurationFrame;
         private CheckSumValidationFrameTypes m_checkSumValidationFrameTypes;
         private bool m_trustHeaderLength;
@@ -1853,7 +1853,7 @@ namespace GSF.PhasorProtocols
             m_checkSumValidationFrameTypes = CheckSumValidationFrameTypes.AllFrames;
             m_trustHeaderLength = true;
             m_keepCommandChannelOpen = true;
-            m_rateCalcTimer = new Timer();
+            m_rateCalcTimer = new SharedTimer(TimerScheduler);
 
             m_phasorProtocol = PhasorProtocol.IEEEC37_118V1;
             m_transportProtocol = TransportProtocol.Tcp;
@@ -3694,7 +3694,7 @@ namespace GSF.PhasorProtocols
         }
 
         // Calculate frame and data rates
-        private void m_rateCalcTimer_Elapsed(object sender, ElapsedEventArgs e)
+        private void m_rateCalcTimer_Elapsed(object sender, EventArgs<DateTime> e)
         {
             double time = Ticks.ToSeconds(DateTime.UtcNow.Ticks - m_dataStreamStartTime);
 
@@ -4238,6 +4238,12 @@ namespace GSF.PhasorProtocols
         }
 
         #endregion
+
+        #endregion
+
+        #region [ Static ]
+
+        private static readonly SharedTimerScheduler TimerScheduler = new SharedTimerScheduler();
 
         #endregion
     }

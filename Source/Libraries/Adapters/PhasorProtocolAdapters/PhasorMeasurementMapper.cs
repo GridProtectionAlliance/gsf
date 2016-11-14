@@ -40,6 +40,7 @@ using GSF.Communication;
 using GSF.IO;
 using GSF.PhasorProtocols;
 using GSF.PhasorProtocols.Anonymous;
+using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Data;
@@ -154,8 +155,8 @@ namespace PhasorProtocolAdapters
         private readonly ConcurrentDictionary<string, long> m_undefinedDevices;
         private readonly ConcurrentDictionary<SignalKind, string[]> m_generatedSignalReferenceCache;
         private MissingDataMonitor m_missingDataMonitor;
-        private Timer m_dataStreamMonitor;
-        private Timer m_measurementCounter;
+        private SharedTimer m_dataStreamMonitor;
+        private SharedTimer m_measurementCounter;
         private bool m_allowUseOfCachedConfiguration;
         private bool m_cachedConfigLoadAttempted;
         private readonly object m_configurationOperationLock;
@@ -212,7 +213,7 @@ namespace PhasorProtocolAdapters
             m_generatedSignalReferenceCache = new ConcurrentDictionary<SignalKind, string[]>();
 
             // Create data stream monitoring timer
-            m_dataStreamMonitor = new Timer();
+            m_dataStreamMonitor = new SharedTimer(CommonPhasorServices.SharedTimerFactory);
             m_dataStreamMonitor.Elapsed += m_dataStreamMonitor_Elapsed;
             m_dataStreamMonitor.AutoReset = true;
             m_dataStreamMonitor.Enabled = false;
@@ -1065,9 +1066,9 @@ namespace PhasorProtocolAdapters
                 m_timeAdjustmentTicks = 0;
 
             if (settings.TryGetValue("dataLossInterval", out setting))
-                m_dataStreamMonitor.Interval = double.Parse(setting) * 1000.0D;
+                m_dataStreamMonitor.Interval = (int)(double.Parse(setting) * 1000.0D);
             else
-                m_dataStreamMonitor.Interval = 5000.0D;
+                m_dataStreamMonitor.Interval = 5000;
 
             if (settings.TryGetValue("delayedConnectionInterval", out setting))
             {
@@ -2101,7 +2102,7 @@ namespace PhasorProtocolAdapters
             if ((object)m_measurementCounter == null)
             {
                 // Create the timer if it doesn't already exist
-                m_measurementCounter = new Timer(1000.0D);
+                m_measurementCounter = new SharedTimer(CommonPhasorServices.SharedTimerFactory, 1000);
                 m_measurementCounter.Elapsed += m_measurementCounter_Elapsed;
             }
 
@@ -2298,7 +2299,7 @@ namespace PhasorProtocolAdapters
             SendCommand(DeviceCommand.SendConfigurationFrame2);
         }
 
-        private void m_dataStreamMonitor_Elapsed(object sender, ElapsedEventArgs e)
+        private void m_dataStreamMonitor_Elapsed(object sender, EventArgs<DateTime> e)
         {
             if (m_bytesReceived == 0 && (m_frameParser.DeviceSupportsCommands || m_frameParser.ConnectionIsMulticast || m_frameParser.ConnectionIsListener))
             {
@@ -2326,7 +2327,7 @@ namespace PhasorProtocolAdapters
             m_bytesReceived = 0;
         }
 
-        private void m_measurementCounter_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
+        private void m_measurementCounter_Elapsed(object sender, EventArgs<DateTime> elapsedEventArgs)
         {
             long now = DateTime.UtcNow.Ticks;
             IEnumerable<DeviceStatisticsHelper<ConfigurationCell>> statisticsHelpers = StatisticsHelpers;
