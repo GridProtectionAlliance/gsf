@@ -125,11 +125,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)Threading\RateLimiter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\ReaderWriterSpinLock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\ScheduledTask.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Threading\SharedTimerScheduler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\ShortSynchronizedOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\ShutdownHandler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\SingleOccurrenceAction.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\StateMachine.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Threading\StaticTimer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Threading\SharedTimer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\SynchronizedOperationBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\ThreadContainerBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\ThreadContainerDedicated.cs" />
