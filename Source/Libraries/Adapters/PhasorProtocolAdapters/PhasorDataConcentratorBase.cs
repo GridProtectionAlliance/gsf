@@ -611,6 +611,24 @@ namespace PhasorProtocolAdapters
         }
 
         /// <summary>
+        /// Gets or sets <see cref="DataSet"/> based data source available to this <see cref="PhasorDataConcentratorBase"/>.
+        /// </summary>
+        public override DataSet DataSource
+        {
+            get
+            {
+                return base.DataSource;
+            }
+            set
+            {
+                base.DataSource = value;
+
+                if (Initialized)
+                    TryUpdateConfiguration();
+            }
+        }
+
+        /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
         /// <remarks>
@@ -1403,6 +1421,19 @@ namespace PhasorProtocolAdapters
 
             // Cache new protocol specific configuration frame
             CacheConfigurationFrame(m_configurationFrame, Name);
+        }
+
+        private bool TryUpdateConfiguration()
+        {
+            try
+            {
+                UpdateConfiguration();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         // Generate a more descriptive phasor label including line phase and phasor type
