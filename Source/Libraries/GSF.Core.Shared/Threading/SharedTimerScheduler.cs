@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text;
 using System.Threading;
 using GSF.Diagnostics;
@@ -44,6 +45,9 @@ namespace GSF.Threading
         /// </summary>
         private class SharedTimerInstance : IDisposable
         {
+            #region [ Members ]
+
+            // Fields
             private ConcurrentQueue<WeakAction<DateTime>> m_additionalQueueItems;
 
             private readonly LinkedList<WeakAction<DateTime>> m_callbacks;
@@ -82,10 +86,15 @@ namespace GSF.Threading
             /// </summary>
             private int m_sharedTimersCount;
 
+            #endregion
+
+            #region [ Constructors ]
+
             public SharedTimerInstance(SharedTimerScheduler parentTimer, int interval)
             {
                 if (parentTimer == null)
                     throw new ArgumentNullException(nameof(parentTimer));
+
                 if (interval <= 0)
                     throw new ArgumentOutOfRangeException(nameof(interval));
 
@@ -98,11 +107,16 @@ namespace GSF.Threading
                 m_timer = new Timer(Callback, null, interval, interval);
             }
 
+            #endregion
+
+            #region [ Methods ]
+
             public WeakAction<DateTime> RegisterCallback(Action<DateTime> callback)
             {
                 if (m_disposed)
                     throw new ObjectDisposedException(GetType().FullName);
-                var weakAction = new WeakAction<DateTime>(callback);
+
+                WeakAction<DateTime> weakAction = new WeakAction<DateTime>(callback);
                 m_additionalQueueItems.Enqueue(weakAction);
                 return weakAction;
             }
@@ -115,15 +129,18 @@ namespace GSF.Threading
                 ShortTime fireTime = ShortTime.Now;
 
                 bool lockTaken = false;
+
                 try
                 {
                     Monitor.TryEnter(m_syncRunning, 0, ref lockTaken);
+
                     if (!lockTaken)
                     {
                         lock (m_syncStats)
                         {
                             m_skippedIntervals++;
                         }
+
                         return;
                     }
 
@@ -137,15 +154,13 @@ namespace GSF.Threading
                         if (m_disposed)
                             return;
 
-                        //Since removing the linked list item will invalidate the "Next" property, go ahead and store it;
-                        var nextNode = timerAction.Next;
+                        // Since removing the linked list item will invalidate the "Next" property, go ahead and store it;
+                        LinkedListNode<WeakAction<DateTime>> nextNode = timerAction.Next;
 
                         try
                         {
                             if (!timerAction.Value.TryInvoke(fireTimeDatetime))
-                            {
                                 m_callbacks.Remove(timerAction);
-                            }
                         }
                         catch (Exception ex)
                         {
@@ -165,17 +180,15 @@ namespace GSF.Threading
                     }
 
                     WeakAction<DateTime> newCallbacks;
+
                     while (m_additionalQueueItems.TryDequeue(out newCallbacks))
-                    {
                         m_callbacks.AddLast(newCallbacks);
-                    }
                 }
                 finally
                 {
                     if (lockTaken)
                         Monitor.Exit(m_syncRunning);
                 }
-
             }
 
             public void Dispose()
@@ -203,24 +216,28 @@ namespace GSF.Threading
                     double averageCpuTime = 0;
                     if (m_elapsedIntervals > 0)
                     {
-                        averageCpuTime= m_elapsedWorkerTime / m_elapsedIntervals;
+                        averageCpuTime = m_elapsedWorkerTime / m_elapsedIntervals;
                     }
                     return $"Interval: {m_interval} Skipped Intervals: {m_skippedIntervals} Elapsed Intervals: {m_elapsedIntervals} Average CPU Time: {(averageCpuTime).ToString("N2")}ms Sum of Callbacks: {m_sumOfCallbacks} Shared Timers: { m_sharedTimersCount}";
                 }
             }
+
+            #endregion
         }
 
         // Fields
         private readonly Dictionary<int, SharedTimerInstance> m_schedulesByInterval;
         private readonly object m_syncRoot;
+
         /// <summary>
         /// Since there won't be many shared timers, it will be better to not make this publisher a static instance. 
         /// This will provide the initialization stack so it will be easier to distinguish this instance of StaticTimer 
         /// from other instances.
         /// </summary>
         private readonly LogPublisher m_log;
-        private bool m_disposed;
+
         private ScheduledTask m_reportStatus;
+        private bool m_disposed;
 
         #endregion
 
@@ -239,23 +256,6 @@ namespace GSF.Threading
             m_reportStatus.Start(60 * 1000);
         }
 
-        private void ReportStatus(object sender, EventArgs<ScheduledTaskRunningReason> e)
-        {
-            m_reportStatus.Start(60 * 1000);
-
-            StringBuilder status = new StringBuilder();
-            lock (m_syncRoot)
-            {
-                status.AppendLine("Shared Timer Factory Status");
-                foreach (var item in m_schedulesByInterval)
-                {
-                    status.AppendLine(item.Value.StatusMessage());
-                    item.Value.ResetStats();
-                }
-            }
-            m_log.Publish(MessageLevel.Info, MessageFlags.SystemHealth, "Shared Timer Factory Status", status.ToString());
-        }
-
         #endregion
 
         #region [ Properties ]
@@ -270,10 +270,11 @@ namespace GSF.Threading
         #region [ Methods ]
 
         /// <summary>
-        /// Creates a <see cref="SharedTimer"/> using the current <see cref="SharedTimerScheduler"/>
+        /// Creates a <see cref="SharedTimer"/> using the current <see cref="SharedTimerScheduler"/>.
         /// </summary>
-        /// <returns></returns>
-        public SharedTimer CreateTimer()
+        /// <param name="interval">The interval of the timer, default is 100</param>
+        /// <returns>A shared timer instance that fires at the given interval.</returns>
+        public SharedTimer CreateTimer(int interval = 100)
         {
             return new SharedTimer(this);
         }
@@ -285,12 +286,15 @@ namespace GSF.Threading
         /// <param name="callback">The action to be performed when the timer is triggered.</param>
         /// <returns>The weak reference callback that will be executed when this timer fires. To unregister
         /// the callback, call <see cref="WeakAction.Clear"/></returns>
-        public WeakAction<DateTime> RegisterCallback(int interval, Action<DateTime> callback)
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        internal WeakAction<DateTime> RegisterCallback(int interval, Action<DateTime> callback)
         {
             if (callback == null)
                 throw new ArgumentNullException(nameof(callback));
+
             if (interval <= 0)
                 throw new ArgumentOutOfRangeException(nameof(interval));
+
             if (m_disposed)
                 throw new ObjectDisposedException(GetType().FullName);
 
@@ -300,11 +304,13 @@ namespace GSF.Threading
                     throw new ObjectDisposedException(GetType().FullName);
 
                 SharedTimerInstance instance;
+
                 if (!m_schedulesByInterval.TryGetValue(interval, out instance))
                 {
                     instance = new SharedTimerInstance(this, interval);
                     m_schedulesByInterval.Add(interval, instance);
                 }
+
                 return instance.RegisterCallback(callback);
             }
         }
@@ -315,22 +321,42 @@ namespace GSF.Threading
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            m_reportStatus.Dispose(); //Causes the status to be generated one last time before clearing everything
+            // Causes the status to be generated one last time before clearing everything
+            m_reportStatus.Dispose();
 
             lock (m_syncRoot)
             {
                 m_disposed = true;
-                foreach (var item in m_schedulesByInterval)
-                {
-                    item.Value.Dispose();
-                }
+
+                foreach (SharedTimerInstance instance in m_schedulesByInterval.Values)
+                    instance.Dispose();
+
                 m_schedulesByInterval.Clear();
             }
+
             m_log.Publish(MessageLevel.Warning, "Timer Disposed");
         }
 
+        private void ReportStatus(object sender, EventArgs<ScheduledTaskRunningReason> e)
+        {
+            m_reportStatus.Start(60 * 1000);
+
+            StringBuilder status = new StringBuilder();
+
+            lock (m_syncRoot)
+            {
+                status.AppendLine("Shared Timer Factory Status");
+
+                foreach (var item in m_schedulesByInterval)
+                {
+                    status.AppendLine(item.Value.StatusMessage());
+                    item.Value.ResetStats();
+                }
+            }
+
+            m_log.Publish(MessageLevel.Info, MessageFlags.SystemHealth, "Shared Timer Factory Status", status.ToString());
+        }
+
         #endregion
-
-
     }
 }

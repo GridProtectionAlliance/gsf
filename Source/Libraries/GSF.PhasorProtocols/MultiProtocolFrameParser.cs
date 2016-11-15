@@ -1853,7 +1853,7 @@ namespace GSF.PhasorProtocols
             m_checkSumValidationFrameTypes = CheckSumValidationFrameTypes.AllFrames;
             m_trustHeaderLength = true;
             m_keepCommandChannelOpen = true;
-            m_rateCalcTimer = new SharedTimer(TimerScheduler);
+            m_rateCalcTimer = TimerScheduler.CreateTimer();
 
             m_phasorProtocol = PhasorProtocol.IEEEC37_118V1;
             m_transportProtocol = TransportProtocol.Tcp;

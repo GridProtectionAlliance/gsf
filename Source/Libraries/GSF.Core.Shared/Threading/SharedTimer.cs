@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.ComponentModel;
 using GSF.Diagnostics;
 
 namespace GSF.Threading
@@ -35,18 +36,21 @@ namespace GSF.Threading
     /// </summary>
     public sealed class SharedTimer : IDisposable
     {
-        //Events
+        #region [ Members ]
+
+        // Events
 
         /// <summary>
         /// Occurs when the interval elapses.
         /// </summary>
         public event EventHandler<EventArgs<DateTime>> Elapsed;
+
         /// <summary>
         /// Occurs when <see cref="Elapsed"/> has an exception
         /// </summary>
         public event EventHandler<EventArgs<Exception>> UnhandledExceptions;
 
-        //Fields
+        // Fields
         private int m_interval;
         private bool m_enabled;
         private bool m_autoReset;
@@ -62,17 +66,24 @@ namespace GSF.Threading
         /// </summary>
         private readonly LogPublisher m_log;
 
+        #endregion
+
+        #region [ Constructors ]
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SharedTimer"/>.
         /// </summary>
         /// <param name="scheduler">The scheduler to use</param>
         /// <param name="interval">The interval of the timer, default is 100</param>
-        public SharedTimer(SharedTimerScheduler scheduler, int interval = 100)
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        internal SharedTimer(SharedTimerScheduler scheduler, int interval = 100)
         {
             if (scheduler == null)
                 throw new ArgumentNullException(nameof(scheduler));
+
             if (scheduler.IsDisposed)
                 throw new ArgumentException("Scheduler has been disposed", nameof(scheduler));
+
             if (interval <= 0)
                 throw new ArgumentOutOfRangeException(nameof(interval));
 
@@ -84,6 +95,10 @@ namespace GSF.Threading
             m_callback = TimerCallback;
             m_scheduler = scheduler;
         }
+
+        #endregion
+
+        #region [ Properties ]
 
         /// <summary>
         /// Gets or sets a value indicating whether the <see cref="SharedTimer" /> should raise the <see cref="Elapsed" /> 
@@ -101,6 +116,7 @@ namespace GSF.Threading
                 if (m_autoReset != value)
                 {
                     m_autoReset = value;
+
                     if (value && m_enabled)
                     {
                         m_registeredCallback?.Clear();
@@ -126,17 +142,15 @@ namespace GSF.Threading
             {
                 if (m_disposed)
                     throw new ObjectDisposedException(GetType().FullName);
+
                 if (m_enabled != value)
                 {
                     m_enabled = value;
+
                     if (!m_enabled)
-                    {
                         m_registeredCallback?.Clear();
-                    }
                     else
-                    {
                         m_registeredCallback = m_scheduler.RegisterCallback(m_interval, m_callback);
-                    }
                 }
             }
         }
@@ -163,6 +177,7 @@ namespace GSF.Threading
                 if (value != m_interval)
                 {
                     m_interval = value;
+
                     if (m_enabled)
                     {
                         m_registeredCallback?.Clear();
@@ -172,9 +187,12 @@ namespace GSF.Threading
             }
         }
 
+        #endregion
+
+        #region [ Methods ]
 
         /// <summary>
-        /// Stops the timer
+        /// Stops the timer.
         /// </summary>
         public void Close()
         {
@@ -182,7 +200,7 @@ namespace GSF.Threading
         }
 
         /// <summary>
-        /// Stops the timer and prevents reuse of this class
+        /// Stops the timer and prevents reuse of this class.
         /// </summary>
         public void Dispose()
         {
@@ -230,15 +248,12 @@ namespace GSF.Threading
             {
                 try
                 {
-                    var unhandledExceptions = UnhandledExceptions;
+                    EventHandler<EventArgs<Exception>> unhandledExceptions = UnhandledExceptions;
+
                     if (unhandledExceptions == null)
-                    {
                         m_log.Publish(MessageLevel.Info, "Swallowed exception", null, null, ex);
-                    }
                     else
-                    {
                         unhandledExceptions(this, new EventArgs<Exception>(ex));
-                    }
                 }
                 catch (Exception ex2)
                 {
@@ -246,5 +261,7 @@ namespace GSF.Threading
                 }
             }
         }
+
+        #endregion
     }
 }
