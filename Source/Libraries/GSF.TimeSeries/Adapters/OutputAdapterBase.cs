@@ -556,10 +556,6 @@ namespace GSF.TimeSeries.Adapters
                 if (performedDisconnect && !UseAsyncConnect)
                     OnDisconnected();
             }
-            catch (ThreadAbortException)
-            {
-                // This exception can be safely ignored...
-            }
             catch (Exception ex)
             {
                 OnProcessException(new InvalidOperationException($"Exception occurred during disconnect: {ex.Message}", ex));
@@ -691,8 +687,7 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (UnprocessedMeasurements != null)
-                    UnprocessedMeasurements(this, new EventArgs<int>(unprocessedMeasurements));
+                UnprocessedMeasurements?.Invoke(this, new EventArgs<int>(unprocessedMeasurements));
             }
             catch (Exception ex)
             {

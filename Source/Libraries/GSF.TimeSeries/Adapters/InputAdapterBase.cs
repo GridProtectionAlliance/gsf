@@ -26,7 +26,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading;
 using GSF.Threading;
 
 namespace GSF.TimeSeries.Adapters
@@ -356,10 +355,6 @@ namespace GSF.TimeSeries.Adapters
                 if (performedDisconnect && !UseAsyncConnect)
                     OnDisconnected();
             }
-            catch (ThreadAbortException)
-            {
-                // This exception can be safely ignored...
-            }
             catch (Exception ex)
             {
                 if(EnableConnectionErrors)
@@ -395,8 +390,7 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (NewMeasurements != null)
-                    NewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
+                NewMeasurements?.Invoke(this, new EventArgs<ICollection<IMeasurement>>(measurements));
 
                 IncrementProcessedMeasurements(measurements.Count);
             }
@@ -414,8 +408,7 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (ProcessingComplete != null)
-                    ProcessingComplete(this, EventArgs.Empty);
+                ProcessingComplete?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {

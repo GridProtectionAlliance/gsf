@@ -3682,10 +3682,6 @@ namespace GSF.PhasorProtocols
                         break;
                 }
             }
-            catch (ThreadAbortException)
-            {
-                throw;
-            }
             catch (Exception ex)
             {
                 OnParsingException(ex);
@@ -3741,10 +3737,6 @@ namespace GSF.PhasorProtocols
                     startDataParsingThread.IsBackground = true;
                     startDataParsingThread.Start();
                 }
-            }
-            catch (ThreadAbortException)
-            {
-                throw;
             }
             catch (Exception ex)
             {

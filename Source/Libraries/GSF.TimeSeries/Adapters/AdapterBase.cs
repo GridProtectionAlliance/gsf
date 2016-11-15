@@ -876,8 +876,7 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if ((object)StatusMessage != null)
-                    StatusMessage(this, new EventArgs<string>(status));
+                StatusMessage?.Invoke(this, new EventArgs<string>(status));
             }
             catch (Exception ex)
             {
@@ -899,8 +898,7 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if ((object)StatusMessage != null)
-                    StatusMessage(this, new EventArgs<string>(string.Format(formattedStatus, args)));
+                StatusMessage?.Invoke(this, new EventArgs<string>(string.Format(formattedStatus, args)));
             }
             catch (Exception ex)
             {
@@ -915,8 +913,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
         protected virtual void OnProcessException(Exception ex)
         {
-            if ((object)ProcessException != null)
-                ProcessException(this, new EventArgs<Exception>(ex));
+            ProcessException?.Invoke(this, new EventArgs<Exception>(ex));
         }
 
         /// <summary>
@@ -926,8 +923,7 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if ((object)InputMeasurementKeysUpdated != null)
-                    InputMeasurementKeysUpdated(this, EventArgs.Empty);
+                InputMeasurementKeysUpdated?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
@@ -943,8 +939,7 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if ((object)OutputMeasurementsUpdated != null)
-                    OutputMeasurementsUpdated(this, EventArgs.Empty);
+                OutputMeasurementsUpdated?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
@@ -960,8 +955,7 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if ((object)ConfigurationChanged != null)
-                    ConfigurationChanged(this, EventArgs.Empty);
+                ConfigurationChanged?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
