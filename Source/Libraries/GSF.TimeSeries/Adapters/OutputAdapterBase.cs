@@ -29,7 +29,6 @@ using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using GSF.Collections;
 using GSF.Threading;
 
@@ -90,7 +89,10 @@ namespace GSF.TimeSeries.Adapters
             m_measurementQueue = ProcessQueue<IMeasurement>.CreateRealTimeQueue(ProcessMeasurements);
             m_measurementQueue.ProcessException += m_measurementQueue_ProcessException;
 
-            m_connectionOperation = new LongSynchronizedOperation(AttemptConnectionOperation);
+            m_connectionOperation = new LongSynchronizedOperation(AttemptConnectionOperation)
+            {
+                IsBackground = true
+            };
 
             m_connectionTimer = TimerScheduler.CreateTimer(2000);
             m_connectionTimer.Elapsed += m_connectionTimer_Elapsed;

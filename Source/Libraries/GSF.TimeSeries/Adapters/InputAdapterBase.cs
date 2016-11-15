@@ -77,7 +77,10 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         protected InputAdapterBase()
         {
-            m_connectionOperation = new LongSynchronizedOperation(AttemptConnectionOperation);
+            m_connectionOperation = new LongSynchronizedOperation(AttemptConnectionOperation)
+            {
+                IsBackground = true
+            };
 
             m_connectionTimer = TimerScheduler.CreateTimer(2000);
             m_connectionTimer.Elapsed += m_connectionTimer_Elapsed;
@@ -344,7 +347,7 @@ namespace GSF.TimeSeries.Adapters
                 bool performedDisconnect = Enabled;
 
                 // Stop the connection cycle
-                if (m_connectionTimer != null)
+                if ((object)m_connectionTimer != null)
                     m_connectionTimer.Enabled = false;
 
                 base.Stop();
