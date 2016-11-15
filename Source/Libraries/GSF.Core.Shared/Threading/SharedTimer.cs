@@ -257,7 +257,7 @@ namespace GSF.Threading
                 }
                 catch (Exception ex2)
                 {
-                    m_log.Publish(MessageLevel.Warning, MessageFlags.BugReport, "Unhandled Exception callback threw an error", ex.ToString(), null, ex2);
+                    m_log.Publish(MessageLevel.Warning, MessageFlags.BugReport, "Unhandled Exception callback threw an error", ex2.ToString(), null, ex2);
                 }
             }
         }
