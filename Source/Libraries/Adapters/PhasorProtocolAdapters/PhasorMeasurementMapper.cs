@@ -2287,14 +2287,6 @@ namespace PhasorProtocolAdapters
         private void m_frameParser_ConfigurationChanged(object sender, EventArgs e)
         {
             OnStatusMessage("NOTICE: Configuration has changed, requesting new configuration frame...");
-
-            // Reset data stream monitor to allow time for non-cached reception of new configuration frame...
-            if (m_dataStreamMonitor.Enabled)
-            {
-                m_dataStreamMonitor.Stop();
-                m_dataStreamMonitor.Start();
-            }
-
             m_receivedConfigFrame = false;
             SendCommand(DeviceCommand.SendConfigurationFrame2);
         }
