@@ -36,8 +36,10 @@ using System.Threading;
 using GSF.Annotations;
 using GSF.Configuration;
 using GSF.Data;
+using GSF.Threading;
 using GSF.Units;
 
+// ReSharper disable TryCastAlwaysSucceeds
 namespace GSF.TimeSeries.Adapters
 {
     /// <summary>
@@ -862,6 +864,7 @@ namespace GSF.TimeSeries.Adapters
         /// <returns>A hash code for the current <see cref="AdapterBase"/>.</returns>
         public override int GetHashCode()
         {
+            // ReSharper disable once NonReadonlyMemberInGetHashCode
             return m_hashCode;
         }
 
@@ -879,7 +882,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for StatusMessage event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex));
             }
         }
 
@@ -902,7 +905,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for StatusMessage event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex));
             }
         }
 
@@ -929,7 +932,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for InputMeasurementKeysUpdated event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for InputMeasurementKeysUpdated event: {ex.Message}", ex));
             }
         }
 
@@ -946,7 +949,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for OutputMeasurementsUpdated event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for OutputMeasurementsUpdated event: {ex.Message}", ex));
             }
         }
 
@@ -963,7 +966,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ConfigurationChanged event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for ConfigurationChanged event: {ex.Message}", ex));
             }
         }
 
@@ -1002,6 +1005,9 @@ namespace GSF.TimeSeries.Adapters
         // Static Fields
         private static readonly Regex s_filterExpression = new Regex("(FILTER[ ]+(TOP[ ]+(?<MaxRows>\\d+)[ ]+)?(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+)[ ]+ORDER[ ]+BY[ ]+(?<SortField>\\w+))|(FILTER[ ]+(TOP[ ]+(?<MaxRows>\\d+)[ ]+)?(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex s_timetagExpression = new Regex("\\*(?<Offset>[+-]?\\d*\\.?\\d*)(?<Unit>\\w+)", RegexOptions.Compiled);
+
+        // Common use static timer for the Time-Series Library
+        internal static readonly SharedTimerScheduler TimerScheduler = new SharedTimerScheduler();
 
         // Static Methods
 
@@ -1281,7 +1287,7 @@ namespace GSF.TimeSeries.Adapters
                                 {
                                     if (adapter.DataSource.Tables.Contains(measurementTable))
                                     {
-                                        filteredRows = adapter.DataSource.Tables[measurementTable].Select(string.Format("ID = '{0}'", key));
+                                        filteredRows = adapter.DataSource.Tables[measurementTable].Select($"ID = '{key}'");
 
                                         if (filteredRows.Length > 0)
                                         {
@@ -1404,7 +1410,7 @@ namespace GSF.TimeSeries.Adapters
                 }
                 catch (Exception ex)
                 {
-                    throw new InvalidOperationException(string.Format("Could not parse input measurement definition from select statement \"{0}\": {1}", value, ex.Message), ex);
+                    throw new InvalidOperationException($"Could not parse input measurement definition from select statement \"{value}\": {ex.Message}", ex);
                 }
             }
             else
@@ -1422,7 +1428,7 @@ namespace GSF.TimeSeries.Adapters
 
                         if (key == MeasurementKey.Undefined && dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
                         {
-                            DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("SignalID = '{0}'", id));
+                            DataRow[] filteredRows = dataSource.Tables[measurementTable].Select($"SignalID = '{id}'");
 
                             if (filteredRows.Length > 0)
                                 MeasurementKey.TryCreateOrUpdate(id, filteredRows[0]["ID"].ToString(), out key);
@@ -1435,10 +1441,10 @@ namespace GSF.TimeSeries.Adapters
                             DataRow[] filteredRows;
 
                             // The item could not be parsed as a signal ID, but we do have a data source we can use to find the signal ID
-                            filteredRows = dataSource.Tables[measurementTable].Select(string.Format("ID = '{0}'", item.Trim()));
+                            filteredRows = dataSource.Tables[measurementTable].Select($"ID = '{item.Trim()}'");
 
                             if (filteredRows.Length == 0)
-                                filteredRows = dataSource.Tables[measurementTable].Select(string.Format("PointTag = '{0}'", item.Trim()));
+                                filteredRows = dataSource.Tables[measurementTable].Select($"PointTag = '{item.Trim()}'");
 
                             if (filteredRows.Length > 0)
                                 key = MeasurementKey.LookUpOrCreate(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), filteredRows[0]["ID"].ToString());
@@ -1448,9 +1454,9 @@ namespace GSF.TimeSeries.Adapters
                         if (key == MeasurementKey.Undefined)
                         {
                             if (id == Guid.Empty)
-                                throw new InvalidOperationException(string.Format("Could not parse input measurement definition \"{0}\" as a filter expression, measurement key, point tag or Guid", item));
+                                throw new InvalidOperationException($"Could not parse input measurement definition \"{item}\" as a filter expression, measurement key, point tag or Guid");
 
-                            throw new InvalidOperationException(string.Format("Measurement (targeted for input) with an ID of \"{0}\" is not defined or is not enabled", item));
+                            throw new InvalidOperationException($"Measurement (targeted for input) with an ID of \"{item}\" is not defined or is not enabled");
                         }
                     }
 
@@ -1562,7 +1568,7 @@ namespace GSF.TimeSeries.Adapters
                 }
                 catch (Exception ex)
                 {
-                    throw new InvalidOperationException(string.Format("Could not parse output measurement definition from select statement \"{0}\": {1}", value, ex.Message), ex);
+                    throw new InvalidOperationException($"Could not parse output measurement definition from select statement \"{value}\": {ex.Message}", ex);
                 }
             }
             else
@@ -1588,7 +1594,7 @@ namespace GSF.TimeSeries.Adapters
 
                         if (key == MeasurementKey.Undefined && dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
                         {
-                            DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("SignalID = '{0}'", id));
+                            DataRow[] filteredRows = dataSource.Tables[measurementTable].Select($"SignalID = '{id}'");
 
                             if (filteredRows.Length > 0)
                                 MeasurementKey.TryCreateOrUpdate(id, filteredRows[0]["ID"].ToString(), out key);
@@ -1601,13 +1607,13 @@ namespace GSF.TimeSeries.Adapters
                             DataRow[] filteredRows;
 
                             // The item could not be parsed as a signal ID, but we do have a data source we can use to find the signal ID
-                            filteredRows = dataSource.Tables[measurementTable].Select(string.Format("ID = '{0}'", elem[0]));
+                            filteredRows = dataSource.Tables[measurementTable].Select($"ID = '{elem[0]}'");
 
                             if (filteredRows.Length == 0)
                             {
                                 // Point tags can have commas so we do not support specification of adders and multipliers in this case -
                                 // therefore, we must do our lookup based on item (not elem) and clear elem if the lookup is successful
-                                filteredRows = dataSource.Tables[measurementTable].Select(string.Format("PointTag = '{0}'", item.Trim()));
+                                filteredRows = dataSource.Tables[measurementTable].Select($"PointTag = '{item.Trim()}'");
 
                                 if (filteredRows.Length > 0)
                                     elem = new string[0];
@@ -1621,9 +1627,9 @@ namespace GSF.TimeSeries.Adapters
                         if (key == MeasurementKey.Undefined)
                         {
                             if (id == Guid.Empty)
-                                throw new InvalidOperationException(string.Format("Could not parse output measurement definition \"{0}\" as a filter expression, measurement key, point tag or Guid", item));
+                                throw new InvalidOperationException($"Could not parse output measurement definition \"{item}\" as a filter expression, measurement key, point tag or Guid");
 
-                            throw new InvalidOperationException(string.Format("Measurement (targeted for output) with an ID of \"{0}\" is not defined or is not enabled", item));
+                            throw new InvalidOperationException($"Measurement (targeted for output) with an ID of \"{item}\" is not defined or is not enabled");
                         }
                     }
 
@@ -1650,7 +1656,7 @@ namespace GSF.TimeSeries.Adapters
                     {
                         if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
                         {
-                            DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("ID = '{0}'", key));
+                            DataRow[] filteredRows = dataSource.Tables[measurementTable].Select($"ID = '{key}'");
 
                             if (filteredRows.Length > 0)
                             {

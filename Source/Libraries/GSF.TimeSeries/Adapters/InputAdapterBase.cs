@@ -27,8 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using System.Timers;
-using Timer = System.Timers.Timer;
+using GSF.Threading;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -64,7 +63,7 @@ namespace GSF.TimeSeries.Adapters
         // Fields
         private List<string> m_outputSourceIDs;
         private MeasurementKey[] m_requestedOutputMeasurementKeys;
-        private Timer m_connectionTimer;
+        private SharedTimer m_connectionTimer;
         private bool m_isConnected;
         private bool m_disposed;
         private bool m_enableConnectionErrors = true;
@@ -78,11 +77,10 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         protected InputAdapterBase()
         {
-            m_connectionTimer = new Timer();
+            m_connectionTimer = TimerScheduler.CreateTimer(2000);
             m_connectionTimer.Elapsed += m_connectionTimer_Elapsed;
 
             m_connectionTimer.AutoReset = false;
-            m_connectionTimer.Interval = 2000;
             m_connectionTimer.Enabled = false;
         }
 
@@ -179,7 +177,7 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 if (m_connectionTimer != null)
-                    m_connectionTimer.Interval = value;
+                    m_connectionTimer.Interval = (int)value;
             }
         }
 
@@ -362,7 +360,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 if(EnableConnectionErrors)
-                    OnProcessException(new InvalidOperationException(string.Format("Exception occurred during disconnect: {0}", ex.Message), ex));
+                    OnProcessException(new InvalidOperationException($"Exception occurred during disconnect: {ex.Message}", ex));
             }
         }
 
@@ -402,7 +400,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for NewMeasurements event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for NewMeasurements event: {ex.Message}", ex));
             }
         }
 
@@ -419,11 +417,11 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ProcessingComplete event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for ProcessingComplete event: {ex.Message}", ex));
             }
         }
 
-        private void m_connectionTimer_Elapsed(object sender, ElapsedEventArgs e)
+        private void m_connectionTimer_Elapsed(object sender, EventArgs<DateTime> e)
         {
             try
             {
@@ -446,7 +444,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 if(EnableConnectionErrors)
-                    OnProcessException(new InvalidOperationException(string.Format("Connection attempt failed: {0}", ex.Message), ex));
+                    OnProcessException(new InvalidOperationException($"Connection attempt failed: {ex.Message}", ex));
 
                 // So long as user hasn't requested to stop, keep trying connection
                 if (Enabled)

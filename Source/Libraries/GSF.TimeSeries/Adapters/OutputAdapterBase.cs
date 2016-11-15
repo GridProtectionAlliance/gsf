@@ -30,10 +30,8 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Timers;
 using GSF.Collections;
 using GSF.Threading;
-using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -70,8 +68,8 @@ namespace GSF.TimeSeries.Adapters
         private ProcessQueue<IMeasurement> m_measurementQueue;
         private List<string> m_inputSourceIDs;
         private MeasurementKey[] m_requestedInputMeasurementKeys;
-        private Timer m_connectionTimer;
-        private Timer m_monitorTimer;
+        private SharedTimer m_connectionTimer;
+        private SharedTimer m_monitorTimer;
         private bool m_disposed;
 
         #endregion
@@ -91,19 +89,17 @@ namespace GSF.TimeSeries.Adapters
             m_measurementQueue = ProcessQueue<IMeasurement>.CreateRealTimeQueue(ProcessMeasurements);
             m_measurementQueue.ProcessException += m_measurementQueue_ProcessException;
 
-            m_connectionTimer = new Timer();
+            m_connectionTimer = TimerScheduler.CreateTimer(2000);
             m_connectionTimer.Elapsed += m_connectionTimer_Elapsed;
 
             m_connectionTimer.AutoReset = false;
-            m_connectionTimer.Interval = 2000;
             m_connectionTimer.Enabled = false;
-
-            m_monitorTimer = new Timer();
-            m_monitorTimer.Elapsed += m_monitorTimer_Elapsed;
 
             // We monitor total number of unarchived measurements every 5 seconds - this is a useful statistic to monitor, if
             // total number of unarchived measurements gets very large, measurement archival could be falling behind
-            m_monitorTimer.Interval = 5000;
+            m_monitorTimer = TimerScheduler.CreateTimer(5000);
+            m_monitorTimer.Elapsed += m_monitorTimer_Elapsed;
+
             m_monitorTimer.AutoReset = true;
             m_monitorTimer.Enabled = false;
         }
@@ -312,7 +308,7 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 if (m_connectionTimer != null)
-                    m_connectionTimer.Interval = value;
+                    m_connectionTimer.Interval = (int)value;
             }
         }
 
@@ -563,7 +559,7 @@ namespace GSF.TimeSeries.Adapters
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Exception occurred during disconnect: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception occurred during disconnect: {ex.Message}", ex));
             }
         }
 
@@ -698,11 +694,11 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for UnprocessedMeasurements event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for UnprocessedMeasurements event: {ex.Message}", ex));
             }
         }
 
-        private void m_connectionTimer_Elapsed(object sender, ElapsedEventArgs e)
+        private void m_connectionTimer_Elapsed(object sender, EventArgs<DateTime> e)
         {
             try
             {
@@ -724,7 +720,7 @@ namespace GSF.TimeSeries.Adapters
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Connection attempt failed: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Connection attempt failed: {ex.Message}", ex));
 
                 // So long as user hasn't requested to stop, keep trying connection
                 if (Enabled)
@@ -733,7 +729,7 @@ namespace GSF.TimeSeries.Adapters
         }
 
         // All we do here is expose the total number of unarchived measurements in the queue
-        private void m_monitorTimer_Elapsed(object sender, ElapsedEventArgs e)
+        private void m_monitorTimer_Elapsed(object sender, EventArgs<DateTime> e)
         {
             OnUnprocessedMeasurements(m_measurementQueue.Count);
         }

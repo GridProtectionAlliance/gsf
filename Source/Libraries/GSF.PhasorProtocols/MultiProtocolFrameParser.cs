@@ -78,7 +78,6 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Timers;
 using GSF.Communication;
 using GSF.IO;
 using GSF.Parsing;
@@ -90,7 +89,6 @@ using GSF.TimeSeries;
 using GSF.Units;
 using GSF.Units.EE;
 using TcpClient = GSF.Communication.TcpClient;
-using Timer = System.Timers.Timer;
 using UdpClient = GSF.Communication.UdpClient;
 
 // Ignore warnings about unused events that are required by IClient
@@ -331,6 +329,7 @@ namespace GSF.PhasorProtocols
                 }
                 set
                 {
+                    // ReSharper disable once InconsistentlySynchronizedField
                     m_configurationString = value;
                 }
             }
@@ -807,10 +806,10 @@ namespace GSF.PhasorProtocols
                     localInterface = string.Empty;
 
                 if (!settings.TryGetValue("port", out localPortSetting))
-                    throw new InvalidOperationException(string.Format("Local port property missing from connection string: {0}", m_configurationString));
+                    throw new InvalidOperationException($"Local port property missing from connection string: {m_configurationString}");
 
                 if (!int.TryParse(localPortSetting, out localPort))
-                    throw new InvalidOperationException(string.Format("Unable to parse local port from \"{0}\".", localPortSetting));
+                    throw new InvalidOperationException($"Unable to parse local port from \"{localPortSetting}\".");
 
                 return Transport.CreateEndPoint(localInterface, localPort, ipStack);
             }
@@ -1230,7 +1229,7 @@ namespace GSF.PhasorProtocols
                 if (settings.TryGetValue("server", out serverSetting))
                 {
                     if (settings.TryGetValue("remoteport", out remotePortSetting))
-                        serverSetting = string.Format("{0}:{1}", serverSetting, remotePortSetting);
+                        serverSetting = $"{serverSetting}:{remotePortSetting}";
 
                     endPointMatch = Regex.Match(serverSetting, Transport.EndpointFormatRegex);
 
@@ -1512,10 +1511,10 @@ namespace GSF.PhasorProtocols
                     localInterface = string.Empty;
 
                 if (!settings.TryGetValue("localport", out localPortSetting) && !settings.TryGetValue("port", out localPortSetting))
-                    throw new InvalidOperationException(string.Format("Local port property missing from connection string: {0}", m_connectionString));
+                    throw new InvalidOperationException($"Local port property missing from connection string: {m_connectionString}");
 
                 if (!int.TryParse(localPortSetting, out localPort))
-                    throw new InvalidOperationException(string.Format("Unable to parse local port from \"{0}\".", localPortSetting));
+                    throw new InvalidOperationException($"Unable to parse local port from \"{localPortSetting}\".");
 
                 return Transport.CreateEndPoint(localInterface, localPort, ipStack);
             }
@@ -2860,14 +2859,14 @@ namespace GSF.PhasorProtocols
 
                 // Check for common error when using an IPv4 address on an IPv6 stack
                 if (ex.ErrorCode == 10014)
-                    OnConnectionException(new InvalidOperationException(string.Format("Bad IP address format in \"{0}\": {1}\r\n\r\nUse a DNS name or an IPv6 formatted IP address (e.g., ::1); otherwise, force IPv4 mode.", m_connectionString, ex.Message), ex), 1);
+                    OnConnectionException(new InvalidOperationException($"Bad IP address format in \"{m_connectionString}\": {ex.Message}\r\n\r\nUse a DNS name or an IPv6 formatted IP address (e.g., ::1); otherwise, force IPv4 mode.", ex), 1);
                 else
-                    OnConnectionException(new InvalidOperationException(string.Format("{0} in \"{1}\"", ex.Message, m_connectionString), ex), 1);
+                    OnConnectionException(new InvalidOperationException($"{ex.Message} in \"{m_connectionString}\"", ex), 1);
             }
             catch (Exception ex)
             {
                 Stop();
-                OnConnectionException(new InvalidOperationException(string.Format("{0} in \"{1}\"", ex.Message, m_connectionString), ex), 1);
+                OnConnectionException(new InvalidOperationException($"{ex.Message} in \"{m_connectionString}\"", ex), 1);
             }
         }
 
@@ -3030,7 +3029,7 @@ namespace GSF.PhasorProtocols
                     }
                     break;
                 default:
-                    throw new InvalidOperationException(string.Format("Phasor protocol \"{0}\" is not recognized, failed to initialize frame parser", m_phasorProtocol));
+                    throw new InvalidOperationException($"Phasor protocol \"{m_phasorProtocol}\" is not recognized, failed to initialize frame parser");
             }
 
             // Assign frame parser properties
@@ -3155,7 +3154,7 @@ namespace GSF.PhasorProtocols
                     m_readNextBuffer = new ShortSynchronizedOperation(ReadNextFileBuffer, ex => OnParsingException(new InvalidOperationException("Encountered an exception while reading file data: " + ex.Message, ex)));
                     break;
                 default:
-                    throw new InvalidOperationException(string.Format("Transport protocol \"{0}\" is not recognized, failed to initialize data channel", m_transportProtocol));
+                    throw new InvalidOperationException($"Transport protocol \"{m_transportProtocol}\" is not recognized, failed to initialize data channel");
             }
 
             // Handle primary data connection, this *must* be defined...
@@ -3232,7 +3231,7 @@ namespace GSF.PhasorProtocols
                 if (settings.TryGetValue("server", out serverSetting))
                 {
                     if (settings.TryGetValue("remoteport", out remotePortSetting))
-                        serverSetting = string.Format("{0}:{1}", serverSetting, remotePortSetting);
+                        serverSetting = $"{serverSetting}:{remotePortSetting}";
 
                     endPointMatch = Regex.Match(serverSetting, Transport.EndpointFormatRegex);
 

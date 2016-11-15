@@ -32,13 +32,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Timers;
 using GSF.Annotations;
 using GSF.Collections;
 using GSF.IO;
 using GSF.Threading;
 using GSF.Units;
-using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -111,7 +109,7 @@ namespace GSF.TimeSeries.Adapters
         private DateTime m_startTimeConstraint;
         private DateTime m_stopTimeConstraint;
         private int m_processingInterval;
-        private Timer m_monitorTimer;
+        private SharedTimer m_monitorTimer;
         private bool m_monitorTimerEnabled;
         private readonly LogicalThreadScheduler m_lifecycleThreadScheduler;
         private readonly Dictionary<uint, LogicalThread> m_lifecycleThreads;
@@ -136,11 +134,10 @@ namespace GSF.TimeSeries.Adapters
             m_initializationTimeout = AdapterBase.DefaultInitializationTimeout;
             m_autoStart = true;
 
-            m_monitorTimer = new Timer();
+            // We monitor total number of processed measurements every minute
+            m_monitorTimer = AdapterBase.TimerScheduler.CreateTimer(60000);
             m_monitorTimer.Elapsed += m_monitorTimer_Elapsed;
 
-            // We monitor total number of processed measurements every minute
-            m_monitorTimer.Interval = 60000;
             m_monitorTimer.AutoReset = true;
             m_monitorTimer.Enabled = false;
 
@@ -858,10 +855,10 @@ namespace GSF.TimeSeries.Adapters
         public virtual void Initialize()
         {
             if ((object)DataSource == null)
-                throw new NullReferenceException(string.Format("DataSource is null, cannot load {0}", Name));
+                throw new NullReferenceException($"DataSource is null, cannot load {Name}");
 
             if (string.IsNullOrWhiteSpace(DataMember))
-                throw new InvalidOperationException(string.Format("DataMember is null or empty, cannot load {0}", Name));
+                throw new InvalidOperationException($"DataMember is null or empty, cannot load {Name}");
 
             Initialized = false;
 
@@ -888,7 +885,7 @@ namespace GSF.TimeSeries.Adapters
                     Initialized = true;
                 }
                 else
-                    throw new InvalidOperationException(string.Format("Data set member \"{0}\" was not found in data source, check ConfigurationEntity. Failed to initialize {1}.", DataMember, Name));
+                    throw new InvalidOperationException($"Data set member \"{DataMember}\" was not found in data source, check ConfigurationEntity. Failed to initialize {Name}.");
             }
         }
 
@@ -945,7 +942,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We report any errors encountered during type creation...
-                OnProcessException(new InvalidOperationException(string.Format("Failed to load adapter \"{0}\" [{1}] from \"{2}\": {3}", name, typeName, assemblyName, ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Failed to load adapter \"{name}\" [{typeName}] from \"{assemblyName}\": {ex.Message}", ex));
             }
 
             adapter = default(T);
@@ -980,7 +977,7 @@ namespace GSF.TimeSeries.Adapters
         /// <returns><c>true</c> if adapter with the specified <paramref name="name"/> was found; otherwise <c>false</c>.</returns>
         public virtual bool TryGetAdapterByName(string name, out T adapter)
         {
-            return TryGetAdapter(name, (item, value) => string.Compare(item.Name, value, true) == 0, out adapter);
+            return TryGetAdapter(name, (item, value) => item.Name.Equals(value, StringComparison.OrdinalIgnoreCase), out adapter);
         }
 
         /// <summary>
@@ -1170,7 +1167,7 @@ namespace GSF.TimeSeries.Adapters
         /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
         public virtual string GetShortStatus(int maxLength)
         {
-            return string.Format("Total components: {0:N0}", Count).CenterText(maxLength);
+            return $"Total components: {Count:N0}".CenterText(maxLength);
         }
 
         /// <summary>
@@ -1269,7 +1266,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for StatusMessage event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex));
             }
         }
 
@@ -1292,7 +1289,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for StatusMessage event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex));
             }
         }
 
@@ -1309,7 +1306,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for InputMeasurementKeysUpdated event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for InputMeasurementKeysUpdated event: {ex.Message}", ex));
             }
         }
 
@@ -1326,7 +1323,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for OutputMeasurementsUpdated event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for OutputMeasurementsUpdated event: {ex.Message}", ex));
             }
         }
 
@@ -1343,7 +1340,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ConfigurationChanged event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for ConfigurationChanged event: {ex.Message}", ex));
             }
         }
 
@@ -1449,7 +1446,7 @@ namespace GSF.TimeSeries.Adapters
                 catch (Exception ex)
                 {
                     // Process exception for logging
-                    string errorMessage = string.Format("Failed to queue initialize operation for adapter {0}: {1}", item.Name, ex.Message);
+                    string errorMessage = $"Failed to queue initialize operation for adapter {item.Name}: {ex.Message}";
                     OnProcessException(new InvalidOperationException(errorMessage, ex));
                 }
             }
@@ -1476,7 +1473,7 @@ namespace GSF.TimeSeries.Adapters
         // Handle item initialization
         private void Initialize(T item)
         {
-            Timer initializationTimeoutTimer = null;
+            SharedTimer initializationTimeoutTimer = null;
 
             if (m_activeItem.Value != item)
                 return;
@@ -1489,7 +1486,7 @@ namespace GSF.TimeSeries.Adapters
                     // If initialization timeout is specified for this item, start the initialization timeout timer
                     if (item.InitializationTimeout > 0)
                     {
-                        initializationTimeoutTimer = new Timer(item.InitializationTimeout);
+                        initializationTimeoutTimer = AdapterBase.TimerScheduler.CreateTimer(item.InitializationTimeout);
 
                         initializationTimeoutTimer.Elapsed += (sender, args) =>
                         {
@@ -1544,12 +1541,11 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We report any errors encountered during initialization...
-                OnProcessException(new InvalidOperationException(string.Format("Failed to initialize adapter {0}: {1}", item.Name, ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Failed to initialize adapter {item.Name}: {ex.Message}", ex));
             }
             finally
             {
-                if ((object)initializationTimeoutTimer != null)
-                    initializationTimeoutTimer.Dispose();
+                initializationTimeoutTimer?.Dispose();
             }
         }
 
@@ -1566,7 +1562,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We report any errors encountered during startup...
-                OnProcessException(new InvalidOperationException(string.Format("Failed to start adapter {0}: {1}", item.Name, ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Failed to start adapter {item.Name}: {ex.Message}", ex));
             }
         }
 
@@ -1650,7 +1646,7 @@ namespace GSF.TimeSeries.Adapters
         }
 
         // We monitor the total number of measurements destined for archival here...
-        private void m_monitorTimer_Elapsed(object sender, ElapsedEventArgs e)
+        private void m_monitorTimer_Elapsed(object sender, EventArgs<DateTime> e)
         {
             StringBuilder status = new StringBuilder();
             Ticks currentTime, totalProcessTime;
