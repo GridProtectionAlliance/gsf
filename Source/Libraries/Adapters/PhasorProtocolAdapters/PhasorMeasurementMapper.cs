@@ -213,7 +213,7 @@ namespace PhasorProtocolAdapters
             m_generatedSignalReferenceCache = new ConcurrentDictionary<SignalKind, string[]>();
 
             // Create data stream monitoring timer
-            m_dataStreamMonitor = CommonPhasorServices.SharedTimerFactory.CreateTimer();
+            m_dataStreamMonitor = CommonPhasorServices.TimerScheduler.CreateTimer();
             m_dataStreamMonitor.Elapsed += m_dataStreamMonitor_Elapsed;
             m_dataStreamMonitor.AutoReset = true;
             m_dataStreamMonitor.Enabled = false;
@@ -2102,7 +2102,7 @@ namespace PhasorProtocolAdapters
             if ((object)m_measurementCounter == null)
             {
                 // Create the timer if it doesn't already exist
-                m_measurementCounter = CommonPhasorServices.SharedTimerFactory.CreateTimer(1000);
+                m_measurementCounter = CommonPhasorServices.TimerScheduler.CreateTimer(1000);
                 m_measurementCounter.Elapsed += m_measurementCounter_Elapsed;
             }
 

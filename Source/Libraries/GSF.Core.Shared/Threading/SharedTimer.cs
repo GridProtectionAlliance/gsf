@@ -28,12 +28,21 @@ using GSF.Diagnostics;
 namespace GSF.Threading
 {
     /// <summary>
-    /// Functions similar to <see cref="System.Timers.Timer"/> except timer callbacks with the same <see cref="Interval"/>
-    /// are pooled into a single timer and called with the same thread when they contain the same <see cref="SharedTimerScheduler"/>. 
-    /// 
-    /// Any long running callbacks that have a risk of long delays should not use <see cref="SharedTimer"/> as they 
-    /// will effect the reliability of all of the other <see cref="SharedTimer"/>s in the <see cref="SharedTimerScheduler"/>.
+    /// Represents a timer class that will group registered timer event callbacks that operate on the same
+    /// interval in order to optimize thread pool queuing.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Externally the <see cref="SharedTimer"/> operations similar to the <see cref="System.Timers.Timer"/>.
+    /// Internally the timer pools callbacks with the same <see cref="Interval"/> into a single timer where
+    /// each callback is executed on the same thread, per instance of the <see cref="SharedTimerScheduler"/>. 
+    /// </para>
+    /// <para>
+    /// Any long running callbacks that have a risk of long delays should not use <see cref="SharedTimer"/>
+    /// as this will effect the reliability of all of the other <see cref="SharedTimer"/> instances for a
+    /// given <see cref="SharedTimerScheduler"/>.
+    /// </para>
+    /// </remarks>
     public sealed class SharedTimer : IDisposable
     {
         #region [ Members ]
@@ -41,12 +50,12 @@ namespace GSF.Threading
         // Events
 
         /// <summary>
-        /// Occurs when the interval elapses.
+        /// Occurs when the timer interval elapses.
         /// </summary>
         public event EventHandler<EventArgs<DateTime>> Elapsed;
 
         /// <summary>
-        /// Occurs when <see cref="Elapsed"/> has an exception
+        /// Occurs when <see cref="Elapsed"/> event throws an exception.
         /// </summary>
         public event EventHandler<EventArgs<Exception>> UnhandledExceptions;
 
@@ -55,15 +64,13 @@ namespace GSF.Threading
         private bool m_enabled;
         private bool m_autoReset;
         private bool m_disposed;
-        private Action<DateTime> m_callback;
-        private SharedTimerScheduler m_scheduler;
+        private readonly Action<DateTime> m_callback;
+        private readonly SharedTimerScheduler m_scheduler;
         private WeakAction<DateTime> m_registeredCallback;
 
-        /// <summary>
-        /// Since there won't be many shared timers, it will be better to not make this publisher a static instance. 
-        /// This will provide the initialization stack so it will be easier to distinguish this instance of SharedTimer 
-        /// from other instances.
-        /// </summary>
+        // Since it is not expected that many shared timers will exist, log publisher is a member instance.
+        // This will provide the initialization stack so it will be easier to distinguish this instance
+        // of StaticTimer from other instances.
         private readonly LogPublisher m_log;
 
         #endregion
@@ -73,12 +80,12 @@ namespace GSF.Threading
         /// <summary>
         /// Initializes a new instance of the <see cref="SharedTimer"/>.
         /// </summary>
-        /// <param name="scheduler">The scheduler to use</param>
-        /// <param name="interval">The interval of the timer, default is 100</param>
+        /// <param name="scheduler">The scheduler to use.</param>
+        /// <param name="interval">The interval of the timer, default is 100.</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         internal SharedTimer(SharedTimerScheduler scheduler, int interval = 100)
         {
-            if (scheduler == null)
+            if ((object)scheduler == null)
                 throw new ArgumentNullException(nameof(scheduler));
 
             if (scheduler.IsDisposed)
@@ -101,10 +108,14 @@ namespace GSF.Threading
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets a value indicating whether the <see cref="SharedTimer" /> should raise the <see cref="Elapsed" /> 
-        /// event each time the specified interval elapses or only after the first time it elapses.</summary>
-        /// <returns>true if the <see cref="SharedTimer" /> should raise the <see cref="Elapsed" /> event each time the interval elapses; 
-        /// false if it should raise the <see cref="Elapsed" /> event only once, after the first time the interval elapses. The default is true.</returns>
+        /// Gets or sets flag that indicates whether the <see cref="SharedTimer" /> should raise the <see cref="Elapsed" /> event only
+        /// once <c>false</c> or repeatedly <c>true</c>.
+        /// </summary>
+        /// <returns>
+        /// <c>true</c> the <see cref="SharedTimer" /> should raise the <see cref="Elapsed" /> event each time the interval elapses; otherwise,
+        /// <c>false</c> if it should raise the <see cref="Elapsed" /> event only once, after the first time the interval elapses.
+        /// The default is <c>true</c>.
+        /// </returns>
         public bool AutoReset
         {
             get
@@ -113,24 +124,25 @@ namespace GSF.Threading
             }
             set
             {
-                if (m_autoReset != value)
-                {
-                    m_autoReset = value;
+                if (m_autoReset == value)
+                    return;
 
-                    if (value && m_enabled)
-                    {
-                        m_registeredCallback?.Clear();
-                        m_registeredCallback = m_scheduler.RegisterCallback(m_interval, m_callback);
-                    }
+                m_autoReset = value;
+
+                if (value && m_enabled)
+                {
+                    m_registeredCallback?.Clear();
+                    m_registeredCallback = m_scheduler.RegisterCallback(m_interval, m_callback);
                 }
             }
         }
 
         /// <summary>
-        /// Gets or sets a value indicating whether the <see cref="SharedTimer" /> should raise the <see cref="Elapsed" /> event.
+        /// Gets or sets flag that indicates whether the <see cref="SharedTimer" /> should raise the <see cref="Elapsed" /> event.
         /// </summary>
         /// <returns>
-        /// true if the <see cref="SharedTimer" /> should raise the <see cref="Elapsed" /> event; otherwise, false. The default is false.
+        /// <c>true</c> if the <see cref="SharedTimer" /> should raise the <see cref="Elapsed" /> event; otherwise, <c>false</c>.
+        /// The default is <c>false</c>.
         /// </returns>
         public bool Enabled
         {
@@ -143,26 +155,26 @@ namespace GSF.Threading
                 if (m_disposed)
                     throw new ObjectDisposedException(GetType().FullName);
 
-                if (m_enabled != value)
-                {
-                    m_enabled = value;
+                if (m_enabled == value)
+                    return;
 
-                    if (!m_enabled)
-                        m_registeredCallback?.Clear();
-                    else
-                        m_registeredCallback = m_scheduler.RegisterCallback(m_interval, m_callback);
-                }
+                m_enabled = value;
+
+                if (!m_enabled)
+                    m_registeredCallback?.Clear();
+                else
+                    m_registeredCallback = m_scheduler.RegisterCallback(m_interval, m_callback);
             }
         }
 
         /// <summary>
         /// Gets or sets the interval at which to raise the <see cref="Elapsed" /> event.
         /// </summary>
-        /// <returns>
-        /// The time, in milliseconds, between <see cref="Elapsed" /> events. 
-        /// The value must be greater than zero, and less than or equal to <see cref="Int32.MaxValue" />. 
+        /// <returns>The time, in milliseconds, between <see cref="Elapsed" /> events.</returns>
+        /// <remarks>
+        /// The value must be greater than zero, and less than or equal to <see cref="Int32.MaxValue" />.
         /// The default is 100 milliseconds.
-        /// </returns>
+        /// </remarks>
         public int Interval
         {
             get
@@ -174,15 +186,15 @@ namespace GSF.Threading
                 if (value <= 0)
                     throw new ArgumentOutOfRangeException(nameof(value));
 
-                if (value != m_interval)
-                {
-                    m_interval = value;
+                if (value == m_interval)
+                    return;
 
-                    if (m_enabled)
-                    {
-                        m_registeredCallback?.Clear();
-                        m_registeredCallback = m_scheduler.RegisterCallback(m_interval, m_callback);
-                    }
+                m_interval = value;
+
+                if (m_enabled)
+                {
+                    m_registeredCallback?.Clear();
+                    m_registeredCallback = m_scheduler.RegisterCallback(m_interval, m_callback);
                 }
             }
         }
@@ -200,7 +212,7 @@ namespace GSF.Threading
         }
 
         /// <summary>
-        /// Stops the timer and prevents reuse of this class.
+        /// Stops the timer and prevents reuse of the class.
         /// </summary>
         public void Dispose()
         {
@@ -209,17 +221,16 @@ namespace GSF.Threading
         }
 
         /// <summary>
-        /// Starts raising the <see cref="Elapsed" /> event by setting 
-        /// <see cref="Enabled" /> to true.</summary>
+        /// Starts raising the <see cref="Elapsed" /> event by setting <see cref="Enabled" /> to <c>true</c>.
+        /// </summary>
         public void Start()
         {
             Enabled = true;
         }
 
         /// <summary>
-        /// Stops raising the <see cref="Elapsed"/> 
-        /// event by setting <see cref="Enabled" /> 
-        /// to false.</summary>
+        /// Stops raising the <see cref="Elapsed"/> event by setting <see cref="Enabled" /> to <c>false</c>.
+        /// </summary>
         public void Stop()
         {
             Enabled = false;
@@ -228,7 +239,7 @@ namespace GSF.Threading
         /// <summary>
         /// Callback from <see cref="SharedTimerScheduler"/>.
         /// </summary>
-        /// <param name="state">the time that the callback was signaled.</param>
+        /// <param name="state">The time that the callback was signaled.</param>
         private void TimerCallback(DateTime state)
         {
             if (!m_enabled)
@@ -250,7 +261,7 @@ namespace GSF.Threading
                 {
                     EventHandler<EventArgs<Exception>> unhandledExceptions = UnhandledExceptions;
 
-                    if (unhandledExceptions == null)
+                    if ((object)unhandledExceptions == null)
                         m_log.Publish(MessageLevel.Info, "Swallowed exception", null, null, ex);
                     else
                         unhandledExceptions(this, new EventArgs<Exception>(ex));

@@ -107,7 +107,7 @@ namespace GSF
 
     /// <summary>
     /// Represents a high resolution time that is very granular but may drift 
-    /// if trying to acurately measure long time durations (Such as hours). 
+    /// if trying to accurately measure long time durations (Such as hours). 
     /// This time is not adjusted with changes to the system clock.
     /// Typical clock drifts by about 2-3 ms per minute as apposed to 0.4ms per minute for 
     /// standard DateTime.

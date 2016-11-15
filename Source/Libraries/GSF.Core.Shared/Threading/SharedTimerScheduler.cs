@@ -33,23 +33,23 @@ namespace GSF.Threading
 {
     /// <summary>
     /// Represents a timer manager which is the scheduler of <see cref="SharedTimer"/>.
-    /// <see cref="SharedTimer"/> with the same scheduler will use the same ThreadPool thread
-    /// to process all <see cref="SharedTimer"/>s in series when they have a common interval.
     /// </summary>
+    /// <remarks>
+    /// A <see cref="SharedTimer"/> with the same scheduler will use the same ThreadPool thread to process
+    /// all of the <see cref="SharedTimer"/> instances in series when they have a common interval. Call
+    /// order, based on registration sequence, will be preserved.
+    /// </remarks>
     public sealed class SharedTimerScheduler : IDisposable
     {
         #region [ Members ]
 
-        /// <summary>
-        /// Represents a scheduler timer with of a common fire rate.
-        /// </summary>
+        // Represents a timer scheduler with of a common fire rate
         private class SharedTimerInstance : IDisposable
         {
             #region [ Members ]
 
             // Fields
-            private ConcurrentQueue<WeakAction<DateTime>> m_additionalQueueItems;
-
+            private readonly ConcurrentQueue<WeakAction<DateTime>> m_additionalQueueItems;
             private readonly LinkedList<WeakAction<DateTime>> m_callbacks;
             private readonly Timer m_timer;
             private readonly int m_interval;
@@ -58,32 +58,23 @@ namespace GSF.Threading
             private readonly object m_syncStats;
             private bool m_disposed;
 
-            /// <summary>
-            /// A counter of the number of times an interval has been skipped
-            /// because the callbacks did not complete before the timer fired again
-            /// since the last time it was reset
-            /// </summary>
+            // Counter of the number of times an interval has been skipped
+            // because the callbacks did not complete before the timer fired
+            // again since the last time it was reset
             private long m_skippedIntervals;
 
-            /// <summary>
-            /// The total CPU time spent processing the timer events.
-            /// since the last time it was reset
-            /// </summary>
+            // Total CPU time spent processing the timer events.
+            // since the last time it was reset
             private double m_elapsedWorkerTime;
-            /// <summary>
-            /// The total number of times the timer events have fired 
-            /// since the last time it was reset
-            /// </summary>
+            
+            // Total number of times the timer events have fired 
+            // since the last time it was reset
             private int m_elapsedIntervals;
 
-            /// <summary>
-            /// The total number of callbacks that have occurred.
-            /// </summary>
+            /// Total number of callbacks that have occurred
             private int m_sumOfCallbacks;
 
-            /// <summary>
-            /// The count of the number of timer callbacks that exists in this factory.
-            /// </summary>
+            /// Count of the number of timer callbacks that exists in this factory
             private int m_sharedTimersCount;
 
             #endregion
@@ -92,7 +83,7 @@ namespace GSF.Threading
 
             public SharedTimerInstance(SharedTimerScheduler parentTimer, int interval)
             {
-                if (parentTimer == null)
+                if ((object)parentTimer == null)
                     throw new ArgumentNullException(nameof(parentTimer));
 
                 if (interval <= 0)
@@ -118,6 +109,7 @@ namespace GSF.Threading
 
                 WeakAction<DateTime> weakAction = new WeakAction<DateTime>(callback);
                 m_additionalQueueItems.Enqueue(weakAction);
+
                 return weakAction;
             }
 
@@ -137,9 +129,7 @@ namespace GSF.Threading
                     if (!lockTaken)
                     {
                         lock (m_syncStats)
-                        {
                             m_skippedIntervals++;
-                        }
 
                         return;
                     }
@@ -154,7 +144,7 @@ namespace GSF.Threading
                         if (m_disposed)
                             return;
 
-                        // Since removing the linked list item will invalidate the "Next" property, go ahead and store it;
+                        // Removing the linked list item will invalidate the "Next" property, so we store it
                         LinkedListNode<WeakAction<DateTime>> nextNode = timerAction.Next;
 
                         try
@@ -214,11 +204,11 @@ namespace GSF.Threading
                 lock (m_syncStats)
                 {
                     double averageCpuTime = 0;
+
                     if (m_elapsedIntervals > 0)
-                    {
                         averageCpuTime = m_elapsedWorkerTime / m_elapsedIntervals;
-                    }
-                    return $"Interval: {m_interval} Skipped Intervals: {m_skippedIntervals} Elapsed Intervals: {m_elapsedIntervals} Average CPU Time: {(averageCpuTime).ToString("N2")}ms Sum of Callbacks: {m_sumOfCallbacks} Shared Timers: { m_sharedTimersCount}";
+
+                    return $"Interval: {m_interval} Skipped Intervals: {m_skippedIntervals} Elapsed Intervals: {m_elapsedIntervals} Average CPU Time: {averageCpuTime:N2}ms Sum of Callbacks: {m_sumOfCallbacks} Shared Timers: {m_sharedTimersCount}";
                 }
             }
 
@@ -229,14 +219,11 @@ namespace GSF.Threading
         private readonly Dictionary<int, SharedTimerInstance> m_schedulesByInterval;
         private readonly object m_syncRoot;
 
-        /// <summary>
-        /// Since there won't be many shared timers, it will be better to not make this publisher a static instance. 
-        /// This will provide the initialization stack so it will be easier to distinguish this instance of StaticTimer 
-        /// from other instances.
-        /// </summary>
+        // Since it is not expected that many shared timers will exist, log publisher is a member instance.
+        // This will provide the initialization stack so it will be easier to distinguish this instance
+        // of StaticTimer from other instances.
         private readonly LogPublisher m_log;
-
-        private ScheduledTask m_reportStatus;
+        private readonly ScheduledTask m_reportStatus;
         private bool m_disposed;
 
         #endregion
@@ -261,7 +248,7 @@ namespace GSF.Threading
         #region [ Properties ]
 
         /// <summary>
-        /// Gets if this class has been disposed.
+        /// Gets flag that determines if this <see cref="SharedTimerScheduler"/> instance has been disposed.
         /// </summary>
         public bool IsDisposed => m_disposed;
 
@@ -272,7 +259,7 @@ namespace GSF.Threading
         /// <summary>
         /// Creates a <see cref="SharedTimer"/> using the current <see cref="SharedTimerScheduler"/>.
         /// </summary>
-        /// <param name="interval">The interval of the timer, default is 100</param>
+        /// <param name="interval">The interval of the timer, default is 100.</param>
         /// <returns>A shared timer instance that fires at the given interval.</returns>
         public SharedTimer CreateTimer(int interval = 100)
         {
@@ -284,12 +271,14 @@ namespace GSF.Threading
         /// </summary>
         /// <param name="interval">The interval at which to run the timer.</param>
         /// <param name="callback">The action to be performed when the timer is triggered.</param>
-        /// <returns>The weak reference callback that will be executed when this timer fires. To unregister
-        /// the callback, call <see cref="WeakAction.Clear"/></returns>
+        /// <returns>
+        /// The weak reference callback that will be executed when this timer fires. To unregister
+        /// the callback, call <see cref="WeakAction.Clear"/>.
+        /// </returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
         internal WeakAction<DateTime> RegisterCallback(int interval, Action<DateTime> callback)
         {
-            if (callback == null)
+            if ((object)callback == null)
                 throw new ArgumentNullException(nameof(callback));
 
             if (interval <= 0)
@@ -318,7 +307,6 @@ namespace GSF.Threading
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
-        /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
             // Causes the status to be generated one last time before clearing everything
@@ -347,14 +335,14 @@ namespace GSF.Threading
             {
                 status.AppendLine("Shared Timer Factory Status");
 
-                foreach (var item in m_schedulesByInterval)
+                foreach (KeyValuePair<int, SharedTimerInstance> item in m_schedulesByInterval)
                 {
                     status.AppendLine(item.Value.StatusMessage());
                     item.Value.ResetStats();
                 }
             }
 
-            m_log.Publish(MessageLevel.Info, MessageFlags.SystemHealth, "Shared Timer Factory Status", status.ToString());
+            m_log.Publish(MessageLevel.Info, MessageFlags.SystemHealth, "SharedTimerScheduler Status", status.ToString());
         }
 
         #endregion
