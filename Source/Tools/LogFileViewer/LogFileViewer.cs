@@ -374,7 +374,7 @@ namespace LogFileViewer
 
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            string item = Interaction.InputBox("Provide a name.", "Save As", "Name");
+            string item = InputBox.Show("Provide a name.", "Save As", "Name");
             if (string.IsNullOrWhiteSpace(item))
                 return;
 

@@ -49,7 +49,6 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -77,6 +76,12 @@
     <Compile Include="Filters\MatchTimestamp.cs" />
     <Compile Include="Filters\MatchType.cs" />
     <Compile Include="Filters\MatchVerbose.cs" />
+    <Compile Include="InputBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="InputBox.Designer.cs">
+      <DependentUpon>InputBox.cs</DependentUpon>
+    </Compile>
     <Compile Include="ShowError.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -93,6 +98,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="ErrorFilterText.resx">
       <DependentUpon>ErrorFilterText.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="InputBox.resx">
+      <DependentUpon>InputBox.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ShowError.resx">
       <DependentUpon>ShowError.cs</DependentUpon>
