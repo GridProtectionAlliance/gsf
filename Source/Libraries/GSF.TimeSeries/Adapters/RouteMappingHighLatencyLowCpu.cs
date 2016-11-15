@@ -47,21 +47,29 @@ namespace GSF.TimeSeries.Adapters
             private readonly ConcurrentQueue<List<IMeasurement>> m_pendingMeasurements;
             public List<IMeasurement> MeasurementsToRoute;
 
+            public bool UsesOptimizedRouting;
+            public OptimizedRoutingConsumerMethods OptimizedMethods;
+
             public Consumer(IAdapter adapter)
             {
-                if (adapter is IActionAdapter)
+                OptimizedMethods = (adapter as IOptimizedRoutingConsumer)?.GetOptimizedRoutingConsumerMethods();
+                UsesOptimizedRouting = OptimizedMethods != null;
+                if (!UsesOptimizedRouting)
                 {
-                    m_callback = ((IActionAdapter)adapter).QueueMeasurementsForProcessing;
-                }
-                else
-                {
-                    m_callback = ((IOutputAdapter)adapter).QueueMeasurementsForProcessing;
-                }
+                    if (adapter is IActionAdapter)
+                    {
+                        m_callback = ((IActionAdapter)adapter).QueueMeasurementsForProcessing;
+                    }
+                    else
+                    {
+                        m_callback = ((IOutputAdapter)adapter).QueueMeasurementsForProcessing;
+                    }
 
-                m_task = new ScheduledTask();
-                m_task.Running += m_task_Running;
-                m_pendingMeasurements = new ConcurrentQueue<List<IMeasurement>>();
-                MeasurementsToRoute = new List<IMeasurement>();
+                    m_task = new ScheduledTask();
+                    m_task.Running += m_task_Running;
+                    m_pendingMeasurements = new ConcurrentQueue<List<IMeasurement>>();
+                    MeasurementsToRoute = new List<IMeasurement>();
+                }
             }
 
             public void RoutingComplete()
@@ -228,7 +236,6 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="routeLatency">The desired wait latency. Must be between 1 and 500ms inclusive</param>
         public RouteMappingHighLatencyLowCpu(int routeLatency)
         {
-
             if (routeLatency < 1 || routeLatency > 500)
                 throw new ArgumentOutOfRangeException(nameof(routeLatency), "Must be between 1 and 500ms");
 
@@ -327,7 +334,6 @@ namespace GSF.TimeSeries.Adapters
 
         void m_task_Running(object sender, EventArgs<ScheduledTaskRunningReason> e)
         {
-
             if (e.Argument == ScheduledTaskRunningReason.Disposing)
                 return;
 
@@ -346,8 +352,20 @@ namespace GSF.TimeSeries.Adapters
 
             var map = m_globalCache;
 
+            List<object> locks = new List<object>();
+
             try
             {
+                foreach (var item in map.GlobalDestinationList)
+                {
+                    if (item.UsesOptimizedRouting)
+                    {
+                        Monitor.Enter(item.OptimizedMethods.LockObject);
+                        locks.Add(item.OptimizedMethods.LockObject);
+                        item.OptimizedMethods.BeginRouting();
+                    }
+                }
+
                 int measurementsRouted = 0;
 
                 foreach (var queue in m_list)
@@ -374,7 +392,15 @@ namespace GSF.TimeSeries.Adapters
                             {
                                 var consumer = consumers[index];
                                 m_measurementsRoutedOutput++;
-                                consumer.MeasurementsToRoute.Add(measurement);
+
+                                if (consumer.UsesOptimizedRouting)
+                                {
+                                    consumer.OptimizedMethods.ProcessMeasurement(measurement);
+                                }
+                                else
+                                {
+                                    consumer.MeasurementsToRoute.Add(measurement);
+                                }
                             }
                         }
 
@@ -384,11 +410,14 @@ namespace GSF.TimeSeries.Adapters
                             measurementsRouted = 0;
                             foreach (var consumer in map.GlobalDestinationList)
                             {
-                                if (consumer.MeasurementsToRoute.Count > 100)
+                                if (!consumer.UsesOptimizedRouting && consumer.MeasurementsToRoute.Count > 100)
                                 {
                                     foreach (var c2 in map.GlobalDestinationLookup.Values)
                                     {
-                                        c2.RoutingComplete();
+                                        if (!c2.UsesOptimizedRouting)
+                                        {
+                                            c2.RoutingComplete();
+                                        }
                                     }
                                     break;
                                 }
@@ -401,7 +430,19 @@ namespace GSF.TimeSeries.Adapters
             {
                 foreach (var consumer in map.GlobalDestinationList)
                 {
-                    consumer.RoutingComplete();
+                    if (consumer.UsesOptimizedRouting)
+                    {
+                        consumer.OptimizedMethods.EndRouting();
+                    }
+                    else
+                    {
+                        consumer.RoutingComplete();
+                    }
+                }
+
+                foreach (var item in locks)
+                {
+                    Monitor.Exit(item);
                 }
             }
         }

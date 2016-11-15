@@ -126,6 +126,137 @@ namespace GSF.Diagnostics
 
         }
 
+        private class MonitorSleep
+        {
+            private LogEventPublisher m_logSmall;
+            private LogEventPublisher m_logMedium;
+            private LogEventPublisher m_logLarge;
+            private Thread s_monitorSleepsGC;
+
+            public MonitorSleep()
+            {
+                m_logSmall = Log.RegisterEvent(MessageLevel.Info, MessageFlags.SystemHealth, $"Process Pause Small", 0, MessageRate.EveryFewSeconds(10), 5);
+                m_logMedium = Log.RegisterEvent(MessageLevel.Warning, MessageFlags.SystemHealth, $"Process Pause Medium", 0, MessageRate.EveryFewSeconds(10), 5);
+                m_logLarge = Log.RegisterEvent(MessageLevel.Error, MessageFlags.SystemHealth, $"Process Pause Large", 0, MessageRate.EveryFewSeconds(10), 5);
+
+                s_monitorSleepsGC = new Thread(MonitorSleeps);
+                s_monitorSleepsGC.Priority = ThreadPriority.Highest;
+                s_monitorSleepsGC.IsBackground = true;
+                s_monitorSleepsGC.Start();
+            }
+
+            private void MonitorSleeps()
+            {
+                ShortTime lastTime = ShortTime.Now;
+                while (true)
+                {
+                    try
+                    {
+                        Thread.Sleep(10);
+                        ShortTime currentTime = ShortTime.Now;
+
+                        double delay = (currentTime - lastTime).TotalMilliseconds;
+
+                        if (delay > 1000)
+                        {
+                            m_logLarge.Publish(delay.ToString() + " ms");
+                        }
+                        else if (delay > 250)
+                        {
+                            m_logMedium.Publish(delay.ToString() + " ms");
+                        }
+                        else if (delay > 50)
+                        {
+                            m_logSmall.Publish(delay.ToString() + " ms");
+                        }
+                        else
+                        {
+
+                        }
+                        lastTime = currentTime;
+                    }
+                    catch (Exception)
+                    {
+                        Thread.Sleep(1000);
+                    }
+
+                }
+            }
+
+        }
+
+        private class MonitorGC
+        {
+            private Thread s_monitor;
+
+            public MonitorGC()
+            {
+                s_monitor = new Thread(Monitor);
+                s_monitor.Priority = ThreadPriority.AboveNormal;
+                s_monitor.IsBackground = true;
+                s_monitor.Start();
+            }
+
+            private void Monitor()
+            {
+                while (true)
+                {
+                    Thread.Sleep(100);
+                    try
+                    {
+                        GC.RegisterForFullGCNotification(99, 99);
+                        switch (GC.WaitForFullGCApproach())
+                        {
+                            case GCNotificationStatus.Succeeded:
+                                Log.Publish(MessageLevel.Warning, "GCWait Succeeded");
+                                break;
+                            case GCNotificationStatus.Failed:
+                                Log.Publish(MessageLevel.Warning, "GCWait Failed");
+                                break;
+                            case GCNotificationStatus.Canceled:
+                                Log.Publish(MessageLevel.Warning, "GCWait Canceled");
+                                break;
+                            case GCNotificationStatus.Timeout:
+                                Log.Publish(MessageLevel.Warning, "GCWait Timeout");
+                                break;
+                            case GCNotificationStatus.NotApplicable:
+                                Log.Publish(MessageLevel.Warning, "GCWait NA");
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                        switch (GC.WaitForFullGCComplete())
+                        {
+                            case GCNotificationStatus.Succeeded:
+                                Log.Publish(MessageLevel.Warning, "GC Succeeded");
+                                break;
+                            case GCNotificationStatus.Failed:
+                                Log.Publish(MessageLevel.Warning, "GC Failed");
+                                break;
+                            case GCNotificationStatus.Canceled:
+                                Log.Publish(MessageLevel.Warning, "GC Canceled");
+                                break;
+                            case GCNotificationStatus.Timeout:
+                                Log.Publish(MessageLevel.Warning, "GC Timeout");
+                                break;
+                            case GCNotificationStatus.NotApplicable:
+                                Log.Publish(MessageLevel.Warning, "GC NA");
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Publish(MessageLevel.Warning, "Error", null, null, ex);
+                        Thread.Sleep(5000);
+                    }
+                }
+            }
+
+        }
+
+
         private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(ThreadPoolMonitor), MessageClass.Component);
         private static ScheduledTask s_fireTimers;
         private static List<Monitor> s_monitors;
@@ -133,10 +264,16 @@ namespace GSF.Diagnostics
         private static Thread s_monitorContentionThread;
         private static volatile Tuple<ShortTime> s_lastResetTime;
 
+        private static MonitorSleep s_monitorSleep;
+        private static MonitorGC s_monitorGC;
+
         static ThreadPoolMonitor()
         {
             if (OptimizationOptions.EnableThreadPoolMonitoring)
             {
+                s_monitorSleep = new MonitorSleep();
+                s_monitorGC = new MonitorGC();
+
                 s_monitors = new List<Monitor>();
                 s_monitors.Add(new Monitor(0));
                 s_monitors.Add(new Monitor(10));
@@ -260,11 +397,6 @@ namespace GSF.Diagnostics
                 }
             }
             Log.Publish(MessageLevel.Warning, "ThreadPool Stack Trace", "Dumped threadpool stack trace", sb.ToString());
-
         }
-
-
-
-
     }
 }
