@@ -124,6 +124,33 @@ namespace GSF.Threading
         }
 
         /// <summary>
+        /// Attempts to execute an action and processes exceptions using the given exception handler.
+        /// </summary>
+        /// <param name="action">The action to be executed.</param>
+        /// <param name="exceptionHandler">The handler to be called in the event of an error.</param>
+        /// <returns>True if the action was executed without errors; false otherwise.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> or <paramref name="exceptionHandler"/> is null</exception>
+        public static bool TryExecute(this Action action, Action<Exception> exceptionHandler)
+        {
+            if ((object)action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            if ((object)exceptionHandler == null)
+                throw new ArgumentNullException(nameof(exceptionHandler));
+
+            try
+            {
+                action();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                exceptionHandler(ex);
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Execute an action on the thread pool after a specified number of milliseconds.
         /// </summary>
         /// <param name="action">The action to be executed.</param>
