@@ -40,10 +40,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Threading;
-using System.Timers;
 using GSF.Configuration;
 using GSF.IO;
-using Timer = System.Timers.Timer;
+using GSF.Threading;
 
 namespace GSF.Communication
 {
@@ -206,14 +205,14 @@ namespace GSF.Communication
         // Fields
         private bool m_autoRepeat;
         private bool m_receiveOnDemand;
-        private double m_receiveInterval;
+        private int m_receiveInterval;
         private long m_startingOffset;
         private FileMode m_fileOpenMode;
         private FileShare m_fileShareMode;
         private FileAccess m_fileAccessMode;
         private readonly TransportProvider<FileStream> m_fileClient;
         private Dictionary<string, string> m_connectData;
-        private readonly Timer m_receiveDataTimer;
+        private readonly SharedTimer m_receiveDataTimer;
         private ManualResetEvent m_connectionHandle;
 #if ThreadTracking
         private ManagedThread m_connectionThread;
@@ -249,7 +248,7 @@ namespace GSF.Communication
             m_fileShareMode = DefaultFileShareMode;
             m_fileAccessMode = DefaultFileAccessMode;
             m_fileClient = new TransportProvider<FileStream>();
-            m_receiveDataTimer = new Timer();
+            m_receiveDataTimer = s_timerScheduler.CreateTimer();
             m_receiveDataTimer.Elapsed += m_receiveDataTimer_Elapsed;
         }
 
@@ -263,6 +262,7 @@ namespace GSF.Communication
             if (container != null)
                 container.Add(this);
         }
+
         #endregion
 
         #region [ Properties ]
@@ -308,8 +308,8 @@ namespace GSF.Communication
             {
                 m_receiveOnDemand = value;
 
+                // We'll disable receiving data at a set interval if user wants to receive data on demand.
                 if (m_receiveOnDemand)
-                    // We'll disable receiving data at a set interval if user wants to receive data on demand.
                     m_receiveInterval = -1;
             }
         }
@@ -331,10 +331,7 @@ namespace GSF.Communication
             }
             set
             {
-                if (value < 1)
-                    m_receiveInterval = -1;
-                else
-                    m_receiveInterval = value;
+                m_receiveInterval = value < 1.0D  ? - 1 : (int)value;
             }
         }
 
@@ -422,25 +419,13 @@ namespace GSF.Communication
         /// Gets the <see cref="FileStream"/> object for the <see cref="FileClient"/>.
         /// </summary>
         [Browsable(false)]
-        public FileStream Client
-        {
-            get
-            {
-                return m_fileClient.Provider;
-            }
-        }
+        public FileStream Client => m_fileClient.Provider;
 
         /// <summary>
         /// Gets the server URI of the <see cref="FileClient"/>.
         /// </summary>
         [Browsable(false)]
-        public override string ServerUri
-        {
-            get
-            {
-                return string.Format("{0}://{1}", TransportProtocol, m_connectData["file"]).ToLower();
-            }
-        }
+        public override string ServerUri => $"{TransportProtocol}://{m_connectData["file"]}".ToLower();
 
         #endregion
 
@@ -551,6 +536,7 @@ namespace GSF.Communication
         public override void SaveSettings()
         {
             base.SaveSettings();
+
             if (PersistSettings)
             {
                 // Save settings under the specified category.
@@ -573,6 +559,7 @@ namespace GSF.Communication
         public override void LoadSettings()
         {
             base.LoadSettings();
+
             if (PersistSettings)
             {
                 // Load settings from the specified category.
@@ -637,7 +624,7 @@ namespace GSF.Communication
             m_connectData = connectionString.ParseKeyValuePairs();
 
             if (!m_connectData.ContainsKey("file"))
-                throw new ArgumentException(string.Format("File property is missing (Example: {0})", DefaultConnectionString));
+                throw new ArgumentException($"File property is missing (Example: {DefaultConnectionString})");
         }
 
         /// <summary>
@@ -686,6 +673,7 @@ namespace GSF.Communication
         private void OpenFile()
         {
             int connectionAttempts = 0;
+
             while (MaxConnectionAttempts == -1 || connectionAttempts < MaxConnectionAttempts)
             {
                 try
@@ -722,11 +710,6 @@ namespace GSF.Communication
 
                     break;  // We're done here.
                 }
-                catch (ThreadAbortException)
-                {
-                    // Exit gracefully.
-                    break;
-                }
                 catch (Exception ex)
                 {
                     // Keep retrying connecting to the file.
@@ -756,20 +739,12 @@ namespace GSF.Communication
 
                     // Re-read the file if the user wants to repeat when done reading the file.
                     if (m_autoRepeat && m_fileClient.Provider.Position == m_fileClient.Provider.Length)
-                    {
                         m_fileClient.Provider.Seek(m_startingOffset, SeekOrigin.Begin);
-                    }
 
                     // Stop processing the file if user has either opted to receive data on demand or receive data at a predefined interval.
                     if (m_receiveOnDemand || m_receiveInterval > 0)
-                    {
                         break;
-                    }
                 }
-            }
-            catch (ThreadAbortException)
-            {
-                // Exit gracefully.
             }
             catch (Exception ex)
             {
@@ -779,7 +754,7 @@ namespace GSF.Communication
             }
         }
 
-        private void m_receiveDataTimer_Elapsed(object sender, ElapsedEventArgs e)
+        private void m_receiveDataTimer_Elapsed(object sender, EventArgs<DateTime> e)
         {
             ReadData();
         }
@@ -793,6 +768,15 @@ namespace GSF.Communication
             base.Disconnect();
             base.OnConnectionException(ex);
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+
+        // Common use static timer for FileClient instances
+        private static readonly SharedTimerScheduler s_timerScheduler = new SharedTimerScheduler();
 
         #endregion
     }

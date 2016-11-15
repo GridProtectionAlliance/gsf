@@ -34,7 +34,6 @@ using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Text;
-using System.Timers;
 using GSF;
 using GSF.Communication;
 using GSF.IO;
