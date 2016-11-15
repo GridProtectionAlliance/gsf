@@ -34,9 +34,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Timers;
+using GSF.Threading;
+using GSF.TimeSeries.Adapters;
 using GSF.Units;
-using Timer = System.Timers.Timer;
 
 // ReSharper disable PossibleMultipleEnumeration
 namespace GSF.TimeSeries
@@ -319,7 +319,7 @@ namespace GSF.TimeSeries
                 int frameRate;
                 int deficit;
 
-                frameRate = (int)(Math.Round(1000.0D / m_framesPerSecond));
+                frameRate = (int)Math.Round(1000.0D / m_framesPerSecond);
                 deficit = 1000 - frameRate * m_framesPerSecond;
 
                 if (deficit == 0)
@@ -343,7 +343,7 @@ namespace GSF.TimeSeries
                         double cur_dis = mod_dis(frameIndex, interval);
                         double next_dis = mod_dis(frameIndex + 1, interval);
 
-                        millisecondsWaitTime = frameRate + ((cur_dis <= pre_dis && cur_dis < next_dis) ? (deficit > 0 ? 1 : -1) : 0);
+                        millisecondsWaitTime = frameRate + (cur_dis <= pre_dis && cur_dis < next_dis ? (deficit > 0 ? 1 : -1) : 0);
                     }
                 }
 
@@ -354,7 +354,7 @@ namespace GSF.TimeSeries
             {
                 double dis2 = (framesIndex + 1) % interval;
                 double dis1 = interval - dis2;
-                return (dis1 < dis2 ? dis1 : dis2);
+                return dis1 < dis2 ? dis1 : dis2;
             }
 
             #endregion
@@ -412,7 +412,7 @@ namespace GSF.TimeSeries
         private AutoResetEvent m_publicationWaitHandle;     // Inter-frame publication wait handle
         private bool m_usePrecisionTimer;                   // Flag that enables use of precision timer (over just simple thread sleep)
         private bool m_attachedToFrameRateTimer;            // Flag that tracks if instance is attached to a frame rate timer
-        private Timer m_monitorTimer;                       // Sample monitor - tracks total number of unpublished frames
+        private SharedTimer m_monitorTimer;                 // Sample monitor - tracks total number of unpublished frames
         private int m_framesPerSecond;                      // Frames per second
         private double m_ticksPerFrame;                     // Ticks per frame
         private double m_lagTime;                           // Allowed past time deviation tolerance, in seconds
@@ -491,8 +491,7 @@ namespace GSF.TimeSeries
             // This timer monitors the total number of unpublished samples every 5 seconds. This is a useful statistic
             // to monitor: if total number of unpublished samples exceed lag time, measurement concentration could
             // be falling behind.
-            m_monitorTimer = new Timer();
-            m_monitorTimer.Interval = 5000;
+            m_monitorTimer = Common.TimerScheduler.CreateTimer(5000);
             m_monitorTimer.AutoReset = true;
             m_monitorTimer.Elapsed += MonitorUnpublishedSamples;
         }
@@ -824,7 +823,7 @@ namespace GSF.TimeSeries
                     if (m_processingInterval < -1)
                         m_processingInterval = -1;
 
-                    ProcessByReceivedTimestamp = (m_processingInterval > -1);
+                    ProcessByReceivedTimestamp = m_processingInterval > -1;
 
                     if (m_processingInterval == 0)
                     {
@@ -934,7 +933,7 @@ namespace GSF.TimeSeries
                     m_timeResolution = value;
 
                 // Calculate half the distance of the time resolution for use as an offset
-                m_timeOffset = (m_timeResolution > 1 ? m_timeResolution / 2 : 1);
+                m_timeOffset = m_timeResolution > 1 ? m_timeResolution / 2 : 1;
 
                 // Assign desired time resolution to frame queue
                 if ((object)m_frameQueue != null)
@@ -2248,9 +2247,9 @@ namespace GSF.TimeSeries
         }
 
         // Exposes the number of unpublished seconds of data in the queue (note that first second of data will always be "publishing").
-        private void MonitorUnpublishedSamples(object sender, ElapsedEventArgs e)
+        private void MonitorUnpublishedSamples(object sender, EventArgs<DateTime> e)
         {
-            int secondsOfData = (m_frameQueue.Count / m_framesPerSecond) - 1;
+            int secondsOfData = m_frameQueue.Count / m_framesPerSecond - 1;
 
             if (secondsOfData < 0)
                 secondsOfData = 0;

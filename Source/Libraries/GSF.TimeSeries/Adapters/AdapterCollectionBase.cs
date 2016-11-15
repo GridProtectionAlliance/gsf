@@ -135,7 +135,7 @@ namespace GSF.TimeSeries.Adapters
             m_autoStart = true;
 
             // We monitor total number of processed measurements every minute
-            m_monitorTimer = AdapterBase.TimerScheduler.CreateTimer(60000);
+            m_monitorTimer = Common.TimerScheduler.CreateTimer(60000);
             m_monitorTimer.Elapsed += m_monitorTimer_Elapsed;
 
             m_monitorTimer.AutoReset = true;
@@ -1486,7 +1486,7 @@ namespace GSF.TimeSeries.Adapters
                     // If initialization timeout is specified for this item, start the initialization timeout timer
                     if (item.InitializationTimeout > 0)
                     {
-                        initializationTimeoutTimer = AdapterBase.TimerScheduler.CreateTimer(item.InitializationTimeout);
+                        initializationTimeoutTimer = Common.TimerScheduler.CreateTimer(item.InitializationTimeout);
 
                         initializationTimeoutTimer.Elapsed += (sender, args) =>
                         {

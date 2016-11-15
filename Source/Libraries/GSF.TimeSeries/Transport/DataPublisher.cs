@@ -49,7 +49,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Timers;
 using System.Xml;
 using GSF.Communication;
 using GSF.Configuration;
@@ -57,10 +56,10 @@ using GSF.Data;
 using GSF.IO;
 using GSF.Net.Security;
 using GSF.Security.Cryptography;
+using GSF.Threading;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
 using GSF.Units;
-using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries.Transport
 {
@@ -825,8 +824,8 @@ namespace GSF.TimeSeries.Transport
         private readonly ConcurrentDictionary<MeasurementKey, Guid> m_signalIDCache;
         private readonly Dictionary<Guid, Dictionary<int, string>> m_clientNotifications;
         private readonly object m_clientNotificationsLock;
-        private Timer m_commandChannelRestartTimer;
-        private Timer m_cipherKeyRotationTimer;
+        private SharedTimer m_commandChannelRestartTimer;
+        private SharedTimer m_cipherKeyRotationTimer;
         private RoutingTables m_routingTables;
         private string m_metadataTables;
         private string m_cacheMeasurementKeys;
@@ -909,13 +908,13 @@ namespace GSF.TimeSeries.Transport
             m_routingTables.ProcessException += m_routingTables_ProcessException;
 
             // Setup a timer for restarting the command channel if it fails
-            m_commandChannelRestartTimer = new Timer(2000.0D);
+            m_commandChannelRestartTimer = Common.TimerScheduler.CreateTimer(2000);
             m_commandChannelRestartTimer.AutoReset = false;
             m_commandChannelRestartTimer.Enabled = false;
             m_commandChannelRestartTimer.Elapsed += m_commandChannelRestartTimer_Elapsed;
 
             // Setup a timer for rotating cipher keys
-            m_cipherKeyRotationTimer = new Timer(DefaultCipherKeyRotationPeriod);
+            m_cipherKeyRotationTimer = Common.TimerScheduler.CreateTimer((int)DefaultCipherKeyRotationPeriod);
             m_cipherKeyRotationTimer.AutoReset = true;
             m_cipherKeyRotationTimer.Enabled = false;
             m_cipherKeyRotationTimer.Elapsed += m_cipherKeyRotationTimer_Elapsed;
@@ -1184,7 +1183,7 @@ namespace GSF.TimeSeries.Transport
                     throw new ArgumentOutOfRangeException(nameof(value), "Cipher key rotation period should not be set to less than 1000 milliseconds.");
 
                 if ((object)m_cipherKeyRotationTimer != null)
-                    m_cipherKeyRotationTimer.Interval = value;
+                    m_cipherKeyRotationTimer.Interval = (int)value;
 
                 throw new ArgumentException("Cannot assign new cipher rotation period, timer is not defined.");
             }
@@ -2898,7 +2897,7 @@ namespace GSF.TimeSeries.Transport
         }
 
         // Cipher key rotation timer handler
-        private void m_cipherKeyRotationTimer_Elapsed(object sender, ElapsedEventArgs e)
+        private void m_cipherKeyRotationTimer_Elapsed(object sender, EventArgs<DateTime> e)
         {
             if ((object)m_clientConnections != null)
             {
@@ -2911,7 +2910,7 @@ namespace GSF.TimeSeries.Transport
         }
 
         // Command channel restart timer handler
-        private void m_commandChannelRestartTimer_Elapsed(object sender, ElapsedEventArgs e)
+        private void m_commandChannelRestartTimer_Elapsed(object sender, EventArgs<DateTime> e)
         {
             if ((object)m_commandChannel != null)
             {

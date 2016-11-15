@@ -629,7 +629,7 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                     status.AppendLine();
 
-                    for (int i = 0; i < Common.Min(OutputMeasurements.Length, MaxMeasurementsToShow); i++)
+                    for (int i = 0; i < Math.Min(OutputMeasurements.Length, MaxMeasurementsToShow); i++)
                     {
                         status.Append(OutputMeasurements[i].ToString().TruncateRight(40).PadLeft(40));
                         status.Append(" ");
@@ -648,7 +648,7 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                     status.AppendLine();
 
-                    for (int i = 0; i < Common.Min(InputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
+                    for (int i = 0; i < Math.Min(InputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
                     {
                         status.AppendLine(InputMeasurementKeys[i].ToString().TruncateRight(25).CenterText(50));
                     }
@@ -999,9 +999,6 @@ namespace GSF.TimeSeries.Adapters
         // Static Fields
         private static readonly Regex s_filterExpression = new Regex("(FILTER[ ]+(TOP[ ]+(?<MaxRows>\\d+)[ ]+)?(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+)[ ]+ORDER[ ]+BY[ ]+(?<SortField>\\w+))|(FILTER[ ]+(TOP[ ]+(?<MaxRows>\\d+)[ ]+)?(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex s_timetagExpression = new Regex("\\*(?<Offset>[+-]?\\d*\\.?\\d*)(?<Unit>\\w+)", RegexOptions.Compiled);
-
-        // Common use static timer for the Time-Series Library
-        internal static readonly SharedTimerScheduler TimerScheduler = new SharedTimerScheduler();
 
         // Static Methods
 

@@ -718,7 +718,7 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                     status.AppendLine();
 
-                    for (int i = 0; i < Common.Min(OutputMeasurements.Length, MaxMeasurementsToShow); i++)
+                    for (int i = 0; i < Math.Min(OutputMeasurements.Length, MaxMeasurementsToShow); i++)
                     {
                         status.Append(OutputMeasurements[i].ToString().TruncateRight(40).PadLeft(40));
                         status.Append(" ");
@@ -737,7 +737,7 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                     status.AppendLine();
 
-                    for (int i = 0; i < Common.Min(InputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
+                    for (int i = 0; i < Math.Min(InputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
                     {
                         status.AppendLine(InputMeasurementKeys[i].ToString().TruncateRight(25).CenterText(50));
                     }
@@ -754,7 +754,7 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                     status.AppendLine();
 
-                    for (int i = 0; i < Common.Min(RequestedInputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
+                    for (int i = 0; i < Math.Min(RequestedInputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
                     {
                         status.AppendLine(RequestedInputMeasurementKeys[i].ToString().TruncateRight(25).CenterText(50));
                     }
@@ -771,7 +771,7 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                     status.AppendLine();
 
-                    for (int i = 0; i < Common.Min(RequestedOutputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
+                    for (int i = 0; i < Math.Min(RequestedOutputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
                     {
                         status.AppendLine(RequestedOutputMeasurementKeys[i].ToString().TruncateRight(25).CenterText(50));
                     }

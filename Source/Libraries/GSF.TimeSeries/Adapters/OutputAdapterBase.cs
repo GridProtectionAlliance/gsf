@@ -94,7 +94,7 @@ namespace GSF.TimeSeries.Adapters
                 IsBackground = true
             };
 
-            m_connectionTimer = TimerScheduler.CreateTimer(2000);
+            m_connectionTimer = Common.TimerScheduler.CreateTimer(2000);
             m_connectionTimer.Elapsed += m_connectionTimer_Elapsed;
 
             m_connectionTimer.AutoReset = false;
@@ -102,7 +102,7 @@ namespace GSF.TimeSeries.Adapters
 
             // We monitor total number of unarchived measurements every 5 seconds - this is a useful statistic to monitor, if
             // total number of unarchived measurements gets very large, measurement archival could be falling behind
-            m_monitorTimer = TimerScheduler.CreateTimer(5000);
+            m_monitorTimer = Common.TimerScheduler.CreateTimer(5000);
             m_monitorTimer.Elapsed += m_monitorTimer_Elapsed;
 
             m_monitorTimer.AutoReset = true;
@@ -358,10 +358,8 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                     status.AppendLine();
 
-                    for (int i = 0; i < Common.Min(RequestedInputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
-                    {
+                    for (int i = 0; i < Math.Min(RequestedInputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
                         status.AppendLine(RequestedInputMeasurementKeys[i].ToString().TruncateRight(25).CenterText(50));
-                    }
 
                     if (RequestedInputMeasurementKeys.Length > MaxMeasurementsToShow)
                         status.AppendLine("...".CenterText(50));

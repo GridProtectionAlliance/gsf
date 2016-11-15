@@ -509,7 +509,7 @@ namespace GSF.TimeSeries
             string stars = new string('*', 79);
 
             // Get current process memory usage
-            long processMemory = Common.GetProcessMemory();
+            long processMemory = GSF.Common.GetProcessMemory();
 
             // Log startup information
             m_serviceHelper.UpdateStatus(
@@ -534,7 +534,7 @@ namespace GSF.TimeSeries
                 FilePath.TrimFileName(FilePath.RemovePathSuffix(FilePath.GetAbsolutePath("")), 61),
                 Environment.MachineName,
                 Environment.OSVersion.VersionString,
-                Common.GetOSProductName(),
+                GSF.Common.GetOSProductName(),
                 processMemory > 0 ? SI2.ToScaledString(processMemory, 4, "B", SI2.IECSymbols) : "Undetermined",
                 IntPtr.Size * 8,
                 Environment.ProcessorCount,

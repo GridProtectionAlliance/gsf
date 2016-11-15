@@ -90,6 +90,7 @@
     <Compile Include="Adapters\RouteMappingHighLatencyLowCpu.cs" />
     <Compile Include="Adapters\RoutingTables.cs" />
     <Compile Include="Alarm.cs" />
+    <Compile Include="Common.cs" />
     <Compile Include="ConcentratorBase.cs" />
     <Compile Include="Configuration\BinaryFileConfigurationLoader.cs" />
     <Compile Include="Configuration\DatabaseConfigurationLoader.cs" />

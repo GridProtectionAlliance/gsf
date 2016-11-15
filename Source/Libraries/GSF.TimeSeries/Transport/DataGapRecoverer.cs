@@ -31,8 +31,9 @@ using System.Text;
 using System.Threading;
 using GSF.Annotations;
 using GSF.IO;
+using GSF.Threading;
+using GSF.TimeSeries.Adapters;
 using GSF.Units;
-using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries.Transport
 {
@@ -126,7 +127,7 @@ namespace GSF.TimeSeries.Transport
         private DataSubscriber m_temporalSubscription;
         private OutageLogProcessor m_dataGapLogProcessor;
         private OutageLog m_dataGapLog;
-        private Timer m_dataStreamMonitor;
+        private SharedTimer m_dataStreamMonitor;
         private DataSet m_dataSource;
         private string m_loggingPath;
         private string m_sourceConnectionName;
@@ -167,9 +168,8 @@ namespace GSF.TimeSeries.Transport
             m_subscriptionInfo.ProcessingInterval = DefaultRecoveryProcessingInterval;
             m_subscriptionInfo.UseMillisecondResolution = DefaultUseMillisecondResolution;
 
-            m_dataStreamMonitor = new Timer();
+            m_dataStreamMonitor = Common.TimerScheduler.CreateTimer((int)(DefaultDataMonitoringInterval * 1000.0D));
             m_dataStreamMonitor.Elapsed += DataStreamMonitor_Elapsed;
-            m_dataStreamMonitor.Interval = DefaultDataMonitoringInterval * 1000.0D;
             m_dataStreamMonitor.AutoReset = true;
             m_dataStreamMonitor.Enabled = false;
         }
@@ -303,7 +303,7 @@ namespace GSF.TimeSeries.Transport
                 if (value <= 0.0D)
                     throw new ArgumentOutOfRangeException(nameof(value), "DataMonitoringInterval cannot be zero or a negative number.");
 
-                m_dataStreamMonitor.Interval = value * 1000.0D;
+                m_dataStreamMonitor.Interval = (int)(value * 1000.0D);
             }
         }
 
@@ -894,7 +894,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for RecoveredMeasurements event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for RecoveredMeasurements event: {ex.Message}", ex));
             }
         }
 
@@ -912,7 +912,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for StatusMessage event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex));
             }
         }
 
@@ -935,7 +935,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for StatusMessage event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex));
             }
         }
 
@@ -1031,7 +1031,7 @@ namespace GSF.TimeSeries.Transport
             OnProcessException(e.Argument);
         }
 
-        private void DataStreamMonitor_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void DataStreamMonitor_Elapsed(object sender, EventArgs<DateTime> e)
         {
             if (m_measurementsRecoveredOverLastInterval == 0)
             {

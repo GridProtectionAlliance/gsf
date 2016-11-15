@@ -172,7 +172,7 @@ namespace GSF.TimeSeries
             {
                 string serviceName = arguments["OrderedArg1"];
 
-                if (Common.IsPosixEnvironment)
+                if (GSF.Common.IsPosixEnvironment)
                 {
                     string serviceCommand = FilePath.GetAbsolutePath(serviceName);
 
@@ -524,7 +524,7 @@ namespace GSF.TimeSeries
                 // Capture the password.
                 Write("Enter password: ");
 
-                char endOfLine = Common.IsPosixEnvironment ? '\n' : '\r';
+                char endOfLine = GSF.Common.IsPosixEnvironment ? '\n' : '\r';
 
                 while ((key = System.Console.ReadKey(true)).KeyChar != endOfLine)
                 {

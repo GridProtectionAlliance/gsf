@@ -29,10 +29,10 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
-using System.Timers;
 using GSF.Communication;
 using GSF.IO;
 using GSF.Security.Cryptography;
+using GSF.Threading;
 
 namespace GSF.TimeSeries.Transport
 {
@@ -71,8 +71,8 @@ namespace GSF.TimeSeries.Transport
         private bool m_connectionEstablished;
         private bool m_isSubscribed;
         private Ticks m_lastCipherKeyUpdateTime;
-        private Timer m_pingTimer;
-        private Timer m_reconnectTimer;
+        private SharedTimer m_pingTimer;
+        private SharedTimer m_reconnectTimer;
         private OperationalModes m_operationalModes;
         private Encoding m_encoding;
         private bool m_disposed;
@@ -98,15 +98,13 @@ namespace GSF.TimeSeries.Transport
             m_cipherIndex = 0;
 
             // Setup ping timer
-            m_pingTimer = new Timer();
-            m_pingTimer.Interval = 5000.0D;
+            m_pingTimer = Common.TimerScheduler.CreateTimer(5000);
             m_pingTimer.AutoReset = true;
             m_pingTimer.Elapsed += m_pingTimer_Elapsed;
             m_pingTimer.Start();
 
             // Setup reconnect timer
-            m_reconnectTimer = new Timer();
-            m_reconnectTimer.Interval = 1000.0D;
+            m_reconnectTimer = Common.TimerScheduler.CreateTimer(1000);
             m_reconnectTimer.AutoReset = false;
             m_reconnectTimer.Elapsed += m_reconnectTimer_Elapsed;
 
@@ -401,7 +399,7 @@ namespace GSF.TimeSeries.Transport
                     settings.TryGetValue("version", out version);
                     settings.TryGetValue("buildDate", out buildDate);
 
-                    m_subscriberInfo = string.Format("{0} version {1} built on {2}", source.ToNonNullNorWhiteSpace("unknown source"), version.ToNonNullNorWhiteSpace("?.?.?.?"), buildDate.ToNonNullNorWhiteSpace("undefined date"));
+                    m_subscriberInfo = $"{source.ToNonNullNorWhiteSpace("unknown source")} version {version.ToNonNullNorWhiteSpace("?.?.?.?")} built on {buildDate.ToNonNullNorWhiteSpace("undefined date")}";
                 }
             }
         }
@@ -564,7 +562,7 @@ namespace GSF.TimeSeries.Transport
                         m_encoding = Encoding.Default;
                         break;
                     default:
-                        throw new InvalidOperationException(string.Format("Unsupported encoding detected: {0}", value));
+                        throw new InvalidOperationException($"Unsupported encoding detected: {value}");
                 }
             }
         }
@@ -809,7 +807,7 @@ namespace GSF.TimeSeries.Transport
             return null;
         }
 
-        private void m_pingTimer_Elapsed(object sender, ElapsedEventArgs e)
+        private void m_pingTimer_Elapsed(object sender, EventArgs<DateTime> e)
         {
             // Send a no-op keep-alive ping to make sure the client is still connected
             m_parent.SendClientResponse(m_clientID, ServerResponse.NoOP, ServerCommand.Subscribe);
@@ -818,13 +816,13 @@ namespace GSF.TimeSeries.Transport
         private void m_dataChannel_ClientConnectingException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
-            m_parent.OnProcessException(new InvalidOperationException(string.Format("Data channel exception occurred while sending client data to \"{0}\": {1}", m_connectionID, ex.Message), ex));
+            m_parent.OnProcessException(new InvalidOperationException($"Data channel exception occurred while sending client data to \"{m_connectionID}\": {ex.Message}", ex));
         }
 
         private void m_dataChannel_SendClientDataException(object sender, EventArgs<Guid, Exception> e)
         {
             Exception ex = e.Argument2;
-            m_parent.OnProcessException(new InvalidOperationException(string.Format("Data channel exception occurred while sending client data to \"{0}\": {1}", m_connectionID, ex.Message), ex));
+            m_parent.OnProcessException(new InvalidOperationException($"Data channel exception occurred while sending client data to \"{m_connectionID}\": {ex.Message}", ex));
         }
 
         private void m_dataChannel_ServerStarted(object sender, EventArgs e)
@@ -847,7 +845,7 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
-        private void m_reconnectTimer_Elapsed(object sender, ElapsedEventArgs e)
+        private void m_reconnectTimer_Elapsed(object sender, EventArgs<DateTime> e)
         {
             try
             {

@@ -28,9 +28,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Timers;
 using GSF.IO;
 using GSF.Parsing;
+using GSF.Threading;
 using GSF.TimeSeries.Adapters;
 
 namespace GSF.TimeSeries.Transport
@@ -79,7 +79,7 @@ namespace GSF.TimeSeries.Transport
         private readonly object m_bufferBlockCacheLock;
         private uint m_bufferBlockSequenceNumber;
         private uint m_expectedBufferBlockConfirmationNumber;
-        private Timer m_bufferBlockRetransmissionTimer;
+        private SharedTimer m_bufferBlockRetransmissionTimer;
         private double m_bufferBlockRetransmissionTimeout;
 
         private bool m_disposed;
@@ -384,9 +384,8 @@ namespace GSF.TimeSeries.Transport
             else
                 m_isNaNFiltered = false;
 
-            m_bufferBlockRetransmissionTimer = new Timer();
+            m_bufferBlockRetransmissionTimer = Common.TimerScheduler.CreateTimer((int)(m_bufferBlockRetransmissionTimeout * 1000.0D));
             m_bufferBlockRetransmissionTimer.AutoReset = false;
-            m_bufferBlockRetransmissionTimer.Interval = m_bufferBlockRetransmissionTimeout * 1000.0D;
             m_bufferBlockRetransmissionTimer.Elapsed += BufferBlockRetransmissionTimer_Elapsed;
 
             // Handle temporal session initialization
@@ -672,7 +671,7 @@ namespace GSF.TimeSeries.Transport
         }
 
         // Retransmits all buffer blocks for which confirmation has not yet been received
-        private void BufferBlockRetransmissionTimer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
+        private void BufferBlockRetransmissionTimer_Elapsed(object sender, EventArgs<DateTime> elapsedEventArgs)
         {
             lock (m_bufferBlockCacheLock)
             {

@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System.Security.Cryptography;
+using GSF.Threading;
 using Microsoft.Win32;
 
 namespace GSF.TimeSeries.Transport
@@ -97,5 +98,8 @@ namespace GSF.TimeSeries.Transport
 
             return false;
         }
+
+        // Reference same static timer for the Time-Series Library in root common
+        internal static readonly SharedTimerScheduler TimerScheduler = TimeSeries.Common.TimerScheduler;
     }
 }

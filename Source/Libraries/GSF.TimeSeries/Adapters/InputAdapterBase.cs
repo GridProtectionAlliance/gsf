@@ -82,7 +82,7 @@ namespace GSF.TimeSeries.Adapters
                 IsBackground = true
             };
 
-            m_connectionTimer = TimerScheduler.CreateTimer(2000);
+            m_connectionTimer = Common.TimerScheduler.CreateTimer(2000);
             m_connectionTimer.Elapsed += m_connectionTimer_Elapsed;
 
             m_connectionTimer.AutoReset = false;
@@ -208,7 +208,7 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                     status.AppendLine();
 
-                    for (int i = 0; i < Common.Min(RequestedOutputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
+                    for (int i = 0; i < Math.Min(RequestedOutputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
                     {
                         status.AppendLine(RequestedOutputMeasurementKeys[i].ToString().TruncateRight(25).CenterText(50));
                     }

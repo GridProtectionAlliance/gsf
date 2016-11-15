@@ -28,11 +28,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Timers;
 using GSF.IO;
 using GSF.Parsing;
+using GSF.Threading;
 using GSF.TimeSeries.Adapters;
-using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries.Transport
 {
@@ -79,7 +78,7 @@ namespace GSF.TimeSeries.Transport
         private bool m_isNaNFiltered;
         private volatile long[] m_baseTimeOffsets;
         private volatile int m_timeIndex;
-        private Timer m_baseTimeRotationTimer;
+        private SharedTimer m_baseTimeRotationTimer;
         private volatile bool m_startTimeSent;
         private IaonSession m_iaonSession;
 
@@ -87,7 +86,7 @@ namespace GSF.TimeSeries.Transport
         private readonly object m_bufferBlockCacheLock;
         private uint m_bufferBlockSequenceNumber;
         private uint m_expectedBufferBlockConfirmationNumber;
-        private Timer m_bufferBlockRetransmissionTimer;
+        private SharedTimer m_bufferBlockRetransmissionTimer;
         private double m_bufferBlockRetransmissionTimeout;
 
         private bool m_disposed;
@@ -430,15 +429,13 @@ namespace GSF.TimeSeries.Transport
 
             if (m_parent.UseBaseTimeOffsets && m_includeTime)
             {
-                m_baseTimeRotationTimer = new Timer();
-                m_baseTimeRotationTimer.Interval = m_useMillisecondResolution ? 60000 : 420000;
+                m_baseTimeRotationTimer = Common.TimerScheduler.CreateTimer(m_useMillisecondResolution ? 60000 : 420000);
                 m_baseTimeRotationTimer.AutoReset = true;
                 m_baseTimeRotationTimer.Elapsed += BaseTimeRotationTimer_Elapsed;
             }
 
-            m_bufferBlockRetransmissionTimer = new Timer();
+            m_bufferBlockRetransmissionTimer = Common.TimerScheduler.CreateTimer((int)(m_bufferBlockRetransmissionTimeout * 1000.0D));
             m_bufferBlockRetransmissionTimer.AutoReset = false;
-            m_bufferBlockRetransmissionTimer.Interval = m_bufferBlockRetransmissionTimeout * 1000.0D;
             m_bufferBlockRetransmissionTimer.Elapsed += BufferBlockRetransmissionTimer_Elapsed;
 
             // Handle temporal session initialization
@@ -817,7 +814,7 @@ namespace GSF.TimeSeries.Transport
         }
 
         // Retransmits all buffer blocks for which confirmation has not yet been received
-        private void BufferBlockRetransmissionTimer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
+        private void BufferBlockRetransmissionTimer_Elapsed(object sender, EventArgs<DateTime> e)
         {
             lock (m_bufferBlockCacheLock)
             {
@@ -896,7 +893,7 @@ namespace GSF.TimeSeries.Transport
                 ProcessingComplete(sender, new EventArgs<IClientSubscription, EventArgs>(this, e));
         }
 
-        private void BaseTimeRotationTimer_Elapsed(object sender, ElapsedEventArgs e)
+        private void BaseTimeRotationTimer_Elapsed(object sender, EventArgs<DateTime> e)
         {
             RotateBaseTimes();
         }

@@ -39,7 +39,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Timers;
 using System.Xml;
 using GSF.Collections;
 using GSF.Communication;
@@ -56,7 +55,6 @@ using GSF.TimeSeries.Statistics;
 using GSF.Units;
 using Random = GSF.Security.Cryptography.Random;
 using TcpClient = GSF.Communication.TcpClient;
-using Timer = System.Timers.Timer;
 using UdpClient = GSF.Communication.UdpClient;
 
 namespace GSF.TimeSeries.Transport
@@ -483,7 +481,7 @@ namespace GSF.TimeSeries.Transport
         private bool m_useZeroMQChannel;
         private LocalConcentrator m_localConcentrator;
         private MeasurementDecompressionBlock m_decompressionBlock;
-        private Timer m_dataStreamMonitor;
+        private SharedTimer m_dataStreamMonitor;
         private long m_commandChannelConnectionAttempts;
         private long m_dataChannelConnectionAttempts;
         private volatile SignalIndexCache m_remoteSignalIndexCache;
@@ -543,7 +541,7 @@ namespace GSF.TimeSeries.Transport
 
         private Ticks m_realTime;
         private Ticks m_lastStatisticsHelperUpdate;
-        private Timer m_subscribedDevicesTimer;
+        private SharedTimer m_subscribedDevicesTimer;
 
         private long m_lifetimeMeasurements;
         private long m_minimumMeasurementsPerSecond;
@@ -793,13 +791,14 @@ namespace GSF.TimeSeries.Transport
                     if ((object)m_dataStreamMonitor == null)
                     {
                         // Create data stream monitoring timer
-                        m_dataStreamMonitor = new Timer();
+                        m_dataStreamMonitor = Common.TimerScheduler.CreateTimer();
                         m_dataStreamMonitor.Elapsed += m_dataStreamMonitor_Elapsed;
                         m_dataStreamMonitor.AutoReset = true;
                         m_dataStreamMonitor.Enabled = false;
                     }
+
                     // Set user specified interval
-                    m_dataStreamMonitor.Interval = value * 1000.0D;
+                    m_dataStreamMonitor.Interval = (int)(value * 1000.0D);
                 }
                 else
                 {
@@ -809,6 +808,7 @@ namespace GSF.TimeSeries.Transport
                         m_dataStreamMonitor.Elapsed -= m_dataStreamMonitor_Elapsed;
                         m_dataStreamMonitor.Dispose();
                     }
+
                     m_dataStreamMonitor = null;
                 }
             }
@@ -2042,7 +2042,7 @@ namespace GSF.TimeSeries.Transport
             // Make sure not to monitor for data loss any faster than down-sample time on throttled connections - additionally
             // you will want to make sure data stream monitor is twice lag-time to allow time for initial points to arrive.
             if (info.Throttled && (object)m_dataStreamMonitor != null && m_dataStreamMonitor.Interval / 1000.0D < info.LagTime)
-                m_dataStreamMonitor.Interval = 2.0D * info.LagTime * 1000.0D;
+                m_dataStreamMonitor.Interval = (int)(2.0D * info.LagTime * 1000.0D);
 
             // Set millisecond resolution member variable for compact measurement parsing
             m_useMillisecondResolution = info.UseMillisecondResolution;
@@ -2389,7 +2389,7 @@ namespace GSF.TimeSeries.Transport
             // Make sure not to monitor for data loss any faster than down-sample time on throttled connections - additionally
             // you will want to make sure data stream monitor is twice lag-time to allow time for initial points to arrive.
             if (throttled && (object)m_dataStreamMonitor != null && m_dataStreamMonitor.Interval / 1000.0D < lagTime)
-                m_dataStreamMonitor.Interval = 2.0D * lagTime * 1000.0D;
+                m_dataStreamMonitor.Interval = (int)(2.0D * lagTime * 1000.0D);
 
             return Subscribe(false, compactFormat, connectionString.ToString());
         }
@@ -2674,7 +2674,7 @@ namespace GSF.TimeSeries.Transport
 
             if (m_useLocalClockAsRealTime && (object)m_subscribedDevicesTimer == null)
             {
-                m_subscribedDevicesTimer = new Timer(1000.0D);
+                m_subscribedDevicesTimer = Common.TimerScheduler.CreateTimer(1000);
                 m_subscribedDevicesTimer.Elapsed += SubscribedDevicesTimer_Elapsed;
             }
 
@@ -4689,7 +4689,7 @@ namespace GSF.TimeSeries.Transport
             //m_lastMeasurementCheck = now;
         }
 
-        private void SubscribedDevicesTimer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
+        private void SubscribedDevicesTimer_Elapsed(object sender, EventArgs<DateTime> elapsedEventArgs)
         {
             UpdateStatisticsHelpers();
         }
@@ -4739,7 +4739,7 @@ namespace GSF.TimeSeries.Transport
             OnProcessException(e.Argument);
         }
 
-        private void m_dataStreamMonitor_Elapsed(object sender, ElapsedEventArgs e)
+        private void m_dataStreamMonitor_Elapsed(object sender, EventArgs<DateTime> e)
         {
             bool dataReceived = m_monitoredBytesReceived > 0;
 
