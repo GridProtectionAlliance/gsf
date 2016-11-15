@@ -68,6 +68,7 @@ namespace GSF.TimeSeries.Adapters
         private ProcessQueue<IMeasurement> m_measurementQueue;
         private List<string> m_inputSourceIDs;
         private MeasurementKey[] m_requestedInputMeasurementKeys;
+        private readonly LongSynchronizedOperation m_connectionOperation;
         private SharedTimer m_connectionTimer;
         private SharedTimer m_monitorTimer;
         private bool m_disposed;
@@ -88,6 +89,8 @@ namespace GSF.TimeSeries.Adapters
 
             m_measurementQueue = ProcessQueue<IMeasurement>.CreateRealTimeQueue(ProcessMeasurements);
             m_measurementQueue.ProcessException += m_measurementQueue_ProcessException;
+
+            m_connectionOperation = new LongSynchronizedOperation(AttemptConnectionOperation);
 
             m_connectionTimer = TimerScheduler.CreateTimer(2000);
             m_connectionTimer.Elapsed += m_connectionTimer_Elapsed;
@@ -698,7 +701,7 @@ namespace GSF.TimeSeries.Adapters
             }
         }
 
-        private void m_connectionTimer_Elapsed(object sender, EventArgs<DateTime> e)
+        private void AttemptConnectionOperation()
         {
             try
             {
@@ -714,10 +717,6 @@ namespace GSF.TimeSeries.Adapters
                         OnConnected();
                 }
             }
-            catch (ThreadAbortException)
-            {
-                // This exception can be safely ignored...
-            }
             catch (Exception ex)
             {
                 OnProcessException(new InvalidOperationException($"Connection attempt failed: {ex.Message}", ex));
@@ -726,6 +725,11 @@ namespace GSF.TimeSeries.Adapters
                 if (Enabled)
                     Start();
             }
+        }
+
+        private void m_connectionTimer_Elapsed(object sender, EventArgs<DateTime> e)
+        {
+            m_connectionOperation.TryRunOnceAsync();
         }
 
         // All we do here is expose the total number of unarchived measurements in the queue

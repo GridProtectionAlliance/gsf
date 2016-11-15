@@ -63,6 +63,7 @@ namespace GSF.TimeSeries.Adapters
         // Fields
         private List<string> m_outputSourceIDs;
         private MeasurementKey[] m_requestedOutputMeasurementKeys;
+        private readonly LongSynchronizedOperation m_connectionOperation;
         private SharedTimer m_connectionTimer;
         private bool m_isConnected;
         private bool m_disposed;
@@ -77,6 +78,8 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         protected InputAdapterBase()
         {
+            m_connectionOperation = new LongSynchronizedOperation(AttemptConnectionOperation);
+
             m_connectionTimer = TimerScheduler.CreateTimer(2000);
             m_connectionTimer.Elapsed += m_connectionTimer_Elapsed;
 
@@ -421,7 +424,7 @@ namespace GSF.TimeSeries.Adapters
             }
         }
 
-        private void m_connectionTimer_Elapsed(object sender, EventArgs<DateTime> e)
+        private void AttemptConnectionOperation()
         {
             try
             {
@@ -437,19 +440,20 @@ namespace GSF.TimeSeries.Adapters
                         OnConnected();
                 }
             }
-            catch (ThreadAbortException)
-            {
-                // This exception can be safely ignored...
-            }
             catch (Exception ex)
             {
-                if(EnableConnectionErrors)
+                if (EnableConnectionErrors)
                     OnProcessException(new InvalidOperationException($"Connection attempt failed: {ex.Message}", ex));
 
                 // So long as user hasn't requested to stop, keep trying connection
                 if (Enabled)
                     Start();
             }
+        }
+
+        private void m_connectionTimer_Elapsed(object sender, EventArgs<DateTime> e)
+        {
+            m_connectionOperation.TryRunOnceAsync();
         }
 
         #endregion
