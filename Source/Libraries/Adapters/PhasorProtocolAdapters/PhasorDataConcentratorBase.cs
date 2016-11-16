@@ -48,6 +48,7 @@ using System.Text;
 using System.Threading;
 using System.Timers;
 using GSF;
+using GSF.Collections;
 using GSF.Communication;
 using GSF.Parsing;
 using GSF.PhasorProtocols;
@@ -157,7 +158,7 @@ namespace PhasorProtocolAdapters
         private IServer m_publishChannel;
         private IConfigurationFrame m_configurationFrame;
         private ConfigurationFrame m_baseConfigurationFrame;
-        private readonly ConcurrentDictionary<MeasurementKey, SignalReference[]> m_signalReferences;
+        private Dictionary<MeasurementKey, SignalReference[]> m_signalReferences;
         private readonly ConcurrentDictionary<Guid, string> m_connectionIDCache;
         private Timer m_commandChannelRestartTimer;
         private readonly object m_reinitializationLock;
@@ -208,9 +209,6 @@ namespace PhasorProtocolAdapters
         /// </summary>
         protected PhasorDataConcentratorBase()
         {
-            // Create a new signal reference dictionary indexed on measurement keys
-            m_signalReferences = new ConcurrentDictionary<MeasurementKey, SignalReference[]>();
-
             // Create a new connection ID cache
             m_connectionIDCache = new ConcurrentDictionary<Guid, string>();
 
@@ -664,9 +662,11 @@ namespace PhasorProtocolAdapters
                     status.AppendLine();
                 }
 
-                if ((object)m_signalReferences != null)
+                Dictionary<MeasurementKey, SignalReference[]> signalReferences = Interlocked.CompareExchange(ref m_signalReferences, null, null);
+
+                if ((object)signalReferences != null)
                 {
-                    status.AppendFormat(" Total device measurements: {0}", m_signalReferences.Count);
+                    status.AppendFormat(" Total device measurements: {0}", signalReferences.Count);
                     status.AppendLine();
                 }
 
@@ -1270,12 +1270,11 @@ namespace PhasorProtocolAdapters
 
             OnStatusMessage("Defined {0} output stream devices...", m_baseConfigurationFrame.Cells.Count);
 
-            // Clear any existing signal references
-            m_signalReferences.Clear();
+            // Create new lookup table for signal references
+            Dictionary<MeasurementKey, SignalReference[]> signalReferences = new Dictionary<MeasurementKey, SignalReference[]>();
 
             Dictionary<string, int> signalCellIndexes = new Dictionary<string, int>();
             SignalReference signal;
-            SignalReference[] signals;
             SignalReference lastSignal = new SignalReference("__-UNKNOWN");
             MeasurementKey measurementKey;
             bool foundQualityFlagsMeasurement = false;
@@ -1378,23 +1377,17 @@ namespace PhasorProtocolAdapters
 
                         // It is possible, but not as common, that a single measurement will have multiple destinations
                         // within an outgoing data stream frame, hence the following
-                        signals = m_signalReferences.GetOrAdd(measurementKey, null as SignalReference[]);
-
-                        if ((object)signals == null)
+                        signalReferences.AddOrUpdate(measurementKey, key =>
                         {
                             // Add new signal to new collection
-                            signals = new SignalReference[1];
-                            signals[0] = signal;
-                        }
-                        else
+                            return new SignalReference[] { signal };
+                        }, (key, signals) =>
                         {
                             // Add a new signal to existing collection
-                            List<SignalReference> signalList = new List<SignalReference>(signals);
-                            signalList.Add(signal);
-                            signals = signalList.ToArray();
-                        }
-
-                        m_signalReferences[measurementKey] = signals;
+                            Array.Resize(ref signals, signals.Length + 1);
+                            signals[signals.Length - 1] = signal;
+                            return signals;
+                        });
                     }
                 }
                 catch (Exception ex)
@@ -1403,9 +1396,12 @@ namespace PhasorProtocolAdapters
                 }
             }
 
+            // Update the m_signalReferences member variable so that configuration changes will begin to take effect
+            Interlocked.Exchange(ref m_signalReferences, signalReferences);
+
             // Assign action adapter input measurement keys - this assigns the expected measurements per frame needed
             // by the concentration engine for preemptive publication 
-            InputMeasurementKeys = m_signalReferences.Keys.ToArray();
+            InputMeasurementKeys = signalReferences.Keys.ToArray();
 
             // Allow for spaces in output stream device names if a replacement character has been defined for spaces
             if (m_replaceWithSpaceChar != Char.MinValue)
@@ -1528,14 +1524,18 @@ namespace PhasorProtocolAdapters
         /// <param name="measurements">Collection of measurements to queue for processing.</param>
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
+            Dictionary<MeasurementKey, SignalReference[]> signalReferences = Interlocked.CompareExchange(ref m_signalReferences, null, null);
             List<IMeasurement> inputMeasurements = new List<IMeasurement>();
             SignalReference[] signals;
+
+            if ((object)signalReferences == null)
+                return;
 
             foreach (IMeasurement measurement in measurements)
             {
                 // We assign signal reference to measurement in advance since we are using this as a filter
                 // anyway, this will save a lookup later during measurement assignment to frame...
-                if (m_signalReferences.TryGetValue(measurement.Key, out signals))
+                if (signalReferences.TryGetValue(measurement.Key, out signals))
                 {
                     // Loop through each signal reference defined for this measurement - this handles
                     // the case where there can be more than one destination for a measurement within
