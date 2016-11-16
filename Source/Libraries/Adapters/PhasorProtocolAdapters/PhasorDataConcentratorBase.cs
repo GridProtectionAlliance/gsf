@@ -53,6 +53,7 @@ using GSF.Communication;
 using GSF.Parsing;
 using GSF.PhasorProtocols;
 using GSF.PhasorProtocols.Anonymous;
+using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
@@ -622,7 +623,7 @@ namespace PhasorProtocolAdapters
                 base.DataSource = value;
 
                 if (Initialized)
-                    TryUpdateConfiguration();
+                    new Action(UpdateConfiguration).TryExecute(OnProcessException);
             }
         }
 
@@ -1417,19 +1418,6 @@ namespace PhasorProtocolAdapters
 
             // Cache new protocol specific configuration frame
             CacheConfigurationFrame(m_configurationFrame, Name);
-        }
-
-        private bool TryUpdateConfiguration()
-        {
-            try
-            {
-                UpdateConfiguration();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
         }
 
         // Generate a more descriptive phasor label including line phase and phasor type
