@@ -716,7 +716,15 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                     outputStreamDeviceAnalog.NodeID = device.NodeID;
                                     outputStreamDeviceAnalog.OutputStreamDeviceID = outputStreamDevice.ID;
                                     outputStreamDeviceAnalog.Label = string.IsNullOrEmpty(measurement.AlternateTag) ? device.Acronym.Length > 12 ? device.Acronym.Substring(0, 12) + ":A" + analogIndex : device.Acronym + ":A" + analogIndex : measurement.AlternateTag; // measurement.PointTag;                                    
-                                    outputStreamDeviceAnalog.LoadOrder = Convert.ToInt32(measurement.SignalReference.Substring((measurement.SignalReference.LastIndexOf("-", StringComparison.Ordinal) + 3)));
+
+                                    int charIndex = measurement.SignalReference.LastIndexOf("-", StringComparison.Ordinal);
+                                    int signalIndex;
+
+                                    if (charIndex >= 0 && charIndex + 3 < measurement.SignalReference.Length && int.TryParse(measurement.SignalReference.Substring(charIndex + 3), out signalIndex))
+                                        outputStreamDeviceAnalog.LoadOrder = signalIndex;
+                                    else
+                                        outputStreamDeviceAnalog.LoadOrder = 999;
+
                                     OutputStreamDeviceAnalog.Save(database, outputStreamDeviceAnalog);
                                     analogIndex++;
                                 }
@@ -726,7 +734,15 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                     outputStreamDeviceDigital.NodeID = device.NodeID;
                                     outputStreamDeviceDigital.OutputStreamDeviceID = outputStreamDevice.ID;
                                     outputStreamDeviceDigital.Label = string.IsNullOrEmpty(measurement.AlternateTag) ? DefaultDigitalLabel : measurement.AlternateTag;     // measurement.PointTag;
-                                    outputStreamDeviceDigital.LoadOrder = Convert.ToInt32(measurement.SignalReference.Substring((measurement.SignalReference.LastIndexOf("-", StringComparison.Ordinal) + 3)));
+
+                                    int charIndex = measurement.SignalReference.LastIndexOf("-", StringComparison.Ordinal);
+                                    int signalIndex;
+
+                                    if (charIndex >= 0 && charIndex + 3 < measurement.SignalReference.Length && int.TryParse(measurement.SignalReference.Substring(charIndex + 3), out signalIndex))
+                                        outputStreamDeviceDigital.LoadOrder = signalIndex;
+                                    else
+                                        outputStreamDeviceDigital.LoadOrder = 999;
+
                                     OutputStreamDeviceDigital.Save(database, outputStreamDeviceDigital);
                                 }
                             }
