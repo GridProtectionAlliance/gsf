@@ -286,7 +286,7 @@ namespace GSF.Threading
         /// <returns>A shared timer instance that fires at the given interval.</returns>
         public SharedTimer CreateTimer(int interval = 100)
         {
-            return new SharedTimer(this);
+            return new SharedTimer(this, interval);
         }
 
         /// <summary>
