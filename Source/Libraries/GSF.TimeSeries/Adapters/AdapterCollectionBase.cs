@@ -1473,7 +1473,8 @@ namespace GSF.TimeSeries.Adapters
         // Handle item initialization
         private void Initialize(T item)
         {
-            SharedTimer initializationTimeoutTimer = null;
+            Action initializationTimeoutAction = null;
+            ICancellationToken initializationTimeoutToken = null;
 
             if (m_activeItem.Value != item)
                 return;
@@ -1486,9 +1487,7 @@ namespace GSF.TimeSeries.Adapters
                     // If initialization timeout is specified for this item, start the initialization timeout timer
                     if (item.InitializationTimeout > 0)
                     {
-                        initializationTimeoutTimer = Common.TimerScheduler.CreateTimer(item.InitializationTimeout);
-
-                        initializationTimeoutTimer.Elapsed += (sender, args) =>
+                        initializationTimeoutAction = new Action(() =>
                         {
                             const string MessageFormat = "WARNING: Initialization of adapter {0} has exceeded" +
                                 " its timeout of {1} seconds. The adapter may still initialize, however this" +
@@ -1497,18 +1496,18 @@ namespace GSF.TimeSeries.Adapters
                                 " normal operations.";
 
                             OnStatusMessage(MessageFormat, item.Name, item.InitializationTimeout / 1000.0);
-                        };
 
-                        initializationTimeoutTimer.AutoReset = true;
-                        initializationTimeoutTimer.Start();
+                            initializationTimeoutToken = initializationTimeoutAction?.DelayAndExecute(item.InitializationTimeout);
+                        });
+
+                        initializationTimeoutToken = initializationTimeoutAction.DelayAndExecute(item.InitializationTimeout);
                     }
 
                     // Initialize the item
                     item.Initialize();
 
                     // Initialization successfully completed, so stop the timeout timer
-                    if ((object)initializationTimeoutTimer != null)
-                        initializationTimeoutTimer.Stop();
+                    initializationTimeoutToken?.Cancel();
                 }
 
                 // If the item is set to auto-start and not already started, start it now
@@ -1542,10 +1541,6 @@ namespace GSF.TimeSeries.Adapters
             {
                 // We report any errors encountered during initialization...
                 OnProcessException(new InvalidOperationException($"Failed to initialize adapter {item.Name}: {ex.Message}", ex));
-            }
-            finally
-            {
-                initializationTimeoutTimer?.Dispose();
             }
         }
 
