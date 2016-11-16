@@ -48,11 +48,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Web.Hosting;
 using GSF.Collections;
 using GSF.Console;
 using GSF.IO;
 using GSF.Reflection;
+using GSF.Units;
 using Microsoft.Win32;
 
 namespace GSF
@@ -323,14 +325,13 @@ namespace GSF
                 try
                 {
                     double percentOfTotal;
-                    long totalMemory;
+                    ulong totalMemory = GetTotalPhysicalMemory();
 
-                    // Get total system memory
-                    using (PerformanceCounter counter = new PerformanceCounter("Mono Memory", "Total Physical Memory"))
-                        totalMemory = counter.RawValue;
+                    //using (PerformanceCounter counter = new PerformanceCounter("Mono Memory", "Total Physical Memory"))
+                    //    totalMemory = counter.RawValue;
 
                     // Get percent of total memory used by current process
-                    string output = Command.Execute("ps", string.Format("-p {0} -o %mem", Process.GetCurrentProcess().Id)).StandardOutput;
+                    string output = Command.Execute("ps", $"-p {Process.GetCurrentProcess().Id} -o %mem").StandardOutput;
                     string[] lines = output.Split('\n');
 
                     if (lines.Length > 1 && double.TryParse(lines[1].Trim(), out percentOfTotal))
@@ -344,6 +345,65 @@ namespace GSF
 
             return processMemory;
         }
+
+        /// <summary>
+        /// Gets the total physical system memory.
+        /// </summary>
+        /// <returns>Total physical system memory.</returns>
+        public static ulong GetTotalPhysicalMemory()
+        {
+            if (IsPosixEnvironment)
+            {
+                string output = Command.Execute("awk", "'/MemTotal/ {print $2}' /proc/meminfo").StandardOutput;
+                return ulong.Parse(output) * SI2.Kilo;
+            }
+
+            MEMORYSTATUSEX memStatus = new MEMORYSTATUSEX();
+            return GlobalMemoryStatusEx(memStatus) ? memStatus.ullTotalPhys : 0;
+        }
+
+        /// <summary>
+        /// Gets the available physical system memory.
+        /// </summary>
+        /// <returns>Total available system memory.</returns>
+        public static ulong GetAvailablePhysicalMemory()
+        {
+            if (IsPosixEnvironment)
+            {
+                string output = Command.Execute("awk", "'/MemAvailable/ {print $2}' /proc/meminfo").StandardOutput;
+                return ulong.Parse(output) * SI2.Kilo;
+            }
+
+            MEMORYSTATUSEX memStatus = new MEMORYSTATUSEX();
+            return GlobalMemoryStatusEx(memStatus) ? memStatus.ullAvailPhys : 0;
+        }
+
+        #pragma warning disable 169
+        #pragma warning disable 649
+        // ReSharper disable MemberCanBePrivate.Local
+        // ReSharper disable NotAccessedField.Local
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        private class MEMORYSTATUSEX
+        {
+            public uint dwLength;
+            public uint dwMemoryLoad;
+            public ulong ullTotalPhys;
+            public ulong ullAvailPhys;
+            public ulong ullTotalPageFile;
+            public ulong ullAvailPageFile;
+            public ulong ullTotalVirtual;
+            public ulong ullAvailVirtual;
+            public ulong ullAvailExtendedVirtual;
+
+            public MEMORYSTATUSEX()
+            {
+                dwLength = (uint)Marshal.SizeOf(typeof(MEMORYSTATUSEX));
+            }
+        }
+
+        [return: MarshalAs(UnmanagedType.Bool)]
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern bool GlobalMemoryStatusEx([In, Out] MEMORYSTATUSEX lpBuffer);
 
         #region [ Old Code ]
 
