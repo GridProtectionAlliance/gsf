@@ -23,6 +23,7 @@
 
 using System;
 using System.Windows.Forms;
+using GSF.Threading;
 
 namespace LogFileViewer
 {
@@ -34,9 +35,17 @@ namespace LogFileViewer
         [STAThread]
         static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new LogFileViewer());
+            ShutdownHandler.Initialize();
+            try
+            {
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(new LogFileViewer());
+            }
+            finally 
+            {
+                ShutdownHandler.InitiateSafeShutdown("OnlyCallThisWhenMainExits");
+            }
         }
     }
 }

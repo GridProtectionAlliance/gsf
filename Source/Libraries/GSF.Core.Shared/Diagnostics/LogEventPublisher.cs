@@ -49,6 +49,22 @@ namespace GSF.Diagnostics
         public bool HasSubscribers => m_internalPublisher.HasSubscribers;
 
         /// <summary>
+        /// Gets/Sets if a log message should be generated when message suppression occurs.
+        /// Default is true;
+        /// </summary>
+        public bool ShouldRaiseMessageSupressionNotifications
+        {
+            get
+            {
+                return m_internalPublisher.ShouldRaiseMessageSupressionNotifications;
+            }
+            set
+            {
+                m_internalPublisher.ShouldRaiseMessageSupressionNotifications = value;
+            }
+        }
+
+        /// <summary>
         /// Raises a log message with the provided data.
         /// </summary>
         /// <param name="message"></param>

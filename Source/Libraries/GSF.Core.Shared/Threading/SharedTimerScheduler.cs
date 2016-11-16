@@ -66,7 +66,7 @@ namespace GSF.Threading
             // Total CPU time spent processing the timer events.
             // since the last time it was reset
             private double m_elapsedWorkerTime;
-            
+
             // Total number of times the timer events have fired 
             // since the last time it was reset
             private int m_elapsedIntervals;
@@ -186,15 +186,18 @@ namespace GSF.Threading
 
                     if (m_callbacks.Count == 0)
                     {
-                        Dispose();
-
                         lock (m_parentTimer.m_syncRoot)
                         {
-                            m_parentTimer.m_schedulesByInterval.Remove(m_interval);
-                        }
+                            while (m_additionalQueueItems.TryDequeue(out newCallbacks))
+                                m_parentTimer.RegisterCallback(m_interval, newCallbacks);
 
-                        while (m_additionalQueueItems.TryDequeue(out newCallbacks))
-                            m_parentTimer.RegisterCallback(m_interval, newCallbacks);
+                            if (m_callbacks.Count == 0)
+                            {
+                                Dispose();
+
+                                m_parentTimer.m_schedulesByInterval.Remove(m_interval);
+                            }
+                        }
                     }
                 }
                 finally

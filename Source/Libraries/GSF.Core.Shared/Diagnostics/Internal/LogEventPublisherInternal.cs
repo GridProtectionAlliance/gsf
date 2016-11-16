@@ -44,6 +44,12 @@ namespace GSF.Diagnostics
         private long m_messagesSuppressed=0;
 
         /// <summary>
+        /// Gets/Sets if a log message should be generated when message suppression occurs.
+        /// Default is true;
+        /// </summary>
+        public bool ShouldRaiseMessageSupressionNotifications = true;
+
+        /// <summary>
         /// Creates a <see cref="LogEventPublisherInternal"/>.
         /// </summary>
         /// <param name="attributes"></param>
@@ -103,7 +109,7 @@ namespace GSF.Diagnostics
             {
                 m_messagesSuppressed++;
 
-                if (m_suppressionMessageNextPublishTime <= ShortTime.Now)
+                if (ShouldRaiseMessageSupressionNotifications &&  m_suppressionMessageNextPublishTime <= ShortTime.Now)
                 {
                     m_suppressionMessageNextPublishTime = ShortTime.Now.AddSeconds(10);
                     MessageSuppressionIndication.Publish($"Message Suppression Is Occurring To: '{ m_owner.TypeName }' {m_messagesSuppressed.ToString()} total messages have been suppressed.", m_owner.ToString() );

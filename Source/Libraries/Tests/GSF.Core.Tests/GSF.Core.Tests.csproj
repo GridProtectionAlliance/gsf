@@ -86,6 +86,7 @@
     <Compile Include="GaussianDistributionTest.cs" />
     <Compile Include="GSF.Collections\IsolatedQueueTest.cs" />
     <Compile Include="GSF.IO.Checksums\CRC-CCITTTest.cs" />
+    <Compile Include="GSF.Threading\LoadingAdjustedTimestamp.cs" />
     <Compile Include="GSF.Threading\ScheduledTaskTest.cs" />
     <Compile Include="PatternCompressorTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

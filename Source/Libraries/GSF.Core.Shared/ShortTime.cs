@@ -44,7 +44,7 @@ namespace GSF
 
         static ShortTimeFunctions()
         {
-            var frequency = Stopwatch.Frequency;
+            decimal frequency = Stopwatch.Frequency;
 
             decimal countsPerSecond = frequency;
             CountsPerSecond = (double)countsPerSecond;

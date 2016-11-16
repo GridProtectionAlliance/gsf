@@ -122,6 +122,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Threading\LongSynchronizedOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\MixedSynchronizedOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\NamespaceDoc.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Threading\LoadingAdjustedTimestamp.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\RateLimiter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\ReaderWriterSpinLock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\ScheduledTask.cs" />
