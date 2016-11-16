@@ -170,7 +170,11 @@ namespace GSF.Web.Model.Handlers
                 FileName = GetModelFileName(requestParameters["ModelName"])
             };
 
+#if MONO
+            return Task.FromResult(false);
+#else
             return Task.CompletedTask;
+#endif
         }
 
         private void CopyModelAsCsvToStream(NameValueCollection requestParameters, Stream responseStream, Action flushResponse, CompatibleCancellationToken cancellationToken)
@@ -428,6 +432,6 @@ namespace GSF.Web.Model.Handlers
             return $"{modelName}Export.csv";
         }
 
-        #endregion
+#endregion
     }
 }
