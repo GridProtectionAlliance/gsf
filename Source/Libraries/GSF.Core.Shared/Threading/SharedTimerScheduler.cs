@@ -113,6 +113,16 @@ namespace GSF.Threading
                 return weakAction;
             }
 
+            public WeakAction<DateTime> RegisterCallback(WeakAction<DateTime> weakAction)
+            {
+                if (m_disposed)
+                    throw new ObjectDisposedException(GetType().FullName);
+
+                m_additionalQueueItems.Enqueue(weakAction);
+
+                return weakAction;
+            }
+
             private void Callback(object state)
             {
                 if (m_disposed)
@@ -173,6 +183,19 @@ namespace GSF.Threading
 
                     while (m_additionalQueueItems.TryDequeue(out newCallbacks))
                         m_callbacks.AddLast(newCallbacks);
+
+                    if (m_callbacks.Count == 0)
+                    {
+                        Dispose();
+
+                        lock (m_parentTimer.m_syncRoot)
+                        {
+                            m_parentTimer.m_schedulesByInterval.Remove(m_interval);
+                        }
+
+                        while (m_additionalQueueItems.TryDequeue(out newCallbacks))
+                            m_parentTimer.RegisterCallback(m_interval, newCallbacks);
+                    }
                 }
                 finally
                 {
@@ -301,6 +324,34 @@ namespace GSF.Threading
                 }
 
                 return instance.RegisterCallback(callback);
+            }
+        }
+
+        private WeakAction<DateTime> RegisterCallback(int interval, WeakAction<DateTime> weakAction)
+        {
+            if ((object)weakAction == null)
+                throw new ArgumentNullException(nameof(weakAction));
+
+            if (interval <= 0)
+                throw new ArgumentOutOfRangeException(nameof(interval));
+
+            if (m_disposed)
+                throw new ObjectDisposedException(GetType().FullName);
+
+            lock (m_syncRoot)
+            {
+                if (m_disposed)
+                    throw new ObjectDisposedException(GetType().FullName);
+
+                SharedTimerInstance instance;
+
+                if (!m_schedulesByInterval.TryGetValue(interval, out instance))
+                {
+                    instance = new SharedTimerInstance(this, interval);
+                    m_schedulesByInterval.Add(interval, instance);
+                }
+
+                return instance.RegisterCallback(weakAction);
             }
         }
 
