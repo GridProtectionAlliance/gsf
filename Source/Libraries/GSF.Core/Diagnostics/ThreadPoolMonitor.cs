@@ -25,7 +25,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using GSF.Threading;
+#if !MONO
 using Microsoft.Diagnostics.Runtime;
+#endif
 
 namespace GSF.Diagnostics
 {
@@ -182,6 +184,7 @@ namespace GSF.Diagnostics
 
             if (OptimizationOptions.EnableThreadStackDumping)
             {
+#if !MONO
                 using (var dataTarget = DataTarget.AttachToProcess(Process.GetCurrentProcess().Id, 5000, AttachFlag.Passive))
                 {
                     foreach (var clr in dataTarget.ClrVersions)
@@ -211,6 +214,7 @@ namespace GSF.Diagnostics
                         }
                     }
                 }
+#endif
             }
             Log.Publish(MessageLevel.Warning, "ThreadPool Stack Trace", "Dumped threadpool stack trace", sb.ToString());
         }
