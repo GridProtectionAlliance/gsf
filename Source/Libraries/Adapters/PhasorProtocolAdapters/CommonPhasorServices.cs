@@ -136,6 +136,7 @@ namespace PhasorProtocolAdapters
         /// Releases the unmanaged resources used by the <see cref="CommonPhasorServices"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "m_configurationWaitHandle", Justification = "Code Analysis does not understand null propagation :-p")]
         protected override void Dispose(bool disposing)
         {
             if (!m_disposed)
@@ -159,7 +160,7 @@ namespace PhasorProtocolAdapters
                         m_frameParser = null;
 
                         // Dispose configuration of wait handle
-                        m_configurationWaitHandle?.Close();
+                        m_configurationWaitHandle?.Dispose();
                         m_configurationWaitHandle = null;
 
                         m_configurationFrame = null;

@@ -28,6 +28,7 @@ namespace GSF.Historian
     /// <summary>
     /// Represents an exception related to <see cref="TimeTag"/> instances.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2237:MarkISerializableTypesWithSerializable")]
     public class TimeTagException : Exception
     {
         /// <summary>
