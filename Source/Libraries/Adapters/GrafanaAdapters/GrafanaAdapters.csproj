@@ -18,35 +18,31 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\Build\Output\Debug\Libraries\</OutputPath>
+    <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\..\Build\Output\Debug\Libraries\GrafanaAdapters.XML</DocumentationFile>
+    <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\..\Build\Output\Release\Libraries\</OutputPath>
+    <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\..\Build\Output\Release\Libraries\GrafanaAdapters.XML</DocumentationFile>
+    <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
     <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
-    <OutputPath>..\..\..\..\Build\Output\Mono\Libraries\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <DocumentationFile>..\..\..\..\Build\Output\Mono\Libraries\GrafanaAdapters.XML</DocumentationFile>
+    <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
+    <DefineConstants>TRACE;MONO</DefineConstants>
+    <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

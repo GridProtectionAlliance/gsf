@@ -1219,5 +1219,34 @@ namespace GSF.Interop
         {
             return GetErrorMessage(Marshal.GetLastWin32Error());
         }
+
+        #pragma warning disable 169
+        #pragma warning disable 649
+        // ReSharper disable MemberCanBePrivate.Local
+        // ReSharper disable NotAccessedField.Local
+        [SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        public class MEMORYSTATUSEX
+        {
+            public uint dwLength;
+            public uint dwMemoryLoad;
+            public ulong ullTotalPhys;
+            public ulong ullAvailPhys;
+            public ulong ullTotalPageFile;
+            public ulong ullAvailPageFile;
+            public ulong ullTotalVirtual;
+            public ulong ullAvailVirtual;
+            public ulong ullAvailExtendedVirtual;
+
+            public MEMORYSTATUSEX()
+            {
+                dwLength = (uint)Marshal.SizeOf(typeof(MEMORYSTATUSEX));
+            }
+        }
+
+        [SuppressMessage("Microsoft.Interoperability", "CA1401:PInvokesShouldNotBeVisible")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern bool GlobalMemoryStatusEx([In, Out] MEMORYSTATUSEX lpBuffer);
     }
 }

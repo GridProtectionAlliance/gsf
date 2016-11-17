@@ -17,33 +17,32 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\Build\Output\Debug\Libraries\</OutputPath>
+    <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\..\Build\Output\Debug\Libraries\KafkaAdapters.xml</DocumentationFile>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\..\Build\Output\Release\Libraries\</OutputPath>
+    <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\..\Build\Output\Release\Libraries\KafkaAdapters.xml</DocumentationFile>
+    <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
     <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
-    <OutputPath>..\..\..\..\Build\Output\Mono\Libraries\</OutputPath>
-    <DefineConstants>CODE_ANALYSIS;TRACE</DefineConstants>
-    <DocumentationFile>..\..\..\..\Build\Output\Mono\Libraries\KafkaAdapters.xml</DocumentationFile>
+    <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
+    <DefineConstants>TRACE;MONO</DefineConstants>
+    <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Misakai.Kafka, Version=1.0.14.0, Culture=neutral, processorArchitecture=MSIL">

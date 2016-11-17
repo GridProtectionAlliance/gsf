@@ -30,6 +30,7 @@
 //
 //******************************************************************************************************
 
+#if !MONO
 using System;
 using System.ComponentModel;
 using System.Security.Principal;
@@ -39,7 +40,6 @@ using GSF.Security;
 
 namespace GSF.Windows
 {
-#if !MONO
     #region [ Enumerations ]
 
     /// <summary>
@@ -327,5 +327,5 @@ namespace GSF.Windows
 
         #endregion
     }
-#endif
 }
+#endif

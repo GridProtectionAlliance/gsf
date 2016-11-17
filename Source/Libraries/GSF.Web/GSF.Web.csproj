@@ -12,42 +12,18 @@
     <AssemblyName>GSF.Web</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <SccProjectName>SAK</SccProjectName>
-    <SccLocalPath>SAK</SccLocalPath>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccProvider>SAK</SccProvider>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <OldToolsVersion>3.5</OldToolsVersion>
-    <UpgradeBackupLocation />
-    <PublishUrl>http://localhost/TVA.Web/</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Web</InstallFrom>
-    <UpdateEnabled>true</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>true</IsWebBootstrapper>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath Condition=" '$(OutputPath)' == '' ">..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
+    <OutputPath>..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\Build\Output\$(Configuration)\Libraries\$(AssemblyName).xml</DocumentationFile>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
     <LangVersion>default</LangVersion>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -56,26 +32,25 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath Condition=" '$(OutputPath)' == '' ">..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
+    <OutputPath>..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\Build\Output\$(Configuration)\Libraries\$(AssemblyName).xml</DocumentationFile>
+    <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
     <Prefer32Bit>false</Prefer32Bit>
     <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
     <OutputPath>..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
     <DefineConstants>TRACE;MONO</DefineConstants>
-    <DocumentationFile>..\..\..\Build\Output\$(Configuration)\Libraries\$(AssemblyName).xml</DocumentationFile>
+    <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
@@ -245,72 +220,35 @@
     <EmbeddedResource Include="Embedded\SecurityPortal.aspx">
       <SubType>ASPXCodeBehind</SubType>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Embedded\SecurityService.svc" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Embedded\Images\Logo.png" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Embedded\Images\Help.png" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Embedded\Images\Warning.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
-      <Visible>False</Visible>
-      <ProductName>Windows Installer 3.1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Embedded\Styles\SecurityPortal.css" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Embedded\Files\Help.pdf" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="GSF.Web.nuspec" />
+    <EmbeddedResource Include="Model\Handlers\CsvDownloadHandler.ashx" />
     <EmbeddedResource Include="Model\Views\PagedViewModel.cshtml" />
     <EmbeddedResource Include="Model\Views\DirectoryBrowser.cshtml" />
-    <EmbeddedResource Include="Model\Handlers\CsvDownloadHandler.ashx" />
-    <None Include="packages.config" />
     <EmbeddedResource Include="Model\Views\AddCheckBoxField.cshtml" />
     <EmbeddedResource Include="Model\Views\AddDateField.cshtml" />
     <EmbeddedResource Include="Model\Views\AddInputField.cshtml" />
     <EmbeddedResource Include="Model\Views\AddSelectField.cshtml" />
     <EmbeddedResource Include="Model\Views\AddTextAreaField.cshtml" />
-    <EmbeddedResource Include="Security\Views\Groups.cshtml" />
-    <EmbeddedResource Include="Security\Views\Users.cshtml" />
-    <None Include="PostBuildSetup.bat" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Model\Scripts\pagedViewModel.js" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Model\Scripts\gsf.web.client.js" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Model\Scripts\js.cookie.js" />
     <EmbeddedResource Include="Model\Scripts\ko-reactor.js" />
     <EmbeddedResource Include="Model\Scripts\ko-reactor.min.js" />
     <EmbeddedResource Include="Model\Scripts\ko.observableDictionary.js" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Model\Scripts\gsf.web.knockout.js" />
     <EmbeddedResource Include="Model\Scripts\gsf.web.primeui.js" />
+    <EmbeddedResource Include="Security\Views\Groups.cshtml" />
+    <EmbeddedResource Include="Security\Views\Users.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="GSF.Web.nuspec" />
+    <None Include="packages.config" />
+    <None Include="PostBuildSetup.bat" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">

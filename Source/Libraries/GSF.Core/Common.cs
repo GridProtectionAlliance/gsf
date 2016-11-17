@@ -48,10 +48,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Web.Hosting;
 using GSF.Collections;
 using GSF.Console;
+using GSF.Interop;
 using GSF.IO;
 using GSF.Reflection;
 using GSF.Units;
@@ -358,8 +358,8 @@ namespace GSF
                 return ulong.Parse(output) * SI2.Kilo;
             }
 
-            MEMORYSTATUSEX memStatus = new MEMORYSTATUSEX();
-            return GlobalMemoryStatusEx(memStatus) ? memStatus.ullTotalPhys : 0;
+            WindowsApi.MEMORYSTATUSEX memStatus = new WindowsApi.MEMORYSTATUSEX();
+            return WindowsApi.GlobalMemoryStatusEx(memStatus) ? memStatus.ullTotalPhys : 0;
         }
 
         /// <summary>
@@ -374,36 +374,9 @@ namespace GSF
                 return ulong.Parse(output) * SI2.Kilo;
             }
 
-            MEMORYSTATUSEX memStatus = new MEMORYSTATUSEX();
-            return GlobalMemoryStatusEx(memStatus) ? memStatus.ullAvailPhys : 0;
+            WindowsApi.MEMORYSTATUSEX memStatus = new WindowsApi.MEMORYSTATUSEX();
+            return WindowsApi.GlobalMemoryStatusEx(memStatus) ? memStatus.ullAvailPhys : 0;
         }
-
-        #pragma warning disable 169
-        #pragma warning disable 649
-        // ReSharper disable MemberCanBePrivate.Local
-        // ReSharper disable NotAccessedField.Local
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        private class MEMORYSTATUSEX
-        {
-            public uint dwLength;
-            public uint dwMemoryLoad;
-            public ulong ullTotalPhys;
-            public ulong ullAvailPhys;
-            public ulong ullTotalPageFile;
-            public ulong ullAvailPageFile;
-            public ulong ullTotalVirtual;
-            public ulong ullAvailVirtual;
-            public ulong ullAvailExtendedVirtual;
-
-            public MEMORYSTATUSEX()
-            {
-                dwLength = (uint)Marshal.SizeOf(typeof(MEMORYSTATUSEX));
-            }
-        }
-
-        [return: MarshalAs(UnmanagedType.Bool)]
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern bool GlobalMemoryStatusEx([In, Out] MEMORYSTATUSEX lpBuffer);
 
         #region [ Old Code ]
 

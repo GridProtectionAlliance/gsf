@@ -7,36 +7,9 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{54CA98CC-2F0A-41F2-879D-0E42B17E8544}</ProjectGuid>
     <OutputType>Library</OutputType>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <RootNamespace>GSF.PhasorProtocols</RootNamespace>
     <AssemblyName>GSF.PhasorProtocols</AssemblyName>
-    <MyType>Windows</MyType>
-    <OptionStrict>Off</OptionStrict>
-    <SignAssembly>false</SignAssembly>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <OldToolsVersion>4.0</OldToolsVersion>
-    <UpgradeBackupLocation>
-    </UpgradeBackupLocation>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
-    <SccProjectName>SAK</SccProjectName>
-    <SccLocalPath>SAK</SccLocalPath>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccProvider>SAK</SccProvider>
-    <PublishUrl>publish\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -44,15 +17,11 @@
     <DebugType>full</DebugType>
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
-    <OutputPath Condition=" '$(OutputPath)' == '' ">..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
-    <DocumentationFile>..\..\..\Build\Output\$(Configuration)\Libraries\$(AssemblyName).xml</DocumentationFile>
-    <NOWARN>
-    </NOWARN>
+    <OutputPath>..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
+    <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
     <RemoveIntegerChecks>true</RemoveIntegerChecks>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <CodeAnalysisRules>
-    </CodeAnalysisRules>
-    <DefineConstants>DEBUG</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <CodeAnalysisRuleSet>GSF.PhasorProtocols.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
@@ -61,54 +30,39 @@
     <DefineDebug>false</DefineDebug>
     <DefineTrace>true</DefineTrace>
     <Optimize>true</Optimize>
-    <OutputPath Condition=" '$(OutputPath)' == '' ">..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
-    <DocumentationFile>..\..\..\Build\Output\$(Configuration)\Libraries\$(AssemblyName).xml</DocumentationFile>
-    <NOWARN>
-    </NOWARN>
+    <DefineConstants>TRACE</DefineConstants>
+    <OutputPath>..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
+    <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
     <RemoveIntegerChecks>true</RemoveIntegerChecks>
-    <DefineConstants>
-    </DefineConstants>
     <RunCodeAnalysis>true</RunCodeAnalysis>
-    <CodeAnalysisRules>
-    </CodeAnalysisRules>
     <CodeAnalysisRuleSet>GSF.PhasorProtocols.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
+    <RemoveIntegerChecks>true</RemoveIntegerChecks>
+    <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisRuleSet>GSF.PhasorProtocols.ruleset</CodeAnalysisRuleSet>
+    <DefineConstants>TRACE;MONO</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Configuration.Install" />
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
+    <Reference Include="System.Core" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Data.DataSetExtensions">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
+    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Runtime.Serialization.Formatters.Soap" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
-      <Visible>False</Visible>
-      <ProductName>Windows Installer 3.1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AnalogDefinitionBase.cs" />
@@ -380,24 +334,5 @@
   <Target Name="BeforeBuild">
   </Target>
   -->
-  <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
-    <DefineTrace>true</DefineTrace>
-    <OutputPath>..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
-    <RemoveIntegerChecks>true</RemoveIntegerChecks>
-    <DocumentationFile>..\..\..\Build\Output\$(Configuration)\Libraries\$(AssemblyName).xml</DocumentationFile>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <CodeAnalysisRuleSet>GSF.PhasorProtocols.ruleset</CodeAnalysisRuleSet>
-    <DefineConstants>MONO</DefineConstants>
-  </PropertyGroup>
   <Import Project="$(MSBuildBinPath)/Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
 </Project>
