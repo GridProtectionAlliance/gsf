@@ -39,9 +39,9 @@
     <StartupObject />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
-    <OutputPath>bin\Mono\</OutputPath>
+    <OutputPath>..\..\..\..\Build\Output\Mono\Libraries\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
-    <DocumentationFile>..\..\..\..\Build\Output\Release\Libraries\GrafanaAdapters.XML</DocumentationFile>
+    <DocumentationFile>..\..\..\..\Build\Output\Mono\Libraries\GrafanaAdapters.XML</DocumentationFile>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
