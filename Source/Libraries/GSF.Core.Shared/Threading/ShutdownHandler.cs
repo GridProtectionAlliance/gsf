@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using GSF.Collections;
 using GSF.Diagnostics;
 
@@ -60,15 +61,16 @@ namespace GSF.Threading
         /// Gets if this process is shutting down.
         /// </summary>
         public static bool IsShuttingDown { get; private set; }
+
         /// <summary>
         /// Gets if this process has already shut down.
         /// </summary>
         public static bool HasShutdown { get; private set; }
 
-        private static List<WeakAction> s_onShutdownCallbackFirst;
-        private static List<WeakAction> s_onShutdownCallbackDefault;
-        private static List<WeakAction> s_onShutdownCallbackLast;
-        private static object s_syncRoot;
+        private static readonly List<WeakAction> s_onShutdownCallbackFirst;
+        private static readonly List<WeakAction> s_onShutdownCallbackDefault;
+        private static readonly List<WeakAction> s_onShutdownCallbackLast;
+        private static readonly object s_syncRoot;
 
         static ShutdownHandler()
         {
@@ -128,6 +130,7 @@ namespace GSF.Threading
 
                 list.RemoveWhere(x => !x.IsAlive);
                 list.Add(new WeakAction(callback));
+
                 return true;
             }
         }
@@ -135,19 +138,19 @@ namespace GSF.Threading
         private static void InitiateSafeShutdown(object sender, EventArgs e)
         {
             List<WeakAction> shutdownList = new List<WeakAction>();
+
             lock (s_syncRoot)
             {
                 if (IsShuttingDown)
-                {
                     return;
-                }
+
                 IsShuttingDown = true;
                 shutdownList.AddRange(s_onShutdownCallbackFirst);
                 shutdownList.AddRange(s_onShutdownCallbackDefault);
                 shutdownList.AddRange(s_onShutdownCallbackLast);
             }
 
-            foreach (var weakAction in shutdownList)
+            foreach (WeakAction weakAction in shutdownList)
             {
                 try
                 {
@@ -160,22 +163,22 @@ namespace GSF.Threading
             }
 
             Logger.Shutdown();
+
             HasShutdown = true;
         }
 
         /// <summary>
-        /// Requests that certain components initiate a safe shutdown. This method 
-        /// should only be called when the main thread exits. Calling this outside
-        /// of the application exiting could result in unpredictable behavior.
+        /// Requests that certain components initiate a safe shutdown.
         /// </summary>
-        /// <param name="areYouSure">To ensure proper use, specify this value as a constant. 'OnlyCallThisWhenMainExits'</param>
-        public static void InitiateSafeShutdown(string areYouSure)
+        /// <remarks>
+        /// This method should only be called when the main thread exits. Calling this outside
+        /// of the application exiting could result in unpredictable behavior.
+        /// </remarks>
+#if !SQLCLR
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+#endif
+        public static void InitiateSafeShutdown()
         {
-            if (areYouSure != "OnlyCallThisWhenMainExits")
-            {
-                throw new InvalidOperationException("This method must only be called when the main thread exits.");
-            }
-
             InitiateSafeShutdown(null, null);
         }
     }

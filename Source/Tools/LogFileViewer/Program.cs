@@ -44,7 +44,7 @@ namespace LogFileViewer
             }
             finally 
             {
-                ShutdownHandler.InitiateSafeShutdown("OnlyCallThisWhenMainExits");
+                ShutdownHandler.InitiateSafeShutdown();
             }
         }
     }

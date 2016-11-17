@@ -296,6 +296,8 @@ namespace GSF.TimeSeries
         /// </remarks>
         protected virtual void ServiceStartingHandler(object sender, EventArgs<string[]> e)
         {
+            ShutdownHandler.Initialize();
+
             // Define a run-time log
             m_runTimeLog = new RunTimeLog();
             m_runTimeLog.FileName = "RunTimeLog.txt";
@@ -696,6 +698,8 @@ namespace GSF.TimeSeries
 
             // Detach from handler for unobserved task exceptions
             TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;
+
+            ShutdownHandler.InitiateSafeShutdown();
         }
 
         private void UpdatedStatusHandler(object sender, EventArgs<Guid, string, UpdateType> e)
