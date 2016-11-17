@@ -23,7 +23,9 @@
 
 using System;
 using System.Collections.Generic;
+#if !SQLCLR
 using System.ComponentModel;
+#endif
 using GSF.Collections;
 using GSF.Diagnostics;
 
