@@ -11,13 +11,18 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)ArrayExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BigEndian.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)BitMath.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CharExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Collections\DynamicObjectPool.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Collections\IndexedArray.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Collections\IsolatedQueue.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Collections\ListExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Collections\NullableArray.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Collections\SortedQueue.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Common.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ComplexNumber.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Data\DataRowExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DateTimeRounding.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\DisposableLoggingClassBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Internal\LogEventPublisherInternal.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Internal\LoggerInternal.cs" />
@@ -113,6 +118,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Threading\CompatibleCancellationToken.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\DedicatedSynchronizedOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\DisposableCallback.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Threading\EventTimer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\ICancellationToken.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\ISynchronizedOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\LogicalThread.cs" />

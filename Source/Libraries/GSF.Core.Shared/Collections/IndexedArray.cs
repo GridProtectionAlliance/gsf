@@ -87,6 +87,17 @@ namespace GSF.Collection
             }
         }
 
+        /// <summary>
+        /// Sets all items to their default value
+        /// </summary>
+        public void Clear()
+        {
+            lock (m_syncRoot)
+            {
+                Array.Clear(m_items, 0, m_items.Length);
+            }
+        }
+
         IEnumerator<T> IEnumerable<T>.GetEnumerator()
         {
             return ((IEnumerable<T>)m_items).GetEnumerator();

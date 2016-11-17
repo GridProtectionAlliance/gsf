@@ -37,8 +37,10 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using Microsoft.Win32.SafeHandles;
 
 #pragma warning disable 1591
 
@@ -1248,5 +1250,15 @@ namespace GSF.Interop
         [return: MarshalAs(UnmanagedType.Bool)]
         [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern bool GlobalMemoryStatusEx([In, Out] MEMORYSTATUSEX lpBuffer);
+
+        /// <summary>
+        /// Flushes the buffers of a specified file and causes all buffered data to be written to a file.
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <remarks>Since the <see cref="FileStream.Flush(bool)"/> method does not actually work, this finishes the flush to the disk file system.
+        /// Which still could cache the results, but this is about the best we can do for a flush right now.</remarks>
+        [SuppressMessage("Microsoft.Interoperability", "CA1401:PInvokesShouldNotBeVisible")]
+        [DllImport("KERNEL32", SetLastError = true)]
+        public static extern void FlushFileBuffers(SafeFileHandle handle);
     }
 }
