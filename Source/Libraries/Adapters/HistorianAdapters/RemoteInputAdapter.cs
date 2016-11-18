@@ -297,7 +297,7 @@ namespace HistorianAdapters
                 {
                     measurements.Add(new Measurement
                     {
-                        Key = MeasurementKey.LookUpOrCreate(m_historianDataListener.ID, (uint)dataPoint.HistorianID),
+                        CommonMeasurementFields = MeasurementKey.LookUpOrCreate(m_historianDataListener.ID, (uint)dataPoint.HistorianID).DataSourceCommonValues,
                         Value = dataPoint.Value,
                         Timestamp = dataPoint.Time
                     });

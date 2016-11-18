@@ -84,7 +84,7 @@ namespace DNP3Adapters
         private Measurement ConvertBinary(Binary meas, uint id, String source)
         {
             var m = new Measurement();
-            m.Key = MeasurementKey.LookUpOrCreate(source, id);
+            m.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(source, id).DataSourceCommonValues;
             m.Value = meas.Value ? 1.0 : 0.0;
             m.Timestamp = DateTime.UtcNow;
             return m;
@@ -93,13 +93,13 @@ namespace DNP3Adapters
         private Measurement ConvertDoubleBinary(DoubleBitBinary meas, uint id, String source)
         {
             var m = new Measurement();
-            m.Key = MeasurementKey.LookUpOrCreate(source, id);
+            m.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(source, id).DataSourceCommonValues;
             switch (meas.Value)
             {
                 case (DoubleBit.INDETERMINATE):
                     m.Value = 0.0;
                     break;
-                case(DoubleBit.DETERMINED_OFF):
+                case (DoubleBit.DETERMINED_OFF):
                     m.Value = 1.0;
                     break;
                 case (DoubleBit.DETERMINED_ON):
@@ -116,7 +116,7 @@ namespace DNP3Adapters
         private Measurement ConvertAnalog(Analog meas, uint id, String source)
         {
             var m = new Measurement();
-            m.Key = MeasurementKey.LookUpOrCreate(source, id);
+            m.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(source, id).DataSourceCommonValues;
             m.Value = meas.Value;
             m.Timestamp = DateTime.UtcNow;
             return m;
@@ -125,7 +125,7 @@ namespace DNP3Adapters
         private Measurement ConvertCounter(Counter meas, uint id, String source)
         {
             var m = new Measurement();
-            m.Key = MeasurementKey.LookUpOrCreate(source, id);
+            m.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(source, id).DataSourceCommonValues;
             m.Value = meas.Value;
             m.Timestamp = DateTime.UtcNow;
             return m;
@@ -134,7 +134,7 @@ namespace DNP3Adapters
         private Measurement ConvertFrozenCounter(FrozenCounter meas, uint id, String source)
         {
             var m = new Measurement();
-            m.Key = MeasurementKey.LookUpOrCreate(source, id);
+            m.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(source, id).DataSourceCommonValues;
             m.Value = meas.Value;
             m.Timestamp = DateTime.UtcNow;
             return m;
@@ -143,7 +143,7 @@ namespace DNP3Adapters
         private Measurement ConvertBinaryOutputStatus(BinaryOutputStatus meas, uint id, String source)
         {
             var m = new Measurement();
-            m.Key = MeasurementKey.LookUpOrCreate(source, id);
+            m.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(source, id).DataSourceCommonValues;
             m.Value = meas.Value ? 1.0 : 0.0;
             m.Timestamp = DateTime.UtcNow;
             return m;
@@ -152,7 +152,7 @@ namespace DNP3Adapters
         private Measurement ConvertAnalogOutputStatus(AnalogOutputStatus meas, uint id, String source)
         {
             var m = new Measurement();
-            m.Key = MeasurementKey.LookUpOrCreate(source, id);
+            m.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(source, id).DataSourceCommonValues;
             m.Value = meas.Value;
             m.Timestamp = DateTime.UtcNow;
             return m;
@@ -164,7 +164,7 @@ namespace DNP3Adapters
             if (map.TryGetValue(index, out id))
             {
                 action(converter(meas, id.tsfId, id.tsfSource));
-            }           
+            }
         }
 
         private readonly Dictionary<UInt32, Mapping> binaryMap = new Dictionary<uint, Mapping>();
@@ -172,7 +172,7 @@ namespace DNP3Adapters
         private readonly Dictionary<UInt32, Mapping> counterMap = new Dictionary<uint, Mapping>();
         private readonly Dictionary<UInt32, Mapping> frozenCounterMap = new Dictionary<uint, Mapping>();
         private readonly Dictionary<UInt32, Mapping> controlStatusMap = new Dictionary<uint, Mapping>();
-        private readonly Dictionary<UInt32, Mapping> setpointStatusMap = new Dictionary<uint, Mapping>();                
+        private readonly Dictionary<UInt32, Mapping> setpointStatusMap = new Dictionary<uint, Mapping>();
         private readonly Dictionary<UInt32, Mapping> doubleBitBinaryMap = new Dictionary<uint, Mapping>();
     }
 }

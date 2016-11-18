@@ -225,7 +225,7 @@ namespace PowerCalculations.PowerMultiCalculator
             }
 
             if (m_configuredCalculations.Any())
-                InputMeasurementKeys = m_configuredCalculations.SelectMany(pc => new[] {pc.CurrentAngleSignalID, pc.CurrentMagnitudeSignalID, pc.VoltageAngleSignalID, pc.VoltageMagnitudeSignalID}).ToArray();
+                InputMeasurementKeys = m_configuredCalculations.SelectMany(pc => new[] { pc.CurrentAngleSignalID, pc.CurrentMagnitudeSignalID, pc.VoltageAngleSignalID, pc.VoltageMagnitudeSignalID }).ToArray();
             else
                 throw new InvalidOperationException("Skipped initialization of power calculator: no defined power calculations...");
 
@@ -395,12 +395,11 @@ namespace PowerCalculations.PowerMultiCalculator
             if (!rows.Any())
                 return null;
 
+            MeasurementKey key = MeasurementKey.LookUpBySignalID(signalID);
+            key.SetDataSourceCommonValues(rows[0]["PointTag"].ToString(), Convert.ToDouble(rows[0]["Adder"]), Convert.ToDouble(rows[0]["Multiplier"]));
             Measurement measurement = new Measurement
             {
-                Key = MeasurementKey.LookUpBySignalID(signalID),
-                TagName = rows[0]["PointTag"].ToString(),
-                Adder = Convert.ToDouble(rows[0]["Adder"]),
-                Multiplier = Convert.ToDouble(rows[0]["Multiplier"])
+                CommonMeasurementFields = key.DefaultCommonMeasurementFields,
             };
 
             return measurement;

@@ -34,24 +34,16 @@ using GSF.Collections;
 namespace GSF.TimeSeries
 {
     /// <summary>
-    /// Implementation of a basic measurement.
+    /// A base class for assisting with properly implementing <see cref="IMeasurement"/> 
+    /// that has the common implementation code in it.
     /// </summary>
     [Serializable]
-    public class Measurement : IMeasurement
+    public abstract class MeasurementBase
     {
         #region [ Members ]
 
         // Fields
-        private MeasurementKey m_key;
-        private MeasurementStateFlags m_stateFlags;
-        private string m_tagName;
-        private double m_value;
-        private double m_adder;
-        private double m_multiplier;
-        private Ticks m_timestamp;
-        private Ticks m_receivedTimestamp;
-        private Ticks m_publishedTimestamp;
-        private MeasurementValueFilterFunction m_measurementValueFilter;
+        private CommonMeasurementFields m_commonFields;
 
         #endregion
 
@@ -60,11 +52,9 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Constructs a new <see cref="Measurement"/> using default settings.
         /// </summary>
-        public Measurement()
+        protected MeasurementBase()
         {
-            m_key = MeasurementKey.Undefined;
-            m_receivedTimestamp = DateTime.UtcNow.Ticks;
-            m_multiplier = 1.0D;
+            m_commonFields = CommonMeasurementFields.Undefined;
         }
 
         #endregion
@@ -78,7 +68,7 @@ namespace GSF.TimeSeries
         {
             get
             {
-                return m_key.SignalID;
+                return m_commonFields.Key.SignalID;
             }
         }
 
@@ -89,25 +79,131 @@ namespace GSF.TimeSeries
         {
             get
             {
-                return m_key;
+                return m_commonFields.Key;
+            }
+            //set
+            //{
+            //    m_commonFields = m_commonFields.ChangeKey(value ?? MeasurementKey.Undefined);
+            //}
+        }
+
+        /// <summary>
+        /// Gets or sets the text based tag name of this <see cref="Measurement"/>.
+        /// </summary>
+        public string TagName
+        {
+            get
+            {
+                return m_commonFields.TagName;
+            }
+            //set
+            //{
+            //    m_commonFields = m_commonFields.ChangeTagName(value);
+            //}
+        }
+
+        /// <summary>
+        /// Gets or sets an offset to add to the measurement value. This defaults to 0.0.
+        /// </summary>
+        [DefaultValue(0.0)]
+        public double Adder
+        {
+            get
+            {
+                return m_commonFields.Adder;
+            }
+            //set
+            //{
+            //    m_commonFields = m_commonFields.ChangeAdder(value);
+            //}
+        }
+
+        /// <summary>
+        /// Defines a multiplicative offset to apply to the measurement value. This defaults to 1.0.
+        /// </summary>
+        [DefaultValue(1.0)]
+        public double Multiplier
+        {
+            get
+            {
+                return m_commonFields.Multiplier;
+            }
+            //set
+            //{
+            //    m_commonFields = m_commonFields.ChangeMultiplier(value);
+            //}
+        }
+
+        /// <summary>
+        /// Gets or sets function used to apply a down-sampling filter over a sequence of <see cref="IMeasurement"/> values.
+        /// </summary>
+        public MeasurementValueFilterFunction MeasurementValueFilter
+        {
+            get
+            {
+                return m_commonFields.MeasurementValueFilter;
+            }
+            //set
+            //{
+            //    m_commonFields = m_commonFields.ChangeMeasurementValueFilter(value);
+            //}
+        }
+
+        /// <summary>
+        /// Contains common fields that rarely change in <see cref="IMeasurement"/> 
+        /// so they can be quickly initialized when creating a new <see cref="IMeasurement"/>.
+        /// </summary>
+        public CommonMeasurementFields CommonMeasurementFields
+        {
+            get
+            {
+                return m_commonFields;
             }
             set
             {
-                if ((object)value == null)
-                {
-                    m_key = MeasurementKey.Undefined;
-                }
-                else
-                {
-                    m_key = value;
-                }
+                m_commonFields = value;
             }
         }
+
+        #endregion
+
+    }
+
+    /// <summary>
+    /// Implementation of a basic measurement.
+    /// </summary>
+    [Serializable]
+    public class Measurement : MeasurementBase, IMeasurement
+    {
+        #region [ Members ]
+
+        // Fields
+        private MeasurementStateFlags m_stateFlags;
+        private double m_value;
+        private Ticks m_timestamp;
+        private Ticks m_receivedTimestamp;
+        private Ticks m_publishedTimestamp;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Constructs a new <see cref="Measurement"/> using default settings.
+        /// </summary>
+        public Measurement()
+        {
+            m_receivedTimestamp = DateTime.UtcNow.Ticks;
+        }
+
+        #endregion
+
+        #region [ Properties ]
 
         /// <summary>
         /// Gets or sets <see cref="MeasurementStateFlags"/> associated with this <see cref="Measurement"/>.
         /// </summary>
-        public virtual MeasurementStateFlags StateFlags
+        public MeasurementStateFlags StateFlags
         {
             get
             {
@@ -120,25 +216,10 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Gets or sets the text based tag name of this <see cref="Measurement"/>.
+        /// Gets or sets the raw measurement value that is not offset by <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/>.
         /// </summary>
-        public virtual string TagName
-        {
-            get
-            {
-                return m_tagName;
-            }
-            set
-            {
-                m_tagName = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the raw measurement value that is not offset by <see cref="Adder"/> and <see cref="Multiplier"/>.
-        /// </summary>
-        /// <returns>Raw value of this <see cref="Measurement"/> (i.e., value that is not offset by <see cref="Adder"/> and <see cref="Multiplier"/>).</returns>
-        public virtual double Value
+        /// <returns>Raw value of this <see cref="Measurement"/> (i.e., value that is not offset by <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/>).</returns>
+        public double Value
         {
             get
             {
@@ -151,49 +232,17 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Gets the adjusted numeric value of this measurement, taking into account the specified <see cref="Adder"/> and <see cref="Multiplier"/> offsets.
+        /// Gets the adjusted numeric value of this measurement, taking into account the specified <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/> offsets.
         /// </summary>
         /// <remarks>
-        /// Note that returned value will be offset by <see cref="Adder"/> and <see cref="Multiplier"/>.
+        /// Note that returned value will be offset by <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/>.
         /// </remarks>
-        /// <returns><see cref="Value"/> offset by <see cref="Adder"/> and <see cref="Multiplier"/> (i.e., <c><see cref="Value"/> * <see cref="Multiplier"/> + <see cref="Adder"/></c>).</returns>
-        public virtual double AdjustedValue
+        /// <returns><see cref="Value"/> offset by <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/> (i.e., <c><see cref="Value"/> * <see cref="MeasurementBase.Multiplier"/> + <see cref="MeasurementBase.Adder"/></c>).</returns>
+        public double AdjustedValue
         {
             get
             {
-                return m_value * m_multiplier + m_adder;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets an offset to add to the measurement value. This defaults to 0.0.
-        /// </summary>
-        [DefaultValue(0.0)]
-        public virtual double Adder
-        {
-            get
-            {
-                return m_adder;
-            }
-            set
-            {
-                m_adder = value;
-            }
-        }
-
-        /// <summary>
-        /// Defines a multiplicative offset to apply to the measurement value. This defaults to 1.0.
-        /// </summary>
-        [DefaultValue(1.0)]
-        public virtual double Multiplier
-        {
-            get
-            {
-                return m_multiplier;
-            }
-            set
-            {
-                m_multiplier = value;
+                return m_value * Multiplier + Adder;
             }
         }
 
@@ -203,7 +252,7 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
         /// </remarks>
-        public virtual Ticks Timestamp
+        public Ticks Timestamp
         {
             get
             {
@@ -249,21 +298,6 @@ namespace GSF.TimeSeries
             set
             {
                 m_publishedTimestamp = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets function used to apply a down-sampling filter over a sequence of <see cref="IMeasurement"/> values.
-        /// </summary>
-        public virtual MeasurementValueFilterFunction MeasurementValueFilter
-        {
-            get
-            {
-                return m_measurementValueFilter;
-            }
-            set
-            {
-                m_measurementValueFilter = value;
             }
         }
 
@@ -408,7 +442,7 @@ namespace GSF.TimeSeries
         /// <remarks>Hash code based on value of measurement.</remarks>
         public override int GetHashCode()
         {
-            return m_key.GetHashCode();
+            return Key.GetHashCode();
         }
 
         #endregion
@@ -492,7 +526,7 @@ namespace GSF.TimeSeries
         /// </summary>
         public static readonly Measurement Undefined = new Measurement
         {
-            Key = MeasurementKey.Undefined
+            CommonMeasurementFields = CommonMeasurementFields.Undefined
         };
 
         // Static Methods
@@ -506,12 +540,9 @@ namespace GSF.TimeSeries
         {
             return new Measurement
             {
-                Key = measurementToClone.Key,
+                CommonMeasurementFields = measurementToClone.CommonMeasurementFields,
                 Value = measurementToClone.Value,
-                Adder = measurementToClone.Adder,
-                Multiplier = measurementToClone.Multiplier,
                 Timestamp = measurementToClone.Timestamp,
-                TagName = measurementToClone.TagName,
                 StateFlags = measurementToClone.StateFlags
             };
         }
@@ -526,12 +557,9 @@ namespace GSF.TimeSeries
         {
             return new Measurement
             {
-                Key = measurementToClone.Key,
+                CommonMeasurementFields = measurementToClone.CommonMeasurementFields,
                 Value = measurementToClone.Value,
-                Adder = measurementToClone.Adder,
-                Multiplier = measurementToClone.Multiplier,
                 Timestamp = timestamp,
-                TagName = measurementToClone.TagName,
                 StateFlags = measurementToClone.StateFlags
             };
         }
@@ -547,12 +575,9 @@ namespace GSF.TimeSeries
         {
             return new Measurement
             {
-                Key = measurementToClone.Key,
+                CommonMeasurementFields = measurementToClone.CommonMeasurementFields,
                 Value = value,
-                Adder = measurementToClone.Adder,
-                Multiplier = measurementToClone.Multiplier,
                 Timestamp = timestamp,
-                TagName = measurementToClone.TagName,
                 StateFlags = measurementToClone.StateFlags
             };
         }

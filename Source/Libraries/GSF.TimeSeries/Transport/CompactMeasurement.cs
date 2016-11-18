@@ -223,10 +223,8 @@ namespace GSF.TimeSeries.Transport
         /// <param name="useMillisecondResolution">Flag that determines if millisecond resolution is in use for this serialization.</param>
         public CompactMeasurement(IMeasurement measurement, SignalIndexCache signalIndexCache, bool includeTime = true, long[] baseTimeOffsets = null, int timeIndex = 0, bool useMillisecondResolution = false)
         {
-            Key = measurement.Key;
+            CommonMeasurementFields = measurement.CommonMeasurementFields;
             Value = measurement.Value;
-            Adder = measurement.Adder;
-            Multiplier = measurement.Multiplier;
             Timestamp = measurement.Timestamp;
             StateFlags = measurement.StateFlags;
 
@@ -372,7 +370,7 @@ namespace GSF.TimeSeries.Transport
 
                 if (m_signalIndexCache.Reference.TryGetValue(value, out tuple))
                 {
-                    Key = MeasurementKey.LookUpOrCreate(tuple.Item1, tuple.Item2, tuple.Item3);
+                    CommonMeasurementFields = MeasurementKey.LookUpOrCreate(tuple.Item1, tuple.Item2, tuple.Item3).DataSourceCommonValues;
                 }
                 else
                     throw new InvalidOperationException("Failed to find associated signal identification for runtime ID " + value);

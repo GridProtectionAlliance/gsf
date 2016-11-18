@@ -358,7 +358,7 @@ namespace MySqlAdapters
                     {
                         measurements.Add(new Measurement
                         {
-                            Key = key,
+                            CommonMeasurementFields = key.DataSourceCommonValues,
                             Value = reader.GetDouble(valueColumn),
                             Timestamp = timeStamp
                         });
@@ -389,7 +389,7 @@ namespace MySqlAdapters
         private static readonly string[] s_measurementColumns = { "SignalID", "Timestamp", "Value" };
 
         // Collection of keys that can be used in a MySQL connection string.
-        private static readonly string[] s_validKeys = 
+        private static readonly string[] s_validKeys =
         {
             "server", "port", "protocol",
             "database", "uid", "user", "pwd", "password",

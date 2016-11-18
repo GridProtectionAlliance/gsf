@@ -49,6 +49,8 @@ namespace GSF.TimeSeries
         private string m_source;
         private readonly int m_hashCode;
         private readonly int m_runtimeID;
+        private CommonMeasurementFields m_dataSourceCommonValues;
+        private readonly  CommonMeasurementFields m_defaultCommonFieldValue;
 
         #endregion
 
@@ -61,6 +63,8 @@ namespace GSF.TimeSeries
             m_source = source;
             m_hashCode = base.GetHashCode();
             m_runtimeID = Interlocked.Increment(ref s_nextRuntimeID) - 1; //Returns the incremented value. Hints the -1
+            m_dataSourceCommonValues = new CommonMeasurementFields(this, null, 0, 1, null);
+            m_defaultCommonFieldValue = m_dataSourceCommonValues;
         }
 
         #endregion
@@ -121,9 +125,51 @@ namespace GSF.TimeSeries
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="CommonMeasurementFields"/> as they appear in the primary DataSource. 
+        /// This is to be considered the reference value. Adapters are free to change this inside <see cref="IMeasurement"/>
+        /// But only adjust this if the value has changed in the DataSource.
+        /// Change these values using <see cref="SetDataSourceCommonValues"/>
+        /// </summary>
+        public CommonMeasurementFields DataSourceCommonValues
+        {
+            get
+            {
+                return m_dataSourceCommonValues;
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="CommonMeasurementFields"/> that is initialized with the default values. 
+        /// Adder=0, Multiplier=1, MeasurementValueFilter=null, Key=This Instance, TagName = null
+        /// </summary>
+        public CommonMeasurementFields DefaultCommonMeasurementFields
+        {
+            get
+            {
+                return m_defaultCommonFieldValue;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Updates the values of the <see cref="DataSourceCommonValues"/>.
+        /// </summary>
+        /// <param name="tagName">Gets or sets the text based tag name</param>
+        /// <param name="adder">Defines an offset to add to the <see cref="IMeasurement"/> value</param>
+        /// <param name="multiplier">Defines a multiplicative offset to apply to the <see cref="IMeasurement"/> value</param>
+        public void SetDataSourceCommonValues(string tagName, double adder, double multiplier)
+        {
+            if (this == Undefined)
+                throw new NotSupportedException("Cannot set data source information for an undefined measurement.");
+            if (m_dataSourceCommonValues.TagName != tagName || m_dataSourceCommonValues.Adder != adder || m_dataSourceCommonValues.Multiplier != multiplier)
+            {
+                m_dataSourceCommonValues = new CommonMeasurementFields(this, tagName, adder, multiplier, null);
+            }
+        }
 
         /// <summary>
         /// Returns a <see cref="String"/> that represents the current <see cref="MeasurementKey"/>.

@@ -41,23 +41,18 @@ namespace GSF.PhasorProtocols
     /// </summary>
     /// <typeparam name="T">Generic type T.</typeparam>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    public class ChannelValueMeasurement<T> : IMeasurement where T : IChannelDefinition
+    public class ChannelValueMeasurement<T> : MeasurementBase, IMeasurement where T : IChannelDefinition
     {
         #region [ Members ]
 
         // Fields
         private IChannelValue<T> m_parent;
-        private MeasurementKey m_key;
         private MeasurementStateFlags m_stateFlags;
         private bool m_stateFlagsAssigned;
-        private string m_tagName;
         private Ticks m_timestamp;
         private Ticks m_receivedTimestamp;
         private Ticks m_publishedTimestamp;
         private int m_valueIndex;
-        private double m_adder;
-        private double m_multiplier;
-        private MeasurementValueFilterFunction m_measurementValueFilter;
 
         #endregion
 
@@ -70,12 +65,35 @@ namespace GSF.PhasorProtocols
         /// <param name="valueIndex">The index into the <see cref="IChannelValue{T}.GetCompositeValue"/> that this measurement derives its value from.</param>
         public ChannelValueMeasurement(IChannelValue<T> parent, int valueIndex)
         {
+
             m_parent = parent;
             m_valueIndex = valueIndex;
-            m_key = MeasurementKey.Undefined;
             m_timestamp = -1;
             m_receivedTimestamp = DateTime.UtcNow.Ticks;
-            m_multiplier = 1.0D;
+
+            //Note: This might not be compatible code. Please review.
+
+            ///// <summary>
+            ///// Gets or sets function used to apply a down-sampling filter over a sequence of <see cref="IMeasurement"/> values.
+            ///// </summary>
+            //public virtual MeasurementValueFilterFunction MeasurementValueFilter
+            //{
+            //    get
+            //    {
+            //        // If measurement user has assigned a specific filter for this measurement, we use it
+            //        if (m_measurementValueFilter != null)
+            //            return m_measurementValueFilter;
+
+            //        // Otherwise we use default filter algorithm as specified by the parent channel value
+            //        return m_parent.GetMeasurementValueFilterFunction(m_valueIndex);
+            //    }
+            //    set
+            //    {
+            //        m_measurementValueFilter = value;
+            //    }
+            //}
+
+            CommonMeasurementFields = CommonMeasurementFields.ChangeMeasurementValueFilter(m_parent.GetMeasurementValueFilterFunction(m_valueIndex));
         }
 
         #endregion
@@ -98,46 +116,13 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="Guid"/> based signal ID of this <see cref="ChannelValueMeasurement{T}"/>, if available.
-        /// </summary>
-        public Guid ID
-        {
-            get
-            {
-                return m_key.SignalID;
-            }
-        }
-
-        /// <summary>
-        /// Gets the primary key (a <see cref="MeasurementKey"/>, of this <see cref="ChannelValueMeasurement{T}"/>.
-        /// </summary>
-        public MeasurementKey Key
-        {
-            get
-            {
-                return m_key;
-            }
-            set
-            {
-                if ((object)value == null)
-                {
-                    m_key = MeasurementKey.Undefined;
-                }
-                else
-                {
-                    m_key = value;
-                }
-            }
-        }
-
-        /// <summary>
         /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="ChannelValueMeasurement{T}"/>.
         /// </summary>
         /// <remarks>
         /// This value returns timestamp of parent data frame unless assigned an alternate value.<br/>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
         /// </remarks>
-        public virtual Ticks Timestamp
+        public Ticks Timestamp
         {
             get
             {
@@ -159,7 +144,7 @@ namespace GSF.PhasorProtocols
         /// <para>In the default implementation, this timestamp will simply be the ticks of <see cref="DateTime.UtcNow"/> of when this class was created.</para>
         /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
         /// </remarks>
-        public virtual Ticks ReceivedTimestamp
+        public Ticks ReceivedTimestamp
         {
             get
             {
@@ -177,7 +162,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
         /// </remarks>
-        public virtual Ticks PublishedTimestamp
+        public Ticks PublishedTimestamp
         {
             get
             {
@@ -190,24 +175,9 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets the text based tag name of this <see cref="ChannelValueMeasurement{T}"/>.
-        /// </summary>
-        public virtual string TagName
-        {
-            get
-            {
-                return m_tagName;
-            }
-            set
-            {
-                m_tagName = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets index into the <see cref="IChannelValue{T}.GetCompositeValue"/> that this measurement derives its value from.
         /// </summary>
-        public virtual int ValueIndex
+        public int ValueIndex
         {
             get
             {
@@ -220,10 +190,10 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets the raw measurement value that is not offset by <see cref="Adder"/> and <see cref="Multiplier"/>.
+        /// Gets or sets the raw measurement value that is not offset by <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/>.
         /// </summary>
-        /// <returns>Raw value of this <see cref="ChannelValueMeasurement{T}"/> (i.e., value that is not offset by <see cref="Adder"/> and <see cref="Multiplier"/>).</returns>
-        public virtual double Value
+        /// <returns>Raw value of this <see cref="ChannelValueMeasurement{T}"/> (i.e., value that is not offset by <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/>).</returns>
+        public double Value
         {
             get
             {
@@ -236,17 +206,17 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets the adjusted numeric value of this measurement, taking into account the specified <see cref="Adder"/> and <see cref="Multiplier"/> offsets.
+        /// Gets the adjusted numeric value of this measurement, taking into account the specified <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/> offsets.
         /// </summary>
         /// <remarks>
-        /// Note that returned value will be offset by <see cref="Adder"/> and <see cref="Multiplier"/>.
+        /// Note that returned value will be offset by <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/>.
         /// </remarks>
-        /// <returns><see cref="Value"/> offset by <see cref="Adder"/> and <see cref="Multiplier"/> (i.e., <c><see cref="Value"/> * <see cref="Multiplier"/> + <see cref="Adder"/></c>).</returns>
-        public virtual double AdjustedValue
+        /// <returns><see cref="Value"/> offset by <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/> (i.e., <c><see cref="Value"/> * <see cref="MeasurementBase.Multiplier"/> + <see cref="MeasurementBase.Adder"/></c>).</returns>
+        public double AdjustedValue
         {
             get
             {
-                double adjustedValue = m_parent.GetCompositeValue(m_valueIndex) * m_multiplier + m_adder;
+                double adjustedValue = m_parent.GetCompositeValue(m_valueIndex) * Multiplier + Adder;
 
                 // Convert phase angles to the -180 degrees to 180 degrees range
                 if (m_parent is PhasorValueBase && m_valueIndex == (int)CompositePhasorValue.Angle)
@@ -257,39 +227,9 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets an offset to add to the measurement value. This defaults to 0.0.
-        /// </summary>
-        public virtual double Adder
-        {
-            get
-            {
-                return m_adder;
-            }
-            set
-            {
-                m_adder = value;
-            }
-        }
-
-        /// <summary>
-        /// Defines a multiplicative offset to apply to the measurement value. This defaults to 1.0.
-        /// </summary>
-        public virtual double Multiplier
-        {
-            get
-            {
-                return m_multiplier;
-            }
-            set
-            {
-                m_multiplier = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets <see cref="MeasurementStateFlags"/> associated with this <see cref="ChannelValueMeasurement{T}"/>.
         /// </summary>
-        public virtual MeasurementStateFlags StateFlags
+        public MeasurementStateFlags StateFlags
         {
             get
             {
@@ -302,26 +242,6 @@ namespace GSF.PhasorProtocols
             {
                 m_stateFlags = value;
                 m_stateFlagsAssigned = true;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets function used to apply a down-sampling filter over a sequence of <see cref="IMeasurement"/> values.
-        /// </summary>
-        public virtual MeasurementValueFilterFunction MeasurementValueFilter
-        {
-            get
-            {
-                // If measurement user has assigned a specific filter for this measurement, we use it
-                if (m_measurementValueFilter != null)
-                    return m_measurementValueFilter;
-
-                // Otherwise we use default filter algorithm as specified by the parent channel value
-                return m_parent.GetMeasurementValueFilterFunction(m_valueIndex);
-            }
-            set
-            {
-                m_measurementValueFilter = value;
             }
         }
 

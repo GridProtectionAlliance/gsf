@@ -1770,12 +1770,9 @@ namespace GSF.TimeSeries.Transport
                         signalID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
 
                         // Set measurement key if defined
-                        measurement.Key = MeasurementKey.LookUpOrCreate(signalID, row["ID"].ToString());
-
-                        // Assign other attributes
-                        measurement.TagName = row["PointTag"].ToNonNullString();
-                        measurement.Multiplier = double.Parse(row["Multiplier"].ToString());
-                        measurement.Adder = double.Parse(row["Adder"].ToString());
+                        MeasurementKey key = MeasurementKey.LookUpOrCreate(signalID, row["ID"].ToString());
+                        key.SetDataSourceCommonValues(row["PointTag"].ToNonNullString(), double.Parse(row["Adder"].ToString()), double.Parse(row["Multiplier"].ToString()));
+                        measurement.CommonMeasurementFields = key.DataSourceCommonValues;
 
                         subscribedMeasurements.Add(measurement);
                     }
@@ -2983,7 +2980,7 @@ namespace GSF.TimeSeries.Transport
                                                         if (m_signalIndexCache.Reference.TryGetValue(id, out tuple))
                                                         {
                                                             measurement = new Measurement();
-                                                            measurement.Key = MeasurementKey.LookUpOrCreate(tuple.Item1, tuple.Item2, tuple.Item3);
+                                                            measurement.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(tuple.Item1, tuple.Item2, tuple.Item3).DataSourceCommonValues;
                                                             measurement.Timestamp = time;
                                                             measurement.StateFlags = (MeasurementStateFlags)quality;
                                                             measurement.Value = value;
@@ -3175,7 +3172,7 @@ namespace GSF.TimeSeries.Transport
                                 // Skip the sequence number and signal index when creating the buffer block measurement
                                 bufferBlockMeasurement = new BufferBlockMeasurement(buffer, responseIndex + 6, responseLength - 6)
                                 {
-                                    Key = MeasurementKey.LookUpOrCreate(measurementKey.Item1, measurementKey.Item2, measurementKey.Item3)
+                                    CommonMeasurementFields = MeasurementKey.LookUpOrCreate(measurementKey.Item1, measurementKey.Item2, measurementKey.Item3).DataSourceCommonValues
                                 };
 
                                 // Determine if this is the next buffer block in the sequence

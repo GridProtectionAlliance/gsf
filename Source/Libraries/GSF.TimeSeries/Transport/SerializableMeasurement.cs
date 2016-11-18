@@ -80,10 +80,8 @@ namespace GSF.TimeSeries.Transport
         public SerializableMeasurement(IMeasurement measurement, Encoding encoding)
             : this(encoding)
         {
-            Key = measurement.Key;
+            CommonMeasurementFields = measurement.CommonMeasurementFields;
             Value = measurement.Value;
-            Adder = measurement.Adder;
-            Multiplier = measurement.Multiplier;
             Timestamp = measurement.Timestamp;
             StateFlags = measurement.StateFlags;
         }
@@ -153,7 +151,7 @@ namespace GSF.TimeSeries.Transport
             index += 16;
 
             // Apply parsed key changes
-            Key = MeasurementKey.LookUpOrCreate(signalID, keySource, keyID);
+            this.SetKey(MeasurementKey.LookUpOrCreate(signalID, keySource, keyID));
 
             // Decode tag name string length
             size = BigEndian.ToInt32(buffer, index);
@@ -162,22 +160,22 @@ namespace GSF.TimeSeries.Transport
             // Decode tag name string
             if (size > 0)
             {
-                TagName = m_encoding.GetString(buffer, index, size);
+                this.SetTagName(m_encoding.GetString(buffer, index, size));
                 index += size;
             }
             else
-                TagName = null;
+                this.SetTagName(null);
 
             // Decode value
             Value = BigEndian.ToDouble(buffer, index);
             index += 8;
 
             // Decode adder
-            Adder = BigEndian.ToDouble(buffer, index);
+            this.SetAdder(BigEndian.ToDouble(buffer, index));
             index += 8;
 
             // Decode multiplier
-            Multiplier = BigEndian.ToDouble(buffer, index);
+            this.SetMultiplier(BigEndian.ToDouble(buffer, index));
             index += 8;
 
             // Decode timestamp

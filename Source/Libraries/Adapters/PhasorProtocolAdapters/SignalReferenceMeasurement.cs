@@ -83,10 +83,10 @@ namespace PhasorProtocolAdapters
             {
                 return m_measurement.Key;
             }
-            set
-            {
-                m_measurement.Key = value;
-            }
+            //set
+            //{
+            //    m_measurement.Key = value;
+            //}
         }
 
         /// <summary>
@@ -124,10 +124,10 @@ namespace PhasorProtocolAdapters
             {
                 return m_measurement.TagName;
             }
-            set
-            {
-                m_measurement.TagName = value;
-            }
+            //set
+            //{
+            //    m_measurement.TagName = value;
+            //}
         }
 
         /// <summary>
@@ -170,10 +170,10 @@ namespace PhasorProtocolAdapters
             {
                 return m_measurement.Adder;
             }
-            set
-            {
-                m_measurement.Adder = value;
-            }
+            //set
+            //{
+            //    m_measurement.Adder = value;
+            //}
         }
 
         /// <summary>
@@ -185,10 +185,10 @@ namespace PhasorProtocolAdapters
             {
                 return m_measurement.Multiplier;
             }
-            set
-            {
-                m_measurement.Multiplier = value;
-            }
+            //set
+            //{
+            //    m_measurement.Multiplier = value;
+            //}
         }
 
         /// <summary>
@@ -255,9 +255,25 @@ namespace PhasorProtocolAdapters
             {
                 return m_measurement.MeasurementValueFilter;
             }
+            //set
+            //{
+            //    m_measurement.MeasurementValueFilter = value;
+            //}
+        }
+
+        /// <summary>
+        /// Contains common fields that rarely change in <see cref="IMeasurement"/> 
+        /// so they can be quickly initialized when creating a new <see cref="IMeasurement"/>.
+        /// </summary>
+        public CommonMeasurementFields CommonMeasurementFields
+        {
+            get
+            {
+                return m_measurement.CommonMeasurementFields;
+            }
             set
             {
-                m_measurement.MeasurementValueFilter = value;
+                m_measurement.CommonMeasurementFields = value;
             }
         }
 

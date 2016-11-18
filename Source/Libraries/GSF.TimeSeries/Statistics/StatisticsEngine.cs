@@ -1065,13 +1065,15 @@ namespace GSF.TimeSeries.Statistics
 
                     if ((object)statistic != null)
                     {
+                        MeasurementKey key = MeasurementKey.LookUpOrCreate(signalID, measurement["ID"].ToString());
+                        key.SetDataSourceCommonValues(measurement["PointTag"].ToNonNullString(),
+                            double.Parse(measurement["Adder"].ToNonNullString("0.0")),
+                            double.Parse(measurement["Multiplier"].ToNonNullString("1.0"))
+                            );
                         // Calculate the current value of the statistic measurement
                         return new Measurement()
                         {
-                            Key = MeasurementKey.LookUpOrCreate(signalID, measurement["ID"].ToString()),
-                            TagName = measurement["PointTag"].ToNonNullString(),
-                            Adder = double.Parse(measurement["Adder"].ToNonNullString("0.0")),
-                            Multiplier = double.Parse(measurement["Multiplier"].ToNonNullString("1.0")),
+                            CommonMeasurementFields = key.DataSourceCommonValues,
                             Value = statistic.Method(target, statistic.Arguments),
                             Timestamp = serverTime
                         };

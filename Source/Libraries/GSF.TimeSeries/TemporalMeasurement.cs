@@ -62,10 +62,8 @@ namespace GSF.TimeSeries
         {
             if (measurement != null)
             {
-                Key = measurement.Key;
+                CommonMeasurementFields = measurement.CommonMeasurementFields;
                 Value = measurement.Value;
-                Adder = measurement.Adder;
-                Multiplier = measurement.Multiplier;
                 Timestamp = measurement.Timestamp;
                 StateFlags = measurement.StateFlags;
             }

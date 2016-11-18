@@ -34,6 +34,141 @@ using System.Linq;
 namespace GSF.TimeSeries
 {
     /// <summary>
+    /// A set of fields that are common to <see cref="IMeasurement"/> but rarely change. 
+    /// This will allow them to be quickly transferred from one <see cref="IMeasurement"/> to 
+    /// another. This class is Immutable, so any change to these values requires that the class be recreated.
+    /// </summary>
+    [Serializable]
+    public class CommonMeasurementFields
+    {
+        /// <summary>
+        /// Gets or sets the primary key of this <see cref="IMeasurement"/>.
+        /// </summary>
+        public readonly MeasurementKey Key;
+
+        /// <summary>
+        /// Gets or sets the text based tag name of this <see cref="IMeasurement"/>.
+        /// </summary>
+        public readonly string TagName;
+
+        /// <summary>
+        /// Defines an offset to add to the <see cref="IMeasurement"/> value.
+        /// </summary>
+        /// <remarks>
+        /// Implementers should make sure this value defaults to zero.
+        /// </remarks>
+        public readonly double Adder;
+
+        /// <summary>
+        /// Defines a multiplicative offset to apply to the <see cref="IMeasurement"/> value.
+        /// </summary>
+        /// <remarks>
+        /// Implementers should make sure this value defaults to one.
+        /// </remarks>
+        public readonly double Multiplier;
+
+        /// <summary>
+        /// Gets or sets function used to apply a down-sampling filter over a sequence of <see cref="IMeasurement"/> values.
+        /// </summary>
+        public readonly MeasurementValueFilterFunction MeasurementValueFilter;
+
+        /// <summary>
+        /// Creates a <see cref="CommonMeasurementFields"/>
+        /// </summary>
+        /// <param name="key">Gets or sets the primary key of this <see cref="IMeasurement"/>.</param>
+        /// <param name="tagName">Gets or sets the text based tag name of this <see cref="IMeasurement"/>.</param>
+        /// <param name="adder">Defines an offset to add to the <see cref="IMeasurement"/> value.</param>
+        /// <param name="multiplier">Defines a multiplicative offset to apply to the <see cref="IMeasurement"/> value.</param>
+        /// <param name="measurementValueFilter">Gets or sets function used to apply a down-sampling filter over a sequence of <see cref="IMeasurement"/> values.</param>
+        public CommonMeasurementFields(MeasurementKey key, string tagName, double adder, double multiplier, MeasurementValueFilterFunction measurementValueFilter)
+        {
+            Key = key;
+            TagName = tagName;
+            Adder = adder;
+            Multiplier = multiplier;
+            MeasurementValueFilter = measurementValueFilter;
+        }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="CommonMeasurementFields"/> using the provided <see pref="key"/>. All other fields remain the same.
+        /// </summary>
+        /// <param name="key">the key to set.</param>
+        /// <returns></returns>
+        public CommonMeasurementFields ChangeKey(MeasurementKey key)
+        {
+            if (Key == key)
+                return this;
+            return new CommonMeasurementFields(key, TagName, Adder, Multiplier, MeasurementValueFilter);
+        }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="CommonMeasurementFields"/> using the provided <see pref="adder"/>. All other fields remain the same.
+        /// </summary>
+        /// <param name="adder">the adder to set.</param>
+        /// <returns></returns>
+        public CommonMeasurementFields ChangeAdder(double adder)
+        {
+            if (Adder == adder)
+                return this;
+            return new CommonMeasurementFields(Key, TagName, adder, Multiplier, MeasurementValueFilter);
+        }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="CommonMeasurementFields"/> using the provided <see pref="adder"/> and <see pref="multiplier"/>. All other fields remain the same.
+        /// </summary>
+        /// <param name="adder">the adder to set.</param>
+        /// <param name="multiplier">the multiplier to set.</param>
+        /// <returns></returns>
+        public CommonMeasurementFields ChangeAdderMultiplier(double adder, double multiplier)
+        {
+            if (Adder == adder && Multiplier == multiplier)
+                return this;
+            return new CommonMeasurementFields(Key, TagName, adder, multiplier, MeasurementValueFilter);
+        }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="CommonMeasurementFields"/> using the provided <see pref="multiplier"/>. All other fields remain the same.
+        /// </summary>
+        /// <param name="multiplier">the multiplier to set.</param>
+        /// <returns></returns>
+        public CommonMeasurementFields ChangeMultiplier(double multiplier)
+        {
+            if (Multiplier == multiplier)
+                return this;
+            return new CommonMeasurementFields(Key, TagName, Adder, multiplier, MeasurementValueFilter);
+        }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="CommonMeasurementFields"/> using the provided <see pref="tagName"/>. All other fields remain the same.
+        /// </summary>
+        /// <param name="tagName">the tagName to set.</param>
+        /// <returns></returns>
+        public CommonMeasurementFields ChangeTagName(string tagName)
+        {
+            if (TagName == tagName)
+                return this;
+            return new CommonMeasurementFields(Key, tagName, Adder, Multiplier, MeasurementValueFilter);
+        }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="CommonMeasurementFields"/> using the provided <see pref="measurementValueFilter"/>. All other fields remain the same.
+        /// </summary>
+        /// <param name="measurementValueFilter">the measurementValueFilter to set.</param>
+        /// <returns></returns>
+        public CommonMeasurementFields ChangeMeasurementValueFilter(MeasurementValueFilterFunction measurementValueFilter)
+        {
+            if (ReferenceEquals(MeasurementValueFilter, measurementValueFilter))
+                return this;
+            return new CommonMeasurementFields(Key, TagName, Adder, Multiplier, measurementValueFilter);
+        }
+
+        /// <summary>
+        /// Represents an undefined <see cref="CommonMeasurementFields"/>.
+        /// </summary>
+        public static readonly CommonMeasurementFields Undefined = new CommonMeasurementFields(MeasurementKey.Undefined, null, 0, 1, null);
+    }
+
+    /// <summary>
     /// Method signature for function used to apply a value filter over a sequence of <see cref="IMeasurement"/> values.
     /// </summary>
     /// <param name="source">Sequence of <see cref="IMeasurement"/> values over which to apply filter.</param>
@@ -198,7 +333,7 @@ namespace GSF.TimeSeries
         MeasurementKey Key
         {
             get;
-            set;
+            //set;
         }
 
         /// <summary>
@@ -207,7 +342,7 @@ namespace GSF.TimeSeries
         string TagName
         {
             get;
-            set;
+            //set;
         }
 
         /// <summary>
@@ -232,7 +367,7 @@ namespace GSF.TimeSeries
         double Adder
         {
             get;
-            set;
+            //set;
         }
 
         /// <summary>
@@ -244,7 +379,7 @@ namespace GSF.TimeSeries
         double Multiplier
         {
             get;
-            set;
+            //set;
         }
 
         /// <summary>
@@ -285,6 +420,16 @@ namespace GSF.TimeSeries
         /// Gets or sets function used to apply a down-sampling filter over a sequence of <see cref="IMeasurement"/> values.
         /// </summary>
         MeasurementValueFilterFunction MeasurementValueFilter
+        {
+            get;
+            //set;
+        }
+
+        /// <summary>
+        /// Contains common fields that rarely change in <see cref="IMeasurement"/> 
+        /// so they can be quickly initialized when creating a new <see cref="IMeasurement"/>.
+        /// </summary>
+        CommonMeasurementFields CommonMeasurementFields
         {
             get;
             set;
@@ -391,5 +536,46 @@ namespace GSF.TimeSeries
                 return "NONE";
             }
         }
+
+        /// <summary>
+        /// Sets the tag name
+        /// </summary>
+        /// <param name="measurement"></param>
+        /// <param name="tagName"></param>
+        public static void SetTagName(this IMeasurement measurement, string tagName)
+        {
+            measurement.CommonMeasurementFields = measurement.CommonMeasurementFields.ChangeTagName(tagName);
+        }
+
+        /// <summary>
+        /// Sets the Key
+        /// </summary>
+        /// <param name="measurement"></param>
+        /// <param name="key"></param>
+        public static void SetKey(this IMeasurement measurement, MeasurementKey key)
+        {
+            measurement.CommonMeasurementFields = measurement.CommonMeasurementFields.ChangeKey(key);
+        }
+
+        /// <summary>
+        /// Sets the Adder
+        /// </summary>
+        /// <param name="measurement"></param>
+        /// <param name="adder"></param>
+        public static void SetAdder(this IMeasurement measurement, double adder)
+        {
+            measurement.CommonMeasurementFields = measurement.CommonMeasurementFields.ChangeAdder(adder);
+        }
+
+        /// <summary>
+        /// Sets the multiplier
+        /// </summary>
+        /// <param name="measurement"></param>
+        /// <param name="multiplier"></param>
+        public static void SetMultiplier(this IMeasurement measurement, double multiplier)
+        {
+            measurement.CommonMeasurementFields = measurement.CommonMeasurementFields.ChangeMultiplier(multiplier);
+        }
+
     }
 }

@@ -344,12 +344,12 @@ namespace DataQualityMonitoring
                         if (signalID != "")
                         {
                             m_lastChange.Add(key, new Measurement
-                                {
-                                    //Assumption made that key.SignalID == signalId
-                                    Key = key,
-                                    Value = double.NaN,
-                                    Timestamp = timestamp
-                                });
+                            {
+                                //Assumption made that key.SignalID == signalId
+                                CommonMeasurementFields = key.DefaultCommonMeasurementFields,
+                                Value = double.NaN,
+                                Timestamp = timestamp
+                            });
                         }
                     }
                 }
@@ -358,11 +358,11 @@ namespace DataQualityMonitoring
                 if (!m_lastChange.ContainsKey(key))
                 {
                     m_lastChange.Add(key, new Measurement
-                        {
-                            Key = key,
-                            Value = double.NaN,
-                            Timestamp = timestamp
-                        });
+                    {
+                        CommonMeasurementFields = key.DefaultCommonMeasurementFields,
+                        Value = double.NaN,
+                        Timestamp = timestamp
+                    });
                 }
             }
         }

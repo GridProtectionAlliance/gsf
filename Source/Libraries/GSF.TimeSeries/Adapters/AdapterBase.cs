@@ -1271,7 +1271,6 @@ namespace GSF.TimeSeries.Adapters
                                 // Create a new measurement for the provided field level information
                                 Measurement measurement = new Measurement();
 
-                                measurement.Key = key;
 
                                 // Attempt to lookup other associated measurement meta-data from default measurement table, if defined
                                 try
@@ -1284,17 +1283,17 @@ namespace GSF.TimeSeries.Adapters
                                         {
                                             DataRow row = filteredRows[0];
 
-                                            measurement.TagName = row["PointTag"].ToNonNullString();
-                                            measurement.Multiplier = double.Parse(row["Multiplier"].ToString());
-                                            measurement.Adder = double.Parse(row["Adder"].ToString());
+                                            key.SetDataSourceCommonValues(row["PointTag"].ToNonNullString(), double.Parse(row["Adder"].ToString()), double.Parse(row["Multiplier"].ToString()));
                                         }
                                     }
                                 }
                                 catch
                                 {
                                     // Errors here are not catastrophic, this simply limits the available meta-data
-                                    measurement.TagName = string.Empty;
                                 }
+
+                                measurement.CommonMeasurementFields = key.DataSourceCommonValues;
+
 
                                 measurements.Add(measurement);
                             }
@@ -1493,6 +1492,7 @@ namespace GSF.TimeSeries.Adapters
             List<IMeasurement> measurements = new List<IMeasurement>();
             Measurement measurement;
             MeasurementKey key;
+            MeasurementKey key2;
             Guid id;
             string tableName, expression, sortField;
             int takeCount;
@@ -1509,12 +1509,11 @@ namespace GSF.TimeSeries.Adapters
                 {
                     id = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
 
+                    key2 = MeasurementKey.LookUpOrCreate(id, row["ID"].ToString());
+                    key2.SetDataSourceCommonValues(row["PointTag"].ToNonNullString(), double.Parse(row["Adder"].ToString()), double.Parse(row["Multiplier"].ToString()));
                     measurement = new Measurement
                     {
-                        Key = MeasurementKey.LookUpOrCreate(id, row["ID"].ToString()),
-                        TagName = row["PointTag"].ToNonNullString(),
-                        Adder = double.Parse(row["Adder"].ToString()),
-                        Multiplier = double.Parse(row["Multiplier"].ToString())
+                        CommonMeasurementFields = key2.DataSourceCommonValues,
                     };
 
                     measurements.Add(measurement);
@@ -1540,12 +1539,12 @@ namespace GSF.TimeSeries.Adapters
                             {
                                 id = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
 
+                                key2 = MeasurementKey.LookUpOrCreate(id, row["ID"].ToString());
+                                key2.SetDataSourceCommonValues(row["PointTag"].ToNonNullString(), double.Parse(row["Adder"].ToString()), double.Parse(row["Multiplier"].ToString()));
+
                                 measurement = new Measurement
                                 {
-                                    Key = MeasurementKey.LookUpOrCreate(id, row["ID"].ToString()),
-                                    TagName = row["PointTag"].ToNonNullString(),
-                                    Adder = double.Parse(row["Adder"].ToString()),
-                                    Multiplier = double.Parse(row["Multiplier"].ToString())
+                                    CommonMeasurementFields = key2.DataSourceCommonValues,
                                 };
 
                                 measurements.Add(measurement);
@@ -1637,9 +1636,7 @@ namespace GSF.TimeSeries.Adapters
                     // Create a new measurement for the provided field level information
                     measurement = new Measurement
                     {
-                        Key = key,
-                        Adder = adder,
-                        Multiplier = multipler
+                        CommonMeasurementFields = key.DefaultCommonMeasurementFields.ChangeAdderMultiplier(adder, multipler),
                     };
 
                     // Attempt to lookup other associated measurement meta-data from default measurement table, if defined
@@ -1653,22 +1650,22 @@ namespace GSF.TimeSeries.Adapters
                             {
                                 DataRow row = filteredRows[0];
 
-                                measurement.TagName = row["PointTag"].ToNonNullString();
+                                measurement.SetTagName(row["PointTag"].ToNonNullString());
 
                                 // Manually specified adder and multiplier take precedence, but if none were specified,
                                 // then those defined in the meta-data are used instead
                                 if (elem.Length < 3)
-                                    measurement.Multiplier = double.Parse(row["Multiplier"].ToString());
+                                    measurement.SetMultiplier(double.Parse(row["Multiplier"].ToString()));
 
                                 if (elem.Length < 2)
-                                    measurement.Adder = double.Parse(row["Adder"].ToString());
+                                    measurement.SetAdder(double.Parse(row["Adder"].ToString()));
                             }
                         }
                     }
                     catch
                     {
                         // Errors here are not catastrophic, this simply limits the available meta-data
-                        measurement.TagName = string.Empty;
+                        measurement.SetTagName(string.Empty);
                     }
 
                     measurements.Add(measurement);

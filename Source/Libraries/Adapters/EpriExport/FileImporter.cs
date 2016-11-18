@@ -444,11 +444,10 @@ namespace EpriExport
 
                     if (Guid.TryParse(measurementID, out id))
                     {
-                        measurement.Key = MeasurementKey.LookUpBySignalID(id);
+                        key = MeasurementKey.LookUpBySignalID(id);
                     }
                     else if (MeasurementKey.TryParse(measurementID, out key))
                     {
-                        measurement.Key = key;
                     }
 
                     if (measurement.ID != Guid.Empty)
@@ -462,15 +461,14 @@ namespace EpriExport
                                 DataRow row = filteredRows[0];
 
                                 // Assign other attributes
-                                measurement.TagName = row["PointTag"].ToNonNullString();
-                                measurement.Multiplier = double.Parse(row["Multiplier"].ToString());
-                                measurement.Adder = double.Parse(row["Adder"].ToString());
+                                key.SetDataSourceCommonValues(row["PointTag"].ToNonNullString(), double.Parse(row["Adder"].ToString()), double.Parse(row["Multiplier"].ToString()));
                             }
                         }
                         catch
                         {
                             // Failure to lookup extra metadata is not catastrophic
                         }
+                        measurement.CommonMeasurementFields = key.DataSourceCommonValues;
 
                         // Associate measurement with column index
                         m_columnMappings[kvp.Key] = measurement;
@@ -483,9 +481,9 @@ namespace EpriExport
 
                 // Reserve a column mapping for timestamp value
                 IMeasurement timestampMeasurement = new Measurement
-                    {
-                        TagName = "Timestamp"
-                    };
+                {
+                    CommonMeasurementFields = new CommonMeasurementFields(null, "Timestamp", 0, 1, null)
+                };
 
                 m_columnMappings[timestampColumn] = timestampMeasurement;
             }
