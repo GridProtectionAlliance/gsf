@@ -52,12 +52,15 @@
 //******************************************************************************************************
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Web.Hosting;
+using GSF.Console;
 using GSF.Identity;
 using GSF.Interop;
 using GSF.Reflection;
+using GSF.Units;
 
 namespace GSF.IO
 {
@@ -143,6 +146,63 @@ namespace GSF.IO
                 throw new InvalidOperationException("Failed to disconnect from network share \"" + sharename + "\" - " + WindowsApi.GetErrorMessage(result));
         }
 
+        /// <summary>
+        /// Tries to get the free space values for a given path. This path can be a network share or a mount point.
+        /// </summary>
+        /// <param name="pathName">The path to the location</param>
+        /// <param name="freeSpace">The number of user space bytes</param>
+        /// <param name="totalSize">The total number of bytes on the drive.</param>
+        /// <returns><c>true</c> if successful; otherwise <c>false</c> if there was an error.</returns>
+        public static bool GetAvailableFreeSpace(string pathName, out long freeSpace, out long totalSize)
+        {
+            try
+            {
+                if (Common.IsPosixEnvironment)
+                {
+                    string output = Command.Execute("df", $"-k {pathName}").StandardOutput;
+                    string[] lines = output.Split('\n');
+
+                    if (lines.Length > 1)
+                    {
+                        string[] elems = lines[1].Trim().RemoveDuplicateWhiteSpace().Split(' ');
+
+                        if (elems.Length > 4)
+                        {
+                            long totalKB, availableKB;
+
+                            if (long.TryParse(elems[1], out totalKB) && long.TryParse(elems[3], out availableKB))
+                            {
+                                freeSpace = availableKB * SI2.Kilo;
+                                totalSize = totalKB * SI2.Kilo;
+                                return true;
+                            }
+                        }
+                    }
+
+                    freeSpace = 0L;
+                    totalSize = 0L;
+                    return false;
+                }
+
+                string fullPath = Path.GetFullPath(pathName);
+
+                ulong lpFreeBytesAvailable;
+                ulong lpTotalNumberOfBytes;
+                ulong lpTotalNumberOfFreeBytes;
+
+                bool success = GetDiskFreeSpaceEx(fullPath, out lpFreeBytesAvailable, out lpTotalNumberOfBytes, out lpTotalNumberOfFreeBytes);
+
+                freeSpace = (long)lpFreeBytesAvailable;
+                totalSize = (long)lpTotalNumberOfBytes;
+                return success;
+            }
+            catch
+            {
+                freeSpace = 0L;
+                totalSize = 0L;
+                return false;
+            }
+        }
         /// <summary>
         /// Determines if the specified <paramref name="filePath"/> is contained with the current executable path.
         /// </summary>
@@ -343,6 +403,10 @@ namespace GSF.IO
 
         [DllImport("mpr.dll", EntryPoint = "WNetCancelConnection2W", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
         private static extern int WNetCancelConnection2(string lpName, int dwFlags, [MarshalAs(UnmanagedType.Bool)] bool fForce);
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool GetDiskFreeSpaceEx(string lpDirectoryName, out ulong lpFreeBytesAvailable, out ulong lpTotalNumberOfBytes, out ulong lpTotalNumberOfFreeBytes);
 
         #endregion
     }
