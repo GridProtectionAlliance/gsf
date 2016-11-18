@@ -501,7 +501,7 @@ namespace PIAdapters
                 OnStatusMessage("DEBUG: Data observer event handler found point ID {0:N0} in table: {1}...", value.PIPoint.ID, key);
                 Measurement measurement = new Measurement();
 
-                measurement.Key = key;
+                measurement.CommonMeasurementFields = key.DefaultCommonMeasurementFields;
                 measurement.Value = Convert.ToDouble(value.Value);
                 measurement.Timestamp = value.Timestamp.UtcTime;
 
