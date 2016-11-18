@@ -662,7 +662,7 @@ namespace DataQualityMonitoring
             if ((object)alarm.AssociatedMeasurementID != null)
             {
                 Guid alarmEventID = alarm.AssociatedMeasurementID.GetValueOrDefault();
-                alarmEvent.CommonMeasurementFields = MeasurementKey.LookUpBySignalID(alarmEventID).CommonMeasurementFields;
+                alarmEvent.MeasurementMetadata = MeasurementKey.LookUpBySignalID(alarmEventID).MeasurementMetadata;
             }
 
             return alarmEvent;

@@ -87,6 +87,8 @@
     <Compile Include="Adapters\RoutingTables.cs" />
     <Compile Include="Alarm.cs" />
     <Compile Include="Common.cs" />
+    <Compile Include="MeasurementBase.cs" />
+    <Compile Include="MeasurementMetadata.cs" />
     <Compile Include="ConcentratorBase.cs" />
     <Compile Include="Configuration\BinaryFileConfigurationLoader.cs" />
     <Compile Include="Configuration\DatabaseConfigurationLoader.cs" />
@@ -97,6 +99,7 @@
     <Compile Include="Data\ActiveMeasurementsTableLookup.cs" />
     <Compile Include="Data\DataSourceLookup.cs" />
     <Compile Include="Data\DataSourceLookupCache.cs" />
+    <Compile Include="IMeasurementExtensions.cs" />
     <Compile Include="Reports\CorrectnessReportingProcess.cs" />
     <Compile Include="Frame.cs" />
     <Compile Include="FrameQueue.cs" />

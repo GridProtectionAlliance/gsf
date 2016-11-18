@@ -1330,7 +1330,7 @@ namespace PhasorProtocolAdapters
                     if (!double.TryParse(measurement["Multiplier"].ToNonNullString(), out multiplier))
                         multiplier = 1.0D;
 
-                    key.SetCommonMeasurementFields(pointTag, adder, multiplier);
+                    key.SetMeasurementMetadata(pointTag, adder, multiplier);
                 }
             }
         }

@@ -26,7 +26,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -435,7 +434,7 @@ namespace EpriExport
                 m_measurementsPerInterval = columnMappings.Keys.Max();
 
                 // Auto-assign output measurements based on column mappings
-                OutputMeasurements = columnMappings.Where(kvp => string.Compare(kvp.Value, "Timestamp", true) != 0).Select(kvp =>
+                OutputMeasurements = columnMappings.Where(kvp => string.Compare(kvp.Value, "Timestamp", StringComparison.OrdinalIgnoreCase) != 0).Select(kvp =>
                 {
                     string measurementID = kvp.Value;
                     IMeasurement measurement = new Measurement();
@@ -453,7 +452,7 @@ namespace EpriExport
 
                     if (key.SignalID != Guid.Empty)
                     {
-                        measurement.CommonMeasurementFields = key.CommonMeasurementFields;
+                        measurement.MeasurementMetadata = key.MeasurementMetadata;
 
                         // Associate measurement with column index
                         m_columnMappings[kvp.Key] = measurement;
@@ -462,12 +461,12 @@ namespace EpriExport
                     return measurement;
                 }).ToArray();
 
-                int timestampColumn = columnMappings.First(kvp => string.Compare(kvp.Value, "Timestamp", true) == 0).Key;
+                int timestampColumn = columnMappings.First(kvp => string.Compare(kvp.Value, "Timestamp", StringComparison.OrdinalIgnoreCase) == 0).Key;
 
                 // Reserve a column mapping for timestamp value
                 IMeasurement timestampMeasurement = new Measurement
                 {
-                    CommonMeasurementFields = new CommonMeasurementFields(null, "Timestamp", 0, 1, null)
+                    MeasurementMetadata = new MeasurementMetadata(null, "Timestamp", 0, 1, null)
                 };
 
                 m_columnMappings[timestampColumn] = timestampMeasurement;
@@ -528,7 +527,7 @@ namespace EpriExport
         /// <returns>Text of the status message.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            return string.Format("{0} measurements read from CSV file.", ProcessedMeasurements).CenterText(maxLength);
+            return $"{ProcessedMeasurements} measurements read from CSV file.".CenterText(maxLength);
         }
 
         private void m_fileSystemWatcher_Created(object sender, FileSystemEventArgs e)
@@ -616,7 +615,7 @@ namespace EpriExport
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Failed to delete file \"{0}\": {1}", fileName, ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Failed to delete file \"{fileName}\": {ex.Message}", ex));
             }
         }
 
@@ -643,7 +642,7 @@ namespace EpriExport
             try
             {
                 List<IMeasurement> newMeasurements = new List<IMeasurement>();
-                long fileTime = 0;
+                long fileTime;
                 int timestampColumn = 0;
                 string line = m_fileStream.ReadLine();
 
@@ -662,7 +661,7 @@ namespace EpriExport
                 }
                 else
                 {
-                    timestampColumn = m_columnMappings.First(kvp => string.Compare(kvp.Value.TagName, "Timestamp", true) == 0).Key;
+                    timestampColumn = m_columnMappings.First(kvp => string.Compare(kvp.Value.TagName, "Timestamp", StringComparison.OrdinalIgnoreCase) == 0).Key;
                     fileTime = DateTime.ParseExact(fields[timestampColumn].Trim(), m_timestampFormat, CultureInfo.InvariantCulture).Ticks;
                 }
 

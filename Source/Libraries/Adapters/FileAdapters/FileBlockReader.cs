@@ -653,7 +653,7 @@ namespace FileAdapters
                     // Publish next block of file data
                     OnNewMeasurement(new BufferBlockMeasurement(buffer, 0, bytesRead)
                     {
-                        CommonMeasurementFields = OutputMeasurements[0].CommonMeasurementFields,
+                        MeasurementMetadata = OutputMeasurements[0].MeasurementMetadata,
                         Timestamp = DateTime.UtcNow.Ticks
                     });
                 }

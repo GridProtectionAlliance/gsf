@@ -34,10 +34,6 @@ namespace GSF.TimeSeries
     /// <summary>
     /// Represents a primary key for a measurement.
     /// </summary>
-    /// <remarks>
-    /// In the Static section of this class, all edits to <see cref="IDCache"/> as well as the
-    /// ConcurrentDictionaries in <see cref="KeyCache"/> should occur within a lock on SyncEdits.
-    /// </remarks>
     [Serializable]
     public class MeasurementKey
     {
@@ -49,7 +45,7 @@ namespace GSF.TimeSeries
         private string m_source;
         private readonly int m_hashCode;
         private readonly int m_runtimeID;
-        private CommonMeasurementFields m_commonMeasurementFields;
+        private MeasurementMetadata m_measurementMetadata;
 
         #endregion
 
@@ -61,8 +57,8 @@ namespace GSF.TimeSeries
             m_id = id;
             m_source = source;
             m_hashCode = base.GetHashCode();
-            m_runtimeID = Interlocked.Increment(ref s_nextRuntimeID) - 1; //Returns the incremented value. Hints the -1
-            m_commonMeasurementFields = new CommonMeasurementFields(this, null, 0, 1, null);
+            m_runtimeID = Interlocked.Increment(ref s_nextRuntimeID) - 1; // Returns the incremented value. Hints the -1
+            m_measurementMetadata = new MeasurementMetadata(this, null, 0, 1, null);
         }
 
         #endregion
@@ -72,24 +68,12 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets or sets <see cref="Guid"/> ID of signal associated with this <see cref="MeasurementKey"/>.
         /// </summary>
-        public Guid SignalID
-        {
-            get
-            {
-                return m_signalID;
-            }
-        }
+        public Guid SignalID => m_signalID;
 
         /// <summary>
         /// Gets or sets the numeric ID of this <see cref="MeasurementKey"/>.
         /// </summary>
-        public uint ID
-        {
-            get
-            {
-                return m_id;
-            }
-        }
+        public uint ID => m_id;
 
         /// <summary>
         /// Gets or sets the source of this <see cref="MeasurementKey"/>.
@@ -97,76 +81,55 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// This value is typically used to track the archive name in which the measurement, that this <see cref="MeasurementKey"/> represents, is stored.
         /// </remarks>
-        public string Source
-        {
-            get
-            {
-                return m_source;
-            }
-        }
+        public string Source => m_source;
 
         /// <summary>
         /// A unique ID that is assigned at runtime to identify this instance of <see cref="MeasurementKey"/>. 
-        /// This value will change between runtimes, so it cannot be used to compare <see cref="MeasurementKey"/>s
-        /// that are running out of process or in a separate <see cref="AppDomain"/>.
+        /// This value will change between life cycles, so it cannot be used to compare <see cref="MeasurementKey"/>
+        /// instances that are running out of process or in a separate <see cref="AppDomain"/>.
         /// </summary>
         /// <remarks>
         /// Since each <see cref="SignalID"/> is only tied to a single <see cref="MeasurementKey"/> object, 
         /// this provides another unique identifier that is zero indexed. 
         /// This allows certain optimizations such as array lookups.
         /// </remarks>
-        public int RuntimeID
-        {
-            get
-            {
-                return m_runtimeID;
-            }
-        }
+        public int RuntimeID => m_runtimeID;
 
         /// <summary>
-        /// Gets the <see cref="TimeSeries.CommonMeasurementFields"/> as they appear in the primary DataSource.
+        /// Gets the <see cref="TimeSeries.MeasurementMetadata"/> as they appear in the primary <see cref="Adapters.IAdapter.DataSource"/>.
         /// </summary>
         /// <remarks>
-        /// This is to be considered the reference value. Adapters are free to change this inside <see cref="IMeasurement"/>
-        /// But only adjust this if the value has changed in the DataSource.
-        /// Change these values using <see cref="SetCommonMeasurementFields"/>
+        /// This is to be considered the reference value. Adapters are free to change this inside specific <see cref="IMeasurement"/> instances
+        /// This value should only be updated upon change in the primary data source using <see cref="SetMeasurementMetadata"/>.
         /// </remarks>
-        public CommonMeasurementFields CommonMeasurementFields
-        {
-            get
-            {
-                return m_commonMeasurementFields;
-            }
-        }
+        public MeasurementMetadata MeasurementMetadata => m_measurementMetadata;
 
         #endregion
 
         #region [ Methods ]
 
         /// <summary>
-        /// Updates the values of the <see cref="CommonMeasurementFields"/>.
+        /// Updates the values of the <see cref="MeasurementMetadata"/>.
         /// </summary>
         /// <param name="tagName">Gets or sets the text based tag name</param>
         /// <param name="adder">Defines an offset to add to the <see cref="IMeasurement"/> value</param>
         /// <param name="multiplier">Defines a multiplicative offset to apply to the <see cref="IMeasurement"/> value</param>
-        public void SetCommonMeasurementFields(string tagName, double adder, double multiplier)
+        public void SetMeasurementMetadata(string tagName, double adder, double multiplier)
         {
             if (this == Undefined)
                 throw new NotSupportedException("Cannot set data source information for an undefined measurement.");
 
-            if (m_commonMeasurementFields.TagName != tagName || m_commonMeasurementFields.Adder != adder || m_commonMeasurementFields.Multiplier != multiplier)
-            {
-                m_commonMeasurementFields = new CommonMeasurementFields(this, tagName, adder, multiplier, null);
-            }
+            if (m_measurementMetadata.TagName != tagName || m_measurementMetadata.Adder != adder || m_measurementMetadata.Multiplier != multiplier)
+                m_measurementMetadata = new MeasurementMetadata(this, tagName, adder, multiplier, null);
         }
 
         /// <summary>
-        /// Returns a <see cref="String"/> that represents the current <see cref="MeasurementKey"/>.
+        /// Returns a <see cref="string"/> that represents the current <see cref="MeasurementKey"/>.
         /// </summary>
-        /// <returns>A <see cref="String"/> that represents the current <see cref="MeasurementKey"/>.</returns>
+        /// <returns>A <see cref="string"/> that represents the current <see cref="MeasurementKey"/>.</returns>
         public override string ToString()
         {
-            return string.Format("{0}:{1}", m_source, m_id);
+            return $"{m_source}:{m_id}";
         }
 
         /// <summary>
@@ -183,10 +146,12 @@ namespace GSF.TimeSeries
         #region [ Static ]
 
         // Static Fields
-        private static readonly ConcurrentDictionary<Guid, MeasurementKey> IDCache = new ConcurrentDictionary<Guid, MeasurementKey>();
-        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>> KeyCache = new ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>>(StringComparer.OrdinalIgnoreCase);
-        private static readonly object SyncEdits = new object();
-        private static int s_nextRuntimeID = 0;
+
+        // All edits to <see cref="s_idCache"/> as well as the ConcurrentDictionaries in s_keyCache should occur within a lock on s_syncEdits
+        private static readonly ConcurrentDictionary<Guid, MeasurementKey> s_idCache = new ConcurrentDictionary<Guid, MeasurementKey>();
+        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>> s_keyCache = new ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>>(StringComparer.OrdinalIgnoreCase);
+        private static readonly object s_syncEdits = new object();
+        private static int s_nextRuntimeID;
 
         /// <summary>
         /// Represents an undefined measurement key.
@@ -235,7 +200,7 @@ namespace GSF.TimeSeries
             addValueFactory = guid =>
             {
                 // Create a new measurement key and add it to the KeyCache
-                ConcurrentDictionary<uint, MeasurementKey> idLookup = KeyCache.GetOrAdd(source, s => new ConcurrentDictionary<uint, MeasurementKey>());
+                ConcurrentDictionary<uint, MeasurementKey> idLookup = s_keyCache.GetOrAdd(source, s => new ConcurrentDictionary<uint, MeasurementKey>());
                 return idLookup[id] = new MeasurementKey(guid, id, source);
             };
 
@@ -252,7 +217,7 @@ namespace GSF.TimeSeries
                 key.m_source = source;
                 key.m_id = id;
 
-                idLookup = KeyCache.GetOrAdd(source, s => new ConcurrentDictionary<uint, MeasurementKey>());
+                idLookup = s_keyCache.GetOrAdd(source, s => new ConcurrentDictionary<uint, MeasurementKey>());
                 idLookup[id] = key;
 
                 return key;
@@ -266,9 +231,9 @@ namespace GSF.TimeSeries
             //
             // This lock prevents race conditions that might occur in the addValueFactory that
             // could cause different MeasurementKey objects to be written to the KeyCache and IDCache
-            lock (SyncEdits)
+            lock (s_syncEdits)
             {
-                return IDCache.AddOrUpdate(signalID, addValueFactory, updateValueFactory);
+                return s_idCache.AddOrUpdate(signalID, addValueFactory, updateValueFactory);
             }
         }
 
@@ -332,9 +297,10 @@ namespace GSF.TimeSeries
         {
             MeasurementKey key;
 
+            // ReSharper disable once InconsistentlySynchronizedField
             if (signalID == Guid.Empty)
                 key = Undefined;
-            else if (!IDCache.TryGetValue(signalID, out key))
+            else if (!s_idCache.TryGetValue(signalID, out key))
                 key = Undefined;
 
             return key;
@@ -355,7 +321,7 @@ namespace GSF.TimeSeries
             ConcurrentDictionary<uint, MeasurementKey> idLookup;
             MeasurementKey key;
 
-            if (!KeyCache.TryGetValue(source, out idLookup))
+            if (!s_keyCache.TryGetValue(source, out idLookup))
                 return Undefined;
 
             if (!idLookup.TryGetValue(id, out key))
@@ -525,7 +491,7 @@ namespace GSF.TimeSeries
             uint id;
 
             // Establish default measurement key cache
-            foreach (DataRow measurement in connection.RetrieveData(adapterType, string.Format("SELECT ID, SignalID FROM {0}", measurementTable)).Rows)
+            foreach (DataRow measurement in connection.RetrieveData(adapterType, $"SELECT ID, SignalID FROM {measurementTable}").Rows)
             {
                 if (TrySplit(measurement["ID"].ToString(), out source, out id))
                     CreateOrUpdate(measurement["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), source, id);
@@ -539,7 +505,7 @@ namespace GSF.TimeSeries
         {
             MeasurementKey key = new MeasurementKey(Guid.Empty, uint.MaxValue, "__");
             //Note. No lock on SyncEdit is required since this method is only called by the static constructor.
-            KeyCache.GetOrAdd(key.Source, kcf => new ConcurrentDictionary<uint, MeasurementKey>())[uint.MaxValue] = key;
+            s_keyCache.GetOrAdd(key.Source, kcf => new ConcurrentDictionary<uint, MeasurementKey>())[uint.MaxValue] = key;
             return key;
         }
 

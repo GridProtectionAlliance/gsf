@@ -150,7 +150,7 @@ namespace MongoAdapters
 
             IMeasurement measurement = new Measurement()
             {
-                CommonMeasurementFields = new CommonMeasurementFields(MeasurementKey.LookUpOrCreate(signalID, Source, unchecked((uint)ID)), TagName, Adder, Multiplier, null),
+                MeasurementMetadata = new MeasurementMetadata(MeasurementKey.LookUpOrCreate(signalID, Source, unchecked((uint)ID)), TagName, Adder, Multiplier, null),
                 Timestamp = Timestamp,
                 Value = Value
             };

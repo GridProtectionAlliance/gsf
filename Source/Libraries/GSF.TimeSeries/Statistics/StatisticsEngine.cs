@@ -1070,7 +1070,7 @@ namespace GSF.TimeSeries.Statistics
                         // Calculate the current value of the statistic measurement
                         return new Measurement()
                         {
-                            CommonMeasurementFields = key.CommonMeasurementFields,
+                            MeasurementMetadata = key.MeasurementMetadata,
                             Value = statistic.Method(target, statistic.Arguments),
                             Timestamp = serverTime
                         };

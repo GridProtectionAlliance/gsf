@@ -49,7 +49,7 @@ namespace ProtocolTester
 
         private static Concentrator concentrator;
         private static MultiProtocolFrameParser parser;
-        private static ConcurrentDictionary<string, CommonMeasurementFields> m_definedMeasurements;
+        private static ConcurrentDictionary<string, MeasurementMetadata> m_definedMeasurements;
         private static ConcurrentDictionary<ushort, ConfigurationCell> m_definedDevices;
         private static StreamWriter m_exportFile;
         private static uint measurementID;
@@ -58,7 +58,7 @@ namespace ProtocolTester
 
         public static void Main(string[] args)
         {
-            m_definedMeasurements = new ConcurrentDictionary<string, CommonMeasurementFields>();
+            m_definedMeasurements = new ConcurrentDictionary<string, MeasurementMetadata>();
             m_definedDevices = new ConcurrentDictionary<ushort, ConfigurationCell>();
 
             if (WriteLogs)
@@ -336,11 +336,11 @@ namespace ProtocolTester
             // the measurement will not yet be associated with an actual historian measurement ID as the measurement
             // will have come directly out of the parsed phasor protocol data frame.  We take the generated signal
             // reference and use that to lookup the actual historian measurement ID, source, adder and multipler.
-            CommonMeasurementFields definedMeasurement = m_definedMeasurements.GetOrAdd(signalReference,
-                signal => MeasurementKey.LookUpOrCreate(Guid.NewGuid(), signal, ++measurementID).CommonMeasurementFields);
+            MeasurementMetadata definedMeasurement = m_definedMeasurements.GetOrAdd(signalReference,
+                signal => MeasurementKey.LookUpOrCreate(Guid.NewGuid(), signal, ++measurementID).MeasurementMetadata);
 
             // Assign ID and other relevant attributes to the parsed measurement value
-            parsedMeasurement.CommonMeasurementFields = definedMeasurement;
+            parsedMeasurement.MeasurementMetadata = definedMeasurement;
 
             // Add the updated measurement value to the destination measurement collection
             mappedMeasurements.Add(parsedMeasurement);

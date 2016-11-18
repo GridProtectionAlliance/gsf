@@ -27,130 +27,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using GSF.Collections;
 
 namespace GSF.TimeSeries
 {
     /// <summary>
-    /// A base class for assisting with properly implementing <see cref="IMeasurement"/> 
-    /// that has the common implementation code in it.
-    /// </summary>
-    [Serializable]
-    public abstract class MeasurementBase
-    {
-        #region [ Members ]
-
-        // Fields
-        private CommonMeasurementFields m_commonFields;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Constructs a new <see cref="Measurement"/> using default settings.
-        /// </summary>
-        protected MeasurementBase()
-        {
-            m_commonFields = CommonMeasurementFields.Undefined;
-        }
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets the <see cref="Guid"/> based signal ID of this <see cref="Measurement"/>, if available.
-        /// </summary>
-        public Guid ID
-        {
-            get
-            {
-                return m_commonFields.Key.SignalID;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the primary <see cref="MeasurementKey"/> of this <see cref="Measurement"/>.
-        /// </summary>
-        public MeasurementKey Key
-        {
-            get
-            {
-                return m_commonFields.Key;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the text based tag name of this <see cref="Measurement"/>.
-        /// </summary>
-        public string TagName
-        {
-            get
-            {
-                return m_commonFields.TagName;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets an offset to add to the measurement value. This defaults to 0.0.
-        /// </summary>
-        [DefaultValue(0.0)]
-        public double Adder
-        {
-            get
-            {
-                return m_commonFields.Adder;
-            }
-        }
-
-        /// <summary>
-        /// Defines a multiplicative offset to apply to the measurement value. This defaults to 1.0.
-        /// </summary>
-        [DefaultValue(1.0)]
-        public double Multiplier
-        {
-            get
-            {
-                return m_commonFields.Multiplier;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets function used to apply a down-sampling filter over a sequence of <see cref="IMeasurement"/> values.
-        /// </summary>
-        public MeasurementValueFilterFunction MeasurementValueFilter
-        {
-            get
-            {
-                return m_commonFields.MeasurementValueFilter;
-            }
-        }
-
-        /// <summary>
-        /// Contains common fields that rarely change in <see cref="IMeasurement"/> 
-        /// so they can be quickly initialized when creating a new <see cref="IMeasurement"/>.
-        /// </summary>
-        public CommonMeasurementFields CommonMeasurementFields
-        {
-            get
-            {
-                return m_commonFields;
-            }
-            set
-            {
-                m_commonFields = value;
-            }
-        }
-
-        #endregion
-
-    }
-
-    /// <summary>
-    /// Implementation of a basic measurement.
+    /// Represents a basic measurement implementation.
     /// </summary>
     [Serializable]
     public class Measurement : MeasurementBase, IMeasurement
@@ -293,34 +176,34 @@ namespace GSF.TimeSeries
                 switch (value.TypeCode)
                 {
                     case TypeCode.Byte:
-                        m_value = (Byte)value;
+                        m_value = (byte)value;
                         break;
                     case TypeCode.SByte:
-                        m_value = (SByte)value;
+                        m_value = (sbyte)value;
                         break;
                     case TypeCode.Int16:
-                        m_value = (Int16)value;
+                        m_value = (short)value;
                         break;
                     case TypeCode.UInt16:
-                        m_value = (UInt16)value;
+                        m_value = (ushort)value;
                         break;
                     case TypeCode.Int32:
-                        m_value = (Int32)value;
+                        m_value = (int)value;
                         break;
                     case TypeCode.UInt32:
-                        m_value = (UInt32)value;
+                        m_value = (uint)value;
                         break;
                     case TypeCode.Int64:
-                        m_value = (Int64)value;
+                        m_value = (long)value;
                         break;
                     case TypeCode.UInt64:
-                        m_value = (UInt64)value;
+                        m_value = (ulong)value;
                         break;
                     case TypeCode.Single:
-                        m_value = (Single)value;
+                        m_value = (float)value;
                         break;
                     case TypeCode.Double:
-                        m_value = (Double)value;
+                        m_value = (double)value;
                         break;
                     //case TypeCode.Boolean:
                     //    break;
@@ -506,7 +389,7 @@ namespace GSF.TimeSeries
         /// </summary>
         public static readonly Measurement Undefined = new Measurement
         {
-            CommonMeasurementFields = CommonMeasurementFields.Undefined
+            MeasurementMetadata = MeasurementMetadata.Undefined
         };
 
         // Static Methods
@@ -520,7 +403,7 @@ namespace GSF.TimeSeries
         {
             return new Measurement
             {
-                CommonMeasurementFields = measurementToClone.CommonMeasurementFields,
+                MeasurementMetadata = measurementToClone.MeasurementMetadata,
                 Value = measurementToClone.Value,
                 Timestamp = measurementToClone.Timestamp,
                 StateFlags = measurementToClone.StateFlags
@@ -537,7 +420,7 @@ namespace GSF.TimeSeries
         {
             return new Measurement
             {
-                CommonMeasurementFields = measurementToClone.CommonMeasurementFields,
+                MeasurementMetadata = measurementToClone.MeasurementMetadata,
                 Value = measurementToClone.Value,
                 Timestamp = timestamp,
                 StateFlags = measurementToClone.StateFlags
@@ -555,7 +438,7 @@ namespace GSF.TimeSeries
         {
             return new Measurement
             {
-                CommonMeasurementFields = measurementToClone.CommonMeasurementFields,
+                MeasurementMetadata = measurementToClone.MeasurementMetadata,
                 Value = value,
                 Timestamp = timestamp,
                 StateFlags = measurementToClone.StateFlags
@@ -577,7 +460,7 @@ namespace GSF.TimeSeries
             string keyText = measurement.Key.ToString();
 
             if (includeTagName && !string.IsNullOrWhiteSpace(tagName))
-                return string.Format("{0} [{1}]", tagName, keyText);
+                return $"{tagName} [{keyText}]";
 
             return keyText;
         }

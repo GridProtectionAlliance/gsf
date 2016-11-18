@@ -358,7 +358,7 @@ namespace MySqlAdapters
                     {
                         measurements.Add(new Measurement
                         {
-                            CommonMeasurementFields = key.CommonMeasurementFields,
+                            MeasurementMetadata = key.MeasurementMetadata,
                             Value = reader.GetDouble(valueColumn),
                             Timestamp = timeStamp
                         });

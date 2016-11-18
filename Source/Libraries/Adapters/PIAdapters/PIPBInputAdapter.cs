@@ -609,7 +609,7 @@ namespace PIAdapters
                             // Add current measurement to the collection for publication
                             measurements.Add(new Measurement
                             {
-                                CommonMeasurementFields = m_tagKeyMap[currentPoint.PIPoint.ID].CommonMeasurementFields,
+                                MeasurementMetadata = m_tagKeyMap[currentPoint.PIPoint.ID].MeasurementMetadata,
                                 Timestamp = m_simulateTimestamp ? DateTime.UtcNow.Ticks : timestamp,
                                 Value = Convert.ToDouble(currentPoint.Value),
                                 StateFlags = ConvertStatusFlags(currentPoint.Status)

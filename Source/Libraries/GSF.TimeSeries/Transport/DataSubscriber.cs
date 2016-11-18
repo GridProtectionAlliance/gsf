@@ -1771,7 +1771,7 @@ namespace GSF.TimeSeries.Transport
 
                         // Set measurement key if defined
                         MeasurementKey key = MeasurementKey.LookUpOrCreate(signalID, row["ID"].ToString());
-                        measurement.CommonMeasurementFields = key.CommonMeasurementFields;
+                        measurement.MeasurementMetadata = key.MeasurementMetadata;
                         subscribedMeasurements.Add(measurement);
                     }
 
@@ -2978,7 +2978,7 @@ namespace GSF.TimeSeries.Transport
                                                         if (m_signalIndexCache.Reference.TryGetValue(id, out tuple))
                                                         {
                                                             measurement = new Measurement();
-                                                            measurement.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(tuple.Item1, tuple.Item2, tuple.Item3).CommonMeasurementFields;
+                                                            measurement.MeasurementMetadata = MeasurementKey.LookUpOrCreate(tuple.Item1, tuple.Item2, tuple.Item3).MeasurementMetadata;
                                                             measurement.Timestamp = time;
                                                             measurement.StateFlags = (MeasurementStateFlags)quality;
                                                             measurement.Value = value;
@@ -3170,7 +3170,7 @@ namespace GSF.TimeSeries.Transport
                                 // Skip the sequence number and signal index when creating the buffer block measurement
                                 bufferBlockMeasurement = new BufferBlockMeasurement(buffer, responseIndex + 6, responseLength - 6)
                                 {
-                                    CommonMeasurementFields = MeasurementKey.LookUpOrCreate(measurementKey.Item1, measurementKey.Item2, measurementKey.Item3).CommonMeasurementFields
+                                    MeasurementMetadata = MeasurementKey.LookUpOrCreate(measurementKey.Item1, measurementKey.Item2, measurementKey.Item3).MeasurementMetadata
                                 };
 
                                 // Determine if this is the next buffer block in the sequence

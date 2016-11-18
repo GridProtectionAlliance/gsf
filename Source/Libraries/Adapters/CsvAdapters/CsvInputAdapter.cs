@@ -28,7 +28,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -431,7 +430,7 @@ namespace CsvAdapters
                     m_measurementsPerInterval = columnMappings.Keys.Max() + 1;
 
                     // Auto-assign output measurements based on column mappings
-                    OutputMeasurements = columnMappings.Where(kvp => string.Compare(kvp.Value, "Timestamp", true) != 0).Select(kvp =>
+                    OutputMeasurements = columnMappings.Where(kvp => string.Compare(kvp.Value, "Timestamp", StringComparison.OrdinalIgnoreCase) != 0).Select(kvp =>
                     {
                         string measurementID = kvp.Value;
                         IMeasurement measurement = new Measurement();
@@ -447,7 +446,7 @@ namespace CsvAdapters
                             MeasurementKey.TryParse(measurementID, out key);
                         }
 
-                        measurement.CommonMeasurementFields = key.CommonMeasurementFields;
+                        measurement.MeasurementMetadata = key.MeasurementMetadata;
 
                         // Associate measurement with column index
                         m_columnMappings[kvp.Key] = measurement;
@@ -455,12 +454,12 @@ namespace CsvAdapters
                         return measurement;
                     }).ToArray();
 
-                    int timestampColumn = columnMappings.First(kvp => string.Compare(kvp.Value, "Timestamp", true) == 0).Key;
+                    int timestampColumn = columnMappings.First(kvp => string.Compare(kvp.Value, "Timestamp", StringComparison.OrdinalIgnoreCase) == 0).Key;
 
                     // Reserve a column mapping for timestamp value
                     IMeasurement timestampMeasurement = new Measurement
                     {
-                        CommonMeasurementFields = new CommonMeasurementFields(null, "Timestamp", 0, 1, null)
+                        MeasurementMetadata = new MeasurementMetadata(null, "Timestamp", 0, 1, null)
                     };
 
                     m_columnMappings[timestampColumn] = timestampMeasurement;
@@ -543,7 +542,7 @@ namespace CsvAdapters
         /// <returns>Text of the status message.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            return string.Format("{0} measurements read from CSV file.", ProcessedMeasurements).CenterText(maxLength);
+            return $"{ProcessedMeasurements} measurements read from CSV file.".CenterText(maxLength);
         }
 
         private void ProcessMeasurements()
@@ -596,7 +595,7 @@ namespace CsvAdapters
                     }
                     else
                     {
-                        timestampColumn = m_columnMappings.First(kvp => string.Compare(kvp.Value.TagName, "Timestamp", true) == 0).Key;
+                        timestampColumn = m_columnMappings.First(kvp => string.Compare(kvp.Value.TagName, "Timestamp", StringComparison.OrdinalIgnoreCase) == 0).Key;
                         fileTime = long.Parse(fields[timestampColumn]);
                     }
                 }
@@ -619,7 +618,7 @@ namespace CsvAdapters
                         else
                         {
                             measurement = new Measurement();
-                            measurement.CommonMeasurementFields = MeasurementKey.Undefined.CommonMeasurementFields;
+                            measurement.MeasurementMetadata = MeasurementKey.Undefined.MeasurementMetadata;
                             measurement.Value = double.NaN;
                         }
 
@@ -637,13 +636,13 @@ namespace CsvAdapters
                             Guid measurementID = new Guid(fields[m_columns["Signal ID"]]);
 
                             if (m_columns.ContainsKey("Measurement Key"))
-                                measurement.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(measurementID, fields[m_columns["Measurement Key"]]).CommonMeasurementFields;
+                                measurement.MeasurementMetadata = MeasurementKey.LookUpOrCreate(measurementID, fields[m_columns["Measurement Key"]]).MeasurementMetadata;
                             else
-                                measurement.CommonMeasurementFields = MeasurementKey.LookUpBySignalID(measurementID).CommonMeasurementFields;
+                                measurement.MeasurementMetadata = MeasurementKey.LookUpBySignalID(measurementID).MeasurementMetadata;
                         }
                         else if (m_columns.ContainsKey("Measurement Key"))
                         {
-                            measurement.CommonMeasurementFields = MeasurementKey.Parse(fields[m_columns["Measurement Key"]]).CommonMeasurementFields;
+                            measurement.MeasurementMetadata = MeasurementKey.Parse(fields[m_columns["Measurement Key"]]).MeasurementMetadata;
                         }
 
                         if (m_simulateTimestamp)

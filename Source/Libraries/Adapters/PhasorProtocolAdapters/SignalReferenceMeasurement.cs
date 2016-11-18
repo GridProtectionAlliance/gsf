@@ -83,10 +83,6 @@ namespace PhasorProtocolAdapters
             {
                 return m_measurement.Key;
             }
-            //set
-            //{
-            //    m_measurement.Key = value;
-            //}
         }
 
         /// <summary>
@@ -116,7 +112,7 @@ namespace PhasorProtocolAdapters
         }
 
         /// <summary>
-        /// Gets or sets the text based tag name of this <see cref="SignalReferenceMeasurement"/>.
+        /// Gets the text based tag name of this <see cref="SignalReferenceMeasurement"/>.
         /// </summary>
         public string TagName
         {
@@ -124,10 +120,6 @@ namespace PhasorProtocolAdapters
             {
                 return m_measurement.TagName;
             }
-            //set
-            //{
-            //    m_measurement.TagName = value;
-            //}
         }
 
         /// <summary>
@@ -162,7 +154,7 @@ namespace PhasorProtocolAdapters
         }
 
         /// <summary>
-        /// Gets or sets an offset to add to the measurement value. This defaults to 0.0.
+        /// Gets an offset to add to the measurement value. This defaults to 0.0.
         /// </summary>
         public double Adder
         {
@@ -170,14 +162,10 @@ namespace PhasorProtocolAdapters
             {
                 return m_measurement.Adder;
             }
-            //set
-            //{
-            //    m_measurement.Adder = value;
-            //}
         }
 
         /// <summary>
-        /// Defines a mulplicative offset to apply to the measurement value. This defaults to 1.0.
+        /// Gets a multiplicative offset to apply to the measurement value. This defaults to 1.0.
         /// </summary>
         public double Multiplier
         {
@@ -185,10 +173,6 @@ namespace PhasorProtocolAdapters
             {
                 return m_measurement.Multiplier;
             }
-            //set
-            //{
-            //    m_measurement.Multiplier = value;
-            //}
         }
 
         /// <summary>
@@ -247,7 +231,7 @@ namespace PhasorProtocolAdapters
         }
 
         /// <summary>
-        /// Gets or sets function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values.
+        /// Gets function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values.
         /// </summary>
         public MeasurementValueFilterFunction MeasurementValueFilter
         {
@@ -255,25 +239,20 @@ namespace PhasorProtocolAdapters
             {
                 return m_measurement.MeasurementValueFilter;
             }
-            //set
-            //{
-            //    m_measurement.MeasurementValueFilter = value;
-            //}
         }
 
         /// <summary>
-        /// Contains common fields that rarely change in <see cref="IMeasurement"/> 
-        /// so they can be quickly initialized when creating a new <see cref="IMeasurement"/>.
+        /// Gets or sets associated metadata values for the <see cref="IMeasurement"/> .
         /// </summary>
-        public CommonMeasurementFields CommonMeasurementFields
+        public MeasurementMetadata MeasurementMetadata
         {
             get
             {
-                return m_measurement.CommonMeasurementFields;
+                return m_measurement.MeasurementMetadata;
             }
             set
             {
-                m_measurement.CommonMeasurementFields = value;
+                m_measurement.MeasurementMetadata = value;
             }
         }
 

@@ -139,7 +139,7 @@ namespace PhasorProtocolAdapters
         // Fields
         private MultiProtocolFrameParser m_frameParser;
         private IConfigurationFrame m_lastConfigurationFrame;
-        private Dictionary<string, CommonMeasurementFields> m_definedMeasurements;
+        private Dictionary<string, MeasurementMetadata> m_definedMeasurements;
         private ConcurrentDictionary<ushort, DeviceStatisticsHelper<ConfigurationCell>> m_definedDevices;
         private ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>> m_labelDefinedDevices;
         private readonly ConcurrentDictionary<string, long> m_undefinedDevices;
@@ -1330,11 +1330,11 @@ namespace PhasorProtocolAdapters
         // Load active device measurements for this mapper connection
         private void LoadDeviceMeasurements()
         {
-            CommonMeasurementFields definedMeasurement;
+            MeasurementMetadata definedMeasurement;
             Guid signalID;
             string signalReference;
 
-            Dictionary<string, CommonMeasurementFields> definedMeasurements = new Dictionary<string, CommonMeasurementFields>();
+            Dictionary<string, MeasurementMetadata> definedMeasurements = new Dictionary<string, MeasurementMetadata>();
 
             foreach (DataRow row in DataSourceLookups.GetLookupCache(DataSource).ActiveMeasurements.LookupByDeviceID(SharedMappingID))
             {
@@ -1350,7 +1350,7 @@ namespace PhasorProtocolAdapters
                         MeasurementKey key = MeasurementKey.LookUpOrCreate(signalID, row["ID"].ToString());
 
                         // Create a measurement with a reference associated with this adapter
-                        definedMeasurement = key.CommonMeasurementFields;
+                        definedMeasurement = key.MeasurementMetadata;
 
                         // Add measurement to definition list keyed by signal reference
                         if (!definedMeasurements.ContainsKey(signalReference))
@@ -1368,9 +1368,9 @@ namespace PhasorProtocolAdapters
             // Update output measurements that input adapter can provide such that it can participate in connect on demand
             if (definedMeasurements.Count > 0)
             {
-                Func<CommonMeasurementFields, IMeasurement> converter = measurement => (IMeasurement)new Measurement()
+                Func<MeasurementMetadata, IMeasurement> converter = measurement => new Measurement()
                 {
-                    CommonMeasurementFields = measurement
+                    MeasurementMetadata = measurement
                 };
 
                 OutputMeasurements = definedMeasurements.Values.Select(converter).ToArray();
@@ -1718,13 +1718,13 @@ namespace PhasorProtocolAdapters
             // the measurement will not yet be associated with an actual historian measurement ID as the measurement
             // will have come directly out of the parsed phasor protocol data frame.  We take the generated signal
             // reference and use that to lookup the actual historian measurement ID, source, adder and multiplier.
-            CommonMeasurementFields definedMeasurement;
+            MeasurementMetadata definedMeasurement;
 
             // Lookup signal reference in defined measurement list
             if (m_definedMeasurements.TryGetValue(signalReference, out definedMeasurement))
             {
                 // Assign ID and other relevant attributes to the parsed measurement value
-                parsedMeasurement.CommonMeasurementFields = definedMeasurement;
+                parsedMeasurement.MeasurementMetadata = definedMeasurement;
 
                 // Add the updated measurement value to the destination measurement collection
                 mappedMeasurements.Add(parsedMeasurement);

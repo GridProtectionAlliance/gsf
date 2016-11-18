@@ -543,7 +543,7 @@ namespace GSF.TimeSeries.Transport
                     {
                         newMeasurement = new Measurement
                         {
-                            CommonMeasurementFields = measurement.CommonMeasurementFields,
+                            MeasurementMetadata = measurement.MeasurementMetadata,
                             Value = measurement.GetValue(RealTime),
                             Timestamp = measurement.Timestamp,
                             StateFlags = measurement.StateFlags

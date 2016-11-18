@@ -62,7 +62,7 @@ namespace GSF.TimeSeries
         {
             if (measurement != null)
             {
-                CommonMeasurementFields = measurement.CommonMeasurementFields;
+                MeasurementMetadata = measurement.MeasurementMetadata;
                 Value = measurement.Value;
                 Timestamp = measurement.Timestamp;
                 StateFlags = measurement.StateFlags;

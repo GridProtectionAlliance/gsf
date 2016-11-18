@@ -70,30 +70,7 @@ namespace GSF.PhasorProtocols
             m_valueIndex = valueIndex;
             m_timestamp = -1;
             m_receivedTimestamp = DateTime.UtcNow.Ticks;
-
-            //Note: This might not be compatible code. Please review.
-
-            ///// <summary>
-            ///// Gets or sets function used to apply a down-sampling filter over a sequence of <see cref="IMeasurement"/> values.
-            ///// </summary>
-            //public virtual MeasurementValueFilterFunction MeasurementValueFilter
-            //{
-            //    get
-            //    {
-            //        // If measurement user has assigned a specific filter for this measurement, we use it
-            //        if (m_measurementValueFilter != null)
-            //            return m_measurementValueFilter;
-
-            //        // Otherwise we use default filter algorithm as specified by the parent channel value
-            //        return m_parent.GetMeasurementValueFilterFunction(m_valueIndex);
-            //    }
-            //    set
-            //    {
-            //        m_measurementValueFilter = value;
-            //    }
-            //}
-
-            CommonMeasurementFields = CommonMeasurementFields.ChangeMeasurementValueFilter(m_parent.GetMeasurementValueFilterFunction(m_valueIndex));
+            MeasurementMetadata = MeasurementMetadata.ChangeMeasurementValueFilter(m_parent.GetMeasurementValueFilterFunction(m_valueIndex));
         }
 
         #endregion
