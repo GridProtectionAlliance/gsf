@@ -1350,7 +1350,7 @@ namespace PhasorProtocolAdapters
                         MeasurementKey key = MeasurementKey.LookUpOrCreate(signalID, row["ID"].ToString());
 
                         // Create a measurement with a reference associated with this adapter
-                        definedMeasurement = key.DataSourceCommonValues;
+                        definedMeasurement = key.CommonMeasurementFields;
 
                         // Add measurement to definition list keyed by signal reference
                         if (!definedMeasurements.ContainsKey(signalReference))

@@ -84,7 +84,7 @@ namespace DNP3Adapters
         private Measurement ConvertBinary(Binary meas, uint id, String source)
         {
             var m = new Measurement();
-            m.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(source, id).DataSourceCommonValues;
+            m.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(source, id).CommonMeasurementFields;
             m.Value = meas.Value ? 1.0 : 0.0;
             m.Timestamp = DateTime.UtcNow;
             return m;
@@ -93,7 +93,7 @@ namespace DNP3Adapters
         private Measurement ConvertDoubleBinary(DoubleBitBinary meas, uint id, String source)
         {
             var m = new Measurement();
-            m.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(source, id).DataSourceCommonValues;
+            m.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(source, id).CommonMeasurementFields;
             switch (meas.Value)
             {
                 case (DoubleBit.INDETERMINATE):
@@ -116,7 +116,7 @@ namespace DNP3Adapters
         private Measurement ConvertAnalog(Analog meas, uint id, String source)
         {
             var m = new Measurement();
-            m.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(source, id).DataSourceCommonValues;
+            m.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(source, id).CommonMeasurementFields;
             m.Value = meas.Value;
             m.Timestamp = DateTime.UtcNow;
             return m;
@@ -125,7 +125,7 @@ namespace DNP3Adapters
         private Measurement ConvertCounter(Counter meas, uint id, String source)
         {
             var m = new Measurement();
-            m.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(source, id).DataSourceCommonValues;
+            m.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(source, id).CommonMeasurementFields;
             m.Value = meas.Value;
             m.Timestamp = DateTime.UtcNow;
             return m;
@@ -134,7 +134,7 @@ namespace DNP3Adapters
         private Measurement ConvertFrozenCounter(FrozenCounter meas, uint id, String source)
         {
             var m = new Measurement();
-            m.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(source, id).DataSourceCommonValues;
+            m.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(source, id).CommonMeasurementFields;
             m.Value = meas.Value;
             m.Timestamp = DateTime.UtcNow;
             return m;
@@ -143,7 +143,7 @@ namespace DNP3Adapters
         private Measurement ConvertBinaryOutputStatus(BinaryOutputStatus meas, uint id, String source)
         {
             var m = new Measurement();
-            m.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(source, id).DataSourceCommonValues;
+            m.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(source, id).CommonMeasurementFields;
             m.Value = meas.Value ? 1.0 : 0.0;
             m.Timestamp = DateTime.UtcNow;
             return m;
@@ -152,7 +152,7 @@ namespace DNP3Adapters
         private Measurement ConvertAnalogOutputStatus(AnalogOutputStatus meas, uint id, String source)
         {
             var m = new Measurement();
-            m.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(source, id).DataSourceCommonValues;
+            m.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(source, id).CommonMeasurementFields;
             m.Value = meas.Value;
             m.Timestamp = DateTime.UtcNow;
             return m;

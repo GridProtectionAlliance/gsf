@@ -151,7 +151,7 @@ namespace TestingAdapters
 
                 // Define output measurements as defined in stored procedure
                 OutputMeasurements = connection.RetrieveData("GetMyOutputsProc @param1 @param2", "param1Value", "param2Value").Rows.OfType<DataRow>()
-                    .Select(row => new Measurement() { CommonMeasurementFields = MeasurementKey.LookUpBySignalID(Guid.Parse(row["ID"].ToString())).DefaultCommonMeasurementFields }).ToArray();
+                    .Select(row => new Measurement() { CommonMeasurementFields = MeasurementKey.LookUpBySignalID(Guid.Parse(row["ID"].ToString())).CommonMeasurementFields }).ToArray();
             }
             finally
             {

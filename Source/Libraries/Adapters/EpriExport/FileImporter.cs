@@ -453,7 +453,7 @@ namespace EpriExport
 
                     if (key.SignalID != Guid.Empty)
                     {
-                        measurement.CommonMeasurementFields = key.DataSourceCommonValues;
+                        measurement.CommonMeasurementFields = key.CommonMeasurementFields;
 
                         // Associate measurement with column index
                         m_columnMappings[kvp.Key] = measurement;

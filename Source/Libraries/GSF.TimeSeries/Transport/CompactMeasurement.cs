@@ -370,7 +370,7 @@ namespace GSF.TimeSeries.Transport
 
                 if (m_signalIndexCache.Reference.TryGetValue(value, out tuple))
                 {
-                    CommonMeasurementFields = MeasurementKey.LookUpOrCreate(tuple.Item1, tuple.Item2, tuple.Item3).DataSourceCommonValues;
+                    CommonMeasurementFields = MeasurementKey.LookUpOrCreate(tuple.Item1, tuple.Item2, tuple.Item3).CommonMeasurementFields;
                 }
                 else
                     throw new InvalidOperationException("Failed to find associated signal identification for runtime ID " + value);

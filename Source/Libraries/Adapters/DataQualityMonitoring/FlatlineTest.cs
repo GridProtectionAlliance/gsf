@@ -346,7 +346,7 @@ namespace DataQualityMonitoring
                             m_lastChange.Add(key, new Measurement
                             {
                                 //Assumption made that key.SignalID == signalId
-                                CommonMeasurementFields = key.DefaultCommonMeasurementFields,
+                                CommonMeasurementFields = key.CommonMeasurementFields,
                                 Value = double.NaN,
                                 Timestamp = timestamp
                             });
@@ -359,7 +359,7 @@ namespace DataQualityMonitoring
                 {
                     m_lastChange.Add(key, new Measurement
                     {
-                        CommonMeasurementFields = key.DefaultCommonMeasurementFields,
+                        CommonMeasurementFields = key.CommonMeasurementFields,
                         Value = double.NaN,
                         Timestamp = timestamp
                     });

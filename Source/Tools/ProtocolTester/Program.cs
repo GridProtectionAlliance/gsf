@@ -337,7 +337,7 @@ namespace ProtocolTester
             // will have come directly out of the parsed phasor protocol data frame.  We take the generated signal
             // reference and use that to lookup the actual historian measurement ID, source, adder and multipler.
             CommonMeasurementFields definedMeasurement = m_definedMeasurements.GetOrAdd(signalReference,
-                signal => MeasurementKey.LookUpOrCreate(Guid.NewGuid(), signal, ++measurementID).DataSourceCommonValues);
+                signal => MeasurementKey.LookUpOrCreate(Guid.NewGuid(), signal, ++measurementID).CommonMeasurementFields);
 
             // Assign ID and other relevant attributes to the parsed measurement value
             parsedMeasurement.CommonMeasurementFields = definedMeasurement;

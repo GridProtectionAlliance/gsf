@@ -397,7 +397,7 @@ namespace PowerCalculations.PowerMultiCalculator
 
             Measurement measurement = new Measurement
             {
-                CommonMeasurementFields = key.DefaultCommonMeasurementFields,
+                CommonMeasurementFields = key.CommonMeasurementFields,
             };
 
             return measurement;

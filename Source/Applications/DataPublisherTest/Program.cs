@@ -126,7 +126,7 @@ namespace DataPublisherTest
                     measurement = new Measurement
                     {
                         //Key = MeasurementKey.LookUpOrCreate("PPA", (uint)i),
-                        CommonMeasurementFields = MeasurementKey.LookUpOrCreate("DEVARCHIVE", (uint)i).DataSourceCommonValues,
+                        CommonMeasurementFields = MeasurementKey.LookUpOrCreate("DEVARCHIVE", (uint)i).CommonMeasurementFields,
                         Value = Random.Between(-65535.0D, 65536.0D),
                         Timestamp = DateTime.UtcNow.Ticks
                     };

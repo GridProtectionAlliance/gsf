@@ -526,7 +526,7 @@ namespace AdoAdapters
                                                 }
                                             }
 
-                                            measurement.CommonMeasurementFields = key.DataSourceCommonValues;
+                                            measurement.CommonMeasurementFields = key.CommonMeasurementFields;
                                         }
                                         break;
                                     case "Key":
@@ -541,7 +541,7 @@ namespace AdoAdapters
                                                 signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, string, uint>(key.SignalID, key.Source, key.ID));
                                             }
 
-                                            measurement.CommonMeasurementFields = key.DataSourceCommonValues;
+                                            measurement.CommonMeasurementFields = key.CommonMeasurementFields;
                                         }
                                         break;
                                     case "Value":

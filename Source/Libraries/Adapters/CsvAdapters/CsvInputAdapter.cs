@@ -447,7 +447,7 @@ namespace CsvAdapters
                             MeasurementKey.TryParse(measurementID, out key);
                         }
 
-                        measurement.CommonMeasurementFields = key.DataSourceCommonValues;
+                        measurement.CommonMeasurementFields = key.CommonMeasurementFields;
 
                         // Associate measurement with column index
                         m_columnMappings[kvp.Key] = measurement;
@@ -619,7 +619,7 @@ namespace CsvAdapters
                         else
                         {
                             measurement = new Measurement();
-                            measurement.CommonMeasurementFields = MeasurementKey.Undefined.DataSourceCommonValues;
+                            measurement.CommonMeasurementFields = MeasurementKey.Undefined.CommonMeasurementFields;
                             measurement.Value = double.NaN;
                         }
 
@@ -637,13 +637,13 @@ namespace CsvAdapters
                             Guid measurementID = new Guid(fields[m_columns["Signal ID"]]);
 
                             if (m_columns.ContainsKey("Measurement Key"))
-                                measurement.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(measurementID, fields[m_columns["Measurement Key"]]).DataSourceCommonValues;
+                                measurement.CommonMeasurementFields = MeasurementKey.LookUpOrCreate(measurementID, fields[m_columns["Measurement Key"]]).CommonMeasurementFields;
                             else
-                                measurement.CommonMeasurementFields = MeasurementKey.LookUpBySignalID(measurementID).DataSourceCommonValues;
+                                measurement.CommonMeasurementFields = MeasurementKey.LookUpBySignalID(measurementID).CommonMeasurementFields;
                         }
                         else if (m_columns.ContainsKey("Measurement Key"))
                         {
-                            measurement.CommonMeasurementFields = MeasurementKey.Parse(fields[m_columns["Measurement Key"]]).DataSourceCommonValues;
+                            measurement.CommonMeasurementFields = MeasurementKey.Parse(fields[m_columns["Measurement Key"]]).CommonMeasurementFields;
                         }
 
                         if (m_simulateTimestamp)
