@@ -80,7 +80,7 @@ namespace GSF.TimeSeries.Transport
         public SerializableMeasurement(IMeasurement measurement, Encoding encoding)
             : this(encoding)
         {
-            MeasurementMetadata = measurement.MeasurementMetadata;
+            Metadata = measurement.Metadata;
             Value = measurement.Value;
             Timestamp = measurement.Timestamp;
             StateFlags = measurement.StateFlags;

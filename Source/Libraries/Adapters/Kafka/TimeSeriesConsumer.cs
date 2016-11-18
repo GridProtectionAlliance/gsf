@@ -465,7 +465,7 @@ namespace KafkaAdapters
                         }
 
                         // Get associated measurement key, or look it up in metadata table
-                        measurement.MeasurementMetadata = idTable.GetOrAdd(id, lookupID => MeasurementKey.LookUpBySignalID(m_metadata?.Records?.FirstOrDefault(record => record.ID == lookupID)?.ParseSignalID() ?? Guid.Empty)).MeasurementMetadata;
+                        measurement.Metadata = idTable.GetOrAdd(id, lookupID => MeasurementKey.LookUpBySignalID(m_metadata?.Records?.FirstOrDefault(record => record.ID == lookupID)?.ParseSignalID() ?? Guid.Empty)).Metadata;
 
                         // Only publish measurements with associated metadata and are assigned to this adapter
                         if (measurement.Key != MeasurementKey.Undefined && ((object)m_outputMeasurementKeys == null || m_outputMeasurementKeys.Contains(measurement.Key)))

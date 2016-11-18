@@ -552,7 +552,7 @@ namespace HistorianAdapters
                         // Add current measurement to the collection for publication
                         measurements.Add(new Measurement
                         {
-                            MeasurementMetadata = key.MeasurementMetadata,
+                            Metadata = key.Metadata,
                             Timestamp = m_simulateTimestamp ? DateTime.UtcNow.Ticks : timestamp,
                             Value = currentPoint.Value,
                             StateFlags = currentPoint.Quality.MeasurementQuality()

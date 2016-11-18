@@ -45,7 +45,7 @@ namespace GSF.TimeSeries
         private string m_source;
         private readonly int m_hashCode;
         private readonly int m_runtimeID;
-        private MeasurementMetadata m_measurementMetadata;
+        private MeasurementMetadata m_metadata;
 
         #endregion
 
@@ -58,7 +58,7 @@ namespace GSF.TimeSeries
             m_source = source;
             m_hashCode = base.GetHashCode();
             m_runtimeID = Interlocked.Increment(ref s_nextRuntimeID) - 1; // Returns the incremented value. Hints the -1
-            m_measurementMetadata = new MeasurementMetadata(this, null, 0, 1, null);
+            m_metadata = new MeasurementMetadata(this, null, 0, 1, null);
         }
 
         #endregion
@@ -102,14 +102,14 @@ namespace GSF.TimeSeries
         /// This is to be considered the reference value. Adapters are free to change this inside specific <see cref="IMeasurement"/> instances
         /// This value should only be updated upon change in the primary data source using <see cref="SetMeasurementMetadata"/>.
         /// </remarks>
-        public MeasurementMetadata MeasurementMetadata => m_measurementMetadata;
+        public MeasurementMetadata Metadata => m_metadata;
 
         #endregion
 
         #region [ Methods ]
 
         /// <summary>
-        /// Updates the values of the <see cref="MeasurementMetadata"/>.
+        /// Updates the values of the <see cref="Metadata"/>.
         /// </summary>
         /// <param name="tagName">Gets or sets the text based tag name</param>
         /// <param name="adder">Defines an offset to add to the <see cref="IMeasurement"/> value</param>
@@ -119,8 +119,8 @@ namespace GSF.TimeSeries
             if (this == Undefined)
                 throw new NotSupportedException("Cannot set data source information for an undefined measurement.");
 
-            if (m_measurementMetadata.TagName != tagName || m_measurementMetadata.Adder != adder || m_measurementMetadata.Multiplier != multiplier)
-                m_measurementMetadata = new MeasurementMetadata(this, tagName, adder, multiplier, null);
+            if (m_metadata.TagName != tagName || m_metadata.Adder != adder || m_metadata.Multiplier != multiplier)
+                m_metadata = new MeasurementMetadata(this, tagName, adder, multiplier, null);
         }
 
         /// <summary>

@@ -339,7 +339,7 @@ namespace AdoAdapters
         /// <returns>Text of the status message.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            return string.Format("{0} measurements read from database.", ProcessedMeasurements).CenterText(maxLength);
+            return $"{ProcessedMeasurements} measurements read from database.".CenterText(maxLength);
         }
 
         // Gets the database field names specified by the user in the connection string.
@@ -361,7 +361,7 @@ namespace AdoAdapters
                     if (propertyName != null)
                         m_fieldNames[fieldName] = propertyName;
                     else
-                        OnProcessException(new ArgumentException(string.Format("Measurement property not found: {0}", subKey)));
+                        OnProcessException(new ArgumentException($"Measurement property not found: {subKey}"));
                 }
             }
 
@@ -405,7 +405,7 @@ namespace AdoAdapters
 
                             signalIndexCacheImageSize = LittleEndian.ToInt32(buffer, 0);
 
-                            // Resize buffer to accomodate exact signal index cache
+                            // Resize buffer to accommodate exact signal index cache
                             buffer = new byte[signalIndexCacheImageSize];
 
                             // Read the signal index cache image from the file
@@ -427,7 +427,7 @@ namespace AdoAdapters
 
                             totalMeasurements = LittleEndian.ToInt32(buffer, 0);
 
-                            // Resize buffer to accomodate compact measurement if needed (not likely)
+                            // Resize buffer to accommodate compact measurement if needed (not likely)
                             if (buffer.Length < compactMeasurementSize)
                                 buffer = new byte[compactMeasurementSize];
 
@@ -480,7 +480,7 @@ namespace AdoAdapters
                     connection.Open();
 
                     command = connection.CreateCommand();
-                    command.CommandText = string.Format("SELECT * FROM {0}", m_dbTableName);
+                    command.CommandText = $"SELECT * FROM {m_dbTableName}";
 
                     using (dbReader = command.ExecuteReader())
                     {
@@ -510,7 +510,7 @@ namespace AdoAdapters
                                             {
                                                 if (DataSource.Tables.Contains(MeasurementTable))
                                                 {
-                                                    DataRow[] filteredRows = DataSource.Tables[MeasurementTable].Select(string.Format("SignalID = '{0}'", id));
+                                                    DataRow[] filteredRows = DataSource.Tables[MeasurementTable].Select($"SignalID = '{id}'");
 
                                                     if (filteredRows.Length > 0)
                                                         key = MeasurementKey.LookUpOrCreate(id, filteredRows[0]["ID"].ToString());
@@ -526,7 +526,7 @@ namespace AdoAdapters
                                                 }
                                             }
 
-                                            measurement.MeasurementMetadata = key.MeasurementMetadata;
+                                            measurement.Metadata = key.Metadata;
                                         }
                                         break;
                                     case "Key":
@@ -541,7 +541,7 @@ namespace AdoAdapters
                                                 signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, string, uint>(key.SignalID, key.Source, key.ID));
                                             }
 
-                                            measurement.MeasurementMetadata = key.MeasurementMetadata;
+                                            measurement.Metadata = key.Metadata;
                                         }
                                         break;
                                     case "Value":
@@ -572,13 +572,13 @@ namespace AdoAdapters
                                             }
                                             else
                                             {
-                                                string exceptionMessage = string.Format("The type of field {0} could not be converted to the type of property {1}.", fieldName, propertyName);
+                                                string exceptionMessage = $"The type of field {fieldName} could not be converted to the type of property {propertyName}.";
                                                 OnProcessException(new InvalidCastException(exceptionMessage));
                                             }
                                         }
                                         else
                                         {
-                                            string exceptionMessage = string.Format("The type of field {0} could not be converted to the type of property {1} - no property match was found.", fieldName, propertyName);
+                                            string exceptionMessage = $"The type of field {fieldName} could not be converted to the type of property {propertyName} - no property match was found.";
                                             OnProcessException(new InvalidCastException(exceptionMessage));
                                         }
                                         break;
@@ -633,7 +633,7 @@ namespace AdoAdapters
             }
             catch (EndOfStreamException ex)
             {
-                OnProcessException(new EndOfStreamException(string.Format("Failed load cached data from {0} due to file corruption{1} cache will be recreated from database", m_cacheFileName, string.IsNullOrWhiteSpace(ex.Message) ? "," : ": " + ex.Message + " - ")));
+                OnProcessException(new EndOfStreamException($"Failed load cached data from {m_cacheFileName} due to file corruption{(string.IsNullOrWhiteSpace(ex.Message) ? "," : ": " + ex.Message + " - ")} cache will be recreated from database"));
 
                 // If the cached file is corrupt, delete it and load from the database
                 if (File.Exists(m_cacheFileName))

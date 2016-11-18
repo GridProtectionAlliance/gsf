@@ -70,7 +70,7 @@ namespace GSF.PhasorProtocols
             m_valueIndex = valueIndex;
             m_timestamp = -1;
             m_receivedTimestamp = DateTime.UtcNow.Ticks;
-            MeasurementMetadata = MeasurementMetadata.ChangeMeasurementValueFilter(m_parent.GetMeasurementValueFilterFunction(m_valueIndex));
+            Metadata = Metadata.ChangeMeasurementValueFilter(m_parent.GetMeasurementValueFilterFunction(m_valueIndex));
         }
 
         #endregion

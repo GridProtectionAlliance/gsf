@@ -123,7 +123,7 @@ namespace GSF.TimeSeries
         /// <param name="tagName">New tag name value to assign to measurement's metadata.</param>
         public static void SetTagName(this IMeasurement measurement, string tagName)
         {
-            measurement.MeasurementMetadata = measurement.MeasurementMetadata.ChangeTagName(tagName);
+            measurement.Metadata = measurement.Metadata.ChangeTagName(tagName);
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace GSF.TimeSeries
         /// <param name="key">New measurement key value to assign to measurement's metadata.</param>
         public static void SetKey(this IMeasurement measurement, MeasurementKey key)
         {
-            measurement.MeasurementMetadata = measurement.MeasurementMetadata.ChangeKey(key);
+            measurement.Metadata = measurement.Metadata.ChangeKey(key);
         }
 
         /// <summary>
@@ -143,7 +143,7 @@ namespace GSF.TimeSeries
         /// <param name="adder">New adder value to assign to measurement's metadata.</param>
         public static void SetAdder(this IMeasurement measurement, double adder)
         {
-            measurement.MeasurementMetadata = measurement.MeasurementMetadata.ChangeAdder(adder);
+            measurement.Metadata = measurement.Metadata.ChangeAdder(adder);
         }
 
         /// <summary>
@@ -153,7 +153,7 @@ namespace GSF.TimeSeries
         /// <param name="multiplier">New multiplier value to assign to measurement's metadata.</param>
         public static void SetMultiplier(this IMeasurement measurement, double multiplier)
         {
-            measurement.MeasurementMetadata = measurement.MeasurementMetadata.ChangeMultiplier(multiplier);
+            measurement.Metadata = measurement.Metadata.ChangeMultiplier(multiplier);
         }
 
         // Lookup signal type for given measurement ID

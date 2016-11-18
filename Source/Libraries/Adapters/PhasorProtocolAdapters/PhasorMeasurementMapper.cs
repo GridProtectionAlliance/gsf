@@ -1350,7 +1350,7 @@ namespace PhasorProtocolAdapters
                         MeasurementKey key = MeasurementKey.LookUpOrCreate(signalID, row["ID"].ToString());
 
                         // Create a measurement with a reference associated with this adapter
-                        definedMeasurement = key.MeasurementMetadata;
+                        definedMeasurement = key.Metadata;
 
                         // Add measurement to definition list keyed by signal reference
                         if (!definedMeasurements.ContainsKey(signalReference))
@@ -1370,7 +1370,7 @@ namespace PhasorProtocolAdapters
             {
                 Func<MeasurementMetadata, IMeasurement> converter = measurement => new Measurement()
                 {
-                    MeasurementMetadata = measurement
+                    Metadata = measurement
                 };
 
                 OutputMeasurements = definedMeasurements.Values.Select(converter).ToArray();
@@ -1724,7 +1724,7 @@ namespace PhasorProtocolAdapters
             if (m_definedMeasurements.TryGetValue(signalReference, out definedMeasurement))
             {
                 // Assign ID and other relevant attributes to the parsed measurement value
-                parsedMeasurement.MeasurementMetadata = definedMeasurement;
+                parsedMeasurement.Metadata = definedMeasurement;
 
                 // Add the updated measurement value to the destination measurement collection
                 mappedMeasurements.Add(parsedMeasurement);

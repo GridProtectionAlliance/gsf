@@ -31,7 +31,7 @@ namespace GSF.TimeSeries
     /// </summary>
     /// <remarks>
     /// This is not a full implementation of <see cref="IMeasurement"/> - this class only defines
-    /// the core functionality for handling <see cref="MeasurementMetadata"/> implementations.
+    /// the core functionality for handling <see cref="Metadata"/> implementations.
     /// </remarks>
     [Serializable]
     public abstract class MeasurementBase
@@ -39,7 +39,7 @@ namespace GSF.TimeSeries
         #region [ Members ]
 
         // Fields
-        private MeasurementMetadata m_measurementMetadata;
+        private MeasurementMetadata m_metadata;
 
         #endregion
 
@@ -50,7 +50,7 @@ namespace GSF.TimeSeries
         /// </summary>
         protected MeasurementBase()
         {
-            m_measurementMetadata = MeasurementMetadata.Undefined;
+            m_metadata = MeasurementMetadata.Undefined;
         }
 
         #endregion
@@ -60,47 +60,47 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets the <see cref="Guid"/> based signal ID of the <see cref="MeasurementBase"/> implementation.
         /// </summary>
-        public Guid ID => m_measurementMetadata.Key.SignalID;
+        public Guid ID => m_metadata.Key.SignalID;
 
         /// <summary>
         /// Gets the primary <see cref="MeasurementKey"/> of this <see cref="MeasurementBase"/> implementation.
         /// </summary>
-        public MeasurementKey Key => m_measurementMetadata.Key;
+        public MeasurementKey Key => m_metadata.Key;
 
         /// <summary>
         /// Gets the text based tag name of this <see cref="MeasurementBase"/> implementation.
         /// </summary>
-        public string TagName => m_measurementMetadata.TagName;
+        public string TagName => m_metadata.TagName;
 
         /// <summary>
         /// Gets an offset to add to the measurement value. This defaults to 0.0.
         /// </summary>
         [DefaultValue(0.0)]
-        public double Adder => m_measurementMetadata.Adder;
+        public double Adder => m_metadata.Adder;
 
         /// <summary>
         /// Gets a multiplicative offset to apply to the measurement value. This defaults to 1.0.
         /// </summary>
         [DefaultValue(1.0)]
-        public double Multiplier => m_measurementMetadata.Multiplier;
+        public double Multiplier => m_metadata.Multiplier;
 
         /// <summary>
         /// Gets function used to apply a down-sampling filter over a sequence of <see cref="IMeasurement"/> values.
         /// </summary>
-        public MeasurementValueFilterFunction MeasurementValueFilter => m_measurementMetadata.MeasurementValueFilter;
+        public MeasurementValueFilterFunction MeasurementValueFilter => m_metadata.MeasurementValueFilter;
 
         /// <summary>
         /// Gets or sets associated metadata values for the <see cref="MeasurementBase"/> implementation.
         /// </summary>
-        public MeasurementMetadata MeasurementMetadata
+        public MeasurementMetadata Metadata
         {
             get
             {
-                return m_measurementMetadata;
+                return m_metadata;
             }
             set
             {
-                m_measurementMetadata = value;
+                m_metadata = value;
             }
         }
 

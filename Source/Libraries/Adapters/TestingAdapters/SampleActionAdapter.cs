@@ -151,7 +151,7 @@ namespace TestingAdapters
 
                 // Define output measurements as defined in stored procedure
                 OutputMeasurements = connection.RetrieveData("GetMyOutputsProc @param1 @param2", "param1Value", "param2Value").Rows.OfType<DataRow>()
-                    .Select(row => new Measurement() { MeasurementMetadata = MeasurementKey.LookUpBySignalID(Guid.Parse(row["ID"].ToString())).MeasurementMetadata }).ToArray();
+                    .Select(row => new Measurement() { Metadata = MeasurementKey.LookUpBySignalID(Guid.Parse(row["ID"].ToString())).Metadata }).ToArray();
             }
             finally
             {

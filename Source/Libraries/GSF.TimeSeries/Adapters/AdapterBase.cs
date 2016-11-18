@@ -1270,7 +1270,7 @@ namespace GSF.TimeSeries.Adapters
                             {
                                 // Create a new measurement for the provided field level information
                                 Measurement measurement = new Measurement();
-                                measurement.MeasurementMetadata = key.MeasurementMetadata;
+                                measurement.Metadata = key.Metadata;
                                 measurements.Add(measurement);
                             }
 
@@ -1488,7 +1488,7 @@ namespace GSF.TimeSeries.Adapters
 
                     measurement = new Measurement
                     {
-                        MeasurementMetadata = key.MeasurementMetadata,
+                        Metadata = key.Metadata,
                     };
 
                     measurements.Add(measurement);
@@ -1518,7 +1518,7 @@ namespace GSF.TimeSeries.Adapters
 
                                 measurement = new Measurement
                                 {
-                                    MeasurementMetadata = key.MeasurementMetadata,
+                                    Metadata = key.Metadata,
                                 };
 
                                 measurements.Add(measurement);
@@ -1610,7 +1610,7 @@ namespace GSF.TimeSeries.Adapters
                     // Create a new measurement for the provided field level information
                     measurement = new Measurement
                     {
-                        MeasurementMetadata = key.MeasurementMetadata.ChangeAdderMultiplier(adder, multipler),
+                        Metadata = key.Metadata.ChangeAdderMultiplier(adder, multipler),
                     };
 
                     // Attempt to lookup other associated measurement meta-data from default measurement table, if defined

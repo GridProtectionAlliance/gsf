@@ -389,7 +389,7 @@ namespace GSF.TimeSeries
         /// </summary>
         public static readonly Measurement Undefined = new Measurement
         {
-            MeasurementMetadata = MeasurementMetadata.Undefined
+            Metadata = MeasurementMetadata.Undefined
         };
 
         // Static Methods
@@ -403,7 +403,7 @@ namespace GSF.TimeSeries
         {
             return new Measurement
             {
-                MeasurementMetadata = measurementToClone.MeasurementMetadata,
+                Metadata = measurementToClone.Metadata,
                 Value = measurementToClone.Value,
                 Timestamp = measurementToClone.Timestamp,
                 StateFlags = measurementToClone.StateFlags
@@ -420,7 +420,7 @@ namespace GSF.TimeSeries
         {
             return new Measurement
             {
-                MeasurementMetadata = measurementToClone.MeasurementMetadata,
+                Metadata = measurementToClone.Metadata,
                 Value = measurementToClone.Value,
                 Timestamp = timestamp,
                 StateFlags = measurementToClone.StateFlags
@@ -438,7 +438,7 @@ namespace GSF.TimeSeries
         {
             return new Measurement
             {
-                MeasurementMetadata = measurementToClone.MeasurementMetadata,
+                Metadata = measurementToClone.Metadata,
                 Value = value,
                 Timestamp = timestamp,
                 StateFlags = measurementToClone.StateFlags

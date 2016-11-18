@@ -244,15 +244,15 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets or sets associated metadata values for the <see cref="IMeasurement"/> .
         /// </summary>
-        public MeasurementMetadata MeasurementMetadata
+        public MeasurementMetadata Metadata
         {
             get
             {
-                return m_measurement.MeasurementMetadata;
+                return m_measurement.Metadata;
             }
             set
             {
-                m_measurement.MeasurementMetadata = value;
+                m_measurement.Metadata = value;
             }
         }
 

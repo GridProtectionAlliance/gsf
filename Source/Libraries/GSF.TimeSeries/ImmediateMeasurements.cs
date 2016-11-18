@@ -315,7 +315,7 @@ namespace GSF.TimeSeries
         {
             return m_measurements.GetOrAdd(id, key => new TemporalMeasurement(m_lagTime, m_leadTime)
             {
-                MeasurementMetadata = key.MeasurementMetadata,
+                Metadata = key.Metadata,
             });
         }
 
@@ -326,7 +326,7 @@ namespace GSF.TimeSeries
         {
             TemporalMeasurement temporalMeasurement = m_measurements.GetOrAdd(measurement.Key, key => new TemporalMeasurement(m_lagTime, m_leadTime)
             {
-                MeasurementMetadata = key.MeasurementMetadata.ChangeAdderMultiplier(measurement.Adder, measurement.Multiplier)
+                Metadata = key.Metadata.ChangeAdderMultiplier(measurement.Adder, measurement.Multiplier)
             });
 
             return temporalMeasurement;

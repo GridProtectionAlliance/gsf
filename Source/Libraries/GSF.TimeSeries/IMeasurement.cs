@@ -190,6 +190,15 @@ namespace GSF.TimeSeries
     public interface IMeasurement : ITimeSeriesValue<double>, IEquatable<ITimeSeriesValue>, IComparable<ITimeSeriesValue>, IComparable
     {
         /// <summary>
+        /// Gets or sets associated metadata values for the <see cref="IMeasurement"/> .
+        /// </summary>
+        MeasurementMetadata Metadata
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets or sets the primary key of this <see cref="IMeasurement"/>.
         /// </summary>
         MeasurementKey Key
@@ -280,15 +289,6 @@ namespace GSF.TimeSeries
         MeasurementValueFilterFunction MeasurementValueFilter
         {
             get;
-        }
-
-        /// <summary>
-        /// Gets or sets associated metadata values for the <see cref="IMeasurement"/> .
-        /// </summary>
-        MeasurementMetadata MeasurementMetadata
-        {
-            get;
-            set;
         }
     }
 }

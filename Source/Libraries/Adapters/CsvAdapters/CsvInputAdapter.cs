@@ -446,7 +446,7 @@ namespace CsvAdapters
                             MeasurementKey.TryParse(measurementID, out key);
                         }
 
-                        measurement.MeasurementMetadata = key.MeasurementMetadata;
+                        measurement.Metadata = key.Metadata;
 
                         // Associate measurement with column index
                         m_columnMappings[kvp.Key] = measurement;
@@ -459,7 +459,7 @@ namespace CsvAdapters
                     // Reserve a column mapping for timestamp value
                     IMeasurement timestampMeasurement = new Measurement
                     {
-                        MeasurementMetadata = new MeasurementMetadata(null, "Timestamp", 0, 1, null)
+                        Metadata = new MeasurementMetadata(null, "Timestamp", 0, 1, null)
                     };
 
                     m_columnMappings[timestampColumn] = timestampMeasurement;
@@ -618,7 +618,7 @@ namespace CsvAdapters
                         else
                         {
                             measurement = new Measurement();
-                            measurement.MeasurementMetadata = MeasurementKey.Undefined.MeasurementMetadata;
+                            measurement.Metadata = MeasurementKey.Undefined.Metadata;
                             measurement.Value = double.NaN;
                         }
 
@@ -636,13 +636,13 @@ namespace CsvAdapters
                             Guid measurementID = new Guid(fields[m_columns["Signal ID"]]);
 
                             if (m_columns.ContainsKey("Measurement Key"))
-                                measurement.MeasurementMetadata = MeasurementKey.LookUpOrCreate(measurementID, fields[m_columns["Measurement Key"]]).MeasurementMetadata;
+                                measurement.Metadata = MeasurementKey.LookUpOrCreate(measurementID, fields[m_columns["Measurement Key"]]).Metadata;
                             else
-                                measurement.MeasurementMetadata = MeasurementKey.LookUpBySignalID(measurementID).MeasurementMetadata;
+                                measurement.Metadata = MeasurementKey.LookUpBySignalID(measurementID).Metadata;
                         }
                         else if (m_columns.ContainsKey("Measurement Key"))
                         {
-                            measurement.MeasurementMetadata = MeasurementKey.Parse(fields[m_columns["Measurement Key"]]).MeasurementMetadata;
+                            measurement.Metadata = MeasurementKey.Parse(fields[m_columns["Measurement Key"]]).Metadata;
                         }
 
                         if (m_simulateTimestamp)

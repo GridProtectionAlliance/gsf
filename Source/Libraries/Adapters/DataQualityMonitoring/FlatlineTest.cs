@@ -346,7 +346,7 @@ namespace DataQualityMonitoring
                             m_lastChange.Add(key, new Measurement
                             {
                                 //Assumption made that key.SignalID == signalId
-                                MeasurementMetadata = key.MeasurementMetadata,
+                                Metadata = key.Metadata,
                                 Value = double.NaN,
                                 Timestamp = timestamp
                             });
@@ -359,7 +359,7 @@ namespace DataQualityMonitoring
                 {
                     m_lastChange.Add(key, new Measurement
                     {
-                        MeasurementMetadata = key.MeasurementMetadata,
+                        Metadata = key.Metadata,
                         Value = double.NaN,
                         Timestamp = timestamp
                     });

@@ -452,7 +452,7 @@ namespace EpriExport
 
                     if (key.SignalID != Guid.Empty)
                     {
-                        measurement.MeasurementMetadata = key.MeasurementMetadata;
+                        measurement.Metadata = key.Metadata;
 
                         // Associate measurement with column index
                         m_columnMappings[kvp.Key] = measurement;
@@ -466,7 +466,7 @@ namespace EpriExport
                 // Reserve a column mapping for timestamp value
                 IMeasurement timestampMeasurement = new Measurement
                 {
-                    MeasurementMetadata = new MeasurementMetadata(null, "Timestamp", 0, 1, null)
+                    Metadata = new MeasurementMetadata(null, "Timestamp", 0, 1, null)
                 };
 
                 m_columnMappings[timestampColumn] = timestampMeasurement;
