@@ -446,28 +446,13 @@ namespace EpriExport
                     {
                         key = MeasurementKey.LookUpBySignalID(id);
                     }
-                    else if (MeasurementKey.TryParse(measurementID, out key))
+                    else
                     {
+                        MeasurementKey.TryParse(measurementID, out key);
                     }
 
-                    if (measurement.ID != Guid.Empty)
+                    if (key.SignalID != Guid.Empty)
                     {
-                        try
-                        {
-                            DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalID = '{0}'", measurement.ID));
-
-                            if (filteredRows.Length > 0)
-                            {
-                                DataRow row = filteredRows[0];
-
-                                // Assign other attributes
-                                key.SetDataSourceCommonValues(row["PointTag"].ToNonNullString(), double.Parse(row["Adder"].ToString()), double.Parse(row["Multiplier"].ToString()));
-                            }
-                        }
-                        catch
-                        {
-                            // Failure to lookup extra metadata is not catastrophic
-                        }
                         measurement.CommonMeasurementFields = key.DataSourceCommonValues;
 
                         // Associate measurement with column index

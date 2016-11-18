@@ -390,13 +390,11 @@ namespace PowerCalculations.PowerMultiCalculator
 
         private Measurement GetMeasurement(Guid signalID)
         {
-            DataRow[] rows = DataSource.Tables["ActiveMeasurements"].Select($"SignalID = '{signalID}'");
+            MeasurementKey key = MeasurementKey.LookUpBySignalID(signalID);
 
-            if (!rows.Any())
+            if (key.SignalID == Guid.Empty)
                 return null;
 
-            MeasurementKey key = MeasurementKey.LookUpBySignalID(signalID);
-            key.SetDataSourceCommonValues(rows[0]["PointTag"].ToString(), Convert.ToDouble(rows[0]["Adder"]), Convert.ToDouble(rows[0]["Multiplier"]));
             Measurement measurement = new Measurement
             {
                 CommonMeasurementFields = key.DefaultCommonMeasurementFields,

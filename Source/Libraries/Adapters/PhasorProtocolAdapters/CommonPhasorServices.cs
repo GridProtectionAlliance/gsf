@@ -1305,11 +1305,14 @@ namespace PhasorProtocolAdapters
         {
             MeasurementKey key;
             string keyID;
+            string pointTag;
+            double adder;
+            double multiplier;
 
             statusMessage("Establishing default measurement key cache...");
 
             // Establish default measurement key cache
-            foreach (DataRow measurement in database.Connection.RetrieveData(database.AdapterType, "SELECT ID, SignalID FROM ActiveMeasurement").Rows)
+            foreach (DataRow measurement in database.Connection.RetrieveData(database.AdapterType, "SELECT ID, SignalID, PointTag, Adder, Multiplier FROM ActiveMeasurement").Rows)
             {
                 keyID = measurement["ID"].ToNonNullString();
 
@@ -1317,7 +1320,18 @@ namespace PhasorProtocolAdapters
                     continue;
 
                 // Cache new measurement key with associated Guid signal ID
-                MeasurementKey.TryCreateOrUpdate(measurement["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), keyID, out key);
+                if (MeasurementKey.TryCreateOrUpdate(measurement["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), keyID, out key))
+                {
+                    pointTag = measurement["PointTag"].ToNonNullString();
+
+                    if (!double.TryParse(measurement["Adder"].ToNonNullString(), out adder))
+                        adder = 0.0D;
+
+                    if (!double.TryParse(measurement["Multiplier"].ToNonNullString(), out multiplier))
+                        multiplier = 1.0D;
+
+                    key.SetDataSourceCommonValues(pointTag, adder, multiplier);
+                }
             }
         }
 

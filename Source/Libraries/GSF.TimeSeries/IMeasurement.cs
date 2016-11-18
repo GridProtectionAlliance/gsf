@@ -333,7 +333,6 @@ namespace GSF.TimeSeries
         MeasurementKey Key
         {
             get;
-            //set;
         }
 
         /// <summary>
@@ -342,7 +341,6 @@ namespace GSF.TimeSeries
         string TagName
         {
             get;
-            //set;
         }
 
         /// <summary>
@@ -367,7 +365,6 @@ namespace GSF.TimeSeries
         double Adder
         {
             get;
-            //set;
         }
 
         /// <summary>
@@ -379,7 +376,6 @@ namespace GSF.TimeSeries
         double Multiplier
         {
             get;
-            //set;
         }
 
         /// <summary>
@@ -422,7 +418,6 @@ namespace GSF.TimeSeries
         MeasurementValueFilterFunction MeasurementValueFilter
         {
             get;
-            //set;
         }
 
         /// <summary>

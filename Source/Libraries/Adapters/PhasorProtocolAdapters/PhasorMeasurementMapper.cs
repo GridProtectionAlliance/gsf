@@ -1348,7 +1348,7 @@ namespace PhasorProtocolAdapters
                         signalID = new Guid(row["SignalID"].ToNonNullString(Guid.NewGuid().ToString()));
 
                         MeasurementKey key = MeasurementKey.LookUpOrCreate(signalID, row["ID"].ToString());
-                        key.SetDataSourceCommonValues(signalReference, double.Parse(row["Adder"].ToNonNullString("0.0")), double.Parse(row["Multiplier"].ToNonNullString("1.0")));
+
                         // Create a measurement with a reference associated with this adapter
                         definedMeasurement = key.DataSourceCommonValues;
 

@@ -81,10 +81,6 @@ namespace GSF.TimeSeries
             {
                 return m_commonFields.Key;
             }
-            //set
-            //{
-            //    m_commonFields = m_commonFields.ChangeKey(value ?? MeasurementKey.Undefined);
-            //}
         }
 
         /// <summary>
@@ -96,10 +92,6 @@ namespace GSF.TimeSeries
             {
                 return m_commonFields.TagName;
             }
-            //set
-            //{
-            //    m_commonFields = m_commonFields.ChangeTagName(value);
-            //}
         }
 
         /// <summary>
@@ -112,10 +104,6 @@ namespace GSF.TimeSeries
             {
                 return m_commonFields.Adder;
             }
-            //set
-            //{
-            //    m_commonFields = m_commonFields.ChangeAdder(value);
-            //}
         }
 
         /// <summary>
@@ -128,10 +116,6 @@ namespace GSF.TimeSeries
             {
                 return m_commonFields.Multiplier;
             }
-            //set
-            //{
-            //    m_commonFields = m_commonFields.ChangeMultiplier(value);
-            //}
         }
 
         /// <summary>
@@ -143,10 +127,6 @@ namespace GSF.TimeSeries
             {
                 return m_commonFields.MeasurementValueFilter;
             }
-            //set
-            //{
-            //    m_commonFields = m_commonFields.ChangeMeasurementValueFilter(value);
-            //}
         }
 
         /// <summary>

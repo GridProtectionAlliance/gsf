@@ -1270,31 +1270,7 @@ namespace GSF.TimeSeries.Adapters
                             {
                                 // Create a new measurement for the provided field level information
                                 Measurement measurement = new Measurement();
-
-
-                                // Attempt to lookup other associated measurement meta-data from default measurement table, if defined
-                                try
-                                {
-                                    if (adapter.DataSource.Tables.Contains(measurementTable))
-                                    {
-                                        filteredRows = adapter.DataSource.Tables[measurementTable].Select($"ID = '{key}'");
-
-                                        if (filteredRows.Length > 0)
-                                        {
-                                            DataRow row = filteredRows[0];
-
-                                            key.SetDataSourceCommonValues(row["PointTag"].ToNonNullString(), double.Parse(row["Adder"].ToString()), double.Parse(row["Multiplier"].ToString()));
-                                        }
-                                    }
-                                }
-                                catch
-                                {
-                                    // Errors here are not catastrophic, this simply limits the available meta-data
-                                }
-
                                 measurement.CommonMeasurementFields = key.DataSourceCommonValues;
-
-
                                 measurements.Add(measurement);
                             }
 
@@ -1492,7 +1468,6 @@ namespace GSF.TimeSeries.Adapters
             List<IMeasurement> measurements = new List<IMeasurement>();
             Measurement measurement;
             MeasurementKey key;
-            MeasurementKey key2;
             Guid id;
             string tableName, expression, sortField;
             int takeCount;
@@ -1509,11 +1484,11 @@ namespace GSF.TimeSeries.Adapters
                 {
                     id = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
 
-                    key2 = MeasurementKey.LookUpOrCreate(id, row["ID"].ToString());
-                    key2.SetDataSourceCommonValues(row["PointTag"].ToNonNullString(), double.Parse(row["Adder"].ToString()), double.Parse(row["Multiplier"].ToString()));
+                    key = MeasurementKey.LookUpOrCreate(id, row["ID"].ToString());
+
                     measurement = new Measurement
                     {
-                        CommonMeasurementFields = key2.DataSourceCommonValues,
+                        CommonMeasurementFields = key.DataSourceCommonValues,
                     };
 
                     measurements.Add(measurement);
@@ -1539,12 +1514,11 @@ namespace GSF.TimeSeries.Adapters
                             {
                                 id = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
 
-                                key2 = MeasurementKey.LookUpOrCreate(id, row["ID"].ToString());
-                                key2.SetDataSourceCommonValues(row["PointTag"].ToNonNullString(), double.Parse(row["Adder"].ToString()), double.Parse(row["Multiplier"].ToString()));
+                                key = MeasurementKey.LookUpOrCreate(id, row["ID"].ToString());
 
                                 measurement = new Measurement
                                 {
-                                    CommonMeasurementFields = key2.DataSourceCommonValues,
+                                    CommonMeasurementFields = key.DataSourceCommonValues,
                                 };
 
                                 measurements.Add(measurement);

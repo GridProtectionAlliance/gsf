@@ -165,6 +165,7 @@ namespace GSF.TimeSeries
         {
             if (this == Undefined)
                 throw new NotSupportedException("Cannot set data source information for an undefined measurement.");
+
             if (m_dataSourceCommonValues.TagName != tagName || m_dataSourceCommonValues.Adder != adder || m_dataSourceCommonValues.Multiplier != multiplier)
             {
                 m_dataSourceCommonValues = new CommonMeasurementFields(this, tagName, adder, multiplier, null);

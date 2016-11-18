@@ -1771,9 +1771,7 @@ namespace GSF.TimeSeries.Transport
 
                         // Set measurement key if defined
                         MeasurementKey key = MeasurementKey.LookUpOrCreate(signalID, row["ID"].ToString());
-                        key.SetDataSourceCommonValues(row["PointTag"].ToNonNullString(), double.Parse(row["Adder"].ToString()), double.Parse(row["Multiplier"].ToString()));
                         measurement.CommonMeasurementFields = key.DataSourceCommonValues;
-
                         subscribedMeasurements.Add(measurement);
                     }
 
