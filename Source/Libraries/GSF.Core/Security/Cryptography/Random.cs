@@ -435,7 +435,7 @@ namespace GSF.Security.Cryptography
                 //technically alters the crypto-random nature of the value being generated.
                 value = UInt32;
             }
-            return value;
+            return value >> leadingZeroes;
         }
 
         /// <summary>
@@ -475,7 +475,7 @@ namespace GSF.Security.Cryptography
                 //technically alters the crypto-random nature of the value being generated.
                 value = UInt64;
             }
-            return value;
+            return value >> leadingZeroes;
         }
 
         /// <summary>
