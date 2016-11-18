@@ -82,23 +82,6 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
-        /// <summary>
-        /// Returns <c>true</c> if <see cref="ServerResponse"/> code is for a solicited <see cref="ServerCommand"/>.
-        /// </summary>
-        /// <remarks>
-        /// Only the <see cref="ServerResponse.Succeeded"/> and <see cref="ServerResponse.Failed"/> response codes are from solicited server commands.
-        /// </remarks>
-        /// <param name="responseCode"><see cref="ServerResponse"/> code to test.</param>
-        /// <returns><c>true</c> if <see cref="ServerResponse"/> code is for a solicited <see cref="ServerCommand"/>; otherwise <c>false</c>.</returns>
-        public static bool IsSolicited(this ServerResponse responseCode)
-        {
-            // Only the succeeded and failed response codes are from solicited commands
-            if (responseCode == ServerResponse.Succeeded || responseCode == ServerResponse.Failed)
-                return true;
-
-            return false;
-        }
-
         // Reference same static timer for the Time-Series Library in root common
         internal static readonly SharedTimerScheduler TimerScheduler = TimeSeries.Common.TimerScheduler;
     }

@@ -326,15 +326,13 @@ namespace GSF.TimeSeries.Transport
             /// </summary>
             /// <param name="command">The code for the user command.</param>
             /// <param name="response">The code for the server's response.</param>
-            /// <param name="solicited">Indicates whether the response was solicited.</param>
             /// <param name="buffer">Buffer containing the message from the server.</param>
             /// <param name="startIndex">Index into the buffer used to skip the header.</param>
             /// <param name="length">The length of the message in the buffer, including the header.</param>
-            public UserCommandArgs(ServerCommand command, ServerResponse response, bool solicited, byte[] buffer, int startIndex, int length)
+            public UserCommandArgs(ServerCommand command, ServerResponse response, byte[] buffer, int startIndex, int length)
             {
                 Command = command;
                 Response = response;
-                Solicited = solicited;
                 Buffer = buffer;
                 StartIndex = startIndex;
                 Length = length;
@@ -349,11 +347,6 @@ namespace GSF.TimeSeries.Transport
             /// Gets the code for the server's response.
             /// </summary>
             public ServerResponse Response { get; private set; }
-
-            /// <summary>
-            /// Gets a flag indicating whether the response was solicited.
-            /// </summary>
-            public bool Solicited { get; private set; }
 
             /// <summary>
             /// Gets the buffer containing the message from the server.
@@ -497,7 +490,6 @@ namespace GSF.TimeSeries.Transport
         private long m_lastMissingCacheWarning;
         private Guid m_nodeID;
         private int m_gatewayProtocolID;
-        private readonly List<ServerCommand> m_requests;
         private SecurityMode m_securityMode;
         private bool m_synchronizedSubscription;
         private bool m_useMillisecondResolution;
@@ -575,8 +567,6 @@ namespace GSF.TimeSeries.Transport
             {
                 IsBackground = true
             };
-
-            m_requests = new List<ServerCommand>();
 
             m_synchronizeMetadataOperation = new LongSynchronizedOperation(SynchronizeMetadata)
             {
@@ -1130,8 +1120,6 @@ namespace GSF.TimeSeries.Transport
                 StringBuilder status = new StringBuilder();
 
                 status.AppendFormat("         Subscription mode: {0}", m_synchronizedSubscription ? "Remotely Synchronized" : (object)m_localConcentrator == null ? "Unsynchronized" : "Locally Synchronized");
-                status.AppendLine();
-                status.AppendFormat("  Pending command requests: {0}", m_requests.Count);
                 status.AppendLine();
                 status.AppendFormat("             Authenticated: {0}", m_authenticated);
                 status.AppendLine();
@@ -2616,22 +2604,6 @@ namespace GSF.TimeSeries.Transport
                         m_metadataRefreshPending = (commandCode == ServerCommand.MetaDataRefresh);
                     }
 
-                    // Track server command in pending request queue
-                    lock (m_requests)
-                    {
-                        // Make sure a pending request does not already exist
-                        int index = m_requests.BinarySearch(commandCode);
-
-                        if (index < 0)
-                        {
-                            // Add the new server command to the request list
-                            m_requests.Add(commandCode);
-
-                            // Make sure requests are sorted to allow for binary searching
-                            m_requests.Sort();
-                        }
-                    }
-
                     return true;
                 }
                 catch (Exception ex)
@@ -2761,93 +2733,49 @@ namespace GSF.TimeSeries.Transport
                     ServerCommand commandCode = (ServerCommand)buffer[1];
                     int responseLength = BigEndian.ToInt32(buffer, 2);
                     int responseIndex = DataPublisher.ClientResponseHeaderSize;
-                    bool solicited = false;
                     byte[][][] keyIVs;
 
-                    // See if this was a solicited response to a requested server command
-                    if (responseCode.IsSolicited())
-                    {
-                        lock (m_requests)
-                        {
-                            int index = m_requests.BinarySearch(commandCode);
-
-                            if (index >= 0)
-                            {
-                                solicited = true;
-                                m_requests.RemoveAt(index);
-                            }
-                        }
-
-                        // Disconnect any established UDP data channel upon successful unsubscribe
-                        if (solicited && commandCode == ServerCommand.Unsubscribe && responseCode == ServerResponse.Succeeded)
-                            DataChannel = null;
-                    }
+                    // Disconnect any established UDP data channel upon successful unsubscribe
+                    if (commandCode == ServerCommand.Unsubscribe && responseCode == ServerResponse.Succeeded)
+                        DataChannel = null;
 
                     if (!IsUserCommand(commandCode))
                         OnReceivedServerResponse(responseCode, commandCode);
                     else
-                        OnReceivedUserCommandResponse(commandCode, responseCode, solicited, buffer, responseIndex, length);
+                        OnReceivedUserCommandResponse(commandCode, responseCode, buffer, responseIndex, length);
 
                     switch (responseCode)
                     {
                         case ServerResponse.Succeeded:
-                            if (solicited)
+                            switch (commandCode)
                             {
-                                switch (commandCode)
-                                {
-                                    case ServerCommand.Authenticate:
-                                        OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
-                                        m_authenticated = true;
-                                        OnConnectionAuthenticated();
-                                        break;
-                                    case ServerCommand.Subscribe:
-                                        OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
-                                        m_subscribed = true;
-                                        break;
-                                    case ServerCommand.Unsubscribe:
-                                        OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
-                                        m_subscribed = false;
-                                        if ((object)m_dataStreamMonitor != null)
-                                            m_dataStreamMonitor.Enabled = false;
-                                        break;
-                                    case ServerCommand.RotateCipherKeys:
-                                        OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
-                                        break;
-                                    case ServerCommand.MetaDataRefresh:
-                                        OnStatusMessage("Success code received in response to server command \"{0}\": latest meta-data received.", commandCode);
-                                        OnMetaDataReceived(DeserializeMetadata(buffer.BlockCopy(responseIndex, responseLength)));
-                                        m_metadataRefreshPending = false;
-                                        break;
-                                }
-                            }
-                            else
-                            {
-                                switch (commandCode)
-                                {
-                                    case ServerCommand.MetaDataRefresh:
-                                        // Meta-data refresh may be unsolicited
-                                        OnStatusMessage("Received server confirmation for unsolicited request to \"{0}\" command: latest meta-data received.", commandCode);
-                                        OnMetaDataReceived(DeserializeMetadata(buffer.BlockCopy(responseIndex, responseLength)));
-                                        m_metadataRefreshPending = false;
-                                        break;
-                                    case ServerCommand.RotateCipherKeys:
-                                        // Key rotation may be unsolicited
-                                        OnStatusMessage("Received server confirmation for unsolicited request to \"{0}\" command: {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
-                                        break;
-                                    case ServerCommand.Subscribe:
-                                        OnStatusMessage("Received unsolicited response to \"{0}\" command: {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
-                                        break;
-                                    default:
-                                        OnProcessException(new InvalidOperationException("Publisher sent a success code for an unsolicited server command: " + commandCode));
-                                        break;
-                                }
+                                case ServerCommand.Authenticate:
+                                    OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
+                                    m_authenticated = true;
+                                    OnConnectionAuthenticated();
+                                    break;
+                                case ServerCommand.Subscribe:
+                                    OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
+                                    m_subscribed = true;
+                                    break;
+                                case ServerCommand.Unsubscribe:
+                                    OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
+                                    m_subscribed = false;
+                                    if ((object)m_dataStreamMonitor != null)
+                                        m_dataStreamMonitor.Enabled = false;
+                                    break;
+                                case ServerCommand.RotateCipherKeys:
+                                    OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
+                                    break;
+                                case ServerCommand.MetaDataRefresh:
+                                    OnStatusMessage("Success code received in response to server command \"{0}\": latest meta-data received.", commandCode);
+                                    OnMetaDataReceived(DeserializeMetadata(buffer.BlockCopy(responseIndex, responseLength)));
+                                    m_metadataRefreshPending = false;
+                                    break;
                             }
                             break;
                         case ServerResponse.Failed:
-                            if (solicited)
-                                OnStatusMessage("Failure code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
-                            else
-                                OnProcessException(new InvalidOperationException("Publisher sent a failed code for an unsolicited server command: " + commandCode));
+                            OnStatusMessage("Failure code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
 
                             if (commandCode == ServerCommand.MetaDataRefresh)
                                 m_metadataRefreshPending = false;
@@ -4481,15 +4409,14 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <param name="command">The code for the user command.</param>
         /// <param name="response">The code for the server's response.</param>
-        /// <param name="solicited">Indicates whether the response was solicited.</param>
         /// <param name="buffer">Buffer containing the message from the server.</param>
         /// <param name="startIndex">Index into the buffer used to skip the header.</param>
         /// <param name="length">The length of the message in the buffer, including the header.</param>
-        protected void OnReceivedUserCommandResponse(ServerCommand command, ServerResponse response, bool solicited, byte[] buffer, int startIndex, int length)
+        protected void OnReceivedUserCommandResponse(ServerCommand command, ServerResponse response, byte[] buffer, int startIndex, int length)
         {
             try
             {
-                UserCommandArgs args = new UserCommandArgs(command, response, solicited, buffer, startIndex, length);
+                UserCommandArgs args = new UserCommandArgs(command, response, buffer, startIndex, length);
                 ReceivedUserCommandResponse?.Invoke(this, args);
             }
             catch (Exception ex)
@@ -4777,12 +4704,6 @@ namespace GSF.TimeSeries.Transport
 
         private void m_commandChannel_ConnectionEstablished(object sender, EventArgs e)
         {
-            // Make sure no existing requests are queued for a new publisher connection
-            lock (m_requests)
-            {
-                m_requests.Clear();
-            }
-
             // Define operational modes as soon as possible
             SendServerCommand(ServerCommand.DefineOperationalModes, BigEndian.GetBytes((uint)m_operationalModes));
 
