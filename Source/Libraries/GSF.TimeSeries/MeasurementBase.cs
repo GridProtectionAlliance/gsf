@@ -39,7 +39,10 @@ namespace GSF.TimeSeries
         #region [ Members ]
 
         // Fields
+        private double m_value;
+        private Ticks m_timestamp;
         private MeasurementMetadata m_metadata;
+        private MeasurementStateFlags m_stateFlags;
 
         #endregion
 
@@ -101,6 +104,55 @@ namespace GSF.TimeSeries
             set
             {
                 m_metadata = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="MeasurementStateFlags"/> associated with this <see cref="IMeasurement"/>.
+        /// </summary>
+        public MeasurementStateFlags StateFlags
+        {
+            get
+            {
+                return m_stateFlags;
+            }
+            set
+            {
+                m_stateFlags = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the raw measurement value that is not offset by <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/>.
+        /// </summary>
+        /// <returns>Raw value of this <see cref="Measurement"/> (i.e., value that is not offset by <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/>).</returns>
+        public double Value
+        {
+            get
+            {
+                return m_value;
+            }
+            set
+            {
+                m_value = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="Measurement"/>.
+        /// </summary>
+        /// <remarks>
+        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
+        public Ticks Timestamp
+        {
+            get
+            {
+                return m_timestamp;
+            }
+            set
+            {
+                m_timestamp = value;
             }
         }
 

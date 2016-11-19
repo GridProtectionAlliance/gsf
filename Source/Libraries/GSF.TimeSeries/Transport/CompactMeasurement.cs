@@ -179,11 +179,11 @@ namespace GSF.TimeSeries.Transport
 
         // Members
         private readonly SignalIndexCache m_signalIndexCache;
-        private readonly bool m_includeTime;
         private readonly long[] m_baseTimeOffsets;
         private int m_timeIndex;
         private readonly bool m_useMillisecondResolution;
         private bool m_usingBaseTimeOffset;
+        private readonly bool m_includeTime;
 
         #endregion
 

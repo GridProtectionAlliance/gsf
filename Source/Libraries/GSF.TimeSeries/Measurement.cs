@@ -41,9 +41,6 @@ namespace GSF.TimeSeries
         #region [ Members ]
 
         // Fields
-        private MeasurementStateFlags m_stateFlags;
-        private double m_value;
-        private Ticks m_timestamp;
         private Ticks m_receivedTimestamp;
         private Ticks m_publishedTimestamp;
 
@@ -64,66 +61,17 @@ namespace GSF.TimeSeries
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets <see cref="MeasurementStateFlags"/> associated with this <see cref="Measurement"/>.
-        /// </summary>
-        public MeasurementStateFlags StateFlags
-        {
-            get
-            {
-                return m_stateFlags;
-            }
-            set
-            {
-                m_stateFlags = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the raw measurement value that is not offset by <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/>.
-        /// </summary>
-        /// <returns>Raw value of this <see cref="Measurement"/> (i.e., value that is not offset by <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/>).</returns>
-        public double Value
-        {
-            get
-            {
-                return m_value;
-            }
-            set
-            {
-                m_value = value;
-            }
-        }
-
-        /// <summary>
         /// Gets the adjusted numeric value of this measurement, taking into account the specified <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/> offsets.
         /// </summary>
         /// <remarks>
         /// Note that returned value will be offset by <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/>.
         /// </remarks>
-        /// <returns><see cref="Value"/> offset by <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/> (i.e., <c><see cref="Value"/> * <see cref="MeasurementBase.Multiplier"/> + <see cref="MeasurementBase.Adder"/></c>).</returns>
+        /// <returns><see cref="MeasurementBase.Value"/> offset by <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/> (i.e., <c><see cref="MeasurementBase.Value"/> * <see cref="MeasurementBase.Multiplier"/> + <see cref="MeasurementBase.Adder"/></c>).</returns>
         public double AdjustedValue
         {
             get
             {
-                return m_value * Multiplier + Adder;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="Measurement"/>.
-        /// </summary>
-        /// <remarks>
-        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
-        /// </remarks>
-        public Ticks Timestamp
-        {
-            get
-            {
-                return m_timestamp;
-            }
-            set
-            {
-                m_timestamp = value;
+                return Value * Multiplier + Adder;
             }
         }
 
@@ -169,41 +117,41 @@ namespace GSF.TimeSeries
         {
             get
             {
-                return m_value;
+                return Value;
             }
             set
             {
                 switch (value.TypeCode)
                 {
                     case TypeCode.Byte:
-                        m_value = (byte)value;
+                        Value = (byte)value;
                         break;
                     case TypeCode.SByte:
-                        m_value = (sbyte)value;
+                        Value = (sbyte)value;
                         break;
                     case TypeCode.Int16:
-                        m_value = (short)value;
+                        Value = (short)value;
                         break;
                     case TypeCode.UInt16:
-                        m_value = (ushort)value;
+                        Value = (ushort)value;
                         break;
                     case TypeCode.Int32:
-                        m_value = (int)value;
+                        Value = (int)value;
                         break;
                     case TypeCode.UInt32:
-                        m_value = (uint)value;
+                        Value = (uint)value;
                         break;
                     case TypeCode.Int64:
-                        m_value = (long)value;
+                        Value = (long)value;
                         break;
                     case TypeCode.UInt64:
-                        m_value = (ulong)value;
+                        Value = (ulong)value;
                         break;
                     case TypeCode.Single:
-                        m_value = (float)value;
+                        Value = (float)value;
                         break;
                     case TypeCode.Double:
-                        m_value = (double)value;
+                        Value = (double)value;
                         break;
                     //case TypeCode.Boolean:
                     //    break;
@@ -217,7 +165,7 @@ namespace GSF.TimeSeries
                     //    m_value = double.Parse(value);
                     //    break;
                     default:
-                        m_value = value;
+                        Value = value;
                         break;
                 }
             }

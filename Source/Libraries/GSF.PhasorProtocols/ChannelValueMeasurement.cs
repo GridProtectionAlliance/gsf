@@ -46,13 +46,9 @@ namespace GSF.PhasorProtocols
         #region [ Members ]
 
         // Fields
-        private IChannelValue<T> m_parent;
-        private MeasurementStateFlags m_stateFlags;
-        private bool m_stateFlagsAssigned;
-        private Ticks m_timestamp;
         private Ticks m_receivedTimestamp;
         private Ticks m_publishedTimestamp;
-        private int m_valueIndex;
+        private bool m_adjustAngleValue;
 
         #endregion
 
@@ -65,54 +61,17 @@ namespace GSF.PhasorProtocols
         /// <param name="valueIndex">The index into the <see cref="IChannelValue{T}.GetCompositeValue"/> that this measurement derives its value from.</param>
         public ChannelValueMeasurement(IChannelValue<T> parent, int valueIndex)
         {
-
-            m_parent = parent;
-            m_valueIndex = valueIndex;
-            m_timestamp = -1;
             m_receivedTimestamp = DateTime.UtcNow.Ticks;
-            Metadata = Metadata.ChangeMeasurementValueFilter(m_parent.GetMeasurementValueFilterFunction(m_valueIndex));
+            Metadata = Metadata.ChangeMeasurementValueFilter(parent.GetMeasurementValueFilterFunction(valueIndex));
+            Timestamp = parent.Parent.Parent.Timestamp;
+            Value = parent.GetCompositeValue(valueIndex);
+            m_adjustAngleValue = parent is PhasorValueBase && valueIndex == (int)CompositePhasorValue.Angle;
+            StateFlags = (parent.Parent.SynchronizationIsValid && Timestamp.Value != -1 ? MeasurementStateFlags.Normal : MeasurementStateFlags.BadTime) | (parent.Parent.DataIsValid ? MeasurementStateFlags.Normal : MeasurementStateFlags.BadData);
         }
 
         #endregion
 
         #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets reference to the <see cref="IChannelValue{T}"/> that this measurement derives its values from.
-        /// </summary>
-        public IChannelValue<T> Parent
-        {
-            get
-            {
-                return m_parent;
-            }
-            set
-            {
-                m_parent = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="ChannelValueMeasurement{T}"/>.
-        /// </summary>
-        /// <remarks>
-        /// This value returns timestamp of parent data frame unless assigned an alternate value.<br/>
-        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
-        /// </remarks>
-        public Ticks Timestamp
-        {
-            get
-            {
-                if (m_timestamp == -1)
-                    m_timestamp = m_parent.Parent.Parent.Timestamp;
-
-                return m_timestamp;
-            }
-            set
-            {
-                m_timestamp = value;
-            }
-        }
 
         /// <summary>
         /// Gets or sets exact timestamp, in ticks, of when this <see cref="ChannelValueMeasurement{T}"/> was received (i.e., created).
@@ -152,73 +111,25 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets index into the <see cref="IChannelValue{T}.GetCompositeValue"/> that this measurement derives its value from.
-        /// </summary>
-        public int ValueIndex
-        {
-            get
-            {
-                return m_valueIndex;
-            }
-            set
-            {
-                m_valueIndex = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the raw measurement value that is not offset by <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/>.
-        /// </summary>
-        /// <returns>Raw value of this <see cref="ChannelValueMeasurement{T}"/> (i.e., value that is not offset by <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/>).</returns>
-        public double Value
-        {
-            get
-            {
-                return m_parent.GetCompositeValue(m_valueIndex);
-            }
-            set
-            {
-                throw new NotImplementedException("Cannot update derived phasor measurement, composite values are read-only");
-            }
-        }
-
-        /// <summary>
         /// Gets the adjusted numeric value of this measurement, taking into account the specified <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/> offsets.
         /// </summary>
         /// <remarks>
         /// Note that returned value will be offset by <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/>.
         /// </remarks>
-        /// <returns><see cref="Value"/> offset by <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/> (i.e., <c><see cref="Value"/> * <see cref="MeasurementBase.Multiplier"/> + <see cref="MeasurementBase.Adder"/></c>).</returns>
+        /// <returns><see cref="MeasurementBase.Value"/> offset by <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/> (i.e., <c><see cref="MeasurementBase.Value"/> * <see cref="MeasurementBase.Multiplier"/> + <see cref="MeasurementBase.Adder"/></c>).</returns>
         public double AdjustedValue
         {
             get
             {
-                double adjustedValue = m_parent.GetCompositeValue(m_valueIndex) * Multiplier + Adder;
+                double adjustedValue = Value * Multiplier + Adder;
 
                 // Convert phase angles to the -180 degrees to 180 degrees range
-                if (m_parent is PhasorValueBase && m_valueIndex == (int)CompositePhasorValue.Angle)
+                if (m_adjustAngleValue && (adjustedValue <= -180 || adjustedValue > 180))
+                {
                     adjustedValue = Angle.FromDegrees(adjustedValue).ToRange(-Math.PI, false).ToDegrees();
+                }
 
                 return adjustedValue;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets <see cref="MeasurementStateFlags"/> associated with this <see cref="ChannelValueMeasurement{T}"/>.
-        /// </summary>
-        public MeasurementStateFlags StateFlags
-        {
-            get
-            {
-                if (m_stateFlagsAssigned)
-                    return m_stateFlags;
-
-                return (m_parent.Parent.SynchronizationIsValid && Timestamp != -1 ? MeasurementStateFlags.Normal : MeasurementStateFlags.BadTime) | (m_parent.Parent.DataIsValid ? MeasurementStateFlags.Normal : MeasurementStateFlags.BadData);
-            }
-            set
-            {
-                m_stateFlags = value;
-                m_stateFlagsAssigned = true;
             }
         }
 
