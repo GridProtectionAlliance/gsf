@@ -79,6 +79,11 @@ namespace GSF
         public static int RoutingLatency { get; private set; } = 50;
 
         /// <summary>
+        /// Specifies the target number of measurements per batch operation.
+        /// </summary>
+        public static int RoutingBatchSize { get; private set; } = 200;
+
+        /// <summary>
         /// Specifies that threadpool monitoring will be enabled.
         /// </summary>
         public static bool EnableThreadPoolMonitoring { get; private set; } = false;
@@ -199,10 +204,36 @@ namespace GSF
                         latency = 10;
                     }
 
-                    Log.Publish(MessageLevel.Info, "Routing Table", "Using RouteMappingHighLatencyLowCpu.", "Latency: " + latency.ToString());
+                    int countPerBatch = -1;
+
+                    if (optimizations.ContainsKey("RoutingBatchSize"))
+                    {
+                        string countPerBatchString = optimizations["RoutingBatchSize"];
+                        if (int.TryParse(countPerBatchString, out countPerBatch))
+                        {
+                            if (countPerBatch < 20 || countPerBatch > 10000)
+                            {
+                                Log.Publish(MessageLevel.Info, "Routing Table", "Invalid RoutingBatchSize. Defaulting to 200. (Range: 20 to 10000)", "Value: " + countPerBatch);
+                                countPerBatch = 200;
+                            }
+                        }
+                        else
+                        {
+                            Log.Publish(MessageLevel.Info, "Routing Table", "Could not parse RoutingBatchSize. Defaulting to 200.", "Value: " + RoutingBatchSize);
+                            countPerBatch = 200;
+                        }
+                    }
+                    else
+                    {
+                        countPerBatch = 200;
+                    }
+
+
+                    Log.Publish(MessageLevel.Info, "Routing Table", "Using RouteMappingHighLatencyLowCpu.", "Latency: " + latency.ToString() + " Batch Size: " + countPerBatch);
 
                     DefaultRoutingMethod = RoutingMethod.HighLatencyLowCpu;
                     RoutingLatency = latency;
+                    RoutingBatchSize = countPerBatch;
                 }
                 else if (method.Equals("Default", StringComparison.CurrentCultureIgnoreCase))
                 {

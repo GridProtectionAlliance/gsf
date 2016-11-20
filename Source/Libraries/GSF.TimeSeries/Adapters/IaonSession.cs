@@ -159,7 +159,7 @@ namespace GSF.TimeSeries.Adapters
             switch (OptimizationOptions.DefaultRoutingMethod)
             {
                 case OptimizationOptions.RoutingMethod.HighLatencyLowCpu:
-                    m_routingTables = new RoutingTables(new RouteMappingHighLatencyLowCpu(OptimizationOptions.RoutingLatency));
+                    m_routingTables = new RoutingTables(new RouteMappingHighLatencyLowCpu());
                     break;
                 default:
                     m_routingTables = new RoutingTables();

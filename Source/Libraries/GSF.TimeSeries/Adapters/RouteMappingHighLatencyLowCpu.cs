@@ -217,6 +217,7 @@ namespace GSF.TimeSeries.Adapters
         private long m_measurementsRoutedOutput;
         private long m_routeOperations;
         private int m_routeLatency;
+        private int m_batchSize;
 
         private GlobalCache m_globalCache;
         private Action<string> m_onStatusMessage;
@@ -233,14 +234,11 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Creates a <see cref="RouteMappingHighLatencyLowCpu"/>
         /// </summary>
-        /// <param name="routeLatency">The desired wait latency. Must be between 1 and 500ms inclusive</param>
-        public RouteMappingHighLatencyLowCpu(int routeLatency)
+        public RouteMappingHighLatencyLowCpu()
         {
-            if (routeLatency < 1 || routeLatency > 500)
-                throw new ArgumentOutOfRangeException(nameof(routeLatency), "Must be between 1 and 500ms");
-
             m_maxPendingMeasurements = 1000;
-            m_routeLatency = routeLatency;
+            m_routeLatency = OptimizationOptions.RoutingLatency;
+            m_batchSize = OptimizationOptions.RoutingBatchSize;
             m_list = new IsolatedQueue<IMeasurement[]>[8];
             for (int x = 0; x < m_list.Length; x++)
             {
@@ -404,13 +402,12 @@ namespace GSF.TimeSeries.Adapters
                             }
                         }
 
-                        //Limit routing to between 100 and 200 measurements per sub-route.
-                        if (measurementsRouted > 100)
+                        if (measurementsRouted > m_batchSize)
                         {
                             measurementsRouted = 0;
                             foreach (var consumer in map.GlobalDestinationList)
                             {
-                                if (!consumer.UsesOptimizedRouting && consumer.MeasurementsToRoute.Count > 100)
+                                if (!consumer.UsesOptimizedRouting && consumer.MeasurementsToRoute.Count > m_batchSize)
                                 {
                                     foreach (var c2 in map.GlobalDestinationLookup.Values)
                                     {
