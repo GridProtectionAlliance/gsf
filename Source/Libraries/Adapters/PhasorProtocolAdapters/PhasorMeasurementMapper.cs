@@ -186,7 +186,7 @@ namespace PhasorProtocolAdapters
         private long m_lifetimeMinimumLatency;
         private long m_lifetimeMaximumLatency;
         private long m_lifetimeLatencyFrames;
-        private string m_qualityFlagsSignalReferenceName;
+        private MeasurementMetadata m_qualityFlagsMetadata;
         private int m_lastMeasurementMappedCount = 4;
         private bool m_disposed;
 
@@ -965,10 +965,7 @@ namespace PhasorProtocolAdapters
 
             Dictionary<string, string> settings = Settings;
             string setting;
-
-            // Cache signal reference name for connected device quality flags - in normal usage, name will not change for adapter lifetime
-            m_qualityFlagsSignalReferenceName = SignalReference.ToString(Name, SignalKind.Quality);
-
+            
             // Load optional mapper specific connection parameters
             if (settings.TryGetValue("isConcentrator", out setting))
                 m_isConcentrator = setting.ParseBoolean();
@@ -1364,6 +1361,9 @@ namespace PhasorProtocolAdapters
             }
 
             m_definedMeasurements = definedMeasurements;
+            
+            // Cache signal reference name for connected device quality flags - in normal usage, name will not change for adapter lifetime
+            definedMeasurements.TryGetValue(SignalReference.ToString(Name, SignalKind.Quality), out m_qualityFlagsMetadata);
 
             // Update output measurements that input adapter can provide such that it can participate in connect on demand
             if (definedMeasurements.Count > 0)
@@ -1702,30 +1702,49 @@ namespace PhasorProtocolAdapters
                 m_measurementCounter.Stop();
         }
 
+        //ToDo: Remove this code or deprecate it as it is no longer used.
+        ///// <summary>
+        ///// Map parsed measurement value to defined measurement attributes (i.e., assign meta-data to parsed measured value).
+        ///// </summary>
+        ///// <param name="mappedMeasurements">Destination collection for the mapped measurement values.</param>
+        ///// <param name="signalReference">Derived <see cref="SignalReference"/> string for the parsed measurement value.</param>
+        ///// <param name="parsedMeasurement">The parsed <see cref="IMeasurement"/> value.</param>
+        ///// <remarks>
+        ///// This procedure is used to identify a parsed measurement value by its derived signal reference and apply the
+        ///// additional needed measurement meta-data attributes (i.e., ID, Source, Adder and Multiplier).
+        ///// </remarks>
+        //protected void MapMeasurementAttributes(List<IMeasurement> mappedMeasurements, string signalReference, IMeasurement parsedMeasurement)
+        //{
+        //    // Coming into this function the parsed measurement value will only have a "value" and a "timestamp";
+        //    // the measurement will not yet be associated with an actual historian measurement ID as the measurement
+        //    // will have come directly out of the parsed phasor protocol data frame.  We take the generated signal
+        //    // reference and use that to lookup the actual historian measurement ID, source, adder and multiplier.
+        //    MeasurementMetadata definedMeasurement;
+
+        //    // Lookup signal reference in defined measurement list
+        //    if (m_definedMeasurements.TryGetValue(signalReference, out definedMeasurement))
+        //    {
+        //        // Assign ID and other relevant attributes to the parsed measurement value
+        //        parsedMeasurement.Metadata = definedMeasurement;
+
+        //        // Add the updated measurement value to the destination measurement collection
+        //        mappedMeasurements.Add(parsedMeasurement);
+        //    }
+        //}
+
         /// <summary>
         /// Map parsed measurement value to defined measurement attributes (i.e., assign meta-data to parsed measured value).
         /// </summary>
         /// <param name="mappedMeasurements">Destination collection for the mapped measurement values.</param>
-        /// <param name="signalReference">Derived <see cref="SignalReference"/> string for the parsed measurement value.</param>
+        /// <param name="metadata">The metadata to assign</param>
         /// <param name="parsedMeasurement">The parsed <see cref="IMeasurement"/> value.</param>
-        /// <remarks>
-        /// This procedure is used to identify a parsed measurement value by its derived signal reference and apply the
-        /// additional needed measurement meta-data attributes (i.e., ID, Source, Adder and Multiplier).
-        /// </remarks>
-        protected void MapMeasurementAttributes(List<IMeasurement> mappedMeasurements, string signalReference, IMeasurement parsedMeasurement)
+        protected void MapMeasurementAttributes(List<IMeasurement> mappedMeasurements, MeasurementMetadata metadata, IMeasurement parsedMeasurement)
         {
-            // Coming into this function the parsed measurement value will only have a "value" and a "timestamp";
-            // the measurement will not yet be associated with an actual historian measurement ID as the measurement
-            // will have come directly out of the parsed phasor protocol data frame.  We take the generated signal
-            // reference and use that to lookup the actual historian measurement ID, source, adder and multiplier.
-            MeasurementMetadata definedMeasurement;
-
-            // Lookup signal reference in defined measurement list
-            if (m_definedMeasurements.TryGetValue(signalReference, out definedMeasurement))
+            if (metadata != null)
             {
                 // Assign ID and other relevant attributes to the parsed measurement value
-                parsedMeasurement.Metadata = definedMeasurement;
-
+                parsedMeasurement.Metadata = metadata;
+               
                 // Add the updated measurement value to the destination measurement collection
                 mappedMeasurements.Add(parsedMeasurement);
             }
@@ -1797,7 +1816,7 @@ namespace PhasorProtocolAdapters
             }
 
             // Map quality flags (QF) from device frame, if any
-            MapMeasurementAttributes(mappedMeasurements, m_qualityFlagsSignalReferenceName, frame.GetQualityFlagsMeasurement());
+            MapMeasurementAttributes(mappedMeasurements, m_qualityFlagsMetadata, frame.GetQualityFlagsMeasurement());
 
             // Loop through each parsed device in the data frame
             foreach (IDataCell parsedDevice in frame.Cells)
@@ -1828,7 +1847,7 @@ namespace PhasorProtocolAdapters
                             definedDevice.DeviceErrors++;
 
                         // Map status flags (SF) from device data cell itself
-                        MapMeasurementAttributes(mappedMeasurements, definedDevice.GetSignalReference(SignalKind.Status), parsedDevice.GetStatusFlagsMeasurement());
+                        MapMeasurementAttributes(mappedMeasurements, definedDevice.GetMetadata(m_definedMeasurements, SignalKind.Status), parsedDevice.GetStatusFlagsMeasurement());
 
                         // Map phase angles (PAn) and magnitudes (PMn)
                         phasors = parsedDevice.PhasorValues;
@@ -1840,20 +1859,20 @@ namespace PhasorProtocolAdapters
                             measurements = phasors[x].Measurements;
 
                             // Map angle
-                            MapMeasurementAttributes(deviceMappedMeasurements, definedDevice.GetSignalReference(SignalKind.Angle, x, count), measurements[AngleIndex]);
+                            MapMeasurementAttributes(deviceMappedMeasurements, definedDevice.GetMetadata(m_definedMeasurements, SignalKind.Angle, x, count), measurements[AngleIndex]);
 
                             // Map magnitude
-                            MapMeasurementAttributes(deviceMappedMeasurements, definedDevice.GetSignalReference(SignalKind.Magnitude, x, count), measurements[MagnitudeIndex]);
+                            MapMeasurementAttributes(deviceMappedMeasurements, definedDevice.GetMetadata(m_definedMeasurements, SignalKind.Magnitude, x, count), measurements[MagnitudeIndex]);
                         }
 
                         // Map frequency (FQ) and dF/dt (DF)
                         measurements = parsedDevice.FrequencyValue.Measurements;
 
                         // Map frequency
-                        MapMeasurementAttributes(deviceMappedMeasurements, definedDevice.GetSignalReference(SignalKind.Frequency), measurements[FrequencyIndex]);
+                        MapMeasurementAttributes(deviceMappedMeasurements, definedDevice.GetMetadata(m_definedMeasurements, SignalKind.Frequency), measurements[FrequencyIndex]);
 
                         // Map dF/dt
-                        MapMeasurementAttributes(deviceMappedMeasurements, definedDevice.GetSignalReference(SignalKind.DfDt), measurements[DfDtIndex]);
+                        MapMeasurementAttributes(deviceMappedMeasurements, definedDevice.GetMetadata(m_definedMeasurements, SignalKind.DfDt), measurements[DfDtIndex]);
 
                         // Map analog values (AVn)
                         analogs = parsedDevice.AnalogValues;
@@ -1862,7 +1881,7 @@ namespace PhasorProtocolAdapters
                         for (x = 0; x < count; x++)
                         {
                             // Map analog value
-                            MapMeasurementAttributes(deviceMappedMeasurements, definedDevice.GetSignalReference(SignalKind.Analog, x, count), analogs[x].Measurements[0]);
+                            MapMeasurementAttributes(deviceMappedMeasurements, definedDevice.GetMetadata(m_definedMeasurements, SignalKind.Analog, x, count), analogs[x].Measurements[0]);
                         }
 
                         // Map digital values (DVn)
@@ -1872,7 +1891,7 @@ namespace PhasorProtocolAdapters
                         for (x = 0; x < count; x++)
                         {
                             // Map digital value
-                            MapMeasurementAttributes(deviceMappedMeasurements, definedDevice.GetSignalReference(SignalKind.Digital, x, count), digitals[x].Measurements[0]);
+                            MapMeasurementAttributes(deviceMappedMeasurements, definedDevice.GetMetadata(m_definedMeasurements, SignalKind.Digital, x, count), digitals[x].Measurements[0]);
                         }
 
                         // Track measurement count statistics for this device
