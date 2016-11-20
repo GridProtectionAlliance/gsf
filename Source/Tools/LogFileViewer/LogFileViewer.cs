@@ -126,7 +126,7 @@ namespace LogFileViewer
                     dlg.RestoreDirectory = true;
                 }
 
-                dlg.Filter = "Log File (Compressed)|*.Logz";
+                dlg.Filter = "Log Files (*.logz)|*.logz|All Files (*.*)|*.*";
                 dlg.Multiselect = true;
 
                 if (dlg.ShowDialog() == DialogResult.OK)
