@@ -57,7 +57,7 @@ namespace GSF.TimeSeries.Transport
         // Since measurement keys are statically cached as a global system optimization and the keys
         // can be different between two parties exchanging data, the raw measurement key elements are
         // cached and exchanged instead of actual measurement key values
-        private ConcurrentDictionary<ushort, Tuple<Guid, string, uint>> m_reference;
+        private ConcurrentDictionary<ushort, MeasurementKey> m_reference;
         private Guid[] m_unauthorizedSignalIDs;
 
         [NonSerialized] // SignalID reverse lookup runtime cache (used to speed deserialization)
@@ -75,7 +75,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public SignalIndexCache()
         {
-            m_reference = new ConcurrentDictionary<ushort, Tuple<Guid, string, uint>>();
+            m_reference = new ConcurrentDictionary<ushort, MeasurementKey>();
             m_signalIDCache = new Dictionary<Guid, ushort>();
         }
 
@@ -92,18 +92,18 @@ namespace GSF.TimeSeries.Transport
             if (dataSource != null && dataSource.Tables.Contains("ActiveMeasurements"))
             {
                 DataTable activeMeasurements = dataSource.Tables["ActiveMeasurements"];
-                m_reference = new ConcurrentDictionary<ushort, Tuple<Guid, string, uint>>();
+                m_reference = new ConcurrentDictionary<ushort, MeasurementKey>();
 
-                foreach (KeyValuePair<ushort, Tuple<Guid, string, uint>> signalIndex in remoteCache.Reference)
+                foreach (KeyValuePair<ushort, MeasurementKey> signalIndex in remoteCache.Reference)
                 {
-                    Guid signalID = signalIndex.Value.Item1;
+                    Guid signalID = signalIndex.Value.SignalID;
                     DataRow[] filteredRows = activeMeasurements.Select("SignalID = '" + signalID.ToString() + "'");
 
                     if (filteredRows.Length > 0)
                     {
                         DataRow row = filteredRows[0];
                         MeasurementKey key = MeasurementKey.LookUpOrCreate(signalID, row["ID"].ToNonNullString(MeasurementKey.Undefined.ToString()));
-                        m_reference.TryAdd(signalIndex.Key, new Tuple<Guid, string, uint>(signalID, key.Source, key.ID));
+                        m_reference.TryAdd(signalIndex.Key, key);
                     }
                 }
 
@@ -139,7 +139,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets or sets integer signal index cross reference dictionary.
         /// </summary>
-        public ConcurrentDictionary<ushort, Tuple<Guid, string, uint>> Reference
+        public ConcurrentDictionary<ushort, MeasurementKey> Reference
         {
             get
             {
@@ -147,7 +147,7 @@ namespace GSF.TimeSeries.Transport
             }
             set
             {
-                Dictionary<Guid, ushort> signalIDCache = value.ToDictionary(pair => pair.Value.Item1, pair => pair.Key);
+                Dictionary<Guid, ushort> signalIDCache = value.ToDictionary(pair => pair.Value.SignalID, pair => pair.Key);
 
                 m_reference = value;
                 m_signalIDCache = signalIDCache;
@@ -161,7 +161,7 @@ namespace GSF.TimeSeries.Transport
         {
             get
             {
-                return m_reference.Select(kvp => kvp.Value.Item1).ToArray();
+                return m_reference.Select(kvp => kvp.Value.SignalID).ToArray();
             }
         }
 
@@ -231,7 +231,7 @@ namespace GSF.TimeSeries.Transport
                 binaryLength += 4;
 
                 // Each reference
-                binaryLength += m_reference.Sum(kvp => 2 + 16 + 4 + m_encoding.GetByteCount(kvp.Value.Item2) + 4);
+                binaryLength += m_reference.Sum(kvp => 2 + 16 + 4 + m_encoding.GetByteCount(kvp.Value.Source) + 4);
 
                 // Number of unauthorized IDs
                 binaryLength += 4;
@@ -297,7 +297,7 @@ namespace GSF.TimeSeries.Transport
             Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
             offset += bigEndianBuffer.Length;
 
-            foreach (KeyValuePair<ushort, Tuple<Guid, string, uint>> kvp in m_reference)
+            foreach (KeyValuePair<ushort, MeasurementKey> kvp in m_reference)
             {
                 // Signal index
                 bigEndianBuffer = BigEndian.GetBytes(kvp.Key);
@@ -305,12 +305,12 @@ namespace GSF.TimeSeries.Transport
                 offset += bigEndianBuffer.Length;
 
                 // Signal ID
-                bigEndianBuffer = EndianOrder.BigEndian.GetBytes(kvp.Value.Item1);
+                bigEndianBuffer = EndianOrder.BigEndian.GetBytes(kvp.Value.SignalID);
                 Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
                 offset += bigEndianBuffer.Length;
 
                 // Source
-                unicodeBuffer = m_encoding.GetBytes(kvp.Value.Item2);
+                unicodeBuffer = m_encoding.GetBytes(kvp.Value.Source);
                 bigEndianBuffer = BigEndian.GetBytes(unicodeBuffer.Length);
                 Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
                 offset += bigEndianBuffer.Length;
@@ -318,7 +318,7 @@ namespace GSF.TimeSeries.Transport
                 offset += unicodeBuffer.Length;
 
                 // ID
-                bigEndianBuffer = BigEndian.GetBytes(kvp.Value.Item3);
+                bigEndianBuffer = BigEndian.GetBytes(kvp.Value.ID);
                 Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
                 offset += bigEndianBuffer.Length;
             }
@@ -406,7 +406,7 @@ namespace GSF.TimeSeries.Transport
                 id = BigEndian.ToUInt32(buffer, offset);
                 offset += 4;
 
-                m_reference[signalIndex] = new Tuple<Guid, string, uint>(signalID, source, id);
+                m_reference[signalIndex] = MeasurementKey.LookUpOrCreate(signalID, source, id);
             }
 
             // Number of unauthorized IDs

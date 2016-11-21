@@ -2057,7 +2057,7 @@ namespace GSF.TimeSeries.Transport
         /// <param name="inputMeasurementKeys">Subscribed measurement keys.</param>
         public void UpdateSignalIndexCache(Guid clientID, SignalIndexCache signalIndexCache, MeasurementKey[] inputMeasurementKeys)
         {
-            ConcurrentDictionary<ushort, Tuple<Guid, string, uint>> reference = new ConcurrentDictionary<ushort, Tuple<Guid, string, uint>>();
+            ConcurrentDictionary<ushort, MeasurementKey> reference = new ConcurrentDictionary<ushort, MeasurementKey>();
             List<Guid> unauthorizedKeys = new List<Guid>();
             ushort index = 0;
             Guid signalID;
@@ -2082,7 +2082,7 @@ namespace GSF.TimeSeries.Transport
 
                     // Validate that subscriber has rights to this signal
                     if (signalID != Guid.Empty && hasRightsFunc(signalID))
-                        reference.TryAdd(index++, new Tuple<Guid, string, uint>(signalID, key.Source, key.ID));
+                        reference.TryAdd(index++, key);
                     else
                         unauthorizedKeys.Add(key.SignalID);
                 }

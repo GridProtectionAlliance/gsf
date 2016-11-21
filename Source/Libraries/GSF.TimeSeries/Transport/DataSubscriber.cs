@@ -2890,7 +2890,7 @@ namespace GSF.TimeSeries.Transport
                                             while (!eos)
                                             {
                                                 Measurement measurement;
-                                                Tuple<Guid, string, uint> tuple;
+                                                MeasurementKey key;
                                                 ushort id;
                                                 long time;
                                                 uint quality;
@@ -2909,10 +2909,10 @@ namespace GSF.TimeSeries.Transport
                                                         break;
                                                     case DecompressionExitCode.MeasurementRead:
                                                         // Attempt to restore signal identification
-                                                        if (m_signalIndexCache.Reference.TryGetValue(id, out tuple))
+                                                        if (m_signalIndexCache.Reference.TryGetValue(id, out key))
                                                         {
                                                             measurement = new Measurement();
-                                                            measurement.Metadata = MeasurementKey.LookUpOrCreate(tuple.Item1, tuple.Item2, tuple.Item3).Metadata;
+                                                            measurement.Metadata = key.Metadata;
                                                             measurement.Timestamp = time;
                                                             measurement.StateFlags = (MeasurementStateFlags)quality;
                                                             measurement.Value = value;
@@ -3086,7 +3086,7 @@ namespace GSF.TimeSeries.Transport
                             uint sequenceNumber = BigEndian.ToUInt32(buffer, responseIndex);
                             int cacheIndex = (int)(sequenceNumber - m_expectedBufferBlockSequenceNumber);
                             BufferBlockMeasurement bufferBlockMeasurement;
-                            Tuple<Guid, string, uint> measurementKey;
+                            MeasurementKey measurementKey;
                             ushort signalIndex;
 
                             // Check if this buffer block has already been processed (e.g., mistaken retransmission due to timeout)
@@ -3104,7 +3104,7 @@ namespace GSF.TimeSeries.Transport
                                 // Skip the sequence number and signal index when creating the buffer block measurement
                                 bufferBlockMeasurement = new BufferBlockMeasurement(buffer, responseIndex + 6, responseLength - 6)
                                 {
-                                    Metadata = MeasurementKey.LookUpOrCreate(measurementKey.Item1, measurementKey.Item2, measurementKey.Item3).Metadata
+                                    Metadata = measurementKey.Metadata
                                 };
 
                                 // Determine if this is the next buffer block in the sequence

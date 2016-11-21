@@ -366,11 +366,11 @@ namespace GSF.TimeSeries.Transport
             set
             {
                 // Attempt to restore signal identification
-                Tuple<Guid, string, uint> tuple;
+                MeasurementKey key;
 
-                if (m_signalIndexCache.Reference.TryGetValue(value, out tuple))
+                if (m_signalIndexCache.Reference.TryGetValue(value, out key))
                 {
-                    Metadata = MeasurementKey.LookUpOrCreate(tuple.Item1, tuple.Item2, tuple.Item3).Metadata;
+                    Metadata = key.Metadata;
                 }
                 else
                     throw new InvalidOperationException("Failed to find associated signal identification for runtime ID " + value);
