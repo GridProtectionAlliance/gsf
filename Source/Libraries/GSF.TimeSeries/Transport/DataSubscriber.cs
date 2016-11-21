@@ -974,6 +974,12 @@ namespace GSF.TimeSeries.Transport
         public int Version => (int)(m_operationalModes & OperationalModes.VersionMask);
 
         /// <summary>
+        /// Gets the character encoding defined by the
+        /// <see cref="OperationalEncoding"/> of the communications stream.
+        /// </summary>
+        public Encoding Encoding => m_encoding;
+
+        /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
         /// <remarks>
