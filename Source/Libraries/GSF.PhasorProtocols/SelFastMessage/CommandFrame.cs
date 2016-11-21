@@ -69,7 +69,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
             : base(new CommandCellCollection(0), PhasorProtocols.DeviceCommand.ReservedBits)
         {
             if (length < 16)
-                throw new ArgumentOutOfRangeException("length");
+                throw new ArgumentOutOfRangeException(nameof(length));
 
             // Validate check-sum
             if (!ChecksumIsValid(buffer, startIndex))
@@ -103,7 +103,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
             : base(new CommandCellCollection(0), command)
         {
             if (command != PhasorProtocols.DeviceCommand.EnableRealTimeData && command != PhasorProtocols.DeviceCommand.DisableRealTimeData)
-                throw new ArgumentException("SEL Fast Message does not support " + command + " device command.", "command");
+                throw new ArgumentException("SEL Fast Message does not support " + command + " device command.", nameof(command));
 
             m_messagePeriod = messagePeriod;
         }

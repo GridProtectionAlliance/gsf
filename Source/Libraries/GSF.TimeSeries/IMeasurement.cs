@@ -100,7 +100,7 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Defines calculated value state.
         /// </summary>
-        CalcuatedValue = (uint)Bits.Bit12,
+        CalculatedValue = (uint)Bits.Bit12,
         /// <summary>
         /// Defines calculation error with the value.
         /// </summary>
@@ -259,35 +259,26 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of when this <see cref="IMeasurement"/> was received (i.e., created).
+        /// Gets the life-span of this <see cref="IMeasurement"/> since its creation.
         /// </summary>
-        /// <remarks>
-        /// <para>Implementers should set this timestamp to be the ticks of <see cref="DateTime.UtcNow"/> of when this class was created.</para>
-        /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
-        /// </remarks>
-        Ticks ReceivedTimestamp
+        ShortTime Lifespan
         {
             get;
-            set;
         }
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of when this <see cref="IMeasurement"/> was published (post-processing).
+        /// Gets timestamp, in ticks, of when this <see cref="IMeasurement"/> was created.
         /// </summary>
-        /// <remarks>
-        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
-        /// </remarks>
-        Ticks PublishedTimestamp
+        Ticks CreatedTimestamp
         {
             get;
-            set;
         }
 
         /// <summary>
         /// Gets or sets function used to apply a down-sampling filter over a sequence of <see cref="IMeasurement"/> values.
         /// </summary>
         MeasurementValueFilterFunction MeasurementValueFilter
-        {
+        {   
             get;
         }
     }

@@ -244,7 +244,7 @@ namespace GSF.PhasorProtocols
         public virtual void AddRange(IEnumerable<T> collection)
         {
             if (collection == null)
-                throw new ArgumentNullException("collection", "collection is null");
+                throw new ArgumentNullException(nameof(collection), "collection is null");
 
             foreach (T item in collection)
             {

@@ -75,7 +75,7 @@ namespace GSF.PhasorProtocols.IEEE1344
             : base(new CommandCellCollection(0), DeviceCommand.ReservedBits)
         {
             if (length < FrameLength)
-                throw new ArgumentOutOfRangeException("length");
+                throw new ArgumentOutOfRangeException(nameof(length));
 
             // Validate check-sum
             int sumLength = FrameLength - 2;

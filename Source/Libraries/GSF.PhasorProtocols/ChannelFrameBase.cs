@@ -58,8 +58,7 @@ namespace GSF.PhasorProtocols
         private ushort m_idCode;                                                            // Numeric identifier of this frame of data (e.g., ID code of the PDC)
         private readonly IChannelCellCollection<T> m_cells;                                 // Collection of "cells" within this frame of data (e.g., PMU's in the PDC frame)
         private Ticks m_timestamp;                                                          // Time, represented as 100-nanosecond ticks, of this frame of data
-        private Ticks m_receivedTimestamp;                                                  // Time, represented as 100-nanosecond ticks, of frame received (i.e. created)
-        private Ticks m_publishedTimestamp;                                                 // Time, represented as 100-nanosecond ticks, of frame published (post process)
+        private ShortTime m_lifespan;                                                       // Elapsed time since creation of this frame of data
         private int m_parsedBinaryLength;                                                   // Binary length of frame as provided from parsed header
         private SourceChannel m_source;                                                     // Defines source channel (e.g., data or command) for channel frame
         private bool m_trustHeaderLength;                                                   // Determines if parsed header lengths should be trusted (normally true)
@@ -84,7 +83,7 @@ namespace GSF.PhasorProtocols
             m_idCode = idCode;
             m_cells = cells;
             m_timestamp = timestamp;
-            m_receivedTimestamp = DateTime.UtcNow.Ticks;
+            m_lifespan = ShortTime.Now;
             m_trustHeaderLength = true;
             m_validateCheckSum = true;
             m_measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>();
@@ -102,7 +101,7 @@ namespace GSF.PhasorProtocols
             m_idCode = info.GetUInt16("idCode");
             m_cells = (IChannelCellCollection<T>)info.GetValue("cells", typeof(IChannelCellCollection<T>));
             m_timestamp = info.GetInt64("timestamp");
-            m_receivedTimestamp = DateTime.UtcNow.Ticks;
+            m_lifespan = ShortTime.Now;
             m_trustHeaderLength = true;
             m_validateCheckSum = true;
             m_measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>();
@@ -144,33 +143,15 @@ namespace GSF.PhasorProtocols
         /// case, these types of frames should be published immediately so that subsequent frame parsing can have
         /// access to needed critical information. All other frames are assumed to be queued by default.
         /// </remarks>
-        public virtual bool AllowQueuedPublication
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public virtual bool AllowQueuedPublication => true;
 
         /// <summary>
         /// Gets the strongly-typed reference to the collection of cells for this <see cref="ChannelFrameBase{T}"/>.
         /// </summary>
-        public virtual IChannelCellCollection<T> Cells
-        {
-            get
-            {
-                return m_cells;
-            }
-        }
+        public virtual IChannelCellCollection<T> Cells => m_cells;
 
         // Gets the simple object reference to the cell collection to satisfy IChannelFrame.Cells
-        object IChannelFrame.Cells
-        {
-            get
-            {
-                return m_cells;
-            }
-        }
+        object IChannelFrame.Cells => m_cells;
 
         /// <summary>
         /// Keyed measurements in this <see cref="ChannelFrameBase{T}"/>.
@@ -178,13 +159,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// Represents a dictionary of measurements, keyed by <see cref="MeasurementKey"/>.
         /// </remarks>
-        public ConcurrentDictionary<MeasurementKey, IMeasurement> Measurements
-        {
-            get
-            {
-                return m_measurements;
-            }
-        }
+        public ConcurrentDictionary<MeasurementKey, IMeasurement> Measurements => m_measurements;
 
         /// <summary>
         /// Gets or sets the ID code of this <see cref="ChannelFrameBase{T}"/>.
@@ -220,50 +195,14 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of when this <see cref="ChannelFrameBase{T}"/> was received (i.e., created).
+        /// Gets the life-span of this <see cref="ChannelFrameBase{T}"/> since its creation.
         /// </summary>
-        /// <remarks>
-        /// <para>In the default implementation, this timestamp will simply be the ticks of <see cref="DateTime.UtcNow"/> of when this class was created.</para>
-        /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
-        /// </remarks>
-        public virtual Ticks ReceivedTimestamp
-        {
-            get
-            {
-                return m_receivedTimestamp;
-            }
-            set
-            {
-                m_receivedTimestamp = value;
-            }
-        }
+        public virtual ShortTime Lifespan => m_lifespan;
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of when this <see cref="ChannelFrameBase{T}"/> was published (post-processing).
+        /// Gets timestamp, in ticks, of when this <see cref="ChannelFrameBase{T}"/> was created.
         /// </summary>
-        /// <remarks>
-        /// <para>In the default implementation, setting this property will update all associated <see cref="IMeasurement.PublishedTimestamp"/>.</para>
-        /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
-        /// </remarks>
-        public virtual Ticks PublishedTimestamp
-        {
-            get
-            {
-                return m_publishedTimestamp;
-            }
-            set
-            {
-                m_publishedTimestamp = value;
-
-                if (m_measurements != null)
-                {
-                    foreach (IMeasurement measurement in m_measurements.Values)
-                    {
-                        measurement.PublishedTimestamp = m_publishedTimestamp;
-                    }
-                }
-            }
-        }
+        public virtual Ticks CreatedTimestamp => m_lifespan.UtcTime.Ticks;
 
         /// <summary>
         /// Gets UNIX based time representation of the ticks of this <see cref="ChannelFrameBase{T}"/>.
@@ -681,6 +620,7 @@ namespace GSF.PhasorProtocols
         /// <returns>A 32-bit signed integer hash code.</returns>
         public override int GetHashCode()
         {
+            // ReSharper disable once NonReadonlyMemberInGetHashCode
             return m_timestamp.GetHashCode();
         }
 

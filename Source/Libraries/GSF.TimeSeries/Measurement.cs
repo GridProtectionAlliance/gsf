@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using GSF.Collections;
 
@@ -36,13 +37,16 @@ namespace GSF.TimeSeries
     /// Represents a basic measurement implementation.
     /// </summary>
     [Serializable]
-    public class Measurement : MeasurementBase, IMeasurement
+    public class Measurement : IMeasurement
     {
         #region [ Members ]
 
         // Fields
-        private Ticks m_receivedTimestamp;
-        private Ticks m_publishedTimestamp;
+        private double m_value;
+        private Ticks m_timestamp;
+        private ShortTime m_lifespan;
+        private MeasurementMetadata m_metadata;
+        private MeasurementStateFlags m_stateFlags;
 
         #endregion
 
@@ -53,7 +57,8 @@ namespace GSF.TimeSeries
         /// </summary>
         public Measurement()
         {
-            m_receivedTimestamp = DateTime.UtcNow.Ticks;
+            m_metadata = MeasurementMetadata.Undefined;
+            m_lifespan = ShortTime.Now;
         }
 
         #endregion
@@ -61,56 +66,120 @@ namespace GSF.TimeSeries
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the adjusted numeric value of this measurement, taking into account the specified <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/> offsets.
+        /// Gets the <see cref="Guid"/> based signal ID of the <see cref="Measurement"/> implementation.
         /// </summary>
-        /// <remarks>
-        /// Note that returned value will be offset by <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/>.
-        /// </remarks>
-        /// <returns><see cref="MeasurementBase.Value"/> offset by <see cref="MeasurementBase.Adder"/> and <see cref="MeasurementBase.Multiplier"/> (i.e., <c><see cref="MeasurementBase.Value"/> * <see cref="MeasurementBase.Multiplier"/> + <see cref="MeasurementBase.Adder"/></c>).</returns>
-        public double AdjustedValue
-        {
-            get
-            {
-                return Value * Multiplier + Adder;
-            }
-        }
+        public Guid ID => m_metadata.Key.SignalID;
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of when this <see cref="Measurement"/> was received (i.e., created).
+        /// Gets or sets the raw measurement value that is not offset by <see cref="Adder"/> and <see cref="Multiplier"/>.
         /// </summary>
-        /// <remarks>
-        /// <para>In the default implementation, this timestamp will simply be the ticks of <see cref="DateTime.UtcNow"/> of when this class was created.</para>
-        /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
-        /// </remarks>
-        public Ticks ReceivedTimestamp
+        /// <returns>Raw value of this <see cref="Measurement"/> (i.e., value that is not offset by <see cref="Adder"/> and <see cref="Multiplier"/>).</returns>
+        public double Value
         {
             get
             {
-                return m_receivedTimestamp;
+                return m_value;
             }
             set
             {
-                m_receivedTimestamp = value;
+                m_value = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of when this <see cref="Measurement"/> was published (post-processing).
+        /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="Measurement"/>.
         /// </summary>
         /// <remarks>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
         /// </remarks>
-        public Ticks PublishedTimestamp
+        public Ticks Timestamp
         {
             get
             {
-                return m_publishedTimestamp;
+                return m_timestamp;
             }
             set
             {
-                m_publishedTimestamp = value;
+                m_timestamp = value;
             }
         }
+
+        /// <summary>
+        /// Gets or sets associated metadata values for the <see cref="Measurement"/> implementation.
+        /// </summary>
+        public MeasurementMetadata Metadata
+        {
+            get
+            {
+                return m_metadata;
+            }
+            set
+            {
+                m_metadata = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the primary <see cref="MeasurementKey"/> of this <see cref="Measurement"/> implementation.
+        /// </summary>
+        public MeasurementKey Key => m_metadata.Key;
+
+        /// <summary>
+        /// Gets the text based tag name of this <see cref="Measurement"/> implementation.
+        /// </summary>
+        public string TagName => m_metadata.TagName;
+
+        /// <summary>
+        /// Gets an offset to add to the measurement value. This defaults to 0.0.
+        /// </summary>
+        [DefaultValue(0.0)]
+        public double Adder => m_metadata.Adder;
+
+        /// <summary>
+        /// Gets a multiplicative offset to apply to the measurement value. This defaults to 1.0.
+        /// </summary>
+        [DefaultValue(1.0)]
+        public double Multiplier => m_metadata.Multiplier;
+
+        /// <summary>
+        /// Gets the adjusted numeric value of this measurement, taking into account the specified <see cref="Measurement.Adder"/> and <see cref="Measurement.Multiplier"/> offsets.
+        /// </summary>
+        /// <remarks>
+        /// Note that returned value will be offset by <see cref="Adder"/> and <see cref="Multiplier"/>.
+        /// </remarks>
+        /// <returns><see cref="Value"/> offset by <see cref="Adder"/> and <see cref="Multiplier"/> (i.e., <c><see cref="Value"/> * <see cref="Multiplier"/> + <see cref="Adder"/></c>).</returns>
+        public double AdjustedValue => Value * Multiplier + Adder;
+
+        /// <summary>
+        /// Gets or sets <see cref="MeasurementStateFlags"/> associated with this <see cref="Measurement"/>.
+        /// </summary>
+        public MeasurementStateFlags StateFlags
+        {
+            get
+            {
+                return m_stateFlags;
+            }
+            set
+            {
+                m_stateFlags = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets function used to apply a down-sampling filter over a sequence of <see cref="Measurement"/> values.
+        /// </summary>
+        public MeasurementValueFilterFunction MeasurementValueFilter => m_metadata.MeasurementValueFilter;
+
+
+        /// <summary>
+        /// Gets the life-span of this <see cref="Measurement"/> since its creation.
+        /// </summary>
+        public ShortTime Lifespan => m_lifespan;
+
+        /// <summary>
+        /// Gets timestamp, in ticks, of when this <see cref="Measurement"/> was created.
+        /// </summary>
+        public Ticks CreatedTimestamp => m_lifespan.UtcTime.Ticks;
 
         // Big-Endian binary value interpretation
         BigBinaryValue ITimeSeriesValue.Value
@@ -194,7 +263,7 @@ namespace GSF.TimeSeries
         /// </returns>
         public bool Equals(ITimeSeriesValue other)
         {
-            return (CompareTo(other) == 0);
+            return CompareTo(other) == 0;
         }
 
         /// <summary>
@@ -234,7 +303,7 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="Measurement"/>.</param>
         /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
-        /// <exception cref="ArgumentException"><paramref name="obj"/> is not an <see cref="IMeasurement"/>.</exception>
+        /// <exception cref="ArgumentException"><paramref name="obj"/> is not an <see cref="Measurement"/>.</exception>
         /// <remarks>Measurement implementations should compare by hash code.</remarks>
         public int CompareTo(object obj)
         {

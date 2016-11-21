@@ -35,7 +35,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using GSF.Threading;
-using GSF.TimeSeries.Adapters;
 using GSF.Units;
 
 // ReSharper disable PossibleMultipleEnumeration
@@ -196,35 +195,17 @@ namespace GSF.TimeSeries
             /// <summary>
             /// Gets frames per second for this <see cref="FrameRateTimer"/>.
             /// </summary>
-            public int FramesPerSecond
-            {
-                get
-                {
-                    return m_framesPerSecond;
-                }
-            }
+            public int FramesPerSecond => m_framesPerSecond;
 
             /// <summary>
             /// Gets the processing interval defined for the <see cref="FrameRateTimer"/>.
             /// </summary>
-            public int ProcessingInterval
-            {
-                get
-                {
-                    return m_processingInterval;
-                }
-            }
+            public int ProcessingInterval => m_processingInterval;
 
             /// <summary>
             /// Gets reference count for this <see cref="FrameRateTimer"/>.
             /// </summary>
-            public int ReferenceCount
-            {
-                get
-                {
-                    return m_referenceCount;
-                }
-            }
+            public int ReferenceCount => m_referenceCount;
 
             #endregion
 
@@ -434,7 +415,6 @@ namespace GSF.TimeSeries
         private bool m_allowPreemptivePublishing;           // Determines whether or not to preemptively publish frame if expected measurements arrive
         private bool m_performTimestampReasonabilityCheck;  // Determines whether or not to execute timestamp reasonability checks (i.e., lead time validation)
         private bool m_processByReceivedTimestamp;          // Determines whether or not to sort and publish measurements by their ReceivedTimestamp
-        private bool m_trackPublishedTimestamp;             // Determines whether or not to track timestamp of publication for all processed frames and measurements
         private int m_expectedMeasurements;                 // Expected number of measurements to be sorted into a frame
         private long m_receivedMeasurements;                // Total number of measurements ever received for sorting
         private long m_processedMeasurements;               // Total number of measurements ever successfully sorted
@@ -572,13 +552,7 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets defined past time deviation tolerance, in ticks.
         /// </summary>
-        public Ticks LagTicks
-        {
-            get
-            {
-                return m_lagTicks;
-            }
-        }
+        public Ticks LagTicks => m_lagTicks;
 
         /// <summary>
         /// Gets or sets the allowed future time deviation tolerance, in seconds (can be sub-second).
@@ -629,13 +603,7 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets reference to the collection of absolute latest received measurement values.
         /// </summary>
-        public ImmediateMeasurements LatestMeasurements
-        {
-            get
-            {
-                return m_latestMeasurements;
-            }
-        }
+        public ImmediateMeasurements LatestMeasurements => m_latestMeasurements;
 
         /// <summary>
         /// Gets reference to the last published <see cref="IFrame"/>.
@@ -986,13 +954,7 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets the number of ticks per frame.
         /// </summary>
-        public double TicksPerFrame
-        {
-            get
-            {
-                return m_ticksPerFrame;
-            }
-        }
+        public double TicksPerFrame => m_ticksPerFrame;
 
         /// <summary>
         /// Gets or sets the expected number of measurements to be assigned to a single frame.
@@ -1088,28 +1050,6 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if system should track timestamp of publication for all frames and measurements.
-        /// </summary>
-        /// <remarks>
-        /// Setting this value to <c>true</c> will cause the concentrator to mark the timestamp of publication in each
-        /// <see cref="IFrame.PublishedTimestamp"/> and its measurement's <see cref="IMeasurement.PublishedTimestamp"/>.
-        /// Since this is extra processing time that may not be needed except in cases of calculating statistics for
-        /// system performance, this must be explicitly enabled.
-        /// </remarks>
-        public bool TrackPublishedTimestamp
-        {
-            get
-            {
-                return m_trackPublishedTimestamp;
-            }
-            set
-            {
-                m_trackPublishedTimestamp = value;
-            }
-
-        }
-
-        /// <summary>
         /// Gets or sets the current enabled state of concentrator.
         /// </summary>
         /// <returns>Current enabled state of concentrator</returns>
@@ -1135,24 +1075,12 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets the UTC time the concentrator was started.
         /// </summary>
-        public Ticks StartTime
-        {
-            get
-            {
-                return m_startTime;
-            }
-        }
+        public Ticks StartTime => m_startTime;
 
         /// <summary>
         /// Gets the UTC time the concentrator was stopped.
         /// </summary>
-        public Ticks StopTime
-        {
-            get
-            {
-                return m_stopTime;
-            }
-        }
+        public Ticks StopTime => m_stopTime;
 
         /// <summary>
         /// Gets the total amount of time, in seconds, that the concentrator has been active.
@@ -1305,146 +1233,68 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets the total number of measurements ever requested for sorting.
         /// </summary>
-        public long ReceivedMeasurements
-        {
-            get
-            {
-                return Thread.VolatileRead(ref m_receivedMeasurements);
-            }
-        }
+        public long ReceivedMeasurements => Thread.VolatileRead(ref m_receivedMeasurements);
 
         /// <summary>
         /// Gets the total number of measurements successfully sorted.
         /// </summary>
-        public long ProcessedMeasurements
-        {
-            get
-            {
-                return Thread.VolatileRead(ref m_processedMeasurements);
-            }
-        }
+        public long ProcessedMeasurements => Thread.VolatileRead(ref m_processedMeasurements);
 
         /// <summary>
         /// Gets the total number of measurements that have been discarded because of old timestamps
         /// (i.e., measurements that were outside the time deviation tolerance from base time, past or future).
         /// </summary>
-        public long DiscardedMeasurements
-        {
-            get
-            {
-                return Thread.VolatileRead(ref m_discardedMeasurements);
-            }
-        }
+        public long DiscardedMeasurements => Thread.VolatileRead(ref m_discardedMeasurements);
 
         /// <summary>
         /// Gets a reference the last <see cref="IMeasurement"/> that was discarded by the concentrator.
         /// </summary>
-        public IMeasurement LastDiscardedMeasurement
-        {
-            get
-            {
-                return m_lastDiscardedMeasurement;
-            }
-        }
+        public IMeasurement LastDiscardedMeasurement => m_lastDiscardedMeasurement;
 
         /// <summary>
         /// Gets the calculated latency of the last <see cref="IMeasurement"/> that was discarded by the concentrator.
         /// </summary>
-        public Ticks LastDiscardedMeasurementLatency
-        {
-            get
-            {
-                return Thread.VolatileRead(ref m_lastDiscardedMeasurementLatency);
-            }
-        }
+        public Ticks LastDiscardedMeasurementLatency => Thread.VolatileRead(ref m_lastDiscardedMeasurementLatency);
 
         /// <summary>
         /// Gets the total number of published measurements.
         /// </summary>
-        public long PublishedMeasurements
-        {
-            get
-            {
-                return Thread.VolatileRead(ref m_publishedMeasurements);
-            }
-        }
+        public long PublishedMeasurements => Thread.VolatileRead(ref m_publishedMeasurements);
 
         /// <summary>
         /// Gets the total number of published frames.
         /// </summary>
-        public long PublishedFrames
-        {
-            get
-            {
-                return Thread.VolatileRead(ref m_publishedFrames);
-            }
-        }
+        public long PublishedFrames => Thread.VolatileRead(ref m_publishedFrames);
 
         /// <summary>
         /// Gets the total number of measurements that were sorted by arrival because the measurement reported a bad timestamp quality.
         /// </summary>
-        public long MeasurementsSortedByArrival
-        {
-            get
-            {
-                return Thread.VolatileRead(ref m_measurementsSortedByArrival);
-            }
-        }
+        public long MeasurementsSortedByArrival => Thread.VolatileRead(ref m_measurementsSortedByArrival);
 
         /// <summary>
         /// Gets the total number of down-sampled measurements processed by the concentrator.
         /// </summary>
-        public long DownsampledMeasurements
-        {
-            get
-            {
-                return Thread.VolatileRead(ref m_downsampledMeasurements);
-            }
-        }
+        public long DownsampledMeasurements => Thread.VolatileRead(ref m_downsampledMeasurements);
 
         /// <summary>
         /// Gets the total number of missed sorts by timeout processed by the concentrator.
         /// </summary>
-        public long MissedSortsByTimeout
-        {
-            get
-            {
-                return Thread.VolatileRead(ref m_missedSortsByTimeout);
-            }
-        }
+        public long MissedSortsByTimeout => Thread.VolatileRead(ref m_missedSortsByTimeout);
 
         /// <summary>
         /// Gets the total number of wait handle expirations encountered due to delayed precision timer releases.
         /// </summary>
-        public long WaitHandleExpirations
-        {
-            get
-            {
-                return Thread.VolatileRead(ref m_waitHandleExpirations);
-            }
-        }
+        public long WaitHandleExpirations => Thread.VolatileRead(ref m_waitHandleExpirations);
 
         /// <summary>
         /// Gets the total number of frames ahead of schedule processed by the concentrator.
         /// </summary>
-        public long FramesAheadOfSchedule
-        {
-            get
-            {
-                return Thread.VolatileRead(ref m_framesAheadOfSchedule);
-            }
-        }
+        public long FramesAheadOfSchedule => Thread.VolatileRead(ref m_framesAheadOfSchedule);
 
         /// <summary>
         /// Gets the total number of seconds frames have spent in the publication process since concentrator started.
         /// </summary>
-        public Time TotalPublicationTime
-        {
-            get
-            {
-                return ((Ticks)Thread.VolatileRead(ref m_totalPublishTime)).ToSeconds();
-            }
-        }
+        public Time TotalPublicationTime => ((Ticks)Thread.VolatileRead(ref m_totalPublishTime)).ToSeconds();
 
         /// <summary>
         /// Gets the average required frame publication time, in seconds.
@@ -1453,13 +1303,7 @@ namespace GSF.TimeSeries
         /// If user publication function, <see cref="ConcentratorBase.PublishFrame"/>, consistently exceeds available publishing time
         /// (i.e., <c>1 / <see cref="ConcentratorBase.FramesPerSecond"/></c>), concentration will fall behind.
         /// </remarks>
-        public Time AveragePublicationTimePerFrame
-        {
-            get
-            {
-                return TotalPublicationTime / PublishedFrames;
-            }
-        }
+        public Time AveragePublicationTimePerFrame => TotalPublicationTime / PublishedFrames;
 
         /// <summary>
         /// Gets detailed state of concentrator frame queue.
@@ -1519,8 +1363,6 @@ namespace GSF.TimeSeries
                 status.AppendFormat(" Use preemptive publishing: {0}", AllowPreemptivePublishing);
                 status.AppendLine();
                 status.AppendFormat("  Time reasonability check: {0}", PerformTimestampReasonabilityCheck ? "Enabled" : "Disabled");
-                status.AppendLine();
-                status.AppendFormat(" Tracking publication time: {0}", TrackPublishedTimestamp);
                 status.AppendLine();
                 status.AppendFormat("  Process by received time: {0}", m_processByReceivedTimestamp);
                 status.AppendLine();
@@ -2159,7 +2001,7 @@ namespace GSF.TimeSeries
                         {
                             // When processing by received timestamp, we need to test received timestamp against lag-time
                             // to make sure there has been time enough to publish frame:
-                            if (m_lagTicks - (RealTime - sourceFrame.ReceivedTimestamp) > 0)
+                            if (m_lagTicks - (RealTime - sourceFrame.CreatedTimestamp) > 0)
                                 break;
                         }
                         else
@@ -2218,9 +2060,6 @@ namespace GSF.TimeSeries
 
                             // Mark stop time for publication
                             stopTime = DateTime.UtcNow.Ticks;
-
-                            if (m_trackPublishedTimestamp)
-                                sourceFrame.PublishedTimestamp = stopTime;
 
                             // Track total publication time
                             Interlocked.Add(ref m_totalPublishTime, stopTime - startTime);

@@ -192,7 +192,7 @@ namespace GSF.PhasorProtocols
             if (index == 0)
                 return m_value;
 
-            throw new ArgumentOutOfRangeException("index", "Invalid composite index requested");
+            throw new ArgumentOutOfRangeException(nameof(index), "Invalid composite index requested");
         }
 
         /// <summary>
@@ -203,7 +203,7 @@ namespace GSF.PhasorProtocols
         public override MeasurementValueFilterFunction GetMeasurementValueFilterFunction(int index)
         {
             if (index != 0)
-                throw new ArgumentOutOfRangeException("index", "Invalid composite index requested");
+                throw new ArgumentOutOfRangeException(nameof(index), "Invalid composite index requested");
 
             // Digital values shouldn't be averaged, so a majority value filter is applied when downsampling
             return Measurement.MajorityValueFilter;

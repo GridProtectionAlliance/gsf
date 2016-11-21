@@ -82,29 +82,19 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of when this <see cref="IMeasurement"/> was received (i.e., created).
+        /// Gets the life-span of this <see cref="IFrame"/> since its creation.
         /// </summary>
-        /// <remarks>
-        /// <para>Implementers should set this timestamp to be the ticks of <see cref="DateTime.UtcNow"/> of when this class was created.</para>
-        /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
-        /// </remarks>
-        Ticks ReceivedTimestamp
+        ShortTime Lifespan
         {
             get;
-            set;
         }
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of when this <see cref="IMeasurement"/> was published (post-processing).
+        /// Gets timestamp, in ticks, of when this <see cref="IFrame"/> was created.
         /// </summary>
-        /// <remarks>
-        /// <para>Implementers should update all associated <see cref="IMeasurement.PublishedTimestamp"/> values when setting this property.</para>
-        /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
-        /// </remarks>
-        Ticks PublishedTimestamp
+        Ticks CreatedTimestamp
         {
             get;
-            set;
         }
 
         /// <summary>

@@ -696,7 +696,7 @@ namespace PIAdapters
                 flags |= MeasurementStateFlags.CalculationError | MeasurementStateFlags.SuspectData;
 
             if ((status & AFValueStatus.Substituted) > 0)
-                flags |= MeasurementStateFlags.CalcuatedValue;
+                flags |= MeasurementStateFlags.CalculatedValue;
 
             return flags;
         }

@@ -873,9 +873,6 @@ namespace GSF.TimeSeries.Adapters
             if (settings.TryGetValue("processByReceivedTimestamp", out setting))
                 ProcessByReceivedTimestamp = setting.ParseBoolean();
 
-            if (settings.TryGetValue("trackPublishedTimestamp", out setting))
-                TrackPublishedTimestamp = setting.ParseBoolean();
-
             if (settings.TryGetValue("maximumPublicationTimeout", out setting))
                 MaximumPublicationTimeout = int.Parse(setting);
 

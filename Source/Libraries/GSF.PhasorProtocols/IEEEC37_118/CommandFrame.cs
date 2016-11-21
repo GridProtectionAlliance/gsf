@@ -69,7 +69,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             : base(new CommandCellCollection(Common.MaximumExtendedDataLength), DeviceCommand.ReservedBits)
         {
             if (length < CommonFrameHeader.FixedLength)
-                throw new ArgumentOutOfRangeException("length");
+                throw new ArgumentOutOfRangeException(nameof(length));
 
             m_frameHeader = new CommonFrameHeader(null, buffer, startIndex);
 
@@ -77,7 +77,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 throw new InvalidOperationException("Binary image does not represent an IEEE C37.118 command frame");
 
             if (length < m_frameHeader.FrameLength)
-                throw new ArgumentOutOfRangeException("length", string.Format("Buffer size, {0}, is not large enough to parse IEEE C37.118 command frame with a length of {1}", length, m_frameHeader.FrameLength));
+                throw new ArgumentOutOfRangeException(nameof(length), string.Format("Buffer size, {0}, is not large enough to parse IEEE C37.118 command frame with a length of {1}", length, m_frameHeader.FrameLength));
 
             // Validate check-sum
             int sumLength = m_frameHeader.FrameLength - 2;

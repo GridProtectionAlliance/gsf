@@ -41,7 +41,7 @@ using GSF.Units.EE;
 namespace PhasorProtocolAdapters
 {
     /// <summary>
-    /// Represents an implementation of <see cref="IConfigurationFrame"/> that by existance only denotes an error state.
+    /// Represents an implementation of <see cref="IConfigurationFrame"/> that by existence only denotes an error state.
     /// </summary>
     /// <remarks>
     /// This class is used by <see cref="CommonPhasorServices"/> to return an error state when configuration could not be retrieved.
@@ -272,27 +272,19 @@ namespace PhasorProtocolAdapters
             }
         }
 
-        Ticks IFrame.ReceivedTimestamp
+        ShortTime IFrame.Lifespan
+        {
+            get
+            {
+                return ShortTime.Now;
+            }
+        }
+
+        Ticks IFrame.CreatedTimestamp
         {
             get
             {
                 return DateTime.UtcNow.Ticks;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        Ticks IFrame.PublishedTimestamp
-        {
-            get
-            {
-                return 0;
-            }
-            set
-            {
-                throw new NotImplementedException();
             }
         }
 

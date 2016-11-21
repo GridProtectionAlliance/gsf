@@ -82,7 +82,6 @@
     <Compile Include="ChannelParsingStateBase.cs" />
     <Compile Include="ChannelValueBase.cs" />
     <Compile Include="ChannelValueCollectionBase.cs" />
-    <Compile Include="ChannelValueMeasurement.cs" />
     <Compile Include="CommandCell.cs" />
     <Compile Include="CommandCellCollection.cs" />
     <Compile Include="CommandFrameBase.cs" />

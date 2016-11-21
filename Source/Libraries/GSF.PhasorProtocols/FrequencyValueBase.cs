@@ -309,7 +309,7 @@ namespace GSF.PhasorProtocols
                 case (int)CompositeFrequencyValue.DfDt:
                     return m_dfdt;
                 default:
-                    throw new ArgumentOutOfRangeException("index", "Invalid composite index requested");
+                    throw new ArgumentOutOfRangeException(nameof(index), "Invalid composite index requested");
             }
         }
 

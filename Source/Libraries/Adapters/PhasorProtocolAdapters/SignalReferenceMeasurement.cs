@@ -65,36 +65,18 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets the <see cref="SignalReference"/> associated with this <see cref="SignalReferenceMeasurement"/>.
         /// </summary>
-        public SignalReference SignalReference
-        {
-            get
-            {
-                return m_signalReference;
-            }
-        }
+        public SignalReference SignalReference => m_signalReference;
 
 
         /// <summary>
         /// Gets the primary key (a <see cref="MeasurementKey"/>, of this <see cref="SignalReferenceMeasurement"/>.
         /// </summary>
-        public MeasurementKey Key
-        {
-            get
-            {
-                return m_measurement.Key;
-            }
-        }
+        public MeasurementKey Key => m_measurement.Key;
 
         /// <summary>
         /// Gets or sets the <see cref="Guid"/> based signal ID of this <see cref="SignalReferenceMeasurement"/>, if available.
         /// </summary>
-        public Guid ID
-        {
-            get
-            {
-                return m_measurement.ID;
-            }
-        }
+        public Guid ID => m_measurement.ID;
 
         /// <summary>
         /// Gets or sets <see cref="MeasurementStateFlags"/> associated with this <see cref="SignalReferenceMeasurement"/>.
@@ -114,13 +96,7 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets the text based tag name of this <see cref="SignalReferenceMeasurement"/>.
         /// </summary>
-        public string TagName
-        {
-            get
-            {
-                return m_measurement.TagName;
-            }
-        }
+        public string TagName => m_measurement.TagName;
 
         /// <summary>
         /// Gets or sets the raw measurement value that is not offset by <see cref="Adder"/> and <see cref="Multiplier"/>.
@@ -145,35 +121,17 @@ namespace PhasorProtocolAdapters
         /// Note that returned value will be offset by <see cref="Adder"/> and <see cref="Multiplier"/>.
         /// </remarks>
         /// <returns><see cref="Value"/> offset by <see cref="Adder"/> and <see cref="Multiplier"/> (i.e., <c><see cref="Value"/> * <see cref="Multiplier"/> + <see cref="Adder"/></c>).</returns>
-        public double AdjustedValue
-        {
-            get
-            {
-                return m_measurement.AdjustedValue;
-            }
-        }
+        public double AdjustedValue => m_measurement.AdjustedValue;
 
         /// <summary>
         /// Gets an offset to add to the measurement value. This defaults to 0.0.
         /// </summary>
-        public double Adder
-        {
-            get
-            {
-                return m_measurement.Adder;
-            }
-        }
+        public double Adder => m_measurement.Adder;
 
         /// <summary>
         /// Gets a multiplicative offset to apply to the measurement value. This defaults to 1.0.
         /// </summary>
-        public double Multiplier
-        {
-            get
-            {
-                return m_measurement.Multiplier;
-            }
-        }
+        public double Multiplier => m_measurement.Multiplier;
 
         /// <summary>
         /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="SignalReferenceMeasurement"/>.
@@ -194,55 +152,22 @@ namespace PhasorProtocolAdapters
         }
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of when this <see cref="SignalReferenceMeasurement"/> was received (i.e., created).
+        /// Gets the life-span of this <see cref="SignalReferenceMeasurement"/> since its creation.
         /// </summary>
-        /// <remarks>
-        /// <para>In the default implementation, this timestamp will simply be the ticks of <see cref="DateTime.UtcNow"/> of when this class was created.</para>
-        /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
-        /// </remarks>
-        public Ticks ReceivedTimestamp
-        {
-            get
-            {
-                return m_measurement.ReceivedTimestamp;
-            }
-            set
-            {
-                m_measurement.ReceivedTimestamp = value;
-            }
-        }
+        public ShortTime Lifespan => m_measurement.Lifespan;
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of when this <see cref="SignalReferenceMeasurement"/> was published (post-processing).
+        /// Gets timestamp, in ticks, of when this <see cref="SignalReferenceMeasurement"/> was created.
         /// </summary>
-        /// <remarks>
-        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
-        /// </remarks>
-        public Ticks PublishedTimestamp
-        {
-            get
-            {
-                return m_measurement.PublishedTimestamp;
-            }
-            set
-            {
-                m_measurement.PublishedTimestamp = value;
-            }
-        }
+        public Ticks CreatedTimestamp => m_measurement.CreatedTimestamp;
 
         /// <summary>
-        /// Gets function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values.
+        /// Gets function used to apply a downsampling filter over a sequence of <see cref="SignalReferenceMeasurement"/> values.
         /// </summary>
-        public MeasurementValueFilterFunction MeasurementValueFilter
-        {
-            get
-            {
-                return m_measurement.MeasurementValueFilter;
-            }
-        }
+        public MeasurementValueFilterFunction MeasurementValueFilter => m_measurement.MeasurementValueFilter;
 
         /// <summary>
-        /// Gets or sets associated metadata values for the <see cref="IMeasurement"/> .
+        /// Gets or sets associated metadata values for the <see cref="SignalReferenceMeasurement"/> .
         /// </summary>
         public MeasurementMetadata Metadata
         {
@@ -280,10 +205,7 @@ namespace PhasorProtocolAdapters
         /// true if the specified <see cref="ITimeSeriesValue"/> is equal to the current <see cref="SignalReferenceMeasurement"/>;
         /// otherwise, false.
         /// </returns>
-        public bool Equals(ITimeSeriesValue other)
-        {
-            return m_measurement.Equals(other);
-        }
+        public bool Equals(ITimeSeriesValue other) => m_measurement.Equals(other);
 
         /// <summary>
         /// Compares the <see cref="SignalReferenceMeasurement"/> with the specified <see cref="Object"/>.
@@ -292,10 +214,7 @@ namespace PhasorProtocolAdapters
         /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
         /// <exception cref="ArgumentException"><paramref name="obj"/> is not an <see cref="IMeasurement"/>.</exception>
         /// <remarks>Measurement implementations should compare by hash code.</remarks>
-        public int CompareTo(object obj)
-        {
-            return m_measurement.CompareTo(obj);
-        }
+        public int CompareTo(object obj) => m_measurement.CompareTo(obj);
 
         /// <summary>
         /// Compares the <see cref="SignalReferenceMeasurement"/> with an <see cref="ITimeSeriesValue"/>.
@@ -303,10 +222,7 @@ namespace PhasorProtocolAdapters
         /// <param name="other">The <see cref="ITimeSeriesValue"/> to compare with the current <see cref="SignalReferenceMeasurement"/>.</param>
         /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
         /// <remarks>Measurement implementations should compare by hash code.</remarks>
-        public int CompareTo(ITimeSeriesValue other)
-        {
-            return m_measurement.CompareTo(other);
-        }
+        public int CompareTo(ITimeSeriesValue other) => m_measurement.CompareTo(other);
 
         #endregion
     }

@@ -1791,7 +1791,7 @@ namespace PhasorProtocolAdapters
 
             // Track latency statistics against system time - in order for these statistics
             // to be useful, the local clock must be fairly accurate
-            long latency = frame.ReceivedTimestamp.Value - timestamp;
+            long latency = frame.CreatedTimestamp.Value - timestamp;
 
             // Throw out latencies that exceed one hour as invalid
             if (Math.Abs(latency) <= Time.SecondsPerHour * Ticks.PerSecond)

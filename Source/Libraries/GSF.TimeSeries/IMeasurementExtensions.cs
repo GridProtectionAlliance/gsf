@@ -71,13 +71,13 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Returns <c>true</c> if <see cref="MeasurementStateFlags.CalcuatedValue"/> is set.
+        /// Returns <c>true</c> if <see cref="MeasurementStateFlags.CalculatedValue"/> is set.
         /// </summary>
         /// <param name="measurement"><see cref="IMeasurement"/> instance to test.</param>
-        /// <returns><c>true</c> if <see cref="MeasurementStateFlags.CalcuatedValue"/> is not set.</returns>
+        /// <returns><c>true</c> if <see cref="MeasurementStateFlags.CalculatedValue"/> is not set.</returns>
         public static bool IsCalculated(this IMeasurement measurement)
         {
-            return (measurement.StateFlags & MeasurementStateFlags.CalcuatedValue) > 0;
+            return (measurement.StateFlags & MeasurementStateFlags.CalculatedValue) > 0;
         }
 
         /// <summary>

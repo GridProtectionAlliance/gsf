@@ -125,46 +125,22 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the <see cref="GSF.PhasorProtocols.CoordinateFormat"/> of this <see cref="PhasorValueBase"/>.
         /// </summary>
-        public virtual CoordinateFormat CoordinateFormat
-        {
-            get
-            {
-                return Definition.CoordinateFormat;
-            }
-        }
+        public virtual CoordinateFormat CoordinateFormat => Definition.CoordinateFormat;
 
         /// <summary>
         /// Gets the <see cref="GSF.PhasorProtocols.AngleFormat"/> of this <see cref="PhasorValueBase"/>.
         /// </summary>
-        public virtual AngleFormat AngleFormat
-        {
-            get
-            {
-                return Definition.AngleFormat;
-            }
-        }
+        public virtual AngleFormat AngleFormat => Definition.AngleFormat;
 
         /// <summary>
         /// Gets the <see cref="PhasorType"/> of this <see cref="PhasorValueBase"/>.
         /// </summary>
-        public virtual PhasorType Type
-        {
-            get
-            {
-                return Definition.PhasorType;
-            }
-        }
+        public virtual PhasorType Type => Definition.PhasorType;
 
         /// <summary>
         /// Gets <see cref="GSF.Units.EE.Phasor"/> value from this <see cref="IPhasorValue"/>.
         /// </summary>
-        public Phasor Phasor
-        {
-            get
-            {
-                return new Phasor(Type, m_phasor);
-            }
-        }
+        public Phasor Phasor => new Phasor(Type, m_phasor);
 
         /// <summary>
         /// Gets or sets the <see cref="GSF.Units.Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValueBase"/>, in radians.
@@ -265,24 +241,12 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets total number of composite values that this <see cref="PhasorValueBase"/> provides.
         /// </summary>
-        public override int CompositeValueCount
-        {
-            get
-            {
-                return 2;
-            }
-        }
+        public override int CompositeValueCount => 2;
 
         /// <summary>
         /// Gets boolean value that determines if none of the composite values of <see cref="PhasorValueBase"/> have been assigned a value.
         /// </summary>
-        public override bool IsEmpty
-        {
-            get
-            {
-                return m_phasor.NoneAssigned;
-            }
-        }
+        public override bool IsEmpty => m_phasor.NoneAssigned;
 
         /// <summary>
         /// Gets the length of the <see cref="BodyImage"/>.
@@ -292,16 +256,7 @@ namespace GSF.PhasorProtocols
         /// integers and floating point values are represented as 32-bit single-precision floating-point
         /// values (i.e., short and float data types respectively).
         /// </remarks>
-        protected override int BodyLength
-        {
-            get
-            {
-                if (DataFormat == DataFormat.FixedInteger)
-                    return 4;
-                else
-                    return 8;
-            }
-        }
+        protected override int BodyLength => DataFormat == DataFormat.FixedInteger ? 4 : 8;
 
         /// <summary>
         /// Gets the binary body image of the <see cref="PhasorValueBase"/> object.
@@ -410,7 +365,7 @@ namespace GSF.PhasorProtocols
                 case (int)CompositePhasorValue.Magnitude:
                     return Magnitude;
                 default:
-                    throw new ArgumentOutOfRangeException("index", "Invalid composite index requested");
+                    throw new ArgumentOutOfRangeException(nameof(index), "Invalid composite index requested");
             }
         }
 
@@ -431,8 +386,31 @@ namespace GSF.PhasorProtocols
                 case (int)CompositePhasorValue.Magnitude:
                     return Measurement.AverageValueFilter;
                 default:
-                    throw new ArgumentOutOfRangeException("index", "Invalid composite index requested");
+                    throw new ArgumentOutOfRangeException(nameof(index), "Invalid composite index requested");
             }
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="IMeasurement"/> value for specified composite value for this <see cref="PhasorValueBase"/>.
+        /// </summary>
+        /// <param name="valueIndex">Composite value index for which to derive new <see cref="IMeasurement"/> value.</param>
+        /// <returns>New <see cref="IMeasurement"/> value for specified composite value for this <see cref="PhasorValueBase"/>.</returns>
+        protected override IMeasurement CreateMeasurement(int valueIndex)
+        {
+            IMeasurement measurement = base.CreateMeasurement(valueIndex);
+
+            if (valueIndex == (int)CompositePhasorValue.Angle)
+            {
+                double adjustedValue = measurement.AdjustedValue;
+
+                if (adjustedValue <= -180 || adjustedValue > 180)
+                {
+                    adjustedValue = Angle.FromDegrees(adjustedValue).ToRange(-Math.PI, false).ToDegrees();
+                    measurement.Value = (adjustedValue - measurement.Adder) / measurement.Multiplier;
+                }
+            }
+
+            return measurement;
         }
 
         /// <summary>
@@ -473,27 +451,25 @@ namespace GSF.PhasorProtocols
 
                 return 4;
             }
+
+            if (CoordinateFormat == CoordinateFormat.Rectangular)
+            {
+                // Parse from single-precision floating-point, rectangular
+                m_phasor.Real = BigEndian.ToSingle(buffer, startIndex);
+                m_phasor.Imaginary = BigEndian.ToSingle(buffer, startIndex + 4);
+            }
             else
             {
-                if (CoordinateFormat == CoordinateFormat.Rectangular)
-                {
-                    // Parse from single-precision floating-point, rectangular
-                    m_phasor.Real = BigEndian.ToSingle(buffer, startIndex);
-                    m_phasor.Imaginary = BigEndian.ToSingle(buffer, startIndex + 4);
-                }
+                // Parse from single-precision floating-point, polar
+                m_phasor.Magnitude = BigEndian.ToSingle(buffer, startIndex);
+
+                if (AngleFormat == AngleFormat.Radians)
+                    m_phasor.Angle = BigEndian.ToSingle(buffer, startIndex + 4);
                 else
-                {
-                    // Parse from single-precision floating-point, polar
-                    m_phasor.Magnitude = BigEndian.ToSingle(buffer, startIndex);
-
-                    if (AngleFormat == AngleFormat.Radians)
-                        m_phasor.Angle = BigEndian.ToSingle(buffer, startIndex + 4);
-                    else
-                        m_phasor.Angle = Angle.FromDegrees(BigEndian.ToSingle(buffer, startIndex + 4));
-                }
-
-                return 8;
+                    m_phasor.Angle = Angle.FromDegrees(BigEndian.ToSingle(buffer, startIndex + 4));
             }
+
+            return 8;
         }
 
         /// <summary>
@@ -526,10 +502,10 @@ namespace GSF.PhasorProtocols
         public static Power CalculatePower(IPhasorValue voltage, IPhasorValue current)
         {
             if (voltage == null)
-                throw new ArgumentNullException("voltage", "No voltage specified");
+                throw new ArgumentNullException(nameof(voltage), "No voltage specified");
 
             if (current == null)
-                throw new ArgumentNullException("current", "No current specified");
+                throw new ArgumentNullException(nameof(current), "No current specified");
 
             return Phasor.CalculateActivePower(voltage.Phasor, current.Phasor);
         }
@@ -550,10 +526,10 @@ namespace GSF.PhasorProtocols
         public static Power CalculateVars(IPhasorValue voltage, IPhasorValue current)
         {
             if (voltage == null)
-                throw new ArgumentNullException("voltage", "No voltage specified");
+                throw new ArgumentNullException(nameof(voltage), "No voltage specified");
 
             if (current == null)
-                throw new ArgumentNullException("current", "No current specified");
+                throw new ArgumentNullException(nameof(current), "No current specified");
 
             return Phasor.CalculateReactivePower(voltage.Phasor, current.Phasor);
         }

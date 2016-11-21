@@ -114,24 +114,12 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the <see cref="GSF.PhasorProtocols.DataFormat"/> of this <see cref="ChannelValueBase{T}"/>.
         /// </summary>
-        public virtual DataFormat DataFormat
-        {
-            get
-            {
-                return m_definition.DataFormat;
-            }
-        }
+        public virtual DataFormat DataFormat => m_definition.DataFormat;
 
         /// <summary>
         /// Gets text based label of this <see cref="ChannelValueBase{T}"/>.
         /// </summary>
-        public virtual string Label
-        {
-            get
-            {
-                return m_definition.Label;
-            }
-        }
+        public virtual string Label => m_definition.Label;
 
         /// <summary>
         /// Gets boolean value that determines if none of the composite values of <see cref="ChannelValueBase{T}"/> have been assigned a value.
@@ -152,19 +140,36 @@ namespace GSF.PhasorProtocols
             get
             {
                 // Create a measurement instance for each composite value the derived channel value exposes
-                if (m_measurements == null)
+                if ((object)m_measurements == null)
                 {
                     m_measurements = new IMeasurement[CompositeValueCount];
 
+                    // ChannelValueMeasurement dynamically accesses CompositeValues[x] for its value
                     for (int x = 0; x < m_measurements.Length; x++)
-                    {
-                        // ChannelValueMeasurement dynamically accesses CompositeValues[x] for its value
-                        m_measurements[x] = new ChannelValueMeasurement<T>(this, x);
-                    }
+                        m_measurements[x] = CreateMeasurement(x);
                 }
 
                 return m_measurements;
             }
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="IMeasurement"/> value for specified composite value for this <see cref="ChannelValueBase{T}"/>.
+        /// </summary>
+        /// <param name="valueIndex">Composite value index for which to derive new <see cref="IMeasurement"/> value.</param>
+        /// <returns>New <see cref="IMeasurement"/> value for specified composite value for this <see cref="ChannelValueBase{T}"/>.</returns>
+        protected virtual IMeasurement CreateMeasurement(int valueIndex)
+        {
+            Measurement measurement = new Measurement
+            {
+                Timestamp = Parent.Parent.Timestamp,
+                Value = GetCompositeValue(valueIndex)
+            };
+
+            measurement.Metadata = measurement.Metadata.ChangeMeasurementValueFilter(GetMeasurementValueFilterFunction(valueIndex));
+            measurement.StateFlags = (Parent.SynchronizationIsValid && measurement.Timestamp.Value != -1 ? MeasurementStateFlags.Normal : MeasurementStateFlags.BadTime) | (Parent.DataIsValid ? MeasurementStateFlags.Normal : MeasurementStateFlags.BadData);
+
+            return measurement;
         }
 
         /// <summary>
@@ -213,7 +218,7 @@ namespace GSF.PhasorProtocols
         public virtual MeasurementValueFilterFunction GetMeasurementValueFilterFunction(int index)
         {
             if (index < 0 || index > CompositeValueCount - 1)
-                throw new ArgumentOutOfRangeException("index", "Invalid composite index requested");
+                throw new ArgumentOutOfRangeException(nameof(index), "Invalid composite index requested");
 
             // All values assumed to be analog in nature unless derived class specifies otherwise
             return Measurement.AverageValueFilter;

@@ -67,7 +67,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             : base(new CommandCellCollection(Common.MaximumExtendedDataLength), DeviceCommand.ReservedBits)
         {
             if (length < CommonFrameHeader.FixedLength)
-                throw new ArgumentOutOfRangeException("length");
+                throw new ArgumentOutOfRangeException(nameof(length));
 
             m_frameHeader = new CommonFrameHeader(null, false, false, false, true, true, AngleFormat.Degrees, buffer, startIndex, 0);
 
@@ -75,7 +75,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 throw new InvalidOperationException("Binary image does not represent an IEC 61850-90-5 command frame");
 
             if (length < m_frameHeader.FrameLength)
-                throw new ArgumentOutOfRangeException("length", string.Format("Buffer size, {0}, is not large enough to parse IEC 61850-90-5 command frame with a length of {1}", length, m_frameHeader.FrameLength));
+                throw new ArgumentOutOfRangeException(nameof(length), string.Format("Buffer size, {0}, is not large enough to parse IEC 61850-90-5 command frame with a length of {1}", length, m_frameHeader.FrameLength));
 
             // Validate check-sum
             int sumLength = m_frameHeader.FrameLength - 2;

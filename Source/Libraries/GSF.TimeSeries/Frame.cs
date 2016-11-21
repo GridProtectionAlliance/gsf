@@ -44,13 +44,12 @@ namespace GSF.TimeSeries
         #region [ Members ]
 
         // Fields
-        private Ticks m_timestamp;                                                  // Time, represented as 100-nanosecond ticks, of this frame of data
-        private Ticks m_receivedTimestamp;                                          // Time, represented as 100-nanosecond ticks, of frame received (i.e. created)
-        private Ticks m_publishedTimestamp;                                         // Time, represented as 100-nanosecond ticks, of frame published (post process)
-        private bool m_published;                                                   // Determines if this frame of data has been published
-        private int m_sortedMeasurements;                                           // Total measurements sorted into this frame
-        private readonly ConcurrentDictionary<MeasurementKey, IMeasurement> m_measurements;  // Concurrent dictionary of measurements published by this frame
-        private IMeasurement m_lastSortedMeasurement;                               // Last measurement sorted into this frame
+        private Ticks m_timestamp;                                                          // Time, represented as 100-nanosecond ticks, of this frame of data
+        private ShortTime m_lifespan;                                                       // Elapsed time since creation of this frame of data
+        private bool m_published;                                                           // Determines if this frame of data has been published
+        private int m_sortedMeasurements;                                                   // Total measurements sorted into this frame
+        private readonly ConcurrentDictionary<MeasurementKey, IMeasurement> m_measurements; // Concurrent dictionary of measurements published by this frame
+        private IMeasurement m_lastSortedMeasurement;                                       // Last measurement sorted into this frame
 
         #endregion
 
@@ -64,7 +63,7 @@ namespace GSF.TimeSeries
         public Frame(Ticks timestamp, int expectedMeasurements = -1)
         {
             m_timestamp = timestamp;
-            m_receivedTimestamp = DateTime.UtcNow.Ticks;
+            m_lifespan = ShortTime.Now;
 
             if (expectedMeasurements > 0)
                 m_measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>(s_defaultConcurrencyLevel, expectedMeasurements * 2);
@@ -82,7 +81,7 @@ namespace GSF.TimeSeries
         public Frame(Ticks timestamp, IDictionary<MeasurementKey, IMeasurement> measurements)
         {
             m_timestamp = timestamp;
-            m_receivedTimestamp = DateTime.UtcNow.Ticks;
+            m_lifespan = ShortTime.Now;
             m_measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>(measurements);
             m_sortedMeasurements = -1;
         }
@@ -94,13 +93,7 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Keyed measurements in this <see cref="Frame"/>.
         /// </summary>
-        public ConcurrentDictionary<MeasurementKey, IMeasurement> Measurements
-        {
-            get
-            {
-                return m_measurements;
-            }
-        }
+        public ConcurrentDictionary<MeasurementKey, IMeasurement> Measurements => m_measurements;
 
         /// <summary>
         /// Gets or sets published state of this <see cref="Frame"/> (pre-processing).
@@ -157,50 +150,14 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of when this <see cref="Frame"/> was received (i.e., created).
+        /// Gets the life-span of this <see cref="Frame"/> since its creation.
         /// </summary>
-        /// <remarks>
-        /// <para>In the default implementation, this timestamp will simply be the ticks of <see cref="DateTime.UtcNow"/> of when this class was created.</para>
-        /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
-        /// </remarks>
-        public Ticks ReceivedTimestamp
-        {
-            get
-            {
-                return m_receivedTimestamp;
-            }
-            set
-            {
-                m_receivedTimestamp = value;
-            }
-        }
+        public ShortTime Lifespan => m_lifespan;
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of when this <see cref="Frame"/> was published (post-processing).
+        /// Gets timestamp, in ticks, of when this <see cref="Frame"/> was created.
         /// </summary>
-        /// <remarks>
-        /// <para>In the default implementation, setting this property will update all associated <see cref="IMeasurement.PublishedTimestamp"/>.</para>
-        /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
-        /// </remarks>
-        public Ticks PublishedTimestamp
-        {
-            get
-            {
-                return m_publishedTimestamp;
-            }
-            set
-            {
-                m_publishedTimestamp = value;
-
-                if (m_measurements != null)
-                {
-                    foreach (IMeasurement measurement in m_measurements.Values)
-                    {
-                        measurement.PublishedTimestamp = m_publishedTimestamp;
-                    }
-                }
-            }
-        }
+        public Ticks CreatedTimestamp => m_lifespan.UtcTime.Ticks;
 
         /// <summary>
         /// Gets or sets reference to last measurement that was sorted into this <see cref="Frame"/>.
@@ -305,6 +262,7 @@ namespace GSF.TimeSeries
         /// <remarks>Hash code based on timestamp of frame.</remarks>
         public override int GetHashCode()
         {
+            // ReSharper disable once NonReadonlyMemberInGetHashCode
             return m_timestamp.GetHashCode();
         }
 

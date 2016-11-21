@@ -719,14 +719,14 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         public static void EncodeTagValue<T>(this T value, SampledValueTag tag, byte[] buffer, ref int index) where T : struct, IConvertible
         {
             if (!typeof(T).IsPrimitive)
-                throw new ArgumentException("Value type is not primitive", "value");
+                throw new ArgumentException("Value type is not primitive", nameof(value));
 
             // Not sure if booleans would be encoded correctly here (due to Marshal sizeof) - also not sure
             // how IEC 61850 deals with booleans - as a result, booleans should likely be avoided.
             // I wonder if compiler is smart enough to exclude this expression in imlementations since this
             // is always false for non boolean types - where is my WHERE expression like "~bool"...
             if (typeof(T) == typeof(bool))
-                throw new ArgumentOutOfRangeException("value", "Boolean encoding is currently not supported");
+                throw new ArgumentOutOfRangeException(nameof(value), "Boolean encoding is currently not supported");
 
             ushort length = (ushort)Marshal.SizeOf(typeof(T));
 
@@ -763,7 +763,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 value = "";
 
             if (value.Length > ushort.MaxValue)
-                throw new ArgumentOutOfRangeException("value", "Current implementation will not encode a string larger than " + ushort.MaxValue);
+                throw new ArgumentOutOfRangeException(nameof(value), "Current implementation will not encode a string larger than " + ushort.MaxValue);
 
             ushort length = (ushort)value.Length;
 

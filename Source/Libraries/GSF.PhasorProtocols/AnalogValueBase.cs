@@ -236,7 +236,7 @@ namespace GSF.PhasorProtocols
             if (index == 0)
                 return m_value;
             else
-                throw new ArgumentOutOfRangeException("index", "Invalid composite index requested");
+                throw new ArgumentOutOfRangeException(nameof(index), "Invalid composite index requested");
         }
 
         /// <summary>

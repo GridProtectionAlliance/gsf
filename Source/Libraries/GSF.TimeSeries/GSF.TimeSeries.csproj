@@ -87,7 +87,6 @@
     <Compile Include="Adapters\RoutingTables.cs" />
     <Compile Include="Alarm.cs" />
     <Compile Include="Common.cs" />
-    <Compile Include="MeasurementBase.cs" />
     <Compile Include="MeasurementMetadata.cs" />
     <Compile Include="ConcentratorBase.cs" />
     <Compile Include="Configuration\BinaryFileConfigurationLoader.cs" />
