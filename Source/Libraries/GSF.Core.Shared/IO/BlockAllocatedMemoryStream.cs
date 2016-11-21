@@ -64,9 +64,9 @@ namespace GSF.IO
     /// </remarks>
     public class BlockAllocatedMemoryStream : Stream
     {
-        //Note: Since byte blocks are pooled, they will not be 
-        //      initialized unless a Read/Write operation occurs 
-        //      when m_position > m_length
+        // Note: Since byte blocks are pooled, they will not be 
+        //       initialized unless a Read/Write operation occurs 
+        //       when m_position > m_length
 
         #region [ Members ]
 
@@ -148,39 +148,27 @@ namespace GSF.IO
 
         /// <summary>
         /// Gets a value that indicates whether the <see cref="BlockAllocatedMemoryStream"/> object supports reading.
-        /// This is always <c>true</c>.
         /// </summary>
-        public override bool CanRead
-        {
-            get
-            {
-                return true;
-            }
-        }
+        /// <remarks>
+        /// This is always <c>true</c>.
+        /// </remarks>
+        public override bool CanRead => true;
 
         /// <summary>
         /// Gets a value that indicates whether the <see cref="BlockAllocatedMemoryStream"/> object supports seeking.
-        /// This is always <c>true</c>.
         /// </summary>
-        public override bool CanSeek
-        {
-            get
-            {
-                return true;
-            }
-        }
+        /// <remarks>
+        /// This is always <c>true</c>.
+        /// </remarks>
+        public override bool CanSeek => true;
 
         /// <summary>
         /// Gets a value that indicates whether the <see cref="BlockAllocatedMemoryStream"/> object supports writing.
-        /// This is always <c>true</c>.
         /// </summary>
-        public override bool CanWrite
-        {
-            get
-            {
-                return true;
-            }
-        }
+        /// <remarks>
+        /// This is always <c>true</c>.
+        /// </remarks>
+        public override bool CanWrite => true;
 
         /// <summary>
         /// Gets current stream length for this <see cref="BlockAllocatedMemoryStream"/> instance.
@@ -230,18 +218,16 @@ namespace GSF.IO
         /// <summary>
         /// Releases the unmanaged resources used by the <see cref="BlockAllocatedMemoryStream"/> object and optionally releases the managed resources.
         /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; otherwise, <c>false</c> to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
             if (!m_disposed)
             {
                 try
                 {
+                    // Make sure buffer blocks get returned to the pool
                     if (disposing)
-                    {
-                        // Make sure buffer blocks get returned to the pool
                         Clear();
-                    }
                 }
                 finally
                 {
@@ -260,13 +246,13 @@ namespace GSF.IO
             m_length = 0;
             m_capacity = 0;
 
-            //In the event that an exception occurs, we don't want to have released blocks that are still in this memory stream.
-            var blocks = m_blocks;
+            // In the event that an exception occurs, we don't want to have released blocks that are still in this memory stream.
+            List<byte[]> blocks = m_blocks;
+
             m_blocks = new List<byte[]>();
+
             foreach (var block in blocks)
-            {
                 MemoryBlockPool.Enqueue(block);
-            }
         }
 
         /// <summary>
@@ -306,24 +292,27 @@ namespace GSF.IO
                     break;
             }
 
-            //Note: The length is not adjusted after this seek to reflect what MemoryStream.Seek does.
-
+            // Note: the length is not adjusted after this seek to reflect what MemoryStream.Seek does
             return m_position;
         }
 
         /// <summary>
-        /// Sets the length of the current stream to the specified value. If 
-        /// this length is larger than the previous length, the data
-        /// is initialized to 0's between the previous length and the current length.
+        /// Sets the length of the current stream to the specified value.
         /// </summary>
         /// <param name="value">The value at which to set the length.</param>
+        /// <remarks>
+        /// If this length is larger than the previous length, the data is initialized to 0's between the previous length and the current length.
+        /// </remarks>
         public override void SetLength(long value)
         {
             if (value > m_capacity)
                 EnsureCapacity(value);
+
             if (m_length < value)
                 InitializeToPosition(value);
+
             m_length = value;
+
             if (m_position > m_length)
                 m_position = m_length;
         }
@@ -350,7 +339,7 @@ namespace GSF.IO
 
             buffer.ValidateParameters(startIndex, length);
 
-            //Do not read beyond the end of the stream.
+            // Do not read beyond the end of the stream
             long remainingBytes = m_length - m_position;
 
             if (remainingBytes <= 0)
@@ -361,7 +350,7 @@ namespace GSF.IO
 
             int bytesRead = length;
 
-            //Must read 1 block at a time.
+            // Must read 1 block at a time
             do
             {
                 int blockOffset = (int)(m_position & BlockMask);
@@ -420,18 +409,15 @@ namespace GSF.IO
 
             if (m_position + length > m_capacity)
                 EnsureCapacity(m_position + length);
+
             if (m_position > m_length)
-            {
                 InitializeToPosition(m_position);
-            }
+
             if (m_length < m_position + length)
-            {
                 m_length = m_position + length;
-            }
+
             if (length == 0)
-            {
                 return;
-            }
 
             do
             {
@@ -459,13 +445,12 @@ namespace GSF.IO
 
             if (m_position + 1 > m_capacity)
                 EnsureCapacity(m_position + 1);
+
             if (m_position > m_length)
                 InitializeToPosition(m_position);
 
             if (m_length < m_position + 1)
-            {
                 m_length = m_position + 1;
-            }
 
             m_blocks[(int)(m_position >> ShiftBits)][m_position & BlockMask] = value;
             m_position++;
@@ -508,21 +493,24 @@ namespace GSF.IO
         /// <exception cref="ObjectDisposedException">The stream is closed.</exception>
         public void ReadFrom(Stream source, long length)
         {
-            //Note: A faster way would be to write directly to the BlockAllocatedMemoryStream
-
+            // Note: A faster way would be to write directly to the BlockAllocatedMemoryStream
             if (m_disposed)
                 throw new ObjectDisposedException("BlockAllocatedMemoryStream", "The stream is closed.");
 
             byte[] buffer = MemoryBlockPool.Dequeue();
+
             do
             {
                 int bytesRead = source.Read(buffer, 0, (int)Math.Min(BlockSize, length));
+
                 if (bytesRead == 0)
                     throw new EndOfStreamException();
+
                 length -= bytesRead;
                 Write(buffer, 0, bytesRead);
             }
             while (length > 0);
+
             MemoryBlockPool.Enqueue(buffer);
         }
 
@@ -580,6 +568,7 @@ namespace GSF.IO
         private void InitializeToPosition(long position)
         {
             long bytesToClear = position - m_length;
+
             while (bytesToClear > 0)
             {
                 int bytesToClearInBlock = (int)Math.Min(bytesToClear, BlockSize - (m_length & BlockMask));
@@ -592,8 +581,8 @@ namespace GSF.IO
         #endregion
 
 
-        //Allow up to 100 items of 8KB items to remain on the buffer pool. This might need to be increased if the buffer pool becomes more 
-        //extensively used. Allocation Statistics will be logged in the Logger.
+        // Allow up to 100 items of 8KB items to remain on the buffer pool. This might need to be increased if the buffer pool becomes more 
+        // extensively used. Allocation Statistics will be logged in the Logger.
         private static readonly DynamicObjectPool<byte[]> MemoryBlockPool = new DynamicObjectPool<byte[]>(() => new byte[BlockSize], 100);
     }
 }
