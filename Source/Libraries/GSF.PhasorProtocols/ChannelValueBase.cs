@@ -154,25 +154,6 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Creates a new <see cref="IMeasurement"/> value for specified composite value for this <see cref="ChannelValueBase{T}"/>.
-        /// </summary>
-        /// <param name="valueIndex">Composite value index for which to derive new <see cref="IMeasurement"/> value.</param>
-        /// <returns>New <see cref="IMeasurement"/> value for specified composite value for this <see cref="ChannelValueBase{T}"/>.</returns>
-        protected virtual IMeasurement CreateMeasurement(int valueIndex)
-        {
-            Measurement measurement = new Measurement
-            {
-                Timestamp = Parent.Parent.Timestamp,
-                Value = GetCompositeValue(valueIndex)
-            };
-
-            measurement.Metadata = measurement.Metadata.ChangeMeasurementValueFilter(GetMeasurementValueFilterFunction(valueIndex));
-            measurement.StateFlags = (Parent.SynchronizationIsValid && measurement.Timestamp.Value != -1 ? MeasurementStateFlags.Normal : MeasurementStateFlags.BadTime) | (Parent.DataIsValid ? MeasurementStateFlags.Normal : MeasurementStateFlags.BadData);
-
-            return measurement;
-        }
-
-        /// <summary>
         /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="ChannelValueBase{T}"/> object.
         /// </summary>
         public override Dictionary<string, string> Attributes
@@ -209,6 +190,25 @@ namespace GSF.PhasorProtocols
         /// </remarks>
         /// <returns>A <see cref="double"/> representing the composite value.</returns>
         public abstract double GetCompositeValue(int index);
+
+        /// <summary>
+        /// Creates a new <see cref="IMeasurement"/> value for specified composite value for this <see cref="ChannelValueBase{T}"/>.
+        /// </summary>
+        /// <param name="valueIndex">Composite value index for which to derive new <see cref="IMeasurement"/> value.</param>
+        /// <returns>New <see cref="IMeasurement"/> value for specified composite value for this <see cref="ChannelValueBase{T}"/>.</returns>
+        protected virtual IMeasurement CreateMeasurement(int valueIndex)
+        {
+            Measurement measurement = new Measurement
+            {
+                Timestamp = Parent.Parent.Timestamp,
+                Value = GetCompositeValue(valueIndex)
+            };
+
+            measurement.Metadata = measurement.Metadata.ChangeMeasurementValueFilter(GetMeasurementValueFilterFunction(valueIndex));
+            measurement.StateFlags = (Parent.SynchronizationIsValid && measurement.Timestamp.Value != -1 ? MeasurementStateFlags.Normal : MeasurementStateFlags.BadTime) | (Parent.DataIsValid ? MeasurementStateFlags.Normal : MeasurementStateFlags.BadData);
+
+            return measurement;
+        }
 
         /// <summary>
         /// Gets function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values.

@@ -1175,9 +1175,7 @@ namespace PhasorProtocolAdapters
             {
                 // Unregister each existing device from the statistics engine
                 foreach (ConfigurationCell device in DefinedDevices)
-                {
                     StatisticsEngine.Unregister(device);
-                }
             }
 
             m_definedDevices = new ConcurrentDictionary<ushort, DeviceStatisticsHelper<ConfigurationCell>>();
@@ -1702,36 +1700,6 @@ namespace PhasorProtocolAdapters
                 m_measurementCounter.Stop();
         }
 
-        //ToDo: Remove this code or deprecate it as it is no longer used.
-        ///// <summary>
-        ///// Map parsed measurement value to defined measurement attributes (i.e., assign meta-data to parsed measured value).
-        ///// </summary>
-        ///// <param name="mappedMeasurements">Destination collection for the mapped measurement values.</param>
-        ///// <param name="signalReference">Derived <see cref="SignalReference"/> string for the parsed measurement value.</param>
-        ///// <param name="parsedMeasurement">The parsed <see cref="IMeasurement"/> value.</param>
-        ///// <remarks>
-        ///// This procedure is used to identify a parsed measurement value by its derived signal reference and apply the
-        ///// additional needed measurement meta-data attributes (i.e., ID, Source, Adder and Multiplier).
-        ///// </remarks>
-        //protected void MapMeasurementAttributes(List<IMeasurement> mappedMeasurements, string signalReference, IMeasurement parsedMeasurement)
-        //{
-        //    // Coming into this function the parsed measurement value will only have a "value" and a "timestamp";
-        //    // the measurement will not yet be associated with an actual historian measurement ID as the measurement
-        //    // will have come directly out of the parsed phasor protocol data frame.  We take the generated signal
-        //    // reference and use that to lookup the actual historian measurement ID, source, adder and multiplier.
-        //    MeasurementMetadata definedMeasurement;
-
-        //    // Lookup signal reference in defined measurement list
-        //    if (m_definedMeasurements.TryGetValue(signalReference, out definedMeasurement))
-        //    {
-        //        // Assign ID and other relevant attributes to the parsed measurement value
-        //        parsedMeasurement.Metadata = definedMeasurement;
-
-        //        // Add the updated measurement value to the destination measurement collection
-        //        mappedMeasurements.Add(parsedMeasurement);
-        //    }
-        //}
-
         /// <summary>
         /// Map parsed measurement value to defined measurement attributes (i.e., assign meta-data to parsed measured value).
         /// </summary>
@@ -1740,14 +1708,14 @@ namespace PhasorProtocolAdapters
         /// <param name="parsedMeasurement">The parsed <see cref="IMeasurement"/> value.</param>
         protected void MapMeasurementAttributes(List<IMeasurement> mappedMeasurements, MeasurementMetadata metadata, IMeasurement parsedMeasurement)
         {
-            if (metadata != null)
-            {
-                // Assign ID and other relevant attributes to the parsed measurement value
-                parsedMeasurement.Metadata = metadata;
+            if ((object)metadata == null)
+                return;
+
+            // Assign ID and other relevant attributes to the parsed measurement value
+            parsedMeasurement.Metadata = metadata;
                
-                // Add the updated measurement value to the destination measurement collection
-                mappedMeasurements.Add(parsedMeasurement);
-            }
+            // Add the updated measurement value to the destination measurement collection
+            mappedMeasurements.Add(parsedMeasurement);
         }
 
         /// <summary>
@@ -1960,6 +1928,7 @@ namespace PhasorProtocolAdapters
             int count;
 
             count = phasorValues.Count;
+
             for (int x = 0; x < count; x++)
             {
                 foreach (IMeasurement measurement in phasorValues[x].Measurements)
@@ -1970,6 +1939,7 @@ namespace PhasorProtocolAdapters
             }
 
             count = digitalValues.Count;
+
             for (int x = 0; x < count; x++)
             {
                 foreach (IMeasurement measurement in digitalValues[x].Measurements)
@@ -1980,6 +1950,7 @@ namespace PhasorProtocolAdapters
             }
 
             count = analogValues.Count;
+
             for (int x = 0; x < count; x++)
             {
                 foreach (IMeasurement measurement in analogValues[x].Measurements)
