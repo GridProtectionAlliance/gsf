@@ -821,7 +821,6 @@ namespace GSF.TimeSeries.Transport
         private Dictionary<X509Certificate, DataRow> m_subscriberIdentities;
         private ConcurrentDictionary<Guid, ClientConnection> m_clientConnections;
         private readonly ConcurrentDictionary<Guid, IServer> m_clientPublicationChannels;
-        private readonly ConcurrentDictionary<MeasurementKey, Guid> m_signalIDCache;
         private readonly Dictionary<Guid, Dictionary<int, string>> m_clientNotifications;
         private readonly object m_clientNotificationsLock;
         private SharedTimer m_commandChannelRestartTimer;
@@ -878,7 +877,6 @@ namespace GSF.TimeSeries.Transport
 
             m_clientConnections = new ConcurrentDictionary<Guid, ClientConnection>();
             m_clientPublicationChannels = new ConcurrentDictionary<Guid, IServer>();
-            m_signalIDCache = new ConcurrentDictionary<MeasurementKey, Guid>();
             m_clientNotifications = new Dictionary<Guid, Dictionary<int, string>>();
             m_clientNotificationsLock = new object();
             m_securityMode = DefaultSecurityMode;
@@ -2080,7 +2078,7 @@ namespace GSF.TimeSeries.Transport
                 // a runtime index optimization for the allowed measurements.
                 foreach (MeasurementKey key in inputMeasurementKeys)
                 {
-                    signalID = LookupSignalID(key);
+                    signalID = key.SignalID;
 
                     // Validate that subscriber has rights to this signal
                     if (signalID != Guid.Empty && hasRightsFunc(signalID))
@@ -2262,41 +2260,6 @@ namespace GSF.TimeSeries.Transport
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Looks up <see cref="Guid"/> signal ID for given <see cref="MeasurementKey"/>.
-        /// </summary>
-        /// <param name="key"><see cref="MeasurementKey"/> to lookup.</param>
-        /// <returns><see cref="Guid"/> signal ID if found; otherwise an empty Guid.</returns>
-        protected Guid LookupSignalID(MeasurementKey key)
-        {
-            // Attempt to lookup measurement key's signal ID that may have already been cached
-            return m_signalIDCache.GetOrAdd(key, keyParam =>
-            {
-                Guid signalID = Guid.Empty;
-
-                if ((object)DataSource != null && DataSource.Tables.Contains("ActiveMeasurements"))
-                {
-                    // Attempt to lookup input measurement keys for given source IDs from default measurement table, if defined
-                    try
-                    {
-                        DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select("ID='" + keyParam.ToString() + "'");
-
-                        if (filteredRows.Length > 0)
-                            Guid.TryParse(filteredRows[0]["SignalID"].ToString(), out signalID);
-                    }
-                    catch
-                    {
-                        // Errors here are not catastrophic, this simply limits the auto-assignment of input measurement keys based on specified source ID's
-                    }
-                }
-
-                if (signalID == Guid.Empty)
-                    signalID = key.SignalID;
-
-                return signalID;
-            });
         }
 
         /// <summary>
