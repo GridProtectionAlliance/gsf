@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  BlockAllocatedMemoryStream.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -20,39 +20,15 @@
 //       Adapted from the "MemoryTributary" class written by Sebastian Friston:
 //          Source Code: http://memorytributary.codeplex.com/
 //          Article: http://www.codeproject.com/Articles/348590/A-replacement-for-MemoryStream
+//  11/21/2016 - Steven E. Chisholm
+//       A complete refresh of BlockAllocatedMemoryStream and how it works.
 //
 //******************************************************************************************************
-
-#region [ Contributor License Agreements ]
-
-/******************************************************************************\
-   Copyright (c) 2012 Sebastian Friston
-  
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
-
-   The above copyright notice and this permission notice shall be included in
-   all copies or substantial portions of the Software.
-
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
-  
-\******************************************************************************/
-
-#endregion
 
 using System;
 using System.Collections.Generic;
 using System.IO;
+using GSF.Collections;
 
 // ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.IO
@@ -88,20 +64,22 @@ namespace GSF.IO
     /// </remarks>
     public class BlockAllocatedMemoryStream : Stream
     {
+        //Note: Since byte blocks are pooled, they will not be 
+        //      initialized unless a Read/Write operation occurs 
+        //      when m_position > m_length
+
         #region [ Members ]
 
         // Constants
-
-        /// <summary>
-        /// Default value for <see cref="BlockSize"/> property.
-        /// </summary>
-        public const int DefaultBlockSize = 16384;
+        private const int BlockSize = 8 * 1024;
+        private const int ShiftBits = 3 + 10;
+        private const int BlockMask = BlockSize - 1;
 
         // Fields
+        private List<byte[]> m_blocks;
         private long m_length;
         private long m_position;
-        private readonly int m_blockSize;
-        private readonly List<byte[]> m_blocks = new List<byte[]>();
+        private long m_capacity;
         private bool m_disposed;
 
         #endregion
@@ -113,7 +91,7 @@ namespace GSF.IO
         /// </summary>
         public BlockAllocatedMemoryStream()
         {
-            m_blockSize = DefaultBlockSize;
+            m_blocks = new List<byte[]>();
         }
 
         /// <summary>
@@ -127,25 +105,7 @@ namespace GSF.IO
         /// memory buffers. Subsequently, the notion of a non-expandable stream is not supported.
         /// </remarks>
         public BlockAllocatedMemoryStream(byte[] buffer)
-            : this(buffer, 0, (object)buffer == null ? 0 : buffer.Length, DefaultBlockSize)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of <see cref="BlockAllocatedMemoryStream"/> from specified <paramref name="buffer"/>
-        /// and desired block size.
-        /// </summary>
-        /// <param name="buffer">Initial buffer to copy into stream.</param>
-        /// <param name="blockSize">Desired size of memory blocks.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">Block size must be greater than zero.</exception>
-        /// <remarks>
-        /// Unlike <see cref="MemoryStream"/>, the <see cref="BlockAllocatedMemoryStream"/> will not use the provided
-        /// <paramref name="buffer"/> as its backing buffer. The buffer will be copied into internally managed reusable
-        /// memory buffers. Subsequently, the notion of a non-expandable stream is not supported.
-        /// </remarks>
-        public BlockAllocatedMemoryStream(byte[] buffer, int blockSize)
-            : this(buffer, 0, (object)buffer == null ? 0 : buffer.Length, blockSize)
+            : this(buffer, 0, (object)buffer == null ? 0 : buffer.Length)
         {
         }
 
@@ -166,37 +126,9 @@ namespace GSF.IO
         /// memory buffers. Subsequently, the notion of a non-expandable stream is not supported.
         /// </remarks>
         public BlockAllocatedMemoryStream(byte[] buffer, int startIndex, int length)
-            : this(buffer, startIndex, length, DefaultBlockSize)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of <see cref="BlockAllocatedMemoryStream"/> from specified region of <paramref name="buffer"/>
-        /// and desired block size.
-        /// </summary>
-        /// <param name="buffer">Initial buffer to copy into stream.</param>
-        /// <param name="startIndex">0-based start index into the <paramref name="buffer"/>.</param>
-        /// <param name="length">Valid number of bytes within <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
-        /// <param name="blockSize">Desired size of memory blocks.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
-        /// <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
-        /// </exception>
-        /// <exception cref="ArgumentOutOfRangeException">Block size must be greater than zero.</exception>
-        /// <remarks>
-        /// Unlike <see cref="MemoryStream"/>, the <see cref="BlockAllocatedMemoryStream"/> will not use the provided
-        /// <paramref name="buffer"/> as its backing buffer. The buffer will be copied into internally managed reusable
-        /// memory buffers. Subsequently, the notion of a non-expandable stream is not supported.
-        /// </remarks>
-        public BlockAllocatedMemoryStream(byte[] buffer, int startIndex, int length, int blockSize)
+            : this()
         {
             buffer.ValidateParameters(startIndex, length);
-
-            if (blockSize <= 0)
-                throw new ArgumentOutOfRangeException(nameof(blockSize), "Block size must be greater than zero.");
-
-            m_blockSize = blockSize;
             Write(buffer, startIndex, length);
         }
 
@@ -205,29 +137,9 @@ namespace GSF.IO
         /// </summary>
         /// <param name="capacity">Initial length of the stream.</param>
         public BlockAllocatedMemoryStream(int capacity)
-            : this(capacity, DefaultBlockSize)
+            : this()
         {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of <see cref="BlockAllocatedMemoryStream"/> for specified <paramref name="capacity"/>
-        /// and desired block size.
-        /// </summary>
-        /// <param name="capacity">Initial length of the stream.</param>
-        /// <param name="blockSize">Desired size of memory blocks.</param>
-        /// <exception cref="ArgumentOutOfRangeException">Block size must be greater than zero.</exception>
-        public BlockAllocatedMemoryStream(int capacity, int blockSize)
-        {
-            if (blockSize <= 0)
-                throw new ArgumentOutOfRangeException(nameof(blockSize), "Block size must be greater than zero.");
-
-            m_blockSize = blockSize;
-
             SetLength(capacity);
-
-            // Pre-allocate memory at desired capacity
-            while (m_blocks.Count <= (int)(capacity / blockSize))
-                m_blocks.Add(new byte[blockSize]);
         }
 
         #endregion
@@ -267,17 +179,6 @@ namespace GSF.IO
             get
             {
                 return true;
-            }
-        }
-
-        /// <summary>
-        /// Gets current block size defined for this <see cref="BlockAllocatedMemoryStream"/> instance.
-        /// </summary>
-        public int BlockSize
-        {
-            get
-            {
-                return m_blockSize;
             }
         }
 
@@ -322,46 +223,6 @@ namespace GSF.IO
             }
         }
 
-        /// <summary>
-        /// Gets the block of memory currently addressed by <see cref="Position"/>.
-        /// </summary>
-        /// <remarks>
-        /// The buffer returned by the property is owned and managed by this <see cref="BlockAllocatedMemoryStream"/>,
-        /// make sure direct access to this buffer is maintained within this class and not exposed externally.
-        /// </remarks>
-        protected byte[] Block
-        {
-            get
-            {
-                while (m_blocks.Count <= BlockIndex)
-                    m_blocks.Add(new byte[m_blockSize]);
-
-                return m_blocks[BlockIndex];
-            }
-        }
-
-        /// <summary>
-        /// Gets the index of the block currently addressed by <see cref="Position"/>.
-        /// </summary>
-        protected int BlockIndex
-        {
-            get
-            {
-                return (int)(m_position / m_blockSize);
-            }
-        }
-
-        /// <summary>
-        /// Gets the offset of the byte currently addressed by <see cref="Position"/> relative to the block that contains it.
-        /// </summary>
-        protected int BlockOffset
-        {
-            get
-            {
-                return (int)(m_position % m_blockSize);
-            }
-        }
-
         #endregion
 
         #region [ Methods ]
@@ -397,7 +258,15 @@ namespace GSF.IO
         {
             m_position = 0;
             m_length = 0;
-            m_blocks.Clear();
+            m_capacity = 0;
+
+            //In the event that an exception occurs, we don't want to have released blocks that are still in this memory stream.
+            var blocks = m_blocks;
+            m_blocks = new List<byte[]>();
+            foreach (var block in blocks)
+            {
+                MemoryBlockPool.Enqueue(block);
+            }
         }
 
         /// <summary>
@@ -433,25 +302,28 @@ namespace GSF.IO
                     if (m_length + offset < 0L)
                         throw new IOException("Seek was attempted before the beginning of the stream.");
 
-                    // Note change from original code which forced negative offset - following code
-                    // matches normal MemoryStream operation for end of stream origin:
                     m_position = m_length + offset;
                     break;
             }
+
+            //Note: The length is not adjusted after this seek to reflect what MemoryStream.Seek does.
 
             return m_position;
         }
 
         /// <summary>
-        /// Sets the length of the current stream to the specified value.
+        /// Sets the length of the current stream to the specified value. If 
+        /// this length is larger than the previous length, the data
+        /// is initialized to 0's between the previous length and the current length.
         /// </summary>
         /// <param name="value">The value at which to set the length.</param>
         public override void SetLength(long value)
         {
+            if (value > m_capacity)
+                EnsureCapacity(value);
+            if (m_length < value)
+                InitializeToPosition(value);
             m_length = value;
-
-            // Note change from original code which did not perform the following operation - code
-            // matches MemoryStream operation when position exceeds length for this function:
             if (m_position > m_length)
                 m_position = m_length;
         }
@@ -478,32 +350,32 @@ namespace GSF.IO
 
             buffer.ValidateParameters(startIndex, length);
 
-            // Only read as far as end of buffer regardless of how much data was requested
-            int remaining = (int)(m_length - m_position);
+            //Do not read beyond the end of the stream.
+            long remainingBytes = m_length - m_position;
 
-            if (remaining <= 0)
+            if (remainingBytes <= 0)
                 return 0;
 
-            if (length > remaining)
-                length = remaining;
+            if (length > remainingBytes)
+                length = (int)remainingBytes;
 
-            int read = 0;
-            int count;
+            int bytesRead = length;
 
+            //Must read 1 block at a time.
             do
             {
-                count = Math.Min(length, m_blockSize - BlockOffset);
+                int blockOffset = (int)(m_position & BlockMask);
+                int bytesToRead = Math.Min(length, BlockSize - blockOffset);
 
-                Buffer.BlockCopy(Block, BlockOffset, buffer, startIndex, count);
+                Buffer.BlockCopy(m_blocks[(int)(m_position >> ShiftBits)], blockOffset, buffer, startIndex, bytesToRead);
 
-                length -= count;
-                startIndex += count;
-                read += count;
-                m_position += count;
+                length -= bytesToRead;
+                startIndex += bytesToRead;
+                m_position += bytesToRead;
             }
             while (length > 0);
 
-            return read;
+            return bytesRead;
         }
 
         /// <summary>
@@ -521,7 +393,7 @@ namespace GSF.IO
             if (m_position >= m_length)
                 return -1;
 
-            byte value = Block[BlockOffset];
+            byte value = m_blocks[(int)(m_position >> ShiftBits)][(int)(m_position & BlockMask)];
             m_position++;
 
             return value;
@@ -546,32 +418,33 @@ namespace GSF.IO
 
             buffer.ValidateParameters(startIndex, length);
 
+            if (m_position + length > m_capacity)
+                EnsureCapacity(m_position + length);
+            if (m_position > m_length)
+            {
+                InitializeToPosition(m_position);
+            }
+            if (m_length < m_position + length)
+            {
+                m_length = m_position + length;
+            }
             if (length == 0)
+            {
                 return;
-
-            long originalPosition = m_position;
-            int count;
-
-            try
-            {
-                do
-                {
-                    count = Math.Min(length, m_blockSize - BlockOffset);
-                    EnsureCapacity(m_position + count);
-
-                    Buffer.BlockCopy(buffer, startIndex, Block, BlockOffset, count);
-
-                    length -= count;
-                    startIndex += count;
-                    m_position += count;
-                }
-                while (length > 0);
             }
-            catch (Exception)
+
+            do
             {
-                m_position = originalPosition;
-                throw;
+                int blockOffset = (int)(m_position & BlockMask);
+                int bytesToWrite = Math.Min(length, BlockSize - blockOffset);
+
+                Buffer.BlockCopy(buffer, startIndex, m_blocks[(int)(m_position >> ShiftBits)], blockOffset, bytesToWrite);
+
+                length -= bytesToWrite;
+                startIndex += bytesToWrite;
+                m_position += bytesToWrite;
             }
+            while (length > 0);
         }
 
         /// <summary>
@@ -584,8 +457,17 @@ namespace GSF.IO
             if (m_disposed)
                 throw new ObjectDisposedException("BlockAllocatedMemoryStream", "The stream is closed.");
 
-            EnsureCapacity(m_position + 1);
-            Block[BlockOffset] = value;
+            if (m_position + 1 > m_capacity)
+                EnsureCapacity(m_position + 1);
+            if (m_position > m_length)
+                InitializeToPosition(m_position);
+
+            if (m_length < m_position + 1)
+            {
+                m_length = m_position + 1;
+            }
+
+            m_blocks[(int)(m_position >> ShiftBits)][m_position & BlockMask] = value;
             m_position++;
         }
 
@@ -626,21 +508,22 @@ namespace GSF.IO
         /// <exception cref="ObjectDisposedException">The stream is closed.</exception>
         public void ReadFrom(Stream source, long length)
         {
+            //Note: A faster way would be to write directly to the BlockAllocatedMemoryStream
+
             if (m_disposed)
                 throw new ObjectDisposedException("BlockAllocatedMemoryStream", "The stream is closed.");
 
-            const int bufferSize = 8192;
-
-            byte[] buffer = new byte[bufferSize];
-            int read;
-
+            byte[] buffer = MemoryBlockPool.Dequeue();
             do
             {
-                read = source.Read(buffer, 0, (int)Math.Min(bufferSize, length));
-                length -= read;
-                Write(buffer, 0, read);
+                int bytesRead = source.Read(buffer, 0, (int)Math.Min(BlockSize, length));
+                if (bytesRead == 0)
+                    throw new EndOfStreamException();
+                length -= bytesRead;
+                Write(buffer, 0, bytesRead);
             }
             while (length > 0);
+            MemoryBlockPool.Enqueue(buffer);
         }
 
         /// <summary>
@@ -682,12 +565,35 @@ namespace GSF.IO
         /// Makes sure desired <paramref name="length"/> can be accommodated by future data accesses.
         /// </summary>
         /// <param name="length">Minimum desired stream capacity.</param>
-        protected void EnsureCapacity(long length)
+        private void EnsureCapacity(long length)
         {
-            if (length > m_length)
-                m_length = length;
+            while (m_capacity < length)
+            {
+                m_blocks.Add(MemoryBlockPool.Dequeue());
+                m_capacity += BlockSize;
+            }
+        }
+
+        /// <summary>
+        /// Initializes all of the bytes to zero.
+        /// </summary>
+        private void InitializeToPosition(long position)
+        {
+            long bytesToClear = position - m_length;
+            while (bytesToClear > 0)
+            {
+                int bytesToClearInBlock = (int)Math.Min(bytesToClear, BlockSize - (m_length & BlockMask));
+                Array.Clear(m_blocks[(int)(m_length >> ShiftBits)], (int)(m_length & BlockMask), bytesToClearInBlock);
+                m_length += bytesToClearInBlock;
+                bytesToClear = position - m_length;
+            }
         }
 
         #endregion
+
+
+        //Allow up to 100 items of 8KB items to remain on the buffer pool. This might need to be increased if the buffer pool becomes more 
+        //extensively used. Allocation Statistics will be logged in the Logger.
+        private static readonly DynamicObjectPool<byte[]> MemoryBlockPool = new DynamicObjectPool<byte[]>(() => new byte[BlockSize], 100);
     }
 }
