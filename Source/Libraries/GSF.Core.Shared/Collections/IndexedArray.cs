@@ -36,6 +36,8 @@ namespace GSF.Collection
     {
         private T[] m_items;
         private object m_syncRoot;
+        private T m_defaultValue;
+        private bool m_defaultSet;
 
         /// <summary>
         /// Creates an <see cref="IndexedArray{T}"/>.
@@ -44,6 +46,24 @@ namespace GSF.Collection
         {
             m_items = new T[32];
             m_syncRoot = new object();
+            m_defaultSet = false;
+            m_defaultValue = default(T);
+        }
+
+        /// <summary>
+        /// Creates an <see cref="IndexedArray{T}"/>.
+        /// </summary>
+        public IndexedArray(T defaultValue)
+        {
+            m_defaultValue = defaultValue;
+            m_items = new T[32];
+            m_syncRoot = new object();
+            m_defaultSet = true;
+            for (int x = 0; x < 32; x++)
+            {
+                m_items[x] = defaultValue;
+            }
+
         }
 
         /// <summary>
@@ -56,7 +76,7 @@ namespace GSF.Collection
             get
             {
                 if ((uint)index >= (uint)m_items.Length)
-                    return default(T);
+                    return m_defaultValue;
 
                 return m_items[index];
             }
@@ -80,6 +100,14 @@ namespace GSF.Collection
                 while (index >= m_items.Length)
                 {
                     T[] items = new T[m_items.Length * 2];
+
+                    if (m_defaultSet)
+                    {
+                        for (int x = m_items.Length; x < items.Length; x++)
+                        {
+                            items[x] = m_defaultValue;
+                        }
+                    }
                     m_items.CopyTo(items, 0);
                     Thread.MemoryBarrier();
                     m_items = items;
@@ -94,7 +122,17 @@ namespace GSF.Collection
         {
             lock (m_syncRoot)
             {
-                Array.Clear(m_items, 0, m_items.Length);
+                if (m_defaultSet)
+                {
+                    for (int x = m_items.Length; x < m_items.Length; x++)
+                    {
+                        m_items[x] = m_defaultValue;
+                    }
+                }
+                else
+                {
+                    Array.Clear(m_items, 0, m_items.Length);
+                }
             }
         }
 

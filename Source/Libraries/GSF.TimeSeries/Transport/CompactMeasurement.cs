@@ -361,7 +361,7 @@ namespace GSF.TimeSeries.Transport
         {
             get
             {
-                return m_signalIndexCache.GetSignalIndex(ID);
+                return m_signalIndexCache.GetSignalIndex(Key);
             }
             set
             {

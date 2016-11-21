@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+using GSF.Collection;
 using GSF.Parsing;
 
 #pragma warning disable 618
@@ -60,8 +61,11 @@ namespace GSF.TimeSeries.Transport
         private ConcurrentDictionary<ushort, MeasurementKey> m_reference;
         private Guid[] m_unauthorizedSignalIDs;
 
+        /// <summary>
+        /// Lookups MeasurementKey.RuntimeID and returns ushort SignalIndex. -1 means it does not exist.
+        /// </summary>
         [NonSerialized] // SignalID reverse lookup runtime cache (used to speed deserialization)
-        private Dictionary<Guid, ushort> m_signalIDCache;
+        private IndexedArray<int> m_signalIDCache;
 
         [NonSerialized]
         private Encoding m_encoding;
@@ -76,7 +80,7 @@ namespace GSF.TimeSeries.Transport
         public SignalIndexCache()
         {
             m_reference = new ConcurrentDictionary<ushort, MeasurementKey>();
-            m_signalIDCache = new Dictionary<Guid, ushort>();
+            m_signalIDCache = new IndexedArray<int>(-1);
         }
 
         /// <summary>
@@ -147,9 +151,13 @@ namespace GSF.TimeSeries.Transport
             }
             set
             {
-                Dictionary<Guid, ushort> signalIDCache = value.ToDictionary(pair => pair.Value.SignalID, pair => pair.Key);
-
                 m_reference = value;
+                IndexedArray<int> signalIDCache = new IndexedArray<int>(-1);
+                foreach (var pair in value)
+                {
+                    signalIDCache[pair.Value.RuntimeID] = pair.Key;
+                }
+
                 m_signalIDCache = signalIDCache;
             }
         }
@@ -250,16 +258,15 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets runtime signal index for given <see cref="Guid"/> signal ID.
         /// </summary>
-        /// <param name="signalID"><see cref="Guid"/> signal ID used to lookup associated runtime signal index.</param>
-        /// <returns>Runtime signal index for given <see cref="Guid"/> <paramref name="signalID"/>.</returns>
-        public ushort GetSignalIndex(Guid signalID)
+        /// <param name="key">The <see cref="MeasurementKey"/> used to lookup associated runtime signal index.</param>
+        /// <returns>Runtime signal index for given <see cref="MeasurementKey"/> <paramref name="key"/>.</returns>
+        public ushort GetSignalIndex(MeasurementKey key)
         {
-            ushort index;
-
-            if (!m_signalIDCache.TryGetValue(signalID, out index))
+            int value = m_signalIDCache[key.RuntimeID];
+            if (value < 0)
                 return ushort.MaxValue;
 
-            return index;
+            return (ushort)value;
         }
 
         /// <summary>

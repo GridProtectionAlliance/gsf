@@ -675,7 +675,7 @@ namespace GSF.TimeSeries.Transport
                         m_bufferBlockSequenceNumber++;
 
                         // Copy signal index into buffer
-                        bufferBlockSignalIndex = m_signalIndexCache.GetSignalIndex(bufferBlockMeasurement.ID);
+                        bufferBlockSignalIndex = m_signalIndexCache.GetSignalIndex(bufferBlockMeasurement.Key);
                         BigEndian.CopyBytes(bufferBlockSignalIndex, bufferBlock, 4);
 
                         // Append measurement data and send
