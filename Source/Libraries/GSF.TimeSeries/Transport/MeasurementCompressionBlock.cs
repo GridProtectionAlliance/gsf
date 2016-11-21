@@ -47,6 +47,7 @@ namespace GSF.TimeSeries.Transport
         private long m_previousTimestamp;
         private PointMetaData m_lastPoint;
         private readonly Dictionary<ushort, PointMetaData> m_points;
+        private readonly List<PointMetaData> m_pointByID;
 
         public MeasurementCompressionBlock()
         {
@@ -55,7 +56,7 @@ namespace GSF.TimeSeries.Transport
             m_buffer = new byte[BufferSize];
             m_previousTimestamp = 0;
             m_points = new Dictionary<ushort, PointMetaData>();
-
+            m_pointByID = new List<PointMetaData>();
             Clear();
         }
 
@@ -114,15 +115,22 @@ namespace GSF.TimeSeries.Transport
 
             PointMetaData point;
 
-            if (!m_points.TryGetValue(id, out point))
+            //Due to the nature of measurements routing in a common order (C37 always generates measurements in the same order)
+            //there is an ~80% chance that a dictionary lookup can be avoided. 
+            if (m_lastPoint.ExpectedNextPointID < m_pointByID.Count && m_pointByID[m_lastPoint.ExpectedNextPointID].SignalID == id)
+            {
+                point = m_pointByID[m_lastPoint.ExpectedNextPointID];
+            }
+            else if (!m_points.TryGetValue(id, out point))
             {
                 m_lastMeasurementHeaderIndex = -1;
                 point = new PointMetaData();
                 point.PointID = m_points.Count;
                 m_lastPoint.ExpectedNextPointID = point.PointID;
                 m_points.Add(id, point);
+                m_pointByID.Add(point);
                 buffer[index++] = 5;
-                Buffer.BlockCopy(BitConverter.GetBytes(id), 0, buffer, index, 2);
+                LittleEndian.CopyBytes(id, buffer, index);
                 index += 2;
             }
 
@@ -181,29 +189,43 @@ namespace GSF.TimeSeries.Transport
 
             if ((code & 16) != 0)
             {
-                buffer[index++] = (byte)quality;
-                buffer[index++] = (byte)(quality >> 8);
-                buffer[index++] = (byte)(quality >> 16);
-                buffer[index++] = (byte)(quality >> 24);
+                //The implemented method is faster than this method commented out
+                //because not incrementing the index every time allows the CPU
+                //to execute these operations simultaneously rather than
+                //having to wait for a write barrier after every write.
+                //buffer[index++] = (byte)quality;
+                //buffer[index++] = (byte)(quality >> 8);
+                //buffer[index++] = (byte)(quality >> 16);
+                //buffer[index++] = (byte)(quality >> 24);
+
+                buffer[index] = (byte)quality;
+                buffer[index + 1] = (byte)(quality >> 8);
+                buffer[index + 2] = (byte)(quality >> 16);
+                buffer[index + 3] = (byte)(quality >> 24);
+                
+                index += 4;
             }
 
             if (bitsChanged > 0xFFFFFFu)
             {
-                buffer[index++] = (byte)bitsChanged;
-                buffer[index++] = (byte)(bitsChanged >> 8);
-                buffer[index++] = (byte)(bitsChanged >> 16);
-                buffer[index++] = (byte)(bitsChanged >> 24);
+                buffer[index] = (byte)bitsChanged;
+                buffer[index + 1] = (byte)(bitsChanged >> 8);
+                buffer[index + 2] = (byte)(bitsChanged >> 16);
+                buffer[index + 3] = (byte)(bitsChanged >> 24);
+                index += 4;
             }
             else if (bitsChanged > 0xFFFFu)
             {
-                buffer[index++] = (byte)bitsChanged;
-                buffer[index++] = (byte)(bitsChanged >> 8);
-                buffer[index++] = (byte)(bitsChanged >> 16);
+                buffer[index] = (byte)bitsChanged;
+                buffer[index + 1] = (byte)(bitsChanged >> 8);
+                buffer[index + 2] = (byte)(bitsChanged >> 16);
+                index += 3;
             }
             else if (bitsChanged > 0xFFu)
             {
-                buffer[index++] = (byte)bitsChanged;
-                buffer[index++] = (byte)(bitsChanged >> 8);
+                buffer[index] = (byte)bitsChanged;
+                buffer[index + 1] = (byte)(bitsChanged >> 8);
+                index += 2;
             }
             else if (bitsChanged > 0u)
             {

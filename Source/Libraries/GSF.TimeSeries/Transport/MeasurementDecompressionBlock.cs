@@ -136,8 +136,11 @@ namespace GSF.TimeSeries.Transport
             TryAgain:
             int index = m_startIndex;
 
-            if (IsEndOfStream())
-                return DecompressionExitCode.EndOfStreamOccured;
+            if (RemainingBytes(index) <= 25) //Avoids a function call that almost always returns false
+            {
+                if (IsEndOfStream())
+                    return DecompressionExitCode.EndOfStreamOccured;
+            }
 
             byte code;
 
@@ -157,11 +160,9 @@ namespace GSF.TimeSeries.Transport
 
             if ((code & 7) == 5)
             {
+                m_nextRunLength = -1;
                 point = new PointMetaData();
-
-                fixed (byte* signalID = &m_buffer[index])
-                    point.SignalID = *(ushort*)signalID;
-
+                point.SignalID = LittleEndian.ToUInt16(m_buffer, index);
                 index += 2;
 
                 point.PointID = m_points.Count;
@@ -177,6 +178,7 @@ namespace GSF.TimeSeries.Transport
 
             if ((code & 7) == 7)
             {
+                m_nextRunLength = -1;
                 userCommand = m_buffer[index++];
                 m_startIndex = index;
 
@@ -194,16 +196,32 @@ namespace GSF.TimeSeries.Transport
             }
 
             if ((code & 16) != 0)
-                point.LastQuality = (uint)(m_buffer[index++] | m_buffer[index++] << 8 | m_buffer[index++] << 16 | m_buffer[index++] << 24);
+            {
+                point.LastQuality = (uint)(m_buffer[index] | m_buffer[index + 1] << 8 | m_buffer[index + 2] << 16 | m_buffer[index + 3] << 24);
+                index += 4;
+            }
+
 
             if ((code & 7) == 1)
-                point.LastValue ^= m_buffer[index++];
+            {
+                point.LastValue ^= m_buffer[index];
+                index += 1;
+            }
             else if ((code & 7) == 2)
-                point.LastValue ^= (uint)(m_buffer[index++] | m_buffer[index++] << 8);
+            {
+                point.LastValue ^= (uint)(m_buffer[index] | m_buffer[index + 1] << 8);
+                index += 2;
+            }
             else if ((code & 7) == 3)
-                point.LastValue ^= (uint)(m_buffer[index++] | m_buffer[index++] << 8 | m_buffer[index++] << 16);
+            {
+                point.LastValue ^= (uint)(m_buffer[index] | m_buffer[index + 1] << 8 | m_buffer[index + 2] << 16);
+                index += 3;
+            }
             else if ((code & 7) == 4)
-                point.LastValue ^= (uint)(m_buffer[index++] | m_buffer[index++] << 8 | m_buffer[index++] << 16 | m_buffer[index++] << 24);
+            {
+                point.LastValue ^= (uint)(m_buffer[index] | m_buffer[index + 1] << 8 | m_buffer[index + 2] << 16 | m_buffer[index + 3] << 24);
+                index += 4;
+            }
 
             if ((code & 8) == 0)
             {
