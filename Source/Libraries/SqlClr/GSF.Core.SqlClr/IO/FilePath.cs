@@ -24,7 +24,7 @@
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace GSF.Core.SqlClr.IO
+namespace GSF.IO
 {
     public static partial class FilePath
     {

@@ -7,7 +7,7 @@
     <ProjectGuid>{D7A6A6A8-32C0-4A1C-B7C4-F6DEE841D2E1}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>GSF.Core.SqlClr</RootNamespace>
+    <RootNamespace>GSF</RootNamespace>
     <AssemblyName>GSF.Core.SqlClr</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
