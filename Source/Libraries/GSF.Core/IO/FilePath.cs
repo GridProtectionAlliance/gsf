@@ -203,6 +203,7 @@ namespace GSF.IO
                 return false;
             }
         }
+
         /// <summary>
         /// Determines if the specified <paramref name="filePath"/> is contained with the current executable path.
         /// </summary>
@@ -403,8 +404,8 @@ namespace GSF.IO
 
         [DllImport("mpr.dll", EntryPoint = "WNetCancelConnection2W", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
         private static extern int WNetCancelConnection2(string lpName, int dwFlags, [MarshalAs(UnmanagedType.Bool)] bool fForce);
-        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
 
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool GetDiskFreeSpaceEx(string lpDirectoryName, out ulong lpFreeBytesAvailable, out ulong lpTotalNumberOfBytes, out ulong lpTotalNumberOfFreeBytes);
 
