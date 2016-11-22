@@ -2235,9 +2235,7 @@ namespace PhasorProtocolAdapters
 
         private void m_frameParser_ParsingException(object sender, EventArgs<Exception> e)
         {
-            Log.Publish(MessageLevel.Warning, "Frame Parsing Exception", e.Argument.Message, null, e.Argument);
-            using (Logger.SuppressLogMessages())
-                OnProcessException(e.Argument);
+            OnProcessException(MessageLevel.Warning, "Frame Parsing Exception", e.Argument);
         }
 
         private void m_frameParser_ExceededParsingExceptionThreshold(object sender, EventArgs e)

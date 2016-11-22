@@ -916,12 +916,68 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
+        /// Raises the <see cref="StatusMessage"/> event and sends this data to the <see cref="Logger"/>.
+        /// </summary>
+        /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
+        /// <param name="eventName">A fixed string to classify this event.</param>
+        /// <param name="formattedStatus">Formatted status message.</param>
+        /// <param name="args">Arguments for <paramref name="formattedStatus"/>.</param>
+        /// <remarks>
+        /// <see pref="eventName"/> should be a constant string value associated with what type of message is being generated. 
+        /// In general, there should only be a few dozen distinct event names per class. Exceeding this threshold.
+        /// Will cause the EventName to be replaced with a general warning that a usage issue has occurred.
+        /// </remarks>
+        protected void OnStatusMessage(MessageLevel level, string eventName, string formattedStatus, params object[] args)
+        {
+            string message = string.Format(formattedStatus, args);
+            Log.Publish(level, eventName, message);
+            using (Logger.SuppressLogMessages())
+                OnStatusMessage(message);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="StatusMessage"/> event and sends this data to the <see cref="Logger"/>.
+        /// </summary>
+        /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
+        /// <param name="eventName">A fixed string to classify this event.</param>
+        /// <param name="status">New status message.</param>
+        /// <remarks>
+        /// <see pref="eventName"/> should be a constant string value associated with what type of message is being generated. 
+        /// In general, there should only be a few dozen distinct event names per class. Exceeding this threshold.
+        /// Will cause the EventName to be replaced with a general warning that a usage issue has occurred.
+        /// </remarks>
+        protected void OnStatusMessage(MessageLevel level, string eventName, string status)
+        {
+            Log.Publish(level, eventName, status);
+            using (Logger.SuppressLogMessages())
+                OnStatusMessage(status);
+        }
+
+        /// <summary>
         /// Raises <see cref="ProcessException"/> event.
         /// </summary>
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
         protected virtual void OnProcessException(Exception ex)
         {
             ProcessException?.Invoke(this, new EventArgs<Exception>(ex));
+        }
+
+        /// <summary>
+        /// Raises <see cref="ProcessException"/> event.
+        /// </summary>
+        /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
+        /// <param name="eventName">A fixed string to classify this event.</param>
+        /// <param name="ex">Processing <see cref="Exception"/>.</param>
+        /// <remarks>
+        /// <see pref="eventName"/> should be a constant string value associated with what type of message is being generated. 
+        /// In general, there should only be a few dozen distinct event names per class. Exceeding this threshold.
+        /// Will cause the EventName to be replaced with a general warning that a usage issue has occurred.
+        /// </remarks>
+        protected void OnProcessException(MessageLevel level, string eventName, Exception ex)
+        {
+            Log.Publish(level, eventName, ex?.Message, null, ex);
+            using (Logger.SuppressLogMessages())
+                OnProcessException(ex);
         }
 
         /// <summary>
