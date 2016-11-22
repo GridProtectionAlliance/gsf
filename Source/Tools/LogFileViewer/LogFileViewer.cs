@@ -40,7 +40,9 @@ namespace LogFileViewer
 {
     internal partial class LogFileViewer : Form
     {
-        private List<LogMessage> m_messages;
+        private BindingSource m_bindingSource;
+        private DataTable m_dataTable;
+
         private List<IMessageMatch> m_filters;
         private string m_logPath;
         SortedList<string, byte[]> m_savedFilters = new SortedList<string, byte[]>();
@@ -71,9 +73,30 @@ namespace LogFileViewer
 
             m_logPath = logPath;
             m_filters = new List<IMessageMatch>();
-            m_messages = new List<LogMessage>();
 
             InitializeComponent();
+
+            m_bindingSource = new BindingSource();
+            m_dataTable = new DataTable();
+            m_dataTable.Columns.Add("Object", typeof(LogMessage));
+            m_dataTable.Columns.Add("File Name", typeof(string));
+            m_dataTable.Columns.Add("Time", typeof(DateTime));
+            m_dataTable.Columns.Add("Level", typeof(string));
+            m_dataTable.Columns.Add("Flags", typeof(string));
+            m_dataTable.Columns.Add("Type", typeof(string));
+            m_dataTable.Columns.Add("Event Name", typeof(string));
+            m_dataTable.Columns.Add("Message", typeof(string));
+            m_dataTable.Columns.Add("Details", typeof(string));
+            m_dataTable.Columns.Add("Exception", typeof(string));
+            m_dataTable.Columns.Add("_Filtered", typeof(bool));
+
+            m_bindingSource.Filter = "_Filtered=false";
+            m_bindingSource.DataSource = m_dataTable;
+            dgvResults.DataSource = m_bindingSource;
+
+            dgvResults.Columns["Time"].DefaultCellStyle.Format = "MM/dd/yyyy HH:mm:ss.fff";
+            dgvResults.Columns["Object"].Visible = false;
+            dgvResults.Columns["_Filtered"].Visible = false;
         }
 
         private void LogFileViewer_Load(object sender, EventArgs e)
@@ -82,38 +105,27 @@ namespace LogFileViewer
             LoadFilters();
         }
 
+        private void RefreshDataSource()
+        {
+
+        }
+
         private void RefreshFilters()
         {
-            DataTable dt = new DataTable();
-            dt.Columns.Add("Object", typeof(LogMessage));
-            dt.Columns.Add("Time", typeof(DateTime));
-            dt.Columns.Add("Level", typeof(string));
-            dt.Columns.Add("Type", typeof(string));
-            dt.Columns.Add("EventName", typeof(string));
-            dt.Columns.Add("Message", typeof(string));
-            dt.Columns.Add("Details", typeof(string));
-            dt.Columns.Add("Exception", typeof(string));
-
-            foreach (LogMessage message in m_messages)
+            m_bindingSource.RaiseListChangedEvents = false;
+            foreach (DataRow row in m_dataTable.Rows)
             {
-                if (m_filters.All(x => x.IsIncluded(message)))
+                LogMessage message = row["Object"] as LogMessage;
+                bool isFiltered = (bool)row["_Filtered"];
+                bool shouldFilter = !m_filters.All(x => x.IsIncluded(message));
+
+                if (isFiltered ^ shouldFilter)
                 {
-                    dt.Rows.Add(message, message.UtcTime.ToLocalTime(), $"{message.Classification} - {message.Level}",
-                        message.EventPublisherDetails.TypeName, message.EventPublisherDetails.EventName, message.Message,
-                        message.Details, message.ExceptionString);
+                    row["_Filtered"] = !isFiltered;
                 }
             }
-
-            dgvResults.DataSource = dt;
-            dgvResults.Columns["Object"].Visible = false;
-
-            foreach (DataGridViewColumn dc in dgvResults.Columns)
-            {
-                if (dc.ValueType == typeof(DateTime))
-                {
-                    dc.DefaultCellStyle.Format = "MM/dd/yyyy HH:mm:ss.fff";
-                }
-            }
+            m_bindingSource.RaiseListChangedEvents = true;
+            m_bindingSource.ResetBindings(false);
         }
 
         private void BtnLoad_Click(object sender, EventArgs e)
@@ -131,12 +143,73 @@ namespace LogFileViewer
 
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    m_messages.Clear();
+                    m_bindingSource.RaiseListChangedEvents = false;
+                    m_dataTable.Rows.Clear();
                     foreach (string file in dlg.FileNames)
                     {
+                        string fileWithoutExtension = Path.GetFileNameWithoutExtension(file);
                         List<LogMessage> messages = LogFileReader.Read(file);
-                        m_messages.AddRange(messages);
+                        foreach (LogMessage message in messages)
+                        {
+                            AddRowToDataTable(message, fileWithoutExtension);
+                        }
+
                     }
+                    m_bindingSource.RaiseListChangedEvents = true;
+                    m_bindingSource.ResetBindings(false);
+                }
+                RefreshFilters();
+            }
+        }
+
+        private void AddRowToDataTable(LogMessage message, string fileWithoutExtension)
+        {
+            object[] items = new object[11];
+            items[0] = message;
+            items[1] = fileWithoutExtension;
+            items[2] = message.UtcTime.ToLocalTime();
+            items[3] = $"{message.Classification} - {message.Level}";
+            items[4] = message.Flags.ToString();
+            items[5] = message.EventPublisherDetails.TypeName;
+            items[6] = message.EventPublisherDetails.EventName;
+            items[7] = message.Message;
+            items[8] = message.Details;
+            items[9] = message.ExceptionString;
+            items[10] = false;
+            m_dataTable.Rows.Add(items);
+        }
+
+        private void btnFilteredLoad_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new OpenFileDialog())
+            {
+                if (m_logPath != null)
+                {
+                    dlg.InitialDirectory = m_logPath;
+                    dlg.RestoreDirectory = true;
+                }
+                dlg.Filter = "Log File (Compressed)|*.Logz";
+                dlg.Multiselect = true;
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    m_bindingSource.RaiseListChangedEvents = false;
+
+                    m_dataTable.Rows.Clear();
+                    foreach (var file in dlg.FileNames)
+                    {
+                        List<LogMessage> messages = LogFileReader.Read(file);
+                        string fileWithoutExtension = Path.GetFileNameWithoutExtension(file);
+
+                        foreach (LogMessage message in messages)
+                        {
+                            if (m_filters.All(x => x.IsIncluded(message)))
+                            {
+                                AddRowToDataTable(message, fileWithoutExtension);
+                            }
+                        }
+                    }
+                    m_bindingSource.RaiseListChangedEvents = true;
+                    m_bindingSource.ResetBindings(false);
                 }
                 RefreshFilters();
             }
@@ -144,7 +217,6 @@ namespace LogFileViewer
 
         private void dgvResults_CellMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
-
             if (e.Button == MouseButtons.Right && e.RowIndex >= 0 && e.ColumnIndex >= 0)
             {
                 LogMessage item = (LogMessage)dgvResults.Rows[e.RowIndex].Cells["Object"].Value;
@@ -445,30 +517,6 @@ namespace LogFileViewer
 
         }
 
-        private void btnFilteredLoad_Click(object sender, EventArgs e)
-        {
-            using (var dlg = new OpenFileDialog())
-            {
-                if (m_logPath != null)
-                {
-                    dlg.InitialDirectory = m_logPath;
-                    dlg.RestoreDirectory = true;
-                }
-                dlg.Filter = "Log File (Compressed)|*.Logz";
-                dlg.Multiselect = true;
-                if (dlg.ShowDialog() == DialogResult.OK)
-                {
-                    m_messages.Clear();
-                    foreach (var file in dlg.FileNames)
-                    {
-                        var messages = LogFileReader.Read(file);
-                        m_messages.AddRange(messages.Where(y => m_filters.All(x => x.IsIncluded(y))));
-                    }
-                }
-                RefreshFilters();
-            }
-        }
-
         private void btnSaveSelected_Click(object sender, EventArgs e)
         {
             using (SaveFileDialog dlgSave = new SaveFileDialog())
@@ -479,9 +527,12 @@ namespace LogFileViewer
                 {
                     using (var fileWriter = new LogFileWriter(dlgSave.FileName))
                     {
-                        foreach (LogMessage message in m_messages)
+                        foreach (DataRow row in m_dataTable.Rows)
                         {
-                            if (m_filters.All(x => x.IsIncluded(message)))
+                            LogMessage message = row["Object"] as LogMessage;
+                            bool isFiltered = (bool)row["_Filtered"];
+
+                            if (!isFiltered)
                             {
                                 fileWriter.Write(message, false);
                             }
