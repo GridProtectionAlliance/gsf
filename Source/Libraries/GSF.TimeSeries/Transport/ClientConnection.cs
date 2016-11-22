@@ -192,13 +192,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets client ID of this <see cref="ClientConnection"/>.
         /// </summary>
-        public Guid ClientID
-        {
-            get
-            {
-                return m_clientID;
-            }
-        }
+        public Guid ClientID => m_clientID;
 
         /// <summary>
         /// Gets or sets reference to <see cref="UdpServer"/> data channel, attaching to or detaching from events as needed, associated with this <see cref="ClientConnection"/>.
@@ -245,24 +239,12 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets <see cref="IServer"/> command channel.
         /// </summary>
-        public IServer CommandChannel
-        {
-            get
-            {
-                return m_commandChannel;
-            }
-        }
+        public IServer CommandChannel => m_commandChannel;
 
         /// <summary>
         /// Gets <see cref="IServer"/> publication channel - that is, data channel if defined otherwise command channel.
         /// </summary>
-        public IServer PublishChannel
-        {
-            get
-            {
-                return ((object)m_dataChannel == null ? m_commandChannel : m_dataChannel);
-            }
-        }
+        public IServer PublishChannel => ((object)m_dataChannel == null ? m_commandChannel : m_dataChannel);
 
         /// <summary>
         /// Gets connected state of the associated client socket.
@@ -407,13 +389,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets the connection identification of this <see cref="ClientConnection"/>.
         /// </summary>
-        public string ConnectionID
-        {
-            get
-            {
-                return m_connectionID;
-            }
-        }
+        public string ConnectionID => m_connectionID;
 
         /// <summary>
         /// Gets or sets authenticated state of this <see cref="ClientConnection"/>.
@@ -448,35 +424,17 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets active and standby keys and initialization vectors.
         /// </summary>
-        public byte[][][] KeyIVs
-        {
-            get
-            {
-                return m_keyIVs;
-            }
-        }
+        public byte[][][] KeyIVs => m_keyIVs;
 
         /// <summary>
         /// Gets current cipher index.
         /// </summary>
-        public int CipherIndex
-        {
-            get
-            {
-                return m_cipherIndex;
-            }
-        }
+        public int CipherIndex => m_cipherIndex;
 
         /// <summary>
         /// Gets time of last cipher key update.
         /// </summary>
-        public Ticks LastCipherKeyUpdateTime
-        {
-            get
-            {
-                return m_lastCipherKeyUpdateTime;
-            }
-        }
+        public Ticks LastCipherKeyUpdateTime => m_lastCipherKeyUpdateTime;
 
         /// <summary>
         /// Gets or sets the list of valid IP addresses that this client can connect from.
@@ -496,13 +454,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets the IP address of the remote client connection.
         /// </summary>
-        public IPAddress IPAddress
-        {
-            get
-            {
-                return m_ipAddress;
-            }
-        }
+        public IPAddress IPAddress => m_ipAddress;
 
         /// <summary>
         /// Gets or sets subscription associated with this <see cref="ClientConnection"/>.
@@ -525,13 +477,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets the subscriber name of this <see cref="ClientConnection"/>.
         /// </summary>
-        public string Name
-        {
-            get
-            {
-                return SubscriberName;
-            }
-        }
+        public string Name => SubscriberName;
 
         /// <summary>
         /// Gets or sets a set of flags that define ways in
@@ -570,13 +516,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Character encoding used to send messages to subscriber.
         /// </summary>
-        public Encoding Encoding
-        {
-            get
-            {
-                return m_encoding ?? Encoding.Unicode;
-            }
-        }
+        public Encoding Encoding => m_encoding ?? Encoding.Unicode;
 
         /// <summary>
         /// Gets a formatted message describing the status of this <see cref="ClientConnection"/>.
@@ -855,7 +795,7 @@ namespace GSF.TimeSeries.Transport
                 UdpServer dataChannel = new UdpServer(m_configurationString);
                 dataChannel.Start();
 
-                this.DataChannel = dataChannel;
+                DataChannel = dataChannel;
                 m_parent.OnStatusMessage("Data channel successfully restarted.");
             }
             catch (Exception ex)

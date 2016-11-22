@@ -33,6 +33,7 @@ using GSF.Parsing;
 using GSF.Threading;
 using GSF.TimeSeries.Adapters;
 
+// ReSharper disable PossibleMultipleEnumeration
 namespace GSF.TimeSeries.Transport
 {
     /// <summary>
@@ -552,20 +553,12 @@ namespace GSF.TimeSeries.Transport
                         currentMeasurements.Add(newMeasurement);
                     }
 
-                    // Order measurements by signal type for better compression when enabled
-                    if (m_usePayloadCompression)
-                        ProcessMeasurements(currentMeasurements.OrderBy(measurement => measurement.GetSignalType(DataSource)));
-                    else
-                        ProcessMeasurements(currentMeasurements);
+                    ProcessMeasurements(currentMeasurements);
                 }
             }
             else
             {
-                // Order measurements by signal type for better compression for non-TSSC compression modes
-                if (m_usePayloadCompression && !m_compressionModes.HasFlag(CompressionModes.TSSC))
-                    ProcessMeasurements(measurements.OrderBy(measurement => measurement.GetSignalType(DataSource)));
-                else
-                    ProcessMeasurements(measurements);
+                ProcessMeasurements(measurements);
             }
         }
 
@@ -628,14 +621,12 @@ namespace GSF.TimeSeries.Transport
 
         private void ProcessMeasurements(IEnumerable<IMeasurement> measurements)
         {
-            //TSSC does not require a measurement that implements IBinaryMeasurement,
-            //Therefore large performance improvements can be attained by using an alternative
-            //routing method.
             if (m_usePayloadCompression && m_compressionModes.HasFlag(CompressionModes.TSSC))
             {
-                ProcessMeasurementsTSSC(measurements);
+                ProcessTSSCMeasurements(measurements);
                 return;
             }
+
             // Includes data packet flags and measurement count
             const int PacketHeaderSize = DataPublisher.ClientResponseHeaderSize + 5;
 
@@ -741,7 +732,50 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
-        private void ProcessMeasurementsTSSC(IEnumerable<IMeasurement> measurements)
+        private void ProcessBinaryMeasurements(IEnumerable<IBinaryMeasurement> measurements, bool useCompactMeasurementFormat, bool usePayloadCompression)
+        {
+            // Create working buffer
+            using (BlockAllocatedMemoryStream workingBuffer = new BlockAllocatedMemoryStream())
+            {
+                // Serialize data packet flags into response
+                DataPacketFlags flags = DataPacketFlags.NoFlags; // No flags means bit is cleared, i.e., unsynchronized
+
+                if (useCompactMeasurementFormat)
+                    flags |= DataPacketFlags.Compact;
+
+                workingBuffer.WriteByte((byte)flags);
+
+                // No frame level timestamp is serialized into the data packet since all data is unsynchronized and essentially
+                // published upon receipt, however timestamps are optionally included in the serialized measurements.
+
+                // Serialize total number of measurement values to follow
+                workingBuffer.Write(BigEndian.GetBytes(measurements.Count()), 0, 4);
+
+                // Attempt compression when requested - encoding of compressed buffer only happens if size would be smaller than normal serialization
+                if (!usePayloadCompression || !measurements.Cast<CompactMeasurement>().CompressPayload(workingBuffer, m_compressionStrength, m_includeTime, ref flags))
+                {
+                    // Serialize measurements to data buffer
+                    foreach (IBinaryMeasurement measurement in measurements)
+                        measurement.CopyBinaryImageToStream(workingBuffer);
+                }
+
+                // Update data packet flags if it has updated compression flags
+                if ((flags & DataPacketFlags.Compressed) > 0)
+                {
+                    workingBuffer.Seek(0, SeekOrigin.Begin);
+                    workingBuffer.WriteByte((byte)flags);
+                }
+
+                // Publish data packet to client
+                if ((object)m_parent != null)
+                    m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, workingBuffer.ToArray());
+
+                // Track last publication time
+                m_lastPublishTime = DateTime.UtcNow.Ticks;
+            }
+        }
+
+        private void ProcessTSSCMeasurements(IEnumerable<IMeasurement> measurements)
         {
             try
             {
@@ -754,6 +788,7 @@ namespace GSF.TimeSeries.Transport
                     m_compressionBlock.Clear();
 
                 int count = 0;
+
                 foreach (IMeasurement measurement in measurements)
                 {
                     if (!m_compressionBlock.CanAddMeasurements)
@@ -771,7 +806,6 @@ namespace GSF.TimeSeries.Transport
                 if (count > 0)
                 {
                     SendTSSCPayload(m_compressionBlock, count);
-                    count = 0;
                     m_compressionBlock.Clear();
                 }
 
@@ -793,92 +827,11 @@ namespace GSF.TimeSeries.Transport
             using (BlockAllocatedMemoryStream workingBuffer = new BlockAllocatedMemoryStream())
             {
                 // Serialize data packet flags into response
-                DataPacketFlags flags = DataPacketFlags.NoFlags; // No flags means bit is cleared, i.e., unsynchronized
-                flags |= DataPacketFlags.Compressed;
+                DataPacketFlags flags = DataPacketFlags.Compressed;
 
                 workingBuffer.WriteByte((byte)flags);
                 workingBuffer.Write(BigEndian.GetBytes(measurementCount), 0, 4);
                 block.CopyTo(workingBuffer);
-
-                // Publish data packet to client
-                if ((object)m_parent != null)
-                    m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, workingBuffer.ToArray());
-
-                // Track last publication time
-                m_lastPublishTime = DateTime.UtcNow.Ticks;
-            }
-
-        }
-
-
-        private void ProcessBinaryMeasurements(IEnumerable<IBinaryMeasurement> measurements, bool useCompactMeasurementFormat, bool usePayloadCompression)
-        {
-            // Create working buffer
-            using (BlockAllocatedMemoryStream workingBuffer = new BlockAllocatedMemoryStream())
-            {
-                // Serialize data packet flags into response
-                DataPacketFlags flags = DataPacketFlags.NoFlags; // No flags means bit is cleared, i.e., unsynchronized
-
-                if (m_compressionModes.HasFlag(CompressionModes.TSSC))
-                {
-                    flags |= DataPacketFlags.Compressed;
-                }
-                else
-                {
-                    if (useCompactMeasurementFormat)
-                        flags |= DataPacketFlags.Compact;
-                }
-
-                workingBuffer.WriteByte((byte)flags);
-
-                // No frame level timestamp is serialized into the data packet since all data is unsynchronized and essentially
-                // published upon receipt, however timestamps are optionally included in the serialized measurements.
-
-                // Serialize total number of measurement values to follow
-                workingBuffer.Write(BigEndian.GetBytes(measurements.Count()), 0, 4);
-
-                if (usePayloadCompression && m_compressionModes.HasFlag(CompressionModes.TSSC))
-                {
-                    if ((object)m_compressionBlock == null)
-                        m_compressionBlock = new MeasurementCompressionBlock();
-                    else
-                        m_compressionBlock.Clear();
-
-                    foreach (CompactMeasurement measurement in measurements.Cast<CompactMeasurement>())
-                    {
-                        if (m_compressionBlock.CanAddMeasurements)
-                        {
-                            m_compressionBlock.AddMeasurement(measurement.RuntimeID, measurement.Timestamp.Value, (uint)measurement.StateFlags, (float)measurement.AdjustedValue);
-                        }
-                        else
-                        {
-                            m_compressionBlock.CopyTo(workingBuffer);
-                            m_compressionBlock.Clear();
-                            m_compressionBlock.AddMeasurement(measurement.RuntimeID, measurement.Timestamp.Value, (uint)measurement.StateFlags, (float)measurement.AdjustedValue);
-                        }
-                    }
-
-                    m_compressionBlock.CopyTo(workingBuffer);
-                }
-                else
-                {
-                    // Attempt compression when requested - encoding of compressed buffer only happens if size would be smaller than normal serialization
-                    if (!usePayloadCompression || !measurements.Cast<CompactMeasurement>().CompressPayload(workingBuffer, m_compressionStrength, m_includeTime, ref flags))
-                    {
-                        // Serialize measurements to data buffer
-                        foreach (IBinaryMeasurement measurement in measurements)
-                        {
-                            measurement.CopyBinaryImageToStream(workingBuffer);
-                        }
-                    }
-
-                    // Update data packet flags if it has updated compression flags
-                    if ((flags & DataPacketFlags.Compressed) > 0)
-                    {
-                        workingBuffer.Seek(0, SeekOrigin.Begin);
-                        workingBuffer.WriteByte((byte)flags);
-                    }
-                }
 
                 // Publish data packet to client
                 if ((object)m_parent != null)

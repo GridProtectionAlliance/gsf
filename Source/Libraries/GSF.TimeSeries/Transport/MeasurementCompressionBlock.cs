@@ -115,8 +115,8 @@ namespace GSF.TimeSeries.Transport
 
             PointMetaData point;
 
-            //Due to the nature of measurements routing in a common order (C37 always generates measurements in the same order)
-            //there is an ~80% chance that a dictionary lookup can be avoided. 
+            // Due to the nature of measurements routing in a common order (C37 always generates measurements in the same order)
+            // there is an ~80% chance that a dictionary lookup can be avoided
             if (m_lastPoint.ExpectedNextPointID < m_pointByID.Count && m_pointByID[m_lastPoint.ExpectedNextPointID].SignalID == id)
             {
                 point = m_pointByID[m_lastPoint.ExpectedNextPointID];
@@ -189,9 +189,9 @@ namespace GSF.TimeSeries.Transport
 
             if ((code & 16) != 0)
             {
-                //The implemented method is faster than this method commented out
-                //because not incrementing the index every time allows the CPU
-                //to execute these operations simultaneously rather than
+                // The implemented method is faster than this method commented out
+                // because not incrementing the index every time allows the CPU
+                // to execute these operations simultaneously rather than
                 //having to wait for a write barrier after every write.
                 //buffer[index++] = (byte)quality;
                 //buffer[index++] = (byte)(quality >> 8);
