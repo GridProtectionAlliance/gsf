@@ -628,6 +628,14 @@ namespace GSF.TimeSeries.Transport
 
         private void ProcessMeasurements(IEnumerable<IMeasurement> measurements)
         {
+            //TSSC does not require a measurement that implements IBinaryMeasurement,
+            //Therefore large performance improvements can be attained by using an alternative
+            //routing method.
+            if (m_usePayloadCompression && m_compressionModes.HasFlag(CompressionModes.TSSC))
+            {
+                ProcessMeasurementsTSSC(measurements);
+                return;
+            }
             // Includes data packet flags and measurement count
             const int PacketHeaderSize = DataPublisher.ClientResponseHeaderSize + 5;
 
@@ -732,6 +740,76 @@ namespace GSF.TimeSeries.Transport
                 OnProcessException(new InvalidOperationException(message, ex));
             }
         }
+
+        private void ProcessMeasurementsTSSC(IEnumerable<IMeasurement> measurements)
+        {
+            try
+            {
+                if (!Enabled)
+                    return;
+
+                if ((object)m_compressionBlock == null)
+                    m_compressionBlock = new MeasurementCompressionBlock();
+                else
+                    m_compressionBlock.Clear();
+
+                int count = 0;
+                foreach (IMeasurement measurement in measurements)
+                {
+                    if (!m_compressionBlock.CanAddMeasurements)
+                    {
+                        SendTSSCPayload(m_compressionBlock, count);
+                        count = 0;
+                        m_compressionBlock.Clear();
+                    }
+
+                    count++;
+                    ushort index = m_signalIndexCache.GetSignalIndex(measurement.Key);
+                    m_compressionBlock.AddMeasurement(index, measurement.Timestamp.Value, (uint)measurement.StateFlags, (float)measurement.AdjustedValue);
+                }
+
+                if (count > 0)
+                {
+                    SendTSSCPayload(m_compressionBlock, count);
+                    count = 0;
+                    m_compressionBlock.Clear();
+                }
+
+                IncrementProcessedMeasurements(measurements.Count());
+
+                // Update latency statistics
+                m_parent.UpdateLatencyStatistics(measurements.Select(m => (long)(m_lastPublishTime - m.Timestamp)));
+            }
+            catch (Exception ex)
+            {
+                string message = $"Error processing measurements: {ex.Message}";
+                OnProcessException(new InvalidOperationException(message, ex));
+            }
+        }
+
+        private void SendTSSCPayload(MeasurementCompressionBlock block, int measurementCount)
+        {
+            // Create working buffer
+            using (BlockAllocatedMemoryStream workingBuffer = new BlockAllocatedMemoryStream())
+            {
+                // Serialize data packet flags into response
+                DataPacketFlags flags = DataPacketFlags.NoFlags; // No flags means bit is cleared, i.e., unsynchronized
+                flags |= DataPacketFlags.Compressed;
+
+                workingBuffer.WriteByte((byte)flags);
+                workingBuffer.Write(BigEndian.GetBytes(measurementCount), 0, 4);
+                block.CopyTo(workingBuffer);
+
+                // Publish data packet to client
+                if ((object)m_parent != null)
+                    m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, workingBuffer.ToArray());
+
+                // Track last publication time
+                m_lastPublishTime = DateTime.UtcNow.Ticks;
+            }
+
+        }
+
 
         private void ProcessBinaryMeasurements(IEnumerable<IBinaryMeasurement> measurements, bool useCompactMeasurementFormat, bool usePayloadCompression)
         {
