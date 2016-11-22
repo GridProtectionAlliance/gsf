@@ -36,6 +36,7 @@ using System.Linq;
 using System.Text;
 using GSF;
 using GSF.Communication;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.PhasorProtocols;
 using GSF.PhasorProtocols.Anonymous;
@@ -965,7 +966,7 @@ namespace PhasorProtocolAdapters
 
             Dictionary<string, string> settings = Settings;
             string setting;
-            
+
             // Load optional mapper specific connection parameters
             if (settings.TryGetValue("isConcentrator", out setting))
                 m_isConcentrator = setting.ParseBoolean();
@@ -1359,7 +1360,7 @@ namespace PhasorProtocolAdapters
             }
 
             m_definedMeasurements = definedMeasurements;
-            
+
             // Cache signal reference name for connected device quality flags - in normal usage, name will not change for adapter lifetime
             definedMeasurements.TryGetValue(SignalReference.ToString(Name, SignalKind.Quality), out m_qualityFlagsMetadata);
 
@@ -1713,7 +1714,7 @@ namespace PhasorProtocolAdapters
 
             // Assign ID and other relevant attributes to the parsed measurement value
             parsedMeasurement.Metadata = metadata;
-               
+
             // Add the updated measurement value to the destination measurement collection
             mappedMeasurements.Add(parsedMeasurement);
         }
@@ -2234,7 +2235,9 @@ namespace PhasorProtocolAdapters
 
         private void m_frameParser_ParsingException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(e.Argument);
+            Log.Publish(MessageLevel.Warning, "Frame Parsing Exception", e.Argument.Message, null, e.Argument);
+            using (Logger.SuppressLogMessages())
+                OnProcessException(e.Argument);
         }
 
         private void m_frameParser_ExceededParsingExceptionThreshold(object sender, EventArgs e)
@@ -2371,5 +2374,7 @@ namespace PhasorProtocolAdapters
         }
 
         #endregion
+
+
     }
 }

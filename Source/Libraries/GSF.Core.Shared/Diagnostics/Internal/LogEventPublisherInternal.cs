@@ -41,7 +41,7 @@ namespace GSF.Diagnostics
         private int m_stackTraceDepth;
         private LogMessageAttributes m_attributes;
         private ShortTime m_suppressionMessageNextPublishTime;
-        private long m_messagesSuppressed=0;
+        private long m_messagesSuppressed = 0;
 
         /// <summary>
         /// Gets/Sets if a log message should be generated when message suppression occurs.
@@ -95,6 +95,9 @@ namespace GSF.Diagnostics
         /// <param name="initialStackTrace"></param>
         public void Publish(string message = null, string details = null, Exception exception = null, LogStackMessages initialStackMessage = null, LogStackTrace initialStackTrace = null)
         {
+            if (Logger.ShouldSuppressLogMessages)
+                return;
+
             var attributes = m_attributes;
             if (!m_publisher.HasSubscribers(attributes))
                 return;
@@ -109,10 +112,10 @@ namespace GSF.Diagnostics
             {
                 m_messagesSuppressed++;
 
-                if (ShouldRaiseMessageSupressionNotifications &&  m_suppressionMessageNextPublishTime <= ShortTime.Now)
+                if (ShouldRaiseMessageSupressionNotifications && m_suppressionMessageNextPublishTime <= ShortTime.Now)
                 {
                     m_suppressionMessageNextPublishTime = ShortTime.Now.AddSeconds(10);
-                    MessageSuppressionIndication.Publish($"Message Suppression Is Occurring To: '{ m_owner.TypeName }' {m_messagesSuppressed.ToString()} total messages have been suppressed.", m_owner.ToString() );
+                    MessageSuppressionIndication.Publish($"Message Suppression Is Occurring To: '{ m_owner.TypeName }' {m_messagesSuppressed.ToString()} total messages have been suppressed.", m_owner.ToString());
                 }
 
                 attributes += suppressionFlags;

@@ -50,7 +50,7 @@ namespace GSF.Diagnostics
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly LogSubscriptionFileWriter FileWriter;
 
-        private static readonly ConcurrentDictionary<int, int> RecursiveChecking = new ConcurrentDictionary<int, int>();
+        private static readonly ConcurrentDictionary<int, int> LogSuppressionChecking = new ConcurrentDictionary<int, int>();
         private static readonly Dictionary<int, List<LogStackMessages>> ThreadStackDetails = new Dictionary<int, List<LogStackMessages>>();
 
         private static readonly LogPublisher Log;
@@ -79,6 +79,11 @@ namespace GSF.Diagnostics
         }
 
         /// <summary>
+        /// Gets if Log Messages should be suppressed.
+        /// </summary>
+        public static bool ShouldSuppressLogMessages => LogSuppressionChecking.ContainsKey(Thread.CurrentThread.ManagedThreadId);
+
+        /// <summary>
         /// Ensures that the logger has been initialized. 
         /// </summary>
         internal static void Initialize()
@@ -105,9 +110,9 @@ namespace GSF.Diagnostics
 
         static void CurrentDomain_FirstChanceException(object sender, System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs e)
         {
-            int threadid = Thread.CurrentThread.ManagedThreadId;
-
-            if (RecursiveChecking.TryAdd(threadid, 1))
+            if (ShouldSuppressLogMessages)
+                return;
+            using (SuppressLogMessages())
             {
                 try
                 {
@@ -128,29 +133,26 @@ namespace GSF.Diagnostics
                 {
                     //swallow any exceptions.
                 }
-                finally
-                {
-                    int value;
-                    RecursiveChecking.TryRemove(threadid, out value);
-                }
             }
         }
 
         static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            int threadid = Thread.CurrentThread.ManagedThreadId;
-
-            if (RecursiveChecking.TryAdd(threadid, 1))
+            if (ShouldSuppressLogMessages)
+                return;
+            using (SuppressLogMessages())
             {
                 try
                 {
-                    EventAppDomainException.Publish(null, null, e.ExceptionObject as Exception);
+                    var perm = new ReflectionPermission(PermissionState.Unrestricted);
+                    perm.Demand();
                 }
-                finally
+                catch (SecurityException)
                 {
-                    int value;
-                    RecursiveChecking.TryRemove(threadid, out value);
+                    //Cannot raise messages if this permission is denied.
+                    return;
                 }
+                EventAppDomainException.Publish(null, null, e.ExceptionObject as Exception);
             }
         }
 
@@ -224,6 +226,16 @@ namespace GSF.Diagnostics
         }
 
         /// <summary>
+        /// Sets a flag that will prevent log messages from being raised on this thread.
+        /// Remember to dispose of the callback to remove this suppression.
+        /// </summary>
+        /// <returns></returns>
+        public static SuppressLogMessagesDisposal SuppressLogMessages()
+        {
+            return new SuppressLogMessagesDisposal(LogSuppressionChecking.TryAdd(Thread.CurrentThread.ManagedThreadId, 1));
+        }
+
+        /// <summary>
         /// Temporarily appends data to the thread's stack so the data can be propagated to any messages generated on this thread.
         /// Be sure to call Dispose on the returned object to remove this from the stack.
         /// </summary>
@@ -285,6 +297,35 @@ namespace GSF.Diagnostics
                     }
                 }
                 Depth = 0;
+            }
+        }
+
+        /// <summary>
+        /// When Suppressing Log Messages. This struct is returned. Be sure to dispose it.
+        /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
+        public struct SuppressLogMessagesDisposal : IDisposable
+        {
+            internal bool ShouldRemove { get; private set; }
+
+            internal SuppressLogMessagesDisposal(bool shouldRemove)
+            {
+                ShouldRemove = shouldRemove;
+            }
+
+            /// <summary>
+            /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            /// </summary>
+            /// <filterpriority>2</filterpriority>
+            public void Dispose()
+            {
+                if (ShouldRemove)
+                {
+                    int threadid = Thread.CurrentThread.ManagedThreadId;
+                    int value;
+                    LogSuppressionChecking.TryRemove(threadid, out value);
+                    ShouldRemove = false;
+                }
             }
         }
     }

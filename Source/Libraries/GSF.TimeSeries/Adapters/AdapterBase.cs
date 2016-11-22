@@ -36,6 +36,7 @@ using System.Threading;
 using GSF.Annotations;
 using GSF.Configuration;
 using GSF.Data;
+using GSF.Diagnostics;
 using GSF.Threading;
 using GSF.Units;
 
@@ -120,6 +121,10 @@ namespace GSF.TimeSeries.Adapters
         private int m_hashCode;
         private bool m_initialized;
         private bool m_disposed;
+        /// <summary>
+        /// Log messages can be generated here.
+        /// </summary>
+        protected LogPublisher Log { get; private set; }
 
         #endregion
 
@@ -130,7 +135,9 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         protected AdapterBase()
         {
+            Log = Logger.CreatePublisher(GetType(), MessageClass.Application);
             m_name = this.GetType().Name;
+            Log.InitialStackMessages = new LogStackMessages("AdapterName", m_name);
             m_settings = new Dictionary<string, string>();
             m_startTimeConstraint = DateTime.MinValue;
             m_stopTimeConstraint = DateTime.MaxValue;
@@ -170,6 +177,7 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 m_name = value;
+                Log.InitialStackMessages = new LogStackMessages("AdapterName", m_name);
                 GenHashCode();
             }
         }
