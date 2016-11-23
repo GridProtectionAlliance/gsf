@@ -44,6 +44,7 @@ using GSF.Collections;
 using GSF.Communication;
 using GSF.Configuration;
 using GSF.Data;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Net.Security;
 using GSF.Reflection;
@@ -1105,7 +1106,7 @@ namespace GSF.TimeSeries.Transport
                 // points for subscription have changed after re-application of filter expressions and if so, resubscribe
                 if ((object)m_commandChannel != null && m_commandChannel.Enabled && m_autoConnect && UpdateOutputMeasurements())
                 {
-                    OnStatusMessage("Meta-data received from publisher modified measurement availability, adjusting active subscription...");
+                    OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Meta-data received from publisher modified measurement availability, adjusting active subscription...");
 
                     // Updating subscription will restart data stream monitor upon successful resubscribe
                     SubscribeToOutputMeasurements(true);
@@ -1632,7 +1633,7 @@ namespace GSF.TimeSeries.Transport
                 if (Directory.Exists(setting))
                     m_loggingPath = setting;
                 else
-                    OnStatusMessage("WARNING: Logging path \"{0}\" not found, defaulting to \"{1}\"...", setting, FilePath.GetAbsolutePath(""));
+                    OnStatusMessage(MessageLevel.Info, "DataSubscriber", "WARNING: Logging path \"{0}\" not found, defaulting to \"{1}\"...", setting, FilePath.GetAbsolutePath(""));
             }
 
             // Initialize data gap recovery processing, if requested
@@ -1781,7 +1782,7 @@ namespace GSF.TimeSeries.Transport
                 catch (Exception ex)
                 {
                     // Errors here may not be catastrophic, this simply limits the auto-assignment of input measurement keys desired for subscription
-                    OnProcessException(new InvalidOperationException($"Failed to apply subscribed measurements to subscription filter: {ex.Message}", ex));
+                    OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException($"Failed to apply subscribed measurements to subscription filter: {ex.Message}", ex));
                 }
             }
 
@@ -1820,7 +1821,7 @@ namespace GSF.TimeSeries.Transport
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException($"Error when filtering output measurements by device ID: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException($"Error when filtering output measurements by device ID: {ex.Message}", ex));
             }
         }
 
@@ -1862,11 +1863,11 @@ namespace GSF.TimeSeries.Transport
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException("Exception occurred while trying to authenticate publisher subscription: " + ex.Message, ex));
+                    OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException("Exception occurred while trying to authenticate publisher subscription: " + ex.Message, ex));
                 }
             }
             else
-                OnProcessException(new InvalidOperationException("Cannot authenticate subscription without a connection string."));
+                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException("Cannot authenticate subscription without a connection string."));
 
             return false;
         }
@@ -2456,11 +2457,11 @@ namespace GSF.TimeSeries.Transport
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException("Exception occurred while trying to make publisher subscription: " + ex.Message, ex));
+                    OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException("Exception occurred while trying to make publisher subscription: " + ex.Message, ex));
                 }
             }
             else
-                OnProcessException(new InvalidOperationException("Cannot make publisher subscription without a connection string."));
+                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException("Cannot make publisher subscription without a connection string."));
 
             // Reset decompressor on successful resubscription
             if (success && (object)m_decompressionBlock != null)
@@ -2556,7 +2557,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // Process exception for logging
-                OnProcessException(new InvalidOperationException("Failed to queue meta-data synchronization: " + ex.Message, ex));
+                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException("Failed to queue meta-data synchronization: " + ex.Message, ex));
             }
         }
 
@@ -2614,11 +2615,11 @@ namespace GSF.TimeSeries.Transport
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException($"Exception occurred while trying to send server command \"{commandCode}\" to publisher: {ex.Message}", ex));
+                    OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException($"Exception occurred while trying to send server command \"{commandCode}\" to publisher: {ex.Message}", ex));
                 }
             }
             else
-                OnProcessException(new InvalidOperationException($"Subscriber is currently unconnected. Cannot send server command \"{commandCode}\" to publisher."));
+                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException($"Subscriber is currently unconnected. Cannot send server command \"{commandCode}\" to publisher."));
 
             return false;
         }
@@ -2720,7 +2721,7 @@ namespace GSF.TimeSeries.Transport
             }
             catch (Exception ex)
             {
-                OnProcessException(ex);
+                OnProcessException(MessageLevel.Info, "DataSubscriber", ex);
             }
         }
 
@@ -2756,32 +2757,32 @@ namespace GSF.TimeSeries.Transport
                             switch (commandCode)
                             {
                                 case ServerCommand.Authenticate:
-                                    OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
+                                    OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
                                     m_authenticated = true;
                                     OnConnectionAuthenticated();
                                     break;
                                 case ServerCommand.Subscribe:
-                                    OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
+                                    OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
                                     m_subscribed = true;
                                     break;
                                 case ServerCommand.Unsubscribe:
-                                    OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
+                                    OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
                                     m_subscribed = false;
                                     if ((object)m_dataStreamMonitor != null)
                                         m_dataStreamMonitor.Enabled = false;
                                     break;
                                 case ServerCommand.RotateCipherKeys:
-                                    OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
+                                    OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
                                     break;
                                 case ServerCommand.MetaDataRefresh:
-                                    OnStatusMessage("Success code received in response to server command \"{0}\": latest meta-data received.", commandCode);
+                                    OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Success code received in response to server command \"{0}\": latest meta-data received.", commandCode);
                                     OnMetaDataReceived(DeserializeMetadata(buffer.BlockCopy(responseIndex, responseLength)));
                                     m_metadataRefreshPending = false;
                                     break;
                             }
                             break;
                         case ServerResponse.Failed:
-                            OnStatusMessage("Failure code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
+                            OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Failure code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
 
                             if (commandCode == ServerCommand.MetaDataRefresh)
                                 m_metadataRefreshPending = false;
@@ -2869,7 +2870,7 @@ namespace GSF.TimeSeries.Transport
                                     if (m_lastMissingCacheWarning != 0L)
                                     {
                                         // Warning message for missing signal index cache
-                                        OnStatusMessage("WARNING: Signal index cache has not arrived. No compact measurements can be parsed.");
+                                        OnStatusMessage(MessageLevel.Info, "DataSubscriber", "WARNING: Signal index cache has not arrived. No compact measurements can be parsed.");
                                     }
 
                                     m_lastMissingCacheWarning = now;
@@ -2930,7 +2931,7 @@ namespace GSF.TimeSeries.Transport
                                     }
                                     catch (Exception ex)
                                     {
-                                        OnProcessException(new InvalidOperationException("WARNING: Decompression failure: " + ex.Message, ex));
+                                        OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException("WARNING: Decompression failure: " + ex.Message, ex));
                                     }
                                 }
                             }
@@ -2963,7 +2964,7 @@ namespace GSF.TimeSeries.Transport
                                         if (m_lastMissingCacheWarning != 0L)
                                         {
                                             // Warning message for missing signal index cache
-                                            OnStatusMessage("WARNING: Signal index cache has not arrived. No compact measurements can be parsed.");
+                                            OnStatusMessage(MessageLevel.Info, "DataSubscriber", "WARNING: Signal index cache has not arrived. No compact measurements can be parsed.");
                                         }
 
                                         m_lastMissingCacheWarning = now;
@@ -3229,21 +3230,21 @@ namespace GSF.TimeSeries.Transport
                             // Exchange keys
                             m_keyIVs = keyIVs;
 
-                            OnStatusMessage("Successfully established new cipher keys for data packet transmissions.");
+                            OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Successfully established new cipher keys for data packet transmissions.");
                             break;
                         case ServerResponse.Notify:
                             // Skip the 4-byte hash
                             string message = m_encoding.GetString(buffer, responseIndex + 4, responseLength - 4);
 
                             // Display notification
-                            OnStatusMessage("NOTIFICATION: {0}", message);
+                            OnStatusMessage(MessageLevel.Info, "DataSubscriber", "NOTIFICATION: {0}", message);
                             OnNotificationReceived(message);
 
                             // Send confirmation of receipt of the notification
                             SendServerCommand(ServerCommand.ConfirmNotification, buffer.BlockCopy(responseIndex, 4));
                             break;
                         case ServerResponse.ConfigurationChanged:
-                            OnStatusMessage("Received notification from publisher that configuration has changed.");
+                            OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Received notification from publisher that configuration has changed.");
                             OnServerConfigurationChanged();
 
                             // Initiate meta-data refresh when publisher configuration has changed - we only do this
@@ -3257,7 +3258,7 @@ namespace GSF.TimeSeries.Transport
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException("Failed to process publisher response packet due to exception: " + ex.Message, ex));
+                    OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException("Failed to process publisher response packet due to exception: " + ex.Message, ex));
                 }
             }
         }
@@ -3323,7 +3324,7 @@ namespace GSF.TimeSeries.Transport
             }
             else if (metaDataRefreshCompleted)
             {
-                OnStatusMessage("WARNING: No measurements are currently defined for subscription.");
+                OnStatusMessage(MessageLevel.Info, "DataSubscriber", "WARNING: No measurements are currently defined for subscription.");
             }
         }
 
@@ -3351,7 +3352,7 @@ namespace GSF.TimeSeries.Transport
 
                 if ((object)metadata == null)
                 {
-                    OnStatusMessage("WARNING: Meta-data synchronization was not performed, deserialized dataset was empty.");
+                    OnStatusMessage(MessageLevel.Info, "DataSubscriber", "WARNING: Meta-data synchronization was not performed, deserialized dataset was empty.");
                     return;
                 }
 
@@ -3853,7 +3854,7 @@ namespace GSF.TimeSeries.Transport
                     }
                     catch (Exception ex)
                     {
-                        OnProcessException(new InvalidOperationException("Failed to synchronize meta-data to local cache: " + ex.Message, ex));
+                        OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException("Failed to synchronize meta-data to local cache: " + ex.Message, ex));
 
                         if ((object)transaction != null)
                         {
@@ -3863,7 +3864,7 @@ namespace GSF.TimeSeries.Transport
                             }
                             catch (Exception rollbackException)
                             {
-                                OnProcessException(new InvalidOperationException("Failed to roll back database transaction due to exception: " + rollbackException.Message, rollbackException));
+                                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException("Failed to roll back database transaction due to exception: " + rollbackException.Message, rollbackException));
                             }
                         }
 
@@ -3882,14 +3883,14 @@ namespace GSF.TimeSeries.Transport
 
                 m_lastMetaDataRefreshTime = latestUpdateTime > DateTime.MinValue ? latestUpdateTime : DateTime.UtcNow;
 
-                OnStatusMessage("Meta-data synchronization completed successfully in {0}", (DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(2));
+                OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Meta-data synchronization completed successfully in {0}", (DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(2));
 
                 // Send notification that system configuration has changed
                 OnConfigurationChanged();
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException("Failed to synchronize meta-data to local cache: " + ex.Message, ex));
+                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException("Failed to synchronize meta-data to local cache: " + ex.Message, ex));
             }
             finally
             {
@@ -3915,7 +3916,7 @@ namespace GSF.TimeSeries.Transport
 
             if (m_syncProgressActionsCount % m_syncProgressUpdateInterval == 0 || DateTime.UtcNow.Ticks - m_syncProgressLastMessage > 150000000)
             {
-                OnStatusMessage("Meta-data synchronization is {0:0.0%} complete...", m_syncProgressActionsCount / (double)m_syncProgressTotalActions);
+                OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Meta-data synchronization is {0:0.0%} complete...", m_syncProgressActionsCount / (double)m_syncProgressTotalActions);
                 m_syncProgressLastMessage = DateTime.UtcNow.Ticks;
             }
         }
@@ -4010,7 +4011,7 @@ namespace GSF.TimeSeries.Transport
             if (rowCount > 0)
             {
                 Time elapsedTime = (DateTime.UtcNow.Ticks - startTime).ToSeconds();
-                OnStatusMessage("Received a total of {0:N0} records spanning {1:N0} tables of meta-data that was {2}deserialized in {3}...", rowCount, deserializedMetadata.Tables.Count, compressMetadata ? "uncompressed and " : "", elapsedTime.ToString(2));
+                OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Received a total of {0:N0} records spanning {1:N0} tables of meta-data that was {2}deserialized in {3}...", rowCount, deserializedMetadata.Tables.Count, compressMetadata ? "uncompressed and " : "", elapsedTime.ToString(2));
             }
 
             return deserializedMetadata;
@@ -4103,7 +4104,7 @@ namespace GSF.TimeSeries.Transport
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException($"Exception while attempting to flush data gap recoverer log: {ex.Message}", ex));
+                    OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException($"Exception while attempting to flush data gap recoverer log: {ex.Message}", ex));
                 }
             }
 
@@ -4229,7 +4230,7 @@ namespace GSF.TimeSeries.Transport
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException($"Unable to register device statistics due to exception: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException($"Unable to register device statistics due to exception: {ex.Message}", ex));
             }
         }
 
@@ -4248,7 +4249,7 @@ namespace GSF.TimeSeries.Transport
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException($"Unable to unregister device statistics due to exception: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException($"Unable to unregister device statistics due to exception: {ex.Message}", ex));
             }
         }
 
@@ -4296,7 +4297,7 @@ namespace GSF.TimeSeries.Transport
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException($"Unable to set expected measurement counts for gathering statistics due to exception: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException($"Unable to set expected measurement counts for gathering statistics due to exception: {ex.Message}", ex));
             }
         }
 
@@ -4339,7 +4340,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // Process exception for logging
-                OnProcessException(new InvalidOperationException("Failed to queue meta-data synchronization due to exception: " + ex.Message, ex));
+                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException("Failed to queue meta-data synchronization due to exception: " + ex.Message, ex));
             }
         }
 
@@ -4356,7 +4357,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException($"Exception in consumer handler for ConnectionEstablished event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException($"Exception in consumer handler for ConnectionEstablished event: {ex.Message}", ex));
             }
         }
 
@@ -4372,7 +4373,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException($"Exception in consumer handler for ConnectionTerminated event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException($"Exception in consumer handler for ConnectionTerminated event: {ex.Message}", ex));
             }
         }
 
@@ -4388,7 +4389,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException($"Exception in consumer handler for ConnectionAuthenticated event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException($"Exception in consumer handler for ConnectionAuthenticated event: {ex.Message}", ex));
             }
         }
 
@@ -4406,7 +4407,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException($"Exception in consumer handler for ReceivedServerResponse event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException($"Exception in consumer handler for ReceivedServerResponse event: {ex.Message}", ex));
             }
         }
 
@@ -4428,7 +4429,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException($"Exception in consumer handler for UserCommandResponse event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException($"Exception in consumer handler for UserCommandResponse event: {ex.Message}", ex));
             }
         }
 
@@ -4445,7 +4446,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException($"Exception in consumer handler for MetaDataReceived event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException($"Exception in consumer handler for MetaDataReceived event: {ex.Message}", ex));
             }
         }
 
@@ -4462,7 +4463,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException($"Exception in consumer handler for DataStartTime event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException($"Exception in consumer handler for DataStartTime event: {ex.Message}", ex));
             }
         }
 
@@ -4482,7 +4483,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException($"Exception in consumer handler for ProcessingComplete event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException($"Exception in consumer handler for ProcessingComplete event: {ex.Message}", ex));
             }
         }
 
@@ -4499,7 +4500,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException($"Exception in consumer handler for NotificationReceived event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException($"Exception in consumer handler for NotificationReceived event: {ex.Message}", ex));
             }
         }
 
@@ -4515,7 +4516,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException($"Exception in consumer handler for ServerConfigurationChanged event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException($"Exception in consumer handler for ServerConfigurationChanged event: {ex.Message}", ex));
             }
         }
 
@@ -4664,7 +4665,7 @@ namespace GSF.TimeSeries.Transport
         private void m_localConcentrator_ProcessException(object sender, EventArgs<Exception> e)
         {
             // Make sure any exceptions reported by local concentrator get exposed as needed
-            OnProcessException(e.Argument);
+            OnProcessException(MessageLevel.Info, "DataSubscriber", e.Argument);
         }
 
         private void m_dataStreamMonitor_Elapsed(object sender, EventArgs<DateTime> e)
@@ -4678,7 +4679,7 @@ namespace GSF.TimeSeries.Transport
             {
                 // If we've received no data in the last time-span, we restart connect cycle...
                 m_dataStreamMonitor.Enabled = false;
-                OnStatusMessage("\r\nNo data received in {0} seconds, restarting connect cycle...\r\n", (m_dataStreamMonitor.Interval / 1000.0D).ToString("0.0"));
+                OnStatusMessage(MessageLevel.Info, "DataSubscriber", "\r\nNo data received in {0} seconds, restarting connect cycle...\r\n", (m_dataStreamMonitor.Interval / 1000.0D).ToString("0.0"));
                 ThreadPool.QueueUserWorkItem(state => Restart());
             }
 
@@ -4688,7 +4689,7 @@ namespace GSF.TimeSeries.Transport
 
         private void m_runTimeLog_ProcessException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(e.Argument);
+            OnProcessException(MessageLevel.Info, "DataSubscriber", e.Argument);
         }
 
         private void m_dataGapRecoverer_RecoveredMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
@@ -4698,12 +4699,12 @@ namespace GSF.TimeSeries.Transport
 
         private void m_dataGapRecoverer_StatusMessage(object sender, EventArgs<string> e)
         {
-            OnStatusMessage("[DataGapRecoverer] " + e.Argument);
+            OnStatusMessage(MessageLevel.Info, "DataSubscriber", "[DataGapRecoverer] " + e.Argument);
         }
 
         private void m_dataGapRecoverer_ProcessException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(new InvalidOperationException("[DataGapRecoverer] " + e.Argument.Message, e.Argument.InnerException));
+            OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException("[DataGapRecoverer] " + e.Argument.Message, e.Argument.InnerException));
         }
 
         #region [ Command Channel Event Handlers ]
@@ -4719,7 +4720,7 @@ namespace GSF.TimeSeries.Transport
             // Notify consumer that connection was successfully established
             OnConnectionEstablished();
 
-            OnStatusMessage("Data subscriber command channel connection to publisher was established.");
+            OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Data subscriber command channel connection to publisher was established.");
 
             if (m_autoConnect)
             {
@@ -4737,14 +4738,14 @@ namespace GSF.TimeSeries.Transport
         private void m_commandChannel_ConnectionTerminated(object sender, EventArgs e)
         {
             OnConnectionTerminated();
-            OnStatusMessage("Data subscriber command channel connection to publisher was terminated.");
+            OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Data subscriber command channel connection to publisher was terminated.");
             DisconnectClient();
         }
 
         private void m_commandChannel_ConnectionException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
-            OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while attempting command channel publisher connection: " + ex.Message, ex));
+            OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException("Data subscriber encountered an exception while attempting command channel publisher connection: " + ex.Message, ex));
         }
 
         private void m_commandChannel_ConnectionAttempt(object sender, EventArgs e)
@@ -4753,7 +4754,7 @@ namespace GSF.TimeSeries.Transport
             if (m_commandChannelConnectionAttempts > 0)
                 Thread.Sleep(2000);
 
-            OnStatusMessage("Attempting command channel connection to publisher...");
+            OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Attempting command channel connection to publisher...");
             m_commandChannelConnectionAttempts++;
         }
 
@@ -4762,7 +4763,7 @@ namespace GSF.TimeSeries.Transport
             Exception ex = e.Argument;
 
             if (!HandleSocketException(ex) && !(ex is ObjectDisposedException))
-                OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while sending command channel data to publisher connection: " + ex.Message, ex));
+                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException("Data subscriber encountered an exception while sending command channel data to publisher connection: " + ex.Message, ex));
         }
 
         private void m_commandChannel_ReceiveData(object sender, EventArgs<int> e)
@@ -4779,7 +4780,7 @@ namespace GSF.TimeSeries.Transport
             }
             catch (Exception ex)
             {
-                OnProcessException(ex);
+                OnProcessException(MessageLevel.Info, "DataSubscriber", ex);
             }
         }
 
@@ -4788,7 +4789,7 @@ namespace GSF.TimeSeries.Transport
             Exception ex = e.Argument;
 
             if (!HandleSocketException(ex) && !(ex is ObjectDisposedException))
-                OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while receiving command channel data from publisher connection: " + ex.Message, ex));
+                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException("Data subscriber encountered an exception while receiving command channel data from publisher connection: " + ex.Message, ex));
         }
 
         #endregion
@@ -4798,7 +4799,7 @@ namespace GSF.TimeSeries.Transport
         private void m_dataChannel_ConnectionException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
-            OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while attempting to establish UDP data channel connection: " + ex.Message, ex));
+            OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException("Data subscriber encountered an exception while attempting to establish UDP data channel connection: " + ex.Message, ex));
         }
 
         private void m_dataChannel_ConnectionAttempt(object sender, EventArgs e)
@@ -4807,7 +4808,7 @@ namespace GSF.TimeSeries.Transport
             if (m_dataChannelConnectionAttempts > 0)
                 Thread.Sleep(2000);
 
-            OnStatusMessage("Attempting to establish data channel connection to publisher...");
+            OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Attempting to establish data channel connection to publisher...");
             m_dataChannelConnectionAttempts++;
         }
 
@@ -4825,7 +4826,7 @@ namespace GSF.TimeSeries.Transport
             }
             catch (Exception ex)
             {
-                OnProcessException(ex);
+                OnProcessException(MessageLevel.Info, "DataSubscriber", ex);
             }
         }
 
@@ -4834,7 +4835,7 @@ namespace GSF.TimeSeries.Transport
             Exception ex = e.Argument;
 
             if (!HandleSocketException(ex) && !(ex is ObjectDisposedException))
-                OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while receiving UDP data from publisher connection: " + ex.Message, ex));
+                OnProcessException(MessageLevel.Info, "DataSubscriber", new InvalidOperationException("Data subscriber encountered an exception while receiving UDP data from publisher connection: " + ex.Message, ex));
         }
 
         #endregion

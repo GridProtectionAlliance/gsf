@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Parsing;
 using GSF.Threading;
@@ -728,7 +729,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 string message = $"Error processing measurements: {ex.Message}";
-                OnProcessException(new InvalidOperationException(message, ex));
+                OnProcessException(MessageLevel.Info, "UnsynchronizedClientSubscription", new InvalidOperationException(message, ex));
             }
         }
 
@@ -817,7 +818,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 string message = $"Error processing measurements: {ex.Message}";
-                OnProcessException(new InvalidOperationException(message, ex));
+                OnProcessException(MessageLevel.Info, "UnsynchronizedClientSubscription", new InvalidOperationException(message, ex));
             }
         }
 
@@ -906,13 +907,13 @@ namespace GSF.TimeSeries.Transport
         // Explicitly implement status message event bubbler to satisfy IClientSubscription interface
         void IClientSubscription.OnStatusMessage(string status)
         {
-            OnStatusMessage(status);
+            OnStatusMessage(MessageLevel.Info, "UnsynchronizedClientSubscription", status);
         }
 
         // Explicitly implement process exception event bubbler to satisfy IClientSubscription interface
         void IClientSubscription.OnProcessException(Exception ex)
         {
-            OnProcessException(ex);
+            OnProcessException(MessageLevel.Info, "UnsynchronizedClientSubscription", ex);
         }
 
         // Explicitly implement processing completed event bubbler to satisfy IClientSubscription interface

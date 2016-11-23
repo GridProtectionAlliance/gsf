@@ -889,7 +889,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, "AdapterBase", new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex));
             }
         }
 
@@ -911,7 +911,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, "AdapterBase", new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex));
             }
         }
 
@@ -992,7 +992,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException($"Exception in consumer handler for InputMeasurementKeysUpdated event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, "AdapterBase", new InvalidOperationException($"Exception in consumer handler for InputMeasurementKeysUpdated event: {ex.Message}", ex));
             }
         }
 
@@ -1008,7 +1008,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException($"Exception in consumer handler for OutputMeasurementsUpdated event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, "AdapterBase", new InvalidOperationException($"Exception in consumer handler for OutputMeasurementsUpdated event: {ex.Message}", ex));
             }
         }
 
@@ -1024,7 +1024,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException($"Exception in consumer handler for ConfigurationChanged event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, "AdapterBase", new InvalidOperationException($"Exception in consumer handler for ConfigurationChanged event: {ex.Message}", ex));
             }
         }
 
@@ -1046,7 +1046,7 @@ namespace GSF.TimeSeries.Adapters
                 m_processedMeasurements += totalAdded;
 
                 if (showMessage)
-                    OnStatusMessage("{0:N0} measurements have been processed so far...", m_processedMeasurements);
+                    OnStatusMessage(MessageLevel.Info, "AdapterBase", "{0:N0} measurements have been processed so far...", m_processedMeasurements);
             }
         }
 

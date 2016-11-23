@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using GSF.Diagnostics;
 using GSF.Threading;
 
 namespace GSF.TimeSeries.Adapters
@@ -334,7 +335,7 @@ namespace GSF.TimeSeries.Adapters
         protected virtual void OnConnected()
         {
             IsConnected = true;
-            OnStatusMessage("Connection established.");
+            OnStatusMessage(MessageLevel.Info, "InputAdapterBase", "Connection established.");
         }
 
         /// <summary>
@@ -360,8 +361,8 @@ namespace GSF.TimeSeries.Adapters
             }
             catch (Exception ex)
             {
-                if(EnableConnectionErrors)
-                    OnProcessException(new InvalidOperationException($"Exception occurred during disconnect: {ex.Message}", ex));
+                if (EnableConnectionErrors)
+                    OnProcessException(MessageLevel.Info, "InputAdapterBase", new InvalidOperationException($"Exception occurred during disconnect: {ex.Message}", ex));
             }
         }
 
@@ -383,7 +384,7 @@ namespace GSF.TimeSeries.Adapters
         protected virtual void OnDisconnected()
         {
             IsConnected = false;
-            OnStatusMessage("Disconnected.");
+            OnStatusMessage(MessageLevel.Info, "InputAdapterBase", "Disconnected.");
         }
 
         /// <summary>
@@ -400,7 +401,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException($"Exception in consumer handler for NewMeasurements event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, "InputAdapterBase", new InvalidOperationException($"Exception in consumer handler for NewMeasurements event: {ex.Message}", ex));
             }
         }
 
@@ -416,7 +417,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException($"Exception in consumer handler for ProcessingComplete event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, "InputAdapterBase", new InvalidOperationException($"Exception in consumer handler for ProcessingComplete event: {ex.Message}", ex));
             }
         }
 
@@ -427,7 +428,7 @@ namespace GSF.TimeSeries.Adapters
                 // So long as user hasn't requested to stop, attempt connection
                 if (Enabled)
                 {
-                    OnStatusMessage("Attempting connection...");
+                    OnStatusMessage(MessageLevel.Info, "InputAdapterBase", "Attempting connection...");
 
                     // Attempt connection to data source
                     AttemptConnection();
@@ -439,7 +440,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 if (EnableConnectionErrors)
-                    OnProcessException(new InvalidOperationException($"Connection attempt failed: {ex.Message}", ex));
+                    OnProcessException(MessageLevel.Info, "InputAdapterBase", new InvalidOperationException($"Connection attempt failed: {ex.Message}", ex));
 
                 // So long as user hasn't requested to stop, keep trying connection
                 if (Enabled)

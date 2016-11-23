@@ -487,25 +487,25 @@ namespace GSF.TimeSeries.Statistics
             m_updateStatisticMeasurementsOperation = new LongSynchronizedOperation(UpdateStatisticMeasurements, ex =>
             {
                 string message = "An error occurred while attempting to update statistic measurement definitions: " + ex.Message;
-                OnProcessException(new InvalidOperationException(message, ex));
+                OnProcessException(MessageLevel.Info, "StatisticsEngine", new InvalidOperationException(message, ex));
             });
 
             m_loadStatisticsOperation = new LongSynchronizedOperation(LoadStatistics, ex =>
             {
                 string message = "An error occurred while attempting to load statistic definitions: " + ex.Message;
-                OnProcessException(new InvalidOperationException(message, ex));
+                OnProcessException(MessageLevel.Info, "StatisticsEngine", new InvalidOperationException(message, ex));
             });
 
             m_calculateStatisticsOperation = new LongSynchronizedOperation(CalculateStatistics, ex =>
             {
                 string message = "An error occurred while attempting to calculate statistics: " + ex.Message;
-                OnProcessException(new InvalidOperationException(message, ex));
+                OnProcessException(MessageLevel.Info, "StatisticsEngine", new InvalidOperationException(message, ex));
             });
 
             m_validateSourceReferencesOperation = new ShortSynchronizedOperation(ValidateSourceReferences, ex =>
             {
                 string message = "An error occurred while attempting to validate statistic source references: " + ex.Message;
-                OnProcessException(new InvalidOperationException(message, ex));
+                OnProcessException(MessageLevel.Info, "StatisticsEngine", new InvalidOperationException(message, ex));
             });
 
             m_updateStatisticMeasurementsOperation.IsBackground = true;
@@ -640,7 +640,7 @@ namespace GSF.TimeSeries.Statistics
             if (UseLocalClockAsRealTime || !TrackLatestMeasurements)
             {
                 m_statisticCalculationTimer.Start();
-                OnStatusMessage("Started statistics calculation timer.");
+                OnStatusMessage(MessageLevel.Info, "StatisticsEngine", "Started statistics calculation timer.");
             }
         }
 
@@ -902,7 +902,7 @@ namespace GSF.TimeSeries.Statistics
                     }
                     catch (Exception ex)
                     {
-                        OnProcessException(new InvalidOperationException(string.Format("Failed to load statistic handler \"{0}\" from \"{1} [{2}::{3}()]\" due to exception: {4}", row["Name"].ToNonNullString("n/a"), assemblyName, typeName, methodName, ex.Message), ex));
+                        OnProcessException(MessageLevel.Info, "StatisticsEngine", new InvalidOperationException(string.Format("Failed to load statistic handler \"{0}\" from \"{1} [{2}::{3}()]\" due to exception: {4}", row["Name"].ToNonNullString("n/a"), assemblyName, typeName, methodName, ex.Message), ex));
                     }
 
                     // Add statistic to list
@@ -927,7 +927,7 @@ namespace GSF.TimeSeries.Statistics
                     signalReference = GetSignalReference(stat, mapping.Item1);
 
                     if (sourceLookup.ContainsKey(signalReference))
-                        OnStatusMessage("WARNING: Encountered duplicate signal reference statistic: {0}", signalReference);
+                        OnStatusMessage(MessageLevel.Info, "StatisticsEngine", "WARNING: Encountered duplicate signal reference statistic: {0}", signalReference);
                     else
                         sourceLookup.Add(signalReference, mapping.Item1);
                 }
@@ -954,7 +954,7 @@ namespace GSF.TimeSeries.Statistics
                     src.StatisticMeasurements = statisticMeasurements;
             }
 
-            OnStatusMessage("Loaded {0} statistic calculation definitions and {1} statistic measurement definitions.", m_statistics.Count, statisticMeasurementCount);
+            OnStatusMessage(MessageLevel.Info, "StatisticsEngine", "Loaded {0} statistic calculation definitions and {1} statistic measurement definitions.", m_statistics.Count, statisticMeasurementCount);
 
             if (reenable)
             {
@@ -1006,7 +1006,7 @@ namespace GSF.TimeSeries.Statistics
             catch (Exception ex)
             {
                 string errorMessage = string.Format("Error encountered while calculating statistics: {0}", ex.Message);
-                OnProcessException(new Exception(errorMessage, ex));
+                OnProcessException(MessageLevel.Info, "StatisticsEngine", new Exception(errorMessage, ex));
             }
         }
 
@@ -1035,7 +1035,7 @@ namespace GSF.TimeSeries.Statistics
             catch (Exception ex)
             {
                 string errorMessage = string.Format("Error calculating statistics for {0}: {1}", source.SourceName, ex.Message);
-                OnProcessException(new Exception(errorMessage, ex));
+                OnProcessException(MessageLevel.Info, "StatisticsEngine", new Exception(errorMessage, ex));
             }
 
             return calculatedStatistics;
@@ -1079,7 +1079,7 @@ namespace GSF.TimeSeries.Statistics
                 catch (Exception ex)
                 {
                     string errorMessage = string.Format("Error calculating statistic for {0}: {1}", measurement["SignalReference"], ex.Message);
-                    OnProcessException(new Exception(errorMessage, ex));
+                    OnProcessException(MessageLevel.Info, "StatisticsEngine", new Exception(errorMessage, ex));
                 }
             }
             else
