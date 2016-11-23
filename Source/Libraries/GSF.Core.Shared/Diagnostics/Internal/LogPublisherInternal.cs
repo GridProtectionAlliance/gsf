@@ -55,27 +55,6 @@ namespace GSF.Diagnostics
 
         public readonly Assembly Assembly;
 
-        /// <summary>
-        /// The maximum number of distinct events that this publisher can generate. (Default: 20)
-        /// </summary>
-        /// <remarks>
-        /// Since message suppression and collection occurs at the event name level, it is important
-        /// to have only a few distinct message types. This is the limit so misapplication
-        /// of this publisher will not cause memory impacts on the system.
-        /// 
-        /// It is recommended to keep the event name as a fixed string and not report any other meta data
-        /// with the event.
-        /// </remarks>
-        // ReSharper disable once ConvertToConstant.Global
-        public int MaxDistinctEventPublisherCount { get; set; }
-
-        /// <summary>
-        /// Where the <see cref="LogEventPublisherInternal"/>s of specific events are cached.
-        /// </summary>
-        private readonly ConcurrentDictionary<Tuple<LogMessageAttributes, string>, LogEventPublisherInternal> m_lookupEventPublishers;
-
-        private LogEventPublisherInternal m_excessivePublisherEventNames;
-
         private MessageAttributeFilter m_attributeFilterCache;
 
         #endregion
@@ -95,10 +74,6 @@ namespace GSF.Diagnostics
             Assembly = type.Assembly;
             TypeFullName = TrimAfterFullName(type.AssemblyQualifiedName);
             AssemblyFullName = Path.GetFileName(Assembly.Location);
-
-            m_lookupEventPublishers = new ConcurrentDictionary<Tuple<LogMessageAttributes, string>, LogEventPublisherInternal>();
-
-            MaxDistinctEventPublisherCount = 20;
             m_logger = logger;
             m_attributeFilterCache = null;
         }
@@ -131,65 +106,7 @@ namespace GSF.Diagnostics
             return subscription.IsSubscribedTo(attributes);
         }
 
-        /// <summary>
-        /// Initializes an <see cref="LogEventPublisher"/> with a series of settings.
-        /// </summary>
-        /// <param name="attributes"></param>
-        /// <param name="eventName">the name of the event.</param>
-        /// <returns></returns>
-        public LogEventPublisherInternal RegisterEvent(LogMessageAttributes attributes, string eventName)
-        {
-            LogEventPublisherInternal publisher;
-            if (m_lookupEventPublishers.TryGetValue(Tuple.Create(attributes, eventName), out publisher))
-            {
-                return publisher;
-            }
-            return RegisterNewEvent(attributes, eventName, 0, 1, 20);
-        }
-
-        /// <summary>
-        /// Initializes an <see cref="LogEventPublisher"/> with a series of settings.
-        /// </summary>
-        /// <param name="attributes"></param>
-        /// <param name="eventName"></param>
-        /// <param name="stackTraceDepth"></param>
-        /// <param name="messagesPerSecond"></param>
-        /// <param name="burstLimit"></param>
-        /// <returns></returns>
-        public LogEventPublisherInternal RegisterEvent(LogMessageAttributes attributes, string eventName, int stackTraceDepth, MessageRate messagesPerSecond, int burstLimit)
-        {
-            LogEventPublisherInternal publisher;
-            if (m_lookupEventPublishers.TryGetValue(Tuple.Create(attributes, eventName), out publisher))
-            {
-                return publisher;
-            }
-            return RegisterNewEvent(attributes, eventName, stackTraceDepth, messagesPerSecond, burstLimit);
-        }
-
-        private LogEventPublisherInternal RegisterNewEvent(LogMessageAttributes attributes, string eventName, int stackTraceDepth, double messagesPerSecond, int burstLimit)
-        {
-            //Note: A race condition can cause more then the maximum number of entries to exist, however, this is not a concern.
-            if (m_lookupEventPublishers.Count > MaxDistinctEventPublisherCount)
-            {
-                if (m_excessivePublisherEventNames == null)
-                {
-                    var owner1 = new LogEventPublisherDetails(TypeFullName, AssemblyFullName,
-                        "Excessive Event Names: Event names for this publisher has been limited to " + MaxDistinctEventPublisherCount.ToString() +
-                        "Please adjust MaxDistinctEventPublisherCount if this is not a bug and this publisher can truly create this many publishers.");
-                    m_excessivePublisherEventNames = new LogEventPublisherInternal(attributes, owner1, this, m_logger, stackTraceDepth, messagesPerSecond, burstLimit);
-                }
-                return m_excessivePublisherEventNames;
-            }
-
-            LogEventPublisherInternal publisher;
-            var owner = new LogEventPublisherDetails(TypeFullName, AssemblyFullName, eventName);
-            publisher = new LogEventPublisherInternal(attributes, owner, this, m_logger, stackTraceDepth, messagesPerSecond, burstLimit);
-            publisher = m_lookupEventPublishers.GetOrAdd(Tuple.Create(attributes, eventName), publisher);
-            return publisher;
-        }
-
         #endregion
-
 
         /// <summary>
         /// Trims the unused information after the namespace.class+subclass details.

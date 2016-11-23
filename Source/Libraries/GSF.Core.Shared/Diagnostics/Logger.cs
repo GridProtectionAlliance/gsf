@@ -217,7 +217,7 @@ namespace GSF.Diagnostics
         /// <returns></returns>
         public static LogPublisher CreatePublisher(Type type, MessageClass classification)
         {
-            return new LogPublisher(s_logger.CreateType(type), classification);
+            return new LogPublisher(s_logger, s_logger.CreateType(type), classification);
         }
 
         /// <summary>

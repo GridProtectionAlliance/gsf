@@ -23,6 +23,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 
 // ReSharper disable InconsistentlySynchronizedField
 
@@ -43,6 +44,11 @@ namespace GSF.Diagnostics
     /// </remarks>
     public class LogPublisher
     {
+        /// <summary>
+        /// Occurs when a new <see cref="LogMessage"/> is ready to be published.
+        /// </summary>
+        private LoggerInternal m_logger;
+
         private readonly LogPublisherInternal m_publisherInstance;
         private readonly MessageClass m_classification;
 
@@ -58,14 +64,6 @@ namespace GSF.Diagnostics
         /// </summary>
         public LogStackTrace InitialStackTrace;
 
-        internal LogPublisher(LogPublisherInternal publisherInstance, MessageClass classification)
-        {
-            m_publisherInstance = publisherInstance;
-            m_classification = classification;
-            InitialStackMessages = Logger.GetStackMessages();
-            InitialStackTrace = new LogStackTrace(true, 1, 10);
-        }
-
         /// <summary>
         /// The maximum number of distinct events that this publisher can generate. (Default: 20)
         /// </summary>
@@ -77,16 +75,26 @@ namespace GSF.Diagnostics
         /// It is recommended to keep the event name as a fixed string and not report any other meta data
         /// with the event.
         /// </remarks>
-        public int MaxDistinctEventPublisherCount
+        // ReSharper disable once ConvertToConstant.Global
+        public int MaxDistinctEventPublisherCount { get; set; }
+
+        /// <summary>
+        /// Where the <see cref="LogEventPublisherInternal"/>s of specific events are cached.
+        /// </summary>
+        private readonly ConcurrentDictionary<Tuple<LogMessageAttributes, string>, LogEventPublisherInternal> m_lookupEventPublishers;
+
+        private LogEventPublisherInternal m_excessivePublisherEventNames;
+
+        internal LogPublisher(LoggerInternal logger, LogPublisherInternal publisherInstance, MessageClass classification)
         {
-            get
-            {
-                return m_publisherInstance.MaxDistinctEventPublisherCount;
-            }
-            set
-            {
-                m_publisherInstance.MaxDistinctEventPublisherCount = value;
-            }
+            m_logger = logger;
+            m_publisherInstance = publisherInstance;
+            m_classification = classification;
+            InitialStackMessages = Logger.GetStackMessages();
+            InitialStackTrace = new LogStackTrace(true, 1, 10);
+            MaxDistinctEventPublisherCount = 20;
+            m_lookupEventPublishers = new ConcurrentDictionary<Tuple<LogMessageAttributes, string>, LogEventPublisherInternal>();
+
         }
 
         /// <summary>
@@ -98,7 +106,7 @@ namespace GSF.Diagnostics
         public LogEventPublisher RegisterEvent(MessageLevel level, string eventName)
         {
             LogMessageAttributes flag = new LogMessageAttributes(m_classification, level, MessageSuppression.None, MessageFlags.None);
-            LogEventPublisherInternal publisher = m_publisherInstance.RegisterEvent(flag, eventName);
+            LogEventPublisherInternal publisher = InternalRegisterEvent(flag, eventName);
             return new LogEventPublisher(this, publisher);
         }
 
@@ -112,7 +120,7 @@ namespace GSF.Diagnostics
         public LogEventPublisher RegisterEvent(MessageLevel level, MessageFlags flags, string eventName)
         {
             LogMessageAttributes flag = new LogMessageAttributes(m_classification, level, MessageSuppression.None, flags);
-            LogEventPublisherInternal publisher = m_publisherInstance.RegisterEvent(flag, eventName);
+            LogEventPublisherInternal publisher = InternalRegisterEvent(flag, eventName);
             return new LogEventPublisher(this, publisher);
         }
 
@@ -128,7 +136,7 @@ namespace GSF.Diagnostics
         public LogEventPublisher RegisterEvent(MessageLevel level, string eventName, int stackTraceDepth, MessageRate messagesPerSecond, int burstLimit)
         {
             LogMessageAttributes flag = new LogMessageAttributes(m_classification, level, MessageSuppression.None, MessageFlags.None);
-            LogEventPublisherInternal publisher = m_publisherInstance.RegisterEvent(flag, eventName, stackTraceDepth, messagesPerSecond, burstLimit);
+            LogEventPublisherInternal publisher = InternalRegisterEvent(flag, eventName, stackTraceDepth, messagesPerSecond, burstLimit);
             return new LogEventPublisher(this, publisher);
         }
 
@@ -145,7 +153,7 @@ namespace GSF.Diagnostics
         public LogEventPublisher RegisterEvent(MessageLevel level, MessageFlags flags, string eventName, int stackTraceDepth, MessageRate messagesPerSecond, int burstLimit)
         {
             LogMessageAttributes flag = new LogMessageAttributes(m_classification, level, MessageSuppression.None, flags);
-            LogEventPublisherInternal publisher = m_publisherInstance.RegisterEvent(flag, eventName, stackTraceDepth, messagesPerSecond, burstLimit);
+            LogEventPublisherInternal publisher = InternalRegisterEvent(flag, eventName, stackTraceDepth, messagesPerSecond, burstLimit);
             return new LogEventPublisher(this, publisher);
         }
 
@@ -170,7 +178,7 @@ namespace GSF.Diagnostics
         public void Publish(MessageLevel level, string eventName, string message = null, string details = null, Exception exception = null)
         {
             LogMessageAttributes flag = new LogMessageAttributes(m_classification, level, MessageSuppression.None, MessageFlags.None);
-            m_publisherInstance.RegisterEvent(flag, eventName).Publish(message, details, exception, InitialStackMessages, InitialStackTrace);
+            InternalRegisterEvent(flag, eventName).Publish(message, details, exception, InitialStackMessages, InitialStackTrace);
         }
 
         /// <summary>
@@ -186,7 +194,65 @@ namespace GSF.Diagnostics
         public void Publish(MessageLevel level, MessageFlags flags, string eventName, string message = null, string details = null, Exception exception = null)
         {
             LogMessageAttributes flag = new LogMessageAttributes(m_classification, level, MessageSuppression.None, flags);
-            m_publisherInstance.RegisterEvent(flag, eventName).Publish(message, details, exception, InitialStackMessages, InitialStackTrace);
+            InternalRegisterEvent(flag, eventName).Publish(message, details, exception, InitialStackMessages, InitialStackTrace);
+        }
+
+
+        /// <summary>
+        /// Initializes an <see cref="LogEventPublisher"/> with a series of settings.
+        /// </summary>
+        /// <param name="attributes"></param>
+        /// <param name="eventName">the name of the event.</param>
+        /// <returns></returns>
+        private LogEventPublisherInternal InternalRegisterEvent(LogMessageAttributes attributes, string eventName)
+        {
+            LogEventPublisherInternal publisher;
+            if (m_lookupEventPublishers.TryGetValue(Tuple.Create(attributes, eventName), out publisher))
+            {
+                return publisher;
+            }
+            return InternalRegisterNewEvent(attributes, eventName, 0, 1, 20);
+        }
+
+        /// <summary>
+        /// Initializes an <see cref="LogEventPublisher"/> with a series of settings.
+        /// </summary>
+        /// <param name="attributes"></param>
+        /// <param name="eventName"></param>
+        /// <param name="stackTraceDepth"></param>
+        /// <param name="messagesPerSecond"></param>
+        /// <param name="burstLimit"></param>
+        /// <returns></returns>
+        private LogEventPublisherInternal InternalRegisterEvent(LogMessageAttributes attributes, string eventName, int stackTraceDepth, MessageRate messagesPerSecond, int burstLimit)
+        {
+            LogEventPublisherInternal publisher;
+            if (m_lookupEventPublishers.TryGetValue(Tuple.Create(attributes, eventName), out publisher))
+            {
+                return publisher;
+            }
+            return InternalRegisterNewEvent(attributes, eventName, stackTraceDepth, messagesPerSecond, burstLimit);
+        }
+
+        private LogEventPublisherInternal InternalRegisterNewEvent(LogMessageAttributes attributes, string eventName, int stackTraceDepth, double messagesPerSecond, int burstLimit)
+        {
+            //Note: A race condition can cause more then the maximum number of entries to exist, however, this is not a concern.
+            if (m_lookupEventPublishers.Count > MaxDistinctEventPublisherCount)
+            {
+                if (m_excessivePublisherEventNames == null)
+                {
+                    var owner1 = new LogEventPublisherDetails(m_publisherInstance.TypeFullName, m_publisherInstance.AssemblyFullName,
+                        "Excessive Event Names: Event names for this publisher has been limited to " + MaxDistinctEventPublisherCount.ToString() +
+                        "Please adjust MaxDistinctEventPublisherCount if this is not a bug and this publisher can truly create this many publishers.");
+                    m_excessivePublisherEventNames = new LogEventPublisherInternal(attributes, owner1, m_publisherInstance, m_logger, stackTraceDepth, messagesPerSecond, burstLimit);
+                }
+                return m_excessivePublisherEventNames;
+            }
+
+            LogEventPublisherInternal publisher;
+            var owner = new LogEventPublisherDetails(m_publisherInstance.TypeFullName, m_publisherInstance.AssemblyFullName, eventName);
+            publisher = new LogEventPublisherInternal(attributes, owner, m_publisherInstance, m_logger, stackTraceDepth, messagesPerSecond, burstLimit);
+            publisher = m_lookupEventPublishers.GetOrAdd(Tuple.Create(attributes, eventName), publisher);
+            return publisher;
         }
 
     }
