@@ -886,7 +886,7 @@ namespace GSF.TimeSeries.Adapters
             {
                 if (!Logger.ShouldSuppressLogMessages)
                 {
-                    Log.Publish(MessageLevel.NA, "Unclassified Status", status);
+                    Log.Publish(MessageLevel.Info, "Unclassified Status", status);
                     using (Logger.SuppressLogMessages())
                         StatusMessage?.Invoke(this, new EventArgs<string>(status));
                 }
@@ -918,7 +918,7 @@ namespace GSF.TimeSeries.Adapters
                 string message = string.Format(formattedStatus, args);
                 if (!Logger.ShouldSuppressLogMessages)
                 {
-                    Log.Publish(MessageLevel.NA, "Unclassified Status", message);
+                    Log.Publish(MessageLevel.Info, "Unclassified Status", message);
                     using (Logger.SuppressLogMessages())
                         StatusMessage?.Invoke(this, new EventArgs<string>(message));
                 }
@@ -980,7 +980,7 @@ namespace GSF.TimeSeries.Adapters
         {
             if (!Logger.ShouldSuppressLogMessages)
             {
-                Log.Publish(MessageLevel.NA, "Unclassified Exception", ex?.Message, null, ex);
+                Log.Publish(MessageLevel.Info, "Unclassified Exception", ex?.Message, null, ex);
                 using (Logger.SuppressLogMessages())
                     ProcessException?.Invoke(this, new EventArgs<Exception>(ex));
             }
