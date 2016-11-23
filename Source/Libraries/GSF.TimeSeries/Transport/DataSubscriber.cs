@@ -4528,33 +4528,36 @@ namespace GSF.TimeSeries.Transport
         {
             base.OnProcessException(ex);
 
-            if (DateTime.UtcNow.Ticks - m_lastParsingExceptionTime > m_parsingExceptionWindow)
+            using (Logger.OverrideSuppressLogMessages()) //Just in case Log Message Suppression was turned on, turn it off so this code can raise messages.
             {
-                // Exception window has passed since last exception, so we reset counters
-                m_lastParsingExceptionTime = DateTime.UtcNow.Ticks;
-                m_parsingExceptionCount = 0;
-            }
-
-            m_parsingExceptionCount++;
-
-            if (m_parsingExceptionCount > m_allowedParsingExceptions)
-            {
-                try
+                if (DateTime.UtcNow.Ticks - m_lastParsingExceptionTime > m_parsingExceptionWindow)
                 {
-                    // When the parsing exception threshold has been exceeded, connection is restarted
-                    Start();
-                }
-                catch (Exception restartException)
-                {
-                    string message = $"Error while restarting subscriber connection due to excessive exceptions: {restartException.Message}";
-                    base.OnProcessException(new InvalidOperationException(message, restartException));
-                }
-                finally
-                {
-                    // Notify consumer of parsing exception threshold deviation
-                    OnExceededParsingExceptionThreshold();
-                    m_lastParsingExceptionTime = 0;
+                    // Exception window has passed since last exception, so we reset counters
+                    m_lastParsingExceptionTime = DateTime.UtcNow.Ticks;
                     m_parsingExceptionCount = 0;
+                }
+
+                m_parsingExceptionCount++;
+
+                if (m_parsingExceptionCount > m_allowedParsingExceptions)
+                {
+                    try
+                    {
+                        // When the parsing exception threshold has been exceeded, connection is restarted
+                        Start();
+                    }
+                    catch (Exception restartException)
+                    {
+                        string message = $"Error while restarting subscriber connection due to excessive exceptions: {restartException.Message}";
+                        base.OnProcessException(new InvalidOperationException(message, restartException));
+                    }
+                    finally
+                    {
+                        // Notify consumer of parsing exception threshold deviation
+                        OnExceededParsingExceptionThreshold();
+                        m_lastParsingExceptionTime = 0;
+                        m_parsingExceptionCount = 0;
+                    }
                 }
             }
         }

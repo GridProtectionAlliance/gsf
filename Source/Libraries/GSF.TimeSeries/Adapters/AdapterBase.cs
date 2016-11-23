@@ -884,7 +884,16 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                StatusMessage?.Invoke(this, new EventArgs<string>(status));
+                if (!Logger.ShouldSuppressLogMessages)
+                {
+                    Log.Publish(MessageLevel.NA, "Unclassified Status", status);
+                    using (Logger.SuppressLogMessages())
+                        StatusMessage?.Invoke(this, new EventArgs<string>(status));
+                }
+                else
+                {
+                    StatusMessage?.Invoke(this, new EventArgs<string>(status));
+                }
             }
             catch (Exception ex)
             {
@@ -906,7 +915,17 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                StatusMessage?.Invoke(this, new EventArgs<string>(string.Format(formattedStatus, args)));
+                string message = string.Format(formattedStatus, args);
+                if (!Logger.ShouldSuppressLogMessages)
+                {
+                    Log.Publish(MessageLevel.NA, "Unclassified Status", message);
+                    using (Logger.SuppressLogMessages())
+                        StatusMessage?.Invoke(this, new EventArgs<string>(message));
+                }
+                else
+                {
+                    StatusMessage?.Invoke(this, new EventArgs<string>(message));
+                }
             }
             catch (Exception ex)
             {
@@ -959,7 +978,16 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
         protected virtual void OnProcessException(Exception ex)
         {
-            ProcessException?.Invoke(this, new EventArgs<Exception>(ex));
+            if (!Logger.ShouldSuppressLogMessages)
+            {
+                Log.Publish(MessageLevel.NA, "Unclassified Exception", ex?.Message, null, ex);
+                using (Logger.SuppressLogMessages())
+                    ProcessException?.Invoke(this, new EventArgs<Exception>(ex));
+            }
+            else
+            {
+                ProcessException?.Invoke(this, new EventArgs<Exception>(ex));
+            }
         }
 
         /// <summary>
