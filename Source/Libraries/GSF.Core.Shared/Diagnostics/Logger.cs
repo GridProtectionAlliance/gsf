@@ -23,7 +23,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Security;
 using System.Security.Permissions;
@@ -37,6 +36,61 @@ namespace GSF.Diagnostics
     /// </summary>
     public static class Logger
     {
+        private class ThreadStack
+        {
+            private List<LogStackMessages> m_threadStackDetails = new List<LogStackMessages>();
+            private LogStackMessages m_stackMessageCache;
+            private List<bool> m_logMessageSuppressionStack = new List<bool>();
+
+            public bool ShouldSuppressLogMessages => m_logMessageSuppressionStack.Count > 0 && m_logMessageSuppressionStack[m_logMessageSuppressionStack.Count - 1];
+
+            public LogStackMessages GetStackMessages()
+            {
+                if (m_stackMessageCache == null)
+                {
+                    if (m_threadStackDetails.Count == 0)
+                    {
+                        m_stackMessageCache = LogStackMessages.Empty;
+                    }
+                    else
+                    {
+                        m_stackMessageCache = new LogStackMessages(m_threadStackDetails);
+                    }
+                }
+                return m_stackMessageCache;
+            }
+
+            public StackDetailsDisposal AppendStackMessages(LogStackMessages messages)
+            {
+                m_stackMessageCache = null;
+                m_threadStackDetails.Add(messages);
+                return new StackDetailsDisposal(m_threadStackDetails.Count);
+            }
+
+            public SuppressLogMessagesDisposal SuppressLogMessages(bool shouldSuppress)
+            {
+                m_logMessageSuppressionStack.Add(shouldSuppress);
+                return new SuppressLogMessagesDisposal(m_logMessageSuppressionStack.Count);
+            }
+
+            public void RemoveStackMessage(StackDetailsDisposal depth)
+            {
+                while (m_threadStackDetails.Count >= depth.Depth)
+                {
+                    m_threadStackDetails.RemoveAt(m_threadStackDetails.Count - 1);
+                }
+                m_stackMessageCache = null;
+            }
+
+            public void RemoveSuppression(SuppressLogMessagesDisposal depth)
+            {
+                while (m_logMessageSuppressionStack.Count >= depth.Depth)
+                {
+                    m_logMessageSuppressionStack.RemoveAt(m_logMessageSuppressionStack.Count - 1);
+                }
+            }
+        }
+
         private static LoggerInternal s_logger;
 
         /// <summary>
@@ -50,8 +104,7 @@ namespace GSF.Diagnostics
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly LogSubscriptionFileWriter FileWriter;
 
-        private static readonly ConcurrentDictionary<int, int> LogSuppressionChecking = new ConcurrentDictionary<int, int>();
-        private static readonly Dictionary<int, List<LogStackMessages>> ThreadStackDetails = new Dictionary<int, List<LogStackMessages>>();
+        private static readonly ThreadLocal<ThreadStack> ThreadItems = new ThreadLocal<ThreadStack>(() => new ThreadStack());
 
         private static readonly LogPublisher Log;
         private static readonly LogEventPublisher EventFirstChanceException;
@@ -81,7 +134,7 @@ namespace GSF.Diagnostics
         /// <summary>
         /// Gets if Log Messages should be suppressed.
         /// </summary>
-        public static bool ShouldSuppressLogMessages => LogSuppressionChecking.ContainsKey(Thread.CurrentThread.ManagedThreadId);
+        public static bool ShouldSuppressLogMessages => ThreadItems.Value.ShouldSuppressLogMessages;
 
         /// <summary>
         /// Ensures that the logger has been initialized. 
@@ -184,19 +237,7 @@ namespace GSF.Diagnostics
         /// <returns></returns>
         public static LogStackMessages GetStackMessages()
         {
-            int threadid = Thread.CurrentThread.ManagedThreadId;
-
-            List<LogStackMessages> stack;
-
-            lock (ThreadStackDetails)
-            {
-                if (!ThreadStackDetails.TryGetValue(threadid, out stack))
-                {
-                    return LogStackMessages.Empty;
-                }
-            }
-
-            return new LogStackMessages(stack);
+            return ThreadItems.Value.GetStackMessages();
         }
 
 
@@ -208,21 +249,7 @@ namespace GSF.Diagnostics
         /// <returns></returns>
         public static StackDetailsDisposal AppendStackMessages(LogStackMessages messages)
         {
-            int threadid = Thread.CurrentThread.ManagedThreadId;
-
-            List<LogStackMessages> stack;
-
-            lock (ThreadStackDetails)
-            {
-                if (!ThreadStackDetails.TryGetValue(threadid, out stack))
-                {
-                    stack = new List<LogStackMessages>();
-                    ThreadStackDetails.Add(threadid, stack);
-                }
-            }
-
-            stack.Add(messages);
-            return new StackDetailsDisposal(stack.Count);
+            return ThreadItems.Value.AppendStackMessages(messages);
         }
 
         /// <summary>
@@ -232,7 +259,17 @@ namespace GSF.Diagnostics
         /// <returns></returns>
         public static SuppressLogMessagesDisposal SuppressLogMessages()
         {
-            return new SuppressLogMessagesDisposal(LogSuppressionChecking.TryAdd(Thread.CurrentThread.ManagedThreadId, 1));
+            return ThreadItems.Value.SuppressLogMessages(true);
+        }
+
+        /// <summary>
+        /// Sets a flag that will allow log messages to be raised again.
+        /// Remember to dispose of the callback to remove this override.
+        /// </summary>
+        /// <returns></returns>
+        public static SuppressLogMessagesDisposal OverrideSuppressLogMessages()
+        {
+            return ThreadItems.Value.SuppressLogMessages(false);
         }
 
         /// <summary>
@@ -273,29 +310,7 @@ namespace GSF.Diagnostics
             {
                 if (Depth == 0)
                     return;
-                int threadid = Thread.CurrentThread.ManagedThreadId;
-
-                if (Depth == 1)
-                {
-                    lock (ThreadStackDetails)
-                    {
-                        ThreadStackDetails.Remove(threadid);
-                    }
-                }
-                else
-                {
-                    lock (ThreadStackDetails)
-                    {
-                        List<LogStackMessages> stack;
-                        if (ThreadStackDetails.TryGetValue(threadid, out stack))
-                        {
-                            while (stack.Count >= Depth)
-                            {
-                                stack.RemoveAt(stack.Count - 1);
-                            }
-                        }
-                    }
-                }
+                ThreadItems.Value.RemoveStackMessage(this);
                 Depth = 0;
             }
         }
@@ -306,11 +321,11 @@ namespace GSF.Diagnostics
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
         public struct SuppressLogMessagesDisposal : IDisposable
         {
-            internal bool ShouldRemove { get; private set; }
+            internal int Depth { get; private set; }
 
-            internal SuppressLogMessagesDisposal(bool shouldRemove)
+            internal SuppressLogMessagesDisposal(int depth)
             {
-                ShouldRemove = shouldRemove;
+                Depth = depth;
             }
 
             /// <summary>
@@ -319,13 +334,10 @@ namespace GSF.Diagnostics
             /// <filterpriority>2</filterpriority>
             public void Dispose()
             {
-                if (ShouldRemove)
-                {
-                    int threadid = Thread.CurrentThread.ManagedThreadId;
-                    int value;
-                    LogSuppressionChecking.TryRemove(threadid, out value);
-                    ShouldRemove = false;
-                }
+                if (Depth == 0)
+                    return;
+                ThreadItems.Value.RemoveSuppression(this);
+                Depth = 0;
             }
         }
     }
