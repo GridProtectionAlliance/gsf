@@ -67,6 +67,29 @@ namespace GSF.Diagnostics
         }
 
         /// <summary>
+        /// The maximum number of distinct events that this publisher can generate. (Default: 20)
+        /// </summary>
+        /// <remarks>
+        /// Since message suppression and collection occurs at the event name level, it is important
+        /// to have only a few distinct message types. This is the limit so misapplication
+        /// of this publisher will not cause memory impacts on the system.
+        /// 
+        /// It is recommended to keep the event name as a fixed string and not report any other meta data
+        /// with the event.
+        /// </remarks>
+        public int MaxDistinctEventPublisherCount
+        {
+            get
+            {
+                return m_publisherInstance.MaxDistinctEventPublisherCount;
+            }
+            set
+            {
+                m_publisherInstance.MaxDistinctEventPublisherCount = value;
+            }
+        }
+
+        /// <summary>
         /// Initializes an <see cref="LogEventPublisher"/> with the provided values.
         /// </summary>
         /// <param name="level">the level of the message and associated flags if any</param>
