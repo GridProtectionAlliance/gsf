@@ -56,7 +56,7 @@ namespace GSF.Diagnostics
         /// </remarks>
         public event NewLogMessageEventHandler NewLogMessage;
 
-        private Action m_subscriptionChanged;
+        private Action m_recalculateRoutingTable;
 
         private readonly object m_syncRoot;
 
@@ -64,17 +64,20 @@ namespace GSF.Diagnostics
 
         private List<SubscriptionInfo> m_allSubscriptions;
 
-        private Dictionary<LogPublisherInternal, MessageAttributeFilter> m_publisherCache;
+        /// <summary>
+        /// Since weak references are linked to this class, this is a common one that everyone can use when storing this weak reference.
+        /// </summary>
+        public readonly WeakReference Reference;
 
         /// <summary>
         /// Creates a <see cref="LogSubscriberInternal"/>
         /// </summary>
-        public LogSubscriberInternal(Action subscriptionChanged)
+        public LogSubscriberInternal(Action recalculateRoutingTable)
         {
-            m_subscriptionChanged = subscriptionChanged;
+            Reference = new WeakReference(this);
+            m_recalculateRoutingTable = recalculateRoutingTable;
             m_syncRoot = new object();
             m_allSubscriptions = null;
-            m_publisherCache = null;
         }
 
         /// <summary>
@@ -91,8 +94,9 @@ namespace GSF.Diagnostics
                     return;
 
                 m_allSubscriptions = null;
-                m_publisherCache = null;
             }
+            m_recalculateRoutingTable();
+
         }
 
         /// <summary>
@@ -106,71 +110,49 @@ namespace GSF.Diagnostics
             if (m_disposed)
                 return;
 
-            bool hasChanged;
-
             lock (m_syncRoot)
             {
                 if (m_disposed)
                     return;
 
-                hasChanged = AddSubscriptionSync(publisherFilter, attributeFilter, isIgnoreSubscription);
-                if (hasChanged)
-                    m_publisherCache = null;
-            }
-
-            if (hasChanged)
-                m_subscriptionChanged();
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="publisherFilter"></param>
-        /// <param name="attributeFilter"></param>
-        /// <param name="isIgnoreSubscription"></param>
-        /// <returns>True if subscription has changed, false otherwise</returns>
-        private bool AddSubscriptionSync(PublisherFilter publisherFilter, MessageAttributeFilter attributeFilter, bool isIgnoreSubscription)
-        {
-            if (m_allSubscriptions == null)
-            {
-                if (attributeFilter == null)
-                    return false;
-
-                m_allSubscriptions = new List<SubscriptionInfo>();
-                m_allSubscriptions.Add(new SubscriptionInfo(publisherFilter, attributeFilter, isIgnoreSubscription));
-                return true;
-            }
-            else
-            {
-                for (int x = 0; x < m_allSubscriptions.Count; x++)
+                if (m_allSubscriptions == null)
                 {
-                    if (m_allSubscriptions[x].PublisherFilter.ContainsTheSameLogSearchCriteria(publisherFilter))
-                    {
-                        if (attributeFilter == null)
-                        {
-                            m_allSubscriptions.RemoveAt(x);
-                            return true;
-                        }
-                        m_allSubscriptions[x].AttributeFilter = attributeFilter;
-                        m_allSubscriptions[x].IsIgnoreSubscription = isIgnoreSubscription;
-                        return true;
-                    }
+                    if (attributeFilter == null)
+                        return;
+
+                    m_allSubscriptions = new List<SubscriptionInfo>();
+                    m_allSubscriptions.Add(new SubscriptionInfo(publisherFilter, attributeFilter, isIgnoreSubscription));
                 }
-                if (attributeFilter == null)
-                    return false;
+                else
+                {
+                    for (int x = 0; x < m_allSubscriptions.Count; x++)
+                    {
+                        if (m_allSubscriptions[x].PublisherFilter.ContainsTheSameLogSearchCriteria(publisherFilter))
+                        {
+                            if (attributeFilter == null)
+                            {
+                                m_allSubscriptions.RemoveAt(x);
+                                return;
+                            }
+                            m_allSubscriptions[x].AttributeFilter = attributeFilter;
+                            m_allSubscriptions[x].IsIgnoreSubscription = isIgnoreSubscription;
+                            return;
+                        }
+                    }
+                    if (attributeFilter == null)
+                        return;
 
-                m_allSubscriptions.Add(new SubscriptionInfo(publisherFilter, attributeFilter, isIgnoreSubscription));
-                return true;
+                    m_allSubscriptions.Add(new SubscriptionInfo(publisherFilter, attributeFilter, isIgnoreSubscription));
+                }
             }
-
+            m_recalculateRoutingTable();
         }
 
         /// <summary>
         /// Assigns the supplied message to this subscriber.
         /// </summary>
         /// <param name="log">the message</param>
-        /// <param name="publisher">the publisher that raised this message.</param>
-        public void RaiseLogMessages(LogMessage log, LogPublisherInternal publisher)
+        public void RaiseLogMessages(LogMessage log)
         {
             if (m_disposed)
                 return;
@@ -183,11 +165,7 @@ namespace GSF.Diagnostics
                 if (m_allSubscriptions == null || m_allSubscriptions.Count == 0)
                     return;
 
-                MessageAttributeFilter verbose = GetSubscriptionSync(publisher);
-                if (verbose.IsSubscribedTo(log.LogMessageAttributes))
-                {
-                    OnLog(log);
-                }
+                OnLog(log);
             }
         }
 
@@ -195,40 +173,26 @@ namespace GSF.Diagnostics
         {
             lock (m_syncRoot)
             {
-                return GetSubscriptionSync(publisher);
-            }
-        }
+                if (m_allSubscriptions == null)
+                    m_allSubscriptions = new List<SubscriptionInfo>();
 
-        private MessageAttributeFilter GetSubscriptionSync(LogPublisherInternal publisher)
-        {
-            if (m_publisherCache == null)
-                m_publisherCache = new Dictionary<LogPublisherInternal, MessageAttributeFilter>();
-            if (m_allSubscriptions == null)
-                m_allSubscriptions = new List<SubscriptionInfo>();
-
-            MessageAttributeFilter verbose;
-            if (!m_publisherCache.TryGetValue(publisher, out verbose))
-            {
-                verbose = new MessageAttributeFilter();
-
+                MessageAttributeFilter filter = new MessageAttributeFilter();
                 foreach (var subscription in m_allSubscriptions)
                 {
                     if (subscription.PublisherFilter.ContainsPublisher(publisher))
                     {
                         if (subscription.IsIgnoreSubscription)
                         {
-                            verbose.Remove(subscription.AttributeFilter);
+                            filter.Remove(subscription.AttributeFilter);
                         }
                         else
                         {
-                            verbose.Append(subscription.AttributeFilter);
+                            filter.Append(subscription.AttributeFilter);
                         }
                     }
                 }
-
-                m_publisherCache.Add(publisher, verbose);
+                return filter;
             }
-            return verbose;
         }
 
         /// <summary>
@@ -241,7 +205,10 @@ namespace GSF.Diagnostics
                 return;
             try
             {
-                NewLogMessage?.Invoke(logMessage);
+                using (Logger.SuppressFirstChanceExceptionLogMessages())
+                {
+                    NewLogMessage?.Invoke(logMessage);
+                }
             }
             catch (Exception)
             {
@@ -258,7 +225,7 @@ namespace GSF.Diagnostics
         {
             m_disposed = true;
             m_allSubscriptions = null;
-            m_publisherCache = null;
+            Reference.Target = null;
         }
 
         public static readonly LogSubscriberInternal DisposedSubscriber;

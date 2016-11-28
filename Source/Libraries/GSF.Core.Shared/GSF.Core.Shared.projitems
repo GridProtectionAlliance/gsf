@@ -31,6 +31,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Internal\LogPublisherInternal.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Internal\LogSubscriberInternal.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Internal\LogSuppressionEngine.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Internal\MessageAttributeFilterCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Internal\MessageAttributeFilter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Internal\PublisherFilter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\LogEventPublisher.cs" />

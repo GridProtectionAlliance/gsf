@@ -63,7 +63,6 @@ namespace GSF.Collection
             {
                 m_items[x] = defaultValue;
             }
-
         }
 
         /// <summary>

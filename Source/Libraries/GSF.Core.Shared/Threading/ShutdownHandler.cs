@@ -57,7 +57,7 @@ namespace GSF.Threading
     /// </summary>
     public static class ShutdownHandler
     {
-        private static readonly LogPublisher Log = Logger.CreatePublisher(typeof(ShutdownHandler), MessageClass.Component);
+        private static readonly LogPublisher Log;
 
         /// <summary>
         /// Gets if this process is shutting down.
@@ -81,6 +81,7 @@ namespace GSF.Threading
             s_onShutdownCallbackDefault = new List<WeakAction>();
             s_onShutdownCallbackLast = new List<WeakAction>();
             Logger.Initialize();
+            Log = Logger.CreatePublisher(typeof(ShutdownHandler), MessageClass.Component);
 
             if (AppDomain.CurrentDomain.IsDefaultAppDomain())
                 AppDomain.CurrentDomain.ProcessExit += InitiateSafeShutdown;
@@ -151,6 +152,8 @@ namespace GSF.Threading
                 shutdownList.AddRange(s_onShutdownCallbackDefault);
                 shutdownList.AddRange(s_onShutdownCallbackLast);
             }
+
+            Log.Publish(MessageLevel.Info, MessageFlags.SystemHealth, "Shutting Down", $"Sending shutdown notification to {shutdownList.Count} objects");
 
             foreach (WeakAction weakAction in shutdownList)
             {

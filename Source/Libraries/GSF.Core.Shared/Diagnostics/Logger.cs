@@ -36,13 +36,25 @@ namespace GSF.Diagnostics
     /// </summary>
     public static class Logger
     {
+        private enum SuppressionMode
+        {
+            None = 0,
+            FirstChanceExceptionOnly = 1,
+            AllMessages = 2,
+        }
+
+        /// <summary>
+        /// This information is maintained in a ThreadLocal variable and is about 
+        /// messages and log suppression applied at higher levels of the calling stack.
+        /// </summary>
         private class ThreadStack
         {
             private List<LogStackMessages> m_threadStackDetails = new List<LogStackMessages>();
             private LogStackMessages m_stackMessageCache;
-            private List<bool> m_logMessageSuppressionStack = new List<bool>();
+            private List<SuppressionMode> m_logMessageSuppressionStack = new List<SuppressionMode>();
 
-            public bool ShouldSuppressLogMessages => m_logMessageSuppressionStack.Count > 0 && m_logMessageSuppressionStack[m_logMessageSuppressionStack.Count - 1];
+            public bool ShouldSuppressLogMessages => m_logMessageSuppressionStack.Count > 0 && m_logMessageSuppressionStack[m_logMessageSuppressionStack.Count - 1] >= SuppressionMode.AllMessages;
+            public bool ShouldSuppressFirstChanceLogMessages => m_logMessageSuppressionStack.Count > 0 && m_logMessageSuppressionStack[m_logMessageSuppressionStack.Count - 1] >= SuppressionMode.FirstChanceExceptionOnly;
 
             public LogStackMessages GetStackMessages()
             {
@@ -60,31 +72,42 @@ namespace GSF.Diagnostics
                 return m_stackMessageCache;
             }
 
-            public StackDetailsDisposal AppendStackMessages(LogStackMessages messages)
+            public StackDisposal AppendStackMessages(LogStackMessages messages)
             {
                 m_stackMessageCache = null;
                 m_threadStackDetails.Add(messages);
-                return new StackDetailsDisposal(m_threadStackDetails.Count);
+
+                int depth = m_threadStackDetails.Count;
+                if (depth >= s_stackDisposalStackMessages.Length)
+                {
+                    GrowStackDisposal(depth);
+                }
+                return s_stackDisposalStackMessages[depth];
             }
 
-            public SuppressLogMessagesDisposal SuppressLogMessages(bool shouldSuppress)
+            public StackDisposal SuppressLogMessages(SuppressionMode suppressionMode)
             {
-                m_logMessageSuppressionStack.Add(shouldSuppress);
-                return new SuppressLogMessagesDisposal(m_logMessageSuppressionStack.Count);
+                m_logMessageSuppressionStack.Add(suppressionMode);
+                int depth = m_logMessageSuppressionStack.Count;
+                if (depth >= s_stackDisposalSuppressionFlags.Length)
+                {
+                    GrowStackDisposal(depth);
+                }
+                return s_stackDisposalSuppressionFlags[depth];
             }
 
-            public void RemoveStackMessage(StackDetailsDisposal depth)
+            public void RemoveStackMessage(int depth)
             {
-                while (m_threadStackDetails.Count >= depth.Depth)
+                while (m_threadStackDetails.Count >= depth)
                 {
                     m_threadStackDetails.RemoveAt(m_threadStackDetails.Count - 1);
                 }
                 m_stackMessageCache = null;
             }
 
-            public void RemoveSuppression(SuppressLogMessagesDisposal depth)
+            public void RemoveSuppression(int depth)
             {
-                while (m_logMessageSuppressionStack.Count >= depth.Depth)
+                while (m_logMessageSuppressionStack.Count >= depth)
                 {
                     m_logMessageSuppressionStack.RemoveAt(m_logMessageSuppressionStack.Count - 1);
                 }
@@ -109,14 +132,18 @@ namespace GSF.Diagnostics
         private static readonly LogPublisher Log;
         private static readonly LogEventPublisher EventFirstChanceException;
         private static readonly LogEventPublisher EventAppDomainException;
+        private static StackDisposal[] s_stackDisposalStackMessages;
+        private static StackDisposal[] s_stackDisposalSuppressionFlags;
+        private static readonly object SyncRoot = new object();
 
         static Logger()
         {
             //Initializes the empty object of StackTraceDetails
             LogStackTrace.Initialize();
             LogStackMessages.Initialize();
+            GrowStackDisposal(1);
 
-            s_logger = new LoggerInternal();
+            s_logger = new LoggerInternal(out s_logger);
             Console = new LogSubscriptionConsole();
             FileWriter = new LogSubscriptionFileWriter(1000);
 
@@ -131,10 +158,6 @@ namespace GSF.Diagnostics
             ShutdownHandler.Initialize();
         }
 
-        /// <summary>
-        /// Gets if Log Messages should be suppressed.
-        /// </summary>
-        public static bool ShouldSuppressLogMessages => ThreadItems.Value.ShouldSuppressLogMessages;
 
         /// <summary>
         /// Ensures that the logger has been initialized. 
@@ -152,20 +175,36 @@ namespace GSF.Diagnostics
         {
             try
             {
+                Log.Publish(MessageLevel.Critical, MessageFlags.SystemHealth, "Logger is shutting down.");
                 s_logger.Dispose();
                 Console.Verbose = VerboseLevel.None;
-                FileWriter.Dispose();
+                FileWriter.Dispose(); 
+                //Cannot raise log messages here since the logger is now shutdown.
             }
             catch (Exception)
             {
             }
         }
 
-        static void CurrentDomain_FirstChanceException(object sender, System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs e)
+        /// <summary>
+        /// Gets if Log Messages should be suppressed.
+        /// </summary>
+        public static bool ShouldSuppressLogMessages => ThreadItems.Value.ShouldSuppressLogMessages;
+
+        /// <summary>
+        /// Gets if First Chance Exception Log Messages should be suppressed.
+        /// </summary>
+        public static bool ShouldSuppressFirstChanceLogMessages => ThreadItems.Value.ShouldSuppressFirstChanceLogMessages;
+
+        private static void CurrentDomain_FirstChanceException(object sender, System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs e)
         {
-            if (ShouldSuppressLogMessages)
+            if ((Thread.CurrentThread.ThreadState & (ThreadState.AbortRequested | ThreadState.Aborted)) != 0)
+            {
                 return;
-            using (SuppressLogMessages())
+            }
+            if (ShouldSuppressFirstChanceLogMessages)
+                return;
+            using (SuppressFirstChanceExceptionLogMessages())
             {
                 try
                 {
@@ -189,8 +228,12 @@ namespace GSF.Diagnostics
             }
         }
 
-        static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
+            if ((Thread.CurrentThread.ThreadState & (ThreadState.AbortRequested | ThreadState.Aborted)) != 0)
+            {
+                return;
+            }
             if (ShouldSuppressLogMessages)
                 return;
             using (SuppressLogMessages())
@@ -240,14 +283,13 @@ namespace GSF.Diagnostics
             return ThreadItems.Value.GetStackMessages();
         }
 
-
         /// <summary>
         /// Temporarily appends data to the thread's stack so the data can be propagated to any messages generated on this thread.
         /// Be sure to call Dispose on the returned object to remove this from the stack.
         /// </summary>
         /// <param name="messages"></param>
         /// <returns></returns>
-        public static StackDetailsDisposal AppendStackMessages(LogStackMessages messages)
+        public static IDisposable AppendStackMessages(LogStackMessages messages)
         {
             return ThreadItems.Value.AppendStackMessages(messages);
         }
@@ -257,9 +299,19 @@ namespace GSF.Diagnostics
         /// Remember to dispose of the callback to remove this suppression.
         /// </summary>
         /// <returns></returns>
-        public static SuppressLogMessagesDisposal SuppressLogMessages()
+        public static IDisposable SuppressLogMessages()
         {
-            return ThreadItems.Value.SuppressLogMessages(true);
+            return ThreadItems.Value.SuppressLogMessages(SuppressionMode.AllMessages);
+        }
+
+        /// <summary>
+        /// Sets a flag that will prevent First Chance Exception log messages from being raised on this thread.
+        /// Remember to dispose of the callback to remove this suppression.
+        /// </summary>
+        /// <returns></returns>
+        public static IDisposable SuppressFirstChanceExceptionLogMessages()
+        {
+            return ThreadItems.Value.SuppressLogMessages(SuppressionMode.FirstChanceExceptionOnly);
         }
 
         /// <summary>
@@ -267,9 +319,9 @@ namespace GSF.Diagnostics
         /// Remember to dispose of the callback to remove this override.
         /// </summary>
         /// <returns></returns>
-        public static SuppressLogMessagesDisposal OverrideSuppressLogMessages()
+        public static IDisposable OverrideSuppressLogMessages()
         {
-            return ThreadItems.Value.SuppressLogMessages(false);
+            return ThreadItems.Value.SuppressLogMessages(SuppressionMode.None);
         }
 
         /// <summary>
@@ -277,55 +329,60 @@ namespace GSF.Diagnostics
         /// Be sure to call Dispose on the returned object to remove this from the stack.
         /// </summary>
         /// <returns></returns>
-        public static StackDetailsDisposal AppendStackMessages(string key, string value)
+        public static IDisposable AppendStackMessages(string key, string value)
         {
             return AppendStackMessages(new LogStackMessages(key, value));
         }
 
-        /// <summary>
-        /// When putting messages on the stack. This struct is returned. Be sure to dispose it.
-        /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
-        public struct StackDetailsDisposal : IDisposable
+        private static void GrowStackDisposal(int desiredSize)
         {
-            /// <summary>
-            /// The depth of the stack messages
-            /// </summary>
-            public int Depth { get; private set; }
-
-            /// <summary>
-            /// Creates a new StackDetailsDisposal
-            /// </summary>
-            /// <param name="depth">the stack depth</param>
-            internal StackDetailsDisposal(int depth)
+            //Since these depths are relatively small, growing them both together has minor consequence.
+            lock (SyncRoot)
             {
-                Depth = depth;
-            }
-
-            /// <summary>
-            /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-            /// </summary>
-            /// <filterpriority>2</filterpriority>
-            public void Dispose()
-            {
-                if (Depth == 0)
-                    return;
-                ThreadItems.Value.RemoveStackMessage(this);
-                Depth = 0;
+                while (s_stackDisposalStackMessages == null || s_stackDisposalStackMessages.Length < desiredSize)
+                {
+                    //Note: both are grown together and completely reinitialized to improve 
+                    //      locality of reference.
+                    int lastSize = s_stackDisposalStackMessages?.Length ?? 2;
+                    StackDisposal[] stackMessages = new StackDisposal[lastSize * 2];
+                    for (int x = 0; x < stackMessages.Length; x++)
+                    {
+                        stackMessages[x] = new StackDisposal(x, DisposeStackMessage);
+                    }
+                    StackDisposal[] suppressionFlags = new StackDisposal[lastSize * 2];
+                    for (int x = 0; x < suppressionFlags.Length; x++)
+                    {
+                        suppressionFlags[x] = new StackDisposal(x, DisposeSuppressionFlags);
+                    }
+                    s_stackDisposalStackMessages = stackMessages;
+                    s_stackDisposalSuppressionFlags = suppressionFlags;
+                }
             }
         }
 
-        /// <summary>
-        /// When Suppressing Log Messages. This struct is returned. Be sure to dispose it.
-        /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
-        public struct SuppressLogMessagesDisposal : IDisposable
+        private static void DisposeStackMessage(int depth)
         {
-            internal int Depth { get; private set; }
+            ThreadItems.Value.RemoveStackMessage(depth);
+        }
+        private static void DisposeSuppressionFlags(int depth)
+        {
+            ThreadItems.Value.RemoveSuppression(depth);
+        }
 
-            internal SuppressLogMessagesDisposal(int depth)
+        /// <summary>
+        /// A class that will undo a temporary change in the stack variables. Note, this class 
+        /// will be reused. Therefore setting some kind of disposed flag will cause make this 
+        /// class unusable. The side effect of multiple calls to Dispose is tolerable.
+        /// </summary>
+        private class StackDisposal : IDisposable
+        {
+            private readonly int m_depth;
+            private readonly Action<int> m_callback;
+
+            internal StackDisposal(int depth, Action<int> callback)
             {
-                Depth = depth;
+                m_depth = depth;
+                m_callback = callback;
             }
 
             /// <summary>
@@ -334,10 +391,7 @@ namespace GSF.Diagnostics
             /// <filterpriority>2</filterpriority>
             public void Dispose()
             {
-                if (Depth == 0)
-                    return;
-                ThreadItems.Value.RemoveSuppression(this);
-                Depth = 0;
+                m_callback(m_depth);
             }
         }
     }

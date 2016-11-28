@@ -109,6 +109,7 @@ namespace GSF.Threading
         private CallbackArgs m_args;
 
         private volatile bool m_startDisposalCallSuccessful = false;
+        private bool m_ignoreShutdownHandler;
 
         protected ThreadContainerBase(Action<CallbackArgs> callback, Action disposeAndWaitCallback, bool disposeOnShutdown)
         {
@@ -300,8 +301,21 @@ namespace GSF.Threading
             }
         }
 
+        /// <summary>
+        /// For foreground threads, a shutdown handler is registered to dispose of the Thread so it doesn't keep the process running. 
+        /// However, for the Logger, shutting down this thread will prevent shutdown messages from showing up in the logger. 
+        /// By calling this method, it declares that the coder will dispose of this class when it is finished and does not want the 
+        /// Shutdown handler to do it.
+        /// </summary>
+        internal void IgnoreShutdownEvent()
+        {
+            m_ignoreShutdownHandler = true;
+        }
+
         protected void Shutdown()
         {
+            if (m_ignoreShutdownHandler)
+                return;
             //If the caller did not want to be notified on shutdown
             // or they did but the callback failed.
             // clear all callbacks and initiate a disposal.

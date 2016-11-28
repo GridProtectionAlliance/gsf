@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-using System.Threading;
+using System;
 using GSF.Diagnostics;
 using GSF.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -29,7 +29,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace GSF.GSF.Threading
 {
     [TestClass]
-    public class LoadingAdjustedTimestampTest
+    public class LoggerTest
     {
         [TestMethod]
         public void TestMethod1()
@@ -37,13 +37,42 @@ namespace GSF.GSF.Threading
             ShutdownHandler.Initialize();
 
             Logger.Console.Verbose = VerboseLevel.Ultra;
-            System.Console.WriteLine(LoadingAdjustedTimestamp.CurrentTime);
-            Thread.Sleep(1000);
-            System.Console.WriteLine(LoadingAdjustedTimestamp.CurrentTime);
-            ShutdownHandler.InitiateSafeShutdown();
-            Thread.Sleep(1000);
+            LogPublisher pub2;
 
+            var pub1 = Logger.CreatePublisher(typeof(LoggerTest), MessageClass.Application);
+            using (Logger.AppendStackMessages("Test2", "Adapter2"))
+                pub2 = Logger.CreatePublisher(typeof(int), MessageClass.Application);
+
+            Error1(pub2);
+            using (Logger.SuppressFirstChanceExceptionLogMessages())
+            {
+                Error1(pub2);
+            }
+            using (Logger.SuppressLogMessages())
+            {
+                Error1(pub1);
+            }
+
+            using (Logger.SuppressLogMessages())
+            using (Logger.AppendStackMessages("Test1", "Adapter1"))
+            using (Logger.OverrideSuppressLogMessages())
+            {
+                Error1(pub2);
+            }
+
+            ShutdownHandler.InitiateSafeShutdown();
         }
 
+        private static void Error1(LogPublisher pub2)
+        {
+            try
+            {
+                int value = int.Parse("dk20");
+            }
+            catch (Exception ex)
+            {
+                pub2.Publish(MessageLevel.Critical, "Failed Cast", null, null, ex);
+            }
+        }
     }
 }

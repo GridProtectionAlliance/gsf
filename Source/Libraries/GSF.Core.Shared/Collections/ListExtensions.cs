@@ -38,12 +38,16 @@ namespace GSF.Collections
         /// <param name="list">the list to iterate though</param>
         /// <param name="shouldRemove">the function to call to determine 
         /// if the items should be removed from the list. </param>
+        /// <returns>
+        /// The number of items removed from the list.
+        /// </returns>
         /// <remarks>
         /// In order to minimize the overhead of a removal. Any item removed with be replaced with
         /// the last item in the list. Therefore Sequence will not be preserved using this method.
         /// </remarks>
-        public static void RemoveWhere<T>(this List<T> list, Func<T, bool> shouldRemove)
+        public static int RemoveWhere<T>(this List<T> list, Func<T, bool> shouldRemove)
         {
+            int removedCount = 0;
             if (list == null)
                 throw new ArgumentNullException(nameof(list));
             if (shouldRemove == null)
@@ -53,12 +57,14 @@ namespace GSF.Collections
             {
                 if (shouldRemove(list[x]))
                 {
+                    removedCount++;
                     if (list.Count > 1 && x != list.Count - 1)
                         list[x] = list[list.Count - 1];
                     list.RemoveAt(list.Count - 1);
                     x--;
                 }
             }
+            return removedCount;
         }
     }
 }

@@ -23,6 +23,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using GSF.Collections;
 using GSF.Threading;
@@ -35,26 +36,114 @@ namespace GSF.Diagnostics
     internal class LoggerInternal
         : IDisposable
     {
-        /// <summary>
-        /// The common synchronization object to make sure external calls are properly synchronized.
-        /// </summary>
+        private bool m_disposing;
         private readonly object m_syncRoot;
-
         private readonly Dictionary<Type, LogPublisherInternal> m_typeIndexCache;
-        private readonly SingleOccurrenceAction m_disposingAction;
         private readonly List<LogPublisherInternal> m_allPublishers;
         private readonly List<WeakReference> m_subscribers;
+        private readonly ConcurrentQueue<Tuple<LogMessage, LogPublisherInternal>> m_messages;
+        private readonly ScheduledTask m_routingTask;
+        private readonly ScheduledTask m_calculateRoutingTable;
+        public bool RoutingTablesValid { get; private set; }
 
         /// <summary>
         /// Creates a <see cref="LoggerInternal"/>.
         /// </summary>
-        public LoggerInternal()
+        public LoggerInternal(out LoggerInternal loggerClass)
         {
-            m_disposingAction = new SingleOccurrenceAction();
+            //Needed to set the member variable of Logger. 
+            //This is because ScheduleTask will call Logger before Logger's static constructor is completed.
+            loggerClass = this;
+
             m_syncRoot = new object();
             m_typeIndexCache = new Dictionary<Type, LogPublisherInternal>();
             m_allPublishers = new List<LogPublisherInternal>();
             m_subscribers = new List<WeakReference>();
+            m_messages = new ConcurrentQueue<Tuple<LogMessage, LogPublisherInternal>>();
+
+            // Since ScheduledTask calls ShutdownHandler, which calls Logger. This initialization method cannot occur
+            // until after the Logger static class has finished initializing.
+            m_calculateRoutingTable = new ScheduledTask();
+            m_calculateRoutingTable.Running += CalculateRoutingTable;
+            m_calculateRoutingTable.IgnoreShutdownEvent();
+            m_routingTask = new ScheduledTask(ThreadingMode.DedicatedForeground);
+            m_routingTask.Running += RoutingTask;
+            m_routingTask.IgnoreShutdownEvent();
+        }
+
+        /// <summary>
+        /// Recalculates the entire routing table on a separate thread.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CalculateRoutingTable(object sender, EventArgs<ScheduledTaskRunningReason> e)
+        {
+            lock (m_syncRoot)
+            {
+                //Some other thread won on the race condition.
+                if (RoutingTablesValid)
+                    return;
+
+                var subscribers = new List<LogSubscriberInternal>(m_subscribers.Count);
+                m_subscribers.RemoveWhere(x =>
+                    {
+                        LogSubscriberInternal subscriber = (LogSubscriberInternal)x.Target;
+                        if (subscriber != null)
+                        {
+                            subscribers.Add(subscriber);
+                            return false;
+                        }
+                        return true;
+                    });
+
+                foreach (var pub in m_allPublishers)
+                {
+                    CalculateRoutingTableForPublisherSync(subscribers, pub);
+                }
+                RoutingTablesValid = true;
+            }
+        }
+
+        /// <summary>
+        /// This method should be called with a lock on m_syncRoot
+        /// </summary>
+        private void CalculateRoutingTableForPublisherSync(List<LogSubscriberInternal> subscribers, LogPublisherInternal publisher)
+        {
+            MessageAttributeFilterCollection filterCollection = new MessageAttributeFilterCollection();
+            foreach (var sub in subscribers)
+            {
+                filterCollection.Add(sub.GetSubscription(publisher), sub);
+            }
+            publisher.SubscriptionFilterCollection = filterCollection;
+        }
+
+        private void RoutingTask(object sender, EventArgs<ScheduledTaskRunningReason> e)
+        {
+            lock (m_syncRoot)
+            {
+                if (!RoutingTablesValid)
+                {
+                    CalculateRoutingTable(null, null);
+                }
+
+                Tuple<LogMessage, LogPublisherInternal> messageTuple;
+                while (m_messages.TryDequeue(out messageTuple))
+                {
+                    var publisher = messageTuple.Item2;
+                    var message = messageTuple.Item1;
+
+                    foreach (var route in publisher.SubscriptionFilterCollection.Routes)
+                    {
+                        var filter = route.Item1;
+                        var subscriber = route.Item2.Target as LogSubscriberInternal;
+
+                        if (subscriber == null)
+                            RecalculateRoutingTable();
+                        else if (filter.IsSubscribedTo(message.LogMessageAttributes))
+                            subscriber.RaiseLogMessages(message);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -63,40 +152,25 @@ namespace GSF.Diagnostics
         /// <returns></returns>
         public LogSubscriberInternal CreateSubscriber()
         {
-            bool success;
-            using (m_disposingAction.TryBlockAction(out success))
+            lock (m_syncRoot)
             {
-                if (success)
-                {
-                    var s = new LogSubscriberInternal(ClearSubscriptionCache);
-                    lock (m_syncRoot)
-                    {
-                        m_subscribers.Add(new WeakReference(s));
-                    }
-                    return s;
-                }
-                else
-                {
+                if (m_disposing)
                     return LogSubscriberInternal.DisposedSubscriber;
-                }
+                var s = new LogSubscriberInternal(RecalculateRoutingTable);
+                m_subscribers.Add(s.Reference);
+                return s;
             }
         }
 
         /// <summary>
-        /// Handles the routing of messages through the logging system.
+        /// Invalidates the current routing table.
         /// </summary>
-        private void ClearSubscriptionCache()
+        private void RecalculateRoutingTable()
         {
-            m_disposingAction.TryBlockAction(() =>
-            {
-                lock (m_syncRoot)
-                {
-                    foreach (var pub in m_allPublishers)
-                    {
-                        pub.ClearSubscriptionCache();
-                    }
-                }
-            });
+            RoutingTablesValid = false;
+            //Wait some time before recalculating the routing tables. This will be done automatically 
+            //if a message is routed before the table is recalculated.
+            m_calculateRoutingTable.Start(10);
         }
 
         /// <summary>
@@ -106,62 +180,8 @@ namespace GSF.Diagnostics
         /// <param name="publisher">the publisher that is originating this message.</param>
         public void OnNewMessage(LogMessage message, LogPublisherInternal publisher)
         {
-            m_disposingAction.TryBlockAction(() =>
-            {
-                List<LogSubscriberInternal> lst;
-                lock (m_syncRoot)
-                {
-                    lst = GetAllSubscribersSync();
-                }
-                foreach (var sub in lst)
-                {
-                    sub.RaiseLogMessages(message, publisher);
-                }
-            });
-        }
-
-        /// <summary>
-        /// Gets a strong reference of all subscribers. 
-        /// Be sure that this list is not kept long term as it will inhibit garbage collection.
-        /// </summary>
-        /// <returns></returns>
-        private List<LogSubscriberInternal> GetAllSubscribersSync()
-        {
-            var lst = new List<LogSubscriberInternal>(m_subscribers.Count);
-            m_subscribers.RemoveWhere(x =>
-            {
-                LogSubscriberInternal subscriber = (LogSubscriberInternal)x.Target;
-                if (subscriber != null)
-                {
-                    lst.Add(subscriber);
-                    return false;
-                }
-                return true;
-            });
-
-            return lst;
-        }
-
-        /// <summary>
-        /// Adds the supplied publisher to the valid publishers
-        /// </summary>
-        /// <param name="publisher">the publisher to add</param>
-        private void AddPublisher(LogPublisherInternal publisher)
-        {
-            if (publisher == null)
-                throw new ArgumentNullException(nameof(publisher));
-
-            bool success;
-            using (m_disposingAction.TryBlockAction(out success))
-            {
-                if (success)
-                {
-                    lock (m_syncRoot)
-                    {
-                        m_allPublishers.Add(publisher);
-                    }
-                }
-            }
+            m_messages.Enqueue(Tuple.Create(message, publisher));
+            m_routingTask.Start(50); //Allow a 50ms delay for multiple logs to queue if in a burst period.
         }
 
         /// <summary>
@@ -174,19 +194,30 @@ namespace GSF.Diagnostics
             if ((object)type == null)
                 throw new ArgumentNullException(nameof(type));
 
-            LogPublisherInternal item;
-            lock (m_typeIndexCache)
+            LogPublisherInternal publisher;
+            lock (m_syncRoot)
             {
-                if (!m_typeIndexCache.TryGetValue(type, out item))
+                if (!m_typeIndexCache.TryGetValue(type, out publisher))
                 {
-
-                    item = new LogPublisherInternal(this, type);
-                    m_typeIndexCache.Add(type, item);
-                    AddPublisher(item);
+                    publisher = new LogPublisherInternal(this, type);
+                    m_typeIndexCache.Add(type, publisher);
+                    if (!m_disposing)
+                    {
+                        m_allPublishers.Add(publisher);
+                        var lst = new List<LogSubscriberInternal>();
+                        foreach (var logSubscriberInternal in m_subscribers)
+                        {
+                            LogSubscriberInternal target = logSubscriberInternal.Target as LogSubscriberInternal;
+                            if (target != null)
+                            {
+                                lst.Add(target);
+                            }
+                        }
+                        CalculateRoutingTableForPublisherSync(lst, publisher);
+                    }
                 }
             }
-
-            return item;
+            return publisher;
         }
 
         /// <summary>
@@ -194,45 +225,30 @@ namespace GSF.Diagnostics
         /// </summary>
         public void Dispose()
         {
-            //Stops all of the message routing of this class.
-            m_disposingAction.ExecuteAndWait(() =>
+            if (m_disposing)
+                return;
+
+            lock (m_syncRoot)
             {
-                //A single occurrence action will only block the ExecuteAndWait() method. Therefore
-                //A lock on the m_globalSyncRoot can be safely acquired without worrying about a deadlock.
-                lock (m_syncRoot)
+                //Ensure that setting disposing is in a synchronized context.
+                m_disposing = true;
+            }
+
+            //These scheduled tasks block when dispose is called. Therefore do not put these in a lock on the base class.
+            m_calculateRoutingTable.Dispose();
+            m_routingTask.Dispose();
+
+            lock (m_syncRoot)
+            {
+                m_allPublishers.Clear();
+                foreach (var sub in m_subscribers)
                 {
-                    m_allPublishers.Clear();
-                    m_subscribers.RemoveWhere(x =>
-                    {
-                        LogSubscriberInternal subscriber = (LogSubscriberInternal)x.Target;
-                        if (subscriber != null)
-                        {
-                            subscriber.Dispose();
-                            return false;
-                        }
-                        return true;
-                    });
-                    m_subscribers.Clear();
+                    (sub.Target as LogSubscriberInternal)?.Dispose();
                 }
-            });
+                m_subscribers.Clear();
+            }
         }
 
-        public MessageAttributeFilter GetSubscription(LogPublisherInternal publisher)
-        {
-            MessageAttributeFilter verbose = new MessageAttributeFilter();
-            m_disposingAction.TryBlockAction(() =>
-            {
-                List<LogSubscriberInternal> lst;
-                lock (m_syncRoot)
-                {
-                    lst = GetAllSubscribersSync();
-                }
-                foreach (var sub in lst)
-                {
-                    verbose.Append(sub.GetSubscription(publisher));
-                }
-            });
-            return verbose;
-        }
+
     }
 }

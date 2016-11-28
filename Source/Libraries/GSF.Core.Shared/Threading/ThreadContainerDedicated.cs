@@ -58,7 +58,7 @@ namespace GSF.Threading
             m_thread.Priority = priority;
             m_thread.Start();
         }
-
+        
         void ThreadLoop()
         {
             while (true)
