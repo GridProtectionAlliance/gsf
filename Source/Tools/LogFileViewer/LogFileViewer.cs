@@ -34,7 +34,6 @@ using GSF.Diagnostics;
 using GSF.IO;
 using LogFileViewer.Filters;
 using LogFileViewer.Properties;
-using Microsoft.VisualBasic;
 
 namespace LogFileViewer
 {
@@ -84,6 +83,7 @@ namespace LogFileViewer
             m_dataTable.Columns.Add("Level", typeof(string));
             m_dataTable.Columns.Add("Flags", typeof(string));
             m_dataTable.Columns.Add("Type", typeof(string));
+            m_dataTable.Columns.Add("Stack Details", typeof(string));
             m_dataTable.Columns.Add("Event Name", typeof(string));
             m_dataTable.Columns.Add("Message", typeof(string));
             m_dataTable.Columns.Add("Details", typeof(string));
@@ -164,18 +164,19 @@ namespace LogFileViewer
 
         private void AddRowToDataTable(LogMessage message, string fileWithoutExtension)
         {
-            object[] items = new object[11];
+            object[] items = new object[12];
             items[0] = message;
             items[1] = fileWithoutExtension;
             items[2] = message.UtcTime.ToLocalTime();
             items[3] = $"{message.Classification} - {message.Level}";
             items[4] = message.Flags.ToString();
             items[5] = message.EventPublisherDetails.TypeName;
-            items[6] = message.EventPublisherDetails.EventName;
-            items[7] = message.Message;
-            items[8] = message.Details;
-            items[9] = message.ExceptionString;
-            items[10] = false;
+            items[6] = message.InitialStackMessages.ConcatenateWith(message.CurrentStackMessages).ToString();
+            items[7] = message.EventPublisherDetails.EventName;
+            items[8] = message.Message;
+            items[9] = message.Details;
+            items[10] = message.ExceptionString;
+            items[11] = false;
             m_dataTable.Rows.Add(items);
         }
 
@@ -226,7 +227,7 @@ namespace LogFileViewer
                     case "Type":
                         MakeMenu(e, new MatchType(item));
                         break;
-                    case "EventName":
+                    case "Event Name":
                         MakeMenu(e, new MatchEventName(item));
                         break;
                     case "Time":
@@ -240,6 +241,9 @@ namespace LogFileViewer
                         break;
                     case "Message":
                         MakeMenu(e, new MatchMessageName(item));
+                        break;
+                    case "Stack Details":
+                        MakeMenu(e, new MatchStackMessages(item));
                         break;
                     default:
                         return;

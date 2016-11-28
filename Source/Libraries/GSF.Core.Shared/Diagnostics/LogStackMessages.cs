@@ -74,6 +74,29 @@ namespace GSF.Diagnostics
         /// Appends stack messages together.
         /// </summary>
         /// <param name="messages">the messages</param>
+        public LogStackMessages(List<KeyValuePair<string, string>> messages)
+        {
+            m_attributes = new string[messages.Count];
+            m_values = new string[messages.Count];
+
+            for (int x = 0; x < messages.Count; x++)
+            {
+                var pair = messages[x];
+                if (string.IsNullOrWhiteSpace(pair.Key))
+                    throw new ArgumentNullException(nameof(messages), "A key is null or whitespace");
+                if (string.IsNullOrWhiteSpace(pair.Value))
+                    throw new ArgumentNullException(nameof(messages), "A value is null or whitespace");
+
+                m_attributes[x] = pair.Key;
+                m_values[x] = pair.Value;
+            }
+            m_hashCode = ComputeHashCode();
+        }
+
+        /// <summary>
+        /// Appends stack messages together.
+        /// </summary>
+        /// <param name="messages">the messages</param>
         public LogStackMessages(List<LogStackMessages> messages)
         {
             int cnt = 0;
@@ -95,6 +118,33 @@ namespace GSF.Diagnostics
                     m_values[cnt] = item.m_values[y];
                     cnt++;
                 }
+            }
+            m_hashCode = ComputeHashCode();
+        }
+
+        /// <summary>
+        /// Appends stack messages together.
+        /// </summary>
+        private LogStackMessages(LogStackMessages a, LogStackMessages b)
+        {
+            int cnt = a.m_attributes.Length + b.m_attributes.Length;
+            m_attributes = new string[cnt];
+            m_values = new string[cnt];
+
+            cnt = 0;
+            var item = a;
+            for (int y = 0; y < item.m_attributes.Length; y++)
+            {
+                m_attributes[cnt] = item.m_attributes[y];
+                m_values[cnt] = item.m_values[y];
+                cnt++;
+            }
+            item = b;
+            for (int y = 0; y < item.m_attributes.Length; y++)
+            {
+                m_attributes[cnt] = item.m_attributes[y];
+                m_values[cnt] = item.m_values[y];
+                cnt++;
             }
             m_hashCode = ComputeHashCode();
         }
@@ -139,6 +189,44 @@ namespace GSF.Diagnostics
             m_hashCode = ComputeHashCode();
         }
 
+        /// <summary>
+        /// Gets the number of Key/Value pairs.
+        /// </summary>
+        public int Count => m_attributes.Length;
+
+        /// <summary>
+        /// Gets the KeyValue for the provided index.
+        /// </summary>
+        /// <param name="index">The Index</param>
+        public KeyValuePair<string, string> this[int index]
+        {
+            get
+            {
+                return new KeyValuePair<string, string>(m_attributes[index], m_values[index]);
+            }
+        }
+
+        /// <summary>
+        /// Gets the first match of the provided <see pref="key"/> in this dictionary. Returns
+        /// null if none can be found.
+        /// </summary>
+        /// <param name="key">The Index</param>
+        public string this[string key]
+        {
+            get
+            {
+                for (int x = 0; x < m_attributes.Length; x++)
+                {
+                    if (m_attributes[x] == key)
+                    {
+                        return m_values[x];
+                    }
+                }
+                return null;
+            }
+        }
+
+
         private int ComputeHashCode()
         {
             int hashSum = m_attributes.Length;
@@ -165,6 +253,21 @@ namespace GSF.Diagnostics
                 throw new ArgumentNullException(nameof(value));
 
             return new LogStackMessages(this, key, value);
+        }
+
+        /// <summary>
+        /// returns the union of this instance and the specified <see pref="stackMessage"/>
+        /// </summary>
+        /// <returns></returns>
+        public LogStackMessages ConcatenateWith(LogStackMessages stackMessage)
+        {
+            if (stackMessage == null)
+                return this;
+            if (ReferenceEquals(stackMessage, Empty))
+                return this;
+            if (ReferenceEquals(this, Empty))
+                return stackMessage;
+            return new LogStackMessages(this, stackMessage);
         }
 
         /// <summary>
