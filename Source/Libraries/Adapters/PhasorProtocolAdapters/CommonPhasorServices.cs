@@ -231,7 +231,7 @@ namespace PhasorProtocolAdapters
                     m_configurationFrame = null;
 
                     // Inform user of temporary loss of command access
-                    OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", "\r\n{0}\r\n\r\nAttempting to request remote device configuration.\r\n\r\nThis request could take up to sixty seconds to complete.\r\n\r\nOther CPS config requests will not be accepted until request succeeds or fails.\r\n\r\n{0}", stars);
+                    OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", $"\r\n{stars}\r\n\r\nAttempting to request remote device configuration.\r\n\r\nThis request could take up to sixty seconds to complete.\r\n\r\nOther CPS config requests will not be accepted until request succeeds or fails.\r\n\r\n{stars}");
 
                     // Make sure the wait handle is not set
                     m_configurationWaitHandle.Reset();
@@ -262,7 +262,7 @@ namespace PhasorProtocolAdapters
                 }
                 catch (Exception ex)
                 {
-                    OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", "ERROR: Failed to request configuration due to exception: {0}", ex.Message);
+                    OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", $"ERROR: Failed to request configuration due to exception: {ex.Message}");
                 }
                 finally
                 {
@@ -272,7 +272,7 @@ namespace PhasorProtocolAdapters
                     Monitor.Exit(m_frameParser);
 
                     // Inform user of restoration of command access
-                    OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", "\r\n{0}\r\n\r\nRemote device configuration request completed.\r\n\r\nCPS config requests have been restored.\r\n\r\n{0}", stars);
+                    OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", $"\r\n{stars}\r\n\r\nRemote device configuration request completed.\r\n\r\nCPS config requests have been restored.\r\n\r\n{stars}");
                 }
             }
             else
@@ -302,11 +302,11 @@ namespace PhasorProtocolAdapters
             if ((object)m_frameParser != null)
             {
                 m_frameParser.SendDeviceCommand(command);
-                OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", "Sent device command \"{0}\"...", command);
+                OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", $"Sent device command \"{command}\"...");
             }
             else
             {
-                OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", "Failed to send device command \"{0}\", no frame parser is defined.", command);
+                OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", $"Failed to send device command \"{command}\", no frame parser is defined.");
             }
         }
 
@@ -341,7 +341,7 @@ namespace PhasorProtocolAdapters
 
         private void m_frameParser_ConnectionException(object sender, EventArgs<Exception, int> e)
         {
-            OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", "ERROR: Connection attempt failed, request for configuration canceled: {0}", e.Argument1.Message);
+            OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", $"ERROR: Connection attempt failed, request for configuration canceled: {e.Argument1.Message}");
 
             // Clear wait handle
             m_configurationWaitHandle.Set();
@@ -349,7 +349,7 @@ namespace PhasorProtocolAdapters
 
         private void m_frameParser_ParsingException(object sender, EventArgs<Exception> e)
         {
-            OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", "ERROR: Parsing exception during request for configuration: {0}", e.Argument.Message);
+            OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", $"ERROR: Parsing exception during request for configuration: {e.Argument.Message}");
         }
 
         private void m_frameParser_ExceededParsingExceptionThreshold(object sender, EventArgs e)
@@ -362,7 +362,7 @@ namespace PhasorProtocolAdapters
 
         private void m_frameParser_ConnectionAttempt(object sender, EventArgs e)
         {
-            OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", "Attempting {0} {1} based connection...", m_frameParser.PhasorProtocol.GetFormattedProtocolName(), m_frameParser.TransportProtocol.ToString().ToUpper());
+            OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", $"Attempting {m_frameParser.PhasorProtocol.GetFormattedProtocolName()} {m_frameParser.TransportProtocol.ToString().ToUpper()} based connection...");
         }
 
         #endregion

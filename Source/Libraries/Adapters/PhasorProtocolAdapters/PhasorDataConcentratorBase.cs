@@ -1200,7 +1200,7 @@ namespace PhasorProtocolAdapters
                 }
             }
 
-            OnStatusMessage(MessageLevel.Info, "Concentrator", "Defined {0} output stream devices...", m_baseConfigurationFrame.Cells.Count);
+            OnStatusMessage(MessageLevel.Info, "Concentrator", $"Defined {m_baseConfigurationFrame.Cells.Count:N0} output stream devices...");
 
             // Create new lookup table for signal references
             Dictionary<MeasurementKey, SignalReference[]> signalReferences = new Dictionary<MeasurementKey, SignalReference[]>();
@@ -1952,7 +1952,7 @@ namespace PhasorProtocolAdapters
 
         private void m_commandChannel_ClientConnected(object sender, EventArgs<Guid> e)
         {
-            OnStatusMessage(MessageLevel.Info, "Concentrator", "Client \"{0}\" connected to command channel.", GetConnectionID(m_commandChannel, e.Argument));
+            OnStatusMessage(MessageLevel.Info, "Concentrator", $"Client \"{GetConnectionID(m_commandChannel, e.Argument)}\" connected to command channel.");
         }
 
         private void m_commandChannel_ClientDisconnected(object sender, EventArgs<Guid> e)
@@ -1960,7 +1960,7 @@ namespace PhasorProtocolAdapters
             Guid clientID = e.Argument;
             string connectionID;
 
-            OnStatusMessage(MessageLevel.Info, "Concentrator", "Client \"{0}\" disconnected from command channel.", GetConnectionID(m_commandChannel, clientID));
+            OnStatusMessage(MessageLevel.Info, "Concentrator", $"Client \"{GetConnectionID(m_commandChannel, clientID)}\" disconnected from command channel.");
 
             m_connectionIDCache.TryRemove(clientID, out connectionID);
         }

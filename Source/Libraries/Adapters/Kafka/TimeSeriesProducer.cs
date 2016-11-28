@@ -331,7 +331,7 @@ namespace KafkaAdapters
             m_router = new BrokerRouter(new KafkaOptions(m_servers) {
                 Log = new TimeSeriesLogger
                 (
-                    (status, args) => OnStatusMessage(MessageLevel.Info, "KafkaProducer", status, args), 
+                    (status, args) => OnStatusMessage(MessageLevel.Info, "KafkaProducer", string.Format(status, args)), 
                     ex => OnProcessException(MessageLevel.Warning, "KafkaProducer", ex)
                 )
             });
@@ -385,7 +385,7 @@ namespace KafkaAdapters
                 {
                     Log = new TimeSeriesLogger
                     (
-                        (status, args) => OnStatusMessage(MessageLevel.Info, "KafkaProducer", status, args),
+                        (status, args) => OnStatusMessage(MessageLevel.Info, "KafkaProducer", string.Format(status, args)),
                         ex => OnProcessException(MessageLevel.Warning, "KafkaProducer", new InvalidOperationException($"[{MetadataTopic}]: {ex.Message}", ex))
                     )
                 }))

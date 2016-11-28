@@ -535,7 +535,7 @@ namespace EpriExport
                 return;
 
             m_fileName = fileName;
-            OnStatusMessage(MessageLevel.Info, "EpriFileImporter", "Processing EPRI file \"{0}\"...", m_fileName);
+            OnStatusMessage(MessageLevel.Info, "EpriFileImporter", $"Processing EPRI file \"{m_fileName}\"...");
 
             FilePath.WaitForReadLock(m_fileName);
             m_fileStream = new StreamReader(m_fileName);
@@ -585,7 +585,7 @@ namespace EpriExport
                 m_fileStream.Dispose();
             }
 
-            OnStatusMessage(MessageLevel.Info, "EpriFileImporter", "Completed processing of EPRI file \"{0}\".", m_fileName);
+            OnStatusMessage(MessageLevel.Info, "EpriFileImporter", $"Completed processing of EPRI file \"{m_fileName}\".");
 
             ThreadPool.QueueUserWorkItem(DeleteFile, m_fileName);
 

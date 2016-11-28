@@ -1635,7 +1635,7 @@ namespace GSF.TimeSeries.Transport
                 if (Directory.Exists(setting))
                     m_loggingPath = setting;
                 else
-                    OnStatusMessage(MessageLevel.Info, "DataSubscriber", "WARNING: Logging path \"{0}\" not found, defaulting to \"{1}\"...", setting, FilePath.GetAbsolutePath(""));
+                    OnStatusMessage(MessageLevel.Info, "DataSubscriber", $"WARNING: Logging path \"{setting}\" not found, defaulting to \"{FilePath.GetAbsolutePath("")}\"...");
             }
 
             // Initialize data gap recovery processing, if requested
@@ -2759,32 +2759,32 @@ namespace GSF.TimeSeries.Transport
                             switch (commandCode)
                             {
                                 case ServerCommand.Authenticate:
-                                    OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
+                                    OnStatusMessage(MessageLevel.Info, "DataSubscriber", $"Success code received in response to server command \"{commandCode}\": {InterpretResponseMessage(buffer, responseIndex, responseLength)}");
                                     m_authenticated = true;
                                     OnConnectionAuthenticated();
                                     break;
                                 case ServerCommand.Subscribe:
-                                    OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
+                                    OnStatusMessage(MessageLevel.Info, "DataSubscriber", $"Success code received in response to server command \"{commandCode}\": {InterpretResponseMessage(buffer, responseIndex, responseLength)}");
                                     m_subscribed = true;
                                     break;
                                 case ServerCommand.Unsubscribe:
-                                    OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
+                                    OnStatusMessage(MessageLevel.Info, "DataSubscriber", $"Success code received in response to server command \"{commandCode}\": {InterpretResponseMessage(buffer, responseIndex, responseLength)}");
                                     m_subscribed = false;
                                     if ((object)m_dataStreamMonitor != null)
                                         m_dataStreamMonitor.Enabled = false;
                                     break;
                                 case ServerCommand.RotateCipherKeys:
-                                    OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
+                                    OnStatusMessage(MessageLevel.Info, "DataSubscriber", $"Success code received in response to server command \"{commandCode}\": {InterpretResponseMessage(buffer, responseIndex, responseLength)}");
                                     break;
                                 case ServerCommand.MetaDataRefresh:
-                                    OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Success code received in response to server command \"{0}\": latest meta-data received.", commandCode);
+                                    OnStatusMessage(MessageLevel.Info, "DataSubscriber", $"Success code received in response to server command \"{commandCode}\": latest meta-data received.");
                                     OnMetaDataReceived(DeserializeMetadata(buffer.BlockCopy(responseIndex, responseLength)));
                                     m_metadataRefreshPending = false;
                                     break;
                             }
                             break;
                         case ServerResponse.Failed:
-                            OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Failure code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
+                            OnStatusMessage(MessageLevel.Info, "DataSubscriber", $"Failure code received in response to server command \"{commandCode}\": {InterpretResponseMessage(buffer, responseIndex, responseLength)}");
 
                             if (commandCode == ServerCommand.MetaDataRefresh)
                                 m_metadataRefreshPending = false;
@@ -3239,7 +3239,7 @@ namespace GSF.TimeSeries.Transport
                             string message = m_encoding.GetString(buffer, responseIndex + 4, responseLength - 4);
 
                             // Display notification
-                            OnStatusMessage(MessageLevel.Info, "DataSubscriber", "NOTIFICATION: {0}", message);
+                            OnStatusMessage(MessageLevel.Info, "DataSubscriber", $"NOTIFICATION: {message}");
                             OnNotificationReceived(message);
 
                             // Send confirmation of receipt of the notification
@@ -3885,7 +3885,7 @@ namespace GSF.TimeSeries.Transport
 
                 m_lastMetaDataRefreshTime = latestUpdateTime > DateTime.MinValue ? latestUpdateTime : DateTime.UtcNow;
 
-                OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Meta-data synchronization completed successfully in {0}", (DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(2));
+                OnStatusMessage(MessageLevel.Info, "DataSubscriber", $"Meta-data synchronization completed successfully in {(DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(2)}");
 
                 // Send notification that system configuration has changed
                 OnConfigurationChanged();
@@ -3918,7 +3918,7 @@ namespace GSF.TimeSeries.Transport
 
             if (m_syncProgressActionsCount % m_syncProgressUpdateInterval == 0 || DateTime.UtcNow.Ticks - m_syncProgressLastMessage > 150000000)
             {
-                OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Meta-data synchronization is {0:0.0%} complete...", m_syncProgressActionsCount / (double)m_syncProgressTotalActions);
+                OnStatusMessage(MessageLevel.Info, "DataSubscriber", $"Meta-data synchronization is {m_syncProgressActionsCount / (double)m_syncProgressTotalActions:0.0%} complete...");
                 m_syncProgressLastMessage = DateTime.UtcNow.Ticks;
             }
         }
@@ -4013,7 +4013,7 @@ namespace GSF.TimeSeries.Transport
             if (rowCount > 0)
             {
                 Time elapsedTime = (DateTime.UtcNow.Ticks - startTime).ToSeconds();
-                OnStatusMessage(MessageLevel.Info, "DataSubscriber", "Received a total of {0:N0} records spanning {1:N0} tables of meta-data that was {2}deserialized in {3}...", rowCount, deserializedMetadata.Tables.Count, compressMetadata ? "uncompressed and " : "", elapsedTime.ToString(2));
+                OnStatusMessage(MessageLevel.Info, "DataSubscriber", $"Received a total of {rowCount:N0} records spanning {deserializedMetadata.Tables.Count:N0} tables of meta-data that was {(compressMetadata ? "uncompressed and " : "")}deserialized in {elapsedTime.ToString(2)}...");
             }
 
             return deserializedMetadata;
@@ -4525,10 +4525,12 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Raises <see cref="AdapterBase.ProcessException"/> event.
         /// </summary>
-        /// <param name="ex">Processing <see cref="Exception"/>.</param>
-        protected override void OnProcessException(Exception ex)
+        /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
+        /// <param name="eventName">A fixed string to classify this event.</param>
+        /// <param name="exception">Processing <see cref="Exception"/>.</param>
+        protected override void OnProcessException(MessageLevel level, string eventName, Exception exception)
         {
-            base.OnProcessException(ex);
+            base.OnProcessException(exception);
 
             // Just in case Log Message Suppression was turned on, turn it off so this code can raise messages
             using (Logger.OverrideSuppressLogMessages())
@@ -4549,10 +4551,9 @@ namespace GSF.TimeSeries.Transport
                         // When the parsing exception threshold has been exceeded, connection is restarted
                         Start();
                     }
-                    catch (Exception restartException)
+                    catch (Exception ex)
                     {
-                        string message = $"Error while restarting subscriber connection due to excessive exceptions: {restartException.Message}";
-                        base.OnProcessException(new InvalidOperationException(message, restartException));
+                        base.OnProcessException(MessageLevel.Warning, "DataSubscriber", new InvalidOperationException($"Error while restarting subscriber connection due to excessive exceptions: {ex.Message}", ex));
                     }
                     finally
                     {
@@ -4685,7 +4686,7 @@ namespace GSF.TimeSeries.Transport
             {
                 // If we've received no data in the last time-span, we restart connect cycle...
                 m_dataStreamMonitor.Enabled = false;
-                OnStatusMessage(MessageLevel.Info, "DataSubscriber", "\r\nNo data received in {0} seconds, restarting connect cycle...\r\n", (m_dataStreamMonitor.Interval / 1000.0D).ToString("0.0"));
+                OnStatusMessage(MessageLevel.Info, "DataSubscriber", $"\r\nNo data received in {m_dataStreamMonitor.Interval / 1000.0D:0.0} seconds, restarting connect cycle...\r\n");
                 ThreadPool.QueueUserWorkItem(state => Restart());
             }
 

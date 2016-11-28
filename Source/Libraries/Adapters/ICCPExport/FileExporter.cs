@@ -497,7 +497,7 @@ namespace ICCPExport
                     catch (Exception ex)
                     {
                         m_skippedExports++;
-                        OnStatusMessage(MessageLevel.Warning, "ICCPFileExporter", "WARNING: Skipped export due to exception: " + ex.Message);
+                        OnStatusMessage(MessageLevel.Warning, "ICCPFileExporter", $"WARNING: Skipped export due to exception: {ex.Message}");
                         displayedWarning = true;
                     }
 
@@ -507,7 +507,7 @@ namespace ICCPExport
                         //Make sure message is only displayed once during the minute
                         if (!m_statusDisplayed)
                         {
-                            OnStatusMessage(MessageLevel.Info, "ICCPFileExporter", "{0} successful file based measurement exports...", m_dataExporter.TotalExports);
+                            OnStatusMessage(MessageLevel.Info, "ICCPFileExporter", $"{m_dataExporter.TotalExports} successful file based measurement exports...");
                             m_statusDisplayed = true;
                         }
                     }

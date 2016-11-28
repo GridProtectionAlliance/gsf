@@ -257,7 +257,7 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
                             if (commandChannel != null)
                             {
                                 commandChannel.SendToAsync(clientID, m_configurationFrame.BinaryImage, 0, m_configurationFrame.BinaryLength);
-                                OnStatusMessage(MessageLevel.Info, "Concentrator", "Received request for \"{0}\" from \"{1}\" - frame was returned.", commandFrame.Command, connectionID);
+                                OnStatusMessage(MessageLevel.Info, "Concentrator", $"Received request for \"{commandFrame.Command}\" from \"{connectionID}\" - frame was returned.");
                             }
                             break;
                         case DeviceCommand.EnableRealTimeData:
@@ -265,11 +265,11 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
                             if (!AutoStartDataChannel)
                             {
                                 StartDataChannel();
-                                OnStatusMessage(MessageLevel.Info, "Concentrator", "Received request for \"EnableRealTimeData\" from \"{0}\" - concentrator real-time data stream was started.", connectionID);
+                                OnStatusMessage(MessageLevel.Info, "Concentrator", $"Received request for \"EnableRealTimeData\" from \"{connectionID}\" - concentrator real-time data stream was started.");
                             }
                             else
                             {
-                                OnStatusMessage(MessageLevel.Info, "Concentrator", "Request for \"EnableRealTimeData\" from \"{0}\" was ignored - concentrator data channel is set for auto-start.", connectionID);                                
+                                OnStatusMessage(MessageLevel.Info, "Concentrator", $"Request for \"EnableRealTimeData\" from \"{connectionID}\" was ignored - concentrator data channel is set for auto-start.");
                             }
                             break;
                         case DeviceCommand.DisableRealTimeData:
@@ -277,20 +277,20 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
                             if (!AutoStartDataChannel)
                             {
                                 StopDataChannel();
-                                OnStatusMessage(MessageLevel.Info, "Concentrator", "Received request for \"DisableRealTimeData\" from \"{0}\" - concentrator real-time data stream was stopped.", connectionID);
+                                OnStatusMessage(MessageLevel.Info, "Concentrator", $"Received request for \"DisableRealTimeData\" from \"{connectionID}\" - concentrator real-time data stream was stopped.");
                             }
                             else
                             {
-                                OnStatusMessage(MessageLevel.Info, "Concentrator", "Request for \"DisableRealTimeData\" from \"{0}\" was ignored - concentrator data channel is set for auto-start.", connectionID);                                
+                                OnStatusMessage(MessageLevel.Info, "Concentrator", $"Request for \"DisableRealTimeData\" from \"{connectionID}\" was ignored - concentrator data channel is set for auto-start.");
                             }
                             break;
                         default:
-                            OnStatusMessage(MessageLevel.Info, "Concentrator", "Request for \"{0}\" from \"{1}\" was ignored - device command is unsupported.", commandFrame.Command, connectionID);
+                            OnStatusMessage(MessageLevel.Info, "Concentrator", $"Request for \"{commandFrame.Command}\" from \"{connectionID}\" was ignored - device command is unsupported.");
                             break;
                     }
                 }
                 else
-                    OnStatusMessage(MessageLevel.Info, "Concentrator", "WARNING: Concentrator ID code validation failed for device command \"{0}\" from \"{1}\" - no action was taken.", commandFrame.Command, connectionID);
+                    OnStatusMessage(MessageLevel.Info, "Concentrator", $"WARNING: Concentrator ID code validation failed for device command \"{commandFrame.Command}\" from \"{connectionID}\" - no action was taken.");
             }
             catch (Exception ex)
             {

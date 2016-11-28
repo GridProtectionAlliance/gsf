@@ -469,7 +469,7 @@ namespace EpriExport
                     // Make sure message is only displayed once during the minute
                     if (!m_statusDisplayed)
                     {
-                        OnStatusMessage(MessageLevel.Info, "EpriFileExporter", "{0} successful file based measurement exports...", m_totalExports);
+                        OnStatusMessage(MessageLevel.Info, "EpriFileExporter", $"{m_totalExports:N0} successful file based measurement exports...");
                         m_statusDisplayed = true;
                     }
                 }

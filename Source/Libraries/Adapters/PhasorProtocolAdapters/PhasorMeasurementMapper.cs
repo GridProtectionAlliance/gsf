@@ -1178,9 +1178,9 @@ namespace PhasorProtocolAdapters
                 if ((object)m_labelDefinedDevices != null)
                 {
                     if (m_forceLabelMapping)
-                        OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", "{0} has {1} defined input devices that are using the device label for identification since connection has been forced to use label mapping. This is not the optimal configuration.", Name, m_labelDefinedDevices.Count);
+                        OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", $"{Name} has {m_labelDefinedDevices.Count:N0} defined input devices that are using the device label for identification since connection has been forced to use label mapping. This is not the optimal configuration.");
                     else
-                        OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", "WARNING: {0} has {1} defined input devices that do not have unique ID codes (i.e., the AccessID), as a result system will use the device label for identification. This is not the optimal configuration.", Name, m_labelDefinedDevices.Count);
+                        OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", $"WARNING: {Name} has {m_labelDefinedDevices.Count:N0} defined input devices that do not have unique ID codes (i.e., the AccessID), as a result system will use the device label for identification. This is not the optimal configuration.");
                 }
             }
             else
@@ -1275,7 +1275,7 @@ namespace PhasorProtocolAdapters
                 OutputMeasurements = null;
             }
 
-            OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", "Loaded {0} active device measurements...", definedMeasurements.Count);
+            OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", $"Loaded {definedMeasurements.Count} active device measurements...");
         }
 
         /// <summary>
@@ -1288,11 +1288,11 @@ namespace PhasorProtocolAdapters
             if ((object)m_frameParser != null)
             {
                 if ((object)m_frameParser.SendDeviceCommand(command) != null)
-                    OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", "Sent device command \"{0}\"...", command);
+                    OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", $"Sent device command \"{command}\"...");
             }
             else
             {
-                OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", "Failed to send device command \"{0}\", no frame parser is defined.", command);
+                OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", $"Failed to send device command \"{command}\", no frame parser is defined.");
             }
         }
 
@@ -1342,11 +1342,11 @@ namespace PhasorProtocolAdapters
                     definedDevice.TotalFrames = 0;
                     definedDevice.TimeQualityErrors = 0;
 
-                    OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", "Statistics reset for device with ID code \"{0}\" associated with this connection.", idCode);
+                    OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", $"Statistics reset for device with ID code \"{idCode}\" associated with this connection.");
                 }
                 else
                 {
-                    OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", "WARNING: Failed to find device with ID code \"{0}\" associated with this connection.", idCode);
+                    OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", $"WARNING: Failed to find device with ID code \"{idCode}\" associated with this connection.");
                 }
             }
             else
@@ -1396,7 +1396,7 @@ namespace PhasorProtocolAdapters
                     ConfigurationFrame.DeleteCachedConfiguration(Name);
                     m_frameParser.ConfigurationFrame = null;
                     m_receivedConfigFrame = false;
-                    OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", "Cached configuration file \"{0}\" was deleted.", ConfigurationCacheFileName);
+                    OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", $"Cached configuration file \"{ConfigurationCacheFileName}\" was deleted.");
                     SendCommand(DeviceCommand.SendConfigurationFrame2);
                 }
                 catch (Exception ex)
@@ -1439,7 +1439,7 @@ namespace PhasorProtocolAdapters
                     }
                     else
                     {
-                        OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", "NOTICE: Cannot load cached configuration, file \"{0}\" does not exist.", ConfigurationCacheFileName);
+                        OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", $"NOTICE: Cannot load cached configuration, file \"{ConfigurationCacheFileName}\" does not exist.");
                     }
                 }
                 catch (Exception ex)
@@ -1486,7 +1486,7 @@ namespace PhasorProtocolAdapters
                     }
                     else
                     {
-                        OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", "NOTICE: Cannot load configuration, file \"{0}\" does not exist.", configurationFileName);
+                        OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", $"NOTICE: Cannot load configuration, file \"{configurationFileName}\" does not exist.");
                     }
                 }
                 catch (Exception ex)
@@ -1777,7 +1777,7 @@ namespace PhasorProtocolAdapters
                         else
                         {
                             m_undefinedDevices.TryAdd(parsedDevice.StationName, 1);
-                            OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", "WARNING: Encountered an undefined device \"{0}\"...", parsedDevice.StationName);
+                            OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", $"WARNING: Encountered an undefined device \"{parsedDevice.StationName}\"...");
                         }
                     }
                 }
@@ -2141,7 +2141,7 @@ namespace PhasorProtocolAdapters
 
         private void m_frameParser_ConnectionAttempt(object sender, EventArgs e)
         {
-            OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", "Initiating {0} {1} based connection...", m_frameParser.PhasorProtocol.GetFormattedProtocolName(), m_frameParser.TransportProtocol.ToString().ToUpper());
+            OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", $"Initiating {m_frameParser.PhasorProtocol.GetFormattedProtocolName()} {m_frameParser.TransportProtocol.ToString().ToUpper()} based connection...");
             m_connectionAttempts++;
         }
 
@@ -2158,7 +2158,7 @@ namespace PhasorProtocolAdapters
             {
                 // If we've received no data in the last time-span, we restart connect cycle...
                 m_dataStreamMonitor.Enabled = false;
-                OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", "\r\nNo data received in {0} seconds, restarting connect cycle...\r\n", (m_dataStreamMonitor.Interval / 1000.0D).ToString("0.0"));
+                OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", $"\r\nNo data received in {m_dataStreamMonitor.Interval / 1000.0D:0.0} seconds, restarting connect cycle...\r\n");
                 Start();
             }
             else if (!m_receivedConfigFrame && m_allowUseOfCachedConfiguration)
@@ -2232,7 +2232,7 @@ namespace PhasorProtocolAdapters
                     }
                     catch (Exception ex)
                     {
-                        OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", "WARNING: Failed to generate a binary image for cached configuration frame - clearing cache. Exception reported: {0}", ex.Message);
+                        OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", $"WARNING: Failed to generate a binary image for cached configuration frame - clearing cache. Exception reported: {ex.Message}");
                         m_lastConfigurationFrame = null;
                     }
 
@@ -2242,7 +2242,7 @@ namespace PhasorProtocolAdapters
                     }
                     catch (Exception ex)
                     {
-                        OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", "WARNING: Failed to generate a binary image for received configuration frame: {0}", ex.Message);
+                        OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", $"WARNING: Failed to generate a binary image for received configuration frame: {ex.Message}");
                         return false;
                     }
 

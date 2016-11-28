@@ -927,7 +927,7 @@ namespace GSF.TimeSeries.Statistics
                     signalReference = GetSignalReference(stat, mapping.Item1);
 
                     if (sourceLookup.ContainsKey(signalReference))
-                        OnStatusMessage(MessageLevel.Info, "StatisticsEngine", "WARNING: Encountered duplicate signal reference statistic: {0}", signalReference);
+                        OnStatusMessage(MessageLevel.Info, "StatisticsEngine", $"WARNING: Encountered duplicate signal reference statistic: {signalReference}");
                     else
                         sourceLookup.Add(signalReference, mapping.Item1);
                 }
@@ -954,7 +954,7 @@ namespace GSF.TimeSeries.Statistics
                     src.StatisticMeasurements = statisticMeasurements;
             }
 
-            OnStatusMessage(MessageLevel.Info, "StatisticsEngine", "Loaded {0} statistic calculation definitions and {1} statistic measurement definitions.", m_statistics.Count, statisticMeasurementCount);
+            OnStatusMessage(MessageLevel.Info, "StatisticsEngine", $"Loaded {m_statistics.Count} statistic calculation definitions and {statisticMeasurementCount} statistic measurement definitions.");
 
             if (reenable)
             {

@@ -332,7 +332,7 @@ namespace KafkaAdapters
             {
                 Log = new TimeSeriesLogger
                 (
-                    (status, args) => OnStatusMessage(MessageLevel.Info, "KafkaConsumer", status, args), 
+                    (status, args) => OnStatusMessage(MessageLevel.Info, "KafkaConsumer", string.Format(status, args)), 
                     ex => OnProcessException(MessageLevel.Warning, "KafkaConsumer", ex)
                 )
             });
@@ -402,7 +402,7 @@ namespace KafkaAdapters
                 long lastMeasurementTime = 0;
 
                 options.PartitionWhitelist.Add(partition);
-                options.Log = new TimeSeriesLogger((message, parameters) => OnStatusMessage(MessageLevel.Info, "KafkaConsumer", $"P[{partition}]: " + message, parameters), ex => OnProcessException(MessageLevel.Warning, "KafkaConsumer", ex));
+                options.Log = new TimeSeriesLogger((message, parameters) => OnStatusMessage(MessageLevel.Info, "KafkaConsumer", string.Format($"P[{partition}]: " + message, parameters)), ex => OnProcessException(MessageLevel.Warning, "KafkaConsumer", ex));
 
                 // Handle consumer offset tracking, i.e., adapter will start reading messages where it left off from last run
                 if (TrackConsumerOffset)
@@ -517,7 +517,7 @@ namespace KafkaAdapters
                 using (BrokerRouter router = new BrokerRouter(new KafkaOptions(m_servers)
                 {
                     Log = new TimeSeriesLogger(
-                        (status, args) => OnStatusMessage(MessageLevel.Info, "KafkaConsumer", status, args), 
+                        (status, args) => OnStatusMessage(MessageLevel.Info, "KafkaConsumer", string.Format(status, args)), 
                         ex => OnProcessException(MessageLevel.Warning, "KafkaConsumer", new InvalidOperationException($"[{MetadataTopic}]: {ex.Message}", ex)))
                 }))
                 {

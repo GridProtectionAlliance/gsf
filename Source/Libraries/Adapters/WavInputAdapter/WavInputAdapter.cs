@@ -181,7 +181,7 @@ namespace WavInputAdapter
             if (m_channels > OutputMeasurements.Length)
                 throw new ArgumentException($"Not enough output measurements ({OutputMeasurements.Length}) defined for the number of channels in the WAV file ({m_channels})");
 
-            OnStatusMessage(MessageLevel.Info, "WavInputAdapter", "Ready to play \"{0}\" with {1} channels...", Path.GetFileName(WavFileName), m_channels);
+            OnStatusMessage(MessageLevel.Info, "WavInputAdapter", $"Ready to play \"{Path.GetFileName(WavFileName)}\" with {m_channels} channels...");
         }
 
         /// <summary>

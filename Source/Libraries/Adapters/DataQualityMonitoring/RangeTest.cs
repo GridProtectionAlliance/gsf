@@ -496,7 +496,7 @@ namespace DataQualityMonitoring
             foreach (MeasurementKey key in measurementCounts.Keys)
             {
                 int count = measurementCounts[key];
-                OnStatusMessage(MessageLevel.Info, "RangeTest", "Measurement {0} arrived out-of-range {1} times within the last {2} seconds.", key, count, (int)m_timeToPurge.ToSeconds());
+                OnStatusMessage(MessageLevel.Info, "RangeTest", $"Measurement {key} arrived out-of-range {count:N0} times within the last {(int)m_timeToPurge.ToSeconds()} seconds.");
             }
         }
 

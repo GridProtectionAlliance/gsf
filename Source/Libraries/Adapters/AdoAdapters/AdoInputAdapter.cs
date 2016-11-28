@@ -445,10 +445,10 @@ namespace AdoAdapters
                                 m_dbMeasurements.Add(measurement);
 
                                 if (m_dbMeasurements.Count % 50000 == 0)
-                                    OnStatusMessage(MessageLevel.Info, "AdoInputAdapter", "Loaded {0} records so far...", m_dbMeasurements.Count);
+                                    OnStatusMessage(MessageLevel.Info, "AdoInputAdapter", $"Loaded {m_dbMeasurements.Count:N0} records so far...");
                             }
 
-                            OnStatusMessage(MessageLevel.Info, "AdoInputAdapter", "Completed data load in {0}", ((Ticks)(DateTime.UtcNow.Ticks - startTime)).ToElapsedTimeString(2));
+                            OnStatusMessage(MessageLevel.Info, "AdoInputAdapter", $"Completed data load in {((Ticks)(DateTime.UtcNow.Ticks - startTime)).ToElapsedTimeString(2)}");
                         }
                     }
                     catch (Exception ex)
@@ -590,7 +590,7 @@ namespace AdoAdapters
                                 m_dbMeasurements.Add(measurement);
 
                                 if (m_dbMeasurements.Count % 50000 == 0)
-                                    OnStatusMessage(MessageLevel.Info, "AdoInputAdapter", "Loaded {0} records so far...", m_dbMeasurements.Count);
+                                    OnStatusMessage(MessageLevel.Info, "AdoInputAdapter", $"Loaded {m_dbMeasurements.Count:N0} records so far...");
                             }
                         }
                     }
@@ -599,7 +599,7 @@ namespace AdoAdapters
 
                     m_dbMeasurements = m_dbMeasurements.OrderBy(m => (long)m.Timestamp).ToList();
 
-                    OnStatusMessage(MessageLevel.Info, "AdoInputAdapter", "Completed data load in {0}", ((Ticks)(DateTime.UtcNow.Ticks - startTime)).ToElapsedTimeString(2));
+                    OnStatusMessage(MessageLevel.Info, "AdoInputAdapter", $"Completed data load in {((Ticks)(DateTime.UtcNow.Ticks - startTime)).ToElapsedTimeString(2)}");
 
                     if (m_cacheFileName != null)
                     {

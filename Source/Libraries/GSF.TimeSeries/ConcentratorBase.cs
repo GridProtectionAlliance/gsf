@@ -38,8 +38,6 @@ using GSF.Diagnostics;
 using GSF.Threading;
 using GSF.Units;
 
-#pragma warning disable 618
-
 // ReSharper disable PossibleMultipleEnumeration
 namespace GSF.TimeSeries
 {
@@ -1928,24 +1926,11 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Raises the <see cref="ProcessException"/> event.
         /// </summary>
-        /// <param name="ex">Exception to send to <see cref="ProcessException"/> event.</param>
-        /// <remarks>
-        /// Allows derived classes to raise a processing exception.
-        /// </remarks>
+        /// <param name="ex">Processing <see cref="Exception"/>.</param>
         [Obsolete("Switch to using overload with MessageLevel parameter - this method may be removed from future builds.", false)]
-        protected virtual void OnProcessException(Exception ex)
+        protected void OnProcessException(Exception ex)
         {
-            if (!Logger.ShouldSuppressLogMessages)
-            {
-                Log.Publish(MessageLevel.Info, "Unclassified Exception", ex?.Message, null, ex);
-
-                using (Logger.SuppressLogMessages())
-                    ProcessException?.Invoke(this, new EventArgs<Exception>(ex));
-            }
-            else
-            {
-                ProcessException?.Invoke(this, new EventArgs<Exception>(ex));
-            }
+            OnProcessException(MessageLevel.Info, "Unclassified Exception", ex);
         }
 
         /// <summary>
@@ -1953,18 +1938,26 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
         /// <param name="eventName">A fixed string to classify this event.</param>
-        /// <param name="ex">Processing <see cref="Exception"/>.</param>
+        /// <param name="exception">Processing <see cref="Exception"/>.</param>
         /// <remarks>
         /// <see pref="eventName"/> should be a constant string value associated with what type of message is being generated. 
         /// In general, there should only be a few dozen distinct event names per class. Exceeding this threshold.
         /// Will cause the EventName to be replaced with a general warning that a usage issue has occurred.
         /// </remarks>
-        protected void OnProcessException(MessageLevel level, string eventName, Exception ex)
+        protected virtual void OnProcessException(MessageLevel level, string eventName, Exception exception)
         {
-            Log.Publish(level, eventName, ex?.Message, null, ex);
+            try
+            {
+                Log.Publish(level, eventName, exception?.Message, null, exception);
 
-            using (Logger.SuppressLogMessages())
-                OnProcessException(ex);
+                using (Logger.SuppressLogMessages())
+                    ProcessException?.Invoke(this, new EventArgs<Exception>(exception));
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                Log.Publish(MessageLevel.Info, "AdapterBase", $"Exception in consumer handler for ProcessException event: {ex.Message}", null, ex);
+            }
         }
 
         /// <summary>

@@ -273,7 +273,7 @@ namespace FtpAdapters
                 m_client.SetCurrentDirectory(m_remotePath);
                 m_client.CurrentDirectory.GetFile(Path.Combine(m_localPath, m_localFileName), m_remoteFileName);
                 m_client.Close();
-                OnStatusMessage(MessageLevel.Info, "FtpReader", "FTP file \"{0}\" downloaded to \"{1}\" from {2}", Path.Combine(m_remotePath, m_remoteFileName), Path.Combine(m_localPath, m_localFileName), m_host);
+                OnStatusMessage(MessageLevel.Info, "FtpReader", $"FTP file \"{Path.Combine(m_remotePath, m_remoteFileName)}\" downloaded to \"{Path.Combine(m_localPath, m_localFileName)}\" from {m_host}");
             }
             catch (Exception ex)
             {
