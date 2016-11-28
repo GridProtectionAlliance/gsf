@@ -149,6 +149,7 @@ namespace LogFileViewer
                     {
                         string fileWithoutExtension = Path.GetFileNameWithoutExtension(file);
                         List<LogMessage> messages = LogFileReader.Read(file);
+                        FilterFirstChanceExceptions(messages);
                         foreach (LogMessage message in messages)
                         {
                             AddRowToDataTable(message, fileWithoutExtension);
@@ -198,8 +199,9 @@ namespace LogFileViewer
                     m_dataTable.Rows.Clear();
                     foreach (var file in dlg.FileNames)
                     {
-                        List<LogMessage> messages = LogFileReader.Read(file);
                         string fileWithoutExtension = Path.GetFileNameWithoutExtension(file);
+                        List<LogMessage> messages = LogFileReader.Read(file);
+                        FilterFirstChanceExceptions(messages);
 
                         foreach (LogMessage message in messages)
                         {
@@ -544,6 +546,66 @@ namespace LogFileViewer
                     }
                 }
             }
+        }
+
+
+        private void FilterFirstChanceExceptions(List<LogMessage> messages)
+        {
+            for (int x = 0; x < messages.Count; x++)
+            {
+                //Only first chance exceptions can be filtered.
+                LogMessage firstMessage = messages[x];
+                if (firstMessage.ExceptionString.Length > 0
+                    && firstMessage.EventPublisherDetails.TypeName == "GSF.Diagnostics.Logger"
+                    && firstMessage.EventPublisherDetails.EventName == "First Chance App Domain Exception")
+                {
+                    //don't look ahead for more than 100ms.
+                    DateTime stopAfter = firstMessage.UtcTime.AddTicks(100 * TimeSpan.TicksPerMillisecond);
+
+                    bool foundMatch = false;
+                    for (int y = x + 1; y < messages.Count; y++)
+                    {
+                        LogMessage futureMessage = messages[y];
+                        if (futureMessage.UtcTime > stopAfter)
+                            break;
+
+                        if (futureMessage.ManagedThreadID == firstMessage.ManagedThreadID
+                            && futureMessage.ExceptionString.Length > 0
+                            && futureMessage.EventPublisherDetails.TypeName != "GSF.Diagnostics.Logger")
+                        {
+                            if (futureMessage.ExceptionString.StartsWith(firstMessage.ExceptionString))
+                            {
+                                foundMatch = true;
+                                break;
+                            }
+                            else if (futureMessage.ExceptionString.StartsWith("System.InvalidOperationException:") && futureMessage.ExceptionString.Contains(" ---> "))
+                            {
+                                string exception = firstMessage.ExceptionString;
+                                if (exception.StartsWith("System.Net.Sockets.SocketException (0x") && exception.Contains("):"))
+                                {
+                                    exception = "System.Net.Sockets.SocketException" + exception.Substring(exception.IndexOf(")")+1) + Environment.NewLine + "   --- End of inner exception stack trace ---";
+                                }
+
+                                if (futureMessage.ExceptionString.EndsWith(exception))
+                                {
+                                    foundMatch = true;
+                                    break;
+                                }
+
+                            }
+
+                        }
+                    }
+
+                    if (foundMatch)
+                    {
+                        messages.RemoveAt(x);
+                        x--;
+                    }
+                }
+
+            }
+
         }
     }
 }
