@@ -113,7 +113,7 @@ namespace LogFileViewer.Filters
                                                                                }
 
                                                                            }),
-                       Tuple.Create<string, Func<bool>>("Include Key", () =>
+                       Tuple.Create<string, Func<bool>>("Exclude Key", () =>
                                                                            {
                                                                                m_includeIfMatched = false;
                                                                                using (var frm = new StackDetailsFilter(m_filter))
