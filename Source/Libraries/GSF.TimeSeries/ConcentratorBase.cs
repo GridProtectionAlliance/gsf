@@ -1956,7 +1956,7 @@ namespace GSF.TimeSeries
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                Log.Publish(MessageLevel.Info, "AdapterBase", $"Exception in consumer handler for ProcessException event: {ex.Message}", null, ex);
+                Log.Publish(MessageLevel.Info, "ConcentratorBase", $"Exception in consumer handler for ProcessException event: {ex.Message}", null, ex);
             }
         }
 
@@ -1966,7 +1966,15 @@ namespace GSF.TimeSeries
         /// <param name="seconds">Total number of unpublished seconds of data.</param>
         protected virtual void OnUnpublishedSamples(int seconds)
         {
-            UnpublishedSamples?.Invoke(this, new EventArgs<int>(seconds));
+            try
+            {
+                UnpublishedSamples?.Invoke(this, new EventArgs<int>(seconds));
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(MessageLevel.Info, "ConcentratorBase", new InvalidOperationException($"Exception in consumer handler for OnUnpublishedSamples event: {ex.Message}", ex));
+            }
         }
 
         /// <summary>
@@ -1978,7 +1986,15 @@ namespace GSF.TimeSeries
         /// </remarks>
         protected virtual void OnDiscardingMeasurements(IEnumerable<IMeasurement> measurements)
         {
-            DiscardingMeasurements?.Invoke(this, new EventArgs<IEnumerable<IMeasurement>>(measurements));
+            try
+            {
+                DiscardingMeasurements?.Invoke(this, new EventArgs<IEnumerable<IMeasurement>>(measurements));
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(MessageLevel.Info, "ConcentratorBase", new InvalidOperationException($"Exception in consumer handler for DiscardingMeasurements event: {ex.Message}", ex));
+            }
         }
 
         // Tick handler for frame rate timer simply signals waiting thread to publish
