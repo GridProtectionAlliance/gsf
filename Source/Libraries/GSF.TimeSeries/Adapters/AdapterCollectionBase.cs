@@ -1487,18 +1487,19 @@ namespace GSF.TimeSeries.Adapters
                     // If initialization timeout is specified for this item, start the initialization timeout timer
                     if (item.InitializationTimeout > 0)
                     {
-                        initializationTimeoutAction = new Action(() =>
+                        initializationTimeoutAction = () =>
                         {
                             const string MessageFormat = "WARNING: Initialization of adapter {0} has exceeded" +
-                                " its timeout of {1} seconds. The adapter may still initialize, however this" +
-                                " may indicate a problem with the adapter. If you consider this to be normal," +
-                                " try adjusting the initialization timeout to suppress this message during" +
-                                " normal operations.";
+                                                         " its timeout of {1} seconds. The adapter may still initialize, however this" +
+                                                         " may indicate a problem with the adapter. If you consider this to be normal," +
+                                                         " try adjusting the initialization timeout to suppress this message during" +
+                                                         " normal operations.";
 
                             OnStatusMessage(MessageFormat, item.Name, item.InitializationTimeout / 1000.0);
 
+                            // ReSharper disable once AccessToModifiedClosure
                             initializationTimeoutToken = initializationTimeoutAction?.DelayAndExecute(item.InitializationTimeout);
-                        });
+                        };
 
                         initializationTimeoutToken = initializationTimeoutAction.DelayAndExecute(item.InitializationTimeout);
                     }

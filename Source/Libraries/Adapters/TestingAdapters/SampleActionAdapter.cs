@@ -29,6 +29,7 @@ using System.Data;
 using System.Linq;
 using GSF;
 using GSF.Data;
+using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.Units;
@@ -122,7 +123,7 @@ namespace TestingAdapters
                     .Select(row => MeasurementKey.LookUpBySignalID(Guid.Parse(row["ID"].ToString()))).ToArray();
 
                 // Lookup signal types for defined input measurements
-                SignalType[] inputTypes = inputKeys.Select(key => LookupSignalType(key)).ToArray();
+                SignalType[] inputTypes = inputKeys.Select(LookupSignalType).ToArray();
 
                 // Segregate inputs into voltage and current phasor measurements
                 MeasurementKey[] voltageAngles = inputKeys.Where((key, index) => inputTypes[index] == SignalType.VPHA).ToArray();
@@ -151,7 +152,7 @@ namespace TestingAdapters
 
                 // Define output measurements as defined in stored procedure
                 OutputMeasurements = connection.RetrieveData("GetMyOutputsProc @param1 @param2", "param1Value", "param2Value").Rows.OfType<DataRow>()
-                    .Select(row => new Measurement() { Metadata = MeasurementKey.LookUpBySignalID(Guid.Parse(row["ID"].ToString())).Metadata }).ToArray();
+                    .Select(row => new Measurement() { Metadata = MeasurementKey.LookUpBySignalID(Guid.Parse(row["ID"].ToString())).Metadata }).Cast<IMeasurement>().ToArray();
             }
             finally
             {
@@ -214,14 +215,14 @@ namespace TestingAdapters
         {
             try
             {
-                DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select(string.Format("ID = '{0}'", key));
+                DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select($"ID = '{key}'");
 
                 if (filteredRows.Length > 0)
                     return (SignalType)Enum.Parse(typeof(SignalType), filteredRows[0]["SignalType"].ToString(), true);
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Failed to lookup signal type for measurement {0}: {1}", key, ex.Message), ex));
+                OnProcessException(MessageLevel.Warning, "SampleActionAdapter", new InvalidOperationException($"Failed to lookup signal type for measurement {key}: {ex.Message}", ex));
             }
 
             return SignalType.NONE;

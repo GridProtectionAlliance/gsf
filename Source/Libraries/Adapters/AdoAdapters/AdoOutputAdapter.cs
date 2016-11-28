@@ -33,6 +33,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using GSF;
+using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
@@ -174,25 +175,13 @@ namespace AdoAdapters
         /// Returns a flag that determines if measurements sent to this
         /// <see cref="AdoOutputAdapter"/> are destined for archival.
         /// </summary>
-        public override bool OutputIsForArchive
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool OutputIsForArchive => true;
 
         /// <summary>
         /// Gets a flag that determines if this <see cref="AdoOutputAdapter"/>
         /// uses an asynchronous connection.
         /// </summary>
-        protected override bool UseAsyncConnect
-        {
-            get
-            {
-                return false;
-            }
-        }
+        protected override bool UseAsyncConnect => false;
 
         #endregion
 
@@ -228,7 +217,7 @@ namespace AdoAdapters
                     }
                     else
                     {
-                        OnProcessException(new ArgumentException(string.Format("Measurement property not found: {0}", subKey)));
+                        OnProcessException(MessageLevel.Warning, "AdoOutputAdapter", new ArgumentException($"Measurement property not found: {subKey}"));
                     }
                 }
             }
@@ -304,7 +293,7 @@ namespace AdoAdapters
         /// <returns>Text of the status message.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            return string.Format("Archived {0} measurements to database.", m_measurementCount).CenterText(maxLength);
+            return $"Archived {m_measurementCount} measurements to database.".CenterText(maxLength);
         }
 
         /// <summary>
@@ -354,18 +343,14 @@ namespace AdoAdapters
             typeList.Add(type);
 
             if (type.IsInterface)
-            {
                 typeList.AddRange(type.GetInterfaces());
-            }
 
             List<PropertyInfo> propertyList = new List<PropertyInfo>();
 
             foreach (Type interfaceType in typeList)
             {
                 foreach (PropertyInfo property in interfaceType.GetProperties())
-                {
                     propertyList.Add(property);
-                }
             }
 
             return propertyList.ToArray();
@@ -385,7 +370,7 @@ namespace AdoAdapters
             string fields = m_fieldList.Aggregate((field1, field2) => field1 + "," + field2);
             string values;
 
-            IDbDataParameter parameter;
+            IDbDataParameter parameter = null;
             char paramChar = m_isOracle ? ':' : '@';
             int paramCount = 0;
 
@@ -402,53 +387,58 @@ namespace AdoAdapters
                     foreach (string fieldName in m_fieldList)
                     {
                         string propertyName = m_fieldNames[fieldName];
-                        object value = GetAllProperties(measurementType).FirstOrDefault(prop => prop.Name == propertyName).GetValue(measurement, null);
+                        PropertyInfo firstOrDefault = GetAllProperties(measurementType).FirstOrDefault(prop => prop.Name == propertyName);
 
-                        if (valuesBuilder.Length > 0)
-                            valuesBuilder.Append(',');
-
-                        if ((object)value == null)
+                        if ((object)firstOrDefault != null)
                         {
-                            valuesBuilder.Append("NULL");
-                            continue;
-                        }
+                            object value = firstOrDefault.GetValue(measurement, null);
 
-                        valuesBuilder.Append(paramChar);
-                        valuesBuilder.Append('p');
-                        valuesBuilder.Append(paramCount);
+                            if (valuesBuilder.Length > 0)
+                                valuesBuilder.Append(',');
 
-                        parameter = command.CreateParameter();
-                        parameter.ParameterName = paramChar + "p" + paramCount;
-                        parameter.Direction = ParameterDirection.Input;
+                            if ((object)value == null)
+                            {
+                                valuesBuilder.Append("NULL");
+                                continue;
+                            }
 
-                        switch (propertyName.ToLower())
-                        {
-                            case "id":
-                                parameter.Value = m_isJetEngine ? "{" + value + "}" : value;
-                                break;
-                            case "key":
-                                parameter.Value = value.ToString();
-                                break;
-                            case "timestamp":
-                            case "publishedtimestamp":
-                            case "receivedtimestamp":
-                                Ticks timestamp = (Ticks)value;
+                            valuesBuilder.Append(paramChar);
+                            valuesBuilder.Append('p');
+                            valuesBuilder.Append(paramCount);
 
-                                // If the value is a timestamp, use the timestamp format
-                                // specified by the user when inserting the timestamp.
-                                if (m_timestampFormat == null)
-                                    parameter.Value = (long)timestamp;
-                                else
-                                    parameter.Value = timestamp.ToString(m_timestampFormat);
-                                break;
-                            case "stateflags":
-                                // IMeasurement.StateFlags field is an uint, cast this back to a
-                                // signed integer to work with most database field types
-                                parameter.Value = Convert.ToInt32(value);
-                                break;
-                            default:
-                                parameter.Value = value;
-                                break;
+                            parameter = command.CreateParameter();
+                            parameter.ParameterName = paramChar + "p" + paramCount;
+                            parameter.Direction = ParameterDirection.Input;
+
+                            switch (propertyName.ToLower())
+                            {
+                                case "id":
+                                    parameter.Value = m_isJetEngine ? "{" + value + "}" : value;
+                                    break;
+                                case "key":
+                                    parameter.Value = value.ToString();
+                                    break;
+                                case "timestamp":
+                                case "publishedtimestamp":
+                                case "receivedtimestamp":
+                                    Ticks timestamp = (Ticks)value;
+
+                                    // If the value is a timestamp, use the timestamp format
+                                    // specified by the user when inserting the timestamp.
+                                    if (m_timestampFormat == null)
+                                        parameter.Value = (long)timestamp;
+                                    else
+                                        parameter.Value = timestamp.ToString(m_timestampFormat);
+                                    break;
+                                case "stateflags":
+                                    // IMeasurement.StateFlags field is an uint, cast this back to a
+                                    // signed integer to work with most database field types
+                                    parameter.Value = Convert.ToInt32(value);
+                                    break;
+                                default:
+                                    parameter.Value = value;
+                                    break;
+                            }
                         }
 
                         command.Parameters.Add(parameter);

@@ -30,6 +30,7 @@ using System.Reflection;
 using System.Text;
 using Ciloci.Flee;
 using GSF;
+using GSF.Diagnostics;
 using GSF.Net.Smtp;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -166,27 +167,22 @@ namespace DynamicCalculator
             }
             set
             {
-                Dictionary<string, string> parsedTypeDef;
-                string assemblyName, typeName;
-                Assembly assembly;
-                Type type;
-
                 foreach (string typeDef in value.Split(';'))
                 {
                     try
                     {
-                        parsedTypeDef = typeDef.ParseKeyValuePairs(',');
-                        assemblyName = parsedTypeDef["assemblyName"];
-                        typeName = parsedTypeDef["typeName"];
-                        assembly = Assembly.Load(new AssemblyName(assemblyName));
-                        type = assembly.GetType(typeName);
+                        Dictionary<string, string> parsedTypeDef = typeDef.ParseKeyValuePairs(',');
+                        string assemblyName = parsedTypeDef["assemblyName"];
+                        string typeName = parsedTypeDef["typeName"];
+                        Assembly assembly = Assembly.Load(new AssemblyName(assemblyName));
+                        Type type = assembly.GetType(typeName);
 
                         m_expressionContext.Imports.AddType(type);
                     }
                     catch (Exception ex)
                     {
                         string message = $"Unable to load type from assembly: {typeDef}";
-                        OnProcessException(new ArgumentException(message, ex));
+                        OnProcessException(MessageLevel.Error, "EmailNotifier", new ArgumentException(message, ex));
                     }
                 }
 

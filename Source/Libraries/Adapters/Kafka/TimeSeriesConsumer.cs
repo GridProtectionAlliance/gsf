@@ -30,6 +30,7 @@ using System.Text;
 using System.Threading;
 using GSF;
 using GSF.Collections;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Threading;
 using GSF.TimeSeries;
@@ -85,7 +86,10 @@ namespace KafkaAdapters
         public TimeSeriesConsumer()
         {
             m_consumers = new List<WeakReference<Consumer>>();
-            m_updateMetadata = new LongSynchronizedOperation(UpdateMetadata, OnProcessException) { IsBackground = true };
+            m_updateMetadata = new LongSynchronizedOperation(UpdateMetadata, ex => OnProcessException(MessageLevel.Warning, "KafkaConsumer", ex))
+            {
+                IsBackground = true
+            };
         }
 
         #endregion
@@ -306,7 +310,10 @@ namespace KafkaAdapters
                 CacheMetadataLocally = TimeSeriesProducer.DefaultCacheMetadataLocally;
 
             if (CacheMetadataLocally)
-                m_cacheMetadataLocally = new LongSynchronizedOperation(() => TimeSeriesMetadata.CacheLocally(m_metadata, MetadataTopic, OnStatusMessage)) { IsBackground = true };
+                m_cacheMetadataLocally = new LongSynchronizedOperation(() => TimeSeriesMetadata.CacheLocally(m_metadata, MetadataTopic, status => OnStatusMessage(MessageLevel.Info, "KafkaConsumer", status)))
+                {
+                    IsBackground = true
+                };
 
             if ((object)OutputMeasurements != null && OutputMeasurements.Length > 0)
                 m_outputMeasurementKeys = new HashSet<MeasurementKey>(OutputMeasurements.Select(m => m.Key));
@@ -321,7 +328,14 @@ namespace KafkaAdapters
         /// </remarks>
         protected override void AttemptConnection()
         {
-            m_router = new BrokerRouter(new KafkaOptions(m_servers) { Log = new TimeSeriesLogger(OnStatusMessage, OnProcessException) });
+            m_router = new BrokerRouter(new KafkaOptions(m_servers)
+            {
+                Log = new TimeSeriesLogger
+                (
+                    (status, args) => OnStatusMessage(MessageLevel.Info, "KafkaConsumer", status, args), 
+                    ex => OnProcessException(MessageLevel.Warning, "KafkaConsumer", ex)
+                )
+            });
 
             m_processingThreads = new Thread[Partitions];
 
@@ -388,7 +402,7 @@ namespace KafkaAdapters
                 long lastMeasurementTime = 0;
 
                 options.PartitionWhitelist.Add(partition);
-                options.Log = new TimeSeriesLogger((message, parameters) => OnStatusMessage($"P[{partition}]: " + message, parameters), OnProcessException);
+                options.Log = new TimeSeriesLogger((message, parameters) => OnStatusMessage(MessageLevel.Info, "KafkaConsumer", $"P[{partition}]: " + message, parameters), ex => OnProcessException(MessageLevel.Warning, "KafkaConsumer", ex));
 
                 // Handle consumer offset tracking, i.e., adapter will start reading messages where it left off from last run
                 if (TrackConsumerOffset)
@@ -412,7 +426,7 @@ namespace KafkaAdapters
                         }
                         catch (Exception ex)
                         {
-                            OnProcessException(new InvalidOperationException($"Failed to read last consumer offset from \"{fileName}\": {ex.Message}", ex));
+                            OnProcessException(MessageLevel.Warning, "KafkaConsumer", new InvalidOperationException($"Failed to read last consumer offset from \"{fileName}\": {ex.Message}", ex));
                         }
                     }
 
@@ -429,7 +443,7 @@ namespace KafkaAdapters
                         // Write current consumer offset
                         File.WriteAllText(fileName, consumerCursor.Offset.ToString());
                     }, 
-                    ex => OnProcessException(new InvalidOperationException($"Failed to cache current consumer offset to \"{fileName}\": {ex.Message}", ex)))
+                    ex => OnProcessException(MessageLevel.Warning, "KafkaConsumer", new InvalidOperationException($"Failed to cache current consumer offset to \"{fileName}\": {ex.Message}", ex)))
                     {
                         IsBackground = true
                     };
@@ -490,7 +504,7 @@ namespace KafkaAdapters
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException($"Exception while reading Kafka messages for topic \"{Topic}\" P[{partition}]: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Warning, "KafkaConsumer", new InvalidOperationException($"Exception while reading Kafka messages for topic \"{Topic}\" P[{partition}]: {ex.Message}", ex));
             }
         }
 
@@ -500,19 +514,24 @@ namespace KafkaAdapters
             // Attempt to retrieve last known metadata record from Kafka
             try
             {
-                using (BrokerRouter router = new BrokerRouter(new KafkaOptions(m_servers) { Log = new TimeSeriesLogger(OnStatusMessage, ex => OnProcessException(new InvalidOperationException($"[{MetadataTopic}]: {ex.Message}", ex))) }))
+                using (BrokerRouter router = new BrokerRouter(new KafkaOptions(m_servers)
+                {
+                    Log = new TimeSeriesLogger(
+                        (status, args) => OnStatusMessage(MessageLevel.Info, "KafkaConsumer", status, args), 
+                        ex => OnProcessException(MessageLevel.Warning, "KafkaConsumer", new InvalidOperationException($"[{MetadataTopic}]: {ex.Message}", ex)))
+                }))
                 {
                     Ticks serializationTime;
 
-                    OnStatusMessage("Reading latest time-series metadata records from Kafka...");
+                    OnStatusMessage(MessageLevel.Info, "KafkaConsumer", "Reading latest time-series metadata records from Kafka...");
 
-                    TimeSeriesMetadata metadata = TimeSeriesMetadata.ReadFromKafka(router, MetadataTopic, OnStatusMessage, out serializationTime);
+                    TimeSeriesMetadata metadata = TimeSeriesMetadata.ReadFromKafka(router, MetadataTopic, status => OnStatusMessage(MessageLevel.Info, "KafkaConsumer", status), out serializationTime);
 
                     if ((object)metadata != null)
                     {
                         m_metadata = metadata;
 
-                        OnStatusMessage($"Deserialized {m_metadata.Count:N0} Kafka time-series metadata records, version {m_metadata.Version:N0}, from \"{MetadataTopic}\" serialized at {serializationTime.ToString(MetadataRecord.DateTimeFormat)}");
+                        OnStatusMessage(MessageLevel.Info, "KafkaConsumer", $"Deserialized {m_metadata.Count:N0} Kafka time-series metadata records, version {m_metadata.Version:N0}, from \"{MetadataTopic}\" serialized at {serializationTime.ToString(MetadataRecord.DateTimeFormat)}");
 
                         if (m_lastMetadataVersion != MetadataVersion)
                         {
@@ -533,7 +552,7 @@ namespace KafkaAdapters
                     if ((object)m_metadata == null)
                         throw;
 
-                    OnStatusMessage($"WARNING: Failed to read latest Kafka time-series metadata records from topic \"{MetadataTopic}\": {ex.Message}");
+                    OnStatusMessage(MessageLevel.Warning, "KafkaConsumer", $"WARNING: Failed to read latest Kafka time-series metadata records from topic \"{MetadataTopic}\": {ex.Message}");
                 }
             }
         }

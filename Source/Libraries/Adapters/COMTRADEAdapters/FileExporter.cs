@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
 using GSF;
+using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using PhasorProtocolAdapters;
@@ -86,13 +87,7 @@ namespace COMTRADEAdapters
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool SupportsTemporalProcessing => false;
 
         /// <summary>
         /// Returns the detailed status of the <see cref="FileExporter"/>.
@@ -176,7 +171,6 @@ namespace COMTRADEAdapters
         /// <param name="index">Index of <see cref="IFrame"/> within one second of data ranging from zero to frames per second - 1.</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            Ticks timestamp = frame.Timestamp;
             IDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
 
             if (measurements.Count > 0)
@@ -198,7 +192,7 @@ namespace COMTRADEAdapters
             else
             {
                 // No data was available in the frame, lag time set too tight?
-                OnProcessException(new InvalidOperationException("No measurements were available for COMTRADE file based data export, possible reasons: system is initializing , receiving no data or lag time is too small. COMTRADE File creation was skipped."));
+                OnProcessException(MessageLevel.Warning, "COMTRADEFileExporter", new InvalidOperationException("No measurements were available for COMTRADE file based data export, possible reasons: system is initializing , receiving no data or lag time is too small. COMTRADE File creation was skipped."));
             }
         }
 

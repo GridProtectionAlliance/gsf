@@ -33,6 +33,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using GSF;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Parsing;
 using GSF.TimeSeries;
@@ -312,7 +313,7 @@ namespace AdoAdapters
             catch (Exception ex)
             {
                 // Process exception for logging
-                OnProcessException(new InvalidOperationException("Failed to queue database query due to exception: " + ex.Message, ex));
+                OnProcessException(MessageLevel.Error, "AdoInputAdapter", new InvalidOperationException("Failed to queue database query due to exception: " + ex.Message, ex));
             }
         }
 
@@ -361,7 +362,7 @@ namespace AdoAdapters
                     if (propertyName != null)
                         m_fieldNames[fieldName] = propertyName;
                     else
-                        OnProcessException(new ArgumentException($"Measurement property not found: {subKey}"));
+                        OnProcessException(MessageLevel.Warning, "AdoInputAdapter", new ArgumentException($"Measurement property not found: {subKey}"));
                 }
             }
 
@@ -388,7 +389,7 @@ namespace AdoAdapters
 
                 if (m_cacheFileName != null && File.Exists(m_cacheFileName))
                 {
-                    OnStatusMessage("Loading cached input data...");
+                    OnStatusMessage(MessageLevel.Info, "AdoInputAdapter", "Loading cached input data...");
 
                     try
                     {
@@ -444,14 +445,15 @@ namespace AdoAdapters
                                 m_dbMeasurements.Add(measurement);
 
                                 if (m_dbMeasurements.Count % 50000 == 0)
-                                    OnStatusMessage("Loaded {0} records so far...", m_dbMeasurements.Count);
+                                    OnStatusMessage(MessageLevel.Info, "AdoInputAdapter", "Loaded {0} records so far...", m_dbMeasurements.Count);
                             }
 
-                            OnStatusMessage("Completed data load in {0}", ((Ticks)(DateTime.UtcNow.Ticks - startTime)).ToElapsedTimeString(2));
+                            OnStatusMessage(MessageLevel.Info, "AdoInputAdapter", "Completed data load in {0}", ((Ticks)(DateTime.UtcNow.Ticks - startTime)).ToElapsedTimeString(2));
                         }
                     }
                     catch (Exception ex)
                     {
+                        // ReSharper disable once CanBeReplacedWithTryCastAndCheckForNull
                         if (ex is EndOfStreamException)
                             throw (EndOfStreamException)ex;
 
@@ -460,7 +462,7 @@ namespace AdoAdapters
                 }
                 else
                 {
-                    OnStatusMessage("Loading database input data...");
+                    OnStatusMessage(MessageLevel.Info, "AdoInputAdapter", "Loading database input data...");
 
                     const string MeasurementTable = "ActiveMeasurements";
 
@@ -555,6 +557,7 @@ namespace AdoAdapters
                                             Type propertyType = property.PropertyType;
                                             Type valueType = value.GetType();
 
+                                            // ReSharper disable once UseMethodIsInstanceOfType
                                             if (property.PropertyType.IsAssignableFrom(value.GetType()))
                                             {
                                                 property.SetValue(measurement, value, null);
@@ -573,13 +576,13 @@ namespace AdoAdapters
                                             else
                                             {
                                                 string exceptionMessage = $"The type of field {fieldName} could not be converted to the type of property {propertyName}.";
-                                                OnProcessException(new InvalidCastException(exceptionMessage));
+                                                OnProcessException(MessageLevel.Warning, "AdoInputAdapter", new InvalidCastException(exceptionMessage));
                                             }
                                         }
                                         else
                                         {
                                             string exceptionMessage = $"The type of field {fieldName} could not be converted to the type of property {propertyName} - no property match was found.";
-                                            OnProcessException(new InvalidCastException(exceptionMessage));
+                                            OnProcessException(MessageLevel.Warning, "AdoInputAdapter", new InvalidCastException(exceptionMessage));
                                         }
                                         break;
                                 }
@@ -587,20 +590,20 @@ namespace AdoAdapters
                                 m_dbMeasurements.Add(measurement);
 
                                 if (m_dbMeasurements.Count % 50000 == 0)
-                                    OnStatusMessage("Loaded {0} records so far...", m_dbMeasurements.Count);
+                                    OnStatusMessage(MessageLevel.Info, "AdoInputAdapter", "Loaded {0} records so far...", m_dbMeasurements.Count);
                             }
                         }
                     }
 
-                    OnStatusMessage("Sorting data by time...");
+                    OnStatusMessage(MessageLevel.Info, "AdoInputAdapter", "Sorting data by time...");
 
                     m_dbMeasurements = m_dbMeasurements.OrderBy(m => (long)m.Timestamp).ToList();
 
-                    OnStatusMessage("Completed data load in {0}", ((Ticks)(DateTime.UtcNow.Ticks - startTime)).ToElapsedTimeString(2));
+                    OnStatusMessage(MessageLevel.Info, "AdoInputAdapter", "Completed data load in {0}", ((Ticks)(DateTime.UtcNow.Ticks - startTime)).ToElapsedTimeString(2));
 
                     if (m_cacheFileName != null)
                     {
-                        OnStatusMessage("Caching data for next initialization...");
+                        OnStatusMessage(MessageLevel.Info, "AdoInputAdapter", "Caching data for next initialization...");
 
                         using (FileStream data = File.OpenWrite(m_cacheFileName))
                         {
@@ -628,12 +631,12 @@ namespace AdoAdapters
                     }
                 }
 
-                OnStatusMessage("Entering data read cycle...");
+                OnStatusMessage(MessageLevel.Info, "AdoInputAdapter", "Entering data read cycle...");
                 ThreadPool.QueueUserWorkItem(PublishData);
             }
             catch (EndOfStreamException ex)
             {
-                OnProcessException(new EndOfStreamException($"Failed load cached data from {m_cacheFileName} due to file corruption{(string.IsNullOrWhiteSpace(ex.Message) ? "," : ": " + ex.Message + " - ")} cache will be recreated from database"));
+                OnProcessException(MessageLevel.Warning, "AdoInputAdapter", new EndOfStreamException($"Failed load cached data from {m_cacheFileName} due to file corruption{(string.IsNullOrWhiteSpace(ex.Message) ? "," : ": " + ex.Message + " - ")} cache will be recreated from database"));
 
                 // If the cached file is corrupt, delete it and load from the database
                 if (File.Exists(m_cacheFileName))
@@ -644,7 +647,7 @@ namespace AdoAdapters
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException("Failed during data load: " + ex.Message, ex));
+                OnProcessException(MessageLevel.Warning, "AdoInputAdapter", new InvalidOperationException("Failed during data load: " + ex.Message, ex));
             }
             finally
             {

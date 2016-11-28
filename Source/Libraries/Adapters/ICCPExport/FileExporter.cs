@@ -44,9 +44,9 @@ using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using GSF;
 using GSF.Collections;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -295,11 +295,11 @@ namespace ICCPExport
                 if (!InputMeasurementKeys.Contains(m_referenceAngleKey))
                     InputMeasurementKeys = InputMeasurementKeys.Concat(new[] { m_referenceAngleKey }).ToArray();
 
-                // Make sure sure reference angle key is actually an angle measurement
+                // Make sure reference angle key is actually an angle measurement
                 SignalType signalType = InputMeasurementKeyTypes[InputMeasurementKeys.IndexOf(key => key == m_referenceAngleKey)];
 
                 if (signalType != SignalType.IPHA && signalType != SignalType.VPHA)
-                    throw new InvalidOperationException(string.Format("Specified reference angle measurement key is a {0} signal, not a phase angle.", signalType.GetFormattedName()));
+                    throw new InvalidOperationException($"Specified reference angle measurement key is a {signalType.GetFormattedName()} signal, not a phase angle.");
             }
 
             // Load optional parameters
@@ -336,7 +336,7 @@ namespace ICCPExport
                     pointID = key.ToString();
 
                     // Lookup measurement key in active measurements table
-                    DataRow row = DataSource.Tables["ActiveMeasurements"].Select(string.Format("ID='{0}'", pointID))[0];
+                    DataRow row = DataSource.Tables["ActiveMeasurements"].Select($"ID='{pointID}'")[0];
 
                     // Remove invalid symbols that may be in tag name
                     string pointTag = row["PointTag"].ToNonNullString(pointID).Replace('-', '_').Replace(':', '_').ToUpper();
@@ -347,13 +347,9 @@ namespace ICCPExport
 
                     m_measurementTags.TryAdd(key, pointTag);
                 }
-                catch (ThreadAbortException)
-                {
-                    throw;
-                }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException(string.Format("Failed to lookup point tag for measurement [{0}] due to exception: {1}", pointID, ex.Message)));
+                    OnProcessException(MessageLevel.Warning, "ICCPFileExporter", new InvalidOperationException($"Failed to lookup point tag for measurement [{pointID}] due to exception: {ex.Message}"));
                 }
             }
 
@@ -395,7 +391,7 @@ namespace ICCPExport
                     // Make sure reference made it in this frame...
                     if (m_useReferenceAngle && !measurements.TryGetValue(m_referenceAngleKey, out referenceAngle))
                     {
-                        OnProcessException(new InvalidOperationException("Calculated reference angle was not found in this frame, possible reasons: system is initializing, receiving no data or lag time is too small. File creation was skipped."));
+                        OnProcessException(MessageLevel.Warning, "ICCPFileExporter", new InvalidOperationException("Calculated reference angle was not found in this frame, possible reasons: system is initializing, receiving no data or lag time is too small. File creation was skipped."));
                     }
                     else
                     {
@@ -488,7 +484,7 @@ namespace ICCPExport
                             else
                             {
                                 // We were unable to find measurement tag for this key - this is unexpected
-                                OnProcessException(new InvalidOperationException(string.Format("Failed to find measurement tag for measurement {0}", inputMeasurementKey)));
+                                OnProcessException(MessageLevel.Warning, "ICCPFileExporter", new InvalidOperationException($"Failed to find measurement tag for measurement {inputMeasurementKey}"));
                             }
                         }
                     }
@@ -498,14 +494,10 @@ namespace ICCPExport
                     {
                         m_dataExporter.ExportData(fileData.ToString());
                     }
-                    catch (ThreadAbortException)
-                    {
-                        throw;
-                    }
                     catch (Exception ex)
                     {
                         m_skippedExports++;
-                        OnStatusMessage("WARNING: Skipped export due to exception: " + ex.Message);
+                        OnStatusMessage(MessageLevel.Warning, "ICCPFileExporter", "WARNING: Skipped export due to exception: " + ex.Message);
                         displayedWarning = true;
                     }
 
@@ -515,7 +507,7 @@ namespace ICCPExport
                         //Make sure message is only displayed once during the minute
                         if (!m_statusDisplayed)
                         {
-                            OnStatusMessage("{0} successful file based measurement exports...", m_dataExporter.TotalExports);
+                            OnStatusMessage(MessageLevel.Info, "ICCPFileExporter", "{0} successful file based measurement exports...", m_dataExporter.TotalExports);
                             m_statusDisplayed = true;
                         }
                     }
@@ -527,19 +519,19 @@ namespace ICCPExport
                 else
                 {
                     // No data was available in the frame, lag time set too tight?
-                    OnProcessException(new InvalidOperationException("No measurements were available for file based data export, possible reasons: system is initializing , receiving no data or lag time is too small. File creation was skipped."));
+                    OnProcessException(MessageLevel.Warning, "ICCPFileExporter", new InvalidOperationException("No measurements were available for file based data export, possible reasons: system is initializing , receiving no data or lag time is too small. File creation was skipped."));
                 }
             }
         }
 
         private void m_dataExporter_StatusMessage(object sender, EventArgs<string> e)
         {
-            OnStatusMessage(e.Argument);
+            OnStatusMessage(MessageLevel.Info, "ICCPFileExporter", e.Argument);
         }
 
         private void m_dataExporter_ProcessException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(e.Argument);
+            OnProcessException(MessageLevel.Warning, "ICCPFileExporter", e.Argument);
         }
 
         #endregion

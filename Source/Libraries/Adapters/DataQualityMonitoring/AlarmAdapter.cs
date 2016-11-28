@@ -34,6 +34,7 @@ using DataQualityMonitoring.Services;
 using GSF;
 using GSF.Collections;
 using GSF.Data;
+using GSF.Diagnostics;
 using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -71,10 +72,10 @@ namespace DataQualityMonitoring
         private const int Modified = 1;
 
         // Fields
-        private object m_alarmLock;
+        private readonly object m_alarmLock;
 
-        private DoubleBufferedQueue<IMeasurement> m_measurementQueue;
-        private MixedSynchronizedOperation m_processMeasurementsOperation;
+        private readonly DoubleBufferedQueue<IMeasurement> m_measurementQueue;
+        private readonly MixedSynchronizedOperation m_processMeasurementsOperation;
         private DataSet m_alarmDataSet;
         private int m_dataSourceState;
 
@@ -82,8 +83,8 @@ namespace DataQualityMonitoring
         private AlarmService m_alarmService;
         private long m_eventCount;
 
-        private LongSynchronizedOperation m_alarmLogOperation;
-        private DoubleBufferedQueue<StateChange> m_stateChanges;
+        private readonly LongSynchronizedOperation m_alarmLogOperation;
+        private readonly DoubleBufferedQueue<StateChange> m_stateChanges;
         private bool m_useAlarmLog;
         private int m_bulkInsertLimit;
         private int m_logProcessingDelay;
@@ -104,9 +105,9 @@ namespace DataQualityMonitoring
             m_alarmLookup = new Dictionary<Guid, SignalAlarms>();
 
             m_measurementQueue = new DoubleBufferedQueue<IMeasurement>();
-            m_processMeasurementsOperation = new MixedSynchronizedOperation(ProcessMeasurements, OnProcessException);
+            m_processMeasurementsOperation = new MixedSynchronizedOperation(ProcessMeasurements, ex => OnProcessException(MessageLevel.Warning, "AlarmAdapter", ex));
 
-            m_alarmLogOperation = new LongSynchronizedOperation(LogStateChanges, OnProcessException);
+            m_alarmLogOperation = new LongSynchronizedOperation(LogStateChanges, ex => OnProcessException(MessageLevel.Warning, "AlarmAdapter", ex));
             m_stateChanges = new DoubleBufferedQueue<StateChange>();
             m_alarmLogOperation.IsBackground = true;
         }
@@ -142,13 +143,7 @@ namespace DataQualityMonitoring
         [ConnectionStringParameter,
         Description("Define the flag indicating if this adapter supports temporal processing."),
         DefaultValue(false)]
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return m_supportsTemporalProcessing;
-            }
-        }
+        public override bool SupportsTemporalProcessing => m_supportsTemporalProcessing;
 
         /// <summary>
         /// Gets or sets the flag indicating whether the alarm adapter should
@@ -265,8 +260,7 @@ namespace DataQualityMonitoring
             }
             catch (Exception ex)
             {
-                string message = string.Format("Unable to initialize alarm service due to exception: {0}", ex.Message);
-                OnProcessException(new InvalidOperationException(message, ex));
+                OnProcessException(MessageLevel.Error, "AlarmAdapter", new InvalidOperationException($"Unable to initialize alarm service due to exception: {ex.Message}", ex));
             }
 
             // Run the process measurements operation to ensure that the alarm configuration is up to date
@@ -303,7 +297,7 @@ namespace DataQualityMonitoring
         /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            return string.Format("{0} events processed since last start", Interlocked.Read(ref m_eventCount)).CenterText(maxLength);
+            return $"{Interlocked.Read(ref m_eventCount)} events processed since last start".CenterText(maxLength);
         }
 
         /// <summary>
@@ -358,8 +352,11 @@ namespace DataQualityMonitoring
                             m_alarmService.Dispose();
                         }
 
-                        foreach (SignalAlarms signalAlarms in m_alarmLookup.Values)
-                            StatisticsEngine.Unregister(signalAlarms.Statistics);
+                        lock (m_alarmLock)
+                        {
+                            foreach (SignalAlarms signalAlarms in m_alarmLookup.Values)
+                                StatisticsEngine.Unregister(signalAlarms.Statistics);
+                        }
                     }
                 }
                 finally
@@ -443,7 +440,7 @@ namespace DataQualityMonitoring
 
             Dictionary<int, Alarm> definedAlarmsLookup;
             Dictionary<Guid, SignalAlarms> newAlarmLookup;
-            List<IMeasurement> alarmEvents;
+            //List<IMeasurement> alarmEvents;
 
             // Get the current time in case we need
             // to generate alarm events for cleared alarms
@@ -467,89 +464,93 @@ namespace DataQualityMonitoring
                 .ToDictionary(alarm => alarm.ID);
 
             // Create a list to store alarm events generated by this process
-            alarmEvents = new List<IMeasurement>();
+            //alarmEvents = new List<IMeasurement>();
 
-            foreach (Alarm existingAlarm in m_alarmLookup.SelectMany(kvp => kvp.Value.Alarms))
+            lock (m_alarmLock)
             {
-                Alarm definedAlarm;
-
-                // Attempt to locate the defined alarm corresponding to the existing alarm
-                definedAlarmsLookup.TryGetValue(existingAlarm.ID, out definedAlarm);
-
-                // Determine if a change to the alarm's
-                // configuration has changed the alarm's behavior
-                if (BehaviorChanged(existingAlarm, definedAlarm))
+                foreach (Alarm existingAlarm in m_alarmLookup.SelectMany(kvp => kvp.Value.Alarms))
                 {
-                    // Clone the existing alarm so that changes to alarm
-                    // states can be observed later in this process
-                    Alarm clone = existingAlarm.Clone();
+                    Alarm definedAlarm;
 
-                    // Clear the alarm and create an event
-                    clone.State = AlarmState.Cleared;
-                    alarmEvents.Add(CreateAlarmEvent(now, clone));
+                    // Attempt to locate the defined alarm corresponding to the existing alarm
+                    definedAlarmsLookup.TryGetValue(existingAlarm.ID, out definedAlarm);
+
+                    // Determine if a change to the alarm's
+                    // configuration has changed the alarm's behavior
+                    if (BehaviorChanged(existingAlarm, definedAlarm))
+                    {
+                        // Clone the existing alarm so that changes to alarm
+                        // states can be observed later in this process
+                        Alarm clone = existingAlarm.Clone();
+
+                        // Clear the alarm and create an event
+                        clone.State = AlarmState.Cleared;
+                        //alarmEvents.Add(CreateAlarmEvent(now, clone));
+                    }
+                    else if ((object)definedAlarm != null)
+                    {
+                        // Update functionally irrelevant configuration info
+                        existingAlarm.TagName = definedAlarm.TagName;
+                        existingAlarm.Description = definedAlarm.Description;
+
+                        // Use the existing alarm since the alarm is functionally the same
+                        definedAlarmsLookup[definedAlarm.ID] = existingAlarm;
+                    }
                 }
-                else if ((object)definedAlarm != null)
-                {
-                    // Update functionally irrelevant configuration info
-                    existingAlarm.TagName = definedAlarm.TagName;
-                    existingAlarm.Description = definedAlarm.Description;
 
-                    // Use the existing alarm since the alarm is functionally the same
-                    definedAlarmsLookup[definedAlarm.ID] = existingAlarm;
-                }
-            }
-
-            // Create the new alarm lookup to replace the old one
-            newAlarmLookup = definedAlarmsLookup.Values
-                .GroupBy(alarm => alarm.SignalID)
-                .ToDictionary(grouping => grouping.Key, grouping => new SignalAlarms()
-                {
+                // Create the new alarm lookup to replace the old one
+                newAlarmLookup = definedAlarmsLookup.Values
+                    .GroupBy(alarm => alarm.SignalID)
+                    .ToDictionary(grouping => grouping.Key, grouping => new SignalAlarms()
+                    {
                     // Alarms are sorted in order of precedence:
                     //   1) Exemptions (forces alarm state to cleared)
                     //   2) Severity (high severity takes precedence over low severity)
                     //   3) ID (relative order of alarms with same severity doesn't change)
                     Alarms = grouping
-                        .OrderByDescending(alarm => alarm.Severity == AlarmSeverity.None)
-                        .ThenByDescending(alarm => alarm.Severity)
-                        .ThenBy(alarm => alarm.ID)
-                        .ToList()
-                });
+                            .OrderByDescending(alarm => alarm.Severity == AlarmSeverity.None)
+                            .ThenByDescending(alarm => alarm.Severity)
+                            .ThenBy(alarm => alarm.ID)
+                            .ToList()
+                    });
 
-            // Check for changes to alarms that need to go in the alarm log
-            foreach (KeyValuePair<Guid, SignalAlarms> kvp in m_alarmLookup)
-            {
-                SignalAlarms existingAlarms = kvp.Value;
-                SignalAlarms definedAlarms;
+                // Check for changes to alarms that need to go in the alarm log
+                foreach (KeyValuePair<Guid, SignalAlarms> kvp in m_alarmLookup)
+                {
+                    SignalAlarms existingAlarms = kvp.Value;
+                    SignalAlarms definedAlarms;
 
-                // Get the active alarms from both before and after the configuration changes were applied
-                Alarm existingActiveAlarm = existingAlarms.Alarms.FirstOrDefault(alarm => alarm.State == AlarmState.Raised);
-                Alarm definedActiveAlarm = null;
+                    // Get the active alarms from both before and after the configuration changes were applied
+                    Alarm existingActiveAlarm = existingAlarms.Alarms.FirstOrDefault(alarm => alarm.State == AlarmState.Raised);
+                    Alarm definedActiveAlarm = null;
 
-                if (newAlarmLookup.TryGetValue(kvp.Key, out definedAlarms))
-                {
-                    definedAlarms.Statistics = existingAlarms.Statistics;
-                    definedActiveAlarm = definedAlarms.Alarms.FirstOrDefault(alarm => alarm.State == AlarmState.Raised);
-                }
-                else
-                {
-                    StatisticsEngine.Unregister(existingAlarms.Statistics);
-                }
+                    if (newAlarmLookup.TryGetValue(kvp.Key, out definedAlarms))
+                    {
+                        definedAlarms.Statistics = existingAlarms.Statistics;
+                        definedActiveAlarm = definedAlarms.Alarms.FirstOrDefault(alarm => alarm.State == AlarmState.Raised);
+                    }
+                    else
+                    {
+                        StatisticsEngine.Unregister(existingAlarms.Statistics);
+                    }
 
-                if ((object)definedActiveAlarm != null && (object)existingActiveAlarm != null)
-                {
-                    // If the active alarm has changed as a result
-                    // of the configuration change, log the change
-                    if (definedActiveAlarm.ID != existingActiveAlarm.ID)
-                        LogStateChange(kvp.Key, existingActiveAlarm, definedActiveAlarm, now, double.NaN);
-                }
-                else if ((object)existingActiveAlarm != null)
-                {
-                    // If alarms were raised before the configuration change,
-                    // but have all been cleared as a result of the
-                    // configuration change, log the change
-                    LogStateChange(kvp.Key, existingActiveAlarm, null, now, double.NaN);
+                    if ((object)definedActiveAlarm != null && (object)existingActiveAlarm != null)
+                    {
+                        // If the active alarm has changed as a result
+                        // of the configuration change, log the change
+                        if (definedActiveAlarm.ID != existingActiveAlarm.ID)
+                            LogStateChange(kvp.Key, existingActiveAlarm, definedActiveAlarm, now, double.NaN);
+                    }
+                    else if ((object)existingActiveAlarm != null)
+                    {
+                        // If alarms were raised before the configuration change,
+                        // but have all been cleared as a result of the
+                        // configuration change, log the change
+                        LogStateChange(kvp.Key, existingActiveAlarm, null, now, double.NaN);
+                    }
                 }
             }
+
 
             // Use SignalReference as the name of the signal when creating statistic source
             foreach (DataRow row in DataSource.Tables["ActiveMeasurements"].Rows)
@@ -575,16 +576,19 @@ namespace DataQualityMonitoring
                 }
             }
 
-            m_alarmLookup = newAlarmLookup;
-
-            // Only automatically update input measurement keys if the setting is not explicitly defined
-            if (m_alarmLookup.Count > 0 && !Settings.ContainsKey("inputMeasurementKeys"))
+            lock (m_alarmLock)
             {
-                // Generate filter expression for input measurements
-                string filterExpression = string.Join(";", m_alarmLookup.Select(kvp => kvp.Key.ToString()));
+                m_alarmLookup = newAlarmLookup;
 
-                // Set input measurement keys for measurement routing
-                InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, true, filterExpression);
+                // Only automatically update input measurement keys if the setting is not explicitly defined
+                if (m_alarmLookup.Count > 0 && !Settings.ContainsKey("inputMeasurementKeys"))
+                {
+                    // Generate filter expression for input measurements
+                    string filterExpression = string.Join(";", m_alarmLookup.Select(kvp => kvp.Key.ToString()));
+
+                    // Set input measurement keys for measurement routing
+                    InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, true, filterExpression);
+                }
             }
         }
 
@@ -688,7 +692,7 @@ namespace DataQualityMonitoring
                     Value = value
                 };
 
-                m_stateChanges.Enqueue(new StateChange[] { stateChange });
+                m_stateChanges.Enqueue(new [] { stateChange });
                 m_alarmLogOperation.RunOnceAsync();
             }
         }
@@ -768,10 +772,10 @@ namespace DataQualityMonitoring
             }
         }
 
-        // Processes excpetions thrown by the alarm service.
+        // Processes exceptions thrown by the alarm service.
         private void AlarmService_ServiceProcessException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(e.Argument);
+            OnProcessException(MessageLevel.Warning, "AlarmAdapter", e.Argument);
         }
 
         #endregion

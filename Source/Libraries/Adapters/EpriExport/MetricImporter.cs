@@ -33,6 +33,7 @@ using System.Text;
 using System.Threading;
 using GSF;
 using GSF.Collections;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -52,7 +53,7 @@ namespace EpriExport
         private string m_fileName;
         private StreamReader m_fileStream;
         private string m_header;
-        private readonly Dictionary<string, int> m_columns;
+        //private readonly Dictionary<string, int> m_columns;
         private readonly Dictionary<int, IMeasurement> m_columnMappings;
         private double m_inputInterval;
         private int m_measurementsPerInterval;
@@ -79,7 +80,7 @@ namespace EpriExport
             m_fileProcessQueue.ProcessItemFunction = ProcessFile;
             m_fileProcessQueue.ProcessException += m_fileProcessQueue_ProcessException;
 
-            m_columns = new Dictionary<string, int>(StringComparer.CurrentCultureIgnoreCase);
+            //m_columns = new Dictionary<string, int>(StringComparer.CurrentCultureIgnoreCase);
             m_columnMappings = new Dictionary<int, IMeasurement>();
 
             m_inputInterval = 5.0D;
@@ -181,13 +182,13 @@ namespace EpriExport
         {
             get
             {
-                return ((object)m_precisionTimer != null);
+                return (object)m_precisionTimer != null;
             }
             set
             {
                 // Note that a 1-ms timer and debug mode don't mix, so the high-resolution timer is disabled while debugging
                 if (value && (object)m_precisionTimer == null && !System.Diagnostics.Debugger.IsAttached)
-                    m_precisionTimer = PrecisionInputTimer.Attach((int)(1000.0D / m_inputInterval), OnProcessException);
+                    m_precisionTimer = PrecisionInputTimer.Attach((int)(1000.0D / m_inputInterval), ex => OnProcessException(MessageLevel.Warning, "EpriMetricImporter", ex));
                 else if (!value && m_precisionTimer != null)
                     PrecisionInputTimer.Detach(ref m_precisionTimer);
             }
@@ -542,31 +543,27 @@ namespace EpriExport
                 return;
 
             m_fileName = fileName;
-            OnStatusMessage("Processing EPRI metrics file \"{0}\"...", m_fileName);
+            OnStatusMessage(MessageLevel.Info, "EpriMetricImporter", "Processing EPRI metrics file \"{0}\"...", m_fileName);
 
             FilePath.WaitForReadLock(m_fileName);
             m_fileStream = new StreamReader(m_fileName);
 
             // Skip specified number of header lines that exist before column heading definitions
             for (int i = 0; i < m_skipRows; i++)
-            {
                 m_fileStream.ReadLine();
-            }
 
             m_header = m_fileStream.ReadLine();
-            m_columns.Clear();
+            //m_columns.Clear();
 
-            string[] headings = m_header.ToNonNullString().Split(',');
+            //string[] headings = m_header.ToNonNullString().Split(',');
 
-            for (int i = 0; i < headings.Length; i++)
-            {
-                m_columns.Add(headings[i], i);
-            }
+            //for (int i = 0; i < headings.Length; i++)
+            //    m_columns.Add(headings[i], i);
 
             if (UseHighResolutionInputTimer)
             {
                 // Start a new thread to process measurements using precision timer
-                (new Thread(ProcessMeasurements)).Start();
+                new Thread(ProcessMeasurements).Start();
             }
             else
             {
@@ -592,7 +589,7 @@ namespace EpriExport
                 m_fileStream.Dispose();
             }
 
-            OnStatusMessage("Completed processing of metrics EPRI file \"{0}\".", m_fileName);
+            OnStatusMessage(MessageLevel.Info, "EpriMetricImporter", "Completed processing of metrics EPRI file \"{0}\".", m_fileName);
 
             ThreadPool.QueueUserWorkItem(DeleteFile, m_fileName);
 
@@ -611,7 +608,7 @@ namespace EpriExport
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException($"Failed to delete file \"{fileName}\": {ex.Message}", ex));
+                OnProcessException(MessageLevel.Warning, "EpriMetricImporter", new InvalidOperationException($"Failed to delete file \"{fileName}\": {ex.Message}", ex));
             }
         }
 
@@ -697,7 +694,7 @@ namespace EpriExport
             }
             catch (Exception ex)
             {
-                OnProcessException(ex);
+                OnProcessException(MessageLevel.Warning, "EpriMetricImporter", ex);
                 return false;
             }
 
@@ -706,7 +703,7 @@ namespace EpriExport
 
         private void m_fileProcessQueue_ProcessException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(e.Argument);
+            OnProcessException(MessageLevel.Warning, "EpriMetricImporter", e.Argument);
         }
 
         #endregion

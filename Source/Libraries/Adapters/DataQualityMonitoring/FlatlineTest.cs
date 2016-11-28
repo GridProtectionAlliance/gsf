@@ -35,6 +35,7 @@ using System.Text;
 using System.Timers;
 using DataQualityMonitoring.Services;
 using GSF;
+using GSF.Diagnostics;
 using GSF.Net.Smtp;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -179,13 +180,7 @@ namespace DataQualityMonitoring
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool SupportsTemporalProcessing => false;
 
         #endregion
 
@@ -335,7 +330,7 @@ namespace DataQualityMonitoring
                 // Try to find the signal ID and add the measurement to the m_lastChange collection
                 if (DataSource.Tables.Contains("ActiveMeasurements"))
                 {
-                    DataRow[] measurementRows = DataSource.Tables["ActiveMeasurements"].Select(string.Format("ID = '{0}'", key.ToString()));
+                    DataRow[] measurementRows = DataSource.Tables["ActiveMeasurements"].Select($"ID = '{key}'");
 
                     if (measurementRows.Length > 0)
                     {
@@ -436,13 +431,13 @@ namespace DataQualityMonitoring
             foreach (IMeasurement measurement in flatlinedMeasurements)
             {
                 Ticks timeDiff = RealTime - measurement.Timestamp;
-                OnStatusMessage(string.Format("{0} flat-lined for {1} seconds.", measurement, (int)timeDiff.ToSeconds()));
+                OnStatusMessage(MessageLevel.Info, "FlatlineTest", $"{measurement} flat-lined for {(int)timeDiff.ToSeconds()} seconds.");
             }
         }
 
         private void m_flatlineService_ServiceProcessException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(e.Argument);
+            OnProcessException(MessageLevel.Warning, "FlatlineTest", e.Argument);
         }
 
         #endregion

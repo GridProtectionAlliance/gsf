@@ -33,6 +33,7 @@ using System.Linq;
 using System.Text;
 using GSF;
 using GSF.Collections;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Threading;
 using GSF.TimeSeries;
@@ -80,7 +81,7 @@ namespace EpriExport
         /// </summary>
         public FileExporter()
         {
-            m_fileExport = new LongSynchronizedOperation(WriteFileData, OnProcessException)
+            m_fileExport = new LongSynchronizedOperation(WriteFileData, ex => OnProcessException(MessageLevel.Error, "EpriFileExporter", ex))
             {
                 IsBackground = true
             };
@@ -249,7 +250,7 @@ namespace EpriExport
             SignalType signalType = InputMeasurementKeyTypes[InputMeasurementKeys.IndexOf(key => key == m_referenceAngleKey)];
 
             if (signalType != SignalType.IPHA && signalType != SignalType.VPHA)
-                throw new InvalidOperationException(string.Format("Specified reference angle measurement key is a {0} signal, not a phase angle.", signalType.GetFormattedName()));
+                throw new InvalidOperationException($"Specified reference angle measurement key is a {signalType.GetFormattedName()} signal, not a phase angle.");
 
             Comments = settings.TryGetValue("comments", out setting) ? setting : "Comment section---";
 
@@ -279,7 +280,7 @@ namespace EpriExport
             for (int i = 0; i < InputMeasurementKeys.Length; i++)
             {
                 // Lookup measurement key in active measurements table
-                DataRow row = measurements.Select(string.Format("ID='{0}'", InputMeasurementKeys[i]))[0];
+                DataRow row = measurements.Select($"ID='{InputMeasurementKeys[i]}'")[0];
                 string deviceName = row["Device"].ToNonNullString("UNDEFINED").ToUpper().Trim();
 
                 if (!referenceAdded && InputMeasurementKeys[i] == m_referenceAngleKey)
@@ -458,7 +459,7 @@ namespace EpriExport
                 catch (Exception ex)
                 {
                     m_skippedExports++;
-                    OnStatusMessage("WARNING: Skipped export due to exception: " + ex.Message);
+                    OnStatusMessage(MessageLevel.Warning, "EpriFileExporter", "WARNING: Skipped export due to exception: " + ex.Message);
                     displayedWarning = true;
                 }
 
@@ -468,7 +469,7 @@ namespace EpriExport
                     // Make sure message is only displayed once during the minute
                     if (!m_statusDisplayed)
                     {
-                        OnStatusMessage("{0} successful file based measurement exports...", m_totalExports);
+                        OnStatusMessage(MessageLevel.Info, "EpriFileExporter", "{0} successful file based measurement exports...", m_totalExports);
                         m_statusDisplayed = true;
                     }
                 }

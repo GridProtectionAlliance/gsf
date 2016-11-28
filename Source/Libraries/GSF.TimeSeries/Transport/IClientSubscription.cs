@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using GSF.Diagnostics;
 using GSF.TimeSeries.Adapters;
 
 namespace GSF.TimeSeries.Transport
@@ -153,14 +154,18 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Explicitly raises the <see cref="IAdapter.StatusMessage"/> event.
         /// </summary>
+        /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
+        /// <param name="eventName">A fixed string to classify this event.</param>
         /// <param name="status">New status message.</param>
-        void OnStatusMessage(string status);
+        void OnStatusMessage(MessageLevel level, string eventName, string status);
 
         /// <summary>
         /// Explicitly raises the <see cref="IAdapter.ProcessException"/> event.
         /// </summary>
+        /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
+        /// <param name="eventName">A fixed string to classify this event.</param>
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
-        void OnProcessException(Exception ex);
+        void OnProcessException(MessageLevel level, string eventName, Exception ex);
 
         /// <summary>
         /// Explicitly raises the <see cref="IInputAdapter.ProcessingComplete"/> event.
@@ -211,11 +216,12 @@ namespace GSF.TimeSeries.Transport
             EventHandler<EventArgs<string, UpdateType>> statusMessageHandler = (sender, e) =>
             {
                 if (e.Argument2 == UpdateType.Information)
-                    clientSubscription.OnStatusMessage(e.Argument1);
+                    clientSubscription.OnStatusMessage(MessageLevel.Info, "IClientSubscription", e.Argument1);
                 else
-                    clientSubscription.OnStatusMessage("0x" + (int)e.Argument2 + e.Argument1);
+                    clientSubscription.OnStatusMessage(MessageLevel.Warning, "IClientSubscription", "0x" + (int)e.Argument2 + e.Argument1);
             };
-            EventHandler<EventArgs<Exception>> processExceptionHandler = (sender, e) => clientSubscription.OnProcessException(e.Argument);
+
+            EventHandler<EventArgs<Exception>> processExceptionHandler = (sender, e) => clientSubscription.OnProcessException(MessageLevel.Warning, "IClientSubscription", e.Argument);
             EventHandler processingCompletedHandler = clientSubscription.OnProcessingCompleted;
 
             // Cache dynamic event handlers so they can be detached later
@@ -230,6 +236,7 @@ namespace GSF.TimeSeries.Transport
 
             // Send the first message indicating a new temporal session is being established
             statusMessageHandler(null, new EventArgs<string, UpdateType>(
+                // ReSharper disable once UseStringInterpolation
                 string.Format("Initializing temporal session for host \"{0}\" spanning {1} to {2} processing data {3}...",
                     clientSubscription.HostName.ToNonNullString("unknown"),
                     clientSubscription.StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"),

@@ -252,8 +252,14 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         protected bool EnableConnectionErrors
         {
-            get { return m_enableConnectionErrors; }
-            set { m_enableConnectionErrors = value; }
+            get
+            {
+                return m_enableConnectionErrors;
+            }
+            set
+            {
+                m_enableConnectionErrors = value;
+            }
         }
 
         #endregion

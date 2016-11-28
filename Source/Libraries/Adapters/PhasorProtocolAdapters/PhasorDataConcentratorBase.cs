@@ -50,6 +50,7 @@ using System.Timers;
 using GSF;
 using GSF.Collections;
 using GSF.Communication;
+using GSF.Diagnostics;
 using GSF.Parsing;
 using GSF.PhasorProtocols;
 using GSF.PhasorProtocols.Anonymous;
@@ -61,6 +62,8 @@ using GSF.Units;
 using GSF.Units.EE;
 using Timer = System.Timers.Timer;
 
+// ReSharper disable NonReadonlyMemberInGetHashCode
+// ReSharper disable AccessToModifiedClosure
 namespace PhasorProtocolAdapters
 {
     /// <summary>
@@ -233,13 +236,7 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets ID code defined for this <see cref="PhasorDataConcentratorBase"/> parsed from the <see cref="ActionAdapterBase.ConnectionString"/>.
         /// </summary>
-        public ushort IDCode
-        {
-            get
-            {
-                return m_idCode;
-            }
-        }
+        public ushort IDCode => m_idCode;
 
         /// <summary>
         /// Gets or sets flag that determines if configuration frame should be automatically published at the top
@@ -264,13 +261,7 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets the total number of active socket connections.
         /// </summary>
-        public long ActiveConnections
-        {
-            get
-            {
-                return m_activeConnections;
-            }
-        }
+        public long ActiveConnections => m_activeConnections;
 
         /// <summary>
         /// Gets or sets flag that determines if concentrator will automatically start data channel.
@@ -445,24 +436,12 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets the minimum latency in milliseconds over the last test interval.
         /// </summary>
-        public int MinimumLatency
-        {
-            get
-            {
-                return (int)Ticks.ToMilliseconds(m_minimumLatency);
-            }
-        }
+        public int MinimumLatency => (int)Ticks.ToMilliseconds(m_minimumLatency);
 
         /// <summary>
         /// Gets the maximum latency in milliseconds over the last test interval.
         /// </summary>
-        public int MaximumLatency
-        {
-            get
-            {
-                return (int)Ticks.ToMilliseconds(m_maximumLatency);
-            }
-        }
+        public int MaximumLatency => (int)Ticks.ToMilliseconds(m_maximumLatency);
 
         /// <summary>
         /// Gets the average latency in milliseconds over the last test interval.
@@ -519,13 +498,7 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets the protocol independent <see cref="GSF.PhasorProtocols.Anonymous.ConfigurationFrame"/> defined for this <see cref="PhasorDataConcentratorBase"/>.
         /// </summary>
-        public ConfigurationFrame BaseConfigurationFrame
-        {
-            get
-            {
-                return m_baseConfigurationFrame;
-            }
-        }
+        public ConfigurationFrame BaseConfigurationFrame => m_baseConfigurationFrame;
 
         /// <summary>
         /// Gets or sets reference to <see cref="UdpServer"/> data channel, attaching and/or detaching to events as needed.
@@ -623,7 +596,7 @@ namespace PhasorProtocolAdapters
                 base.DataSource = value;
 
                 if (Initialized)
-                    new Action(UpdateConfiguration).TryExecute(OnProcessException);
+                    new Action(UpdateConfiguration).TryExecute(ex => OnProcessException(MessageLevel.Info, "Concentrator", ex));
             }
         }
 
@@ -634,13 +607,7 @@ namespace PhasorProtocolAdapters
         /// Since the concentrator is designed to open sockets and produce data streams, it is expected
         /// that this would not be desired in a temporal data streaming session.
         /// </remarks>
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool SupportsTemporalProcessing => false;
 
         /// <summary>
         /// Returns the detailed status of this <see cref="PhasorDataConcentratorBase"/>.
@@ -749,46 +716,22 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets the total number of bytes sent to clients of this output stream.
         /// </summary>
-        public long TotalBytesSent
-        {
-            get
-            {
-                return m_totalBytesSent;
-            }
-        }
+        public long TotalBytesSent => m_totalBytesSent;
 
         /// <summary>
         /// Gets the total number of measurements processed through this output stream over the lifetime of the output stream.
         /// </summary>
-        public long LifetimeMeasurements
-        {
-            get
-            {
-                return m_lifetimeMeasurements;
-            }
-        }
+        public long LifetimeMeasurements => m_lifetimeMeasurements;
 
         /// <summary>
         /// Gets the minimum value of the measurements per second calculation.
         /// </summary>
-        public long MinimumMeasurementsPerSecond
-        {
-            get
-            {
-                return m_minimumMeasurementsPerSecond;
-            }
-        }
+        public long MinimumMeasurementsPerSecond => m_minimumMeasurementsPerSecond;
 
         /// <summary>
         /// Gets the maximum value of the measurements per second calculation.
         /// </summary>
-        public long MaximumMeasurementsPerSecond
-        {
-            get
-            {
-                return m_maximumMeasurementsPerSecond;
-            }
-        }
+        public long MaximumMeasurementsPerSecond => m_maximumMeasurementsPerSecond;
 
         /// <summary>
         /// Gets the average value of the measurements per second calculation.
@@ -807,24 +750,12 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets the minimum latency calculated over the full lifetime of the output stream.
         /// </summary>
-        public int LifetimeMinimumLatency
-        {
-            get
-            {
-                return (int)Ticks.ToMilliseconds(m_lifetimeMinimumLatency);
-            }
-        }
+        public int LifetimeMinimumLatency => (int)Ticks.ToMilliseconds(m_lifetimeMinimumLatency);
 
         /// <summary>
         /// Gets the maximum latency calculated over the full lifetime of the output stream.
         /// </summary>
-        public int LifetimeMaximumLatency
-        {
-            get
-            {
-                return (int)Ticks.ToMilliseconds(m_lifetimeMaximumLatency);
-            }
-        }
+        public int LifetimeMaximumLatency => (int)Ticks.ToMilliseconds(m_lifetimeMaximumLatency);
 
         /// <summary>
         /// Gets the average latency calculated over the full lifetime of the output stream.
@@ -951,7 +882,7 @@ namespace PhasorProtocolAdapters
                     }
                     catch (Exception ex)
                     {
-                        OnProcessException(new InvalidOperationException("Failed to start publication channel: " + ex.Message, ex));
+                        OnProcessException(MessageLevel.Warning, "Concentrator", new InvalidOperationException("Failed to start publication channel: " + ex.Message, ex));
                     }
                 }
 
@@ -1142,7 +1073,7 @@ namespace PhasorProtocolAdapters
             m_baseConfigurationFrame = new ConfigurationFrame(m_idCode, DateTime.UtcNow.Ticks, (ushort)base.FramesPerSecond);
 
             // Define configuration cells (i.e., PMU's that will appear in outgoing data stream)
-            foreach (DataRow deviceRow in DataSource.Tables["OutputStreamDevices"].Select(string.Format("ParentID={0}", ID), "LoadOrder"))
+            foreach (DataRow deviceRow in DataSource.Tables["OutputStreamDevices"].Select($"ParentID={ID}", "LoadOrder"))
             {
                 try
                 {
@@ -1180,7 +1111,7 @@ namespace PhasorProtocolAdapters
                     cell.StationName = label;
 
                     // Define all the phasors configured for this device
-                    foreach (DataRow phasorRow in DataSource.Tables["OutputStreamDevicePhasors"].Select(string.Format("OutputStreamDeviceID={0}", deviceID), "LoadOrder"))
+                    foreach (DataRow phasorRow in DataSource.Tables["OutputStreamDevicePhasors"].Select($"OutputStreamDeviceID={deviceID}", "LoadOrder"))
                     {
                         order = int.Parse(phasorRow["LoadOrder"].ToNonNullString("0"));
                         label = phasorRow["Label"].ToNonNullString("Phasor " + order).Trim().TruncateRight(LabelLength);
@@ -1208,13 +1139,13 @@ namespace PhasorProtocolAdapters
                     }
 
                     // Add frequency definition
-                    label = string.Format("{0} Freq", cell.IDLabel.TruncateRight(LabelLength - 5)).Trim();
+                    label = $"{cell.IDLabel.TruncateRight(LabelLength - 5)} Freq".Trim();
                     cell.FrequencyDefinition = new FrequencyDefinition(cell, label);
 
                     // Optionally define all the analogs configured for this device
                     if (DataSource.Tables.Contains("OutputStreamDeviceAnalogs"))
                     {
-                        foreach (DataRow analogRow in DataSource.Tables["OutputStreamDeviceAnalogs"].Select(string.Format("OutputStreamDeviceID={0}", deviceID), "LoadOrder"))
+                        foreach (DataRow analogRow in DataSource.Tables["OutputStreamDeviceAnalogs"].Select($"OutputStreamDeviceID={deviceID}", "LoadOrder"))
                         {
                             order = int.Parse(analogRow["LoadOrder"].ToNonNullString("0"));
                             label = analogRow["Label"].ToNonNullString("Analog " + order).Trim().TruncateRight(LabelLength);
@@ -1239,7 +1170,7 @@ namespace PhasorProtocolAdapters
                     // Optionally define all the digitals configured for this device
                     if (DataSource.Tables.Contains("OutputStreamDeviceDigitals"))
                     {
-                        foreach (DataRow digitalRow in DataSource.Tables["OutputStreamDeviceDigitals"].Select(string.Format("OutputStreamDeviceID={0}", deviceID), "LoadOrder"))
+                        foreach (DataRow digitalRow in DataSource.Tables["OutputStreamDeviceDigitals"].Select($"OutputStreamDeviceID={deviceID}", "LoadOrder"))
                         {
                             order = int.Parse(digitalRow["LoadOrder"].ToNonNullString("0"));
                             scale = digitalRow["MaskValue"].ToNonNullString("0");
@@ -1265,11 +1196,11 @@ namespace PhasorProtocolAdapters
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException(string.Format("Failed to define output stream device \"{0}\" due to exception: {1}", deviceRow["Acronym"].ToString().Trim(), ex.Message), ex));
+                    OnProcessException(MessageLevel.Warning, "Concentrator", new InvalidOperationException($"Failed to define output stream device \"{deviceRow["Acronym"].ToString().Trim()}\" due to exception: {ex.Message}", ex));
                 }
             }
 
-            OnStatusMessage("Defined {0} output stream devices...", m_baseConfigurationFrame.Cells.Count);
+            OnStatusMessage(MessageLevel.Info, "Concentrator", "Defined {0} output stream devices...", m_baseConfigurationFrame.Cells.Count);
 
             // Create new lookup table for signal references
             Dictionary<MeasurementKey, SignalReference[]> signalReferences = new Dictionary<MeasurementKey, SignalReference[]>();
@@ -1282,7 +1213,7 @@ namespace PhasorProtocolAdapters
             bool isQualityFlagsMeasurement;
 
             IEnumerable<DataRow> measurementRows = DataSource.Tables["OutputStreamMeasurements"]
-                .Select(string.Format("AdapterID={0}", ID))
+                .Select($"AdapterID={ID}")
                 .Select(row => new { Row = row, SigRef = new SignalReference(row["SignalReference"].ToString()) })
                 .OrderBy(obj => obj.SigRef.Acronym)
                 .ThenBy(obj => obj.SigRef.Kind)
@@ -1312,7 +1243,7 @@ namespace PhasorProtocolAdapters
                         }
                         else
                         {
-                            throw new Exception(string.Format("Unexpected quality flags measurement assignment to \"{0}\". A single quality flags measurement can be assigned to output stream \"{1}\".", signal.Acronym, Name));
+                            throw new Exception($"Unexpected quality flags measurement assignment to \"{signal.Acronym}\". A single quality flags measurement can be assigned to output stream \"{Name}\".");
                         }
                     }
                     else
@@ -1349,7 +1280,7 @@ namespace PhasorProtocolAdapters
 
                             // OPTIMIZE: This select query will be slow on very large ActiveMeasurement implementations, consider optimization.
                             if ((object)activeMeasurements != null)
-                                activeMeasurementRows = activeMeasurements.Select(string.Format("ID LIKE '*:{0}'", pointID));
+                                activeMeasurementRows = activeMeasurements.Select($"ID LIKE '*:{pointID}'");
 
                             if (activeMeasurementRows.Length == 1)
                             {
@@ -1359,7 +1290,7 @@ namespace PhasorProtocolAdapters
 
                             // If we still can't find the measurement key, now is the time to give up
                             if ((object)activeMeasurementSignalID == null && (object)activeMeasurementID == null)
-                                throw new Exception(string.Format("Cannot find measurement key for measurement with pointID {0}", pointID));
+                                throw new Exception($"Cannot find measurement key for measurement with pointID {pointID}");
 
                             measurementKey = MeasurementKey.LookUpOrCreate(Guid.Parse(activeMeasurementRows[0]["SignalID"].ToString()), activeMeasurementID.ToString());
                         }
@@ -1378,11 +1309,7 @@ namespace PhasorProtocolAdapters
 
                         // It is possible, but not as common, that a single measurement will have multiple destinations
                         // within an outgoing data stream frame, hence the following
-                        signalReferences.AddOrUpdate(measurementKey, key =>
-                        {
-                            // Add new signal to new collection
-                            return new SignalReference[] { signal };
-                        }, (key, signals) =>
+                        signalReferences.AddOrUpdate(measurementKey, key => new[] { signal }, (key, signals) =>
                         {
                             // Add a new signal to existing collection
                             Array.Resize(ref signals, signals.Length + 1);
@@ -1393,7 +1320,7 @@ namespace PhasorProtocolAdapters
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException(string.Format("Failed to associate measurement key to signal reference \"{0}\" due to exception: {1}", measurementRow["SignalReference"].ToNonNullString(), ex.Message), ex));
+                    OnProcessException(MessageLevel.Warning, "Concentrator", new InvalidOperationException($"Failed to associate measurement key to signal reference \"{measurementRow["SignalReference"].ToNonNullString()}\" due to exception: {ex.Message}", ex));
                 }
             }
 
@@ -1405,12 +1332,10 @@ namespace PhasorProtocolAdapters
             InputMeasurementKeys = signalReferences.Keys.ToArray();
 
             // Allow for spaces in output stream device names if a replacement character has been defined for spaces
-            if (m_replaceWithSpaceChar != Char.MinValue)
+            if (m_replaceWithSpaceChar != char.MinValue)
             {
                 foreach (IConfigurationCell cell in m_baseConfigurationFrame.Cells)
-                {
                     cell.StationName = cell.StationName.Replace(m_replaceWithSpaceChar, ' ');
-                }
             }
 
             // Create a new protocol specific configuration frame
@@ -1529,9 +1454,7 @@ namespace PhasorProtocolAdapters
                     // the case where there can be more than one destination for a measurement within
                     // an outgoing phasor data frame
                     foreach (SignalReference signal in signals)
-                    {
                         inputMeasurements.Add(new SignalReferenceMeasurement(measurement, signal));
-                    }
                 }
             }
 
@@ -1628,10 +1551,10 @@ namespace PhasorProtocolAdapters
 
             // This is not expected to occur - but just in case
             if ((object)signalMeasurement == null && (object)measurement != null)
-                OnProcessException(new InvalidCastException(string.Format("Attempt was made to assign an invalid measurement to phasor data concentration frame, expected a \"SignalReferenceMeasurement\" but received a \"{0}\"", measurement.GetType().Name)));
+                OnProcessException(MessageLevel.Error, "Concentrator", new InvalidCastException($"Attempt was made to assign an invalid measurement to phasor data concentration frame, expected a \"SignalReferenceMeasurement\" but received a \"{measurement.GetType().Name}\""));
 
             if ((object)dataFrame == null)
-                OnProcessException(new InvalidCastException(string.Format("During measurement assignment, incoming frame was not a phasor data concentration frame, expected a type derived from \"IDataFrame\" but received a \"{0}\"", frame.GetType().Name)));
+                OnProcessException(MessageLevel.Error, "Concentrator", new InvalidCastException($"During measurement assignment, incoming frame was not a phasor data concentration frame, expected a type derived from \"IDataFrame\" but received a \"{frame.GetType().Name}\""));
         }
 
         /// <summary>
@@ -1771,7 +1694,7 @@ namespace PhasorProtocolAdapters
                 catch (Exception ex)
                 {
                     retry = true;
-                    OnProcessException(new InvalidOperationException(string.Format("Failed to reinitialize socket layer: {0}", ex.Message), ex));
+                    OnProcessException(MessageLevel.Warning, "Concentrator", new InvalidOperationException($"Failed to reinitialize socket layer: {ex.Message}", ex));
                 }
                 finally
                 {
@@ -1866,7 +1789,7 @@ namespace PhasorProtocolAdapters
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException("Failed to lookup remote end-point connection information for client data transmission due to exception: " + ex.Message, ex));
+                    OnProcessException(MessageLevel.Info, "Concentrator", new InvalidOperationException("Failed to lookup remote end-point connection information for client data transmission due to exception: " + ex.Message, ex));
                 }
 
                 if (string.IsNullOrEmpty(connectionID))
@@ -1899,7 +1822,7 @@ namespace PhasorProtocolAdapters
         /// <returns>A new protocol specific <see cref="IConfigurationFrame"/>.</returns>
         /// <remarks>
         /// Derived classes should notify consumers of change in configuration if system is active when
-        /// new configuration frame is created if outgoing protocol allows such a notfication.
+        /// new configuration frame is created if outgoing protocol allows such a notification.
         /// </remarks>
         protected abstract IConfigurationFrame CreateNewConfigurationFrame(ConfigurationFrame baseConfigurationFrame);
 
@@ -1916,17 +1839,17 @@ namespace PhasorProtocolAdapters
         protected void CacheConfigurationFrame(IConfigurationFrame configurationFrame, string name)
         {
             // Cache configuration frame for reference
-            OnStatusMessage("Caching configuration frame...");
+            OnStatusMessage(MessageLevel.Info, "Concentrator", "Caching configuration frame...");
 
             try
             {
                 // Cache configuration on an independent thread in case this takes some time
-                GSF.PhasorProtocols.Anonymous.ConfigurationFrame.Cache(configurationFrame, OnProcessException, name);
+                GSF.PhasorProtocols.Anonymous.ConfigurationFrame.Cache(configurationFrame, ex => OnProcessException(MessageLevel.Info, "Concentrator", ex), name);
             }
             catch (Exception ex)
             {
                 // Process exception for logging
-                OnProcessException(new InvalidOperationException("Failed to queue caching of config frame due to exception: " + ex.Message, ex));
+                OnProcessException(MessageLevel.Info, "Concentrator", new InvalidOperationException("Failed to queue caching of config frame due to exception: " + ex.Message, ex));
             }
         }
 
@@ -1979,7 +1902,7 @@ namespace PhasorProtocolAdapters
         private void m_dataChannel_ClientConnectingException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
-            OnProcessException(new InvalidOperationException(string.Format("Exception occurred while client attempting to connect to data channel: {0}", ex.Message), ex));
+            OnProcessException(MessageLevel.Info, "Concentrator", new InvalidOperationException($"Exception occurred while client attempting to connect to data channel: {ex.Message}", ex));
         }
 
         private void m_dataChannel_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
@@ -1998,12 +1921,12 @@ namespace PhasorProtocolAdapters
             if (ex is SocketException)
             {
                 // Restart connection if a socket exception occurs
-                OnProcessException(new InvalidOperationException(string.Format("Socket exception occurred on the data channel while attempting to send client data to \"{0}\": {1}", GetConnectionID(m_dataChannel, e.Argument1), ex.Message), ex));
+                OnProcessException(MessageLevel.Info, "Concentrator", new InvalidOperationException($"Socket exception occurred on the data channel while attempting to send client data to \"{GetConnectionID(m_dataChannel, e.Argument1)}\": {ex.Message}", ex));
                 ThreadPool.QueueUserWorkItem(ReinitializeSocketLayer);
             }
             else
             {
-                OnProcessException(new InvalidOperationException(string.Format("Data channel exception occurred while sending client data to \"{0}\": {1}", GetConnectionID(m_dataChannel, e.Argument1), ex.Message), ex));
+                OnProcessException(MessageLevel.Info, "Concentrator", new InvalidOperationException($"Data channel exception occurred while sending client data to \"{GetConnectionID(m_dataChannel, e.Argument1)}\": {ex.Message}", ex));
             }
         }
 
@@ -2014,13 +1937,13 @@ namespace PhasorProtocolAdapters
                 base.Start();
 
             m_activeConnections++;
-            OnStatusMessage("Data channel started.");
+            OnStatusMessage(MessageLevel.Info, "Concentrator", "Data channel started.");
         }
 
         private void m_dataChannel_ServerStopped(object sender, EventArgs e)
         {
             m_activeConnections--;
-            OnStatusMessage("Data channel stopped.");
+            OnStatusMessage(MessageLevel.Info, "Concentrator", "Data channel stopped.");
         }
 
         #endregion
@@ -2029,7 +1952,7 @@ namespace PhasorProtocolAdapters
 
         private void m_commandChannel_ClientConnected(object sender, EventArgs<Guid> e)
         {
-            OnStatusMessage("Client \"{0}\" connected to command channel.", GetConnectionID(m_commandChannel, e.Argument));
+            OnStatusMessage(MessageLevel.Info, "Concentrator", "Client \"{0}\" connected to command channel.", GetConnectionID(m_commandChannel, e.Argument));
         }
 
         private void m_commandChannel_ClientDisconnected(object sender, EventArgs<Guid> e)
@@ -2037,7 +1960,7 @@ namespace PhasorProtocolAdapters
             Guid clientID = e.Argument;
             string connectionID;
 
-            OnStatusMessage("Client \"{0}\" disconnected from command channel.", GetConnectionID(m_commandChannel, clientID));
+            OnStatusMessage(MessageLevel.Info, "Concentrator", "Client \"{0}\" disconnected from command channel.", GetConnectionID(m_commandChannel, clientID));
 
             m_connectionIDCache.TryRemove(clientID, out connectionID);
         }
@@ -2045,7 +1968,7 @@ namespace PhasorProtocolAdapters
         private void m_commandChannel_ClientConnectingException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
-            OnProcessException(new InvalidOperationException(string.Format("Socket exception occurred while client attempting to connect to command channel: {0}", ex.Message), ex));
+            OnProcessException(MessageLevel.Info, "Concentrator", new InvalidOperationException($"Socket exception occurred while client attempting to connect to command channel: {ex.Message}", ex));
         }
 
         private void m_commandChannel_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
@@ -2063,18 +1986,18 @@ namespace PhasorProtocolAdapters
             if (ex is SocketException)
             {
                 // Restart connection if a socket exception occurs
-                OnProcessException(new InvalidOperationException(string.Format("Socket exception occurred on the command channel while attempting to send client data to \"{0}\": {1}", GetConnectionID(m_dataChannel, e.Argument1), ex.Message), ex));
+                OnProcessException(MessageLevel.Info, "Concentrator", new InvalidOperationException($"Socket exception occurred on the command channel while attempting to send client data to \"{GetConnectionID(m_dataChannel, e.Argument1)}\": {ex.Message}", ex));
                 ThreadPool.QueueUserWorkItem(ReinitializeSocketLayer);
             }
             else
             {
-                OnProcessException(new InvalidOperationException(string.Format("Command channel exception occurred while sending client data to \"{0}\": {1}", GetConnectionID(m_commandChannel, e.Argument1), ex.Message), ex));
+                OnProcessException(MessageLevel.Info, "Concentrator", new InvalidOperationException($"Command channel exception occurred while sending client data to \"{GetConnectionID(m_commandChannel, e.Argument1)}\": {ex.Message}", ex));
             }
         }
 
         private void m_commandChannel_ServerStarted(object sender, EventArgs e)
         {
-            OnStatusMessage("Command channel started.");
+            OnStatusMessage(MessageLevel.Info, "Concentrator", "Command channel started.");
             m_activeConnections++;
         }
 
@@ -2084,14 +2007,14 @@ namespace PhasorProtocolAdapters
 
             if (Enabled)
             {
-                OnStatusMessage("Command channel was unexpectedly terminated, restarting...");
+                OnStatusMessage(MessageLevel.Info, "Concentrator", "Command channel was unexpectedly terminated, restarting...");
 
                 // We must wait for command channel to completely shutdown before trying to restart...
                 if ((object)m_commandChannelRestartTimer != null)
                     m_commandChannelRestartTimer.Start();
             }
             else
-                OnStatusMessage("Command channel stopped.");
+                OnStatusMessage(MessageLevel.Info, "Concentrator", "Command channel stopped.");
         }
 
         private void m_commandChannelRestartTimer_Elapsed(object sender, ElapsedEventArgs e)
@@ -2105,7 +2028,7 @@ namespace PhasorProtocolAdapters
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException("Failed to restart command channel: " + ex.Message, ex));
+                    OnProcessException(MessageLevel.Info, "Concentrator", new InvalidOperationException("Failed to restart command channel: " + ex.Message, ex));
                 }
             }
         }

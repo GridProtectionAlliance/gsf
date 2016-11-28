@@ -274,9 +274,7 @@ namespace GSF.Parsing
                 else
                 {
                     m_bufferQueue.Enqueue(new[] { identifiableBuffer });
-                }
-                
-
+                }                
             }
         }
 

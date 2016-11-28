@@ -58,6 +58,8 @@ using Random = GSF.Security.Cryptography.Random;
 using TcpClient = GSF.Communication.TcpClient;
 using UdpClient = GSF.Communication.UdpClient;
 
+#pragma warning disable 672
+
 namespace GSF.TimeSeries.Transport
 {
     /// <summary>
@@ -4528,7 +4530,8 @@ namespace GSF.TimeSeries.Transport
         {
             base.OnProcessException(ex);
 
-            using (Logger.OverrideSuppressLogMessages()) //Just in case Log Message Suppression was turned on, turn it off so this code can raise messages.
+            // Just in case Log Message Suppression was turned on, turn it off so this code can raise messages
+            using (Logger.OverrideSuppressLogMessages())
             {
                 if (DateTime.UtcNow.Ticks - m_lastParsingExceptionTime > m_parsingExceptionWindow)
                 {

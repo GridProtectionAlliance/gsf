@@ -221,13 +221,7 @@ namespace PhasorProtocolAdapters
         /// Gets flag that determines if device being mapped is a concentrator (i.e., data from multiple
         /// devices combined together from the connected device).
         /// </summary>
-        public bool IsConcentrator
-        {
-            get
-            {
-                return m_isConcentrator;
-            }
-        }
+        public bool IsConcentrator => m_isConcentrator;
 
         /// <summary>
         /// Gets or sets access ID (or ID code) for this device connection which is often necessary in order to make a connection to some phasor protocols.
@@ -258,13 +252,7 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets an enumeration of all defined system devices (regardless of ID or label based definition)
         /// </summary>
-        public IEnumerable<ConfigurationCell> DefinedDevices
-        {
-            get
-            {
-                return StatisticsHelpers.Select(statisticsHelper => statisticsHelper.Device);
-            }
-        }
+        public IEnumerable<ConfigurationCell> DefinedDevices => StatisticsHelpers.Select(statisticsHelper => statisticsHelper.Device);
 
         /// <summary>
         /// Gets or sets flag that determines if use of cached configuration during initial connection is allowed when a configuration has not been received within the data loss interval.
@@ -284,13 +272,7 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets the configuration cache file name, with path.
         /// </summary>
-        public string ConfigurationCacheFileName
-        {
-            get
-            {
-                return ConfigurationFrame.GetConfigurationCacheFileName(Name);
-            }
-        }
+        public string ConfigurationCacheFileName => ConfigurationFrame.GetConfigurationCacheFileName(Name);
 
         /// <summary>
         /// Gets or sets time zone of this <see cref="PhasorMeasurementMapper"/>.
@@ -404,35 +386,17 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets the total number frames that came in out of order from the current mapper connection.
         /// </summary>
-        public long OutOfOrderFrames
-        {
-            get
-            {
-                return m_outOfOrderFrames;
-            }
-        }
+        public long OutOfOrderFrames => m_outOfOrderFrames;
 
         /// <summary>
         /// Gets the minimum latency in milliseconds over the last test interval.
         /// </summary>
-        public int MinimumLatency
-        {
-            get
-            {
-                return (int)Ticks.ToMilliseconds(m_minimumLatency);
-            }
-        }
+        public int MinimumLatency => (int)Ticks.ToMilliseconds(m_minimumLatency);
 
         /// <summary>
         /// Gets the maximum latency in milliseconds over the last test interval.
         /// </summary>
-        public int MaximumLatency
-        {
-            get
-            {
-                return (int)Ticks.ToMilliseconds(m_maximumLatency);
-            }
-        }
+        public int MaximumLatency => (int)Ticks.ToMilliseconds(m_maximumLatency);
 
         /// <summary>
         /// Gets the average latency in milliseconds over the last test interval.
@@ -451,57 +415,27 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets the total number of connection attempts.
         /// </summary>
-        public long ConnectionAttempts
-        {
-            get
-            {
-                return m_connectionAttempts;
-            }
-        }
+        public long ConnectionAttempts => m_connectionAttempts;
 
         /// <summary>
         /// Gets the total number of received configurations.
         /// </summary>
-        public long ConfigurationChanges
-        {
-            get
-            {
-                return m_configurationChanges;
-            }
-        }
+        public long ConfigurationChanges => m_configurationChanges;
 
         /// <summary>
         /// Gets the total number of received data frames.
         /// </summary>
-        public long TotalDataFrames
-        {
-            get
-            {
-                return m_totalDataFrames;
-            }
-        }
+        public long TotalDataFrames => m_totalDataFrames;
 
         /// <summary>
         /// Gets the total number of received configuration frames.
         /// </summary>
-        public long TotalConfigurationFrames
-        {
-            get
-            {
-                return m_totalConfigurationFrames;
-            }
-        }
+        public long TotalConfigurationFrames => m_totalConfigurationFrames;
 
         /// <summary>
         /// Gets the total number of received header frames.
         /// </summary>
-        public long TotalHeaderFrames
-        {
-            get
-            {
-                return m_totalHeaderFrames;
-            }
-        }
+        public long TotalHeaderFrames => m_totalHeaderFrames;
 
         /// <summary>
         /// Gets the defined frame rate.
@@ -580,8 +514,7 @@ namespace PhasorProtocolAdapters
                     }
                     catch (Exception ex)
                     {
-                        OnProcessException(MessageLevel.Warning, "PhasorMeasurementMapper", new InvalidOperationException(
-                            $"Failed to find input adapter ID for shared mapping \"{m_sharedMapping}\" due to exception: {ex.Message} Mapping was not assigned.", ex));
+                        OnProcessException(MessageLevel.Warning, "PhasorMeasurementMapper", new InvalidOperationException($"Failed to find input adapter ID for shared mapping \"{m_sharedMapping}\" due to exception: {ex.Message} Mapping was not assigned.", ex));
                         m_sharedMapping = null;
                     }
                 }
@@ -605,14 +538,7 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets flag that determines if the data input connects asynchronously.
         /// </summary>
-        protected override bool UseAsyncConnect
-        {
-            get
-            {
-                // We use asynchronous connection on devices
-                return true;
-            }
-        }
+        protected override bool UseAsyncConnect => true;
 
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
@@ -621,13 +547,7 @@ namespace PhasorProtocolAdapters
         /// Since the phasor measurement mapper is designed to open sockets and connect to data streams,
         /// it is expected that this would not be desired in a temporal data streaming session.
         /// </remarks>
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool SupportsTemporalProcessing => false;
 
         /// <summary>
         /// Returns the detailed status of the data input source.
@@ -814,35 +734,17 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets the total number of measurements processed through this data publisher over the lifetime of the input stream.
         /// </summary>
-        public long LifetimeMeasurements
-        {
-            get
-            {
-                return m_lifetimeMeasurements;
-            }
-        }
+        public long LifetimeMeasurements => m_lifetimeMeasurements;
 
         /// <summary>
         /// Gets the minimum value of the measurements per second calculation.
         /// </summary>
-        public long MinimumMeasurementsPerSecond
-        {
-            get
-            {
-                return m_minimumMeasurementsPerSecond;
-            }
-        }
+        public long MinimumMeasurementsPerSecond => m_minimumMeasurementsPerSecond;
 
         /// <summary>
         /// Gets the maximum value of the measurements per second calculation.
         /// </summary>
-        public long MaximumMeasurementsPerSecond
-        {
-            get
-            {
-                return m_maximumMeasurementsPerSecond;
-            }
-        }
+        public long MaximumMeasurementsPerSecond => m_maximumMeasurementsPerSecond;
 
         /// <summary>
         /// Gets the average value of the measurements per second calculation.
@@ -861,24 +763,12 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets the minimum latency calculated over the full lifetime of the input stream.
         /// </summary>
-        public int LifetimeMinimumLatency
-        {
-            get
-            {
-                return (int)Ticks.ToMilliseconds(m_lifetimeMinimumLatency);
-            }
-        }
+        public int LifetimeMinimumLatency => (int)Ticks.ToMilliseconds(m_lifetimeMinimumLatency);
 
         /// <summary>
         /// Gets the maximum latency calculated over the full lifetime of the input stream.
         /// </summary>
-        public int LifetimeMaximumLatency
-        {
-            get
-            {
-                return (int)Ticks.ToMilliseconds(m_lifetimeMaximumLatency);
-            }
-        }
+        public int LifetimeMaximumLatency => (int)Ticks.ToMilliseconds(m_lifetimeMaximumLatency);
 
         /// <summary>
         /// Gets the average latency calculated over the full lifetime of the input stream.
@@ -898,12 +788,18 @@ namespace PhasorProtocolAdapters
         /// When false, this adapter will not log any connection errors through OnProcessException. When true, all errors get logged.
         /// </summary>
         [ConnectionStringParameter,
-         Description("Enable to allow this adapter to log connection errors. Disable to ignore connection errors."),
+        Description("Enable to allow this adapter to log connection errors. Disable to ignore connection errors."),
         DefaultValue(true)]
         public new bool EnableConnectionErrors
         {
-            get { return base.EnableConnectionErrors; }
-            set { base.EnableConnectionErrors = value; }
+            get
+            {
+                return base.EnableConnectionErrors;
+            }
+            set
+            {
+                base.EnableConnectionErrors = value;
+            }
         }
 
         #endregion
@@ -1354,7 +1250,7 @@ namespace PhasorProtocolAdapters
                     }
                     catch (Exception ex)
                     {
-                        OnProcessException(MessageLevel.Info, "PhasorMeasurementMapper", new InvalidOperationException($"Failed to load signal reference \"{signalReference}\" due to exception: {ex.Message}", ex));
+                        OnProcessException(MessageLevel.Warning, "PhasorMeasurementMapper", new InvalidOperationException($"Failed to load signal reference \"{signalReference}\" due to exception: {ex.Message}", ex));
                     }
                 }
             }
@@ -1575,7 +1471,7 @@ namespace PhasorProtocolAdapters
                         try
                         {
                             // Cache this configuration frame since its being loaded as the new last known good configuration
-                            ConfigurationFrame.Cache(configFrame, OnProcessException, Name);
+                            ConfigurationFrame.Cache(configFrame, ex => OnProcessException(MessageLevel.Info, "PhasorMeasurementMapper", ex), Name);
                         }
                         catch (Exception ex)
                         {
@@ -1595,7 +1491,7 @@ namespace PhasorProtocolAdapters
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(MessageLevel.Info, "PhasorMeasurementMapper", new InvalidOperationException($"Failed to load configuration \"{configurationFileName}\": {ex.Message}", ex));
+                    OnProcessException(MessageLevel.Warning, "PhasorMeasurementMapper", new InvalidOperationException($"Failed to load configuration \"{configurationFileName}\": {ex.Message}", ex));
                 }
             }
         }
@@ -1847,21 +1743,17 @@ namespace PhasorProtocolAdapters
                         analogs = parsedDevice.AnalogValues;
                         count = analogs.Count;
 
+                        // Map analog values
                         for (x = 0; x < count; x++)
-                        {
-                            // Map analog value
                             MapMeasurementAttributes(deviceMappedMeasurements, definedDevice.GetMetadata(m_definedMeasurements, SignalKind.Analog, x, count), analogs[x].Measurements[0]);
-                        }
 
                         // Map digital values (DVn)
                         digitals = parsedDevice.DigitalValues;
                         count = digitals.Count;
 
+                        // Map digital values
                         for (x = 0; x < count; x++)
-                        {
-                            // Map digital value
                             MapMeasurementAttributes(deviceMappedMeasurements, definedDevice.GetMetadata(m_definedMeasurements, SignalKind.Digital, x, count), digitals[x].Measurements[0]);
-                        }
 
                         // Track measurement count statistics for this device
                         if (m_countOnlyMappedMeasurements)
@@ -2170,7 +2062,7 @@ namespace PhasorProtocolAdapters
                     try
                     {
                         // Cache configuration on an independent thread in case this takes some time
-                        ConfigurationFrame.Cache(e.Argument, OnProcessException, Name);
+                        ConfigurationFrame.Cache(e.Argument, ex => OnProcessException(MessageLevel.Info, "PhasorMeasurementMapper", ex), Name);
                     }
                     catch (Exception ex)
                     {
@@ -2223,10 +2115,9 @@ namespace PhasorProtocolAdapters
         private void m_frameParser_ConnectionException(object sender, EventArgs<Exception, int> e)
         {
             Exception ex = e.Argument1;
+
             if (EnableConnectionErrors)
-            {
                 OnProcessException(MessageLevel.Info, "PhasorMeasurementMapper", new InvalidOperationException($"Connection attempt failed: {ex.Message}", ex));
-            }
 
             // So long as user hasn't requested to stop, keep trying connection
             if (Enabled)
@@ -2241,9 +2132,7 @@ namespace PhasorProtocolAdapters
         private void m_frameParser_ExceededParsingExceptionThreshold(object sender, EventArgs e)
         {
             if (EnableConnectionErrors)
-            {
                 OnStatusMessage(MessageLevel.Info, "PhasorMeasurementMapper", "\r\nConnection is being reset due to an excessive number of exceptions...\r\n");
-            }
 
             // So long as user hasn't already requested to stop, we restart connection
             if (Enabled)
@@ -2372,7 +2261,5 @@ namespace PhasorProtocolAdapters
         }
 
         #endregion
-
-
     }
 }

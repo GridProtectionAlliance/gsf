@@ -31,6 +31,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using GSF;
+using GSF.Diagnostics;
 using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -486,7 +487,7 @@ namespace InfluxDBAdapters
 
                 if (!ignoreError)
                 {
-                    OnProcessException(ex);
+                    OnProcessException(MessageLevel.Warning, "InfluxDBOutputAdapter", ex);
 
                     // So long as user hasn't requested to stop, restart connection cycle when exceptions occur
                     m_requestRestart.RunOnceAsync();

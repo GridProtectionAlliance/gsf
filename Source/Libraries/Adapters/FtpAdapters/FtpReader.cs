@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Threading;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Net.Ftp;
 using GSF.TimeSeries.Adapters;
@@ -182,13 +183,7 @@ namespace FtpAdapters
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool SupportsTemporalProcessing => false;
 
         #endregion
 
@@ -228,7 +223,7 @@ namespace FtpAdapters
         /// <returns>A short one-line summary of the current status of this <see cref="FtpReader"/>.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            return string.Format("Downloads the FTP file \"{0}\"", Path.Combine(m_remotePath, m_remoteFileName));
+            return $"Downloads the FTP file \"{Path.Combine(m_remotePath, m_remoteFileName)}\"";
         }
 
         /// <summary>
@@ -278,11 +273,11 @@ namespace FtpAdapters
                 m_client.SetCurrentDirectory(m_remotePath);
                 m_client.CurrentDirectory.GetFile(Path.Combine(m_localPath, m_localFileName), m_remoteFileName);
                 m_client.Close();
-                OnStatusMessage("FTP file \"{0}\" downloaded to \"{1}\" from {2}", Path.Combine(m_remotePath, m_remoteFileName), Path.Combine(m_localPath, m_localFileName), m_host);
+                OnStatusMessage(MessageLevel.Info, "FtpReader", "FTP file \"{0}\" downloaded to \"{1}\" from {2}", Path.Combine(m_remotePath, m_remoteFileName), Path.Combine(m_localPath, m_localFileName), m_host);
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Failed to read FTP file: {0}", ex.Message), ex));
+                OnProcessException(MessageLevel.Warning, "FtpReader", new InvalidOperationException($"Failed to read FTP file: {ex.Message}", ex));
             }
         }
 

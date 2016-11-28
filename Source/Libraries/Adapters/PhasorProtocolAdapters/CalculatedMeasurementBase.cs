@@ -34,6 +34,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using GSF;
+using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.Units.EE;
@@ -116,24 +117,12 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets or sets input measurement <see cref="SignalType"/>'s for each of the <see cref="ActionAdapterBase.InputMeasurementKeys"/>, if any.
         /// </summary>
-        public virtual SignalType[] InputMeasurementKeyTypes
-        {
-            get
-            {
-                return m_inputMeasurementKeyTypes;
-            }
-        }
+        public virtual SignalType[] InputMeasurementKeyTypes => m_inputMeasurementKeyTypes;
 
         /// <summary>
         /// Gets or sets output measurement <see cref="SignalType"/>'s for each of the <see cref="ActionAdapterBase.OutputMeasurements"/>, if any.
         /// </summary>
-        public virtual SignalType[] OutputMeasurementTypes
-        {
-            get
-            {
-                return m_outputMeasurementTypes;
-            }
-        }
+        public virtual SignalType[] OutputMeasurementTypes => m_outputMeasurementTypes;
 
         /// <summary>
         /// Gets or sets the configuration section to use for this <see cref="CalculatedMeasurementBase"/>.
@@ -153,13 +142,7 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return m_supportsTemporalProcessing;
-            }
-        }
+        public override bool SupportsTemporalProcessing => m_supportsTemporalProcessing;
 
         /// <summary>
         /// Returns the detailed status of the calculated measurement.
@@ -250,14 +233,14 @@ namespace PhasorProtocolAdapters
         {
             try
             {
-                DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select(string.Format("ID = '{0}'", key));
+                DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select($"ID = '{key}'");
 
                 if (filteredRows.Length > 0)
                     return (SignalType)Enum.Parse(typeof(SignalType), filteredRows[0]["SignalType"].ToString(), true);
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Failed to lookup signal type for measurement {0}: {1}", key, ex.Message), ex));
+                OnProcessException(MessageLevel.Info, "CalculatedMeasurementBase", new InvalidOperationException($"Failed to lookup signal type for measurement {key}: {ex.Message}", ex));
             }
 
             return SignalType.NONE;

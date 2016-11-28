@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
 using GSF.Collections;
+using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.Units;
@@ -353,7 +354,7 @@ namespace PowerCalculations.EventDetection
 
         private void OutputLOFWarning(double realPower, double reactivePower, double qAreamVar)
         {
-            OnStatusMessage("WARNING: Loss of Field Detected!\r\n        Real power = {0}\r\n    Reactive Power = {1}\r\n            Q Area = {2}\r\n", realPower, reactivePower, qAreamVar);
+            OnStatusMessage(MessageLevel.Info, "LossOfField", "WARNING: Loss of Field Detected!\r\n        Real power = {0}\r\n    Reactive Power = {1}\r\n            Q Area = {2}\r\n", realPower, reactivePower, qAreamVar);
         }
 
         #endregion

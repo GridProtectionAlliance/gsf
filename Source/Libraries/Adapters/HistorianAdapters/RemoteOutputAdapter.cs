@@ -42,6 +42,7 @@ using System.Text;
 using System.Threading;
 using GSF;
 using GSF.Communication;
+using GSF.Diagnostics;
 using GSF.Historian.Packets;
 using GSF.Parsing;
 using GSF.TimeSeries;
@@ -185,21 +186,15 @@ namespace HistorianAdapters
         [ConnectionStringParameter,
         Description("Define a value that determines whether the measurements are destined for archival."),
         DefaultValue(true)]
-        public override bool OutputIsForArchive
-        {
-            get
-            {
-                return m_outputIsForArchive;
-            }
-        }
+        public override bool OutputIsForArchive => m_outputIsForArchive;
 
         /// <summary>
         /// Gets or sets a boolean value that determines whether to wait for
-        /// acknowledgement from the historian that the last set of points have
+        /// acknowledgment from the historian that the last set of points have
         /// been received before attempting to send the next set of points.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define a value that determines whether to wait for acknowledgement before sending more points."),
+        Description("Define a value that determines whether to wait for acknowledgment before sending more points."),
         DefaultValue(true)]
         public bool ThrottleTransmission
         {
@@ -235,13 +230,7 @@ namespace HistorianAdapters
         /// <summary>
         /// Gets flag that determines if this <see cref="RemoteOutputAdapter"/> uses an asynchronous connection.
         /// </summary>
-        protected override bool UseAsyncConnect
-        {
-            get
-            {
-                return true;
-            }
-        }
+        protected override bool UseAsyncConnect => true;
 
         /// <summary>
         /// Returns the detailed status of the data output source.
@@ -310,7 +299,7 @@ namespace HistorianAdapters
                 m_publisherBuffer = new byte[m_samplesPerTransmission * PacketType1.FixedLength];
             }
 
-            // Initialize publiser socket.
+            // Initialize publisher socket.
             m_historianPublisher.ConnectionString = settings.JoinKeyValuePairs();
             m_historianPublisher.PayloadAware = m_payloadAware;
             m_historianPublisher.ConnectionAttempt += HistorianPublisher_ConnectionAttempt;
@@ -330,9 +319,9 @@ namespace HistorianAdapters
         public override string GetShortStatus(int maxLength)
         {
             if (m_outputIsForArchive)
-                return string.Format("Published {0} measurements for archival.", m_measurementsPublished).CenterText(maxLength);
-            else
-                return string.Format("Published {0} measurements for processing.", m_measurementsPublished).CenterText(maxLength);
+                return $"Published {m_measurementsPublished} measurements for archival.".CenterText(maxLength);
+
+            return $"Published {m_measurementsPublished} measurements for processing.".CenterText(maxLength);
         }
 
         /// <summary>
@@ -394,7 +383,7 @@ namespace HistorianAdapters
         /// Publishes <paramref name="measurements"/> for archival.
         /// </summary>
         /// <param name="measurements">Measurements to be archived.</param>
-        /// <exception cref="OperationCanceledException">Acknowledgement is not received from historian for published data.</exception>
+        /// <exception cref="OperationCanceledException">Acknowledgment is not received from historian for published data.</exception>
         protected override void ProcessMeasurements(IMeasurement[] measurements)
         {
             if (m_historianPublisher.CurrentState != ClientState.Connected)
@@ -404,11 +393,11 @@ namespace HistorianAdapters
             {
                 for (int i = 0; i < measurements.Length; i += m_samplesPerTransmission)
                 {
-                    // Wait for historian acknowledgement.
+                    // Wait for historian acknowledgment.
                     if (m_throttleTransmission)
                     {
                         if (!m_publisherWaitHandle.WaitOne(PublisherWaitTime))
-                            throw new OperationCanceledException("Timeout waiting for acknowledgement from historian");
+                            throw new OperationCanceledException("Timeout waiting for acknowledgment from historian");
                     }
 
                     // Publish measurements to historian.
@@ -426,7 +415,7 @@ namespace HistorianAdapters
 
         private void HistorianPublisher_ConnectionAttempt(object sender, EventArgs e)
         {
-            OnStatusMessage("Attempting socket connection...");
+            OnStatusMessage(MessageLevel.Info, "RemoteHistorianOutputAdapter", "Attempting socket connection...");
         }
 
         private void HistorianPublisher_ConnectionEstablished(object sender, EventArgs e)
@@ -447,12 +436,12 @@ namespace HistorianAdapters
         private void HistorianPublisher_SendDataException(object sender, EventArgs<Exception> e)
         {
             m_publisherWaitHandle.Set();
-            OnProcessException(e.Argument);
+            OnProcessException(MessageLevel.Warning, "RemoteHistorianOutputAdapter", e.Argument);
         }
 
         private void HistorianPublisher_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
         {
-            // Check for acknowledgement from historian.
+            // Check for acknowledgment from historian.
             string reply = Encoding.ASCII.GetString(e.Argument1, 0, e.Argument2);
             if (reply == "ACK")
                 m_publisherWaitHandle.Set();
@@ -461,26 +450,25 @@ namespace HistorianAdapters
         private void HistorianPublisher_ReceiveDataException(object sender, EventArgs<Exception> e)
         {
             m_publisherWaitHandle.Set();
-            OnProcessException(e.Argument);
+            OnProcessException(MessageLevel.Warning, "RemoteHistorianOutputAdapter", e.Argument);
         }
 
         private void TransmitPacketType1(IMeasurement[] measurements, int startIndex, int endIndex)
         {
             int bufferIndex = 0;
+
             for (int i = startIndex; i <= endIndex; i++)
-            {
                 bufferIndex += new PacketType1(measurements[i]).GenerateBinaryImage(m_publisherBuffer, bufferIndex);
-            }
+
             m_historianPublisher.SendAsync(m_publisherBuffer, 0, bufferIndex);
         }
 
         private void TransmitPacketType101(IMeasurement[] measurements, int startIndex, int endIndex)
         {
             PacketType101 packet = new PacketType101();
+
             for (int i = startIndex; i <= endIndex; i++)
-            {
                 packet.Data.Add(new PacketType101DataPoint(measurements[i]));
-            }
 
             m_historianPublisher.SendAsync(packet.BinaryImage());
         }

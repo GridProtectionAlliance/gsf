@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.Units.EE;
@@ -319,7 +320,7 @@ namespace PowerCalculations.EventDetection
                 throw new InvalidOperationException("No valid frequency measurements were specified as inputs to the frequency excursion detector.");
 
             if (validInputMeasurementKeys.Count < m_minimumValidChannels)
-                throw new InvalidOperationException(string.Format("Minimum valid frequency measurements (i.e., \"minimumValidChannels\") for the frequency excursion detector is currently set to {0}, only {1} {2} defined.", m_minimumValidChannels, validInputMeasurementKeys.Count, (validInputMeasurementKeys.Count == 1 ? "was" : "were")));
+                throw new InvalidOperationException($"Minimum valid frequency measurements (i.e., \"minimumValidChannels\") for the frequency excursion detector is currently set to {m_minimumValidChannels}, only {validInputMeasurementKeys.Count} {(validInputMeasurementKeys.Count == 1 ? "was" : "were")} defined.");
 
             // Make sure only frequencies are used as input
             InputMeasurementKeys = validInputMeasurementKeys.ToArray();
@@ -408,7 +409,7 @@ namespace PowerCalculations.EventDetection
 
         private void OutputFrequencyWarning(DateTime timestamp, double delta, ExcursionType typeOfExcursion, double totalAmount)
         {
-            OnStatusMessage("WARNING: Frequency excursion detected!\r\n              Time = {0}\r\n             Delta = {1}\r\n              Type = {2}\r\n    Estimated Size = {3}MW\r\n", timestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff"), delta, typeOfExcursion, totalAmount.ToString("0.00"));
+            OnStatusMessage(MessageLevel.Info, "FrequencyExcursion", "WARNING: Frequency excursion detected!\r\n              Time = {0}\r\n             Delta = {1}\r\n              Type = {2}\r\n    Estimated Size = {3}MW\r\n", timestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff"), delta, typeOfExcursion, totalAmount.ToString("0.00"));
         }
 
         #endregion

@@ -35,6 +35,7 @@ using System.Text;
 using System.Threading;
 using System.Timers;
 using GSF;
+using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using Timer = System.Timers.Timer;
@@ -176,13 +177,13 @@ namespace CsvAdapters
         {
             get
             {
-                return ((object)m_precisionTimer != null);
+                return (object)m_precisionTimer != null;
             }
             set
             {
                 // Note that a 1-ms timer and debug mode don't mix, so the high-resolution timer is disabled while debugging
                 if (value && (object)m_precisionTimer == null && !Debugger.IsAttached)
-                    m_precisionTimer = PrecisionInputTimer.Attach((int)(1000.0D / m_inputInterval), OnProcessException);
+                    m_precisionTimer = PrecisionInputTimer.Attach((int)(1000.0D / m_inputInterval), ex => OnProcessException(MessageLevel.Warning, "CsvInputAdapter", ex));
                 else if (!value && m_precisionTimer != null)
                     PrecisionInputTimer.Detach(ref m_precisionTimer);
             }
@@ -192,7 +193,7 @@ namespace CsvAdapters
         /// Gets or sets the number of measurements that are read from the CSV file in each frame.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define the number of measurements measurements that are read from the CSV file in each frame."),
+        Description("Define the number of measurements that are read from the CSV file in each frame."),
         DefaultValue(5)]
         public int MeasurementsPerInterval
         {
@@ -259,13 +260,7 @@ namespace CsvAdapters
         /// Gets a flag that determines if this <see cref="CsvInputAdapter"/>
         /// uses an asynchronous connection.
         /// </summary>
-        protected override bool UseAsyncConnect
-        {
-            get
-            {
-                return false;
-            }
-        }
+        protected override bool UseAsyncConnect => false;
 
         /// <summary>
         /// Returns the detailed status of this <see cref="CsvInputAdapter"/>.
@@ -295,7 +290,7 @@ namespace CsvAdapters
                 status.AppendFormat("             Lines to skip: {0}", m_skipRows);
                 status.AppendLine();
 
-                if (m_precisionTimer != null)
+                if ((object)m_precisionTimer != null)
                 {
                     status.AppendFormat("  Timer resynchronizations: {0}", m_precisionTimer.Resynchronizations);
                     status.AppendLine();
@@ -308,13 +303,7 @@ namespace CsvAdapters
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool SupportsTemporalProcessing => true;
 
         #endregion
 
@@ -493,23 +482,19 @@ namespace CsvAdapters
 
             // Skip specified number of header lines that exist before column heading definitions
             for (int i = 0; i < m_skipRows; i++)
-            {
                 m_inStream.ReadLine();
-            }
 
             m_columns.Clear();
             m_header = m_inStream.ReadLine();
             headings = m_header.ToNonNullString().Split(',');
 
             for (int i = 0; i < headings.Length; i++)
-            {
                 m_columns.Add(headings[i], i);
-            }
 
             if (UseHighResolutionInputTimer)
             {
                 // Start a new thread to process measurements using precision timer
-                (new Thread(ProcessMeasurements)).Start();
+                new Thread(ProcessMeasurements).Start();
             }
             else
             {
@@ -661,7 +646,7 @@ namespace CsvAdapters
             }
             catch (Exception ex)
             {
-                OnProcessException(ex);
+                OnProcessException(MessageLevel.Warning, "CsvInputAdapter", ex);
             }
 
             return true;

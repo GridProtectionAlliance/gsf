@@ -351,13 +351,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets reference to the collection of absolute latest received measurement values.
         /// </summary>
-        public virtual ImmediateMeasurements LatestMeasurements
-        {
-            get
-            {
-                return m_latestMeasurements;
-            }
-        }
+        public virtual ImmediateMeasurements LatestMeasurements => m_latestMeasurements;
 
         /// <summary>
         /// Gets or sets flag that determines whether or not to use the local clock time as real time.
@@ -392,7 +386,7 @@ namespace GSF.TimeSeries.Adapters
                 if (UseLocalClockAsRealTime || !TrackLatestMeasurements)
                     return DateTime.UtcNow.Ticks;
 
-                // Assume lastest measurement timestamp is the best value we have for real-time.
+                // Assume latest measurement timestamp is the best value we have for real-time.
                 return m_realTimeTicks;
             }
         }
@@ -510,15 +504,14 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (NewMeasurements != null)
-                    NewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
+                NewMeasurements?.Invoke(this, new EventArgs<ICollection<IMeasurement>>(measurements));
 
                 IncrementProcessedMeasurements(measurements.Count);
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, "FacileActionAdapterBase", new InvalidOperationException(string.Format("Exception in consumer handler for NewMeasurements event: {0}", ex.Message), ex));
+                OnProcessException(MessageLevel.Info, "FacileActionAdapterBase", new InvalidOperationException($"Exception in consumer handler for NewMeasurements event: {ex.Message}", ex));
             }
         }
 
@@ -530,13 +523,12 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (UnpublishedSamples != null)
-                    UnpublishedSamples(this, new EventArgs<int>(seconds));
+                UnpublishedSamples?.Invoke(this, new EventArgs<int>(seconds));
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, "FacileActionAdapterBase", new InvalidOperationException(string.Format("Exception in consumer handler for UnpublishedSamples event: {0}", ex.Message), ex));
+                OnProcessException(MessageLevel.Info, "FacileActionAdapterBase", new InvalidOperationException($"Exception in consumer handler for UnpublishedSamples event: {ex.Message}", ex));
             }
         }
 
@@ -548,13 +540,12 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (DiscardingMeasurements != null)
-                    DiscardingMeasurements(this, new EventArgs<IEnumerable<IMeasurement>>(measurements));
+                DiscardingMeasurements?.Invoke(this, new EventArgs<IEnumerable<IMeasurement>>(measurements));
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, "FacileActionAdapterBase", new InvalidOperationException(string.Format("Exception in consumer handler for DiscardingMeasurements event: {0}", ex.Message), ex));
+                OnProcessException(MessageLevel.Info, "FacileActionAdapterBase", new InvalidOperationException($"Exception in consumer handler for DiscardingMeasurements event: {ex.Message}", ex));
             }
         }
 

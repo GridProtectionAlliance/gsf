@@ -71,6 +71,7 @@ using GSF;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
+using GSF.Diagnostics;
 using GSF.Historian;
 using GSF.Historian.DataServices;
 using GSF.Historian.Files;
@@ -209,24 +210,12 @@ namespace HistorianAdapters
         /// <summary>
         /// Returns a flag that determines if measurements sent to this <see cref="LocalOutputAdapter"/> are destined for archival.
         /// </summary>
-        public override bool OutputIsForArchive
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool OutputIsForArchive => true;
 
         /// <summary>
         /// Gets flag that determines if this <see cref="LocalOutputAdapter"/> uses an asynchronous connection.
         /// </summary>
-        protected override bool UseAsyncConnect
-        {
-            get
-            {
-                return true;
-            }
-        }
+        protected override bool UseAsyncConnect => true;
 
         /// <summary>
         /// Gets or sets <see cref="DataSet"/> based data source available to this <see cref="LocalOutputAdapter"/>.
@@ -299,7 +288,7 @@ namespace HistorianAdapters
                 {
                     if (!m_attemptingConnection)
                     {
-                        OnStatusMessage("Pausing measurement processing...");
+                        OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", "Pausing measurement processing...");
                         InternalProcessQueue.Stop();
                     }
 
@@ -338,7 +327,7 @@ namespace HistorianAdapters
                     }
                     else
                     {
-                        OnStatusMessage("Resuming measurement processing...");
+                        OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", "Resuming measurement processing...");
                         InternalProcessQueue.Start();
                     }
                 }
@@ -453,7 +442,7 @@ namespace HistorianAdapters
         /// <returns>Text of the status message.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            return string.Format("Archived {0} measurements locally.", m_archivedMeasurements).CenterText(maxLength);
+            return $"Archived {m_archivedMeasurements} measurements locally.".CenterText(maxLength);
         }
 
         /// <summary>
@@ -653,7 +642,7 @@ namespace HistorianAdapters
             }
             catch (Exception ex)
             {
-                OnProcessException(ex);
+                OnProcessException(MessageLevel.Warning, "HistorianOutputAdapter", ex);
             }
 
             return false;
@@ -661,42 +650,42 @@ namespace HistorianAdapters
 
         private void m_archive_RolloverStart(object sender, EventArgs e)
         {
-            OnStatusMessage("Archive is being rolled over...");
+            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", "Archive is being rolled over...");
         }
 
         private void m_archive_RolloverComplete(object sender, EventArgs e)
         {
-            OnStatusMessage("Archive rollover is complete.");
+            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", "Archive rollover is complete.");
         }
 
         private void m_archive_RolloverException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(new InvalidOperationException(string.Format("Archive rollover failed: {0}", e.Argument.Message), e.Argument));
+            OnProcessException(MessageLevel.Warning, "HistorianOutputAdapter", new InvalidOperationException($"Archive rollover failed: {e.Argument.Message}", e.Argument));
         }
 
         private void m_archive_DataReadException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(new InvalidOperationException(string.Format("Archive data read exception: {0}", e.Argument.Message), e.Argument));
+            OnProcessException(MessageLevel.Warning, "HistorianOutputAdapter", new InvalidOperationException($"Archive data read exception: {e.Argument.Message}", e.Argument));
         }
 
         private void m_archive_DataWriteException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(new InvalidOperationException(string.Format("Archive write read exception: {0}", e.Argument.Message), e.Argument));
+            OnProcessException(MessageLevel.Warning, "HistorianOutputAdapter", new InvalidOperationException($"Archive write read exception: {e.Argument.Message}", e.Argument));
         }
 
         private void m_archive_OffloadStart(object sender, EventArgs e)
         {
-            OnStatusMessage("Archive offload started...");
+            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", "Archive offload started...");
         }
 
         private void m_archive_OffloadComplete(object sender, EventArgs e)
         {
-            OnStatusMessage("Archive offload complete.");
+            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", "Archive offload complete.");
         }
 
         private void m_archive_OffloadException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(new InvalidOperationException(string.Format("Archive offload exception: {0}", e.Argument.Message), e.Argument));
+            OnProcessException(MessageLevel.Warning, "HistorianOutputAdapter", new InvalidOperationException($"Archive offload exception: {e.Argument.Message}", e.Argument));
         }
 
         private void m_archive_OrphanDataReceived(object sender, EventArgs<IDataPoint> e)
@@ -717,9 +706,9 @@ namespace HistorianAdapters
             if (total % m_badDataMessageInterval == 0UL)
             {
                 if (total > 0UL)
-                    OnStatusMessage("Received {0} points of orphaned data for {1}:{2} @{3:yyyy-MM-dd HH:mm:ss.fffffff}. Measurements which are no longer defined in the metadata will not be archived.", total, m_instanceName, id, point.Time);
+                    OnStatusMessage(MessageLevel.Warning, "HistorianOutputAdapter", "Received {0} points of orphaned data for {1}:{2} @{3:yyyy-MM-dd HH:mm:ss.fffffff}. Measurements which are no longer defined in the metadata will not be archived.", total, m_instanceName, id, point.Time);
                 else
-                    OnStatusMessage("Received orphaned data for point {0}:{1} @{2:yyyy-MM-dd HH:mm:ss.fffffff}. Measurements which are no longer defined in the metadata will not be archived.", m_instanceName, id, point.Time);
+                    OnStatusMessage(MessageLevel.Warning, "HistorianOutputAdapter", "Received orphaned data for point {0}:{1} @{2:yyyy-MM-dd HH:mm:ss.fffffff}. Measurements which are no longer defined in the metadata will not be archived.", m_instanceName, id, point.Time);
             }
 
             m_orphanCounts[id] = total + 1UL;
@@ -743,9 +732,9 @@ namespace HistorianAdapters
             if (total % m_badDataMessageInterval == 0UL)
             {
                 if (total > 0UL)
-                    OnStatusMessage("Received {0} points of data for {1}:{2} @{3:yyyy-MM-dd HH:mm:ss.fffffff} with an unreasonable future timestamp. Data with a timestamp beyond {4:0.00} minutes of the local clock will not be archived. Check local system clock and data source clock for accuracy.", total, m_instanceName, id, point.Time, m_archive.LeadTimeTolerance);
+                    OnStatusMessage(MessageLevel.Warning, "HistorianOutputAdapter", "Received {0} points of data for {1}:{2} @{3:yyyy-MM-dd HH:mm:ss.fffffff} with an unreasonable future timestamp. Data with a timestamp beyond {4:0.00} minutes of the local clock will not be archived. Check local system clock and data source clock for accuracy.", total, m_instanceName, id, point.Time, m_archive.LeadTimeTolerance);
                 else
-                    OnStatusMessage("Received data for point {0}:{1} @{2:yyyy-MM-dd HH:mm:ss.fffffff} with an unreasonable future timestamp. Data with a timestamp beyond {3:0.00} minutes of the local clock will not be archived. Check local system clock and data source clock for accuracy.", m_instanceName, id, point.Time, m_archive.LeadTimeTolerance);
+                    OnStatusMessage(MessageLevel.Warning, "HistorianOutputAdapter", "Received data for point {0}:{1} @{2:yyyy-MM-dd HH:mm:ss.fffffff} with an unreasonable future timestamp. Data with a timestamp beyond {3:0.00} minutes of the local clock will not be archived. Check local system clock and data source clock for accuracy.", m_instanceName, id, point.Time, m_archive.LeadTimeTolerance);
             }
 
             m_badTimestampCounts[id] = total + 1UL;
@@ -769,9 +758,9 @@ namespace HistorianAdapters
             if (total % m_badDataMessageInterval == 0UL)
             {
                 if (total > 0UL)
-                    OnStatusMessage("Received {0} points of out-of-sequence data for {1}:{2} @{3:yyyy-MM-dd HH:mm:ss.fffffff}. Data received out of order will not be archived, per configuration.", total, m_instanceName, id, point.Time);
+                    OnStatusMessage(MessageLevel.Warning, "HistorianOutputAdapter", "Received {0} points of out-of-sequence data for {1}:{2} @{3:yyyy-MM-dd HH:mm:ss.fffffff}. Data received out of order will not be archived, per configuration.", total, m_instanceName, id, point.Time);
                 else
-                    OnStatusMessage("Received out-of-sequence data for {0}:{1} @{2:yyyy-MM-dd HH:mm:ss.fffffff}. Data received out of order will not be archived, per configuration.", m_instanceName, id, point.Time);
+                    OnStatusMessage(MessageLevel.Warning, "HistorianOutputAdapter", "Received out-of-sequence data for {0}:{1} @{2:yyyy-MM-dd HH:mm:ss.fffffff}. Data received out of order will not be archived, per configuration.", m_instanceName, id, point.Time);
             }
 
             m_outOfSequenceCounts[id] = total + 1UL;
@@ -786,7 +775,7 @@ namespace HistorianAdapters
         {
             e.Argument.Archive = m_archive;
             e.Argument.ServiceProcessException += DataServices_ServiceProcessException;
-            OnStatusMessage("{0} has been loaded.", e.Argument.GetType().Name);
+            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", "{0} has been loaded.", e.Argument.GetType().Name);
 
             m_adapterLoadedCount++;
         }
@@ -795,7 +784,7 @@ namespace HistorianAdapters
         {
             e.Argument.Archive = null;
             e.Argument.ServiceProcessException -= DataServices_ServiceProcessException;
-            OnStatusMessage("{0} has been unloaded.", e.Argument.GetType().Name);
+            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", "{0} has been unloaded.", e.Argument.GetType().Name);
         }
 
         private void MetadataProviders_AdapterCreated(object sender, EventArgs<IMetadataProvider> e)
@@ -810,7 +799,7 @@ namespace HistorianAdapters
                 if ((object)provider != null)
                 {
                     provider.Enabled = true;
-                    provider.SelectString = string.Format("SELECT * FROM HistorianMetadata WHERE PlantCode='{0}'", Name);
+                    provider.SelectString = $"SELECT * FROM HistorianMetadata WHERE PlantCode='{Name}'";
                 }
 
                 // The following connection information is now provided via configuration Eval mappings
@@ -846,7 +835,7 @@ namespace HistorianAdapters
             e.Argument.MetadataRefreshComplete += MetadataProviders_MetadataRefreshComplete;
             e.Argument.MetadataRefreshTimeout += MetadataProviders_MetadataRefreshTimeout;
             e.Argument.MetadataRefreshException += MetadataProviders_MetadataRefreshException;
-            OnStatusMessage("{0} has been loaded.", e.Argument.GetType().Name);
+            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", "{0} has been loaded.", e.Argument.GetType().Name);
 
             m_adapterLoadedCount++;
         }
@@ -858,7 +847,7 @@ namespace HistorianAdapters
             e.Argument.MetadataRefreshComplete -= MetadataProviders_MetadataRefreshComplete;
             e.Argument.MetadataRefreshTimeout -= MetadataProviders_MetadataRefreshTimeout;
             e.Argument.MetadataRefreshException -= MetadataProviders_MetadataRefreshException;
-            OnStatusMessage("{0} has been unloaded.", e.Argument.GetType().Name);
+            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", "{0} has been unloaded.", e.Argument.GetType().Name);
         }
 
         private void ReplicationProviders_AdapterCreated(object sender, EventArgs<IReplicationProvider> e)
@@ -872,7 +861,7 @@ namespace HistorianAdapters
             e.Argument.ReplicationComplete += ReplicationProvider_ReplicationComplete;
             e.Argument.ReplicationProgress += ReplicationProvider_ReplicationProgress;
             e.Argument.ReplicationException += ReplicationProvider_ReplicationException;
-            OnStatusMessage("{0} has been loaded.", e.Argument.GetType().Name);
+            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", "{0} has been loaded.", e.Argument.GetType().Name);
 
             m_adapterLoadedCount++;
         }
@@ -883,57 +872,57 @@ namespace HistorianAdapters
             e.Argument.ReplicationComplete -= ReplicationProvider_ReplicationComplete;
             e.Argument.ReplicationProgress -= ReplicationProvider_ReplicationProgress;
             e.Argument.ReplicationException -= ReplicationProvider_ReplicationException;
-            OnStatusMessage("{0} has been unloaded.", e.Argument.GetType().Name);
+            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", "{0} has been unloaded.", e.Argument.GetType().Name);
         }
 
         private void AdapterLoader_AdapterLoadException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(e.Argument);
+            OnProcessException(MessageLevel.Warning, "HistorianOutputAdapter", e.Argument);
         }
 
         private void DataServices_ServiceProcessException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(e.Argument);
+            OnProcessException(MessageLevel.Warning, "HistorianOutputAdapter", e.Argument);
         }
 
         private void MetadataProviders_MetadataRefreshStart(object sender, EventArgs e)
         {
-            OnStatusMessage("{0} has started metadata refresh...", sender.GetType().Name);
+            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", "{0} has started metadata refresh...", sender.GetType().Name);
         }
 
         private void MetadataProviders_MetadataRefreshComplete(object sender, EventArgs e)
         {
-            OnStatusMessage("{0} has finished metadata refresh.", sender.GetType().Name);
+            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", "{0} has finished metadata refresh.", sender.GetType().Name);
         }
 
         private void MetadataProviders_MetadataRefreshTimeout(object sender, EventArgs e)
         {
-            OnStatusMessage("{0} has timed-out on metadata refresh.", sender.GetType().Name);
+            OnStatusMessage(MessageLevel.Warning, "HistorianOutputAdapter", "{0} has timed-out on metadata refresh.", sender.GetType().Name);
         }
 
         private void MetadataProviders_MetadataRefreshException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(e.Argument);
+            OnProcessException(MessageLevel.Warning, "HistorianOutputAdapter", e.Argument);
         }
 
         private void ReplicationProvider_ReplicationStart(object sender, EventArgs e)
         {
-            OnStatusMessage("{0} has started archive replication...", sender.GetType().Name);
+            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", "{0} has started archive replication...", sender.GetType().Name);
         }
 
         private void ReplicationProvider_ReplicationComplete(object sender, EventArgs e)
         {
-            OnStatusMessage("{0} has finished archive replication.", sender.GetType().Name);
+            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", "{0} has finished archive replication.", sender.GetType().Name);
         }
 
         private void ReplicationProvider_ReplicationProgress(object sender, EventArgs<ProcessProgress<int>> e)
         {
-            OnStatusMessage("{0} has replicated archive file {1}.", sender.GetType().Name, e.Argument.ProgressMessage);
+            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", "{0} has replicated archive file {1}.", sender.GetType().Name, e.Argument.ProgressMessage);
         }
 
         private void ReplicationProvider_ReplicationException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(e.Argument);
+            OnProcessException(MessageLevel.Warning, "HistorianOutputAdapter", e.Argument);
         }
 
         #endregion
@@ -963,11 +952,11 @@ namespace HistorianAdapters
                 statusMessage("Optimizing settings for local historians...");
 
                 // Load the defined local system historians
-                IEnumerable<DataRow> historians = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT AdapterName FROM RuntimeHistorian WHERE NodeID = {0} AND TypeName = 'HistorianAdapters.LocalOutputAdapter'", nodeIDQueryString)).AsEnumerable();
-                IEnumerable<DataRow> readers = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM CustomInputAdapter WHERE NodeID = {0} AND TypeName = 'HistorianAdapters.LocalInputAdapter'", nodeIDQueryString)).AsEnumerable();
+                IEnumerable<DataRow> historians = database.Connection.RetrieveData(database.AdapterType, $"SELECT AdapterName FROM RuntimeHistorian WHERE NodeID = {nodeIDQueryString} AND TypeName = 'HistorianAdapters.LocalOutputAdapter'").AsEnumerable();
+                IEnumerable<DataRow> readers = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM CustomInputAdapter WHERE NodeID = {nodeIDQueryString} AND TypeName = 'HistorianAdapters.LocalInputAdapter'").AsEnumerable();
 
                 // Also check for local historian adapters loaded into CustomOutputAdapters
-                historians = historians.Concat(database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT AdapterName, ConnectionString FROM RuntimeCustomOutputAdapter WHERE NodeID = {0} AND TypeName = 'HistorianAdapters.LocalOutputAdapter'", nodeIDQueryString)).AsEnumerable());
+                historians = historians.Concat(database.Connection.RetrieveData(database.AdapterType, $"SELECT AdapterName, ConnectionString FROM RuntimeCustomOutputAdapter WHERE NodeID = {nodeIDQueryString} AND TypeName = 'HistorianAdapters.LocalOutputAdapter'").AsEnumerable());
 
                 List<string> validHistorians = new List<string>();
                 string name, acronym, currentPath, archivePath, fileName, defaultFileName, instanceName;
@@ -985,7 +974,7 @@ namespace HistorianAdapters
                 foreach (DataRow row in historians)
                 {
                     acronym = row.Field<string>("AdapterName").ToLower();
-                    name = string.Format("local \'{0}\' historian", acronym);
+                    name = $"local \'{acronym}\' historian";
                     validHistorians.Add(acronym);
 
                     // We handle the statistics historian as a special case
@@ -1015,16 +1004,16 @@ namespace HistorianAdapters
                     else
                     {
                         // Make sure needed historian configuration settings are properly defined
-                        settings = configFile.Settings[string.Format("{0}MetadataFile", acronym)];
-                        settings.Add("LoadOnOpen", true, string.Format("True if file records are to be loaded in memory when opened; otherwise False - this defaults to True for the {0} meta-data file.", name));
-                        settings.Add("ReloadOnModify", false, string.Format("True if file records loaded in memory are to be re-loaded when file is modified on disk; otherwise False - this defaults to True for the {0} meta-data file.", name));
+                        settings = configFile.Settings[$"{acronym}MetadataFile"];
+                        settings.Add("LoadOnOpen", true, $"True if file records are to be loaded in memory when opened; otherwise False - this defaults to True for the {name} meta-data file.");
+                        settings.Add("ReloadOnModify", false, $"True if file records loaded in memory are to be re-loaded when file is modified on disk; otherwise False - this defaults to True for the {name} meta-data file.");
                         settings["LoadOnOpen"].Update(true);
                         settings["ReloadOnModify"].Update(false);
 
                         // Older versions placed the archive data files in the same folder as the executables, for both better organization
                         // and performance related to file monitoring, these files are now located in their own folder
-                        defaultFileName = string.Format("{0}{1}{2}_dbase.dat", archivePath, Path.DirectorySeparatorChar, acronym);
-                        settings.Add("FileName", defaultFileName, string.Format("Name of the {0} meta-data file including its path.", acronym));
+                        defaultFileName = $"{archivePath}{Path.DirectorySeparatorChar}{acronym}_dbase.dat";
+                        settings.Add("FileName", defaultFileName, $"Name of the {acronym} meta-data file including its path.");
                         fileName = settings["FileName"].Value;
 
                         if (string.Compare(FilePath.GetDirectoryName(fileName), currentPath, StringComparison.OrdinalIgnoreCase) == 0)
@@ -1034,18 +1023,18 @@ namespace HistorianAdapters
                             settings["FileName"].Update(defaultFileName);
                         }
 
-                        settings = configFile.Settings[string.Format("{0}StateFile", acronym)];
-                        settings.Add("AutoSaveInterval", 10000, string.Format("Interval in milliseconds at which the file records loaded in memory are to be saved automatically to disk. Use -1 to disable automatic saving - this defaults to 10,000 for the {0} state file.", name));
-                        settings.Add("LoadOnOpen", true, string.Format("True if file records are to be loaded in memory when opened; otherwise False - this defaults to True for the {0} state file.", name));
-                        settings.Add("SaveOnClose", true, string.Format("True if file records loaded in memory are to be saved to disk when file is closed; otherwise False - this defaults to True for the {0} state file.", name));
-                        settings.Add("ReloadOnModify", false, string.Format("True if file records loaded in memory are to be re-loaded when file is modified on disk; otherwise False - this defaults to False for the {0} state file.", name));
+                        settings = configFile.Settings[$"{acronym}StateFile"];
+                        settings.Add("AutoSaveInterval", 10000, $"Interval in milliseconds at which the file records loaded in memory are to be saved automatically to disk. Use -1 to disable automatic saving - this defaults to 10,000 for the {name} state file.");
+                        settings.Add("LoadOnOpen", true, $"True if file records are to be loaded in memory when opened; otherwise False - this defaults to True for the {name} state file.");
+                        settings.Add("SaveOnClose", true, $"True if file records loaded in memory are to be saved to disk when file is closed; otherwise False - this defaults to True for the {name} state file.");
+                        settings.Add("ReloadOnModify", false, $"True if file records loaded in memory are to be re-loaded when file is modified on disk; otherwise False - this defaults to False for the {name} state file.");
                         settings["AutoSaveInterval"].Update(10000);
                         settings["LoadOnOpen"].Update(true);
                         settings["SaveOnClose"].Update(true);
                         settings["ReloadOnModify"].Update(false);
 
-                        defaultFileName = string.Format("{0}{1}{2}_startup.dat", archivePath, Path.DirectorySeparatorChar, acronym);
-                        settings.Add("FileName", defaultFileName, string.Format("Name of the {0} state file including its path.", acronym));
+                        defaultFileName = $"{archivePath}{Path.DirectorySeparatorChar}{acronym}_startup.dat";
+                        settings.Add("FileName", defaultFileName, $"Name of the {acronym} state file including its path.");
                         fileName = settings["FileName"].Value;
 
                         if (string.Compare(FilePath.GetDirectoryName(fileName), currentPath, StringComparison.OrdinalIgnoreCase) == 0)
@@ -1055,18 +1044,18 @@ namespace HistorianAdapters
                             settings["FileName"].Update(defaultFileName);
                         }
 
-                        settings = configFile.Settings[string.Format("{0}IntercomFile", acronym)];
-                        settings.Add("AutoSaveInterval", 1000, string.Format("Interval in milliseconds at which the file records loaded in memory are to be saved automatically to disk. Use -1 to disable automatic saving - this defaults to 1,000 for the {0} intercom file.", name));
-                        settings.Add("LoadOnOpen", true, string.Format("True if file records are to be loaded in memory when opened; otherwise False - this defaults to True for the {0} intercom file.", name));
-                        settings.Add("SaveOnClose", true, string.Format("True if file records loaded in memory are to be saved to disk when file is closed; otherwise False - this defaults to True for the {0} intercom file.", name));
-                        settings.Add("ReloadOnModify", false, string.Format("True if file records loaded in memory are to be re-loaded when file is modified on disk; otherwise False - this defaults to False for the {0} intercom file.", name));
+                        settings = configFile.Settings[$"{acronym}IntercomFile"];
+                        settings.Add("AutoSaveInterval", 1000, $"Interval in milliseconds at which the file records loaded in memory are to be saved automatically to disk. Use -1 to disable automatic saving - this defaults to 1,000 for the {name} intercom file.");
+                        settings.Add("LoadOnOpen", true, $"True if file records are to be loaded in memory when opened; otherwise False - this defaults to True for the {name} intercom file.");
+                        settings.Add("SaveOnClose", true, $"True if file records loaded in memory are to be saved to disk when file is closed; otherwise False - this defaults to True for the {name} intercom file.");
+                        settings.Add("ReloadOnModify", false, $"True if file records loaded in memory are to be re-loaded when file is modified on disk; otherwise False - this defaults to False for the {name} intercom file.");
                         settings["AutoSaveInterval"].Update(1000);
                         settings["LoadOnOpen"].Update(true);
                         settings["SaveOnClose"].Update(true);
                         settings["ReloadOnModify"].Update(false);
 
-                        defaultFileName = string.Format("{0}{1}scratch.dat", archivePath, Path.DirectorySeparatorChar);
-                        settings.Add("FileName", defaultFileName, string.Format("Name of the {0} intercom file including its path.", acronym));
+                        defaultFileName = $"{archivePath}{Path.DirectorySeparatorChar}scratch.dat";
+                        settings.Add("FileName", defaultFileName, $"Name of the {acronym} intercom file including its path.");
                         fileName = settings["FileName"].Value;
 
                         if (string.Compare(FilePath.GetDirectoryName(fileName), currentPath, StringComparison.OrdinalIgnoreCase) == 0)
@@ -1077,14 +1066,14 @@ namespace HistorianAdapters
                             settings["FileName"].Update(defaultFileName);
                         }
 
-                        settings = configFile.Settings[string.Format("{0}ArchiveFile", acronym)];
-                        settings.Add("CacheWrites", true, string.Format("True if writes are to be cached for performance; otherwise False - this defaults to True for the {0} working archive file.", name));
-                        settings.Add("ConserveMemory", false, string.Format("True if attempts are to be made to conserve memory; otherwise False - this defaults to False for the {0} working archive file.", name));
+                        settings = configFile.Settings[$"{acronym}ArchiveFile"];
+                        settings.Add("CacheWrites", true, $"True if writes are to be cached for performance; otherwise False - this defaults to True for the {name} working archive file.");
+                        settings.Add("ConserveMemory", false, $"True if attempts are to be made to conserve memory; otherwise False - this defaults to False for the {name} working archive file.");
                         settings["CacheWrites"].Update(true);
                         settings["ConserveMemory"].Update(false);
 
-                        defaultFileName = string.Format("{0}{1}{2}_archive.d", archivePath, Path.DirectorySeparatorChar, acronym);
-                        settings.Add("FileName", defaultFileName, string.Format("Name of the {0} working archive file including its path.", acronym));
+                        defaultFileName = $"{archivePath}{Path.DirectorySeparatorChar}{acronym}_archive.d";
+                        settings.Add("FileName", defaultFileName, $"Name of the {acronym} working archive file including its path.");
                         fileName = settings["FileName"].Value;
 
                         if (string.Compare(FilePath.GetDirectoryName(fileName), currentPath, StringComparison.OrdinalIgnoreCase) == 0)
@@ -1096,7 +1085,7 @@ namespace HistorianAdapters
                         }
 
                         // Move any historical files in executable folder to the archive folder...
-                        string[] archiveFileNames = FilePath.GetFileList(string.Format("{0}{1}{2}_archive*.d", FilePath.GetAbsolutePath(""), Path.DirectorySeparatorChar, acronym));
+                        string[] archiveFileNames = FilePath.GetFileList($"{FilePath.GetAbsolutePath("")}{Path.DirectorySeparatorChar}{acronym}_archive*.d");
 
                         if ((object)archiveFileNames != null && archiveFileNames.Length > 0)
                         {
@@ -1104,7 +1093,7 @@ namespace HistorianAdapters
 
                             foreach (string archiveFileName in archiveFileNames)
                             {
-                                defaultFileName = string.Format("{0}{1}{2}", archivePath, Path.DirectorySeparatorChar, FilePath.GetFileName(archiveFileName));
+                                defaultFileName = $"{archivePath}{Path.DirectorySeparatorChar}{FilePath.GetFileName(archiveFileName)}";
 
                                 if (!File.Exists(defaultFileName))
                                     File.Move(archiveFileName, defaultFileName);
@@ -1135,12 +1124,11 @@ namespace HistorianAdapters
                             try
                             {
                                 instanceName = acronym.ToUpper().Trim();
-                                settings = configFile.Settings[string.Format("{0}ArchiveFile", acronym)];
+                                settings = configFile.Settings[$"{acronym}ArchiveFile"];
                                 string archiveLocation = FilePath.GetDirectoryName(settings["FileName"].Value);
-                                string adapterName = string.Format("{0}READER", instanceName);
+                                string adapterName = $"{instanceName}READER";
                                 string connectionString = string.Format("archiveLocation={0}; instanceName={1}; sourceIDs={1}; publicationInterval=333333; connectOnDemand=true", archiveLocation, instanceName);
-                                string query = string.Format("INSERT INTO CustomInputAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, LoadOrder, Enabled) " +
-                                    "VALUES({0}, @adapterName, 'HistorianAdapters.dll', 'HistorianAdapters.LocalInputAdapter', @connectionString, 0, 1)", nodeIDQueryString);
+                                string query = "INSERT INTO CustomInputAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, LoadOrder, Enabled) " + $"VALUES({nodeIDQueryString}, @adapterName, 'HistorianAdapters.dll', 'HistorianAdapters.LocalInputAdapter', @connectionString, 0, 1)";
 
                                 if (database.IsOracle)
                                     query = query.Replace('@', ':');
@@ -1219,11 +1207,11 @@ namespace HistorianAdapters
         private static void AddPIHistorianReaders(AdoDataConnection database, string nodeIDQueryString, Action<Exception> processException)
         {
             // Load the defined local PI historians
-            IEnumerable<DataRow> historians = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT AdapterName, ConnectionString FROM RuntimeHistorian WHERE NodeID = {0} AND TypeName = 'PIAdapters.PIOutputAdapter'", nodeIDQueryString)).AsEnumerable();
-            IEnumerable<DataRow> readers = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM CustomInputAdapter WHERE NodeID = {0} AND TypeName = 'PIAdapters.PIPBInputAdapter'", nodeIDQueryString)).AsEnumerable();
+            IEnumerable<DataRow> historians = database.Connection.RetrieveData(database.AdapterType, $"SELECT AdapterName, ConnectionString FROM RuntimeHistorian WHERE NodeID = {nodeIDQueryString} AND TypeName = 'PIAdapters.PIOutputAdapter'").AsEnumerable();
+            IEnumerable<DataRow> readers = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM CustomInputAdapter WHERE NodeID = {nodeIDQueryString} AND TypeName = 'PIAdapters.PIPBInputAdapter'").AsEnumerable();
 
             // Also check for PI adapters loaded into CustomOutputAdapters
-            historians = historians.Concat(database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT AdapterName, ConnectionString FROM RuntimeCustomOutputAdapter WHERE NodeID = {0} AND TypeName = 'PIAdapters.PIOutputAdapter'", nodeIDQueryString)).AsEnumerable());
+            historians = historians.Concat(database.Connection.RetrieveData(database.AdapterType, $"SELECT AdapterName, ConnectionString FROM RuntimeCustomOutputAdapter WHERE NodeID = {nodeIDQueryString} AND TypeName = 'PIAdapters.PIOutputAdapter'").AsEnumerable());
 
             // Make sure a temporal reader is defined for each OSI-PI historian
             foreach (DataRow row in historians)
@@ -1257,7 +1245,7 @@ namespace HistorianAdapters
                     {
                         Dictionary<string, string> settings = row.Field<string>("ConnectionString").ToNonNullString().ParseKeyValuePairs();
                         string instanceName = acronym.ToUpper().Trim();
-                        string adapterName = string.Format("{0}READER", instanceName);
+                        string adapterName = $"{instanceName}READER";
                         string serverName, userName, password, setting;
                         int connectTimeout;
 
@@ -1280,12 +1268,11 @@ namespace HistorianAdapters
                         string connectionString;
 
                         if (string.IsNullOrEmpty(userName))
-                            connectionString = string.Format("ServerName={0}; ConnectTimeout={1}; sourceIDs={2}; connectOnDemand=true", serverName, connectTimeout, instanceName);
+                            connectionString = $"ServerName={serverName}; ConnectTimeout={connectTimeout}; sourceIDs={instanceName}; connectOnDemand=true";
                         else
-                            connectionString = string.Format("ServerName={0}; UserName={1}; Password={2}; ConnectTimeout={3}; sourceIDs={4}; connectOnDemand=true", serverName, userName, password.ToNonNullString(), connectTimeout, instanceName);
+                            connectionString = $"ServerName={serverName}; UserName={userName}; Password={password.ToNonNullString()}; ConnectTimeout={connectTimeout}; sourceIDs={instanceName}; connectOnDemand=true";
 
-                        string query = string.Format("INSERT INTO CustomInputAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, LoadOrder, Enabled) " +
-                            "VALUES({0}, @adapterName, 'PIAdapters.dll', 'PIAdapters.PIPBInputAdapter', @connectionString, 0, 1)", nodeIDQueryString);
+                        string query = "INSERT INTO CustomInputAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, LoadOrder, Enabled) " + $"VALUES({nodeIDQueryString}, @adapterName, 'PIAdapters.dll', 'PIAdapters.PIPBInputAdapter', @connectionString, 0, 1)";
 
                         if (database.IsOracle)
                             query = query.Replace('@', ':');

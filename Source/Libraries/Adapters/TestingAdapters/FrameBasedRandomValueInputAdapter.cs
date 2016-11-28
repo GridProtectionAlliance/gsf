@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using GSF;
+using GSF.Diagnostics;
 using GSF.NumericalAnalysis;
 using GSF.Threading;
 using GSF.TimeSeries;
@@ -46,10 +47,12 @@ namespace TestingAdapters
         /// Default value for the <see cref="PublishRate"/> property.
         /// </summary>
         public const double DefaultPublishRate = 30.0;
+
         /// <summary>
-        /// The default number of milliseconds for the dealy;
+        /// The default number of milliseconds for the delay;
         /// </summary>
         public const double DefaultLatency = 125.0;
+
         /// <summary>
         /// The default jitter in the channel (1 standard deviation);
         /// </summary>
@@ -92,13 +95,7 @@ namespace TestingAdapters
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool SupportsTemporalProcessing => false;
 
         /// <summary>
         /// Gets flag that determines if the data input connects asynchronously.
@@ -106,13 +103,7 @@ namespace TestingAdapters
         /// <remarks>
         /// Derived classes should return true when data input source is connects asynchronously, otherwise return false.
         /// </remarks>
-        protected override bool UseAsyncConnect
-        {
-            get
-            {
-                return false;
-            }
-        }
+        protected override bool UseAsyncConnect => false;
 
         #endregion
 
@@ -134,17 +125,18 @@ namespace TestingAdapters
                 m_publishRate = DefaultPublishRate;
 
             if (m_publishRate <= 0.0D)
-                throw new InvalidOperationException(string.Format("publishRate({0}) must be greater than zero", m_publishRate));
+                throw new InvalidOperationException($"publishRate({m_publishRate}) must be greater than zero");
 
             double latency;
             double jitter;
+
             if (!settings.TryGetValue("latency", out setting) || !double.TryParse(setting, out latency))
                 latency = DefaultLatency;
 
             if (!settings.TryGetValue("jitter", out setting) || !double.TryParse(setting, out jitter))
                 jitter = DefaultJitter;
 
-            //Clips at 3 time the latency and 1/3 latency
+            // Clips at 3 time the latency and 1/3 latency
             m_latency = new GaussianDistribution(latency, jitter, latency / 3, latency * 3);
         }
 
@@ -157,7 +149,7 @@ namespace TestingAdapters
         /// </returns>
         public override string GetShortStatus(int maxLength)
         {
-            return string.Format("{0} random values generated so far...", ProcessedMeasurements).CenterText(maxLength);
+            return $"{ProcessedMeasurements} random values generated so far...".CenterText(maxLength);
         }
 
         /// <summary>
@@ -170,12 +162,13 @@ namespace TestingAdapters
 
             if ((object)m_timer == null)
             {
-                m_timer = new ScheduledTask(ThreadingMode.ThreadPool);
+                m_timer = new ScheduledTask();
                 m_timer.Running += m_timer_Running;
             }
+
             if ((object)m_statusUpdate == null)
             {
-                m_statusUpdate = new ScheduledTask(ThreadingMode.ThreadPool);
+                m_statusUpdate = new ScheduledTask();
                 m_statusUpdate.Running += m_statusUpdate_Running;
             }
             m_timer.Start();
@@ -198,9 +191,8 @@ namespace TestingAdapters
                 return;
 
             if (m_unprocessedMeasurements > 10 * m_publishRate)
-            {
-                OnStatusMessage(string.Format("{0} unprocessed messages", m_unprocessedMeasurements));
-            }
+                OnStatusMessage(MessageLevel.Info, "RandomValueAdapter", $"{m_unprocessedMeasurements} unprocessed messages");
+
             m_statusUpdate.Start(10000);
 
         }
@@ -302,6 +294,5 @@ namespace TestingAdapters
         }
 
         #endregion
-
     }
 }

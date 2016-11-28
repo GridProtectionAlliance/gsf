@@ -35,6 +35,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using GSF;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Media;
 using GSF.TimeSeries;
@@ -136,24 +137,12 @@ namespace WavInputAdapter
         /// <remarks>
         /// This returns false because this adapter does not connect asynchronously.
         /// </remarks>
-        protected override bool UseAsyncConnect
-        {
-            get
-            {
-                return false;
-            }
-        }
+        protected override bool UseAsyncConnect => false;
 
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool SupportsTemporalProcessing => true;
 
         #endregion
 
@@ -190,9 +179,9 @@ namespace WavInputAdapter
             m_audioLength = fileInfo.AudioLength;
 
             if (m_channels > OutputMeasurements.Length)
-                throw new ArgumentException(string.Format("Not enough output measurements ({0}) defined for the number of channels in the WAV file ({1})", OutputMeasurements.Length, m_channels));
+                throw new ArgumentException($"Not enough output measurements ({OutputMeasurements.Length}) defined for the number of channels in the WAV file ({m_channels})");
 
-            OnStatusMessage("Ready to play \"{0}\" with {1} channels...", Path.GetFileName(WavFileName), m_channels);
+            OnStatusMessage(MessageLevel.Info, "WavInputAdapter", "Ready to play \"{0}\" with {1} channels...", Path.GetFileName(WavFileName), m_channels);
         }
 
         /// <summary>
@@ -205,9 +194,7 @@ namespace WavInputAdapter
 
             m_startTime = DateTime.UtcNow.Ticks;
 
-            Thread t = new Thread(ProcessMeasurements);
-            t.IsBackground = true;
-            t.Start();
+            new Thread(ProcessMeasurements) { IsBackground = true }.Start();
         }
 
         /// <summary>
@@ -262,10 +249,10 @@ namespace WavInputAdapter
         public override string GetShortStatus(int maxLength)
         {
             if (!Enabled || !IsConnected)
-                return string.Format("Streaming for \"{0}\" is paused...", Path.GetFileName(WavFileName)).CenterText(maxLength);
+                return $"Streaming for \"{Path.GetFileName(WavFileName)}\" is paused...".CenterText(maxLength);
 
             TimeSpan time = Ticks.FromSeconds(m_dataIndex / (double)m_sampleRate);
-            return string.Format("Streaming \"{0}\" at time {1} / {2} - {3:0.00%}.", Path.GetFileName(WavFileName), time.ToString(@"m\:ss"), m_audioLength.ToString(@"m\:ss"), time.TotalSeconds / m_audioLength.TotalSeconds).CenterText(maxLength);
+            return $"Streaming \"{Path.GetFileName(WavFileName)}\" at time {time.ToString(@"m\:ss")} / {m_audioLength.ToString(@"m\:ss")} - {time.TotalSeconds / m_audioLength.TotalSeconds:0.00%}.".CenterText(maxLength);
         }
 
         private void ProcessMeasurements()
@@ -291,7 +278,7 @@ namespace WavInputAdapter
                         // Reset the start time and delay next transmission in an attempt to catch up
                         m_startTime = now - (m_dataIndex * Ticks.PerSecond / m_sampleRate) + Ticks.FromSeconds(RecoveryDelay);
                         timestamp = now;
-                        OnStatusMessage("Start time reset.");
+                        OnStatusMessage(MessageLevel.Info, "WavInputAdapter", "Start time reset.");
                     }
 
                     // Keep generating measurements until
@@ -334,7 +321,7 @@ namespace WavInputAdapter
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(ex);
+                    OnProcessException(MessageLevel.Warning, "WavInputAdapter", ex);
                 }
             }
         }

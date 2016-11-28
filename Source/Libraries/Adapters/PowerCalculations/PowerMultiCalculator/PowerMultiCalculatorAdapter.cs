@@ -33,6 +33,7 @@ using System.Text;
 using GSF;
 using GSF.Configuration;
 using GSF.Data;
+using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.Units;
@@ -316,7 +317,7 @@ namespace PowerCalculations.PowerMultiCalculator
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(ex);
+                    OnProcessException(MessageLevel.Warning, "PowerCalculator", ex);
                 }
                 finally
                 {

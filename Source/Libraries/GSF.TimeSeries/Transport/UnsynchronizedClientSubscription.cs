@@ -905,15 +905,15 @@ namespace GSF.TimeSeries.Transport
         }
 
         // Explicitly implement status message event bubbler to satisfy IClientSubscription interface
-        void IClientSubscription.OnStatusMessage(string status)
+        void IClientSubscription.OnStatusMessage(MessageLevel level, string eventName, string status)
         {
-            OnStatusMessage(MessageLevel.Info, "UnsynchronizedClientSubscription", status);
+            OnStatusMessage(level, eventName, status);
         }
 
         // Explicitly implement process exception event bubbler to satisfy IClientSubscription interface
-        void IClientSubscription.OnProcessException(Exception ex)
+        void IClientSubscription.OnProcessException(MessageLevel level, string eventName, Exception ex)
         {
-            OnProcessException(MessageLevel.Info, "UnsynchronizedClientSubscription", ex);
+            OnProcessException(level, eventName, ex);
         }
 
         // Explicitly implement processing completed event bubbler to satisfy IClientSubscription interface

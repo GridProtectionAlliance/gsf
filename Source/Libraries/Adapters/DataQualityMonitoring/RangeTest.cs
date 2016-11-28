@@ -29,6 +29,7 @@ using System.ComponentModel;
 using System.Timers;
 using DataQualityMonitoring.Services;
 using GSF;
+using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
@@ -217,13 +218,7 @@ namespace DataQualityMonitoring
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool SupportsTemporalProcessing => false;
 
         #endregion
 
@@ -257,8 +252,6 @@ namespace DataQualityMonitoring
                     throw new ArgumentException(string.Format(errorMessage, "highRange"));
 
                 m_highRange = double.Parse(setting);
-
-                rangeSet = true;
             }
 
             // Load optional parameters
@@ -310,16 +303,14 @@ namespace DataQualityMonitoring
         /// </remarks>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            IMeasurement measurement = null;
+            IMeasurement measurement;
 
             foreach (MeasurementKey key in frame.Measurements.Keys)
             {
                 measurement = frame.Measurements[key];
 
                 if (measurement.AdjustedValue < m_lowRange || measurement.AdjustedValue > m_highRange)
-                {
                     AddOutOfRangeMeasurement(key, measurement);
-                }
             }
         }
 
@@ -336,7 +327,8 @@ namespace DataQualityMonitoring
             {
                 PurgeOldMeasurements();
 
-                int count = 0;
+                int count;
+
                 foreach (MeasurementKey key in m_outOfRangeMeasurements.Keys)
                 {
                     count = m_outOfRangeMeasurements[key].Count;
@@ -364,9 +356,7 @@ namespace DataQualityMonitoring
                 foreach (LinkedList<IMeasurement> measurementList in m_outOfRangeMeasurements.Values)
                 {
                     foreach (IMeasurement measurement in measurementList)
-                    {
                         allOutOfRangeMeasurements.Add(measurement);
-                    }
                 }
             }
 
@@ -393,9 +383,7 @@ namespace DataQualityMonitoring
             lock (m_outOfRangeMeasurements)
             {
                 foreach (MeasurementKey key in m_outOfRangeMeasurements.Keys)
-                {
                     PurgeOldMeasurements(key);
-                }
             }
         }
 
@@ -492,15 +480,11 @@ namespace DataQualityMonitoring
             {
                 s_service.DetachRangeTest(this);
 
-                if (this == s_exceptionProcessor)
-                {
-                    ICollection<RangeTest> tests = s_service.Tests;
+                if (this != s_exceptionProcessor)
+                    return;
 
-                    if (tests.Count > 0)
-                        s_exceptionProcessor = tests.GetEnumerator().Current;
-                    else
-                        s_exceptionProcessor = null;
-                }
+                ICollection<RangeTest> tests = s_service.Tests;
+                s_exceptionProcessor = tests.Count > 0 ? tests.GetEnumerator().Current : null;
             }
         }
 
@@ -512,7 +496,7 @@ namespace DataQualityMonitoring
             foreach (MeasurementKey key in measurementCounts.Keys)
             {
                 int count = measurementCounts[key];
-                OnStatusMessage("Measurement {0} arrived out-of-range {1} times within the last {2} seconds.", key, count, (int)m_timeToPurge.ToSeconds());
+                OnStatusMessage(MessageLevel.Info, "RangeTest", "Measurement {0} arrived out-of-range {1} times within the last {2} seconds.", key, count, (int)m_timeToPurge.ToSeconds());
             }
         }
 
@@ -541,8 +525,7 @@ namespace DataQualityMonitoring
         // Static Methods
         private static void s_service_ServiceProcessException(object sender, EventArgs<Exception> e)
         {
-            if (s_exceptionProcessor != null)
-                s_exceptionProcessor.OnProcessException(e.Argument);
+            s_exceptionProcessor?.OnProcessException(MessageLevel.Warning, "RangeTest", e.Argument);
         }
 
         #endregion

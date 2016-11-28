@@ -33,6 +33,9 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using GSF.Annotations;
+using GSF.Diagnostics;
+
+#pragma warning disable 618
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -114,6 +117,7 @@ namespace GSF.TimeSeries.Adapters
         protected ActionAdapterBase()
         {
             m_name = this.GetType().Name;
+            Log.InitialStackMessages = new LogStackMessages("AdapterName", m_name);
             m_settings = new Dictionary<string, string>();
             m_startTimeConstraint = DateTime.MinValue;
             m_stopTimeConstraint = DateTime.MaxValue;
@@ -200,7 +204,7 @@ namespace GSF.TimeSeries.Adapters
             {
                 m_connectionString = value;
 
-                // Preparse settings upon connection string assignment
+                // Pre-parse settings upon connection string assignment
                 if (string.IsNullOrWhiteSpace(m_connectionString))
                     m_settings = new Dictionary<string, string>();
                 else
@@ -530,13 +534,7 @@ namespace GSF.TimeSeries.Adapters
         /// This value will be <see cref="DateTime.MinValue"/> when start time constraint is not set - meaning the adapter
         /// is processing data in real-time.
         /// </remarks>
-        public virtual DateTime StartTimeConstraint
-        {
-            get
-            {
-                return m_startTimeConstraint;
-            }
-        }
+        public virtual DateTime StartTimeConstraint => m_startTimeConstraint;
 
         /// <summary>
         /// Gets the stop time temporal processing constraint defined by call to <see cref="SetTemporalConstraint"/>.
@@ -545,13 +543,7 @@ namespace GSF.TimeSeries.Adapters
         /// This value will be <see cref="DateTime.MaxValue"/> when stop time constraint is not set - meaning the adapter
         /// is processing data in real-time.
         /// </remarks>
-        public virtual DateTime StopTimeConstraint
-        {
-            get
-            {
-                return m_stopTimeConstraint;
-            }
-        }
+        public virtual DateTime StopTimeConstraint => m_stopTimeConstraint;
 
         /// <summary>
         /// Gets or sets minimum number of input measurements required for adapter.  Set to -1 to require all.
@@ -584,6 +576,7 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 m_name = value;
+                Log.InitialStackMessages = new LogStackMessages("AdapterName", m_name);
                 GenHashCode();
             }
         }
@@ -622,13 +615,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets settings <see cref="Dictionary{TKey,TValue}"/> parsed when <see cref="ConnectionString"/> was assigned.
         /// </summary>
-        public Dictionary<string, string> Settings
-        {
-            get
-            {
-                return m_settings;
-            }
-        }
+        public Dictionary<string, string> Settings => m_settings;
 
         /// <summary>
         /// Returns the detailed status of the action adapter.
@@ -886,7 +873,7 @@ namespace GSF.TimeSeries.Adapters
                 }
                 else
                 {
-                    OnStatusMessage("WARNING: No down-sampling method labeled \"{0}\" exists, \"LastReceived\" method was selected.", setting);
+                    OnStatusMessage(MessageLevel.Info, "AdapterBase", "WARNING: No down-sampling method labeled \"{0}\" exists, \"LastReceived\" method was selected.", setting);
                     DownsamplingMethod = DownsamplingMethod.LastReceived;
                 }
             }
@@ -932,13 +919,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets a flag that indicates whether the object has been disposed.
         /// </summary>
-        public bool IsDisposed
-        {
-            get
-            {
-                return m_disposed;
-            }
-        }
+        public bool IsDisposed => m_disposed;
 
         /// <summary>
         /// Starts the <see cref="ActionAdapterBase"/> or restarts it if it is already running.
@@ -968,7 +949,7 @@ namespace GSF.TimeSeries.Adapters
         [AdapterCommand("Examines concentration frame queue state.", "Administrator", "Editor", "Viewer")]
         public void ExamineQueueState()
         {
-            OnStatusMessage(QueueState);
+            OnStatusMessage(MessageLevel.Info, "AdapterBase", QueueState);
         }
 
         /// <summary>
@@ -980,7 +961,7 @@ namespace GSF.TimeSeries.Adapters
             base.ResetStatistics();
 
             if (Enabled)
-                OnStatusMessage("Action adapter concentration statistics have been reset.");
+                OnStatusMessage(MessageLevel.Info, "AdapterBase", "Action adapter concentration statistics have been reset.");
         }
 
         /// <summary>
@@ -1008,7 +989,7 @@ namespace GSF.TimeSeries.Adapters
             if ((object)OutputMeasurements != null)
                 outputCount = OutputMeasurements.Length;
 
-            return string.Format("Total input measurements: {0}, total output measurements: {1}", inputCount, outputCount).PadLeft(maxLength);
+            return $"Total input measurements: {inputCount}, total output measurements: {outputCount}".PadLeft(maxLength);
         }
 
         /// <summary>
@@ -1100,10 +1081,8 @@ namespace GSF.TimeSeries.Adapters
         /// Serves as a hash function for the current <see cref="ActionAdapterBase"/>.
         /// </summary>
         /// <returns>A hash code for the current <see cref="ActionAdapterBase"/>.</returns>
-        public override int GetHashCode()
-        {
-            return m_hashCode;
-        }
+        // ReSharper disable once NonReadonlyMemberInGetHashCode
+        public override int GetHashCode() => m_hashCode;
 
         /// <summary>
         /// Attempts to retrieve the minimum needed number of measurements from the frame (as specified by MinimumMeasurementsToUse)
@@ -1166,13 +1145,12 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if ((object)NewMeasurements != null)
-                    NewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
+                NewMeasurements?.Invoke(this, new EventArgs<ICollection<IMeasurement>>(measurements));
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for NewMeasurements event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for NewMeasurements event: {ex.Message}", ex));
             }
         }
 
@@ -1180,17 +1158,27 @@ namespace GSF.TimeSeries.Adapters
         /// Raises the <see cref="StatusMessage"/> event.
         /// </summary>
         /// <param name="status">New status message.</param>
+        [Obsolete("Switch to using overload with MessageLevel parameter - this method may be removed from future builds.", false)]
         protected virtual void OnStatusMessage(string status)
         {
             try
             {
-                if ((object)StatusMessage != null)
-                    StatusMessage(this, new EventArgs<string>(status));
+                if (!Logger.ShouldSuppressLogMessages)
+                {
+                    Log.Publish(MessageLevel.Info, "Unclassified Status", status);
+
+                    using (Logger.SuppressLogMessages())
+                        StatusMessage?.Invoke(this, new EventArgs<string>(status));
+                }
+                else
+                {
+                    StatusMessage?.Invoke(this, new EventArgs<string>(status));
+                }
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for StatusMessage event: {0}", ex.Message), ex));
+                OnProcessException(MessageLevel.Info, "AdapterBase", new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex));
             }
         }
 
@@ -1202,19 +1190,71 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// This overload combines string.Format and SendStatusMessage for convenience.
         /// </remarks>
-        [StringFormatMethod("formattedStatus")]
+        [StringFormatMethod("formattedStatus"), Obsolete("Switch to using overload with MessageLevel parameter - this method may be removed from future builds.", false)]
         protected virtual void OnStatusMessage(string formattedStatus, params object[] args)
         {
             try
             {
-                if ((object)StatusMessage != null)
-                    StatusMessage(this, new EventArgs<string>(string.Format(formattedStatus, args)));
+                string message = string.Format(formattedStatus, args);
+
+                if (!Logger.ShouldSuppressLogMessages)
+                {
+                    Log.Publish(MessageLevel.Info, "Unclassified Status", message);
+
+                    using (Logger.SuppressLogMessages())
+                        StatusMessage?.Invoke(this, new EventArgs<string>(message));
+                }
+                else
+                {
+                    StatusMessage?.Invoke(this, new EventArgs<string>(message));
+                }
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for StatusMessage event: {0}", ex.Message), ex));
+                OnProcessException(MessageLevel.Info, "AdapterBase", new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex));
             }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="StatusMessage"/> event and sends this data to the <see cref="Logger"/>.
+        /// </summary>
+        /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
+        /// <param name="eventName">A fixed string to classify this event.</param>
+        /// <param name="status">New status message.</param>
+        /// <remarks>
+        /// <see pref="eventName"/> should be a constant string value associated with what type of message is being generated. 
+        /// In general, there should only be a few dozen distinct event names per class. Exceeding this threshold.
+        /// Will cause the EventName to be replaced with a general warning that a usage issue has occurred.
+        /// </remarks>
+        protected void OnStatusMessage(MessageLevel level, string eventName, string status)
+        {
+            Log.Publish(level, eventName, status);
+
+            using (Logger.SuppressLogMessages())
+                OnStatusMessage(status);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="StatusMessage"/> event and sends this data to the <see cref="Logger"/>.
+        /// </summary>
+        /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
+        /// <param name="eventName">A fixed string to classify this event.</param>
+        /// <param name="formattedStatus">Formatted status message.</param>
+        /// <param name="args">Arguments for <paramref name="formattedStatus"/>.</param>
+        /// <remarks>
+        /// <see pref="eventName"/> should be a constant string value associated with what type of message is being generated. 
+        /// In general, there should only be a few dozen distinct event names per class. Exceeding this threshold.
+        /// Will cause the EventName to be replaced with a general warning that a usage issue has occurred.
+        /// </remarks>
+        protected void OnStatusMessage(MessageLevel level, string eventName, string formattedStatus, params object[] args)
+        {
+            string message = string.Format(formattedStatus, args);
+
+            Log.Publish(level, eventName, message);
+
+            using (Logger.SuppressLogMessages())
+                OnStatusMessage(message);
         }
 
         /// <summary>
@@ -1224,13 +1264,12 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if ((object)InputMeasurementKeysUpdated != null)
-                    InputMeasurementKeysUpdated(this, EventArgs.Empty);
+                InputMeasurementKeysUpdated?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for InputMeasurementKeysUpdated event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for InputMeasurementKeysUpdated event: {ex.Message}", ex));
             }
         }
 
@@ -1241,13 +1280,12 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if ((object)OutputMeasurementsUpdated != null)
-                    OutputMeasurementsUpdated(this, EventArgs.Empty);
+                OutputMeasurementsUpdated?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for OutputMeasurementsUpdated event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for OutputMeasurementsUpdated event: {ex.Message}", ex));
             }
         }
 
@@ -1258,13 +1296,12 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if ((object)ConfigurationChanged != null)
-                    ConfigurationChanged(this, EventArgs.Empty);
+                ConfigurationChanged?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ConfigurationChanged event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for ConfigurationChanged event: {ex.Message}", ex));
             }
         }
 

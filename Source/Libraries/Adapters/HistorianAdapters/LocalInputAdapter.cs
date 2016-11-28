@@ -26,13 +26,13 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Timers;
 using GSF;
+using GSF.Diagnostics;
 using GSF.Historian;
 using GSF.Historian.Files;
 using GSF.IO;
@@ -270,13 +270,7 @@ namespace HistorianAdapters
         /// <summary>
         /// Gets flag that determines if this <see cref="LocalInputAdapter"/> uses an asynchronous connection.
         /// </summary>
-        protected override bool UseAsyncConnect
-        {
-            get
-            {
-                return false;
-            }
-        }
+        protected override bool UseAsyncConnect => false;
 
         /// <summary>
         /// Returns the detailed status of the data input source.
@@ -403,7 +397,7 @@ namespace HistorianAdapters
         public override string GetShortStatus(int maxLength)
         {
             if (Enabled && m_publicationTime > 0)
-                return string.Format("Publishing data for {0}...", (new DateTime(m_publicationTime)).ToString("yyyy-MM-dd HH:mm:ss.fff")).CenterText(maxLength);
+                return $"Publishing data for {new DateTime(m_publicationTime):yyyy-MM-dd HH:mm:ss.fff}...".CenterText(maxLength);
 
             return "Not currently publishing data".CenterText(maxLength);
         }
@@ -448,13 +442,13 @@ namespace HistorianAdapters
                         catch (Exception ex)
                         {
                             // Process exception for logging
-                            OnProcessException(new InvalidOperationException("Failed to start data reader due to exception: " + ex.Message, ex));
+                            OnProcessException(MessageLevel.Warning, "HistorianInputAdapter", new InvalidOperationException("Failed to start data reader due to exception: " + ex.Message, ex));
                         }
                     }
                 }
                 else
                 {
-                    OnProcessException(new InvalidOperationException("Cannot open historian files, directory does not exist: " + m_archiveLocation));
+                    OnProcessException(MessageLevel.Warning, "HistorianInputAdapter", new InvalidOperationException("Cannot open historian files, directory does not exist: " + m_archiveLocation));
                 }
             }
         }
@@ -469,9 +463,7 @@ namespace HistorianAdapters
                 m_readTimer.Enabled = false;
 
                 lock (m_readTimer)
-                {
                     m_dataReader = null;
-                }
             }
 
             if ((object)m_archiveReader != null)
@@ -507,11 +499,11 @@ namespace HistorianAdapters
 
                     if (m_readTimer.Enabled)
                     {
-                        OnStatusMessage("Starting historical data read...");
+                        OnStatusMessage(MessageLevel.Info, "HistorianInputAdapter", "Starting historical data read...");
                     }
                     else
                     {
-                        OnStatusMessage("No historical data was available to read for given timeframe.");
+                        OnStatusMessage(MessageLevel.Info, "HistorianInputAdapter", "No historical data was available to read for given timeframe.");
                         OnProcessingComplete();
                     }
                 }
@@ -519,7 +511,7 @@ namespace HistorianAdapters
             else
             {
                 m_readTimer.Enabled = false;
-                OnStatusMessage("No measurement keys have been requested for reading, historian reader is idle.");
+                OnStatusMessage(MessageLevel.Info, "HistorianInputAdapter", "No measurement keys have been requested for reading, historian reader is idle.");
                 OnProcessingComplete();
             }
         }
@@ -619,22 +611,22 @@ namespace HistorianAdapters
 
         private void m_archiveReader_DataReadException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(e.Argument);
+            OnProcessException(MessageLevel.Warning, "HistorianInputAdapter", e.Argument);
         }
 
         private void m_archiveReader_HistoricFileListBuildException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(e.Argument);
+            OnProcessException(MessageLevel.Warning, "HistorianInputAdapter", e.Argument);
         }
 
         private void m_archiveReader_HistoricFileListBuildStart(object sender, EventArgs e)
         {
-            OnStatusMessage("Building list of historic archive files...");
+            OnStatusMessage(MessageLevel.Info, "HistorianInputAdapter", "Building list of historic archive files...");
         }
 
         private void m_archiveReader_HistoricFileListBuildComplete(object sender, EventArgs e)
         {
-            OnStatusMessage("Completed building list of historic archive files.");
+            OnStatusMessage(MessageLevel.Info, "HistorianInputAdapter", "Completed building list of historic archive files.");
         }
 
         #endregion

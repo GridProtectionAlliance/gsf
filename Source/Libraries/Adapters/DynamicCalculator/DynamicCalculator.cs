@@ -32,6 +32,7 @@ using System.Reflection;
 using System.Text;
 using Ciloci.Flee;
 using GSF;
+using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
@@ -182,27 +183,21 @@ namespace DynamicCalculator
             }
             set
             {
-                Dictionary<string, string> parsedTypeDef;
-                string assemblyName, typeName;
-                Assembly asm;
-                Type t;
-
                 foreach (string typeDef in value.Split(';'))
                 {
                     try
                     {
-                        parsedTypeDef = typeDef.ParseKeyValuePairs(',');
-                        assemblyName = parsedTypeDef["assemblyName"];
-                        typeName = parsedTypeDef["typeName"];
-                        asm = Assembly.Load(new AssemblyName(assemblyName));
-                        t = asm.GetType(typeName);
+                        Dictionary<string, string> parsedTypeDef = typeDef.ParseKeyValuePairs(',');
+                        string assemblyName = parsedTypeDef["assemblyName"];
+                        string typeName = parsedTypeDef["typeName"];
+                        Assembly asm = Assembly.Load(new AssemblyName(assemblyName));
+                        Type t = asm.GetType(typeName);
 
                         m_expressionContext.Imports.AddType(t);
                     }
                     catch (Exception ex)
                     {
-                        string message = string.Format("Unable to load type from assembly: {0}", typeDef);
-                        OnProcessException(new ArgumentException(message, ex));
+                        OnProcessException(MessageLevel.Error, "DynamicCalculator", new ArgumentException($"Unable to load type from assembly: {typeDef}", ex));
                     }
                 }
 
@@ -216,13 +211,7 @@ namespace DynamicCalculator
         [ConnectionStringParameter,
         Description("Define the flag indicating if this adapter supports temporal processing."),
         DefaultValue(false)]
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return m_supportsTemporalProcessing;
-            }
-        }
+        public override bool SupportsTemporalProcessing => m_supportsTemporalProcessing;
 
         /// <summary>
         /// Gets or sets the source of the timestamps of the calculated values.
@@ -260,7 +249,7 @@ namespace DynamicCalculator
             settings = Settings;
 
             if (OutputMeasurements.Length != 1)
-                throw new ArgumentException(string.Format("Exactly one output measurement must be defined. Amount defined: {0}", OutputMeasurements.Length));
+                throw new ArgumentException($"Exactly one output measurement must be defined. Amount defined: {OutputMeasurements.Length}");
 
             // Load required parameters
 
@@ -292,7 +281,7 @@ namespace DynamicCalculator
             if (settings.TryGetValue("skipNanOutput", out setting))
                 m_skipNanOutput = setting.ParseBoolean();
             else
-                m_skipNanOutput = false; //default to previous behavour
+                m_skipNanOutput = false; //default to previous behavior
 
             if (settings.TryGetValue("timestampSource", out setting))
                 m_timestampSource = (TimestampSource)Enum.Parse(typeof(TimestampSource), setting);
@@ -335,7 +324,6 @@ namespace DynamicCalculator
             switch (m_timestampSource)
             {
                 default:
-                case TimestampSource.Frame:
                     timestamp = frame.Timestamp;
                     break;
 
@@ -372,7 +360,7 @@ namespace DynamicCalculator
             string alias;
 
             if (splitToken.Length > 2)
-                throw new FormatException(string.Format("Too many equals signs: {0}", token));
+                throw new FormatException($"Too many equals signs: {token}");
 
             key = GetKey(splitToken[1].Trim());
             alias = splitToken[0].Trim();
@@ -402,7 +390,7 @@ namespace DynamicCalculator
         private void AddMapping(MeasurementKey key, string alias)
         {
             if (m_variableNames.Contains(alias))
-                throw new ArgumentException(string.Format("Variable name is not unique: {0}", alias));
+                throw new ArgumentException($"Variable name is not unique: {alias}");
 
             m_variableNames.Add(alias);
             m_keyMapping.Add(key, alias);
@@ -464,7 +452,7 @@ namespace DynamicCalculator
         {
             // skip processing of an output with a value of NaN unless configured to process NaN outputs
             if (!m_skipNanOutput || !double.IsNaN(measurement.Value))
-                OnNewMeasurements(new IMeasurement[] { measurement });
+                OnNewMeasurements(new[] { measurement });
         }
 
         #endregion

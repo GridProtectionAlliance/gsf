@@ -37,6 +37,7 @@ using System.ComponentModel;
 using System.Text;
 using GSF;
 using GSF.Communication;
+using GSF.Diagnostics;
 using GSF.Historian;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -158,24 +159,12 @@ namespace HistorianAdapters
         /// <summary>
         /// Gets flag that determines if this <see cref="RemoteInputAdapter"/> uses an asynchronous connection.
         /// </summary>
-        protected override bool UseAsyncConnect
-        {
-            get
-            {
-                return true;
-            }
-        }
+        protected override bool UseAsyncConnect => true;
 
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool SupportsTemporalProcessing => false;
 
         #endregion
 
@@ -233,7 +222,7 @@ namespace HistorianAdapters
         /// <returns>Text of the status message.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            return string.Format("Received {0} bytes in {1} packets.", m_historianDataListener.TotalBytesReceived, m_historianDataListener.TotalPacketsReceived).CenterText(maxLength);
+            return $"Received {m_historianDataListener.TotalBytesReceived} bytes in {m_historianDataListener.TotalPacketsReceived} packets.".CenterText(maxLength);
         }
 
         /// <summary>
@@ -307,13 +296,13 @@ namespace HistorianAdapters
             }
             catch (Exception ex)
             {
-                OnProcessException(ex);
+                OnProcessException(MessageLevel.Warning, "RemoteHistorianInputAdapter", ex);
             }
         }
 
         private void HistorianDataListener_SocketConnecting(object sender, EventArgs e)
         {
-            OnStatusMessage("Attempting socket connection...");
+            OnStatusMessage(MessageLevel.Info, "RemoteHistorianInputAdapter", "Attempting socket connection...");
         }
 
         private void HistorianDataListener_SocketConnected(object sender, EventArgs e)
@@ -328,17 +317,17 @@ namespace HistorianAdapters
 
         private void HistorianDataListener_OutputTypeNotFound(object sender, EventArgs<short> e)
         {
-            OnStatusMessage(string.Format("Unable to parse data for packet type {0}.", e.Argument));
+            OnStatusMessage(MessageLevel.Warning, "RemoteHistorianInputAdapter", $"Unable to parse data for packet type {e.Argument}.");
         }
 
         private void HistorianDataListener_DataDiscarded(object sender, EventArgs<byte[]> e)
         {
-            OnStatusMessage(string.Format("Unable to parse data: {0} bytes discarded.", e.Argument.Length));
+            OnStatusMessage(MessageLevel.Warning, "RemoteHistorianInputAdapter", $"Unable to parse data: {e.Argument.Length} bytes discarded.");
         }
 
         private void HistorianDataListener_ParsingException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(e.Argument);
+            OnProcessException(MessageLevel.Warning, "RemoteHistorianInputAdapter", e.Argument);
         }
 
         #endregion
