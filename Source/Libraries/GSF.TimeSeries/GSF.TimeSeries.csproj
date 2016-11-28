@@ -192,11 +192,21 @@
   <ItemGroup>
     <None Include="Adapters\IaonAdapters.vsd" />
     <None Include="Adapters\IaonOverview.vsd" />
-    <None Include="Data\SQLite\db-update.bat" />
-    <None Include="Data\SQLite\GSFSchema-InitialDataSet.db" />
-    <None Include="Data\SQLite\GSFSchema-SampleDataSet.db" />
-    <None Include="Data\SQLite\GSFSchema.db" />
-    <None Include="Data\SerializedSchema.bin" />
+    <None Include="Data\SQLite\db-update.bat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\SQLite\GSFSchema-InitialDataSet.db">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\SQLite\GSFSchema-SampleDataSet.db">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\SQLite\GSFSchema.db">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\SerializedSchema.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="GSF.TimeSeries.nuspec" />
     <None Include="PostBuildSetup.bat" />
     <None Include="GSF.TimeSeries.ruleset" />
@@ -220,28 +230,68 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Data\DatabaseUpdateReadme.txt" />
-    <None Include="Data\MySQL\AuditLog.sql" />
-    <None Include="Data\MySQL\InitialDataSet.sql" />
-    <None Include="Data\MySQL\GSFSchema.sql" />
-    <None Include="Data\MySQL\SampleDataSet.sql" />
-    <None Include="Data\Oracle\AuditLog.sql" />
-    <None Include="Data\Oracle\InitialDataSet.sql" />
-    <None Include="Data\Oracle\GSFSchema.sql" />
-    <None Include="Data\Oracle\SampleDataSet.sql" />
-    <None Include="Data\SQL Server\AuditLog.sql" />
-    <None Include="Data\SQL Server\InitialDataSet.sql" />
-    <None Include="Data\SQL Server\GSFSchema.sql" />
-    <None Include="Data\SQL Server\SampleDataSet.sql" />
-    <None Include="Data\SQLite\InitialDataSet.sql" />
-    <None Include="Data\SQLite\GSFSchema.sql" />
-    <None Include="Data\SQLite\SampleDataSet.sql" />
-    <None Include="Data\SQLite\sqlite3.exe" />
+    <None Include="Data\DatabaseUpdateReadme.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\MySQL\AuditLog.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\MySQL\InitialDataSet.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\MySQL\GSFSchema.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\MySQL\SampleDataSet.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\Oracle\AuditLog.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\Oracle\InitialDataSet.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\Oracle\GSFSchema.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\Oracle\SampleDataSet.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\SQL Server\AuditLog.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\SQL Server\InitialDataSet.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\SQL Server\GSFSchema.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\SQL Server\SampleDataSet.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\SQLite\InitialDataSet.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\SQLite\GSFSchema.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\SQLite\SampleDataSet.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\SQLite\sqlite3.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Data\PostgreSQL\GSFSchema.sql" />
-    <Content Include="Data\PostgreSQL\InitialDataSet.sql" />
-    <Content Include="Data\PostgreSQL\SampleDataSet.sql" />
+    <Content Include="Data\PostgreSQL\GSFSchema.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\PostgreSQL\InitialDataSet.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\PostgreSQL\SampleDataSet.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
