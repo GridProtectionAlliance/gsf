@@ -26,6 +26,7 @@ using System;
 using System.Data;
 using System.IO;
 using System.Text;
+using System.Threading;
 using GSF.IO;
 
 namespace GSF.Diagnostics
@@ -122,6 +123,13 @@ namespace GSF.Diagnostics
         public readonly string ExceptionString;
 
         /// <summary>
+        /// The Managed Thread ID of the thread that created this message. This 
+        /// is primarily to assist in future log viewing applications
+        /// where it is beneficial to track the thread.
+        /// </summary>
+        public readonly int ManagedThreadID;
+
+        /// <summary>
         /// Loads a log messages from the supplied stream
         /// </summary>
         /// <param name="stream">the stream to load the log message from.</param>
@@ -146,6 +154,21 @@ namespace GSF.Diagnostics
                     Details = stream.ReadString();
                     Exception = null;
                     ExceptionString = stream.ReadString();
+                    ManagedThreadID = -1;
+                    break;
+                case 2:
+                    EventPublisherDetails = saveHelper.LoadEventPublisherDetails(stream);
+                    InitialStackMessages = saveHelper.LoadStackMessages(stream);
+                    InitialStackTrace = saveHelper.LoadStackTrace(stream);
+                    CurrentStackMessages = saveHelper.LoadStackMessages(stream);
+                    CurrentStackTrace = saveHelper.LoadStackTrace(stream);
+                    UtcTime = stream.ReadDateTime();
+                    LogMessageAttributes = new LogMessageAttributes(stream);
+                    Message = stream.ReadString();
+                    Details = stream.ReadString();
+                    Exception = null;
+                    ExceptionString = stream.ReadString();
+                    ManagedThreadID = stream.ReadInt32();
                     break;
                 default:
                     throw new VersionNotFoundException();
@@ -179,6 +202,7 @@ namespace GSF.Diagnostics
             Message = message ?? string.Empty;
             Details = details ?? string.Empty;
             Exception = exception;
+            ManagedThreadID = Thread.CurrentThread.ManagedThreadId;
         }
 
         /// <summary>Returns a string that represents the current object.</summary>
@@ -199,7 +223,7 @@ namespace GSF.Diagnostics
             if (saveHelper == null)
                 saveHelper = LogMessageSaveHelper.Create(true);
 
-            stream.Write((byte)1);
+            stream.Write((byte)2);
             saveHelper.SaveEventPublisherDetails(stream, EventPublisherDetails);
             saveHelper.SaveStackMessages(stream, InitialStackMessages);
             saveHelper.SaveStackTrace(stream, InitialStackTrace);
@@ -210,6 +234,7 @@ namespace GSF.Diagnostics
             stream.Write(Message);
             stream.Write(Details);
             stream.Write(ExceptionString);
+            stream.Write(ManagedThreadID);
         }
 
         /// <summary>
