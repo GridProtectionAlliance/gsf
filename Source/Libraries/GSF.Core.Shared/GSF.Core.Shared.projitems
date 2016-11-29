@@ -13,6 +13,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)BigEndian.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BitMath.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CharExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Collections\ConcurrentIsolatedQueue.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Collections\DynamicObjectPool.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Collections\IndexedArray.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Collections\IsolatedQueue.cs" />

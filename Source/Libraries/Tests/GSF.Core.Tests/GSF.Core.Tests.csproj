@@ -70,6 +70,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GSF.Collections\ConcurrentIsolatedQueueTest.cs" />
     <Compile Include="GSF.Collections\RollingWindowTest.cs" />
     <Compile Include="GSF.Collections\FileBackedHashSetTest.cs" />
     <Compile Include="GSF.Collections\FileBackedDictionaryTest.cs" />
