@@ -324,7 +324,10 @@ namespace GSF.EMAX
 
             FileStream currentFile;
             int recordLength;
-            ushort[] clockWords = new ushort[4];
+            ushort[] clockWords;
+            ushort[] eventGroups;
+            int eventGroupIndex = 0;
+            int eventGroupCopyLength = 0;
             ushort value;
             int index;
             double scalingFactor;
@@ -435,67 +438,50 @@ namespace GSF.EMAX
                     }
                 }
 
+                // Place the index in the location just
+                // after the last analog channel so we
+                // can start parsing event groups
+                index = frameValueCount * sizeof(ushort);
+
+                eventGroups = Enumerable.Range(0, 4)
+                    .Select(i => index + 2 * i)
+                    .Select(i => (i + 1 < buffer.Length) ? LittleEndian.ToUInt16(buffer, i) : ushort.MinValue)
+                    .ToArray();
+
+                eventGroupCopyLength = Math.Max(0, Math.Min(4, m_eventGroups.Length - eventGroupIndex));
+                Buffer.BlockCopy(eventGroups, 0, m_eventGroups, eventGroupIndex, eventGroupCopyLength);
+                eventGroupIndex += 4;
+                index += 4 * sizeof(ushort);
+
+                // Clock words always come right after event words,
+                // but we need to ignore the clock words in the RCU
+                // file because they are not used
                 if (streamIndex == 0)
                 {
-                    index = frameValueCount * sizeof(ushort);
+                    clockWords = Enumerable.Range(0, 4)
+                        .Select(i => index + 2 * i)
+                        .Select(i => (i + 1 < buffer.Length) ? LittleEndian.ToUInt16(buffer, i) : ushort.MaxValue)
+                        .ToArray();
 
-                    if (index + 4 * sizeof(ushort) <= recordLength)
-                    {
-                        // Read event group values (first set)
-                        for (int i = 0; i < 4; i++)
-                        {
-                            ushort eventGroup = LittleEndian.ToUInt16(buffer, index);
+                    ParseTimestamp(clockWords);
+                }
 
-                            if (i < m_eventGroups.Length)
-                                m_eventGroups[i] = LittleEndian.ToUInt16(buffer, index);
+                index += 4 * sizeof(ushort);
 
-                            index += 2;
-                        }
-                    }
-                    else
-                    {
-                        for (int i = 0; i < 4; i++)
-                            m_eventGroups[i] = ushort.MaxValue;
-                    }
+                if (frameChannelCount == largeFrameChannelCount)
+                {
+                    // 64-channel frames have an extra set of event words
+                    eventGroups = Enumerable.Range(0, 4)
+                        .Select(i => index + 2 * i)
+                        .Select(i => (i + 1 < buffer.Length) ? LittleEndian.ToUInt16(buffer, i) : ushort.MinValue)
+                        .ToArray();
 
-                    if (index + 4 * sizeof(ushort) <= recordLength)
-                    {
-                        // Read timestamp from next four word values
-                        for (int i = 0; i < 4; i++)
-                        {
-                            clockWords[i] = LittleEndian.ToUInt16(buffer, index);
-                            index += 2;
-                        }
+                    eventGroupCopyLength = Math.Max(0, Math.Min(4, m_eventGroups.Length - eventGroupIndex));
+                    Buffer.BlockCopy(eventGroups, 0, m_eventGroups, eventGroupIndex, eventGroupCopyLength);
+                    eventGroupIndex += 4;
 
-                        m_timestamp = ParseTimestamp(clockWords);
-                    }
-                    else
-                    {
-                        m_timeError = true;
-                        m_timestamp = DateTime.MaxValue;
-                    }
-
-                    if (frameChannelCount == largeFrameChannelCount)
-                    {
-                        if (index + 4 * sizeof(ushort) <= recordLength)
-                        {
-                            // Read next set of event group values
-                            for (int i = 4; i < 8; i++)
-                            {
-                                ushort eventGroup = LittleEndian.ToUInt16(buffer, index);
-
-                                if (i < m_eventGroups.Length)
-                                    m_eventGroups[i] = LittleEndian.ToUInt16(buffer, index);
-
-                                index += 2;
-                            }
-                        }
-                        else
-                        {
-                            for (int i = 4; i < 8; i++)
-                                m_eventGroups[i] = ushort.MaxValue;
-                        }
-                    }
+                    // There is also an extra set of clock words,
+                    // but they are not used so we ignore them
                 }
             }
 
@@ -521,7 +507,7 @@ namespace GSF.EMAX
                     clockWord.LowByte().HighNibble(),
                     clockWord.LowByte().LowNibble()
                 })
-                .Take(15)
+                .Take(12)
                 .Any(b => b > 9);
 
             if (m_timeError)
@@ -547,24 +533,27 @@ namespace GSF.EMAX
 
             milliseconds = highByte.LowNibble() * 100 + lowByte.HighNibble() * 10 + lowByte.LowNibble();
 
-            if (milliseconds > 999)
-                milliseconds = 0;
-
             highByte = clockWords[3].HighByte();
             lowByte = clockWords[3].LowByte();
 
-            microseconds = highByte.HighNibble() * 100 + highByte.LowNibble() * 10 + lowByte.HighNibble();
+            microseconds = 0;
 
-            if (microseconds > 999)
-                microseconds = 0;
+            if (highByte.HighNibble() <= 9)
+                microseconds += highByte.HighNibble() * 100;
+
+            if (highByte.LowNibble() <= 9)
+                microseconds += highByte.LowNibble() * 10;
+
+            if (lowByte.HighNibble() <= 9)
+                microseconds += lowByte.HighNibble();
 
             return m_baseTime
-                    .AddDays(days - 1) // Base time starts at day one, so we subtract one for target day
-                    .AddHours(hours)
-                    .AddMinutes(minutes)
-                    .AddSeconds(seconds)
-                    .AddMilliseconds(milliseconds)
-                    .AddTicks(Ticks.FromMicroseconds(microseconds));
+                .AddDays(days - 1) // Base time starts at day one, so we subtract one for target day
+                .AddHours(hours)
+                .AddMinutes(minutes)
+                .AddSeconds(seconds)
+                .AddMilliseconds(milliseconds)
+                .AddTicks(Ticks.FromMicroseconds(microseconds));
         }
 
         #endregion

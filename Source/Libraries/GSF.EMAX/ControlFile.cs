@@ -137,10 +137,7 @@ namespace GSF.EMAX
         {
             get
             {
-                if (SystemParameters.samples_per_second > 5760)
-                    return 4;
-
-                return 4 * (m_configuredAnalogChannels > 32 ? 2 : 1);
+                return SystemParameters.event_groups;
             }
         }
 
