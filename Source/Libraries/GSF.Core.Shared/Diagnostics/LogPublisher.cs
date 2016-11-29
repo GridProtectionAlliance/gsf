@@ -206,12 +206,23 @@ namespace GSF.Diagnostics
         /// <returns></returns>
         private LogEventPublisherInternal InternalRegisterEvent(LogMessageAttributes attributes, string eventName)
         {
+            if (eventName == null)
+                eventName = string.Empty;
             LogEventPublisherInternal publisher;
             if (m_lookupEventPublishers.TryGetValue(Tuple.Create(attributes, eventName), out publisher))
             {
                 return publisher;
             }
-            return InternalRegisterNewEvent(attributes, eventName, 0, 1, 20);
+
+            //If messages events are unclassified allow a higher message throughput rate.
+            double messagesPerSecond = 1;
+            int burstRate = 20;
+            if (eventName == string.Empty)
+            {
+                messagesPerSecond = 5;
+                burstRate = 100;
+            }
+            return InternalRegisterNewEvent(attributes, eventName, 0, messagesPerSecond, burstRate);
         }
 
         /// <summary>
@@ -225,6 +236,8 @@ namespace GSF.Diagnostics
         /// <returns></returns>
         private LogEventPublisherInternal InternalRegisterEvent(LogMessageAttributes attributes, string eventName, int stackTraceDepth, MessageRate messagesPerSecond, int burstLimit)
         {
+            if (eventName == null)
+                eventName = string.Empty;
             LogEventPublisherInternal publisher;
             if (m_lookupEventPublishers.TryGetValue(Tuple.Create(attributes, eventName), out publisher))
             {
