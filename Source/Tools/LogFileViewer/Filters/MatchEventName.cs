@@ -49,6 +49,8 @@ namespace LogFileViewer.Filters
             {
                 case 1:
                     m_typeName = stream.ReadString();
+                    if (m_typeName == string.Empty)
+                        m_typeName = null;
                     m_eventName = stream.ReadString();
                     m_includeIfMatched = stream.ReadBoolean();
                     break;
@@ -63,14 +65,14 @@ namespace LogFileViewer.Filters
         public void Save(Stream stream)
         {
             stream.Write((byte)1);
-            stream.Write(m_typeName);
+            stream.Write(m_typeName ?? string.Empty);
             stream.Write(m_eventName);
             stream.Write(m_includeIfMatched);
         }
 
         public bool IsIncluded(LogMessage log)
         {
-            if (log.EventPublisherDetails.TypeName == m_typeName && log.EventPublisherDetails.EventName == m_eventName)
+            if ((m_typeName == null || log.EventPublisherDetails.TypeName == m_typeName) && log.EventPublisherDetails.EventName == m_eventName)
                 return m_includeIfMatched;
             return !m_includeIfMatched;
         }
@@ -79,6 +81,14 @@ namespace LogFileViewer.Filters
         {
             get
             {
+                if (m_typeName == null)
+                {
+                    if (m_includeIfMatched)
+                        return "Include if Event: " + m_eventName;
+                    else
+                        return "Exclude if Event: " + m_eventName;
+                }
+
                 if (m_includeIfMatched)
                     return "Include if Event: " + m_eventName + "(" + m_typeName + ")";
                 else
@@ -90,8 +100,10 @@ namespace LogFileViewer.Filters
         {
             return new[]
                    {
-                       Tuple.Create<string, Func<bool>>("Include Event", () => { m_includeIfMatched = true; return true;}),
-                       Tuple.Create<string, Func<bool>>("Exclude Event", () => { m_includeIfMatched = false; return true;})
+                       Tuple.Create<string, Func<bool>>("Include Event (Type Specific)", () => { m_includeIfMatched = true; return true;}),
+                       Tuple.Create<string, Func<bool>>("Exclude Event (Type Specific)", () => { m_includeIfMatched = false; return true;}),
+                       Tuple.Create<string, Func<bool>>("Include Event", () => { m_includeIfMatched = true; m_typeName = null; return true;}),
+                       Tuple.Create<string, Func<bool>>("Exclude Event", () => { m_includeIfMatched = false; m_typeName = null; return true;})
                    };
         }
         public void ToggleResult()

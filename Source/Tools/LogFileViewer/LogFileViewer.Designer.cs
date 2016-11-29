@@ -31,6 +31,7 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LogFileViewer));
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.btnSaveSelected = new System.Windows.Forms.Button();
             this.btnFilteredLoad = new System.Windows.Forms.Button();
             this.btnCompactFiles = new System.Windows.Forms.Button();
             this.btnToggle = new System.Windows.Forms.Button();
@@ -44,7 +45,6 @@
             this.deleteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.BtnLoad = new System.Windows.Forms.Button();
             this.dgvResults = new System.Windows.Forms.DataGridView();
-            this.btnSaveSelected = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -77,6 +77,17 @@
             this.splitContainer1.Size = new System.Drawing.Size(759, 657);
             this.splitContainer1.SplitterDistance = 106;
             this.splitContainer1.TabIndex = 1;
+            // 
+            // btnSaveSelected
+            // 
+            this.btnSaveSelected.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSaveSelected.Location = new System.Drawing.Point(672, 42);
+            this.btnSaveSelected.Name = "btnSaveSelected";
+            this.btnSaveSelected.Size = new System.Drawing.Size(75, 23);
+            this.btnSaveSelected.TabIndex = 6;
+            this.btnSaveSelected.Text = "Save As";
+            this.btnSaveSelected.UseVisualStyleBackColor = true;
+            this.btnSaveSelected.Click += new System.EventHandler(this.btnSaveSelected_Click);
             // 
             // btnFilteredLoad
             // 
@@ -202,19 +213,9 @@
             this.dgvResults.CellMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dgvResults_CellMouseClick);
             this.dgvResults.CellMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dgvResults_CellMouseDoubleClick);
             // 
-            // btnSaveSelected
-            // 
-            this.btnSaveSelected.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSaveSelected.Location = new System.Drawing.Point(672, 42);
-            this.btnSaveSelected.Name = "btnSaveSelected";
-            this.btnSaveSelected.Size = new System.Drawing.Size(75, 23);
-            this.btnSaveSelected.TabIndex = 6;
-            this.btnSaveSelected.Text = "Save As";
-            this.btnSaveSelected.UseVisualStyleBackColor = true;
-            this.btnSaveSelected.Click += new System.EventHandler(this.btnSaveSelected_Click);
-            // 
             // LogFileViewer
             // 
+            this.AllowDrop = true;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(759, 657);
@@ -224,6 +225,8 @@
             this.Name = "LogFileViewer";
             this.Text = "Log File Viewer";
             this.Load += new System.EventHandler(this.LogFileViewer_Load);
+            this.DragDrop += new System.Windows.Forms.DragEventHandler(this.LogFileViewer_DragDrop);
+            this.DragEnter += new System.Windows.Forms.DragEventHandler(this.LogFileViewer_DragEnter);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();

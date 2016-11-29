@@ -143,24 +143,29 @@ namespace LogFileViewer
 
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    m_bindingSource.RaiseListChangedEvents = false;
-                    m_dataTable.Rows.Clear();
-                    foreach (string file in dlg.FileNames)
-                    {
-                        string fileWithoutExtension = Path.GetFileNameWithoutExtension(file);
-                        List<LogMessage> messages = LogFileReader.Read(file);
-                        FilterFirstChanceExceptions(messages);
-                        foreach (LogMessage message in messages)
-                        {
-                            AddRowToDataTable(message, fileWithoutExtension);
-                        }
-
-                    }
-                    m_bindingSource.RaiseListChangedEvents = true;
-                    m_bindingSource.ResetBindings(false);
+                    LoadFiles(dlg.FileNames, false);
                 }
-                RefreshFilters();
             }
+        }
+
+        private void LoadFiles(string[] files, bool loadFiltered)
+        {
+            m_bindingSource.RaiseListChangedEvents = false;
+            m_dataTable.Rows.Clear();
+            foreach (string file in files)
+            {
+                string fileWithoutExtension = Path.GetFileNameWithoutExtension(file);
+                List<LogMessage> messages = LogFileReader.Read(file);
+                FilterFirstChanceExceptions(messages);
+                foreach (LogMessage message in messages)
+                {
+                    if (!loadFiltered || m_filters.All(x => x.IsIncluded(message)))
+                        AddRowToDataTable(message, fileWithoutExtension);
+                }
+            }
+            m_bindingSource.RaiseListChangedEvents = true;
+            m_bindingSource.ResetBindings(false);
+            RefreshFilters();
         }
 
         private void AddRowToDataTable(LogMessage message, string fileWithoutExtension)
@@ -194,27 +199,8 @@ namespace LogFileViewer
                 dlg.Multiselect = true;
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    m_bindingSource.RaiseListChangedEvents = false;
-
-                    m_dataTable.Rows.Clear();
-                    foreach (var file in dlg.FileNames)
-                    {
-                        string fileWithoutExtension = Path.GetFileNameWithoutExtension(file);
-                        List<LogMessage> messages = LogFileReader.Read(file);
-                        FilterFirstChanceExceptions(messages);
-
-                        foreach (LogMessage message in messages)
-                        {
-                            if (m_filters.All(x => x.IsIncluded(message)))
-                            {
-                                AddRowToDataTable(message, fileWithoutExtension);
-                            }
-                        }
-                    }
-                    m_bindingSource.RaiseListChangedEvents = true;
-                    m_bindingSource.ResetBindings(false);
+                    LoadFiles(dlg.FileNames, true);
                 }
-                RefreshFilters();
             }
         }
 
@@ -548,7 +534,6 @@ namespace LogFileViewer
             }
         }
 
-
         private void FilterFirstChanceExceptions(List<LogMessage> messages)
         {
             for (int x = 0; x < messages.Count; x++)
@@ -583,7 +568,7 @@ namespace LogFileViewer
                                 string exception = firstMessage.ExceptionString;
                                 if (exception.StartsWith("System.Net.Sockets.SocketException (0x") && exception.Contains("):"))
                                 {
-                                    exception = "System.Net.Sockets.SocketException" + exception.Substring(exception.IndexOf(")")+1) + Environment.NewLine + "   --- End of inner exception stack trace ---";
+                                    exception = "System.Net.Sockets.SocketException" + exception.Substring(exception.IndexOf(")") + 1) + Environment.NewLine + "   --- End of inner exception stack trace ---";
                                 }
 
                                 if (futureMessage.ExceptionString.EndsWith(exception))
@@ -606,6 +591,18 @@ namespace LogFileViewer
 
             }
 
+        }
+
+        private void LogFileViewer_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                e.Effect = DragDropEffects.Copy;
+        }
+
+        private void LogFileViewer_DragDrop(object sender, DragEventArgs e)
+        {
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            LoadFiles(files, (e.KeyState & 8) == 8); //CTRL is pushed.
         }
     }
 }
