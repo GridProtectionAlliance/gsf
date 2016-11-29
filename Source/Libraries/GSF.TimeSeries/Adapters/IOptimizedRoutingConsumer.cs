@@ -30,7 +30,7 @@ namespace GSF.TimeSeries.Adapters
 {
     /// <summary>
     /// Provides an alternative means of routing messages one at a time if an adapter
-    /// is more efficient at receiving messages one at a time.
+    /// is more efficient at receiving messages.
     /// </summary>
     public interface IOptimizedRoutingConsumer
     {
@@ -38,6 +38,6 @@ namespace GSF.TimeSeries.Adapters
         /// Gets the alternative routing method callbacks for this adapter.
         /// </summary>
         /// <returns>The methods if the adapter supports them. Null if this method is not to be used.</returns>
-        OptimizedRoutingConsumerMethods GetOptimizedRoutingConsumerMethods();
+        RoutingPassthroughMethod GetRoutingPassthroughMethods();
     }
 }

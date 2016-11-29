@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  OptimizedRoutingConsumerMethods.cs - Gbtc
+//  RoutingPassthroughMethod.cs - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -22,52 +22,30 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 
 namespace GSF.TimeSeries.Adapters
 {
     /// <summary>
     /// A set of methods that can be called to route measurements to an adapter that implements <see cref="IOptimizedRoutingConsumer"/>
     /// </summary>
-    public class OptimizedRoutingConsumerMethods
+    public class RoutingPassthroughMethod
     {
         /// <summary>
-        /// Object to lock before calling any of the provided methods. 
-        /// </summary> 
-        public readonly object LockObject;
-        /// <summary>
-        /// Method to call before any measurements are passed to <see cref="ProcessMeasurement"/>
+        /// Measurements can be directly passed through to this method without the need for routing/filtering.
         /// </summary>
-        public readonly Action BeginRouting;
-        /// <summary>
-        /// Where measurements are added when they are routed.
-        /// </summary>
-        public readonly Action<IMeasurement> ProcessMeasurement;
-        /// <summary>
-        /// Method to call after this round of routing has occurred.
-        /// </summary>
-        public readonly Action EndRouting;
+        public readonly Action<List<IMeasurement>> ProcessMeasurementList;
 
         /// <summary>
-        /// Creates a OptimizedRoutingConsumerMethods
+        /// Creates <see cref="RoutingPassthroughMethod"/>.
         /// </summary>
-        /// <param name="lockObject"></param>
-        /// <param name="beginRouting"></param>
-        /// <param name="processMeasurement"></param>
-        /// <param name="endRouting"></param>
-        public OptimizedRoutingConsumerMethods(object lockObject, Action beginRouting, Action<IMeasurement> processMeasurement, Action endRouting)
+        /// <param name="processMeasurementList"></param>
+        public RoutingPassthroughMethod(Action<List<IMeasurement>> processMeasurementList)
         {
-            LockObject = lockObject ?? this;
-            BeginRouting = beginRouting ?? CallNothing;
-            ProcessMeasurement = processMeasurement ?? CallNothing;
-            EndRouting = endRouting ?? CallNothing;
+            ProcessMeasurementList = processMeasurementList ?? CallNothing;
         }
 
-        void CallNothing()
-        {
-
-        }
-
-        void CallNothing(IMeasurement measurement)
+        void CallNothing(List<IMeasurement> measurement)
         {
 
         }

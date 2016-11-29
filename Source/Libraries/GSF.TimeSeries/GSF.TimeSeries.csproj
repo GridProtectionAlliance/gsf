@@ -80,7 +80,7 @@
     <Compile Include="Adapters\IaonSession.cs" />
     <Compile Include="Adapters\IOptimizedRoutingConsumer.cs" />
     <Compile Include="Adapters\IRouteMappingTables.cs" />
-    <Compile Include="Adapters\OptimizedRoutingConsumerMethods.cs" />
+    <Compile Include="Adapters\RoutingPassthroughMethod.cs" />
     <Compile Include="Adapters\RouteMappingDoubleBufferQueue.cs" />
     <Compile Include="Adapters\RoutingTablesAdaptersList.cs" />
     <Compile Include="Adapters\RouteMappingHighLatencyLowCpu.cs" />
