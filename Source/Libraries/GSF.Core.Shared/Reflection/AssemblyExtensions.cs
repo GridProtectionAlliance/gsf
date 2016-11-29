@@ -35,6 +35,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using GSF.Diagnostics;
 
 namespace GSF.Reflection
 {
@@ -318,8 +319,9 @@ namespace GSF.Reflection
                 // All referenced assemblies loaded successfully
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                Logger.SwallowException(ex, "AssemblyExtensions.cs TryLoadAllReferences: Failed to load for some reason.");
                 // Error loading a referenced assembly
                 return false;
             }

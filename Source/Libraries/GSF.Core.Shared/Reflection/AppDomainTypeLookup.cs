@@ -47,7 +47,6 @@ namespace GSF.Reflection
             m_assemblyVersionNumber = -1;
             m_syncRoot = new object();
             m_loadedAssemblies = new HashSet<Assembly>();
-
         }
 
         /// <summary>
@@ -130,7 +129,7 @@ namespace GSF.Reflection
             {
                 //Since its possible that during enumeration, the GetTypes method can error, this will allow us 
                 //to enumerate the types that did not error.
-                Log.Publish(MessageLevel.Error, "Reflection Load Error Occurred", assembly.GetName().Name, ex.ToString() + Environment.NewLine + String.Join(Environment.NewLine, ex.LoaderExceptions.Select(x => x.ToString())));
+                Log.Publish(MessageLevel.Error, "Reflection Load Error Occurred", assembly.GetName().Name, ex.ToString() + Environment.NewLine + String.Join(Environment.NewLine, ex.LoaderExceptions.Select(x => x.ToString())), ex);
                 types = ex.Types;
             }
 

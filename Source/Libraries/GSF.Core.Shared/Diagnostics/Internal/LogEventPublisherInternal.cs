@@ -127,11 +127,11 @@ namespace GSF.Diagnostics
             LogStackTrace currentStackTrace = LogStackTrace.Empty;
             if (m_stackTraceDepth > 0)
             {
-                currentStackTrace = new LogStackTrace(true, 1, m_stackTraceDepth);
+                currentStackTrace = new LogStackTrace(true, 2, m_stackTraceDepth);
             }
             else if (exception != null || attributes.Level >= MessageLevel.Error)
             {
-                currentStackTrace = new LogStackTrace(true, 1, 10);
+                currentStackTrace = new LogStackTrace(true, 2, 10);
             }
 
             var logMessage = new LogMessage(m_owner, initialStackMessage, initialStackTrace, currentStackMessages, currentStackTrace, attributes, message, details, exception);

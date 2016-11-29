@@ -47,6 +47,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Reflection;
 
@@ -167,8 +168,10 @@ namespace GSF
                         }
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Logger.SwallowException(ex, "TypeExtensions.cs LoadImplementations: Failed to load for some reason.");
+
                     // Absorb any exception thrown while processing the assembly.
                 }
             }

@@ -132,6 +132,7 @@ namespace GSF.Diagnostics
         private static readonly LogPublisher Log;
         private static readonly LogEventPublisher EventFirstChanceException;
         private static readonly LogEventPublisher EventAppDomainException;
+        private static readonly LogEventPublisher EventSwallowedException;
         private static StackDisposal[] s_stackDisposalStackMessages;
         private static StackDisposal[] s_stackDisposalSuppressionFlags;
         private static readonly object SyncRoot = new object();
@@ -154,6 +155,7 @@ namespace GSF.Diagnostics
             Log.InitialStackTrace = LogStackTrace.Empty;
             EventFirstChanceException = Log.RegisterEvent(MessageLevel.NA, MessageFlags.SystemHealth, "First Chance App Domain Exception", 30, MessageRate.PerSecond(30), 1000);
             EventAppDomainException = Log.RegisterEvent(MessageLevel.Critical, MessageFlags.SystemHealth, "Unhandled App Domain Exception");
+            EventSwallowedException = Log.RegisterEvent(MessageLevel.Debug, MessageFlags.None, "Exception was Swallowed", 30, MessageRate.PerSecond(30), 1000);
 
             ShutdownHandler.Initialize();
         }
@@ -178,7 +180,7 @@ namespace GSF.Diagnostics
                 Log.Publish(MessageLevel.Critical, MessageFlags.SystemHealth, "Logger is shutting down.");
                 s_logger.Dispose();
                 Console.Verbose = VerboseLevel.None;
-                FileWriter.Dispose(); 
+                FileWriter.Dispose();
                 //Cannot raise log messages here since the logger is now shutdown.
             }
             catch (Exception)
@@ -272,6 +274,18 @@ namespace GSF.Diagnostics
             var subscriber = new LogSubscriber(s_logger.CreateSubscriber());
             subscriber.SubscribeToAll(level);
             return subscriber;
+        }
+
+        /// <summary>
+        /// Logs that a first chance exception was intentionally not handled for the provided reason.
+        /// In the LogFileViewer it will filter messages differently if it was indicated that they were swallowed.
+        /// </summary>
+        /// <param name="ex">the exception that was swallowed</param>
+        /// <param name="message">message to include, such as a reason why it was swallowed.</param>
+        /// <param name="details">additional details.</param>
+        public static void SwallowException(Exception ex, string message = null, string details = null)
+        {
+            EventSwallowedException.Publish(message, details, ex);
         }
 
         /// <summary>

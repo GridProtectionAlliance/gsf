@@ -40,10 +40,12 @@ namespace GSF.Threading
         private ManualResetEvent m_threadPausedWaitHandler;
         private ManualResetEvent m_threadSleepWaitHandler;
         private volatile int m_sleepTime;
+        private bool m_isBackground;
 
         public ThreadContainerDedicated(Action<CallbackArgs> callback, Action disposeAndWaitCallback, bool isBackground, ThreadPriority priority, bool disposeOnShutdown)
             : base(callback, disposeAndWaitCallback, disposeOnShutdown)
         {
+            m_isBackground = isBackground;
             if (disposeOnShutdown || !isBackground)
             {
                 ShutdownHandler.TryRegisterCallback(Shutdown);
@@ -58,7 +60,7 @@ namespace GSF.Threading
             m_thread.Priority = priority;
             m_thread.Start();
         }
-        
+
         void ThreadLoop()
         {
             while (true)
@@ -79,16 +81,29 @@ namespace GSF.Threading
                     m_shouldReRunAfterDelay = false;
 
                     if (m_shouldReRunAfterDelayValue != 0)
+                    {
+                        //Set the foreground threads to background threads before sleeping.
+                        if (!m_isBackground)
+                            m_thread.IsBackground = true;
                         m_threadSleepWaitHandler.WaitOne(m_shouldReRunAfterDelayValue);
+                        if (!m_isBackground)
+                            m_thread.IsBackground = false;
+                    }
 
                     OnRunning();
                 }
                 else
                 {
-                    m_threadPausedWaitHandler.WaitOne(-1);
+                    //Set the foreground threads to background threads before sleeping.
+                    if (!m_isBackground)
+                        m_thread.IsBackground = true;
 
+                    m_threadPausedWaitHandler.WaitOne(-1);
                     if (m_sleepTime != 0)
                         m_threadSleepWaitHandler.WaitOne(m_sleepTime);
+
+                    if (!m_isBackground)
+                        m_thread.IsBackground = false;
 
                     OnRunning();
                 }

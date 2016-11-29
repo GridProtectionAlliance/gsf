@@ -68,6 +68,7 @@ using System.Net.Security;
 using System.Security.Authentication;
 #endif
 using GSF.Configuration;
+using GSF.Diagnostics;
 using GSF.Threading;
 
 namespace GSF.Communication
@@ -1571,6 +1572,8 @@ namespace GSF.Communication
         {
             if (CurrentState != ClientState.Disconnected)
                 base.OnSendDataException(ex);
+            else
+                Logger.SwallowException(ex, "TcpClient.cs: The client state was disconnected");
         }
 
         /// <summary>
@@ -1581,6 +1584,9 @@ namespace GSF.Communication
         {
             if (ex.SocketErrorCode != SocketError.Disconnecting)
                 OnReceiveDataException((Exception)ex);
+            else
+                Logger.SwallowException(ex, "TcpClient.cs: The socket was disconnecting");
+
         }
 
         /// <summary>
@@ -1591,6 +1597,8 @@ namespace GSF.Communication
         {
             if (CurrentState != ClientState.Disconnected)
                 base.OnReceiveDataException(ex);
+            else
+                Logger.SwallowException(ex, "TcpClient.cs: The socket was disconnected");
         }
 
         /// <summary>

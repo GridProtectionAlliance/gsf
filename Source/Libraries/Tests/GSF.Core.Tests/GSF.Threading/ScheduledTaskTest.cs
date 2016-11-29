@@ -21,7 +21,9 @@
 //
 //******************************************************************************************************
 
+using System.Diagnostics;
 using System.Threading;
+using System.Windows.Forms;
 using GSF.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -36,7 +38,7 @@ namespace GSF.Core.Tests.GSF.Threading
         [TestMethod]
         public void TestMethod1()
         {
-            m_task = new ScheduledTask(ThreadingMode.DedicatedBackground,ThreadPriority.Highest);
+            m_task = new ScheduledTask(ThreadingMode.DedicatedBackground, ThreadPriority.Highest);
             m_task.Running += task_Running;
             m_task.Start(10);
             Thread.Sleep(1000);
@@ -51,6 +53,37 @@ namespace GSF.Core.Tests.GSF.Threading
             m_task.Start(10);
             m_count++;
             System.Console.WriteLine(m_count);
+        }
+
+
+        [TestMethod]
+        public void BenchmarkBackgroundFlag()
+        {
+            var thread = new Thread(Start);
+            thread.Start();
+            Thread.Sleep(2000);
+            System.Console.WriteLine("Disposed");
+        }
+
+        void Start(object state)
+        {
+            var myThread = Thread.CurrentThread;
+            for (int x = 0; x < 1000 * 1000; x++)
+            {
+                myThread.IsBackground = true;
+                myThread.IsBackground = false;
+            }
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
+            for (int x = 0; x < 1000 * 1000; x++)
+            {
+                myThread.IsBackground = true;
+                myThread.IsBackground = false;
+            }
+            System.Console.WriteLine((2 * 1000 * 1000 / sw.Elapsed.TotalSeconds).ToString("N0"));
+
+
         }
     }
 }

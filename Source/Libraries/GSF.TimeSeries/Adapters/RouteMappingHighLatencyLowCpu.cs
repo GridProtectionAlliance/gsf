@@ -160,7 +160,7 @@ namespace GSF.TimeSeries.Adapters
 
         // Fields
         private readonly ScheduledTask m_task;
-        private readonly ConcurrentIsolatedQueue<List<IMeasurement>> m_inboundQueue;
+        private readonly ConcurrentQueue<List<IMeasurement>> m_inboundQueue;
         private long m_measurementsRoutedInputFrames;
         private long m_measurementsRoutedInputMeasurements;
         private long m_measurementsRoutedOutput;
@@ -189,7 +189,7 @@ namespace GSF.TimeSeries.Adapters
             m_maxPendingMeasurements = 1000;
             m_routeLatency = OptimizationOptions.RoutingLatency;
             m_batchSize = OptimizationOptions.RoutingBatchSize;
-            m_inboundQueue = new ConcurrentIsolatedQueue<List<IMeasurement>>();
+            m_inboundQueue = new ConcurrentQueue<List<IMeasurement>>();
 
             m_task = new ScheduledTask(ThreadingMode.DedicatedBackground, ThreadPriority.AboveNormal);
             m_task.Running += m_task_Running;

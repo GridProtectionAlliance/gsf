@@ -34,6 +34,7 @@ using System.Security;
 using System.Security.Principal;
 using System.Text.RegularExpressions;
 using System.Threading;
+using GSF.Diagnostics;
 using GSF.Interop;
 using GSF.IO;
 using Microsoft.Win32;
@@ -803,8 +804,9 @@ namespace GSF.Identity
                     // Don't include "BUILTIN\" prefix for group names so they are easily comparable
                     builtInGroups.Add(groupAccount.ToString().Substring(8));
                 }
-                catch (IdentityNotMappedException)
+                catch (IdentityNotMappedException ex)
                 {
+                    Logger.SwallowException(ex, "WindowsUserInfo.cs Static Constructor: Failed to lookup identity", builtInSid.ToString());
                 }
             }
 
@@ -1405,8 +1407,9 @@ namespace GSF.Identity
 
                 return securityIdentifier.ToString();
             }
-            catch (IdentityNotMappedException)
+            catch (IdentityNotMappedException ex)
             {
+                Logger.SwallowException(ex, "WindowsUserInfo.cs AccountNameToSID: Error in mapping");
                 machineAlias = @".\";
                 machineDomain = Environment.MachineName + @"\";
 
