@@ -651,7 +651,7 @@ namespace GSF.TimeSeries.Transport
     /// </summary>
     [Description("DataPublisher: server component that allows gateway-style subscription connections.")]
     [EditorBrowsable(EditorBrowsableState.Always)]
-    public class DataPublisher : ActionAdapterCollection
+    public class DataPublisher : ActionAdapterCollection, IOptimizedRoutingConsumer
     {
         #region [ Members ]
 
@@ -1709,6 +1709,27 @@ namespace GSF.TimeSeries.Transport
             m_routingTables.InjectMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurementList));
 
             measurementCount = measurementList.Count;
+            m_lifetimeMeasurements += measurementCount;
+            UpdateMeasurementsPerSecond(measurementCount);
+        }
+
+
+        RoutingPassthroughMethod IOptimizedRoutingConsumer.GetRoutingPassthroughMethods()
+        {
+            return new RoutingPassthroughMethod(QueueMeasurementsForProcessing);
+        }
+
+        /// <summary>
+        /// Queues a collection of measurements for processing to each <see cref="IActionAdapter"/> connected to this <see cref="DataPublisher"/>.
+        /// </summary>
+        /// <param name="measurements">Measurements to queue for processing.</param>
+        private void QueueMeasurementsForProcessing(List<IMeasurement> measurements)
+        {
+            int measurementCount;
+
+            m_routingTables.InjectMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
+
+            measurementCount = measurements.Count;
             m_lifetimeMeasurements += measurementCount;
             UpdateMeasurementsPerSecond(measurementCount);
         }

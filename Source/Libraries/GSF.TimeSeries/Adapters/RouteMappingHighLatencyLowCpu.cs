@@ -114,6 +114,7 @@ namespace GSF.TimeSeries.Adapters
 
             public GlobalCache(Dictionary<IAdapter, Consumer> consumers, int version)
             {
+                NormalDestinationAdapters = new List<Consumer>();
                 RoutingPassthroughAdapters = new List<RoutingPassthroughMethod>();
                 GlobalSignalLookup = new IndexedArray<List<Consumer>>();
                 BroadcastConsumers = new List<Consumer>();

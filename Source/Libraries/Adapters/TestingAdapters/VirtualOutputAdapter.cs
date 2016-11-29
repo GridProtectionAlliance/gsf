@@ -41,6 +41,21 @@ namespace TestingAdapters
         #region [ Properties ]
 
         /// <summary>
+        /// Causes this adapter to receive no measurements
+        /// </summary>
+        public override MeasurementKey[] InputMeasurementKeys
+        {
+            get
+            {
+                return new MeasurementKey[0];
+            }
+            set
+            {
+
+            }
+        }
+
+        /// <summary>
         /// Returns a flag that determines if measurements sent to this <see cref="VirtualOutputAdapter"/> are
         /// destined for archival.
         /// </summary>

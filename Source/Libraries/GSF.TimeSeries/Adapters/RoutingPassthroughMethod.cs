@@ -28,6 +28,7 @@ namespace GSF.TimeSeries.Adapters
 {
     /// <summary>
     /// A set of methods that can be called to route measurements to an adapter that implements <see cref="IOptimizedRoutingConsumer"/>
+    /// Note, this method will be called within a synchronized context.
     /// </summary>
     public class RoutingPassthroughMethod
     {
