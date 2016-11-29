@@ -21,7 +21,7 @@
 //  04/20/2009 - Pinal C. Patel
 //       Converted to C#.
 //  09/10/2009 - Pinal C. Patel
-//       Added contructor that takes in IMeasurement.
+//       Added constructor that takes in IMeasurement.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //  03/15/2010 - Pinal C. Patel
@@ -43,6 +43,8 @@ using System;
 using System.Globalization;
 using GSF.TimeSeries;
 
+// ReSharper disable VirtualMemberCallInConstructor
+// ReSharper disable NonReadonlyMemberInGetHashCode
 namespace GSF.Historian.Files
 {
     /// <summary>
@@ -308,16 +310,21 @@ namespace GSF.Historian.Files
                 // Binary image has sufficient data.
                 Flags = LittleEndian.ToInt16(buffer, startIndex + 4);
                 Value = LittleEndian.ToSingle(buffer, startIndex + 6);
-                Time = new TimeTag(LittleEndian.ToInt32(buffer, startIndex) +   // Seconds
+
+                TimeTag value = new TimeTag(LittleEndian.ToInt32(buffer, startIndex) +       // Seconds
                         ((decimal)(m_flags.GetMaskedValue(MillisecondMask) >> 5) / 1000));   // Milliseconds
+
+                // Make sure to properly validate timestamps for newly initialized or possibly corrupted blocks
+                if (value.CompareTo(TimeTag.MinValue) < 0 || value.CompareTo(TimeTag.MaxValue) > 0)
+                    value = TimeTag.MinValue;
+
+                Time = value;
 
                 return FixedLength;
             }
-            else
-            {
-                // Binary image does not have sufficient data.
-                return 0;
-            }
+            
+            // Binary image does not have sufficient data.
+            return 0;
         }
 
         /// <summary>
@@ -469,7 +476,7 @@ namespace GSF.Historian.Files
                         return Metadata.Synonym3;
                     return "";
                 default:
-                    throw new FormatException("Invalid format identifer specified for ArchiveDataPoint: " + format);
+                    throw new FormatException("Invalid format identifier specified for ArchiveDataPoint: " + format);
             }
         }
 
