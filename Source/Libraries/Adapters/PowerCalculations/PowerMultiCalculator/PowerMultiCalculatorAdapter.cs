@@ -317,7 +317,7 @@ namespace PowerCalculations.PowerMultiCalculator
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(MessageLevel.Warning, "PowerCalculator", ex);
+                    OnProcessException(MessageLevel.Warning, ex);
                 }
                 finally
                 {

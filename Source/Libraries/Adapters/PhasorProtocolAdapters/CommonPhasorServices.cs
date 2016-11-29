@@ -198,7 +198,7 @@ namespace PhasorProtocolAdapters
 
             if (string.IsNullOrEmpty(connectionString))
             {
-                OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", "ERROR: No connection string was specified, request for configuration canceled.");
+                OnStatusMessage(MessageLevel.Info, "ERROR: No connection string was specified, request for configuration canceled.");
                 return new ConfigurationErrorFrame();
             }
 
@@ -231,7 +231,7 @@ namespace PhasorProtocolAdapters
                     m_configurationFrame = null;
 
                     // Inform user of temporary loss of command access
-                    OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", $"\r\n{stars}\r\n\r\nAttempting to request remote device configuration.\r\n\r\nThis request could take up to sixty seconds to complete.\r\n\r\nOther CPS config requests will not be accepted until request succeeds or fails.\r\n\r\n{stars}");
+                    OnStatusMessage(MessageLevel.Info, $"\r\n{stars}\r\n\r\nAttempting to request remote device configuration.\r\n\r\nThis request could take up to sixty seconds to complete.\r\n\r\nOther CPS config requests will not be accepted until request succeeds or fails.\r\n\r\n{stars}");
 
                     // Make sure the wait handle is not set
                     m_configurationWaitHandle.Reset();
@@ -243,7 +243,7 @@ namespace PhasorProtocolAdapters
                     // to receive a configuration frame. If the device connection is Active or Hybrid then the configuration frame should be
                     // returned immediately - for purely Passive connections the configuration frame is delivered once per minute.
                     if (!m_configurationWaitHandle.WaitOne(60000))
-                        OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", "WARNING: Timed-out waiting to retrieve remote device configuration.");
+                        OnStatusMessage(MessageLevel.Info, "WARNING: Timed-out waiting to retrieve remote device configuration.");
 
                     // Terminate connection to device
                     m_frameParser.Stop();
@@ -253,16 +253,16 @@ namespace PhasorProtocolAdapters
                         m_configurationFrame = new ConfigurationErrorFrame();
 
                         if (m_cancelConfigurationFrameRequest)
-                            OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", "Configuration frame request canceled by user.");
+                            OnStatusMessage(MessageLevel.Info, "Configuration frame request canceled by user.");
                         else
-                            OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", "Failed to retrieve remote device configuration.");
+                            OnStatusMessage(MessageLevel.Info, "Failed to retrieve remote device configuration.");
                     }
 
                     return m_configurationFrame;
                 }
                 catch (Exception ex)
                 {
-                    OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", $"ERROR: Failed to request configuration due to exception: {ex.Message}");
+                    OnStatusMessage(MessageLevel.Info, $"ERROR: Failed to request configuration due to exception: {ex.Message}");
                 }
                 finally
                 {
@@ -272,12 +272,12 @@ namespace PhasorProtocolAdapters
                     Monitor.Exit(m_frameParser);
 
                     // Inform user of restoration of command access
-                    OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", $"\r\n{stars}\r\n\r\nRemote device configuration request completed.\r\n\r\nCPS config requests have been restored.\r\n\r\n{stars}");
+                    OnStatusMessage(MessageLevel.Info, $"\r\n{stars}\r\n\r\nRemote device configuration request completed.\r\n\r\nCPS config requests have been restored.\r\n\r\n{stars}");
                 }
             }
             else
             {
-                OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", "ERROR: Cannot process simultaneous requests for device configurations, please try again in a few seconds..");
+                OnStatusMessage(MessageLevel.Info, "ERROR: Cannot process simultaneous requests for device configurations, please try again in a few seconds..");
             }
 
             return new ConfigurationErrorFrame();
@@ -302,11 +302,11 @@ namespace PhasorProtocolAdapters
             if ((object)m_frameParser != null)
             {
                 m_frameParser.SendDeviceCommand(command);
-                OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", $"Sent device command \"{command}\"...");
+                OnStatusMessage(MessageLevel.Info, $"Sent device command \"{command}\"...");
             }
             else
             {
-                OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", $"Failed to send device command \"{command}\", no frame parser is defined.");
+                OnStatusMessage(MessageLevel.Info, $"Failed to send device command \"{command}\", no frame parser is defined.");
             }
         }
 
@@ -315,7 +315,7 @@ namespace PhasorProtocolAdapters
             // Cache received configuration frame
             m_configurationFrame = e.Argument;
 
-            OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", "Successfully received configuration frame!");
+            OnStatusMessage(MessageLevel.Info, "Successfully received configuration frame!");
 
             // Clear wait handle
             m_configurationWaitHandle.Set();
@@ -325,7 +325,7 @@ namespace PhasorProtocolAdapters
         {
             // Communications layer closed connection (close not initiated by system) - so we cancel request..
             if (m_frameParser.Enabled)
-                OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", "ERROR: Connection closed by remote device, request for configuration canceled.");
+                OnStatusMessage(MessageLevel.Info, "ERROR: Connection closed by remote device, request for configuration canceled.");
 
             // Clear wait handle
             m_configurationWaitHandle.Set();
@@ -333,7 +333,7 @@ namespace PhasorProtocolAdapters
 
         private void m_frameParser_ConnectionEstablished(object sender, EventArgs e)
         {
-            OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", "Connected to remote device, requesting configuration frame...");
+            OnStatusMessage(MessageLevel.Info, "Connected to remote device, requesting configuration frame...");
 
             // Send manual request for configuration frame
             SendCommand(DeviceCommand.SendConfigurationFrame2);
@@ -341,7 +341,7 @@ namespace PhasorProtocolAdapters
 
         private void m_frameParser_ConnectionException(object sender, EventArgs<Exception, int> e)
         {
-            OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", $"ERROR: Connection attempt failed, request for configuration canceled: {e.Argument1.Message}");
+            OnStatusMessage(MessageLevel.Info, $"ERROR: Connection attempt failed, request for configuration canceled: {e.Argument1.Message}");
 
             // Clear wait handle
             m_configurationWaitHandle.Set();
@@ -349,12 +349,12 @@ namespace PhasorProtocolAdapters
 
         private void m_frameParser_ParsingException(object sender, EventArgs<Exception> e)
         {
-            OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", $"ERROR: Parsing exception during request for configuration: {e.Argument.Message}");
+            OnStatusMessage(MessageLevel.Info, $"ERROR: Parsing exception during request for configuration: {e.Argument.Message}");
         }
 
         private void m_frameParser_ExceededParsingExceptionThreshold(object sender, EventArgs e)
         {
-            OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", "\r\nRequest for configuration canceled due to an excessive number of exceptions...\r\n");
+            OnStatusMessage(MessageLevel.Info, "\r\nRequest for configuration canceled due to an excessive number of exceptions...\r\n");
 
             // Clear wait handle
             m_configurationWaitHandle.Set();
@@ -362,7 +362,7 @@ namespace PhasorProtocolAdapters
 
         private void m_frameParser_ConnectionAttempt(object sender, EventArgs e)
         {
-            OnStatusMessage(MessageLevel.Info, "CommonPhasorServices", $"Attempting {m_frameParser.PhasorProtocol.GetFormattedProtocolName()} {m_frameParser.TransportProtocol.ToString().ToUpper()} based connection...");
+            OnStatusMessage(MessageLevel.Info, $"Attempting {m_frameParser.PhasorProtocol.GetFormattedProtocolName()} {m_frameParser.TransportProtocol.ToString().ToUpper()} based connection...");
         }
 
         #endregion

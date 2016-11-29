@@ -101,6 +101,7 @@ namespace GSF.TimeSeries.Adapters
         private int m_minimumMeasurementsToUse;
         private DateTime m_startTimeConstraint;
         private DateTime m_stopTimeConstraint;
+        private string m_defaultEventName;
         private int m_hashCode;
         private bool m_initialized;
         private bool m_disposed;
@@ -131,6 +132,60 @@ namespace GSF.TimeSeries.Adapters
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets name of the action adapter.
+        /// </summary>
+        public virtual string Name
+        {
+            get
+            {
+                return m_name;
+            }
+            set
+            {
+                m_name = value;
+                Log.InitialStackMessages = new LogStackMessages("AdapterName", m_name);
+                GenHashCode();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets default event name.
+        /// </summary>
+        /// <remarks>
+        /// Default value is adapter <see cref="Name"/>.
+        /// </remarks>
+        protected string DefaultEventName
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(m_defaultEventName))
+                    m_defaultEventName = Name;
+
+                return m_defaultEventName;
+            }
+            set
+            {
+                m_defaultEventName = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets numeric ID associated with this action adapter.
+        /// </summary>
+        public virtual uint ID
+        {
+            get
+            {
+                return m_id;
+            }
+            set
+            {
+                m_id = value;
+                GenHashCode();
+            }
+        }
 
         /// <summary>
         /// Gets or sets key/value pair connection information specific to action adapter.
@@ -563,39 +618,6 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets name of the action adapter.
-        /// </summary>
-        public virtual string Name
-        {
-            get
-            {
-                return m_name;
-            }
-            set
-            {
-                m_name = value;
-                Log.InitialStackMessages = new LogStackMessages("AdapterName", m_name);
-                GenHashCode();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets numeric ID associated with this action adapter.
-        /// </summary>
-        public virtual uint ID
-        {
-            get
-            {
-                return m_id;
-            }
-            set
-            {
-                m_id = value;
-                GenHashCode();
-            }
-        }
-
-        /// <summary>
         /// Gets or sets flag indicating if the action adapter has been initialized successfully.
         /// </summary>
         public virtual bool Initialized
@@ -871,7 +893,7 @@ namespace GSF.TimeSeries.Adapters
                 }
                 else
                 {
-                    OnStatusMessage(MessageLevel.Info, "ActionAdapterBase", $"WARNING: No down-sampling method labeled \"{setting}\" exists, \"LastReceived\" method was selected.");
+                    OnStatusMessage(MessageLevel.Info, $"WARNING: No down-sampling method labeled \"{setting}\" exists, \"LastReceived\" method was selected.");
                     DownsamplingMethod = DownsamplingMethod.LastReceived;
                 }
             }
@@ -947,7 +969,7 @@ namespace GSF.TimeSeries.Adapters
         [AdapterCommand("Examines concentration frame queue state.", "Administrator", "Editor", "Viewer")]
         public void ExamineQueueState()
         {
-            OnStatusMessage(MessageLevel.Info, "ActionAdapterBase", QueueState);
+            OnStatusMessage(MessageLevel.Info, QueueState);
         }
 
         /// <summary>
@@ -959,7 +981,7 @@ namespace GSF.TimeSeries.Adapters
             base.ResetStatistics();
 
             if (Enabled)
-                OnStatusMessage(MessageLevel.Info, "ActionAdapterBase", "Action adapter concentration statistics have been reset.");
+                OnStatusMessage(MessageLevel.Info, "Action adapter concentration statistics have been reset.");
         }
 
         /// <summary>
@@ -1148,7 +1170,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, "ActionAdapterBase", new InvalidOperationException($"Exception in consumer handler for NewMeasurements event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for NewMeasurements event: {ex.Message}", ex));
             }
         }
 
@@ -1159,7 +1181,7 @@ namespace GSF.TimeSeries.Adapters
         [Obsolete("Switch to using overload with MessageLevel parameter - this method may be removed from future builds.", false)]
         protected void OnStatusMessage(string status)
         {
-            OnStatusMessage(MessageLevel.Info, "Unclassified Status", status);
+            OnStatusMessage(MessageLevel.Info, status, "Unclassified Status");
         }
 
         /// <summary>
@@ -1173,25 +1195,29 @@ namespace GSF.TimeSeries.Adapters
         [StringFormatMethod("formattedStatus"), Obsolete("Switch to using overload with MessageLevel parameter - this method may be removed from future builds.", false)]
         protected void OnStatusMessage(string formattedStatus, params object[] args)
         {
-            OnStatusMessage(MessageLevel.Info, "Unclassified Status", string.Format(formattedStatus, args));
+            OnStatusMessage(MessageLevel.Info, string.Format(formattedStatus, args), "Unclassified Status");
         }
 
         /// <summary>
         /// Raises the <see cref="StatusMessage"/> event and sends this data to the <see cref="Logger"/>.
         /// </summary>
         /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
-        /// <param name="eventName">A fixed string to classify this event.</param>
         /// <param name="status">New status message.</param>
+        /// <param name="eventName">A fixed string to classify this event; defaults to <see cref="DefaultEventName"/>.</param>
+        /// <param name="flags"><see cref="MessageFlags"/> to use, if any; defaults to <see cref="MessageFlags.None"/>.</param>
         /// <remarks>
-        /// <see pref="eventName"/> should be a constant string value associated with what type of message is being generated. 
-        /// In general, there should only be a few dozen distinct event names per class. Exceeding this threshold.
-        /// Will cause the EventName to be replaced with a general warning that a usage issue has occurred.
+        /// <see pref="eventName"/> should be a constant string value associated with what type of message is being
+        /// generated. In general, there should only be a few dozen distinct event names per class. Exceeding this
+        /// threshold will cause the EventName to be replaced with a general warning that a usage issue has occurred.
         /// </remarks>
-        protected virtual void OnStatusMessage(MessageLevel level, string eventName, string status)
+        protected virtual void OnStatusMessage(MessageLevel level, string status, string eventName = null, MessageFlags flags = MessageFlags.None)
         {
             try
             {
-                Log.Publish(level, eventName, status);
+                if (string.IsNullOrWhiteSpace(eventName))
+                    eventName = DefaultEventName;
+
+                Log.Publish(level, flags, eventName, status);
 
                 using (Logger.SuppressLogMessages())
                     StatusMessage?.Invoke(this, new EventArgs<string>(status));
@@ -1199,8 +1225,29 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, "ActionAdapterBase", new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex));
             }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ConcentratorBase.ProcessException"/> event.
+        /// </summary>
+        /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
+        /// <param name="exception">Processing <see cref="Exception"/>.</param>
+        /// <param name="eventName">A fixed string to classify this event; defaults to <see cref="DefaultEventName"/>.</param>
+        /// <param name="flags"><see cref="MessageFlags"/> to use, if any; defaults to <see cref="MessageFlags.None"/>.</param>
+        /// <remarks>
+        /// <see pref="eventName"/> should be a constant string value associated with what type of message is being
+        /// generated. In general, there should only be a few dozen distinct event names per class. Exceeding this
+        /// threshold will cause the EventName to be replaced with a general warning that a usage issue has occurred.
+        /// </remarks>
+        // ReSharper disable once OptionalParameterHierarchyMismatch
+        protected override void OnProcessException(MessageLevel level, Exception exception, string eventName = null, MessageFlags flags = MessageFlags.None)
+        {
+            if (string.IsNullOrWhiteSpace(eventName))
+                eventName = DefaultEventName;
+
+            base.OnProcessException(level, exception, eventName, flags);
         }
 
         /// <summary>
@@ -1215,7 +1262,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, "ActionAdapterBase", new InvalidOperationException($"Exception in consumer handler for InputMeasurementKeysUpdated event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for InputMeasurementKeysUpdated event: {ex.Message}", ex));
             }
         }
 
@@ -1231,7 +1278,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, "ActionAdapterBase", new InvalidOperationException($"Exception in consumer handler for OutputMeasurementsUpdated event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for OutputMeasurementsUpdated event: {ex.Message}", ex));
             }
         }
 
@@ -1247,7 +1294,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, "ActionAdapterBase", new InvalidOperationException($"Exception in consumer handler for ConfigurationChanged event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ConfigurationChanged event: {ex.Message}", ex));
             }
         }
 

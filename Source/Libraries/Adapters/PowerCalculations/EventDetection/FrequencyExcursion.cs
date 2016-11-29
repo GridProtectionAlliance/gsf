@@ -409,7 +409,7 @@ namespace PowerCalculations.EventDetection
 
         private void OutputFrequencyWarning(DateTime timestamp, double delta, ExcursionType typeOfExcursion, double totalAmount)
         {
-            OnStatusMessage(MessageLevel.Info, "FrequencyExcursion", $"WARNING: Frequency excursion detected!\r\n              Time = {timestamp:dd-MMM-yyyy HH:mm:ss.fff}\r\n             Delta = {delta}\r\n              Type = {typeOfExcursion}\r\n    Estimated Size = {totalAmount:0.00}MW\r\n");
+            OnStatusMessage(MessageLevel.Info, $"WARNING: Frequency excursion detected!\r\n              Time = {timestamp:dd-MMM-yyyy HH:mm:ss.fff}\r\n             Delta = {delta}\r\n              Type = {typeOfExcursion}\r\n    Estimated Size = {totalAmount:0.00}MW\r\n");
         }
 
         #endregion

@@ -34,6 +34,7 @@ using System.Text;
 using System.Threading;
 using System.Timers;
 using GSF;
+using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using OSIsoft.AF.Asset;
@@ -301,13 +302,7 @@ namespace PIAdapters
         /// <summary>
         /// Gets flag that determines if this <see cref="PIAdapters.PIPBInputAdapter"/> uses an asynchronous connection.
         /// </summary>
-        protected override bool UseAsyncConnect
-        {
-            get
-            {
-                return false;
-            }
-        }
+        protected override bool UseAsyncConnect => false;
 
         /// <summary>
         /// Returns the detailed status of the data input source.
@@ -435,7 +430,7 @@ namespace PIAdapters
         public override string GetShortStatus(int maxLength)
         {
             if (Enabled && m_publicationTime > 0)
-                return string.Format("Publishing data for {0}...", (new DateTime(m_publicationTime)).ToString("yyyy-MM-dd HH:mm:ss.fff")).CenterText(maxLength);
+                return $"Publishing data for {(new DateTime(m_publicationTime)).ToString("yyyy-MM-dd HH:mm:ss.fff")}...".CenterText(maxLength);
 
             return "Not currently publishing data".CenterText(maxLength);
         }
@@ -495,7 +490,7 @@ namespace PIAdapters
                 Points = m_points,
                 StartTime = startTime,
                 EndTime = endTime,
-                DataReadExceptionHandler = OnProcessException
+                DataReadExceptionHandler = ex => OnProcessException(MessageLevel.Warning, ex)
             }
             .Read();
         }
@@ -508,9 +503,9 @@ namespace PIAdapters
                 if (SupportsTemporalProcessing)
                 {
                     if ((object)RequestedOutputMeasurementKeys != null)
-                        OnStatusMessage("Replaying for requested output keys: {0:N0} defined measurements", RequestedOutputMeasurementKeys.Length);
+                        OnStatusMessage(MessageLevel.Info, $"Replaying for requested output keys: {RequestedOutputMeasurementKeys.Length:N0} defined measurements");
                     else
-                        OnStatusMessage("No measurements have been requested for playback - make sure \"; connectOnDemand=true\" is defined in the connection string for the reader.");
+                        OnStatusMessage(MessageLevel.Warning, "No measurements have been requested for playback - make sure \"; connectOnDemand=true\" is defined in the connection string for the reader.");
                 }
 
                 MeasurementKey[] requestedKeys = SupportsTemporalProcessing ? RequestedOutputMeasurementKeys : OutputMeasurements.MeasurementKeys().ToArray();
@@ -561,11 +556,11 @@ namespace PIAdapters
 
                         if (m_readTimer.Enabled)
                         {
-                            OnStatusMessage("Starting historical data read...");
+                            OnStatusMessage(MessageLevel.Info, "Starting historical data read...");
                         }
                         else
                         {
-                            OnStatusMessage("No historical data was available to read for given time frame.");
+                            OnStatusMessage(MessageLevel.Info, "No historical data was available to read for given time frame.");
                             OnProcessingComplete();
                         }
                     }
@@ -573,13 +568,13 @@ namespace PIAdapters
                 else
                 {
                     m_readTimer.Enabled = false;
-                    OnStatusMessage("No measurement keys have been requested for reading, historian reader is idle.");
+                    OnStatusMessage(MessageLevel.Info, "No measurement keys have been requested for reading, historian reader is idle.");
                     OnProcessingComplete();
                 }
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Could not start historical data read due to exception: {0}", ex.Message), ex));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Could not start historical data read due to exception: {ex.Message}", ex));
             }
         }
 
@@ -617,7 +612,7 @@ namespace PIAdapters
                         }
                         catch (Exception ex)
                         {
-                            OnProcessException(new InvalidOperationException("Failed to map AFValue to Measurement: " + ex.Message, ex));
+                            OnProcessException(MessageLevel.Info, new InvalidOperationException("Failed to map AFValue to Measurement: " + ex.Message, ex));
                         }
 
                         // Attempt to move to next record

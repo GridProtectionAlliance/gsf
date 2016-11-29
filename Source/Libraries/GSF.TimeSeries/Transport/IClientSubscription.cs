@@ -155,17 +155,19 @@ namespace GSF.TimeSeries.Transport
         /// Explicitly raises the <see cref="IAdapter.StatusMessage"/> event.
         /// </summary>
         /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
-        /// <param name="eventName">A fixed string to classify this event.</param>
         /// <param name="status">New status message.</param>
-        void OnStatusMessage(MessageLevel level, string eventName, string status);
+        /// <param name="eventName">A fixed string to classify this event; defaults to <see cref="AdapterBase.DefaultEventName"/>.</param>
+        /// <param name="flags"><see cref="MessageFlags"/> to use, if any; defaults to <see cref="MessageFlags.None"/>.</param>
+        void OnStatusMessage(MessageLevel level, string status, string eventName = null, MessageFlags flags = MessageFlags.None);
 
         /// <summary>
         /// Explicitly raises the <see cref="IAdapter.ProcessException"/> event.
         /// </summary>
         /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
-        /// <param name="eventName">A fixed string to classify this event.</param>
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
-        void OnProcessException(MessageLevel level, string eventName, Exception ex);
+        /// <param name="eventName">A fixed string to classify this event; defaults to <see cref="AdapterBase.DefaultEventName"/>.</param>
+        /// <param name="flags"><see cref="MessageFlags"/> to use, if any; defaults to <see cref="MessageFlags.None"/>.</param>
+        void OnProcessException(MessageLevel level, Exception ex, string eventName = null, MessageFlags flags = MessageFlags.None);
 
         /// <summary>
         /// Explicitly raises the <see cref="IInputAdapter.ProcessingComplete"/> event.
@@ -216,12 +218,12 @@ namespace GSF.TimeSeries.Transport
             EventHandler<EventArgs<string, UpdateType>> statusMessageHandler = (sender, e) =>
             {
                 if (e.Argument2 == UpdateType.Information)
-                    clientSubscription.OnStatusMessage(MessageLevel.Info, "IClientSubscription", e.Argument1);
+                    clientSubscription.OnStatusMessage(MessageLevel.Info, e.Argument1);
                 else
-                    clientSubscription.OnStatusMessage(MessageLevel.Warning, "IClientSubscription", "0x" + (int)e.Argument2 + e.Argument1);
+                    clientSubscription.OnStatusMessage(MessageLevel.Warning, "0x" + (int)e.Argument2 + e.Argument1);
             };
 
-            EventHandler<EventArgs<Exception>> processExceptionHandler = (sender, e) => clientSubscription.OnProcessException(MessageLevel.Warning, "IClientSubscription", e.Argument);
+            EventHandler<EventArgs<Exception>> processExceptionHandler = (sender, e) => clientSubscription.OnProcessException(MessageLevel.Warning, e.Argument);
             EventHandler processingCompletedHandler = clientSubscription.OnProcessingCompleted;
 
             // Cache dynamic event handlers so they can be detached later

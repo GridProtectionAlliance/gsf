@@ -496,7 +496,7 @@ namespace DataQualityMonitoring
             foreach (MeasurementKey key in measurementCounts.Keys)
             {
                 int count = measurementCounts[key];
-                OnStatusMessage(MessageLevel.Info, "RangeTest", $"Measurement {key} arrived out-of-range {count:N0} times within the last {(int)m_timeToPurge.ToSeconds()} seconds.");
+                OnStatusMessage(MessageLevel.Info, $"Measurement {key} arrived out-of-range {count:N0} times within the last {(int)m_timeToPurge.ToSeconds()} seconds.");
             }
         }
 
@@ -525,7 +525,7 @@ namespace DataQualityMonitoring
         // Static Methods
         private static void s_service_ServiceProcessException(object sender, EventArgs<Exception> e)
         {
-            s_exceptionProcessor?.OnProcessException(MessageLevel.Warning, "RangeTest", e.Argument);
+            s_exceptionProcessor?.OnProcessException(MessageLevel.Warning, e.Argument);
         }
 
         #endregion

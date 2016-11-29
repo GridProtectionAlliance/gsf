@@ -431,13 +431,13 @@ namespace DataQualityMonitoring
             foreach (IMeasurement measurement in flatlinedMeasurements)
             {
                 Ticks timeDiff = RealTime - measurement.Timestamp;
-                OnStatusMessage(MessageLevel.Info, "FlatlineTest", $"{measurement} flat-lined for {(int)timeDiff.ToSeconds()} seconds.");
+                OnStatusMessage(MessageLevel.Info, $"{measurement} flat-lined for {(int)timeDiff.ToSeconds()} seconds.");
             }
         }
 
         private void m_flatlineService_ServiceProcessException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(MessageLevel.Warning, "FlatlineTest", e.Argument);
+            OnProcessException(MessageLevel.Warning, e.Argument);
         }
 
         #endregion

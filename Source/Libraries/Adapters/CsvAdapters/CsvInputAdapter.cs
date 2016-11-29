@@ -183,7 +183,7 @@ namespace CsvAdapters
             {
                 // Note that a 1-ms timer and debug mode don't mix, so the high-resolution timer is disabled while debugging
                 if (value && (object)m_precisionTimer == null && !Debugger.IsAttached)
-                    m_precisionTimer = PrecisionInputTimer.Attach((int)(1000.0D / m_inputInterval), ex => OnProcessException(MessageLevel.Warning, "CsvInputAdapter", ex));
+                    m_precisionTimer = PrecisionInputTimer.Attach((int)(1000.0D / m_inputInterval), ex => OnProcessException(MessageLevel.Warning, ex));
                 else if (!value && m_precisionTimer != null)
                     PrecisionInputTimer.Detach(ref m_precisionTimer);
             }
@@ -646,7 +646,7 @@ namespace CsvAdapters
             }
             catch (Exception ex)
             {
-                OnProcessException(MessageLevel.Warning, "CsvInputAdapter", ex);
+                OnProcessException(MessageLevel.Warning, ex);
             }
 
             return true;

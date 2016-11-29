@@ -596,7 +596,7 @@ namespace PhasorProtocolAdapters
                 base.DataSource = value;
 
                 if (Initialized)
-                    new Action(UpdateConfiguration).TryExecute(ex => OnProcessException(MessageLevel.Info, "Concentrator", ex));
+                    new Action(UpdateConfiguration).TryExecute(ex => OnProcessException(MessageLevel.Info, ex));
             }
         }
 
@@ -882,7 +882,7 @@ namespace PhasorProtocolAdapters
                     }
                     catch (Exception ex)
                     {
-                        OnProcessException(MessageLevel.Warning, "Concentrator", new InvalidOperationException("Failed to start publication channel: " + ex.Message, ex));
+                        OnProcessException(MessageLevel.Warning, new InvalidOperationException("Failed to start publication channel: " + ex.Message, ex));
                     }
                 }
 
@@ -1196,11 +1196,11 @@ namespace PhasorProtocolAdapters
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(MessageLevel.Warning, "Concentrator", new InvalidOperationException($"Failed to define output stream device \"{deviceRow["Acronym"].ToString().Trim()}\" due to exception: {ex.Message}", ex));
+                    OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to define output stream device \"{deviceRow["Acronym"].ToString().Trim()}\" due to exception: {ex.Message}", ex));
                 }
             }
 
-            OnStatusMessage(MessageLevel.Info, "Concentrator", $"Defined {m_baseConfigurationFrame.Cells.Count:N0} output stream devices...");
+            OnStatusMessage(MessageLevel.Info, $"Defined {m_baseConfigurationFrame.Cells.Count:N0} output stream devices...");
 
             // Create new lookup table for signal references
             Dictionary<MeasurementKey, SignalReference[]> signalReferences = new Dictionary<MeasurementKey, SignalReference[]>();
@@ -1320,7 +1320,7 @@ namespace PhasorProtocolAdapters
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(MessageLevel.Warning, "Concentrator", new InvalidOperationException($"Failed to associate measurement key to signal reference \"{measurementRow["SignalReference"].ToNonNullString()}\" due to exception: {ex.Message}", ex));
+                    OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to associate measurement key to signal reference \"{measurementRow["SignalReference"].ToNonNullString()}\" due to exception: {ex.Message}", ex));
                 }
             }
 
@@ -1551,10 +1551,10 @@ namespace PhasorProtocolAdapters
 
             // This is not expected to occur - but just in case
             if ((object)signalMeasurement == null && (object)measurement != null)
-                OnProcessException(MessageLevel.Error, "Concentrator", new InvalidCastException($"Attempt was made to assign an invalid measurement to phasor data concentration frame, expected a \"SignalReferenceMeasurement\" but received a \"{measurement.GetType().Name}\""));
+                OnProcessException(MessageLevel.Error, new InvalidCastException($"Attempt was made to assign an invalid measurement to phasor data concentration frame, expected a \"SignalReferenceMeasurement\" but received a \"{measurement.GetType().Name}\""));
 
             if ((object)dataFrame == null)
-                OnProcessException(MessageLevel.Error, "Concentrator", new InvalidCastException($"During measurement assignment, incoming frame was not a phasor data concentration frame, expected a type derived from \"IDataFrame\" but received a \"{frame.GetType().Name}\""));
+                OnProcessException(MessageLevel.Error, new InvalidCastException($"During measurement assignment, incoming frame was not a phasor data concentration frame, expected a type derived from \"IDataFrame\" but received a \"{frame.GetType().Name}\""));
         }
 
         /// <summary>
@@ -1694,7 +1694,7 @@ namespace PhasorProtocolAdapters
                 catch (Exception ex)
                 {
                     retry = true;
-                    OnProcessException(MessageLevel.Warning, "Concentrator", new InvalidOperationException($"Failed to reinitialize socket layer: {ex.Message}", ex));
+                    OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to reinitialize socket layer: {ex.Message}", ex));
                 }
                 finally
                 {
@@ -1789,7 +1789,7 @@ namespace PhasorProtocolAdapters
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(MessageLevel.Info, "Concentrator", new InvalidOperationException("Failed to lookup remote end-point connection information for client data transmission due to exception: " + ex.Message, ex));
+                    OnProcessException(MessageLevel.Info, new InvalidOperationException("Failed to lookup remote end-point connection information for client data transmission due to exception: " + ex.Message, ex));
                 }
 
                 if (string.IsNullOrEmpty(connectionID))
@@ -1839,17 +1839,17 @@ namespace PhasorProtocolAdapters
         protected void CacheConfigurationFrame(IConfigurationFrame configurationFrame, string name)
         {
             // Cache configuration frame for reference
-            OnStatusMessage(MessageLevel.Info, "Concentrator", "Caching configuration frame...");
+            OnStatusMessage(MessageLevel.Info, "Caching configuration frame...");
 
             try
             {
                 // Cache configuration on an independent thread in case this takes some time
-                GSF.PhasorProtocols.Anonymous.ConfigurationFrame.Cache(configurationFrame, ex => OnProcessException(MessageLevel.Info, "Concentrator", ex), name);
+                GSF.PhasorProtocols.Anonymous.ConfigurationFrame.Cache(configurationFrame, ex => OnProcessException(MessageLevel.Info, ex), name);
             }
             catch (Exception ex)
             {
                 // Process exception for logging
-                OnProcessException(MessageLevel.Info, "Concentrator", new InvalidOperationException("Failed to queue caching of config frame due to exception: " + ex.Message, ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException("Failed to queue caching of config frame due to exception: " + ex.Message, ex));
             }
         }
 
@@ -1902,7 +1902,7 @@ namespace PhasorProtocolAdapters
         private void m_dataChannel_ClientConnectingException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
-            OnProcessException(MessageLevel.Info, "Concentrator", new InvalidOperationException($"Exception occurred while client attempting to connect to data channel: {ex.Message}", ex));
+            OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception occurred while client attempting to connect to data channel: {ex.Message}", ex));
         }
 
         private void m_dataChannel_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
@@ -1921,12 +1921,12 @@ namespace PhasorProtocolAdapters
             if (ex is SocketException)
             {
                 // Restart connection if a socket exception occurs
-                OnProcessException(MessageLevel.Info, "Concentrator", new InvalidOperationException($"Socket exception occurred on the data channel while attempting to send client data to \"{GetConnectionID(m_dataChannel, e.Argument1)}\": {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Socket exception occurred on the data channel while attempting to send client data to \"{GetConnectionID(m_dataChannel, e.Argument1)}\": {ex.Message}", ex));
                 ThreadPool.QueueUserWorkItem(ReinitializeSocketLayer);
             }
             else
             {
-                OnProcessException(MessageLevel.Info, "Concentrator", new InvalidOperationException($"Data channel exception occurred while sending client data to \"{GetConnectionID(m_dataChannel, e.Argument1)}\": {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Data channel exception occurred while sending client data to \"{GetConnectionID(m_dataChannel, e.Argument1)}\": {ex.Message}", ex));
             }
         }
 
@@ -1937,13 +1937,13 @@ namespace PhasorProtocolAdapters
                 base.Start();
 
             m_activeConnections++;
-            OnStatusMessage(MessageLevel.Info, "Concentrator", "Data channel started.");
+            OnStatusMessage(MessageLevel.Info, "Data channel started.");
         }
 
         private void m_dataChannel_ServerStopped(object sender, EventArgs e)
         {
             m_activeConnections--;
-            OnStatusMessage(MessageLevel.Info, "Concentrator", "Data channel stopped.");
+            OnStatusMessage(MessageLevel.Info, "Data channel stopped.");
         }
 
         #endregion
@@ -1952,7 +1952,7 @@ namespace PhasorProtocolAdapters
 
         private void m_commandChannel_ClientConnected(object sender, EventArgs<Guid> e)
         {
-            OnStatusMessage(MessageLevel.Info, "Concentrator", $"Client \"{GetConnectionID(m_commandChannel, e.Argument)}\" connected to command channel.");
+            OnStatusMessage(MessageLevel.Info, $"Client \"{GetConnectionID(m_commandChannel, e.Argument)}\" connected to command channel.");
         }
 
         private void m_commandChannel_ClientDisconnected(object sender, EventArgs<Guid> e)
@@ -1960,7 +1960,7 @@ namespace PhasorProtocolAdapters
             Guid clientID = e.Argument;
             string connectionID;
 
-            OnStatusMessage(MessageLevel.Info, "Concentrator", $"Client \"{GetConnectionID(m_commandChannel, clientID)}\" disconnected from command channel.");
+            OnStatusMessage(MessageLevel.Info, $"Client \"{GetConnectionID(m_commandChannel, clientID)}\" disconnected from command channel.");
 
             m_connectionIDCache.TryRemove(clientID, out connectionID);
         }
@@ -1968,7 +1968,7 @@ namespace PhasorProtocolAdapters
         private void m_commandChannel_ClientConnectingException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
-            OnProcessException(MessageLevel.Info, "Concentrator", new InvalidOperationException($"Socket exception occurred while client attempting to connect to command channel: {ex.Message}", ex));
+            OnProcessException(MessageLevel.Info, new InvalidOperationException($"Socket exception occurred while client attempting to connect to command channel: {ex.Message}", ex));
         }
 
         private void m_commandChannel_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
@@ -1986,18 +1986,18 @@ namespace PhasorProtocolAdapters
             if (ex is SocketException)
             {
                 // Restart connection if a socket exception occurs
-                OnProcessException(MessageLevel.Info, "Concentrator", new InvalidOperationException($"Socket exception occurred on the command channel while attempting to send client data to \"{GetConnectionID(m_dataChannel, e.Argument1)}\": {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Socket exception occurred on the command channel while attempting to send client data to \"{GetConnectionID(m_dataChannel, e.Argument1)}\": {ex.Message}", ex));
                 ThreadPool.QueueUserWorkItem(ReinitializeSocketLayer);
             }
             else
             {
-                OnProcessException(MessageLevel.Info, "Concentrator", new InvalidOperationException($"Command channel exception occurred while sending client data to \"{GetConnectionID(m_commandChannel, e.Argument1)}\": {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Command channel exception occurred while sending client data to \"{GetConnectionID(m_commandChannel, e.Argument1)}\": {ex.Message}", ex));
             }
         }
 
         private void m_commandChannel_ServerStarted(object sender, EventArgs e)
         {
-            OnStatusMessage(MessageLevel.Info, "Concentrator", "Command channel started.");
+            OnStatusMessage(MessageLevel.Info, "Command channel started.");
             m_activeConnections++;
         }
 
@@ -2007,14 +2007,14 @@ namespace PhasorProtocolAdapters
 
             if (Enabled)
             {
-                OnStatusMessage(MessageLevel.Info, "Concentrator", "Command channel was unexpectedly terminated, restarting...");
+                OnStatusMessage(MessageLevel.Info, "Command channel was unexpectedly terminated, restarting...");
 
                 // We must wait for command channel to completely shutdown before trying to restart...
                 if ((object)m_commandChannelRestartTimer != null)
                     m_commandChannelRestartTimer.Start();
             }
             else
-                OnStatusMessage(MessageLevel.Info, "Concentrator", "Command channel stopped.");
+                OnStatusMessage(MessageLevel.Info, "Command channel stopped.");
         }
 
         private void m_commandChannelRestartTimer_Elapsed(object sender, ElapsedEventArgs e)
@@ -2028,7 +2028,7 @@ namespace PhasorProtocolAdapters
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(MessageLevel.Info, "Concentrator", new InvalidOperationException("Failed to restart command channel: " + ex.Message, ex));
+                    OnProcessException(MessageLevel.Info, new InvalidOperationException("Failed to restart command channel: " + ex.Message, ex));
                 }
             }
         }

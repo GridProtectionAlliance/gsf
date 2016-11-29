@@ -30,6 +30,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using GSF.Communication;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Security.Cryptography;
 using GSF.Threading;
@@ -708,20 +709,20 @@ namespace GSF.TimeSeries.Transport
 
                     // Send success message
                     m_parent.SendClientResponse(m_clientID, ServerResponse.Succeeded, ServerCommand.RotateCipherKeys, "New cipher keys established.");
-                    m_parent.OnStatusMessage(ConnectionID + " cipher keys rotated.");
+                    m_parent.OnStatusMessage(MessageLevel.Info, $"{ConnectionID} cipher keys rotated.");
                     return true;
                 }
                 catch (Exception ex)
                 {
                     // Send failure message
                     m_parent.SendClientResponse(m_clientID, ServerResponse.Failed, ServerCommand.RotateCipherKeys, "Failed to establish new cipher keys: " + ex.Message);
-                    m_parent.OnStatusMessage("Failed to establish new cipher keys for {0}: {1}", ConnectionID, ex.Message);
+                    m_parent.OnStatusMessage(MessageLevel.Warning, $"Failed to establish new cipher keys for {ConnectionID}: {ex.Message}");
                     return false;
                 }
             }
 
             m_parent.SendClientResponse(m_clientID, ServerResponse.Failed, ServerCommand.RotateCipherKeys, "Cipher key rotation skipped, keys were already rotated within last second.");
-            m_parent.OnStatusMessage("WARNING: Cipher key rotation skipped for {0}, keys were already rotated within last second.", ConnectionID);
+            m_parent.OnStatusMessage(MessageLevel.Warning, $"WARNING: Cipher key rotation skipped for {ConnectionID}, keys were already rotated within last second.");
             return false;
         }
 
@@ -756,32 +757,32 @@ namespace GSF.TimeSeries.Transport
         private void m_dataChannel_ClientConnectingException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
-            m_parent.OnProcessException(new InvalidOperationException($"Data channel exception occurred while sending client data to \"{m_connectionID}\": {ex.Message}", ex));
+            m_parent.OnProcessException(MessageLevel.Info, new InvalidOperationException($"Data channel exception occurred while sending client data to \"{m_connectionID}\": {ex.Message}", ex));
         }
 
         private void m_dataChannel_SendClientDataException(object sender, EventArgs<Guid, Exception> e)
         {
             Exception ex = e.Argument2;
-            m_parent.OnProcessException(new InvalidOperationException($"Data channel exception occurred while sending client data to \"{m_connectionID}\": {ex.Message}", ex));
+            m_parent.OnProcessException(MessageLevel.Info, new InvalidOperationException($"Data channel exception occurred while sending client data to \"{m_connectionID}\": {ex.Message}", ex));
         }
 
         private void m_dataChannel_ServerStarted(object sender, EventArgs e)
         {
-            m_parent.OnStatusMessage("Data channel started.");
+            m_parent.OnStatusMessage(MessageLevel.Info, "Data channel started.");
         }
 
         private void m_dataChannel_ServerStopped(object sender, EventArgs e)
         {
             if (m_connectionEstablished)
             {
-                m_parent.OnStatusMessage("Data channel stopped unexpectedly, restarting data channel...");
+                m_parent.OnStatusMessage(MessageLevel.Info, "Data channel stopped unexpectedly, restarting data channel...");
 
                 if ((object)m_reconnectTimer != null)
                     m_reconnectTimer.Start();
             }
             else
             {
-                m_parent.OnStatusMessage("Data channel stopped.");
+                m_parent.OnStatusMessage(MessageLevel.Info, "Data channel stopped.");
             }
         }
 
@@ -789,18 +790,18 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                m_parent.OnStatusMessage("Attempting to restart data channel...");
+                m_parent.OnStatusMessage(MessageLevel.Info, "Attempting to restart data channel...");
                 DataChannel = null;
 
                 UdpServer dataChannel = new UdpServer(m_configurationString);
                 dataChannel.Start();
 
                 DataChannel = dataChannel;
-                m_parent.OnStatusMessage("Data channel successfully restarted.");
+                m_parent.OnStatusMessage(MessageLevel.Info, "Data channel successfully restarted.");
             }
             catch (Exception ex)
             {
-                m_parent.OnStatusMessage("Failed to restart data channel due to exception: {0}", ex.Message);
+                m_parent.OnStatusMessage(MessageLevel.Warning, $"Failed to restart data channel due to exception: {ex.Message}");
                 m_reconnectTimer.Start();
             }
         }

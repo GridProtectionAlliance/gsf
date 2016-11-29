@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using GSF.Diagnostics;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -137,7 +138,7 @@ namespace GSF.TimeSeries.Adapters
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException("Failed to queue measurements to output adapters: " + ex.Message, ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Failed to queue measurements to output adapters: {ex.Message}", ex));
             }
         }
 
@@ -171,13 +172,12 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (UnprocessedMeasurements != null)
-                    UnprocessedMeasurements(this, new EventArgs<int>(unprocessedMeasurements));
+                UnprocessedMeasurements?.Invoke(this, new EventArgs<int>(unprocessedMeasurements));
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for UnprocessedMeasurements event: {0}", ex.Message), ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for UnprocessedMeasurements event: {ex.Message}", ex));
             }
         }
 
@@ -187,7 +187,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="item">New <see cref="IOutputAdapter"/> implementation.</param>
         protected override void InitializeItem(IOutputAdapter item)
         {
-            if (item != null)
+            if ((object)item != null)
             {
                 // Wire up unprocessed measurements event
                 item.UnprocessedMeasurements += item_UnprocessedMeasurements;
@@ -201,7 +201,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="item"><see cref="IOutputAdapter"/> to dispose.</param>
         protected override void DisposeItem(IOutputAdapter item)
         {
-            if (item != null)
+            if ((object)item != null)
             {
                 // Un-wire unprocessed measurements event
                 item.UnprocessedMeasurements -= item_UnprocessedMeasurements;
@@ -210,11 +210,7 @@ namespace GSF.TimeSeries.Adapters
         }
 
         // Raise unprocessed measurements event on behalf of each item in collection
-        private void item_UnprocessedMeasurements(object sender, EventArgs<int> e)
-        {
-            if (UnprocessedMeasurements != null)
-                UnprocessedMeasurements(sender, e);
-        }
+        private void item_UnprocessedMeasurements(object sender, EventArgs<int> e) => UnprocessedMeasurements?.Invoke(sender, e);
 
         #endregion
     }

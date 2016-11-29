@@ -192,7 +192,7 @@ namespace COMTRADEAdapters
             else
             {
                 // No data was available in the frame, lag time set too tight?
-                OnProcessException(MessageLevel.Warning, "COMTRADEFileExporter", new InvalidOperationException("No measurements were available for COMTRADE file based data export, possible reasons: system is initializing , receiving no data or lag time is too small. COMTRADE File creation was skipped."));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException("No measurements were available for COMTRADE file based data export, possible reasons: system is initializing , receiving no data or lag time is too small. COMTRADE File creation was skipped."));
             }
         }
 

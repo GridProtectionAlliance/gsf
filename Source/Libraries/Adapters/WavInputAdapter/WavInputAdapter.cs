@@ -181,7 +181,7 @@ namespace WavInputAdapter
             if (m_channels > OutputMeasurements.Length)
                 throw new ArgumentException($"Not enough output measurements ({OutputMeasurements.Length}) defined for the number of channels in the WAV file ({m_channels})");
 
-            OnStatusMessage(MessageLevel.Info, "WavInputAdapter", $"Ready to play \"{Path.GetFileName(WavFileName)}\" with {m_channels} channels...");
+            OnStatusMessage(MessageLevel.Info, $"Ready to play \"{Path.GetFileName(WavFileName)}\" with {m_channels} channels...");
         }
 
         /// <summary>
@@ -278,7 +278,7 @@ namespace WavInputAdapter
                         // Reset the start time and delay next transmission in an attempt to catch up
                         m_startTime = now - (m_dataIndex * Ticks.PerSecond / m_sampleRate) + Ticks.FromSeconds(RecoveryDelay);
                         timestamp = now;
-                        OnStatusMessage(MessageLevel.Info, "WavInputAdapter", "Start time reset.");
+                        OnStatusMessage(MessageLevel.Info, "Start time reset.");
                     }
 
                     // Keep generating measurements until
@@ -321,7 +321,7 @@ namespace WavInputAdapter
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(MessageLevel.Warning, "WavInputAdapter", ex);
+                    OnProcessException(MessageLevel.Warning, ex);
                 }
             }
         }

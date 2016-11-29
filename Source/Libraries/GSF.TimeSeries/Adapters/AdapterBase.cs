@@ -117,6 +117,7 @@ namespace GSF.TimeSeries.Adapters
         private DateTime m_startTimeConstraint;
         private DateTime m_stopTimeConstraint;
         private int m_processingInterval;
+        private string m_defaultEventName;
         private int m_hashCode;
         private bool m_initialized;
         private bool m_disposed;
@@ -179,6 +180,27 @@ namespace GSF.TimeSeries.Adapters
                 m_name = value;
                 Log.InitialStackMessages = new LogStackMessages("AdapterName", m_name);
                 GenHashCode();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets default event name.
+        /// </summary>
+        /// <remarks>
+        /// Default value is adapter <see cref="Name"/>.
+        /// </remarks>
+        protected string DefaultEventName
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(m_defaultEventName))
+                    m_defaultEventName = Name;
+
+                return m_defaultEventName;
+            }
+            set
+            {
+                m_defaultEventName = value;
             }
         }
 
@@ -865,7 +887,7 @@ namespace GSF.TimeSeries.Adapters
         [Obsolete("Switch to using overload with MessageLevel parameter - this method may be removed from future builds.", false)]
         protected void OnStatusMessage(string status)
         {
-            OnStatusMessage(MessageLevel.Info, "Unclassified Status", status);
+            OnStatusMessage(MessageLevel.Info, status, "Unclassified Status");
         }
 
         /// <summary>
@@ -879,25 +901,29 @@ namespace GSF.TimeSeries.Adapters
         [StringFormatMethod("formattedStatus"), Obsolete("Switch to using overload with MessageLevel parameter - this method may be removed from future builds.", false)]
         protected void OnStatusMessage(string formattedStatus, params object[] args)
         {
-            OnStatusMessage(MessageLevel.Info, "Unclassified Status", string.Format(formattedStatus, args));
+            OnStatusMessage(MessageLevel.Info, string.Format(formattedStatus, args), "Unclassified Status");
         }
 
         /// <summary>
         /// Raises the <see cref="StatusMessage"/> event and sends this data to the <see cref="Logger"/>.
         /// </summary>
         /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
-        /// <param name="eventName">A fixed string to classify this event.</param>
         /// <param name="status">New status message.</param>
+        /// <param name="eventName">A fixed string to classify this event; defaults to <see cref="DefaultEventName"/>.</param>
+        /// <param name="flags"><see cref="MessageFlags"/> to use, if any; defaults to <see cref="MessageFlags.None"/>.</param>
         /// <remarks>
-        /// <see pref="eventName"/> should be a constant string value associated with what type of message is being generated. 
-        /// In general, there should only be a few dozen distinct event names per class. Exceeding this threshold.
-        /// Will cause the EventName to be replaced with a general warning that a usage issue has occurred.
+        /// <see pref="eventName"/> should be a constant string value associated with what type of message is being
+        /// generated. In general, there should only be a few dozen distinct event names per class. Exceeding this
+        /// threshold will cause the EventName to be replaced with a general warning that a usage issue has occurred.
         /// </remarks>
-        protected virtual void OnStatusMessage(MessageLevel level, string eventName, string status)
+        protected virtual void OnStatusMessage(MessageLevel level, string status, string eventName = null, MessageFlags flags = MessageFlags.None)
         {
             try
             {
-                Log.Publish(level, eventName, status);
+                if (string.IsNullOrWhiteSpace(eventName))
+                    eventName = DefaultEventName;
+
+                Log.Publish(level, flags, eventName, status);
 
                 using (Logger.SuppressLogMessages())
                     StatusMessage?.Invoke(this, new EventArgs<string>(status));
@@ -905,7 +931,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, "AdapterBase", new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex));
             }
         }
 
@@ -916,25 +942,29 @@ namespace GSF.TimeSeries.Adapters
         [Obsolete("Switch to using overload with MessageLevel parameter - this method may be removed from future builds.", false)]
         protected void OnProcessException(Exception ex)
         {
-            OnProcessException(MessageLevel.Info, "Unclassified Exception", ex);
+            OnProcessException(MessageLevel.Info, ex, "Unclassified Exception");
         }
 
         /// <summary>
         /// Raises the <see cref="ProcessException"/> event.
         /// </summary>
         /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
-        /// <param name="eventName">A fixed string to classify this event.</param>
         /// <param name="exception">Processing <see cref="Exception"/>.</param>
+        /// <param name="eventName">A fixed string to classify this event; defaults to <see cref="DefaultEventName"/>.</param>
+        /// <param name="flags"><see cref="MessageFlags"/> to use, if any; defaults to <see cref="MessageFlags.None"/>.</param>
         /// <remarks>
-        /// <see pref="eventName"/> should be a constant string value associated with what type of message is being generated. 
-        /// In general, there should only be a few dozen distinct event names per class. Exceeding this threshold.
-        /// Will cause the EventName to be replaced with a general warning that a usage issue has occurred.
+        /// <see pref="eventName"/> should be a constant string value associated with what type of message is being
+        /// generated. In general, there should only be a few dozen distinct event names per class. Exceeding this
+        /// threshold will cause the EventName to be replaced with a general warning that a usage issue has occurred.
         /// </remarks>
-        protected virtual void OnProcessException(MessageLevel level, string eventName, Exception exception)
+        protected virtual void OnProcessException(MessageLevel level, Exception exception, string eventName = null, MessageFlags flags = MessageFlags.None)
         {
             try
             {
-                Log.Publish(level, eventName, exception?.Message, null, exception);
+                if (string.IsNullOrWhiteSpace(eventName))
+                    eventName = DefaultEventName;
+
+                Log.Publish(level, flags, eventName, exception?.Message, null, exception);
 
                 using (Logger.SuppressLogMessages())
                     ProcessException?.Invoke(this, new EventArgs<Exception>(exception));
@@ -958,7 +988,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, "AdapterBase", new InvalidOperationException($"Exception in consumer handler for InputMeasurementKeysUpdated event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for InputMeasurementKeysUpdated event: {ex.Message}", ex));
             }
         }
 
@@ -974,7 +1004,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, "AdapterBase", new InvalidOperationException($"Exception in consumer handler for OutputMeasurementsUpdated event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for OutputMeasurementsUpdated event: {ex.Message}", ex));
             }
         }
 
@@ -990,7 +1020,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, "AdapterBase", new InvalidOperationException($"Exception in consumer handler for ConfigurationChanged event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ConfigurationChanged event: {ex.Message}", ex));
             }
         }
 
@@ -1012,7 +1042,7 @@ namespace GSF.TimeSeries.Adapters
                 m_processedMeasurements += totalAdded;
 
                 if (showMessage)
-                    OnStatusMessage(MessageLevel.Info, "AdapterBase", $"{m_processedMeasurements:N0} measurements have been processed so far...");
+                    OnStatusMessage(MessageLevel.Info, $"{m_processedMeasurements:N0} measurements have been processed so far...");
             }
         }
 

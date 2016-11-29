@@ -34,6 +34,7 @@ using System.Xml.Serialization;
 using DNP3.Adapter;
 using DNP3.Interface;
 using GSF;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.TimeSeries.Adapters;
 
@@ -74,7 +75,7 @@ namespace DNP3Adapters
                             else
                                 exception = new InvalidOperationException(FormatLogEntry(entry));
 
-                            s_statusProxy.OnProcessException(exception);
+                            s_statusProxy.OnProcessException(MessageLevel.Error, exception);
                         }
                         else
                         {
@@ -85,7 +86,7 @@ namespace DNP3Adapters
                             if ((entry.filter.Flags & LogFilters.WARNING) > 0)
                                 message = "WARNING: " + message;
 
-                            s_statusProxy.OnStatusMessage(message);
+                            s_statusProxy.OnStatusMessage(MessageLevel.Info, message);
                         }
                     }
                 }
@@ -311,7 +312,7 @@ namespace DNP3Adapters
             TimeSpan maxRetry = TimeSpan.FromMilliseconds(tcpConfig.maxRetryMs);
 
             IChannel channel = s_manager.AddTCPClient(portName, tcpConfig.level, minRetry, maxRetry, tcpConfig.address, tcpConfig.port);
-            channel.AddStateListener(state => OnStatusMessage(portName + " - Channel state change: " + state));
+            channel.AddStateListener(state => OnStatusMessage(MessageLevel.Info, portName + " - Channel state change: " + state));
             m_channel = channel;
 
             IMaster master = channel.AddMaster(portName, m_soeHandler, m_masterConfig.master);

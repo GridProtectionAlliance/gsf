@@ -217,7 +217,7 @@ namespace AdoAdapters
                     }
                     else
                     {
-                        OnProcessException(MessageLevel.Warning, "AdoOutputAdapter", new ArgumentException($"Measurement property not found: {subKey}"));
+                        OnProcessException(MessageLevel.Warning, new ArgumentException($"Measurement property not found: {subKey}"));
                     }
                 }
             }

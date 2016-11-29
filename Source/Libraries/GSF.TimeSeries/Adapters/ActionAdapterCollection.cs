@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using GSF.Diagnostics;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -192,7 +193,7 @@ namespace GSF.TimeSeries.Adapters
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException("Failed to queue measurements to action adapters: " + ex.Message, ex));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException("Failed to queue measurements to action adapters: " + ex.Message, ex));
             }
         }
 
@@ -204,13 +205,12 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (NewMeasurements != null)
-                    NewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
+                NewMeasurements?.Invoke(this, new EventArgs<ICollection<IMeasurement>>(measurements));
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for NewMeasurements event: {0}", ex.Message), ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for NewMeasurements event: {ex.Message}", ex));
             }
         }
 
@@ -222,13 +222,12 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (UnpublishedSamples != null)
-                    UnpublishedSamples(this, new EventArgs<int>(unpublishedSamples));
+                UnpublishedSamples?.Invoke(this, new EventArgs<int>(unpublishedSamples));
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for UnpublishedSamples event: {0}", ex.Message), ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for UnpublishedSamples event: {ex.Message}", ex));
             }
         }
 
@@ -240,13 +239,12 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (DiscardingMeasurements != null)
-                    DiscardingMeasurements(this, new EventArgs<IEnumerable<IMeasurement>>(measurements));
+                DiscardingMeasurements?.Invoke(this, new EventArgs<IEnumerable<IMeasurement>>(measurements));
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for DiscardingMeasurements event: {0}", ex.Message), ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for DiscardingMeasurements event: {ex.Message}", ex));
             }
         }
 
@@ -257,13 +255,12 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if ((object)RequestTemporalSupport != null)
-                    RequestTemporalSupport(this, EventArgs.Empty);
+                RequestTemporalSupport?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for RequestTemporalSupport event: {0}", ex.Message), ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for RequestTemporalSupport event: {ex.Message}", ex));
             }
         }
 
@@ -318,32 +315,16 @@ namespace GSF.TimeSeries.Adapters
         }
 
         // Raise new measurements event on behalf of each item in collection
-        private void item_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
-        {
-            if (NewMeasurements != null)
-                NewMeasurements(sender, e);
-        }
+        private void item_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e) => NewMeasurements?.Invoke(sender, e);
 
         // Raise unpublished samples event on behalf of each item in collection
-        private void item_UnpublishedSamples(object sender, EventArgs<int> e)
-        {
-            if (UnpublishedSamples != null)
-                UnpublishedSamples(sender, e);
-        }
+        private void item_UnpublishedSamples(object sender, EventArgs<int> e) => UnpublishedSamples?.Invoke(sender, e);
 
         // Raise discarding measurements event on behalf of each item in collection
-        private void item_DiscardingMeasurements(object sender, EventArgs<IEnumerable<IMeasurement>> e)
-        {
-            if (DiscardingMeasurements != null)
-                DiscardingMeasurements(sender, e);
-        }
+        private void item_DiscardingMeasurements(object sender, EventArgs<IEnumerable<IMeasurement>> e) => DiscardingMeasurements?.Invoke(sender, e);
 
         // Raise request temporal support event on behalf of each item in collection
-        private void item_RequestTemporalSupport(object sender, EventArgs e)
-        {
-            if ((object)RequestTemporalSupport != null)
-                RequestTemporalSupport(sender, e);
-        }
+        private void item_RequestTemporalSupport(object sender, EventArgs e) => RequestTemporalSupport?.Invoke(sender, e);
 
         #endregion
     }

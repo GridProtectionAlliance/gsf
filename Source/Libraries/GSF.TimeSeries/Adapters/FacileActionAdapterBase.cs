@@ -511,7 +511,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, "FacileActionAdapterBase", new InvalidOperationException($"Exception in consumer handler for NewMeasurements event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for NewMeasurements event: {ex.Message}", ex));
             }
         }
 
@@ -528,7 +528,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, "FacileActionAdapterBase", new InvalidOperationException($"Exception in consumer handler for UnpublishedSamples event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for UnpublishedSamples event: {ex.Message}", ex));
             }
         }
 
@@ -545,7 +545,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, "FacileActionAdapterBase", new InvalidOperationException($"Exception in consumer handler for DiscardingMeasurements event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for DiscardingMeasurements event: {ex.Message}", ex));
             }
         }
 

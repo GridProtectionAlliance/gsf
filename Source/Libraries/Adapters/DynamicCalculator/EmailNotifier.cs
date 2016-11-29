@@ -182,7 +182,7 @@ namespace DynamicCalculator
                     catch (Exception ex)
                     {
                         string message = $"Unable to load type from assembly: {typeDef}";
-                        OnProcessException(MessageLevel.Error, "EmailNotifier", new ArgumentException(message, ex));
+                        OnProcessException(MessageLevel.Error, new ArgumentException(message, ex));
                     }
                 }
 

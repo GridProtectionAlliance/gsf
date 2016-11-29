@@ -72,6 +72,18 @@ namespace TestingAdapters
 
         #endregion
 
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="FrameBasedRandomValueInputAdapter"/>.
+        /// </summary>
+        public FrameBasedRandomValueInputAdapter()
+        {
+            DefaultEventName = "RandomValueAdapter";
+        }
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>
@@ -191,7 +203,7 @@ namespace TestingAdapters
                 return;
 
             if (m_unprocessedMeasurements > 10 * m_publishRate)
-                OnStatusMessage(MessageLevel.Info, "RandomValueAdapter", $"{m_unprocessedMeasurements} unprocessed messages");
+                OnStatusMessage(MessageLevel.Info, $"{m_unprocessedMeasurements} unprocessed messages");
 
             m_statusUpdate.Start(10000);
 

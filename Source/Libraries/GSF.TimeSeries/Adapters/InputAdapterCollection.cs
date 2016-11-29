@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using GSF.Diagnostics;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -80,13 +81,12 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (NewMeasurements != null)
-                    NewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
+                NewMeasurements?.Invoke(this, new EventArgs<ICollection<IMeasurement>>(measurements));
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for NewMeasurements event: {0}", ex.Message), ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for NewMeasurements event: {ex.Message}", ex));
             }
         }
 
@@ -97,13 +97,12 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (ProcessingComplete != null)
-                    ProcessingComplete(this, EventArgs.Empty);
+                ProcessingComplete?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ProcessingComplete event: {0}", ex.Message), ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ProcessingComplete event: {ex.Message}", ex));
             }
         }
 
@@ -113,7 +112,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="item">New <see cref="IInputAdapter"/> implementation.</param>
         protected override void InitializeItem(IInputAdapter item)
         {
-            if (item != null)
+            if ((object)item != null)
             {
                 // Wire up new measurement event
                 item.NewMeasurements += item_NewMeasurements;
@@ -128,7 +127,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="item"><see cref="IInputAdapter"/> to dispose.</param>
         protected override void DisposeItem(IInputAdapter item)
         {
-            if (item != null)
+            if ((object)item != null)
             {
                 // Un-wire new measurements event
                 item.NewMeasurements -= item_NewMeasurements;
@@ -138,18 +137,10 @@ namespace GSF.TimeSeries.Adapters
         }
 
         // Raise new measurements event on behalf of each item in collection
-        private void item_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
-        {
-            if (NewMeasurements != null)
-                NewMeasurements(sender, e);
-        }
+        private void item_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e) => NewMeasurements?.Invoke(sender, e);
 
         // Raise processing complete event on behalf of each item in collection
-        private void item_ProcessingComplete(object sender, EventArgs e)
-        {
-            if (ProcessingComplete != null)
-                ProcessingComplete(sender, e);
-        }
+        private void item_ProcessingComplete(object sender, EventArgs e) => ProcessingComplete?.Invoke(sender, e);
 
         #endregion
     }

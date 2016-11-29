@@ -29,6 +29,7 @@ using System.Linq;
 using System.Text;
 using System.Timers;
 using GSF;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -301,13 +302,7 @@ namespace FileAdapters
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool SupportsTemporalProcessing => false;
 
         /// <summary>
         /// Gets the block size after making adjustments for throttling.
@@ -488,9 +483,9 @@ namespace FileAdapters
         public override string GetShortStatus(int maxLength)
         {
             if ((object)m_activeFileStream != null)
-                return string.Format("Currently reading from file {0}", Path.GetFileName(m_unprocessedFiles.Peek())).CenterText(maxLength);
+                return $"Currently reading from file {Path.GetFileName(m_unprocessedFiles.Peek())}".CenterText(maxLength);
 
-            return string.Format("{0} files processed by {1}", m_processedFiles.Count, Name).CenterText(maxLength);
+            return $"{m_processedFiles.Count} files processed by {Name}".CenterText(maxLength);
         }
 
         /// <summary>
@@ -608,7 +603,7 @@ namespace FileAdapters
                     if (bytesRead == 1)
                     {
                         // Notify that processing is done for the current file
-                        OnStatusMessage("Done processing file {0}.", Path.GetFileName(m_unprocessedFiles.Peek()));
+                        OnStatusMessage(MessageLevel.Info, "Done processing file {0}.", Path.GetFileName(m_unprocessedFiles.Peek()));
 
                         // Delete the now-processed file
                         m_activeFileStream.Dispose();
@@ -624,7 +619,7 @@ namespace FileAdapters
                 if ((object)m_activeFileStream == null && m_unprocessedFiles.Count > 0)
                 {
                     // Notify that processing has started for a new file
-                    OnStatusMessage("Now processing file {0}...", Path.GetFileName(m_unprocessedFiles.Peek()));
+                    OnStatusMessage(MessageLevel.Info, "Now processing file {0}...", Path.GetFileName(m_unprocessedFiles.Peek()));
 
                     // Get info about the next file to process
                     fileInfo = new FileInfo(m_unprocessedFiles.Peek());

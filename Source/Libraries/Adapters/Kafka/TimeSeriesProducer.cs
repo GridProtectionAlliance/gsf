@@ -95,6 +95,18 @@ namespace KafkaAdapters
 
         #endregion
 
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="TimeSeriesProducer"/> instance.
+        /// </summary>
+        public TimeSeriesProducer()
+        {
+            DefaultEventName = "KafkaProducer";
+        }
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>
@@ -316,7 +328,7 @@ namespace KafkaAdapters
                 CacheMetadataLocally = DefaultCacheMetadataLocally;
 
             if (CacheMetadataLocally)
-                m_cacheMetadataLocally = new LongSynchronizedOperation(() => TimeSeriesMetadata.CacheLocally(m_metadata, MetadataTopic, status => OnStatusMessage(MessageLevel.Info, "KafkaProducer", status))) { IsBackground = true };
+                m_cacheMetadataLocally = new LongSynchronizedOperation(() => TimeSeriesMetadata.CacheLocally(m_metadata, MetadataTopic, status => OnStatusMessage(MessageLevel.Info, status))) { IsBackground = true };
         }
 
         /// <summary>
@@ -328,11 +340,12 @@ namespace KafkaAdapters
         /// </remarks>
         protected override void AttemptConnection()
         {
-            m_router = new BrokerRouter(new KafkaOptions(m_servers) {
+            m_router = new BrokerRouter(new KafkaOptions(m_servers)
+            {
                 Log = new TimeSeriesLogger
                 (
-                    (status, args) => OnStatusMessage(MessageLevel.Info, "KafkaProducer", string.Format(status, args)), 
-                    ex => OnProcessException(MessageLevel.Warning, "KafkaProducer", ex)
+                    (status, args) => OnStatusMessage(MessageLevel.Info, string.Format(status, args)), 
+                    ex => OnProcessException(MessageLevel.Warning, ex)
                 )
             });
             m_producer = new Producer(m_router);
@@ -385,8 +398,8 @@ namespace KafkaAdapters
                 {
                     Log = new TimeSeriesLogger
                     (
-                        (status, args) => OnStatusMessage(MessageLevel.Info, "KafkaProducer", string.Format(status, args)),
-                        ex => OnProcessException(MessageLevel.Warning, "KafkaProducer", new InvalidOperationException($"[{MetadataTopic}]: {ex.Message}", ex))
+                        (status, args) => OnStatusMessage(MessageLevel.Info, string.Format(status, args)),
+                        ex => OnProcessException(MessageLevel.Warning, new InvalidOperationException($"[{MetadataTopic}]: {ex.Message}", ex))
                     )
                 }))
                 {
@@ -397,15 +410,15 @@ namespace KafkaAdapters
                         {
                             Ticks serializationTime;
 
-                            OnStatusMessage(MessageLevel.Info, "KafkaProducer", "Reading latest time-series metadata records from Kafka...");
+                            OnStatusMessage(MessageLevel.Info, "Reading latest time-series metadata records from Kafka...");
 
-                            m_metadata = TimeSeriesMetadata.ReadFromKafka(router, MetadataTopic, status => OnStatusMessage(MessageLevel.Info, "KafkaProducer", status), out serializationTime);
+                            m_metadata = TimeSeriesMetadata.ReadFromKafka(router, MetadataTopic, status => OnStatusMessage(MessageLevel.Info, status), out serializationTime);
 
-                            OnStatusMessage(MessageLevel.Info, "KafkaProducer", $"Deserialized {m_metadata.Count:N0} Kafka time-series metadata records, version {m_metadata.Version:N0}, from \"{MetadataTopic}\" serialized at {serializationTime.ToString(MetadataRecord.DateTimeFormat)}");
+                            OnStatusMessage(MessageLevel.Info, $"Deserialized {m_metadata.Count:N0} Kafka time-series metadata records, version {m_metadata.Version:N0}, from \"{MetadataTopic}\" serialized at {serializationTime.ToString(MetadataRecord.DateTimeFormat)}");
                         }
                         catch (Exception ex)
                         {
-                            OnStatusMessage(MessageLevel.Warning, "KafkaProducer", $"WARNING: Failed to read any existing Kafka time-series metadata records from topic \"{MetadataTopic}\": {ex.Message}");
+                            OnStatusMessage(MessageLevel.Warning, $"WARNING: Failed to read any existing Kafka time-series metadata records from topic \"{MetadataTopic}\": {ex.Message}");
                         }
                     }
 
@@ -442,7 +455,7 @@ namespace KafkaAdapters
                     }
                     catch (Exception ex)
                     {
-                        OnProcessException(MessageLevel.Warning, "KafkaProducer", new InvalidOperationException($"Failed to serialize current time-series metadata records: {ex.Message}", ex));
+                        OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to serialize current time-series metadata records: {ex.Message}", ex));
                     }
 
                     if (metadata.Count > 0)
@@ -461,22 +474,22 @@ namespace KafkaAdapters
 
                             m_metadataUpdateCount++;
 
-                            OnStatusMessage(MessageLevel.Info, "KafkaProducer", $"Updated \"{MetadataTopic}\" with {m_metadata.Count:N0} Kafka time-series metadata records...");
+                            OnStatusMessage(MessageLevel.Info, $"Updated \"{MetadataTopic}\" with {m_metadata.Count:N0} Kafka time-series metadata records...");
                         }
                         else
                         {
-                            OnStatusMessage(MessageLevel.Info, "KafkaProducer", $"Latest \"{MetadataTopic}\" is up to date with current time-series metadata records...");
+                            OnStatusMessage(MessageLevel.Info, $"Latest \"{MetadataTopic}\" is up to date with current time-series metadata records...");
                         }
                     }
                     else
                     {
-                        OnStatusMessage(MessageLevel.Info, "KafkaProducer", "WARNING: No available local time-series metadata available to serialize...");
+                        OnStatusMessage(MessageLevel.Info, "WARNING: No available local time-series metadata available to serialize...");
                     }
                 }
             }
             catch (Exception ex)
             {
-                OnProcessException(MessageLevel.Warning, "KafkaProducer", new InvalidOperationException($"Failed to update \"{MetadataTopic}\" with current time-series metadata records: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to update \"{MetadataTopic}\" with current time-series metadata records: {ex.Message}", ex));
             }
         }
 
@@ -505,7 +518,7 @@ namespace KafkaAdapters
             }
             catch (Exception ex)
             {
-                OnProcessException(MessageLevel.Warning, "KafkaProducer", new InvalidOperationException($"Exception while sending Kafka messages for topic \"{Topic}\": {ex.Message}", ex));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Exception while sending Kafka messages for topic \"{Topic}\": {ex.Message}", ex));
 
                 try
                 {
@@ -513,7 +526,7 @@ namespace KafkaAdapters
                 }
                 catch (Exception ex2)
                 {
-                    OnStatusMessage(MessageLevel.Warning, "KafkaProducer", $"WARNING: Exception occurred while attempting to restart adapter from the ProcessMeasurements handler: {ex2.Message}");
+                    OnStatusMessage(MessageLevel.Warning, $"WARNING: Exception occurred while attempting to restart adapter from the ProcessMeasurements handler: {ex2.Message}");
                 }
             }
         }

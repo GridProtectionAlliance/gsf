@@ -354,7 +354,7 @@ namespace PowerCalculations.EventDetection
 
         private void OutputLOFWarning(double realPower, double reactivePower, double qAreamVar)
         {
-            OnStatusMessage(MessageLevel.Info, "LossOfField", $"WARNING: Loss of Field Detected!\r\n        Real power = {realPower}\r\n    Reactive Power = {reactivePower}\r\n            Q Area = {qAreamVar}\r\n");
+            OnStatusMessage(MessageLevel.Info, $"WARNING: Loss of Field Detected!\r\n        Real power = {realPower}\r\n    Reactive Power = {reactivePower}\r\n            Q Area = {qAreamVar}\r\n");
         }
 
         #endregion

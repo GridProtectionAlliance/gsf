@@ -133,6 +133,8 @@ namespace HistorianAdapters
             m_badTimestampQueue = ProcessQueue<IDataPoint>.CreateRealTimeQueue(HandleBadTimestampData);
             m_outOfSequenceCounts = new Dictionary<int, ulong>();
             m_outOfSequenceQueue = ProcessQueue<IDataPoint>.CreateRealTimeQueue(HandleOutOfSequenceData);
+
+            DefaultEventName = "HistorianOutputAdapter";
         }
 
         #endregion
@@ -288,7 +290,7 @@ namespace HistorianAdapters
                 {
                     if (!m_attemptingConnection)
                     {
-                        OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", "Pausing measurement processing...");
+                        OnStatusMessage(MessageLevel.Info, "Pausing measurement processing...");
                         InternalProcessQueue.Stop();
                     }
 
@@ -327,7 +329,7 @@ namespace HistorianAdapters
                     }
                     else
                     {
-                        OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", "Resuming measurement processing...");
+                        OnStatusMessage(MessageLevel.Info, "Resuming measurement processing...");
                         InternalProcessQueue.Start();
                     }
                 }
@@ -642,7 +644,7 @@ namespace HistorianAdapters
             }
             catch (Exception ex)
             {
-                OnProcessException(MessageLevel.Warning, "HistorianOutputAdapter", ex);
+                OnProcessException(MessageLevel.Warning, ex);
             }
 
             return false;
@@ -650,42 +652,42 @@ namespace HistorianAdapters
 
         private void m_archive_RolloverStart(object sender, EventArgs e)
         {
-            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", "Archive is being rolled over...");
+            OnStatusMessage(MessageLevel.Info, "Archive is being rolled over...");
         }
 
         private void m_archive_RolloverComplete(object sender, EventArgs e)
         {
-            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", "Archive rollover is complete.");
+            OnStatusMessage(MessageLevel.Info, "Archive rollover is complete.");
         }
 
         private void m_archive_RolloverException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(MessageLevel.Warning, "HistorianOutputAdapter", new InvalidOperationException($"Archive rollover failed: {e.Argument.Message}", e.Argument));
+            OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Archive rollover failed: {e.Argument.Message}", e.Argument));
         }
 
         private void m_archive_DataReadException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(MessageLevel.Warning, "HistorianOutputAdapter", new InvalidOperationException($"Archive data read exception: {e.Argument.Message}", e.Argument));
+            OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Archive data read exception: {e.Argument.Message}", e.Argument));
         }
 
         private void m_archive_DataWriteException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(MessageLevel.Warning, "HistorianOutputAdapter", new InvalidOperationException($"Archive write read exception: {e.Argument.Message}", e.Argument));
+            OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Archive write read exception: {e.Argument.Message}", e.Argument));
         }
 
         private void m_archive_OffloadStart(object sender, EventArgs e)
         {
-            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", "Archive offload started...");
+            OnStatusMessage(MessageLevel.Info, "Archive offload started...");
         }
 
         private void m_archive_OffloadComplete(object sender, EventArgs e)
         {
-            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", "Archive offload complete.");
+            OnStatusMessage(MessageLevel.Info, "Archive offload complete.");
         }
 
         private void m_archive_OffloadException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(MessageLevel.Warning, "HistorianOutputAdapter", new InvalidOperationException($"Archive offload exception: {e.Argument.Message}", e.Argument));
+            OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Archive offload exception: {e.Argument.Message}", e.Argument));
         }
 
         private void m_archive_OrphanDataReceived(object sender, EventArgs<IDataPoint> e)
@@ -706,9 +708,9 @@ namespace HistorianAdapters
             if (total % m_badDataMessageInterval == 0UL)
             {
                 if (total > 0UL)
-                    OnStatusMessage(MessageLevel.Warning, "HistorianOutputAdapter", $"Received {total} points of orphaned data for {m_instanceName}:{id} @{point.Time:yyyy-MM-dd HH:mm:ss.fffffff}. Measurements which are no longer defined in the metadata will not be archived.");
+                    OnStatusMessage(MessageLevel.Warning, $"Received {total} points of orphaned data for {m_instanceName}:{id} @{point.Time:yyyy-MM-dd HH:mm:ss.fffffff}. Measurements which are no longer defined in the metadata will not be archived.");
                 else
-                    OnStatusMessage(MessageLevel.Warning, "HistorianOutputAdapter", $"Received orphaned data for point {m_instanceName}:{id} @{point.Time:yyyy-MM-dd HH:mm:ss.fffffff}. Measurements which are no longer defined in the metadata will not be archived.");
+                    OnStatusMessage(MessageLevel.Warning, $"Received orphaned data for point {m_instanceName}:{id} @{point.Time:yyyy-MM-dd HH:mm:ss.fffffff}. Measurements which are no longer defined in the metadata will not be archived.");
             }
 
             m_orphanCounts[id] = total + 1UL;
@@ -732,9 +734,9 @@ namespace HistorianAdapters
             if (total % m_badDataMessageInterval == 0UL)
             {
                 if (total > 0UL)
-                    OnStatusMessage(MessageLevel.Warning, "HistorianOutputAdapter", $"Received {total} points of data for {m_instanceName}:{id} @{point.Time:yyyy-MM-dd HH:mm:ss.fffffff} with an unreasonable future timestamp. Data with a timestamp beyond {m_archive.LeadTimeTolerance:0.00} minutes of the local clock will not be archived. Check local system clock and data source clock for accuracy.");
+                    OnStatusMessage(MessageLevel.Warning, $"Received {total} points of data for {m_instanceName}:{id} @{point.Time:yyyy-MM-dd HH:mm:ss.fffffff} with an unreasonable future timestamp. Data with a timestamp beyond {m_archive.LeadTimeTolerance:0.00} minutes of the local clock will not be archived. Check local system clock and data source clock for accuracy.");
                 else
-                    OnStatusMessage(MessageLevel.Warning, "HistorianOutputAdapter", $"Received data for point {m_instanceName}:{id} @{point.Time:yyyy-MM-dd HH:mm:ss.fffffff} with an unreasonable future timestamp. Data with a timestamp beyond {m_archive.LeadTimeTolerance:0.00} minutes of the local clock will not be archived. Check local system clock and data source clock for accuracy.");
+                    OnStatusMessage(MessageLevel.Warning, $"Received data for point {m_instanceName}:{id} @{point.Time:yyyy-MM-dd HH:mm:ss.fffffff} with an unreasonable future timestamp. Data with a timestamp beyond {m_archive.LeadTimeTolerance:0.00} minutes of the local clock will not be archived. Check local system clock and data source clock for accuracy.");
             }
 
             m_badTimestampCounts[id] = total + 1UL;
@@ -758,9 +760,9 @@ namespace HistorianAdapters
             if (total % m_badDataMessageInterval == 0UL)
             {
                 if (total > 0UL)
-                    OnStatusMessage(MessageLevel.Warning, "HistorianOutputAdapter", $"Received {total} points of out-of-sequence data for {m_instanceName}:{id} @{point.Time:yyyy-MM-dd HH:mm:ss.fffffff}. Data received out of order will not be archived, per configuration.");
+                    OnStatusMessage(MessageLevel.Warning, $"Received {total} points of out-of-sequence data for {m_instanceName}:{id} @{point.Time:yyyy-MM-dd HH:mm:ss.fffffff}. Data received out of order will not be archived, per configuration.");
                 else
-                    OnStatusMessage(MessageLevel.Warning, "HistorianOutputAdapter", $"Received out-of-sequence data for {m_instanceName}:{id} @{point.Time:yyyy-MM-dd HH:mm:ss.fffffff}. Data received out of order will not be archived, per configuration.");
+                    OnStatusMessage(MessageLevel.Warning, $"Received out-of-sequence data for {m_instanceName}:{id} @{point.Time:yyyy-MM-dd HH:mm:ss.fffffff}. Data received out of order will not be archived, per configuration.");
             }
 
             m_outOfSequenceCounts[id] = total + 1UL;
@@ -775,7 +777,7 @@ namespace HistorianAdapters
         {
             e.Argument.Archive = m_archive;
             e.Argument.ServiceProcessException += DataServices_ServiceProcessException;
-            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", $"{e.Argument.GetType().Name} has been loaded.");
+            OnStatusMessage(MessageLevel.Info, $"{e.Argument.GetType().Name} has been loaded.");
 
             m_adapterLoadedCount++;
         }
@@ -784,7 +786,7 @@ namespace HistorianAdapters
         {
             e.Argument.Archive = null;
             e.Argument.ServiceProcessException -= DataServices_ServiceProcessException;
-            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", $"{e.Argument.GetType().Name} has been unloaded.");
+            OnStatusMessage(MessageLevel.Info, $"{e.Argument.GetType().Name} has been unloaded.");
         }
 
         private void MetadataProviders_AdapterCreated(object sender, EventArgs<IMetadataProvider> e)
@@ -835,7 +837,7 @@ namespace HistorianAdapters
             e.Argument.MetadataRefreshComplete += MetadataProviders_MetadataRefreshComplete;
             e.Argument.MetadataRefreshTimeout += MetadataProviders_MetadataRefreshTimeout;
             e.Argument.MetadataRefreshException += MetadataProviders_MetadataRefreshException;
-            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", $"{e.Argument.GetType().Name} has been loaded.");
+            OnStatusMessage(MessageLevel.Info, $"{e.Argument.GetType().Name} has been loaded.");
 
             m_adapterLoadedCount++;
         }
@@ -847,7 +849,7 @@ namespace HistorianAdapters
             e.Argument.MetadataRefreshComplete -= MetadataProviders_MetadataRefreshComplete;
             e.Argument.MetadataRefreshTimeout -= MetadataProviders_MetadataRefreshTimeout;
             e.Argument.MetadataRefreshException -= MetadataProviders_MetadataRefreshException;
-            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", $"{e.Argument.GetType().Name} has been unloaded.");
+            OnStatusMessage(MessageLevel.Info, $"{e.Argument.GetType().Name} has been unloaded.");
         }
 
         private void ReplicationProviders_AdapterCreated(object sender, EventArgs<IReplicationProvider> e)
@@ -861,7 +863,7 @@ namespace HistorianAdapters
             e.Argument.ReplicationComplete += ReplicationProvider_ReplicationComplete;
             e.Argument.ReplicationProgress += ReplicationProvider_ReplicationProgress;
             e.Argument.ReplicationException += ReplicationProvider_ReplicationException;
-            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", $"{e.Argument.GetType().Name} has been loaded.");
+            OnStatusMessage(MessageLevel.Info, $"{e.Argument.GetType().Name} has been loaded.");
 
             m_adapterLoadedCount++;
         }
@@ -872,57 +874,57 @@ namespace HistorianAdapters
             e.Argument.ReplicationComplete -= ReplicationProvider_ReplicationComplete;
             e.Argument.ReplicationProgress -= ReplicationProvider_ReplicationProgress;
             e.Argument.ReplicationException -= ReplicationProvider_ReplicationException;
-            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", $"{e.Argument.GetType().Name} has been unloaded.");
+            OnStatusMessage(MessageLevel.Info, $"{e.Argument.GetType().Name} has been unloaded.");
         }
 
         private void AdapterLoader_AdapterLoadException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(MessageLevel.Warning, "HistorianOutputAdapter", e.Argument);
+            OnProcessException(MessageLevel.Warning, e.Argument);
         }
 
         private void DataServices_ServiceProcessException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(MessageLevel.Warning, "HistorianOutputAdapter", e.Argument);
+            OnProcessException(MessageLevel.Warning, e.Argument);
         }
 
         private void MetadataProviders_MetadataRefreshStart(object sender, EventArgs e)
         {
-            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", $"{sender.GetType().Name} has started metadata refresh...");
+            OnStatusMessage(MessageLevel.Info, $"{sender.GetType().Name} has started metadata refresh...");
         }
 
         private void MetadataProviders_MetadataRefreshComplete(object sender, EventArgs e)
         {
-            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", $"{sender.GetType().Name} has finished metadata refresh.");
+            OnStatusMessage(MessageLevel.Info, $"{sender.GetType().Name} has finished metadata refresh.");
         }
 
         private void MetadataProviders_MetadataRefreshTimeout(object sender, EventArgs e)
         {
-            OnStatusMessage(MessageLevel.Warning, "HistorianOutputAdapter", $"{sender.GetType().Name} has timed-out on metadata refresh.");
+            OnStatusMessage(MessageLevel.Warning, $"{sender.GetType().Name} has timed-out on metadata refresh.");
         }
 
         private void MetadataProviders_MetadataRefreshException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(MessageLevel.Warning, "HistorianOutputAdapter", e.Argument);
+            OnProcessException(MessageLevel.Warning, e.Argument);
         }
 
         private void ReplicationProvider_ReplicationStart(object sender, EventArgs e)
         {
-            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", $"{sender.GetType().Name} has started archive replication...");
+            OnStatusMessage(MessageLevel.Info, $"{sender.GetType().Name} has started archive replication...");
         }
 
         private void ReplicationProvider_ReplicationComplete(object sender, EventArgs e)
         {
-            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", $"{sender.GetType().Name} has finished archive replication.");
+            OnStatusMessage(MessageLevel.Info, $"{sender.GetType().Name} has finished archive replication.");
         }
 
         private void ReplicationProvider_ReplicationProgress(object sender, EventArgs<ProcessProgress<int>> e)
         {
-            OnStatusMessage(MessageLevel.Info, "HistorianOutputAdapter", $"{sender.GetType().Name} has replicated archive file {e.Argument.ProgressMessage}.");
+            OnStatusMessage(MessageLevel.Info, $"{sender.GetType().Name} has replicated archive file {e.Argument.ProgressMessage}.");
         }
 
         private void ReplicationProvider_ReplicationException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(MessageLevel.Warning, "HistorianOutputAdapter", e.Argument);
+            OnProcessException(MessageLevel.Warning, e.Argument);
         }
 
         #endregion

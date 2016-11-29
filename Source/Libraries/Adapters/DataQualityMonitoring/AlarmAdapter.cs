@@ -105,9 +105,9 @@ namespace DataQualityMonitoring
             m_alarmLookup = new Dictionary<Guid, SignalAlarms>();
 
             m_measurementQueue = new DoubleBufferedQueue<IMeasurement>();
-            m_processMeasurementsOperation = new MixedSynchronizedOperation(ProcessMeasurements, ex => OnProcessException(MessageLevel.Warning, "AlarmAdapter", ex));
+            m_processMeasurementsOperation = new MixedSynchronizedOperation(ProcessMeasurements, ex => OnProcessException(MessageLevel.Warning, ex));
 
-            m_alarmLogOperation = new LongSynchronizedOperation(LogStateChanges, ex => OnProcessException(MessageLevel.Warning, "AlarmAdapter", ex));
+            m_alarmLogOperation = new LongSynchronizedOperation(LogStateChanges, ex => OnProcessException(MessageLevel.Warning, ex));
             m_stateChanges = new DoubleBufferedQueue<StateChange>();
             m_alarmLogOperation.IsBackground = true;
         }
@@ -260,7 +260,7 @@ namespace DataQualityMonitoring
             }
             catch (Exception ex)
             {
-                OnProcessException(MessageLevel.Error, "AlarmAdapter", new InvalidOperationException($"Unable to initialize alarm service due to exception: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Error, new InvalidOperationException($"Unable to initialize alarm service due to exception: {ex.Message}", ex));
             }
 
             // Run the process measurements operation to ensure that the alarm configuration is up to date
@@ -775,7 +775,7 @@ namespace DataQualityMonitoring
         // Processes exceptions thrown by the alarm service.
         private void AlarmService_ServiceProcessException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(MessageLevel.Warning, "AlarmAdapter", e.Argument);
+            OnProcessException(MessageLevel.Warning, e.Argument);
         }
 
         #endregion

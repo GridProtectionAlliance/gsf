@@ -66,6 +66,8 @@ namespace HistorianAdapters
         public RemoteInputAdapter()
         {
             m_historianDataListener = new DataListener();
+
+            DefaultEventName = "RemoteHistorianInputAdapter";
         }
 
         #endregion
@@ -296,13 +298,13 @@ namespace HistorianAdapters
             }
             catch (Exception ex)
             {
-                OnProcessException(MessageLevel.Warning, "RemoteHistorianInputAdapter", ex);
+                OnProcessException(MessageLevel.Warning, ex);
             }
         }
 
         private void HistorianDataListener_SocketConnecting(object sender, EventArgs e)
         {
-            OnStatusMessage(MessageLevel.Info, "RemoteHistorianInputAdapter", "Attempting socket connection...");
+            OnStatusMessage(MessageLevel.Info, "Attempting socket connection...");
         }
 
         private void HistorianDataListener_SocketConnected(object sender, EventArgs e)
@@ -317,17 +319,17 @@ namespace HistorianAdapters
 
         private void HistorianDataListener_OutputTypeNotFound(object sender, EventArgs<short> e)
         {
-            OnStatusMessage(MessageLevel.Warning, "RemoteHistorianInputAdapter", $"Unable to parse data for packet type {e.Argument}.");
+            OnStatusMessage(MessageLevel.Warning, $"Unable to parse data for packet type {e.Argument}.");
         }
 
         private void HistorianDataListener_DataDiscarded(object sender, EventArgs<byte[]> e)
         {
-            OnStatusMessage(MessageLevel.Warning, "RemoteHistorianInputAdapter", $"Unable to parse data: {e.Argument.Length} bytes discarded.");
+            OnStatusMessage(MessageLevel.Warning, $"Unable to parse data: {e.Argument.Length} bytes discarded.");
         }
 
         private void HistorianDataListener_ParsingException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(MessageLevel.Warning, "RemoteHistorianInputAdapter", e.Argument);
+            OnProcessException(MessageLevel.Warning, e.Argument);
         }
 
         #endregion

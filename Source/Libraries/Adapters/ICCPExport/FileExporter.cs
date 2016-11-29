@@ -88,6 +88,18 @@ namespace ICCPExport
 
         #endregion
 
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new ICCP <see cref="FileExporter"/>.
+        /// </summary>
+        public FileExporter()
+        {
+            DefaultEventName = "ICCPFileExporter";
+        }
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>
@@ -349,7 +361,7 @@ namespace ICCPExport
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(MessageLevel.Warning, "ICCPFileExporter", new InvalidOperationException($"Failed to lookup point tag for measurement [{pointID}] due to exception: {ex.Message}"));
+                    OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to lookup point tag for measurement [{pointID}] due to exception: {ex.Message}"));
                 }
             }
 
@@ -391,7 +403,7 @@ namespace ICCPExport
                     // Make sure reference made it in this frame...
                     if (m_useReferenceAngle && !measurements.TryGetValue(m_referenceAngleKey, out referenceAngle))
                     {
-                        OnProcessException(MessageLevel.Warning, "ICCPFileExporter", new InvalidOperationException("Calculated reference angle was not found in this frame, possible reasons: system is initializing, receiving no data or lag time is too small. File creation was skipped."));
+                        OnProcessException(MessageLevel.Warning, new InvalidOperationException("Calculated reference angle was not found in this frame, possible reasons: system is initializing, receiving no data or lag time is too small. File creation was skipped."));
                     }
                     else
                     {
@@ -484,7 +496,7 @@ namespace ICCPExport
                             else
                             {
                                 // We were unable to find measurement tag for this key - this is unexpected
-                                OnProcessException(MessageLevel.Warning, "ICCPFileExporter", new InvalidOperationException($"Failed to find measurement tag for measurement {inputMeasurementKey}"));
+                                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to find measurement tag for measurement {inputMeasurementKey}"));
                             }
                         }
                     }
@@ -497,7 +509,7 @@ namespace ICCPExport
                     catch (Exception ex)
                     {
                         m_skippedExports++;
-                        OnStatusMessage(MessageLevel.Warning, "ICCPFileExporter", $"WARNING: Skipped export due to exception: {ex.Message}");
+                        OnStatusMessage(MessageLevel.Warning, $"WARNING: Skipped export due to exception: {ex.Message}");
                         displayedWarning = true;
                     }
 
@@ -507,7 +519,7 @@ namespace ICCPExport
                         //Make sure message is only displayed once during the minute
                         if (!m_statusDisplayed)
                         {
-                            OnStatusMessage(MessageLevel.Info, "ICCPFileExporter", $"{m_dataExporter.TotalExports} successful file based measurement exports...");
+                            OnStatusMessage(MessageLevel.Info, $"{m_dataExporter.TotalExports} successful file based measurement exports...");
                             m_statusDisplayed = true;
                         }
                     }
@@ -519,19 +531,19 @@ namespace ICCPExport
                 else
                 {
                     // No data was available in the frame, lag time set too tight?
-                    OnProcessException(MessageLevel.Warning, "ICCPFileExporter", new InvalidOperationException("No measurements were available for file based data export, possible reasons: system is initializing , receiving no data or lag time is too small. File creation was skipped."));
+                    OnProcessException(MessageLevel.Warning, new InvalidOperationException("No measurements were available for file based data export, possible reasons: system is initializing , receiving no data or lag time is too small. File creation was skipped."));
                 }
             }
         }
 
         private void m_dataExporter_StatusMessage(object sender, EventArgs<string> e)
         {
-            OnStatusMessage(MessageLevel.Info, "ICCPFileExporter", e.Argument);
+            OnStatusMessage(MessageLevel.Info, e.Argument);
         }
 
         private void m_dataExporter_ProcessException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(MessageLevel.Warning, "ICCPFileExporter", e.Argument);
+            OnProcessException(MessageLevel.Warning, e.Argument);
         }
 
         #endregion

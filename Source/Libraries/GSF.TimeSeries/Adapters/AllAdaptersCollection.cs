@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using GSF.Diagnostics;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -60,13 +61,7 @@ namespace GSF.TimeSeries.Adapters
         /// We don't auto-initialize collections added to the <see cref="AllAdaptersCollection"/> since no data source
         /// will be available when the collections are being created.
         /// </remarks>
-        protected override bool AutoInitialize
-        {
-            get
-            {
-                return false;
-            }
-        }
+        protected override bool AutoInitialize => false;
 
         /// <summary>
         /// Gets or sets <see cref="DataSet"/> based data source used to load each <see cref="IAdapter"/>.
@@ -122,7 +117,7 @@ namespace GSF.TimeSeries.Adapters
                     }
                     catch (Exception ex)
                     {
-                        OnProcessException(ex);
+                        OnProcessException(MessageLevel.Warning, ex);
                     }
                 }
             }
@@ -189,7 +184,7 @@ namespace GSF.TimeSeries.Adapters
                         for (int i = adapterCollection.Count - 1; i >= 0; i--)
                         {
                             IAdapter adapter = adapterCollection[i];
-                            DataRow[] adapterRows = dataSource.Tables[dataMember].Select(string.Format("ID = {0}", adapter.ID));
+                            DataRow[] adapterRows = dataSource.Tables[dataMember].Select($"ID = {adapter.ID}");
 
                             if (adapterRows.Length == 0 && adapter.ID != 0)
                             {
@@ -199,7 +194,7 @@ namespace GSF.TimeSeries.Adapters
                                 }
                                 catch (Exception ex)
                                 {
-                                    OnProcessException(new InvalidOperationException(string.Format("Exception while stopping adapter {0}: {1}", adapter.Name, ex.Message), ex));
+                                    OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception while stopping adapter {adapter.Name}: {ex.Message}", ex));
                                 }
 
                                 adapterCollection.Remove(adapter);
@@ -297,7 +292,7 @@ namespace GSF.TimeSeries.Adapters
         /// This method is not implemented in <see cref="AllAdaptersCollection"/>.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override bool TryGetAdapterByID(uint ID, out IAdapterCollection adapter)
+        public override bool TryGetAdapterByID(uint id, out IAdapterCollection adapter)
         {
             throw new NotImplementedException();
         }

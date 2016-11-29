@@ -487,7 +487,7 @@ namespace InfluxDBAdapters
 
                 if (!ignoreError)
                 {
-                    OnProcessException(MessageLevel.Warning, "InfluxDBOutputAdapter", ex);
+                    OnProcessException(MessageLevel.Warning, ex);
 
                     // So long as user hasn't requested to stop, restart connection cycle when exceptions occur
                     m_requestRestart.RunOnceAsync();

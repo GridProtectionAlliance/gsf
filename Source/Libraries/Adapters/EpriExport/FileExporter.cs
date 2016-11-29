@@ -81,11 +81,13 @@ namespace EpriExport
         /// </summary>
         public FileExporter()
         {
-            m_fileExport = new LongSynchronizedOperation(WriteFileData, ex => OnProcessException(MessageLevel.Error, "EpriFileExporter", ex))
+            m_fileExport = new LongSynchronizedOperation(WriteFileData, ex => OnProcessException(MessageLevel.Error, ex))
             {
                 IsBackground = true
             };
             m_fileDataLock = new object();
+
+            DefaultEventName = "EpriFileExporter";
         }
 
         #region [ Properties ]
@@ -459,7 +461,7 @@ namespace EpriExport
                 catch (Exception ex)
                 {
                     m_skippedExports++;
-                    OnStatusMessage(MessageLevel.Warning, "EpriFileExporter", "WARNING: Skipped export due to exception: " + ex.Message);
+                    OnStatusMessage(MessageLevel.Warning, "WARNING: Skipped export due to exception: " + ex.Message);
                     displayedWarning = true;
                 }
 
@@ -469,7 +471,7 @@ namespace EpriExport
                     // Make sure message is only displayed once during the minute
                     if (!m_statusDisplayed)
                     {
-                        OnStatusMessage(MessageLevel.Info, "EpriFileExporter", $"{m_totalExports:N0} successful file based measurement exports...");
+                        OnStatusMessage(MessageLevel.Info, $"{m_totalExports:N0} successful file based measurement exports...");
                         m_statusDisplayed = true;
                     }
                 }

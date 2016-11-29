@@ -240,7 +240,7 @@ namespace PhasorProtocolAdapters
             }
             catch (Exception ex)
             {
-                OnProcessException(MessageLevel.Info, "CalculatedMeasurementBase", new InvalidOperationException($"Failed to lookup signal type for measurement {key}: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Failed to lookup signal type for measurement {key}: {ex.Message}", ex));
             }
 
             return SignalType.NONE;

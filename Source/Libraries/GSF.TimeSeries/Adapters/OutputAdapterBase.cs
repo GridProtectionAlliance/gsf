@@ -530,7 +530,7 @@ namespace GSF.TimeSeries.Adapters
             if (m_measurementQueue != null)
                 m_measurementQueue.Start();
 
-            OnStatusMessage(MessageLevel.Info, "OutputAdapterBase", "Connection established.");
+            OnStatusMessage(MessageLevel.Info, "Connection established.");
         }
 
         /// <summary>
@@ -559,7 +559,7 @@ namespace GSF.TimeSeries.Adapters
             }
             catch (Exception ex)
             {
-                OnProcessException(MessageLevel.Info, "OutputActionAdapterBase", new InvalidOperationException($"Exception occurred during disconnect: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception occurred during disconnect: {ex.Message}", ex));
             }
         }
 
@@ -580,7 +580,7 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         protected virtual void OnDisconnected()
         {
-            OnStatusMessage(MessageLevel.Info, "OutputAdapterBase", "Disconnected.");
+            OnStatusMessage(MessageLevel.Info, "Disconnected.");
         }
 
         /// <summary>
@@ -693,7 +693,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, "OutputActionAdapterBase", new InvalidOperationException($"Exception in consumer handler for UnprocessedMeasurements event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for UnprocessedMeasurements event: {ex.Message}", ex));
             }
         }
 
@@ -704,7 +704,7 @@ namespace GSF.TimeSeries.Adapters
                 // So long as user hasn't requested to stop, attempt connection
                 if (Enabled)
                 {
-                    OnStatusMessage(MessageLevel.Info, "OutputAdapterBase", "Attempting connection...");
+                    OnStatusMessage(MessageLevel.Info, "Attempting connection...");
 
                     // Attempt connection to data output adapter (e.g., call historian API connect function).
                     AttemptConnection();
@@ -715,7 +715,7 @@ namespace GSF.TimeSeries.Adapters
             }
             catch (Exception ex)
             {
-                OnProcessException(MessageLevel.Info, "OutputActionAdapterBase", new InvalidOperationException($"Connection attempt failed: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Connection attempt failed: {ex.Message}", ex));
 
                 // So long as user hasn't requested to stop, keep trying connection
                 if (Enabled)
@@ -737,7 +737,7 @@ namespace GSF.TimeSeries.Adapters
         // Bubble any exceptions occurring in the process queue to the base class event
         private void m_measurementQueue_ProcessException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(MessageLevel.Info, "OutputActionAdapterBase", e.Argument);
+            OnProcessException(MessageLevel.Info, e.Argument);
         }
 
         #endregion

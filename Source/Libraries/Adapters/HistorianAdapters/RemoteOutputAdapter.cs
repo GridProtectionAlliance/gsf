@@ -101,6 +101,8 @@ namespace HistorianAdapters
             m_outputIsForArchive = DefaultOutputIsForArchive;
             m_throttleTransmission = DefaultThrottleTransmission;
             m_samplesPerTransmission = DefaultSamplesPerTransmission;
+
+            DefaultEventName = "RemoteHistorianOutputAdapter";
         }
 
         #endregion
@@ -415,7 +417,7 @@ namespace HistorianAdapters
 
         private void HistorianPublisher_ConnectionAttempt(object sender, EventArgs e)
         {
-            OnStatusMessage(MessageLevel.Info, "RemoteHistorianOutputAdapter", "Attempting socket connection...");
+            OnStatusMessage(MessageLevel.Info, "Attempting socket connection...");
         }
 
         private void HistorianPublisher_ConnectionEstablished(object sender, EventArgs e)
@@ -436,7 +438,7 @@ namespace HistorianAdapters
         private void HistorianPublisher_SendDataException(object sender, EventArgs<Exception> e)
         {
             m_publisherWaitHandle.Set();
-            OnProcessException(MessageLevel.Warning, "RemoteHistorianOutputAdapter", e.Argument);
+            OnProcessException(MessageLevel.Warning, e.Argument);
         }
 
         private void HistorianPublisher_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
@@ -450,7 +452,7 @@ namespace HistorianAdapters
         private void HistorianPublisher_ReceiveDataException(object sender, EventArgs<Exception> e)
         {
             m_publisherWaitHandle.Set();
-            OnProcessException(MessageLevel.Warning, "RemoteHistorianOutputAdapter", e.Argument);
+            OnProcessException(MessageLevel.Warning, e.Argument);
         }
 
         private void TransmitPacketType1(IMeasurement[] measurements, int startIndex, int endIndex)

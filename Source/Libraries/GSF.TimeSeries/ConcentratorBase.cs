@@ -1930,25 +1930,26 @@ namespace GSF.TimeSeries
         [Obsolete("Switch to using overload with MessageLevel parameter - this method may be removed from future builds.", false)]
         protected void OnProcessException(Exception ex)
         {
-            OnProcessException(MessageLevel.Info, "Unclassified Exception", ex);
+            OnProcessException(MessageLevel.Info, ex, "Unclassified Exception");
         }
 
         /// <summary>
         /// Raises the <see cref="ProcessException"/> event.
         /// </summary>
         /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
-        /// <param name="eventName">A fixed string to classify this event.</param>
         /// <param name="exception">Processing <see cref="Exception"/>.</param>
+        /// <param name="eventName">A fixed string to classify this event.</param>
+        /// <param name="flags"><see cref="MessageFlags"/> to use, if any; defaults to <see cref="MessageFlags.None"/>.</param>
         /// <remarks>
-        /// <see pref="eventName"/> should be a constant string value associated with what type of message is being generated. 
-        /// In general, there should only be a few dozen distinct event names per class. Exceeding this threshold.
-        /// Will cause the EventName to be replaced with a general warning that a usage issue has occurred.
+        /// <see pref="eventName"/> should be a constant string value associated with what type of message is being
+        /// generated. In general, there should only be a few dozen distinct event names per class. Exceeding this
+        /// threshold will cause the EventName to be replaced with a general warning that a usage issue has occurred.
         /// </remarks>
-        protected virtual void OnProcessException(MessageLevel level, string eventName, Exception exception)
+        protected virtual void OnProcessException(MessageLevel level, Exception exception, string eventName, MessageFlags flags = MessageFlags.None)
         {
             try
             {
-                Log.Publish(level, eventName, exception?.Message, null, exception);
+                Log.Publish(level, flags, eventName, exception?.Message, null, exception);
 
                 using (Logger.SuppressLogMessages())
                     ProcessException?.Invoke(this, new EventArgs<Exception>(exception));
@@ -1973,7 +1974,7 @@ namespace GSF.TimeSeries
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, "ConcentratorBase", new InvalidOperationException($"Exception in consumer handler for OnUnpublishedSamples event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for OnUnpublishedSamples event: {ex.Message}", ex), "ConcentratorBase");
             }
         }
 
@@ -1993,7 +1994,7 @@ namespace GSF.TimeSeries
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, "ConcentratorBase", new InvalidOperationException($"Exception in consumer handler for DiscardingMeasurements event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for DiscardingMeasurements event: {ex.Message}", ex), "ConcentratorBase");
             }
         }
 
@@ -2105,7 +2106,7 @@ namespace GSF.TimeSeries
                     catch (Exception ex)
                     {
                         // Not stopping for exceptions - but we'll let user know there are issues...
-                        OnProcessException(MessageLevel.Info, "ConcentratorBase", ex);
+                        OnProcessException(MessageLevel.Info, ex, "ConcentratorBase");
                         break;
                     }
                 }

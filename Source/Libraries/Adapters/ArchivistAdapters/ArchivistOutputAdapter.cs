@@ -31,6 +31,7 @@ using Automatak.Archivist.Client;
 using Automatak.Archivist.Client.Impl;
 using Automatak.Archivist.Protocol;
 using GSF;
+using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using Measurement = Automatak.Archivist.Protocol.Measurement;
@@ -112,25 +113,13 @@ namespace ArchivistAdapters
         /// Returns a flag that determines if measurements sent to this
         /// <see cref="ArchivistOutputAdapter"/> are destined for archival.
         /// </summary>
-        public override bool OutputIsForArchive
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool OutputIsForArchive => true;
 
         /// <summary>
         /// Gets a flag that determines if this <see cref="ArchivistOutputAdapter"/>
         /// uses an asynchronous connection.
         /// </summary>
-        protected override bool UseAsyncConnect
-        {
-            get
-            {
-                return false;
-            }
-        }
+        protected override bool UseAsyncConnect => false;
 
         /// <summary>
         /// Returns the detailed status of this <see cref="ArchivistOutputAdapter"/>.
@@ -172,7 +161,7 @@ namespace ArchivistAdapters
             if (settings.TryGetValue("port", out setting))
                 m_port = ushort.Parse(setting);
 
-            var msgClient = new PoolingMessageClient(m_host, m_port);
+            PoolingMessageClient msgClient = new PoolingMessageClient(m_host, m_port);
             m_client = new DefaultArchivistClient(msgClient);
         }
 
@@ -198,16 +187,16 @@ namespace ArchivistAdapters
         /// <param name="measurements">Measurements to be archived.</param>
         protected override void ProcessMeasurements(IMeasurement[] measurements)
         {
-            if (measurements != null)
+            if ((object)measurements != null)
             {
                 try
                 {
-                    var meas = Convert(measurements);
-                    var result = m_client.Insert(meas).Await().Get(); // TODO - error handling here
+                    ICollection<MeasurementWithId> meas = Convert(measurements);
+                    m_client.Insert(meas).Await().Get();
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(ex);
+                    OnProcessException(MessageLevel.Warning, ex);
                 }
             }
         }
@@ -219,34 +208,35 @@ namespace ArchivistAdapters
         /// <returns>Text of the status message.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            return string.Format("Archived {0} measurements to Archive.", m_measurementCount).CenterText(maxLength);
+            return $"Archived {m_measurementCount} measurements to Archive.".CenterText(maxLength);
         }
 
         #endregion
 
-        #region Static Members
+        #region  [ Static ]
 
         private static ICollection<MeasurementWithId> Convert(IMeasurement[] m)
         {
-            var list = new List<MeasurementWithId>();
+            List<MeasurementWithId> list = new List<MeasurementWithId>();
+
             for (int i = 0; i < m.Length; ++i)
-            {
                 list.Add(Convert(m[i]));
-            }
+
             return list;
         }
 
         private static MeasurementWithId Convert(IMeasurement m)
         {
-            var builder = Measurement.CreateBuilder();
+            Measurement.Builder builder = Measurement.CreateBuilder();
+
             builder.SetTime(m.Timestamp);
             builder.SetType(Type.FLOAT64);
             builder.SetDoubleValue(m.Value);
             builder.SetQuality(0); // TODO - convert quality types
+
             return MeasurementWithId.CreateBuilder().SetId(m.TagName).SetMeas(builder.Build()).Build();
         }
 
         #endregion
-
     }
 }

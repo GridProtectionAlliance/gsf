@@ -197,7 +197,7 @@ namespace DynamicCalculator
                     }
                     catch (Exception ex)
                     {
-                        OnProcessException(MessageLevel.Error, "DynamicCalculator", new ArgumentException($"Unable to load type from assembly: {typeDef}", ex));
+                        OnProcessException(MessageLevel.Error, new ArgumentException($"Unable to load type from assembly: {typeDef}", ex));
                     }
                 }
 

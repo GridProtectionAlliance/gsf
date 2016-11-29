@@ -53,6 +53,7 @@ using System.Xml;
 using GSF.Communication;
 using GSF.Configuration;
 using GSF.Data;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Net.Security;
 using GSF.Security.Cryptography;
@@ -1756,7 +1757,7 @@ namespace GSF.TimeSeries.Transport
         [AdapterCommand("Enumerates connected clients.", "Administrator", "Editor", "Viewer")]
         public virtual void EnumerateClients()
         {
-            OnStatusMessage(EnumerateClients(false));
+            OnStatusMessage(MessageLevel.Info, EnumerateClients(false));
         }
 
         /// <summary>
@@ -1765,7 +1766,7 @@ namespace GSF.TimeSeries.Transport
         [AdapterCommand("Enumerates connected clients with active temporal sessions.", "Administrator", "Editor", "Viewer")]
         public virtual void EnumerateTemporalClients()
         {
-            OnStatusMessage(EnumerateClients(true));
+            OnStatusMessage(MessageLevel.Info, EnumerateClients(true));
         }
 
         private string EnumerateClients(bool filterToTemporalSessions)
@@ -1860,7 +1861,7 @@ namespace GSF.TimeSeries.Transport
             catch
             {
                 success = false;
-                OnStatusMessage("ERROR: Failed to find connected client with enumerated index " + clientIndex);
+                OnStatusMessage(MessageLevel.Error, "ERROR: Failed to find connected client with enumerated index " + clientIndex);
             }
 
             if (success)
@@ -1870,7 +1871,7 @@ namespace GSF.TimeSeries.Transport
                 if (m_clientConnections.TryGetValue(clientID, out connection))
                     connection.RotateCipherKeys();
                 else
-                    OnStatusMessage("ERROR: Failed to find connected client " + clientID);
+                    OnStatusMessage(MessageLevel.Error, "ERROR: Failed to find connected client " + clientID);
             }
         }
 
@@ -1891,7 +1892,7 @@ namespace GSF.TimeSeries.Transport
             catch
             {
                 success = false;
-                OnStatusMessage("ERROR: Failed to find connected client with enumerated index " + clientIndex);
+                OnStatusMessage(MessageLevel.Error, "ERROR: Failed to find connected client with enumerated index " + clientIndex);
             }
 
             if (success)
@@ -1901,7 +1902,7 @@ namespace GSF.TimeSeries.Transport
                 if (m_clientConnections.TryGetValue(clientID, out connection))
                     return connection.SubscriberInfo;
 
-                OnStatusMessage("ERROR: Failed to find connected client " + clientID);
+                OnStatusMessage(MessageLevel.Error, "ERROR: Failed to find connected client " + clientID);
             }
 
             return "";
@@ -1924,7 +1925,7 @@ namespace GSF.TimeSeries.Transport
             catch
             {
                 success = false;
-                OnStatusMessage("ERROR: Failed to find connected client with enumerated index " + clientIndex);
+                OnStatusMessage(MessageLevel.Error, "ERROR: Failed to find connected client with enumerated index " + clientIndex);
             }
 
             if (success)
@@ -1949,7 +1950,7 @@ namespace GSF.TimeSeries.Transport
                     return temporalStatus;
                 }
 
-                OnStatusMessage("ERROR: Failed to find connected client " + clientID);
+                OnStatusMessage(MessageLevel.Error, "ERROR: Failed to find connected client " + clientID);
             }
 
             return "";
@@ -2046,7 +2047,7 @@ namespace GSF.TimeSeries.Transport
                 SendAllNotifications();
             }
 
-            OnStatusMessage("Sent notification: {0}", message);
+            OnStatusMessage(MessageLevel.Info, "Sent notification: {0}", message);
         }
 
         /// <summary>
@@ -2119,7 +2120,7 @@ namespace GSF.TimeSeries.Transport
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException($"Failed to update latest measurement cache: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Failed to update latest measurement cache: {ex.Message}", ex));
             }
         }
 
@@ -2159,7 +2160,7 @@ namespace GSF.TimeSeries.Transport
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException($"Failed to initialize client notification dictionary: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Failed to initialize client notification dictionary: {ex.Message}", ex));
             }
         }
 
@@ -2295,7 +2296,7 @@ namespace GSF.TimeSeries.Transport
             ClientConnection connection;
 
             if (m_clientConnections.TryGetValue(clientID, out connection))
-                OnStatusMessage("Start time sent to {0}.", connection.ConnectionID);
+                OnStatusMessage(MessageLevel.Info, $"Start time sent to {connection.ConnectionID}.");
 
             return result;
         }
@@ -2489,13 +2490,13 @@ namespace GSF.TimeSeries.Transport
                     }
                     catch (Exception ex)
                     {
-                        OnProcessException(new InvalidOperationException($"Failed to add subscriber \"{subscriber["Acronym"].ToNonNullNorEmptyString("[UNKNOWN]")}\" certificate to trusted certificates: {ex.Message}", ex));
+                        OnProcessException(MessageLevel.Error, new InvalidOperationException($"Failed to add subscriber \"{subscriber["Acronym"].ToNonNullNorEmptyString("[UNKNOWN]")}\" certificate to trusted certificates: {ex.Message}", ex), flags: MessageFlags.SecurityMessage);
                     }
                 }
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException($"Failed to update certificate checker: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Error, new InvalidOperationException($"Failed to update certificate checker: {ex.Message}", ex), flags: MessageFlags.SecurityMessage);
             }
         }
 
@@ -2548,7 +2549,7 @@ namespace GSF.TimeSeries.Transport
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException($"Failed to update authorized signal rights for \"{connection.ConnectionID}\" - connection will be terminated: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Error, new InvalidOperationException($"Failed to update authorized signal rights for \"{connection.ConnectionID}\" - connection will be terminated: {ex.Message}", ex), flags: MessageFlags.SecurityMessage);
 
                 // If we can't assign rights, terminate connection
                 ThreadPool.QueueUserWorkItem(DisconnectClient, connection.ClientID);
@@ -2664,7 +2665,7 @@ namespace GSF.TimeSeries.Transport
                 catch (SocketException ex)
                 {
                     if (!HandleSocketException(clientID, ex))
-                        OnProcessException(new InvalidOperationException("Failed to send response packet to client due to exception: " + ex.Message, ex));
+                        OnProcessException(MessageLevel.Info, new InvalidOperationException("Failed to send response packet to client due to exception: " + ex.Message, ex));
                 }
                 catch (InvalidOperationException ex)
                 {
@@ -2672,11 +2673,11 @@ namespace GSF.TimeSeries.Transport
                     if (ex.Message.StartsWith("No client found"))
                         connection.ClientNotFoundExceptionOccurred = true;
                     else
-                        OnProcessException(new InvalidOperationException("Failed to send response packet to client due to exception: " + ex.Message, ex));
+                        OnProcessException(MessageLevel.Info, new InvalidOperationException("Failed to send response packet to client due to exception: " + ex.Message, ex));
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException("Failed to send response packet to client due to exception: " + ex.Message, ex));
+                    OnProcessException(MessageLevel.Info, new InvalidOperationException("Failed to send response packet to client due to exception: " + ex.Message, ex));
                 }
             }
 
@@ -2701,7 +2702,7 @@ namespace GSF.TimeSeries.Transport
                     catch (Exception queueException)
                     {
                         // Process exception for logging
-                        OnProcessException(new InvalidOperationException("Failed to queue client disconnect due to exception: " + queueException.Message, queueException));
+                        OnProcessException(MessageLevel.Info, new InvalidOperationException("Failed to queue client disconnect due to exception: " + queueException.Message, queueException));
                     }
 
                     return true;
@@ -2728,14 +2729,14 @@ namespace GSF.TimeSeries.Transport
                 if (m_clientConnections.TryRemove(clientID, out connection))
                 {
                     connection.Dispose();
-                    OnStatusMessage("Client disconnected from command channel.");
+                    OnStatusMessage(MessageLevel.Info, "Client disconnected from command channel.");
                 }
 
                 m_clientPublicationChannels.TryRemove(clientID, out publicationChannel);
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException($"Encountered an exception while processing client disconnect: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Encountered an exception while processing client disconnect: {ex.Message}", ex));
             }
         }
 
@@ -2759,7 +2760,7 @@ namespace GSF.TimeSeries.Transport
                     catch (Exception ex)
                     {
                         // Process exception for logging
-                        OnProcessException(new InvalidOperationException("Failed to queue notification of subscription removal due to exception: " + ex.Message, ex));
+                        OnProcessException(MessageLevel.Warning, new InvalidOperationException("Failed to queue notification of subscription removal due to exception: " + ex.Message, ex));
                     }
                 }
             }
@@ -2824,7 +2825,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException($"Exception in consumer handler for ProcessingComplete event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ProcessingComplete event: {ex.Message}", ex));
             }
         }
 
@@ -2843,20 +2844,20 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException($"Exception in consumer handler for ClientConnected event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ClientConnected event: {ex.Message}", ex));
             }
         }
 
         // Make sure to expose any routing table messages
         private void m_routingTables_StatusMessage(object sender, EventArgs<string> e)
         {
-            OnStatusMessage(e.Argument);
+            OnStatusMessage(MessageLevel.Info, e.Argument);
         }
 
         // Make sure to expose any routing table exceptions
         private void m_routingTables_ProcessException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(e.Argument);
+            OnProcessException(MessageLevel.Warning, e.Argument);
         }
 
         // Cipher key rotation timer handler
@@ -2884,7 +2885,7 @@ namespace GSF.TimeSeries.Transport
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException("Failed to restart data publisher command channel: " + ex.Message, ex));
+                    OnProcessException(MessageLevel.Warning, new InvalidOperationException("Failed to restart data publisher command channel: " + ex.Message, ex));
                 }
             }
         }
@@ -2920,7 +2921,7 @@ namespace GSF.TimeSeries.Transport
                 {
                     message = "WARNING: Received authentication request from client while running in TLS mode.";
                     SendClientResponse(connection.ClientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
-                    OnProcessException(new InvalidOperationException(message));
+                    OnProcessException(MessageLevel.Warning, new InvalidOperationException(message));
                     return;
                 }
 
@@ -2942,7 +2943,7 @@ namespace GSF.TimeSeries.Transport
                 {
                     message = $"No subscriber is registered for {connection.ConnectionID}, cannot authenticate connection - {ServerCommand.Authenticate} request denied.";
                     SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
-                    OnStatusMessage("WARNING: Client {0} {1} command request denied - subscriber is disabled or not registered.", connection.ConnectionID, ServerCommand.Authenticate);
+                    OnStatusMessage(MessageLevel.Warning, $"WARNING: Client {connection.ConnectionID} {ServerCommand.Authenticate} command request denied - subscriber is disabled or not registered.", flags: MessageFlags.SecurityMessage);
                 }
                 else
                 {
@@ -2979,7 +2980,7 @@ namespace GSF.TimeSeries.Transport
                                     // Send success response
                                     message = $"Registered subscriber \"{connection.SubscriberName}\" {connection.ConnectionID} was successfully authenticated.";
                                     SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Authenticate, message);
-                                    OnStatusMessage(message);
+                                    OnStatusMessage(MessageLevel.Info, message, flags: MessageFlags.SecurityMessage);
 
                                     lock (m_clientNotificationsLock)
                                     {
@@ -2991,28 +2992,28 @@ namespace GSF.TimeSeries.Transport
                                 {
                                     message = $"Subscriber authentication failed - {ServerCommand.Authenticate} request denied.";
                                     SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
-                                    OnStatusMessage("WARNING: Client {0} {1} command request denied - subscriber authentication failed.", connection.ConnectionID, ServerCommand.Authenticate);
+                                    OnStatusMessage(MessageLevel.Warning, $"WARNING: Client {connection.ConnectionID} {ServerCommand.Authenticate} command request denied - subscriber authentication failed.", flags: MessageFlags.SecurityMessage);
                                 }
                             }
                             else
                             {
                                 message = "Not enough buffer was provided to parse client request.";
                                 SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
-                                OnProcessException(new InvalidOperationException(message));
+                                OnProcessException(MessageLevel.Warning, new InvalidOperationException(message), flags: MessageFlags.SecurityMessage);
                             }
                         }
                         else
                         {
                             message = $"Received request packet with an unexpected size from {connection.ConnectionID} - {ServerCommand.Authenticate} request denied.";
                             SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
-                            OnStatusMessage("WARNING: Registered subscriber \"{0}\" {1} {2} command request was denied due to oddly sized {3} byte authentication packet.", connection.SubscriberName, connection.ConnectionID, ServerCommand.Authenticate, byteLength);
+                            OnStatusMessage(MessageLevel.Warning, $"WARNING: Registered subscriber \"{connection.SubscriberName}\" {connection.ConnectionID} {ServerCommand.Authenticate} command request was denied due to oddly sized {byteLength} byte authentication packet.", flags: MessageFlags.SecurityMessage);
                         }
                     }
                     else
                     {
                         message = "Not enough buffer was provided to parse client request.";
                         SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
-                        OnProcessException(new InvalidOperationException(message));
+                        OnProcessException(MessageLevel.Warning, new InvalidOperationException(message), flags: MessageFlags.SecurityMessage);
                     }
                 }
             }
@@ -3020,7 +3021,7 @@ namespace GSF.TimeSeries.Transport
             {
                 message = "Failed to process authentication request due to exception: " + ex.Message;
                 SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
-                OnProcessException(new InvalidOperationException(message, ex));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException(message, ex), flags: MessageFlags.SecurityMessage);
             }
         }
 
@@ -3048,7 +3049,7 @@ namespace GSF.TimeSeries.Transport
                         // Remotely synchronized subscriptions are currently disallowed by data publisher
                         message = "Client request for remotely synchronized data subscription was denied. Data publisher is currently configured to disallow synchronized subscriptions.";
                         SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Subscribe, message);
-                        OnProcessException(new InvalidOperationException(message));
+                        OnProcessException(MessageLevel.Info, new InvalidOperationException(message), flags: MessageFlags.UsageIssue);
                     }
                     else
                     {
@@ -3239,7 +3240,7 @@ namespace GSF.TimeSeries.Transport
                             }
                             catch (Exception ex)
                             {
-                                OnProcessException(new InvalidOperationException($"ClientConnected event handler exception: {ex.Message}", ex));
+                                OnProcessException(MessageLevel.Info, new InvalidOperationException($"ClientConnected event handler exception: {ex.Message}", ex));
                             }
 
                             // Send success response
@@ -3260,7 +3261,7 @@ namespace GSF.TimeSeries.Transport
 
                             connection.IsSubscribed = true;
                             SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Subscribe, message);
-                            OnStatusMessage(message);
+                            OnStatusMessage(MessageLevel.Info, message);
                         }
                         else
                         {
@@ -3270,7 +3271,7 @@ namespace GSF.TimeSeries.Transport
                                 message = "Cannot initialize client data subscription without a connection string.";
 
                             SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Subscribe, message);
-                            OnProcessException(new InvalidOperationException(message));
+                            OnProcessException(MessageLevel.Warning, new InvalidOperationException(message));
                         }
                     }
                 }
@@ -3278,14 +3279,14 @@ namespace GSF.TimeSeries.Transport
                 {
                     message = "Not enough buffer was provided to parse client data subscription.";
                     SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Subscribe, message);
-                    OnProcessException(new InvalidOperationException(message));
+                    OnProcessException(MessageLevel.Warning, new InvalidOperationException(message));
                 }
             }
             catch (Exception ex)
             {
                 message = "Failed to process client data subscription due to exception: " + ex.Message;
                 SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Subscribe, message);
-                OnProcessException(new InvalidOperationException(message, ex));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException(message, ex));
             }
         }
 
@@ -3307,7 +3308,7 @@ namespace GSF.TimeSeries.Transport
             connection.IsSubscribed = false;
 
             SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Unsubscribe, "Client unsubscribed.");
-            OnStatusMessage(connection.ConnectionID + " unsubscribed.");
+            OnStatusMessage(MessageLevel.Info, $"{connection.ConnectionID} unsubscribed.");
         }
 
         /// <summary>
@@ -3487,7 +3488,7 @@ namespace GSF.TimeSeries.Transport
             if (!m_allowMetadataRefresh)
                 throw new InvalidOperationException("Meta-data refresh has been disallowed by the DataPublisher.");
 
-            OnStatusMessage("Received meta-data refresh request from {0}, preparing response...", connection.ConnectionID);
+            OnStatusMessage(MessageLevel.Info, "Received meta-data refresh request from {0}, preparing response...", connection.ConnectionID);
 
             Guid clientID = connection.ClientID;
             Dictionary<string, Tuple<string, string, int>> filterExpressions = new Dictionary<string, Tuple<string, string, int>>(StringComparer.OrdinalIgnoreCase);
@@ -3522,7 +3523,7 @@ namespace GSF.TimeSeries.Transport
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException("Failed to parse subscriber provided meta-data filter expressions: " + ex.Message, ex));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException("Failed to parse subscriber provided meta-data filter expressions: " + ex.Message, ex));
             }
 
             try
@@ -3534,11 +3535,11 @@ namespace GSF.TimeSeries.Transport
                 if (rowCount > 0)
                 {
                     Time elapsedTime = (DateTime.UtcNow.Ticks - startTime).ToSeconds();
-                    OnStatusMessage("{0:N0} records spanning {1:N0} tables of meta-data prepared in {2}, sending response to {3}...", rowCount, metadata.Tables.Count, elapsedTime.ToString(2), connection.ConnectionID);
+                    OnStatusMessage(MessageLevel.Info, $"{rowCount:N0} records spanning {metadata.Tables.Count:N0} tables of meta-data prepared in {elapsedTime.ToString(2)}, sending response to {connection.ConnectionID}...");
                 }
                 else
                 {
-                    OnStatusMessage("No meta-data is available, sending an empty response to {0}...", connection.ConnectionID);
+                    OnStatusMessage(MessageLevel.Info, $"No meta-data is available, sending an empty response to {connection.ConnectionID}...");
                 }
 
                 SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.MetaDataRefresh, serializedMetadata);
@@ -3547,7 +3548,7 @@ namespace GSF.TimeSeries.Transport
             {
                 message = "Failed to transfer meta-data due to exception: " + ex.Message;
                 SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.MetaDataRefresh, message);
-                OnProcessException(new InvalidOperationException(message, ex));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException(message, ex));
             }
         }
 
@@ -3569,20 +3570,20 @@ namespace GSF.TimeSeries.Transport
                 {
                     subscription.ProcessingInterval = processingInterval;
                     SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.UpdateProcessingInterval, "New processing interval of {0} assigned.", processingInterval);
-                    OnStatusMessage("{0} was assigned a new processing interval of {1}.", connection.ConnectionID, processingInterval);
+                    OnStatusMessage(MessageLevel.Info, $"{connection.ConnectionID} was assigned a new processing interval of {processingInterval}.");
                 }
                 else
                 {
                     message = "Client subscription was not available, could not update processing interval.";
                     SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.UpdateProcessingInterval, message);
-                    OnProcessException(new InvalidOperationException(message));
+                    OnProcessException(MessageLevel.Info, new InvalidOperationException(message));
                 }
             }
             else
             {
                 message = "Not enough buffer was provided to update client processing interval.";
                 SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.UpdateProcessingInterval, message);
-                OnProcessException(new InvalidOperationException(message));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException(message));
             }
         }
 
@@ -3596,7 +3597,7 @@ namespace GSF.TimeSeries.Transport
                 operationalModes = BigEndian.ToUInt32(buffer, startIndex);
 
                 if ((operationalModes & (uint)OperationalModes.VersionMask) != 0u)
-                    OnStatusMessage("WARNING: Protocol version not supported. Operational modes may not be set correctly for client {0}.", connection.ClientID);
+                    OnStatusMessage(MessageLevel.Warning, $"WARNING: Protocol version not supported. Operational modes may not be set correctly for client {connection.ClientID}.", flags: MessageFlags.UsageIssue);
 
                 connection.OperationalModes = (OperationalModes)operationalModes;
             }
@@ -3618,23 +3619,23 @@ namespace GSF.TimeSeries.Transport
                         if (notifications.TryGetValue(hash, out notification))
                         {
                             notifications.Remove(hash);
-                            OnStatusMessage("Subscriber {0} confirmed receipt of notification: {1}.", connection.ConnectionID, notification);
+                            OnStatusMessage(MessageLevel.Info, $"Subscriber {connection.ConnectionID} confirmed receipt of notification: {notification}.");
                             SerializeClientNotifications();
                         }
                         else
                         {
-                            OnStatusMessage("Confirmation for unknown notification received from client {0}.", connection.ConnectionID);
+                            OnStatusMessage(MessageLevel.Info, $"Confirmation for unknown notification received from client {connection.ConnectionID}.");
                         }
                     }
                     else
                     {
-                        OnStatusMessage("Unsolicited confirmation of notification received.");
+                        OnStatusMessage(MessageLevel.Info, "Unsolicited confirmation of notification received.");
                     }
                 }
             }
             else
             {
-                OnStatusMessage("Malformed notification confirmation received.");
+                OnStatusMessage(MessageLevel.Info, "Malformed notification confirmation received.");
             }
         }
 
@@ -3659,7 +3660,7 @@ namespace GSF.TimeSeries.Transport
         /// <param name="length">The total number of bytes in the message, including the header.</param>
         protected virtual void HandleUserCommand(ClientConnection connection, ServerCommand command, byte[] buffer, int startIndex, int length)
         {
-            OnStatusMessage($"Received command code for user-defined command '{command}'.");
+            OnStatusMessage(MessageLevel.Info, $"Received command code for user-defined command \"{command}\".");
         }
 
         private byte[] SerializeSignalIndexCache(Guid clientID, SignalIndexCache signalIndexCache)
@@ -3854,7 +3855,7 @@ namespace GSF.TimeSeries.Transport
                     if (!m_clientConnections.TryGetValue(clientID, out connection))
                     {
                         // Received a request from an unknown client, this request is denied
-                        OnStatusMessage("WARNING: Ignored {0} byte {1} command request received from an unrecognized client: {2}", length, validServerCommand ? command.ToString() : "unidentified", clientID);
+                        OnStatusMessage(MessageLevel.Warning, $"WARNING: Ignored {length} byte {(validServerCommand ? command.ToString() : "unidentified")} command request received from an unrecognized client: {clientID}", flags: MessageFlags.UsageIssue);
                     }
                     else if (validServerCommand)
                     {
@@ -3871,7 +3872,7 @@ namespace GSF.TimeSeries.Transport
                             {
                                 message = $"Subscriber not authenticated - {command} request denied.";
                                 SendClientResponse(clientID, ServerResponse.Failed, command, message);
-                                OnStatusMessage("WARNING: Client {0} {1} command request denied - subscriber not authenticated.", connection.ConnectionID, command);
+                                OnStatusMessage(MessageLevel.Warning, $"WARNING: Client {connection.ConnectionID} {command} command request denied - subscriber not authenticated.");
                                 return;
                             }
                         }
@@ -3944,13 +3945,13 @@ namespace GSF.TimeSeries.Transport
                         // Handle unrecognized commands
                         message = " sent an unrecognized server command: 0x" + commandByte.ToString("X").PadLeft(2, '0');
                         SendClientResponse(clientID, (byte)ServerResponse.Failed, commandByte, GetClientEncoding(clientID).GetBytes("Client" + message));
-                        OnProcessException(new InvalidOperationException("WARNING: " + connection.ConnectionID + message));
+                        OnProcessException(MessageLevel.Warning, new InvalidOperationException("WARNING: " + connection.ConnectionID + message));
                     }
                 }
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException($"Encountered an exception while processing received client data: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Encountered an exception while processing received client data: {ex.Message}", ex));
             }
         }
 
@@ -3968,7 +3969,7 @@ namespace GSF.TimeSeries.Transport
 
             m_clientConnections[clientID] = connection;
 
-            OnStatusMessage("Client connected to command channel.");
+            OnStatusMessage(MessageLevel.Info, "Client connected to command channel.");
 
             if (connection.Authenticated)
             {
@@ -3986,7 +3987,7 @@ namespace GSF.TimeSeries.Transport
 
                 string errorMessage = string.Format(ErrorFormat, connection.SubscriberName, connection.IPAddress);
 
-                OnProcessException(new InvalidOperationException(errorMessage));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException(errorMessage));
             }
         }
 
@@ -3999,26 +4000,26 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // Process exception for logging
-                OnProcessException(new InvalidOperationException("Failed to queue client disconnect due to exception: " + ex.Message, ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException("Failed to queue client disconnect due to exception: " + ex.Message, ex));
             }
         }
 
         private void m_commandChannel_ClientConnectingException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
-            OnProcessException(new InvalidOperationException("Data publisher encountered an exception while connecting client to the command channel: " + ex.Message, ex));
+            OnProcessException(MessageLevel.Info, new InvalidOperationException("Data publisher encountered an exception while connecting client to the command channel: " + ex.Message, ex));
         }
 
         private void m_commandChannel_ServerStarted(object sender, EventArgs e)
         {
-            OnStatusMessage("Data publisher command channel started.");
+            OnStatusMessage(MessageLevel.Info, "Data publisher command channel started.");
         }
 
         private void m_commandChannel_ServerStopped(object sender, EventArgs e)
         {
             if (Enabled)
             {
-                OnStatusMessage("Data publisher command channel was unexpectedly terminated, restarting...");
+                OnStatusMessage(MessageLevel.Info, "Data publisher command channel was unexpectedly terminated, restarting...");
 
                 // We must wait for command channel to completely shutdown before trying to restart...
                 if ((object)m_commandChannelRestartTimer != null)
@@ -4026,7 +4027,7 @@ namespace GSF.TimeSeries.Transport
             }
             else
             {
-                OnStatusMessage("Data publisher command channel stopped.");
+                OnStatusMessage(MessageLevel.Info, "Data publisher command channel stopped.");
             }
         }
 
@@ -4035,7 +4036,7 @@ namespace GSF.TimeSeries.Transport
             Exception ex = e.Argument2;
 
             if (!HandleSocketException(e.Argument1, ex) && !(ex is NullReferenceException) && !(ex is ObjectDisposedException))
-                OnProcessException(new InvalidOperationException("Data publisher encountered an exception while sending command channel data to client connection: " + ex.Message, ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException("Data publisher encountered an exception while sending command channel data to client connection: " + ex.Message, ex));
         }
 
         private void m_commandChannel_ReceiveClientDataException(object sender, EventArgs<Guid, Exception> e)
@@ -4043,7 +4044,7 @@ namespace GSF.TimeSeries.Transport
             Exception ex = e.Argument2;
 
             if (!HandleSocketException(e.Argument1, ex) && !(ex is NullReferenceException) && !(ex is ObjectDisposedException))
-                OnProcessException(new InvalidOperationException("Data publisher encountered an exception while receiving command channel data from client connection: " + ex.Message, ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException("Data publisher encountered an exception while receiving command channel data from client connection: " + ex.Message, ex));
         }
 
         #endregion

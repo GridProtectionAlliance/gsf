@@ -37,6 +37,7 @@ using System.Threading;
 using GSF;
 using GSF.Collections;
 using GSF.Data;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Threading;
 using GSF.TimeSeries;
@@ -522,7 +523,7 @@ namespace PIAdapters
                     }
                     catch (Exception ex)
                     {
-                        OnProcessException(new InvalidOperationException($"Failed to associate measurement value with connection point for '{measurement.Key}': {ex.Message}", ex));
+                        OnProcessException(MessageLevel.Info, new InvalidOperationException($"Failed to associate measurement value with connection point for '{measurement.Key}': {ex.Message}", ex));
                     }
                 }
                 else
@@ -538,7 +539,7 @@ namespace PIAdapters
                     }
                     catch (Exception ex)
                     {
-                        OnProcessException(new InvalidOperationException($"Failed to collate measurement value into OSI-PI point value collection for '{measurement.Key}': {ex.Message}", ex));
+                        OnProcessException(MessageLevel.Info, new InvalidOperationException($"Failed to collate measurement value into OSI-PI point value collection for '{measurement.Key}': {ex.Message}", ex));
                     }
                 }
             }
@@ -591,7 +592,7 @@ namespace PIAdapters
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException($"Failed to create connection point mapping for '{key}': {ex.Message}", ex));
+                    OnProcessException(MessageLevel.Info, new InvalidOperationException($"Failed to create connection point mapping for '{key}': {ex.Message}", ex));
                 }
                 finally
                 {
@@ -607,7 +608,7 @@ namespace PIAdapters
                     Interlocked.Increment(ref m_processedMappings);
 
                     if (Interlocked.Read(ref m_processedMappings) % 100 == 0)
-                        OnStatusMessage("Mapped {0:N0} PI tags to measurements, {1:0.00%} complete...", m_mappedPIPoints.Count - m_pendingMappings.Count, 1.0D - m_pendingMappings.Count / (double)m_mappedPIPoints.Count);
+                        OnStatusMessage(MessageLevel.Info, $"Mapped {m_mappedPIPoints.Count - m_pendingMappings.Count:N0} PI tags to measurements, {1.0D - m_pendingMappings.Count / (double)m_mappedPIPoints.Count:0.00%} complete...");
                 }
             }
         }
@@ -652,14 +653,14 @@ namespace PIAdapters
                         if ((object)point == null)
                         {
                             if (!m_refreshingMetadata)
-                                OnStatusMessage("WARNING: No PI points found for tag '{0}'. Data will not be archived for '{1}'.", tagName, key);
+                                OnStatusMessage(MessageLevel.Warning, $"WARNING: No PI points found for tag '{tagName}'. Data will not be archived for '{key}'.");
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException($"Failed to map '{key}' to a PI tag: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to map '{key}' to a PI tag: {ex.Message}", ex));
             }
 
             // If no point could be mapped, return null connection mapping so key can be removed from tag-map
@@ -708,7 +709,7 @@ namespace PIAdapters
 
             try
             {
-                OnStatusMessage("Beginning metadata refresh...");
+                OnStatusMessage(MessageLevel.Info, "Beginning metadata refresh...");
 
                 if ((object)inputMeasurements != null && inputMeasurements.Length > 0)
                 {
@@ -776,7 +777,7 @@ namespace PIAdapters
                             }
                             catch (Exception ex)
                             {
-                                OnProcessException(new InvalidOperationException($"Failed to add PI tag '{tagName}' for measurement '{key}': {ex.Message}", ex));
+                                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to add PI tag '{tagName}' for measurement '{key}': {ex.Message}", ex));
                             }
                         }
 
@@ -803,7 +804,7 @@ namespace PIAdapters
                             }
                             catch (Exception ex)
                             {
-                                OnProcessException(new InvalidOperationException($"Failed to rename PI tag '{point.Name}' to '{tagName}' for measurement '{key}': {ex.Message}", ex));
+                                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to rename PI tag '{point.Name}' to '{tagName}' for measurement '{key}': {ex.Message}", ex));
                             }
 
                             if (!refreshMetadata)
@@ -897,7 +898,7 @@ namespace PIAdapters
                             }
                             catch (Exception ex)
                             {
-                                OnProcessException(new InvalidOperationException($"Failed to update PI tag '{tagName}' metadata from measurement '{key}': {ex.Message}", ex));
+                                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to update PI tag '{tagName}' metadata from measurement '{key}': {ex.Message}", ex));
                             }
                         }
 
@@ -905,7 +906,7 @@ namespace PIAdapters
                         m_metadataRefreshProgress = processed / (double)total;
 
                         if (processed % 100 == 0)
-                            OnStatusMessage("Updated {0:N0} PI tags and associated metadata, {1:0.00%} complete...", processed, m_metadataRefreshProgress);
+                            OnStatusMessage(MessageLevel.Info, $"Updated {processed:N0} PI tags and associated metadata, {m_metadataRefreshProgress:0.00%} complete...");
 
                         // If mapping for this connection was removed, it may have been because there was no meta-data so
                         // we re-add key to dictionary with null value, actual mapping will happen dynamically as needed
@@ -921,27 +922,27 @@ namespace PIAdapters
                         // Cache tag-map for faster future PI adapter startup
                         try
                         {
-                            OnStatusMessage("Caching tag-map for faster future loads...");
+                            OnStatusMessage(MessageLevel.Info, "Caching tag-map for faster future loads...");
 
                             using (FileStream tagMapCache = File.Create(TagMapCacheFileName))
                                 Serialization.Serialize(m_tagMap.ToDictionary(kvp => kvp.Key, kvp => kvp.Value), GSF.SerializationFormat.Binary, tagMapCache);
 
-                            OnStatusMessage("Tag-map cached for faster future loads.");
+                            OnStatusMessage(MessageLevel.Info, "Tag-map cached for faster future loads.");
                         }
                         catch (Exception ex)
                         {
-                            OnProcessException(new InvalidOperationException($"Failed to cache tag-map to file '{TagMapCacheFileName}': {ex.Message}", ex));
+                            OnProcessException(MessageLevel.Info, new InvalidOperationException($"Failed to cache tag-map to file '{TagMapCacheFileName}': {ex.Message}", ex));
                         }
                     }
                 }
                 else
                 {
-                    OnStatusMessage("OSI-PI historian output adapter is not configured to receive any input measurements - metadata refresh canceled.");
+                    OnStatusMessage(MessageLevel.Warning, "OSI-PI historian output adapter is not configured to receive any input measurements - metadata refresh canceled.");
                 }
             }
             catch (Exception ex)
             {
-                OnProcessException(ex);
+                OnProcessException(MessageLevel.Warning, ex);
             }
             finally
             {
@@ -952,7 +953,7 @@ namespace PIAdapters
             {
                 m_lastMetadataRefresh = latestUpdateTime > DateTime.MinValue ? latestUpdateTime : DateTime.UtcNow;
 
-                OnStatusMessage("Completed metadata refresh successfully.");
+                OnStatusMessage(MessageLevel.Info, "Completed metadata refresh successfully.");
 
                 // Re-establish connection point dictionary since meta-data and tags may exist in PI server now that didn't before.
                 // This will also start showing warning messages in CreateMappedPIPoint function for unmappable points
@@ -967,7 +968,7 @@ namespace PIAdapters
         // Resets the PI tag to MeasurementKey mapping for loading data into PI by finding PI points that match either the GSFSchema point tag or alternate tag
         private void EstablishPIPointDictionary(MeasurementKey[] inputMeasurements)
         {
-            OnStatusMessage("Establishing connection points for mapping...");
+            OnStatusMessage(MessageLevel.Info, "Establishing connection points for mapping...");
 
             List<MeasurementKey> newTags = new List<MeasurementKey>();
 
@@ -997,18 +998,18 @@ namespace PIAdapters
                     foreach (MeasurementKey key in tagsToRemove)
                         m_mappedPIPoints.TryRemove(key, out removedPIPoint);
 
-                    OnStatusMessage("Detected {0:N0} tags that have been removed from OSI-PI output - primary tag-map has been updated...", tagsToRemove.Count);
+                    OnStatusMessage(MessageLevel.Info, $"Detected {tagsToRemove.Count:N0} tags that have been removed from OSI-PI output - primary tag-map has been updated...");
                 }
 
                 if (m_mappedPIPoints.Count == 0)
-                    OnStatusMessage("WARNING: No PI tags were mapped to measurements - no tag-map exists so no points will be archived.");
+                    OnStatusMessage(MessageLevel.Warning, "WARNING: No PI tags were mapped to measurements - no tag-map exists so no points will be archived.");
             }
             else
             {
                 if (m_mappedPIPoints.Count > 0)
-                    OnStatusMessage("WARNING: No PI tags were mapped to measurements - existing tag-map with {0:N0} tags remains in use.", m_mappedPIPoints.Count);
+                    OnStatusMessage(MessageLevel.Info, $"WARNING: No PI tags were mapped to measurements - existing tag-map with {m_mappedPIPoints.Count:N0} tags remains in use.");
                 else
-                    OnStatusMessage("WARNING: No PI tags were mapped to measurements - no tag-map exists so no points will be archived.");
+                    OnStatusMessage(MessageLevel.Info, "WARNING: No PI tags were mapped to measurements - no tag-map exists so no points will be archived.");
             }
         }
 
@@ -1024,7 +1025,7 @@ namespace PIAdapters
                     {
                         m_tagMap.Merge(true, Serialization.Deserialize<Dictionary<Guid, string>>(tagMapCache, GSF.SerializationFormat.Binary));
 
-                        OnStatusMessage("Loaded {0:N0} mappings from tag-map cache.", m_tagMap.Count);
+                        OnStatusMessage(MessageLevel.Info, $"Loaded {m_tagMap.Count:N0} mappings from tag-map cache.");
 
                         // Use last write time of file as the last meta-data refresh time - rough value is OK
                         if (m_lastMetadataRefresh == DateTime.MinValue)
@@ -1033,7 +1034,7 @@ namespace PIAdapters
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException($"Failed to load mappings from cached tag-map to file '{TagMapCacheFileName}': {ex.Message}", ex));
+                    OnProcessException(MessageLevel.Info, new InvalidOperationException($"Failed to load mappings from cached tag-map to file '{TagMapCacheFileName}': {ex.Message}", ex));
                 }
             }
         }

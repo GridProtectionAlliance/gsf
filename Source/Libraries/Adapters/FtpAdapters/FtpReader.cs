@@ -273,11 +273,11 @@ namespace FtpAdapters
                 m_client.SetCurrentDirectory(m_remotePath);
                 m_client.CurrentDirectory.GetFile(Path.Combine(m_localPath, m_localFileName), m_remoteFileName);
                 m_client.Close();
-                OnStatusMessage(MessageLevel.Info, "FtpReader", $"FTP file \"{Path.Combine(m_remotePath, m_remoteFileName)}\" downloaded to \"{Path.Combine(m_localPath, m_localFileName)}\" from {m_host}");
+                OnStatusMessage(MessageLevel.Info, $"FTP file \"{Path.Combine(m_remotePath, m_remoteFileName)}\" downloaded to \"{Path.Combine(m_localPath, m_localFileName)}\" from {m_host}");
             }
             catch (Exception ex)
             {
-                OnProcessException(MessageLevel.Warning, "FtpReader", new InvalidOperationException($"Failed to read FTP file: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to read FTP file: {ex.Message}", ex));
             }
         }
 

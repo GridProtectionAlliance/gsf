@@ -222,7 +222,7 @@ namespace TestingAdapters
             }
             catch (Exception ex)
             {
-                OnProcessException(MessageLevel.Warning, "SampleActionAdapter", new InvalidOperationException($"Failed to lookup signal type for measurement {key}: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to lookup signal type for measurement {key}: {ex.Message}", ex));
             }
 
             return SignalType.NONE;

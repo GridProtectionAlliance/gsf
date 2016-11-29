@@ -35,6 +35,7 @@ using System.Linq;
 using System.Text;
 using GSF;
 using GSF.Collections;
+using GSF.Diagnostics;
 using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -121,25 +122,13 @@ namespace PIAdapters
         /// <summary>
         /// Returns false to indicate that this <see cref="PIRTInputAdapter"/> does NOT connect asynchronously
         /// </summary>
-        protected override bool UseAsyncConnect
-        {
-            get
-            {
-                return false;
-            }
-        }
+        protected override bool UseAsyncConnect => false;
 
         /// <summary>
         /// Returns false to indicate that this <see cref="PIRTInputAdapter"/> does NOT support temporal processing. 
         /// Temporal processing is supported in a separate adapter that is not driven by event pipes.
         /// </summary>
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool SupportsTemporalProcessing => false;
 
         /// <summary>
         /// Gets or sets the measurements that this <see cref="PIRTInputAdapter"/> has been requested to provide
@@ -227,13 +216,7 @@ namespace PIAdapters
         /// <summary>
         /// Last timestamp received from PI
         /// </summary>
-        public DateTime LastReceivedTimestamp
-        {
-            get
-            {
-                return m_lastReceivedTimestamp;
-            }
-        }
+        public DateTime LastReceivedTimestamp => m_lastReceivedTimestamp;
 
         /// <summary>
         /// Returns the status of the adapter
@@ -389,14 +372,11 @@ namespace PIAdapters
         /// </summary>
         /// <param name="maxLength"></param>
         /// <returns></returns>
-        public override string GetShortStatus(int maxLength)
-        {
-            return string.Format("Received {0} measurements from PI...", ProcessedMeasurements).CenterText(maxLength);
-        }
+        public override string GetShortStatus(int maxLength) => $"Received {ProcessedMeasurements} measurements from PI...".CenterText(maxLength);
 
         private void SubscribeToPointUpdates(MeasurementKey[] keys)
         {
-            OnStatusMessage("Subscribing to updates for {0} measurements...", keys.Length);
+            OnStatusMessage(MessageLevel.Info, "Subscribing to updates for {0} measurements...", keys.Length);
 
             var query = from row in DataSource.Tables["ActiveMeasurements"].AsEnumerable()
                         from key in keys
@@ -417,19 +397,19 @@ namespace PIAdapters
                 if (!string.IsNullOrWhiteSpace(row.AlternateTag))
                     tagName = row.AlternateTag;
 
-                OnStatusMessage("DEBUG: Looking up point tag '{0}'...", tagName);
+                OnStatusMessage(MessageLevel.Debug, "DEBUG: Looking up point tag '{0}'...", tagName);
 
                 PIPoint point = GetPIPoint(m_connection.Server, tagName);
 
                 if ((object)point != null)
                 {
-                    OnStatusMessage("DEBUG: Found point tag '{0}'...", tagName);
+                    OnStatusMessage(MessageLevel.Debug, "DEBUG: Found point tag '{0}'...", tagName);
                     dataPoints.Add(point);
                     m_tagKeyMap[point.ID] = row.Key;
                 }
                 else
                 {
-                    OnStatusMessage("DEBUG: Failed to find point tag '{0}'...", tagName);
+                    OnStatusMessage(MessageLevel.Debug, "DEBUG: Failed to find point tag '{0}'...", tagName);
                 }
             }
 
@@ -440,11 +420,11 @@ namespace PIAdapters
             // Sign up for updates on selected points
             AFListResults<PIPoint, AFDataPipeEvent> initialEvents = m_dataPipe.AddSignupsWithInitEvents(dataPoints);
 
-            OnStatusMessage("DEBUG: Initial event count = {0}...", initialEvents.Results.Count);
+            OnStatusMessage(MessageLevel.Debug, $"DEBUG: Initial event count = {initialEvents.Results.Count}...");
 
             foreach (AFDataPipeEvent item in initialEvents.Results)
             {
-                OnStatusMessage("DEBUG: Found initial event for action...", item.Action);
+                OnStatusMessage(MessageLevel.Debug, "DEBUG: Found initial event for action...");
 
                 if (item.Action != AFDataPipeAction.Delete)
                     m_dataUpdateObserver_DataUpdated(this, new EventArgs<AFValue>(item.Value));
@@ -464,7 +444,7 @@ namespace PIAdapters
 
         private void m_eventTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            OnStatusMessage("DEBUG: Timer elapsed...");
+            OnStatusMessage(MessageLevel.Debug, "DEBUG: Timer elapsed...");
             m_readEvents.TryRunOnceAsync();
         }
 
@@ -473,15 +453,15 @@ namespace PIAdapters
             if ((object)m_dataPipe == null)
                 return;
 
-            OnStatusMessage("DEBUG: Data pipe called for next 100 GetUpdateEvents...");
+            OnStatusMessage(MessageLevel.Debug, "DEBUG: Data pipe called for next 100 GetUpdateEvents...");
 
             AFListResults<PIPoint, AFDataPipeEvent> updateEvents = m_dataPipe.GetUpdateEvents(100);
 
-            OnStatusMessage("DEBUG: Update event count = {0}...", updateEvents.Count);
+            OnStatusMessage(MessageLevel.Debug, $"DEBUG: Update event count = {updateEvents.Count}...");
 
             foreach (AFDataPipeEvent item in updateEvents.Results)
             {
-                OnStatusMessage("DEBUG: Found update event for action...", item.Action);
+                OnStatusMessage(MessageLevel.Debug, "DEBUG: Found update event for action...");
 
                 if (item.Action != AFDataPipeAction.Delete)
                     m_dataUpdateObserver_DataUpdated(this, new EventArgs<AFValue>(item.Value));
@@ -491,14 +471,15 @@ namespace PIAdapters
         // PI data updated handler
         private void m_dataUpdateObserver_DataUpdated(object sender, EventArgs<AFValue> e)
         {
-            OnStatusMessage("DEBUG: Data observer event handler called with a new value: {0:N3}...", Convert.ToDouble(e.Argument.Value));
+            OnStatusMessage(MessageLevel.Debug, $"DEBUG: Data observer event handler called with a new value: {Convert.ToDouble(e.Argument.Value):N3}...");
             AFValue value = e.Argument;
             MeasurementKey key;
 
-            OnStatusMessage("DEBUG: Data observer event handler looking up point ID {0:N0} in table...", value.PIPoint.ID);
+            OnStatusMessage(MessageLevel.Debug, $"DEBUG: Data observer event handler looking up point ID {value.PIPoint.ID:N0} in table...");
+
             if ((object)value != null && m_tagKeyMap.TryGetValue(value.PIPoint.ID, out key))
             {
-                OnStatusMessage("DEBUG: Data observer event handler found point ID {0:N0} in table: {1}...", value.PIPoint.ID, key);
+                OnStatusMessage(MessageLevel.Debug, $"DEBUG: Data observer event handler found point ID {value.PIPoint.ID:N0} in table: {key}...");
                 Measurement measurement = new Measurement();
 
                 measurement.Metadata = key.Metadata;
@@ -512,7 +493,7 @@ namespace PIAdapters
             }
             else
             {
-                OnStatusMessage("DEBUG: Data observer event handler did not find point ID {0:N0} in table...", value.PIPoint.ID);
+                OnStatusMessage(MessageLevel.Debug, $"DEBUG: Data observer event handler did not find point ID {value.PIPoint.ID:N0} in table...");
             }
         }
 

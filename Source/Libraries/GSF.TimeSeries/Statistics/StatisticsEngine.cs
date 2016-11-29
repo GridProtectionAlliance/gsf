@@ -42,6 +42,11 @@ using GSF.Threading;
 using GSF.TimeSeries.Adapters;
 using Timer = System.Timers.Timer;
 
+#pragma warning disable 414
+
+// ReSharper disable NotAccessedField.Local
+// ReSharper disable UnusedMember.Local
+// ReSharper disable MemberHidesStaticFromOuterClass
 namespace GSF.TimeSeries.Statistics
 {
     /// <summary>
@@ -162,125 +167,35 @@ namespace GSF.TimeSeries.Statistics
                 }
             }
 
-            public string Name
-            {
-                get
-                {
-                    return m_name ?? (m_name = GetName());
-                }
-            }
+            public string Name => m_name ?? (m_name = GetName());
 
-            public int HistorianID
-            {
-                get
-                {
-                    return m_historianID ?? (int)(m_historianID = GetHistorianID());
-                }
-            }
+            public int HistorianID => m_historianID ?? (int)(m_historianID = GetHistorianID());
 
-            public object DeviceID
-            {
-                get
-                {
-                    return m_deviceID ?? (m_deviceID = GetDeviceID());
-                }
-            }
+            public object DeviceID => m_deviceID ?? (m_deviceID = GetDeviceID());
 
-            public string PointTag
-            {
-                get
-                {
-                    return m_pointTag ?? (m_pointTag = GetPointTag());
-                }
-            }
+            public string PointTag => m_pointTag ?? (m_pointTag = GetPointTag());
 
-            public int SignalTypeID
-            {
-                get
-                {
-                    return m_signalTypeID ?? (int)(m_signalTypeID = GetSignalTypeID());
-                }
-            }
+            public int SignalTypeID => m_signalTypeID ?? (int)(m_signalTypeID = GetSignalTypeID());
 
-            public string SignalReference
-            {
-                get
-                {
-                    return m_signalReference ?? (m_signalReference = GetSignalReference());
-                }
-            }
+            public string SignalReference => m_signalReference ?? (m_signalReference = GetSignalReference());
 
-            public string Description
-            {
-                get
-                {
-                    return m_description ?? (m_description = GetDescription());
-                }
-            }
+            public string Description => m_description ?? (m_description = GetDescription());
 
-            public int Index
-            {
-                get
-                {
-                    return Convert.ToInt32(m_statistic["SignalIndex"]);
-                }
-            }
+            public int Index => Convert.ToInt32(m_statistic["SignalIndex"]);
 
-            private Guid NodeID
-            {
-                get
-                {
-                    return m_nodeID ?? (Guid)(m_nodeID = GetNodeID());
-                }
-            }
+            private Guid NodeID => m_nodeID ?? (Guid)(m_nodeID = GetNodeID());
 
-            private string Company
-            {
-                get
-                {
-                    return m_company ?? (m_company = GetCompany());
-                }
-            }
+            private string Company => m_company ?? (m_company = GetCompany());
 
-            private string NodeOwner
-            {
-                get
-                {
-                    return m_nodeOwner ?? (m_nodeOwner = GetNodeOwner());
-                }
-            }
+            private string NodeOwner => m_nodeOwner ?? (m_nodeOwner = GetNodeOwner());
 
-            private string Category
-            {
-                get
-                {
-                    return m_source.SourceCategory;
-                }
-            }
+            private string Category => m_source.SourceCategory;
 
-            private string Acronym
-            {
-                get
-                {
-                    return m_source.SourceAcronym;
-                }
-            }
+            private string Acronym => m_source.SourceAcronym;
 
-            private Dictionary<string, DataRow> DeviceLookup
-            {
-                get
-                {
-                    return m_deviceLookup ?? (m_deviceLookup = GetDeviceLookup());
-                }
-            }
+            private Dictionary<string, DataRow> DeviceLookup => m_deviceLookup ?? (m_deviceLookup = GetDeviceLookup());
 
-            private Dictionary<int, string> CompanyLookup
-            {
-                get
-                {
-                    return m_companyLookup ?? (m_companyLookup = GetCompanyLookup());
-                }
-            }
+            private Dictionary<int, string> CompanyLookup => m_companyLookup ?? (m_companyLookup = GetCompanyLookup());
 
             #endregion
 
@@ -333,7 +248,7 @@ namespace GSF.TimeSeries.Statistics
 
             private string GetPointTag()
             {
-                return string.Format("{0}_{1}!{2}:ST{3}", Company, Name, Acronym, Index);
+                return $"{Company}_{Name}!{Acronym}:ST{Index}";
             }
 
             private int GetSignalTypeID()
@@ -344,12 +259,12 @@ namespace GSF.TimeSeries.Statistics
 
             private string GetSignalReference()
             {
-                return string.Format("{0}!{1}-ST{2}", Name, Acronym, Index);
+                return $"{Name}!{Acronym}-ST{Index}";
             }
 
             private string GetDescription()
             {
-                return string.Format("{0} statistic for {1}", Category, m_statistic["Description"].ToNonNullString());
+                return $"{Category} statistic for {m_statistic["Description"].ToNonNullString()}";
             }
 
             private Guid GetNodeID()
@@ -487,25 +402,25 @@ namespace GSF.TimeSeries.Statistics
             m_updateStatisticMeasurementsOperation = new LongSynchronizedOperation(UpdateStatisticMeasurements, ex =>
             {
                 string message = "An error occurred while attempting to update statistic measurement definitions: " + ex.Message;
-                OnProcessException(MessageLevel.Info, "StatisticsEngine", new InvalidOperationException(message, ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException(message, ex));
             });
 
             m_loadStatisticsOperation = new LongSynchronizedOperation(LoadStatistics, ex =>
             {
                 string message = "An error occurred while attempting to load statistic definitions: " + ex.Message;
-                OnProcessException(MessageLevel.Info, "StatisticsEngine", new InvalidOperationException(message, ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException(message, ex));
             });
 
             m_calculateStatisticsOperation = new LongSynchronizedOperation(CalculateStatistics, ex =>
             {
                 string message = "An error occurred while attempting to calculate statistics: " + ex.Message;
-                OnProcessException(MessageLevel.Info, "StatisticsEngine", new InvalidOperationException(message, ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException(message, ex));
             });
 
             m_validateSourceReferencesOperation = new ShortSynchronizedOperation(ValidateSourceReferences, ex =>
             {
                 string message = "An error occurred while attempting to validate statistic source references: " + ex.Message;
-                OnProcessException(MessageLevel.Info, "StatisticsEngine", new InvalidOperationException(message, ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException(message, ex));
             });
 
             m_updateStatisticMeasurementsOperation.IsBackground = true;
@@ -540,13 +455,7 @@ namespace GSF.TimeSeries.Statistics
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool SupportsTemporalProcessing => false;
 
         /// <summary>
         /// Returns the detailed status of the statistics engine.
@@ -619,7 +528,7 @@ namespace GSF.TimeSeries.Statistics
                 if (m_lastStatisticCalculationTime == default(DateTime))
                     m_lastStatisticCalculationTime = measurement.Timestamp;
 
-                base.QueueMeasurementsForProcessing(new IMeasurement[] { measurement });
+                base.QueueMeasurementsForProcessing(new [] { measurement });
 
                 if (!UseLocalClockAsRealTime && TrackLatestMeasurements)
                 {
@@ -640,7 +549,7 @@ namespace GSF.TimeSeries.Statistics
             if (UseLocalClockAsRealTime || !TrackLatestMeasurements)
             {
                 m_statisticCalculationTimer.Start();
-                OnStatusMessage(MessageLevel.Info, "StatisticsEngine", "Started statistics calculation timer.");
+                OnStatusMessage(MessageLevel.Info, "Started statistics calculation timer.");
             }
         }
 
@@ -683,10 +592,7 @@ namespace GSF.TimeSeries.Statistics
         /// </summary>
         /// <param name="maxLength">Maximum number of available characters for display.</param>
         /// <returns>A short one-line summary of the current status of this <see cref="StatisticsEngine"/>.</returns>
-        public override string GetShortStatus(int maxLength)
-        {
-            return string.Format("Last published {0} statistics", m_lastStatisticCalculationCount).CenterText(maxLength);
-        }
+        public override string GetShortStatus(int maxLength) => $"Last published {m_lastStatisticCalculationCount} statistics".CenterText(maxLength);
 
         /// <summary>
         /// Releases the unmanaged resources used by the <see cref="StatisticsEngine"/> object and optionally releases the managed resources.
@@ -884,7 +790,7 @@ namespace GSF.TimeSeries.Statistics
                     try
                     {
                         // See if statistic is defined in this assembly (no need to reload)
-                        if (string.Compare(GetType().FullName, typeName, true) == 0)
+                        if (string.Compare(GetType().FullName, typeName, StringComparison.OrdinalIgnoreCase) == 0)
                         {
                             // Assign statistic handler to local method (assumed to be private static)
                             statistic.Method = (StatisticCalculationFunction)Delegate.CreateDelegate(typeof(StatisticCalculationFunction), GetType().GetMethod(methodName, BindingFlags.IgnoreCase | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.InvokeMethod));
@@ -902,7 +808,7 @@ namespace GSF.TimeSeries.Statistics
                     }
                     catch (Exception ex)
                     {
-                        OnProcessException(MessageLevel.Info, "StatisticsEngine", new InvalidOperationException(string.Format("Failed to load statistic handler \"{0}\" from \"{1} [{2}::{3}()]\" due to exception: {4}", row["Name"].ToNonNullString("n/a"), assemblyName, typeName, methodName, ex.Message), ex));
+                        OnProcessException(MessageLevel.Info, new InvalidOperationException($"Failed to load statistic handler \"{row["Name"].ToNonNullString("n/a")}\" from \"{assemblyName} [{typeName}::{methodName}()]\" due to exception: {ex.Message}", ex));
                     }
 
                     // Add statistic to list
@@ -927,7 +833,7 @@ namespace GSF.TimeSeries.Statistics
                     signalReference = GetSignalReference(stat, mapping.Item1);
 
                     if (sourceLookup.ContainsKey(signalReference))
-                        OnStatusMessage(MessageLevel.Info, "StatisticsEngine", $"WARNING: Encountered duplicate signal reference statistic: {signalReference}");
+                        OnStatusMessage(MessageLevel.Info, $"WARNING: Encountered duplicate signal reference statistic: {signalReference}");
                     else
                         sourceLookup.Add(signalReference, mapping.Item1);
                 }
@@ -954,7 +860,7 @@ namespace GSF.TimeSeries.Statistics
                     src.StatisticMeasurements = statisticMeasurements;
             }
 
-            OnStatusMessage(MessageLevel.Info, "StatisticsEngine", $"Loaded {m_statistics.Count} statistic calculation definitions and {statisticMeasurementCount} statistic measurement definitions.");
+            OnStatusMessage(MessageLevel.Info, $"Loaded {m_statistics.Count} statistic calculation definitions and {statisticMeasurementCount} statistic measurement definitions.");
 
             if (reenable)
             {
@@ -1005,8 +911,8 @@ namespace GSF.TimeSeries.Statistics
             }
             catch (Exception ex)
             {
-                string errorMessage = string.Format("Error encountered while calculating statistics: {0}", ex.Message);
-                OnProcessException(MessageLevel.Info, "StatisticsEngine", new Exception(errorMessage, ex));
+                string errorMessage = $"Error encountered while calculating statistics: {ex.Message}";
+                OnProcessException(MessageLevel.Info, new Exception(errorMessage, ex));
             }
         }
 
@@ -1034,8 +940,8 @@ namespace GSF.TimeSeries.Statistics
             }
             catch (Exception ex)
             {
-                string errorMessage = string.Format("Error calculating statistics for {0}: {1}", source.SourceName, ex.Message);
-                OnProcessException(MessageLevel.Info, "StatisticsEngine", new Exception(errorMessage, ex));
+                string errorMessage = $"Error calculating statistics for {source.SourceName}: {ex.Message}";
+                OnProcessException(MessageLevel.Info, new Exception(errorMessage, ex));
             }
 
             return calculatedStatistics;
@@ -1078,8 +984,8 @@ namespace GSF.TimeSeries.Statistics
                 }
                 catch (Exception ex)
                 {
-                    string errorMessage = string.Format("Error calculating statistic for {0}: {1}", measurement["SignalReference"], ex.Message);
-                    OnProcessException(MessageLevel.Info, "StatisticsEngine", new Exception(errorMessage, ex));
+                    string errorMessage = $"Error calculating statistic for {measurement["SignalReference"]}: {ex.Message}";
+                    OnProcessException(MessageLevel.Info, new Exception(errorMessage, ex));
                 }
             }
             else
@@ -1107,7 +1013,7 @@ namespace GSF.TimeSeries.Statistics
 
             using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
             {
-                return database.Connection.ExecuteScalar(string.Format("SELECT Name FROM Node WHERE ID = '{0}'", database.Guid(nodeID))).ToNonNullString().ToUpper();
+                return database.Connection.ExecuteScalar($"SELECT Name FROM Node WHERE ID = '{database.Guid(nodeID)}'").ToNonNullString().ToUpper();
             }
         }
 
@@ -1208,7 +1114,7 @@ namespace GSF.TimeSeries.Statistics
                 object target;
 
                 if (StatisticSources.Any(registeredSource => registeredSource.SourceReference.TryGetTarget(out target) && target == source))
-                    throw new InvalidOperationException(string.Format("Unable to register {0} as statistic source because it is already registered.", sourceName));
+                    throw new InvalidOperationException($"Unable to register {sourceName} as statistic source because it is already registered.");
 
                 adapter = source as IAdapter;
 
@@ -1272,7 +1178,7 @@ namespace GSF.TimeSeries.Statistics
         /// </remarks>
         public static bool RegexMatch(string signalReference, string suffix)
         {
-            string regex = string.Format(@"!{0}-ST\d+$", suffix);
+            string regex = $@"!{suffix}-ST\d+$";
             return Regex.IsMatch(signalReference, regex);
         }
 
@@ -1299,7 +1205,7 @@ namespace GSF.TimeSeries.Statistics
             substitutions = substitutions.ToDictionary(kvp => string.Concat("{", kvp.Key, "}"), kvp => kvp.Value);
             substitutions["{}"] = source.SourceName;
 
-            return string.Format("{0}!{1}-ST{2}", parser.Execute(substitutions), source.SourceAcronym, statistic.Index);
+            return $"{parser.Execute(substitutions)}!{source.SourceAcronym}-ST{statistic.Index}";
         }
 
         // Triggered when a source registers with the statistics engine.

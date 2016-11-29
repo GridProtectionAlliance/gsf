@@ -81,6 +81,8 @@ namespace HistorianAdapters
             // Setup a read timer
             m_readTimer = new Timer();
             m_readTimer.Elapsed += m_readTimer_Elapsed;
+
+            DefaultEventName = "HistorianInputAdapter";
         }
 
         #endregion
@@ -442,13 +444,13 @@ namespace HistorianAdapters
                         catch (Exception ex)
                         {
                             // Process exception for logging
-                            OnProcessException(MessageLevel.Warning, "HistorianInputAdapter", new InvalidOperationException("Failed to start data reader due to exception: " + ex.Message, ex));
+                            OnProcessException(MessageLevel.Warning, new InvalidOperationException("Failed to start data reader due to exception: " + ex.Message, ex));
                         }
                     }
                 }
                 else
                 {
-                    OnProcessException(MessageLevel.Warning, "HistorianInputAdapter", new InvalidOperationException("Cannot open historian files, directory does not exist: " + m_archiveLocation));
+                    OnProcessException(MessageLevel.Warning, new InvalidOperationException("Cannot open historian files, directory does not exist: " + m_archiveLocation));
                 }
             }
         }
@@ -499,11 +501,11 @@ namespace HistorianAdapters
 
                     if (m_readTimer.Enabled)
                     {
-                        OnStatusMessage(MessageLevel.Info, "HistorianInputAdapter", "Starting historical data read...");
+                        OnStatusMessage(MessageLevel.Info, "Starting historical data read...");
                     }
                     else
                     {
-                        OnStatusMessage(MessageLevel.Info, "HistorianInputAdapter", "No historical data was available to read for given timeframe.");
+                        OnStatusMessage(MessageLevel.Info, "No historical data was available to read for given timeframe.");
                         OnProcessingComplete();
                     }
                 }
@@ -511,7 +513,7 @@ namespace HistorianAdapters
             else
             {
                 m_readTimer.Enabled = false;
-                OnStatusMessage(MessageLevel.Info, "HistorianInputAdapter", "No measurement keys have been requested for reading, historian reader is idle.");
+                OnStatusMessage(MessageLevel.Info, "No measurement keys have been requested for reading, historian reader is idle.");
                 OnProcessingComplete();
             }
         }
@@ -611,22 +613,22 @@ namespace HistorianAdapters
 
         private void m_archiveReader_DataReadException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(MessageLevel.Warning, "HistorianInputAdapter", e.Argument);
+            OnProcessException(MessageLevel.Warning, e.Argument);
         }
 
         private void m_archiveReader_HistoricFileListBuildException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(MessageLevel.Warning, "HistorianInputAdapter", e.Argument);
+            OnProcessException(MessageLevel.Warning, e.Argument);
         }
 
         private void m_archiveReader_HistoricFileListBuildStart(object sender, EventArgs e)
         {
-            OnStatusMessage(MessageLevel.Info, "HistorianInputAdapter", "Building list of historic archive files...");
+            OnStatusMessage(MessageLevel.Info, "Building list of historic archive files...");
         }
 
         private void m_archiveReader_HistoricFileListBuildComplete(object sender, EventArgs e)
         {
-            OnStatusMessage(MessageLevel.Info, "HistorianInputAdapter", "Completed building list of historic archive files.");
+            OnStatusMessage(MessageLevel.Info, "Completed building list of historic archive files.");
         }
 
         #endregion

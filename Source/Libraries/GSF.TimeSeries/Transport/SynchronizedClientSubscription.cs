@@ -697,15 +697,15 @@ namespace GSF.TimeSeries.Transport
         }
 
         // Explicitly implement status message event bubbler to satisfy IClientSubscription interface
-        void IClientSubscription.OnStatusMessage(MessageLevel level, string eventName, string status)
+        void IClientSubscription.OnStatusMessage(MessageLevel level, string status, string eventName, MessageFlags flags)
         {
-            OnStatusMessage(level, eventName, status);
+            OnStatusMessage(level, status, eventName, flags);
         }
 
         // Explicitly implement process exception event bubbler to satisfy IClientSubscription interface
-        void IClientSubscription.OnProcessException(MessageLevel level, string eventName, Exception ex)
+        void IClientSubscription.OnProcessException(MessageLevel level, Exception ex, string eventName, MessageFlags flags)
         {
-            OnProcessException(level, eventName, ex);
+            OnProcessException(level, ex, eventName, flags);
         }
 
         // Explicitly implement processing completed event bubbler to satisfy IClientSubscription interface

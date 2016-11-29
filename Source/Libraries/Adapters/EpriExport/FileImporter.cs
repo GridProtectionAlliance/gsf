@@ -93,6 +93,8 @@ namespace EpriExport
 
             // Set minimum timer resolution to one millisecond to improve timer accuracy
             PrecisionTimer.SetMinimumTimerResolution(1);
+
+            DefaultEventName = "EpriFileImporter";
         }
 
         #endregion
@@ -192,7 +194,7 @@ namespace EpriExport
             {
                 // Note that a 1-ms timer and debug mode don't mix, so the high-resolution timer is disabled while debugging
                 if (value && (object)m_precisionTimer == null && !Debugger.IsAttached)
-                    m_precisionTimer = PrecisionInputTimer.Attach((int)(1000.0D / m_inputInterval), ex => OnProcessException(MessageLevel.Error, "EpriFileImporter", ex));
+                    m_precisionTimer = PrecisionInputTimer.Attach((int)(1000.0D / m_inputInterval), ex => OnProcessException(MessageLevel.Error, ex));
                 else if (!value && m_precisionTimer != null)
                     PrecisionInputTimer.Detach(ref m_precisionTimer);
             }
@@ -535,7 +537,7 @@ namespace EpriExport
                 return;
 
             m_fileName = fileName;
-            OnStatusMessage(MessageLevel.Info, "EpriFileImporter", $"Processing EPRI file \"{m_fileName}\"...");
+            OnStatusMessage(MessageLevel.Info, $"Processing EPRI file \"{m_fileName}\"...");
 
             FilePath.WaitForReadLock(m_fileName);
             m_fileStream = new StreamReader(m_fileName);
@@ -585,7 +587,7 @@ namespace EpriExport
                 m_fileStream.Dispose();
             }
 
-            OnStatusMessage(MessageLevel.Info, "EpriFileImporter", $"Completed processing of EPRI file \"{m_fileName}\".");
+            OnStatusMessage(MessageLevel.Info, $"Completed processing of EPRI file \"{m_fileName}\".");
 
             ThreadPool.QueueUserWorkItem(DeleteFile, m_fileName);
 
@@ -604,7 +606,7 @@ namespace EpriExport
             }
             catch (Exception ex)
             {
-                OnProcessException(MessageLevel.Warning, "EpriFileImporter", new InvalidOperationException($"Failed to delete file \"{fileName}\": {ex.Message}", ex));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to delete file \"{fileName}\": {ex.Message}", ex));
             }
         }
 
@@ -690,7 +692,7 @@ namespace EpriExport
             }
             catch (Exception ex)
             {
-                OnProcessException(MessageLevel.Warning, "EpriFileImporter", ex);
+                OnProcessException(MessageLevel.Warning, ex);
                 return false;
             }
 
@@ -699,7 +701,7 @@ namespace EpriExport
 
         private void m_fileProcessQueue_ProcessException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(MessageLevel.Warning, "EpriFileImporter", e.Argument);
+            OnProcessException(MessageLevel.Warning, e.Argument);
         }
 
         #endregion

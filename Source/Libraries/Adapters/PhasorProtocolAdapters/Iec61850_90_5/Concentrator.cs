@@ -257,7 +257,7 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
                             if (commandChannel != null)
                             {
                                 commandChannel.SendToAsync(clientID, m_configurationFrame.BinaryImage, 0, m_configurationFrame.BinaryLength);
-                                OnStatusMessage(MessageLevel.Info, "Concentrator", $"Received request for \"{commandFrame.Command}\" from \"{connectionID}\" - frame was returned.");
+                                OnStatusMessage(MessageLevel.Info, $"Received request for \"{commandFrame.Command}\" from \"{connectionID}\" - frame was returned.");
                             }
                             break;
                         case DeviceCommand.EnableRealTimeData:
@@ -265,11 +265,11 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
                             if (!AutoStartDataChannel)
                             {
                                 StartDataChannel();
-                                OnStatusMessage(MessageLevel.Info, "Concentrator", $"Received request for \"EnableRealTimeData\" from \"{connectionID}\" - concentrator real-time data stream was started.");
+                                OnStatusMessage(MessageLevel.Info, $"Received request for \"EnableRealTimeData\" from \"{connectionID}\" - concentrator real-time data stream was started.");
                             }
                             else
                             {
-                                OnStatusMessage(MessageLevel.Info, "Concentrator", $"Request for \"EnableRealTimeData\" from \"{connectionID}\" was ignored - concentrator data channel is set for auto-start.");
+                                OnStatusMessage(MessageLevel.Info, $"Request for \"EnableRealTimeData\" from \"{connectionID}\" was ignored - concentrator data channel is set for auto-start.");
                             }
                             break;
                         case DeviceCommand.DisableRealTimeData:
@@ -277,24 +277,24 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
                             if (!AutoStartDataChannel)
                             {
                                 StopDataChannel();
-                                OnStatusMessage(MessageLevel.Info, "Concentrator", $"Received request for \"DisableRealTimeData\" from \"{connectionID}\" - concentrator real-time data stream was stopped.");
+                                OnStatusMessage(MessageLevel.Info, $"Received request for \"DisableRealTimeData\" from \"{connectionID}\" - concentrator real-time data stream was stopped.");
                             }
                             else
                             {
-                                OnStatusMessage(MessageLevel.Info, "Concentrator", $"Request for \"DisableRealTimeData\" from \"{connectionID}\" was ignored - concentrator data channel is set for auto-start.");
+                                OnStatusMessage(MessageLevel.Info, $"Request for \"DisableRealTimeData\" from \"{connectionID}\" was ignored - concentrator data channel is set for auto-start.");
                             }
                             break;
                         default:
-                            OnStatusMessage(MessageLevel.Info, "Concentrator", $"Request for \"{commandFrame.Command}\" from \"{connectionID}\" was ignored - device command is unsupported.");
+                            OnStatusMessage(MessageLevel.Info, $"Request for \"{commandFrame.Command}\" from \"{connectionID}\" was ignored - device command is unsupported.");
                             break;
                     }
                 }
                 else
-                    OnStatusMessage(MessageLevel.Info, "Concentrator", $"WARNING: Concentrator ID code validation failed for device command \"{commandFrame.Command}\" from \"{connectionID}\" - no action was taken.");
+                    OnStatusMessage(MessageLevel.Info, $"WARNING: Concentrator ID code validation failed for device command \"{commandFrame.Command}\" from \"{connectionID}\" - no action was taken.");
             }
             catch (Exception ex)
             {
-                OnProcessException(MessageLevel.Warning, "Concentrator", new InvalidOperationException($"Remotely connected device \"{connectionID}\" sent an unrecognized data sequence to the concentrator, no action was taken. Exception details: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Remotely connected device \"{connectionID}\" sent an unrecognized data sequence to the concentrator, no action was taken. Exception details: {ex.Message}", ex));
             }
         }
 

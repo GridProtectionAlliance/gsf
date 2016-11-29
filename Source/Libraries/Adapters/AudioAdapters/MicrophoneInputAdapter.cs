@@ -27,6 +27,7 @@ using System.ComponentModel;
 using System.Text;
 using System.Threading;
 using GSF;
+using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using NAudio.CoreAudioApi;
@@ -61,13 +62,7 @@ namespace AudioAdapters
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool SupportsTemporalProcessing => false;
 
         /// <summary>
         /// Gets flag that determines if the data input connects asynchronously.
@@ -75,13 +70,7 @@ namespace AudioAdapters
         /// <remarks>
         /// Derived classes should return true when data input source is connects asynchronously, otherwise return false.
         /// </remarks>
-        protected override bool UseAsyncConnect
-        {
-            get
-            {
-                return false;
-            }
-        }
+        protected override bool UseAsyncConnect => false;
 
         /// <summary>
         /// Returns the detailed status of the data input source.
@@ -117,7 +106,7 @@ namespace AudioAdapters
         /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            return string.Format("{0} samples processed so far...", m_samplesProcessed).CenterText(maxLength);
+            return $"{m_samplesProcessed} samples processed so far...".CenterText(maxLength);
         }
 
         /// <summary>
@@ -129,6 +118,7 @@ namespace AudioAdapters
         /// </remarks>
         protected override void AttemptConnection()
         {
+            // ReSharper disable once UnusedVariable > Justification: implementation pattern disposes any existing object
             using (IWaveIn waveIn = m_waveIn)
                 m_waveIn = new WasapiCapture();
 
@@ -141,7 +131,7 @@ namespace AudioAdapters
             m_samplesProcessed = 0L;
 
             if (m_channels != OutputMeasurements.Length)
-                OnStatusMessage("WARNING: Number of output measurements does not match the number of channels.");
+                OnStatusMessage(MessageLevel.Warning, "WARNING: Number of output measurements does not match the number of channels.");
 
             m_waveIn.DataAvailable += WaveIn_DataAvailable;
             m_waveIn.RecordingStopped += WaveIn_RecordingStopped;
@@ -241,7 +231,7 @@ namespace AudioAdapters
 
                     return (short)((double)sample / long.MaxValue * short.MaxValue);
                 default:
-                    throw new InvalidOperationException(string.Format("Cannot convert sample \'{0}\' into 16-bits.", sample));
+                    throw new InvalidOperationException($"Cannot convert sample \'{sample}\' into 16-bits.");
             }
         }
 
@@ -294,8 +284,8 @@ namespace AudioAdapters
         {
             if ((object)stoppedEventArgs.Exception != null)
             {
-                string errorMessage = string.Format("An error occurred during recording: {0}", stoppedEventArgs.Exception.Message);
-                OnProcessException(new InvalidOperationException(errorMessage, stoppedEventArgs.Exception));
+                string errorMessage = $"An error occurred during recording: {stoppedEventArgs.Exception.Message}";
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException(errorMessage, stoppedEventArgs.Exception));
             }
         }
 
