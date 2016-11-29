@@ -72,18 +72,6 @@ namespace TestingAdapters
 
         #endregion
 
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Creates a new <see cref="FrameBasedRandomValueInputAdapter"/>.
-        /// </summary>
-        public FrameBasedRandomValueInputAdapter()
-        {
-            DefaultEventName = "RandomValueAdapter";
-        }
-
-        #endregion
-
         #region [ Properties ]
 
         /// <summary>

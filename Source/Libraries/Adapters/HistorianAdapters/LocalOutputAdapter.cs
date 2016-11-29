@@ -133,8 +133,6 @@ namespace HistorianAdapters
             m_badTimestampQueue = ProcessQueue<IDataPoint>.CreateRealTimeQueue(HandleBadTimestampData);
             m_outOfSequenceCounts = new Dictionary<int, ulong>();
             m_outOfSequenceQueue = ProcessQueue<IDataPoint>.CreateRealTimeQueue(HandleOutOfSequenceData);
-
-            DefaultEventName = "HistorianOutputAdapter";
         }
 
         #endregion

@@ -177,7 +177,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for UnprocessedMeasurements event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for UnprocessedMeasurements event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 

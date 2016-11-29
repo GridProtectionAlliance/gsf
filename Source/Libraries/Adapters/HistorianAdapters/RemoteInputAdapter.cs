@@ -66,8 +66,6 @@ namespace HistorianAdapters
         public RemoteInputAdapter()
         {
             m_historianDataListener = new DataListener();
-
-            DefaultEventName = "RemoteHistorianInputAdapter";
         }
 
         #endregion

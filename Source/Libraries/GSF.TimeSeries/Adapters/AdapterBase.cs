@@ -117,7 +117,6 @@ namespace GSF.TimeSeries.Adapters
         private DateTime m_startTimeConstraint;
         private DateTime m_stopTimeConstraint;
         private int m_processingInterval;
-        private string m_defaultEventName;
         private int m_hashCode;
         private bool m_initialized;
         private bool m_disposed;
@@ -180,27 +179,6 @@ namespace GSF.TimeSeries.Adapters
                 m_name = value;
                 Log.InitialStackMessages = new LogStackMessages("AdapterName", m_name);
                 GenHashCode();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets default event name.
-        /// </summary>
-        /// <remarks>
-        /// Default value is adapter <see cref="Name"/>.
-        /// </remarks>
-        protected string DefaultEventName
-        {
-            get
-            {
-                if (string.IsNullOrWhiteSpace(m_defaultEventName))
-                    m_defaultEventName = Name;
-
-                return m_defaultEventName;
-            }
-            set
-            {
-                m_defaultEventName = value;
             }
         }
 
@@ -394,13 +372,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets the total number of measurements handled thus far by the <see cref="AdapterBase"/>.
         /// </summary>
-        public virtual long ProcessedMeasurements
-        {
-            get
-            {
-                return m_processedMeasurements;
-            }
-        }
+        public virtual long ProcessedMeasurements => m_processedMeasurements;
 
         /// <summary>
         /// Gets or sets the measurement reporting interval.
@@ -460,24 +432,12 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets the UTC time this <see cref="AdapterBase"/> was started.
         /// </summary>
-        public Ticks StartTime
-        {
-            get
-            {
-                return m_startTime;
-            }
-        }
+        public Ticks StartTime => m_startTime;
 
         /// <summary>
         /// Gets the UTC time this <see cref="AdapterBase"/> was stopped.
         /// </summary>
-        public Ticks StopTime
-        {
-            get
-            {
-                return m_stopTime;
-            }
-        }
+        public Ticks StopTime => m_stopTime;
 
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
@@ -494,13 +454,7 @@ namespace GSF.TimeSeries.Adapters
         /// This value will be <see cref="DateTime.MinValue"/> when start time constraint is not set - meaning the adapter
         /// is processing data in real-time.
         /// </remarks>
-        public virtual DateTime StartTimeConstraint
-        {
-            get
-            {
-                return m_startTimeConstraint;
-            }
-        }
+        public virtual DateTime StartTimeConstraint => m_startTimeConstraint;
 
         /// <summary>
         /// Gets the stop time temporal processing constraint defined by call to <see cref="SetTemporalConstraint"/>.
@@ -509,13 +463,7 @@ namespace GSF.TimeSeries.Adapters
         /// This value will be <see cref="DateTime.MaxValue"/> when stop time constraint is not set - meaning the adapter
         /// is processing data in real-time.
         /// </remarks>
-        public virtual DateTime StopTimeConstraint
-        {
-            get
-            {
-                return m_stopTimeConstraint;
-            }
-        }
+        public virtual DateTime StopTimeConstraint => m_stopTimeConstraint;
 
         /// <summary>
         /// Gets or sets the desired processing interval, in milliseconds, for the adapter.
@@ -567,13 +515,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets settings <see cref="Dictionary{TKey,TValue}"/> parsed when <see cref="ConnectionString"/> was assigned.
         /// </summary>
-        public Dictionary<string, string> Settings
-        {
-            get
-            {
-                return m_settings;
-            }
-        }
+        public Dictionary<string, string> Settings => m_settings;
 
         /// <summary>
         /// Gets the status of this <see cref="AdapterBase"/>.
@@ -909,7 +851,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
         /// <param name="status">New status message.</param>
-        /// <param name="eventName">A fixed string to classify this event; defaults to <see cref="DefaultEventName"/>.</param>
+        /// <param name="eventName">A fixed string to classify this event; defaults to <c>null</c>.</param>
         /// <param name="flags"><see cref="MessageFlags"/> to use, if any; defaults to <see cref="MessageFlags.None"/>.</param>
         /// <remarks>
         /// <see pref="eventName"/> should be a constant string value associated with what type of message is being
@@ -920,9 +862,6 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(eventName))
-                    eventName = DefaultEventName;
-
                 Log.Publish(level, flags, eventName, status);
 
                 using (Logger.SuppressLogMessages())
@@ -931,7 +870,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -950,7 +889,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
         /// <param name="exception">Processing <see cref="Exception"/>.</param>
-        /// <param name="eventName">A fixed string to classify this event; defaults to <see cref="DefaultEventName"/>.</param>
+        /// <param name="eventName">A fixed string to classify this event; defaults to <c>null</c>.</param>
         /// <param name="flags"><see cref="MessageFlags"/> to use, if any; defaults to <see cref="MessageFlags.None"/>.</param>
         /// <remarks>
         /// <see pref="eventName"/> should be a constant string value associated with what type of message is being
@@ -961,9 +900,6 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(eventName))
-                    eventName = DefaultEventName;
-
                 Log.Publish(level, flags, eventName, exception?.Message, null, exception);
 
                 using (Logger.SuppressLogMessages())
@@ -972,7 +908,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                Log.Publish(MessageLevel.Info, "AdapterBase", $"Exception in consumer handler for ProcessException event: {ex.Message}", null, ex);
+                Log.Publish(MessageLevel.Info, "ConsumerEventException", $"Exception in consumer handler for ProcessException event: {ex.Message}", null, ex);
             }
         }
 
@@ -988,7 +924,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for InputMeasurementKeysUpdated event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for InputMeasurementKeysUpdated event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -1004,7 +940,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for OutputMeasurementsUpdated event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for OutputMeasurementsUpdated event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -1020,7 +956,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ConfigurationChanged event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ConfigurationChanged event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 

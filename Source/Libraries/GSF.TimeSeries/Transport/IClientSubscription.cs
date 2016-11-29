@@ -156,7 +156,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
         /// <param name="status">New status message.</param>
-        /// <param name="eventName">A fixed string to classify this event; defaults to <see cref="AdapterBase.DefaultEventName"/>.</param>
+        /// <param name="eventName">A fixed string to classify this event; defaults to <c>null</c>.</param>
         /// <param name="flags"><see cref="MessageFlags"/> to use, if any; defaults to <see cref="MessageFlags.None"/>.</param>
         void OnStatusMessage(MessageLevel level, string status, string eventName = null, MessageFlags flags = MessageFlags.None);
 
@@ -165,7 +165,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
-        /// <param name="eventName">A fixed string to classify this event; defaults to <see cref="AdapterBase.DefaultEventName"/>.</param>
+        /// <param name="eventName">A fixed string to classify this event; defaults to <c>null</c>.</param>
         /// <param name="flags"><see cref="MessageFlags"/> to use, if any; defaults to <see cref="MessageFlags.None"/>.</param>
         void OnProcessException(MessageLevel level, Exception ex, string eventName = null, MessageFlags flags = MessageFlags.None);
 

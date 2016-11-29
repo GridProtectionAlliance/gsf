@@ -90,8 +90,6 @@ namespace KafkaAdapters
             {
                 IsBackground = true
             };
-
-            DefaultEventName = "KafkaConsumer";
         }
 
         #endregion

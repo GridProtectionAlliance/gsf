@@ -115,7 +115,6 @@ namespace GSF.TimeSeries.Adapters
         private readonly LogicalThreadScheduler m_lifecycleThreadScheduler;
         private readonly Dictionary<uint, LogicalThread> m_lifecycleThreads;
         private readonly LogicalThreadLocal<T> m_activeItem;
-        private string m_defaultEventName;
         private bool m_enabled;
         private bool m_disposed;
 
@@ -188,27 +187,6 @@ namespace GSF.TimeSeries.Adapters
             {
                 m_name = value;
                 Log.InitialStackMessages = new LogStackMessages("AdapterName", m_name, "CollectionType", typeof(T).Name);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets default event name.
-        /// </summary>
-        /// <remarks>
-        /// Default value is adapter collection <see cref="Name"/>.
-        /// </remarks>
-        protected string DefaultEventName
-        {
-            get
-            {
-                if (string.IsNullOrWhiteSpace(m_defaultEventName))
-                    m_defaultEventName = Name;
-
-                return m_defaultEventName;
-            }
-            set
-            {
-                m_defaultEventName = value;
             }
         }
 
@@ -1259,7 +1237,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
         /// <param name="status">New status message.</param>
-        /// <param name="eventName">A fixed string to classify this event; defaults to <see cref="DefaultEventName"/>.</param>
+        /// <param name="eventName">A fixed string to classify this event; defaults to <c>null</c>.</param>
         /// <param name="flags"><see cref="MessageFlags"/> to use, if any; defaults to <see cref="MessageFlags.None"/>.</param>
         /// <remarks>
         /// <see pref="eventName"/> should be a constant string value associated with what type of message is being
@@ -1270,9 +1248,6 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(eventName))
-                    eventName = DefaultEventName;
-
                 Log.Publish(level, flags, eventName, status);
 
                 using (Logger.SuppressLogMessages())
@@ -1281,7 +1256,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -1300,7 +1275,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
         /// <param name="exception">Processing <see cref="Exception"/>.</param>
-        /// <param name="eventName">A fixed string to classify this event; defaults to <see cref="DefaultEventName"/>.</param>
+        /// <param name="eventName">A fixed string to classify this event; defaults to <c>null</c>.</param>
         /// <param name="flags"><see cref="MessageFlags"/> to use, if any; defaults to <see cref="MessageFlags.None"/>.</param>
         /// <remarks>
         /// <see pref="eventName"/> should be a constant string value associated with what type of message is being
@@ -1311,9 +1286,6 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(eventName))
-                    eventName = DefaultEventName;
-
                 Log.Publish(level, flags, eventName, exception?.Message, null, exception);
 
                 using (Logger.SuppressLogMessages())
@@ -1322,7 +1294,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                Log.Publish(MessageLevel.Info, "AdapterCollectionBase", $"Exception in consumer handler for ProcessException event: {ex.Message}", null, ex);
+                Log.Publish(MessageLevel.Info, "ConsumerEventException", $"Exception in consumer handler for ProcessException event: {ex.Message}", null, ex);
             }
         }
 
@@ -1338,7 +1310,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for InputMeasurementKeysUpdated event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for InputMeasurementKeysUpdated event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -1354,7 +1326,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for OutputMeasurementsUpdated event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for OutputMeasurementsUpdated event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -1370,7 +1342,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ConfigurationChanged event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ConfigurationChanged event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 

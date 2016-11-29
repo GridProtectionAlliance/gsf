@@ -101,8 +101,6 @@ namespace HistorianAdapters
             m_outputIsForArchive = DefaultOutputIsForArchive;
             m_throttleTransmission = DefaultThrottleTransmission;
             m_samplesPerTransmission = DefaultSamplesPerTransmission;
-
-            DefaultEventName = "RemoteHistorianOutputAdapter";
         }
 
         #endregion

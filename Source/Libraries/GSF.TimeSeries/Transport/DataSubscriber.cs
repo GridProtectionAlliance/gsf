@@ -4359,7 +4359,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ConnectionEstablished event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ConnectionEstablished event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -4375,7 +4375,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ConnectionTerminated event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ConnectionTerminated event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -4391,7 +4391,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ConnectionAuthenticated event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ConnectionAuthenticated event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -4409,7 +4409,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ReceivedServerResponse event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ReceivedServerResponse event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -4431,7 +4431,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for UserCommandResponse event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for UserCommandResponse event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -4448,7 +4448,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for MetaDataReceived event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for MetaDataReceived event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -4465,7 +4465,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for DataStartTime event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for DataStartTime event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -4485,7 +4485,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ProcessingComplete event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ProcessingComplete event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -4502,7 +4502,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for NotificationReceived event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for NotificationReceived event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -4518,7 +4518,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ServerConfigurationChanged event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ServerConfigurationChanged event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -4527,7 +4527,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
         /// <param name="exception">Processing <see cref="Exception"/>.</param>
-        /// <param name="eventName">A fixed string to classify this event; defaults to <see cref="AdapterBase.DefaultEventName"/>.</param>
+        /// <param name="eventName">A fixed string to classify this event; defaults to <c>null</c>.</param>
         /// <param name="flags"><see cref="MessageFlags"/> to use, if any; defaults to <see cref="MessageFlags.None"/>.</param>
         protected override void OnProcessException(MessageLevel level, Exception exception, string eventName = null, MessageFlags flags = MessageFlags.None)
         {

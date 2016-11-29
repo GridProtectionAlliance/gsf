@@ -81,8 +81,6 @@ namespace HistorianAdapters
             // Setup a read timer
             m_readTimer = new Timer();
             m_readTimer.Elapsed += m_readTimer_Elapsed;
-
-            DefaultEventName = "HistorianInputAdapter";
         }
 
         #endregion

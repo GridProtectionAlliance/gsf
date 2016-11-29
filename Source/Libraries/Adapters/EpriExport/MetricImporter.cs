@@ -90,8 +90,6 @@ namespace EpriExport
 
             // Set minimum timer resolution to one millisecond to improve timer accuracy
             PrecisionTimer.SetMinimumTimerResolution(1);
-
-            DefaultEventName = "EpriMetricImporter";
         }
 
         #endregion

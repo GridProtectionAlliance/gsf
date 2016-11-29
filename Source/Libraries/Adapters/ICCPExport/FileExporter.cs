@@ -88,18 +88,6 @@ namespace ICCPExport
 
         #endregion
 
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Creates a new ICCP <see cref="FileExporter"/>.
-        /// </summary>
-        public FileExporter()
-        {
-            DefaultEventName = "ICCPFileExporter";
-        }
-
-        #endregion
-
         #region [ Properties ]
 
         /// <summary>

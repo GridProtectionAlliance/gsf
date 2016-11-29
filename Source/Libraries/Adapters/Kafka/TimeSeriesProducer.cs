@@ -95,18 +95,6 @@ namespace KafkaAdapters
 
         #endregion
 
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Creates a new <see cref="TimeSeriesProducer"/> instance.
-        /// </summary>
-        public TimeSeriesProducer()
-        {
-            DefaultEventName = "KafkaProducer";
-        }
-
-        #endregion
-
         #region [ Properties ]
 
         /// <summary>

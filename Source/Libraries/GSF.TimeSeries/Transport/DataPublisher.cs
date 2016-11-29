@@ -2846,7 +2846,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ProcessingComplete event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ProcessingComplete event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -2865,21 +2865,15 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ClientConnected event: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for ClientConnected event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
         // Make sure to expose any routing table messages
-        private void m_routingTables_StatusMessage(object sender, EventArgs<string> e)
-        {
-            OnStatusMessage(MessageLevel.Info, e.Argument);
-        }
+        private void m_routingTables_StatusMessage(object sender, EventArgs<string> e) => OnStatusMessage(MessageLevel.Info, e.Argument);
 
         // Make sure to expose any routing table exceptions
-        private void m_routingTables_ProcessException(object sender, EventArgs<Exception> e)
-        {
-            OnProcessException(MessageLevel.Warning, e.Argument);
-        }
+        private void m_routingTables_ProcessException(object sender, EventArgs<Exception> e) => OnProcessException(MessageLevel.Warning, e.Argument);
 
         // Cipher key rotation timer handler
         private void m_cipherKeyRotationTimer_Elapsed(object sender, EventArgs<DateTime> e)

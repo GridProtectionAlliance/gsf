@@ -341,7 +341,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for StatusMessage event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex));
             }
         }
 
@@ -358,13 +358,12 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (StatusMessage != null)
-                    StatusMessage(this, new EventArgs<string>(string.Format(formattedStatus, args)));
+                StatusMessage?.Invoke(this, new EventArgs<string>(string.Format(formattedStatus, args)));
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for StatusMessage event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex));
             }
         }
 
@@ -374,8 +373,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
         protected virtual void OnProcessException(Exception ex)
         {
-            if ((object)ProcessException != null)
-                ProcessException(this, new EventArgs<Exception>(ex));
+            ProcessException?.Invoke(this, new EventArgs<Exception>(ex));
         }
 
         /// <summary>

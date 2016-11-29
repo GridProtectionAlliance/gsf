@@ -1938,14 +1938,14 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <param name="level">The <see cref="MessageLevel"/> to assign to this message</param>
         /// <param name="exception">Processing <see cref="Exception"/>.</param>
-        /// <param name="eventName">A fixed string to classify this event.</param>
+        /// <param name="eventName">A fixed string to classify this event; defaults to <c>null</c>.</param>
         /// <param name="flags"><see cref="MessageFlags"/> to use, if any; defaults to <see cref="MessageFlags.None"/>.</param>
         /// <remarks>
         /// <see pref="eventName"/> should be a constant string value associated with what type of message is being
         /// generated. In general, there should only be a few dozen distinct event names per class. Exceeding this
         /// threshold will cause the EventName to be replaced with a general warning that a usage issue has occurred.
         /// </remarks>
-        protected virtual void OnProcessException(MessageLevel level, Exception exception, string eventName, MessageFlags flags = MessageFlags.None)
+        protected virtual void OnProcessException(MessageLevel level, Exception exception, string eventName = null, MessageFlags flags = MessageFlags.None)
         {
             try
             {
@@ -1957,7 +1957,7 @@ namespace GSF.TimeSeries
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                Log.Publish(MessageLevel.Info, "ConcentratorBase", $"Exception in consumer handler for ProcessException event: {ex.Message}", null, ex);
+                Log.Publish(MessageLevel.Info, "ConsumerEventException", $"Exception in consumer handler for ProcessException event: {ex.Message}", null, ex);
             }
         }
 
@@ -1974,7 +1974,7 @@ namespace GSF.TimeSeries
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for OnUnpublishedSamples event: {ex.Message}", ex), "ConcentratorBase");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for OnUnpublishedSamples event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -1994,7 +1994,7 @@ namespace GSF.TimeSeries
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for DiscardingMeasurements event: {ex.Message}", ex), "ConcentratorBase");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for DiscardingMeasurements event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
 
@@ -2106,7 +2106,7 @@ namespace GSF.TimeSeries
                     catch (Exception ex)
                     {
                         // Not stopping for exceptions - but we'll let user know there are issues...
-                        OnProcessException(MessageLevel.Info, ex, "ConcentratorBase");
+                        OnProcessException(MessageLevel.Info, ex, "FramePublicationException");
                         break;
                     }
                 }

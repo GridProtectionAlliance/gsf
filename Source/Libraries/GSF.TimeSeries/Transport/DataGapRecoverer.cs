@@ -888,8 +888,7 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                if (RecoveredMeasurements != null)
-                    RecoveredMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
+                RecoveredMeasurements?.Invoke(this, new EventArgs<ICollection<IMeasurement>>(measurements));
             }
             catch (Exception ex)
             {
@@ -906,8 +905,7 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                if ((object)StatusMessage != null)
-                    StatusMessage(this, new EventArgs<string>(status));
+                StatusMessage?.Invoke(this, new EventArgs<string>(status));
             }
             catch (Exception ex)
             {
@@ -929,8 +927,7 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                if ((object)StatusMessage != null)
-                    StatusMessage(this, new EventArgs<string>(string.Format(formattedStatus, args)));
+                StatusMessage?.Invoke(this, new EventArgs<string>(string.Format(formattedStatus, args)));
             }
             catch (Exception ex)
             {
@@ -945,8 +942,7 @@ namespace GSF.TimeSeries.Transport
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
         protected virtual void OnProcessException(Exception ex)
         {
-            if ((object)ProcessException != null)
-                ProcessException(this, new EventArgs<Exception>(ex));
+            ProcessException?.Invoke(this, new EventArgs<Exception>(ex));
         }
 
         private string GetLoggingPath(string filePath)

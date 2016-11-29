@@ -86,8 +86,6 @@ namespace EpriExport
                 IsBackground = true
             };
             m_fileDataLock = new object();
-
-            DefaultEventName = "EpriFileExporter";
         }
 
         #region [ Properties ]
