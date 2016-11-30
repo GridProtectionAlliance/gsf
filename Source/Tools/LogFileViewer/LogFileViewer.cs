@@ -195,7 +195,7 @@ namespace LogFileViewer
                     dlg.InitialDirectory = m_logPath;
                     dlg.RestoreDirectory = true;
                 }
-                dlg.Filter = "Log File (Compressed)|*.Logz";
+                dlg.Filter = "Log Files (Compressed)|*.logz";
                 dlg.Multiselect = true;
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
@@ -311,7 +311,7 @@ namespace LogFileViewer
                     dlgLoad.RestoreDirectory = true;
                 }
 
-                dlgLoad.Filter = "Log File (Compressed)|*.Logz";
+                dlgLoad.Filter = "Log File (Compressed)|*.logz";
                 dlgLoad.Multiselect = true;
 
                 if (dlgLoad.ShowDialog() == DialogResult.OK)
@@ -324,7 +324,7 @@ namespace LogFileViewer
                             dlgLoad.RestoreDirectory = true;
                         }
 
-                        dlgSave.Filter = "Log File (Compressed)|*.Logz";
+                        dlgSave.Filter = "Log File (Compressed)|*.logz";
 
                         if (dlgSave.ShowDialog() == DialogResult.OK)
                         {
@@ -513,7 +513,7 @@ namespace LogFileViewer
         {
             using (SaveFileDialog dlgSave = new SaveFileDialog())
             {
-                dlgSave.Filter = "Log File (Compressed)|*.Logz";
+                dlgSave.Filter = "Log File (Compressed)|*.logz";
 
                 if (dlgSave.ShowDialog() == DialogResult.OK)
                 {

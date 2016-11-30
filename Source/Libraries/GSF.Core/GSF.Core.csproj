@@ -64,10 +64,6 @@
       <HintPath>..\..\Dependencies\NuGet\ExpressionEvaluator.2.0.3.0\lib\net40\ExpressionEvaluator.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.Diagnostics.Runtime, Version=0.8.31.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\Dependencies\NuGet\Microsoft.Diagnostics.Runtime.0.8.31-beta\lib\net40\Microsoft.Diagnostics.Runtime.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Mono.Security">
       <HintPath>..\..\Dependencies\Mono\Mono.Security.dll</HintPath>
       <Private>False</Private>

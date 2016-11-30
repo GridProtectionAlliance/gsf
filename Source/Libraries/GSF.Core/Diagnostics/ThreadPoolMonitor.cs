@@ -22,12 +22,8 @@
 //******************************************************************************************************
 
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Text;
 using GSF.Threading;
-#if !MONO
-using Microsoft.Diagnostics.Runtime;
-#endif
 
 namespace GSF.Diagnostics
 {
@@ -182,40 +178,43 @@ namespace GSF.Diagnostics
 
             TimerTrace.GetTrace(sb);
 
-            if (OptimizationOptions.EnableThreadStackDumping)
-            {
-#if !MONO
-                using (var dataTarget = DataTarget.AttachToProcess(Process.GetCurrentProcess().Id, 5000, AttachFlag.Passive))
-                {
-                    foreach (var clr in dataTarget.ClrVersions)
-                    {
-                        var runtime = clr.CreateRuntime();
+            //Since current builds of openPDC appears to be doing better about not blocking all threads on the threadpool
+            //this diagnostics functionality has been disabled but the code has been left in place if it's needed in the future.
 
-                        sb.AppendLine("--------------------------------------------------------");
-                        sb.AppendLine("Thread Stacks");
-                        sb.AppendLine("--------------------------------------------------------");
-                        foreach (var t in runtime.Threads)
-                        {
-                            bool hasWrittenData = false;
+            //            if (OptimizationOptions.EnableThreadStackDumping)
+            //            {
+            //#if !MONO
+            //                using (var dataTarget = DataTarget.AttachToProcess(Process.GetCurrentProcess().Id, 5000, AttachFlag.Passive))
+            //                {
+            //                    foreach (var clr in dataTarget.ClrVersions)
+            //                    {
+            //                        var runtime = clr.CreateRuntime();
 
-                            foreach (var item in t.StackTrace)
-                            {
-                                if (item.Method != null)
-                                {
-                                    if (!hasWrittenData)
-                                        hasWrittenData = true;
-                                    sb.AppendLine(item.ToString());
-                                }
-                            }
-                            if (hasWrittenData)
-                            {
-                                sb.AppendLine("--------------------------------------------------------");
-                            }
-                        }
-                    }
-                }
-#endif
-            }
+            //                        sb.AppendLine("--------------------------------------------------------");
+            //                        sb.AppendLine("Thread Stacks");
+            //                        sb.AppendLine("--------------------------------------------------------");
+            //                        foreach (var t in runtime.Threads)
+            //                        {
+            //                            bool hasWrittenData = false;
+
+            //                            foreach (var item in t.StackTrace)
+            //                            {
+            //                                if (item.Method != null)
+            //                                {
+            //                                    if (!hasWrittenData)
+            //                                        hasWrittenData = true;
+            //                                    sb.AppendLine(item.ToString());
+            //                                }
+            //                            }
+            //                            if (hasWrittenData)
+            //                            {
+            //                                sb.AppendLine("--------------------------------------------------------");
+            //                            }
+            //                        }
+            //                    }
+            //                }
+            //#endif
+            //            }
             Log.Publish(MessageLevel.Warning, "ThreadPool Stack Trace", "Dumped threadpool stack trace", sb.ToString());
         }
 
