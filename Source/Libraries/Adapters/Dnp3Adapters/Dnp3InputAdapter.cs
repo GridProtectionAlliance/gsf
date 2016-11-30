@@ -82,11 +82,12 @@ namespace DNP3Adapters
                             // For other messages, we just expose as a normal status
                             string message = FormatLogEntry(entry, true);
 
-                            // The typical pattern in Iaon adapters is to prefix warning messages with "WARNING:"
                             if ((entry.filter.Flags & LogFilters.WARNING) > 0)
-                                message = "WARNING: " + message;
-
-                            s_statusProxy.OnStatusMessage(MessageLevel.Info, message);
+                                s_statusProxy.OnStatusMessage(MessageLevel.Warning, message);
+                            else if ((entry.filter.Flags & LogFilters.DEBUG) > 0)
+                                s_statusProxy.OnStatusMessage(MessageLevel.Debug, message);
+                            else
+                                s_statusProxy.OnStatusMessage(MessageLevel.Info, message);
                         }
                     }
                 }

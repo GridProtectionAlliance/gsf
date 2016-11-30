@@ -1635,7 +1635,7 @@ namespace GSF.TimeSeries.Transport
                 if (Directory.Exists(setting))
                     m_loggingPath = setting;
                 else
-                    OnStatusMessage(MessageLevel.Info, $"WARNING: Logging path \"{setting}\" not found, defaulting to \"{FilePath.GetAbsolutePath("")}\"...");
+                    OnStatusMessage(MessageLevel.Info, $"Logging path \"{setting}\" not found, defaulting to \"{FilePath.GetAbsolutePath("")}\"...", flags: MessageFlags.UsageIssue);
             }
 
             // Initialize data gap recovery processing, if requested
@@ -2875,7 +2875,7 @@ namespace GSF.TimeSeries.Transport
                                 {
                                     // Warning message for missing signal index cache
                                     if (m_lastMissingCacheWarning != 0L)
-                                        OnStatusMessage(MessageLevel.Error, "WARNING: Signal index cache has not arrived. No compact measurements can be parsed.");
+                                        OnStatusMessage(MessageLevel.Error, "Signal index cache has not arrived. No compact measurements can be parsed.");
 
                                     m_lastMissingCacheWarning = now;
                                 }
@@ -2935,7 +2935,7 @@ namespace GSF.TimeSeries.Transport
                                     }
                                     catch (Exception ex)
                                     {
-                                        OnProcessException(MessageLevel.Error, new InvalidOperationException("WARNING: Decompression failure: " + ex.Message, ex));
+                                        OnProcessException(MessageLevel.Error, new InvalidOperationException("Decompression failure: " + ex.Message, ex));
                                     }
                                 }
                             }
@@ -2967,7 +2967,7 @@ namespace GSF.TimeSeries.Transport
                                     {
                                         // Warning message for missing signal index cache
                                         if (m_lastMissingCacheWarning != 0L)
-                                            OnStatusMessage(MessageLevel.Error, "WARNING: Signal index cache has not arrived. No compact measurements can be parsed.");
+                                            OnStatusMessage(MessageLevel.Error, "Signal index cache has not arrived. No compact measurements can be parsed.");
 
                                         m_lastMissingCacheWarning = now;
                                     }
@@ -3326,7 +3326,7 @@ namespace GSF.TimeSeries.Transport
             }
             else if (metaDataRefreshCompleted)
             {
-                OnStatusMessage(MessageLevel.Error, "WARNING: No measurements are currently defined for subscription.");
+                OnStatusMessage(MessageLevel.Error, "No measurements are currently defined for subscription.");
             }
         }
 
@@ -3354,7 +3354,7 @@ namespace GSF.TimeSeries.Transport
 
                 if ((object)metadata == null)
                 {
-                    OnStatusMessage(MessageLevel.Error, "WARNING: Meta-data synchronization was not performed, deserialized dataset was empty.");
+                    OnStatusMessage(MessageLevel.Error, "Meta-data synchronization was not performed, deserialized dataset was empty.");
                     return;
                 }
 

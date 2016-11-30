@@ -722,7 +722,7 @@ namespace GSF.TimeSeries.Transport
             }
 
             m_parent.SendClientResponse(m_clientID, ServerResponse.Failed, ServerCommand.RotateCipherKeys, "Cipher key rotation skipped, keys were already rotated within last second.");
-            m_parent.OnStatusMessage(MessageLevel.Warning, $"WARNING: Cipher key rotation skipped for {ConnectionID}, keys were already rotated within last second.");
+            m_parent.OnStatusMessage(MessageLevel.Warning, $"Cipher key rotation skipped for {ConnectionID}, keys were already rotated within last second.");
             return false;
         }
 

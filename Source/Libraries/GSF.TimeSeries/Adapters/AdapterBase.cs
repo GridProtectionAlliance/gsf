@@ -865,7 +865,7 @@ namespace GSF.TimeSeries.Adapters
                 Log.Publish(level, flags, eventName, status);
 
                 using (Logger.SuppressLogMessages())
-                    StatusMessage?.Invoke(this, new EventArgs<string>(status));
+                    StatusMessage?.Invoke(this, new EventArgs<string>(GetStatusWithMessageLevelPrefix(status, level)));
             }
             catch (Exception ex)
             {
@@ -997,6 +997,30 @@ namespace GSF.TimeSeries.Adapters
         private static readonly Regex s_timetagExpression = new Regex("\\*(?<Offset>[+-]?\\d*\\.?\\d*)(?<Unit>\\w+)", RegexOptions.Compiled);
 
         // Static Methods
+
+        /// <summary>
+        /// Gets status message with common time-series messaging prefix for given <see cref="MessageLevel"/>.
+        /// </summary>
+        /// <param name="status">Status message.</param>
+        /// <param name="level">Message level.</param>
+        /// <returns>Status message with common time-series messaging prefix for given <see cref="MessageLevel"/>.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string GetStatusWithMessageLevelPrefix(string status, MessageLevel level)
+        {
+            switch (level)
+            {
+                case MessageLevel.Debug:
+                    return $"DEBUG: {status}";
+                case MessageLevel.Warning:
+                    return $"WARNING: {status}";
+                case MessageLevel.Error:
+                    return $"ERROR: {status}";
+                case MessageLevel.Critical:
+                    return $"CRITICAL: {status}";
+                default:
+                    return status;
+            }
+        }
 
         /// <summary>
         /// Parses a standard FILTER styles expression into its constituent parts.

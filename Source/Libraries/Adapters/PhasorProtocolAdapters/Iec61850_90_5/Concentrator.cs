@@ -290,7 +290,9 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
                     }
                 }
                 else
-                    OnStatusMessage(MessageLevel.Info, $"WARNING: Concentrator ID code validation failed for device command \"{commandFrame.Command}\" from \"{connectionID}\" - no action was taken.");
+                {
+                    OnStatusMessage(MessageLevel.Warning, $"Concentrator ID code validation failed for device command \"{commandFrame.Command}\" from \"{connectionID}\" - no action was taken.");                    
+                }
             }
             catch (Exception ex)
             {

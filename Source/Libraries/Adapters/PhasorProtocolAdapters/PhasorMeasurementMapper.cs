@@ -1115,7 +1115,7 @@ namespace PhasorProtocolAdapters
                             // For devices that do not have unique labels when forcing label mapping, we fall back on its ID code for unique lookup
                             if (m_definedDevices.ContainsKey(definedDevice.IDCode))
                             {
-                                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"ERROR: Device ID \"{definedDevice.IDCode}\", labeled \"{definedDevice.StationName}\", was not unique in the {Name} input stream. Data from devices that are not distinctly defined by ID code or label will not be correctly parsed until uniquely identified."));
+                                OnProcessException(MessageLevel.Error, new InvalidOperationException($"ERROR: Device ID \"{definedDevice.IDCode}\", labeled \"{definedDevice.StationName}\", was not unique in the {Name} input stream. Data from devices that are not distinctly defined by ID code or label will not be correctly parsed until uniquely identified."), flags: MessageFlags.UsageIssue);
                             }
                             else
                             {
@@ -1142,7 +1142,7 @@ namespace PhasorProtocolAdapters
 
                             if (m_labelDefinedDevices.ContainsKey(definedDevice.StationName))
                             {
-                                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"ERROR: Device ID \"{definedDevice.IDCode}\", labeled \"{definedDevice.StationName}\", was not unique in the {Name} input stream. Data from devices that are not distinctly defined by ID code or label will not be correctly parsed until uniquely identified."));
+                                OnProcessException(MessageLevel.Error, new InvalidOperationException($"Device ID \"{definedDevice.IDCode}\", labeled \"{definedDevice.StationName}\", was not unique in the {Name} input stream. Data from devices that are not distinctly defined by ID code or label will not be correctly parsed until uniquely identified."), flags: MessageFlags.UsageIssue);
                             }
                             else
                             {
@@ -1178,9 +1178,9 @@ namespace PhasorProtocolAdapters
                 if ((object)m_labelDefinedDevices != null)
                 {
                     if (m_forceLabelMapping)
-                        OnStatusMessage(MessageLevel.Info, $"{Name} has {m_labelDefinedDevices.Count:N0} defined input devices that are using the device label for identification since connection has been forced to use label mapping. This is not the optimal configuration.");
+                        OnStatusMessage(MessageLevel.Info, $"{Name} has {m_labelDefinedDevices.Count:N0} defined input devices that are using the device label for identification since connection has been forced to use label mapping. This is not the optimal configuration.", flags: MessageFlags.UsageIssue);
                     else
-                        OnStatusMessage(MessageLevel.Info, $"WARNING: {Name} has {m_labelDefinedDevices.Count:N0} defined input devices that do not have unique ID codes (i.e., the AccessID), as a result system will use the device label for identification. This is not the optimal configuration.");
+                        OnStatusMessage(MessageLevel.Info, $"{Name} has {m_labelDefinedDevices.Count:N0} defined input devices that do not have unique ID codes (i.e., the AccessID), as a result system will use the device label for identification. This is not the optimal configuration.", flags: MessageFlags.UsageIssue);
                 }
             }
             else
@@ -1777,7 +1777,7 @@ namespace PhasorProtocolAdapters
                         else
                         {
                             m_undefinedDevices.TryAdd(parsedDevice.StationName, 1);
-                            OnStatusMessage(MessageLevel.Info, $"WARNING: Encountered an undefined device \"{parsedDevice.StationName}\"...");
+                            OnStatusMessage(MessageLevel.Warning, $"Encountered an undefined device \"{parsedDevice.StationName}\"...");
                         }
                     }
                 }
@@ -2097,7 +2097,7 @@ namespace PhasorProtocolAdapters
             if (m_frameParser.Enabled)
             {
                 // Communications layer closed connection (close not initiated by system) - so we restart connection cycle...
-                OnStatusMessage(MessageLevel.Info, "WARNING: Connection closed by remote device, attempting reconnection...");
+                OnStatusMessage(MessageLevel.Info, "Connection closed by remote device, attempting reconnection...");
                 Start();
             }
         }

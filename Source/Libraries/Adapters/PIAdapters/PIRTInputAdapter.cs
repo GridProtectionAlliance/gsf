@@ -376,7 +376,7 @@ namespace PIAdapters
 
         private void SubscribeToPointUpdates(MeasurementKey[] keys)
         {
-            OnStatusMessage(MessageLevel.Info, "Subscribing to updates for {0} measurements...", keys.Length);
+            OnStatusMessage(MessageLevel.Info, $"Subscribing to updates for {keys.Length} measurements...");
 
             var query = from row in DataSource.Tables["ActiveMeasurements"].AsEnumerable()
                         from key in keys
@@ -397,19 +397,19 @@ namespace PIAdapters
                 if (!string.IsNullOrWhiteSpace(row.AlternateTag))
                     tagName = row.AlternateTag;
 
-                OnStatusMessage(MessageLevel.Debug, "DEBUG: Looking up point tag '{0}'...", tagName);
+                OnStatusMessage(MessageLevel.Debug, $"DEBUG: Looking up point tag '{tagName}'...");
 
                 PIPoint point = GetPIPoint(m_connection.Server, tagName);
 
                 if ((object)point != null)
                 {
-                    OnStatusMessage(MessageLevel.Debug, "DEBUG: Found point tag '{0}'...", tagName);
+                    OnStatusMessage(MessageLevel.Debug, $"DEBUG: Found point tag '{tagName}'...");
                     dataPoints.Add(point);
                     m_tagKeyMap[point.ID] = row.Key;
                 }
                 else
                 {
-                    OnStatusMessage(MessageLevel.Debug, "DEBUG: Failed to find point tag '{0}'...", tagName);
+                    OnStatusMessage(MessageLevel.Debug, $"DEBUG: Failed to find point tag '{tagName}'...");
                 }
             }
 

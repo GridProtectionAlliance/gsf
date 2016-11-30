@@ -552,7 +552,7 @@ namespace KafkaAdapters
                     if ((object)m_metadata == null)
                         throw;
 
-                    OnStatusMessage(MessageLevel.Warning, $"WARNING: Failed to read latest Kafka time-series metadata records from topic \"{MetadataTopic}\": {ex.Message}");
+                    OnStatusMessage(MessageLevel.Warning, $"Failed to read latest Kafka time-series metadata records from topic \"{MetadataTopic}\": {ex.Message}");
                 }
             }
         }

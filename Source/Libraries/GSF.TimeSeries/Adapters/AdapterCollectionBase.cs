@@ -1251,7 +1251,7 @@ namespace GSF.TimeSeries.Adapters
                 Log.Publish(level, flags, eventName, status);
 
                 using (Logger.SuppressLogMessages())
-                    StatusMessage?.Invoke(this, new EventArgs<string>(status));
+                    StatusMessage?.Invoke(this, new EventArgs<string>(AdapterBase.GetStatusWithMessageLevelPrefix(status, level)));
             }
             catch (Exception ex)
             {
@@ -1491,13 +1491,13 @@ namespace GSF.TimeSeries.Adapters
                     {
                         initializationTimeoutAction = () =>
                         {
-                            const string MessageFormat = "WARNING: Initialization of adapter {0} has exceeded" +
+                            const string MessageFormat = "Initialization of adapter {0} has exceeded" +
                                                          " its timeout of {1} seconds. The adapter may still initialize, however this" +
                                                          " may indicate a problem with the adapter. If you consider this to be normal," +
                                                          " try adjusting the initialization timeout to suppress this message during" +
                                                          " normal operations.";
 
-                            OnStatusMessage(MessageLevel.Warning, "AdapterCollectionBase", string.Format(MessageFormat, item.Name, item.InitializationTimeout / 1000.0));
+                            OnStatusMessage(MessageLevel.Warning, string.Format(MessageFormat, item.Name, item.InitializationTimeout / 1000.0), "Initialization");
 
                             // ReSharper disable once AccessToModifiedClosure
                             initializationTimeoutToken = initializationTimeoutAction?.DelayAndExecute(item.InitializationTimeout);
@@ -1543,7 +1543,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We report any errors encountered during initialization...
-                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to initialize adapter {item.Name}: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to initialize adapter {item.Name}: {ex.Message}", ex), "Initialization");
             }
         }
 
@@ -1560,7 +1560,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // We report any errors encountered during startup...
-                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to start adapter {item.Name}: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to start adapter {item.Name}: {ex.Message}", ex), "Startup");
             }
         }
 

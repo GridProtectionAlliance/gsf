@@ -85,12 +85,12 @@ namespace GSF.TimeSeries.Adapters
         public RoutingTables(IRouteMappingTables mappingTable = null)
         {
             Log = Logger.CreatePublisher(GetType(), MessageClass.Application);
-            Log.InitialStackMessages = new LogStackMessages("AdapterName", GetType().Name);
+            Log.InitialStackMessages = new LogStackMessages("ComponentName", GetType().Name);
 
             m_prevCalculatedConsumers = new HashSet<IAdapter>();
             m_prevCalculatedProducers = new HashSet<IAdapter>();
             m_routeMappingTables = mappingTable ?? new RouteMappingDoubleBufferQueue();
-            m_routeMappingTables.Initialize(status => OnStatusMessage(MessageLevel.Info, status), ex => OnProcessException(MessageLevel.Warning, ex));
+            m_routeMappingTables.Initialize(status => OnStatusMessage(MessageLevel.Info, status, "Initialization"), ex => OnProcessException(MessageLevel.Warning, ex, "Initialization"));
 
             m_calculateRoutingTablesOperation = new LongSynchronizedOperation(CalculateRoutingTables)
             {
@@ -214,7 +214,7 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 // Process exception for logging
-                OnProcessException(MessageLevel.Info, new InvalidOperationException("Failed to queue routing table calculation: " + ex.Message, ex), "CalculateRoutingTables");
+                OnProcessException(MessageLevel.Info, new InvalidOperationException("Failed to queue routing table calculation: " + ex.Message, ex));
             }
         }
 
@@ -228,7 +228,7 @@ namespace GSF.TimeSeries.Adapters
             IOutputAdapter[] outputAdapterCollection = null;
             bool retry = true;
 
-            OnStatusMessage(MessageLevel.Info, "Starting measurement route calculation...", "CalculateRoutingTables");
+            OnStatusMessage(MessageLevel.Info, "Starting measurement route calculation...");
 
             // Attempt to cache input, action, and output adapters for routing table calculation.
             // This could fail if another thread modifies the collections while caching is in
@@ -292,7 +292,7 @@ namespace GSF.TimeSeries.Adapters
                 int routeCount = m_routeMappingTables.RouteCount;
                 int destinationCount = consumerAdapters.Count;
 
-                OnStatusMessage(MessageLevel.Info, $"Calculated {routeCount} route{((routeCount == 1) ? "" : "s")} for {destinationCount} destination{((destinationCount == 1) ? "" : "s")} in {elapsedTime.ToString(2)}.", "CalculateRoutingTables");
+                OnStatusMessage(MessageLevel.Info, $"Calculated {routeCount} route{((routeCount == 1) ? "" : "s")} for {destinationCount} destination{((destinationCount == 1) ? "" : "s")} in {elapsedTime.ToString(2)}.");
             }
             catch (ObjectDisposedException)
             {
@@ -301,7 +301,7 @@ namespace GSF.TimeSeries.Adapters
             }
             catch (Exception ex)
             {
-                OnProcessException(MessageLevel.Warning, new InvalidOperationException("Routing tables calculation error: " + ex.Message, ex), "CalculateRoutingTables");
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException("Routing tables calculation error: " + ex.Message, ex));
             }
         }
 
@@ -348,10 +348,10 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                Log.Publish(level, flags, eventName, status);
+                Log.Publish(level, flags, eventName ?? "CalculateRoutingTables", status);
 
                 using (Logger.SuppressLogMessages())
-                    StatusMessage?.Invoke(this, new EventArgs<string>(status));
+                    StatusMessage?.Invoke(this, new EventArgs<string>(AdapterBase.GetStatusWithMessageLevelPrefix(status, level)));
             }
             catch (Exception ex)
             {
@@ -377,7 +377,7 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                Log.Publish(level, flags, eventName, exception?.Message, null, exception);
+                Log.Publish(level, flags, eventName ?? "CalculateRoutingTables", exception?.Message, null, exception);
 
                 using (Logger.SuppressLogMessages())
                     ProcessException?.Invoke(this, new EventArgs<Exception>(exception));

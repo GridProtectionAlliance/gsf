@@ -1882,7 +1882,7 @@ namespace GSF.TimeSeries.Transport
             catch
             {
                 success = false;
-                OnStatusMessage(MessageLevel.Error, "ERROR: Failed to find connected client with enumerated index " + clientIndex);
+                OnStatusMessage(MessageLevel.Error, "Failed to find connected client with enumerated index " + clientIndex);
             }
 
             if (success)
@@ -1892,7 +1892,7 @@ namespace GSF.TimeSeries.Transport
                 if (m_clientConnections.TryGetValue(clientID, out connection))
                     connection.RotateCipherKeys();
                 else
-                    OnStatusMessage(MessageLevel.Error, "ERROR: Failed to find connected client " + clientID);
+                    OnStatusMessage(MessageLevel.Error, "Failed to find connected client " + clientID);
             }
         }
 
@@ -1913,7 +1913,7 @@ namespace GSF.TimeSeries.Transport
             catch
             {
                 success = false;
-                OnStatusMessage(MessageLevel.Error, "ERROR: Failed to find connected client with enumerated index " + clientIndex);
+                OnStatusMessage(MessageLevel.Error, "Failed to find connected client with enumerated index " + clientIndex);
             }
 
             if (success)
@@ -1923,7 +1923,7 @@ namespace GSF.TimeSeries.Transport
                 if (m_clientConnections.TryGetValue(clientID, out connection))
                     return connection.SubscriberInfo;
 
-                OnStatusMessage(MessageLevel.Error, "ERROR: Failed to find connected client " + clientID);
+                OnStatusMessage(MessageLevel.Error, "Failed to find connected client " + clientID);
             }
 
             return "";
@@ -1946,7 +1946,7 @@ namespace GSF.TimeSeries.Transport
             catch
             {
                 success = false;
-                OnStatusMessage(MessageLevel.Error, "ERROR: Failed to find connected client with enumerated index " + clientIndex);
+                OnStatusMessage(MessageLevel.Error, "Failed to find connected client with enumerated index " + clientIndex);
             }
 
             if (success)
@@ -1971,7 +1971,7 @@ namespace GSF.TimeSeries.Transport
                     return temporalStatus;
                 }
 
-                OnStatusMessage(MessageLevel.Error, "ERROR: Failed to find connected client " + clientID);
+                OnStatusMessage(MessageLevel.Error, "Failed to find connected client " + clientID);
             }
 
             return "";
@@ -2934,7 +2934,7 @@ namespace GSF.TimeSeries.Transport
                 // Check security mode to determine whether authentication is supported
                 if (m_securityMode == SecurityMode.TLS)
                 {
-                    message = "WARNING: Received authentication request from client while running in TLS mode.";
+                    message = "Received authentication request from client while running in TLS mode.";
                     SendClientResponse(connection.ClientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
                     OnProcessException(MessageLevel.Warning, new InvalidOperationException(message));
                     return;
@@ -2958,7 +2958,7 @@ namespace GSF.TimeSeries.Transport
                 {
                     message = $"No subscriber is registered for {connection.ConnectionID}, cannot authenticate connection - {ServerCommand.Authenticate} request denied.";
                     SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
-                    OnStatusMessage(MessageLevel.Warning, $"WARNING: Client {connection.ConnectionID} {ServerCommand.Authenticate} command request denied - subscriber is disabled or not registered.", flags: MessageFlags.SecurityMessage);
+                    OnStatusMessage(MessageLevel.Warning, $"Client {connection.ConnectionID} {ServerCommand.Authenticate} command request denied - subscriber is disabled or not registered.", flags: MessageFlags.SecurityMessage);
                 }
                 else
                 {
@@ -3007,7 +3007,7 @@ namespace GSF.TimeSeries.Transport
                                 {
                                     message = $"Subscriber authentication failed - {ServerCommand.Authenticate} request denied.";
                                     SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
-                                    OnStatusMessage(MessageLevel.Warning, $"WARNING: Client {connection.ConnectionID} {ServerCommand.Authenticate} command request denied - subscriber authentication failed.", flags: MessageFlags.SecurityMessage);
+                                    OnStatusMessage(MessageLevel.Warning, $"Client {connection.ConnectionID} {ServerCommand.Authenticate} command request denied - subscriber authentication failed.", flags: MessageFlags.SecurityMessage);
                                 }
                             }
                             else
@@ -3021,7 +3021,7 @@ namespace GSF.TimeSeries.Transport
                         {
                             message = $"Received request packet with an unexpected size from {connection.ConnectionID} - {ServerCommand.Authenticate} request denied.";
                             SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Authenticate, message);
-                            OnStatusMessage(MessageLevel.Warning, $"WARNING: Registered subscriber \"{connection.SubscriberName}\" {connection.ConnectionID} {ServerCommand.Authenticate} command request was denied due to oddly sized {byteLength} byte authentication packet.", flags: MessageFlags.SecurityMessage);
+                            OnStatusMessage(MessageLevel.Warning, $"Registered subscriber \"{connection.SubscriberName}\" {connection.ConnectionID} {ServerCommand.Authenticate} command request was denied due to oddly sized {byteLength} byte authentication packet.", flags: MessageFlags.SecurityMessage);
                         }
                     }
                     else
@@ -3612,7 +3612,7 @@ namespace GSF.TimeSeries.Transport
                 operationalModes = BigEndian.ToUInt32(buffer, startIndex);
 
                 if ((operationalModes & (uint)OperationalModes.VersionMask) != 0u)
-                    OnStatusMessage(MessageLevel.Warning, $"WARNING: Protocol version not supported. Operational modes may not be set correctly for client {connection.ClientID}.", flags: MessageFlags.UsageIssue);
+                    OnStatusMessage(MessageLevel.Warning, $"Protocol version not supported. Operational modes may not be set correctly for client {connection.ClientID}.", flags: MessageFlags.UsageIssue);
 
                 connection.OperationalModes = (OperationalModes)operationalModes;
             }
@@ -3870,7 +3870,7 @@ namespace GSF.TimeSeries.Transport
                     if (!m_clientConnections.TryGetValue(clientID, out connection))
                     {
                         // Received a request from an unknown client, this request is denied
-                        OnStatusMessage(MessageLevel.Warning, $"WARNING: Ignored {length} byte {(validServerCommand ? command.ToString() : "unidentified")} command request received from an unrecognized client: {clientID}", flags: MessageFlags.UsageIssue);
+                        OnStatusMessage(MessageLevel.Warning, $"Ignored {length} byte {(validServerCommand ? command.ToString() : "unidentified")} command request received from an unrecognized client: {clientID}", flags: MessageFlags.UsageIssue);
                     }
                     else if (validServerCommand)
                     {
@@ -3887,7 +3887,7 @@ namespace GSF.TimeSeries.Transport
                             {
                                 message = $"Subscriber not authenticated - {command} request denied.";
                                 SendClientResponse(clientID, ServerResponse.Failed, command, message);
-                                OnStatusMessage(MessageLevel.Warning, $"WARNING: Client {connection.ConnectionID} {command} command request denied - subscriber not authenticated.");
+                                OnStatusMessage(MessageLevel.Warning, $"Client {connection.ConnectionID} {command} command request denied - subscriber not authenticated.");
                                 return;
                             }
                         }
@@ -3960,7 +3960,7 @@ namespace GSF.TimeSeries.Transport
                         // Handle unrecognized commands
                         message = " sent an unrecognized server command: 0x" + commandByte.ToString("X").PadLeft(2, '0');
                         SendClientResponse(clientID, (byte)ServerResponse.Failed, commandByte, GetClientEncoding(clientID).GetBytes("Client" + message));
-                        OnProcessException(MessageLevel.Warning, new InvalidOperationException("WARNING: " + connection.ConnectionID + message));
+                        OnProcessException(MessageLevel.Warning, new InvalidOperationException(connection.ConnectionID + message));
                     }
                 }
             }

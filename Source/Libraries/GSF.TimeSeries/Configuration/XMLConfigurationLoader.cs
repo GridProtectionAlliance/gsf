@@ -23,6 +23,7 @@
 
 using System;
 using System.Data;
+using GSF.Diagnostics;
 
 #pragma warning disable 0067
 
@@ -31,21 +32,9 @@ namespace GSF.TimeSeries.Configuration
     /// <summary>
     /// Represents a configuration loader that gets its configuration from an XML file.
     /// </summary>
-    public class XMLConfigurationLoader : IConfigurationLoader
+    public class XMLConfigurationLoader : ConfigurationLoaderBase
     {
         #region [ Members ]
-
-        // Events
-
-        /// <summary>
-        /// Occurs when the configuration loader has a message to provide about its current status.
-        /// </summary>
-        public event EventHandler<EventArgs<string>> StatusMessage;
-
-        /// <summary>
-        /// Occurs when the configuration loader encounters a non-catastrophic exception.
-        /// </summary>
-        public event EventHandler<EventArgs<Exception>> ProcessException;
 
         // Fields
         private string m_filePath;
@@ -72,13 +61,7 @@ namespace GSF.TimeSeries.Configuration
         /// <summary>
         /// Gets the flag that indicates whether augmentation is supported by this configuration loader.
         /// </summary>
-        public bool CanAugment
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool CanAugment => false;
 
         #endregion
 
@@ -88,16 +71,16 @@ namespace GSF.TimeSeries.Configuration
         /// Loads the entire configuration data set from scratch.
         /// </summary>
         /// <returns>The configuration data set.</returns>
-        public DataSet Load()
+        public override DataSet Load()
         {
             DataSet configuration;
 
-            OnStatusMessage(string.Format("Loading XML based configuration from \"{0}\".", m_filePath));
+            OnStatusMessage(MessageLevel.Info, $"Loading XML based configuration from \"{m_filePath}\".");
 
             configuration = new DataSet();
             configuration.ReadXml(m_filePath);
 
-            OnStatusMessage("XML based configuration successfully loaded.");
+            OnStatusMessage(MessageLevel.Info, "XML based configuration successfully loaded.");
 
             return configuration;
         }
@@ -105,15 +88,9 @@ namespace GSF.TimeSeries.Configuration
         /// <summary>
         /// Not supported.
         /// </summary>
-        public void Augment(DataSet configuration)
+        public override void Augment(DataSet configuration)
         {
             throw new NotSupportedException();
-        }
-
-        private void OnStatusMessage(string message)
-        {
-            if ((object)StatusMessage != null)
-                StatusMessage(this, new EventArgs<string>(message));
         }
 
         #endregion

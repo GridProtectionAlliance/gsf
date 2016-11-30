@@ -174,13 +174,7 @@ namespace GSF.PhasorProtocols
         /// This base class returns 0, as most protocols do not support redundant frames.
         /// </para>
         /// </remarks>
-        public virtual int RedundantFramesPerPacket
-        {
-            get
-            {
-                return 0;
-            }
-        }
+        public virtual int RedundantFramesPerPacket => 0;
 
         /// <summary>
         /// Gets or sets current <see cref="IConfigurationFrame"/> used for parsing <see cref="IDataFrame"/>'s encountered in the data stream from a device.
@@ -231,46 +225,22 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets flag based on <see cref="CheckSumValidationFrameTypes"/> property that determines if configuration frames are selected for check-sum validation.
         /// </summary>
-        protected bool ValidateConfigurationFrameCheckSum
-        {
-            get
-            {
-                return (m_checkSumValidationFrameTypes & CheckSumValidationFrameTypes.ConfigurationFrame) > 0;
-            }
-        }
+        protected bool ValidateConfigurationFrameCheckSum => (m_checkSumValidationFrameTypes & CheckSumValidationFrameTypes.ConfigurationFrame) > 0;
 
         /// <summary>
         /// Gets flag based on <see cref="CheckSumValidationFrameTypes"/> property that determines if data frames are selected for check-sum validation.
         /// </summary>
-        protected bool ValidateDataFrameCheckSum
-        {
-            get
-            {
-                return (m_checkSumValidationFrameTypes & CheckSumValidationFrameTypes.DataFrame) > 0;
-            }
-        }
+        protected bool ValidateDataFrameCheckSum => (m_checkSumValidationFrameTypes & CheckSumValidationFrameTypes.DataFrame) > 0;
 
         /// <summary>
         /// Gets flag based on <see cref="CheckSumValidationFrameTypes"/> property that determines if header frames are selected for check-sum validation.
         /// </summary>
-        protected bool ValidateHeaderFrameCheckSum
-        {
-            get
-            {
-                return (m_checkSumValidationFrameTypes & CheckSumValidationFrameTypes.HeaderFrame) > 0;
-            }
-        }
+        protected bool ValidateHeaderFrameCheckSum => (m_checkSumValidationFrameTypes & CheckSumValidationFrameTypes.HeaderFrame) > 0;
 
         /// <summary>
         /// Gets flag based on <see cref="CheckSumValidationFrameTypes"/> property that determines if command frames are selected for check-sum validation.
         /// </summary>
-        protected bool ValidateCommandFrameCheckSum
-        {
-            get
-            {
-                return (m_checkSumValidationFrameTypes & CheckSumValidationFrameTypes.DataFrame) > 0;
-            }
-        }
+        protected bool ValidateCommandFrameCheckSum => (m_checkSumValidationFrameTypes & CheckSumValidationFrameTypes.DataFrame) > 0;
 
         /// <summary>
         /// Gets or sets flag that determines if header lengths should be trusted over parsed byte count.
@@ -313,7 +283,7 @@ namespace GSF.PhasorProtocols
 
                     foreach (IConfigurationCell cell in ConfigurationFrame.Cells)
                     {
-                        status.AppendFormat("               ({0:00000}) {1}{2}\r\n", cell.IDCode, cell.StationName.PadRight(16), string.IsNullOrEmpty(cell.IDLabel) ? "" : string.Format(" [{0}]", cell.IDLabel));
+                        status.AppendFormat("               ({0:00000}) {1}{2}\r\n", cell.IDCode, cell.StationName.PadRight(16), string.IsNullOrEmpty(cell.IDLabel) ? "" : $" [{cell.IDLabel}]");
                     }
 
                     status.Append("     Configured frame rate: ");
@@ -529,35 +499,20 @@ namespace GSF.PhasorProtocols
         /// Handles unknown frame types.
         /// </summary>
         /// <param name="frameType">Unknown frame ID.</param>
-        protected virtual void OnUnknownFrameTypeEncountered(TFrameIdentifier frameType)
-        {
-            OnParsingException(new InvalidOperationException(string.Format("WARNING: Encountered an undefined frame type identifier \"{0}\". Output was not parsed.", frameType)));
-        }
+        protected virtual void OnUnknownFrameTypeEncountered(TFrameIdentifier frameType) => OnParsingException(new InvalidOperationException($"WARNING: Encountered an undefined frame type identifier \"{frameType}\". Output was not parsed."));
 
         // Handle reception of data from base class event "DataParsed". Note that by attaching to base class event instead of overriding
         // OnDataParsed event raiser we allow frame implementations to control whether or not publication happens from a new thread pool
         // thread or from existing parsing thread by simply overriding the AllowQueuedPublication boolean property. Normally configuration
         // frames are published as soon as they are parsed to make sure needed parsing information is available as quickly as possible.
         // All other frames are queued for processing by default to allow for better processor distribution of mapping/routing work load.
-        private void base_DataParsed(object sender, EventArgs<ISupportSourceIdentifiableFrameImage<SourceChannel, TFrameIdentifier>> e)
-        {
-            // Call overridable channel frame function handler for parsed frame...
-            OnReceivedChannelFrame(e.Argument as IChannelFrame);
-        }
+        private void base_DataParsed(object sender, EventArgs<ISupportSourceIdentifiableFrameImage<SourceChannel, TFrameIdentifier>> e) => OnReceivedChannelFrame(e.Argument as IChannelFrame);
 
         // Handles output type not found error from base class event "OutputTypeNotFound"
-        private void base_OutputTypeNotFound(object sender, EventArgs<TFrameIdentifier> e)
-        {
-            // Call overridable output type not found function handler...
-            OnUnknownFrameTypeEncountered(e.Argument);
-        }
+        private void base_OutputTypeNotFound(object sender, EventArgs<TFrameIdentifier> e) => OnUnknownFrameTypeEncountered(e.Argument);
 
         // Handles duplicate type handler encountered warning from base class event "DuplicateTypeHandlerEncountered"
-        private void base_DuplicateTypeHandlerEncountered(object sender, EventArgs<Type, TFrameIdentifier> e)
-        {
-            // This exception will only occur on start up and is a result of not defining unique frame identifiers for the base types
-            OnParsingException(new InvalidOperationException(string.Format("WARNING: Duplicate frame type identifier \"{0}\" encountered for parsing type {1} during initialization. Only the first defined type for this identifier will ever be parsed.", e.Argument2, e.Argument1.FullName)));
-        }
+        private void base_DuplicateTypeHandlerEncountered(object sender, EventArgs<Type, TFrameIdentifier> e) => OnParsingException(new InvalidOperationException($"WARNING: Duplicate frame type identifier \"{e.Argument2}\" encountered for parsing type {e.Argument1.FullName} during initialization. Only the first defined type for this identifier will ever be parsed."));
 
         #endregion
     }

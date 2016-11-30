@@ -459,7 +459,7 @@ namespace EpriExport
                 catch (Exception ex)
                 {
                     m_skippedExports++;
-                    OnStatusMessage(MessageLevel.Warning, "WARNING: Skipped export due to exception: " + ex.Message);
+                    OnStatusMessage(MessageLevel.Warning, "Skipped export due to exception: " + ex.Message);
                     displayedWarning = true;
                 }
 

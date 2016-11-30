@@ -32,6 +32,7 @@ using System.Threading;
 using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Threading;
+using GSF.TimeSeries.Adapters;
 using GSF.Units;
 
 namespace GSF.TimeSeries.Transport
@@ -152,7 +153,7 @@ namespace GSF.TimeSeries.Transport
         public DataGapRecoverer()
         {
             Log = Logger.CreatePublisher(GetType(), MessageClass.Application);
-            Log.InitialStackMessages = new LogStackMessages("AdapterName", GetType().Name);
+            Log.InitialStackMessages = new LogStackMessages("ComponentName", GetType().Name);
 
             m_dataGapRecoveryCompleted = new ManualResetEventSlim(true);
 
@@ -686,7 +687,7 @@ namespace GSF.TimeSeries.Transport
                 if (Directory.Exists(setting))
                     m_loggingPath = setting;
                 else
-                    OnStatusMessage(MessageLevel.Warning, $"WARNING: Logging path \"{setting}\" not found, defaulting to \"{FilePath.GetAbsolutePath("")}\"...", "Initialization");
+                    OnStatusMessage(MessageLevel.Warning, $"Logging path \"{setting}\" not found, defaulting to \"{FilePath.GetAbsolutePath("")}\"...", "Initialization");
             }
 
             if (string.IsNullOrEmpty(m_sourceConnectionName))
@@ -712,7 +713,7 @@ namespace GSF.TimeSeries.Transport
             m_dataGapLog.Initialize();
 
             // Setup data gap processor to process items one at a time, a 5-second minimum period is established between each gap processing
-            m_dataGapLogProcessor = new OutageLogProcessor(m_dataGapLog, ProcessDataGap, CanProcessDataGap, ex => OnProcessException(MessageLevel.Warning, ex, "DataGapRecovery"), GSF.Common.Max(5000, (int)(m_recoveryStartDelay * SI.Milli)));
+            m_dataGapLogProcessor = new OutageLogProcessor(m_dataGapLog, ProcessDataGap, CanProcessDataGap, ex => OnProcessException(MessageLevel.Warning, ex), GSF.Common.Max(5000, (int)(m_recoveryStartDelay * SI.Milli)));
         }
 
         /// <summary>
@@ -733,7 +734,7 @@ namespace GSF.TimeSeries.Transport
             if ((object)m_dataGapLog == null)
                 throw new InvalidOperationException("Data gap recoverer has not been initialized. Cannot log data gap for processing.");
 
-            OnStatusMessage(MessageLevel.Info, $"Data gap recovery requested for period \"{startTime.ToString(OutageLog.DateTimeFormat, CultureInfo.InvariantCulture)}\" - \"{endTime.ToString(OutageLog.DateTimeFormat, CultureInfo.InvariantCulture)}\"...", "DataGapRecovery");
+            OnStatusMessage(MessageLevel.Info, $"Data gap recovery requested for period \"{startTime.ToString(OutageLog.DateTimeFormat, CultureInfo.InvariantCulture)}\" - \"{endTime.ToString(OutageLog.DateTimeFormat, CultureInfo.InvariantCulture)}\"...");
 
             Time dataGapSpan = (endTime - startTime).TotalSeconds;
 
@@ -759,7 +760,7 @@ namespace GSF.TimeSeries.Transport
                 rangeLimitText = "maximum";
             }
 
-            OnStatusMessage(MessageLevel.Info, $"Skipped data gap recovery for {Time.ToElapsedTimeString(dataGapSpan, 2)} of missed data - outside configured {rangeLimitText} range of {Time.ToElapsedTimeString(rangeLimit, 2)}.", "DataGapRecovery");
+            OnStatusMessage(MessageLevel.Info, $"Skipped data gap recovery for {Time.ToElapsedTimeString(dataGapSpan, 2)} of missed data - outside configured {rangeLimitText} range of {Time.ToElapsedTimeString(rangeLimit, 2)}.");
 
             return false;
         }
@@ -817,7 +818,7 @@ namespace GSF.TimeSeries.Transport
             m_subscriptionInfo.StartTime = dataGap.Start.ToString(OutageLog.DateTimeFormat, CultureInfo.InvariantCulture);
             m_subscriptionInfo.StopTime = dataGap.End.ToString(OutageLog.DateTimeFormat, CultureInfo.InvariantCulture);
 
-            OnStatusMessage(MessageLevel.Info, $"Starting data gap recovery for period \"{m_subscriptionInfo.StartTime}\" - \"{m_subscriptionInfo.StopTime}\"...", "DataGapRecovery");
+            OnStatusMessage(MessageLevel.Info, $"Starting data gap recovery for period \"{m_subscriptionInfo.StartTime}\" - \"{m_subscriptionInfo.StopTime}\"...");
 
             // Enable data monitor            
             m_dataStreamMonitor.Enabled = true;
@@ -850,9 +851,9 @@ namespace GSF.TimeSeries.Transport
                 FlushLogAsync();
 
                 if (m_measurementsRecoveredForDataGap == 0)
-                    OnStatusMessage(MessageLevel.Warning, $"WARNING: Failed to establish temporal session. Data recovery for period \"{m_subscriptionInfo.StartTime}\" - \"{m_subscriptionInfo.StopTime}\" will be re-attempted.", "DataGapRecovery");
+                    OnStatusMessage(MessageLevel.Warning, $"Failed to establish temporal session. Data recovery for period \"{m_subscriptionInfo.StartTime}\" - \"{m_subscriptionInfo.StopTime}\" will be re-attempted.");
                 else
-                    OnStatusMessage(MessageLevel.Warning, $"WARNING: Temporal session was disconnected during recovery operation. Data recovery for adjusted period \"{dataGap.Start.ToString(OutageLog.DateTimeFormat, CultureInfo.InvariantCulture)}\" - \"{m_subscriptionInfo.StopTime}\" will be re-attempted.", "DataGapRecovery");
+                    OnStatusMessage(MessageLevel.Warning, $"Temporal session was disconnected during recovery operation. Data recovery for adjusted period \"{dataGap.Start.ToString(OutageLog.DateTimeFormat, CultureInfo.InvariantCulture)}\" - \"{m_subscriptionInfo.StopTime}\" will be re-attempted.");
             }
 
             // Disconnect temporal session
@@ -861,7 +862,7 @@ namespace GSF.TimeSeries.Transport
             // Disable data monitor            
             m_dataStreamMonitor.Enabled = false;
 
-            OnStatusMessage(MessageLevel.Info, $"{(m_measurementsRecoveredForDataGap == 0 ? "WARNING: " : "")}Recovered {m_measurementsRecoveredForDataGap} measurements for period \"{m_subscriptionInfo.StartTime}\" - \"{m_subscriptionInfo.StopTime}\".", "DataGapRecovery");
+            OnStatusMessage(m_measurementsRecoveredForDataGap == 0 ? MessageLevel.Warning : MessageLevel.Info, $"Recovered {m_measurementsRecoveredForDataGap} measurements for period \"{m_subscriptionInfo.StartTime}\" - \"{m_subscriptionInfo.StopTime}\".");
         }
 
         /// <summary>
@@ -896,10 +897,10 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                Log.Publish(level, flags, eventName, status);
+                Log.Publish(level, flags, eventName ?? "DataGapRecovery", status);
 
                 using (Logger.SuppressLogMessages())
-                    StatusMessage?.Invoke(this, new EventArgs<string>(status));
+                    StatusMessage?.Invoke(this, new EventArgs<string>(AdapterBase.GetStatusWithMessageLevelPrefix(status, level)));
             }
             catch (Exception ex)
             {
@@ -907,7 +908,6 @@ namespace GSF.TimeSeries.Transport
                 OnProcessException(MessageLevel.Info, new InvalidOperationException($"Exception in consumer handler for StatusMessage event: {ex.Message}", ex), "ConsumerEventException");
             }
         }
-
 
         /// <summary>
         /// Raises the <see cref="ProcessException"/> event.
@@ -925,7 +925,7 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                Log.Publish(level, flags, eventName, exception?.Message, null, exception);
+                Log.Publish(level, flags, eventName ?? "DataGapRecovery", exception?.Message, null, exception);
 
                 using (Logger.SuppressLogMessages())
                     ProcessException?.Invoke(this, new EventArgs<Exception>(exception));
@@ -971,7 +971,7 @@ namespace GSF.TimeSeries.Transport
 
         private void TemporalSubscription_ProcessingComplete(object sender, EventArgs<string> e)
         {
-            OnStatusMessage(MessageLevel.Info, "Temporal data recovery processing completed.", "DataGapRecovery");
+            OnStatusMessage(MessageLevel.Info, "Temporal data recovery processing completed.");
 
             m_dataGapRecoveryCompleted.Set();
             m_dataStreamMonitor.Enabled = false;
@@ -1000,7 +1000,7 @@ namespace GSF.TimeSeries.Transport
             // See if consumer has requested to stop recovery operations
             if (!m_enabled)
             {
-                OnStatusMessage(MessageLevel.Info, "Data gap recovery has been canceled.", "DataGapRecovery");
+                OnStatusMessage(MessageLevel.Info, "Data gap recovery has been canceled.");
 
                 m_abnormalTermination = true;
 
@@ -1009,9 +1009,9 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
-        private void Common_StatusMessage(object sender, EventArgs<string> e) => OnStatusMessage(MessageLevel.Info, e.Argument, "DataGapRecovery");
+        private void Common_StatusMessage(object sender, EventArgs<string> e) => OnStatusMessage(MessageLevel.Info, e.Argument);
 
-        private void Common_ProcessException(object sender, EventArgs<Exception> e) => OnProcessException(MessageLevel.Warning, e.Argument, "DataGapRecovery");
+        private void Common_ProcessException(object sender, EventArgs<Exception> e) => OnProcessException(MessageLevel.Warning, e.Argument);
 
         private void DataStreamMonitor_Elapsed(object sender, EventArgs<DateTime> e)
         {
@@ -1019,7 +1019,7 @@ namespace GSF.TimeSeries.Transport
             {
                 // If we've received no measurements in the last time-span, we cancel current process...
                 m_dataStreamMonitor.Enabled = false;
-                OnStatusMessage(MessageLevel.Info, $"\r\nWARNING: No data received in {(m_dataStreamMonitor.Interval / 1000.0D).ToString("0.0")} seconds, canceling current data recovery operation...\r\n", "DataGapRecovery");
+                OnStatusMessage(MessageLevel.Warning, $"\r\nNo data received in {(m_dataStreamMonitor.Interval / 1000.0D).ToString("0.0")} seconds, canceling current data recovery operation...\r\n");
                 m_dataGapRecoveryCompleted.Set();
             }
 

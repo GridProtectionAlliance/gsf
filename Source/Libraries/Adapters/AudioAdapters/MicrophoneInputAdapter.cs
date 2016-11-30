@@ -131,7 +131,7 @@ namespace AudioAdapters
             m_samplesProcessed = 0L;
 
             if (m_channels != OutputMeasurements.Length)
-                OnStatusMessage(MessageLevel.Warning, "WARNING: Number of output measurements does not match the number of channels.");
+                OnStatusMessage(MessageLevel.Warning, "Number of output measurements does not match the number of channels.");
 
             m_waveIn.DataAvailable += WaveIn_DataAvailable;
             m_waveIn.RecordingStopped += WaveIn_RecordingStopped;

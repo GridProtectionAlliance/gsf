@@ -653,7 +653,7 @@ namespace PIAdapters
                         if ((object)point == null)
                         {
                             if (!m_refreshingMetadata)
-                                OnStatusMessage(MessageLevel.Warning, $"WARNING: No PI points found for tag '{tagName}'. Data will not be archived for '{key}'.");
+                                OnStatusMessage(MessageLevel.Warning, $"No PI points found for tag '{tagName}'. Data will not be archived for '{key}'.");
                         }
                     }
                 }
@@ -1002,14 +1002,14 @@ namespace PIAdapters
                 }
 
                 if (m_mappedPIPoints.Count == 0)
-                    OnStatusMessage(MessageLevel.Warning, "WARNING: No PI tags were mapped to measurements - no tag-map exists so no points will be archived.");
+                    OnStatusMessage(MessageLevel.Warning, "No PI tags were mapped to measurements - no tag-map exists so no points will be archived.");
             }
             else
             {
                 if (m_mappedPIPoints.Count > 0)
-                    OnStatusMessage(MessageLevel.Info, $"WARNING: No PI tags were mapped to measurements - existing tag-map with {m_mappedPIPoints.Count:N0} tags remains in use.");
+                    OnStatusMessage(MessageLevel.Warning, $"No PI tags were mapped to measurements - existing tag-map with {m_mappedPIPoints.Count:N0} tags remains in use.");
                 else
-                    OnStatusMessage(MessageLevel.Info, "WARNING: No PI tags were mapped to measurements - no tag-map exists so no points will be archived.");
+                    OnStatusMessage(MessageLevel.Warning, "No PI tags were mapped to measurements - no tag-map exists so no points will be archived.");
             }
         }
 

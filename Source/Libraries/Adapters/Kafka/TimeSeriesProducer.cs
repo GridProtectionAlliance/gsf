@@ -406,7 +406,7 @@ namespace KafkaAdapters
                         }
                         catch (Exception ex)
                         {
-                            OnStatusMessage(MessageLevel.Warning, $"WARNING: Failed to read any existing Kafka time-series metadata records from topic \"{MetadataTopic}\": {ex.Message}");
+                            OnStatusMessage(MessageLevel.Warning, $"Failed to read any existing Kafka time-series metadata records from topic \"{MetadataTopic}\": {ex.Message}");
                         }
                     }
 
@@ -471,7 +471,7 @@ namespace KafkaAdapters
                     }
                     else
                     {
-                        OnStatusMessage(MessageLevel.Info, "WARNING: No available local time-series metadata available to serialize...");
+                        OnStatusMessage(MessageLevel.Warning, "No available local time-series metadata available to serialize...");
                     }
                 }
             }
@@ -514,7 +514,7 @@ namespace KafkaAdapters
                 }
                 catch (Exception ex2)
                 {
-                    OnStatusMessage(MessageLevel.Warning, $"WARNING: Exception occurred while attempting to restart adapter from the ProcessMeasurements handler: {ex2.Message}");
+                    OnStatusMessage(MessageLevel.Warning, $"Exception occurred while attempting to restart adapter from the ProcessMeasurements handler: {ex2.Message}");
                 }
             }
         }

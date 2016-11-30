@@ -27,10 +27,12 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 using GSF.Data;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Security;
 using GSF.Units;
 
+// ReSharper disable AccessToModifiedClosure
 namespace GSF.TimeSeries.Configuration
 {
     /// <summary>
@@ -47,21 +49,9 @@ namespace GSF.TimeSeries.Configuration
     /// <summary>
     /// Represents a configuration loader that gets its configuration from a database connection.
     /// </summary>
-    public class DatabaseConfigurationLoader : IConfigurationLoader, IDisposable
+    public class DatabaseConfigurationLoader : ConfigurationLoaderBase, IDisposable
     {
         #region [ Members ]
-
-        // Events
-
-        /// <summary>
-        /// Occurs when the configuration loader has a message to provide about its current status.
-        /// </summary>
-        public event EventHandler<EventArgs<string>> StatusMessage;
-
-        /// <summary>
-        /// Occurs when the configuration loader encounters a non-catastrophic exception.
-        /// </summary>
-        public event EventHandler<EventArgs<Exception>> ProcessException;
 
         // Fields
         private string m_connectionString;
@@ -124,7 +114,7 @@ namespace GSF.TimeSeries.Configuration
         /// <summary>
         /// Gets the flag that indicates whether augmentation is supported by this configuration loader.
         /// </summary>
-        public bool CanAugment
+        public override bool CanAugment
         {
             get
             {
@@ -153,7 +143,7 @@ namespace GSF.TimeSeries.Configuration
             using (m_database)
             {
                 m_database = new AdoDataConnection(m_connectionString, m_dataProviderString);
-                OnStatusMessage("Database connection opened.");
+                OnStatusMessage(MessageLevel.Info, "Database connection opened.");
             }
         }
 
@@ -161,7 +151,7 @@ namespace GSF.TimeSeries.Configuration
         /// Loads the entire configuration data set from scratch.
         /// </summary>
         /// <returns>The configuration data set.</returns>
-        public DataSet Load()
+        public override DataSet Load()
         {
             DataSet configuration = null;
 
@@ -196,7 +186,7 @@ namespace GSF.TimeSeries.Configuration
         /// tracked since the version of the given configuration data set.
         /// </summary>
         /// <param name="configuration">The configuration data set to be augmented.</param>
-        public void Augment(DataSet configuration)
+        public override void Augment(DataSet configuration)
         {
             // Get the version of the configuration so we know
             // which changes in the change table need to be updated
@@ -300,7 +290,7 @@ namespace GSF.TimeSeries.Configuration
                         try
                         {
                             // Get the list of changes specific to this table
-                            entityChanges = trackedChanges.Select(string.Format("TableName = '{0}'", sourceName));
+                            entityChanges = trackedChanges.Select($"TableName = '{sourceName}'");
 
                             // If there are no changes to this table, there is nothing to do
                             if (entityChanges.Length > 0)
@@ -370,15 +360,14 @@ namespace GSF.TimeSeries.Configuration
                                 operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
                                 // Display information to the user
-                                OnStatusMessage(string.Format("Loaded {0} change{1} to \"{2}\" in {3}...", changeCount, changeCount == 1 ? "" : "s", runtimeName, operationElapsedTime.ToString(2)));
+                                OnStatusMessage(MessageLevel.Info, $"Loaded {changeCount} change{(changeCount == 1 ? "" : "s")} to \"{runtimeName}\" in {operationElapsedTime.ToString(2)}...");
                             }
 
                             success = true;
                         }
                         catch (Exception ex)
                         {
-                            OnStatusMessage(string.Format("WARNING: Unable to augment {0} table due to exception: {1}", runtimeName, ex.Message));
-                            OnProcessException(ex);
+                            OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Unable to augment {runtimeName} table due to exception: {ex.Message}", ex));
                         }
                     }
 
@@ -397,12 +386,11 @@ namespace GSF.TimeSeries.Configuration
 
                 try
                 {
-                    database.Connection.ExecuteNonQuery(string.Format("DELETE FROM TrackedChange WHERE ID <= {0}", latestVersion));
+                    database.Connection.ExecuteNonQuery($"DELETE FROM TrackedChange WHERE ID <= {latestVersion}");
                 }
                 catch (Exception ex)
                 {
-                    OnStatusMessage(string.Format("WARNING: Unable to curtail the TrackedChange table due to exception: {0}", ex.Message));
-                    OnProcessException(ex);
+                    OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Unable to curtail the TrackedChange table due to exception: {ex.Message}", ex));
                 }
             });
         }
@@ -417,7 +405,7 @@ namespace GSF.TimeSeries.Configuration
                 m_database.Dispose();
                 m_database = null;
 
-                OnStatusMessage("Database connection closed.");
+                OnStatusMessage(MessageLevel.Info, "Database connection closed.");
             }
         }
 
@@ -438,11 +426,11 @@ namespace GSF.TimeSeries.Configuration
                 Type type;
                 MethodInfo method;
 
-                foreach (DataRow row in database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM DataOperation WHERE (NodeID IS NULL OR NodeID={0}) AND Enabled <> 0 ORDER BY LoadOrder", m_nodeIDQueryString)).Rows)
+                foreach (DataRow row in database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM DataOperation WHERE (NodeID IS NULL OR NodeID={m_nodeIDQueryString}) AND Enabled <> 0 ORDER BY LoadOrder").Rows)
                 {
                     try
                     {
-                        OnStatusMessage(string.Format("Executing startup data operation \"{0}\".", row["Description"].ToNonNullString("Unlabeled")));
+                        OnStatusMessage(MessageLevel.Info, $"Executing startup data operation \"{row["Description"].ToNonNullString("Unlabeled")}\".");
 
                         // Load data operation parameters
                         assemblyName = row["AssemblyName"].ToNonNullString();
@@ -465,12 +453,11 @@ namespace GSF.TimeSeries.Configuration
                         method = type.GetMethod(methodName, BindingFlags.IgnoreCase | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.InvokeMethod);
 
                         // Execute data operation via loaded assembly method
-                        ((DataOperationFunction)Delegate.CreateDelegate(typeof(DataOperationFunction), method))(database, m_nodeIDQueryString, trackingVersion, arguments, OnStatusMessage, OnProcessException);
+                        ((DataOperationFunction)Delegate.CreateDelegate(typeof(DataOperationFunction), method))(database, m_nodeIDQueryString, trackingVersion, arguments, status => OnStatusMessage(MessageLevel.Info, status), ex => OnProcessException(MessageLevel.Warning, ex));
                     }
                     catch (Exception ex)
                     {
-                        OnStatusMessage(string.Format("WARNING: Failed to execute startup data operation \"{0} [{1}::{2}()]\" due to exception: {3}", assemblyName, typeName, methodName, ex.Message));
-                        OnProcessException(ex);
+                        OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to execute startup data operation \"{assemblyName} [{typeName}::{methodName}()]\" due to exception: {ex.Message}", ex));
                     }
                 }
             });
@@ -491,13 +478,13 @@ namespace GSF.TimeSeries.Configuration
 
                 // Load configuration entity data filtered by node ID
                 operationStartTime = DateTime.UtcNow.Ticks;
-                source = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM {0} WHERE NodeID={1}", entityRow["SourceName"], m_nodeIDQueryString));
+                source = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM {entityRow["SourceName"]} WHERE NodeID={m_nodeIDQueryString}");
                 operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
                 // Update table name as defined in configuration entity
                 source.TableName = entityRow["RuntimeName"].ToString();
 
-                OnStatusMessage(string.Format("Loaded {0} row{1} from \"{2}\" in {3}...", source.Rows.Count, source.Rows.Count == 1 ? "" : "s", source.TableName, operationElapsedTime.ToString(2)));
+                OnStatusMessage(MessageLevel.Info, $"Loaded {source.Rows.Count} row{(source.Rows.Count == 1 ? "" : "s")} from \"{source.TableName}\" in {operationElapsedTime.ToString(2)}...");
 
                 operationStartTime = DateTime.UtcNow.Ticks;
 
@@ -535,7 +522,7 @@ namespace GSF.TimeSeries.Configuration
 
                 operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
-                OnStatusMessage(string.Format("{0} configuration pre-cache completed in {1}.", source.TableName, operationElapsedTime.ToString(2)));
+                OnStatusMessage(MessageLevel.Info, $"{source.TableName} configuration pre-cache completed in {operationElapsedTime.ToString(2)}.");
             });
 
             return destination;
@@ -576,7 +563,7 @@ namespace GSF.TimeSeries.Configuration
             {
                 try
                 {
-                    string query = string.Format("SELECT CASE WHEN COUNT(ID) = 0 THEN {0} ELSE MAX(ID) END FROM TrackedChange", currentVersion);
+                    string query = $"SELECT CASE WHEN COUNT(ID) = 0 THEN {currentVersion} ELSE MAX(ID) END FROM TrackedChange";
                     version = Convert.ToUInt64(database.Connection.ExecuteScalar(query));
                 }
                 catch
@@ -596,7 +583,7 @@ namespace GSF.TimeSeries.Configuration
             {
                 try
                 {
-                    string query = string.Format("SELECT COUNT(ID) FROM TrackedChange WHERE ID < {0}", currentVersion);
+                    string query = $"SELECT COUNT(ID) FROM TrackedChange WHERE ID < {currentVersion}";
                     changesAreValid = Convert.ToInt32(database.Connection.ExecuteScalar(query)) == 0;
                 }
                 catch
@@ -611,7 +598,7 @@ namespace GSF.TimeSeries.Configuration
         private DataTable GetTrackedChanges(ulong currentVersion)
         {
             DataTable table = null;
-            Execute(database => table = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM TrackedChange WHERE ID > {0}", currentVersion)));
+            Execute(database => table = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM TrackedChange WHERE ID > {currentVersion}"));
             return table;
         }
 
@@ -652,14 +639,14 @@ namespace GSF.TimeSeries.Configuration
                 Time operationElapsedTime;
 
                 // Extract and begin cache of current security context - this does not require an existing security provider
-                OnStatusMessage("Preparing current security context...");
+                OnStatusMessage(MessageLevel.Info, "Preparing current security context...", flags: MessageFlags.SecurityMessage);
 
                 operationStartTime = DateTime.UtcNow.Ticks;
-                AdoSecurityProvider.ExtractSecurityContext(database.Connection, OnProcessException);
+                AdoSecurityProvider.ExtractSecurityContext(database.Connection, ex => OnProcessException(MessageLevel.Warning, ex, flags: MessageFlags.SecurityMessage));
                 operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
-                OnStatusMessage(string.Format("Security context prepared in {0}.", operationElapsedTime.ToString(2)));
-                OnStatusMessage("Database configuration successfully loaded.");
+                OnStatusMessage(MessageLevel.Info, $"Security context prepared in {operationElapsedTime.ToString(2)}.");
+                OnStatusMessage(MessageLevel.Info, "Database configuration successfully loaded.", flags: MessageFlags.SecurityMessage);
             });
         }
 
@@ -679,18 +666,6 @@ namespace GSF.TimeSeries.Configuration
                 if (!isOpen)
                     Close();
             }
-        }
-
-        private void OnStatusMessage(string message)
-        {
-            if ((object)StatusMessage != null)
-                StatusMessage(this, new EventArgs<string>(message));
-        }
-
-        private void OnProcessException(Exception ex)
-        {
-            if ((object)ProcessException != null)
-                ProcessException(this, new EventArgs<Exception>(ex));
         }
 
         #endregion

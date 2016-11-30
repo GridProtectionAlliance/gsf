@@ -833,7 +833,7 @@ namespace GSF.TimeSeries.Statistics
                     signalReference = GetSignalReference(stat, mapping.Item1);
 
                     if (sourceLookup.ContainsKey(signalReference))
-                        OnStatusMessage(MessageLevel.Info, $"WARNING: Encountered duplicate signal reference statistic: {signalReference}");
+                        OnStatusMessage(MessageLevel.Warning, $"Encountered duplicate signal reference statistic: {signalReference}");
                     else
                         sourceLookup.Add(signalReference, mapping.Item1);
                 }

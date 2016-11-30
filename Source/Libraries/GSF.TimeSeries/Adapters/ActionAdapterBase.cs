@@ -871,7 +871,7 @@ namespace GSF.TimeSeries.Adapters
                 }
                 else
                 {
-                    OnStatusMessage(MessageLevel.Info, $"WARNING: No down-sampling method labeled \"{setting}\" exists, \"LastReceived\" method was selected.");
+                    OnStatusMessage(MessageLevel.Info, $"No down-sampling method labeled \"{setting}\" exists, \"LastReceived\" method was selected.", flags: MessageFlags.UsageIssue);
                     DownsamplingMethod = DownsamplingMethod.LastReceived;
                 }
             }
@@ -1195,7 +1195,7 @@ namespace GSF.TimeSeries.Adapters
                 Log.Publish(level, flags, eventName, status);
 
                 using (Logger.SuppressLogMessages())
-                    StatusMessage?.Invoke(this, new EventArgs<string>(status));
+                    StatusMessage?.Invoke(this, new EventArgs<string>(AdapterBase.GetStatusWithMessageLevelPrefix(status, level)));
             }
             catch (Exception ex)
             {

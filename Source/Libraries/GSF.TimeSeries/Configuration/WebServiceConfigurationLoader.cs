@@ -24,6 +24,7 @@
 using System;
 using System.Data;
 using System.Net;
+using GSF.Diagnostics;
 
 #pragma warning disable 0067
 
@@ -32,21 +33,9 @@ namespace GSF.TimeSeries.Configuration
     /// <summary>
     /// Represents a configuration loader that queries a web service for its configuration.
     /// </summary>
-    public class WebServiceConfigurationLoader : IConfigurationLoader
+    public class WebServiceConfigurationLoader : ConfigurationLoaderBase
     {
         #region [ Members ]
-
-        // Events
-
-        /// <summary>
-        /// Occurs when the configuration loader has a message to provide about its current status.
-        /// </summary>
-        public event EventHandler<EventArgs<string>> StatusMessage;
-
-        /// <summary>
-        /// Occurs when the configuration loader encounters a non-catastrophic exception.
-        /// </summary>
-        public event EventHandler<EventArgs<Exception>> ProcessException;
 
         // Fields
         private string m_uri;
@@ -73,13 +62,7 @@ namespace GSF.TimeSeries.Configuration
         /// <summary>
         /// Gets the flag that indicates whether augmentation is supported by this configuration loader.
         /// </summary>
-        public bool CanAugment
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool CanAugment => false;
 
         #endregion
 
@@ -89,13 +72,13 @@ namespace GSF.TimeSeries.Configuration
         /// Loads the entire configuration data set from scratch.
         /// </summary>
         /// <returns>The configuration data set.</returns>
-        public DataSet Load()
+        public override DataSet Load()
         {
             DataSet configuration;
             WebRequest request;
             WebResponse response;
 
-            OnStatusMessage("Webservice configuration connection opened.");
+            OnStatusMessage(MessageLevel.Info, "Webservice configuration connection opened.");
 
             configuration = new DataSet();
             request = WebRequest.Create(m_uri);
@@ -105,7 +88,7 @@ namespace GSF.TimeSeries.Configuration
                 configuration.ReadXml(response.GetResponseStream());
             }
 
-            OnStatusMessage("Webservice configuration successfully loaded.");
+            OnStatusMessage(MessageLevel.Info, "Webservice configuration successfully loaded.");
 
             return configuration;
         }
@@ -113,15 +96,9 @@ namespace GSF.TimeSeries.Configuration
         /// <summary>
         /// Not supported.
         /// </summary>
-        public void Augment(DataSet configuration)
+        public override void Augment(DataSet configuration)
         {
             throw new NotSupportedException();
-        }
-
-        private void OnStatusMessage(string message)
-        {
-            if ((object)StatusMessage != null)
-                StatusMessage(this, new EventArgs<string>(message));
         }
 
         #endregion
