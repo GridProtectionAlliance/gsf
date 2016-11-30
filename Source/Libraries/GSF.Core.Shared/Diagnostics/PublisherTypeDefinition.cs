@@ -52,6 +52,7 @@ namespace GSF.Diagnostics
         /// <summary>
         /// All related types such as interfaces/parent classes for the current type.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public readonly ImmutableList<string> RelatedTypes;
 
         /// <summary>

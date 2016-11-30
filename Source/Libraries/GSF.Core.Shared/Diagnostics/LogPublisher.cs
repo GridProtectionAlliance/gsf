@@ -217,7 +217,7 @@ namespace GSF.Diagnostics
             //If messages events are unclassified allow a higher message throughput rate.
             double messagesPerSecond = 1;
             int burstRate = 20;
-            if (eventName == string.Empty)
+            if (eventName.Length == 0)
             {
                 messagesPerSecond = 5;
                 burstRate = 100;

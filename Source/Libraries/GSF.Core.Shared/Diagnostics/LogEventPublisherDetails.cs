@@ -43,6 +43,7 @@ namespace GSF.Diagnostics
         /// <summary>
         /// The <see cref="PublisherTypeDefinition"/> associated with <see cref="LogPublisher"/> that generated the message.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public readonly PublisherTypeDefinition TypeData;
 
         /// <summary>

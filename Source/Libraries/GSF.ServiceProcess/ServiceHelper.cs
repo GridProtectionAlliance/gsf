@@ -4724,7 +4724,7 @@ namespace GSF.ServiceProcess
             if (!Directory.Exists(logPath))
                 Directory.CreateDirectory(logPath);
 
-            Logger.FileWriter.SetPath(logPath, VerboseLevel.High);
+            Logger.FileWriter.SetPath(logPath, VerboseLevel.Ultra);
             Logger.FileWriter.SetLoggingFileCount(300);
 
             s_log.InitialStackTrace = LogStackTrace.Empty;
