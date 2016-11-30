@@ -50,6 +50,12 @@ namespace GSF.Diagnostics
         public readonly string AssemblyName;
 
         /// <summary>
+        /// Gets the version number of the <see cref="Assembly"/> that this <see cref="LogPublisher"/>'s type 
+        /// belongs to.
+        /// </summary>
+        public readonly string AssemblyVersion;
+
+        /// <summary>
         /// All related types such as interfaces/parent classes for the current type.
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
@@ -71,6 +77,7 @@ namespace GSF.Diagnostics
 
             TypeName = TrimAfterFullName(type.AssemblyQualifiedName);
             AssemblyName = Path.GetFileName(type.Assembly.Location);
+            AssemblyVersion = type.Assembly.GetName().Version.ToString();
             RelatedTypes = new ImmutableList<string>();
 
             foreach (var interfaceType in type.GetInterfaces())
@@ -94,19 +101,33 @@ namespace GSF.Diagnostics
         /// <param name="stream">the stream to load the log message from.</param>
         public PublisherTypeDefinition(Stream stream)
         {
+            int count;
             byte version = stream.ReadNextByte();
             switch (version)
             {
                 case 1:
                     TypeName = stream.ReadString();
                     AssemblyName = stream.ReadString();
-                    int count = stream.ReadInt32();
+                    count = stream.ReadInt32();
                     RelatedTypes = new ImmutableList<string>(count);
                     while (count > 0)
                     {
                         RelatedTypes.Add(stream.ReadString());
                         count--;
                     }
+                    AssemblyVersion = string.Empty;
+                    break;
+                case 2:
+                    TypeName = stream.ReadString();
+                    AssemblyName = stream.ReadString();
+                    count = stream.ReadInt32();
+                    RelatedTypes = new ImmutableList<string>(count);
+                    while (count > 0)
+                    {
+                        RelatedTypes.Add(stream.ReadString());
+                        count--;
+                    }
+                    AssemblyVersion = stream.ReadString();
                     break;
                 default:
                     throw new VersionNotFoundException();
@@ -126,6 +147,7 @@ namespace GSF.Diagnostics
 
             TypeName = typeName;
             AssemblyName = assemblyName;
+            AssemblyVersion = string.Empty;
             RelatedTypes = new ImmutableList<string>();
             RelatedTypes.IsReadOnly = true;
             m_hashCode = ComputeHashCode();
@@ -143,7 +165,7 @@ namespace GSF.Diagnostics
         /// <param name="stream"></param>
         public void Save(Stream stream)
         {
-            stream.Write((byte)1);
+            stream.Write((byte)2);
             stream.Write(TypeName);
             stream.Write(AssemblyName);
             stream.Write(RelatedTypes.Count);
@@ -151,6 +173,7 @@ namespace GSF.Diagnostics
             {
                 stream.Write(type);
             }
+            stream.Write(AssemblyVersion);
         }
 
         /// <summary>
@@ -216,6 +239,7 @@ namespace GSF.Diagnostics
             return m_hashCode == obj.m_hashCode &&
                    TypeName == obj.TypeName &&
                    AssemblyName == obj.AssemblyName &&
+                   AssemblyVersion == obj.AssemblyVersion &&
                    AreEqual(RelatedTypes, obj.RelatedTypes);
         }
 
