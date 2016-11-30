@@ -50,6 +50,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\MessageRate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\MessageSuppression.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\NewLogMessageEventHandler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\PublisherTypeDefinition.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\ThreadPoolTrace.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\TimerTrace.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Diagnostics\Utilities\LogFileCompactor.cs" />

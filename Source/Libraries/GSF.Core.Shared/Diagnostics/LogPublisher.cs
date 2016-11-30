@@ -163,7 +163,7 @@ namespace GSF.Diagnostics
         /// <returns></returns>
         public override string ToString()
         {
-            return m_publisherInstance.TypeFullName + " (" + m_publisherInstance.AssemblyFullName + ")";
+            return m_publisherInstance.TypeData.TypeName + " (" + m_publisherInstance.TypeData.AssemblyName + ")";
         }
 
         /// <summary>
@@ -253,7 +253,7 @@ namespace GSF.Diagnostics
             {
                 if (m_excessivePublisherEventNames == null)
                 {
-                    var owner1 = new LogEventPublisherDetails(m_publisherInstance.TypeFullName, m_publisherInstance.AssemblyFullName,
+                    var owner1 = new LogEventPublisherDetails(m_publisherInstance.TypeData,
                         "Excessive Event Names: Event names for this publisher has been limited to " + MaxDistinctEventPublisherCount.ToString() +
                         "Please adjust MaxDistinctEventPublisherCount if this is not a bug and this publisher can truly create this many publishers.");
                     m_excessivePublisherEventNames = new LogEventPublisherInternal(attributes, owner1, m_publisherInstance, m_logger, stackTraceDepth, messagesPerSecond, burstLimit);
@@ -262,7 +262,7 @@ namespace GSF.Diagnostics
             }
 
             LogEventPublisherInternal publisher;
-            var owner = new LogEventPublisherDetails(m_publisherInstance.TypeFullName, m_publisherInstance.AssemblyFullName, eventName);
+            var owner = new LogEventPublisherDetails(m_publisherInstance.TypeData, eventName);
             publisher = new LogEventPublisherInternal(attributes, owner, m_publisherInstance, m_logger, stackTraceDepth, messagesPerSecond, burstLimit);
             publisher = m_lookupEventPublishers.GetOrAdd(Tuple.Create(attributes, eventName), publisher);
             return publisher;

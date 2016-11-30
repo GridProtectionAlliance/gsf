@@ -25,7 +25,6 @@
 using System;
 using System.Data;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using GSF.IO;
 
@@ -42,14 +41,9 @@ namespace GSF.Diagnostics
         : IEquatable<LogEventPublisherDetails>
     {
         /// <summary>
-        /// The <see cref="Type"/> associated with <see cref="LogPublisher"/> that generated the message.
+        /// The <see cref="PublisherTypeDefinition"/> associated with <see cref="LogPublisher"/> that generated the message.
         /// </summary>
-        public readonly string TypeName;
-
-        /// <summary>
-        /// The <see cref="Assembly"/> associated with <see cref="LogPublisher"/> that generated the message.
-        /// </summary>
-        public readonly string AssemblyName;
+        public readonly PublisherTypeDefinition TypeData;
 
         /// <summary>
         /// The event name of this log message.
@@ -65,15 +59,21 @@ namespace GSF.Diagnostics
         /// Loads a log messages from the supplied stream
         /// </summary>
         /// <param name="stream">the stream to load the log message from.</param>
-        public LogEventPublisherDetails(Stream stream)
+        /// <param name="helper">the helper to assist in loading/saving</param>
+        internal LogEventPublisherDetails(Stream stream, LogMessageSaveHelper helper)
         {
             byte version = stream.ReadNextByte();
             switch (version)
             {
                 case 1:
-                    TypeName = stream.ReadString();
-                    AssemblyName = stream.ReadString();
+                    string typeName = stream.ReadString();
+                    string assemblyName = stream.ReadString();
+                    TypeData = new PublisherTypeDefinition(typeName, assemblyName);
                     EventName = stream.ReadString();
+                    break;
+                case 2:
+                    EventName = stream.ReadString();
+                    TypeData = helper.LoadPublisherTypeDefinition(stream);
                     break;
                 default:
                     throw new VersionNotFoundException();
@@ -84,36 +84,32 @@ namespace GSF.Diagnostics
         /// <summary>
         /// Represents a single owner of a log message.
         /// </summary>
-        public LogEventPublisherDetails(string typeName, string assemblyName, string eventName)
+        public LogEventPublisherDetails(PublisherTypeDefinition typeData, string eventName)
         {
-            if (string.IsNullOrWhiteSpace(typeName))
-                throw new ArgumentNullException(nameof(typeName));
-            if (string.IsNullOrWhiteSpace(assemblyName))
-                throw new ArgumentNullException(nameof(assemblyName));
+            if (typeData == null)
+                throw new ArgumentNullException(nameof(typeData));
             if (eventName == null)
                 eventName = string.Empty;
-
-            TypeName = typeName;
-            AssemblyName = assemblyName;
+            TypeData = typeData;
             EventName = eventName;
             m_hashCode = ComputeHashCode();
         }
 
         private int ComputeHashCode()
         {
-            return TypeName.GetHashCode() ^ AssemblyName.GetHashCode() ^ EventName.GetHashCode();
+            return TypeData.GetHashCode() ^ EventName.GetHashCode();
         }
 
         /// <summary>
         /// Writes the log data to the stream
         /// </summary>
         /// <param name="stream"></param>
-        public void Save(Stream stream)
+        /// <param name="helper">the helper to assist in loading/saving</param>
+        internal void Save(Stream stream, LogMessageSaveHelper helper)
         {
-            stream.Write((byte)1);
-            stream.Write(TypeName);
-            stream.Write(AssemblyName);
+            stream.Write((byte)2);
             stream.Write(EventName);
+            helper.SavePublisherTypeDefinition(stream, TypeData);
         }
 
         /// <summary>
@@ -126,13 +122,13 @@ namespace GSF.Diagnostics
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            if (TypeName.Length > 0)
+            if (TypeData.TypeName.Length > 0)
             {
-                sb.AppendLine("Message Type: " + TypeName);
+                sb.AppendLine("Message Type: " + TypeData.TypeName);
             }
-            if (AssemblyName.Length > 0)
+            if (TypeData.AssemblyName.Length > 0)
             {
-                sb.AppendLine("Message Assembly: " + AssemblyName);
+                sb.AppendLine("Message Assembly: " + TypeData.AssemblyName);
             }
             if (EventName.Length > 0)
             {
@@ -181,9 +177,9 @@ namespace GSF.Diagnostics
                 return true;
 
             return m_hashCode == obj.m_hashCode &&
-                   TypeName == obj.TypeName &&
-                   AssemblyName == obj.AssemblyName &&
-                   EventName == obj.EventName;
+                   EventName == obj.EventName &&
+                   TypeData.Equals(obj.TypeData);
+
         }
 
 

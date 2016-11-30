@@ -46,8 +46,8 @@ namespace LogFileViewer.Filters
         public MatchMessageName(LogMessage typeName)
         {
             m_errorText = typeName.Message;
-            m_typeName = typeName.EventPublisherDetails.TypeName;
-            m_eventName = typeName.EventPublisherDetails.EventName;
+            m_typeName = typeName.TypeName;
+            m_eventName = typeName.EventName;
         }
 
         public MatchMessageName(Stream stream)
@@ -86,7 +86,7 @@ namespace LogFileViewer.Filters
 
         public bool IsIncluded(LogMessage log)
         {
-            if (log.EventPublisherDetails.TypeName == m_typeName && log.EventPublisherDetails.EventName == m_eventName)
+            if (log.TypeName == m_typeName && log.EventName == m_eventName)
             {
                 if (m_isRegex)
                     return m_includeIfMatched ^ !m_regex.IsMatch(log.Message);

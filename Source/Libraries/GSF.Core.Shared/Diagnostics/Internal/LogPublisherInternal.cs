@@ -41,15 +41,7 @@ namespace GSF.Diagnostics
         /// </summary>
         private LoggerInternal m_logger;
 
-        /// <summary>
-        /// The full name of the type.
-        /// </summary>
-        public readonly string TypeFullName;
-
-        /// <summary>
-        /// The full name of the assembly. 
-        /// </summary>
-        public readonly string AssemblyFullName;
+        public readonly PublisherTypeDefinition TypeData;
 
         public readonly Type Type;
 
@@ -72,8 +64,7 @@ namespace GSF.Diagnostics
 
             Type = type;
             Assembly = type.Assembly;
-            TypeFullName = TrimAfterFullName(type.AssemblyQualifiedName);
-            AssemblyFullName = Path.GetFileName(Assembly.Location);
+            TypeData = new PublisherTypeDefinition(type);
             m_logger = logger;
             SubscriptionFilterCollection = new MessageAttributeFilterCollection();
         }
@@ -93,24 +84,6 @@ namespace GSF.Diagnostics
         }
 
         #endregion
-
-        /// <summary>
-        /// Trims the unused information after the namespace.class+subclass details.
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        private static string TrimAfterFullName(string name)
-        {
-            int newLength = name.Length;
-            int indexOfBracket = name.IndexOf('[');
-            int indexOfComma = name.IndexOf(',');
-
-            if (indexOfBracket >= 0)
-                newLength = Math.Min(indexOfBracket, newLength);
-            if (indexOfComma >= 0)
-                newLength = Math.Min(indexOfComma, newLength);
-            name = name.Substring(0, newLength).Trim();
-            return name;
-        }
+     
     }
 }

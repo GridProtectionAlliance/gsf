@@ -132,12 +132,12 @@ namespace GSF.Diagnostics
                     return true;
                 case FilterType.Assembly:
                     if (m_isExpression)
-                        return m_regexMatch.IsMatch(publisher.AssemblyFullName);
-                    return publisher.AssemblyFullName.Equals(m_text, StringComparison.OrdinalIgnoreCase);
+                        return m_regexMatch.IsMatch(publisher.TypeData.AssemblyName);
+                    return publisher.TypeData.AssemblyName.Equals(m_text, StringComparison.OrdinalIgnoreCase);
                 case FilterType.Type:
                     if (m_isExpression)
-                        return m_regexMatch.IsMatch(publisher.TypeFullName);
-                    return publisher.TypeFullName.Equals(m_text, StringComparison.OrdinalIgnoreCase);
+                        return m_regexMatch.IsMatch(publisher.TypeData.TypeName);
+                    return publisher.TypeData.TypeName.Equals(m_text, StringComparison.OrdinalIgnoreCase);
                 default:
                     throw new ArgumentOutOfRangeException();
             }

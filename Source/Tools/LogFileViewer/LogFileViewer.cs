@@ -176,9 +176,9 @@ namespace LogFileViewer
             items[2] = message.UtcTime.ToLocalTime();
             items[3] = $"{message.Classification} - {message.Level}";
             items[4] = message.Flags.ToString();
-            items[5] = message.EventPublisherDetails.TypeName;
+            items[5] = message.TypeName;
             items[6] = message.InitialStackMessages.ConcatenateWith(message.CurrentStackMessages).ToString();
-            items[7] = message.EventPublisherDetails.EventName;
+            items[7] = message.EventName;
             items[8] = message.Message;
             items[9] = message.Details;
             items[10] = message.ExceptionString;
@@ -541,8 +541,8 @@ namespace LogFileViewer
                 //Only first chance exceptions can be filtered.
                 LogMessage firstMessage = messages[x];
                 if (firstMessage.ExceptionString.Length > 0
-                    && firstMessage.EventPublisherDetails.TypeName == "GSF.Diagnostics.Logger"
-                    && firstMessage.EventPublisherDetails.EventName == "First Chance App Domain Exception")
+                    && firstMessage.TypeName == "GSF.Diagnostics.Logger"
+                    && firstMessage.EventName == "First Chance App Domain Exception")
                 {
                     //don't look ahead for more than 100ms.
                     DateTime stopAfter = firstMessage.UtcTime.AddTicks(100 * TimeSpan.TicksPerMillisecond);
@@ -556,7 +556,7 @@ namespace LogFileViewer
 
                         if (futureMessage.ManagedThreadID == firstMessage.ManagedThreadID
                             && futureMessage.ExceptionString.Length > 0
-                            && futureMessage.EventPublisherDetails.TypeName != "GSF.Diagnostics.Logger")
+                            && futureMessage.TypeName != "GSF.Diagnostics.Logger")
                         {
                             if (futureMessage.ExceptionString.StartsWith(firstMessage.ExceptionString))
                             {

@@ -115,7 +115,7 @@ namespace GSF.Diagnostics
                 if (ShouldRaiseMessageSupressionNotifications && m_suppressionMessageNextPublishTime <= ShortTime.Now)
                 {
                     m_suppressionMessageNextPublishTime = ShortTime.Now.AddSeconds(10);
-                    MessageSuppressionIndication.Publish($"Message Suppression Is Occurring To: '{ m_owner.TypeName }' {m_messagesSuppressed.ToString()} total messages have been suppressed.", m_owner.ToString());
+                    MessageSuppressionIndication.Publish($"Message Suppression Is Occurring To: '{ m_owner.TypeData.TypeName }' {m_messagesSuppressed.ToString()} total messages have been suppressed.", m_owner.ToString());
                 }
 
                 attributes += suppressionFlags;

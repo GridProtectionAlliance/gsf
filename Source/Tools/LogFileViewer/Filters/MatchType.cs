@@ -39,7 +39,7 @@ namespace LogFileViewer.Filters
 
         public MatchType(LogMessage typeName)
         {
-            m_typeName = typeName.EventPublisherDetails.TypeName;
+            m_typeName = typeName.TypeName;
             m_class = typeName.Classification;
             m_level = typeName.Level;
         }
@@ -82,11 +82,11 @@ namespace LogFileViewer.Filters
         {
             if (m_typeAndLevel)
             {
-                if (log.EventPublisherDetails.TypeName == m_typeName && log.Classification == m_class && log.Level == m_level)
+                if (log.TypeName == m_typeName && log.Classification == m_class && log.Level == m_level)
                     return m_includeIfMatched;
                 return !m_includeIfMatched;
             }
-            if (log.EventPublisherDetails.TypeName == m_typeName)
+            if (log.TypeName == m_typeName)
                 return m_includeIfMatched;
             return !m_includeIfMatched;
         }

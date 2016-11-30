@@ -25,8 +25,10 @@
 using System;
 using System.Data;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Threading;
+using GSF.Immutable;
 using GSF.IO;
 
 namespace GSF.Diagnostics
@@ -90,6 +92,26 @@ namespace GSF.Diagnostics
         /// The suppression level assigned to this log message
         /// </summary>
         public MessageSuppression MessageSuppression => LogMessageAttributes.MessageSuppression;
+
+        /// <summary>
+        /// The <see cref="Type"/> associated with <see cref="LogPublisher"/> that generated the message.
+        /// </summary>
+        public string TypeName => EventPublisherDetails.TypeData.TypeName;
+
+        /// <summary>
+        /// The <see cref="Assembly"/> associated with <see cref="LogPublisher"/> that generated the message.
+        /// </summary>
+        public string AssemblyName => EventPublisherDetails.TypeData.AssemblyName;
+
+        /// <summary>
+        /// All related types such as interfaces/parent classes for the current type.
+        /// </summary>
+        public ImmutableList<string> RelatedTypes => EventPublisherDetails.TypeData.RelatedTypes;
+
+        /// <summary>
+        /// The event name of this log message.
+        /// </summary>
+        public string EventName => EventPublisherDetails.EventName;
 
         internal readonly LogMessageAttributes LogMessageAttributes;
 
@@ -170,6 +192,20 @@ namespace GSF.Diagnostics
                     ExceptionString = stream.ReadString();
                     ManagedThreadID = stream.ReadInt32();
                     break;
+                case 3:
+                    EventPublisherDetails = saveHelper.LoadEventPublisherDetails(stream);
+                    InitialStackMessages = saveHelper.LoadStackMessages(stream);
+                    InitialStackTrace = saveHelper.LoadStackTrace(stream);
+                    CurrentStackMessages = saveHelper.LoadStackMessages(stream);
+                    CurrentStackTrace = saveHelper.LoadStackTrace(stream);
+                    UtcTime = stream.ReadDateTime();
+                    LogMessageAttributes = new LogMessageAttributes(stream);
+                    Message = saveHelper.LoadString(stream);
+                    Details = saveHelper.LoadString(stream);
+                    Exception = null;
+                    ExceptionString = saveHelper.LoadString(stream);
+                    ManagedThreadID = stream.ReadInt32();
+                    break;
                 default:
                     throw new VersionNotFoundException();
             }
@@ -223,7 +259,7 @@ namespace GSF.Diagnostics
             if (saveHelper == null)
                 saveHelper = LogMessageSaveHelper.Create(true);
 
-            stream.Write((byte)2);
+            stream.Write((byte)3);
             saveHelper.SaveEventPublisherDetails(stream, EventPublisherDetails);
             saveHelper.SaveStackMessages(stream, InitialStackMessages);
             saveHelper.SaveStackTrace(stream, InitialStackTrace);
@@ -231,9 +267,9 @@ namespace GSF.Diagnostics
             saveHelper.SaveStackTrace(stream, CurrentStackTrace);
             stream.Write(UtcTime);
             LogMessageAttributes.Save(stream);
-            stream.Write(Message);
-            stream.Write(Details);
-            stream.Write(ExceptionString);
+            saveHelper.SaveString(stream, Message);
+            saveHelper.SaveString(stream, Details);
+            saveHelper.SaveString(stream, ExceptionString);
             stream.Write(ManagedThreadID);
         }
 
@@ -272,13 +308,13 @@ namespace GSF.Diagnostics
                 sb.AppendLine("Exception: ");
                 sb.AppendLine(ExceptionString);
             }
-            if (EventPublisherDetails.TypeName.Length > 0)
+            if (EventPublisherDetails.TypeData.TypeName.Length > 0)
             {
-                sb.AppendLine("Message Type: " + EventPublisherDetails.TypeName);
+                sb.AppendLine("Message Type: " + EventPublisherDetails.TypeData.TypeName);
             }
-            if (EventPublisherDetails.AssemblyName.Length > 0)
+            if (EventPublisherDetails.TypeData.AssemblyName.Length > 0)
             {
-                sb.AppendLine("Message Assembly: " + EventPublisherDetails.AssemblyName);
+                sb.AppendLine("Message Assembly: " + EventPublisherDetails.TypeData.AssemblyName);
             }
 
             if (!ReferenceEquals(InitialStackMessages, LogStackMessages.Empty))
