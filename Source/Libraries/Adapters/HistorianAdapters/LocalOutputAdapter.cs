@@ -208,6 +208,11 @@ namespace HistorianAdapters
         }
 
         /// <summary>
+        /// Gets connection info for adapter, if any.
+        /// </summary>
+        public override string ConnectionInfo => $"{InstanceName} [{ArchivePath}]";
+
+        /// <summary>
         /// Returns a flag that determines if measurements sent to this <see cref="LocalOutputAdapter"/> are destined for archival.
         /// </summary>
         public override bool OutputIsForArchive => true;

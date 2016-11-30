@@ -94,6 +94,17 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
+        /// Gets connection info for adapter, if any.
+        /// </summary>
+        /// <remarks>
+        /// For example, this could return IP or host name of source connection.
+        /// </remarks>
+        string ConnectionInfo
+        {
+            get;
+        }
+
+        /// <summary>
         /// Gets settings <see cref="Dictionary{TKey,TValue}"/> parsed when <see cref="ConnectionString"/> was assigned.
         /// </summary>
         Dictionary<string, string> Settings

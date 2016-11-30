@@ -241,6 +241,8 @@ namespace GSF.TimeSeries.Adapters
             }
         }
 
+        string IAdapter.ConnectionInfo => null;
+
         /// <summary>
         /// Gets or sets <see cref="DataSet"/> based data source used to load each <see cref="IAdapter"/>.
         /// Updates to this property will cascade to all items in this <see cref="AdapterCollectionBase{T}"/>.

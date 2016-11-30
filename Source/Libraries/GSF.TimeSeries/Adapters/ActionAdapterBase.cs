@@ -244,6 +244,14 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
+        /// Gets connection info for adapter, if any.
+        /// </summary>
+        /// <remarks>
+        /// For example, this could return IP or host name of source connection.
+        /// </remarks>
+        public virtual string ConnectionInfo => null;
+
+        /// <summary>
         /// Gets or sets <see cref="DataSet"/> based data source available to this <see cref="ActionAdapterBase"/>.
         /// </summary>
         public virtual DataSet DataSource

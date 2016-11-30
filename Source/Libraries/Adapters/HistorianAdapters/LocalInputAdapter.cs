@@ -130,6 +130,11 @@ namespace HistorianAdapters
         }
 
         /// <summary>
+        /// Gets connection info for adapter, if any.
+        /// </summary>
+        public override string ConnectionInfo => $"{InstanceName} [{ArchiveLocation}]";
+
+        /// <summary>
         /// Gets or sets archive offload path for this <see cref="LocalInputAdapter"/>.
         /// </summary>
         [ConnectionStringParameter,

@@ -550,125 +550,6 @@ namespace PhasorProtocolAdapters
         public override bool SupportsTemporalProcessing => false;
 
         /// <summary>
-        /// Returns the detailed status of the data input source.
-        /// </summary>
-        public override string Status
-        {
-            get
-            {
-                StringBuilder status = new StringBuilder();
-
-                status.Append(base.Status);
-                status.AppendFormat("    Source is concentrator: {0}", m_isConcentrator);
-                status.AppendLine();
-                if (!string.IsNullOrWhiteSpace(SharedMapping))
-                {
-                    status.AppendFormat("     Shared mapping source: {0}", SharedMapping);
-                    status.AppendLine();
-                }
-                status.AppendFormat(" Source connection ID code: {0}", m_accessID);
-                status.AppendLine();
-                status.AppendFormat("     Forcing label mapping: {0}", m_forceLabelMapping);
-                status.AppendLine();
-                status.AppendFormat("      Label mapped devices: {0}", (object)m_labelDefinedDevices == null ? 0 : m_labelDefinedDevices.Count);
-                status.AppendLine();
-                status.AppendFormat("          Target time zone: {0}", m_timezone.Id);
-                status.AppendLine();
-                status.AppendFormat("    Manual time adjustment: {0} seconds", m_timeAdjustmentTicks.ToSeconds().ToString("0.000"));
-                status.AppendLine();
-                status.AppendFormat("Allow use of cached config: {0}", m_allowUseOfCachedConfiguration);
-                status.AppendLine();
-                status.AppendFormat("No data reconnect interval: {0} seconds", Ticks.FromMilliseconds(m_dataStreamMonitor.Interval).ToSeconds().ToString("0.000"));
-                status.AppendLine();
-
-                if (m_allowUseOfCachedConfiguration)
-                {
-                    //                   123456789012345678901234567890
-                    status.AppendFormat("   Cached config file name: {0}", FilePath.TrimFileName(ConfigurationCacheFileName, 51));
-                    status.AppendLine();
-                }
-
-                status.AppendFormat("       Out of order frames: {0}", m_outOfOrderFrames);
-                status.AppendLine();
-                status.AppendFormat("           Minimum latency: {0}ms over {1} tests", MinimumLatency, m_latencyFrames);
-                status.AppendLine();
-                status.AppendFormat("           Maximum latency: {0}ms over {1} tests", MaximumLatency, m_latencyFrames);
-                status.AppendLine();
-                status.AppendFormat("           Average latency: {0}ms over {1} tests", AverageLatency, m_latencyFrames);
-                status.AppendLine();
-
-                if ((object)m_frameParser != null)
-                    status.Append(m_frameParser.Status);
-
-                status.AppendLine();
-                status.Append("Parsed Frame Quality Statistics".CenterText(78));
-                status.AppendLine();
-                status.AppendLine();
-                //                      1         2         3         4         5         6         7
-                //             123456789012345678901234567890123456789012345678901234567890123456789012345678
-                status.Append("Device                  Bad Data   Bad Time    Frame      Total    Last Report");
-                status.AppendLine();
-                status.Append(" Name                    Frames     Frames     Errors     Frames      Time");
-                status.AppendLine();
-                //                      1         2            1          1          1          1          1
-                //             1234567890123456789012 1234567890 1234567890 1234567890 1234567890 123456789012
-                status.Append("---------------------- ---------- ---------- ---------- ---------- ------------");
-                status.AppendLine();
-
-                IConfigurationCell parsedDevice;
-                string stationName;
-
-                foreach (ConfigurationCell definedDevice in DefinedDevices)
-                {
-                    stationName = null;
-
-                    // Attempt to lookup station name in configuration frame of connected device
-                    if ((object)m_frameParser != null && (object)m_frameParser.ConfigurationFrame != null)
-                    {
-                        // Attempt to lookup by label (if defined), then by ID code
-                        if (((object)m_labelDefinedDevices != null && (object)definedDevice.StationName != null &&
-                            m_frameParser.ConfigurationFrame.Cells.TryGetByStationName(definedDevice.StationName, out parsedDevice)) ||
-                            m_frameParser.ConfigurationFrame.Cells.TryGetByIDCode(definedDevice.IDCode, out parsedDevice))
-                            stationName = parsedDevice.StationName;
-                    }
-
-                    // We will default to defined name if parsed name is unavailable
-                    if (string.IsNullOrWhiteSpace(stationName))
-                        stationName = "[" + definedDevice.StationName.NotEmpty(definedDevice.IDLabel.NotEmpty("UNDEF") + ":" + definedDevice.IDCode) + "]";
-
-                    status.Append(stationName.TruncateRight(22).PadRight(22));
-                    status.Append(' ');
-                    status.Append(definedDevice.DataQualityErrors.ToString().CenterText(10));
-                    status.Append(' ');
-                    status.Append(definedDevice.TimeQualityErrors.ToString().CenterText(10));
-                    status.Append(' ');
-                    status.Append(definedDevice.DeviceErrors.ToString().CenterText(10));
-                    status.Append(' ');
-                    status.Append(definedDevice.TotalFrames.ToString().CenterText(10));
-                    status.Append(' ');
-                    status.Append(((DateTime)definedDevice.LastReportTime).ToString("HH:mm:ss.fff"));
-                    status.AppendLine();
-                }
-
-                status.AppendLine();
-                status.AppendFormat("Undefined devices encountered: {0}", m_undefinedDevices.Count);
-                status.AppendLine();
-
-                foreach (KeyValuePair<string, long> item in m_undefinedDevices)
-                {
-                    status.Append("    Device \"");
-                    status.Append(item.Key);
-                    status.Append("\" encountered ");
-                    status.Append(item.Value);
-                    status.Append(" times");
-                    status.AppendLine();
-                }
-
-                return status.ToString();
-            }
-        }
-
-        /// <summary>
         /// Gets or sets reference to <see cref="MultiProtocolFrameParser"/>, attaching and/or detaching to events as needed.
         /// </summary>
         protected MultiProtocolFrameParser FrameParser
@@ -805,7 +686,126 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets connection info for adapter, if any.
         /// </summary>
-        public override string ConnectionInfo => m_frameParser?.SourceConnection;
+        public override string ConnectionInfo => m_frameParser?.ConnectionInfo;
+
+        /// <summary>
+        /// Returns the detailed status of the data input source.
+        /// </summary>
+        public override string Status
+        {
+            get
+            {
+                StringBuilder status = new StringBuilder();
+
+                status.Append(base.Status);
+                status.AppendFormat("    Source is concentrator: {0}", m_isConcentrator);
+                status.AppendLine();
+                if (!string.IsNullOrWhiteSpace(SharedMapping))
+                {
+                    status.AppendFormat("     Shared mapping source: {0}", SharedMapping);
+                    status.AppendLine();
+                }
+                status.AppendFormat(" Source connection ID code: {0}", m_accessID);
+                status.AppendLine();
+                status.AppendFormat("     Forcing label mapping: {0}", m_forceLabelMapping);
+                status.AppendLine();
+                status.AppendFormat("      Label mapped devices: {0}", (object)m_labelDefinedDevices == null ? 0 : m_labelDefinedDevices.Count);
+                status.AppendLine();
+                status.AppendFormat("          Target time zone: {0}", m_timezone.Id);
+                status.AppendLine();
+                status.AppendFormat("    Manual time adjustment: {0} seconds", m_timeAdjustmentTicks.ToSeconds().ToString("0.000"));
+                status.AppendLine();
+                status.AppendFormat("Allow use of cached config: {0}", m_allowUseOfCachedConfiguration);
+                status.AppendLine();
+                status.AppendFormat("No data reconnect interval: {0} seconds", Ticks.FromMilliseconds(m_dataStreamMonitor.Interval).ToSeconds().ToString("0.000"));
+                status.AppendLine();
+
+                if (m_allowUseOfCachedConfiguration)
+                {
+                    //                   123456789012345678901234567890
+                    status.AppendFormat("   Cached config file name: {0}", FilePath.TrimFileName(ConfigurationCacheFileName, 51));
+                    status.AppendLine();
+                }
+
+                status.AppendFormat("       Out of order frames: {0}", m_outOfOrderFrames);
+                status.AppendLine();
+                status.AppendFormat("           Minimum latency: {0}ms over {1} tests", MinimumLatency, m_latencyFrames);
+                status.AppendLine();
+                status.AppendFormat("           Maximum latency: {0}ms over {1} tests", MaximumLatency, m_latencyFrames);
+                status.AppendLine();
+                status.AppendFormat("           Average latency: {0}ms over {1} tests", AverageLatency, m_latencyFrames);
+                status.AppendLine();
+
+                if ((object)m_frameParser != null)
+                    status.Append(m_frameParser.Status);
+
+                status.AppendLine();
+                status.Append("Parsed Frame Quality Statistics".CenterText(78));
+                status.AppendLine();
+                status.AppendLine();
+                //                      1         2         3         4         5         6         7
+                //             123456789012345678901234567890123456789012345678901234567890123456789012345678
+                status.Append("Device                  Bad Data   Bad Time    Frame      Total    Last Report");
+                status.AppendLine();
+                status.Append(" Name                    Frames     Frames     Errors     Frames      Time");
+                status.AppendLine();
+                //                      1         2            1          1          1          1          1
+                //             1234567890123456789012 1234567890 1234567890 1234567890 1234567890 123456789012
+                status.Append("---------------------- ---------- ---------- ---------- ---------- ------------");
+                status.AppendLine();
+
+                IConfigurationCell parsedDevice;
+                string stationName;
+
+                foreach (ConfigurationCell definedDevice in DefinedDevices)
+                {
+                    stationName = null;
+
+                    // Attempt to lookup station name in configuration frame of connected device
+                    if ((object)m_frameParser != null && (object)m_frameParser.ConfigurationFrame != null)
+                    {
+                        // Attempt to lookup by label (if defined), then by ID code
+                        if (((object)m_labelDefinedDevices != null && (object)definedDevice.StationName != null &&
+                            m_frameParser.ConfigurationFrame.Cells.TryGetByStationName(definedDevice.StationName, out parsedDevice)) ||
+                            m_frameParser.ConfigurationFrame.Cells.TryGetByIDCode(definedDevice.IDCode, out parsedDevice))
+                            stationName = parsedDevice.StationName;
+                    }
+
+                    // We will default to defined name if parsed name is unavailable
+                    if (string.IsNullOrWhiteSpace(stationName))
+                        stationName = "[" + definedDevice.StationName.NotEmpty(definedDevice.IDLabel.NotEmpty("UNDEF") + ":" + definedDevice.IDCode) + "]";
+
+                    status.Append(stationName.TruncateRight(22).PadRight(22));
+                    status.Append(' ');
+                    status.Append(definedDevice.DataQualityErrors.ToString().CenterText(10));
+                    status.Append(' ');
+                    status.Append(definedDevice.TimeQualityErrors.ToString().CenterText(10));
+                    status.Append(' ');
+                    status.Append(definedDevice.DeviceErrors.ToString().CenterText(10));
+                    status.Append(' ');
+                    status.Append(definedDevice.TotalFrames.ToString().CenterText(10));
+                    status.Append(' ');
+                    status.Append(((DateTime)definedDevice.LastReportTime).ToString("HH:mm:ss.fff"));
+                    status.AppendLine();
+                }
+
+                status.AppendLine();
+                status.AppendFormat("Undefined devices encountered: {0}", m_undefinedDevices.Count);
+                status.AppendLine();
+
+                foreach (KeyValuePair<string, long> item in m_undefinedDevices)
+                {
+                    status.Append("    Device \"");
+                    status.Append(item.Key);
+                    status.Append("\" encountered ");
+                    status.Append(item.Value);
+                    status.Append(" times");
+                    status.AppendLine();
+                }
+
+                return status.ToString();
+            }
+        }
 
         #endregion
 
@@ -2122,7 +2122,7 @@ namespace PhasorProtocolAdapters
             Exception ex = e.Argument1;
 
             if (EnableConnectionErrors)
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Connection attempt failed for {m_frameParser.SourceConnection}: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Connection attempt failed for {ConnectionInfo}: {ex.Message}", ex));
 
             // So long as user hasn't requested to stop, keep trying connection
             if (Enabled)

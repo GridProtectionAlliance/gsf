@@ -2337,7 +2337,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets a string representing connectivity information.
         /// </summary>
-        public string SourceConnection
+        public string ConnectionInfo
         {
             get
             {
@@ -2348,7 +2348,7 @@ namespace GSF.PhasorProtocols
                 string dataChannelServerUri = DataChannelServerUri;
 
                 if ((object)commandChannelServerUri == null && (object)dataChannelServerUri == null)
-                    return "";
+                    return null;
 
                 if ((object)dataChannelServerUri == null)
                     return commandChannelServerUri;
@@ -2590,7 +2590,7 @@ namespace GSF.PhasorProtocols
                     status.Append(" - Multicast");
 
                 status.AppendLine();
-                status.AppendFormat("         Source Connection: {0}", SourceConnection);
+                status.AppendFormat("         Source Connection: {0}", ConnectionInfo);
                 status.AppendLine();
                 status.AppendFormat("               Buffer size: {0}", m_bufferSize);
                 status.AppendLine();

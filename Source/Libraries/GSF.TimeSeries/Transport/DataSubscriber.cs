@@ -1117,6 +1117,26 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Gets connection info for adapter, if any.
+        /// </summary>
+        public override string ConnectionInfo
+        {
+            get
+            {
+                string commandChannelServerUri = m_commandChannel?.ServerUri;
+                string dataChannelServerUri = m_dataChannel?.ServerUri;
+
+                if ((object)commandChannelServerUri == null && (object)dataChannelServerUri == null)
+                    return null;
+
+                if ((object)dataChannelServerUri == null)
+                    return commandChannelServerUri;
+
+                return $"{commandChannelServerUri} / {dataChannelServerUri}";
+            }
+        }
+
+        /// <summary>
         /// Gets the status of this <see cref="DataSubscriber"/>.
         /// </summary>
         /// <remarks>
