@@ -463,7 +463,7 @@ namespace GSF.EMAX
                         .Select(i => (i + 1 < buffer.Length) ? LittleEndian.ToUInt16(buffer, i) : ushort.MaxValue)
                         .ToArray();
 
-                    ParseTimestamp(clockWords);
+                    m_timestamp = ParseTimestamp(clockWords);
                 }
 
                 index += 4 * sizeof(ushort);
