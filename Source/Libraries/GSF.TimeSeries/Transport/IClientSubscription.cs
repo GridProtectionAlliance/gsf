@@ -119,15 +119,6 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Gets or sets host name used to identify connection source of client subscription.
-        /// </summary>
-        string HostName
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// Gets the status of the active temporal session, if any.
         /// </summary>
         string TemporalSessionStatus
@@ -209,7 +200,7 @@ namespace GSF.TimeSeries.Transport
 
             // Create a new Iaon session
             session = new IaonSession();
-            session.Name = "<" + clientSubscription.HostName.ToNonNullString("unavailable") + ">@" + clientSubscription.StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss");
+            session.Name = "<" + clientSubscription.Name.ToNonNullString("unavailable") + ">@" + clientSubscription.StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss");
 
             // Assign requested input measurement keys as a routing restriction
             session.InputMeasurementKeysRestriction = inputMeasurementKeys;
@@ -240,7 +231,7 @@ namespace GSF.TimeSeries.Transport
             statusMessageHandler(null, new EventArgs<string, UpdateType>(
                 // ReSharper disable once UseStringInterpolation
                 string.Format("Initializing temporal session for host \"{0}\" spanning {1} to {2} processing data {3}...",
-                    clientSubscription.HostName.ToNonNullString("unknown"),
+                    clientSubscription.Name.ToNonNullString("unknown"),
                     clientSubscription.StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"),
                     clientSubscription.StopTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"),
                     clientSubscription.ProcessingInterval == 0 ? "as fast as possible" :

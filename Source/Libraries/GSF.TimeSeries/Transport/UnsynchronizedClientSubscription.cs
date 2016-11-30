@@ -66,7 +66,6 @@ namespace GSF.TimeSeries.Transport
         private readonly Guid m_clientID;
         private readonly Guid m_subscriberID;
         private DataPublisher m_parent;
-        private string m_hostName;
         private volatile byte m_compressionStrength;
         private volatile bool m_usePayloadCompression;
         private volatile bool m_useCompactMeasurementFormat;
@@ -121,6 +120,23 @@ namespace GSF.TimeSeries.Transport
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets name of the action adapter.
+        /// </summary>
+        public override string Name
+        {
+            get
+            {
+                return base.Name;
+            }
+
+            set
+            {
+                base.Name = value;
+                Log.InitialStackMessages = new LogStackMessages("AdapterName", GetType().Name, "HostName", value);
+            }
+        }
 
         /// <summary>
         /// Gets the <see cref="Guid"/> client TCP connection identifier of this <see cref="UnsynchronizedClientSubscription"/>.
@@ -213,21 +229,6 @@ namespace GSF.TimeSeries.Transport
                     return 8;
 
                 return !m_useMillisecondResolution ? 4 : 2;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets host name used to identify connection source of client subscription.
-        /// </summary>
-        public string HostName
-        {
-            get
-            {
-                return m_hostName;
-            }
-            set
-            {
-                m_hostName = value;
             }
         }
 

@@ -471,7 +471,7 @@ namespace GSF.TimeSeries.Transport
                 m_subscription = value;
 
                 if ((object)m_subscription != null)
-                    m_subscription.HostName = m_hostName;
+                    m_subscription.Name = m_hostName;
             }
         }
 

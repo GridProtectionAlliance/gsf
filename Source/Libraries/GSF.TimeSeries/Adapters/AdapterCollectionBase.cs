@@ -129,7 +129,7 @@ namespace GSF.TimeSeries.Adapters
         {
             Log = Logger.CreatePublisher(GetType(), MessageClass.Application);
             m_name = GetType().Name;
-            Log.InitialStackMessages = new LogStackMessages("AdpaterName", m_name);
+            Log.InitialStackMessages = new LogStackMessages("AdapterName", m_name);
             m_settings = new Dictionary<string, string>();
             m_startTimeConstraint = DateTime.MinValue;
             m_stopTimeConstraint = DateTime.MaxValue;
@@ -186,7 +186,7 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 m_name = value;
-                Log.InitialStackMessages = new LogStackMessages("AdapterName", m_name, "CollectionType", typeof(T).Name);
+                Log.InitialStackMessages = new LogStackMessages("AdapterName", m_name);
             }
         }
 
