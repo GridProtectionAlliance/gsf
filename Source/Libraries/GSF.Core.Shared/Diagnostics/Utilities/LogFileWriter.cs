@@ -78,6 +78,11 @@ namespace GSF.Diagnostics
         public int LogCount => m_logCount;
 
         /// <summary>
+        /// The current size of the log file.
+        /// </summary>
+        public long LogSize => m_stream?.Length ?? 0;
+
+        /// <summary>
         /// Writes the specified log to the file
         /// </summary>
         /// <param name="log"></param>

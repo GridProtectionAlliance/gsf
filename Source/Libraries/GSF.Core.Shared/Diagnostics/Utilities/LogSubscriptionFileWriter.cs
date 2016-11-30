@@ -54,6 +54,9 @@ namespace GSF.Diagnostics
         private int m_maxFileCount;
         private Stopwatch m_fileAge = new Stopwatch();
         private ScheduledTask m_flushTask;
+        //A number that increments every time the service has restarted. This will help to identify order and when the service last restarted
+        private int m_fileSequenceNumber;
+        private string m_processName;
 
         /// <summary>
         /// Creates a LogFileWriter that initially queues message
@@ -61,6 +64,8 @@ namespace GSF.Diagnostics
         /// <param name="messageLimit">the number of messages to maintain</param>
         public LogSubscriptionFileWriter(int messageLimit)
         {
+            m_processName = Process.GetCurrentProcess().ProcessName;
+            m_fileSequenceNumber = 1;
             m_syncRoot = new object();
             m_maxQueue = messageLimit;
             m_messageQueue = new ConcurrentQueue<LogMessage>();
@@ -168,7 +173,9 @@ namespace GSF.Diagnostics
 
         private void WriteLogMessage(LogMessage log)
         {
-            if (m_writer != null && (m_writer.LogCount >= 10000 || m_fileAge.Elapsed.TotalHours > 12))
+            //Rollover a file if over 500KB in size, over 50000 records, or older than 12 hours.
+            //Ideally, 500KB will always come first.
+            if (m_writer != null && (m_writer.LogSize > 500 * 1024 || m_writer.LogCount >= 50000 || m_fileAge.Elapsed.TotalHours > 12))
             {
                 string fileName = m_writer.FileName;
                 m_writer.Dispose();
@@ -198,7 +205,9 @@ namespace GSF.Diagnostics
                 catch (Exception)
                 {
                 }
-                var fileName = Path.Combine(m_path, DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-ffffff") + ".logz");
+                string file = $"{DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-ffffff")} - {m_processName} - {m_fileSequenceNumber}.logz";
+                m_fileSequenceNumber++;
+                var fileName = Path.Combine(m_path, file);
                 m_writer = new LogFileWriter(fileName);
             }
 
