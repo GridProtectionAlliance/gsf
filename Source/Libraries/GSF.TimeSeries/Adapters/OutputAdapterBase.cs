@@ -580,7 +580,7 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         protected virtual void OnDisconnected()
         {
-            OnStatusMessage(MessageLevel.Info, "Disconnected.");
+            OnStatusMessage(MessageLevel.Info, $"Disconnected{((object)ConnectionInfo == null ? "" : "from " + ConnectionInfo)}.");
         }
 
         /// <summary>
@@ -704,7 +704,7 @@ namespace GSF.TimeSeries.Adapters
                 // So long as user hasn't requested to stop, attempt connection
                 if (Enabled)
                 {
-                    OnStatusMessage(MessageLevel.Info, "Attempting connection...");
+                    OnStatusMessage(MessageLevel.Info, $"Attempting connection{((object)ConnectionInfo == null ? "" : " to " + ConnectionInfo)}...");
 
                     // Attempt connection to data output adapter (e.g., call historian API connect function).
                     AttemptConnection();
@@ -715,7 +715,7 @@ namespace GSF.TimeSeries.Adapters
             }
             catch (Exception ex)
             {
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Connection attempt failed: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Connection attempt failed{((object)ConnectionInfo == null ? "" : " for " + ConnectionInfo)}: {ex.Message}", ex));
 
                 // So long as user hasn't requested to stop, keep trying connection
                 if (Enabled)

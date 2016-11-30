@@ -802,6 +802,11 @@ namespace PhasorProtocolAdapters
             }
         }
 
+        /// <summary>
+        /// Gets connection info for adapter, if any.
+        /// </summary>
+        public override string ConnectionInfo => m_frameParser?.SourceConnection;
+
         #endregion
 
         #region [ Methods ]
@@ -2117,7 +2122,7 @@ namespace PhasorProtocolAdapters
             Exception ex = e.Argument1;
 
             if (EnableConnectionErrors)
-                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Connection attempt failed: {ex.Message}", ex));
+                OnProcessException(MessageLevel.Info, new InvalidOperationException($"Connection attempt failed for {m_frameParser.SourceConnection}: {ex.Message}", ex));
 
             // So long as user hasn't requested to stop, keep trying connection
             if (Enabled)
@@ -2141,7 +2146,7 @@ namespace PhasorProtocolAdapters
 
         private void m_frameParser_ConnectionAttempt(object sender, EventArgs e)
         {
-            OnStatusMessage(MessageLevel.Info, $"Initiating {m_frameParser.PhasorProtocol.GetFormattedProtocolName()} {m_frameParser.TransportProtocol.ToString().ToUpper()} based connection...");
+            OnStatusMessage(MessageLevel.Info, $"Initiating {m_frameParser.PhasorProtocol.GetFormattedProtocolName()} protocol connection...");
             m_connectionAttempts++;
         }
 

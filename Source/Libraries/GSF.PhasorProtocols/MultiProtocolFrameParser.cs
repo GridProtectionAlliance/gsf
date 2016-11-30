@@ -418,13 +418,7 @@ namespace GSF.PhasorProtocols
             /// <summary>
             /// Gets the <see cref="TransportProtocol"/> used by the server for the transportation of data with the clients.
             /// </summary>
-            public TransportProtocol TransportProtocol
-            {
-                get
-                {
-                    return TransportProtocol.Tcp;
-                }
-            }
+            public TransportProtocol TransportProtocol => TransportProtocol.Tcp;
 
             /// <summary>
             /// Gets the server's ID.
@@ -492,13 +486,7 @@ namespace GSF.PhasorProtocols
             /// <summary>
             /// Gets a flag that indicates whether the object has been disposed.
             /// </summary>
-            public bool IsDisposed
-            {
-                get
-                {
-                    return m_disposed;
-                }
-            }
+            public bool IsDisposed => m_disposed;
 
             #endregion
 
@@ -1087,13 +1075,7 @@ namespace GSF.PhasorProtocols
             /// <summary>
             /// Gets the <see cref="TransportProtocol"/> used by the client for the transportation of data with the server.
             /// </summary>
-            public TransportProtocol TransportProtocol
-            {
-                get
-                {
-                    return TransportProtocol.Udp;
-                }
-            }
+            public TransportProtocol TransportProtocol => TransportProtocol.Udp;
 
             /// <summary>
             /// Gets or sets a boolean value that indicates whether the client is currently enabled.
@@ -1121,13 +1103,7 @@ namespace GSF.PhasorProtocols
             /// <summary>
             /// Gets a flag that indicates whether the object has been disposed.
             /// </summary>
-            public bool IsDisposed
-            {
-                get
-                {
-                    return m_disposed;
-                }
-            }
+            public bool IsDisposed => m_disposed;
 
             /// <summary>
             /// Gets the unique identifier of the client.
@@ -1170,13 +1146,7 @@ namespace GSF.PhasorProtocols
             /// <summary>
             /// Gets the <see cref="TransportStatistics"/> for the client connection.
             /// </summary>
-            public TransportStatistics Statistics
-            {
-                get
-                {
-                    return m_udpClient.Statistics;
-                }
-            }
+            public TransportStatistics Statistics => m_udpClient.Statistics;
 
             /// <summary>
             /// Gets the descriptive status of the client.
@@ -2178,7 +2148,7 @@ namespace GSF.PhasorProtocols
         {
             get
             {
-                return ((object)m_inputTimer != null);
+                return (object)m_inputTimer != null;
             }
             set
             {
@@ -2339,16 +2309,10 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets a flag that determines if the currently selected <see cref="PhasorProtocol"/> is an IEEE standard protocol.
         /// </summary>
-        public bool IsIEEEProtocol
-        {
-            get
-            {
-                return (m_phasorProtocol == PhasorProtocol.IEEEC37_118V2 ||
-                        m_phasorProtocol == PhasorProtocol.IEEEC37_118V1 ||
-                        m_phasorProtocol == PhasorProtocol.IEEEC37_118D6 ||
-                        m_phasorProtocol == PhasorProtocol.IEEE1344);
-            }
-        }
+        public bool IsIEEEProtocol => m_phasorProtocol == PhasorProtocol.IEEEC37_118V2 ||
+                                      m_phasorProtocol == PhasorProtocol.IEEEC37_118V1 ||
+                                      m_phasorProtocol == PhasorProtocol.IEEEC37_118D6 ||
+                                      m_phasorProtocol == PhasorProtocol.IEEE1344;
 
         /// <summary>
         /// Gets a flag that determines if the currently selected <see cref="TransportProtocol"/> is connected.
@@ -2358,17 +2322,50 @@ namespace GSF.PhasorProtocols
             get
             {
                 if ((object)m_commandChannel != null && m_keepCommandChannelOpen)
-                    return (m_commandChannel.CurrentState == ClientState.Connected);
+                    return m_commandChannel.CurrentState == ClientState.Connected;
 
                 if ((object)m_dataChannel != null)
-                    return (m_dataChannel.CurrentState == ClientState.Connected);
+                    return m_dataChannel.CurrentState == ClientState.Connected;
 
                 if ((object)m_serverBasedDataChannel != null)
-                    return (m_serverBasedDataChannel.ClientIDs.Length > 0);
+                    return m_serverBasedDataChannel.ClientIDs.Length > 0;
 
                 return false;
             }
         }
+
+        /// <summary>
+        /// Gets a string representing connectivity information.
+        /// </summary>
+        public string SourceConnection
+        {
+            get
+            {
+                if ((object)m_serverBasedDataChannel != null)
+                    return $"{m_serverBasedDataChannel.TransportProtocol} Server";
+
+                string commandChannelServerUri = CommandChannelServerUri;
+                string dataChannelServerUri = DataChannelServerUri;
+
+                if ((object)commandChannelServerUri == null && (object)dataChannelServerUri == null)
+                    return "";
+
+                if ((object)dataChannelServerUri == null)
+                    return commandChannelServerUri;
+
+                return $"{commandChannelServerUri} / {dataChannelServerUri}";
+            }
+        }
+
+        /// <summary>
+        /// Gets the server URI of the command channel connection, or <c>null</c> if not connected.
+        /// </summary>
+        public string CommandChannelServerUri => m_commandChannel?.ServerUri;
+
+        /// <summary>
+        /// Gets the server URI of the data channel connection, or <c>null</c> if not connected.
+        /// </summary>
+        public string DataChannelServerUri => m_dataChannel?.ServerUri;
 
         /// <summary>
         /// Gets flag that determines if the connection type is multicast.
@@ -2477,24 +2474,12 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the total number of buffers that are currently queued for processing, if any.
         /// </summary>
-        public int QueuedBuffers
-        {
-            get
-            {
-                return (object)m_frameParser != null ? m_frameParser.QueuedBuffers : 0;
-            }
-        }
+        public int QueuedBuffers => (object)m_frameParser != null ? m_frameParser.QueuedBuffers : 0;
 
         /// <summary>
         /// Gets the total number of frames that are currently queued for publication, if any.
         /// </summary>
-        public int QueuedOutputs
-        {
-            get
-            {
-                return (object)m_frameParser != null ? m_frameParser.QueuedOutputs : 0;
-            }
-        }
+        public int QueuedOutputs => (object)m_frameParser != null ? m_frameParser.QueuedOutputs : 0;
 
         /// <summary>
         /// Gets a boolean value that determines if data channel is defined as a server based connection.
@@ -2530,101 +2515,47 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets total number of frames that have been received from a device so far.
         /// </summary>
-        public long TotalFramesReceived
-        {
-            get
-            {
-                return m_totalFramesReceived;
-            }
-        }
+        public long TotalFramesReceived => m_totalFramesReceived;
 
         /// <summary>
         /// Gets total number of bytes that have been received from a device so far.
         /// </summary>
-        public long TotalBytesReceived
-        {
-            get
-            {
-                return m_totalBytesReceived;
-            }
-        }
+        public long TotalBytesReceived => m_totalBytesReceived;
 
         /// <summary>
         /// Gets total number of frames that were missing from device so far.
         /// </summary>
-        public long TotalMissingFrames
-        {
-            get
-            {
-                return m_totalMissingFrames;
-            }
-        }
+        public long TotalMissingFrames => m_totalMissingFrames;
 
         /// <summary>
         /// Gets total number of CRC exceptions encountered from device so far.
         /// </summary>
-        public long TotalCrcExceptions
-        {
-            get
-            {
-                return m_totalCrcExceptions;
-            }
-        }
+        public long TotalCrcExceptions => m_totalCrcExceptions;
 
         /// <summary>
         /// Gets the configured frame rate as reported by the connected device.
         /// </summary>
-        public int ConfiguredFrameRate
-        {
-            get
-            {
-                return m_configuredFrameRate;
-            }
-        }
+        public int ConfiguredFrameRate => m_configuredFrameRate;
 
         /// <summary>
         /// Gets the calculated frame rate (i.e., frames per second) based on data received from device connection.
         /// </summary>
-        public double CalculatedFrameRate
-        {
-            get
-            {
-                return m_calculatedFrameRate;
-            }
-        }
+        public double CalculatedFrameRate => m_calculatedFrameRate;
 
         /// <summary>
         /// Gets the calculated byte rate (i.e., bytes per second) based on data received from device connection.
         /// </summary>
-        public double ByteRate
-        {
-            get
-            {
-                return m_calculatedByteRate;
-            }
-        }
+        public double ByteRate => m_calculatedByteRate;
 
         /// <summary>
         /// Gets the calculated bit rate (i.e., bits per second (bps)) based on data received from device connection.
         /// </summary>
-        public double BitRate
-        {
-            get
-            {
-                return m_calculatedByteRate * 8.0D;
-            }
-        }
+        public double BitRate => m_calculatedByteRate * 8.0D;
 
         /// <summary>
         /// Gets the calculated megabits per second (Mbps) rate based on data received from device connection.
         /// </summary>
-        public double MegaBitRate
-        {
-            get
-            {
-                return BitRate / SI2.Mega;
-            }
-        }
+        public double MegaBitRate => BitRate / SI2.Mega;
 
         /// <summary>
         /// Gets a descriptive name for a device connection that includes <see cref="SourceName"/>, if provided.
@@ -2658,6 +2589,8 @@ namespace GSF.PhasorProtocols
                 if (ConnectionIsMulticast)
                     status.Append(" - Multicast");
 
+                status.AppendLine();
+                status.AppendFormat("         Source Connection: {0}", SourceConnection);
                 status.AppendLine();
                 status.AppendFormat("               Buffer size: {0}", m_bufferSize);
                 status.AppendLine();
@@ -3670,7 +3603,7 @@ namespace GSF.PhasorProtocols
                         Macrodyne.ConnectionParameters parameters = m_connectionParameters as Macrodyne.ConnectionParameters;
 
                         if ((object)parameters != null)
-                            sendCommand = (parameters.ProtocolVersion != ProtocolVersion.G);
+                            sendCommand = parameters.ProtocolVersion != ProtocolVersion.G;
 
                         if (sendCommand)
                             SendDeviceCommand(DeviceCommand.SendHeaderFrame);
@@ -3703,7 +3636,7 @@ namespace GSF.PhasorProtocols
 
             if (missingFrames > 0)
             {
-                m_totalMissingFrames += (missingFrames + m_missingFramesOverflow);
+                m_totalMissingFrames += missingFrames + m_missingFramesOverflow;
                 m_missingFramesOverflow = 0;
             }
             else
@@ -3753,7 +3686,7 @@ namespace GSF.PhasorProtocols
                 if (m_lastFrameReceivedTime > 0)
                 {
                     // To maintain timing on "frames per second", we wait for defined frame rate interval
-                    double sleepTime = (1.0D / m_definedFrameRate) - ((double)(DateTime.UtcNow.Ticks - m_lastFrameReceivedTime) / (double)Ticks.PerSecond);
+                    double sleepTime = 1.0D / m_definedFrameRate - (double)(DateTime.UtcNow.Ticks - m_lastFrameReceivedTime) / (double)Ticks.PerSecond;
 
                     // Thread sleep time is a minimum suggested sleep time depending on system activity, when not using high-resolution
                     // input timer we assume getting close is good enough
