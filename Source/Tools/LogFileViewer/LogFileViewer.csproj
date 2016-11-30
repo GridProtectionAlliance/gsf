@@ -83,6 +83,12 @@
     <Compile Include="InputBox.Designer.cs">
       <DependentUpon>InputBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="RelatedTypesFilter.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RelatedTypesFilter.Designer.cs">
+      <DependentUpon>RelatedTypesFilter.cs</DependentUpon>
+    </Compile>
     <Compile Include="ShowError.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -108,6 +114,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="InputBox.resx">
       <DependentUpon>InputBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RelatedTypesFilter.resx">
+      <DependentUpon>RelatedTypesFilter.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ShowError.resx">
       <DependentUpon>ShowError.cs</DependentUpon>
