@@ -181,6 +181,7 @@ namespace GSF.SELEventParser
             commaSeparatedEventReport.Header = new Header();
 
             int triggerIndex = 0;
+
             foreach (string line in lines)
             {
                 if (line.Split(',').Length > 11 && line.Split(',')[11].Contains(">"))
@@ -188,7 +189,6 @@ namespace GSF.SELEventParser
 
                 ++triggerIndex;    
             }
-
 
             while (!lines[index].ToUpper().Contains("SEL"))
                 ++index;
@@ -219,13 +219,15 @@ namespace GSF.SELEventParser
 
             while (!lines[index].ToUpper().Contains("IA"))
                 ++index;
+
             commaSeparatedEventReport.AnalogSection = new AnalogSection();
-            //commaSeparatedEventReport.AnalogSection.TimeChannel.Samples.Add(commaSeparatedEventReport.Header.EventTime);
+
             string[] fields = lines[index].Split(',');
+
             foreach (string name in fields)
             {
                 if(name.Length < 10 && (
-                    name.ToUpper().Contains("IA") || 
+                   name.ToUpper().Contains("IA") || 
                    name.ToUpper().Contains("IB") || 
                    name.ToUpper().Contains("IC") || 
                    name.ToUpper().Contains("IN") || 
@@ -239,7 +241,7 @@ namespace GSF.SELEventParser
                    ))
                 {
                     commaSeparatedEventReport.AnalogSection.AnalogChannels.Add(new Channel<double>());
-                    commaSeparatedEventReport.AnalogSection.AnalogChannels[commaSeparatedEventReport.AnalogSection.AnalogChannels.Count - 1].Name = name.Split('(')[0];
+                    commaSeparatedEventReport.AnalogSection.AnalogChannels[commaSeparatedEventReport.AnalogSection.AnalogChannels.Count - 1].Name = name.Split('(')[0].Trim('"');
                 }
             }
 
@@ -248,7 +250,7 @@ namespace GSF.SELEventParser
                 if(channel != "\"")
                 {
                     commaSeparatedEventReport.AnalogSection.DigitalChannels.Add(new Channel<bool>());
-                    commaSeparatedEventReport.AnalogSection.DigitalChannels[commaSeparatedEventReport.AnalogSection.DigitalChannels.Count - 1].Name = channel;
+                    commaSeparatedEventReport.AnalogSection.DigitalChannels[commaSeparatedEventReport.AnalogSection.DigitalChannels.Count - 1].Name = channel.Trim('"');
                 }
             }
 
@@ -258,6 +260,7 @@ namespace GSF.SELEventParser
             while (!lines[index].ToUpper().Contains("SETTINGS"))
             {
                 int diff = commaSeparatedEventReport.TriggerIndex - index - commaSeparatedEventReport.InitialReadingIndex;
+
                 commaSeparatedEventReport.AnalogSection.TimeChannel.Samples.Add(commaSeparatedEventReport.Header.EventTime.AddTicks(-1*timeStepTicks * diff));
                 commaSeparatedEventReport.AnalogSection.AnalogChannels[0].Samples.Add(Convert.ToDouble(lines[index].Split(',')[0])*(fields[0].ToUpper().Contains("KV")? 1000 : 1));
                 commaSeparatedEventReport.AnalogSection.AnalogChannels[1].Samples.Add(Convert.ToDouble(lines[index].Split(',')[1])*(fields[1].ToUpper().Contains("KV")? 1000 : 1));
@@ -273,12 +276,14 @@ namespace GSF.SELEventParser
 
                 string digitals = lines[index].Split(',')[12].Replace("\"", "");
                 int forEachIndex = 0;
+
                 foreach (Channel<bool> channel in commaSeparatedEventReport.AnalogSection.DigitalChannels)
                 {
 
                     channel.Samples.Add(Convert.ToString(Convert.ToInt32(digitals[forEachIndex/4].ToString(), 16), 2).PadLeft(4, '0')[forEachIndex%4] == '1');
                     ++forEachIndex;
                 }
+
                 ++index;
             }
 
@@ -286,6 +291,5 @@ namespace GSF.SELEventParser
         }
 
         #endregion
-
     }
 }
