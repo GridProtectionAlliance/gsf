@@ -1,5 +1,5 @@
 //******************************************************************************************************
-//  IMessageMatch.cs - Gbtc
+//  FilterMode.cs - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -21,20 +21,13 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using GSF.Diagnostics;
-
 namespace LogFileViewer.Filters
 {
-    internal interface IMessageMatch
+    public enum FilterMode : byte
     {
-        FilterType TypeCode { get; }
-        bool IsIncluded(LogMessage log);
-        string Description { get; }
-        void Save(Stream stream);
-        IEnumerable<Tuple<string, Func<bool>>> GetMenuButtons();
-        void ToggleResult();
+        //Any matches will be excluded.
+        Exclude,
+        //Any matches will be included.
+        Highlight,
     }
 }

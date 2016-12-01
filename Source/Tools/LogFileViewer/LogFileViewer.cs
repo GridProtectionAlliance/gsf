@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -33,6 +34,7 @@ using System.Windows.Forms;
 using GSF.Diagnostics;
 using GSF.IO;
 using LogFileViewer.Filters;
+using LogFileViewer.Menu;
 using LogFileViewer.Properties;
 
 namespace LogFileViewer
@@ -41,8 +43,9 @@ namespace LogFileViewer
     {
         private BindingSource m_bindingSource;
         private DataTable m_dataTable;
+        private bool[] m_visibleFlags;
+        private List<FilterBase> m_filters;
 
-        private List<IMessageMatch> m_filters;
         private string m_logPath;
         SortedList<string, byte[]> m_savedFilters = new SortedList<string, byte[]>();
 
@@ -54,6 +57,8 @@ namespace LogFileViewer
                 Settings.Default.HasBeenUpgraded = true;
                 Settings.Default.Save();
             }
+
+            m_visibleFlags = new bool[9];
 
             if (logPath != null)
             {
@@ -71,7 +76,7 @@ namespace LogFileViewer
             }
 
             m_logPath = logPath;
-            m_filters = new List<IMessageMatch>();
+            m_filters = new List<FilterBase>();
 
             InitializeComponent();
 
@@ -88,45 +93,28 @@ namespace LogFileViewer
             m_dataTable.Columns.Add("Message", typeof(string));
             m_dataTable.Columns.Add("Details", typeof(string));
             m_dataTable.Columns.Add("Exception", typeof(string));
-            m_dataTable.Columns.Add("_Filtered", typeof(bool));
+            m_dataTable.Columns.Add("_Show", typeof(bool));
+            m_dataTable.Columns.Add("_Level", typeof(int));
 
-            m_bindingSource.Filter = "_Filtered=false";
+            m_bindingSource.Filter = "_Show";
             m_bindingSource.DataSource = m_dataTable;
             dgvResults.DataSource = m_bindingSource;
 
             dgvResults.Columns["Time"].DefaultCellStyle.Format = "MM/dd/yyyy HH:mm:ss.fff";
             dgvResults.Columns["Object"].Visible = false;
-            dgvResults.Columns["_Filtered"].Visible = false;
+            dgvResults.Columns["_Show"].Visible = false;
+            dgvResults.Columns["_Level"].Visible = false;
+            m_visibleFlags = GetVisibleFlags();
         }
 
         private void LogFileViewer_Load(object sender, EventArgs e)
         {
-            typeof(DataGridView).InvokeMember("DoubleBuffered", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.SetProperty, null, dgvResults, new object[] { true });
+            typeof(DataGridView).InvokeMember("DoubleBuffered", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.SetProperty, null, dgvResults, new object[] {true});
             LoadFilters();
         }
 
         private void RefreshDataSource()
-        {
-
-        }
-
-        private void RefreshFilters()
-        {
-            m_bindingSource.RaiseListChangedEvents = false;
-            foreach (DataRow row in m_dataTable.Rows)
-            {
-                LogMessage message = row["Object"] as LogMessage;
-                bool isFiltered = (bool)row["_Filtered"];
-                bool shouldFilter = !m_filters.All(x => x.IsIncluded(message));
-
-                if (isFiltered ^ shouldFilter)
-                {
-                    row["_Filtered"] = !isFiltered;
-                }
-            }
-            m_bindingSource.RaiseListChangedEvents = true;
-            m_bindingSource.ResetBindings(false);
-        }
+        {}
 
         private void BtnLoad_Click(object sender, EventArgs e)
         {
@@ -159,7 +147,7 @@ namespace LogFileViewer
                 FilterFirstChanceExceptions(messages);
                 foreach (LogMessage message in messages)
                 {
-                    if (!loadFiltered || m_filters.All(x => x.IsIncluded(message)))
+                    if (!loadFiltered || IsShown(message))
                         AddRowToDataTable(message, fileWithoutExtension);
                 }
             }
@@ -170,7 +158,7 @@ namespace LogFileViewer
 
         private void AddRowToDataTable(LogMessage message, string fileWithoutExtension)
         {
-            object[] items = new object[12];
+            object[] items = new object[13];
             items[0] = message;
             items[1] = fileWithoutExtension;
             items[2] = message.UtcTime.ToLocalTime();
@@ -182,7 +170,8 @@ namespace LogFileViewer
             items[8] = message.Message;
             items[9] = message.Details;
             items[10] = message.ExceptionString;
-            items[11] = false;
+            items[11] = true;
+            items[12] = 4;
             m_dataTable.Rows.Add(items);
         }
 
@@ -210,82 +199,78 @@ namespace LogFileViewer
             {
                 LogMessage item = (LogMessage)dgvResults.Rows[e.RowIndex].Cells["Object"].Value;
 
+                List<LogMessage> messages = new List<LogMessage>();
+                messages.Add(item);
+
+                List<Tuple<string, Func<FilterBase>>> items = new List<Tuple<string, Func<FilterBase>>>();
+
                 switch (dgvResults.Columns[e.ColumnIndex].Name)
                 {
                     case "Type":
-                        MakeMenu(e, new MatchType(item));
+                        items.AddRange(new TypeMenu(messages).GetMenuButtons());
+                        //MakeMenu(e, new MatchType(item));
                         break;
                     case "Event Name":
-                        MakeMenu(e, new MatchEventName(item));
+                        //MakeMenu(e, new MatchEventName(item));
                         break;
                     case "Time":
-                        MakeMenu(e, new MatchTimestamp(item));
+                        items.AddRange(new TimestampMenu(messages).GetMenuButtons());
                         break;
                     case "Level":
-                        MakeMenu(e, new MatchVerbose(item));
+                        //MakeMenu(e, new MatchVerbose(item));
                         break;
                     case "Exception":
-                        MakeMenu(e, new MatchErrorName(item));
+                        //MakeMenu(e, new MatchErrorName(item));
                         break;
                     case "Message":
-                        MakeMenu(e, new MatchMessageName(item));
+                        //MakeMenu(e, new MatchMessageName(item));
                         break;
                     case "Stack Details":
-                        MakeMenu(e, new MatchStackMessages(item));
+                        //MakeMenu(e, new MatchStackMessages(item));
                         break;
                     default:
                         return;
                 }
+
+                if (items.Count > 0)
+                    MakeMenu(e, items);
+
             }
         }
 
-        private void MakeMenu(DataGridViewCellMouseEventArgs e, IMessageMatch filter)
+        private void MakeMenu(DataGridViewCellMouseEventArgs e, List<Tuple<string, Func<FilterBase>>> items)
         {
             ContextMenuStrip menu = new ContextMenuStrip();
 
             menu.ShowImageMargin = false;
 
-            foreach (Tuple<string, Func<bool>> item in filter.GetMenuButtons())
+            foreach (Tuple<string, Func<FilterBase>> item in items)
             {
-                ToolStripButton button = new ToolStripButton(item.Item1);
-                button.Click += (send1, e1) =>
-                    {
-                        if (item.Item2())
-                        {
-                            LstFilters.Items.Add(filter);
-                            m_filters.Add(filter);
-                            RefreshFilters();
-                        }
-                    };
-                menu.Items.Add(button);
+                var subMenu = new ToolStripMenuItem(item.Item1);
+
+                for (int x = 1; x <= 4; x++)
+                {
+                    ToolStripButton button = new ToolStripButton(x.ToString());
+                    button.Tag = x;
+                    button.Click += (send1, e1) =>
+                                    {
+                                        FilterBase filter = item.Item2();
+                                        if (filter != null)
+                                        {
+                                            filter.FilterLevel = (int)((ToolStripButton)send1).Tag;
+                                            LstFilters.Items.Add(filter);
+                                            m_filters.Add(filter);
+                                            RefreshFilters();
+                                        }
+                                    };
+                    subMenu.DropDownItems.Add(button);
+                }
+
+                menu.Items.Add(subMenu);
             }
 
             menu.Width = 150;
             menu.Show(dgvResults, dgvResults.PointToClient(Cursor.Position));
-        }
-
-        private void btnRemove_Click(object sender, EventArgs e)
-        {
-            foreach (IMessageMatch item in LstFilters.SelectedItems.Cast<IMessageMatch>().ToArray())
-            {
-                m_filters.Remove(item);
-                LstFilters.Items.Remove(item);
-            }
-
-            RefreshFilters();
-        }
-
-        private void btnToggle_Click(object sender, EventArgs e)
-        {
-            foreach (IMessageMatch item in LstFilters.SelectedItems.Cast<IMessageMatch>().ToArray())
-            {
-                item.ToggleResult();
-            }
-
-            LstFilters.DisplayMember = string.Empty;
-            LstFilters.DisplayMember = "Description";
-
-            RefreshFilters();
         }
 
         private void dgvResults_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
@@ -403,9 +388,7 @@ namespace LogFileViewer
                 var button = new ToolStripButton(item.Key);
                 button.Width = 300;
                 button.Click += (send1, e1) =>
-                {
-                    SaveCurrentTemplete(item.Key);
-                };
+                                { SaveCurrentTemplete(item.Key); };
                 overwriteToolStripMenuItem.DropDownItems.Add(button);
             }
 
@@ -415,9 +398,7 @@ namespace LogFileViewer
                 var button = new ToolStripButton(item.Key);
                 button.Width = 300;
                 button.Click += (send1, e1) =>
-                {
-                    LoadCurrentTemplete(item.Key);
-                };
+                                { LoadCurrentTemplete(item.Key); };
                 loadToolStripMenuItem.DropDownItems.Add(button);
             }
 
@@ -427,11 +408,11 @@ namespace LogFileViewer
                 var button = new ToolStripButton(item.Key);
                 button.Width = 300;
                 button.Click += (send1, e1) =>
-                {
-                    m_savedFilters.Remove(item.Key);
-                    SaveFilters();
+                                {
+                                    m_savedFilters.Remove(item.Key);
+                                    SaveFilters();
 
-                };
+                                };
                 deleteToolStripMenuItem.DropDownItems.Add(button);
             }
         }
@@ -448,11 +429,10 @@ namespace LogFileViewer
         private void SaveCurrentTemplete(string item)
         {
             var ms = new MemoryStream();
-            ms.Write((byte)1);
+            ms.Write((byte)2);
             ms.Write(m_filters.Count);
             foreach (var filter in m_filters)
             {
-                ms.Write((byte)filter.TypeCode);
                 filter.Save(ms);
             }
 
@@ -463,39 +443,19 @@ namespace LogFileViewer
 
         private void LoadCurrentTemplete(string item)
         {
-            List<IMessageMatch> filters = new List<IMessageMatch>();
+            List<FilterBase> filters = new List<FilterBase>();
             var ms = new MemoryStream(m_savedFilters[item]);
             byte version = ms.ReadNextByte();
             switch (version)
             {
                 case 1:
+                    return;
+                case 2:
                     int count = ms.ReadInt32();
                     while (count > 0)
                     {
                         count--;
-                        switch ((FilterType)ms.ReadNextByte())
-                        {
-                            case FilterType.Timestamp:
-                                filters.Add(new MatchTimestamp(ms));
-                                break;
-                            case FilterType.Verbose:
-                                filters.Add(new MatchVerbose(ms));
-                                break;
-                            case FilterType.Type:
-                                filters.Add(new MatchType(ms));
-                                break;
-                            case FilterType.Event:
-                                filters.Add(new MatchEventName(ms));
-                                break;
-                            case FilterType.Description:
-                                filters.Add(new MatchMessageName(ms));
-                                break;
-                            case FilterType.Error:
-                                filters.Add(new MatchErrorName(ms));
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException();
-                        }
+                        filters.Add(FilterBase.Load(ms));
                     }
 
                     m_filters = filters;
@@ -540,9 +500,7 @@ namespace LogFileViewer
             {
                 //Only first chance exceptions can be filtered.
                 LogMessage firstMessage = messages[x];
-                if (firstMessage.ExceptionString.Length > 0
-                    && firstMessage.TypeName == "GSF.Diagnostics.Logger"
-                    && firstMessage.EventName == "First Chance App Domain Exception")
+                if (firstMessage.ExceptionString.Length > 0 && firstMessage.TypeName == "GSF.Diagnostics.Logger" && firstMessage.EventName == "First Chance App Domain Exception")
                 {
                     //don't look ahead for more than 100ms.
                     DateTime stopAfter = firstMessage.UtcTime.AddTicks(100 * TimeSpan.TicksPerMillisecond);
@@ -554,9 +512,7 @@ namespace LogFileViewer
                         if (futureMessage.UtcTime > stopAfter)
                             break;
 
-                        if (futureMessage.ManagedThreadID == firstMessage.ManagedThreadID
-                            && futureMessage.ExceptionString.Length > 0
-                            && futureMessage.TypeName != "GSF.Diagnostics.Logger")
+                        if (futureMessage.ManagedThreadID == firstMessage.ManagedThreadID && futureMessage.ExceptionString.Length > 0 && futureMessage.TypeName != "GSF.Diagnostics.Logger")
                         {
                             if (futureMessage.ExceptionString.StartsWith(firstMessage.ExceptionString))
                             {
@@ -588,7 +544,6 @@ namespace LogFileViewer
                         x--;
                     }
                 }
-
             }
 
         }
@@ -604,5 +559,162 @@ namespace LogFileViewer
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
             LoadFiles(files, (e.KeyState & 8) == 8); //CTRL is pushed.
         }
+
+        private void LstFilters_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Delete)
+            {
+                foreach (FilterBase item in LstFilters.SelectedItems.Cast<FilterBase>().ToArray())
+                {
+                    m_filters.Remove(item);
+                    LstFilters.Items.Remove(item);
+                }
+
+                RefreshFilters();
+            }
+        }
+
+        private void VisibleCheckedChanged(object sender, EventArgs e)
+        {
+            m_visibleFlags = GetVisibleFlags();
+            RefreshVisible();
+        }
+
+        private void RefreshVisible()
+        {
+            var visible = GetVisibleFlags();
+
+            m_bindingSource.RaiseListChangedEvents = false;
+            foreach (DataRow row in m_dataTable.Rows)
+            {
+                int level = (int)row["_Level"];
+                bool show = (bool)row["_Show"];
+
+                if (show ^ visible[level])
+                {
+                    row["_show"] = !show;
+                }
+            }
+            m_bindingSource.RaiseListChangedEvents = true;
+            m_bindingSource.ResetBindings(false);
+        }
+
+        private bool[] GetVisibleFlags()
+        {
+            bool[] visible = new bool[9];
+            visible[0] = chkExclude1.Checked;
+            visible[1] = chkExclude2.Checked;
+            visible[2] = chkExclude3.Checked;
+            visible[3] = chkExclude4.Checked;
+            visible[4] = chkNormal.Checked;
+            visible[5] = chkHighlight1.Checked;
+            visible[6] = chkHighlight2.Checked;
+            visible[7] = chkHighlight3.Checked;
+            visible[8] = chkHighlight4.Checked;
+            return visible;
+        }
+
+        private void RefreshFilters()
+        {
+            var visible = GetVisibleFlags();
+            m_bindingSource.RaiseListChangedEvents = false;
+            foreach (DataRow row in m_dataTable.Rows)
+            {
+                LogMessage message = row["Object"] as LogMessage;
+                int level = (int)row["_Level"];
+                bool show = (bool)row["_Show"];
+                int assignedLevel = GetLevel(message);
+
+                if (level != assignedLevel)
+                {
+                    row["_Level"] = assignedLevel;
+                }
+                if (show ^ visible[assignedLevel])
+                {
+                    row["_show"] = !show;
+                }
+            }
+            m_bindingSource.RaiseListChangedEvents = true;
+            m_bindingSource.ResetBindings(false);
+        }
+
+        private int GetLevel(LogMessage message)
+        {
+            //Match is in reverse order.
+            for (int x = m_filters.Count - 1; x >= 0; x--)
+            {
+                var filter = m_filters[x];
+                if (filter.IsMatch(message))
+                {
+                    if (filter.FilterMode == FilterMode.Exclude)
+                    {
+                        return filter.FilterLevel - 1;
+                    }
+                    if (filter.FilterMode == FilterMode.Highlight)
+                    {
+                        return filter.FilterLevel - 1 + 5;
+                    }
+                }
+            }
+            return 4;
+        }
+
+        private bool IsShown(LogMessage message)
+        {
+            return m_visibleFlags[GetLevel(message)];
+        }
+
+        private void dgvResults_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
+        {
+            if (e.ColumnIndex == 1 && e.RowIndex != -1 && (e.State & DataGridViewElementStates.Selected) != DataGridViewElementStates.Selected)
+            {
+                if (e.ColumnIndex == 1)
+                {
+                    int value = (int)dgvResults["_Level", e.RowIndex].Value;
+                    Color color;
+                    switch (value)
+                    {
+                        case 0:
+                            color = Color.Silver;
+                            break;
+                        case 1:
+                            color = Color.FromArgb(255, 128, 128);
+                            break;
+                        case 2:
+                            color = Color.FromArgb(255, 128, 255);
+                            break;
+                        case 3:
+                            color = Color.FromArgb(128, 128, 255);
+                            break;
+                        case 5:
+                            color = Color.FromArgb(255, 255, 128);
+                            break;
+                        case 6:
+                            color = Color.FromArgb(128, 255, 128);
+                            break;
+                        case 7:
+                            color = Color.FromArgb(128, 255, 255);
+                            break;
+                        case 8:
+                            color = Color.FromArgb(255, 192, 128);
+                            break;
+                        default:
+                            return;
+                    }
+
+
+                    //fill gradient background
+                    using (SolidBrush gradientBrush = new SolidBrush(color))
+                    {
+                        e.Graphics.FillRectangle(gradientBrush, e.CellBounds);
+                    }
+
+                    // paint rest of cell
+                    e.Paint(e.CellBounds, DataGridViewPaintParts.Border | DataGridViewPaintParts.ContentForeground);
+                    e.Handled = true;
+                }
+            }
+        }
+
     }
 }

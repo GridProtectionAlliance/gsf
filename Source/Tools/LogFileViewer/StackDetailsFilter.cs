@@ -40,6 +40,12 @@ namespace LogFileViewer
 
         private void BtnOK_Click(object sender, EventArgs e)
         {
+            if (checkedListBox1.CheckedItems.Count == 0)
+            {
+                MessageBox.Show("Select an item");
+                return;
+            }
+
             SelectedItems = new LogStackMessages(checkedListBox1.CheckedItems.Cast<KVP>().Select(x=>x.Values).ToList());
             DialogResult = DialogResult.OK;
         }

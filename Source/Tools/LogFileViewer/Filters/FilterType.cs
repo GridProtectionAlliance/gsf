@@ -25,11 +25,7 @@ namespace LogFileViewer.Filters
 {
     public enum FilterType : byte
     {
-        Timestamp = 0,
-        Verbose = 1,
-        Type = 2,
-        Event = 3,
-        Description = 4,
-        Error = 5
+        Timestamp,
+        Type,
     }
 }

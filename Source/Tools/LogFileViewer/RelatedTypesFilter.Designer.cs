@@ -30,7 +30,7 @@
         {
             this.BtnCancel = new System.Windows.Forms.Button();
             this.BtnOK = new System.Windows.Forms.Button();
-            this.listBox1 = new System.Windows.Forms.ListBox();
+            this.checkedListBox1 = new System.Windows.Forms.CheckedListBox();
             this.SuspendLayout();
             // 
             // BtnCancel
@@ -54,13 +54,13 @@
             this.BtnOK.UseVisualStyleBackColor = true;
             this.BtnOK.Click += new System.EventHandler(this.BtnOK_Click);
             // 
-            // listBox1
+            // checkedListBox1
             // 
-            this.listBox1.FormattingEnabled = true;
-            this.listBox1.Location = new System.Drawing.Point(12, 12);
-            this.listBox1.Name = "listBox1";
-            this.listBox1.Size = new System.Drawing.Size(260, 199);
-            this.listBox1.TabIndex = 5;
+            this.checkedListBox1.FormattingEnabled = true;
+            this.checkedListBox1.Location = new System.Drawing.Point(12, 12);
+            this.checkedListBox1.Name = "checkedListBox1";
+            this.checkedListBox1.Size = new System.Drawing.Size(260, 199);
+            this.checkedListBox1.TabIndex = 5;
             // 
             // RelatedTypesFilter
             // 
@@ -69,7 +69,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.BtnCancel;
             this.ClientSize = new System.Drawing.Size(284, 262);
-            this.Controls.Add(this.listBox1);
+            this.Controls.Add(this.checkedListBox1);
             this.Controls.Add(this.BtnCancel);
             this.Controls.Add(this.BtnOK);
             this.Name = "RelatedTypesFilter";
@@ -82,6 +82,6 @@
 
         private System.Windows.Forms.Button BtnCancel;
         private System.Windows.Forms.Button BtnOK;
-        private System.Windows.Forms.ListBox listBox1;
+        private System.Windows.Forms.CheckedListBox checkedListBox1;
     }
 }

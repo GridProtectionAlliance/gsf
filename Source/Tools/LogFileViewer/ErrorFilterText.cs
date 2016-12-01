@@ -30,12 +30,25 @@ namespace LogFileViewer
     public partial class ErrorFilterText : Form
     {
         public string ErrorText;
+        public bool StartsWith;
+        public bool ContainsText;
+        public bool IsRegex;
 
         public ErrorFilterText(string errorText)
         {
             InitializeComponent();
             ErrorText = errorText.Trim("\t \r\n".ToCharArray());
             TxtErrorName.Text = errorText.Trim("\t \r\n".ToCharArray());
+        }
+
+        public void AllowRegex(bool enabled)
+        {
+            rdoRegex.Visible = enabled;
+        }
+
+        public void AllowMultiline(bool enabled)
+        {
+            TxtErrorName.Multiline = enabled;
         }
 
         private void TxtErrorName_TextChanged(object sender, EventArgs e)
@@ -58,7 +71,11 @@ namespace LogFileViewer
                 }
             }
 
-            DialogResult=DialogResult.OK;
+            StartsWith = RdoStartsWith.Checked;
+            ContainsText = rdoContains.Checked;
+            IsRegex = rdoRegex.Checked;
+
+            DialogResult = DialogResult.OK;
         }
     }
 }

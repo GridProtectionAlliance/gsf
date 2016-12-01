@@ -68,21 +68,28 @@
     <Compile Include="ErrorFilterText.Designer.cs">
       <DependentUpon>ErrorFilterText.cs</DependentUpon>
     </Compile>
+    <Compile Include="Filters\FilterMode.cs" />
     <Compile Include="Filters\FilterType.cs" />
-    <Compile Include="Filters\IMessageMatch.cs" />
-    <Compile Include="Filters\MatchErrorName.cs" />
-    <Compile Include="Filters\MatchStackMessages.cs" />
-    <Compile Include="Filters\MatchEventName.cs" />
-    <Compile Include="Filters\MatchMessageName.cs" />
-    <Compile Include="Filters\MatchTimestamp.cs" />
-    <Compile Include="Filters\MatchType.cs" />
-    <Compile Include="Filters\MatchVerbose.cs" />
+    <Compile Include="Filters\Old\FilterType.cs" />
+    <Compile Include="Filters\FilterBase.cs" />
+    <Compile Include="Filters\Old\IMessageMatch.cs" />
+    <Compile Include="Filters\Old\MatchErrorName.cs" />
+    <Compile Include="Filters\Old\MatchStackMessages.cs" />
+    <Compile Include="Filters\Old\MatchEventName.cs" />
+    <Compile Include="Filters\Old\MatchMessageName.cs" />
+    <Compile Include="Filters\TypeFilter.cs" />
+    <Compile Include="Filters\TimestampFilter.cs" />
+    <Compile Include="Filters\Old\MatchTimestamp.cs" />
+    <Compile Include="Filters\Old\MatchType.cs" />
+    <Compile Include="Filters\Old\MatchVerbose.cs" />
     <Compile Include="InputBox.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="InputBox.Designer.cs">
       <DependentUpon>InputBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="Menu\TypeMenu.cs" />
+    <Compile Include="Menu\TimestampMenu.cs" />
     <Compile Include="RelatedTypesFilter.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -159,6 +166,7 @@
       <Name>GSF.Core</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

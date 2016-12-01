@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using GSF.Diagnostics;
 
@@ -13,19 +7,20 @@ namespace LogFileViewer
 {
     public partial class RelatedTypesFilter : Form
     {
-        public string SelectedItems;
+        public string[] SelectedItems;
 
         public RelatedTypesFilter(PublisherTypeDefinition types)
         {
             InitializeComponent();
-            listBox1.Items.Add(types.TypeName);
-            listBox1.Items.AddRange(types.RelatedTypes.Cast<object>().ToArray());
+            checkedListBox1.Items.Add(types.TypeName);
+            checkedListBox1.Items.AddRange(types.RelatedTypes.Cast<object>().ToArray());
+            checkedListBox1.Sorted = true;
         }
 
         private void BtnOK_Click(object sender, EventArgs e)
         {
-            SelectedItems = (string)listBox1.SelectedItem;
-            if (SelectedItems == null)
+            SelectedItems = checkedListBox1.CheckedItems.Cast<string>().ToArray();
+            if (SelectedItems.Length == 0)
             {
                 MessageBox.Show("Select an item");
                 return;
