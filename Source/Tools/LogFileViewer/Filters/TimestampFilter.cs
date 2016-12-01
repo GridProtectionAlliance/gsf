@@ -33,11 +33,10 @@ namespace LogFileViewer.Filters
     {
         public enum Mode
         {
-            ExcludeBefore,
-            ExcludeAfter,
+            Before,
+            After,
             ExcludeInside,
-            ExcludeOutside,
-            HighlightInside,
+            Outside,
         }
 
         private DateTime m_first;
@@ -70,14 +69,13 @@ namespace LogFileViewer.Filters
         {
             switch (m_mode)
             {
-                case Mode.ExcludeBefore:
+                case Mode.Before:
                     return log.UtcTime < m_first;
-                case Mode.ExcludeAfter:
+                case Mode.After:
                     return log.UtcTime > m_first;
                 case Mode.ExcludeInside:
-                case Mode.HighlightInside:
                     return m_first <= log.UtcTime && log.UtcTime <= m_second;
-                case Mode.ExcludeOutside:
+                case Mode.Outside:
                     return log.UtcTime < m_first || log.UtcTime > m_second;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -92,41 +90,19 @@ namespace LogFileViewer.Filters
             stream.Write((byte)m_mode);
         }
 
-        protected override FilterType TypeCode => FilterType.Timestamp;
-
-        public override FilterMode FilterMode
-        {
-            get
-            {
-                switch (m_mode)
-                {
-                    case Mode.ExcludeBefore:
-                    case Mode.ExcludeAfter:
-                    case Mode.ExcludeInside:
-                    case Mode.ExcludeOutside:
-                        return FilterMode.Exclude;
-                    case Mode.HighlightInside:
-                        return FilterMode.Highlight;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
-        }
-
         protected override string DescriptionInternal
         {
             get
             {
                 switch (m_mode)
                 {
-                    case Mode.ExcludeBefore:
+                    case Mode.Before:
                         return "Before: " + m_first.ToLocalTime();
-                    case Mode.ExcludeAfter:
+                    case Mode.After:
                         return "After: " + m_first.ToLocalTime();
                     case Mode.ExcludeInside:
-                    case Mode.HighlightInside:
                         return "Between: " + m_first.ToLocalTime() + " and " + m_second.ToLocalTime();
-                    case Mode.ExcludeOutside:
+                    case Mode.Outside:
                         return "Outside: " + m_first.ToLocalTime() + " and " + m_second.ToLocalTime();
                     default:
                         throw new ArgumentOutOfRangeException();

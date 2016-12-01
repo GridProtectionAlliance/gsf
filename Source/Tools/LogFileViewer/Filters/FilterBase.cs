@@ -29,25 +29,41 @@ using GSF.IO;
 
 namespace LogFileViewer.Filters
 {
+    public static class FilterLevelExtensions
+    {
+        public static string Name(this FilterLevel level)
+        {
+            switch (level)
+            {
+                case FilterLevel.Lowest:
+                    return "Lowest";
+                case FilterLevel.Low:
+                    return "Low";
+                case FilterLevel.BelowNormal:
+                    return "BelowNormal";
+                case FilterLevel.Normal:
+                    return "Normal";
+                case FilterLevel.AboveNormal:
+                    return "AboveNormal";
+                case FilterLevel.High:
+                    return "High";
+                case FilterLevel.Highest:
+                    return "Highest";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(level), level, null);
+            }
+        }
+    }
+
     public abstract class FilterBase
     {
-        public int FilterLevel { get; set; }
-        protected abstract FilterType TypeCode { get; }
-        public abstract FilterMode FilterMode { get; }
+        public FilterLevel FilterLevel { get; set; }
 
         public string Description
         {
             get
             {
-                switch (FilterMode)
-                {
-                    case FilterMode.Exclude:
-                        return $"(Exclude{FilterLevel}) {DescriptionInternal}";
-                    case FilterMode.Highlight:
-                        return $"(Highlight{FilterLevel}) {DescriptionInternal}";
-                    default:
-                        return string.Empty;
-                }
+                return $"({FilterLevel}) {DescriptionInternal}";
             }
         }
 
@@ -58,8 +74,22 @@ namespace LogFileViewer.Filters
         public void Save(Stream stream)
         {
             stream.Write((byte)1);
-            stream.Write((byte)TypeCode);
-            stream.Write(FilterLevel);
+
+            Type ownerType = GetType();
+            if (ownerType == typeof(TimestampFilter))
+            {
+                stream.Write((byte)FilterType.Timestamp);
+            }
+            else if (ownerType == typeof(TypeFilter))
+            {
+                stream.Write((byte)FilterType.Type);
+            }
+            else
+            {
+                throw new Exception("Type not identified.");
+            }
+
+            stream.Write((int)FilterLevel);
             SaveInternal(stream);
         }
 
@@ -76,10 +106,13 @@ namespace LogFileViewer.Filters
                         case FilterType.Timestamp:
                             filter = new TimestampFilter(stream);
                             break;
+                        case FilterType.Type:
+                            filter = new TypeFilter(stream);
+                            break;
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
-                    filter.FilterLevel = filterLevel;
+                    filter.FilterLevel = (FilterLevel)filterLevel;
                     return filter;
                 default:
                     throw new VersionNotFoundException();

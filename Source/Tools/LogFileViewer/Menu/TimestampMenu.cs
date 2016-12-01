@@ -22,43 +22,37 @@ namespace LogFileViewer.Menu
         {
             return new[]
                    {
-                       Tuple.Create<string, Func<FilterBase>>("Exclude Before", ExcludeBefore),
-                       Tuple.Create<string, Func<FilterBase>>("Exclude After", ExcludeAfter),
-                       Tuple.Create<string, Func<FilterBase>>("Exclude 5 Minutes Before", Exclude5Before),
-                       Tuple.Create<string, Func<FilterBase>>("Exclude 5 Minutes After", Exclude5After),
-                       Tuple.Create<string, Func<FilterBase>>("Exclude 3 Minutes Before And 1 Minute After", ExcludeBeforeAndAfter),
-                       Tuple.Create<string, Func<FilterBase>>("Highlight 3 Minutes Before And 1 Minute After", HighlightBeforeAndAfter),
+                       Tuple.Create<string, Func<FilterBase>>("Is Before", ExcludeBefore),
+                       Tuple.Create<string, Func<FilterBase>>("Is After", ExcludeAfter),
+                       Tuple.Create<string, Func<FilterBase>>("Is 5 Minutes Before", Exclude5Before),
+                       Tuple.Create<string, Func<FilterBase>>("Is 5 Minutes After", Exclude5After),
+                       Tuple.Create<string, Func<FilterBase>>("Is 3 Minutes Before And 1 Minute After", ExcludeBeforeAndAfter),
                    };
         }
 
         private FilterBase ExcludeBefore()
         {
-            return new TimestampFilter(m_minTime, m_maxTime, TimestampFilter.Mode.ExcludeBefore);
+            return new TimestampFilter(m_minTime, m_maxTime, TimestampFilter.Mode.Before);
         }
 
         private FilterBase ExcludeAfter()
         {
-            return new TimestampFilter(m_minTime, m_maxTime, TimestampFilter.Mode.ExcludeAfter);
+            return new TimestampFilter(m_minTime, m_maxTime, TimestampFilter.Mode.After);
         }
 
         private FilterBase Exclude5Before()
         {
-            return new TimestampFilter(m_minTime.AddMinutes(-5), m_maxTime, TimestampFilter.Mode.ExcludeBefore);
+            return new TimestampFilter(m_minTime.AddMinutes(-5), m_maxTime, TimestampFilter.Mode.Before);
         }
 
         private FilterBase Exclude5After()
         {
-            return new TimestampFilter(m_minTime.AddMinutes(5), m_maxTime, TimestampFilter.Mode.ExcludeAfter);
+            return new TimestampFilter(m_minTime.AddMinutes(5), m_maxTime, TimestampFilter.Mode.After);
         }
 
         private FilterBase ExcludeBeforeAndAfter()
         {
-            return new TimestampFilter(m_minTime.AddMinutes(-3), m_maxTime.AddMinutes(1), TimestampFilter.Mode.ExcludeOutside);
-        }
-
-        private FilterBase HighlightBeforeAndAfter()
-        {
-            return new TimestampFilter(m_minTime.AddMinutes(-3), m_maxTime.AddMinutes(1), TimestampFilter.Mode.HighlightInside);
+            return new TimestampFilter(m_minTime.AddMinutes(-3), m_maxTime.AddMinutes(1), TimestampFilter.Mode.Outside);
         }
 
     }

@@ -20,25 +20,17 @@ namespace LogFileViewer.Menu
         {
             return new[]
                    {
-                       Tuple.Create<string, Func<FilterBase>>("Exclude Type", ExcludeType),
-                       Tuple.Create<string, Func<FilterBase>>("Exclude Type...", ExcludeTypeAdv),
-                       Tuple.Create<string, Func<FilterBase>>("Exclude Assembly", ExcludeAssembly),
-                       Tuple.Create<string, Func<FilterBase>>("Exclude Assembly...", ExcludeAssemblyAdv),
-                       Tuple.Create<string, Func<FilterBase>>("Exclude Related Type", ExcludeRelatedType),
-
-
-                       Tuple.Create<string, Func<FilterBase>>("Highlight Type", HighlightType),
-                       Tuple.Create<string, Func<FilterBase>>("Highlight Type...", HighlightTypeAdv),
-                       Tuple.Create<string, Func<FilterBase>>("Highlight Assembly", HighlightAssembly),
-                       Tuple.Create<string, Func<FilterBase>>("Highlight Assembly...", HighlightAssemblyAdv),
-                       Tuple.Create<string, Func<FilterBase>>("Highlight Related Type", HighlightRelatedType),
-
+                       Tuple.Create<string, Func<FilterBase>>("Is Type", ExcludeType),
+                       Tuple.Create<string, Func<FilterBase>>("Is Type...", ExcludeTypeAdv),
+                       Tuple.Create<string, Func<FilterBase>>("Is Assembly", ExcludeAssembly),
+                       Tuple.Create<string, Func<FilterBase>>("Is Assembly...", ExcludeAssemblyAdv),
+                       Tuple.Create<string, Func<FilterBase>>("Is Related Type", ExcludeRelatedType),
                    };
         }
 
         private FilterBase ExcludeType()
         {
-            return new TypeFilter(TypeFilter.Mode.ExcludeType, TypeFilter.MatchMode.Equals, m_log.TypeName);
+            return new TypeFilter(TypeFilter.Mode.Type, TypeFilter.MatchMode.Equals, m_log.TypeName);
         }
 
         private FilterBase ExcludeTypeAdv()
@@ -54,7 +46,7 @@ namespace LogFileViewer.Menu
                         mode = TypeFilter.MatchMode.Contains;
                     if (frm.StartsWith)
                         mode = TypeFilter.MatchMode.StartsWith;
-                    return new TypeFilter(TypeFilter.Mode.ExcludeType, mode, frm.ErrorText);
+                    return new TypeFilter(TypeFilter.Mode.Type, mode, frm.ErrorText);
                 }
                 return null;
             }
@@ -66,7 +58,7 @@ namespace LogFileViewer.Menu
             {
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
-                    return new TypeFilter(TypeFilter.Mode.ExcludeRelatedType, TypeFilter.MatchMode.Equals, frm.SelectedItems);
+                    return new TypeFilter(TypeFilter.Mode.RelatedType, TypeFilter.MatchMode.Equals, frm.SelectedItems);
                 }
                 return null;
             }
@@ -74,7 +66,7 @@ namespace LogFileViewer.Menu
 
         private FilterBase ExcludeAssembly()
         {
-            return new TypeFilter(TypeFilter.Mode.ExcludeAssembly, TypeFilter.MatchMode.Equals, m_log.AssemblyName);
+            return new TypeFilter(TypeFilter.Mode.Assembly, TypeFilter.MatchMode.Equals, m_log.AssemblyName);
         }
 
         private FilterBase ExcludeAssemblyAdv()
@@ -90,75 +82,11 @@ namespace LogFileViewer.Menu
                         mode = TypeFilter.MatchMode.Contains;
                     if (frm.StartsWith)
                         mode = TypeFilter.MatchMode.StartsWith;
-                    return new TypeFilter(TypeFilter.Mode.ExcludeAssembly, mode, frm.ErrorText);
+                    return new TypeFilter(TypeFilter.Mode.Assembly, mode, frm.ErrorText);
                 }
                 return null;
             }
         }
-
-
-
-
-        private FilterBase HighlightType()
-        {
-            return new TypeFilter(TypeFilter.Mode.HighlightType, TypeFilter.MatchMode.Equals, m_log.TypeName);
-        }
-
-        private FilterBase HighlightTypeAdv()
-        {
-            using (var frm = new ErrorFilterText(m_log.TypeName))
-            {
-                frm.AllowRegex(false);
-                frm.AllowMultiline(false);
-                if (frm.ShowDialog() == DialogResult.OK)
-                {
-                    TypeFilter.MatchMode mode = TypeFilter.MatchMode.Equals;
-                    if (frm.ContainsText)
-                        mode = TypeFilter.MatchMode.Contains;
-                    if (frm.StartsWith)
-                        mode = TypeFilter.MatchMode.StartsWith;
-                    return new TypeFilter(TypeFilter.Mode.HighlightType, mode, frm.ErrorText);
-                }
-                return null;
-            }
-        }
-
-        private FilterBase HighlightRelatedType()
-        {
-            using (var frm = new RelatedTypesFilter(m_log.EventPublisherDetails.TypeData))
-            {
-                if (frm.ShowDialog() == DialogResult.OK)
-                {
-                    return new TypeFilter(TypeFilter.Mode.HighlightRelatedType, TypeFilter.MatchMode.Equals, frm.SelectedItems);
-                }
-                return null;
-            }
-        }
-
-        private FilterBase HighlightAssembly()
-        {
-            return new TypeFilter(TypeFilter.Mode.HighlightAssembly, TypeFilter.MatchMode.Equals, m_log.AssemblyName);
-        }
-
-        private FilterBase HighlightAssemblyAdv()
-        {
-            using (var frm = new ErrorFilterText(m_log.AssemblyName))
-            {
-                frm.AllowRegex(false);
-                frm.AllowMultiline(false);
-                if (frm.ShowDialog() == DialogResult.OK)
-                {
-                    TypeFilter.MatchMode mode = TypeFilter.MatchMode.Equals;
-                    if (frm.ContainsText)
-                        mode = TypeFilter.MatchMode.Contains;
-                    if (frm.StartsWith)
-                        mode = TypeFilter.MatchMode.StartsWith;
-                    return new TypeFilter(TypeFilter.Mode.HighlightAssembly, mode, frm.ErrorText);
-                }
-                return null;
-            }
-        }
-
 
 
 

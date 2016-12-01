@@ -68,7 +68,7 @@
     <Compile Include="ErrorFilterText.Designer.cs">
       <DependentUpon>ErrorFilterText.cs</DependentUpon>
     </Compile>
-    <Compile Include="Filters\FilterMode.cs" />
+    <Compile Include="Filters\FilterLevel.cs" />
     <Compile Include="Filters\FilterType.cs" />
     <Compile Include="Filters\Old\FilterType.cs" />
     <Compile Include="Filters\FilterBase.cs" />

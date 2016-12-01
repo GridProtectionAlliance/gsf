@@ -33,14 +33,9 @@ namespace LogFileViewer.Filters
     {
         public enum Mode
         {
-            ExcludeType,
-            HighlightType,
-
-            ExcludeAssembly,
-            HighlightAssembly,
-
-            ExcludeRelatedType,
-            HighlightRelatedType,
+            Type,
+            Assembly,
+            RelatedType,
         }
 
         public enum MatchMode
@@ -84,8 +79,7 @@ namespace LogFileViewer.Filters
         {
             switch (m_mode)
             {
-                case Mode.ExcludeType:
-                case Mode.HighlightType:
+                case Mode.Type:
                     switch (m_matchMode)
                     {
                         case MatchMode.Equals:
@@ -97,16 +91,14 @@ namespace LogFileViewer.Filters
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
-                case Mode.ExcludeRelatedType:
-                case Mode.HighlightRelatedType:
+                case Mode.RelatedType:
                     foreach (var item in m_matchingNames)
                     {
                         if (!(log.TypeName == item || log.RelatedTypes.Contains(item)))
                             return false;
                     }
                     return true;
-                case Mode.ExcludeAssembly:
-                case Mode.HighlightAssembly:
+                case Mode.Assembly:
                     switch (m_matchMode)
                     {
                         case MatchMode.Equals:
@@ -135,28 +127,6 @@ namespace LogFileViewer.Filters
             }
         }
 
-        protected override FilterType TypeCode => FilterType.Timestamp;
-
-        public override FilterMode FilterMode
-        {
-            get
-            {
-                switch (m_mode)
-                {
-                    case Mode.ExcludeType:
-                    case Mode.ExcludeRelatedType:
-                    case Mode.ExcludeAssembly:
-                        return FilterMode.Exclude;
-                    case Mode.HighlightType:
-                    case Mode.HighlightRelatedType:
-                    case Mode.HighlightAssembly:
-                        return FilterMode.Highlight;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
-        }
-
         protected override string DescriptionInternal
         {
             get
@@ -164,8 +134,7 @@ namespace LogFileViewer.Filters
 
                 switch (m_mode)
                 {
-                    case Mode.ExcludeType:
-                    case Mode.HighlightType:
+                    case Mode.Type:
                         switch (m_matchMode)
                         {
                             case MatchMode.Equals:
@@ -177,11 +146,9 @@ namespace LogFileViewer.Filters
                             default:
                                 throw new ArgumentOutOfRangeException();
                         }
-                    case Mode.ExcludeRelatedType:
-                    case Mode.HighlightRelatedType:
+                    case Mode.RelatedType:
                         return "Type: " + string.Join(", ", m_matchingNames);
-                    case Mode.ExcludeAssembly:
-                    case Mode.HighlightAssembly:
+                    case Mode.Assembly:
                         switch (m_matchMode)
                         {
                             case MatchMode.Equals:

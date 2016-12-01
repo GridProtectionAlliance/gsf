@@ -109,12 +109,12 @@ namespace LogFileViewer
 
         private void LogFileViewer_Load(object sender, EventArgs e)
         {
-            typeof(DataGridView).InvokeMember("DoubleBuffered", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.SetProperty, null, dgvResults, new object[] {true});
+            typeof(DataGridView).InvokeMember("DoubleBuffered", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.SetProperty, null, dgvResults, new object[] { true });
             LoadFilters();
         }
 
         private void RefreshDataSource()
-        {}
+        { }
 
         private void BtnLoad_Click(object sender, EventArgs e)
         {
@@ -242,22 +242,21 @@ namespace LogFileViewer
         {
             ContextMenuStrip menu = new ContextMenuStrip();
 
-            menu.ShowImageMargin = false;
 
             foreach (Tuple<string, Func<FilterBase>> item in items)
             {
                 var subMenu = new ToolStripMenuItem(item.Item1);
 
-                for (int x = 1; x <= 4; x++)
+                for (int x = 0; x <= 6; x++)
                 {
-                    ToolStripButton button = new ToolStripButton(x.ToString());
-                    button.Tag = x;
+                    ToolStripButton button = new ToolStripButton(((FilterLevel)x).Name());
+                    button.Tag = (FilterLevel)x;
                     button.Click += (send1, e1) =>
                                     {
                                         FilterBase filter = item.Item2();
                                         if (filter != null)
                                         {
-                                            filter.FilterLevel = (int)((ToolStripButton)send1).Tag;
+                                            filter.FilterLevel = (FilterLevel)((ToolStripButton)send1).Tag;
                                             LstFilters.Items.Add(filter);
                                             m_filters.Add(filter);
                                             RefreshFilters();
@@ -265,10 +264,15 @@ namespace LogFileViewer
                                     };
                     subMenu.DropDownItems.Add(button);
                 }
-
                 menu.Items.Add(subMenu);
+
+                ((ToolStripDropDownMenu)subMenu.DropDown).ShowImageMargin = false;
+                subMenu.DropDown.Width = 150;
+
+
             }
 
+            menu.ShowImageMargin = false;
             menu.Width = 150;
             menu.Show(dgvResults, dgvResults.PointToClient(Cursor.Position));
         }
@@ -601,16 +605,14 @@ namespace LogFileViewer
 
         private bool[] GetVisibleFlags()
         {
-            bool[] visible = new bool[9];
-            visible[0] = chkExclude1.Checked;
-            visible[1] = chkExclude2.Checked;
-            visible[2] = chkExclude3.Checked;
-            visible[3] = chkExclude4.Checked;
-            visible[4] = chkNormal.Checked;
-            visible[5] = chkHighlight1.Checked;
-            visible[6] = chkHighlight2.Checked;
-            visible[7] = chkHighlight3.Checked;
-            visible[8] = chkHighlight4.Checked;
+            bool[] visible = new bool[7];
+            visible[0] = RdoLowest.Checked;
+            visible[1] = visible[0] || RdoLow.Checked;
+            visible[2] = visible[1] || RdoBelowNormal.Checked;
+            visible[3] = visible[2] || RdoNormal.Checked;
+            visible[4] = visible[3] || RdoAboveNormal.Checked;
+            visible[5] = visible[4] || RdoHigh.Checked;
+            visible[6] = visible[5] || RdoHighest.Checked;
             return visible;
         }
 
@@ -646,17 +648,10 @@ namespace LogFileViewer
                 var filter = m_filters[x];
                 if (filter.IsMatch(message))
                 {
-                    if (filter.FilterMode == FilterMode.Exclude)
-                    {
-                        return filter.FilterLevel - 1;
-                    }
-                    if (filter.FilterMode == FilterMode.Highlight)
-                    {
-                        return filter.FilterLevel - 1 + 5;
-                    }
+                    return (int)filter.FilterLevel;
                 }
             }
-            return 4;
+            return (int)(FilterLevel.Normal);
         }
 
         private bool IsShown(LogMessage message)
@@ -666,53 +661,44 @@ namespace LogFileViewer
 
         private void dgvResults_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
-            if (e.ColumnIndex == 1 && e.RowIndex != -1 && (e.State & DataGridViewElementStates.Selected) != DataGridViewElementStates.Selected)
+            if (e.ColumnIndex >= 0 && e.RowIndex != -1 && (e.State & DataGridViewElementStates.Selected) != DataGridViewElementStates.Selected)
             {
-                if (e.ColumnIndex == 1)
+                int value = (int)dgvResults["_Level", e.RowIndex].Value;
+                Color color;
+                switch (value)
                 {
-                    int value = (int)dgvResults["_Level", e.RowIndex].Value;
-                    Color color;
-                    switch (value)
-                    {
-                        case 0:
-                            color = Color.Silver;
-                            break;
-                        case 1:
-                            color = Color.FromArgb(255, 128, 128);
-                            break;
-                        case 2:
-                            color = Color.FromArgb(255, 128, 255);
-                            break;
-                        case 3:
-                            color = Color.FromArgb(128, 128, 255);
-                            break;
-                        case 5:
-                            color = Color.FromArgb(255, 255, 128);
-                            break;
-                        case 6:
-                            color = Color.FromArgb(128, 255, 128);
-                            break;
-                        case 7:
-                            color = Color.FromArgb(128, 255, 255);
-                            break;
-                        case 8:
-                            color = Color.FromArgb(255, 192, 128);
-                            break;
-                        default:
-                            return;
-                    }
-
-
-                    //fill gradient background
-                    using (SolidBrush gradientBrush = new SolidBrush(color))
-                    {
-                        e.Graphics.FillRectangle(gradientBrush, e.CellBounds);
-                    }
-
-                    // paint rest of cell
-                    e.Paint(e.CellBounds, DataGridViewPaintParts.Border | DataGridViewPaintParts.ContentForeground);
-                    e.Handled = true;
+                    case 0:
+                        color = Color.Silver;
+                        break;
+                    case 1:
+                        color = Color.FromArgb(255, 128, 128);
+                        break;
+                    case 2:
+                        color = Color.FromArgb(255, 128, 255);
+                        break;
+                    case 4:
+                        color = Color.FromArgb(255, 255, 128);
+                        break;
+                    case 5:
+                        color = Color.FromArgb(128, 255, 128);
+                        break;
+                    case 6:
+                        color = Color.FromArgb(128, 255, 255);
+                        break;
+                    default:
+                        return;
                 }
+
+
+                //fill gradient background
+                using (SolidBrush gradientBrush = new SolidBrush(color))
+                {
+                    e.Graphics.FillRectangle(gradientBrush, e.CellBounds);
+                }
+
+                // paint rest of cell
+                e.Paint(e.CellBounds, DataGridViewPaintParts.Border | DataGridViewPaintParts.ContentForeground);
+                e.Handled = true;
             }
         }
 
