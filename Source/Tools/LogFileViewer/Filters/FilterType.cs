@@ -27,5 +27,6 @@ namespace LogFileViewer.Filters
     {
         Timestamp,
         Type,
+        Event,
     }
 }

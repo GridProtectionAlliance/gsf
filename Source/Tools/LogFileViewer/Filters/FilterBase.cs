@@ -84,6 +84,10 @@ namespace LogFileViewer.Filters
             {
                 stream.Write((byte)FilterType.Type);
             }
+            else if (ownerType == typeof(EventFilter))
+            {
+                stream.Write((byte)FilterType.Event);
+            }
             else
             {
                 throw new Exception("Type not identified.");
@@ -108,6 +112,9 @@ namespace LogFileViewer.Filters
                             break;
                         case FilterType.Type:
                             filter = new TypeFilter(stream);
+                            break;
+                        case FilterType.Event:
+                            filter = new EventFilter(stream);
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();

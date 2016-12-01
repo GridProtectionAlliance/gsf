@@ -208,10 +208,9 @@ namespace LogFileViewer
                 {
                     case "Type":
                         items.AddRange(new TypeMenu(messages).GetMenuButtons());
-                        //MakeMenu(e, new MatchType(item));
                         break;
                     case "Event Name":
-                        //MakeMenu(e, new MatchEventName(item));
+                        items.AddRange(new EventMenu(messages).GetMenuButtons());
                         break;
                     case "Time":
                         items.AddRange(new TimestampMenu(messages).GetMenuButtons());

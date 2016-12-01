@@ -77,6 +77,7 @@
     <Compile Include="Filters\Old\MatchStackMessages.cs" />
     <Compile Include="Filters\Old\MatchEventName.cs" />
     <Compile Include="Filters\Old\MatchMessageName.cs" />
+    <Compile Include="Filters\EventFilter.cs" />
     <Compile Include="Filters\TypeFilter.cs" />
     <Compile Include="Filters\TimestampFilter.cs" />
     <Compile Include="Filters\Old\MatchTimestamp.cs" />
@@ -88,6 +89,7 @@
     <Compile Include="InputBox.Designer.cs">
       <DependentUpon>InputBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="Menu\EventMenu.cs" />
     <Compile Include="Menu\TypeMenu.cs" />
     <Compile Include="Menu\TimestampMenu.cs" />
     <Compile Include="RelatedTypesFilter.cs">
