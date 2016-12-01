@@ -1126,7 +1126,7 @@ namespace GSF.TimeSeries.Adapters
             m_totalProcessTime = 0.0D;
             m_lastProcessTime = DateTime.UtcNow.Ticks;
 
-            OnStatusMessage(MessageLevel.Info, "AdapterCollectionBase", "Statistics reset for this collection.");
+            OnStatusMessage(MessageLevel.Info, "Statistics reset for this collection.");
         }
 
         /// <summary>

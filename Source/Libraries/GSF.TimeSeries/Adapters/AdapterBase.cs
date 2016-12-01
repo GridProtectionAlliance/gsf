@@ -130,7 +130,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         protected AdapterBase()
         {
-            Log = Logger.CreatePublisher(GetType(), MessageClass.Application);
+            Log = Logger.CreatePublisher(GetType(), MessageClass.Framework);
             m_name = this.GetType().Name;
             Log.InitialStackMessages = new LogStackMessages("AdapterName", m_name);
             m_settings = new Dictionary<string, string>();

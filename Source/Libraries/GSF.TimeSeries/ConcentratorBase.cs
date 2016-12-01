@@ -447,7 +447,7 @@ namespace GSF.TimeSeries
         /// </remarks>
         protected ConcentratorBase()
         {
-            Log = Logger.CreatePublisher(GetType(), MessageClass.Application);
+            Log = Logger.CreatePublisher(GetType(), MessageClass.Framework);
             m_usePrecisionTimer = true;
             m_allowSortsByArrival = true;
             m_allowPreemptivePublishing = true;

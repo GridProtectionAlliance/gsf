@@ -152,7 +152,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public DataGapRecoverer()
         {
-            Log = Logger.CreatePublisher(GetType(), MessageClass.Application);
+            Log = Logger.CreatePublisher(GetType(), MessageClass.Framework);
             Log.InitialStackMessages = new LogStackMessages("ComponentName", GetType().Name);
 
             m_dataGapRecoveryCompleted = new ManualResetEventSlim(true);
