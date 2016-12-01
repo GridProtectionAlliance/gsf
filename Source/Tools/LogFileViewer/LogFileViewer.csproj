@@ -62,33 +62,33 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ErrorFilterText.cs">
+    <Compile Include="Filters\StringMatchingFilterDialog.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ErrorFilterText.Designer.cs">
-      <DependentUpon>ErrorFilterText.cs</DependentUpon>
+    <Compile Include="Filters\StringMatchingFilterDialog.Designer.cs">
+      <DependentUpon>StringMatchingFilterDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="FilterEditorDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FilterEditorDialog.Designer.cs">
+      <DependentUpon>FilterEditorDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Filters\StackTraceMatching.cs" />
+    <Compile Include="Filters\StackDetailsMatching.cs" />
+    <Compile Include="Filters\TimestampMatching.cs" />
+    <Compile Include="Filters\EnumMatchingFlags.cs" />
+    <Compile Include="Filters\LogMessageFilter.cs" />
     <Compile Include="Filters\FilterLevel.cs" />
-    <Compile Include="Filters\FilterType.cs" />
-    <Compile Include="Filters\Old\FilterType.cs" />
-    <Compile Include="Filters\FilterBase.cs" />
-    <Compile Include="Filters\Old\IMessageMatch.cs" />
-    <Compile Include="Filters\Old\MatchErrorName.cs" />
-    <Compile Include="Filters\Old\MatchStackMessages.cs" />
-    <Compile Include="Filters\Old\MatchEventName.cs" />
-    <Compile Include="Filters\Old\MatchMessageName.cs" />
-    <Compile Include="Filters\EventFilter.cs" />
-    <Compile Include="Filters\TypeFilter.cs" />
-    <Compile Include="Filters\TimestampFilter.cs" />
-    <Compile Include="Filters\Old\MatchTimestamp.cs" />
-    <Compile Include="Filters\Old\MatchType.cs" />
-    <Compile Include="Filters\Old\MatchVerbose.cs" />
+    <Compile Include="Filters\StringMatching.cs" />
     <Compile Include="InputBox.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="InputBox.Designer.cs">
       <DependentUpon>InputBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="Menu\ExceptionMenu.cs" />
+    <Compile Include="Menu\MessageMenu.cs" />
     <Compile Include="Menu\EventMenu.cs" />
     <Compile Include="Menu\TypeMenu.cs" />
     <Compile Include="Menu\TimestampMenu.cs" />
@@ -118,8 +118,11 @@
     <Compile Include="StackDetailsFilter.Designer.cs">
       <DependentUpon>StackDetailsFilter.cs</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="ErrorFilterText.resx">
-      <DependentUpon>ErrorFilterText.cs</DependentUpon>
+    <EmbeddedResource Include="Filters\StringMatchingFilterDialog.resx">
+      <DependentUpon>StringMatchingFilterDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FilterEditorDialog.resx">
+      <DependentUpon>FilterEditorDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="InputBox.resx">
       <DependentUpon>InputBox.cs</DependentUpon>

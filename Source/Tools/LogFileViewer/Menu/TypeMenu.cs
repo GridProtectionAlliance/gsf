@@ -1,4 +1,27 @@
 ﻿using System;
+//******************************************************************************************************
+//  TypeMenu.cs - Gbtc
+//
+//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  12/01/2016 - Steven E. Chisholm
+//       Generated original version of source code.
+//
+//******************************************************************************************************
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -16,78 +39,43 @@ namespace LogFileViewer.Menu
             m_log = selectedLogMessages.First();
         }
 
-        public IEnumerable<Tuple<string, Func<FilterBase>>> GetMenuButtons()
+        public IEnumerable<Tuple<string, Func<LogMessageFilter>>> GetMenuButtons()
         {
             return new[]
                    {
-                       Tuple.Create<string, Func<FilterBase>>("Is Type", ExcludeType),
-                       Tuple.Create<string, Func<FilterBase>>("Is Type...", ExcludeTypeAdv),
-                       Tuple.Create<string, Func<FilterBase>>("Is Assembly", ExcludeAssembly),
-                       Tuple.Create<string, Func<FilterBase>>("Is Assembly...", ExcludeAssemblyAdv),
-                       Tuple.Create<string, Func<FilterBase>>("Is Related Type", ExcludeRelatedType),
+                       Tuple.Create<string, Func<LogMessageFilter>>("Type", ExcludeType),
+                       Tuple.Create<string, Func<LogMessageFilter>>("Related Type", ExcludeRelatedType),
+                       Tuple.Create<string, Func<LogMessageFilter>>("Assembly", ExcludeAssembly),
                    };
         }
 
-        private FilterBase ExcludeType()
+        private LogMessageFilter ExcludeType()
         {
-            return new TypeFilter(TypeFilter.Mode.Type, TypeFilter.MatchMode.Equals, m_log.TypeName);
+            var filter = new LogMessageFilter();
+            filter.Type = new StringMatching(StringMatchingMode.Exact, m_log.TypeName);
+            return filter;
         }
 
-        private FilterBase ExcludeTypeAdv()
-        {
-            using (var frm = new ErrorFilterText(m_log.TypeName))
-            {
-                frm.AllowRegex(false);
-                frm.AllowMultiline(false);
-                if (frm.ShowDialog() == DialogResult.OK)
-                {
-                    TypeFilter.MatchMode mode = TypeFilter.MatchMode.Equals;
-                    if (frm.ContainsText)
-                        mode = TypeFilter.MatchMode.Contains;
-                    if (frm.StartsWith)
-                        mode = TypeFilter.MatchMode.StartsWith;
-                    return new TypeFilter(TypeFilter.Mode.Type, mode, frm.ErrorText);
-                }
-                return null;
-            }
-        }
-
-        private FilterBase ExcludeRelatedType()
+        private LogMessageFilter ExcludeRelatedType()
         {
             using (var frm = new RelatedTypesFilter(m_log.EventPublisherDetails.TypeData))
             {
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
-                    return new TypeFilter(TypeFilter.Mode.RelatedType, TypeFilter.MatchMode.Equals, frm.SelectedItems);
+                    var filter = new LogMessageFilter();
+                    filter.RelatedType = new StringMatching(StringMatchingMode.Exact, frm.SelectedItem);
+                    return filter;
                 }
                 return null;
             }
         }
 
-        private FilterBase ExcludeAssembly()
+        private LogMessageFilter ExcludeAssembly()
         {
-            return new TypeFilter(TypeFilter.Mode.Assembly, TypeFilter.MatchMode.Equals, m_log.AssemblyName);
+            var filter = new LogMessageFilter();
+            filter.Assembly = new StringMatching(StringMatchingMode.Exact, m_log.AssemblyName);
+            return filter;
         }
-
-        private FilterBase ExcludeAssemblyAdv()
-        {
-            using (var frm = new ErrorFilterText(m_log.AssemblyName))
-            {
-                frm.AllowRegex(false);
-                frm.AllowMultiline(false);
-                if (frm.ShowDialog() == DialogResult.OK)
-                {
-                    TypeFilter.MatchMode mode = TypeFilter.MatchMode.Equals;
-                    if (frm.ContainsText)
-                        mode = TypeFilter.MatchMode.Contains;
-                    if (frm.StartsWith)
-                        mode = TypeFilter.MatchMode.StartsWith;
-                    return new TypeFilter(TypeFilter.Mode.Assembly, mode, frm.ErrorText);
-                }
-                return null;
-            }
-        }
-
 
 
     }

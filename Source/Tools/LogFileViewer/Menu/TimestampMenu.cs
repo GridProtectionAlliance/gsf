@@ -1,4 +1,27 @@
-﻿using System;
+﻿//******************************************************************************************************
+//  TimestampMenu.cs - Gbtc
+//
+//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://opensource.org/licenses/MIT
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  12/01/2016 - Steven E. Chisholm
+//       Generated original version of source code.
+//
+//******************************************************************************************************
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using GSF.Diagnostics;
@@ -18,41 +41,51 @@ namespace LogFileViewer.Menu
             m_maxTime = time.Last().UtcTime;
         }
 
-        public IEnumerable<Tuple<string, Func<FilterBase>>> GetMenuButtons()
+        public IEnumerable<Tuple<string, Func<LogMessageFilter>>> GetMenuButtons()
         {
             return new[]
                    {
-                       Tuple.Create<string, Func<FilterBase>>("Is Before", ExcludeBefore),
-                       Tuple.Create<string, Func<FilterBase>>("Is After", ExcludeAfter),
-                       Tuple.Create<string, Func<FilterBase>>("Is 5 Minutes Before", Exclude5Before),
-                       Tuple.Create<string, Func<FilterBase>>("Is 5 Minutes After", Exclude5After),
-                       Tuple.Create<string, Func<FilterBase>>("Is 3 Minutes Before And 1 Minute After", ExcludeBeforeAndAfter),
+                       Tuple.Create<string, Func<LogMessageFilter>>("Before", ExcludeBefore),
+                       Tuple.Create<string, Func<LogMessageFilter>>("After", ExcludeAfter),
+                       Tuple.Create<string, Func<LogMessageFilter>>("5 Minutes Before", Exclude5Before),
+                       Tuple.Create<string, Func<LogMessageFilter>>("5 Minutes After", Exclude5After),
+                       Tuple.Create<string, Func<LogMessageFilter>>("3 Minutes Before And 1 Minute After", ExcludeBeforeAndAfter),
                    };
         }
 
-        private FilterBase ExcludeBefore()
+        private LogMessageFilter ExcludeBefore()
         {
-            return new TimestampFilter(m_minTime, m_maxTime, TimestampFilter.Mode.Before);
+            var filter = new LogMessageFilter();
+            filter.TimeFilter = new TimestampMatching(TimestampMatchingMode.Before, m_minTime, m_maxTime);
+            return filter;
         }
 
-        private FilterBase ExcludeAfter()
+        private LogMessageFilter ExcludeAfter()
         {
-            return new TimestampFilter(m_minTime, m_maxTime, TimestampFilter.Mode.After);
+            var filter = new LogMessageFilter();
+            filter.TimeFilter = new TimestampMatching(TimestampMatchingMode.After, m_minTime, m_maxTime);
+            return filter;
         }
 
-        private FilterBase Exclude5Before()
+        private LogMessageFilter Exclude5Before()
         {
-            return new TimestampFilter(m_minTime.AddMinutes(-5), m_maxTime, TimestampFilter.Mode.Before);
+            var filter = new LogMessageFilter();
+            filter.TimeFilter = new TimestampMatching(TimestampMatchingMode.Before, m_minTime.AddMinutes(-5), m_maxTime);
+            return filter;
         }
 
-        private FilterBase Exclude5After()
+        private LogMessageFilter Exclude5After()
         {
-            return new TimestampFilter(m_minTime.AddMinutes(5), m_maxTime, TimestampFilter.Mode.After);
+            var filter = new LogMessageFilter();
+            filter.TimeFilter = new TimestampMatching(TimestampMatchingMode.After, m_minTime.AddMinutes(5), m_maxTime);
+            return filter;
         }
 
-        private FilterBase ExcludeBeforeAndAfter()
+        private LogMessageFilter ExcludeBeforeAndAfter()
         {
-            return new TimestampFilter(m_minTime.AddMinutes(-3), m_maxTime.AddMinutes(1), TimestampFilter.Mode.Outside);
+            var filter = new LogMessageFilter();
+            filter.TimeFilter = new TimestampMatching(TimestampMatchingMode.After, m_minTime.AddMinutes(-3), m_minTime.AddMinutes(1));
+            return filter;
         }
 
     }

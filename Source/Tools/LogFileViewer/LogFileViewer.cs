@@ -44,7 +44,7 @@ namespace LogFileViewer
         private BindingSource m_bindingSource;
         private DataTable m_dataTable;
         private bool[] m_visibleFlags;
-        private List<FilterBase> m_filters;
+        private List<LogMessageFilter> m_filters;
 
         private string m_logPath;
         SortedList<string, byte[]> m_savedFilters = new SortedList<string, byte[]>();
@@ -76,7 +76,7 @@ namespace LogFileViewer
             }
 
             m_logPath = logPath;
-            m_filters = new List<FilterBase>();
+            m_filters = new List<LogMessageFilter>();
 
             InitializeComponent();
 
@@ -202,7 +202,7 @@ namespace LogFileViewer
                 List<LogMessage> messages = new List<LogMessage>();
                 messages.Add(item);
 
-                List<Tuple<string, Func<FilterBase>>> items = new List<Tuple<string, Func<FilterBase>>>();
+                List<Tuple<string, Func<LogMessageFilter>>> items = new List<Tuple<string, Func<LogMessageFilter>>>();
 
                 switch (dgvResults.Columns[e.ColumnIndex].Name)
                 {
@@ -219,10 +219,10 @@ namespace LogFileViewer
                         //MakeMenu(e, new MatchVerbose(item));
                         break;
                     case "Exception":
-                        //MakeMenu(e, new MatchErrorName(item));
+                        items.AddRange(new ExceptionMenu(messages).GetMenuButtons());
                         break;
                     case "Message":
-                        //MakeMenu(e, new MatchMessageName(item));
+                        items.AddRange(new MessageMenu(messages).GetMenuButtons());
                         break;
                     case "Stack Details":
                         //MakeMenu(e, new MatchStackMessages(item));
@@ -237,12 +237,12 @@ namespace LogFileViewer
             }
         }
 
-        private void MakeMenu(DataGridViewCellMouseEventArgs e, List<Tuple<string, Func<FilterBase>>> items)
+        private void MakeMenu(DataGridViewCellMouseEventArgs e, List<Tuple<string, Func<LogMessageFilter>>> items)
         {
             ContextMenuStrip menu = new ContextMenuStrip();
 
 
-            foreach (Tuple<string, Func<FilterBase>> item in items)
+            foreach (Tuple<string, Func<LogMessageFilter>> item in items)
             {
                 var subMenu = new ToolStripMenuItem(item.Item1);
 
@@ -252,7 +252,7 @@ namespace LogFileViewer
                     button.Tag = (FilterLevel)x;
                     button.Click += (send1, e1) =>
                                     {
-                                        FilterBase filter = item.Item2();
+                                        LogMessageFilter filter = item.Item2();
                                         if (filter != null)
                                         {
                                             filter.FilterLevel = (FilterLevel)((ToolStripButton)send1).Tag;
@@ -446,7 +446,7 @@ namespace LogFileViewer
 
         private void LoadCurrentTemplete(string item)
         {
-            List<FilterBase> filters = new List<FilterBase>();
+            List<LogMessageFilter> filters = new List<LogMessageFilter>();
             var ms = new MemoryStream(m_savedFilters[item]);
             byte version = ms.ReadNextByte();
             switch (version)
@@ -458,7 +458,7 @@ namespace LogFileViewer
                     while (count > 0)
                     {
                         count--;
-                        filters.Add(FilterBase.Load(ms));
+                        filters.Add(new LogMessageFilter(ms));
                     }
 
                     m_filters = filters;
@@ -485,9 +485,9 @@ namespace LogFileViewer
                         foreach (DataRow row in m_dataTable.Rows)
                         {
                             LogMessage message = row["Object"] as LogMessage;
-                            bool isFiltered = (bool)row["_Filtered"];
+                            bool shown = (bool)row["_Show"];
 
-                            if (!isFiltered)
+                            if (shown)
                             {
                                 fileWriter.Write(message, false);
                             }
@@ -567,7 +567,7 @@ namespace LogFileViewer
         {
             if (e.KeyCode == Keys.Delete)
             {
-                foreach (FilterBase item in LstFilters.SelectedItems.Cast<FilterBase>().ToArray())
+                foreach (LogMessageFilter item in LstFilters.SelectedItems.Cast<LogMessageFilter>().ToArray())
                 {
                     m_filters.Remove(item);
                     LstFilters.Items.Remove(item);
@@ -701,5 +701,50 @@ namespace LogFileViewer
             }
         }
 
+        private void BtnAddFilter_Click(object sender, EventArgs e)
+        {
+            DataGridViewCell cell = dgvResults.SelectedCells.Cast<DataGridViewCell>().FirstOrDefault();
+            if (cell == null)
+            {
+                MessageBox.Show("Select a message to base the filter on");
+                return;
+            }
+            LogMessage message = dgvResults["Object", cell.RowIndex].Value as LogMessage;
+
+            using (var win = new FilterEditorDialog(message, new LogMessageFilter()))
+            {
+                if (win.ShowDialog() == DialogResult.OK)
+                {
+                    LstFilters.Items.Add(win.FilterResult);
+                    m_filters.Add(win.FilterResult);
+                    RefreshFilters();
+                }
+            }
+        }
+
+        private void LstFilters_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            if (LstFilters.SelectedItem != null)
+            {
+                DataGridViewCell cell = dgvResults.SelectedCells.Cast<DataGridViewCell>().FirstOrDefault();
+                if (cell == null)
+                {
+                    MessageBox.Show("Select a message to base the edits on");
+                    return;
+                }
+                LogMessage message = dgvResults["Object", cell.RowIndex].Value as LogMessage;
+
+                using (var win = new FilterEditorDialog(message, (LogMessageFilter)LstFilters.SelectedItem))
+                {
+                    if (win.ShowDialog() == DialogResult.OK)
+                    {
+                        m_filters[LstFilters.SelectedIndex] = win.FilterResult;
+                        LstFilters.Items[LstFilters.SelectedIndex] = win.FilterResult;
+                        RefreshFilters();
+                    }
+                }
+
+            }
+        }
     }
 }
