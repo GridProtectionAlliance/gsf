@@ -126,10 +126,10 @@ namespace GSF.Communication
 
             // Make sure system can support specified stack
             if (stack == IPStack.IPv6 && !Socket.OSSupportsIPv6)
-                throw new NotSupportedException(string.Format("IPv6 stack is not available for socket creation on {0}:{1}", hostNameOrAddress.ToNonNullNorWhiteSpace("localhost"), port));
+                throw new NotSupportedException($"IPv6 stack is not available for socket creation on {hostNameOrAddress.ToNonNullNorWhiteSpace("localhost")}:{port}");
 #if !MONO
             if (stack == IPStack.IPv4 && !Socket.OSSupportsIPv4)
-                throw new NotSupportedException(string.Format("IPv4 stack is not available for socket creation on {0}:{1}", hostNameOrAddress.ToNonNullNorWhiteSpace("localhost"), port));
+                throw new NotSupportedException($"IPv4 stack is not available for socket creation on {hostNameOrAddress.ToNonNullNorWhiteSpace("localhost")}:{port}");
 #endif
 
             if (string.IsNullOrWhiteSpace(hostNameOrAddress))
@@ -182,13 +182,13 @@ namespace GSF.Communication
                     ipStackMismatch = true;
                 }
 
-                throw new InvalidOperationException(string.Format("No valid {0} addresses could be found for \"{1}\"", stack, hostNameOrAddress));
+                throw new InvalidOperationException($"No valid {stack} addresses could be found for \"{hostNameOrAddress}\"");
             }
             catch
             {
                 // Spell out a specific error message for IP stack mismatches
                 if (ipStackMismatch)
-                    throw new InvalidOperationException(string.Format("IP address mismatch: unable to find an {0} address for \"{1}\"", stack, hostNameOrAddress));
+                    throw new InvalidOperationException($"IP address mismatch: unable to find an {stack} address for \"{hostNameOrAddress}\"");
 
                 // Otherwise report original exception
                 throw;

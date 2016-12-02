@@ -509,7 +509,7 @@ namespace GSF.Communication
         {
             get
             {
-                return string.Format("{0}://{1}", TransportProtocol, m_connectData["server"]).ToLower();
+                return $"{TransportProtocol}://{m_connectData["server"]}".ToLower();
             }
         }
 
@@ -973,7 +973,7 @@ namespace GSF.Communication
             catch (Exception ex)
             {
                 // Log exception during connection attempt
-                string errorMessage = string.Format("Unable to authenticate connection to server: {0}", ex.Message);
+                string errorMessage = $"Unable to authenticate connection to server: {ex.Message}";
                 OnConnectionException(new Exception(errorMessage, ex));
 
                 // Terminate the connection
@@ -1477,9 +1477,13 @@ namespace GSF.Communication
                         m_connectWaitHandle.Set();
                 }
             }
+            catch (ObjectDisposedException)
+            {
+                // This can be safely ignored
+            }
             catch (Exception ex)
             {
-                OnSendDataException(new InvalidOperationException(string.Format("Disconnect exception: {0}", ex.Message), ex));
+                OnSendDataException(new InvalidOperationException($"Disconnect exception: {ex.Message}", ex));
             }
         }
 
@@ -1546,22 +1550,22 @@ namespace GSF.Communication
 
             // Check if 'server' property is missing.
             if (!m_connectData.ContainsKey("server"))
-                throw new ArgumentException(string.Format("Server property is missing (Example: {0})", DefaultConnectionString));
+                throw new ArgumentException($"Server property is missing (Example: {DefaultConnectionString})");
 
             // Backwards compatibility adjustments.
             // New Format: Server=localhost:8888
             // Old Format: Server=localhost; Port=8888
             if (m_connectData.ContainsKey("port"))
-                m_connectData["server"] = string.Format("{0}:{1}", m_connectData["server"], m_connectData["port"]);
+                m_connectData["server"] = $"{m_connectData["server"]}:{m_connectData["port"]}";
 
             // Check if 'server' property is valid.
             Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
 
             if (endpoint == Match.Empty)
-                throw new FormatException(string.Format("Server property is invalid (Example: {0})", DefaultConnectionString));
+                throw new FormatException($"Server property is invalid (Example: {DefaultConnectionString})");
 
             if (!Transport.IsPortNumberValid(endpoint.Groups["port"].Value))
-                throw new ArgumentOutOfRangeException(nameof(connectionString), string.Format("Server port must between {0} and {1}", Transport.PortRangeLow, Transport.PortRangeHigh));
+                throw new ArgumentOutOfRangeException(nameof(connectionString), $"Server port must between {Transport.PortRangeLow} and {Transport.PortRangeHigh}");
         }
 
         /// <summary>
@@ -1628,7 +1632,7 @@ namespace GSF.Communication
                     }
                 }
 
-                throw new InvalidOperationException(string.Format("UDP client reached maximum send queue size. {0} payloads dumped from the queue.", m_maxSendQueueSize));
+                throw new InvalidOperationException($"UDP client reached maximum send queue size. {m_maxSendQueueSize} payloads dumped from the queue.");
             }
         }
 

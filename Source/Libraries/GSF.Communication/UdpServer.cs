@@ -608,7 +608,7 @@ namespace GSF.Communication
                         }
                         catch (Exception ex)
                         {
-                            string errorMessage = string.Format("Unable to connect to client {0}: {1}", clientString, ex.Message);
+                            string errorMessage = $"Unable to connect to client {clientString}: {ex.Message}";
                             OnClientConnectingException(new Exception(errorMessage, ex));
                         }
                     }
@@ -660,7 +660,7 @@ namespace GSF.Communication
             catch (Exception ex)
             {
                 if ((object)client != null)
-                    OnSendClientDataException(client.ID, new InvalidOperationException(string.Format("Failed to drop multicast membership: {0}", ex.Message), ex));
+                    OnSendClientDataException(client.ID, new InvalidOperationException($"Failed to drop multicast membership: {ex.Message}", ex));
             }
             finally
             {
@@ -713,10 +713,10 @@ namespace GSF.Communication
             m_ipStack = Transport.GetInterfaceIPStack(m_configData);
 
             if (!m_configData.ContainsKey("port"))
-                throw new ArgumentException(string.Format("Port is missing (Example: {0})", DefaultConfigurationString));
+                throw new ArgumentException($"Port is missing (Example: {DefaultConfigurationString})");
 
             if (!Transport.IsPortNumberValid(m_configData["port"]) && int.Parse(m_configData["port"]) != -1)
-                throw new ArgumentOutOfRangeException(nameof(configurationString), string.Format("Port number must be {0} or between {1} and {2}", -1, Transport.PortRangeLow, Transport.PortRangeHigh));
+                throw new ArgumentOutOfRangeException(nameof(configurationString), $"Port number must be {-1} or between {Transport.PortRangeLow} and {Transport.PortRangeHigh}");
 
             if (!m_configData.ContainsKey("multicastTimeToLive"))
                 m_configData.Add("multicastTimeToLive", "10");
@@ -744,7 +744,7 @@ namespace GSF.Communication
             UdpServerPayload dequeuedPayload;
 
             if (!m_clientInfoLookup.TryGetValue(clientID, out clientInfo))
-                throw new InvalidOperationException(string.Format("No client found for ID {0}.", clientID));
+                throw new InvalidOperationException($"No client found for ID {clientID}.");
 
             sendQueue = clientInfo.SendQueue;
 
@@ -834,10 +834,10 @@ namespace GSF.Communication
                     IPAddress localAddress = (udpClientIPEndPoint.AddressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Any : IPAddress.Any);
 
                     if (sourceAddress.AddressFamily != udpClientIPEndPoint.AddressFamily)
-                        throw new InvalidOperationException(string.Format("Source address \"{0}\" is not in the same IP format as server address \"{1}\"", sourceAddress, udpClientIPEndPoint.Address));
+                        throw new InvalidOperationException($"Source address \"{sourceAddress}\" is not in the same IP format as server address \"{udpClientIPEndPoint.Address}\"");
 
                     if (localAddress.AddressFamily != udpClientIPEndPoint.AddressFamily)
-                        throw new InvalidOperationException(string.Format("Local address \"{0}\" is not in the same IP format as server address \"{1}\"", localAddress, udpClientIPEndPoint.Address));
+                        throw new InvalidOperationException($"Local address \"{localAddress}\" is not in the same IP format as server address \"{udpClientIPEndPoint.Address}\"");
 
                     using (BlockAllocatedMemoryStream membershipAddresses = new BlockAllocatedMemoryStream())
                     {
@@ -890,7 +890,7 @@ namespace GSF.Communication
                         }
                     }
 
-                    throw new InvalidOperationException(string.Format("Client {0} connected to UDP server reached maximum send queue size. {1} payloads dumped from the queue.", udpClientInfo.Client.ID, m_maxSendQueueSize));
+                    throw new InvalidOperationException($"Client {udpClientInfo.Client.ID} connected to UDP server reached maximum send queue size. {m_maxSendQueueSize} payloads dumped from the queue.");
                 }
             }, ex => OnSendClientDataException(udpClientInfo.Client.ID, ex));
 
@@ -1030,7 +1030,7 @@ namespace GSF.Communication
                     }
                     catch (Exception ex)
                     {
-                        string errorMessage = string.Format("Exception encountered while attempting to send next payload: {0}", ex.Message);
+                        string errorMessage = $"Exception encountered while attempting to send next payload: {ex.Message}";
 
                         if ((object)client != null)
                             OnSendClientDataException(client.ID, new Exception(errorMessage, ex));

@@ -192,7 +192,7 @@ namespace GSF.Communication
         {
             get
             {
-                return string.Format("{0}://{1}", TransportProtocol, m_connectData["port"]).ToLower();
+                return $"{TransportProtocol}://{m_connectData["port"]}".ToLower();
             }
         }
 
@@ -359,19 +359,19 @@ namespace GSF.Communication
             m_connectData = connectionString.ParseKeyValuePairs();
 
             if (!m_connectData.ContainsKey("port"))
-                throw new ArgumentException(string.Format("Port property is missing (Example: {0})", DefaultConnectionString));
+                throw new ArgumentException($"Port property is missing (Example: {DefaultConnectionString})");
 
             if (!m_connectData.ContainsKey("baudrate"))
-                throw new ArgumentException(string.Format("BaudRate property is missing (Example: {0})", DefaultConnectionString));
+                throw new ArgumentException($"BaudRate property is missing (Example: {DefaultConnectionString})");
 
             if (!m_connectData.ContainsKey("parity"))
-                throw new ArgumentException(string.Format("Parity property is missing (Example: {0})", DefaultConnectionString));
+                throw new ArgumentException($"Parity property is missing (Example: {DefaultConnectionString})");
 
             if (!m_connectData.ContainsKey("stopbits"))
-                throw new ArgumentException(string.Format("StopBits property is missing (Example: {0})", DefaultConnectionString));
+                throw new ArgumentException($"StopBits property is missing (Example: {DefaultConnectionString})");
 
             if (!m_connectData.ContainsKey("databits"))
-                throw new ArgumentException(string.Format("DataBits property is missing (Example: {0})", DefaultConnectionString));
+                throw new ArgumentException($"DataBits property is missing (Example: {DefaultConnectionString})");
         }
 
         /// <summary>

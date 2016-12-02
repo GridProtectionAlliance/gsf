@@ -607,13 +607,13 @@ namespace GSF.Communication
 
             // Check if 'server' property is missing.
             if (!m_connectData.ContainsKey("server"))
-                throw new ArgumentException(string.Format("Server property is missing (Example: {0})", DefaultConnectionString));
+                throw new ArgumentException($"Server property is missing (Example: {DefaultConnectionString})");
 
             // Backwards compatibility adjustments.
             // New Format: Server=localhost:8888
             // Old Format: Server=localhost; Port=8888
             if (m_connectData.ContainsKey("port"))
-                m_connectData["server"] = string.Format("{0}:{1}", m_connectData["server"], m_connectData["port"]);
+                m_connectData["server"] = $"{m_connectData["server"]}:{m_connectData["port"]}";
 
             // For traditional style connection strings, also support a "zeroMQTransportProtocol" setting
             if (m_connectData.ContainsKey("zeroMQTransportProtocol"))
@@ -638,7 +638,7 @@ namespace GSF.Communication
                 validConnectionString = true;
 
                 if (!string.IsNullOrWhiteSpace(m_connectData["interface"]) && (m_zeroMQTransportProtocol == ZeroMQTransportProtocol.Pgm || m_zeroMQTransportProtocol == ZeroMQTransportProtocol.Epgm))
-                    m_connectData["server"] = string.Format("{0}://{1};{2}:{3}", m_zeroMQTransportProtocol.ToString().ToLowerInvariant(), m_connectData["interface"], endpointMatch.Groups["host"].Value.Trim(), port);
+                    m_connectData["server"] = $"{m_zeroMQTransportProtocol.ToString().ToLowerInvariant()}://{m_connectData["interface"]};{endpointMatch.Groups["host"].Value.Trim()}:{port}";
             }
             else
             {
@@ -647,20 +647,20 @@ namespace GSF.Communication
 
                 if (endpointMatch.Success)
                 {
-                    m_connectData["server"] = string.Format("{0}://{1}", m_zeroMQTransportProtocol.ToString().ToLowerInvariant(), m_connectData["server"]);
+                    m_connectData["server"] = $"{m_zeroMQTransportProtocol.ToString().ToLowerInvariant()}://{m_connectData["server"]}";
                     port = endpointMatch.Groups["port"].Value.Trim();
                     validConnectionString = true;
 
                     if (!string.IsNullOrWhiteSpace(m_connectData["interface"]) && (m_zeroMQTransportProtocol == ZeroMQTransportProtocol.Pgm || m_zeroMQTransportProtocol == ZeroMQTransportProtocol.Epgm))
-                        m_connectData["server"] = string.Format("{0}://{1};{2}:{3}", m_zeroMQTransportProtocol.ToString().ToLowerInvariant(), m_connectData["interface"], endpointMatch.Groups["host"].Value.Trim(), port);
+                        m_connectData["server"] = $"{m_zeroMQTransportProtocol.ToString().ToLowerInvariant()}://{m_connectData["interface"]};{endpointMatch.Groups["host"].Value.Trim()}:{port}";
                 }
             }
 
             if (!validConnectionString)
-                throw new FormatException(string.Format("Server property is invalid (Example: {0})", DefaultConnectionString));
+                throw new FormatException($"Server property is invalid (Example: {DefaultConnectionString})");
 
             if (m_zeroMQTransportProtocol != ZeroMQTransportProtocol.InProc && !Transport.IsPortNumberValid(port))
-                throw new ArgumentOutOfRangeException(nameof(connectionString), string.Format("Server port must between {0} and {1}", Transport.PortRangeLow, Transport.PortRangeHigh));
+                throw new ArgumentOutOfRangeException(nameof(connectionString), $"Server port must between {Transport.PortRangeLow} and {Transport.PortRangeHigh}");
         }
 
         /// <summary>
@@ -717,7 +717,7 @@ namespace GSF.Communication
             if (ZeroMQServer.IsThreadAbortException(ex))
                 return;
 
-            OnSendDataException(new InvalidOperationException(string.Format("Disconnect exception: {0}", ex.Message), ex));
+            OnSendDataException(new InvalidOperationException($"Disconnect exception: {ex.Message}", ex));
         }
 
         /// <summary>

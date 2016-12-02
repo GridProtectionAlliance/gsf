@@ -560,7 +560,7 @@ namespace GSF.Communication
             }
             catch (Exception ex)
             {
-                OnSendClientDataException(clientInfo.ID, new InvalidOperationException(string.Format("Client disconnection exception: {0}", ex.Message), ex));
+                OnSendClientDataException(clientInfo.ID, new InvalidOperationException($"Client disconnection exception: {ex.Message}", ex));
             }
         }
 
@@ -624,7 +624,7 @@ namespace GSF.Communication
 
                     if (endpointMatch.Success)
                     {
-                        m_configData["server"] = string.Format("{0}://{1}", m_zeroMQTransportProtocol.ToString().ToLowerInvariant(), m_configData["server"]);
+                        m_configData["server"] = $"{m_zeroMQTransportProtocol.ToString().ToLowerInvariant()}://{m_configData["server"]}";
                         m_configData["interface"] = endpointMatch.Groups["host"].Value.Trim();
                         port = endpointMatch.Groups["port"].Value.Trim();
                         validConfigurationString = true;
@@ -632,10 +632,10 @@ namespace GSF.Communication
                 }
 
                 if (!validConfigurationString)
-                    throw new FormatException(string.Format("Server property is invalid (Example: {0})", DefaultConfigurationString));
+                    throw new FormatException($"Server property is invalid (Example: {DefaultConfigurationString})");
 
                 if (m_zeroMQTransportProtocol != ZeroMQTransportProtocol.InProc && !Transport.IsPortNumberValid(port))
-                    throw new ArgumentOutOfRangeException(nameof(configurationString), string.Format("Port number must be between {0} and {1}", Transport.PortRangeLow, Transport.PortRangeHigh));
+                    throw new ArgumentOutOfRangeException(nameof(configurationString), $"Port number must be between {Transport.PortRangeLow} and {Transport.PortRangeHigh}");
             }
             else
             {
@@ -656,9 +656,9 @@ namespace GSF.Communication
 
                 // For traditional IServer connection strings, a "port" property is expected
                 if (m_configData.ContainsKey("port") && m_zeroMQTransportProtocol != ZeroMQTransportProtocol.InProc)
-                    m_configData["server"] = string.Format("{0}://{1}:{2}", m_zeroMQTransportProtocol.ToString().ToLowerInvariant(), m_configData["interface"], m_configData["port"]);
+                    m_configData["server"] = $"{m_zeroMQTransportProtocol.ToString().ToLowerInvariant()}://{m_configData["interface"]}:{m_configData["port"]}";
                 else
-                    throw new FormatException(string.Format("Server property is invalid (Example: {0})", DefaultConfigurationString));
+                    throw new FormatException($"Server property is invalid (Example: {DefaultConfigurationString})");
             }
         }
 

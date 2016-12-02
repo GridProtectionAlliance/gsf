@@ -515,12 +515,12 @@ namespace GSF.Communication
                         if (string.IsNullOrWhiteSpace(applicationName))
                             applicationName = FilePath.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName);
 
-                        string message = string.Format("One or more less secure TLS/SSL protocols \"{0}\" are being used by an instance of the TlsServer in {1}", m_enabledSslProtocols, applicationName);
+                        string message = $"One or more less secure TLS/SSL protocols \"{m_enabledSslProtocols}\" are being used by an instance of the TlsServer in {applicationName}";
                         EventLog.WriteEntry(applicationName, message, EventLogEntryType.Warning, 1);
                     }
                     catch (Exception ex)
                     {
-                        throw new SecurityException(string.Format("Failed to write event log entry for security warning about use of less secure TLS/SSL protocols \"{0}\": {1}", m_enabledSslProtocols, ex.Message), ex);
+                        throw new SecurityException($"Failed to write event log entry for security warning about use of less secure TLS/SSL protocols \"{m_enabledSslProtocols}\": {ex.Message}", ex);
                     }
                 }
             }
@@ -755,7 +755,7 @@ namespace GSF.Communication
                 catch (SecurityException ex)
                 {
                     // Security exception can occur when user forces use of older TLS protocol through configuration but event log warning entry cannot be written
-                    OnClientConnectingException(new SecurityException(string.Format("Transport layer security protocols assigned as configured: \"{0}\", however, event log entry for security exception could not be written: {1}", EnabledSslProtocols, ex.Message), ex));
+                    OnClientConnectingException(new SecurityException($"Transport layer security protocols assigned as configured: \"{EnabledSslProtocols}\", however, event log entry for security exception could not be written: {ex.Message}", ex));
                 }
 
                 RequireClientCertificate = settings["RequireClientCertificate"].ValueAs(m_requireClientCertificate);
@@ -771,7 +771,7 @@ namespace GSF.Communication
             }
 
             if (!FilePath.InApplicationPath(TrustedCertificatesPath))
-                OnClientConnectingException(new SecurityException(string.Format("Trusted certificates path \"{0}\" is not in application path", TrustedCertificatesPath)));
+                OnClientConnectingException(new SecurityException($"Trusted certificates path \"{TrustedCertificatesPath}\" is not in application path"));
         }
 
         /// <summary>
@@ -864,7 +864,7 @@ namespace GSF.Communication
             }
             catch (Exception ex)
             {
-                OnSendClientDataException(clientID, new InvalidOperationException(string.Format("Client disconnection exception: {0}", ex.Message), ex));
+                OnSendClientDataException(clientID, new InvalidOperationException($"Client disconnection exception: {ex.Message}", ex));
             }
         }
 
@@ -921,10 +921,10 @@ namespace GSF.Communication
             m_ipStack = Transport.GetInterfaceIPStack(m_configData);
 
             if (!m_configData.ContainsKey("port"))
-                throw new ArgumentException(string.Format("Port property is missing (Example: {0})", DefaultConfigurationString));
+                throw new ArgumentException($"Port property is missing (Example: {DefaultConfigurationString})");
 
             if (!Transport.IsPortNumberValid(m_configData["port"]))
-                throw new ArgumentOutOfRangeException(nameof(configurationString), string.Format("Port number must be between {0} and {1}", Transport.PortRangeLow, Transport.PortRangeHigh));
+                throw new ArgumentOutOfRangeException(nameof(configurationString), $"Port number must be between {Transport.PortRangeLow} and {Transport.PortRangeHigh}");
         }
 
         /// <summary>
@@ -945,7 +945,7 @@ namespace GSF.Communication
             ManualResetEventSlim handle;
 
             if (!m_clientInfoLookup.TryGetValue(clientID, out clientInfo))
-                throw new InvalidOperationException(string.Format("No client found for ID {0}.", clientID));
+                throw new InvalidOperationException($"No client found for ID {clientID}.");
 
             sendQueue = clientInfo.SendQueue;
 
@@ -1061,7 +1061,7 @@ namespace GSF.Communication
                 if ((object)remoteEndPoint != null)
                 {
                     string clientAddress = remoteEndPoint.Address.ToString();
-                    string errorMessage = string.Format("Unable to accept connection to client [{0}]: {1}", clientAddress, ex.Message);
+                    string errorMessage = $"Unable to accept connection to client [{clientAddress}]: {ex.Message}";
                     OnClientConnectingException(new Exception(errorMessage, ex));
                 }
 
@@ -1125,7 +1125,7 @@ namespace GSF.Communication
                                 }
                             }
 
-                            throw new InvalidOperationException(string.Format("Client {0} connected to TCP server reached maximum send queue size. {1} payloads dumped from the queue.", clientInfo.Client.ID, m_maxSendQueueSize));
+                            throw new InvalidOperationException($"Client {clientInfo.Client.ID} connected to TCP server reached maximum send queue size. {m_maxSendQueueSize} payloads dumped from the queue.");
                         }
                     }, ex => OnSendClientDataException(clientInfo.Client.ID, ex));
 
@@ -1142,7 +1142,7 @@ namespace GSF.Communication
                 if ((object)remoteEndPoint != null)
                 {
                     string clientAddress = remoteEndPoint.Address.ToString();
-                    string errorMessage = string.Format("Unable to authenticate connection to client [{0}]: {1}", clientAddress, CertificateChecker.ReasonForFailure ?? ex.Message);
+                    string errorMessage = $"Unable to authenticate connection to client [{clientAddress}]: {CertificateChecker.ReasonForFailure ?? ex.Message}";
                     OnClientConnectingException(new Exception(errorMessage, ex));
                 }
                 TerminateConnection(client, false);
@@ -1199,7 +1199,7 @@ namespace GSF.Communication
                             }
                         }
 
-                        throw new InvalidOperationException(string.Format("Client {0} connected to TCP server reached maximum send queue size. {1} payloads dumped from the queue.", clientInfo.Client.ID, m_maxSendQueueSize));
+                        throw new InvalidOperationException($"Client {clientInfo.Client.ID} connected to TCP server reached maximum send queue size. {m_maxSendQueueSize} payloads dumped from the queue.");
                     }
                 }, ex => OnSendClientDataException(clientInfo.Client.ID, ex));
 
@@ -1215,7 +1215,7 @@ namespace GSF.Communication
                 if ((object)remoteEndPoint != null)
                 {
                     string clientAddress = remoteEndPoint.Address.ToString();
-                    string errorMessage = string.Format("Unable to authenticate connection to client [{0}]: {1}", clientAddress, ex.Message);
+                    string errorMessage = $"Unable to authenticate connection to client [{clientAddress}]: {ex.Message}";
                     OnClientConnectingException(new Exception(errorMessage, ex));
                 }
                 TerminateConnection(client, false);
@@ -1326,7 +1326,7 @@ namespace GSF.Communication
                     }
                     catch (Exception ex)
                     {
-                        string errorMessage = string.Format("Exception encountered while attempting to send next payload: {0}", ex.Message);
+                        string errorMessage = $"Exception encountered while attempting to send next payload: {ex.Message}";
 
                         if ((object)client != null)
                             OnSendClientDataException(client.ID, new Exception(errorMessage, ex));

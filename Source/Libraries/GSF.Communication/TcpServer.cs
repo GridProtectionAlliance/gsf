@@ -637,7 +637,7 @@ namespace GSF.Communication
             }
             catch (Exception ex)
             {
-                OnSendClientDataException(client.ID, new InvalidOperationException(string.Format("Client disconnection exception: {0}", ex.Message), ex));
+                OnSendClientDataException(client.ID, new InvalidOperationException($"Client disconnection exception: {ex.Message}", ex));
             }
         }
 
@@ -693,10 +693,10 @@ namespace GSF.Communication
             m_ipStack = Transport.GetInterfaceIPStack(m_configData);
 
             if (!m_configData.ContainsKey("port"))
-                throw new ArgumentException(string.Format("Port property is missing (Example: {0})", DefaultConfigurationString));
+                throw new ArgumentException($"Port property is missing (Example: {DefaultConfigurationString})");
 
             if (!Transport.IsPortNumberValid(m_configData["port"]))
-                throw new ArgumentOutOfRangeException(nameof(configurationString), string.Format("Port number must be between {0} and {1}", Transport.PortRangeLow, Transport.PortRangeHigh));
+                throw new ArgumentOutOfRangeException(nameof(configurationString), $"Port number must be between {Transport.PortRangeLow} and {Transport.PortRangeHigh}");
         }
 
         /// <summary>
@@ -717,7 +717,7 @@ namespace GSF.Communication
             ManualResetEventSlim handle;
 
             if (!m_clientInfoLookup.TryGetValue(clientID, out clientInfo))
-                throw new InvalidOperationException(string.Format("No client found for ID {0}.", clientID));
+                throw new InvalidOperationException($"No client found for ID {clientID}.");
 
             sendQueue = clientInfo.SendQueue;
 
@@ -906,7 +906,7 @@ namespace GSF.Communication
                                 }
                             }
 
-                            throw new InvalidOperationException(string.Format("Client {0} connected to TCP server reached maximum send queue size. {1} payloads dumped from the queue.", clientInfo.Client.ID, m_maxSendQueueSize));
+                            throw new InvalidOperationException($"Client {clientInfo.Client.ID} connected to TCP server reached maximum send queue size. {m_maxSendQueueSize} payloads dumped from the queue.");
                         }
                     }, ex => OnSendClientDataException(clientInfo.Client.ID, ex));
 
@@ -943,12 +943,12 @@ namespace GSF.Communication
                 if ((object)client.Provider != null && (object)client.Provider.RemoteEndPoint != null)
                 {
                     string clientAddress = ((IPEndPoint)client.Provider.RemoteEndPoint).Address.ToString();
-                    string errorMessage = string.Format("Unable to accept connection to client [{0}]: {1}", clientAddress, ex.Message);
+                    string errorMessage = $"Unable to accept connection to client [{clientAddress}]: {ex.Message}";
                     OnClientConnectingException(new Exception(errorMessage, ex));
                 }
                 else
                 {
-                    string errorMessage = string.Format("Unable to accept connection to client [unknown]: {0}", ex.Message);
+                    string errorMessage = $"Unable to accept connection to client [unknown]: {ex.Message}";
                     OnClientConnectingException(new Exception(errorMessage, ex));
                 }
 
@@ -1083,7 +1083,7 @@ namespace GSF.Communication
                     }
                     catch (Exception ex)
                     {
-                        string errorMessage = string.Format("Exception encountered while attempting to send next payload: {0}", ex.Message);
+                        string errorMessage = $"Exception encountered while attempting to send next payload: {ex.Message}";
 
                         if ((object)client != null)
                             OnSendClientDataException(client.ID, new Exception(errorMessage, ex));

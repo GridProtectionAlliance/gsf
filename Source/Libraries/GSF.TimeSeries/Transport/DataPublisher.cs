@@ -2694,7 +2694,7 @@ namespace GSF.TimeSeries.Transport
                 catch (InvalidOperationException ex)
                 {
                     // Could still be processing threads with client data after client has been disconnected, this can be safely ignored
-                    if (ex.Message.StartsWith("No client found"))
+                    if (ex.Message.StartsWith("No client found") && !connection.IsConnected)
                         connection.ClientNotFoundExceptionOccurred = true;
                     else
                         OnProcessException(MessageLevel.Info, new InvalidOperationException("Failed to send response packet to client due to exception: " + ex.Message, ex));

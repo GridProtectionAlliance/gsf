@@ -367,7 +367,7 @@ namespace GSF.Communication
         {
             get
             {
-                return string.Format("{0}://{1}", TransportProtocol, m_connectData["server"]).ToLower();
+                return $"{TransportProtocol}://{m_connectData["server"]}".ToLower();
             }
         }
 
@@ -571,7 +571,7 @@ namespace GSF.Communication
                 }
                 catch (Exception ex)
                 {
-                    OnSendDataException(new InvalidOperationException(string.Format("Failed to drop multicast membership: {0}", ex.Message), ex));
+                    OnSendDataException(new InvalidOperationException($"Failed to drop multicast membership: {ex.Message}", ex));
                 }
 
                 m_udpClient.Reset();
@@ -607,7 +607,7 @@ namespace GSF.Communication
                 if (endpoint != Match.Empty)
                     m_udpServer = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
                 else
-                    throw new FormatException(string.Format("Server property in ConnectionString is invalid (Example: {0})", DefaultConnectionString));
+                    throw new FormatException($"Server property in ConnectionString is invalid (Example: {DefaultConnectionString})");
             }
             else
             {
@@ -711,15 +711,15 @@ namespace GSF.Communication
                 m_connectData.Add("port", m_connectData["localport"]);
 
             if (m_connectData.ContainsKey("server") && m_connectData.ContainsKey("remoteport"))
-                m_connectData["server"] = string.Format("{0}:{1}", m_connectData["server"], m_connectData["remoteport"]);
+                m_connectData["server"] = $"{m_connectData["server"]}:{m_connectData["remoteport"]}";
 
             // Check if 'port' property is missing.
             if (!m_connectData.ContainsKey("port"))
-                throw new ArgumentException(string.Format("Port property is missing (Example: {0})", DefaultConnectionString));
+                throw new ArgumentException($"Port property is missing (Example: {DefaultConnectionString})");
 
             // Check if 'port' property is valid.
             if (!Transport.IsPortNumberValid(m_connectData["port"]) && int.Parse(m_connectData["port"]) != -1)
-                throw new ArgumentOutOfRangeException(nameof(connectionString), string.Format("Port number must be {0} or between {1} and {2}", -1, Transport.PortRangeLow, Transport.PortRangeHigh));
+                throw new ArgumentOutOfRangeException(nameof(connectionString), $"Port number must be {-1} or between {Transport.PortRangeLow} and {Transport.PortRangeHigh}");
 
             if (!m_connectData.ContainsKey("multicastTimeToLive"))
                 m_connectData.Add("multicastTimeToLive", "10");
@@ -1040,7 +1040,7 @@ namespace GSF.Communication
                     }
                     catch (Exception ex)
                     {
-                        string errorMessage = string.Format("Exception encountered while attempting to send next payload: {0}", ex.Message);
+                        string errorMessage = $"Exception encountered while attempting to send next payload: {ex.Message}";
                         OnSendDataException(new Exception(errorMessage, ex));
                         Interlocked.Exchange(ref m_sending, 0);
                     }
@@ -1154,10 +1154,10 @@ namespace GSF.Communication
                     IPAddress localAddress = ((IPEndPoint)m_udpClient.Provider.LocalEndPoint).Address;
 
                     if (sourceAddress.AddressFamily != serverAddress.AddressFamily)
-                        throw new InvalidOperationException(string.Format("Source address \"{0}\" is not in the same IP format as server address \"{1}\"", sourceAddress, serverAddress));
+                        throw new InvalidOperationException($"Source address \"{sourceAddress}\" is not in the same IP format as server address \"{serverAddress}\"");
 
                     if (localAddress.AddressFamily != serverAddress.AddressFamily)
-                        throw new InvalidOperationException(string.Format("Local address \"{0}\" is not in the same IP format as server address \"{1}\"", localAddress, serverAddress));
+                        throw new InvalidOperationException($"Local address \"{localAddress}\" is not in the same IP format as server address \"{serverAddress}\"");
 
                     using (BlockAllocatedMemoryStream membershipAddresses = new BlockAllocatedMemoryStream())
                     {
@@ -1204,10 +1204,10 @@ namespace GSF.Communication
                         IPAddress localAddress = ((IPEndPoint)m_udpClient.Provider.LocalEndPoint).Address;
 
                         if (sourceAddress.AddressFamily != serverAddress.AddressFamily)
-                            throw new InvalidOperationException(string.Format("Source address \"{0}\" is not in the same IP format as server address \"{1}\"", sourceAddress, serverAddress));
+                            throw new InvalidOperationException($"Source address \"{sourceAddress}\" is not in the same IP format as server address \"{serverAddress}\"");
 
                         if (localAddress.AddressFamily != serverAddress.AddressFamily)
-                            throw new InvalidOperationException(string.Format("Local address \"{0}\" is not in the same IP format as server address \"{1}\"", localAddress, serverAddress));
+                            throw new InvalidOperationException($"Local address \"{localAddress}\" is not in the same IP format as server address \"{serverAddress}\"");
 
                         using (BlockAllocatedMemoryStream membershipAddresses = new BlockAllocatedMemoryStream())
                         {
@@ -1254,7 +1254,7 @@ namespace GSF.Communication
                     }
                 }
 
-                throw new InvalidOperationException(string.Format("UDP client reached maximum send queue size. {0} payloads dumped from the queue.", m_maxSendQueueSize));
+                throw new InvalidOperationException($"UDP client reached maximum send queue size. {m_maxSendQueueSize} payloads dumped from the queue.");
             }
         }
 

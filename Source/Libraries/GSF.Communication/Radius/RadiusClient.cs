@@ -115,7 +115,7 @@ namespace GSF.Communication.Radius
             this.NewPinModeMessage2 = DefaultNewPinModeMessage2;
             this.NewPinModeMessage3 = DefaultNewPinModeMessage3;
             this.NextTokenModeMessage = DefaultNextTokenModeMessage;
-            m_udpClient = new UdpClient(string.Format("Server={0}; RemotePort={1}; LocalPort=0", serverName, serverPort));
+            m_udpClient = new UdpClient($"Server={serverName}; RemotePort={serverPort}; LocalPort=0");
             m_udpClient.ReceiveDataComplete += m_udpClient_ReceivedData;
             m_udpClient.Connect(); // Start the connection cycle.
         }

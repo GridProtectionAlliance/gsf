@@ -432,7 +432,7 @@ namespace GSF.Communication
         {
             get
             {
-                return string.Format("{0}://{1}", TransportProtocol, m_connectData["server"]).ToLower();
+                return $"{TransportProtocol}://{m_connectData["server"]}".ToLower();
             }
         }
 
@@ -569,12 +569,12 @@ namespace GSF.Communication
                         if (string.IsNullOrWhiteSpace(applicationName))
                             applicationName = FilePath.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName);
 
-                        string message = string.Format("One or more less secure TLS/SSL protocols \"{0}\" are being used by an instance of the TlsClient in {1}", m_enabledSslProtocols, applicationName);
+                        string message = $"One or more less secure TLS/SSL protocols \"{m_enabledSslProtocols}\" are being used by an instance of the TlsClient in {applicationName}";
                         EventLog.WriteEntry(applicationName, message, EventLogEntryType.Warning, 1);
                     }
                     catch (Exception ex)
                     {
-                        throw new SecurityException(string.Format("Failed to write event log entry for security warning about use of less secure TLS/SSL protocols \"{0}\": {1}", m_enabledSslProtocols, ex.Message), ex);
+                        throw new SecurityException($"Failed to write event log entry for security warning about use of less secure TLS/SSL protocols \"{m_enabledSslProtocols}\": {ex.Message}", ex);
                     }
                 }
             }
@@ -762,7 +762,7 @@ namespace GSF.Communication
                 catch (SecurityException ex)
                 {
                     // Security exception can occur when user forces use of older TLS protocol through configuration but event log warning entry cannot be written
-                    OnConnectionException(new SecurityException(string.Format("Transport layer security protocols assigned as configured: \"{0}\", however, event log entry for security exception could not be written: {1}", EnabledSslProtocols, ex.Message), ex));
+                    OnConnectionException(new SecurityException($"Transport layer security protocols assigned as configured: \"{EnabledSslProtocols}\", however, event log entry for security exception could not be written: {ex.Message}", ex));
                 }
 
                 CheckCertificateRevocation = settings["CheckCertificateRevocation"].ValueAs(m_checkCertificateRevocation);
@@ -777,7 +777,7 @@ namespace GSF.Communication
             }
 
             if (!FilePath.InApplicationPath(TrustedCertificatesPath))
-                OnConnectionException(new SecurityException(string.Format("Trusted certificates path \"{0}\" is not in application path", TrustedCertificatesPath)));
+                OnConnectionException(new SecurityException($"Trusted certificates path \"{TrustedCertificatesPath}\" is not in application path"));
         }
 
         /// <summary>
@@ -1078,7 +1078,7 @@ namespace GSF.Communication
             catch (Exception ex)
             {
                 // Log exception during connection attempt
-                string errorMessage = string.Format("Unable to authenticate connection to server: {0}", CertificateChecker.ReasonForFailure ?? ex.Message);
+                string errorMessage = $"Unable to authenticate connection to server: {CertificateChecker.ReasonForFailure ?? ex.Message}";
                 OnConnectionException(new Exception(errorMessage, ex));
 
                 // Terminate the connection
@@ -1205,7 +1205,7 @@ namespace GSF.Communication
             catch (Exception ex)
             {
                 // Log exception during connection attempt
-                string errorMessage = string.Format("Unable to authenticate connection to server: {0}", CertificateChecker.ReasonForFailure ?? ex.Message);
+                string errorMessage = $"Unable to authenticate connection to server: {CertificateChecker.ReasonForFailure ?? ex.Message}";
                 OnConnectionException(new Exception(errorMessage, ex));
 
                 // Terminate the connection
@@ -1730,9 +1730,13 @@ namespace GSF.Communication
                         m_connectWaitHandle.Set();
                 }
             }
+            catch (ObjectDisposedException)
+            {
+                // This can be safely ignored
+            }
             catch (Exception ex)
             {
-                OnSendDataException(new InvalidOperationException(string.Format("Disconnect exception: {0}", ex.Message), ex));
+                OnSendDataException(new InvalidOperationException($"Disconnect exception: {ex.Message}", ex));
             }
         }
 
@@ -1796,22 +1800,22 @@ namespace GSF.Communication
 
             // Check if 'server' property is missing.
             if (!m_connectData.ContainsKey("server"))
-                throw new ArgumentException(string.Format("Server property is missing (Example: {0})", DefaultConnectionString));
+                throw new ArgumentException($"Server property is missing (Example: {DefaultConnectionString})");
 
             // Backwards compatibility adjustments.
             // New Format: Server=localhost:8888
             // Old Format: Server=localhost; Port=8888
             if (m_connectData.ContainsKey("port"))
-                m_connectData["server"] = string.Format("{0}:{1}", m_connectData["server"], m_connectData["port"]);
+                m_connectData["server"] = $"{m_connectData["server"]}:{m_connectData["port"]}";
 
             // Check if 'server' property is valid.
             Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
 
             if (endpoint == Match.Empty)
-                throw new FormatException(string.Format("Server property is invalid (Example: {0})", DefaultConnectionString));
+                throw new FormatException($"Server property is invalid (Example: {DefaultConnectionString})");
 
             if (!Transport.IsPortNumberValid(endpoint.Groups["port"].Value))
-                throw new ArgumentOutOfRangeException(nameof(connectionString), string.Format("Server port must between {0} and {1}", Transport.PortRangeLow, Transport.PortRangeHigh));
+                throw new ArgumentOutOfRangeException(nameof(connectionString), $"Server port must between {Transport.PortRangeLow} and {Transport.PortRangeHigh}");
         }
 
         /// <summary>
@@ -1871,7 +1875,7 @@ namespace GSF.Communication
                     }
                 }
 
-                throw new InvalidOperationException(string.Format("UDP client reached maximum send queue size. {0} payloads dumped from the queue.", m_maxSendQueueSize));
+                throw new InvalidOperationException($"UDP client reached maximum send queue size. {m_maxSendQueueSize} payloads dumped from the queue.");
             }
         }
 
