@@ -281,7 +281,7 @@ namespace GSF.TimeSeries
                     // Override default settings with user provided input. 
                     m_clientHelper.PersistSettings = false;
                     m_remotingClient.PersistSettings = false;
-                    m_remotingClient.ConnectionString = string.Format("Server={0}", arguments["server"]);
+                    m_remotingClient.ConnectionString = $"Server={arguments["server"]}";
                 }
 
                 long lastConnectAttempt = 0;
@@ -457,7 +457,7 @@ namespace GSF.TimeSeries
             remotingClient.PayloadAware = true;
             remotingClient.PersistSettings = true;
             remotingClient.SettingsCategory = "RemotingClient";
-            remotingClient.TrustedCertificatesPath = string.Format("Certs{0}Remotes", Path.DirectorySeparatorChar);
+            remotingClient.TrustedCertificatesPath = $"Certs{Path.DirectorySeparatorChar}Remotes";
             remotingClient.ValidChainFlags = X509ChainStatusFlags.UntrustedRoot;
             remotingClient.ValidPolicyErrors = SslPolicyErrors.RemoteCertificateChainErrors;
             remotingClient.Initialize();
@@ -730,7 +730,7 @@ namespace GSF.TimeSeries
 
                         if ((object)reportData != null)
                         {
-                            string tempPath = Path.Combine(Path.GetTempPath(), string.Format("{0}.pdf", Process.GetCurrentProcess().Id));
+                            string tempPath = Path.Combine(Path.GetTempPath(), $"{Process.GetCurrentProcess().Id}.pdf");
                             File.WriteAllBytes(tempPath, reportData);
                             using (Process.Start(tempPath))
                             {

@@ -127,7 +127,7 @@ namespace GSF.TimeSeries
         {
             if (!DesignMode)
             {
-                if (MessageBox.Show(string.Format("Are you sure you want to stop {0} service? ", m_productName),
+                if (MessageBox.Show($"Are you sure you want to stop {m_productName} service? ",
                     "Stop Service", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
                     // Stop the windows service.

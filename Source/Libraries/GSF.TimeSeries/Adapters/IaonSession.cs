@@ -493,7 +493,7 @@ namespace GSF.TimeSeries.Adapters
                 if (string.IsNullOrWhiteSpace(collection))
                     return temporalSupport.Rows.Count > 0;
 
-                return temporalSupport.Select(string.Format("Source = '{0}'", collection)).Length > 0;
+                return temporalSupport.Select($"Source = '{collection}'").Length > 0;
             }
             catch
             {
@@ -917,7 +917,7 @@ namespace GSF.TimeSeries.Adapters
                             temporalConfiguration.Tables.Add(table.Clone());
 
                             // Check for adapters with temporal support in this adapter collection
-                            DataRow[] temporalAdapters = temporalSupport.Select(string.Format("Source = '{0}'", tableName));
+                            DataRow[] temporalAdapters = temporalSupport.Select($"Source = '{tableName}'");
 
                             // If any adapters support temporal processing, add them to the temporal configuration
                             if (temporalAdapters.Length > 0)
@@ -925,7 +925,7 @@ namespace GSF.TimeSeries.Adapters
                                 DataTable realtimeTable = realtimeConfiguration.Tables[tableName];
                                 DataTable temporalTable = temporalConfiguration.Tables[tableName];
 
-                                foreach (DataRow row in realtimeTable.Select(string.Format("ID IN ({0})", temporalAdapters.Select(row => row["ID"].ToString()).ToDelimitedString(','))))
+                                foreach (DataRow row in realtimeTable.Select($"ID IN ({temporalAdapters.Select(row => row["ID"].ToString()).ToDelimitedString(',')})"))
                                 {
                                     DataRow newRow = temporalTable.NewRow();
 

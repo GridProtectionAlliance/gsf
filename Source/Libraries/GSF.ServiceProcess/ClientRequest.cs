@@ -153,13 +153,7 @@ namespace GSF.ServiceProcess
         /// <summary>
         /// Gets a list of attachments for the <see cref="ClientRequest"/>.
         /// </summary>
-        public List<object> Attachments
-        {
-            get
-            {
-                return m_attachments;
-            }
-        }
+        public List<object> Attachments => m_attachments;
 
         #endregion
 
@@ -171,7 +165,7 @@ namespace GSF.ServiceProcess
         /// <returns>A <see cref="String"/> that represents the <see cref="ClientRequest"/>.</returns>
         public override string ToString()
         {
-            return string.Format("{0} {1}", m_command, m_arguments).Trim();
+            return $"{m_command} {m_arguments}".Trim();
         }
 
         /// <summary>

@@ -198,35 +198,17 @@ namespace GSF.ServiceProcess
         /// <summary>
         /// Gets the <see cref="DateTime"/> when execution of <see cref="ServiceProcess"/> last started.
         /// </summary>
-        public DateTime ExecutionStartTime
-        {
-            get
-            {
-                return m_executionStartTime;
-            }
-        }
+        public DateTime ExecutionStartTime => m_executionStartTime;
 
         /// <summary>
         /// Gets the <see cref="DateTime"/> when execution of <see cref="ServiceProcess"/> last completed.
         /// </summary>
-        public DateTime ExecutionStopTime
-        {
-            get
-            {
-                return m_executionStopTime;
-            }
-        }
+        public DateTime ExecutionStopTime => m_executionStopTime;
 
         /// <summary>
         /// Gets the <see cref="Time"/> taken by the <see cref="ServiceProcess"/> during the last execution.
         /// </summary>
-        public Time LastExecutionTime
-        {
-            get
-            {
-                return Ticks.ToSeconds(m_executionStopTime.Ticks - m_executionStartTime.Ticks);
-            }
-        }
+        public Time LastExecutionTime => Ticks.ToSeconds(m_executionStopTime.Ticks - m_executionStartTime.Ticks);
 
         /// <summary>
         /// Gets the descriptive status of the <see cref="ServiceProcess"/>.

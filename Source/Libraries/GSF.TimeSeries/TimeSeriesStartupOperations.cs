@@ -490,7 +490,7 @@ namespace GSF.TimeSeries
             string description;
 
             // Add statistics for the alarms defined in the Alarm table.
-            methodName = string.Format("Get{0}Statistic_MeasurementCountForSeverity", source);
+            methodName = $"Get{source}Statistic_MeasurementCountForSeverity";
             missingStatistics = connection.RetrieveData(MissingStatisticsFormat, source, methodName);
 
             if (missingStatistics.Rows.Count > 0)
@@ -501,8 +501,8 @@ namespace GSF.TimeSeries
                 {
                     signalIndex++;
                     severity = missingStatistic.ConvertField<int>("Severity");
-                    name = string.Format("Alarm Severity {0}", severity);
-                    description = string.Format("Number of measurements received while alarm with severity {0} was raised during the last reporting interval.", severity);
+                    name = $"Alarm Severity {severity}";
+                    description = $"Number of measurements received while alarm with severity {severity} was raised during the last reporting interval.";
 
                     connection.ExecuteNonQuery(InsertAlarmStatisticFormat, source, signalIndex, name, description, "DataQualityMonitoring.dll", "DataQualityMonitoring.AlarmStatistics", methodName, severity, 1, "System.Int32", "{0:N0}", 0, 1001 - severity);
                 }

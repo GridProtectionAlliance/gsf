@@ -394,13 +394,7 @@ namespace GSF.ServiceProcess
         [Browsable(false),
         EditorBrowsable(EditorBrowsableState.Never),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public bool IsDisposed
-        {
-            get
-            {
-                return m_disposed;
-            }
-        }
+        public bool IsDisposed => m_disposed;
 
         #endregion
 
@@ -596,7 +590,7 @@ namespace GSF.ServiceProcess
                     else
                     {
                         // File does not exist.
-                        throw new FileNotFoundException(string.Format("File '{0}' does not exist", source));
+                        throw new FileNotFoundException($"File '{source}' does not exist");
                     }
                 }
 

@@ -2448,9 +2448,9 @@ namespace GSF.ServiceProcess
             SendResponse(clientID, new ServiceResponse("AuthenticationFailure"));
         }
 
-        private void SendUpdateClientStatusResponse(Guid clientID, UpdateType type, string responseMessage)
+        private void SendUpdateClientStatusResponse(Guid clientID, UpdateType type, string responseMessage, bool telnetMessage = false)
         {
-            if (string.IsNullOrEmpty(responseMessage))
+            if (string.IsNullOrEmpty(responseMessage) || (clientID == m_remoteCommandClientID && !telnetMessage))
                 return;
 
             ServiceResponse response = new ServiceResponse();
@@ -2680,15 +2680,9 @@ namespace GSF.ServiceProcess
             }
         }
 
-        private void RemoteCommandProcess_ErrorDataReceived(object sender, DataReceivedEventArgs e)
-        {
-            UpdateStatus(m_remoteCommandClientID, UpdateType.Alarm, e.Data + "\r\n");
-        }
+        private void RemoteCommandProcess_ErrorDataReceived(object sender, DataReceivedEventArgs e) => SendUpdateClientStatusResponse(m_remoteCommandClientID, UpdateType.Alarm, $"{e.Data}\r\n", true);
 
-        private void RemoteCommandProcess_OutputDataReceived(object sender, DataReceivedEventArgs e)
-        {
-            UpdateStatus(m_remoteCommandClientID, UpdateType.Information, e.Data + "\r\n");
-        }
+        private void RemoteCommandProcess_OutputDataReceived(object sender, DataReceivedEventArgs e) => SendUpdateClientStatusResponse(m_remoteCommandClientID, UpdateType.Information, $"{e.Data}\r\n", true);
 
         #region [ Client Request Handlers ]
 

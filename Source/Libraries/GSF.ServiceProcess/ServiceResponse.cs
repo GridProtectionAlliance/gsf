@@ -146,13 +146,7 @@ namespace GSF.ServiceProcess
         /// <summary>
         /// Gets a list of serializable attachments of the <see cref="ServiceResponse"/>.
         /// </summary>
-        public List<object> Attachments
-        {
-            get
-            {
-                return m_attachments;
-            }
-        }
+        public List<object> Attachments => m_attachments;
 
         #endregion
 
