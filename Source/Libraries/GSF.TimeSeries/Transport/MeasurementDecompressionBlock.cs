@@ -160,7 +160,6 @@ namespace GSF.TimeSeries.Transport
 
             if ((code & 7) == 5)
             {
-                m_nextRunLength = -1;
                 point = new PointMetaData();
                 point.SignalID = LittleEndian.ToUInt16(m_buffer, index);
                 index += 2;
@@ -178,7 +177,6 @@ namespace GSF.TimeSeries.Transport
 
             if ((code & 7) == 7)
             {
-                m_nextRunLength = -1;
                 userCommand = m_buffer[index++];
                 m_startIndex = index;
 
