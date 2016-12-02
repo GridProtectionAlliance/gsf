@@ -99,7 +99,7 @@ namespace GSF.TimeSeries.Transport
             if (OutputMeasurements != null)
                 outputCount = OutputMeasurements.Length;
 
-            return string.Format("Total input measurements: {0}, total output measurements: {1}", inputCount, outputCount).PadLeft(maxLength);
+            return $"Total input measurements: {inputCount}, total output measurements: {outputCount}".PadLeft(maxLength);
         }
 
         #endregion

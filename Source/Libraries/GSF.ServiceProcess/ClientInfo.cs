@@ -107,7 +107,7 @@ namespace GSF.ServiceProcess
             if ((object)parent == null || string.IsNullOrEmpty(parent.Username) || string.IsNullOrEmpty(parent.Password))
                 m_clientUserCredentials = string.Empty;
             else
-                m_clientUserCredentials = string.Format("{0}:{1}", parent.Username, parent.Password);
+                m_clientUserCredentials = $"{parent.Username}:{parent.Password}";
 
             // Initialize client application name.
             if (m_clientType == ApplicationType.Web)
@@ -181,57 +181,27 @@ namespace GSF.ServiceProcess
         /// <summary>
         /// Gets the <see cref="ApplicationType"/> of the remote client application.
         /// </summary>
-        public ApplicationType ClientType
-        {
-            get
-            {
-                return m_clientType;
-            }
-        }
+        public ApplicationType ClientType => m_clientType;
 
         /// <summary>
         /// Gets the friendly name of the remote client application.
         /// </summary>
-        public string ClientName
-        {
-            get
-            {
-                return m_clientName;
-            }
-        }
+        public string ClientName => m_clientName;
 
         /// <summary>
         /// Gets the <see cref="IPrincipal"/> of the remote client application's user.
         /// </summary>
-        public IPrincipal ClientUser
-        {
-            get
-            {
-                return m_clientUser;
-            }
-        }
+        public IPrincipal ClientUser => m_clientUser;
 
         /// <summary>
         /// Gets the credentials in 'username:password' format for authenticating the remote client application's user if a valid <see cref="ClientUser"/> is not available.
         /// </summary>
-        public string ClientUserCredentials
-        {
-            get
-            {
-                return m_clientUserCredentials;
-            }
-        }
+        public string ClientUserCredentials => m_clientUserCredentials;
 
         /// <summary>
         /// Gets the name of the machine running the remote client application.
         /// </summary>
-        public string MachineName
-        {
-            get
-            {
-                return m_machineName;
-            }
-        }
+        public string MachineName => m_machineName;
 
         /// <summary>
         /// Gets or sets the <see cref="DateTime"/> when the remote client application connected to the <see cref="ServiceHelper"/>.

@@ -161,7 +161,7 @@ namespace GSF.TimeSeries
         {
             try
             {
-                DataRow[] filteredRows = dataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalID = '{0}'", signalID.ToString()));
+                DataRow[] filteredRows = dataSource.Tables["ActiveMeasurements"].Select($"SignalID = '{signalID}'");
                 return filteredRows.Length > 0 ? filteredRows[0]["SignalType"].ToString().ToUpper().Trim() : "NONE";
             }
             catch
