@@ -74,6 +74,7 @@ namespace GSF.TimeSeries.Transport
             m_lastPoint.PointID = -1;
             m_previousTimestamp = 0;
             m_points.Clear();
+            m_pointByID.Clear();
             Clear();
         }
 
