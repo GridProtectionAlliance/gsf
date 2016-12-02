@@ -1126,11 +1126,14 @@ namespace GSF.TimeSeries.Transport
                 string commandChannelServerUri = m_commandChannel?.ServerUri;
                 string dataChannelServerUri = m_dataChannel?.ServerUri;
 
-                if ((object)commandChannelServerUri == null && (object)dataChannelServerUri == null)
+                if (string.IsNullOrWhiteSpace(commandChannelServerUri) && string.IsNullOrWhiteSpace(dataChannelServerUri))
                     return null;
 
-                if ((object)dataChannelServerUri == null)
+                if (string.IsNullOrWhiteSpace(dataChannelServerUri))
                     return commandChannelServerUri;
+
+                if (string.IsNullOrWhiteSpace(commandChannelServerUri))
+                    return dataChannelServerUri;
 
                 return $"{commandChannelServerUri} / {dataChannelServerUri}";
             }

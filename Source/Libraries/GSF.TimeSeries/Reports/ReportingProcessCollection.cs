@@ -35,13 +35,7 @@ namespace GSF.TimeSeries.Reports
     {
         #region [ Properties ]
 
-        string IProvideStatus.Name
-        {
-            get
-            {
-                return GetType().Name;
-            }
-        }
+        string IProvideStatus.Name => GetType().Name;
 
         /// <summary>
         /// Gets the descriptive status of this <see cref="AdapterCollectionBase{T}"/>.
