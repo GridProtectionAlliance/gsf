@@ -301,7 +301,20 @@ namespace GSF.Web.Model.Handlers
 
                     // Add any parent key restriction parameters
                     if (parentKeys.Length > 0 && parentKeys[0].Length > 0)
-                        queryRecordCountParameters.AddRange(parentKeys);
+                        queryRecordCountParameters.AddRange(parentKeys.Select((s,i) =>
+                        {
+                            Type type = queryRecordCount.GetParameters()[i].ParameterType;
+                            if (type == typeof(string))
+                            {
+                                return (object)s;
+                            }
+                            else if(type == typeof(Guid))
+                            {
+                                return (object)Guid.Parse(s);
+                    
+                            }
+                            return Convert.ChangeType(s, type);
+                        }));
 
                     // Add parameters for query records from query record count parameters - they match up to this point
                     queryRecordsParameters.AddRange(queryRecordCountParameters);
