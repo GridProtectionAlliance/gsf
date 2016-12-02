@@ -84,7 +84,7 @@ namespace GSF.SELEventParser
             }
         }
 
-        public double AverageFrequncy
+        public double AverageFrequency
         {
             get
             {
@@ -211,7 +211,7 @@ namespace GSF.SELEventParser
             while (!lines[index].ToUpper().Contains("FREQ"))
                 ++index;
 
-            commaSeparatedEventReport.AverageFrequncy = Convert.ToDouble(lines[++index].Split(',')[0]);
+            commaSeparatedEventReport.AverageFrequency = Convert.ToDouble(lines[++index].Split(',')[0]);
             commaSeparatedEventReport.SamplesPerCycleAnalog = Convert.ToInt32(lines[index].Split(',')[1]);
             commaSeparatedEventReport.SamplesPerCycleDigital = Convert.ToInt32(lines[index].Split(',')[2]);
             commaSeparatedEventReport.NumberOfCycles = Convert.ToInt32(lines[index].Split(',')[3]);
@@ -255,7 +255,7 @@ namespace GSF.SELEventParser
             }
 
             commaSeparatedEventReport.InitialReadingIndex = ++index;
-            int timeStepTicks = Convert.ToInt32(Math.Round(10000000.0 / commaSeparatedEventReport.AverageFrequncy / commaSeparatedEventReport.SamplesPerCycleAnalog));
+            int timeStepTicks = Convert.ToInt32(Math.Round(10000000.0 / commaSeparatedEventReport.AverageFrequency / commaSeparatedEventReport.SamplesPerCycleAnalog));
 
             while (!lines[index].ToUpper().Contains("SETTINGS"))
             {
