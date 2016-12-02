@@ -83,14 +83,22 @@ namespace GSF.Collections
                 int min = m_countHistory.Min();
                 m_countHistory.Clear();
 
-                if (objectsCreated > 0)
-                {
+                if (objectsCreated > 250)
+                    Log.Publish(MessageLevel.Error, MessageFlags.PerformanceIssue | MessageFlags.UsageIssue, "Items Created since last collection cycle.", (objectsCreated).ToString());
+                else if (objectsCreated > 50)
+                    Log.Publish(MessageLevel.Warning, "Items Created since last collection cycle.", (objectsCreated).ToString());
+                else if (objectsCreated > 0)
                     Log.Publish(MessageLevel.Info, "Items Created since last collection cycle.", (objectsCreated).ToString());
-                }
 
                 if (min > m_targetCount && objectsCreated == 0)
                 {
-                    Log.Publish(MessageLevel.Info, "Removing items", (min - m_targetCount).ToString());
+                    int itemsRemoved = (min - m_targetCount);
+                    if (itemsRemoved > 250)
+                        Log.Publish(MessageLevel.Error, MessageFlags.PerformanceIssue | MessageFlags.UsageIssue, "Removing items", itemsRemoved.ToString());
+                    else if (itemsRemoved > 50)
+                        Log.Publish(MessageLevel.Warning, "Removing items", itemsRemoved.ToString());
+                    else if (itemsRemoved > 0)
+                        Log.Publish(MessageLevel.Info, "Removing items", itemsRemoved.ToString());
                 }
 
                 while (min > m_targetCount && objectsCreated == 0)

@@ -155,17 +155,19 @@ namespace GSF.TimeSeries.Adapters
             m_measurementDumpingThreshold = thresholdSettings["MeasurementDumpingThreshold"].ValueAsInt32();
             m_defaultSampleSizeWarningThreshold = thresholdSettings["DefaultSampleSizeWarningThreshold"].ValueAsInt32();
 
-            // Create a new set of routing tables
-            switch (OptimizationOptions.DefaultRoutingMethod)
+            using (Logger.AppendStackMessages("HostAdapter","IaonSession"))
             {
-                case OptimizationOptions.RoutingMethod.HighLatencyLowCpu:
-                    m_routingTables = new RoutingTables(new RouteMappingHighLatencyLowCpu());
-                    break;
-                default:
-                    m_routingTables = new RoutingTables();
-                    break;
+                // Create a new set of routing tables
+                switch (OptimizationOptions.DefaultRoutingMethod)
+                {
+                    case OptimizationOptions.RoutingMethod.HighLatencyLowCpu:
+                        m_routingTables = new RoutingTables(new RouteMappingHighLatencyLowCpu());
+                        break;
+                    default:
+                        m_routingTables = new RoutingTables();
+                        break;
+                }
             }
-
             m_routingTables.StatusMessage += m_routingTables_StatusMessage;
             m_routingTables.ProcessException += m_routingTables_ProcessException;
 

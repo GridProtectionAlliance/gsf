@@ -57,7 +57,7 @@ namespace GSF.TimeSeries.Configuration
         protected ConfigurationLoaderBase()
         {
             Log = Logger.CreatePublisher(GetType(), MessageClass.Framework);
-            Log.InitialStackMessages = new LogStackMessages("ComponentName", GetType().Name);
+            Log.InitialStackMessages = Log.InitialStackMessages.Union("ComponentName", GetType().Name);
         }
 
         #endregion

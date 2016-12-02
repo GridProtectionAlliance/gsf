@@ -114,7 +114,7 @@ namespace LogFileViewer.Filters
                 case TimestampMatchingMode.Outside:
                     return "Outside: " + m_first.ToLocalTime() + " and " + m_second.ToLocalTime();
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    return "Unknown";
             }
         }
 

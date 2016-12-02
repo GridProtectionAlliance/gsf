@@ -43,7 +43,6 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="onProcessException">Raise exceptions on this callback</param>
         void Initialize(Action<string> onStatusMessage, Action<Exception> onProcessException);
 
-
         /// <summary>
         /// Patches the existing routing table with the supplied adapters.
         /// </summary>

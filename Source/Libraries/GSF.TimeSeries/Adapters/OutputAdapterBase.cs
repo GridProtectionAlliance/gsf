@@ -530,7 +530,7 @@ namespace GSF.TimeSeries.Adapters
             if (m_measurementQueue != null)
                 m_measurementQueue.Start();
 
-            OnStatusMessage(MessageLevel.Info, "Connection established.");
+            OnStatusMessage(MessageLevel.Info, "Connection established.", "Connecting");
         }
 
         /// <summary>

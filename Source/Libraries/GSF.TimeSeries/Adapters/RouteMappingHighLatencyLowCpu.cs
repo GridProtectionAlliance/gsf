@@ -171,6 +171,7 @@ namespace GSF.TimeSeries.Adapters
         private GlobalCache m_globalCache;
         private Action<string> m_onStatusMessage;
         private Action<Exception> m_onProcessException;
+        private ShortTime m_lastStatusUpdate;
 
         private int m_pendingMeasurements;
         /// <summary>
@@ -186,6 +187,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         public RouteMappingHighLatencyLowCpu()
         {
+            m_lastStatusUpdate = ShortTime.Now;
             m_maxPendingMeasurements = 1000;
             m_routeLatency = OptimizationOptions.RoutingLatency;
             m_batchSize = OptimizationOptions.RoutingBatchSize;
@@ -292,8 +294,9 @@ namespace GSF.TimeSeries.Adapters
 
             m_routeOperations++;
 
-            if (m_routeOperations % 1000 == 0)
+            if (m_lastStatusUpdate.ElapsedSeconds() > 15)
             {
+                m_lastStatusUpdate = ShortTime.Now;
                 Log.Publish(MessageLevel.Info, MessageFlags.None, "Routing Update",
                 string.Format("Route Operations: {0}, Input Frames: {1}, Input Measurements: {2}, Output Measurements: {3}",
                             m_routeOperations, m_measurementsRoutedInputFrames,

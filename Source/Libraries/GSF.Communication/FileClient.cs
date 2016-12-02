@@ -41,6 +41,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Threading;
 using GSF.Configuration;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Threading;
 
@@ -776,7 +777,16 @@ namespace GSF.Communication
         // Static Fields
 
         // Common use static timer for FileClient instances
-        private static readonly SharedTimerScheduler s_timerScheduler = new SharedTimerScheduler();
+        private static readonly SharedTimerScheduler s_timerScheduler;
+
+        //Static Constructor
+        static FileClient()
+        {
+            using (Logger.AppendStackMessages("Owner", "FileClient"))
+            {
+                s_timerScheduler = new SharedTimerScheduler();
+            }
+        }
 
         #endregion
     }

@@ -362,7 +362,7 @@ namespace PhasorProtocolAdapters
 
         private void m_frameParser_ConnectionAttempt(object sender, EventArgs e)
         {
-            OnStatusMessage(MessageLevel.Info, $"Attempting {m_frameParser.PhasorProtocol.GetFormattedProtocolName()} {m_frameParser.TransportProtocol.ToString().ToUpper()} based connection...");
+            OnStatusMessage(MessageLevel.Info, $"Attempting {m_frameParser.PhasorProtocol.GetFormattedProtocolName()} {m_frameParser.TransportProtocol.ToString().ToUpper()} based connection...", "Connecting");
         }
 
         #endregion
@@ -373,7 +373,7 @@ namespace PhasorProtocolAdapters
         private static readonly StatisticValueStateCache s_statisticValueCache = new StatisticValueStateCache();
 
         // Common use static timer for the Phasor Protocols Library
-        internal static readonly SharedTimerScheduler TimerScheduler = new SharedTimerScheduler();
+        internal static readonly SharedTimerScheduler TimerScheduler;
 
         // Classic
         private const string DefaultPointTagNameExpression = "{CompanyAcronym}_{DeviceAcronym}[?{SignalType.Source}=Phasor[-{SignalType.Suffix}{SignalIndex}]]:{VendorAcronym}{SignalType.Abbreviation}[?{SignalType.Source}!=Phasor[?{SignalIndex}!=-1[{SignalIndex}]]]";
@@ -390,6 +390,15 @@ namespace PhasorProtocolAdapters
         // Cached point tag name expression fields
         private static TemplatedExpressionParser s_pointTagExpressionParser;
         private static Dictionary<string, DataRow> s_signalTypes;
+
+        //Static Constructor
+        static CommonPhasorServices()
+        {
+            using (Logger.AppendStackMessages("Owner", "CommonPhasorServices"))
+            {
+                TimerScheduler = new SharedTimerScheduler();
+            }
+        }
 
         // Static Methods
 

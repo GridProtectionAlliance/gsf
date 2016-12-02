@@ -112,7 +112,7 @@ namespace LogFileViewer.Filters
                 case EnumMatchingFlagsMode.Exactly:
                     return "Equals: " + m_description;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    return "Unknown";
             }
         }
     }

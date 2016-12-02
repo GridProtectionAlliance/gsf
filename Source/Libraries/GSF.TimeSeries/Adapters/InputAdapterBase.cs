@@ -341,7 +341,7 @@ namespace GSF.TimeSeries.Adapters
         protected virtual void OnConnected()
         {
             IsConnected = true;
-            OnStatusMessage(MessageLevel.Info, "Connection established.");
+            OnStatusMessage(MessageLevel.Info, "Connection established.", "Connecting");
         }
 
         /// <summary>

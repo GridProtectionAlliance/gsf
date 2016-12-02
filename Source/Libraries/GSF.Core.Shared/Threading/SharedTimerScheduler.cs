@@ -225,7 +225,7 @@ namespace GSF.Threading
                 }
             }
 
-            public string StatusMessage()
+            public string StatusMessage(ref bool warning, ref bool error)
             {
                 lock (m_syncStats)
                 {
@@ -233,6 +233,13 @@ namespace GSF.Threading
 
                     if (m_elapsedIntervals > 0)
                         averageCpuTime = m_elapsedWorkerTime / m_elapsedIntervals;
+
+                    if (m_skippedIntervals > 0)
+                        warning = true;
+                    if (2 * averageCpuTime > m_interval)
+                        warning = true;
+                    if (averageCpuTime > m_interval * 2)
+                        error = true;
 
                     return $"Interval: {m_interval} Skipped Intervals: {m_skippedIntervals} Elapsed Intervals: {m_elapsedIntervals} Average CPU Time: {averageCpuTime:N2}ms Sum of Callbacks: {m_sumOfCallbacks} Shared Timers: {m_sharedTimersCount}";
                 }
@@ -385,18 +392,21 @@ namespace GSF.Threading
 
             StringBuilder status = new StringBuilder();
 
+            bool warning = false;
+            bool error = false;
+
             lock (m_syncRoot)
             {
                 status.AppendLine("Shared Timer Factory Status");
 
                 foreach (KeyValuePair<int, SharedTimerInstance> item in m_schedulesByInterval)
                 {
-                    status.AppendLine(item.Value.StatusMessage());
+                    status.AppendLine(item.Value.StatusMessage(ref warning, ref error));
                     item.Value.ResetStats();
                 }
             }
 
-            m_log.Publish(MessageLevel.Info, MessageFlags.SystemHealth, "SharedTimerScheduler Status", status.ToString());
+            m_log.Publish(error ? MessageLevel.Error : warning ? MessageLevel.Warning : MessageLevel.Info, MessageFlags.SystemHealth, "SharedTimerScheduler Status", status.ToString());
         }
 
         #endregion

@@ -1255,7 +1255,7 @@ namespace PhasorProtocolAdapters
                     }
                     catch (Exception ex)
                     {
-                        OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to load signal reference \"{signalReference}\" due to exception: {ex.Message}", ex));
+                        OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to load signal reference \"{signalReference}\" due to exception: {ex.Message}", ex), "Loading");
                     }
                 }
             }
@@ -1280,7 +1280,7 @@ namespace PhasorProtocolAdapters
                 OutputMeasurements = null;
             }
 
-            OnStatusMessage(MessageLevel.Info, $"Loaded {definedMeasurements.Count} active device measurements...");
+            OnStatusMessage(MessageLevel.Info, $"Loaded {definedMeasurements.Count} active device measurements...", "Loading");
         }
 
         /// <summary>
@@ -1293,11 +1293,11 @@ namespace PhasorProtocolAdapters
             if ((object)m_frameParser != null)
             {
                 if ((object)m_frameParser.SendDeviceCommand(command) != null)
-                    OnStatusMessage(MessageLevel.Info, $"Sent device command \"{command}\"...");
+                    OnStatusMessage(MessageLevel.Info, $"Sent device command \"{command}\"...", "Command");
             }
             else
             {
-                OnStatusMessage(MessageLevel.Info, $"Failed to send device command \"{command}\", no frame parser is defined.");
+                OnStatusMessage(MessageLevel.Info, $"Failed to send device command \"{command}\", no frame parser is defined.", "Command");
             }
         }
 
@@ -1319,11 +1319,11 @@ namespace PhasorProtocolAdapters
 
                 m_outOfOrderFrames = 0;
 
-                OnStatusMessage(MessageLevel.Info, "Statistics reset for all devices associated with this connection.");
+                OnStatusMessage(MessageLevel.Info, "Statistics reset for all devices associated with this connection.", "Statistics");
             }
             else
             {
-                OnStatusMessage(MessageLevel.Info, "Failed to reset statistics, no devices are defined.");
+                OnStatusMessage(MessageLevel.Info, "Failed to reset statistics, no devices are defined.", "Statistics");
             }
         }
 
@@ -1347,16 +1347,16 @@ namespace PhasorProtocolAdapters
                     definedDevice.TotalFrames = 0;
                     definedDevice.TimeQualityErrors = 0;
 
-                    OnStatusMessage(MessageLevel.Info, $"Statistics reset for device with ID code \"{idCode}\" associated with this connection.");
+                    OnStatusMessage(MessageLevel.Info, $"Statistics reset for device with ID code \"{idCode}\" associated with this connection.", "Statistics");
                 }
                 else
                 {
-                    OnStatusMessage(MessageLevel.Info, $"WARNING: Failed to find device with ID code \"{idCode}\" associated with this connection.");
+                    OnStatusMessage(MessageLevel.Info, $"WARNING: Failed to find device with ID code \"{idCode}\" associated with this connection.", "Statistics");
                 }
             }
             else
             {
-                OnStatusMessage(MessageLevel.Info, "Failed to reset statistics, no devices are defined.");
+                OnStatusMessage(MessageLevel.Info, "Failed to reset statistics, no devices are defined.", "Statistics");
             }
         }
 
@@ -2163,7 +2163,7 @@ namespace PhasorProtocolAdapters
             {
                 // If we've received no data in the last time-span, we restart connect cycle...
                 m_dataStreamMonitor.Enabled = false;
-                OnStatusMessage(MessageLevel.Info, $"\r\nNo data received in {m_dataStreamMonitor.Interval / 1000.0D:0.0} seconds, restarting connect cycle...\r\n");
+                OnStatusMessage(MessageLevel.Info, $"\r\nNo data received in {m_dataStreamMonitor.Interval / 1000.0D:0.0} seconds, restarting connect cycle...\r\n", "Connection Issues");
                 Start();
             }
             else if (!m_receivedConfigFrame && m_allowUseOfCachedConfiguration)

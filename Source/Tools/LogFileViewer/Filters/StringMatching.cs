@@ -108,7 +108,7 @@ namespace LogFileViewer.Filters
                 case StringMatchingMode.Regex:
                     return "Regex: " + MatchText;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    return "Unknown";
             }
         }
     }

@@ -893,14 +893,17 @@ namespace GSF.TimeSeries.Transport
             m_metadataTables = DefaultMetadataTables;
             m_forceReceiveMetadataFlags = OperationalModes.ReceiveInternalMetadata;
 
-            switch (OptimizationOptions.DefaultRoutingMethod)
+            using (Logger.AppendStackMessages("HostAdapter", "Data Publisher Collection"))
             {
-                case OptimizationOptions.RoutingMethod.HighLatencyLowCpu:
-                    m_routingTables = new RoutingTables(new RouteMappingHighLatencyLowCpu());
-                    break;
-                default:
-                    m_routingTables = new RoutingTables();
-                    break;
+                switch (OptimizationOptions.DefaultRoutingMethod)
+                {
+                    case OptimizationOptions.RoutingMethod.HighLatencyLowCpu:
+                        m_routingTables = new RoutingTables(new RouteMappingHighLatencyLowCpu());
+                        break;
+                    default:
+                        m_routingTables = new RoutingTables();
+                        break;
+                }
             }
             m_routingTables.ActionAdapters = this;
             m_routingTables.StatusMessage += m_routingTables_StatusMessage;

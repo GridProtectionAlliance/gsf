@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using GSF.Diagnostics;
 using GSF.Threading;
 
 namespace GSF.TimeSeries
@@ -31,6 +32,16 @@ namespace GSF.TimeSeries
     internal static class Common
     {
         // Common use static timer for the Time-Series Library
-        public static readonly SharedTimerScheduler TimerScheduler = new SharedTimerScheduler();
+        public static readonly SharedTimerScheduler TimerScheduler;
+
+        //Static Constructor
+        static Common()
+        {
+            using (Logger.AppendStackMessages("Owner", "TimeSeries.Common"))
+            {
+                TimerScheduler = new SharedTimerScheduler();
+            }
+        }
+
     }
 }

@@ -79,6 +79,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using GSF.Communication;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Parsing;
 using GSF.PhasorProtocols.IEEEC37_118;
@@ -4159,7 +4160,15 @@ namespace GSF.PhasorProtocols
 
         #region [ Static ]
 
-        private static readonly SharedTimerScheduler TimerScheduler = new SharedTimerScheduler();
+        private static readonly SharedTimerScheduler TimerScheduler;
+
+        static MultiProtocolFrameParser()
+        {
+            using (Logger.AppendStackMessages("Owner", "MultiProtocolFrameParser"))
+            {
+                TimerScheduler = new SharedTimerScheduler();
+            }
+        }
 
         #endregion
     }

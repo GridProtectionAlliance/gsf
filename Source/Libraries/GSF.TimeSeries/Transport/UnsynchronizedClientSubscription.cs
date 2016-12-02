@@ -134,7 +134,7 @@ namespace GSF.TimeSeries.Transport
             set
             {
                 base.Name = value;
-                Log.InitialStackMessages = new LogStackMessages("AdapterName", GetType().Name, "HostName", value);
+                Log.InitialStackMessages = Log.InitialStackMessages.Union("AdapterName", GetType().Name, "HostName", value);
             }
         }
 

@@ -132,7 +132,7 @@ namespace GSF.TimeSeries.Adapters
         {
             Log = Logger.CreatePublisher(GetType(), MessageClass.Framework);
             m_name = this.GetType().Name;
-            Log.InitialStackMessages = new LogStackMessages("AdapterName", m_name);
+            Log.InitialStackMessages = Log.InitialStackMessages.Union("AdapterName", m_name);
             m_settings = new Dictionary<string, string>();
             m_startTimeConstraint = DateTime.MinValue;
             m_stopTimeConstraint = DateTime.MaxValue;
@@ -177,7 +177,7 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 m_name = value;
-                Log.InitialStackMessages = new LogStackMessages("AdapterName", m_name);
+                Log.InitialStackMessages = Log.InitialStackMessages.Union("AdapterName", m_name);
                 GenHashCode();
             }
         }
@@ -986,7 +986,7 @@ namespace GSF.TimeSeries.Adapters
                 m_processedMeasurements += totalAdded;
 
                 if (showMessage)
-                    OnStatusMessage(MessageLevel.Info, $"{m_processedMeasurements:N0} measurements have been processed so far...");
+                    OnStatusMessage(MessageLevel.Info, $"{m_processedMeasurements:N0} measurements have been processed so far...", "Processed Measurement Count");
             }
         }
 

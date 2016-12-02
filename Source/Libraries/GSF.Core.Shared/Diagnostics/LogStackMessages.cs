@@ -39,8 +39,8 @@ namespace GSF.Diagnostics
         #region [ Members ]
 
         // Fields
-        private readonly string[] m_attributes;
-        private readonly string[] m_values;
+        //Since stack messages won't be too large, SortedList consumes less memory and can be faster.
+        private readonly SortedList<string, string> m_messages;
         private readonly long m_hashCode;
 
         #endregion
@@ -49,8 +49,7 @@ namespace GSF.Diagnostics
 
         private LogStackMessages()
         {
-            m_attributes = EmptyArray<string>.Empty;
-            m_values = EmptyArray<string>.Empty;
+            m_messages = new SortedList<string, string>();
             m_hashCode = ComputeHashCode();
         }
 
@@ -66,11 +65,8 @@ namespace GSF.Diagnostics
             if (keyValuePairs.Length % 2 != 0)
                 throw new ArgumentOutOfRangeException(nameof(keyValuePairs), "Key/value pair mismatch");
 
-            int count = keyValuePairs.Length / 2;
-            int index = 0;
 
-            m_attributes = new string[count];
-            m_values = new string[count];
+            m_messages = new SortedList<string, string>();
 
             for (int i = 0; i < keyValuePairs.Length; i += 2)
             {
@@ -83,9 +79,7 @@ namespace GSF.Diagnostics
                 if (string.IsNullOrWhiteSpace(value))
                     throw new ArgumentNullException(nameof(value), "Specified value was null or empty.");
 
-                m_attributes[index] = key.Trim();
-                m_values[index] = value.Trim();
-                index++;
+                m_messages[key] = value;
             }
 
             m_hashCode = ComputeHashCode();
@@ -105,8 +99,8 @@ namespace GSF.Diagnostics
             if (string.IsNullOrWhiteSpace(value))
                 throw new ArgumentNullException(nameof(value), "Specified value was null or empty.");
 
-            m_attributes = new [] { key };
-            m_values = new [] { value };
+            m_messages = new SortedList<string, string>();
+            m_messages[key] = value;
             m_hashCode = ComputeHashCode();
         }
 
@@ -116,8 +110,7 @@ namespace GSF.Diagnostics
         /// <param name="messages">the messages</param>
         public LogStackMessages(List<KeyValuePair<string, string>> messages)
         {
-            m_attributes = new string[messages.Count];
-            m_values = new string[messages.Count];
+            m_messages = new SortedList<string, string>();
 
             for (int x = 0; x < messages.Count; x++)
             {
@@ -129,8 +122,7 @@ namespace GSF.Diagnostics
                 if (string.IsNullOrWhiteSpace(pair.Value))
                     throw new ArgumentNullException(nameof(messages), "A value is null or whitespace");
 
-                m_attributes[x] = pair.Key;
-                m_values[x] = pair.Value;
+                m_messages[pair.Key] = pair.Value;
             }
 
             m_hashCode = ComputeHashCode();
@@ -142,24 +134,14 @@ namespace GSF.Diagnostics
         /// <param name="messages">the messages</param>
         public LogStackMessages(List<LogStackMessages> messages)
         {
-            int count = 0;
-
-            for (int x = 0; x < messages.Count; x++)
-                count += messages[x].m_attributes.Length;
-
-            m_attributes = new string[count];
-            m_values = new string[count];
-
-            count = 0;
+            m_messages = new SortedList<string, string>();
 
             for (int x = 0; x < messages.Count; x++)
             {
                 LogStackMessages item = messages[x];
-                for (int y = 0; y < item.m_attributes.Length; y++)
+                foreach (var kvp in item.m_messages)
                 {
-                    m_attributes[count] = item.m_attributes[y];
-                    m_values[count] = item.m_values[y];
-                    count++;
+                    m_messages[kvp.Key] = kvp.Value;
                 }
             }
 
@@ -171,28 +153,16 @@ namespace GSF.Diagnostics
         /// </summary>
         private LogStackMessages(LogStackMessages a, LogStackMessages b)
         {
-            int count = a.m_attributes.Length + b.m_attributes.Length;
+            m_messages = new SortedList<string, string>();
 
-            m_attributes = new string[count];
-            m_values = new string[count];
-
-            count = 0;
-            LogStackMessages item = a;
-
-            for (int y = 0; y < item.m_attributes.Length; y++)
+            foreach (var kvp in a.m_messages)
             {
-                m_attributes[count] = item.m_attributes[y];
-                m_values[count] = item.m_values[y];
-                count++;
+                m_messages[kvp.Key] = kvp.Value;
             }
 
-            item = b;
-
-            for (int y = 0; y < item.m_attributes.Length; y++)
+            foreach (var kvp in b.m_messages)
             {
-                m_attributes[count] = item.m_attributes[y];
-                m_values[count] = item.m_values[y];
-                count++;
+                m_messages[kvp.Key] = kvp.Value;
             }
 
             m_hashCode = ComputeHashCode();
@@ -206,18 +176,16 @@ namespace GSF.Diagnostics
         public LogStackMessages(Stream stream)
         {
             int version = stream.ReadNextByte();
+            m_messages = new SortedList<string, string>();
 
             if (version == 0)
             {
                 int count = stream.ReadInt32();
-
-                m_attributes = new string[count];
-                m_values = new string[count];
-
                 for (int x = 0; x < count; x++)
                 {
-                    m_attributes[x] = stream.ReadString();
-                    m_values[x] = stream.ReadString();
+                    string key = stream.ReadString();
+                    string value = stream.ReadString();
+                    m_messages[key] = value;
                 }
             }
             else
@@ -230,17 +198,15 @@ namespace GSF.Diagnostics
 
         private LogStackMessages(LogStackMessages oldMessage, string key, string value)
         {
-            int count = oldMessage.m_attributes.Length + 1;
+            m_messages = new SortedList<string, string>();
 
-            m_attributes = new string[count];
-            m_values = new string[count];
-
-            oldMessage.m_attributes.CopyTo(m_attributes, 0);
-            oldMessage.m_values.CopyTo(m_values, 0);
-
-            m_attributes[count - 1] = key;
-            m_values[count - 1] = value;
+            foreach (var kvp in oldMessage.m_messages)
+            {
+                m_messages[kvp.Key] = kvp.Value;
+            }
+            m_messages[key] = value;
             m_hashCode = ComputeHashCode();
+
         }
 
         #endregion
@@ -250,13 +216,13 @@ namespace GSF.Diagnostics
         /// <summary>
         /// Gets the number of Key/Value pairs.
         /// </summary>
-        public int Count => m_attributes.Length;
+        public int Count => m_messages.Count;
 
         /// <summary>
         /// Gets the KeyValue for the provided index.
         /// </summary>
         /// <param name="index">The Index</param>
-        public KeyValuePair<string, string> this[int index] => new KeyValuePair<string, string>(m_attributes[index], m_values[index]);
+        public KeyValuePair<string, string> this[int index] => new KeyValuePair<string, string>(m_messages.Keys[index], m_messages.Values[index]);
 
         /// <summary>
         /// Gets the first match of the provided <see pref="key"/> in this dictionary. Returns
@@ -267,13 +233,9 @@ namespace GSF.Diagnostics
         {
             get
             {
-                for (int x = 0; x < m_attributes.Length; x++)
-                {
-                    if (m_attributes[x] == key)
-                        return m_values[x];
-                }
-
-                return null;
+                string value;
+                m_messages.TryGetValue(key, out value);
+                return value;
             }
         }
 
@@ -282,13 +244,14 @@ namespace GSF.Diagnostics
         #region [ Methods ]
 
         /// <summary>
-        /// returns the union of this instance and the specified key/value
+        /// returns the union of this instance and the specified key/value. 
+        /// If the key already exists. The new one replaces the existing one.
         /// </summary>
         /// <param name="key">a key</param>
         /// <param name="value">a value</param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException">if Key or Value are null or whitespace.</exception>
-        public LogStackMessages ConcatenateWith(string key, string value)
+        public LogStackMessages Union(string key, string value)
         {
             if (string.IsNullOrWhiteSpace(key))
                 throw new ArgumentNullException(nameof(key));
@@ -296,14 +259,31 @@ namespace GSF.Diagnostics
             if (string.IsNullOrWhiteSpace(value))
                 throw new ArgumentNullException(nameof(value));
 
+            string currentValue = this[key];
+            if (currentValue != null && currentValue == value)
+                return this;
+
             return new LogStackMessages(this, key, value);
         }
 
         /// <summary>
+        /// returns the union of this instance and the specified list of key/value pairs. 
+        /// If the keys already exists. The new one replaces the existing one.
+        /// </summary>
+        /// <param name="keyValuePairs">Key/value pairs, e.g., key1, value1, key2, value2, ..., key(n), value(n).</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">if Key or Value are null or whitespace.</exception>
+        public LogStackMessages Union(params string[] keyValuePairs)
+        {
+            return Union(new LogStackMessages(keyValuePairs));
+        }
+
+        /// <summary>
         /// returns the union of this instance and the specified <see pref="stackMessage"/>
+        /// New messages replace existing messages.
         /// </summary>
         /// <returns></returns>
-        public LogStackMessages ConcatenateWith(LogStackMessages stackMessage)
+        public LogStackMessages Union(LogStackMessages stackMessage)
         {
             if ((object)stackMessage == null)
                 return this;
@@ -313,6 +293,9 @@ namespace GSF.Diagnostics
 
             if (ReferenceEquals(this, Empty))
                 return stackMessage;
+
+            if (Equals(stackMessage))
+                return this;
 
             return new LogStackMessages(this, stackMessage);
         }
@@ -324,12 +307,12 @@ namespace GSF.Diagnostics
         public void Save(Stream stream)
         {
             stream.WriteByte(0);
-            stream.Write(m_attributes.Length);
+            stream.Write(m_messages.Count);
 
-            for (int x = 0; x < m_attributes.Length; x++)
+            foreach (var kvp in m_messages)
             {
-                stream.Write(m_attributes[x]);
-                stream.Write(m_values[x]);
+                stream.Write(kvp.Key);
+                stream.Write(kvp.Value);
             }
         }
 
@@ -365,15 +348,15 @@ namespace GSF.Diagnostics
 
             if ((object)other == null
                 || m_hashCode != other.m_hashCode
-                || m_attributes.Length != other.m_attributes.Length)
+                || m_messages.Count != other.m_messages.Count)
                 return false;
 
-            for (int x = 0; x < m_attributes.Length; x++)
+            for (int x = 0; x < m_messages.Count; x++)
             {
-                if (m_attributes[x] != other.m_attributes[x])
+                if (m_messages.Keys[x] != other.m_messages.Keys[x])
                     return false;
 
-                if (m_values[x] != other.m_values[x])
+                if (m_messages.Values[x] != other.m_messages.Values[x])
                     return false;
             }
 
@@ -385,16 +368,16 @@ namespace GSF.Diagnostics
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            if (m_attributes.Length == 0)
+            if (m_messages.Count == 0)
                 return string.Empty;
 
             StringBuilder image = new StringBuilder();
 
-            for (int x = 0; x < m_attributes.Length; x++)
+            foreach (var kvp in m_messages)
             {
-                image.Append(m_attributes[x]);
+                image.Append(kvp.Key);
                 image.Append('=');
-                image.Append(m_values[x]);
+                image.Append(kvp.Value);
                 image.AppendLine();
             }
 
@@ -403,12 +386,12 @@ namespace GSF.Diagnostics
 
         private int ComputeHashCode()
         {
-            int hashSum = m_attributes.Length;
+            int hashSum = m_messages.Count;
 
-            for (int x = 0; x < m_attributes.Length; x++)
+            foreach (var kvp in m_messages)
             {
-                hashSum ^= m_attributes[x].GetHashCode();
-                hashSum ^= m_values[x].GetHashCode();
+                hashSum ^= kvp.Key.GetHashCode();
+                hashSum ^= kvp.Value.GetHashCode();
             }
 
             return hashSum;

@@ -165,7 +165,7 @@ namespace LogFileViewer
             items[3] = $"{message.Classification} - {message.Level}";
             items[4] = message.Flags.ToString();
             items[5] = message.TypeName;
-            items[6] = message.InitialStackMessages.ConcatenateWith(message.CurrentStackMessages).ToString();
+            items[6] = message.InitialStackMessages.Union(message.CurrentStackMessages).ToString();
             items[7] = message.EventName;
             items[8] = message.Message;
             items[9] = message.Details;

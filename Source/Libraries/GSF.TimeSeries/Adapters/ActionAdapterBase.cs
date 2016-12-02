@@ -115,7 +115,7 @@ namespace GSF.TimeSeries.Adapters
         protected ActionAdapterBase()
         {
             m_name = this.GetType().Name;
-            Log.InitialStackMessages = new LogStackMessages("AdapterName", m_name);
+            Log.InitialStackMessages = Log.InitialStackMessages.Union("AdapterName", m_name);
             m_settings = new Dictionary<string, string>();
             m_startTimeConstraint = DateTime.MinValue;
             m_stopTimeConstraint = DateTime.MaxValue;
@@ -144,7 +144,7 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 m_name = value;
-                Log.InitialStackMessages = new LogStackMessages("AdapterName", m_name);
+                Log.InitialStackMessages = Log.InitialStackMessages.Union("AdapterName", m_name);
                 GenHashCode();
             }
         }

@@ -85,7 +85,7 @@ namespace GSF.TimeSeries.Adapters
         public RoutingTables(IRouteMappingTables mappingTable = null)
         {
             Log = Logger.CreatePublisher(GetType(), MessageClass.Framework);
-            Log.InitialStackMessages = new LogStackMessages("ComponentName", GetType().Name);
+            Log.InitialStackMessages = Log.InitialStackMessages.Union("ComponentName", GetType().Name);
 
             m_prevCalculatedConsumers = new HashSet<IAdapter>();
             m_prevCalculatedProducers = new HashSet<IAdapter>();
