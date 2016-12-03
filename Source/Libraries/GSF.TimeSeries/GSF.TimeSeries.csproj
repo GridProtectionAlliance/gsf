@@ -180,6 +180,14 @@
     <Compile Include="Transport\SubscriptionInfo.cs" />
     <Compile Include="Transport\SynchronizedClientSubscription.cs" />
     <Compile Include="Transport\TemporalClientSubscriptionProxy.cs" />
+    <Compile Include="Transport\TSSC\BitStream.cs" />
+    <Compile Include="Transport\TSSC\ByteBuffer.cs" />
+    <Compile Include="Transport\TSSC\MeasurementStreamCodes.cs" />
+    <Compile Include="Transport\TSSC\MeasurementStreamFileReading.cs" />
+    <Compile Include="Transport\TSSC\MeasurementStreamFileReading_BitStreamReader.cs" />
+    <Compile Include="Transport\TSSC\MeasurementStreamFileWriting.cs" />
+    <Compile Include="Transport\TSSC\MeasurementStreamFileWriting_BitStreamWriter.cs" />
+    <Compile Include="Transport\TSSC\PointMetaData.cs" />
     <Compile Include="Transport\UnsynchronizedClientSubscription.cs" />
   </ItemGroup>
   <ItemGroup>
