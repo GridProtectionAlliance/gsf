@@ -21,11 +21,6 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace GSF.TimeSeries.Transport.TSSC
 {
     internal class ByteBuffer
@@ -38,10 +33,16 @@ namespace GSF.TimeSeries.Transport.TSSC
             Data = new byte[size];
         }
 
+        public ByteBuffer(byte[] data, int position)
+        {
+            Data = data;
+            Position = position;
+        }
+
         public void Grow()
         {
-            var data = new byte[Data.Length*2];
-            Data.CopyTo(data,0);
+            var data = new byte[Data.Length * 2];
+            Data.CopyTo(data, 0);
             Data = data;
         }
     }

@@ -22,10 +22,8 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using GSF;
-using GSF.IO;
+using GSF.Collection;
 
 namespace GSF.TimeSeries.Transport.TSSC
 {
@@ -43,29 +41,24 @@ namespace GSF.TimeSeries.Transport.TSSC
         private long m_prevTimeDelta4;
 
         private PointMetaData m_lastPoint;
-        private List<PointMetaData> m_points;
+        private IndexedArray<PointMetaData> m_points;
 
         #region [ Returned Value ]
-
-        public int ID;
-        public long Timestamp;
-        public uint Quality;
-        public float Value;
-        public int NewMeasurementRegisteredId;
 
         private BitStreamReader m_bitStream;
         #endregion
 
         public MeasurementStreamFileReading()
         {
-            m_points = new List<PointMetaData>();
-            m_buffer = new ByteBuffer(4096);
+            m_points = new IndexedArray<PointMetaData>();
+            m_buffer = new ByteBuffer(0);
             m_bitStream = new BitStreamReader(this);
+            Reset();
         }
 
-        private void Reset()
+        public void Reset()
         {
-            m_lastPoint = new PointMetaData(m_buffer, m_bitStream, -1);
+            m_lastPoint = new PointMetaData(m_buffer, m_bitStream, ushort.MaxValue);
             m_points.Clear();
             m_prevTimeDelta1 = long.MaxValue;
             m_prevTimeDelta2 = long.MaxValue;
@@ -75,22 +68,14 @@ namespace GSF.TimeSeries.Transport.TSSC
             m_prevTimestamp2 = 0;
         }
 
-        public void Load(byte[] data)
+        public void Load(byte[] data, int startingPosition, int length)
         {
-            while (m_buffer.Data.Length < data.Length)
-                m_buffer.Grow();
-
-            m_buffer.Position = 0;
-            m_length = data.Length;
-            data.CopyTo(m_buffer.Data, 0);
-
-            Reset();
+            m_buffer = new ByteBuffer(data, startingPosition);
+            m_length = startingPosition + length;
         }
 
-        public void GetMeasurement()
+        public bool TryGetMeasurement(out ushort id, out long timestamp, out uint quality, out float value)
         {
-            TryAgain:
-
             PointMetaData nextPoint = null;
 
             if (m_buffer.Position == m_length && m_bitStream.IsEmpty)
@@ -98,38 +83,21 @@ namespace GSF.TimeSeries.Transport.TSSC
 
             int code = m_lastPoint.ReadCode(m_bitStream);
 
-            if (code >= MeasurementStreamCodes.NewPointId && code <= MeasurementStreamCodes.FlushBits)
+            if (code == MeasurementStreamCodes.EndOfStream)
             {
-                if (code == MeasurementStreamCodes.NewPointId)
-                {
-                    PointMetaData point = new PointMetaData(m_buffer, m_bitStream, m_points.Count);
-                    NewMeasurementRegisteredId = point.ReferenceId;
-                    m_lastPoint.PrevNextPointId1 = point.ReferenceId;
-                    m_points.Add(point);
-
-                    point.SignalID = LittleEndian.ToUInt16(m_buffer.Data, m_buffer.Position);
-                    m_buffer.Position += 2;
-                    goto TryAgain;
-                }
-                else if (code == MeasurementStreamCodes.FlushBits)
-                {
-                    m_bitStream.Clear();
-                    goto TryAgain;
-                }
-                else
-                {
-                    throw new Exception("Programming Error.");
-                }
+                m_bitStream.Clear();
+                id = 0;
+                timestamp = 0;
+                quality = 0;
+                value = 0;
+                return false;
             }
 
-            if (code < MeasurementStreamCodes.PointIDXOR4)
-                throw new Exception("Expecting higher code");
-
-            if (code <= MeasurementStreamCodes.PointIDXOR32)
+            if (code <= MeasurementStreamCodes.PointIDXOR16)
             {
                 if (code == MeasurementStreamCodes.PointIDXOR4)
                 {
-                    m_lastPoint.PrevNextPointId1 ^= m_bitStream.ReadBits4();
+                    m_lastPoint.PrevNextPointId1 ^= (ushort)m_bitStream.ReadBits4();
                 }
                 else if (code == MeasurementStreamCodes.PointIDXOR8)
                 {
@@ -137,32 +105,13 @@ namespace GSF.TimeSeries.Transport.TSSC
                 }
                 else if (code == MeasurementStreamCodes.PointIDXOR12)
                 {
-                    m_lastPoint.PrevNextPointId1 ^= m_bitStream.ReadBits4();
-                    m_lastPoint.PrevNextPointId1 ^= m_buffer.Data[m_buffer.Position++] << 4;
+                    m_lastPoint.PrevNextPointId1 ^= (ushort)m_bitStream.ReadBits4();
+                    m_lastPoint.PrevNextPointId1 ^= (ushort)(m_buffer.Data[m_buffer.Position++] << 4);
                 }
                 else if (code == MeasurementStreamCodes.PointIDXOR16)
                 {
                     m_lastPoint.PrevNextPointId1 ^= m_buffer.Data[m_buffer.Position++];
-                    m_lastPoint.PrevNextPointId1 ^= m_buffer.Data[m_buffer.Position++] << 8;
-                }
-                else if (code == MeasurementStreamCodes.PointIDXOR20)
-                {
-                    m_lastPoint.PrevNextPointId1 ^= m_bitStream.ReadBits4();
-                    m_lastPoint.PrevNextPointId1 ^= m_buffer.Data[m_buffer.Position++] << 4;
-                    m_lastPoint.PrevNextPointId1 ^= m_buffer.Data[m_buffer.Position++] << 12;
-                }
-                else if (code == MeasurementStreamCodes.PointIDXOR24)
-                {
-                    m_lastPoint.PrevNextPointId1 ^= m_buffer.Data[m_buffer.Position++];
-                    m_lastPoint.PrevNextPointId1 ^= m_buffer.Data[m_buffer.Position++] << 8;
-                    m_lastPoint.PrevNextPointId1 ^= m_buffer.Data[m_buffer.Position++] << 16;
-                }
-                else if (code == MeasurementStreamCodes.PointIDXOR32)
-                {
-                    m_lastPoint.PrevNextPointId1 ^= m_buffer.Data[m_buffer.Position++];
-                    m_lastPoint.PrevNextPointId1 ^= m_buffer.Data[m_buffer.Position++] << 8;
-                    m_lastPoint.PrevNextPointId1 ^= m_buffer.Data[m_buffer.Position++] << 16;
-                    m_lastPoint.PrevNextPointId1 ^= m_buffer.Data[m_buffer.Position++] << 24;
+                    m_lastPoint.PrevNextPointId1 ^= (ushort)(m_buffer.Data[m_buffer.Position++] << 8);
                 }
                 else
                 {
@@ -175,51 +124,58 @@ namespace GSF.TimeSeries.Transport.TSSC
             if (code < MeasurementStreamCodes.TimeDelta1Forward)
                 throw new Exception("Expecting higher code");
 
-            ID = m_lastPoint.PrevNextPointId1;
+            id = m_lastPoint.PrevNextPointId1;
             nextPoint = m_points[m_lastPoint.PrevNextPointId1];
-            Quality = nextPoint.PrevQuality1;
+            if (nextPoint == null)
+            {
+                nextPoint = new PointMetaData(m_buffer, m_bitStream, id);
+                m_points[id] = nextPoint;
+                nextPoint.PrevNextPointId1 = (ushort)(id + 1);
+            }
+
+            quality = nextPoint.PrevQuality1;
 
             if (code <= MeasurementStreamCodes.TimeXOR7Bit)
             {
                 if (code == MeasurementStreamCodes.TimeDelta1Forward)
                 {
-                    Timestamp = m_prevTimestamp1 + m_prevTimeDelta1;
+                    timestamp = m_prevTimestamp1 + m_prevTimeDelta1;
                 }
                 else if (code == MeasurementStreamCodes.TimeDelta2Forward)
                 {
-                    Timestamp = m_prevTimestamp1 + m_prevTimeDelta2;
+                    timestamp = m_prevTimestamp1 + m_prevTimeDelta2;
                 }
                 else if (code == MeasurementStreamCodes.TimeDelta3Forward)
                 {
-                    Timestamp = m_prevTimestamp1 + m_prevTimeDelta3;
+                    timestamp = m_prevTimestamp1 + m_prevTimeDelta3;
                 }
                 else if (code == MeasurementStreamCodes.TimeDelta4Forward)
                 {
-                    Timestamp = m_prevTimestamp1 + m_prevTimeDelta4;
+                    timestamp = m_prevTimestamp1 + m_prevTimeDelta4;
                 }
                 else if (code == MeasurementStreamCodes.TimeDelta1Reverse)
                 {
-                    Timestamp = m_prevTimestamp1 - m_prevTimeDelta1;
+                    timestamp = m_prevTimestamp1 - m_prevTimeDelta1;
                 }
                 else if (code == MeasurementStreamCodes.TimeDelta2Reverse)
                 {
-                    Timestamp = m_prevTimestamp1 - m_prevTimeDelta2;
+                    timestamp = m_prevTimestamp1 - m_prevTimeDelta2;
                 }
                 else if (code == MeasurementStreamCodes.TimeDelta3Reverse)
                 {
-                    Timestamp = m_prevTimestamp1 - m_prevTimeDelta3;
+                    timestamp = m_prevTimestamp1 - m_prevTimeDelta3;
                 }
                 else if (code == MeasurementStreamCodes.TimeDelta4Reverse)
                 {
-                    Timestamp = m_prevTimestamp1 - m_prevTimeDelta4;
+                    timestamp = m_prevTimestamp1 - m_prevTimeDelta4;
                 }
                 else if (code == MeasurementStreamCodes.Timestamp2)
                 {
-                    Timestamp = m_prevTimestamp2;
+                    timestamp = m_prevTimestamp2;
                 }
                 else if (code == MeasurementStreamCodes.TimeXOR7Bit)
                 {
-                    Timestamp = m_prevTimestamp1 ^ (long)Encoding7Bit.ReadUInt64(m_buffer.Data, ref m_buffer.Position);
+                    timestamp = m_prevTimestamp1 ^ (long)Encoding7Bit.ReadUInt64(m_buffer.Data, ref m_buffer.Position);
                 }
                 else
                 {
@@ -227,7 +183,7 @@ namespace GSF.TimeSeries.Transport.TSSC
                 }
 
                 //Save the smallest delta time
-                long minDelta = Math.Abs(m_prevTimestamp1 - Timestamp);
+                long minDelta = Math.Abs(m_prevTimestamp1 - timestamp);
 
                 if (minDelta < m_prevTimeDelta4 && minDelta != m_prevTimeDelta1 && minDelta != m_prevTimeDelta2 && minDelta != m_prevTimeDelta3)
                 {
@@ -256,12 +212,12 @@ namespace GSF.TimeSeries.Transport.TSSC
                 }
 
                 m_prevTimestamp2 = m_prevTimestamp1;
-                m_prevTimestamp1 = Timestamp;
+                m_prevTimestamp1 = timestamp;
                 code = m_lastPoint.ReadCode(m_bitStream);
             }
             else
             {
-                Timestamp = m_prevTimestamp1;
+                timestamp = m_prevTimestamp1;
             }
 
             if (code < MeasurementStreamCodes.Quality2)
@@ -271,26 +227,27 @@ namespace GSF.TimeSeries.Transport.TSSC
             {
                 if (code == MeasurementStreamCodes.Quality2)
                 {
-                    Quality = nextPoint.PrevQuality2;
+                    quality = nextPoint.PrevQuality2;
                 }
                 else if (code == MeasurementStreamCodes.Quality7Bit32)
                 {
-                    Quality = Encoding7Bit.ReadUInt32(m_buffer.Data, ref m_buffer.Position);
+                    quality = Encoding7Bit.ReadUInt32(m_buffer.Data, ref m_buffer.Position);
                 }
                 nextPoint.PrevQuality2 = nextPoint.PrevQuality1;
-                nextPoint.PrevQuality1 = Quality;
+                nextPoint.PrevQuality1 = quality;
                 code = m_lastPoint.ReadCode(m_bitStream);
             }
             else
             {
-                Quality = nextPoint.PrevQuality1;
+                quality = nextPoint.PrevQuality1;
             }
 
-            if (code < 32)
+            if (code < MeasurementStreamCodes.Value1)
                 throw new Exception("Programming Error. Expecting a value quality code.");
 
-            nextPoint.ReadValue(code, out Value);
+            nextPoint.ReadValue(code, out value);
             m_lastPoint = nextPoint;
+            return true;
         }
 
     }

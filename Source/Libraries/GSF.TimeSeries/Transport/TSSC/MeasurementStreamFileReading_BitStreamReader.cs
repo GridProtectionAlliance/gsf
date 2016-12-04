@@ -90,9 +90,9 @@ namespace GSF.TimeSeries.Transport.TSSC
                 //return (m_cache >> m_bitCount) & 15;
             }
 
-            public override int ReadBits6()
+            public override int ReadBits5()
             {
-                return ReadBit() << 5 | ReadBit() << 4 | ReadBit() << 3 | ReadBit() << 2 | ReadBit() << 1 | ReadBit();
+                return ReadBit() << 4 | ReadBit() << 3 | ReadBit() << 2 | ReadBit() << 1 | ReadBit();
                 //if (m_bitCount < 5)
                 //{
                 //    m_bitCount += 8;

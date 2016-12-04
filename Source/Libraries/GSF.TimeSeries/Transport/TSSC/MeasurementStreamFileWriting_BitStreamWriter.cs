@@ -120,7 +120,7 @@ namespace GSF.TimeSeries.Transport.TSSC
                         m_bitStreamBufferIndex = m_parent.m_buffer.Position++;
                     }
 
-                    WriteCode(MeasurementStreamCodes.FlushBits);
+                    WriteCode(MeasurementStreamCodes.EndOfStream);
 
                     if (m_bitStreamCacheBitCount > 7)
                     {
@@ -139,7 +139,7 @@ namespace GSF.TimeSeries.Transport.TSSC
                 }
             }
 
-            public override int ReadBits6()
+            public override int ReadBits5()
             {
                 throw new NotSupportedException();
             }

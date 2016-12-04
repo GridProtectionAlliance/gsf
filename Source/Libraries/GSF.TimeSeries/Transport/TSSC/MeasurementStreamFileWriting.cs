@@ -23,19 +23,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using GSF;
 
 namespace GSF.TimeSeries.Transport.TSSC
 {
     internal partial class MeasurementStreamFileWriting
     {
-        const uint Bits28 = 0xFFFFFFFu;
-        const uint Bits24 = 0xFFFFFFu;
-        const uint Bits20 = 0xFFFFFu;
-        const uint Bits16 = 0xFFFFu;
         const uint Bits12 = 0xFFFu;
         const uint Bits8 = 0xFFu;
         const uint Bits4 = 0xFu;
@@ -89,7 +82,7 @@ namespace GSF.TimeSeries.Transport.TSSC
 
             m_pointById.Clear();
 
-            m_lastPoint = new PointMetaData(m_buffer, m_bitStream, -1);
+            m_lastPoint = new PointMetaData(m_buffer, m_bitStream, ushort.MaxValue);
         }
 
         /// <summary>
@@ -141,29 +134,17 @@ namespace GSF.TimeSeries.Transport.TSSC
             m_bitStream.Flush();
         }
 
-        /// <summary>
-        /// Registers a measurement with the associated metadata. 
-        /// </summary>
-        /// <returns>the local ID that must be used for referencing this measurement's ID. It is assigned sequentially starting with 0.</returns>
-        public int RegisterMeasurement(ushort id)
+        public void AddMeasurement(ushort id, long timestamp, uint quality, float value)
         {
-            PointMetaData point = new PointMetaData(m_buffer, m_bitStream, m_pointById.Count);
-            point.SignalID = id;
-            m_lastPoint.PrevNextPointId1 = point.ReferenceId;
-            m_pointById.Add(point);
-
-            m_bitStream.WriteCode(MeasurementStreamCodes.NewPointId);
-            LittleEndian.CopyBytes(id, m_buffer.Data, m_buffer.Position);
-            m_buffer.Position += 2;
-            return point.ReferenceId;
-        }
-
-        public void AddMeasurement(int id, long timestamp, uint quality, float value)
-        {
-            if (id >= m_pointById.Count)
-                throw new InvalidOperationException("The id is outside the valid range. Measurements must be registered before used.");
-
             PointMetaData point = m_pointById[id];
+            if (point == null)
+            {
+                point = new PointMetaData(m_buffer, m_bitStream, id);
+                point.PrevNextPointId1 = (ushort)(id + 1);
+                m_pointById[id] = point;
+
+            }
+
 
             EnsureCapacity();
 
@@ -251,39 +232,12 @@ namespace GSF.TimeSeries.Transport.TSSC
                 m_buffer.Data[m_buffer.Position] = (byte)(bitsChanged >> 4);
                 m_buffer.Position++;
             }
-            else if (bitsChanged <= Bits16)
+            else 
             {
                 m_bitStream.WriteCode(MeasurementStreamCodes.PointIDXOR16);
                 m_buffer.Data[m_buffer.Position] = (byte)bitsChanged;
                 m_buffer.Data[m_buffer.Position + 1] = (byte)(bitsChanged >> 8);
                 m_buffer.Position += 2;
-            }
-            else if (bitsChanged <= Bits20)
-            {
-                m_bitStream.WriteCode4(MeasurementStreamCodes.PointIDXOR20, (byte)bitsChanged);
-
-                m_buffer.Data[m_buffer.Position] = (byte)(bitsChanged >> 4);
-                m_buffer.Data[m_buffer.Position + 1] = (byte)(bitsChanged >> 12);
-                m_buffer.Position += 2;
-            }
-            else if (bitsChanged <= Bits24)
-            {
-                m_bitStream.WriteCode(MeasurementStreamCodes.PointIDXOR24);
-
-                m_buffer.Data[m_buffer.Position] = (byte)bitsChanged;
-                m_buffer.Data[m_buffer.Position + 1] = (byte)(bitsChanged >> 8);
-                m_buffer.Data[m_buffer.Position + 2] = (byte)(bitsChanged >> 16);
-                m_buffer.Position += 3;
-            }
-            else
-            {
-                m_bitStream.WriteCode(MeasurementStreamCodes.PointIDXOR32);
-
-                m_buffer.Data[m_buffer.Position] = (byte)bitsChanged;
-                m_buffer.Data[m_buffer.Position + 1] = (byte)(bitsChanged >> 8);
-                m_buffer.Data[m_buffer.Position + 2] = (byte)(bitsChanged >> 16);
-                m_buffer.Data[m_buffer.Position + 3] = (byte)(bitsChanged >> 24);
-                m_buffer.Position += 4;
             }
 
         }

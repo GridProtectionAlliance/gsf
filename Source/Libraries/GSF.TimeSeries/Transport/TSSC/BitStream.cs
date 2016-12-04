@@ -27,7 +27,7 @@ namespace GSF.TimeSeries.Transport.TSSC
     {
         public abstract void WriteCode(int code);
         public abstract void WriteCode4(int code, int value);
-        public abstract int ReadBits6();
+        public abstract int ReadBits5();
         public abstract int ReadBits4();
         public abstract int ReadBit();
     }

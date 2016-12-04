@@ -23,54 +23,42 @@
 
 namespace GSF.TimeSeries.Transport.TSSC
 {
-    internal class MeasurementStreamCodes
+    internal static class MeasurementStreamCodes
     {
-        /// <summary>
-        /// A new measurement has been registered.
-        /// <para>byte MeasurementTypeCode</para>
-        /// <para>7BitUInt MetadataLength</para>
-        /// <para>byte[] Metadata</para>
-        /// </summary>
-        public const byte NewPointId = 0;
+        public const byte EndOfStream = 0;
 
-        public const byte FlushBits = 3;
+        public const byte PointIDXOR4 = 1;
+        public const byte PointIDXOR8 = 2;
+        public const byte PointIDXOR12 = 3;
+        public const byte PointIDXOR16 = 4;
 
-        public const byte PointIDXOR4 = 4;
-        public const byte PointIDXOR8 = 5;
-        public const byte PointIDXOR12 = 6;
-        public const byte PointIDXOR16 = 7;
-        public const byte PointIDXOR20 = 8;
-        public const byte PointIDXOR24 = 9;
-        public const byte PointIDXOR32 = 10;
+        public const byte TimeDelta1Forward = 5;
+        public const byte TimeDelta2Forward = 6;
+        public const byte TimeDelta3Forward = 7;
+        public const byte TimeDelta4Forward = 8;
 
-        public const byte TimeDelta1Forward = 11;
-        public const byte TimeDelta2Forward = 12;
-        public const byte TimeDelta3Forward = 13;
-        public const byte TimeDelta4Forward = 14;
+        public const byte TimeDelta1Reverse = 9;
+        public const byte TimeDelta2Reverse = 10;
+        public const byte TimeDelta3Reverse = 11;
+        public const byte TimeDelta4Reverse = 12;
 
-        public const byte TimeDelta1Reverse = 15;
-        public const byte TimeDelta2Reverse = 16;
-        public const byte TimeDelta3Reverse = 17;
-        public const byte TimeDelta4Reverse = 18;
+        public const byte Timestamp2 = 13;
+        public const byte TimeXOR7Bit = 14;
 
-        public const byte Timestamp2 = 19;
-        public const byte TimeXOR7Bit = 20;
+        public const byte Quality2 = 15;
+        public const byte Quality7Bit32 = 16;
 
-        public const byte Quality2 = 21;
-        public const byte Quality7Bit32 = 22;
-
-
-        public const byte Value1 = 32;
-        public const byte Value2 = 33;
-        public const byte Value3 = 34;
-        public const byte ValueZero = 35;
-        public const byte ValueXOR4 = 36;
-        public const byte ValueXOR8 = 37;
-        public const byte ValueXOR12 = 38;
-        public const byte ValueXOR16 = 39;
-        public const byte ValueXOR20 = 40;
-        public const byte ValueXOR24 = 41;
-        public const byte ValueXOR28 = 42;
-        public const byte ValueXOR32 = 43;
+        public const byte Value1 = 17;
+        public const byte Value2 = 18;
+        public const byte Value3 = 19;
+        public const byte ValueZero = 20;
+        public const byte ValueXOR4 = 21;
+        public const byte ValueXOR8 = 22;
+        public const byte ValueXOR12 = 23;
+        public const byte ValueXOR16 = 24;
+        public const byte ValueXOR20 = 25;
+        public const byte ValueXOR24 = 26;
+        public const byte ValueXOR28 = 27;
+        public const byte ValueXOR32 = 28;
     }
 }

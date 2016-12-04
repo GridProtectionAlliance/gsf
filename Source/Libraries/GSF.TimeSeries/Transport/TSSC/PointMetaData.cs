@@ -36,14 +36,10 @@ namespace GSF.TimeSeries.Transport.TSSC
         const uint Bits4 = 0xFu;
         const uint Bits0 = 0x0u;
 
-        public ushort SignalID;
-        /// <summary>
-        /// The local reference ID
-        /// </summary>
-        public readonly int ReferenceId;
+        public readonly ushort ReferenceId;
         private readonly byte[] m_commandStats;
 
-        public int PrevNextPointId1;
+        public ushort PrevNextPointId1;
 
         public uint PrevQuality1;
         public uint PrevQuality2;
@@ -71,12 +67,12 @@ namespace GSF.TimeSeries.Transport.TSSC
         public uint PrevValue2;
         public uint PrevValue3;
 
-        public PointMetaData(ByteBuffer buffer, BitStream bitStream, int referenceId)
+        public PointMetaData(ByteBuffer buffer, BitStream bitStream, ushort referenceId)
         {
             Buffer = buffer;
             BitStream = bitStream;
             m_commandsSentSinceLastChange = 0;
-            m_commandStats = new byte[64];
+            m_commandStats = new byte[32];
             Mode = 1;
             ReferenceId = referenceId;
             Mode = 4;
@@ -273,7 +269,7 @@ namespace GSF.TimeSeries.Transport.TSSC
             switch (Mode)
             {
                 case 1:
-                    len = 6;
+                    len = 5;
                     break;
                 case 2:
                     if (code == Mode2_1)
@@ -283,7 +279,7 @@ namespace GSF.TimeSeries.Transport.TSSC
                     }
                     else
                     {
-                        len = 7;
+                        len = 6;
                     }
                     break;
                 case 3:
@@ -299,7 +295,7 @@ namespace GSF.TimeSeries.Transport.TSSC
                     }
                     else
                     {
-                        len = 8;
+                        len = 7;
                     }
                     break;
                 case 4:
@@ -320,7 +316,7 @@ namespace GSF.TimeSeries.Transport.TSSC
                     }
                     else
                     {
-                        len = 9;
+                        len = 8;
                     }
                     break;
                 default:
@@ -349,7 +345,7 @@ namespace GSF.TimeSeries.Transport.TSSC
             switch (Mode)
             {
                 case 1:
-                    code = bitStream.ReadBits6();
+                    code = bitStream.ReadBits5();
                     break;
                 case 2:
                     if (bitStream.ReadBit() == 1)
@@ -358,7 +354,7 @@ namespace GSF.TimeSeries.Transport.TSSC
                     }
                     else
                     {
-                        code = bitStream.ReadBits6();
+                        code = bitStream.ReadBits5();
                     }
                     break;
                 case 3:
@@ -372,7 +368,7 @@ namespace GSF.TimeSeries.Transport.TSSC
                     }
                     else
                     {
-                        code = bitStream.ReadBits6();
+                        code = bitStream.ReadBits5();
                     }
                     break;
                 case 4:
@@ -390,7 +386,7 @@ namespace GSF.TimeSeries.Transport.TSSC
                     }
                     else
                     {
-                        code = bitStream.ReadBits6();
+                        code = bitStream.ReadBits5();
                     }
                     break;
                 default:
