@@ -27,9 +27,287 @@ using GSF.Collection;
 
 namespace GSF.TimeSeries.Transport.TSSC
 {
-    internal partial class MeasurementStreamFileReading
+    internal class MeasurementStreamFileReading
     {
-        private ByteBuffer m_buffer;
+        private class PointMetaData
+        {
+            public ushort PrevNextPointId1;
+            public uint PrevQuality1;
+            public uint PrevQuality2;
+            public uint PrevValue1;
+            public uint PrevValue2;
+            public uint PrevValue3;
+
+            private readonly byte[] m_commandStats;
+            private int m_commandsSentSinceLastChange = 0;
+            private byte m_mode;
+
+            //Bit codes for the 4 modes of encoding. 
+            //(Mode 1 means no prefix.)
+            private byte m_mode21;
+
+            private byte m_mode31;
+            private byte m_mode301;
+
+            private byte m_mode41;
+            private byte m_mode401;
+            private byte m_mode4001;
+            private int m_startupMode = 0;
+
+            private readonly MeasurementStreamFileReading m_parent;
+
+            public PointMetaData(MeasurementStreamFileReading parent)
+            {
+                m_parent = parent;
+                m_commandsSentSinceLastChange = 0;
+                m_commandStats = new byte[32];
+                m_mode = 4;
+                m_mode41 = MeasurementStreamCodes.Value1;
+                m_mode401 = MeasurementStreamCodes.Value2;
+                m_mode4001 = MeasurementStreamCodes.Value3;
+            }
+
+            public unsafe void ReadValue(int code, out float outValue)
+            {
+                uint valueRaw = 0;
+
+                if (code == MeasurementStreamCodes.Value1)
+                {
+                    valueRaw = PrevValue1;
+                }
+                else if (code == MeasurementStreamCodes.Value2)
+                {
+                    valueRaw = PrevValue2;
+                    PrevValue2 = PrevValue1;
+                    PrevValue1 = valueRaw;
+                }
+                else if (code == MeasurementStreamCodes.Value3)
+                {
+                    valueRaw = PrevValue3;
+                    PrevValue3 = PrevValue2;
+                    PrevValue2 = PrevValue1;
+                    PrevValue1 = valueRaw;
+                }
+                else if (code == MeasurementStreamCodes.ValueZero)
+                {
+                    valueRaw = 0;
+                    PrevValue3 = PrevValue2;
+                    PrevValue2 = PrevValue1;
+                    PrevValue1 = valueRaw;
+                }
+                else
+                {
+                    switch (code)
+                    {
+                        case MeasurementStreamCodes.ValueXOR4:
+                            valueRaw = (uint)m_parent.ReadBits4() ^ PrevValue1;
+                            break;
+                        case MeasurementStreamCodes.ValueXOR8:
+                            valueRaw = m_parent.m_data[m_parent.m_position] ^ PrevValue1;
+                            m_parent.m_position = m_parent.m_position + 1;
+                            break;
+                        case MeasurementStreamCodes.ValueXOR12:
+                            valueRaw = (uint)m_parent.ReadBits4() ^ (uint)(m_parent.m_data[m_parent.m_position] << 4) ^ PrevValue1;
+                            m_parent.m_position = m_parent.m_position + 1;
+                            break;
+                        case MeasurementStreamCodes.ValueXOR16:
+                            valueRaw = m_parent.m_data[m_parent.m_position] ^ (uint)(m_parent.m_data[m_parent.m_position + 1] << 8) ^ PrevValue1;
+                            m_parent.m_position = m_parent.m_position + 2;
+                            break;
+                        case MeasurementStreamCodes.ValueXOR20:
+                            valueRaw = (uint)m_parent.ReadBits4() ^ (uint)(m_parent.m_data[m_parent.m_position] << 4) ^ (uint)(m_parent.m_data[m_parent.m_position + 1] << 12) ^ PrevValue1;
+                            m_parent.m_position = m_parent.m_position + 2;
+                            break;
+                        case MeasurementStreamCodes.ValueXOR24:
+                            valueRaw = m_parent.m_data[m_parent.m_position] ^ (uint)(m_parent.m_data[m_parent.m_position + 1] << 8) ^ (uint)(m_parent.m_data[m_parent.m_position + 2] << 16) ^ PrevValue1;
+                            m_parent.m_position = m_parent.m_position + 3;
+                            break;
+                        case MeasurementStreamCodes.ValueXOR28:
+                            valueRaw = (uint)m_parent.ReadBits4() ^ (uint)(m_parent.m_data[m_parent.m_position] << 4) ^ (uint)(m_parent.m_data[m_parent.m_position + 1] << 12) ^ (uint)(m_parent.m_data[m_parent.m_position + 2] << 20) ^ PrevValue1;
+                            m_parent.m_position = m_parent.m_position + 3;
+                            break;
+                        case MeasurementStreamCodes.ValueXOR32:
+                            valueRaw = m_parent.m_data[m_parent.m_position] ^ (uint)(m_parent.m_data[m_parent.m_position + 1] << 8) ^ (uint)(m_parent.m_data[m_parent.m_position + 2] << 16) ^ (uint)(m_parent.m_data[m_parent.m_position + 3] << 24) ^ PrevValue1;
+                            m_parent.m_position = m_parent.m_position + 4;
+                            break;
+                        default:
+                            throw new Exception("Code not valid");
+                    }
+
+                    PrevValue3 = PrevValue2;
+                    PrevValue2 = PrevValue1;
+                    PrevValue1 = valueRaw;
+                }
+
+                outValue = *(float*)&valueRaw;
+            }
+
+            public int ReadCode()
+            {
+                int code = 0;
+                switch (m_mode)
+                {
+                    case 1:
+                        code = m_parent.ReadBits5();
+                        break;
+                    case 2:
+                        if (m_parent.ReadBit() == 1)
+                        {
+                            code = m_mode21;
+                        }
+                        else
+                        {
+                            code = m_parent.ReadBits5();
+                        }
+                        break;
+                    case 3:
+                        if (m_parent.ReadBit() == 1)
+                        {
+                            code = m_mode31;
+                        }
+                        else if (m_parent.ReadBit() == 1)
+                        {
+                            code = m_mode301;
+                        }
+                        else
+                        {
+                            code = m_parent.ReadBits5();
+                        }
+                        break;
+                    case 4:
+                        if (m_parent.ReadBit() == 1)
+                        {
+                            code = m_mode41;
+                        }
+                        else if (m_parent.ReadBit() == 1)
+                        {
+                            code = m_mode401;
+                        }
+                        else if (m_parent.ReadBit() == 1)
+                        {
+                            code = m_mode4001;
+                        }
+                        else
+                        {
+                            code = m_parent.ReadBits5();
+                        }
+                        break;
+                    default:
+                        throw new Exception("Unsupported compression mode");
+                }
+                m_commandStats[code]++;
+                m_commandsSentSinceLastChange++;
+
+                if (m_startupMode == 0 && m_commandsSentSinceLastChange > 5)
+                {
+                    m_startupMode++;
+                    AdaptCommands2();
+                }
+                else if (m_startupMode == 1 && m_commandsSentSinceLastChange > 20)
+                {
+                    m_startupMode++;
+                    AdaptCommands2();
+                }
+                else if (m_startupMode == 2 && m_commandsSentSinceLastChange > 100)
+                {
+                    AdaptCommands2();
+                }
+                return code;
+            }
+
+            private void AdaptCommands2()
+            {
+                byte code1 = 0;
+                int count1 = 0;
+
+                byte code2 = 1;
+                int count2 = 0;
+
+                byte code3 = 2;
+                int count3 = 0;
+
+                int total = 0;
+
+                for (int x = 0; x < m_commandStats.Length; x++)
+                {
+                    int cnt = m_commandStats[x];
+                    m_commandStats[x] = 0;
+
+                    total += cnt;
+
+                    if (cnt > count3)
+                    {
+                        if (cnt > count1)
+                        {
+                            code3 = code2;
+                            count3 = count2;
+
+                            code2 = code1;
+                            count2 = count1;
+
+                            code1 = (byte)x;
+                            count1 = cnt;
+                        }
+                        else if (cnt > count2)
+                        {
+                            code3 = code2;
+                            count3 = count2;
+
+                            code2 = (byte)x;
+                            count2 = cnt;
+                        }
+                        else
+                        {
+                            code3 = (byte)x;
+                            count3 = cnt;
+                        }
+                    }
+                }
+
+                int mode1Size = total * 5;
+                int mode2Size = count1 * 1 + (total - count1) * 6;
+                int mode3Size = count1 * 1 + count2 * 2 + (total - count1 - count2) * 7;
+                int mode4Size = count1 * 1 + count2 * 2 + count3 * 3 + (total - count1 - count2 - count3) * 8;
+
+                int minSize = int.MaxValue;
+                minSize = Math.Min(minSize, mode1Size);
+                minSize = Math.Min(minSize, mode2Size);
+                minSize = Math.Min(minSize, mode3Size);
+                minSize = Math.Min(minSize, mode4Size);
+
+                if (minSize == mode1Size)
+                {
+                    m_mode = 1;
+                }
+                else if (minSize == mode2Size)
+                {
+                    m_mode = 2;
+                    m_mode21 = code1;
+                }
+                else if (minSize == mode3Size)
+                {
+                    m_mode = 3;
+                    m_mode31 = code1;
+                    m_mode301 = code2;
+                }
+                else if (minSize == mode4Size)
+                {
+                    m_mode = 4;
+                    m_mode41 = code1;
+                    m_mode401 = code2;
+                    m_mode4001 = code3;
+                }
+                else
+                {
+                    throw new Exception("Coding Error");
+                }
+
+                m_commandsSentSinceLastChange = 0;
+            }
+        }
+
+        private byte[] m_data;
+        private int m_position;
         private int m_length;
 
         private long m_prevTimestamp1;
@@ -43,22 +321,19 @@ namespace GSF.TimeSeries.Transport.TSSC
         private PointMetaData m_lastPoint;
         private IndexedArray<PointMetaData> m_points;
 
-        #region [ Returned Value ]
-
-        private BitStreamReader m_bitStream;
-        #endregion
-
         public MeasurementStreamFileReading()
         {
             m_points = new IndexedArray<PointMetaData>();
-            m_buffer = new ByteBuffer(0);
-            m_bitStream = new BitStreamReader(this);
+            m_data = EmptyArray<byte>.Empty;
+            m_position = 0;
+            m_length = 0;
+            ClearBitStream();
             Reset();
         }
 
         public void Reset()
         {
-            m_lastPoint = new PointMetaData(m_buffer, m_bitStream, ushort.MaxValue);
+            m_lastPoint = new PointMetaData(this);
             m_points.Clear();
             m_prevTimeDelta1 = long.MaxValue;
             m_prevTimeDelta2 = long.MaxValue;
@@ -70,7 +345,8 @@ namespace GSF.TimeSeries.Transport.TSSC
 
         public void Load(byte[] data, int startingPosition, int length)
         {
-            m_buffer = new ByteBuffer(data, startingPosition);
+            m_data = data;
+            m_position = startingPosition;
             m_length = startingPosition + length;
         }
 
@@ -78,14 +354,21 @@ namespace GSF.TimeSeries.Transport.TSSC
         {
             PointMetaData nextPoint = null;
 
-            if (m_buffer.Position == m_length && m_bitStream.IsEmpty)
-                throw new EndOfStreamException("The end of the stream has been encountered.");
+            if (m_position == m_length && BitStreamIsEmpty)
+            {
+                ClearBitStream();
+                id = 0;
+                timestamp = 0;
+                quality = 0;
+                value = 0;
+                return false;
+            }
 
-            int code = m_lastPoint.ReadCode(m_bitStream);
+            int code = m_lastPoint.ReadCode();
 
             if (code == MeasurementStreamCodes.EndOfStream)
             {
-                m_bitStream.Clear();
+                ClearBitStream();
                 id = 0;
                 timestamp = 0;
                 quality = 0;
@@ -97,28 +380,28 @@ namespace GSF.TimeSeries.Transport.TSSC
             {
                 if (code == MeasurementStreamCodes.PointIDXOR4)
                 {
-                    m_lastPoint.PrevNextPointId1 ^= (ushort)m_bitStream.ReadBits4();
+                    m_lastPoint.PrevNextPointId1 ^= (ushort)ReadBits4();
                 }
                 else if (code == MeasurementStreamCodes.PointIDXOR8)
                 {
-                    m_lastPoint.PrevNextPointId1 ^= m_buffer.Data[m_buffer.Position++];
+                    m_lastPoint.PrevNextPointId1 ^= m_data[m_position++];
                 }
                 else if (code == MeasurementStreamCodes.PointIDXOR12)
                 {
-                    m_lastPoint.PrevNextPointId1 ^= (ushort)m_bitStream.ReadBits4();
-                    m_lastPoint.PrevNextPointId1 ^= (ushort)(m_buffer.Data[m_buffer.Position++] << 4);
+                    m_lastPoint.PrevNextPointId1 ^= (ushort)ReadBits4();
+                    m_lastPoint.PrevNextPointId1 ^= (ushort)(m_data[m_position++] << 4);
                 }
                 else if (code == MeasurementStreamCodes.PointIDXOR16)
                 {
-                    m_lastPoint.PrevNextPointId1 ^= m_buffer.Data[m_buffer.Position++];
-                    m_lastPoint.PrevNextPointId1 ^= (ushort)(m_buffer.Data[m_buffer.Position++] << 8);
+                    m_lastPoint.PrevNextPointId1 ^= m_data[m_position++];
+                    m_lastPoint.PrevNextPointId1 ^= (ushort)(m_data[m_position++] << 8);
                 }
                 else
                 {
                     throw new Exception("Programming Error.");
                 }
 
-                code = m_lastPoint.ReadCode(m_bitStream);
+                code = m_lastPoint.ReadCode();
             }
 
             if (code < MeasurementStreamCodes.TimeDelta1Forward)
@@ -128,7 +411,7 @@ namespace GSF.TimeSeries.Transport.TSSC
             nextPoint = m_points[m_lastPoint.PrevNextPointId1];
             if (nextPoint == null)
             {
-                nextPoint = new PointMetaData(m_buffer, m_bitStream, id);
+                nextPoint = new PointMetaData(this);
                 m_points[id] = nextPoint;
                 nextPoint.PrevNextPointId1 = (ushort)(id + 1);
             }
@@ -175,7 +458,7 @@ namespace GSF.TimeSeries.Transport.TSSC
                 }
                 else if (code == MeasurementStreamCodes.TimeXOR7Bit)
                 {
-                    timestamp = m_prevTimestamp1 ^ (long)Encoding7Bit.ReadUInt64(m_buffer.Data, ref m_buffer.Position);
+                    timestamp = m_prevTimestamp1 ^ (long)Encoding7Bit.ReadUInt64(m_data, ref m_position);
                 }
                 else
                 {
@@ -213,7 +496,7 @@ namespace GSF.TimeSeries.Transport.TSSC
 
                 m_prevTimestamp2 = m_prevTimestamp1;
                 m_prevTimestamp1 = timestamp;
-                code = m_lastPoint.ReadCode(m_bitStream);
+                code = m_lastPoint.ReadCode();
             }
             else
             {
@@ -231,11 +514,11 @@ namespace GSF.TimeSeries.Transport.TSSC
                 }
                 else if (code == MeasurementStreamCodes.Quality7Bit32)
                 {
-                    quality = Encoding7Bit.ReadUInt32(m_buffer.Data, ref m_buffer.Position);
+                    quality = Encoding7Bit.ReadUInt32(m_data, ref m_position);
                 }
                 nextPoint.PrevQuality2 = nextPoint.PrevQuality1;
                 nextPoint.PrevQuality1 = quality;
-                code = m_lastPoint.ReadCode(m_bitStream);
+                code = m_lastPoint.ReadCode();
             }
             else
             {
@@ -250,6 +533,65 @@ namespace GSF.TimeSeries.Transport.TSSC
             return true;
         }
 
+        #region [ BitStream ]
+
+
+        /// <summary>
+        /// The number of bits in m_bitStreamCache that are valid. 0 Means the bitstream is empty.
+        /// </summary>
+        private int m_bitStreamCount;
+        /// <summary>
+        /// A cache of bits that need to be flushed to m_buffer when full. Bits filled starting from the right moving left.
+        /// </summary>
+        private int m_bitStreamCache;
+
+        private bool BitStreamIsEmpty => m_bitStreamCount == 0;
+
+        /// <summary>
+        /// Resets the stream so it can be reused. All measurements must be registered again.
+        /// </summary>
+        private void ClearBitStream()
+        {
+            m_bitStreamCount = 0;
+            m_bitStreamCache = 0;
+        }
+
+        private int ReadBit()
+        {
+            if (m_bitStreamCount == 0)
+            {
+                m_bitStreamCount = 8;
+                m_bitStreamCache = m_data[m_position++];
+            }
+            m_bitStreamCount--;
+            return (m_bitStreamCache >> m_bitStreamCount) & 1;
+        }
+
+        private int ReadBits4()
+        {
+            return ReadBit() << 3 | ReadBit() << 2 | ReadBit() << 1 | ReadBit();
+            //if (m_bitCount < 4)
+            //{
+            //    m_bitCount += 8;
+            //    m_cache = m_cache << 8 | m_parent.m_buffer.Data[m_parent.m_buffer.Position++];
+            //}
+            //m_bitCount -= 4;
+            //return (m_cache >> m_bitCount) & 15;
+        }
+
+        private int ReadBits5()
+        {
+            return ReadBit() << 4 | ReadBit() << 3 | ReadBit() << 2 | ReadBit() << 1 | ReadBit();
+            //if (m_bitCount < 5)
+            //{
+            //    m_bitCount += 8;
+            //    m_cache = m_cache << 8 | m_parent.m_buffer.Data[m_parent.m_buffer.Position++];
+            //}
+            //m_bitCount -= 5;
+            //return (m_cache >> m_bitCount) & 31;
+        }
+
+        #endregion
     }
 
 }
