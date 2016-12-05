@@ -61,6 +61,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Random = GSF.Security.Cryptography.Random;
 
 namespace GSF.Collections
@@ -323,6 +324,39 @@ namespace GSF.Collections
         public static bool All(this BitArray source, bool value)
         {
             return source.Cast<bool>().All(item => item == value);
+        }
+
+        /// <summary>
+        /// Determines whether all elements of a sequence satisfy a condition with each item being tested in parallel.
+        /// </summary>
+        /// <param name="source">An <see cref="IEnumerable{TSource}" /> that contains the elements to apply the predicate to.</param>
+        /// <param name="predicate">A function to test each element for a condition.</param>
+        /// <param name="options">Any <see cref="ParallelOptions"/> to apply.</param>
+        /// <returns>
+        /// <c>true</c> if every element of the source sequence passes the test in the specified predicate, or if the sequence is empty; otherwise, <c>false</c>.
+        /// </returns>
+        /// <typeparam name="TSource">The type of the elements of <paramref name="source" />.</typeparam>
+        /// <exception cref="ArgumentNullException"><paramref name="source" /> or <paramref name="predicate" /> is <c>null</c>.</exception>
+        public static bool AllParallel<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate, ParallelOptions options = null)
+        {
+            if ((object)source == null)
+                throw new ArgumentNullException(nameof(source));
+
+            if ((object)predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            bool succeeded = true;
+
+            Parallel.ForEach(source, options ?? new ParallelOptions(), (element, state) =>
+            {
+                if (!predicate(element))
+                {
+                    succeeded = false;
+                    state.Break();
+                }
+            });
+
+            return succeeded;
         }
 
         /// <summary>
@@ -1009,6 +1043,7 @@ namespace GSF.Collections
 
             public bool Equals(DistinctByWrapper<TKey, TValue> other)
             {
+                // ReSharper disable once PossibleNullReferenceException
                 return Equals(m_key, other.m_key);
             }
 

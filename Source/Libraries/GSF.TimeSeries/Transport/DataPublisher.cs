@@ -2198,9 +2198,7 @@ namespace GSF.TimeSeries.Transport
                 {
                     // Make a copy of client connection enumeration with ToArray() in case connections are added or dropped during notification
                     foreach (ClientConnection connection in m_clientConnections.Values)
-                    {
                         SendClientResponse(connection.ClientID, ServerResponse.ConfigurationChanged, ServerCommand.Subscribe);
-                    }
                 });
             }
         }
@@ -3977,6 +3975,8 @@ namespace GSF.TimeSeries.Transport
         {
             Guid clientID = e.Argument;
             ClientConnection connection = new ClientConnection(this, clientID, m_commandChannel);
+
+            connection.ClientNotFoundExceptionOccurred = false;
 
             // TODO: Also validate ZeroMQServer with CURVE security enabled
             if (m_securityMode == SecurityMode.TLS)

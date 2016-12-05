@@ -48,6 +48,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using GSF.Configuration;
+using GSF.Threading;
 
 namespace GSF.IO
 {
@@ -155,7 +156,7 @@ namespace GSF.IO
             /// </summary>
             public ExportState()
             {
-                WaitHandle = new AutoResetEvent(false);
+                WaitHandle = new ManualResetEventSlim(false);
             }
 
             /// <summary>
@@ -191,10 +192,9 @@ namespace GSF.IO
             /// <summary>
             /// Gets or sets the event wait handle for the <see cref="ExportState"/>.
             /// </summary>
-            public AutoResetEvent WaitHandle
+            public ManualResetEventSlim WaitHandle
             {
                 get;
-                private set;
             }
 
             /// <summary>
@@ -230,12 +230,7 @@ namespace GSF.IO
                     try
                     {
                         if (disposing)
-                        {
-                            if ((object)WaitHandle != null)
-                                WaitHandle.Dispose();
-
-                            WaitHandle = null;
-                        }
+                           WaitHandle?.Dispose();
                     }
                     finally
                     {
@@ -306,11 +301,11 @@ namespace GSF.IO
         private string m_settingsCategory;
         private long m_totalExports;
         private long m_failedExportAttempts;
+        private volatile byte[] m_fileData;
         private Encoding m_textEncoding;
         private List<ExportDestination> m_exportDestinations;
-        private bool m_exportInProgress;
         private readonly object m_exportDestinationsLock;
-        private readonly object m_exportInProgressLock;
+        private readonly LongSynchronizedOperation m_exportOperation;
         private int m_maximumRetryAttempts;
         private int m_retryDelayInterval;
         private bool m_enabled;
@@ -353,7 +348,10 @@ namespace GSF.IO
             m_retryDelayInterval = DefaultRetryDelayInterval;
             m_textEncoding = Encoding.Default; // We use default ANSI page encoding for text based exports...
             m_exportDestinationsLock = new object();
-            m_exportInProgressLock = new object();
+            m_exportOperation = new LongSynchronizedOperation(ExecuteExports, OnProcessException)
+            {
+                IsBackground = true
+            };            
         }
 
         #endregion
@@ -501,25 +499,13 @@ namespace GSF.IO
         /// Gets a flag that indicates whether the object has been disposed.
         /// </summary>
         [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public bool IsDisposed
-        {
-            get
-            {
-                return m_disposed;
-            }
-        }
+        public bool IsDisposed => m_disposed;
 
         /// <summary>
         /// Gets the total number exports performed successfully.
         /// </summary>
         [Browsable(false)]
-        public long TotalExports
-        {
-            get
-            {
-                return m_totalExports;
-            }
-        }
+        public long TotalExports => m_totalExports;
 
         /// <summary>
         /// Gets a list of currently defined <see cref="ExportDestination"/>.
@@ -546,14 +532,7 @@ namespace GSF.IO
         /// Gets the unique identifier of the <see cref="MultipleDestinationExporter"/> object.
         /// </summary>
         [Browsable(false)]
-        public string Name
-        {
-            get
-            {
-                // We just return the settings category name for unique identification of this component
-                return m_settingsCategory;
-            }
-        }
+        public string Name => m_settingsCategory;
 
         /// <summary>
         /// Gets the descriptive status of the <see cref="MultipleDestinationExporter"/> object.
@@ -712,12 +691,12 @@ namespace GSF.IO
                     settings["ExportCount", true].Update(m_exportDestinations.Count, "Total number of export files to produce.");
                     for (int x = 0; x < m_exportDestinations.Count; x++)
                     {
-                        settings[string.Format("ExportDestination{0}", x + 1), true].Update(m_exportDestinations[x].Share, "Root path for export destination. Use UNC path (\\\\server\\share) with no trailing slash for network shares.");
-                        settings[string.Format("ExportDestination{0}.ConnectToShare", x + 1), true].Update(m_exportDestinations[x].ConnectToShare, "Set to True to attempt authentication to network share.");
-                        settings[string.Format("ExportDestination{0}.Domain", x + 1), true].Update(m_exportDestinations[x].Domain, "Domain used for authentication to network share (computer name for local accounts).");
-                        settings[string.Format("ExportDestination{0}.UserName", x + 1), true].Update(m_exportDestinations[x].UserName, "User name used for authentication to network share.");
-                        settings[string.Format("ExportDestination{0}.Password", x + 1), true].Update(m_exportDestinations[x].Password, "Encrypted password used for authentication to network share.", true);
-                        settings[string.Format("ExportDestination{0}.FileName", x + 1), true].Update(m_exportDestinations[x].FileName, "Path and file name of data export (do not include drive letter or UNC share). Prefix with slash when using UNC paths (\\path\\filename.txt).");
+                        settings[$"ExportDestination{x + 1}", true].Update(m_exportDestinations[x].Share, "Root path for export destination. Use UNC path (\\\\server\\share) with no trailing slash for network shares.");
+                        settings[$"ExportDestination{x + 1}.ConnectToShare", true].Update(m_exportDestinations[x].ConnectToShare, "Set to True to attempt authentication to network share.");
+                        settings[$"ExportDestination{x + 1}.Domain", true].Update(m_exportDestinations[x].Domain, "Domain used for authentication to network share (computer name for local accounts).");
+                        settings[$"ExportDestination{x + 1}.UserName", true].Update(m_exportDestinations[x].UserName, "User name used for authentication to network share.");
+                        settings[$"ExportDestination{x + 1}.Password", true].Update(m_exportDestinations[x].Password, "Encrypted password used for authentication to network share.", true);
+                        settings[$"ExportDestination{x + 1}.FileName", true].Update(m_exportDestinations[x].FileName, "Path and file name of data export (do not include drive letter or UNC share). Prefix with slash when using UNC paths (\\path\\filename.txt).");
                     }
                 }
 
@@ -745,14 +724,10 @@ namespace GSF.IO
                 if (settings.Count == 0)
                     return;    // Don't proceed if export destinations don't exist in config file.
 
-                ExportDestination destination;
-                string entryRoot;
-                int count;
-
                 m_exportTimeout = settings["ExportTimeout", true].ValueAs(m_exportTimeout);
                 m_maximumRetryAttempts = settings["MaximumRetryAttempts", true].ValueAs(m_maximumRetryAttempts);
                 m_retryDelayInterval = settings["RetryDelayInterval", true].ValueAs(m_retryDelayInterval);
-                count = settings["ExportCount", true].ValueAsInt32();
+                int count = settings["ExportCount", true].ValueAsInt32();
 
                 lock (m_exportDestinationsLock)
                 {
@@ -760,15 +735,16 @@ namespace GSF.IO
 
                     for (int x = 0; x < count; x++)
                     {
-                        entryRoot = string.Format("ExportDestination{0}", x + 1);
+                        string entryRoot = $"ExportDestination{x + 1}";
 
                         // Load export destination from configuration entries
-                        destination = new ExportDestination();
-                        destination.DestinationFile = settings[entryRoot, true].ValueAsString() + settings[string.Format("{0}.FileName", entryRoot), true].ValueAsString();
-                        destination.ConnectToShare = settings[string.Format("{0}.ConnectToShare", entryRoot), true].ValueAsBoolean();
-                        destination.Domain = settings[string.Format("{0}.Domain", entryRoot), true].ValueAsString();
-                        destination.UserName = settings[string.Format("{0}.UserName", entryRoot), true].ValueAsString();
-                        destination.Password = settings[string.Format("{0}.Password", entryRoot), true].ValueAsString();
+                        ExportDestination destination = new ExportDestination();
+
+                        destination.DestinationFile = settings[entryRoot, true].ValueAsString() + settings[$"{entryRoot}.FileName", true].ValueAsString();
+                        destination.ConnectToShare = settings[$"{entryRoot}.ConnectToShare", true].ValueAsBoolean();
+                        destination.Domain = settings[$"{entryRoot}.Domain", true].ValueAsString();
+                        destination.UserName = settings[$"{entryRoot}.UserName", true].ValueAsString();
+                        destination.Password = settings[$"{entryRoot}.Password", true].ValueAsString();
 
                         // Save new export destination if destination file name has been defined and is valid
                         if (FilePath.IsValidFileName(destination.DestinationFile))
@@ -804,15 +780,15 @@ namespace GSF.IO
         public void Initialize(IEnumerable<ExportDestination> defaultDestinations)
         {
             // So as to not delay calling thread due to share authentication, we perform initialization on another thread...
-#if ThreadTracking
-            ManagedThread thread = ManagedThreadPool.QueueUserWorkItem(Initialize, defaultDestinations.ToList());
-            thread.Name = "GSF.IO.MultipleDestinationExporter.Initialize()";
-#else
-            ThreadPool.QueueUserWorkItem(Initialize, defaultDestinations.ToList());
-#endif
+            Thread initializeThread = new Thread(InitializeExporter)
+            {
+                IsBackground = true
+            };
+
+            initializeThread.Start(defaultDestinations.ToList());
         }
 
-        private void Initialize(object state)
+        private void InitializeExporter(object state)
         {
             // In case we are reinitializing class, we shutdown any prior queue operations and close any existing network connections...
             Shutdown();
@@ -865,7 +841,7 @@ namespace GSF.IO
                         catch (Exception ex)
                         {
                             // Something unexpected happened during attempt to connect to network share - so we'll report it...
-                            OnProcessException(new IOException(string.Format("Network share authentication to {0} failed due to exception: {1}", destinations[x].Share, ex.Message), ex));
+                            OnProcessException(new IOException($"Network share authentication to {destinations[x].Share} failed due to exception: {ex.Message}", ex));
                         }
                     }
                 }
@@ -898,7 +874,7 @@ namespace GSF.IO
                             catch (Exception ex)
                             {
                                 // Something unexpected happened during attempt to disconnect from network share - so we'll report it...
-                                OnProcessException(new IOException(string.Format("Network share disconnect from {0} failed due to exception: {1}", m_exportDestinations[x].Share, ex.Message), ex));
+                                OnProcessException(new IOException($"Network share disconnect from {m_exportDestinations[x].Share} failed due to exception: {ex.Message}", ex));
                             }
                         }
                     }
@@ -962,102 +938,81 @@ namespace GSF.IO
             if (m_enabled)
             {
                 // Ensure that only one export will be queued and exporting at once
-                lock (m_exportInProgressLock)
-                {
-                    if (m_exportInProgress)
-                        throw new InvalidOperationException("Export failed: cannot export data while another export attempt is already in progress.");
-
-                    m_exportInProgress = true;
-                    ThreadPool.QueueUserWorkItem(ExecuteExports, fileData);
-                }
+                m_fileData = fileData;
+                m_exportOperation.RunOnceAsync();
             }
             else
             {
                 throw new InvalidOperationException("Export failed: exporter is not currently enabled.");
             }
-        }
+        }       
 
-        private void ExecuteExports(object state)
+        private void ExecuteExports()
         {
-            // Outer try/finally is used only to make sure m_exportInProgress state is reset regardless of success or failure of export
-            try
+            byte[] fileData = m_fileData;
+
+            if (m_enabled && (object)fileData != null && m_exportDestinations.Count > 0)
             {
-                // Dereference file bytes to be exported
-                byte[] fileData = state as byte[];
+                string fileName = null;
+                ExportState[] exportStates = null;
+                ExportDestination[] destinations;
 
-                if (m_enabled && (object)fileData != null && m_exportDestinations.Count > 0)
+                try
                 {
-                    string filename = null;
-                    ExportState[] exportStates = null;
-                    ExportDestination[] destinations;
+                    //  Get a temporary file name
+                    fileName = Path.GetTempFileName();
 
-                    try
+                    // Export data to the temporary file
+                    File.WriteAllBytes(fileName, fileData);
+
+                    lock (m_exportDestinationsLock)
                     {
-                        //  Get a temporary file name
-                        filename = Path.GetTempFileName();
-
-                        // Export data to the temporary file
-                        File.WriteAllBytes(filename, fileData);
-
-                        lock (m_exportDestinationsLock)
-                        {
-                            // Cache a local copy of export destinations to reduce lock time
-                            destinations = m_exportDestinations.ToArray();
-                        }
-
-                        // Define a new export state for each export destination
-                        exportStates = new ExportState[destinations.Length];
-
-                        for (int i = 0; i < exportStates.Length; i++)
-                        {
-                            exportStates[i] = new ExportState
-                                {
-                                    SourceFileName = filename,
-                                    DestinationFileName = destinations[i].DestinationFile
-                                };
-                        }
-
-                        // Spool threads to attempt copy of export files
-                        for (int i = 0; i < destinations.Length; i++)
-                        {
-                            ThreadPool.QueueUserWorkItem(CopyFileToDestination, exportStates[i]);
-                        }
-
-                        // Wait for exports to complete - even if user specifies to wait indefinitely spooled copy routines
-                        // will eventually return since there is a specified maximum retry count
-                        if (!WaitHandle.WaitAll(exportStates.Select(exportState => exportState.WaitHandle).ToArray<WaitHandle>(), m_exportTimeout))
-                        {
-                            // Exports failed to complete in specified allowed time, set timeout flag for each export state
-                            Array.ForEach(exportStates, exportState => exportState.Timeout = true);
-                            OnStatusMessage("Timed out attempting export, waited for {0}.", Ticks.FromMilliseconds(m_exportTimeout).ToElapsedTimeString(2).ToLower());
-                        }
+                        // Cache a local copy of export destinations to reduce lock time
+                        destinations = m_exportDestinations.ToArray();
                     }
-                    catch (Exception ex)
-                    {
-                        OnProcessException(new InvalidOperationException(string.Format("Exception encountered during export preparation: {0}", ex.Message), ex));
-                    }
-                    finally
-                    {
-                        // Dispose the export state wait handles
-                        if ((object)exportStates != null)
-                        {
-                            foreach (ExportState exportState in exportStates)
-                            {
-                                exportState.Dispose();
-                            }
-                        }
 
-                        // Delete the temporary file - we queue this up in case the export threads may still be trying their last copy attempt
-                        ThreadPool.QueueUserWorkItem(DeleteTemporaryFile, filename);
+                    // Define a new export state for each export destination
+                    exportStates = new ExportState[destinations.Length];
+
+                    for (int i = 0; i < exportStates.Length; i++)
+                    {
+                        exportStates[i] = new ExportState
+                        {
+                            SourceFileName = fileName,
+                            DestinationFileName = destinations[i].DestinationFile
+                        };
+                    }
+
+                    // Spool threads to attempt copy of export files
+                    for (int i = 0; i < destinations.Length; i++)
+                        ThreadPool.QueueUserWorkItem(CopyFileToDestination, exportStates[i]);
+
+                    // Wait for exports to complete - even if user specifies to wait indefinitely spooled copy routines
+                    // will eventually return since there is a specified maximum retry count
+                    if (!exportStates.Select(exportState => exportState.WaitHandle).WaitAll(m_exportTimeout))
+                    {
+                        // Exports failed to complete in specified allowed time, set timeout flag for each export state
+                        Array.ForEach(exportStates, exportState => exportState.Timeout = true);
+                        OnStatusMessage("Timed out attempting export, waited for {0}.", Ticks.FromMilliseconds(m_exportTimeout).ToElapsedTimeString(2).ToLower());
                     }
                 }
-            }
-            finally
-            {
-                // Synchronously reset export progress state
-                lock (m_exportInProgressLock)
+                catch (Exception ex)
                 {
-                    m_exportInProgress = false;
+                    OnProcessException(new InvalidOperationException($"Exception encountered during export preparation: {ex.Message}", ex));
+                }
+                finally
+                {
+                    // Dispose the export state wait handles
+                    if ((object)exportStates != null)
+                    {
+                        foreach (ExportState exportState in exportStates)
+                            exportState.Dispose();
+                    }
+
+                    // Delete the temporary file - wait for the specified retry time in case the export threads may still be trying
+                    // their last copy attempt. This is important if the timeouts are synchronized and there is one more export
+                    // about to be attempted before the timeout flag is checked.
+                    new Action(() => DeleteTemporaryFile(fileName)).DelayAndExecute(m_retryDelayInterval);
                 }
             }
         }
@@ -1090,7 +1045,7 @@ namespace GSF.IO
                             if ((object)exportException == null)
                                 exportException = ex;
                             else
-                                exportException = new IOException(string.Format("Attempt {0} exception: {1}", attempt + 1, ex.Message), exportException);
+                                exportException = new IOException($"Attempt {attempt + 1} exception: {ex.Message}", exportException);
 
                             failedExportCount++;
 
@@ -1117,40 +1072,33 @@ namespace GSF.IO
                     timeout = exportState.Timeout;
                 }
 
-                OnProcessException(new InvalidOperationException(string.Format("Export attempt aborted {0} {1} exception{2} for \"{3}\" - {4}", timeout ? "due to timeout with" : "after", failedExportCount, failedExportCount > 1 ? "s" : "", destinationFileName.ToNonNullString("[undefined]"), ex.Message), ex));
+                OnProcessException(new InvalidOperationException($"Export attempt aborted {(timeout ? "due to timeout with" : "after")} {failedExportCount} exception{(failedExportCount > 1 ? "s" : "")} for \"{destinationFileName.ToNonNullString("[undefined]")}\" - {ex.Message}", ex));
             }
             finally
             {
                 // Release waiting thread
-                if ((object)exportState != null && exportState.WaitHandle != null)
-                    exportState.WaitHandle.Set();
+                exportState?.WaitHandle?.Set();
 
                 // Track total number of failed export attempts
                 Interlocked.Add(ref m_failedExportAttempts, failedExportCount);
             }
         }
 
-        private void DeleteTemporaryFile(object state)
+        private void DeleteTemporaryFile(string filename)
         {
-            string filename = state as string;
+            if (string.IsNullOrEmpty(filename))
+                return;
 
-            if (!string.IsNullOrEmpty(filename))
+            try
             {
-                try
-                {
-                    // Hold up for the specified retry time in case the export threads may still be trying their last copy attempt. This is important
-                    // if the timeouts are synchronized and there is one more export about to be attempted before the timeout flag is checked.
-                    Thread.Sleep(m_retryDelayInterval);
-
-                    // Delete the temporary file
-                    if (File.Exists(filename))
-                        File.Delete(filename);
-                }
-                catch (Exception ex)
-                {
-                    // Although errors are not expected from deleting the temporary file, we report any that may occur
-                    OnProcessException(new InvalidOperationException(string.Format("Exception encountered while trying to remove temporary file: {0}", ex.Message), ex));
-                }
+                // Delete the temporary file
+                if (File.Exists(filename))
+                    File.Delete(filename);
+            }
+            catch (Exception ex)
+            {
+                // Although errors are not expected from deleting the temporary file, we report any that may occur
+                OnProcessException(new InvalidOperationException($"Exception encountered while trying to remove temporary file: {ex.Message}", ex));
             }
         }
 

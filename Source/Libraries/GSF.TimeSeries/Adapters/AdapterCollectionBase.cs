@@ -1546,6 +1546,9 @@ namespace GSF.TimeSeries.Adapters
             {
                 // We report any errors encountered during initialization...
                 OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to initialize adapter {item.Name}: {ex.Message}", ex), "Initialization");
+
+                // Initialization failed, so stop the timeout timer
+                initializationTimeoutToken?.Cancel();
             }
         }
 
