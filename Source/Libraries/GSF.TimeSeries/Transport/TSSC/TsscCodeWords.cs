@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  MeasurementStreamCodes.cs - Gbtc
+//  TsscCodeWords.cs - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -23,7 +23,11 @@
 
 namespace GSF.TimeSeries.Transport.TSSC
 {
-    internal static class MeasurementStreamCodes
+    /// <summary>
+    /// The encoding commands supported by TSSC. This class is used by 
+    /// <see cref="TsscDecoder"/> and <see cref="TsscEncoder"/>.
+    /// </summary>
+    internal static class TsscCodeWords
     {
         public const byte EndOfStream = 0;
 
@@ -36,12 +40,10 @@ namespace GSF.TimeSeries.Transport.TSSC
         public const byte TimeDelta2Forward = 6;
         public const byte TimeDelta3Forward = 7;
         public const byte TimeDelta4Forward = 8;
-
         public const byte TimeDelta1Reverse = 9;
         public const byte TimeDelta2Reverse = 10;
         public const byte TimeDelta3Reverse = 11;
         public const byte TimeDelta4Reverse = 12;
-
         public const byte Timestamp2 = 13;
         public const byte TimeXOR7Bit = 14;
 

@@ -180,9 +180,10 @@
     <Compile Include="Transport\SubscriptionInfo.cs" />
     <Compile Include="Transport\SynchronizedClientSubscription.cs" />
     <Compile Include="Transport\TemporalClientSubscriptionProxy.cs" />
-    <Compile Include="Transport\TSSC\MeasurementStreamCodes.cs" />
-    <Compile Include="Transport\TSSC\MeasurementStreamFileReading.cs" />
-    <Compile Include="Transport\TSSC\MeasurementStreamFileWriting.cs" />
+    <Compile Include="Transport\TSSC\TsscPointMetadata.cs" />
+    <Compile Include="Transport\TSSC\TsscCodeWords.cs" />
+    <Compile Include="Transport\TSSC\TsscDecoder.cs" />
+    <Compile Include="Transport\TSSC\TsscEncoder.cs" />
     <Compile Include="Transport\UnsynchronizedClientSubscription.cs" />
   </ItemGroup>
   <ItemGroup>
