@@ -59,7 +59,6 @@
     <Compile Include="CalculatedMeasurementBase.cs" />
     <Compile Include="CommonPhasorServices.cs" />
     <Compile Include="ConfigurationErrorFrame.cs" />
-    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Iec61850_90_5\Concentrator.cs" />
     <Compile Include="IeeeC37_118\Concentrator.cs" />
     <Compile Include="PhasorDataConcentratorBase.cs" />

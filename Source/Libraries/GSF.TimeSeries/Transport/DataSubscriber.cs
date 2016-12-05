@@ -2935,15 +2935,15 @@ namespace GSF.TimeSeries.Transport
                                                 m_tsscDecoder = new TsscDecoder();
                                                 m_tsscSequenceNumber = 0;
                                             }
+
                                             if (buffer[responseIndex] != 0)
-                                            {
                                                 throw new Exception($"TSSC Version not recognized. {buffer[responseIndex]}");
-                                            }
+
                                             responseIndex++;
+
                                             if (buffer[responseIndex] != m_tsscSequenceNumber)
-                                            {
                                                 throw new Exception($"TSSC is out of sequence. Expecting: {m_tsscSequenceNumber} Received: {buffer[responseIndex]}");
-                                            }
+
                                             responseIndex++;
 
                                             m_tsscDecoder.SetBuffer(buffer, responseIndex, responseLength - responseIndex + DataPublisher.ClientResponseHeaderSize);
@@ -2967,6 +2967,7 @@ namespace GSF.TimeSeries.Transport
                                                     measurements.Add(measurement);
                                                 }
                                             }
+
                                             m_tsscSequenceNumber = (byte)(m_tsscSequenceNumber + 1);
                                         }
                                         else
@@ -4596,7 +4597,7 @@ namespace GSF.TimeSeries.Transport
                     }
                     catch (Exception ex)
                     {
-                        base.OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Error while restarting subscriber connection due to excessive exceptions: {ex.Message}", ex), "DataSubscriber");
+                        base.OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Error while restarting subscriber connection due to excessive exceptions: {ex.Message}", ex), "DataSubscriber", MessageFlags.UsageIssue);
                     }
                     finally
                     {

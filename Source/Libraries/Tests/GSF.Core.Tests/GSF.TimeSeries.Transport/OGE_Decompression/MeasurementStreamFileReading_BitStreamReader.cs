@@ -67,25 +67,25 @@ namespace OGE.MeasurementStream
             public override int ReadBits4()
             {
                 return ReadBit() << 3 | ReadBit() << 2 | ReadBit() << 1 | ReadBit();
-                if (m_bitCount < 4)
-                {
-                    m_bitCount += 8;
-                    m_cache = m_cache << 8 | m_parent.m_buffer.Data[m_parent.m_buffer.Position++];
-                }
-                m_bitCount -= 4;
-                return (m_cache >> m_bitCount) & 15;
+                //if (m_bitCount < 4)
+                //{
+                //    m_bitCount += 8;
+                //    m_cache = m_cache << 8 | m_parent.m_buffer.Data[m_parent.m_buffer.Position++];
+                //}
+                //m_bitCount -= 4;
+                //return (m_cache >> m_bitCount) & 15;
             }
 
             public override int ReadBits6()
             {
                 return ReadBit() << 5 | ReadBit() << 4 | ReadBit() << 3 | ReadBit() << 2 | ReadBit() << 1 | ReadBit();
-                if (m_bitCount < 5)
-                {
-                    m_bitCount += 8;
-                    m_cache = m_cache << 8 | m_parent.m_buffer.Data[m_parent.m_buffer.Position++];
-                }
-                m_bitCount -= 5;
-                return (m_cache >> m_bitCount) & 31;
+                //if (m_bitCount < 5)
+                //{
+                //    m_bitCount += 8;
+                //    m_cache = m_cache << 8 | m_parent.m_buffer.Data[m_parent.m_buffer.Position++];
+                //}
+                //m_bitCount -= 5;
+                //return (m_cache >> m_bitCount) & 31;
             }
 
 

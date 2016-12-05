@@ -44,7 +44,10 @@ namespace GSF.TimeSeries
         // Fields
         private double m_value;
         private Ticks m_timestamp;
+
+        [NonSerialized]
         private ShortTime m_lifespan;
+
         private MeasurementMetadata m_metadata;
         private MeasurementStateFlags m_stateFlags;
 

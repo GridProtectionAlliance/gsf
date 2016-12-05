@@ -4168,9 +4168,7 @@ namespace GSF.PhasorProtocols
         static MultiProtocolFrameParser()
         {
             using (Logger.AppendStackMessages("Owner", "MultiProtocolFrameParser"))
-            {
                 TimerScheduler = new SharedTimerScheduler();
-            }
         }
 
         #endregion

@@ -223,6 +223,7 @@ namespace GSF.IO
             /// Releases the unmanaged resources used by the <see cref="ExportState"/> object and optionally releases the managed resources.
             /// </summary>
             /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+            [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "<WaitHandle>k__BackingField", Justification = "FxCop needs to do a better job recognizing null propagation :-p")]
             private void Dispose(bool disposing)
             {
                 if (!m_disposed)
@@ -230,7 +231,7 @@ namespace GSF.IO
                     try
                     {
                         if (disposing)
-                           WaitHandle?.Dispose();
+                            WaitHandle?.Dispose();
                     }
                     finally
                     {
