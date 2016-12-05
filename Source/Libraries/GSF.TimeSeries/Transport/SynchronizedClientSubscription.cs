@@ -717,7 +717,7 @@ namespace GSF.TimeSeries.Transport
         private void SendTSSCPayload(long frameLevelTimestamp, int count)
         {
             int length = m_tsscEncoder.FinishBlock();
-            byte[] packet = new byte[length + 14];
+            byte[] packet = new byte[length + 15];
 
             packet[0] = (byte)(DataPacketFlags.Synchronized | DataPacketFlags.Compressed);
 
@@ -731,7 +731,7 @@ namespace GSF.TimeSeries.Transport
             packet[9 + 4] = 0; //A version number
             packet[13 + 1] = m_tsscSequenceNumber;
 
-            Array.Copy(m_tsscWorkingBuffer, 0, packet, 14, length);
+            Array.Copy(m_tsscWorkingBuffer, 0, packet, 15, length);
 
             if ((object)m_parent != null)
                 m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, packet);
