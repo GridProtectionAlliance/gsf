@@ -33,6 +33,7 @@ using GSF.IO;
 using GSF.Parsing;
 using GSF.Threading;
 using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Transport.TSSC;
 
 namespace GSF.TimeSeries.Transport
 {
@@ -70,7 +71,9 @@ namespace GSF.TimeSeries.Transport
         private volatile bool m_usePayloadCompression;
         private volatile bool m_useCompactMeasurementFormat;
         private readonly CompressionModes m_compressionModes;
-        private MeasurementCompressionBlock m_compressionBlock;
+        private TsscEncoder m_tsscEncoder;
+        private byte[] m_tsscWorkingBuffer;
+        private byte m_tsscSequenceNumber;
         private volatile bool m_startTimeSent;
         private volatile bool m_isNaNFiltered;
         private IaonSession m_iaonSession;
@@ -404,8 +407,9 @@ namespace GSF.TimeSeries.Transport
                 m_startTimeSent = false;
 
             // Reset compressor on successful resubscription
-            if ((object)m_compressionBlock != null)
-                m_compressionBlock.Reset();
+            if ((object)m_tsscEncoder != null)
+                m_tsscEncoder.Reset();
+            m_tsscSequenceNumber = 0;
 
             base.Start();
         }
@@ -513,6 +517,12 @@ namespace GSF.TimeSeries.Transport
         {
             if ((object)m_parent == null || m_disposed)
                 return;
+
+            if (m_usePayloadCompression && m_compressionModes.HasFlag(CompressionModes.TSSC))
+            {
+                ProcessTSSCMeasurements(frame);
+                return;
+            }
 
             // Includes data packet flags, frame level timestamp and measurement count
             const int PacketHeaderSize = DataPublisher.ClientResponseHeaderSize + 13;
@@ -625,26 +635,7 @@ namespace GSF.TimeSeries.Transport
 
                 if (usePayloadCompression && m_compressionModes.HasFlag(CompressionModes.TSSC))
                 {
-                    if ((object)m_compressionBlock == null)
-                        m_compressionBlock = new MeasurementCompressionBlock();
-                    else
-                        m_compressionBlock.Clear();
-
-                    foreach (CompactMeasurement measurement in measurements.Cast<CompactMeasurement>())
-                    {
-                        if (m_compressionBlock.CanAddMeasurements)
-                        {
-                            m_compressionBlock.AddMeasurement(measurement.RuntimeID, measurement.Timestamp.Value, (uint)measurement.StateFlags, (float)measurement.AdjustedValue);
-                        }
-                        else
-                        {
-                            m_compressionBlock.CopyTo(workingBuffer);
-                            m_compressionBlock.Clear();
-                            m_compressionBlock.AddMeasurement(measurement.RuntimeID, measurement.Timestamp.Value, (uint)measurement.StateFlags, (float)measurement.AdjustedValue);
-                        }
-                    }
-
-                    m_compressionBlock.CopyTo(workingBuffer);
+                    throw new NotSupportedException("TSSC must be processed at the frame level. There is a coding bug somewhere.");
                 }
                 else
                 {
@@ -670,6 +661,80 @@ namespace GSF.TimeSeries.Transport
                 if ((object)m_parent != null)
                     m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, workingBuffer.ToArray());
             }
+        }
+
+        private void ProcessTSSCMeasurements(IFrame frame)
+        {
+            try
+            {
+                if (!Enabled)
+                    return;
+
+                if ((object)m_tsscEncoder == null)
+                {
+                    m_tsscEncoder = new TsscEncoder();
+                    m_tsscWorkingBuffer = new byte[32 * 1024];
+                    m_tsscSequenceNumber = 0;
+                    m_tsscEncoder.SetBuffer(m_tsscWorkingBuffer, 0, m_tsscWorkingBuffer.Length);
+                }
+                else
+                {
+                    m_tsscEncoder.SetBuffer(m_tsscWorkingBuffer, 0, m_tsscWorkingBuffer.Length);
+                }
+
+                int count = 0;
+
+                foreach (IMeasurement measurement in frame.Measurements.Values)
+                {
+                    ushort index = m_signalIndexCache.GetSignalIndex(measurement.Key);
+                    if (!m_tsscEncoder.TryAddMeasurement(index, measurement.Timestamp.Value, (uint)measurement.StateFlags, (float)measurement.AdjustedValue))
+                    {
+                        SendTSSCPayload(frame.Timestamp, count);
+                        count = 0;
+                        m_tsscEncoder.SetBuffer(m_tsscWorkingBuffer, 0, m_tsscWorkingBuffer.Length);
+                        //This will always succeed
+                        m_tsscEncoder.TryAddMeasurement(index, measurement.Timestamp.Value, (uint)measurement.StateFlags, (float)measurement.AdjustedValue);
+                    }
+                    count++;
+                }
+
+                if (count > 0)
+                {
+                    SendTSSCPayload(frame.Timestamp, count);
+                }
+
+                // Update latency statistics
+                long publishTime = DateTime.UtcNow.Ticks;
+                m_parent.UpdateLatencyStatistics(frame.Measurements.Values.Select(m => (long)(publishTime - m.Timestamp)));
+            }
+            catch (Exception ex)
+            {
+                string message = $"Error processing measurements: {ex.Message}";
+                OnProcessException(MessageLevel.Info, new InvalidOperationException(message, ex));
+            }
+        }
+
+        private void SendTSSCPayload(long frameLevelTimestamp, int count)
+        {
+            int length = m_tsscEncoder.FinishBlock();
+            byte[] packet = new byte[length + 14];
+
+            packet[0] = (byte)(DataPacketFlags.Synchronized | DataPacketFlags.Compressed);
+
+            // Serialize frame timestamp into data packet - this only occurs in synchronized data packets,
+            // unsynchronized subscriptions always include timestamps in the serialized measurements
+            BigEndian.CopyBytes(frameLevelTimestamp, packet, 1);
+
+            // Serialize total number of measurement values to follow
+            BigEndian.CopyBytes(count, packet, 1 + 8);
+
+            packet[9 + 4] = 0; //A version number
+            packet[13 + 1] = m_tsscSequenceNumber;
+
+            Array.Copy(m_tsscWorkingBuffer, 0, packet, 14, length);
+
+            if ((object)m_parent != null)
+                m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, packet);
         }
 
         // Retransmits all buffer blocks for which confirmation has not yet been received

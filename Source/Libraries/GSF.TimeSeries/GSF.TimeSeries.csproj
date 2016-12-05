@@ -162,8 +162,6 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Transport\IBinaryMeasurement.cs" />
-    <Compile Include="Transport\MeasurementCompressionBlock.cs" />
-    <Compile Include="Transport\MeasurementDecompressionBlock.cs" />
     <Compile Include="Transport\SerializableMeasurement.cs" />
     <Compile Include="ServiceHostBase.cs">
       <SubType>Component</SubType>

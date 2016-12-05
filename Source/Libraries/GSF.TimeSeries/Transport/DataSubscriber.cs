@@ -53,6 +53,7 @@ using GSF.Threading;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Data;
 using GSF.TimeSeries.Statistics;
+using GSF.TimeSeries.Transport.TSSC;
 using GSF.Units;
 using Random = GSF.Security.Cryptography.Random;
 using TcpClient = GSF.Communication.TcpClient;
@@ -476,7 +477,8 @@ namespace GSF.TimeSeries.Transport
         private UdpClient m_dataChannel;
         private bool m_useZeroMQChannel;
         private LocalConcentrator m_localConcentrator;
-        private MeasurementDecompressionBlock m_decompressionBlock;
+        private TsscDecoder m_tsscDecoder;
+        private byte m_tsscSequenceNumber;
         private SharedTimer m_dataStreamMonitor;
         private long m_commandChannelConnectionAttempts;
         private long m_dataChannelConnectionAttempts;
@@ -2458,6 +2460,7 @@ namespace GSF.TimeSeries.Transport
                         }
 
                         dataChannel = new UdpClient(setting);
+
                         dataChannel.ReceiveBufferSize = ushort.MaxValue;
                         dataChannel.MaxConnectionAttempts = -1;
                         dataChannel.ConnectAsync();
@@ -2508,8 +2511,11 @@ namespace GSF.TimeSeries.Transport
             }
 
             // Reset decompressor on successful resubscription
-            if (success && (object)m_decompressionBlock != null)
-                m_decompressionBlock.Reset();
+            if (success && (object)m_tsscDecoder != null)
+            {
+                m_tsscDecoder.Reset();
+                m_tsscSequenceNumber = 0;
+            }
 
             return success;
         }
@@ -2924,46 +2930,44 @@ namespace GSF.TimeSeries.Transport
                                         if (CompressionModes.HasFlag(CompressionModes.TSSC))
                                         {
                                             // Use TSSC compression to decompress measurements                                            
-                                            if ((object)m_decompressionBlock == null)
-                                                m_decompressionBlock = new MeasurementDecompressionBlock();
-
-                                            MemoryStream bufferStream = new MemoryStream(buffer, responseIndex, responseLength - responseIndex + DataPublisher.ClientResponseHeaderSize);
-                                            bool eos = false;
-
-                                            while (!eos)
+                                            if ((object)m_tsscDecoder == null)
                                             {
-                                                Measurement measurement;
-                                                MeasurementKey key;
-                                                ushort id;
-                                                long time;
-                                                uint quality;
-                                                float value;
-                                                byte command;
+                                                m_tsscDecoder = new TsscDecoder();
+                                                m_tsscSequenceNumber = 0;
+                                            }
+                                            if (buffer[responseIndex] != 0)
+                                            {
+                                                throw new Exception($"TSSC Version not recognized. {buffer[responseIndex]}");
+                                            }
+                                            responseIndex++;
+                                            if (buffer[responseIndex] != m_tsscSequenceNumber)
+                                            {
+                                                throw new Exception($"TSSC is out of sequence. Expecting: {m_tsscSequenceNumber} Received: {buffer[responseIndex]}");
+                                            }
+                                            responseIndex++;
 
-                                                switch (m_decompressionBlock.GetMeasurement(out id, out time, out quality, out value, out command))
+                                            m_tsscDecoder.SetBuffer(buffer, responseIndex, responseLength - responseIndex + DataPublisher.ClientResponseHeaderSize);
+
+                                            Measurement measurement;
+                                            MeasurementKey key;
+                                            ushort id;
+                                            long time;
+                                            uint quality;
+                                            float value;
+
+                                            while (m_tsscDecoder.TryGetMeasurement(out id, out time, out quality, out value))
+                                            {
+                                                if (m_signalIndexCache.Reference.TryGetValue(id, out key))
                                                 {
-                                                    case DecompressionExitCode.EndOfStreamOccured:
-                                                        if (bufferStream.Position != bufferStream.Length)
-                                                            m_decompressionBlock.Fill(bufferStream);
-                                                        else
-                                                            eos = true;
-                                                        break;
-                                                    case DecompressionExitCode.CommandRead:
-                                                        break;
-                                                    case DecompressionExitCode.MeasurementRead:
-                                                        // Attempt to restore signal identification
-                                                        if (m_signalIndexCache.Reference.TryGetValue(id, out key))
-                                                        {
-                                                            measurement = new Measurement();
-                                                            measurement.Metadata = key.Metadata;
-                                                            measurement.Timestamp = time;
-                                                            measurement.StateFlags = (MeasurementStateFlags)quality;
-                                                            measurement.Value = value;
-                                                            measurements.Add(measurement);
-                                                        }
-                                                        break;
+                                                    measurement = new Measurement();
+                                                    measurement.Metadata = key.Metadata;
+                                                    measurement.Timestamp = time;
+                                                    measurement.StateFlags = (MeasurementStateFlags)quality;
+                                                    measurement.Value = value;
+                                                    measurements.Add(measurement);
                                                 }
                                             }
+                                            m_tsscSequenceNumber = (byte)(m_tsscSequenceNumber + 1);
                                         }
                                         else
                                         {
@@ -3359,7 +3363,7 @@ namespace GSF.TimeSeries.Transport
                 }
 
                 // Start unsynchronized subscription
-                #pragma warning disable 0618
+#pragma warning disable 0618
                 UnsynchronizedSubscribe(true, false, filterExpression.ToString(), dataChannel);
             }
             else if (metaDataRefreshCompleted)

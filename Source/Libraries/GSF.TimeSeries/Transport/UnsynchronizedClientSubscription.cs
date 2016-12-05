@@ -33,6 +33,7 @@ using GSF.IO;
 using GSF.Parsing;
 using GSF.Threading;
 using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Transport.TSSC;
 
 // ReSharper disable PossibleMultipleEnumeration
 namespace GSF.TimeSeries.Transport
@@ -70,7 +71,9 @@ namespace GSF.TimeSeries.Transport
         private volatile bool m_usePayloadCompression;
         private volatile bool m_useCompactMeasurementFormat;
         private readonly CompressionModes m_compressionModes;
-        private MeasurementCompressionBlock m_compressionBlock;
+        private TsscEncoder m_tsscEncoder;
+        private byte[] m_tsscWorkingBuffer;
+        private byte m_tsscSequenceNumber;
         private long m_lastPublishTime;
         private string m_requestedInputFilter;
         private double m_publishInterval;
@@ -455,8 +458,9 @@ namespace GSF.TimeSeries.Transport
                 m_startTimeSent = false;
 
             // Reset compressor on successful resubscription
-            if ((object)m_compressionBlock != null)
-                m_compressionBlock.Reset();
+            if ((object)m_tsscEncoder != null)
+                m_tsscEncoder.Reset();
+            m_tsscSequenceNumber = 0;
 
             base.Start();
 
@@ -784,31 +788,37 @@ namespace GSF.TimeSeries.Transport
                 if (!Enabled)
                     return;
 
-                if ((object)m_compressionBlock == null)
-                    m_compressionBlock = new MeasurementCompressionBlock();
+                if ((object)m_tsscEncoder == null)
+                {
+                    m_tsscEncoder = new TsscEncoder();
+                    m_tsscWorkingBuffer = new byte[32 * 1024];
+                    m_tsscSequenceNumber = 0;
+                    m_tsscEncoder.SetBuffer(m_tsscWorkingBuffer, 0, m_tsscWorkingBuffer.Length);
+                }
                 else
-                    m_compressionBlock.Clear();
+                {
+                    m_tsscEncoder.SetBuffer(m_tsscWorkingBuffer, 0, m_tsscWorkingBuffer.Length);
+                }
 
                 int count = 0;
 
                 foreach (IMeasurement measurement in measurements)
                 {
-                    if (!m_compressionBlock.CanAddMeasurements)
-                    {
-                        SendTSSCPayload(m_compressionBlock, count);
-                        count = 0;
-                        m_compressionBlock.Clear();
-                    }
-
-                    count++;
                     ushort index = m_signalIndexCache.GetSignalIndex(measurement.Key);
-                    m_compressionBlock.AddMeasurement(index, measurement.Timestamp.Value, (uint)measurement.StateFlags, (float)measurement.AdjustedValue);
+                    if (!m_tsscEncoder.TryAddMeasurement(index, measurement.Timestamp.Value, (uint)measurement.StateFlags, (float)measurement.AdjustedValue))
+                    {
+                        SendTSSCPayload(count);
+                        count = 0;
+                        m_tsscEncoder.SetBuffer(m_tsscWorkingBuffer, 0, m_tsscWorkingBuffer.Length);
+                        //This will always succeed
+                        m_tsscEncoder.TryAddMeasurement(index, measurement.Timestamp.Value, (uint)measurement.StateFlags, (float)measurement.AdjustedValue);
+                    }
+                    count++;
                 }
 
                 if (count > 0)
                 {
-                    SendTSSCPayload(m_compressionBlock, count);
-                    m_compressionBlock.Clear();
+                    SendTSSCPayload(count);
                 }
 
                 IncrementProcessedMeasurements(measurements.Count());
@@ -823,25 +833,26 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
-        private void SendTSSCPayload(MeasurementCompressionBlock block, int measurementCount)
+        private void SendTSSCPayload(int count)
         {
-            // Create working buffer
-            using (BlockAllocatedMemoryStream workingBuffer = new BlockAllocatedMemoryStream())
-            {
-                // Serialize data packet flags into response
-                DataPacketFlags flags = DataPacketFlags.Compressed;
+            int length = m_tsscEncoder.FinishBlock();
+            byte[] packet = new byte[length + 6];
 
-                workingBuffer.WriteByte((byte)flags);
-                workingBuffer.Write(BigEndian.GetBytes(measurementCount), 0, 4);
-                block.CopyTo(workingBuffer);
+            packet[0] = (byte)(DataPacketFlags.Compressed);
 
-                // Publish data packet to client
-                if ((object)m_parent != null)
-                    m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, workingBuffer.ToArray());
+            // Serialize total number of measurement values to follow
+            BigEndian.CopyBytes(count, packet, 1);
 
-                // Track last publication time
-                m_lastPublishTime = DateTime.UtcNow.Ticks;
-            }
+            packet[1 + 4] = 0; //A version number
+            packet[5 + 1] = m_tsscSequenceNumber;
+
+            Array.Copy(m_tsscWorkingBuffer, 0, packet, 6, length);
+
+            if ((object)m_parent != null)
+                m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, packet);
+
+            // Track last publication time
+            m_lastPublishTime = DateTime.UtcNow.Ticks;
         }
 
         // Retransmits all buffer blocks for which confirmation has not yet been received
