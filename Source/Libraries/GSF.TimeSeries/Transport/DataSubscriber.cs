@@ -1650,6 +1650,13 @@ namespace GSF.TimeSeries.Transport
             else
                 m_commandChannel.ConnectionString = ConnectionString;
 
+            // Check for simplified compression setup flag
+            if (settings.TryGetValue("compression", out setting) && setting.ParseBoolean())
+            {
+                CompressionModes |= CompressionModes.TSSC | CompressionModes.GZip;
+                OperationalModes |= OperationalModes.CompressPayloadData | OperationalModes.CompressMetadata | OperationalModes.CompressSignalIndexCache | OperationalModes.UseCommonSerializationFormat;
+            }
+
             // Get logging path, if any has been defined
             if (settings.TryGetValue("loggingPath", out setting))
             {
@@ -2441,8 +2448,16 @@ namespace GSF.TimeSeries.Transport
 
                     if (!string.IsNullOrWhiteSpace(setting))
                     {
-                        dataChannel = new UdpClient(setting);
+                        if ((CompressionModes & CompressionModes.TSSC) > 0)
+                        {
+                            // TSSC is a stateful compression algorithm which will not reliably support UDP
+                            OnStatusMessage(MessageLevel.Warning, "Cannot use TSSC compression mode with UDP - special compression mode disabled");
 
+                            // Disable TSSC compression processing
+                            CompressionModes &= ~CompressionModes.TSSC;
+                        }
+
+                        dataChannel = new UdpClient(setting);
                         dataChannel.ReceiveBufferSize = ushort.MaxValue;
                         dataChannel.MaxConnectionAttempts = -1;
                         dataChannel.ConnectAsync();

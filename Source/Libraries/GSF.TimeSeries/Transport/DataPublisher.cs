@@ -3172,7 +3172,15 @@ namespace GSF.TimeSeries.Transport
                                 if (settings.TryGetValue("port", out setting) || settings.TryGetValue("localport", out setting))
                                 {
                                     if ((compressionModes & CompressionModes.TSSC) > 0)
-                                        throw new InvalidOperationException("Cannot use TSCC compression mode with UDP");
+                                    {
+                                        // TSSC is a stateful compression algorithm which will not reliably support UDP
+                                        OnStatusMessage(MessageLevel.Warning, "Cannot use TSSC compression mode with UDP - special compression mode disabled");
+
+                                        // Disable TSSC compression processing
+                                        compressionModes &= ~CompressionModes.TSSC;
+                                        connection.OperationalModes &= ~OperationalModes.CompressionModeMask;
+                                        connection.OperationalModes |= (OperationalModes)compressionModes;
+                                    }
 
                                     connection.DataChannel = new UdpServer($"Port=-1; Clients={connection.IPAddress}:{int.Parse(setting)}; interface={networkInterface}");
                                     connection.DataChannel.Start();
