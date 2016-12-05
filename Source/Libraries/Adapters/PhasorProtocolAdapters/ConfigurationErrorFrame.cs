@@ -48,7 +48,7 @@ namespace PhasorProtocolAdapters
     /// </remarks>
     [Serializable]
     [SuppressMessage("Microsoft.Design", "CA1033:InterfaceMethodsShouldBeCallableByChildTypes", Scope = "method")]
-    public class ConfigurationErrorFrame : IConfigurationFrame
+    public sealed class ConfigurationErrorFrame : IConfigurationFrame
     {
         #region [ Constructors ]
 
@@ -64,7 +64,7 @@ namespace PhasorProtocolAdapters
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
         /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected ConfigurationErrorFrame(SerializationInfo info, StreamingContext context)
+        private ConfigurationErrorFrame(SerializationInfo info, StreamingContext context)
         {
         }
 
@@ -77,7 +77,7 @@ namespace PhasorProtocolAdapters
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
         /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
-        public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
         {
         }
 
@@ -85,13 +85,7 @@ namespace PhasorProtocolAdapters
 
         #region [ Explicit Interface Implementation ]
 
-        ConfigurationCellCollection IConfigurationFrame.Cells
-        {
-            get
-            {
-                return null;
-            }
-        }
+        ConfigurationCellCollection IConfigurationFrame.Cells => null;
 
         IConfigurationFrameParsingState IConfigurationFrame.State
         {
@@ -117,34 +111,16 @@ namespace PhasorProtocolAdapters
             }
         }
 
-        decimal IConfigurationFrame.TicksPerFrame
-        {
-            get
-            {
-                return 0;
-            }
-        }
+        decimal IConfigurationFrame.TicksPerFrame => 0;
 
         void IConfigurationFrame.SetNominalFrequency(LineFrequency value)
         {
             throw new NotImplementedException();
         }
 
-        FundamentalFrameType IChannelFrame.FrameType
-        {
-            get
-            {
-                return FundamentalFrameType.ConfigurationFrame;
-            }
-        }
+        FundamentalFrameType IChannelFrame.FrameType => FundamentalFrameType.ConfigurationFrame;
 
-        object IChannelFrame.Cells
-        {
-            get
-            {
-                return null;
-            }
-        }
+        object IChannelFrame.Cells => null;
 
         ushort IChannelFrame.IDCode
         {
@@ -158,21 +134,9 @@ namespace PhasorProtocolAdapters
             }
         }
 
-        UnixTimeTag IChannelFrame.TimeTag
-        {
-            get
-            {
-                return null;
-            }
-        }
+        UnixTimeTag IChannelFrame.TimeTag => null;
 
-        Dictionary<string, string> IChannel.Attributes
-        {
-            get
-            {
-                return null;
-            }
-        }
+        Dictionary<string, string> IChannel.Attributes => null;
 
         IChannelParsingState IChannel.State
         {
@@ -198,13 +162,7 @@ namespace PhasorProtocolAdapters
             }
         }
 
-        int ISupportBinaryImage.BinaryLength
-        {
-            get
-            {
-                return 0;
-            }
-        }
+        int ISupportBinaryImage.BinaryLength => 0;
 
         int ISupportBinaryImage.ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
@@ -228,13 +186,7 @@ namespace PhasorProtocolAdapters
             }
         }
 
-        ConcurrentDictionary<MeasurementKey, IMeasurement> IFrame.Measurements
-        {
-            get
-            {
-                return null;
-            }
-        }
+        ConcurrentDictionary<MeasurementKey, IMeasurement> IFrame.Measurements => null;
 
         bool IFrame.Published
         {
@@ -272,21 +224,9 @@ namespace PhasorProtocolAdapters
             }
         }
 
-        ShortTime IFrame.Lifespan
-        {
-            get
-            {
-                return ShortTime.Now;
-            }
-        }
+        ShortTime IFrame.Lifespan => ShortTime.Now;
 
-        Ticks IFrame.CreatedTimestamp
-        {
-            get
-            {
-                return DateTime.UtcNow.Ticks;
-            }
-        }
+        Ticks IFrame.CreatedTimestamp => DateTime.UtcNow.Ticks;
 
         bool IEquatable<IFrame>.Equals(IFrame other)
         {
