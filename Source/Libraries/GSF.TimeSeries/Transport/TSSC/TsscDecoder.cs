@@ -88,6 +88,7 @@ namespace GSF.TimeSeries.Transport.TSSC
         /// <param name="length"></param>
         public void SetBuffer(byte[] data, int startingPosition, int length)
         {
+            data.ValidateParameters(startingPosition, length);
             m_data = data;
             m_position = startingPosition;
             m_lastPosition = startingPosition + length;

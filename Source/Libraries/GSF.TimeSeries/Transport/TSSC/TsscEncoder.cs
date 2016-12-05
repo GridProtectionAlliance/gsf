@@ -22,7 +22,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using GSF.Collection;
 
 namespace GSF.TimeSeries.Transport.TSSC
@@ -64,7 +63,6 @@ namespace GSF.TimeSeries.Transport.TSSC
             Reset();
         }
 
-
         /// <summary>
         /// Resets the TSSC Encoder to the initial state. 
         /// </summary>
@@ -89,7 +87,6 @@ namespace GSF.TimeSeries.Transport.TSSC
             m_prevTimeDelta4 = long.MaxValue;
             m_prevTimestamp1 = 0;
             m_prevTimestamp2 = 0;
-
         }
 
         /// <summary>
@@ -100,6 +97,7 @@ namespace GSF.TimeSeries.Transport.TSSC
         /// <param name="length"></param>
         public void SetBuffer(byte[] data, int startingPosition, int length)
         {
+            data.ValidateParameters(startingPosition, length);
             m_data = data;
             m_position = startingPosition;
             m_lastPosition = startingPosition + length;
@@ -128,7 +126,7 @@ namespace GSF.TimeSeries.Transport.TSSC
         {
             //if there are fewer than 100 bytes available on the buffer
             //assume that we cannot add any more.
-            if (m_lastPosition - m_position < 100) 
+            if (m_lastPosition - m_position < 100)
                 return false;
 
             TsscPointMetadata point = m_points[id];
@@ -138,7 +136,7 @@ namespace GSF.TimeSeries.Transport.TSSC
                 point.PrevNextPointId1 = (ushort)(id + 1);
                 m_points[id] = point;
             }
-            
+
             //Note: since I will not know the incoming pointID. The most recent
             //      measurement received will be the one that contains the 
             //      coding algorithm for this measurement. Since for the more part
@@ -192,7 +190,7 @@ namespace GSF.TimeSeries.Transport.TSSC
                 if (bitsChanged <= Bits4)
                 {
                     m_lastPoint.WriteCode(TsscCodeWords.ValueXOR4);
-                    WriteBits((byte)bitsChanged, 4);
+                    WriteBits((byte)bitsChanged & 15, 4);
                 }
                 else if (bitsChanged <= Bits8)
                 {
@@ -204,7 +202,7 @@ namespace GSF.TimeSeries.Transport.TSSC
                 else if (bitsChanged <= Bits12)
                 {
                     m_lastPoint.WriteCode(TsscCodeWords.ValueXOR12);
-                    WriteBits((byte)bitsChanged, 4);
+                    WriteBits((byte)bitsChanged & 15, 4);
 
                     m_data[m_position] = (byte)(bitsChanged >> 4);
                     m_position++;
@@ -219,7 +217,7 @@ namespace GSF.TimeSeries.Transport.TSSC
                 else if (bitsChanged <= Bits20)
                 {
                     m_lastPoint.WriteCode(TsscCodeWords.ValueXOR20);
-                    WriteBits((byte)bitsChanged, 4);
+                    WriteBits((byte)bitsChanged & 15, 4);
 
                     m_data[m_position] = (byte)(bitsChanged >> 4);
                     m_data[m_position + 1] = (byte)(bitsChanged >> 12);
@@ -237,7 +235,7 @@ namespace GSF.TimeSeries.Transport.TSSC
                 else if (bitsChanged <= Bits28)
                 {
                     m_lastPoint.WriteCode(TsscCodeWords.ValueXOR28);
-                    WriteBits((byte)bitsChanged, 4);
+                    WriteBits((byte)bitsChanged & 15, 4);
 
                     m_data[m_position] = (byte)(bitsChanged >> 4);
                     m_data[m_position + 1] = (byte)(bitsChanged >> 12);
@@ -272,7 +270,7 @@ namespace GSF.TimeSeries.Transport.TSSC
             if (bitsChanged <= Bits4)
             {
                 m_lastPoint.WriteCode(TsscCodeWords.PointIDXOR4);
-                WriteBits((byte)bitsChanged, 4);
+                WriteBits((byte)bitsChanged & 15, 4);
             }
             else if (bitsChanged <= Bits8)
             {
@@ -283,7 +281,7 @@ namespace GSF.TimeSeries.Transport.TSSC
             else if (bitsChanged <= Bits12)
             {
                 m_lastPoint.WriteCode(TsscCodeWords.PointIDXOR12);
-                WriteBits((byte)bitsChanged, 4);
+                WriteBits((byte)bitsChanged & 15, 4);
 
                 m_data[m_position] = (byte)(bitsChanged >> 4);
                 m_position++;
