@@ -45,6 +45,8 @@ namespace LogFileViewer
         private DataTable m_dataTable;
         private bool[] m_visibleFlags;
         private List<LogMessageFilter> m_filters;
+        private HashSet<string> m_filesToBold = new HashSet<string>();
+        private DataGridViewCellStyle m_highlightStyle;
 
         private string m_logPath;
         SortedList<string, byte[]> m_savedFilters = new SortedList<string, byte[]>();
@@ -104,6 +106,8 @@ namespace LogFileViewer
             dgvResults.Columns["Object"].Visible = false;
             dgvResults.Columns["_Show"].Visible = false;
             dgvResults.Columns["_Level"].Visible = false;
+            m_highlightStyle = new DataGridViewCellStyle(dgvResults.DefaultCellStyle);
+            m_highlightStyle.ForeColor = Color.Blue;
             m_visibleFlags = GetVisibleFlags();
         }
 
@@ -198,6 +202,7 @@ namespace LogFileViewer
             if (e.Button == MouseButtons.Right && e.RowIndex >= 0 && e.ColumnIndex >= 0)
             {
                 LogMessage item = (LogMessage)dgvResults.Rows[e.RowIndex].Cells["Object"].Value;
+                string fileName = (string)dgvResults.Rows[e.RowIndex].Cells["File Name"].Value;
 
                 List<LogMessage> messages = new List<LogMessage>();
                 messages.Add(item);
@@ -206,6 +211,32 @@ namespace LogFileViewer
 
                 switch (dgvResults.Columns[e.ColumnIndex].Name)
                 {
+                    case "File Name":
+                        ContextMenuStrip menu = new ContextMenuStrip();
+                        ToolStripButton button;
+                        if (!m_filesToBold.Contains(fileName))
+                        {
+                            button = new ToolStripButton("Color");
+                            button.Click += (send1, e1) =>
+                                            {
+                                                m_filesToBold.Add(fileName);
+                                                dgvResults.Invalidate();
+                                            };
+                        }
+                        else
+                        {
+                            button = new ToolStripButton("Remove Color");
+                            button.Click += (send1, e1) =>
+                            {
+                                m_filesToBold.Remove(fileName);
+                                dgvResults.Invalidate();
+                            };
+                        }
+                        menu.Items.Add(button);
+                        menu.ShowImageMargin = false;
+                        menu.Width = 150;
+                        menu.Show(dgvResults, dgvResults.PointToClient(Cursor.Position));
+                        return;
                     case "Type":
                         items.AddRange(new TypeMenu(messages).GetMenuButtons());
                         break;
@@ -658,6 +689,23 @@ namespace LogFileViewer
             return m_visibleFlags[GetLevel(message)];
         }
 
+        private void dgvResults_RowPrePaint(object sender, DataGridViewRowPrePaintEventArgs e)
+        {
+            if (e.RowIndex != -1)
+            {
+                DataGridViewRow row = dgvResults.Rows[e.RowIndex];
+                string fileName = (string)dgvResults["File Name", e.RowIndex].Value;
+                if (m_filesToBold.Contains(fileName))
+                {
+                    row.DefaultCellStyle = m_highlightStyle;
+                }
+                else
+                {
+                    row.DefaultCellStyle = dgvResults.DefaultCellStyle;
+                }
+            }
+        }
+
         private void dgvResults_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
             if (e.ColumnIndex >= 0 && e.RowIndex != -1 && (e.State & DataGridViewElementStates.Selected) != DataGridViewElementStates.Selected)
@@ -746,5 +794,7 @@ namespace LogFileViewer
 
             }
         }
+
+
     }
 }

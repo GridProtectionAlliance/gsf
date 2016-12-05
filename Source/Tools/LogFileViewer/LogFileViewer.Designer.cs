@@ -326,6 +326,7 @@
             this.dgvResults.CellMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dgvResults_CellMouseClick);
             this.dgvResults.CellMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dgvResults_CellMouseDoubleClick);
             this.dgvResults.CellPainting += new System.Windows.Forms.DataGridViewCellPaintingEventHandler(this.dgvResults_CellPainting);
+            this.dgvResults.RowPrePaint += new System.Windows.Forms.DataGridViewRowPrePaintEventHandler(this.dgvResults_RowPrePaint);
             // 
             // LogFileViewer
             // 
