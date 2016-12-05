@@ -1,0 +1,1 @@
+﻿This is a direct copy of OGE's internal decompression algorithm and differs from TSSC slightly. This is used in unit tests to take our data and use it to test TSSC.

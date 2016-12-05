@@ -88,6 +88,16 @@
     <Compile Include="GSF.Diagnostics\Logger.cs" />
     <Compile Include="GSF.Threading\LoadingAdjustedTimestamp.cs" />
     <Compile Include="GSF.Threading\ScheduledTaskTest.cs" />
+    <Compile Include="GSF.TimeSeries.Transport\OGE_Decompression\ByteBuffer.cs" />
+    <Compile Include="GSF.TimeSeries.Transport\OGE_Decompression\MeasurementStreamCodes.cs" />
+    <Compile Include="GSF.TimeSeries.Transport\OGE_Decompression\MeasurementStreamFileReading.cs" />
+    <Compile Include="GSF.TimeSeries.Transport\OGE_Decompression\MeasurementStreamFileReading_BitStreamReader.cs" />
+    <Compile Include="GSF.TimeSeries.Transport\OGE_Decompression\MeasurementTypeCode.cs" />
+    <Compile Include="GSF.TimeSeries.Transport\OGE_Decompression\PointMetaData.cs" />
+    <Compile Include="GSF.TimeSeries.Transport\OGE_Decompression\PointMetaDataInt32.cs" />
+    <Compile Include="GSF.TimeSeries.Transport\OGE_Decompression\PointMetaDataInt64.cs" />
+    <Compile Include="GSF.TimeSeries.Transport\OGE_Decompression\PointMetaDataString.cs" />
+    <Compile Include="GSF.TimeSeries.Transport\OGE_Decompression\UnionValues.cs" />
     <Compile Include="GSF.TimeSeries.Transport\Tssc.cs" />
     <Compile Include="PatternCompressorTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -129,7 +139,9 @@
       <Name>GSF.TimeSeries</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="GSF.TimeSeries.Transport\OGE_Decompression\README.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
