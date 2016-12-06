@@ -86,19 +86,26 @@ namespace GSF.Diagnostics
         public bool HasSubscribers => m_publisher.HasSubscribers(m_attributes);
 
         /// <summary>
+        /// The attributes that will be used if not specified.
+        /// </summary>
+        public LogMessageAttributes DefaultAttributes => m_attributes;
+
+        /// <summary>
         /// Raises a log message with the provided data.
         /// </summary>
+        /// <param name="overriddenAttributes">attributes to use with this message</param>
         /// <param name="message"></param>
         /// <param name="details">A long text field with the details of the message.</param>
         /// <param name="exception">An exception object if one is provided.</param>
         /// <param name="initialStackMessage"></param>
         /// <param name="initialStackTrace"></param>
-        public void Publish(string message = null, string details = null, Exception exception = null, LogStackMessages initialStackMessage = null, LogStackTrace initialStackTrace = null)
+        public void Publish(LogMessageAttributes? overriddenAttributes, string message, string details, Exception exception, LogStackMessages initialStackMessage, LogStackTrace initialStackTrace)
         {
             if (Logger.ShouldSuppressLogMessages)
                 return;
 
-            var attributes = m_attributes;
+            LogMessageAttributes attributes = overriddenAttributes ?? m_attributes;
+
             if (!m_publisher.HasSubscribers(attributes))
                 return;
 

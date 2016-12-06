@@ -49,6 +49,7 @@ namespace GSF.Diagnostics
         /// </summary>
         private class ThreadStack
         {
+            public int PreviousFirstChanceExceptionSequenceNumber;
             private List<LogStackMessages> m_threadStackDetails = new List<LogStackMessages>();
             private LogStackMessages m_stackMessageCache;
             private List<SuppressionMode> m_logMessageSuppressionStack = new List<SuppressionMode>();
@@ -189,6 +190,11 @@ namespace GSF.Diagnostics
         }
 
         /// <summary>
+        /// Gets the sequence number of the most recent First Chance Exception log 
+        /// </summary>
+        internal static int PreviousFirstChanceExceptionSequenceNumber => ThreadItems.Value.PreviousFirstChanceExceptionSequenceNumber;
+
+        /// <summary>
         /// Gets if Log Messages should be suppressed.
         /// </summary>
         public static bool ShouldSuppressLogMessages => ThreadItems.Value.ShouldSuppressLogMessages;
@@ -227,6 +233,7 @@ namespace GSF.Diagnostics
                 {
                     //swallow any exceptions.
                 }
+                ThreadItems.Value.PreviousFirstChanceExceptionSequenceNumber++;
             }
         }
 
@@ -283,9 +290,12 @@ namespace GSF.Diagnostics
         /// <param name="ex">the exception that was swallowed</param>
         /// <param name="message">message to include, such as a reason why it was swallowed.</param>
         /// <param name="details">additional details.</param>
-        public static void SwallowException(Exception ex, string message = null, string details = null)
+        /// <param name="additionalFlags">additional flags that can be set with this swallowed exception.</param>
+        public static void SwallowException(Exception ex, string message = null, string details = null, MessageFlags additionalFlags = MessageFlags.None)
         {
-            EventSwallowedException.Publish(message, details, ex);
+            EventSwallowedException.Publish(additionalFlags, message, details, ex);
+            //Increment this value to ensure that nothing else matches with the exception since it has been removed.
+            ThreadItems.Value.PreviousFirstChanceExceptionSequenceNumber++;
         }
 
         /// <summary>
