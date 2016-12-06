@@ -160,7 +160,7 @@ namespace GSF.TimeSeries.Transport
             catch
             {
                 // At worst we'll just use the client GUID for identification
-                m_connectionID = (m_subscriberID == Guid.Empty ? clientID.ToString() : m_subscriberID.ToString());
+                m_connectionID = m_subscriberID == Guid.Empty ? clientID.ToString() : m_subscriberID.ToString();
             }
 
             if (string.IsNullOrWhiteSpace(m_connectionID))
@@ -206,7 +206,7 @@ namespace GSF.TimeSeries.Transport
             }
             set
             {
-                m_connectionEstablished = ((object)value != null);
+                m_connectionEstablished = (object)value != null;
 
                 if ((object)m_dataChannel != null)
                 {
@@ -245,7 +245,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets <see cref="IServer"/> publication channel - that is, data channel if defined otherwise command channel.
         /// </summary>
-        public IServer PublishChannel => ((object)m_dataChannel == null ? m_commandChannel : m_dataChannel);
+        public IServer PublishChannel => (object)m_dataChannel == null ? m_commandChannel : m_dataChannel;
 
         /// <summary>
         /// Gets connected state of the associated client socket.

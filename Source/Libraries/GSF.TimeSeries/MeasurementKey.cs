@@ -469,7 +469,7 @@ namespace GSF.TimeSeries
                 key = Undefined;
             }
 
-            return (key != Undefined);
+            return key != Undefined;
         }
 
         /// <summary>

@@ -657,7 +657,7 @@ namespace GSF.TimeSeries.Adapters
                 status.AppendLine();
                 status.AppendFormat("    Initialization timeout: {0}", InitializationTimeout < 0 ? "Infinite" : InitializationTimeout.ToString() + " milliseconds");
                 status.AppendLine();
-                status.AppendFormat(" Current operational state: {0}", (Enabled ? "Enabled" : "Disabled"));
+                status.AppendFormat(" Current operational state: {0}", Enabled ? "Enabled" : "Disabled");
                 status.AppendLine();
                 status.AppendFormat("       Temporal processing: {0}", SupportsTemporalProcessing ? "Supported" : "Unsupported");
                 status.AppendLine();
@@ -677,7 +677,7 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendFormat("   Average processing rate: {0} measurements / second", ((int)(m_processedMeasurements / m_totalProcessTime)).ToString("N0"));
                     status.AppendLine();
                 }
-                status.AppendFormat("       Data source defined: {0}", (dataSource != null));
+                status.AppendFormat("       Data source defined: {0}", dataSource != null);
                 status.AppendLine();
                 if (dataSource != null)
                 {
@@ -709,7 +709,7 @@ namespace GSF.TimeSeries.Adapters
                     if (value.Length > 50)
                         value = value.TruncateRight(47) + "...";
 
-                    status.AppendFormat("{0} = {1}", (new string(keyChars)).TruncateRight(25).PadLeft(25), value.PadRight(50));
+                    status.AppendFormat("{0} = {1}", new string(keyChars).TruncateRight(25).PadLeft(25), value.PadRight(50));
                     status.AppendLine();
                 }
 

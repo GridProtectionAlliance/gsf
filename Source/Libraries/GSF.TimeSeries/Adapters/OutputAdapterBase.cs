@@ -368,7 +368,7 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                 }
 
-                status.AppendFormat("     Source ID filter list: {0}", ((object)m_inputSourceIDs == null ? "[No filter applied]" : m_inputSourceIDs.ToDelimitedString(',')));
+                status.AppendFormat("     Source ID filter list: {0}", (object)m_inputSourceIDs == null ? "[No filter applied]" : m_inputSourceIDs.ToDelimitedString(','));
                 status.AppendLine();
                 status.AppendFormat("   Asynchronous connection: {0}", UseAsyncConnect);
                 status.AppendLine();

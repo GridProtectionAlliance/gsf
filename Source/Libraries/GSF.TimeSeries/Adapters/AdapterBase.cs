@@ -540,7 +540,7 @@ namespace GSF.TimeSeries.Adapters
                 StringBuilder status = new StringBuilder();
                 DataSet dataSource = this.DataSource;
 
-                status.AppendFormat("       Data source defined: {0}", (dataSource != null));
+                status.AppendFormat("       Data source defined: {0}", dataSource != null);
                 status.AppendLine();
                 if ((object)dataSource != null)
                 {
@@ -597,7 +597,7 @@ namespace GSF.TimeSeries.Adapters
                     if (value.Length > 50)
                         value = value.TruncateRight(47) + "...";
 
-                    status.AppendFormat("{0} = {1}", (new string(keyChars)).TruncateRight(25).PadLeft(25), value.PadRight(50));
+                    status.AppendFormat("{0} = {1}", new string(keyChars).TruncateRight(25).PadLeft(25), value.PadRight(50));
                     status.AppendLine();
                 }
 
@@ -1355,7 +1355,7 @@ namespace GSF.TimeSeries.Adapters
             Guid id;
             string tableName, expression, sortField;
             int takeCount;
-            bool dataSourceAvailable = ((object)dataSource != null);
+            bool dataSourceAvailable = (object)dataSource != null;
 
             if (string.IsNullOrWhiteSpace(value))
                 return keys.ToArray();
@@ -1499,7 +1499,7 @@ namespace GSF.TimeSeries.Adapters
             Guid id;
             string tableName, expression, sortField;
             int takeCount;
-            bool dataSourceAvailable = ((object)dataSource != null);
+            bool dataSourceAvailable = (object)dataSource != null;
 
             if (string.IsNullOrWhiteSpace(value))
                 return measurements.ToArray();

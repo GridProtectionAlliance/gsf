@@ -2658,7 +2658,7 @@ namespace GSF.TimeSeries.Transport
 
                         // Send command packet to publisher
                         m_commandChannel.SendAsync(commandPacket.ToArray(), 0, (int)commandPacket.Length);
-                        m_metadataRefreshPending = (commandCode == ServerCommand.MetaDataRefresh);
+                        m_metadataRefreshPending = commandCode == ServerCommand.MetaDataRefresh;
                     }
 
                     return true;
@@ -2687,7 +2687,7 @@ namespace GSF.TimeSeries.Transport
             m_commandChannelConnectionAttempts = 0;
             m_dataChannelConnectionAttempts = 0;
 
-            m_authenticated = (m_securityMode == SecurityMode.TLS);
+            m_authenticated = m_securityMode == SecurityMode.TLS;
             m_subscribed = false;
             m_keyIVs = null;
             m_totalBytesReceived = 0L;
@@ -2885,9 +2885,9 @@ namespace GSF.TimeSeries.Transport
                             flags = (DataPacketFlags)buffer[responseIndex];
                             responseIndex++;
 
-                            bool synchronizedMeasurements = ((byte)(flags & DataPacketFlags.Synchronized) > 0);
-                            bool compactMeasurementFormat = ((byte)(flags & DataPacketFlags.Compact) > 0);
-                            bool compressedPayload = ((byte)(flags & DataPacketFlags.Compressed) > 0);
+                            bool synchronizedMeasurements = (byte)(flags & DataPacketFlags.Synchronized) > 0;
+                            bool compactMeasurementFormat = (byte)(flags & DataPacketFlags.Compact) > 0;
+                            bool compressedPayload = (byte)(flags & DataPacketFlags.Compressed) > 0;
                             int cipherIndex = (flags & DataPacketFlags.CipherIndex) > 0 ? 1 : 0;
 
                             // Decrypt data packet payload if keys are available
@@ -2946,7 +2946,7 @@ namespace GSF.TimeSeries.Transport
 
                                             responseIndex++;
 
-                                            m_tsscDecoder.SetBuffer(buffer, responseIndex, (responseLength + DataPublisher.ClientResponseHeaderSize) - responseIndex);
+                                            m_tsscDecoder.SetBuffer(buffer, responseIndex, responseLength + DataPublisher.ClientResponseHeaderSize - responseIndex);
 
                                             Measurement measurement;
                                             MeasurementKey key;
