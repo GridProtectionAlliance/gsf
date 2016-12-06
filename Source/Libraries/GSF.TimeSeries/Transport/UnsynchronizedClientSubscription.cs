@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Parsing;
@@ -63,6 +64,7 @@ namespace GSF.TimeSeries.Transport
         public event EventHandler<EventArgs<IClientSubscription, EventArgs>> ProcessingComplete;
 
         // Fields
+        private int m_duplicateCallToQueueMeasurementsForProcessingCheck = 0;
         private readonly SignalIndexCache m_signalIndexCache;
         private readonly Guid m_clientID;
         private readonly Guid m_subscriberID;
@@ -510,61 +512,81 @@ namespace GSF.TimeSeries.Transport
         /// </remarks>
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
-            if ((object)measurements == null)
-                return;
-
-            if (!m_startTimeSent && measurements.Any())
+            int value = Interlocked.Increment(ref m_duplicateCallToQueueMeasurementsForProcessingCheck);
+            try
             {
-                m_startTimeSent = true;
-
-                IMeasurement measurement = measurements.FirstOrDefault(m => (object)m != null);
-                Ticks timestamp = 0;
-
-                if ((object)measurement != null)
-                    timestamp = measurement.Timestamp;
-
-                m_parent.SendDataStartTime(m_clientID, timestamp);
-            }
-
-            if (m_isNaNFiltered)
-                measurements = measurements.Where(measurement => !double.IsNaN(measurement.Value));
-
-            if (!measurements.Any() || !Enabled)
-                return;
-
-            if (TrackLatestMeasurements)
-            {
-                double publishInterval;
-
-                // Keep track of latest measurements
-                base.QueueMeasurementsForProcessing(measurements);
-                publishInterval = m_publishInterval > 0 ? m_publishInterval : LagTime;
-
-                if (DateTime.UtcNow.Ticks > m_lastPublishTime + Ticks.FromSeconds(publishInterval))
+                if (value != 1)
                 {
-                    List<IMeasurement> currentMeasurements = new List<IMeasurement>();
-                    Measurement newMeasurement;
-
-                    // Create a new set of measurements that represent the latest known values setting value to NaN if it is old
-                    foreach (TemporalMeasurement measurement in LatestMeasurements)
-                    {
-                        newMeasurement = new Measurement
-                        {
-                            Metadata = measurement.Metadata,
-                            Value = measurement.GetValue(RealTime),
-                            Timestamp = measurement.Timestamp,
-                            StateFlags = measurement.StateFlags
-                        };
-
-                        currentMeasurements.Add(newMeasurement);
-                    }
-
-                    ProcessMeasurements(currentMeasurements);
+                    Log.Publish(MessageLevel.Critical, MessageFlags.BugReport | MessageFlags.UsageIssue, "Concurrent Call Detected",
+                        $"Concurrent entrance to UnsynchronizedClientSubscription.QueueMeasurementsForProcessing: Expected 1: Received: {value}");
                 }
+
+                if ((object)measurements == null)
+                    return;
+
+                if (!m_startTimeSent && measurements.Any())
+                {
+                    m_startTimeSent = true;
+
+                    IMeasurement measurement = measurements.FirstOrDefault(m => (object)m != null);
+                    Ticks timestamp = 0;
+
+                    if ((object)measurement != null)
+                        timestamp = measurement.Timestamp;
+
+                    m_parent.SendDataStartTime(m_clientID, timestamp);
+                }
+
+                if (m_isNaNFiltered)
+                    measurements = measurements.Where(measurement => !double.IsNaN(measurement.Value));
+
+                if (!measurements.Any() || !Enabled)
+                    return;
+
+                if (TrackLatestMeasurements)
+                {
+                    double publishInterval;
+
+                    // Keep track of latest measurements
+                    base.QueueMeasurementsForProcessing(measurements);
+                    publishInterval = m_publishInterval > 0 ? m_publishInterval : LagTime;
+
+                    if (DateTime.UtcNow.Ticks > m_lastPublishTime + Ticks.FromSeconds(publishInterval))
+                    {
+                        List<IMeasurement> currentMeasurements = new List<IMeasurement>();
+                        Measurement newMeasurement;
+
+                        // Create a new set of measurements that represent the latest known values setting value to NaN if it is old
+                        foreach (TemporalMeasurement measurement in LatestMeasurements)
+                        {
+                            newMeasurement = new Measurement
+                            {
+                                Metadata = measurement.Metadata,
+                                Value = measurement.GetValue(RealTime),
+                                Timestamp = measurement.Timestamp,
+                                StateFlags = measurement.StateFlags
+                            };
+
+                            currentMeasurements.Add(newMeasurement);
+                        }
+
+                        ProcessMeasurements(currentMeasurements);
+                    }
+                }
+                else
+                {
+                    ProcessMeasurements(measurements);
+                }
+
             }
-            else
+            finally
             {
-                ProcessMeasurements(measurements);
+                value = Interlocked.Decrement(ref m_duplicateCallToQueueMeasurementsForProcessingCheck);
+                if (value != 0)
+                {
+                    Log.Publish(MessageLevel.Critical, MessageFlags.BugReport | MessageFlags.UsageIssue,
+                        "Concurrent Call Detected", $"Concurrent Exit to UnsynchronizedClientSubscription.QueueMeasurementsForProcessing: Expected 0: Received: {value}");
+                }
             }
         }
 
