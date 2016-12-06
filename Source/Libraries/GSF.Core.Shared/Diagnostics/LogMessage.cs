@@ -185,6 +185,7 @@ namespace GSF.Diagnostics
                     Exception = null;
                     ExceptionString = stream.ReadString();
                     ManagedThreadID = -1;
+                    PreviousFirstChanceExceptionSequenceNumber = -1;
                     break;
                 case 2:
                     EventPublisherDetails = saveHelper.LoadEventPublisherDetails(stream);
@@ -199,6 +200,7 @@ namespace GSF.Diagnostics
                     Exception = null;
                     ExceptionString = stream.ReadString();
                     ManagedThreadID = stream.ReadInt32();
+                    PreviousFirstChanceExceptionSequenceNumber = -1;
                     break;
                 case 3:
                     EventPublisherDetails = saveHelper.LoadEventPublisherDetails(stream);
@@ -213,6 +215,7 @@ namespace GSF.Diagnostics
                     Exception = null;
                     ExceptionString = saveHelper.LoadString(stream);
                     ManagedThreadID = stream.ReadInt32();
+                    PreviousFirstChanceExceptionSequenceNumber = -1;
                     break;
                 case 4:
                     EventPublisherDetails = saveHelper.LoadEventPublisherDetails(stream);
