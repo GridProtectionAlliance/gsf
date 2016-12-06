@@ -73,6 +73,7 @@ namespace GSF.TimeSeries.Transport
         private readonly CompressionModes m_compressionModes;
         private bool m_resetTsscEncoder;
         private TsscEncoder m_tsscEncoder;
+        private object m_tsscSyncLock = new object();
         private byte[] m_tsscWorkingBuffer;
         private ushort m_tsscSequenceNumber;
         private long m_lastPublishTime;
@@ -782,56 +783,59 @@ namespace GSF.TimeSeries.Transport
 
         private void ProcessTSSCMeasurements(IEnumerable<IMeasurement> measurements)
         {
-            try
+            lock (m_tsscSyncLock)
             {
-                if (!Enabled)
-                    return;
-
-                if ((object)m_tsscEncoder == null || m_resetTsscEncoder)
+                try
                 {
-                    m_resetTsscEncoder = false;
-                    m_tsscEncoder = new TsscEncoder();
-                    m_tsscWorkingBuffer = new byte[32 * 1024];
-                    OnStatusMessage(MessageLevel.Info, $"TSSC algorithm reset before sequence number: {m_tsscSequenceNumber}", "TSSC");
-                    m_tsscSequenceNumber = 0;
-                    m_tsscEncoder.SetBuffer(m_tsscWorkingBuffer, 0, m_tsscWorkingBuffer.Length);
-                }
-                else
-                {
-                    m_tsscEncoder.SetBuffer(m_tsscWorkingBuffer, 0, m_tsscWorkingBuffer.Length);
-                }
+                    if (!Enabled)
+                        return;
 
-                int count = 0;
-
-                foreach (IMeasurement measurement in measurements)
-                {
-                    ushort index = m_signalIndexCache.GetSignalIndex(measurement.Key);
-
-                    if (!m_tsscEncoder.TryAddMeasurement(index, measurement.Timestamp.Value, (uint)measurement.StateFlags, (float)measurement.AdjustedValue))
+                    if ((object)m_tsscEncoder == null || m_resetTsscEncoder)
                     {
-                        SendTSSCPayload(count);
-                        count = 0;
+                        m_resetTsscEncoder = false;
+                        m_tsscEncoder = new TsscEncoder();
+                        m_tsscWorkingBuffer = new byte[32 * 1024];
+                        OnStatusMessage(MessageLevel.Info, $"TSSC algorithm reset before sequence number: {m_tsscSequenceNumber}", "TSSC");
+                        m_tsscSequenceNumber = 0;
                         m_tsscEncoder.SetBuffer(m_tsscWorkingBuffer, 0, m_tsscWorkingBuffer.Length);
-
-                        // This will always succeed
-                        m_tsscEncoder.TryAddMeasurement(index, measurement.Timestamp.Value, (uint)measurement.StateFlags, (float)measurement.AdjustedValue);
+                    }
+                    else
+                    {
+                        m_tsscEncoder.SetBuffer(m_tsscWorkingBuffer, 0, m_tsscWorkingBuffer.Length);
                     }
 
-                    count++;
+                    int count = 0;
+
+                    foreach (IMeasurement measurement in measurements)
+                    {
+                        ushort index = m_signalIndexCache.GetSignalIndex(measurement.Key);
+
+                        if (!m_tsscEncoder.TryAddMeasurement(index, measurement.Timestamp.Value, (uint)measurement.StateFlags, (float)measurement.AdjustedValue))
+                        {
+                            SendTSSCPayload(count);
+                            count = 0;
+                            m_tsscEncoder.SetBuffer(m_tsscWorkingBuffer, 0, m_tsscWorkingBuffer.Length);
+
+                            // This will always succeed
+                            m_tsscEncoder.TryAddMeasurement(index, measurement.Timestamp.Value, (uint)measurement.StateFlags, (float)measurement.AdjustedValue);
+                        }
+
+                        count++;
+                    }
+
+                    if (count > 0)
+                        SendTSSCPayload(count);
+
+                    IncrementProcessedMeasurements(measurements.Count());
+
+                    // Update latency statistics
+                    m_parent.UpdateLatencyStatistics(measurements.Select(m => (long)(m_lastPublishTime - m.Timestamp)));
                 }
-
-                if (count > 0)
-                    SendTSSCPayload(count);
-
-                IncrementProcessedMeasurements(measurements.Count());
-
-                // Update latency statistics
-                m_parent.UpdateLatencyStatistics(measurements.Select(m => (long)(m_lastPublishTime - m.Timestamp)));
-            }
-            catch (Exception ex)
-            {
-                string message = $"Error processing measurements: {ex.Message}";
-                OnProcessException(MessageLevel.Info, new InvalidOperationException(message, ex));
+                catch (Exception ex)
+                {
+                    string message = $"Error processing measurements: {ex.Message}";
+                    OnProcessException(MessageLevel.Info, new InvalidOperationException(message, ex));
+                }
             }
         }
 
