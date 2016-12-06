@@ -30,6 +30,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Windows.Forms;
 using GSF.Diagnostics;
 using GSF.IO;
@@ -546,40 +547,81 @@ namespace LogFileViewer
                         if (futureMessage.UtcTime > stopAfter)
                             break;
 
-                        if (futureMessage.ManagedThreadID == firstMessage.ManagedThreadID && futureMessage.ExceptionString.Length > 0 && futureMessage.TypeName != "GSF.Diagnostics.Logger")
+                        if (futureMessage.ManagedThreadID == firstMessage.ManagedThreadID && futureMessage.ExceptionString.Length > 0 &&
+                            !(futureMessage.TypeName == "GSF.Diagnostics.Logger" && futureMessage.EventName == "First Chance App Domain Exception"))
                         {
-                            if (futureMessage.ExceptionString.StartsWith(firstMessage.ExceptionString))
+                            if (AreExceptionsEqual(firstMessage, futureMessage))
                             {
-                                foundMatch = true;
+                                messages.RemoveAt(x);
+                                x--;
                                 break;
                             }
-                            else if (futureMessage.ExceptionString.StartsWith("System.InvalidOperationException:") && futureMessage.ExceptionString.Contains(" ---> "))
-                            {
-                                string exception = firstMessage.ExceptionString;
-                                if (exception.StartsWith("System.Net.Sockets.SocketException (0x") && exception.Contains("):"))
-                                {
-                                    exception = "System.Net.Sockets.SocketException" + exception.Substring(exception.IndexOf(")") + 1) + Environment.NewLine + "   --- End of inner exception stack trace ---";
-                                }
-
-                                if (futureMessage.ExceptionString.EndsWith(exception))
-                                {
-                                    foundMatch = true;
-                                    break;
-                                }
-
-                            }
-
                         }
                     }
+                }
+            }
+        }
 
-                    if (foundMatch)
+        private bool AreExceptionsEqual(LogMessage first, LogMessage future)
+        {
+            string firstError = TrimException(first.ExceptionString);
+            string futureError = TrimException(future.ExceptionString);
+
+            if (futureError.StartsWith(firstError))
+            {
+                return true;
+            }
+
+            string[] firstWords = firstError.Split(" \r\n:".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+            List<string> foundWords = new List<string>();
+            List<string> missingWords = new List<string>();
+            List<string> ignoredWords = new List<string>();
+
+            int position = 0;
+
+            foreach (var word in firstWords)
+            {
+                if (position >= futureError.Length)
+                {
+                    missingWords.Add(word);
+                }
+                else
+                {
+                    int newPosition = futureError.IndexOf(word, position);
+                    if (newPosition >= 0)
                     {
-                        messages.RemoveAt(x);
-                        x--;
+                        foundWords.Add(word);
+                        position = newPosition + word.Length;
+                    }
+                    else
+                    {
+                        if (word[0] == '(' && word[word.Length - 1] == ')' && word.Contains("0x"))
+                        {
+                            ignoredWords.Add(word);
+                        }
+                        else
+                        {
+                            missingWords.Add(word);
+                        }
                     }
                 }
             }
 
+            if (missingWords.Count > 0)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        private string TrimException(string error)
+        {
+            int pos = error.IndexOf("WRN: Assembly binding");
+            if (pos >= 0)
+            {
+                return error.Substring(0, pos).TrimEnd("\r\n ".ToCharArray());
+            }
+            return error;
         }
 
         private void LogFileViewer_DragEnter(object sender, DragEventArgs e)

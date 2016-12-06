@@ -314,8 +314,10 @@ namespace GSF.Diagnostics
             }
             if (EventPublisherDetails.TypeData.AssemblyName.Length > 0)
             {
-                sb.AppendLine("Message Assembly: " + EventPublisherDetails.TypeData.AssemblyName);
+                sb.AppendLine($"Message Assembly: {EventPublisherDetails.TypeData.AssemblyName} ({EventPublisherDetails.TypeData.AssemblyVersion}) ");
             }
+            sb.AppendLine($"Managed Thread Id: {ManagedThreadID}");
+
 
             if (!ReferenceEquals(InitialStackMessages, LogStackMessages.Empty))
             {

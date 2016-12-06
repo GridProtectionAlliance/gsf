@@ -241,6 +241,7 @@ namespace GSF.Core.Tests.GSF.Threading
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
+            long totalSize = 0;
             long measurementsProcessed = 0;
             int quitAfterCount = 0;
             Dictionary<Guid, ushort> idLookup = new Dictionary<Guid, ushort>();
@@ -251,7 +252,7 @@ namespace GSF.Core.Tests.GSF.Threading
 
             foreach (var file in Directory.GetFiles(@"D:\TsscTest", "*.PhasorStream"))
             {
-                if (quitAfterCount == -1)
+                if (quitAfterCount == 10)
                     return;
                 quitAfterCount++;
 
@@ -278,6 +279,7 @@ namespace GSF.Core.Tests.GSF.Threading
                     measurementsProcessed++;
                     if (!encoder.TryAddMeasurement(id, timestamp, quality, value))
                     {
+                        totalSize += encoder.FinishBlock();
                         TestEncoding(encoder, decoder, encoder2, writeBuffer, randomValue, reader2, idOld, timestampOld, qualityOld, valueOld);
 
                         randomValue = Security.Cryptography.Random.ByteBetween(1, 200);
@@ -289,16 +291,16 @@ namespace GSF.Core.Tests.GSF.Threading
                         }
                     }
 
-
                     idOld = id;
                     timestampOld = timestamp;
                     qualityOld = quality;
                     valueOld = value;
                 }
 
+                totalSize += encoder.FinishBlock();
                 TestEncoding(encoder, decoder, encoder2, writeBuffer, randomValue, reader2, idOld, timestampOld, qualityOld, valueOld);
 
-                System.Console.WriteLine(measurementsProcessed.ToString("N0") + " " + file + " " + sw.Elapsed.TotalSeconds.ToString("N1"));
+                System.Console.WriteLine(measurementsProcessed.ToString("N0") + " " + file + " " + sw.Elapsed.TotalSeconds.ToString("N1") + " " + (totalSize*8 / (double)measurementsProcessed).ToString("N2"));
 
             }
 
