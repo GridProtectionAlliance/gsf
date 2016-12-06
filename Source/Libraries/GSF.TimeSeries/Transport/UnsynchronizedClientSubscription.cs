@@ -845,6 +845,7 @@ namespace GSF.TimeSeries.Transport
 
             packet[1 + 4] = 0; //A version number
             packet[5 + 1] = m_tsscSequenceNumber;
+            m_tsscSequenceNumber = (byte)(m_tsscSequenceNumber + 1);
 
             Array.Copy(m_tsscWorkingBuffer, 0, packet, 7, length);
 

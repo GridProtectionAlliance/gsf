@@ -2946,7 +2946,7 @@ namespace GSF.TimeSeries.Transport
 
                                             responseIndex++;
 
-                                            m_tsscDecoder.SetBuffer(buffer, responseIndex, responseLength - responseIndex + DataPublisher.ClientResponseHeaderSize);
+                                            m_tsscDecoder.SetBuffer(buffer, responseIndex, (responseLength + DataPublisher.ClientResponseHeaderSize) - responseIndex);
 
                                             Measurement measurement;
                                             MeasurementKey key;
@@ -2978,7 +2978,7 @@ namespace GSF.TimeSeries.Transport
                                     }
                                     catch (Exception ex)
                                     {
-                                        OnProcessException(MessageLevel.Error, new InvalidOperationException("Decompression failure: " + ex.Message, ex));
+                                        OnProcessException(MessageLevel.Error, new InvalidOperationException($"Decompression failure: (Decoded {measurements.Count} of {count} measurements)" + ex.Message, ex));
                                     }
                                 }
                             }
