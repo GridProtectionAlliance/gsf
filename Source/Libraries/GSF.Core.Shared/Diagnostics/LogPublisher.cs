@@ -178,7 +178,7 @@ namespace GSF.Diagnostics
         public void Publish(MessageLevel level, string eventName, string message = null, string details = null, Exception exception = null)
         {
             LogMessageAttributes flag = new LogMessageAttributes(m_classification, level, MessageSuppression.None, MessageFlags.None);
-            InternalRegisterEvent(flag, eventName).Publish(message, details, exception, InitialStackMessages, InitialStackTrace);
+            InternalRegisterEvent(flag, eventName).Publish(null, message, details, exception, InitialStackMessages, InitialStackTrace);
         }
 
         /// <summary>
@@ -194,7 +194,7 @@ namespace GSF.Diagnostics
         public void Publish(MessageLevel level, MessageFlags flags, string eventName, string message = null, string details = null, Exception exception = null)
         {
             LogMessageAttributes flag = new LogMessageAttributes(m_classification, level, MessageSuppression.None, flags);
-            InternalRegisterEvent(flag, eventName).Publish(message, details, exception, InitialStackMessages, InitialStackTrace);
+            InternalRegisterEvent(flag, eventName).Publish(null, message, details, exception, InitialStackMessages, InitialStackTrace);
         }
 
 

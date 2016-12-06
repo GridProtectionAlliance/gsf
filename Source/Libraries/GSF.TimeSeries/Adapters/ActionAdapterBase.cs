@@ -699,7 +699,7 @@ namespace GSF.TimeSeries.Adapters
                     if (value.Length > 50)
                         value = value.TruncateRight(47) + "...";
 
-                    status.AppendFormat("{0} = {1}", (new string(keyChars)).TruncateRight(25).PadLeft(25), value.PadRight(50));
+                    status.AppendFormat("{0} = {1}", new string(keyChars).TruncateRight(25).PadLeft(25), value.PadRight(50));
                     status.AppendLine();
                 }
 
@@ -1141,7 +1141,7 @@ namespace GSF.TimeSeries.Adapters
                 }
             }
 
-            return (index == minNeeded);
+            return index == minNeeded;
         }
 
         /// <summary>

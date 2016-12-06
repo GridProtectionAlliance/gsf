@@ -40,6 +40,7 @@ using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Threading;
+using GSF.Diagnostics;
 using GSF.Identity;
 using GSF.Security.Cryptography;
 
@@ -142,8 +143,10 @@ namespace GSF.Threading
             {
                 namedMutex = Mutex.OpenExisting(mutexName, MutexRights.Synchronize | MutexRights.Modify);
             }
-            catch (WaitHandleCannotBeOpenedException)
+            catch (WaitHandleCannotBeOpenedException ex)
             {
+                Logger.SwallowException(ex, "Common Exception", "Exception expected when mutex does not already exist.");
+
                 namedMutex = null;
                 doesNotExist = true;
             }
@@ -157,8 +160,10 @@ namespace GSF.Threading
                     security.AddAccessRule(new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), MutexRights.Synchronize | MutexRights.Modify, AccessControlType.Allow));
                     namedMutex = new Mutex(false, mutexName, out mutexWasCreated, security);
                 }
-                catch (UnauthorizedAccessException)
+                catch (UnauthorizedAccessException ex)
                 {
+                    Logger.SwallowException(ex, "Common Exception", "Accommodated race condition on mutex creation.");
+
                     // Named mutex exists now but current user doesn't have full control, attempt to open with minimum needed rights
                     namedMutex = Mutex.OpenExisting(mutexName, MutexRights.Synchronize | MutexRights.Modify);
                 }
@@ -267,8 +272,10 @@ namespace GSF.Threading
             {
                 namedSemaphore = Semaphore.OpenExisting(semaphoreName, SemaphoreRights.Synchronize | SemaphoreRights.Modify);
             }
-            catch (WaitHandleCannotBeOpenedException)
+            catch (WaitHandleCannotBeOpenedException ex)
             {
+                Logger.SwallowException(ex, "Common Exception", "Exception expected when semaphore does not already exist.");
+
                 namedSemaphore = null;
                 doesNotExist = true;
             }
@@ -282,8 +289,10 @@ namespace GSF.Threading
                     security.AddAccessRule(new SemaphoreAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), SemaphoreRights.Synchronize | SemaphoreRights.Modify, AccessControlType.Allow));
                     namedSemaphore = new Semaphore(initialCount, maximumCount, semaphoreName, out semaphoreWasCreated, security);
                 }
-                catch (UnauthorizedAccessException)
+                catch (UnauthorizedAccessException ex)
                 {
+                    Logger.SwallowException(ex, "Common Exception", "Accommodated race condition on semaphore creation.");
+
                     // Named semaphore exists now but current user doesn't have full control, attempt to open with minimum needed rights
                     namedSemaphore = Semaphore.OpenExisting(semaphoreName, SemaphoreRights.Synchronize | SemaphoreRights.Modify);
                 }

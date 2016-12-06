@@ -1584,7 +1584,7 @@ namespace GSF.TimeSeries.Transport
 
             // Determine the type of metadata to force upon clients who do not specify
             if (settings.TryGetValue("forceReceiveMetadataFlags", out setting) && Enum.TryParse(setting, true, out m_forceReceiveMetadataFlags))
-                m_forceReceiveMetadataFlags &= (OperationalModes.ReceiveInternalMetadata | OperationalModes.ReceiveExternalMetadata);
+                m_forceReceiveMetadataFlags &= OperationalModes.ReceiveInternalMetadata | OperationalModes.ReceiveExternalMetadata;
 
             if (settings.TryGetValue("cacheMeasurementKeys", out m_cacheMeasurementKeys))
             {
@@ -2593,7 +2593,7 @@ namespace GSF.TimeSeries.Transport
                     using (BlockAllocatedMemoryStream workingBuffer = new BlockAllocatedMemoryStream())
                     {
                         bool dataPacketResponse = responseCode == (byte)ServerResponse.DataPacket;
-                        bool useDataChannel = (dataPacketResponse || responseCode == (byte)ServerResponse.BufferBlock);
+                        bool useDataChannel = dataPacketResponse || responseCode == (byte)ServerResponse.BufferBlock;
 
                         // Add response code
                         workingBuffer.WriteByte(responseCode);
@@ -2989,7 +2989,7 @@ namespace GSF.TimeSeries.Transport
                                 //startIndex += byteLength;
 
                                 // Validate the authentication ID - if it matches, connection is authenticated
-                                connection.Authenticated = (string.Compare(authenticationID, GetClientEncoding(clientID).GetString(bytes, CipherSaltLength, bytes.Length - CipherSaltLength), StringComparison.Ordinal) == 0);
+                                connection.Authenticated = string.Compare(authenticationID, GetClientEncoding(clientID).GetString(bytes, CipherSaltLength, bytes.Length - CipherSaltLength), StringComparison.Ordinal) == 0;
 
                                 if (connection.Authenticated)
                                 {
@@ -3058,7 +3058,7 @@ namespace GSF.TimeSeries.Transport
                     DataPacketFlags flags = (DataPacketFlags)buffer[startIndex];
                     startIndex++;
 
-                    bool useSynchronizedSubscription = ((byte)(flags & DataPacketFlags.Synchronized) > 0);
+                    bool useSynchronizedSubscription = (byte)(flags & DataPacketFlags.Synchronized) > 0;
 
                     if (useSynchronizedSubscription && !m_allowSynchronizedSubscription)
                     {
@@ -3071,7 +3071,7 @@ namespace GSF.TimeSeries.Transport
                     {
                         bool usePayloadCompression = m_allowPayloadCompression && ((connection.OperationalModes & OperationalModes.CompressPayloadData) > 0);
                         CompressionModes compressionModes = (CompressionModes)(connection.OperationalModes & OperationalModes.CompressionModeMask);
-                        bool useCompactMeasurementFormat = ((byte)(flags & DataPacketFlags.Compact) > 0);
+                        bool useCompactMeasurementFormat = (byte)(flags & DataPacketFlags.Compact) > 0;
                         bool addSubscription = false;
 
                         // Next 4 bytes are an integer representing the length of the connection string that follows

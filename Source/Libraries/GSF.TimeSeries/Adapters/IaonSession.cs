@@ -33,6 +33,7 @@ using GSF.Collections;
 using GSF.Configuration;
 using GSF.Diagnostics;
 
+// ReSharper disable InconsistentlySynchronizedField
 namespace GSF.TimeSeries.Adapters
 {
     /// <summary>
@@ -488,15 +489,19 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                DataTable temporalSupport = m_allAdapters.DataSource.Tables["TemporalSupport"];
+                DataTable temporalSupport = m_allAdapters?.DataSource?.Tables["TemporalSupport"];
+
+                if ((object)temporalSupport == null)
+                    return false;
 
                 if (string.IsNullOrWhiteSpace(collection))
                     return temporalSupport.Rows.Count > 0;
 
                 return temporalSupport.Select($"Source = '{collection}'").Length > 0;
             }
-            catch
+            catch (Exception ex)
             {
+                Logger.SwallowException(ex, "Ignored Exception", "Failures are non-catastrophic and should only result in false.");
                 return false;
             }
         }

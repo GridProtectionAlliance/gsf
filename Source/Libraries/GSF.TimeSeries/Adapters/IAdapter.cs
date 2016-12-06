@@ -318,7 +318,7 @@ namespace GSF.TimeSeries.Adapters
         /// <returns><c>true</c> if <see cref="IAdapter"/> has a temporal constraint defined.</returns>
         public static bool TemporalConstraintIsDefined(this IAdapter adapter)
         {
-            return (adapter.StartTimeConstraint != DateTime.MinValue || adapter.StopTimeConstraint != DateTime.MaxValue);
+            return adapter.StartTimeConstraint != DateTime.MinValue || adapter.StopTimeConstraint != DateTime.MaxValue;
         }
 
         /// <summary>

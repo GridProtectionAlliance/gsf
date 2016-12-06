@@ -695,28 +695,28 @@ namespace GSF.TimeSeries
         // than or equal to the set point, offset by the hysteresis.
         private bool ClearIfNotGreaterOrEqual(IMeasurement measurement)
         {
-            return (measurement.Value < m_setPoint - m_hysteresis);
+            return measurement.Value < m_setPoint - m_hysteresis;
         }
 
         // Indicates whether the given measurement is not less
         // than or equal to the set point, offset by the hysteresis.
         private bool ClearIfNotLessOrEqual(IMeasurement measurement)
         {
-            return (measurement.Value > m_setPoint + m_hysteresis);
+            return measurement.Value > m_setPoint + m_hysteresis;
         }
 
         // Indicates whether the given measurement is not greater
         // than the set point, offset by the hysteresis.
         private bool ClearIfNotGreaterThan(IMeasurement measurement)
         {
-            return (measurement.Value <= m_setPoint - m_hysteresis);
+            return measurement.Value <= m_setPoint - m_hysteresis;
         }
 
         // Indicates whether the given measurement is not less
         // than the set point, offset by the hysteresis.
         private bool ClearIfNotLessThan(IMeasurement measurement)
         {
-            return (measurement.Value >= m_setPoint + m_hysteresis);
+            return measurement.Value >= m_setPoint + m_hysteresis;
         }
 
         // Indicates whether the given measurement's value has changed.

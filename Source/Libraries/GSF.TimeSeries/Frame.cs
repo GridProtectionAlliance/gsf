@@ -203,7 +203,7 @@ namespace GSF.TimeSeries
         /// </returns>
         public bool Equals(IFrame other)
         {
-            return (CompareTo(other) == 0);
+            return CompareTo(other) == 0;
         }
 
         /// <summary>
@@ -281,7 +281,7 @@ namespace GSF.TimeSeries
             if ((object)frame1 != null)
                 return frame1.Equals(frame2);
 
-            return ((object)frame2 == null);
+            return (object)frame2 == null;
         }
 
         /// <summary>
@@ -295,7 +295,7 @@ namespace GSF.TimeSeries
             if ((object)frame1 != null)
                 return !frame1.Equals(frame2);
 
-            return ((object)frame2 != null);
+            return (object)frame2 != null;
         }
 
         /// <summary>
@@ -323,7 +323,7 @@ namespace GSF.TimeSeries
             if ((object)frame1 != null)
                 return frame1.CompareTo(frame2) >= 0;
 
-            return ((object)frame2 == null);
+            return (object)frame2 == null;
         }
 
         /// <summary>
@@ -351,7 +351,7 @@ namespace GSF.TimeSeries
             if ((object)frame1 != null)
                 return frame1.CompareTo(frame2) <= 0;
 
-            return ((object)frame2 == null);
+            return (object)frame2 == null;
         }
 
         #endregion

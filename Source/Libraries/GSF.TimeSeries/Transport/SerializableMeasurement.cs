@@ -186,7 +186,7 @@ namespace GSF.TimeSeries.Transport
             StateFlags = (MeasurementStateFlags)BigEndian.ToUInt32(buffer, index);
             index += 4;
 
-            return (index - startIndex);
+            return index - startIndex;
         }
 
         /// <summary>

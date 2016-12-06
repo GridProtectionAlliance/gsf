@@ -297,7 +297,7 @@ namespace GSF.TimeSeries
                             {
                                 status.AppendFormat("Frame {0} @ {1} - {2} measurements, {3} received",
                                     i.ToString().PadLeft(4, '0'),
-                                    (new DateTime(frame.Timestamp)).ToString("dd-MMM-yyyy HH:mm:ss.fff"),
+                                    new DateTime(frame.Timestamp).ToString("dd-MMM-yyyy HH:mm:ss.fff"),
                                     frame.Measurements.Count,
                                     (frame.Measurements.Count / (double)expectedMeasurements).ToString("##0.00%"));
                             }

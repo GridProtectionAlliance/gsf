@@ -152,6 +152,14 @@ namespace GSF.Diagnostics
         public readonly int ManagedThreadID;
 
         /// <summary>
+        /// A sequence number maintained by each thread thread of the previous 
+        /// first chance exception that was thrown. This is used to assist
+        /// LogFileViewer associate log messages with properly handled 
+        /// first chance exceptions.
+        /// </summary>
+        public readonly int PreviousFirstChanceExceptionSequenceNumber;
+
+        /// <summary>
         /// Loads a log messages from the supplied stream
         /// </summary>
         /// <param name="stream">the stream to load the log message from.</param>
@@ -177,6 +185,7 @@ namespace GSF.Diagnostics
                     Exception = null;
                     ExceptionString = stream.ReadString();
                     ManagedThreadID = -1;
+                    PreviousFirstChanceExceptionSequenceNumber = -1;
                     break;
                 case 2:
                     EventPublisherDetails = saveHelper.LoadEventPublisherDetails(stream);
@@ -191,6 +200,7 @@ namespace GSF.Diagnostics
                     Exception = null;
                     ExceptionString = stream.ReadString();
                     ManagedThreadID = stream.ReadInt32();
+                    PreviousFirstChanceExceptionSequenceNumber = -1;
                     break;
                 case 3:
                     EventPublisherDetails = saveHelper.LoadEventPublisherDetails(stream);
@@ -205,6 +215,22 @@ namespace GSF.Diagnostics
                     Exception = null;
                     ExceptionString = saveHelper.LoadString(stream);
                     ManagedThreadID = stream.ReadInt32();
+                    PreviousFirstChanceExceptionSequenceNumber = -1;
+                    break;
+                case 4:
+                    EventPublisherDetails = saveHelper.LoadEventPublisherDetails(stream);
+                    InitialStackMessages = saveHelper.LoadStackMessages(stream);
+                    InitialStackTrace = saveHelper.LoadStackTrace(stream);
+                    CurrentStackMessages = saveHelper.LoadStackMessages(stream);
+                    CurrentStackTrace = saveHelper.LoadStackTrace(stream);
+                    UtcTime = stream.ReadDateTime();
+                    LogMessageAttributes = new LogMessageAttributes(stream);
+                    Message = saveHelper.LoadString(stream);
+                    Details = saveHelper.LoadString(stream);
+                    Exception = null;
+                    ExceptionString = saveHelper.LoadString(stream);
+                    ManagedThreadID = stream.ReadInt32();
+                    PreviousFirstChanceExceptionSequenceNumber = stream.ReadInt32();
                     break;
                 default:
                     throw new VersionNotFoundException();
@@ -239,6 +265,7 @@ namespace GSF.Diagnostics
             Details = details ?? string.Empty;
             Exception = exception;
             ManagedThreadID = Thread.CurrentThread.ManagedThreadId;
+            PreviousFirstChanceExceptionSequenceNumber = Logger.PreviousFirstChanceExceptionSequenceNumber;
         }
 
         /// <summary>Returns a string that represents the current object.</summary>
@@ -259,7 +286,7 @@ namespace GSF.Diagnostics
             if (saveHelper == null)
                 saveHelper = LogMessageSaveHelper.Create(true);
 
-            stream.Write((byte)3);
+            stream.Write((byte)4);
             saveHelper.SaveEventPublisherDetails(stream, EventPublisherDetails);
             saveHelper.SaveStackMessages(stream, InitialStackMessages);
             saveHelper.SaveStackTrace(stream, InitialStackTrace);
@@ -271,6 +298,7 @@ namespace GSF.Diagnostics
             saveHelper.SaveString(stream, Details);
             saveHelper.SaveString(stream, ExceptionString);
             stream.Write(ManagedThreadID);
+            stream.Write(PreviousFirstChanceExceptionSequenceNumber);
         }
 
         /// <summary>

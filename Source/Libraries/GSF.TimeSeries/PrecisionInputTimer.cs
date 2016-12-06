@@ -299,7 +299,7 @@ namespace GSF.TimeSeries
                                 // If the system is starting to skip publications it could need resynchronization,
                                 // so in this case we restart the high-resolution timer to get the timer started
                                 // closer to the top of the millisecond
-                                resync = (m_missedPublicationWindows > 4);
+                                resync = m_missedPublicationWindows > 4;
                             }
 
                             // Prepare index for next check, time moving forward
@@ -368,7 +368,7 @@ namespace GSF.TimeSeries
             while (repeat)
             {
                 next = DateTime.UtcNow.Ticks % Ticks.PerMillisecond % 1000;
-                repeat = (next > last);
+                repeat = next > last;
                 last = next;
             }
 

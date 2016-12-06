@@ -292,7 +292,7 @@ namespace GSF.TimeSeries.Adapters
                 int routeCount = m_routeMappingTables.RouteCount;
                 int destinationCount = consumerAdapters.Count;
 
-                OnStatusMessage(MessageLevel.Info, $"Calculated {routeCount} route{((routeCount == 1) ? "" : "s")} for {destinationCount} destination{((destinationCount == 1) ? "" : "s")} in {elapsedTime.ToString(2)}.");
+                OnStatusMessage(MessageLevel.Info, $"Calculated {routeCount} route{(routeCount == 1 ? "" : "s")} for {destinationCount} destination{(destinationCount == 1 ? "" : "s")} in {elapsedTime.ToString(2)}.");
             }
             catch (ObjectDisposedException)
             {

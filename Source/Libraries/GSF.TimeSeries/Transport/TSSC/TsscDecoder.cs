@@ -141,7 +141,7 @@ namespace GSF.TimeSeries.Transport.TSSC
                 DecodePointID(code, m_lastPoint);
                 code = m_lastPoint.ReadCode();
                 if (code < TsscCodeWords.TimeDelta1Forward)
-                    throw new Exception("Expecting higher code");
+                    throw new Exception($"Expecting code >= {TsscCodeWords.TimeDelta1Forward} Received {code} at position {m_position} with last position { m_lastPosition}");
             }
 
             id = m_lastPoint.PrevNextPointId1;
@@ -158,7 +158,7 @@ namespace GSF.TimeSeries.Transport.TSSC
                 timestamp = DecodeTimestamp(code);
                 code = m_lastPoint.ReadCode();
                 if (code < TsscCodeWords.Quality2)
-                    throw new Exception("Expecting higher code");
+                    throw new Exception($"Expecting code >= {TsscCodeWords.Quality2} Received {code} at position {m_position} with last position { m_lastPosition}");
             }
             else
             {
@@ -170,7 +170,7 @@ namespace GSF.TimeSeries.Transport.TSSC
                 quality = DecodeQuality(code, nextPoint);
                 code = m_lastPoint.ReadCode();
                 if (code < TsscCodeWords.Value1)
-                    throw new Exception("Programming Error. Expecting a value quality code.");
+                    throw new Exception($"Expecting code >= {TsscCodeWords.Value1} Received {code} at position {m_position} with last position { m_lastPosition}");
             }
             else
             {
@@ -240,7 +240,7 @@ namespace GSF.TimeSeries.Transport.TSSC
                         m_position = m_position + 4;
                         break;
                     default:
-                        throw new Exception("Code not valid");
+                        throw new Exception($"Invalid code received {code} at position {m_position} with last position { m_lastPosition}");
                 }
 
                 nextPoint.PrevValue3 = nextPoint.PrevValue2;

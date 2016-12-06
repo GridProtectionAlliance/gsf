@@ -65,5 +65,9 @@ namespace GSF.Diagnostics
         {
             return new LogMessageAttributes(a.Classification, a.Level, b, a.Flags);
         }
+        public static LogMessageAttributes operator +(LogMessageAttributes a, MessageFlags b)
+        {
+            return new LogMessageAttributes(a.Classification, a.Level, a.MessageSuppression, a.Flags | b);
+        }
     }
 }

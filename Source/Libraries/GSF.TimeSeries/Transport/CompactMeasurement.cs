@@ -311,7 +311,7 @@ namespace GSF.TimeSeries.Transport
         {
             get
             {
-                return (ushort)((Timestamp - m_baseTimeOffsets[m_timeIndex]).ToMilliseconds());
+                return (ushort)(Timestamp - m_baseTimeOffsets[m_timeIndex]).ToMilliseconds();
             }
         }
 
@@ -445,7 +445,7 @@ namespace GSF.TimeSeries.Transport
                 }
             }
 
-            return (index - startIndex);
+            return index - startIndex;
         }
 
         /// <summary>

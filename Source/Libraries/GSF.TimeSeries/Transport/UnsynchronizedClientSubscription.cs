@@ -460,6 +460,7 @@ namespace GSF.TimeSeries.Transport
             // Reset compressor on successful resubscription
             if ((object)m_tsscEncoder != null)
                 m_tsscEncoder.Reset();
+
             m_tsscSequenceNumber = 0;
 
             base.Start();
@@ -538,7 +539,7 @@ namespace GSF.TimeSeries.Transport
 
                 // Keep track of latest measurements
                 base.QueueMeasurementsForProcessing(measurements);
-                publishInterval = (m_publishInterval > 0) ? m_publishInterval : LagTime;
+                publishInterval = m_publishInterval > 0 ? m_publishInterval : LagTime;
 
                 if (DateTime.UtcNow.Ticks > m_lastPublishTime + Ticks.FromSeconds(publishInterval))
                 {
@@ -805,21 +806,22 @@ namespace GSF.TimeSeries.Transport
                 foreach (IMeasurement measurement in measurements)
                 {
                     ushort index = m_signalIndexCache.GetSignalIndex(measurement.Key);
+
                     if (!m_tsscEncoder.TryAddMeasurement(index, measurement.Timestamp.Value, (uint)measurement.StateFlags, (float)measurement.AdjustedValue))
                     {
                         SendTSSCPayload(count);
                         count = 0;
                         m_tsscEncoder.SetBuffer(m_tsscWorkingBuffer, 0, m_tsscWorkingBuffer.Length);
-                        //This will always succeed
+
+                        // This will always succeed
                         m_tsscEncoder.TryAddMeasurement(index, measurement.Timestamp.Value, (uint)measurement.StateFlags, (float)measurement.AdjustedValue);
                     }
+
                     count++;
                 }
 
                 if (count > 0)
-                {
                     SendTSSCPayload(count);
-                }
 
                 IncrementProcessedMeasurements(measurements.Count());
 
@@ -838,13 +840,14 @@ namespace GSF.TimeSeries.Transport
             int length = m_tsscEncoder.FinishBlock();
             byte[] packet = new byte[length + 7];
 
-            packet[0] = (byte)(DataPacketFlags.Compressed);
+            packet[0] = (byte)DataPacketFlags.Compressed;
 
             // Serialize total number of measurement values to follow
             BigEndian.CopyBytes(count, packet, 1);
 
-            packet[1 + 4] = 0; //A version number
+            packet[1 + 4] = 0; // A version number
             packet[5 + 1] = m_tsscSequenceNumber;
+            m_tsscSequenceNumber = (byte)(m_tsscSequenceNumber + 1);
 
             Array.Copy(m_tsscWorkingBuffer, 0, packet, 7, length);
 

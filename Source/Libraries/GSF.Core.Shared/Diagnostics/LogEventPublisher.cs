@@ -72,7 +72,19 @@ namespace GSF.Diagnostics
         /// <param name="exception">An exception object if one is provided.</param>
         public void Publish(string message = null, string details = null, Exception exception = null)
         {
-            m_internalPublisher.Publish(message, details, exception, m_publisher.InitialStackMessages, m_publisher.InitialStackTrace);
+            m_internalPublisher.Publish(null, message, details, exception, m_publisher.InitialStackMessages, m_publisher.InitialStackTrace);
+        }
+
+        /// <summary>
+        /// Raises a log message with the provided data.
+        /// </summary>
+        /// <param name="flags">additional flags to set to this log</param>
+        /// <param name="message"></param>
+        /// <param name="details">A long text field with the details of the message.</param>
+        /// <param name="exception">An exception object if one is provided.</param>
+        public void Publish(MessageFlags flags, string message = null, string details = null, Exception exception = null)
+        {
+            m_internalPublisher.Publish(m_internalPublisher.DefaultAttributes + flags, message, details, exception, m_publisher.InitialStackMessages, m_publisher.InitialStackTrace);
         }
     }
 }
