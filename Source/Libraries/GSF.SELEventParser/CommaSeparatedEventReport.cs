@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace GSF.SELEventParser
 {
@@ -19,7 +21,19 @@ namespace GSF.SELEventParser
         private string m_event;
         private int m_triggerIndex;
         private int m_initialReadingIndex;
+        private Dictionary<string, string> m_groupSettings;
+        private Dictionary<string, string> m_controlEquations;
+        private Dictionary<string, string> m_globalSettings;
 
+        #endregion
+
+        #region [Constructor]
+        public CommaSeparatedEventReport()
+        {
+            m_groupSettings = new Dictionary<string, string>();
+            m_controlEquations = new Dictionary<string, string>();
+            m_globalSettings = new Dictionary<string, string>();
+        }
         #endregion
 
         #region [ Properties ]
@@ -168,6 +182,80 @@ namespace GSF.SELEventParser
             }
         }
 
+        public void SetGroupSetting(string key, string value)
+        {
+            if (m_groupSettings.ContainsKey(key))
+            {
+                m_groupSettings[key] = value;
+            }
+            else
+            {
+                m_groupSettings.Add(key, value);
+            }
+        }
+
+        public string GetGroupSettings(string key)
+        {
+            string result = null;
+
+            if (m_groupSettings.ContainsKey(key))
+            {
+                result = m_groupSettings[key];
+            }
+
+            return result;
+        }
+
+        public void SetControlEquations(string key, string value)
+        {
+            if (m_controlEquations.ContainsKey(key))
+            {
+                m_controlEquations[key] = value;
+            }
+            else
+            {
+                m_controlEquations.Add(key, value);
+            }
+        }
+
+        public string GetControlEquations(string key)
+        {
+            string result = null;
+
+            if (m_controlEquations.ContainsKey(key))
+            {
+                result = m_controlEquations[key];
+            }
+
+            return result;
+        }
+
+        public void SetGlobalSetting(string key, string value)
+        {
+            if (m_globalSettings.ContainsKey(key))
+            {
+                m_globalSettings[key] = value;
+            }
+            else
+            {
+                m_globalSettings.Add(key, value);
+            }
+        }
+
+        public string GetGlobalSettings(string key)
+        {
+            string result = null;
+
+            if (m_globalSettings.ContainsKey(key))
+            {
+                result = m_globalSettings[key];
+            }
+
+            return result;
+        }
+
+
+
         #endregion
 
         #region [ Static ]
@@ -286,6 +374,58 @@ namespace GSF.SELEventParser
 
                 ++index;
             }
+
+            while(!lines[index].ToUpper().Contains("GROUP SETTINGS:") && index < lines.Length) { ++index; }
+
+            while(!lines[index].ToUpper().Contains("SELOGIC CONTROL EQUATIONS:") && index < lines.Length)
+            {
+                if (lines[index].Contains("="))
+                {
+                    string line = new string(lines[index].ToCharArray());
+                    int count = line.Count(s => s == '=');
+
+                    for(int x = 0; x < count; ++x)
+                    {
+                        string key = line.Split(new[] { '=' }, 2)[0].Trim();
+                        line = line.Split(new [] { '=' }, 2)[1].TrimStart();
+                        string value = line.Split(new[] { ' ' }, 2)[0];
+                        line = line.Split(new[] { ' ' }, 2)[1].TrimStart();
+                        commaSeparatedEventReport.SetGroupSetting(key, value);
+                    }
+                }
+                ++index;
+            }
+
+            while (!lines[index].ToUpper().Contains("GLOBAL SETTINGS:") && index < lines.Length)
+            {
+                if (lines[index].Contains("="))
+                {
+                    string line = lines[index];
+                    commaSeparatedEventReport.SetControlEquations(line.Split('=')[0].Trim(), line.Split('=')[1].Trim());
+                }
+                ++index;
+            }
+
+            while (!lines[index].ToUpper().Contains("=>") && index < lines.Length)
+            {
+                if (lines[index].Contains("="))
+                {
+                    string line = new string(lines[index].ToCharArray());
+                    int count = line.Count(s => s == '=');
+
+                    for (int x = 0; x < count; ++x)
+                    {
+                        string key = line.Split(new[] { '=' }, 2)[0].Trim();
+                        line = line.Split(new[] { '=' }, 2)[1].TrimStart();
+                        string value = line.Split(new[] { ' ' }, 2)[0];
+                        line = line.Split(new[] { ' ' }, 2)[line.Split(new[] { ' ' }, 2).Length - 1].TrimStart();
+                        commaSeparatedEventReport.SetGlobalSetting(key, value);
+                    }
+                }
+                ++index;
+            }
+
+
 
             return commaSeparatedEventReport;
         }
