@@ -2915,70 +2915,39 @@ namespace GSF.TimeSeries.Transport
 
                             if (compressedPayload)
                             {
-                                if ((object)m_signalIndexCache == null && m_lastMissingCacheWarning + MissingCacheWarningInterval < now)
-                                {
-                                    // Warning message for missing signal index cache
-                                    if (m_lastMissingCacheWarning != 0L)
-                                        OnStatusMessage(MessageLevel.Error, "Signal index cache has not arrived. No compact measurements can be parsed.");
-
-                                    m_lastMissingCacheWarning = now;
-                                }
-                                else
+                                if (CompressionModes.HasFlag(CompressionModes.TSSC))
                                 {
                                     try
                                     {
-                                        if (CompressionModes.HasFlag(CompressionModes.TSSC))
-                                        {
-                                            // Use TSSC compression to decompress measurements                                            
-                                            if ((object)m_tsscDecoder == null)
-                                            {
-                                                m_tsscDecoder = new TsscDecoder();
-                                                m_tsscSequenceNumber = 0;
-                                            }
-
-                                            if (buffer[responseIndex] != 0)
-                                                throw new Exception($"TSSC Version not recognized. {buffer[responseIndex]}");
-
-                                            responseIndex++;
-
-                                            if (buffer[responseIndex] != m_tsscSequenceNumber)
-                                                throw new Exception($"TSSC is out of sequence. Expecting: {m_tsscSequenceNumber} Received: {buffer[responseIndex]}");
-
-                                            responseIndex++;
-
-                                            m_tsscDecoder.SetBuffer(buffer, responseIndex, responseLength + DataPublisher.ClientResponseHeaderSize - responseIndex);
-
-                                            Measurement measurement;
-                                            MeasurementKey key;
-                                            ushort id;
-                                            long time;
-                                            uint quality;
-                                            float value;
-
-                                            while (m_tsscDecoder.TryGetMeasurement(out id, out time, out quality, out value))
-                                            {
-                                                if (m_signalIndexCache.Reference.TryGetValue(id, out key))
-                                                {
-                                                    measurement = new Measurement();
-                                                    measurement.Metadata = key.Metadata;
-                                                    measurement.Timestamp = time;
-                                                    measurement.StateFlags = (MeasurementStateFlags)quality;
-                                                    measurement.Value = value;
-                                                    measurements.Add(measurement);
-                                                }
-                                            }
-
-                                            m_tsscSequenceNumber = (byte)(m_tsscSequenceNumber + 1);
-                                        }
-                                        else
-                                        {
-                                            // Decompress compact measurements from payload
-                                            measurements.AddRange(buffer.DecompressPayload(m_signalIndexCache, responseIndex, responseLength - responseIndex + DataPublisher.ClientResponseHeaderSize, count, m_includeTime, flags));
-                                        }
+                                        // Decompress TSSC serialized measurements from payload
+                                        ParseTSSCMeasurements(buffer, responseLength, ref responseIndex, measurements);
                                     }
                                     catch (Exception ex)
                                     {
                                         OnProcessException(MessageLevel.Error, new InvalidOperationException($"Decompression failure: (Decoded {measurements.Count} of {count} measurements)" + ex.Message, ex));
+                                    }
+                                }
+                                else
+                                {
+                                    if ((object)m_signalIndexCache == null && m_lastMissingCacheWarning + MissingCacheWarningInterval < now)
+                                    {
+                                        // Warning message for missing signal index cache
+                                        if (m_lastMissingCacheWarning != 0L)
+                                            OnStatusMessage(MessageLevel.Error, "Signal index cache has not arrived. No compact measurements can be parsed.");
+
+                                        m_lastMissingCacheWarning = now;
+                                    }
+                                    else
+                                    {
+                                        try
+                                        {
+                                            // Decompress compact measurements from payload
+                                            measurements.AddRange(buffer.DecompressPayload(m_signalIndexCache, responseIndex, responseLength - responseIndex + DataPublisher.ClientResponseHeaderSize, count, m_includeTime, flags));
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            OnProcessException(MessageLevel.Error, new InvalidOperationException($"Decompression failure: (Decoded {measurements.Count} of {count} measurements)" + ex.Message, ex));
+                                        }
                                     }
                                 }
                             }
@@ -3306,6 +3275,50 @@ namespace GSF.TimeSeries.Transport
                     OnProcessException(MessageLevel.Error, new InvalidOperationException("Failed to process publisher response packet due to exception: " + ex.Message, ex));
                 }
             }
+        }
+
+        private void ParseTSSCMeasurements(byte[] buffer, int responseLength, ref int responseIndex, List<IMeasurement> measurements)
+        {
+            // Use TSSC compression to decompress measurements                                            
+            if ((object)m_tsscDecoder == null)
+            {
+                m_tsscDecoder = new TsscDecoder();
+                m_tsscSequenceNumber = 0;
+            }
+
+            if (buffer[responseIndex] != 0)
+                throw new Exception($"TSSC version not recognized: {buffer[responseIndex]}");
+
+            responseIndex++;
+
+            if (buffer[responseIndex] != m_tsscSequenceNumber)
+                throw new Exception($"TSSC is out of sequence. Expecting: {m_tsscSequenceNumber}, Received: {buffer[responseIndex]}");
+
+            responseIndex++;
+
+            m_tsscDecoder.SetBuffer(buffer, responseIndex, responseLength + DataPublisher.ClientResponseHeaderSize - responseIndex);
+
+            Measurement measurement;
+            MeasurementKey key = null;
+            ushort id;
+            long time;
+            uint quality;
+            float value;
+
+            while (m_tsscDecoder.TryGetMeasurement(out id, out time, out quality, out value))
+            {
+                if (m_signalIndexCache?.Reference.TryGetValue(id, out key) ?? false)
+                {
+                    measurement = new Measurement();
+                    measurement.Metadata = key?.Metadata;
+                    measurement.Timestamp = time;
+                    measurement.StateFlags = (MeasurementStateFlags)quality;
+                    measurement.Value = value;
+                    measurements.Add(measurement);
+                }
+            }
+
+            m_tsscSequenceNumber = (byte)(m_tsscSequenceNumber + 1);
         }
 
         private bool IsUserCommand(ServerCommand command)
