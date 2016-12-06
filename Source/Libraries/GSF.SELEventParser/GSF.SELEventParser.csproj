@@ -56,6 +56,7 @@
     <Compile Include="EventHistory.cs" />
     <Compile Include="EventReport.cs" />
     <Compile Include="Firmware.cs" />
+    <Compile Include="GroupSettings.cs" />
     <Compile Include="Header.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

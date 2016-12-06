@@ -206,6 +206,14 @@ namespace GSF.SELEventParser
             return result;
         }
 
+        public Dictionary<string, string> GroupSetting
+        {
+            set
+            {
+                m_groupSettings = value;
+            }
+        } 
+
         public void SetControlEquations(string key, string value)
         {
             if (m_controlEquations.ContainsKey(key))
@@ -229,6 +237,15 @@ namespace GSF.SELEventParser
 
             return result;
         }
+
+        public Dictionary<string, string> ControlEquations
+        {
+            set
+            {
+                m_controlEquations = value;
+            }
+        }
+
 
         public void SetGlobalSetting(string key, string value)
         {
@@ -254,6 +271,13 @@ namespace GSF.SELEventParser
             return result;
         }
 
+        public Dictionary<string, string> GlobalSetting
+        {
+            set
+            {
+                m_globalSettings = value;
+            }
+        }
 
 
         #endregion
@@ -375,7 +399,7 @@ namespace GSF.SELEventParser
                 ++index;
             }
 
-            while(!lines[index].ToUpper().Contains("GROUP SETTINGS:") && index < lines.Length) { ++index; }
+            EventFile.SkipBlanks(lines, ref index);
 
             while(!lines[index].ToUpper().Contains("SELOGIC CONTROL EQUATIONS:") && index < lines.Length)
             {

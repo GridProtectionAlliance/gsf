@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace GSF.SELEventParser
@@ -36,6 +37,9 @@ namespace GSF.SELEventParser
         private Firmware m_firmware;
         private int m_eventNumber;
         private AnalogSection m_analogSection;
+        private Dictionary<string, string> m_groupSettings;
+        private Dictionary<string, string> m_controlEquations;
+        private Dictionary<string, string> m_globalSettings;
 
         #endregion
 
@@ -101,6 +105,104 @@ namespace GSF.SELEventParser
             }
         }
 
+        public void SetGroupSetting(string key, string value)
+        {
+            if (m_groupSettings.ContainsKey(key))
+            {
+                m_groupSettings[key] = value;
+            }
+            else
+            {
+                m_groupSettings.Add(key, value);
+            }
+        }
+
+        public string GetGroupSettings(string key)
+        {
+            string result = null;
+
+            if (m_groupSettings.ContainsKey(key))
+            {
+                result = m_groupSettings[key];
+            }
+
+            return result;
+        }
+
+        public Dictionary<string, string> GroupSetting
+        {
+            set
+            {
+                m_groupSettings = value;
+            }
+        }
+
+        public void SetControlEquations(string key, string value)
+        {
+            if (m_controlEquations.ContainsKey(key))
+            {
+                m_controlEquations[key] = value;
+            }
+            else
+            {
+                m_controlEquations.Add(key, value);
+            }
+        }
+
+        public string GetControlEquations(string key)
+        {
+            string result = null;
+
+            if (m_controlEquations.ContainsKey(key))
+            {
+                result = m_controlEquations[key];
+            }
+
+            return result;
+        }
+
+        public Dictionary<string, string> ControlEquations
+        {
+            set
+            {
+                m_controlEquations = value;
+            }
+        }
+
+        public void SetGlobalSetting(string key, string value)
+        {
+            if (m_globalSettings.ContainsKey(key))
+            {
+                m_globalSettings[key] = value;
+            }
+            else
+            {
+                m_globalSettings.Add(key, value);
+            }
+        }
+
+        public string GetGlobalSettings(string key)
+        {
+            string result = null;
+
+            if (m_globalSettings.ContainsKey(key))
+            {
+                result = m_globalSettings[key];
+            }
+
+            return result;
+        }
+
+        public Dictionary<string, string> GlobalSetting
+        {
+            set
+            {
+                m_globalSettings = value;
+            }
+        }
+
+
+
         #endregion
 
         #region [ Static ]
@@ -132,6 +234,22 @@ namespace GSF.SELEventParser
 
             // Parse the analog section of the report
             eventReport.AnalogSection = AnalogSection.Parse(eventReport.Header.EventTime, lines, ref index);
+
+            // skip digitals for now
+            while (!lines[index].ToLower().Contains("group settings") && index < lines.Length) { ++index; }
+            ++index;
+            // Parse Group settings
+            eventReport.GroupSetting = Settings.Parse(lines, ref index);
+            EventFile.SkipBlanks(lines, ref index);
+
+            // Parse Logic control equations
+            ++index;
+            EventFile.SkipBlanks(lines, ref index);
+            eventReport.ControlEquations = ControlEquation.Parse(lines, ref index);
+            EventFile.SkipBlanks(lines, ref index);
+
+            // Parse Global Settings
+            eventReport.GlobalSetting = Settings.Parse(lines, ref index);
 
             return eventReport;
         }
