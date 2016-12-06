@@ -477,8 +477,9 @@ namespace GSF.TimeSeries.Transport
         private UdpClient m_dataChannel;
         private bool m_useZeroMQChannel;
         private LocalConcentrator m_localConcentrator;
+        private bool m_tsscResetRequested;
         private TsscDecoder m_tsscDecoder;
-        private byte m_tsscSequenceNumber;
+        private ushort m_tsscSequenceNumber;
         private SharedTimer m_dataStreamMonitor;
         private long m_commandChannelConnectionAttempts;
         private long m_dataChannelConnectionAttempts;
@@ -2511,10 +2512,9 @@ namespace GSF.TimeSeries.Transport
             }
 
             // Reset decompressor on successful resubscription
-            if (success && (object)m_tsscDecoder != null)
+            if (success)
             {
-                m_tsscDecoder.Reset();
-                m_tsscSequenceNumber = 0;
+                m_tsscResetRequested = true;
             }
 
             return success;
@@ -3286,15 +3286,35 @@ namespace GSF.TimeSeries.Transport
                 m_tsscSequenceNumber = 0;
             }
 
-            if (buffer[responseIndex] != 0)
+            if (buffer[responseIndex] != 85)
                 throw new Exception($"TSSC version not recognized: {buffer[responseIndex]}");
-
             responseIndex++;
 
-            if (buffer[responseIndex] != m_tsscSequenceNumber)
-                throw new Exception($"TSSC is out of sequence. Expecting: {m_tsscSequenceNumber}, Received: {buffer[responseIndex]}");
+            int sequenceNumber = BigEndian.ToUInt16(buffer, responseIndex);
+            responseIndex += 2;
+            if (sequenceNumber == 0)
+            {
+                OnStatusMessage(MessageLevel.Info, $"TSSC algorithm reset before sequence number: {m_tsscSequenceNumber}", "TSSC");
+                m_tsscDecoder = new TsscDecoder();
+                m_tsscSequenceNumber = 0;
+                m_tsscResetRequested = false;
+            }
 
-            responseIndex++;
+            if (m_tsscSequenceNumber != sequenceNumber)
+            {
+                if (!m_tsscResetRequested)
+                {
+                    throw new Exception($"TSSC is out of sequence. Expecting: {m_tsscSequenceNumber}, Received: {sequenceNumber}");
+                }
+                else
+                {
+                    //Ignore packets until the reset has occurred.
+                    LogEventPublisher publisher = Log.RegisterEvent(MessageLevel.Debug, "TSSC", 0, MessageRate.EveryFewSeconds(1), 5);
+                    publisher.ShouldRaiseMessageSupressionNotifications = false;
+                    publisher.Publish($"TSSC is out of sequence. Expecting: {m_tsscSequenceNumber}, Received: {sequenceNumber}");
+                    return;
+                }
+            }
 
             m_tsscDecoder.SetBuffer(buffer, responseIndex, responseLength + DataPublisher.ClientResponseHeaderSize - responseIndex);
 
@@ -3318,7 +3338,12 @@ namespace GSF.TimeSeries.Transport
                 }
             }
 
-            m_tsscSequenceNumber = (byte)(m_tsscSequenceNumber + 1);
+            m_tsscSequenceNumber++;
+            if (m_tsscSequenceNumber == 0)
+            {
+                //Do not increment to 0
+                m_tsscSequenceNumber = 1;
+            }
         }
 
         private bool IsUserCommand(ServerCommand command)
