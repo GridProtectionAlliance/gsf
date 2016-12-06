@@ -71,9 +71,10 @@ namespace GSF.TimeSeries.Transport
         private volatile bool m_usePayloadCompression;
         private volatile bool m_useCompactMeasurementFormat;
         private readonly CompressionModes m_compressionModes;
+        private bool m_resetTsscEncoder;
         private TsscEncoder m_tsscEncoder;
         private byte[] m_tsscWorkingBuffer;
-        private byte m_tsscSequenceNumber;
+        private ushort m_tsscSequenceNumber;
         private long m_lastPublishTime;
         private string m_requestedInputFilter;
         private double m_publishInterval;
@@ -458,10 +459,7 @@ namespace GSF.TimeSeries.Transport
                 m_startTimeSent = false;
 
             // Reset compressor on successful resubscription
-            if ((object)m_tsscEncoder != null)
-                m_tsscEncoder.Reset();
-
-            m_tsscSequenceNumber = 0;
+            m_resetTsscEncoder = true;
 
             base.Start();
 
@@ -789,10 +787,12 @@ namespace GSF.TimeSeries.Transport
                 if (!Enabled)
                     return;
 
-                if ((object)m_tsscEncoder == null)
+                if ((object)m_tsscEncoder == null || m_resetTsscEncoder)
                 {
+                    m_resetTsscEncoder = false;
                     m_tsscEncoder = new TsscEncoder();
                     m_tsscWorkingBuffer = new byte[32 * 1024];
+                    OnStatusMessage(MessageLevel.Info, $"TSSC algorithm reset before sequence number: {m_tsscSequenceNumber}", "TSSC");
                     m_tsscSequenceNumber = 0;
                     m_tsscEncoder.SetBuffer(m_tsscWorkingBuffer, 0, m_tsscWorkingBuffer.Length);
                 }
@@ -838,18 +838,22 @@ namespace GSF.TimeSeries.Transport
         private void SendTSSCPayload(int count)
         {
             int length = m_tsscEncoder.FinishBlock();
-            byte[] packet = new byte[length + 7];
+            byte[] packet = new byte[length + 8];
 
             packet[0] = (byte)DataPacketFlags.Compressed;
 
             // Serialize total number of measurement values to follow
             BigEndian.CopyBytes(count, packet, 1);
 
-            packet[1 + 4] = 0; // A version number
-            packet[5 + 1] = m_tsscSequenceNumber;
-            m_tsscSequenceNumber = (byte)(m_tsscSequenceNumber + 1);
-
-            Array.Copy(m_tsscWorkingBuffer, 0, packet, 7, length);
+            packet[1 + 4] = 85; // A version number
+            BigEndian.CopyBytes(m_tsscSequenceNumber, packet, 5 + 1);
+            m_tsscSequenceNumber++;
+            if (m_tsscSequenceNumber == 0)
+            {
+                //Do not increment to 0
+                m_tsscSequenceNumber = 1;
+            }
+            Array.Copy(m_tsscWorkingBuffer, 0, packet, 8, length);
 
             if ((object)m_parent != null)
                 m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, packet);
