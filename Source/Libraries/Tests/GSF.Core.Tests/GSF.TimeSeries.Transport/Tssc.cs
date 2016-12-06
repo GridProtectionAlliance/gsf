@@ -300,11 +300,84 @@ namespace GSF.Core.Tests.GSF.Threading
                 totalSize += encoder.FinishBlock();
                 TestEncoding(encoder, decoder, encoder2, writeBuffer, randomValue, reader2, idOld, timestampOld, qualityOld, valueOld);
 
-                System.Console.WriteLine(measurementsProcessed.ToString("N0") + " " + file + " " + sw.Elapsed.TotalSeconds.ToString("N1") + " " + (totalSize*8 / (double)measurementsProcessed).ToString("N2"));
+                System.Console.WriteLine(measurementsProcessed.ToString("N0") + " " + file + " " + sw.Elapsed.TotalSeconds.ToString("N1") + " " + (totalSize * 8 / (double)measurementsProcessed).ToString("N2"));
 
             }
 
+        }
 
+        [TestMethod]
+        public unsafe void TestSmallerSegments()
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            long totalSize = 0;
+            long measurementsProcessed = 0;
+            int quitAfterCount = 0;
+            Dictionary<Guid, ushort> idLookup = new Dictionary<Guid, ushort>();
+
+            var encoder = new TsscEncoder();
+            var encoder2 = new TsscEncoder();
+            var decoder = new TsscDecoder();
+
+            foreach (var file in Directory.GetFiles(@"D:\TsscTest", "*.PhasorStream"))
+            {
+                if (quitAfterCount == 1)
+                    return;
+                quitAfterCount++;
+
+                byte[] data = File.ReadAllBytes(file);
+                var reader1 = new OrigReader(data, idLookup);
+                var reader2 = new OrigReader(data, idLookup);
+
+                byte randomValue = Security.Cryptography.Random.ByteBetween(1, 200);
+                byte[] writeBuffer = new byte[randomValue * 1024];
+                encoder.SetBuffer(writeBuffer, randomValue, writeBuffer.Length - randomValue);
+
+                ushort id;
+                long timestamp;
+                uint quality;
+                float value;
+
+                ushort idOld = 0;
+                long timestampOld = 0;
+                uint qualityOld = 0;
+                float valueOld = 0;
+
+                int quitAfter = Security.Cryptography.Random.ByteBetween(0, 40);
+                while (reader1.ReadNextMeasurement(out id, out timestamp, out quality, out value))
+                {
+                    measurementsProcessed++;
+                    if (quitAfter <= 0 || !encoder.TryAddMeasurement(id, timestamp, quality, value))
+                    {
+                        totalSize += encoder.FinishBlock();
+                        TestEncoding(encoder, decoder, encoder2, writeBuffer, randomValue, reader2, idOld, timestampOld, qualityOld, valueOld);
+
+                        randomValue = Security.Cryptography.Random.ByteBetween(1, 200);
+                        writeBuffer = new byte[randomValue * 1024];
+                        encoder.SetBuffer(writeBuffer, randomValue, writeBuffer.Length - randomValue);
+                        if (!encoder.TryAddMeasurement(id, timestamp, quality, value))
+                        {
+                            throw new Exception();
+                        }
+
+                        quitAfter = Security.Cryptography.Random.ByteBetween(0, 40);
+
+                    }
+
+                    quitAfter--;
+
+                    idOld = id;
+                    timestampOld = timestamp;
+                    qualityOld = quality;
+                    valueOld = value;
+                }
+
+                totalSize += encoder.FinishBlock();
+                TestEncoding(encoder, decoder, encoder2, writeBuffer, randomValue, reader2, idOld, timestampOld, qualityOld, valueOld);
+
+                System.Console.WriteLine(measurementsProcessed.ToString("N0") + " " + file + " " + sw.Elapsed.TotalSeconds.ToString("N1") + " " + (totalSize * 8 / (double)measurementsProcessed).ToString("N2"));
+            }
 
         }
 
@@ -322,6 +395,7 @@ namespace GSF.Core.Tests.GSF.Threading
             int flushPosition;
 
             flushPosition = encoder.FinishBlock();
+            Array.Clear(writeBuffer, flushPosition, writeBuffer.Length - flushPosition);
 
             byte[] writeBuffer2 = new byte[writeBuffer.Length];
             encoder2.SetBuffer(writeBuffer2, randomValue, writeBuffer2.Length - randomValue);
