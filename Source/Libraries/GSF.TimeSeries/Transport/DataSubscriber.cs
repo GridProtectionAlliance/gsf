@@ -3288,10 +3288,12 @@ namespace GSF.TimeSeries.Transport
 
             if (buffer[responseIndex] != 85)
                 throw new Exception($"TSSC version not recognized: {buffer[responseIndex]}");
+
             responseIndex++;
 
             int sequenceNumber = BigEndian.ToUInt16(buffer, responseIndex);
             responseIndex += 2;
+
             if (sequenceNumber == 0)
             {
                 OnStatusMessage(MessageLevel.Info, $"TSSC algorithm reset before sequence number: {m_tsscSequenceNumber}", "TSSC");
@@ -3303,17 +3305,13 @@ namespace GSF.TimeSeries.Transport
             if (m_tsscSequenceNumber != sequenceNumber)
             {
                 if (!m_tsscResetRequested)
-                {
                     throw new Exception($"TSSC is out of sequence. Expecting: {m_tsscSequenceNumber}, Received: {sequenceNumber}");
-                }
-                else
-                {
-                    //Ignore packets until the reset has occurred.
-                    LogEventPublisher publisher = Log.RegisterEvent(MessageLevel.Debug, "TSSC", 0, MessageRate.EveryFewSeconds(1), 5);
-                    publisher.ShouldRaiseMessageSupressionNotifications = false;
-                    publisher.Publish($"TSSC is out of sequence. Expecting: {m_tsscSequenceNumber}, Received: {sequenceNumber}");
-                    return;
-                }
+
+                // Ignore packets until the reset has occurred.
+                LogEventPublisher publisher = Log.RegisterEvent(MessageLevel.Debug, "TSSC", 0, MessageRate.EveryFewSeconds(1), 5);
+                publisher.ShouldRaiseMessageSupressionNotifications = false;
+                publisher.Publish($"TSSC is out of sequence. Expecting: {m_tsscSequenceNumber}, Received: {sequenceNumber}");
+                return;
             }
 
             m_tsscDecoder.SetBuffer(buffer, responseIndex, responseLength + DataPublisher.ClientResponseHeaderSize - responseIndex);
@@ -3339,11 +3337,10 @@ namespace GSF.TimeSeries.Transport
             }
 
             m_tsscSequenceNumber++;
+
+            // Do not increment to 0 on roll-over
             if (m_tsscSequenceNumber == 0)
-            {
-                //Do not increment to 0
                 m_tsscSequenceNumber = 1;
-            }
         }
 
         private bool IsUserCommand(ServerCommand command)

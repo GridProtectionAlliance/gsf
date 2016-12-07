@@ -28,7 +28,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Parsing;
@@ -64,7 +63,6 @@ namespace GSF.TimeSeries.Transport
         public event EventHandler<EventArgs<IClientSubscription, EventArgs>> ProcessingComplete;
 
         // Fields
-        private int m_duplicateCallToQueueMeasurementsForProcessingCheck = 0;
         private readonly SignalIndexCache m_signalIndexCache;
         private readonly Guid m_clientID;
         private readonly Guid m_subscriberID;
@@ -75,7 +73,7 @@ namespace GSF.TimeSeries.Transport
         private readonly CompressionModes m_compressionModes;
         private bool m_resetTsscEncoder;
         private TsscEncoder m_tsscEncoder;
-        private object m_tsscSyncLock = new object();
+        private readonly object m_tsscSyncLock;
         private byte[] m_tsscWorkingBuffer;
         private ushort m_tsscSequenceNumber;
         private long m_lastPublishTime;
@@ -122,6 +120,8 @@ namespace GSF.TimeSeries.Transport
 
             m_bufferBlockCache = new List<byte[]>();
             m_bufferBlockCacheLock = new object();
+
+            m_tsscSyncLock = new object();
         }
 
         #endregion
@@ -359,7 +359,6 @@ namespace GSF.TimeSeries.Transport
                 {
                     if (disposing)
                     {
-                        // Remove reference to parent
                         m_parent = null;
 
                         // Dispose base time rotation timer
@@ -510,83 +509,65 @@ namespace GSF.TimeSeries.Transport
         /// Measurements are filtered against the defined <see cref="InputMeasurementKeys"/> so we override method
         /// so that dynamic updates to keys will be synchronized with filtering to prevent interference.
         /// </remarks>
+        // IMPORTANT: TSSC is sensitive to order - always make sure this function gets called sequentially, concurrent
+        // calls to this function can cause TSSC parsing to get out of sequence and fail
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
-            int value = Interlocked.Increment(ref m_duplicateCallToQueueMeasurementsForProcessingCheck);
-            try
+            if ((object)measurements == null)
+                return;
+
+            if (!m_startTimeSent && measurements.Any())
             {
-                if (value != 1)
-                {
-                    Log.Publish(MessageLevel.Critical, MessageFlags.BugReport | MessageFlags.UsageIssue, "Concurrent Call Detected",
-                        $"Concurrent entrance to UnsynchronizedClientSubscription.QueueMeasurementsForProcessing: Expected 1: Received: {value}");
-                }
+                m_startTimeSent = true;
 
-                if ((object)measurements == null)
-                    return;
+                IMeasurement measurement = measurements.FirstOrDefault(m => (object)m != null);
+                Ticks timestamp = 0;
 
-                if (!m_startTimeSent && measurements.Any())
-                {
-                    m_startTimeSent = true;
+                if ((object)measurement != null)
+                    timestamp = measurement.Timestamp;
 
-                    IMeasurement measurement = measurements.FirstOrDefault(m => (object)m != null);
-                    Ticks timestamp = 0;
-
-                    if ((object)measurement != null)
-                        timestamp = measurement.Timestamp;
-
-                    m_parent.SendDataStartTime(m_clientID, timestamp);
-                }
-
-                if (m_isNaNFiltered)
-                    measurements = measurements.Where(measurement => !double.IsNaN(measurement.Value));
-
-                if (!measurements.Any() || !Enabled)
-                    return;
-
-                if (TrackLatestMeasurements)
-                {
-                    double publishInterval;
-
-                    // Keep track of latest measurements
-                    base.QueueMeasurementsForProcessing(measurements);
-                    publishInterval = m_publishInterval > 0 ? m_publishInterval : LagTime;
-
-                    if (DateTime.UtcNow.Ticks > m_lastPublishTime + Ticks.FromSeconds(publishInterval))
-                    {
-                        List<IMeasurement> currentMeasurements = new List<IMeasurement>();
-                        Measurement newMeasurement;
-
-                        // Create a new set of measurements that represent the latest known values setting value to NaN if it is old
-                        foreach (TemporalMeasurement measurement in LatestMeasurements)
-                        {
-                            newMeasurement = new Measurement
-                            {
-                                Metadata = measurement.Metadata,
-                                Value = measurement.GetValue(RealTime),
-                                Timestamp = measurement.Timestamp,
-                                StateFlags = measurement.StateFlags
-                            };
-
-                            currentMeasurements.Add(newMeasurement);
-                        }
-
-                        ProcessMeasurements(currentMeasurements);
-                    }
-                }
-                else
-                {
-                    ProcessMeasurements(measurements);
-                }
-
+                m_parent.SendDataStartTime(m_clientID, timestamp);
             }
-            finally
+
+            if (m_isNaNFiltered)
+                measurements = measurements.Where(measurement => !double.IsNaN(measurement.Value));
+
+            if (!measurements.Any() || !Enabled)
+                return;
+
+            if (TrackLatestMeasurements)
             {
-                value = Interlocked.Decrement(ref m_duplicateCallToQueueMeasurementsForProcessingCheck);
-                if (value != 0)
+                double publishInterval;
+
+                // Keep track of latest measurements
+                base.QueueMeasurementsForProcessing(measurements);
+                publishInterval = m_publishInterval > 0 ? m_publishInterval : LagTime;
+
+                if (DateTime.UtcNow.Ticks > m_lastPublishTime + Ticks.FromSeconds(publishInterval))
                 {
-                    Log.Publish(MessageLevel.Critical, MessageFlags.BugReport | MessageFlags.UsageIssue,
-                        "Concurrent Call Detected", $"Concurrent Exit to UnsynchronizedClientSubscription.QueueMeasurementsForProcessing: Expected 0: Received: {value}");
+                    List<IMeasurement> currentMeasurements = new List<IMeasurement>();
+                    Measurement newMeasurement;
+
+                    // Create a new set of measurements that represent the latest known values setting value to NaN if it is old
+                    foreach (TemporalMeasurement measurement in LatestMeasurements)
+                    {
+                        newMeasurement = new Measurement
+                        {
+                            Metadata = measurement.Metadata,
+                            Value = measurement.GetValue(RealTime),
+                            Timestamp = measurement.Timestamp,
+                            StateFlags = measurement.StateFlags
+                        };
+
+                        currentMeasurements.Add(newMeasurement);
+                    }
+
+                    ProcessMeasurements(currentMeasurements);
                 }
+            }
+            else
+            {
+                ProcessMeasurements(measurements);
             }
         }
 
@@ -598,6 +579,7 @@ namespace GSF.TimeSeries.Transport
         /// <returns>A list of buffer block sequence numbers for blocks that need to be retransmitted.</returns>
         public void ConfirmBufferBlock(uint sequenceNumber)
         {
+            DataPublisher parent = m_parent;
             int sequenceIndex;
             int removalCount;
 
@@ -633,7 +615,7 @@ namespace GSF.TimeSeries.Transport
                         {
                             if ((object)m_bufferBlockCache[i] != null)
                             {
-                                m_parent.SendClientResponse(m_clientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, m_bufferBlockCache[i]);
+                                parent?.SendClientResponse(m_clientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, m_bufferBlockCache[i]);
                                 OnBufferBlockRetransmission();
                             }
                         }
@@ -819,12 +801,9 @@ namespace GSF.TimeSeries.Transport
                         m_tsscWorkingBuffer = new byte[32 * 1024];
                         OnStatusMessage(MessageLevel.Info, $"TSSC algorithm reset before sequence number: {m_tsscSequenceNumber}", "TSSC");
                         m_tsscSequenceNumber = 0;
-                        m_tsscEncoder.SetBuffer(m_tsscWorkingBuffer, 0, m_tsscWorkingBuffer.Length);
                     }
-                    else
-                    {
-                        m_tsscEncoder.SetBuffer(m_tsscWorkingBuffer, 0, m_tsscWorkingBuffer.Length);
-                    }
+
+                    m_tsscEncoder.SetBuffer(m_tsscWorkingBuffer, 0, m_tsscWorkingBuffer.Length);
 
                     int count = 0;
 
