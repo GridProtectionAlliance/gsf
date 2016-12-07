@@ -374,14 +374,32 @@ namespace GSF.TimeSeries
                 LogException(ex);
             }
 
-            if (!Directory.Exists(logPath))
-                Directory.CreateDirectory(logPath);
-
             // Retrieve application log path as defined in the config file
             logPath = FilePath.GetAbsolutePath(systemSettings["LogPath"].Value);
 
-            Logger.FileWriter.SetPath(logPath);
-            Logger.FileWriter.SetLoggingFileCount(systemSettings["MaxLogFiles"].ValueAs(DefaultMaxLogFiles));
+            // Make sure log directory exists
+            try
+            {
+                if (!Directory.Exists(logPath))
+                    Directory.CreateDirectory(logPath);
+            }
+            catch (Exception ex)
+            {
+                DisplayStatusMessage("Failed to create logging directory due to exception, defaulting to {1}: {0}", UpdateType.Alarm, ex.Message, servicePath);
+                LogException(ex);
+                logPath = servicePath;
+            }
+
+            try
+            {
+                Logger.FileWriter.SetPath(logPath);
+                Logger.FileWriter.SetLoggingFileCount(systemSettings["MaxLogFiles"].ValueAs(DefaultMaxLogFiles));
+            }
+            catch (Exception ex)
+            {
+                DisplayStatusMessage("Failed to set logging path due to exception: {0}", UpdateType.Alarm, ex.Message);
+                LogException(ex);
+            }
 
             // Retrieve configuration cache directory as defined in the config file
             cachePath = FilePath.GetAbsolutePath(systemSettings["ConfigurationCachePath"].Value);
