@@ -4708,19 +4708,13 @@ namespace GSF.ServiceProcess
         static ServiceHelper()
         {
             s_log = Logger.CreatePublisher(typeof(ServiceHelper), MessageClass.Framework);
+
             s_logError = s_log.RegisterEvent(MessageLevel.Error, MessageFlags.None, "Error Message", 0, MessageRate.PerSecond(30), 1000);
             s_logStatusInfo = s_log.RegisterEvent(MessageLevel.Info, MessageFlags.None, "Status Message Info", 0, MessageRate.PerSecond(30), 1000);
             s_logStatusWarning = s_log.RegisterEvent(MessageLevel.Warning, MessageFlags.None, "Status Message Warning", 0, MessageRate.PerSecond(30), 1000);
             s_logStatusAlarm = s_log.RegisterEvent(MessageLevel.Error, MessageFlags.None, "Status Message Alarm", 0, MessageRate.PerSecond(30), 1000);
 
-            string logPath = FilePath.GetAbsolutePath("Application Logs");
-
-            if (!Directory.Exists(logPath))
-                Directory.CreateDirectory(logPath);
-
-            Logger.FileWriter.SetPath(logPath, VerboseLevel.Ultra);
-            Logger.FileWriter.SetLoggingFileCount(300);
-
+            Logger.FileWriter.Verbose = VerboseLevel.Ultra;
             s_log.InitialStackTrace = LogStackTrace.Empty;
         }
 

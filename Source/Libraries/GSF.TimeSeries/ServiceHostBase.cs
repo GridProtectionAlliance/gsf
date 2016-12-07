@@ -50,6 +50,7 @@ using GSF.Communication;
 using GSF.Configuration;
 using GSF.Console;
 using GSF.Data;
+using GSF.Diagnostics;
 using GSF.IO;
 using GSF.Net.Security;
 using GSF.Reflection;
@@ -101,6 +102,7 @@ namespace GSF.TimeSeries
         private const int DefaultMinThreadPoolSize = 25;
         private const int DefaultMaxThreadPoolSize = 2048;
         private const int DefaultConfigurationBackups = 5;
+        private const int DefaultMaxLogFiles = 300;
 
         internal event EventHandler<EventArgs<Guid, string, UpdateType>> UpdatedStatus;
         internal event EventHandler<EventArgs<Exception>> LoggedException;
@@ -315,7 +317,10 @@ namespace GSF.TimeSeries
 
             // Make sure default service settings exist
             ConfigurationFile configFile = ConfigurationFile.Current;
-            string cachePath = string.Format("{0}{1}ConfigurationCache{1}", FilePath.GetAbsolutePath(""), Path.DirectorySeparatorChar);
+
+            string servicePath = FilePath.GetAbsolutePath("");
+            string cachePath = string.Format("{0}{1}ConfigurationCache{1}", servicePath, Path.DirectorySeparatorChar);
+            string logPath = string.Format("{0}{1}Logs{1}", servicePath, Path.DirectorySeparatorChar);
 
             // System settings
             CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
@@ -323,6 +328,8 @@ namespace GSF.TimeSeries
             systemSettings.Add("ConnectionString", "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=IaonHost.mdb", "Configuration database connection string");
             systemSettings.Add("DataProviderString", "AssemblyName={System.Data, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089};ConnectionType=System.Data.OleDb.OleDbConnection;AdapterType=System.Data.OleDb.OleDbDataAdapter", "Configuration database ADO.NET data provider assembly type creation string");
             systemSettings.Add("ConfigurationCachePath", cachePath, "Defines the path used to cache serialized configurations");
+            systemSettings.Add("LogPath", logPath, "Defines the path used to archive log files");
+            systemSettings.Add("MaxLogFiles", DefaultMaxLogFiles, "Defines the maximum number of log files to keep");
             systemSettings.Add("CachedConfigurationFile", "SystemConfiguration.xml", "File name for last known good system configuration (only cached for a Database or WebService connection)");
             systemSettings.Add("UniqueAdaptersIDs", "True", "Set to true if all runtime adapter ID's will be unique to allow for easier adapter specification");
             systemSettings.Add("ProcessPriority", "High", "Sets desired process priority: Normal, AboveNormal, High, RealTime");
@@ -367,6 +374,15 @@ namespace GSF.TimeSeries
                 LogException(ex);
             }
 
+            if (!Directory.Exists(logPath))
+                Directory.CreateDirectory(logPath);
+
+            // Retrieve application log path as defined in the config file
+            logPath = FilePath.GetAbsolutePath(systemSettings["LogPath"].Value);
+
+            Logger.FileWriter.SetPath(logPath);
+            Logger.FileWriter.SetLoggingFileCount(systemSettings["MaxLogFiles"].ValueAs(DefaultMaxLogFiles));
+
             // Retrieve configuration cache directory as defined in the config file
             cachePath = FilePath.GetAbsolutePath(systemSettings["ConfigurationCachePath"].Value);
 
@@ -384,7 +400,7 @@ namespace GSF.TimeSeries
 
             try
             {
-                Directory.SetCurrentDirectory(FilePath.GetAbsolutePath(""));
+                Directory.SetCurrentDirectory(servicePath);
             }
             catch (Exception ex)
             {
