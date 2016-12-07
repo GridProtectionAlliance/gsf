@@ -531,7 +531,10 @@ namespace GSF.ServiceProcess
             // Wait for connection.
             m_remotingClient.Connect();
 
-            while (!m_authenticationComplete && m_remotingClient.Enabled)
+            const int MaxWaitPeriods = 50;   // Will wait a maximum of 5 seconds before assuming failure
+            int attempts = 0;
+
+            while (!m_authenticationComplete && m_remotingClient.Enabled && attempts++ < MaxWaitPeriods)
             {
                 // Wait for authentication.
                 Thread.Sleep(100);
@@ -540,6 +543,13 @@ namespace GSF.ServiceProcess
                 if ((object)m_remotingClient == null)
                     return;
             }
+
+            // It is possible that local domain account will not be accepted and/or recognized by remote
+            // server when attempting to use integrated security - in these cases the sent client info
+            // message can be rejected so the ServiceHelper will neither respond with success or failure.
+            // We treat this as an authentication failure so that credentials can be requested.
+            if (attempts >= MaxWaitPeriods)
+                OnAuthenticationFailure();
 
             if (m_remotingClient.Enabled)
                 m_attemptReconnection = true;
