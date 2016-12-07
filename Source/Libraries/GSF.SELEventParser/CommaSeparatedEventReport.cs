@@ -413,7 +413,7 @@ namespace GSF.SELEventParser
                         string key = line.Split(new[] { '=' }, 2)[0].Trim();
                         line = line.Split(new [] { '=' }, 2)[1].TrimStart();
                         string value = line.Split(new[] { ' ' }, 2)[0];
-                        line = line.Split(new[] { ' ' }, 2)[1].TrimStart();
+                        line = line.Split(new[] { ' ' }, 2)[line.Split(new[] { ' ' }, 2).Length - 1].TrimStart();
                         commaSeparatedEventReport.SetGroupSetting(key, value);
                     }
                 }
