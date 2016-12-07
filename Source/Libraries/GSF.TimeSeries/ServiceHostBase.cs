@@ -320,7 +320,7 @@ namespace GSF.TimeSeries
 
             string servicePath = FilePath.GetAbsolutePath("");
             string cachePath = string.Format("{0}{1}ConfigurationCache{1}", servicePath, Path.DirectorySeparatorChar);
-            string logPath = string.Format("{0}{1}Logs{1}", servicePath, Path.DirectorySeparatorChar);
+            string defaultLogPath = string.Format("{0}{1}Logs{1}", servicePath, Path.DirectorySeparatorChar);
 
             // System settings
             CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
@@ -328,7 +328,7 @@ namespace GSF.TimeSeries
             systemSettings.Add("ConnectionString", "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=IaonHost.mdb", "Configuration database connection string");
             systemSettings.Add("DataProviderString", "AssemblyName={System.Data, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089};ConnectionType=System.Data.OleDb.OleDbConnection;AdapterType=System.Data.OleDb.OleDbDataAdapter", "Configuration database ADO.NET data provider assembly type creation string");
             systemSettings.Add("ConfigurationCachePath", cachePath, "Defines the path used to cache serialized configurations");
-            systemSettings.Add("LogPath", logPath, "Defines the path used to archive log files");
+            systemSettings.Add("LogPath", defaultLogPath, "Defines the path used to archive log files");
             systemSettings.Add("MaxLogFiles", DefaultMaxLogFiles, "Defines the maximum number of log files to keep");
             systemSettings.Add("CachedConfigurationFile", "SystemConfiguration.xml", "File name for last known good system configuration (only cached for a Database or WebService connection)");
             systemSettings.Add("UniqueAdaptersIDs", "True", "Set to true if all runtime adapter ID's will be unique to allow for easier adapter specification");
@@ -375,7 +375,7 @@ namespace GSF.TimeSeries
             }
 
             // Retrieve application log path as defined in the config file
-            logPath = FilePath.GetAbsolutePath(systemSettings["LogPath"].Value);
+            string logPath = FilePath.GetAbsolutePath(systemSettings["LogPath"].Value);
 
             // Make sure log directory exists
             try
@@ -385,19 +385,34 @@ namespace GSF.TimeSeries
             }
             catch (Exception ex)
             {
-                DisplayStatusMessage("Failed to create logging directory due to exception, defaulting to {1}: {0}", UpdateType.Alarm, ex.Message, servicePath);
+                // Attempt to default back to common log file path
+                if (!Directory.Exists(defaultLogPath))
+                {
+                    try
+                    {
+                        Directory.CreateDirectory(defaultLogPath);
+                    }
+                    catch
+                    {
+                        defaultLogPath = servicePath;
+                    }
+                }
+
+                DisplayStatusMessage("Failed to create logging directory \"{0}\" due to exception, defaulting to \"{1}\": {2}", UpdateType.Alarm, logPath, defaultLogPath, ex.Message);
                 LogException(ex);
-                logPath = servicePath;
+                logPath = defaultLogPath;
             }
+
+            int maxLogFiles = systemSettings["MaxLogFiles"].ValueAs(DefaultMaxLogFiles);
 
             try
             {
                 Logger.FileWriter.SetPath(logPath);
-                Logger.FileWriter.SetLoggingFileCount(systemSettings["MaxLogFiles"].ValueAs(DefaultMaxLogFiles));
+                Logger.FileWriter.SetLoggingFileCount(maxLogFiles);
             }
             catch (Exception ex)
             {
-                DisplayStatusMessage("Failed to set logging path due to exception: {0}", UpdateType.Alarm, ex.Message);
+                DisplayStatusMessage("Failed to set logging path \"{0}\" or max file count \"{1}\" due to exception: {2}", UpdateType.Alarm, logPath, maxLogFiles, ex.Message);
                 LogException(ex);
             }
 
@@ -412,7 +427,7 @@ namespace GSF.TimeSeries
             }
             catch (Exception ex)
             {
-                DisplayStatusMessage("Failed to create configuration cache directory due to exception: {0}", UpdateType.Alarm, ex.Message);
+                DisplayStatusMessage("Failed to create configuration cache directory \"{0}\" due to exception: {1}", UpdateType.Alarm, cachePath, ex.Message);
                 LogException(ex);
             }
 
@@ -422,7 +437,7 @@ namespace GSF.TimeSeries
             }
             catch (Exception ex)
             {
-                DisplayStatusMessage("Failed to set current directory to execution path due to exception: {0}", UpdateType.Alarm, ex.Message);
+                DisplayStatusMessage("Failed to set current directory to execution path \"{0}\" due to exception: {1}", UpdateType.Alarm, servicePath, ex.Message);
                 LogException(ex);
             }
 
