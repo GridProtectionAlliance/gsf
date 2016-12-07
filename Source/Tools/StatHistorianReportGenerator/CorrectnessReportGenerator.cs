@@ -1030,8 +1030,12 @@ namespace StatHistorianReportGenerator
 
         private string GetDeviceNameForSignal(string signalReference)
         {
-            return signalReference
-                .Remove(signalReference.LastIndexOf('-'));
+            int index = signalReference.LastIndexOf('-');
+
+            if (index > -1)
+                return signalReference.Remove(index);
+
+            return signalReference;
         }
 
         private string GetSignalName(string signalReference)
