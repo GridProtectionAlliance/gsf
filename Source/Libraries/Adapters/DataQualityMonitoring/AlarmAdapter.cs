@@ -151,7 +151,7 @@ namespace DataQualityMonitoring
         /// </summary>
         [ConnectionStringParameter,
         Description("Define the flag indicating whether to use the alarm log to track recently modified alarm states."),
-        DefaultValue(true)]
+        DefaultValue(false)]
         public bool UseAlarmLog
         {
             get
@@ -239,7 +239,7 @@ namespace DataQualityMonitoring
             if (settings.TryGetValue("useAlarmLog", out setting))
                 m_useAlarmLog = setting.ParseBoolean();
             else
-                m_useAlarmLog = true;
+                m_useAlarmLog = false;
 
             if (!settings.TryGetValue("bulkInsertLimit", out setting) || !int.TryParse(setting, out m_bulkInsertLimit))
                 m_bulkInsertLimit = 300;
