@@ -1320,10 +1320,10 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         // authorization request and save it.
         private void SaveDevice()
         {
-            const string TcpConnectionStringFormat = "interface=0.0.0.0; compression=false; autoConnect=true; securityMode={0}; " +
+            const string TcpConnectionStringFormat = "interface=0.0.0.0; compression=true; autoConnect=true; securityMode={0}; " +
                 "server={1}:{2}; {3}{4}";
 
-            const string UdpConnectionStringFormat = "interface=0.0.0.0; compression=false; autoConnect=true; securityMode={0}; " +
+            const string UdpConnectionStringFormat = "interface=0.0.0.0; compression=true; autoConnect=true; securityMode={0}; " +
                 "localport={1}; transportprotocol=udp; commandChannel={{server={2}:{3}; interface=0.0.0.0}}; {4}{5}";
 
             Device device;
