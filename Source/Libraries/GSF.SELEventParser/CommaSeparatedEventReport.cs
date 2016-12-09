@@ -399,57 +399,25 @@ namespace GSF.SELEventParser
                 ++index;
             }
 
+            //skip "SETTINGS" AND " LINES
+            if(lines[index].ToUpper() == "SETTINGS")
+                ++index;
+            if (lines[index] == "\"")
+                ++index;
+
             EventFile.SkipBlanks(lines, ref index);
-
-            while(!lines[index].ToUpper().Contains("SELOGIC CONTROL EQUATIONS:") && index < lines.Length)
-            {
-                if (lines[index].Contains("="))
-                {
-                    string line = new string(lines[index].ToCharArray());
-                    int count = line.Count(s => s == '=');
-
-                    for(int x = 0; x < count; ++x)
-                    {
-                        string key = line.Split(new[] { '=' }, 2)[0].Trim();
-                        line = line.Split(new [] { '=' }, 2)[1].TrimStart();
-                        string value = line.Split(new[] { ' ' }, 2)[0];
-                        line = line.Split(new[] { ' ' }, 2)[line.Split(new[] { ' ' }, 2).Length - 1].TrimStart();
-                        commaSeparatedEventReport.SetGroupSetting(key, value);
-                    }
-                }
+            // SKIP GROUP 1 AND GROUP SETTINGS lINES
+            if (lines[index].ToUpper() == "GROUP 1")
                 ++index;
-            }
-
-            while (!lines[index].ToUpper().Contains("GLOBAL SETTINGS:") && index < lines.Length)
-            {
-                if (lines[index].Contains("="))
-                {
-                    string line = lines[index];
-                    commaSeparatedEventReport.SetControlEquations(line.Split('=')[0].Trim(), line.Split('=')[1].Trim());
-                }
+            if (lines[index].ToUpper() == "GROUP SETTINGS:")
                 ++index;
-            }
 
-            while (!lines[index].ToUpper().Contains("=>") && index < lines.Length)
-            {
-                if (lines[index].Contains("="))
-                {
-                    string line = new string(lines[index].ToCharArray());
-                    int count = line.Count(s => s == '=');
-
-                    for (int x = 0; x < count; ++x)
-                    {
-                        string key = line.Split(new[] { '=' }, 2)[0].Trim();
-                        line = line.Split(new[] { '=' }, 2)[1].TrimStart();
-                        string value = line.Split(new[] { ' ' }, 2)[0];
-                        line = line.Split(new[] { ' ' }, 2)[line.Split(new[] { ' ' }, 2).Length - 1].TrimStart();
-                        commaSeparatedEventReport.SetGlobalSetting(key, value);
-                    }
-                }
-                ++index;
-            }
-
-
+            commaSeparatedEventReport.GroupSetting = Settings.Parse(lines, ref index);
+            EventFile.SkipBlanks(lines, ref index);
+            ++index;
+            commaSeparatedEventReport.ControlEquations = ControlEquation.Parse(lines, ref index);
+            EventFile.SkipBlanks(lines, ref index);
+            commaSeparatedEventReport.GlobalSetting = Settings.Parse(lines, ref index);
 
             return commaSeparatedEventReport;
         }
