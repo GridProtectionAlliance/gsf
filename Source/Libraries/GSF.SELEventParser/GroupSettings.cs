@@ -51,7 +51,7 @@ namespace GSF.SELEventParser
             EventFile.SkipBlanks(lines,ref index);
 
             Dictionary<string, string> dictionary = new Dictionary<string, string>();
-            while (lines[index] !="" && index < lines.Length)
+            while (index < lines.Length && lines[index] != "")
             {
                 if (lines[index].Contains("="))
                 {
@@ -99,7 +99,7 @@ namespace GSF.SELEventParser
             EventFile.SkipBlanks(lines, ref index);
 
             Dictionary<string, string> dictionary = new Dictionary<string, string>();
-            while (lines[index] != "" && index < lines.Length)
+            while (index < lines.Length && lines[index] != "")
             {
                 if (lines[index].Contains("="))
                 {
