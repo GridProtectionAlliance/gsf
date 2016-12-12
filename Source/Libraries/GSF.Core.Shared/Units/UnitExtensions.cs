@@ -38,7 +38,7 @@ namespace GSF.Units
         /// <remarks>
         /// For Angles that wrap, e.g., between -180 and +180, this algorithm unwraps the values to make the values mathematically comparable.
         /// </remarks>
-        public static IEnumerable<Angle> Unwrap(IEnumerable<Angle> source)
+        public static IEnumerable<Angle> Unwrap(this IEnumerable<Angle> source)
         {
             return Angle.Unwrap(source);
         }
