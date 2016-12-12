@@ -106,6 +106,8 @@ namespace GSF.Units
 
         private const double AngularMilFactor = 2.0D * Math.PI / 6400.0D;
 
+        private const double TwoPI = 2.0D * Math.PI;
+
         // Fields
         private readonly double m_value; // Angle value stored in radians
 
@@ -180,8 +182,6 @@ namespace GSF.Units
         /// <returns>The equivalent angle within the specified range.</returns>
         public Angle ToRange(Angle minValue, bool inclusive = true)
         {
-            const double TwoPI = 2.0D * Math.PI;
-
             return inclusive
                 ? Euclidean.Wrap(this, minValue, TwoPI)
                 : Euclidean.Wrap(this, minValue + TwoPI, -TwoPI);
@@ -830,8 +830,8 @@ namespace GSF.Units
         /// </remarks>
         public static IEnumerable<Angle> Unwrap(IEnumerable<Angle> source)
         {
-            double[] sourceAngles = source.Select(angle => angle.ToDegrees()).ToArray();
-            return Unwrap(sourceAngles).Select(FromDegrees);
+            double[] sourceAngles = source.Select(angle => angle.m_value).ToArray();
+            return Unwrap(sourceAngles).Select(angle => new Angle(angle));
         }
 
         /// <summary>
@@ -844,8 +844,8 @@ namespace GSF.Units
         /// </remarks>
         public static Angle Average(IEnumerable<Angle> source)
         {
-            double[] sourceAngles = source.Select(angle => angle.ToDegrees()).ToArray();
-            return FromDegrees(Unwrap(sourceAngles).Average()).ToRange(-Math.PI, false);
+            double[] sourceAngles = source.Select(angle => angle.m_value).ToArray();
+            return new Angle(Unwrap(sourceAngles).Average()).ToRange(-Math.PI, false);
         }
 
         private static double[] Unwrap(double[] sourceAngles)
@@ -862,13 +862,13 @@ namespace GSF.Units
                 for (int i = 1; i < sourceAngles.Length; i++)
                 {
                     dis0 = Math.Abs(sourceAngles[i] + offset - unwrappedAngles[i - 1]);
-                    dis1 = Math.Abs(sourceAngles[i] + offset - unwrappedAngles[i - 1] + 360.0D);
-                    dis2 = Math.Abs(sourceAngles[i] + offset - unwrappedAngles[i - 1] - 360.0D);
+                    dis1 = Math.Abs(sourceAngles[i] + offset - unwrappedAngles[i - 1] + TwoPI);
+                    dis2 = Math.Abs(sourceAngles[i] + offset - unwrappedAngles[i - 1] - TwoPI);
 
                     if (dis1 < dis0 && dis1 < dis2)
-                        offset = offset + 360.0D;
+                        offset = offset + TwoPI;
                     else if (dis2 < dis0 && dis2 < dis1)
-                        offset = offset - 360.0D;
+                        offset = offset - TwoPI;
 
                     unwrappedAngles[i] = sourceAngles[i] + offset;
                 }
