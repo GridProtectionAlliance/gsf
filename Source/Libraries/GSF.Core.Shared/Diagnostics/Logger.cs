@@ -43,6 +43,19 @@ namespace GSF.Diagnostics
             AllMessages = 2,
         }
 
+        private static class ThreadLocalThreadStack
+        {
+            [ThreadStatic]
+            private static ThreadStack s_localValue;
+
+            /// <summary>
+            /// Gets the <see cref="ThreadStack"/> item for the current thread.
+            /// Note: No exchange compare is needed since <see cref="s_localValue"/>
+            /// is local only to the current thread.
+            /// </summary>
+            public static ThreadStack Value => s_localValue ?? (s_localValue = new ThreadStack());
+        }
+
         /// <summary>
         /// This information is maintained in a ThreadLocal variable and is about 
         /// messages and log suppression applied at higher levels of the calling stack.
@@ -128,8 +141,6 @@ namespace GSF.Diagnostics
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly LogSubscriptionFileWriter FileWriter;
 
-        private static readonly ThreadLocal<ThreadStack> ThreadItems = new ThreadLocal<ThreadStack>(() => new ThreadStack());
-
         private static readonly LogPublisher Log;
         private static readonly LogEventPublisher EventFirstChanceException;
         private static readonly LogEventPublisher EventAppDomainException;
@@ -192,17 +203,17 @@ namespace GSF.Diagnostics
         /// <summary>
         /// Gets the sequence number of the most recent First Chance Exception log 
         /// </summary>
-        internal static int PreviousFirstChanceExceptionSequenceNumber => ThreadItems.Value.PreviousFirstChanceExceptionSequenceNumber;
+        internal static int PreviousFirstChanceExceptionSequenceNumber => ThreadLocalThreadStack.Value.PreviousFirstChanceExceptionSequenceNumber;
 
         /// <summary>
         /// Gets if Log Messages should be suppressed.
         /// </summary>
-        public static bool ShouldSuppressLogMessages => ThreadItems.Value.ShouldSuppressLogMessages;
+        public static bool ShouldSuppressLogMessages => ThreadLocalThreadStack.Value.ShouldSuppressLogMessages;
 
         /// <summary>
         /// Gets if First Chance Exception Log Messages should be suppressed.
         /// </summary>
-        public static bool ShouldSuppressFirstChanceLogMessages => ThreadItems.Value.ShouldSuppressFirstChanceLogMessages;
+        public static bool ShouldSuppressFirstChanceLogMessages => ThreadLocalThreadStack.Value.ShouldSuppressFirstChanceLogMessages;
 
         private static void CurrentDomain_FirstChanceException(object sender, System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs e)
         {
@@ -233,7 +244,7 @@ namespace GSF.Diagnostics
                 {
                     //swallow any exceptions.
                 }
-                ThreadItems.Value.PreviousFirstChanceExceptionSequenceNumber++;
+                ThreadLocalThreadStack.Value.PreviousFirstChanceExceptionSequenceNumber++;
             }
         }
 
@@ -295,7 +306,7 @@ namespace GSF.Diagnostics
         {
             EventSwallowedException.Publish(additionalFlags, message, details, ex);
             //Increment this value to ensure that nothing else matches with the exception since it has been removed.
-            ThreadItems.Value.PreviousFirstChanceExceptionSequenceNumber++;
+            ThreadLocalThreadStack.Value.PreviousFirstChanceExceptionSequenceNumber++;
         }
 
         /// <summary>
@@ -304,7 +315,7 @@ namespace GSF.Diagnostics
         /// <returns></returns>
         public static LogStackMessages GetStackMessages()
         {
-            return ThreadItems.Value.GetStackMessages();
+            return ThreadLocalThreadStack.Value.GetStackMessages();
         }
 
         /// <summary>
@@ -315,7 +326,7 @@ namespace GSF.Diagnostics
         /// <returns></returns>
         public static IDisposable AppendStackMessages(LogStackMessages messages)
         {
-            return ThreadItems.Value.AppendStackMessages(messages);
+            return ThreadLocalThreadStack.Value.AppendStackMessages(messages);
         }
 
         /// <summary>
@@ -325,7 +336,7 @@ namespace GSF.Diagnostics
         /// <returns></returns>
         public static IDisposable SuppressLogMessages()
         {
-            return ThreadItems.Value.SuppressLogMessages(SuppressionMode.AllMessages);
+            return ThreadLocalThreadStack.Value.SuppressLogMessages(SuppressionMode.AllMessages);
         }
 
         /// <summary>
@@ -335,7 +346,7 @@ namespace GSF.Diagnostics
         /// <returns></returns>
         public static IDisposable SuppressFirstChanceExceptionLogMessages()
         {
-            return ThreadItems.Value.SuppressLogMessages(SuppressionMode.FirstChanceExceptionOnly);
+            return ThreadLocalThreadStack.Value.SuppressLogMessages(SuppressionMode.FirstChanceExceptionOnly);
         }
 
         /// <summary>
@@ -345,7 +356,7 @@ namespace GSF.Diagnostics
         /// <returns></returns>
         public static IDisposable OverrideSuppressLogMessages()
         {
-            return ThreadItems.Value.SuppressLogMessages(SuppressionMode.None);
+            return ThreadLocalThreadStack.Value.SuppressLogMessages(SuppressionMode.None);
         }
 
         /// <summary>
@@ -386,11 +397,11 @@ namespace GSF.Diagnostics
 
         private static void DisposeStackMessage(int depth)
         {
-            ThreadItems.Value.RemoveStackMessage(depth);
+            ThreadLocalThreadStack.Value.RemoveStackMessage(depth);
         }
         private static void DisposeSuppressionFlags(int depth)
         {
-            ThreadItems.Value.RemoveSuppression(depth);
+            ThreadLocalThreadStack.Value.RemoveSuppression(depth);
         }
 
         /// <summary>
