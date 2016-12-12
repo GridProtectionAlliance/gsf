@@ -516,7 +516,7 @@ namespace GSF.TimeSeries
         /// </remarks>
         public static double AverageAngleValueFilter(IEnumerable<IMeasurement> source)
         {
-            return source.Select(m => (Angle)m.Value).Average();
+            return source.Select(m => Angle.FromDegrees(m.Value)).Average().ToDegrees();
         }
 
         #endregion
