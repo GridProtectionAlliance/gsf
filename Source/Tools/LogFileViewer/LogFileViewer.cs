@@ -540,7 +540,7 @@ namespace LogFileViewer
                     //don't look ahead for more than 100ms.
                     DateTime stopAfter = firstMessage.UtcTime.AddTicks(100 * TimeSpan.TicksPerMillisecond);
 
-                    bool foundMatch = false;
+                    //bool foundMatch = false;
                     for (int y = x + 1; y < messages.Count; y++)
                     {
                         LogMessage futureMessage = messages[y];
