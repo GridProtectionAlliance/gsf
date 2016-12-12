@@ -821,22 +821,40 @@ namespace GSF.Units
         }
 
         /// <summary>
+        /// Unwraps a set of <see cref="Angle"/> values so a comparable mathematical operation can be applied.
+        /// </summary>
+        /// <param name="source">Sequence of <see cref="Angle"/> values to unwrap.</param>
+        /// <returns>Unwrapped set of <see cref="Angle"/> values.</returns>
+        /// <remarks>
+        /// For Angles that wrap, e.g., between -180 and +180, this algorithm unwraps the values to make the values mathematically comparable.
+        /// </remarks>
+        public static IEnumerable<Angle> Unwrap(IEnumerable<Angle> source)
+        {
+            double[] sourceAngles = source.Select(angle => angle.ToDegrees()).ToArray();
+            return Unwrap(sourceAngles).Select(FromDegrees);
+        }
+
+        /// <summary>
         /// Calculates an average of the specified sequence of <see cref="Angle"/> values.
         /// </summary>
-        /// <param name="source">Sequence of <see cref="Angle"/> values over which to run calculation.</param>
+        /// <param name="source">Sequence of <see cref="Angle"/> values over which to calculate average.</param>
         /// <returns>Average of the specified sequence of <see cref="Angle"/> values.</returns>
         /// <remarks>
-        /// For Angles that wrap between -180 and +180, this algorithm takes the wrapping into account when calculating the average.
+        /// For Angles that wrap, e.g., between -180 and +180, this algorithm takes the wrapping into account when calculating the average.
         /// </remarks>
         public static Angle Average(IEnumerable<Angle> source)
         {
-            double average = 0.0D;
-            double[] sourceAngles = source.Select(angle => angle.m_value).ToArray();
+            double[] sourceAngles = source.Select(angle => angle.ToDegrees()).ToArray();
+            return FromDegrees(Unwrap(sourceAngles).Average()).ToRange(-Math.PI, false);
+        }
+
+        private static double[] Unwrap(double[] sourceAngles)
+        {
+            double[] unwrappedAngles = new double[sourceAngles.Length];
 
             if (sourceAngles.Length > 0)
             {
                 double offset = 0.0D, dis0, dis1, dis2;
-                double[] unwrappedAngles = new double[sourceAngles.Length];
 
                 unwrappedAngles[0] = sourceAngles[0];
 
@@ -854,22 +872,9 @@ namespace GSF.Units
 
                     unwrappedAngles[i] = sourceAngles[i] + offset;
                 }
-
-                // Apply average to unwrapped angles
-                average = unwrappedAngles.Average();
-
-                // Re-wrap average angle
-                while (!(average <= 180.0D && average > -180.0D))
-                {
-                    if (average > 180.0D)
-                        average -= 360.0D;
-
-                    if (average <= -180.0D)
-                        average += 360.0D;
-                }
             }
 
-            return average;
+            return unwrappedAngles;
         }
 
         #endregion
