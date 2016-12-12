@@ -204,24 +204,9 @@ namespace GSF.PhasorProtocols
                 Value = GetCompositeValue(valueIndex)
             };
 
-            measurement.Metadata = measurement.Metadata.ChangeMeasurementValueFilter(GetMeasurementValueFilterFunction(valueIndex));
             measurement.StateFlags = (Parent.SynchronizationIsValid && measurement.Timestamp.Value != -1 ? MeasurementStateFlags.Normal : MeasurementStateFlags.BadTime) | (Parent.DataIsValid ? MeasurementStateFlags.Normal : MeasurementStateFlags.BadData);
 
             return measurement;
-        }
-
-        /// <summary>
-        /// Gets function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values.
-        /// </summary>
-        /// <param name="index">Index of composite value for which to retrieve its filter function.</param>
-        /// <returns>Function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values, if defined; otherwise, <c>null</c>.</returns>
-        public virtual MeasurementValueFilterFunction GetMeasurementValueFilterFunction(int index)
-        {
-            if (index < 0 || index > CompositeValueCount - 1)
-                throw new ArgumentOutOfRangeException(nameof(index), "Invalid composite index requested");
-
-            // All values assumed to be analog in nature unless derived class specifies otherwise
-            return Measurement.AverageValueFilter;
         }
 
         /// <summary>

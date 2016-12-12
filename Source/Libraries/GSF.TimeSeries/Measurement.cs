@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using GSF.Collections;
+using GSF.Units;
 
 namespace GSF.TimeSeries
 {
@@ -503,6 +504,19 @@ namespace GSF.TimeSeries
         public static double MajorityValueFilter(IEnumerable<IMeasurement> source)
         {
             return source.Select(m => m.Value).Majority();
+        }
+
+        /// <summary>
+        /// Calculates an average of the specified sequence of <see cref="IMeasurement"/> phase angle values.
+        /// </summary>
+        /// <param name="source">Sequence of <see cref="IMeasurement"/> values over which to run calculation.</param>
+        /// <returns>Average of the specified sequence of <see cref="IMeasurement"/> phase angle values.</returns>
+        /// <remarks>
+        /// Phase angles wrap, so this algorithm takes the wrapping into account when calculating the average.
+        /// </remarks>
+        public static double AverageAngleValueFilter(IEnumerable<IMeasurement> source)
+        {
+            return source.Select(m => (Angle)m.Value).Average();
         }
 
         #endregion

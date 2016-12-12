@@ -170,6 +170,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Units\Speed.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Units\Temperature.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Units\Time.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Units\UnitExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Units\Voltage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Units\Volume.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UnixTimeTag.cs" />

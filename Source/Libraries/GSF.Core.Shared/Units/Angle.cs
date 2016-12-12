@@ -64,8 +64,10 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using GSF.NumericalAnalysis;
 
@@ -816,6 +818,58 @@ namespace GSF.Units
         public static Angle FromAngularMil(double value)
         {
             return new Angle(value * AngularMilFactor);
+        }
+
+        /// <summary>
+        /// Calculates an average of the specified sequence of <see cref="Angle"/> values.
+        /// </summary>
+        /// <param name="source">Sequence of <see cref="Angle"/> values over which to run calculation.</param>
+        /// <returns>Average of the specified sequence of <see cref="Angle"/> values.</returns>
+        /// <remarks>
+        /// For Angles that wrap between -180 and +180, this algorithm takes the wrapping into account when calculating the average.
+        /// </remarks>
+        public static Angle Average(IEnumerable<Angle> source)
+        {
+            double average = 0.0D;
+            double[] sourceAngles = source.Select(angle => angle.m_value).ToArray();
+
+            if (sourceAngles.Length > 0)
+            {
+                double offset = 0.0D, dis0, dis1, dis2;
+                double[] unwrappedAngles = new double[sourceAngles.Length];
+
+                unwrappedAngles[0] = sourceAngles[0];
+
+                // Unwrap all source angles
+                for (int i = 1; i < sourceAngles.Length; i++)
+                {
+                    dis0 = Math.Abs(sourceAngles[i] + offset - unwrappedAngles[i - 1]);
+                    dis1 = Math.Abs(sourceAngles[i] + offset - unwrappedAngles[i - 1] + 360.0D);
+                    dis2 = Math.Abs(sourceAngles[i] + offset - unwrappedAngles[i - 1] - 360.0D);
+
+                    if (dis1 < dis0 && dis1 < dis2)
+                        offset = offset + 360.0D;
+                    else if (dis2 < dis0 && dis2 < dis1)
+                        offset = offset - 360.0D;
+
+                    unwrappedAngles[i] = sourceAngles[i] + offset;
+                }
+
+                // Apply average to unwrapped angles
+                average = unwrappedAngles.Average();
+
+                // Re-wrap average angle
+                while (!(average <= 180.0D && average > -180.0D))
+                {
+                    if (average > 180.0D)
+                        average -= 360.0D;
+
+                    if (average <= -180.0D)
+                        average += 360.0D;
+                }
+            }
+
+            return average;
         }
 
         #endregion

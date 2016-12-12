@@ -196,20 +196,6 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values.
-        /// </summary>
-        /// <param name="index">Index of composite value for which to retrieve its filter function.</param>
-        /// <returns>Majority value filter function since all values are digital in nature.</returns>
-        public override MeasurementValueFilterFunction GetMeasurementValueFilterFunction(int index)
-        {
-            if (index != 0)
-                throw new ArgumentOutOfRangeException(nameof(index), "Invalid composite index requested");
-
-            // Digital values shouldn't be averaged, so a majority value filter is applied when downsampling
-            return Measurement.MajorityValueFilter;
-        }
-
-        /// <summary>
         /// Parses the binary body image.
         /// </summary>
         /// <param name="buffer">Binary image to parse.</param>

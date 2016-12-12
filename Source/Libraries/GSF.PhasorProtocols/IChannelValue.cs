@@ -85,12 +85,5 @@ namespace GSF.PhasorProtocols
         /// <param name="index">Index of composite value to retrieve.</param>
         /// <returns>A <see cref="double"/> representing the composite value.</returns>
         double GetCompositeValue(int index);
-
-        /// <summary>
-        /// Gets function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values.
-        /// </summary>
-        /// <param name="index">Index of composite value for which to retrieve its filter function.</param>
-        /// <returns>Function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values, if defined; otherwise, <c>null</c>.</returns>
-        MeasurementValueFilterFunction GetMeasurementValueFilterFunction(int index);
     }
 }

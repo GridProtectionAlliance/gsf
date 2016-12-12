@@ -111,16 +111,17 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Updates the values of the <see cref="Metadata"/>.
         /// </summary>
-        /// <param name="tagName">Gets or sets the text based tag name</param>
-        /// <param name="adder">Defines an offset to add to the <see cref="IMeasurement"/> value</param>
-        /// <param name="multiplier">Defines a multiplicative offset to apply to the <see cref="IMeasurement"/> value</param>
-        public void SetMeasurementMetadata(string tagName, double adder, double multiplier)
+        /// <param name="tagName">Gets or sets the text based tag name.</param>
+        /// <param name="adder">Defines an offset to add to the <see cref="IMeasurement"/> value.</param>
+        /// <param name="multiplier">Defines a multiplicative offset to apply to the <see cref="IMeasurement"/> value.</param>
+        /// <param name="valueFilter">Defines the <see cref="MeasurementValueFilterFunction"/> to use when downsampling this type of <see cref="IMeasurement"/> value.</param>
+        public void SetMeasurementMetadata(string tagName, double adder, double multiplier, MeasurementValueFilterFunction valueFilter)
         {
             if (this == Undefined)
                 throw new NotSupportedException("Cannot set data source information for an undefined measurement.");
 
-            if (m_metadata.TagName != tagName || m_metadata.Adder != adder || m_metadata.Multiplier != multiplier)
-                m_metadata = new MeasurementMetadata(this, tagName, adder, multiplier, null);
+            if (m_metadata.TagName != tagName || m_metadata.Adder != adder || m_metadata.Multiplier != multiplier || m_metadata.MeasurementValueFilter != valueFilter)
+                m_metadata = new MeasurementMetadata(this, tagName, adder, multiplier, valueFilter);
         }
 
         /// <summary>

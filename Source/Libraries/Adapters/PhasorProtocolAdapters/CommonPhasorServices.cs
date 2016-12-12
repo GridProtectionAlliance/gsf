@@ -1310,15 +1310,14 @@ namespace PhasorProtocolAdapters
         private static void EstablishDefaultMeasurementKeyCache(AdoDataConnection database, Action<string> statusMessage, Action<Exception> processException)
         {
             MeasurementKey key;
-            string keyID;
-            string pointTag;
-            double adder;
-            double multiplier;
+            string keyID, pointTag, signalType;
+            double adder, multiplier;
+            MeasurementValueFilterFunction filterFunction;
 
             statusMessage("Establishing default measurement key cache...");
 
             // Establish default measurement key cache
-            foreach (DataRow measurement in database.Connection.RetrieveData(database.AdapterType, "SELECT ID, SignalID, PointTag, Adder, Multiplier FROM ActiveMeasurement").Rows)
+            foreach (DataRow measurement in database.Connection.RetrieveData(database.AdapterType, "SELECT ID, SignalID, SignalType, PointTag, Adder, Multiplier FROM ActiveMeasurement").Rows)
             {
                 keyID = measurement["ID"].ToNonNullString();
 
@@ -1336,7 +1335,26 @@ namespace PhasorProtocolAdapters
                     if (!double.TryParse(measurement["Multiplier"].ToNonNullString(), out multiplier))
                         multiplier = 1.0D;
 
-                    key.SetMeasurementMetadata(pointTag, adder, multiplier);
+                    signalType = measurement["SignalType"].ToNonNullString().ToUpperInvariant();
+
+                    // Define default filter function
+                    switch (signalType)
+                    {
+                        case "VPHA":
+                        case "IPHA":
+                            filterFunction = Measurement.AverageAngleValueFilter;
+                            break;
+                        case "DIGI":
+                        case "FLAG":
+                        case "QUAL":
+                            filterFunction = Measurement.MajorityValueFilter;
+                            break;
+                        default:
+                            filterFunction = Measurement.AverageValueFilter;
+                            break;
+                    }
+                    
+                    key.SetMeasurementMetadata(pointTag, adder, multiplier, filterFunction);
                 }
             }
         }

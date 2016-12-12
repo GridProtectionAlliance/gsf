@@ -370,27 +370,6 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values.
-        /// </summary>
-        /// <param name="index">Index of composite value for which to retrieve its filter function.</param>
-        /// <returns>Function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values.</returns>
-        /// <remarks>
-        /// Phase angles averaging filter takes angle wrapping into account, magnitudes apply a standard average filter.
-        /// </remarks>
-        public override MeasurementValueFilterFunction GetMeasurementValueFilterFunction(int index)
-        {
-            switch (index)
-            {
-                case (int)CompositePhasorValue.Angle:
-                    return AverageAngleValueFilter;
-                case (int)CompositePhasorValue.Magnitude:
-                    return Measurement.AverageValueFilter;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(index), "Invalid composite index requested");
-            }
-        }
-
-        /// <summary>
         /// Creates a new <see cref="IMeasurement"/> value for specified composite value for this <see cref="PhasorValueBase"/>.
         /// </summary>
         /// <param name="valueIndex">Composite value index for which to derive new <see cref="IMeasurement"/> value.</param>
@@ -532,58 +511,6 @@ namespace GSF.PhasorProtocols
                 throw new ArgumentNullException(nameof(current), "No current specified");
 
             return Phasor.CalculateReactivePower(voltage.Phasor, current.Phasor);
-        }
-
-        /// <summary>
-        /// Calculates an average of the specified sequence of <see cref="IMeasurement"/> phase angle values.
-        /// </summary>
-        /// <param name="source">Sequence of <see cref="IMeasurement"/> values over which to run calculation.</param>
-        /// <returns>Average of the specified sequence of <see cref="IMeasurement"/> phase angle values.</returns>
-        /// <remarks>
-        /// Phase angles wrap, so this algorithm takes the wrapping into account when calculating the average.
-        /// </remarks>
-        public static double AverageAngleValueFilter(IEnumerable<IMeasurement> source)
-        {
-            double average = 0.0D;
-            double[] sourceAngles = source.Select(m => m.Value).ToArray();
-
-            if (sourceAngles.Length > 0)
-            {
-                double offset = 0.0D, dis0, dis1, dis2;
-                double[] unwrappedAngles = new double[sourceAngles.Length];
-
-                unwrappedAngles[0] = sourceAngles[0];
-
-                // Unwrap all source angles
-                for (int i = 1; i < sourceAngles.Length; i++)
-                {
-                    dis0 = Math.Abs(sourceAngles[i] + offset - unwrappedAngles[i - 1]);
-                    dis1 = Math.Abs(sourceAngles[i] + offset - unwrappedAngles[i - 1] + 360.0D);
-                    dis2 = Math.Abs(sourceAngles[i] + offset - unwrappedAngles[i - 1] - 360.0D);
-
-                    if (dis1 < dis0 && dis1 < dis2)
-                        offset = offset + 360.0D;
-                    else if (dis2 < dis0 && dis2 < dis1)
-                        offset = offset - 360.0D;
-
-                    unwrappedAngles[i] = sourceAngles[i] + offset;
-                }
-
-                // Apply average to unwrapped angles
-                average = unwrappedAngles.Average();
-
-                // Re-wrap average angle
-                while (!(average <= 180.0D && average > -180.0D))
-                {
-                    if (average > 180.0D)
-                        average -= 360.0D;
-
-                    if (average <= -180.0D)
-                        average += 360.0D;
-                }
-            }
-
-            return average;
         }
 
         #endregion
