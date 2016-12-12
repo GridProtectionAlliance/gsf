@@ -1335,7 +1335,7 @@ namespace PhasorProtocolAdapters
                     if (!double.TryParse(measurement["Multiplier"].ToNonNullString(), out multiplier))
                         multiplier = 1.0D;
 
-                    signalType = measurement["SignalType"].ToNonNullString().ToUpperInvariant();
+                    signalType = measurement["SignalType"].ToNonNullString().ToUpperInvariant().Trim();
 
                     // Define default filter function
                     switch (signalType)
