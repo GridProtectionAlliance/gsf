@@ -39,6 +39,7 @@ using System.Windows.Forms;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using GSF.Data;
+using GSF.ErrorManagement;
 using GSF.Identity;
 using GSF.Interop;
 using GSF.Security.Cryptography;
@@ -202,7 +203,7 @@ namespace GSF.InstallerActions
                     string action = (mode == "WRITE") ? "update" : "read";
                     string message = $"Failed to {action} XML file: {ex.Message}";
                     LogInstallMessage(session, InstallMessage.Error, message);
-                    LogInstallMessage(session, EventLogEntryType.Error, message);
+                    LogInstallMessage(session, EventLogEntryType.Error, ex);
                     LogInstallMessage(session, $"FilePath = {filePath}");
                     LogInstallMessage(session, $"PropertyMappings = {mappings}");
                     return ActionResult.Failure;
@@ -349,11 +350,11 @@ namespace GSF.InstallerActions
                 AddPrivileges(serviceAccount, "SeServiceLogonRight");
                 LogInstallMessage(session, $"Done adding {serviceAccount} user to {groupName} group.");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 string message = $"Failed to add {serviceAccount} user to {groupName} group!";
                 LogInstallMessage(session, InstallMessage.Error, message);
-                LogInstallMessage(session, EventLogEntryType.Error, message);
+                LogInstallMessage(session, EventLogEntryType.Error, ex);
             }
 
             // Attempt to grant rights to start and stop the service
@@ -375,7 +376,7 @@ namespace GSF.InstallerActions
                     process.WaitForExit();
 
                     if (process.ExitCode != 0)
-                        throw new Exception();
+                        throw new Exception($"Non-zero exit code ({process.ExitCode}) returned from 'sc sdshow {serviceName}'.");
                 }
 
                 int index = acl.IndexOf("S:");
@@ -391,14 +392,14 @@ namespace GSF.InstallerActions
                     process.WaitForExit();
 
                     if (process.ExitCode != 0)
-                        throw new Exception();
+                        throw new Exception($"Non-zero exit code ({process.ExitCode}) returned from 'sc sdset {serviceName} \"{acl}\"'.");
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 string message = $"Failed to grant {serviceAccount} rights to restart the service!";
                 LogInstallMessage(session, InstallMessage.Error, message);
-                LogInstallMessage(session, EventLogEntryType.Error, message);
+                LogInstallMessage(session, EventLogEntryType.Error, ex);
             }
 
             if (!string.IsNullOrEmpty(servicePorts))
@@ -575,10 +576,8 @@ namespace GSF.InstallerActions
             catch (Exception ex)
             {
                 // Log the error and return failure code
-                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Failed to connect to the database: {0}.", ex.Message));
-                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Connection string: {0}", connectionString));
-                LogInstallMessage(session, EventLogEntryType.Error, string.Format("Data provider string: {0}", dataProviderString));
-
+                LogInstallMessage(session, EventLogEntryType.Error, ex);
+                LogInstallMessage(session, EventLogEntryType.Error, $"Connection string: {connectionString}{Environment.NewLine}Data provider string: {dataProviderString}");
                 session["DATABASECONNECTED"] = null;
             }
 
@@ -619,10 +618,13 @@ namespace GSF.InstallerActions
                 // Log the error and return failure code
                 string message = $"Failed to execute database query: {ex.Message}.";
                 LogInstallMessage(session, InstallMessage.Error, message);
-                LogInstallMessage(session, EventLogEntryType.Error, message);
-                LogInstallMessage(session, InstallMessage.Error, $"Database Query: {query}");
-                LogInstallMessage(session, InstallMessage.Error, $"Connection string: {connectionString}");
-                LogInstallMessage(session, InstallMessage.Error, $"Data provider string: {dataProviderString}");
+                LogInstallMessage(session, EventLogEntryType.Error, ex);
+
+                LogInstallMessage(session, InstallMessage.Error,
+                    $"Database Query: {query}{Environment.NewLine}" +
+                    $"Connection string: {connectionString}{Environment.NewLine}" +
+                    $"Data provider string: {dataProviderString}");
+
                 return ActionResult.Failure;
             }
 
@@ -663,10 +665,13 @@ namespace GSF.InstallerActions
                 // Log the error and return failure code
                 string message = $"Failed to execute database script: {ex.Message}.";
                 LogInstallMessage(session, InstallMessage.Error, message);
-                LogInstallMessage(session, EventLogEntryType.Error, message);
-                LogInstallMessage(session, InstallMessage.Error, $"Database Script: {scriptPath}");
-                LogInstallMessage(session, InstallMessage.Error, $"Connection string: {connectionString}");
-                LogInstallMessage(session, InstallMessage.Error, $"Data provider string: {dataProviderString}");
+                LogInstallMessage(session, EventLogEntryType.Error, ex);
+
+                LogInstallMessage(session, InstallMessage.Error,
+                    $"Database Script: {scriptPath}{Environment.NewLine}" +
+                    $"Connection string: {connectionString}{Environment.NewLine}" +
+                    $"Data provider string: {dataProviderString}");
+
                 return ActionResult.Failure;
             }
 
@@ -741,7 +746,7 @@ namespace GSF.InstallerActions
                 // Log the error and return failure code
                 string message = $"Failed to start process: {ex.Message}";
                 LogInstallMessage(session, InstallMessage.Error, message);
-                LogInstallMessage(session, EventLogEntryType.Error, message);
+                LogInstallMessage(session, EventLogEntryType.Error, ex);
                 return ActionResult.Failure;
             }
 
@@ -849,6 +854,12 @@ namespace GSF.InstallerActions
             {
                 LogInstallMessage(session, InstallMessage.Error, ex.ToString());
             }
+        }
+
+        // Method to log exceptions to event log
+        private static void LogInstallMessage(Session session, EventLogEntryType messageType, Exception ex)
+        {
+            LogInstallMessage(session, messageType, ErrorLogger.GetExceptionInfo(ex, false));
         }
 
         #region [ Interop ]
@@ -1059,7 +1070,7 @@ namespace GSF.InstallerActions
             {
                 string message = "GrantShutdownPrivilege: " + ex.Message;
                 LogInstallMessage(session, InstallMessage.Error, message);
-                LogInstallMessage(session, EventLogEntryType.Error, message);
+                LogInstallMessage(session, EventLogEntryType.Error, ex);
             }
             finally
             {
