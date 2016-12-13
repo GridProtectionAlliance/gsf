@@ -39,7 +39,6 @@ using System.Windows.Forms;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using GSF.Data;
-using GSF.ErrorManagement;
 using GSF.Identity;
 using GSF.Interop;
 using GSF.Security.Cryptography;
@@ -859,7 +858,7 @@ namespace GSF.InstallerActions
         // Method to log exceptions to event log
         private static void LogInstallMessage(Session session, EventLogEntryType messageType, Exception ex)
         {
-            LogInstallMessage(session, messageType, ErrorLogger.GetExceptionInfo(ex, false));
+            LogInstallMessage(session, messageType, ex.ToString());
         }
 
         #region [ Interop ]
