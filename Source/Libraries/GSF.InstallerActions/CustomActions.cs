@@ -1033,7 +1033,7 @@ namespace GSF.InstallerActions
         }
 
         // This code mimics the MSDN defined way to adjust privilege for shutdown
-        // http://msdn.microsoft.com/library/default.asp?url=/library/en-us/sysinfo/base/shutting_down.asp
+        // https://msdn.microsoft.com/en-us/library/windows/desktop/aa376871(v=vs.85).aspx
         private static bool GrantShutdownPrivilege(Session session)
         {
             bool grantSuccess = false;
