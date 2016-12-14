@@ -530,6 +530,7 @@ namespace GSF.TimeSeries.Transport
         private long m_lastParsingExceptionTime;
         private int m_allowedParsingExceptions;
         private Ticks m_parsingExceptionWindow;
+        private bool m_supportsTemporalProcessing;
         //private Ticks m_lastMeasurementCheck;
         //private Ticks m_minimumMissingMeasurementThreshold = 5;
         //private double m_transmissionDelayTimeAdjustment = 5.0;
@@ -989,11 +990,23 @@ namespace GSF.TimeSeries.Transport
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// Although the data subscriber provisions support for temporal processing by receiving historical data from a remote source,
         /// the adapter opens sockets and does not need to be engaged within an actual temporal <see cref="IaonSession"/>, therefore
-        /// this method returns <c>false</c> to make sure the adapter doesn't get instantiated within a temporal session.
+        /// this method normally returns <c>false</c> to make sure the adapter doesn't get instantiated within a temporal session.
+        /// </para>
+        /// <para>
+        /// Setting this to <c>true</c> means that a subscriber will be initialized within a temporal session to provide historical
+        /// data from a remote source - this should only be enabled in cases where (1) there is no locally defined, e.g., in-process,
+        /// historian that can already provide historical data for temporal sessions, and (2) a remote subscriber should be allowed
+        /// to proxy temporal requests, e.g., those requested for data gap recovery, to an up-stream subscription. This is useful in
+        /// cases where a primary data subscriber that has data gap recovery enabled can also allow a remote subscription to proxy in
+        /// data gap recovery requests. It is recommended that remote data gap recovery request parameters be (1) either slightly
+        /// looser than those of local system to reduce the possibility of duplicated recovery sessions for the same data loss, or
+        /// (2) only enabled in the end-most system that most needs the recovered data, like a historian.
+        /// </para>
         /// </remarks>
-        public override bool SupportsTemporalProcessing => false;
+        public override bool SupportsTemporalProcessing => m_supportsTemporalProcessing;
 
         /// <summary>
         /// Gets or sets the desired processing interval, in milliseconds, for the adapter.
@@ -1452,6 +1465,8 @@ namespace GSF.TimeSeries.Transport
             // Apply gateway compression mode to operational mode flags
             if (settings.TryGetValue("compressionModes", out setting) && Enum.TryParse(setting, true, out compressionModes))
                 CompressionModes = compressionModes;
+
+            m_supportsTemporalProcessing = settings.TryGetValue("supportsTemporalProcessing", out setting) && setting.ParseBoolean();
 
             if (settings.TryGetValue("useZeroMQChannel", out setting))
                 m_useZeroMQChannel = setting.ParseBoolean();
