@@ -910,96 +910,101 @@ namespace GSF.IO
 
         private void LogFile_FileFull(object sender, EventArgs e)
         {
-            // Signals that the "file full operation" is in progress.
-            m_operationWaitHandle.Reset();
-
-            switch (m_fileFullOperation)
+            try
             {
-                case LogFileFullOperation.Truncate:
-                    // Deletes the existing log entries, and makes way from new ones.
-                    try
-                    {
-                        Close(false);
-                        File.Delete(m_fileName);
-                    }
-                    finally
-                    {
-                        Open();
-                    }
-                    break;
-                case LogFileFullOperation.Rollover:
-                    // Rolls over to a new log file, and keeps the current file for history.
-                    try
-                    {
-                        string directoryName = FilePath.GetDirectoryName(m_fileName);
-                        string rootFileName = FilePath.GetFileNameWithoutExtension(m_fileName);
+                // Signals that the "file full operation" is in progress.
+                m_operationWaitHandle.Reset();
 
-                        // We want this to run only once, when system starts.
-                        if (m_savedFilesWithTime.Count < 1)
+                switch (m_fileFullOperation)
+                {
+                    case LogFileFullOperation.Truncate:
+                        // Deletes the existing log entries, and makes way from new ones.
+                        try
                         {
-                            string expression = string.Format("{0}*", rootFileName);
-                            string[] files = Directory.GetFiles(directoryName, expression);
+                            Close(false);
+                            File.Delete(m_fileName);
+                        }
+                        finally
+                        {
+                            Open();
+                        }
+                        break;
+                    case LogFileFullOperation.Rollover:
+                        // Rolls over to a new log file, and keeps the current file for history.
+                        try
+                        {
+                            string directoryName = FilePath.GetDirectoryName(m_fileName);
+                            string rootFileName = FilePath.GetFileNameWithoutExtension(m_fileName);
 
-                            foreach (string prestartLogFile in files)
+                            // We want this to run only once, when system starts.
+                            if (m_savedFilesWithTime.Count < 1)
                             {
-                                if (!m_savedFilesWithTime.ContainsKey(File.GetLastWriteTime(prestartLogFile)))
-                                    m_savedFilesWithTime.Add(File.GetLastWriteTime(prestartLogFile), prestartLogFile);
+                                string expression = string.Format("{0}*", rootFileName);
+                                string[] files = Directory.GetFiles(directoryName, expression);
+
+                                foreach (string prestartLogFile in files)
+                                {
+                                    if (!m_savedFilesWithTime.ContainsKey(File.GetLastWriteTime(prestartLogFile)))
+                                        m_savedFilesWithTime.Add(File.GetLastWriteTime(prestartLogFile), prestartLogFile);
+                                }
+                            }
+
+                            Close(false);
+
+                            DateTime creationTime = File.GetCreationTime(m_fileName);
+                            DateTime lastWriteTime = File.GetLastWriteTime(m_fileName);
+
+                            List<DateTime> savedTimes;
+                            string destinationfile;
+                            bool fileExists = false;
+
+                            // In cases where logs are filling very fast you may encounter situations
+                            // where the log file names could overlap. In order to help with this
+                            // case dated file names include milliseconds and verify file uniqueness
+                            do
+                            {
+                                // Keep adding milliseconds to last write time until file name is unique
+                                if (fileExists)
+                                    lastWriteTime = lastWriteTime.AddMilliseconds(1.0D);
+
+                                destinationfile = Path.Combine(directoryName, rootFileName) + "_" +
+                                    creationTime.ToString("yyyy-MM-dd HH!mm!ss!fff") + "_to_" +
+                                    lastWriteTime.ToString("yyyy-MM-dd HH!mm!ss!fff") + FilePath.GetExtension(m_fileName);
+
+                                fileExists = File.Exists(destinationfile);
+                            }
+                            while (fileExists);
+
+                            File.Move(m_fileName, destinationfile);
+
+                            m_savedFilesWithTime.Add(lastWriteTime, destinationfile);
+
+                            savedTimes = m_savedFilesWithTime.Keys.ToList();
+                            savedTimes.Sort();
+
+                            // Save at least one file even if duration is 0 or negative.
+                            for (int i = 0; i < savedTimes.Count - 1; i++)
+                            {
+                                // True only when time difference is reached.
+                                if (DateTime.Compare(DateTime.Now.AddHours(-m_logFilesDuration), savedTimes[i]) > 0)
+                                {
+                                    File.Delete(m_savedFilesWithTime[savedTimes[i]]);
+                                    m_savedFilesWithTime.Remove(savedTimes[i]);
+                                }
                             }
                         }
-
-                        Close(false);
-
-                        DateTime creationTime = File.GetCreationTime(m_fileName);
-                        DateTime lastWriteTime = File.GetLastWriteTime(m_fileName);
-
-                        List<DateTime> savedTimes;
-                        string destinationfile;
-                        bool fileExists = false;
-
-                        // In cases where logs are filling very fast you may encounter situations
-                        // where the log file names could overlap. In order to help with this
-                        // case dated file names include milliseconds and verify file uniqueness
-                        do
+                        finally
                         {
-                            // Keep adding milliseconds to last write time until file name is unique
-                            if (fileExists)
-                                lastWriteTime = lastWriteTime.AddMilliseconds(1.0D);
-
-                            destinationfile = Path.Combine(directoryName, rootFileName) + "_" +
-                                creationTime.ToString("yyyy-MM-dd HH!mm!ss!fff") + "_to_" +
-                                lastWriteTime.ToString("yyyy-MM-dd HH!mm!ss!fff") + FilePath.GetExtension(m_fileName);
-
-                            fileExists = File.Exists(destinationfile);
+                            Open();
                         }
-                        while (fileExists);
-
-                        File.Move(m_fileName, destinationfile);
-
-                        m_savedFilesWithTime.Add(lastWriteTime, destinationfile);
-
-                        savedTimes = m_savedFilesWithTime.Keys.ToList();
-                        savedTimes.Sort();
-
-                        // Save at least one file even if duration is 0 or negative.
-                        for (int i = 0; i < savedTimes.Count - 1; i++)
-                        {
-                            // True only when time difference is reached.
-                            if (DateTime.Compare(DateTime.Now.AddHours(-m_logFilesDuration), savedTimes[i]) > 0)
-                            {
-                                File.Delete(m_savedFilesWithTime[savedTimes[i]]);
-                                m_savedFilesWithTime.Remove(savedTimes[i]);
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        Open();
-                    }
-                    break;
+                        break;
+                }
             }
-
-            // Signals that the "file full operation" is complete.
-            m_operationWaitHandle.Set();
+            finally
+            {
+                // Signals that the "file full operation" is complete.
+                m_operationWaitHandle.Set();
+            }
         }
 
         private void ProcessExceptionHandler(object sender, EventArgs<Exception> e)
