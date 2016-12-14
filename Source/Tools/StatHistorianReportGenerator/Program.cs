@@ -24,7 +24,9 @@
 //******************************************************************************************************
 
 using System;
+using System.Globalization;
 using System.IO;
+using System.Threading;
 using System.Windows.Forms;
 using GSF.Console;
 using GSF.IO;
@@ -43,6 +45,20 @@ namespace StatHistorianReportGenerator
         {
             Arguments args;
             string arg;
+
+            try
+            {
+                // Report.NET is only capable of using the standard AFM fonts that are expected to be supported by all PDF readers.
+                // As a result, high-order Unicode characters that may be produced with long date-time formats when using non-US
+                // cultures can cause application to fail - as a result, culture is set to invariant to reduce failure risk. Note
+                // that risk will not be completely eliminated, e.g., system configured with a company name using a bad character.
+                Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+                Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
+            }
+            catch
+            {
+                // Nothing to do at the moment if this fails - need logging!
+            }
 
             if (Environment.GetCommandLineArgs().Length > 1)
             {
