@@ -2501,10 +2501,14 @@ namespace GSF.ServiceProcess
 
         private void StatusLog_LogException(object sender, EventArgs<Exception> e)
         {
+            const int LowPriority = 1;
+
             // We'll let the connected clients know that we encountered an exception while logging the status update.
-            m_logStatusUpdates = false;
+            m_statusUpdateThread.Push(LowPriority, () => m_logStatusUpdates = false);
             UpdateStatus(UpdateType.Alarm, "Error occurred while logging status update - {0}\r\n\r\n", e.Argument.Message);
-            m_logStatusUpdates = true;
+            m_statusUpdateThread.Push(LowPriority, () => m_logStatusUpdates = true);
+
+            LogException(e.Argument);
         }
 
         private void ErrorLogger_LoggingException(object sender, EventArgs<Exception> e)
