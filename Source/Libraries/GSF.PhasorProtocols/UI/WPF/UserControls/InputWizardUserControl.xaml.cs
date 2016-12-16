@@ -178,9 +178,29 @@ namespace GSF.PhasorProtocols.UI.UserControls
             }
             else if (m_dataContext.StepThreeExpanded)
             {
-                m_dataContext.SavePDC();
-                m_dataContext.SaveConfiguration();
+                if (ValidatePMUNames())
+                {
+                    m_dataContext.SavePDC();
+                    m_dataContext.SaveConfiguration();
+                }
+                else
+                {
+                    m_dataContext.Popup($"One of the device acronyms is set to the PDC acronym \"{m_dataContext.PdcAcronym}\", device cannot be saved.", "Validation Error", MessageBoxImage.Error);
+                }
             }
+        }
+
+        private bool ValidatePMUNames()
+        {
+            string pdcAcronym = m_dataContext.PdcAcronym.Trim();
+
+            foreach (InputWizardDevice device in m_dataContext.ItemsSource)
+            {
+                if (device.Acronym.Trim().Equals(pdcAcronym, StringComparison.OrdinalIgnoreCase))
+                    return false;
+            }
+
+            return true;
         }
 
         private void ExpanderStep1_Expanded(object sender, RoutedEventArgs e)
