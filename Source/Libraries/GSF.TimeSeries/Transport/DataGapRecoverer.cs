@@ -228,6 +228,9 @@ namespace GSF.TimeSeries.Transport
             set
             {
                 m_dataSource = value;
+
+                if ((object)m_temporalSubscription != null)
+                    m_temporalSubscription.DataSource = m_dataSource;
             }
         }
 

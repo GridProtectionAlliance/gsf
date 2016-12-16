@@ -157,7 +157,16 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Represents an undefined measurement key.
         /// </summary>
-        public static readonly MeasurementKey Undefined = CreateUndefinedMeasurementKey();
+        public static readonly MeasurementKey Undefined;
+
+        // Static Constructor
+        static MeasurementKey()
+        {
+            // Order of operations is critical here since MeasurementKey and MeasurementMetadata have a circular reference
+            Undefined = CreateUndefinedMeasurementKey();
+            MeasurementMetadata.CreateUndefinedMeasurementMetadata();
+            Undefined.m_metadata = MeasurementMetadata.Undefined;
+        }
 
         // Static Methods
 
@@ -505,7 +514,7 @@ namespace GSF.TimeSeries
         private static MeasurementKey CreateUndefinedMeasurementKey()
         {
             MeasurementKey key = new MeasurementKey(Guid.Empty, uint.MaxValue, "__");
-            //Note. No lock on SyncEdit is required since this method is only called by the static constructor.
+            // Lock on s_syncEdits is not required since method is only called by the static constructor
             s_keyCache.GetOrAdd(key.Source, kcf => new ConcurrentDictionary<uint, MeasurementKey>())[uint.MaxValue] = key;
             return key;
         }

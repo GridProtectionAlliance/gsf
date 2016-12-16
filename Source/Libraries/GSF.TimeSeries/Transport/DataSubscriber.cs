@@ -1129,6 +1129,28 @@ namespace GSF.TimeSeries.Transport
                     // Updating subscription will restart data stream monitor upon successful resubscribe
                     SubscribeToOutputMeasurements(true);
                 }
+
+                if ((object)m_dataGapRecoverer != null)
+                    m_dataGapRecoverer.DataSource = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets output measurements that the <see cref="AdapterBase"/> will produce, if any.
+        /// </summary>
+        public override IMeasurement[] OutputMeasurements
+        {
+            get
+            {
+                return base.OutputMeasurements;
+            }
+
+            set
+            {
+                base.OutputMeasurements = value;
+
+                if ((object)m_dataGapRecoverer != null)
+                    m_dataGapRecoverer.FilterExpression = this.OutputMeasurementKeys().Select(key => key.SignalID.ToString()).ToDelimitedString(';');
             }
         }
 
