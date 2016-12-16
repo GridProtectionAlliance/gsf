@@ -856,8 +856,8 @@ namespace GSF.TimeSeries.Transport
                     OnStatusMessage(MessageLevel.Warning, $"Temporal session was disconnected during recovery operation. Data recovery for adjusted period \"{dataGap.Start.ToString(OutageLog.DateTimeFormat, CultureInfo.InvariantCulture)}\" - \"{m_subscriptionInfo.StopTime}\" will be re-attempted.");
             }
 
-            // Disconnect temporal session
-            m_temporalSubscription.Stop();
+            // Unsubscribe from temporal session
+            m_temporalSubscription.Unsubscribe();
 
             // Disable data monitor            
             m_dataStreamMonitor.Enabled = false;
