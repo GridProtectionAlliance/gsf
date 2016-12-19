@@ -409,6 +409,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Images", "Images", "{ADC095
 		Documentation\Images\GSF Poster (4x3).png = Documentation\Images\GSF Poster (4x3).png
 		Documentation\Images\GSF Poster (4x3).pptx = Documentation\Images\GSF Poster (4x3).pptx
 		Documentation\Images\GSF Poster (small).png = Documentation\Images\GSF Poster (small).png
+		Documentation\Images\GSF64x64.png = Documentation\Images\GSF64x64.png
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Extensions", "Extensions", "{4E8D127B-DBEE-4B5F-9620-5ADC4E3C6EB3}"

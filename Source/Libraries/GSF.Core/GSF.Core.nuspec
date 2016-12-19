@@ -36,9 +36,9 @@
     <version>$version$</version>
     <authors>$author$</authors>
     <description>$description$</description>
-    <projectUrl>https://gsf.codeplex.com/</projectUrl>
-    <licenseUrl>http://www.opensource.org/licenses/MIT</licenseUrl>
-    <iconUrl>https://s3.amazonaws.com/cloud.ohloh.net/attachments/70294/GSF64x64_med.png</iconUrl>
+    <projectUrl>https://github.com/GridProtectionAlliance/gsf</projectUrl>
+    <licenseUrl>https://github.com/GridProtectionAlliance/gsf/blob/master/LICENSE</licenseUrl>
+    <iconUrl>https://raw.githubusercontent.com/GridProtectionAlliance/gsf/master/Source/Documentation/Images/GSF64x64.png</iconUrl>
     <tags>Core Energy Utility Adapters Functions Extensions Queues Threads Serialization Units Checksums Endianness Bits Words Diagnostics LDAP ActiveDirectory Configuration User Account ADO Database Abstraction Task Scheduling</tags>
   </metadata>
 </package>

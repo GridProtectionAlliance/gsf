@@ -34,9 +34,9 @@
     <version>1.0.0.0</version>
     <authors>Grid Protection Alliance</authors>
     <description>Enables role-based security using Grid Solutions Framework security layer in an ASP.NET Model View Controller (MVC) framework based application.</description>
-    <projectUrl>https://gsf.codeplex.com/</projectUrl>
-    <licenseUrl>http://www.opensource.org/licenses/MIT</licenseUrl>
-    <iconUrl>https://s3.amazonaws.com/cloud.ohloh.net/attachments/70294/GSF64x64_med.png</iconUrl>
+    <projectUrl>https://github.com/GridProtectionAlliance/gsf</projectUrl>
+    <licenseUrl>https://github.com/GridProtectionAlliance/gsf/blob/master/LICENSE</licenseUrl>
+    <iconUrl>https://raw.githubusercontent.com/GridProtectionAlliance/gsf/master/Source/Documentation/Images/GSF64x64.png</iconUrl>
     <tags>Web MVC Model View Controller Application Security</tags>
     <dependencies>
       <dependency id="WebActivator" version="" />
