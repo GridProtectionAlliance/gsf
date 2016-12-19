@@ -21,6 +21,9 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Runtime.CompilerServices;
+
 namespace GSF.Data.Model
 {
     /// <summary>
@@ -71,5 +74,82 @@ namespace GSF.Data.Model
         }
 
         #endregion
+
+        #region [ Operators ]
+
+        /// <summary>
+        /// Combines two record restrictions with an AND condition.
+        /// </summary>
+        /// <param name="left"><see cref="RecordRestriction"/> left operand.</param>
+        /// <param name="right"><see cref="RecordRestriction"/> right operand.</param>
+        /// <returns>New combined record restriction.</returns>
+        /// <exception cref="ArgumentNullException">Both record restriction parameters are <c>null</c>.</exception>
+        /// <remarks>
+        /// If one parameter is <c>null</c> and the other parameter is not, the non-null parameter will be returned.
+        /// </remarks>
+        public static RecordRestriction operator +(RecordRestriction left, RecordRestriction right)
+        {
+            return And(left, right);
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        /// <summary>
+        /// Combines two record restrictions with an AND condition.
+        /// </summary>
+        /// <param name="left">Left operand.</param>
+        /// <param name="right">Right operand.</param>
+        /// <returns>New combined record restriction.</returns>
+        /// <exception cref="ArgumentNullException">Both record restriction parameters are <c>null</c>.</exception>
+        /// <remarks>
+        /// If one parameter is <c>null</c> and the other parameter is not, the non-null parameter will be returned.
+        /// </remarks>
+        public static RecordRestriction And(RecordRestriction left, RecordRestriction right)
+        {
+            return Combine(left, right, "AND");
+        }
+
+        /// <summary>
+        /// Combines two record restrictions with an OR condition.
+        /// </summary>
+        /// <param name="left">Left operand.</param>
+        /// <param name="right">Right operand.</param>
+        /// <returns>New combined record restriction.</returns>
+        /// <exception cref="ArgumentNullException">Both record restriction parameters are <c>null</c>.</exception>
+        /// <remarks>
+        /// If one parameter is <c>null</c> and the other parameter is not, the non-null parameter will be returned.
+        /// </remarks>
+        public static RecordRestriction Or(RecordRestriction left, RecordRestriction right)
+        {
+            return Combine(left, right, "OR");
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static RecordRestriction Combine(RecordRestriction left, RecordRestriction right, string operation)
+        {
+            if ((object)left == null && (object)right == null)
+                throw new ArgumentNullException(nameof(left), "Both record restriction parameters are null - cannot combine");
+
+            if ((object)left == null)
+                return right;
+
+            if ((object)right == null)
+                return left;
+
+            object[] parameters = left.Parameters.Combine(right.Parameters);
+            int leftLength = left.Parameters.Length;
+            int rightLength = right.Parameters.Length;
+
+            for (int i = rightLength - 1; i >= 0; i--)
+                right.FilterExpression = right.FilterExpression.Replace($"{{{i}}}", $"{{{leftLength + i}}}");
+
+            return new RecordRestriction($"({left.FilterExpression}) {operation} ({right.FilterExpression})", parameters);
+        }
     }
+
+    #endregion
 }
