@@ -111,7 +111,7 @@ namespace DynamicCalculator
         /// Gets or sets the list of variables used in the expression.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define the list of variables used in the expression.")]
+        Description("Define the app-domain unique list of variables used in the expression. Any defined aliased variables must be unique per defined dynamic calculator or e-mail notifier instance")]
         public string VariableList
         {
             get
