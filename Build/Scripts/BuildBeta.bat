@@ -27,13 +27,11 @@
 ::
 ::*******************************************************************************************************
 
-echo off
+@ECHO OFF
 
-SetLocal EnableDelayedExpansion
+SetLocal
 
-ECHO BuildBeta: CALL CommonBuild.bat %*
-CALL CommonBuild.bat %*
+IF NOT "%1" == "" SET logflag=/l:FileLogger,Microsoft.Build.Engine;logfile=%1
 
-ECHO BuildBeta: C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe GridSolutionsFramework.buildproj /p:BuildDeployFolder=%deploy%;NugetApiKey=%api_key%;NugetPackagesFolder=%package%;ForceBuild=true /l:FileLogger,Microsoft.Build.Engine;logfile=%logger%
-"C:\Program Files (x86)\MSBuild\14.0\Bin\MSBuild.exe" GridSolutionsFramework.buildproj /p:BuildDeployFolder=%deploy%;NugetApiKey=%api_key%;NugetPackagesFolder=%package%;ForceBuild=true /l:FileLogger,Microsoft.Build.Engine;logfile=%logger%  
-endlocal
+ECHO BuildBeta: C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe GridSolutionsFramework.buildproj /p:ForceBuild=true %logflag%
+"C:\Program Files (x86)\MSBuild\14.0\Bin\MSBuild.exe" GridSolutionsFramework.buildproj /p:ForceBuild=true %logFlag%

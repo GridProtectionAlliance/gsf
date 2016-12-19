@@ -119,6 +119,8 @@
     <ForceBuild></ForceBuild>
     <!-- Skips the versioning process and just executes build steps. -->
     <SkipVersioning></SkipVersioning>
+    <!-- Prevents the build script from pushing to the remote repository. -->
+    <DoNotPush></DoNotPush>
     <!--Executes build without running unit tests when true.-->
     <SkipUnitTest>True</SkipUnitTest>
     <!-- Name of binaries archive file. -->
@@ -302,11 +304,13 @@
       <NuGet Condition="'$(NuGet)' == ''">$(ProgramFiles64)\NuGet\nuget.exe</NuGet>
       <GitClient Condition="'$(GitClient)' == ''">$(ProgramFiles32)\Git\cmd\git.exe</GitClient>
       <GitBranch Condition="'$(GitBranch)' == ''">master</GitBranch>
+	  <SetUpWorkspace Condition="'$(SetUpWorkspace)' == ''">True</SetUpWorkspace>
       <VisualStudio Condition="'$(VisualStudio)' == ''">$(VS140COMNTOOLS)\..\IDE\devenv.com</VisualStudio>
       <MSTest Condition="'$(MSTest)' == ''">$(VS140COMNTOOLS)\..\IDE\mstest.exe</MSTest>
       <SandcastleBuilder Condition="'$(SandcastleBuilder)' == ''">$(SHFBROOT)\SandcastleBuilderGUI.exe</SandcastleBuilder>
       <ForceBuild Condition="'$(ForceBuild)' == ''">false</ForceBuild>
       <SkipVersioning Condition="'$(SkipVersioning)' == ''">false</SkipVersioning>
+      <DoNotPush Condition="'$(DoNotPush)' == ''">false</DoNotPush>
       <BinariesArchiveFileName Condition="'$(BinariesArchiveFileName)' == ''">$(LocalFolder)\$(ProjectName).Binaries.zip</BinariesArchiveFileName>
       <InstallsArchiveFileName Condition="'$(InstallsArchiveFileName)' == ''">$(LocalFolder)\$(ProjectName).Installs.zip</InstallsArchiveFileName>
       <ScriptsArchiveFileName Condition="'$(ScriptsArchiveFileName)' == ''">$(LocalFolder)\$(ProjectName).Scripts.zip</ScriptsArchiveFileName>
@@ -340,15 +344,16 @@
     <RemoveDir Directories="$(LocalFolder)" Condition="Exists('$(LocalFolder)') And !Exists('$(LocalFolder)\.git')"/>
     <MakeDir Directories="$(LocalFolder)" Condition="!Exists('$(LocalFolder)')"/>
     <Exec Command="%22$(GitClient)%22 clone %22$(GitServer)%22 ." WorkingDirectory="$(LocalFolder)" Condition="!Exists('$(LocalFolder)\.git')"/>
-    <Exec Command="%22$(GitClient)%22 checkout %22$(GitBranch)%22" WorkingDirectory="$(LocalFolder)"/>
+    <Exec Command="%22$(GitClient)%22 checkout %22$(GitBranch)%22" WorkingDirectory="$(LocalFolder)" Condition="'$(SetUpWorkspace)' != 'False'"/>
   </Target>
 
   <Target Name="AfterCreateWorkspace"/>
   <Target Name="BeforeUpdateRepository"/>
 
-  <Target Name="CoreUpdateRepository">
+  <Target Name="CoreUpdateRepository" Condition="'$(SetUpWorkspace)' != 'False'">
     <!-- Get source code for the specified version. -->
     <Message Text="Getting latest updates from repo..."/>
+    <Exec Command="%22$(GitClient)%22 gc" WorkingDirectory="$(LocalFolder)"/>
     <Exec Command="%22$(GitClient)%22 fetch" WorkingDirectory="$(LocalFolder)"/>
     <Exec Command="%22$(GitClient)%22 reset --hard %22origin/$(GitBranch)%22" WorkingDirectory="$(LocalFolder)"/>
     <Exec Command="%22$(GitClient)%22 clean -f -d -x" WorkingDirectory="$(LocalFolder)"/>
@@ -494,7 +499,7 @@
   <Target Name="AfterDeployBuild"/>
   <Target Name="BeforePushToServer"/>
 
-  <Target Name="CorePushToServer" Condition="'$(SkipVersioning)' != 'true'">
+  <Target Name="CorePushToServer" Condition="'$(DoNotPush)' == 'false' And '$(SkipVersioning)' != 'true'">
     <!-- Commit all of the pending changes. -->
     <Message Text="Pushing changes to Git server..." />
     <Exec Command="%22$(GitClient)%22 push origin $(GitBranch):$(GitBranch)" WorkingDirectory="$(LocalFolder)" ContinueOnError="true"  />

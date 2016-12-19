@@ -1,5 +1,5 @@
 ::*******************************************************************************************************
-::  BuildBetaNoHelp.bat - Gbtc
+::  BuildRelease.bat - Gbtc
 ::
 ::  Copyright © 2013, Grid Protection Alliance.  All Rights Reserved.
 ::
@@ -22,20 +22,14 @@
 ::       Modified to force a build and suppress archives from being published to public locations.
 ::  10/03/2010 - Pinal C. Patel
 ::       Updated to use MSBuild 4.0.
-::  08/25/2014 - Gavin E. Holden
-::       Modified to call CommonBuild.bat 
-::  08/14/2015 - Stephen C. Wills
-::       Adapted from BuildBeta.bat.
 ::
 ::*******************************************************************************************************
 
-echo off
+@ECHO OFF
 
-SetLocal EnableDelayedExpansion
+SetLocal
 
-ECHO BuildBetaNoHelp: CALL CommonBuild.bat %*
-CALL CommonBuild.bat %*
+IF NOT "%1" == "" SET logflag=/l:FileLogger,Microsoft.Build.Engine;logfile=%1
 
-ECHO BuildBetaNoHelp: C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe GridSolutionsFramework.buildproj /p:BuildDeployFolder=%deploy%;NugetApiKey=%api_key%;NugetPackagesFolder=%package%;ForceBuild=true;SkipHelpFiles=true /l:FileLogger,Microsoft.Build.Engine;logfile=%logger%
-"C:\Program Files (x86)\MSBuild\14.0\Bin\MSBuild.exe" GridSolutionsFramework.buildproj /p:BuildDeployFolder=%deploy%;NugetApiKey=%api_key%;NugetPackagesFolder=%package%;ForceBuild=true;SkipHelpFiles=true /l:FileLogger,Microsoft.Build.Engine;logfile=%logger%  
-endlocal
+ECHO BuildRelease: C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe GridSolutionsFramework.buildproj /p:ForceBuild=true;PreRelease=false %logflag%
+"C:\Program Files (x86)\MSBuild\14.0\Bin\MSBuild.exe" GridSolutionsFramework.buildproj /p:ForceBuild=true;PreRelease=false %logFlag%
