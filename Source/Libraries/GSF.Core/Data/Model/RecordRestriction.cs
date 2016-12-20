@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-using System;
+using System.Data;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -37,17 +37,27 @@ namespace GSF.Data.Model
         // Fields
 
         /// <summary>
-        /// Defines filter SQL expression for restriction - does not include WHERE. When escaping is needed for field names, use standard ANSI quotes.
+        /// Defines filter SQL expression for restriction as a composite format string - does not
+        /// include WHERE. When escaping is needed for field names, use standard ANSI quotes.
         /// </summary>
         /// <remarks>
-        /// If needed, field names that are escaped with standard ANSI quotes in the filter expression will be updated to reflect what is defined in the user model.
+        /// <para>
+        /// Each indexed parameter, e.g., "{0}", in the composite format string will be converted into
+        /// query parameters where each of the corresponding values in the <see cref="Parameters"/>
+        /// collection will be applied as <see cref="IDbDataParameter"/> values to an executed
+        /// <see cref="IDbCommand"/> query.
+        /// </para>
+        /// <para>
+        /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
+        /// will be updated to reflect what is defined in the user model.
+        /// </para>
         /// </remarks>
         public string FilterExpression;
 
         /// <summary>
         /// Defines restriction parameter values.
         /// </summary>
-        public object[] Parameters = new object[0];
+        public object[] Parameters;
 
         #endregion
 
@@ -58,15 +68,29 @@ namespace GSF.Data.Model
         /// </summary>
         public RecordRestriction()
         {
+            Parameters = new object[0];
         }
 
         /// <summary>
-        /// Creates a new parameterized <see cref="RecordRestriction"/> with the specified filter and parameters.
+        /// Creates a new parameterized <see cref="RecordRestriction"/> with the specified SQL filter
+        /// expression and parameters.
         /// </summary>
-        /// <param name="filterExpression">Filter SQL expression for restriction - does not include WHERE. When escaping is needed for field names, use standard ANSI quotes.</param>
+        /// <param name="filterExpression">
+        /// Filter SQL expression for restriction as a composite format string - does not include WHERE.
+        /// When escaping is needed for field names, use standard ANSI quotes.
+        /// </param>
         /// <param name="parameters">Restriction parameter values.</param>
         /// <remarks>
-        /// If needed, field names that are escaped with standard ANSI quotes in the <paramref name="filterExpression"/> will be updated to reflect what is defined in the user model.
+        /// <para>
+        /// Each indexed parameter, e.g., "{0}", in the composite format <paramref name="filterExpression"/>
+        /// will be converted into query parameters where each of the corresponding values in the
+        /// <paramref name="parameters"/> collection will be applied as <see cref="IDbDataParameter"/>
+        /// values to an executed <see cref="IDbCommand"/> query.
+        /// </para>
+        /// <para>
+        /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
+        /// will be updated to reflect what is defined in the user model.
+        /// </para>
         /// </remarks>
         public RecordRestriction(string filterExpression, params object[] parameters)
         {
@@ -86,7 +110,11 @@ namespace GSF.Data.Model
         /// <returns>New combined record restriction.</returns>
         /// <remarks>
         /// If both parameters are <c>null</c>, result will be <c>null</c>. If one parameter is <c>null</c>
-        /// and the other parameter is not, the non-null parameter will be returned.
+        /// and the other parameter is not, the non-null parameter will be returned. Equally, if the
+        /// <see cref="FilterExpression"/> of both parameters are <c>null</c>, empty or only whitespace,
+        /// then the result will be <c>null</c>. If one parameter has a filter expression that is
+        /// <c>null</c>, empty or whitespace and the other parameter's filter expression is defined, then
+        /// the parameter that has a filter expression will be returned.
         /// </remarks>
         public static RecordRestriction operator +(RecordRestriction left, RecordRestriction right)
         {
@@ -101,7 +129,11 @@ namespace GSF.Data.Model
         /// <returns>New combined record restriction.</returns>
         /// <remarks>
         /// If both parameters are <c>null</c>, result will be <c>null</c>. If one parameter is <c>null</c>
-        /// and the other parameter is not, the non-null parameter will be returned.
+        /// and the other parameter is not, the non-null parameter will be returned. Equally, if the
+        /// <see cref="FilterExpression"/> of both parameters are <c>null</c>, empty or only whitespace,
+        /// then the result will be <c>null</c>. If one parameter has a filter expression that is
+        /// <c>null</c>, empty or whitespace and the other parameter's filter expression is defined, then
+        /// the parameter that has a filter expression will be returned.
         /// </remarks>
         public static RecordRestriction operator &(RecordRestriction left, RecordRestriction right)
         {
@@ -116,7 +148,11 @@ namespace GSF.Data.Model
         /// <returns>New combined record restriction.</returns>
         /// <remarks>
         /// If both parameters are <c>null</c>, result will be <c>null</c>. If one parameter is <c>null</c>
-        /// and the other parameter is not, the non-null parameter will be returned.
+        /// and the other parameter is not, the non-null parameter will be returned. Equally, if the
+        /// <see cref="FilterExpression"/> of both parameters are <c>null</c>, empty or only whitespace,
+        /// then the result will be <c>null</c>. If one parameter has a filter expression that is
+        /// <c>null</c>, empty or whitespace and the other parameter's filter expression is defined, then
+        /// the parameter that has a filter expression will be returned.
         /// </remarks>
         public static RecordRestriction operator |(RecordRestriction left, RecordRestriction right)
         {
@@ -137,7 +173,11 @@ namespace GSF.Data.Model
         /// <returns>New combined record restriction.</returns>
         /// <remarks>
         /// If both parameters are <c>null</c>, result will be <c>null</c>. If one parameter is <c>null</c>
-        /// and the other parameter is not, the non-null parameter will be returned.
+        /// and the other parameter is not, the non-null parameter will be returned. Equally, if the
+        /// <see cref="FilterExpression"/> of both parameters are <c>null</c>, empty or only whitespace,
+        /// then the result will be <c>null</c>. If one parameter has a filter expression that is
+        /// <c>null</c>, empty or whitespace and the other parameter's filter expression is defined, then
+        /// the parameter that has a filter expression will be returned.
         /// </remarks>
         public static RecordRestriction CombineAnd(RecordRestriction left, RecordRestriction right)
         {
@@ -152,7 +192,11 @@ namespace GSF.Data.Model
         /// <returns>New combined record restriction.</returns>
         /// <remarks>
         /// If both parameters are <c>null</c>, result will be <c>null</c>. If one parameter is <c>null</c>
-        /// and the other parameter is not, the non-null parameter will be returned.
+        /// and the other parameter is not, the non-null parameter will be returned. Equally, if the
+        /// <see cref="FilterExpression"/> of both parameters are <c>null</c>, empty or only whitespace,
+        /// then the result will be <c>null</c>. If one parameter has a filter expression that is
+        /// <c>null</c>, empty or whitespace and the other parameter's filter expression is defined, then
+        /// the parameter that has a filter expression will be returned.
         /// </remarks>
         public static RecordRestriction CombineOr(RecordRestriction left, RecordRestriction right)
         {
@@ -192,9 +236,11 @@ namespace GSF.Data.Model
             if (leftLength == 0 && rightLength == 0)
                 return new RecordRestriction($"({left.FilterExpression}) {operation} ({right.FilterExpression})");
 
+            object[] parameters = leftLength == 0 ? right.Parameters : (rightLength == 0 ? left.Parameters : left.Parameters.Combine(right.Parameters));
+
             object[] offsetArgs = Enumerable.Range(leftLength, rightLength).Select(index => (object)$"{{{index}}}").ToArray();
 
-            return new RecordRestriction($"({left.FilterExpression}) {operation} ({string.Format(right.FilterExpression, offsetArgs)})", left.Parameters.Combine(right.Parameters));
+            return new RecordRestriction($"({left.FilterExpression}) {operation} ({string.Format(right.FilterExpression, offsetArgs)})", parameters);
         }
     }
 
