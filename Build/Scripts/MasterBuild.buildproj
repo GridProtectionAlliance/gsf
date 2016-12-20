@@ -348,13 +348,13 @@
   <Target Name="AfterCreateWorkspace"/>
   <Target Name="BeforeUpdateRepository"/>
 
-  <Target Name="CoreUpdateRepository" Condition="'$(SetUpWorkspace)' != 'False'">
+  <Target Name="CoreUpdateRepository">
     <!-- Get source code for the specified version. -->
     <Message Text="Getting latest updates from repo..."/>
-    <Exec Command="%22$(GitClient)%22 gc" WorkingDirectory="$(LocalFolder)"/>
-    <Exec Command="%22$(GitClient)%22 fetch" WorkingDirectory="$(LocalFolder)"/>
-    <Exec Command="%22$(GitClient)%22 reset --hard %22origin/$(GitBranch)%22" WorkingDirectory="$(LocalFolder)"/>
-    <Exec Command="%22$(GitClient)%22 clean -f -d -x" WorkingDirectory="$(LocalFolder)"/>
+    <Exec Command="%22$(GitClient)%22 gc" WorkingDirectory="$(LocalFolder)" Condition="'$(SetUpWorkspace)' != 'False'"/>
+    <Exec Command="%22$(GitClient)%22 fetch" WorkingDirectory="$(LocalFolder)" Condition="'$(SetUpWorkspace)' != 'False'"/>
+    <Exec Command="%22$(GitClient)%22 reset --hard %22origin/$(GitBranch)%22" WorkingDirectory="$(LocalFolder)" Condition="'$(SetUpWorkspace)' != 'False'"/>
+    <Exec Command="%22$(GitClient)%22 clean -f -d -x" WorkingDirectory="$(LocalFolder)" Condition="'$(SetUpWorkspace)' != 'False'"/>
     <Exec Command="%22$(NuGet)%22 restore %22$(ProjectSolution)%22"/>
     <CallTarget Targets="CheckForChanges"/>
   </Target>
