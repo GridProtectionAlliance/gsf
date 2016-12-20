@@ -27,10 +27,15 @@
 @using GSF.Web.Model
 @inherits ExtendedTemplateBase
 @{
+    // ReSharper disable NotResolvedInText
     DataContext dataContext = ViewBag.DataContext;
 
     if (dataContext == null) {
-        throw new ArgumentNullException("ViewBag.DataContext", "DataContext was not defined in ViewBag");
+        throw new ArgumentNullException("ViewBag.DataContext", "DataContext was not defined in ViewBag, cannot render PagedViewModel");
+    }
+
+    if (ViewBag.HeaderColumns == null) {
+        throw new ArgumentNullException("ViewBag.HeaderColumns", "HeaderColumns was not defined in ViewBag, cannot render PagedViewModel");
     }
 
     if (ViewBag.PageControlScripts == null) {
