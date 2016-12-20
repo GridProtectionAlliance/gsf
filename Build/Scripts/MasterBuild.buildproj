@@ -77,24 +77,22 @@
     <ProjectName></ProjectName>
     <!-- Solution of the project being built. -->
     <ProjectSolution></ProjectSolution>
-    <!-- Name of the local build workspace. -->
-    <Workspace></Workspace>
     <!-- URL of the Git Server. -->
-    <GitServer></GitServer>
+    <GitServer>$(GitServer)</GitServer>
     <!-- Root local folder of the project. -->
-    <LocalFolder></LocalFolder>
+    <LocalFolder>$(LocalFolder)</LocalFolder>
     <!-- Source control tag for the build. -->
     <BuildTag></BuildTag>
     <!-- Type of the build to compile. -->
-    <BuildFlavor></BuildFlavor>
+    <BuildFlavor>$(BuildFlavor)</BuildFlavor>
     <!-- Target platform of the build. -->
-    <BuildTarget></BuildTarget>
+    <BuildTarget>$(BuildTarget)</BuildTarget>
     <!-- Output folder of build content. -->
-    <BuildOutputFolder></BuildOutputFolder>
+    <BuildOutputFolder>$(BuildOutputFolder)</BuildOutputFolder>
     <!-- Drop location of the build content. -->
-    <BuildDeployFolder></BuildDeployFolder>
+    <BuildDeployFolder>$(BuildDeployFolder)</BuildDeployFolder>
     <!-- Setting for enabling user propmts. -->
-    <BuildInteractive></BuildInteractive>
+    <BuildInteractive>$(BuildInteractive)</BuildInteractive>
     <!-- File containing the build version. -->
     <VersionFile></VersionFile>
     <!-- Versioning scheme major number change type. -->
@@ -106,23 +104,23 @@
     <!-- Versioning scheme revision number change type. -->
     <VersionRevisionChange></VersionRevisionChange>
     <!-- Paths to Git Client. -->
-    <GitClient></GitClient>
+    <GitClient>$(GitClient)</GitClient>
     <!-- Branch to be built. -->
-    <GitBranch></GitBranch>
+    <GitBranch>$(GitBranch)</GitBranch>
     <!-- Path to Visual Studio IDE. -->
-    <VisualStudio></VisualStudio>
+    <VisualStudio>$(VisualStudio)</VisualStudio>
     <!-- Path to unit testing tool. -->
-    <MSTest></MSTest>
+    <MSTest>$(MSTest)</MSTest>
     <!-- Path to Sandcastle Builder. -->
-    <SandcastleBuilder></SandcastleBuilder>
+    <SandcastleBuilder>$(SandcastleBuilder)</SandcastleBuilder>
     <!-- Forces a build regardless of new changes since last build. -->
-    <ForceBuild></ForceBuild>
+    <ForceBuild>$(ForceBuild)</ForceBuild>
     <!-- Skips the versioning process and just executes build steps. -->
-    <SkipVersioning></SkipVersioning>
+    <SkipVersioning>$(SkipVersioning)</SkipVersioning>
     <!-- Prevents the build script from pushing to the remote repository. -->
-    <DoNotPush></DoNotPush>
+    <DoNotPush>$(DoNotPush)</DoNotPush>
     <!--Executes build without running unit tests when true.-->
-    <SkipUnitTest>True</SkipUnitTest>
+    <SkipUnitTest>$(SkipUnitTest)</SkipUnitTest>
     <!-- Name of binaries archive file. -->
     <BinariesArchiveFileName></BinariesArchiveFileName>
     <!-- Name of installs archive file. -->
