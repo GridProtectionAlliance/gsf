@@ -86,7 +86,7 @@ namespace GSF
                 throw new ArgumentOutOfRangeException(nameof(length), "cannot be negative");
 
             if (startIndex + length > array.Length)
-                throw new ArgumentOutOfRangeException(nameof(length), string.Format("startIndex of {0} and length of {1} will exceed array size of {2}", startIndex, length, array.Length));
+                throw new ArgumentOutOfRangeException(nameof(length), $"startIndex of {startIndex} and length of {length} will exceed array size of {array.Length}");
         }
 
         /// <summary>
@@ -102,8 +102,9 @@ namespace GSF
         /// it will never be less than the source array length - <paramref name="startIndex"/>.
         /// </para>
         /// <para>
-        /// This is a convenience function. If an existing array is already available, using the <see cref="Buffer.BlockCopy"/>
-        /// directly instead of this extension method will be optimal since this method always allocates a new return array.
+        /// If an existing array of primitives is already available, using the <see cref="Buffer.BlockCopy"/> directly
+        /// instead of this extension method may be optimal since this method always allocates a new return array.
+        /// Unlike <see cref="Buffer.BlockCopy"/>, however, this function also works with non-primitive types.
         /// </para>
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">
@@ -126,7 +127,10 @@ namespace GSF
 
             T[] copiedBytes = new T[array.Length - startIndex < length ? array.Length - startIndex : length];
 
-            Buffer.BlockCopy(array, startIndex, copiedBytes, 0, copiedBytes.Length);
+            if (typeof(T).IsPrimitive)
+                Buffer.BlockCopy(array, startIndex, copiedBytes, 0, copiedBytes.Length);
+            else
+                Array.Copy(array, startIndex, copiedBytes, 0, copiedBytes.Length);
 
             return copiedBytes;
         }
@@ -225,8 +229,16 @@ namespace GSF
             // Combine arrays together as a single image
             T[] combinedBuffer = new T[sourceCount + otherCount];
 
-            Buffer.BlockCopy(source, sourceOffset, combinedBuffer, 0, sourceCount);
-            Buffer.BlockCopy(other, otherOffset, combinedBuffer, sourceCount, otherCount);
+            if (typeof(T).IsPrimitive)
+            {
+                Buffer.BlockCopy(source, sourceOffset, combinedBuffer, 0, sourceCount);
+                Buffer.BlockCopy(other, otherOffset, combinedBuffer, sourceCount, otherCount);
+            }
+            else
+            {
+                Array.Copy(source, sourceOffset, combinedBuffer, 0, sourceCount);
+                Array.Copy(other, otherOffset, combinedBuffer, sourceCount, otherCount);
+            }
 
             return combinedBuffer;
         }
@@ -251,7 +263,7 @@ namespace GSF
         /// </remarks>
         public static T[] Combine<T>(this T[] source, T[] other1, T[] other2)
         {
-            return (new[] { source, other1, other2 }).Combine();
+            return new[] { source, other1, other2 }.Combine();
         }
 
         /// <summary>
@@ -275,7 +287,7 @@ namespace GSF
         /// </remarks>
         public static T[] Combine<T>(this T[] source, T[] other1, T[] other2, T[] other3)
         {
-            return (new[] { source, other1, other2, other3 }).Combine();
+            return new[] { source, other1, other2, other3 }.Combine();
         }
 
         /// <summary>
@@ -300,7 +312,7 @@ namespace GSF
         /// </remarks>
         public static T[] Combine<T>(this T[] source, T[] other1, T[] other2, T[] other3, T[] other4)
         {
-            return (new[] { source, other1, other2, other3, other4 }).Combine();
+            return new[] { source, other1, other2, other3, other4 }.Combine();
         }
 
         /// <summary>
@@ -339,7 +351,11 @@ namespace GSF
 
                 if (length > 0)
                 {
-                    Buffer.BlockCopy(arrays[x], 0, combinedBuffer, offset, length);
+                    if (typeof(T).IsPrimitive)
+                        Buffer.BlockCopy(arrays[x], 0, combinedBuffer, offset, length);
+                    else
+                        Array.Copy(arrays[x], 0, combinedBuffer, offset, length);
+
                     offset += length;
                 }
             }
@@ -446,7 +462,7 @@ namespace GSF
                             }
 
                             // If each item to find matched, we found the sequence
-                            foundSequence = (x == sequenceToFind.Length - 1);
+                            foundSequence = x == sequenceToFind.Length - 1;
                         }
                         else
                         {
@@ -646,7 +662,7 @@ namespace GSF
         /// </remarks>
         public static byte[] Combine(this byte[] source, byte[] other1, byte[] other2)
         {
-            return (new[] { source, other1, other2 }).Combine();
+            return new[] { source, other1, other2 }.Combine();
         }
 
         /// <summary>
@@ -665,7 +681,7 @@ namespace GSF
         /// </remarks>
         public static byte[] Combine(this byte[] source, byte[] other1, byte[] other2, byte[] other3)
         {
-            return (new[] { source, other1, other2, other3 }).Combine();
+            return new[] { source, other1, other2, other3 }.Combine();
         }
 
         /// <summary>
@@ -685,7 +701,7 @@ namespace GSF
         /// </remarks>
         public static byte[] Combine(this byte[] source, byte[] other1, byte[] other2, byte[] other3, byte[] other4)
         {
-            return (new[] { source, other1, other2, other3, other4 }).Combine();
+            return new[] { source, other1, other2, other3, other4 }.Combine();
         }
 
         /// <summary>
