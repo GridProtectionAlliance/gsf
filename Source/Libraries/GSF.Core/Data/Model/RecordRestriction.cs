@@ -192,7 +192,7 @@ namespace GSF.Data.Model
             if (leftLength == 0 && rightLength == 0)
                 return new RecordRestriction($"({left.FilterExpression}) {operation} ({right.FilterExpression})");
 
-            object[] offsetArgs = Enumerable.Range(0, rightLength).Select(index => (object)$"{{{index + leftLength}}}").ToArray();
+            object[] offsetArgs = Enumerable.Range(leftLength, rightLength).Select(index => (object)$"{{{index}}}").ToArray();
 
             return new RecordRestriction($"({left.FilterExpression}) {operation} ({string.Format(right.FilterExpression, offsetArgs)})", left.Parameters.Combine(right.Parameters));
         }
