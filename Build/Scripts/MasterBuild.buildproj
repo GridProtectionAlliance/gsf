@@ -305,7 +305,7 @@
 	  <SetUpWorkspace Condition="'$(SetUpWorkspace)' == ''">True</SetUpWorkspace>
       <VisualStudio Condition="'$(VisualStudio)' == ''">$(VS140COMNTOOLS)\..\IDE\devenv.com</VisualStudio>
       <MSTest Condition="'$(MSTest)' == ''">$(VS140COMNTOOLS)\..\IDE\mstest.exe</MSTest>
-      <SandcastleBuilder Condition="'$(SandcastleBuilder)' == ''">$(SHFBROOT)\SandcastleBuilderGUI.exe</SandcastleBuilder>
+      <!-- <SandcastleBuilder Condition="'$(SandcastleBuilder)' == ''">$(SHFBROOT)\SandcastleBuilderGUI.exe</SandcastleBuilder> -->
       <ForceBuild Condition="'$(ForceBuild)' == ''">false</ForceBuild>
       <SkipVersioning Condition="'$(SkipVersioning)' == ''">false</SkipVersioning>
       <DoNotPush Condition="'$(DoNotPush)' == ''">false</DoNotPush>
