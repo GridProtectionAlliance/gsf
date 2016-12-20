@@ -44,6 +44,7 @@ namespace LogFileViewer.Menu
             return new[]
                    {
                        Tuple.Create<string, Func<LogMessageFilter>>("Event and Type", EventAndType),
+                       Tuple.Create<string, Func<LogMessageFilter>>("Event and Type and Level", EventAndTypeAndLevel),
                        Tuple.Create<string, Func<LogMessageFilter>>("Event and Related Type", EventAndRelatedType),
                        Tuple.Create<string, Func<LogMessageFilter>>("Event and Assembly", EventAndAssembly),
                        Tuple.Create<string, Func<LogMessageFilter>>("Event", Event),
@@ -62,6 +63,15 @@ namespace LogFileViewer.Menu
             var filter = new LogMessageFilter();
             filter.EventName = new StringMatching(StringMatchingMode.Exact, m_log.EventName);
             filter.Type = new StringMatching(StringMatchingMode.Exact, m_log.TypeName);
+            return filter;
+        }
+
+        private LogMessageFilter EventAndTypeAndLevel()
+        {
+            var filter = new LogMessageFilter();
+            filter.EventName = new StringMatching(StringMatchingMode.Exact, m_log.EventName);
+            filter.Type = new StringMatching(StringMatchingMode.Exact, m_log.TypeName);
+            filter.Level = new EnumMatchingFlags(EnumMatchingFlagsMode.Any, 1 << (int)m_log.Level, m_log.Level.ToString());
             return filter;
         }
 

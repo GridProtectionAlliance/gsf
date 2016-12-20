@@ -44,15 +44,27 @@ namespace LogFileViewer.Menu
             return new[]
                    {
                        Tuple.Create<string, Func<LogMessageFilter>>("Type", ExcludeType),
+                       Tuple.Create<string, Func<LogMessageFilter>>("Type And Level", ExcludeTypeAndLevel),
                        Tuple.Create<string, Func<LogMessageFilter>>("Related Type", ExcludeRelatedType),
+                       Tuple.Create<string, Func<LogMessageFilter>>("Related Type And Level", ExcludeRelatedTypeAndLevel),
                        Tuple.Create<string, Func<LogMessageFilter>>("Assembly", ExcludeAssembly),
+                       Tuple.Create<string, Func<LogMessageFilter>>("Assembly And Level", ExcludeAssemblyAndLevel),
                    };
         }
+
+       
 
         private LogMessageFilter ExcludeType()
         {
             var filter = new LogMessageFilter();
             filter.Type = new StringMatching(StringMatchingMode.Exact, m_log.TypeName);
+            return filter;
+        }
+        private LogMessageFilter ExcludeTypeAndLevel()
+        {
+            var filter = new LogMessageFilter();
+            filter.Type = new StringMatching(StringMatchingMode.Exact, m_log.TypeName);
+            filter.Level = new EnumMatchingFlags(EnumMatchingFlagsMode.Any, 1 << (int)m_log.Level, m_log.Level.ToString());
             return filter;
         }
 
@@ -70,10 +82,33 @@ namespace LogFileViewer.Menu
             }
         }
 
+        private LogMessageFilter ExcludeRelatedTypeAndLevel()
+        {
+            using (var frm = new RelatedTypesFilter(m_log.EventPublisherDetails.TypeData))
+            {
+                if (frm.ShowDialog() == DialogResult.OK)
+                {
+                    var filter = new LogMessageFilter();
+                    filter.RelatedType = new StringMatching(StringMatchingMode.Exact, frm.SelectedItem);
+                    filter.Assembly = new StringMatching(StringMatchingMode.Exact, m_log.AssemblyName);
+                    return filter;
+                }
+                return null;
+            }
+        }
+
         private LogMessageFilter ExcludeAssembly()
         {
             var filter = new LogMessageFilter();
             filter.Assembly = new StringMatching(StringMatchingMode.Exact, m_log.AssemblyName);
+            return filter;
+        }
+
+        private LogMessageFilter ExcludeAssemblyAndLevel()
+        {
+            var filter = new LogMessageFilter();
+            filter.Assembly = new StringMatching(StringMatchingMode.Exact, m_log.AssemblyName);
+            filter.Level = new EnumMatchingFlags(EnumMatchingFlagsMode.Any, 1 << (int)m_log.Level, m_log.Level.ToString());
             return filter;
         }
 
