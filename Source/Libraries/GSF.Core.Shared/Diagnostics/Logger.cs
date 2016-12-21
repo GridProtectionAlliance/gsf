@@ -227,17 +227,6 @@ namespace GSF.Diagnostics
             {
                 try
                 {
-                    var perm = new ReflectionPermission(PermissionState.Unrestricted);
-                    perm.Demand();
-                }
-                catch (SecurityException)
-                {
-                    //Cannot raise messages if this permission is denied.
-                    return;
-                }
-
-                try
-                {
                     EventFirstChanceException.Publish(null, null, e.Exception);
                 }
                 catch (Exception)
@@ -254,21 +243,16 @@ namespace GSF.Diagnostics
             {
                 return;
             }
-            if (ShouldSuppressLogMessages)
-                return;
-            using (SuppressLogMessages())
+            using (SuppressFirstChanceExceptionLogMessages())
             {
                 try
                 {
-                    var perm = new ReflectionPermission(PermissionState.Unrestricted);
-                    perm.Demand();
+                    EventAppDomainException.Publish(null, null, e.ExceptionObject as Exception);
                 }
-                catch (SecurityException)
+                catch (Exception)
                 {
-                    //Cannot raise messages if this permission is denied.
-                    return;
+                    //swallow any exceptions.
                 }
-                EventAppDomainException.Publish(null, null, e.ExceptionObject as Exception);
             }
         }
 

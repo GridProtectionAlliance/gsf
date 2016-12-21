@@ -93,13 +93,16 @@ namespace GSF.Diagnostics
 
             ClassName = frame.GetMethod().GetFriendlyClassName();
             MethodName = frame.GetMethod().GetFriendlyMethodName();
-            try
+            using (Logger.SuppressFirstChanceExceptionLogMessages())
             {
-                FileName = frame.GetFileName() ?? string.Empty;
-            }
-            catch (SecurityException)
-            {
-                FileName = string.Empty;
+                try
+                {
+                    FileName = frame.GetFileName() ?? string.Empty;
+                }
+                catch (SecurityException)
+                {
+                    FileName = string.Empty;
+                }
             }
             NativeOffset = frame.GetNativeOffset();
             LineNumber = frame.GetFileLineNumber();

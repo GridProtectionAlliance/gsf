@@ -23,11 +23,12 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using GSF.Immutable;
 using GSF.IO;
 
 namespace GSF.Diagnostics
@@ -36,13 +37,19 @@ namespace GSF.Diagnostics
     /// Provides stack trace data that can be serialized to a stream.
     /// </summary>
     public class LogStackTrace
-        : ImmutableObjectAutoBase<LogStackTrace>, IEquatable<LogStackTrace>
+        : IEquatable<LogStackTrace>
     {
         /// <summary>
         /// Gets the stack frame data
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
-        public readonly ImmutableList<LogStackFrame> Frames;
+        private readonly List<LogStackFrame> m_frames;
+
+        /// <summary>
+        /// Gets the stack frame data
+        /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
+        public readonly ReadOnlyCollection<LogStackFrame> Frames;
 
         /// <summary>
         /// Gets the hashcode for this class
@@ -54,8 +61,8 @@ namespace GSF.Diagnostics
         /// </summary>
         private LogStackTrace()
         {
-            Frames = new ImmutableList<LogStackFrame>();
-            IsReadOnly = true;
+            m_frames = new List<LogStackFrame>();
+            Frames = new ReadOnlyCollection<LogStackFrame>(m_frames);
         }
 
         /// <summary>
@@ -66,21 +73,28 @@ namespace GSF.Diagnostics
         /// <param name="maxStackFrames">the maximum number of frames in the stack trace.</param>
         public LogStackTrace(bool lookupFileInfo = true, int skipCount = 0, int maxStackFrames = int.MaxValue)
         {
-            var trace = new StackTrace(skipCount + 1, lookupFileInfo);
-            Frames = new ImmutableList<LogStackFrame>();
-            var frames = trace.GetFrames();
-            if (frames != null)
+            m_frames = new List<LogStackFrame>();
+            Frames = new ReadOnlyCollection<LogStackFrame>(m_frames);
+            try
             {
-                foreach (var frame in frames)
+                var trace = new StackTrace(skipCount + 1, lookupFileInfo);
+                var frames = trace.GetFrames();
+                if (frames != null)
                 {
-                    if (maxStackFrames <= 0)
-                        break;
-                    maxStackFrames--;
-                    Frames.Add(new LogStackFrame(frame));
+                    foreach (var frame in frames)
+                    {
+                        if (maxStackFrames <= 0)
+                            break;
+                        maxStackFrames--;
+                        m_frames.Add(new LogStackFrame(frame));
+                    }
                 }
             }
+            catch (Exception)
+            {
+                //Sometimes a stack trace can not be obtained. Just silently ignore this error.
+            }
             m_hashCode = ComputeHashCode();
-            IsReadOnly = true;
         }
 
         /// <summary>
@@ -94,18 +108,18 @@ namespace GSF.Diagnostics
             {
                 case 1:
                     int count = stream.ReadInt32();
-                    Frames = new ImmutableList<LogStackFrame>(count);
+                    m_frames = new List<LogStackFrame>(count);
+                    Frames = new ReadOnlyCollection<LogStackFrame>(m_frames);
                     while (count > 0)
                     {
                         count--;
-                        Frames.Add(new LogStackFrame(stream));
+                        m_frames.Add(new LogStackFrame(stream));
                     }
                     break;
                 default:
                     throw new VersionNotFoundException("Unknown StackTraceDetails Version");
             }
             m_hashCode = ComputeHashCode();
-            IsReadOnly = true;
         }
 
         private int ComputeHashCode()
