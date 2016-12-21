@@ -797,12 +797,9 @@ namespace GSF.TimeSeries.Transport
             if (m_disposed)
                 throw new InvalidOperationException("Data gap recoverer has been disposed. Cannot flush log.");
 
-            if ((object)m_dataGapLog == null)
-                throw new InvalidOperationException("Data gap recoverer has not been initialized. Cannot flush log.");
-
             // Wait for process completion if in progress
             if (m_dataGapRecoveryCompleted.Wait(timeout))
-                return m_dataGapLog.Flush().Wait(timeout);
+                return m_dataGapLog?.Flush().Wait(timeout) ?? false;
 
             return false;
         }

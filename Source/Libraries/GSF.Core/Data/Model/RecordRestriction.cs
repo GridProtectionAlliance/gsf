@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -116,6 +117,7 @@ namespace GSF.Data.Model
         /// <c>null</c>, empty or whitespace and the other parameter's filter expression is defined, then
         /// the parameter that has a filter expression will be returned.
         /// </remarks>
+        [SuppressMessage("Microsoft.Design", "CA1013:OverloadOperatorEqualsOnOverloadingAddAndSubtract")]
         public static RecordRestriction operator +(RecordRestriction left, RecordRestriction right)
         {
             return CombineAnd(left, right);
