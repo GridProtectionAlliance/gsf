@@ -700,7 +700,7 @@ namespace GSF.TimeSeries.Transport
             m_temporalSubscription = new DataSubscriber();
             m_temporalSubscription.Name = m_sourceConnectionName + "!" + GetType().Name;
             m_temporalSubscription.DataSource = m_dataSource;
-            m_temporalSubscription.ConnectionString = m_connectionString;
+            m_temporalSubscription.ConnectionString = $"{m_connectionString};BypassStatistics=true";
             m_temporalSubscription.StatusMessage += Common_StatusMessage;
             m_temporalSubscription.ProcessException += Common_ProcessException;
             m_temporalSubscription.ConnectionEstablished += TemporalSubscription_ConnectionEstablished;

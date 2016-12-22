@@ -1757,9 +1757,11 @@ namespace GSF.TimeSeries.Transport
                 m_dataGapRecoveryEnabled = false;
             }
 
-            // Register subscriber with the statistics engine
-            StatisticsEngine.Register(this, "Subscriber", "SUB");
-            StatisticsEngine.Calculated += (sender, args) => ResetMeasurementsPerSecondCounters();
+            if (!settings.TryGetValue("BypassStatistics", out setting) || !setting.ParseBoolean())
+            {
+                StatisticsEngine.Register(this, "Subscriber", "SUB");
+                StatisticsEngine.Calculated += (sender, args) => ResetMeasurementsPerSecondCounters();
+            }
 
             Initialized = true;
         }
