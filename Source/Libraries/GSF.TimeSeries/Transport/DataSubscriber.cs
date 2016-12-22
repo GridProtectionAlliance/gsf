@@ -524,6 +524,7 @@ namespace GSF.TimeSeries.Transport
         private Encoding m_encoding;
         private string m_loggingPath;
         private RunTimeLog m_runTimeLog;
+        private bool m_bypassingStatistics;
         private bool m_dataGapRecoveryEnabled;
         private DataGapRecoverer m_dataGapRecoverer;
         private int m_parsingExceptionCount;
@@ -1761,6 +1762,10 @@ namespace GSF.TimeSeries.Transport
             {
                 StatisticsEngine.Register(this, "Subscriber", "SUB");
                 StatisticsEngine.Calculated += (sender, args) => ResetMeasurementsPerSecondCounters();
+            }
+            else
+            {
+                m_bypassingStatistics = true;
             }
 
             Initialized = true;
@@ -4237,6 +4242,9 @@ namespace GSF.TimeSeries.Transport
 
         private void HandleDeviceStatisticsRegistration()
         {
+            if (m_bypassingStatistics)
+                return;
+
             if (Enabled)
                 RegisterDeviceStatistics();
             else
