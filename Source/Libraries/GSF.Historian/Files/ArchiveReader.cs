@@ -573,10 +573,6 @@ namespace GSF.Historian.Files
                         }
                     }
                 }
-                catch (ThreadAbortException)
-                {
-                    throw;
-                }
                 catch (Exception ex)
                 {
                     OnDataReadException(new InvalidOperationException("Exception encountered during roll-over processing: " + ex.Message, ex));
