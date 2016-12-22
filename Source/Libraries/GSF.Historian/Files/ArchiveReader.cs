@@ -100,6 +100,7 @@ namespace GSF.Historian.Files
         private ArchiveFile m_archiveFile;
         private Timer m_rolloverWatcher;
         private readonly object m_watcherLock;
+        private bool m_rolloverInProgress;
         private bool m_disposed;
 
         #endregion
@@ -530,32 +531,44 @@ namespace GSF.Historian.Files
                         if ((object)record != null)
                         {
                             // Pause processing
-                            if (record.RolloverInProgress && m_archiveFile.IsOpen)
+                            if (record.RolloverInProgress)
                             {
-                                // Notify internal archive file components about the pending rollover
-                                m_archiveFile.RolloverWaitHandle.Reset();
+                                if (!m_rolloverInProgress)
+                                {
+                                    m_rolloverInProgress = true;
 
-                                // Raise roll-over start event (sets m_rolloverInProgress flag)
-                                m_archiveFile.OnRolloverStart();
+                                    // Notify internal archive file components about the pending rollover
+                                    m_archiveFile.RolloverWaitHandle.Reset();
 
-                                // Wait for pending to reads to yield
-                                m_archiveFile.WaitForReadersRelease();
+                                    // Raise roll-over start event (sets m_rolloverInProgress flag in ArchiveFile)
+                                    m_archiveFile.OnRolloverStart();
+
+                                    // Wait for pending reads to yield
+                                    m_archiveFile.WaitForReadersRelease();
+                                }
 
                                 // Close the active archive file stream so it can be rolled-over
-                                m_archiveFile.CloseStream();
+                                if (m_archiveFile.IsOpen)
+                                    m_archiveFile.CloseStream();
                             }
 
                             // Resume processing
-                            if (!record.RolloverInProgress && !m_archiveFile.IsOpen)
+                            if (!record.RolloverInProgress)
                             {
                                 // Open new active archive file stream
-                                m_archiveFile.OpenStream();
+                                if (!m_archiveFile.IsOpen)
+                                    m_archiveFile.OpenStream();
 
-                                // Raise roll-over complete event (resets m_rolloverInProgress flag)
-                                m_archiveFile.OnRolloverComplete();
+                                if (m_rolloverInProgress)
+                                {
+                                    m_rolloverInProgress = false;
 
-                                // Notify waiting internal archive components that rollover is complete
-                                m_archiveFile.RolloverWaitHandle.Set();
+                                    // Raise roll-over complete event (resets m_rolloverInProgress flag in ArchiveFile)
+                                    m_archiveFile.OnRolloverComplete();
+
+                                    // Notify waiting internal archive components that rollover is complete
+                                    m_archiveFile.RolloverWaitHandle.Set();
+                                }
                             }
                         }
                     }
@@ -578,102 +591,53 @@ namespace GSF.Historian.Files
         /// <summary>
         /// Raises the <see cref="RolloverStart"/> event.
         /// </summary>
-        protected internal virtual void OnRolloverStart()
-        {
-            if (RolloverStart != null)
-                RolloverStart(this, EventArgs.Empty);
-        }
+        protected internal virtual void OnRolloverStart() => RolloverStart?.Invoke(this, EventArgs.Empty);
 
         /// <summary>
         /// Raises the <see cref="RolloverComplete"/> event.
         /// </summary>
-        protected internal virtual void OnRolloverComplete()
-        {
-            if (RolloverComplete != null)
-                RolloverComplete(this, EventArgs.Empty);
-        }
+        protected internal virtual void OnRolloverComplete() => RolloverComplete?.Invoke(this, EventArgs.Empty);
 
         /// <summary>
         /// Raises the <see cref="HistoricFileListBuildStart"/> event.
         /// </summary>
-        protected virtual void OnHistoricFileListBuildStart()
-        {
-            if (HistoricFileListBuildStart != null)
-                HistoricFileListBuildStart(this, EventArgs.Empty);
-        }
+        protected virtual void OnHistoricFileListBuildStart() => HistoricFileListBuildStart?.Invoke(this, EventArgs.Empty);
 
         /// <summary>
         /// Raises the <see cref="HistoricFileListBuildComplete"/> event.
         /// </summary>
-        protected virtual void OnHistoricFileListBuildComplete()
-        {
-            if (HistoricFileListBuildComplete != null)
-                HistoricFileListBuildComplete(this, EventArgs.Empty);
-        }
+        protected virtual void OnHistoricFileListBuildComplete() => HistoricFileListBuildComplete?.Invoke(this, EventArgs.Empty);
 
         /// <summary>
         /// Raise the <see cref="HistoricFileListBuildException"/> event.
         /// </summary>
         /// <param name="ex"><see cref="Exception"/> to send to <see cref="HistoricFileListBuildException"/> event.</param>
-        protected virtual void OnHistoricFileListBuildException(Exception ex)
-        {
-            if (HistoricFileListBuildException != null)
-                HistoricFileListBuildException(this, new EventArgs<Exception>(ex));
-        }
+        protected virtual void OnHistoricFileListBuildException(Exception ex) => HistoricFileListBuildException?.Invoke(this, new EventArgs<Exception>(ex));
 
         /// <summary>
         /// Raises the <see cref="HistoricFileListUpdated"/> event.
         /// </summary>
-        protected virtual void OnHistoricFileListUpdated()
-        {
-            if (HistoricFileListUpdated != null)
-                HistoricFileListUpdated(this, EventArgs.Empty);
-        }
+        protected virtual void OnHistoricFileListUpdated() => HistoricFileListUpdated?.Invoke(this, EventArgs.Empty);
 
         /// <summary>
         /// Raises the <see cref="DataReadException"/> event.
         /// </summary>
         /// <param name="ex"><see cref="Exception"/> to send to <see cref="DataReadException"/> event.</param>
-        protected virtual void OnDataReadException(Exception ex)
-        {
-            if (DataReadException != null)
-                DataReadException(this, new EventArgs<Exception>(ex));
-        }
+        protected virtual void OnDataReadException(Exception ex) => DataReadException?.Invoke(this, new EventArgs<Exception>(ex));
 
-        private void file_RolloverStart(object sender, EventArgs e)
-        {
-            OnRolloverStart();
-        }
+        private void file_RolloverStart(object sender, EventArgs e) => OnRolloverStart();
 
-        private void file_RolloverComplete(object sender, EventArgs e)
-        {
-            OnRolloverComplete();
-        }
+        private void file_RolloverComplete(object sender, EventArgs e) => OnRolloverComplete();
 
-        private void file_HistoricFileListUpdated(object sender, EventArgs e)
-        {
-            OnHistoricFileListUpdated();
-        }
+        private void file_HistoricFileListUpdated(object sender, EventArgs e) => OnHistoricFileListUpdated();
 
-        private void file_HistoricFileListBuildStart(object sender, EventArgs e)
-        {
-            OnHistoricFileListBuildStart();
-        }
+        private void file_HistoricFileListBuildStart(object sender, EventArgs e) => OnHistoricFileListBuildStart();
 
-        private void file_HistoricFileListBuildException(object sender, EventArgs<Exception> e)
-        {
-            OnHistoricFileListBuildException(e.Argument);
-        }
+        private void file_HistoricFileListBuildException(object sender, EventArgs<Exception> e) => OnHistoricFileListBuildException(e.Argument);
 
-        private void file_HistoricFileListBuildComplete(object sender, EventArgs e)
-        {
-            OnHistoricFileListBuildComplete();
-        }
+        private void file_HistoricFileListBuildComplete(object sender, EventArgs e) => OnHistoricFileListBuildComplete();
 
-        private void file_DataReadException(object sender, EventArgs<Exception> e)
-        {
-            OnDataReadException(e.Argument);
-        }
+        private void file_DataReadException(object sender, EventArgs<Exception> e) => OnDataReadException(e.Argument);
 
         #endregion
     }
