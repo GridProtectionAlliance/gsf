@@ -1,0 +1,39 @@
+﻿<Window x:Class="COMTRADEConverter.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:COMTRADEConverter"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="800" Width="1200">
+    <StackPanel ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
+        <Menu>
+            <MenuItem Header="_File" >
+                <MenuItem Header="_Open" Click="OpenClicked" />
+                <MenuItem Header="Process Files" Click="ProcessFilesClicked" />
+            </MenuItem>
+            <MenuItem Header="_Go" />
+            <MenuItem Header="_Exit" />
+        </Menu>        
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <StackPanel Grid.Column="0">
+                <Grid Background="Silver" Width="500" Height="500" AllowDrop="True" />
+            </StackPanel>
+            <StackPanel Grid.Column="1">
+                <Label>
+                    File List
+                </Label>
+                <TextBox Name="FileListBox" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                    Files
+                </TextBox>
+            </StackPanel>
+        </Grid>
+    </StackPanel>
+</Window>

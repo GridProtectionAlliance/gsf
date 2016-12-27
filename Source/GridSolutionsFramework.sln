@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{13006BBE-434A-4027-940B-EAD752844137}"
 EndProject
@@ -435,6 +435,8 @@ EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "GSF.Core.Shared", "Libraries\GSF.Core.Shared\GSF.Core.Shared.shproj", "{5CE3D6F4-D38D-4F71-ACB6-79681CFE47DF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogFileViewer", "Tools\LogFileViewer\LogFileViewer.csproj", "{B04CAC0F-CA13-4A19-8857-F55619638CD9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "COMTRADEConverter", "Tools\COMTRADEConverter\COMTRADEConverter.csproj", "{CED3845C-90C3-4064-A5D2-F03D7828B901}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -941,6 +943,12 @@ Global
 		{B04CAC0F-CA13-4A19-8857-F55619638CD9}.Mono|Any CPU.Build.0 = Mono|Any CPU
 		{B04CAC0F-CA13-4A19-8857-F55619638CD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B04CAC0F-CA13-4A19-8857-F55619638CD9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CED3845C-90C3-4064-A5D2-F03D7828B901}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CED3845C-90C3-4064-A5D2-F03D7828B901}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CED3845C-90C3-4064-A5D2-F03D7828B901}.Mono|Any CPU.ActiveCfg = Release|Any CPU
+		{CED3845C-90C3-4064-A5D2-F03D7828B901}.Mono|Any CPU.Build.0 = Release|Any CPU
+		{CED3845C-90C3-4064-A5D2-F03D7828B901}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CED3845C-90C3-4064-A5D2-F03D7828B901}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1076,6 +1084,7 @@ Global
 		{3C8D8504-1880-4CC4-AB1A-8793F3625A31} = {CD3C7F74-B7F2-422F-8417-1E9045155352}
 		{5CE3D6F4-D38D-4F71-ACB6-79681CFE47DF} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
 		{B04CAC0F-CA13-4A19-8857-F55619638CD9} = {1B63485E-46C7-4185-B968-216A02396B88}
+		{CED3845C-90C3-4064-A5D2-F03D7828B901} = {1B63485E-46C7-4185-B968-216A02396B88}
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = GSF.Core.Tests.vsmdi
