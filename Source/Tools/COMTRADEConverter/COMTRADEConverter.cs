@@ -71,7 +71,7 @@ namespace COMTRADEConverter
             Files = new ObservableCollection<string>();
             Files.Add("Drag and drop files here or use the add files button");
             m_exceptionList = new List<Exception>();
-            ExportPath = @"%userprofile%\Documents\COMTRADE Converter Test Data\Output";
+            ExportPath = @"C:\Users\sjenks\Documents\COMTRADE Converter Test Data\Output";
         }
 
         #endregion
@@ -139,11 +139,18 @@ namespace COMTRADEConverter
 
         private void ProcessCOMTRADE()
         {
-            string[] files = Directory.GetFiles(m_currentFileDirectory, m_currentFileRootName + ".*");
-            foreach (string file in files)
+            try
             {
-                string dest = Path.Combine(m_exportPath, Path.GetFileName(file));
-                File.Copy(file, dest);
+                string[] files = Directory.GetFiles(m_currentFileDirectory, m_currentFileRootName + ".*");
+                foreach (string file in files)
+                {
+                    string dest = Path.Combine(m_exportPath, Path.GetFileName(file));
+                    File.Copy(file, dest);
+                }
+            }
+            catch (Exception e)
+            {
+                ExceptionList.Add(e);
             }
         }
 
@@ -167,49 +174,56 @@ namespace COMTRADEConverter
         // Thanks other Stephen
         private void ParseEMAX(string controlFileName)
         {
-            DateTime? startTime = null;
-            DateTime timestamp;
-
-            using (CorrectiveParser parser = new CorrectiveParser())
+            try
             {
-                parser.ControlFile = new ControlFile(controlFileName);
-                parser.FileName = m_currentFilePath;
+                DateTime? startTime = null;
+                DateTime timestamp;
 
-                // Open EMAX data file
-                parser.OpenFiles();
-
-                // Parse EMAX control file into channels
-                m_channels = parser.ControlFile.AnalogChannelSettings.Values
-                    .Select(channel => new ParsedChannel()
-                    {
-                        Index = Convert.ToInt32(channel.chanlnum),
-                        Name = channel.title,
-                        TimeValues = new List<DateTime>(),
-                        XValues = new List<object>(),
-                        YValues = new List<object>()
-                    })
-                    .OrderBy(channel => channel.Index)
-                    .ToList();
-
-                // Read values from EMAX data file
-                while (parser.ReadNext())
+                using (CorrectiveParser parser = new CorrectiveParser())
                 {
-                    timestamp = parser.CalculatedTimestamp;
+                    parser.ControlFile = new ControlFile(controlFileName);
+                    parser.FileName = m_currentFilePath;
 
-                    // If this is the first frame, store this frame's
-                    // timestamp as the start time of the file
-                    if ((object)startTime == null)
-                        startTime = timestamp;
+                    // Open EMAX data file
+                    parser.OpenFiles();
 
-                    // Read the values from this frame into
-                    // x- and y-value collections for each channel
-                    for (int i = 0; i < m_channels.Count; i++)
+                    // Parse EMAX control file into channels
+                    m_channels = parser.ControlFile.AnalogChannelSettings.Values
+                        .Select(channel => new ParsedChannel()
+                        {
+                            Index = Convert.ToInt32(channel.chanlnum),
+                            Name = channel.title,
+                            TimeValues = new List<DateTime>(),
+                            XValues = new List<object>(),
+                            YValues = new List<object>()
+                        })
+                        .OrderBy(channel => channel.Index)
+                        .ToList();
+
+                    // Read values from EMAX data file
+                    while (parser.ReadNext())
                     {
-                        m_channels[i].TimeValues.Add(timestamp);
-                        m_channels[i].XValues.Add(timestamp.Subtract(startTime.Value).TotalSeconds);
-                        m_channels[i].YValues.Add(parser.CorrectedValues[i]);
+                        timestamp = parser.CalculatedTimestamp;
+
+                        // If this is the first frame, store this frame's
+                        // timestamp as the start time of the file
+                        if ((object)startTime == null)
+                            startTime = timestamp;
+
+                        // Read the values from this frame into
+                        // x- and y-value collections for each channel
+                        for (int i = 0; i < m_channels.Count; i++)
+                        {
+                            m_channels[i].TimeValues.Add(timestamp);
+                            m_channels[i].XValues.Add(timestamp.Subtract(startTime.Value).TotalSeconds);
+                            m_channels[i].YValues.Add(parser.CorrectedValues[i]);
+                        }
                     }
                 }
+            }
+            catch (Exception e)
+            {
+                ExceptionList.Add(e);
             }
         }
 
@@ -227,27 +241,35 @@ namespace COMTRADEConverter
         // Thanks other Stephen
         private void ParsePQDIF()
         {
-            List<ObservationRecord> observationRecords;
-
-            using (OpenFileDialog dialog = new OpenFileDialog())
+            try
             {
-                // Parse PQDif File Data
-                using (LogicalParser logicalParser = new LogicalParser(m_currentFilePath))
+                List<ObservationRecord> observationRecords;
+
+                using (OpenFileDialog dialog = new OpenFileDialog())
                 {
-                    observationRecords = new List<ObservationRecord>();
-                    logicalParser.Open();
+                    // Parse PQDif File Data
+                    using (LogicalParser logicalParser = new LogicalParser(m_currentFilePath))
+                    {
+                        observationRecords = new List<ObservationRecord>();
+                        logicalParser.Open();
 
-                    while (logicalParser.HasNextObservationRecord())
-                        observationRecords.Add(logicalParser.NextObservationRecord());
+                        while (logicalParser.HasNextObservationRecord())
+                            observationRecords.Add(logicalParser.NextObservationRecord());
+                    }
+
+                    // Convert to common channel format
+                    m_channels = observationRecords
+                        .SelectMany(observation => observation.ChannelInstances)
+                        .Where(channel => channel.Definition.QuantityTypeID == QuantityType.WaveForm)
+                        .Select(MakeParsedChannel)
+                        .ToList();
                 }
-
-                // Convert to common channel format
-                m_channels = observationRecords
-                    .SelectMany(observation => observation.ChannelInstances)
-                    .Where(channel => channel.Definition.QuantityTypeID == QuantityType.WaveForm)
-                    .Select(MakeParsedChannel)
-                    .ToList();
             }
+            catch (Exception e)
+            {
+                ExceptionList.Add(e);
+            }
+
         }
 
         #endregion
@@ -256,7 +278,39 @@ namespace COMTRADEConverter
 
         private void ProcessSELEVE()
         {
+            ParseSELEVE();
+            WriteDataFile(WriteSchemaFile());
+        }
 
+        // Shamelessly copy pasted from the XDAWaveFormDataParser
+        // Thanks other Stephen
+        private void ParseSELEVE()
+        {
+            try
+            {
+                EventFile parsedFile;
+
+                // Parse event file
+                parsedFile = EventFile.Parse(m_currentFilePath);
+
+                // Convert to common channel format
+                if (parsedFile.EventReports.Count > 0)
+                {
+                    m_channels = parsedFile.EventReports
+                        .SelectMany(report => report.AnalogSection.AnalogChannels.Select(channel => MakeParsedChannel(report, channel)))
+                        .ToList();
+                }
+                else if (parsedFile.CommaSeparatedEventReports.Count > 0)
+                {
+                    m_channels = parsedFile.CommaSeparatedEventReports
+                        .SelectMany(report => report.AnalogSection.AnalogChannels.Select(channel => MakeParsedChannel(report, channel)))
+                        .ToList();
+                }
+            }
+            catch (Exception e)
+            {
+                ExceptionList.Add(e);
+            }
         }
 
         #endregion
@@ -265,51 +319,66 @@ namespace COMTRADEConverter
 
         private Schema WriteSchemaFile()
         {
-            DateTime? startTime = m_channels[0].TimeValues[0];
-            int sampleCount = m_channels[0].YValues.Count;
-            IEnumerable<ChannelMetadata> metadata = m_channels.Select(ConvertToChannelMetadata);
+            try
+            {
+                DateTime? startTime = m_channels[0].TimeValues[0];
+                int sampleCount = m_channels[0].YValues.Count;
+                IEnumerable<ChannelMetadata> metadata = m_channels.Select(ConvertToChannelMetadata);
 
-            string configFileName = Path.Combine(m_exportPath, m_currentFileRootName + ".cfg");
-            StreamWriter configFileWriter = new StreamWriter(new FileStream(configFileName, FileMode.Create, FileAccess.Write), Encoding.ASCII);
+                string configFileName = Path.Combine(m_exportPath, m_currentFileRootName + ".cfg");
+                StreamWriter configFileWriter = new StreamWriter(new FileStream(configFileName, FileMode.Create, FileAccess.Write), Encoding.ASCII);
 
-            Schema schema = Writer.CreateSchema(metadata, "Station Name", "DeviceID", startTime.GetValueOrDefault(), sampleCount, includeFracSecDefinition: false, isBinary: false);
+                Schema schema = Writer.CreateSchema(metadata, "Station Name", "DeviceID", startTime.GetValueOrDefault(), sampleCount, includeFracSecDefinition: false, isBinary: false);
 
-            configFileWriter.Write(schema.FileImage);
-            configFileWriter.Flush();
+                configFileWriter.Write(schema.FileImage);
+                configFileWriter.Flush();
 
-            return schema;
+                return schema;
+            }
+            catch (Exception e)
+            {
+                ExceptionList.Add(e);
+                return new Schema(); //TODO: Maybe come up with a good default Schema
+            }
         }
 
         private void WriteDataFile(Schema schema)
         {
-            int sampleCount = m_channels[0].YValues.Count;
-
-            string dataFileName = Path.Combine(m_exportPath, m_currentFileRootName + ".dat");
-            StreamWriter dataFileWriter = new StreamWriter(new FileStream(dataFileName, FileMode.Create, FileAccess.Write), Encoding.ASCII);
-            FileStream dataFileStream = (FileStream)dataFileWriter.BaseStream;
-
-            for (int sample = 0; sample < sampleCount; sample++)
+            try
             {
-                double[] frame = new double[m_channels.Count];
-                int channelIndex = 0;
-                foreach (ParsedChannel channel in m_channels)
+                int sampleCount = m_channels[0].YValues.Count;
+
+                string dataFileName = Path.Combine(m_exportPath, m_currentFileRootName + ".dat");
+                StreamWriter dataFileWriter = new StreamWriter(new FileStream(dataFileName, FileMode.Create, FileAccess.Write), Encoding.ASCII);
+                FileStream dataFileStream = (FileStream)dataFileWriter.BaseStream;
+
+                for (int sample = 0; sample < sampleCount; sample++)
                 {
-                    try
+                    double[] frame = new double[m_channels.Count];
+                    int channelIndex = 0;
+                    foreach (ParsedChannel channel in m_channels)
                     {
-                        if (channel.YValues.Count > sample)
-                        frame[channelIndex++] = (double)channel.YValues[sample];
-                        else
-                            frame[channelIndex++] = 0.0;
+                        try
+                        {
+                            if (channel.YValues.Count > sample)
+                                frame[channelIndex++] = (double)channel.YValues[sample];
+                            else
+                                frame[channelIndex++] = 0.0;
+                        }
+                        catch (Exception e)
+                        {
+                            m_exceptionList.Add(e);
+                        }
                     }
-                    catch(Exception e)
-                    {
-                        m_exceptionList.Add(e);
-                    }
+                    // TODO: Ask Other Stephen how this ever worked when I had sample++ in
+                    Writer.WriteNextRecordAscii(dataFileWriter, schema, m_channels[0].TimeValues[sample], frame, (uint)sample, injectFracSecValue: false);
                 }
-                // TODO: Ask Other Stephen how this ever worked when I had sample++ in
-                Writer.WriteNextRecordAscii(dataFileWriter, schema, m_channels[0].TimeValues[sample], frame, (uint)sample, injectFracSecValue: false);
+                dataFileWriter.Flush();
             }
-            dataFileWriter.Flush();
+            catch (Exception e)
+            {
+                ExceptionList.Add(e);
+            }
         }
 
         // Has no references because functionality moved to WriteDataFile, but keeping it for now just in case.
@@ -333,6 +402,8 @@ namespace COMTRADEConverter
             return frames;
         }
 
+        // Shamelessly copy pasted from the XDAWaveFormDataParser
+        // Thanks other Stephen
         private ParsedChannel MakeParsedChannel(ChannelInstance channel)
         {
             // Get the time series and value series for the given channel
@@ -372,6 +443,52 @@ namespace COMTRADEConverter
                     .Cast<object>()
                     .ToList();
             }
+
+            return parsedChannel;
+        }
+
+        // Shamelessly copy pasted from the XDAWaveFormDataParser
+        // Thanks other Stephen
+        private ParsedChannel MakeParsedChannel(EventReport report, Channel<double> channel)
+        {
+            List<DateTime> timeSamples = report.AnalogSection.TimeChannel.Samples.ToList();
+
+            List<object> xValues = timeSamples
+                .Select(time => time - timeSamples[0])
+                .Select(timeSpan => timeSpan.TotalSeconds)
+                .Cast<object>()
+                .ToList();
+
+            ParsedChannel parsedChannel = new ParsedChannel()
+            {
+                Name = string.Format("({0}) {1}", report.Command, channel.Name),
+                TimeValues = timeSamples,
+                XValues = xValues,
+                YValues = channel.Samples.Cast<object>().ToList()
+            };
+
+            return parsedChannel;
+        }
+
+        // Shamelessly copy pasted from the XDAWaveFormDataParser
+        // Thanks other Stephen
+        private ParsedChannel MakeParsedChannel(CommaSeparatedEventReport report, Channel<double> channel)
+        {
+            List<DateTime> timeSamples = report.AnalogSection.TimeChannel.Samples.ToList();
+
+            List<object> xValues = timeSamples
+                .Select(time => time - timeSamples[0])
+                .Select(timeSpan => timeSpan.TotalSeconds)
+                .Cast<object>()
+                .ToList();
+
+            ParsedChannel parsedChannel = new ParsedChannel()
+            {
+                Name = string.Format("({0}) {1}", report.Command, channel.Name),
+                TimeValues = timeSamples,
+                XValues = xValues,
+                YValues = channel.Samples.Cast<object>().ToList()
+            };
 
             return parsedChannel;
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,7 +13,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace COMTRADEConverter
 {
@@ -46,6 +46,9 @@ namespace COMTRADEConverter
 
         private void GoButtonClicked(object sender, RoutedEventArgs e)
         {
+            if (!Directory.Exists(m_viewModel.ExportPath))
+                BrowseButtonClick(sender, e);
+
             m_viewModel.ProcessFiles();
         }
 
@@ -65,6 +68,12 @@ namespace COMTRADEConverter
         private void ClearFilesClicked(object sender, RoutedEventArgs e)
         {
             m_viewModel.ClearFileList();
+        }
+
+        private void FileListDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            System.Windows.Controls.ListBox fileList = (System.Windows.Controls.ListBox)sender;
+            m_viewModel.Files.Remove(fileList.SelectedItem.ToString());
         }
     }
 }
