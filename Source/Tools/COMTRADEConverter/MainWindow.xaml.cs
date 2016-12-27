@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Forms;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
-using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -23,28 +23,48 @@ namespace COMTRADEConverter
     {
         #region Members
 
-        private COMTRADEConverterViewModel m_converter;
+        private COMTRADEConverterViewModel m_viewModel;
 
         #endregion
+
         public MainWindow()
         {
             InitializeComponent();
-            m_converter = new COMTRADEConverterViewModel();
+            m_viewModel = new COMTRADEConverterViewModel();
+            DataContext = m_viewModel;
         }
 
-        private void OpenClicked(object sender, RoutedEventArgs e)
+        private void AddFilesClicked(object sender, RoutedEventArgs e)
         {
-            m_converter.OpenFiles();
-            FileListBox.Text = "";
-            foreach (string file in m_converter.Files)
-            {
-                FileListBox.Text += file + "\n";
-            }
+            string filter= "Disturbance Files|*.dat;*.d00;*.rcd;*.rcl;*.pqd;*.eve;*.sel"
+                + "|COMTRADE Files|*.dat;*.d00|EMAX Files|*.rcd;*.rcl|PQDIF Files|*.pqd|SEL Files|*.eve;*.sel|All Files|*.*";
+            OpenFileDialog dialog = new OpenFileDialog() { Multiselect = true, Filter = filter };
+            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.Cancel)
+                return;
+            m_viewModel.AddFiles(dialog.FileNames);
         }
 
-        private void ProcessFilesClicked(object sender, RoutedEventArgs e)
+        private void GoButtonClicked(object sender, RoutedEventArgs e)
         {
-            m_converter.ProcessFiles();
+            m_viewModel.ProcessFiles();
+        }
+
+        private void FileListDrop(object sender, System.Windows.DragEventArgs e)
+        {
+            string[] newFiles = (string[])e.Data.GetData(System.Windows.Forms.DataFormats.FileDrop);
+            m_viewModel.AddFiles(newFiles);
+        }
+
+        private void BrowseButtonClick(object sender, RoutedEventArgs e)
+        {
+            FolderBrowserDialog dialog = new FolderBrowserDialog() { ShowNewFolderButton = true, Description = "Choose a folder to export files to." };
+            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                m_viewModel.ExportPath = dialog.SelectedPath;
+        }
+
+        private void ClearFilesClicked(object sender, RoutedEventArgs e)
+        {
+            m_viewModel.ClearFileList();
         }
     }
 }

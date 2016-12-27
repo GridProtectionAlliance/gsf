@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.IO;
@@ -9,9 +10,11 @@ using GSF.COMTRADE;
 using GSF.EMAX;
 using GSF.PQDIF.Logical;
 using GSF.SELEventParser;
+using System.Collections.ObjectModel;
+
 namespace COMTRADEConverter
 {
-    class COMTRADEConverterViewModel
+    class COMTRADEConverterViewModel : ViewModelBase
     {
         #region [ Members ]
 
@@ -39,7 +42,7 @@ namespace COMTRADEConverter
         private string m_currentFileRootName;
 
         private string m_exportPath;
-        private List<string> m_files;
+        private ObservableCollection<string> m_files;
         private IList<ParsedChannel> m_channels;
         private List<Exception> m_exceptionList;
 
@@ -64,17 +67,26 @@ namespace COMTRADEConverter
                 { ".eve", SELEVE },
                 { ".sel", SELEVE }
             };
+
+            Files = new ObservableCollection<string>();
+            Files.Add("Drag and drop files here or use the add files button");
+            m_exceptionList = new List<Exception>();
+            ExportPath = @"%userprofile%\Documents\COMTRADE Converter Test Data\Output";
         }
 
         #endregion
 
         #region [ Properties ]
 
-        public List<string> Files
+        public string ExportPath
         {
             get
             {
-                return m_files;
+                return m_exportPath;
+            }
+            set
+            {
+                SetProperty(ref m_exportPath, value);
             }
         }
 
@@ -89,6 +101,31 @@ namespace COMTRADEConverter
                 m_currentFilePath = value;
                 m_currentFileDirectory = Path.GetDirectoryName(m_currentFilePath);
                 m_currentFileRootName = Path.GetFileNameWithoutExtension(m_currentFilePath);
+            }
+        }
+
+        public ObservableCollection<string> Files
+        {
+            get
+            {
+                return m_files;
+            }
+
+            private set
+            {
+                SetProperty(ref m_files, value);
+            }
+        }
+
+        public List<Exception> ExceptionList
+        {
+            get
+            {
+                return m_exceptionList;
+            }
+            set
+            {
+                m_exceptionList = value;
             }
         }
 
@@ -360,31 +397,28 @@ namespace COMTRADEConverter
 
         #region Public Methods
 
-        public void OpenFiles()
+        public void AddFilesWithDialog()
         {
-            string debugFilter = "Disturbance Files|*.dat;*.d00;*.rcd;*.rcl;*.pqd;*.eve;*.sel|All Files|*.*";
-            string normalFilter = "COMTRADE Files|*.dat;*.d00|EMAX Files|*.rcd;*.rcl|PQDIF Files|*.pqd|SEL Files|*.eve;*.sel|All Files|*.*";
-            OpenFileDialog dialog = new OpenFileDialog() { Multiselect = true, Filter = debugFilter };
+            string filter = "Disturbance Files|*.dat;*.d00;*.rcd;*.rcl;*.pqd;*.eve;*.sel" 
+                + "COMTRADE Files|*.dat;*.d00|EMAX Files|*.rcd;*.rcl|PQDIF Files|*.pqd|SEL Files|*.eve;*.sel|All Files|*.*";
+            OpenFileDialog dialog = new OpenFileDialog() { Multiselect = true, Filter = filter };
             if (dialog.ShowDialog() == DialogResult.Cancel)
                 return;
 
-            m_files = new List<string>(dialog.FileNames);
+            AddFiles(dialog.FileNames);
+        }
+
+        public void AddFiles(string[] files)
+        {
+            foreach (string file in files)
+            {
+                Files.Add(file);
+            }
         }
 
         public void ProcessFiles()
         {
-            bool debug = true;
-            if (!debug)
-            {
-                FolderBrowserDialog dialog = new FolderBrowserDialog() { ShowNewFolderButton = true, Description = "Choose a folder to export to" };
-                if (dialog.ShowDialog() == DialogResult.Cancel)
-                    return;
-
-                m_exportPath = dialog.SelectedPath;
-            }
-            else
-                m_exportPath = @"C:\Users\sjenks\Documents\COMTRADE Converter Test Data\Output";
-            foreach (string file in m_files)
+            foreach (string file in Files)
             {
                 string extension = Path.GetExtension(file).ToLower();
                 if (m_fileTypeAssociations.ContainsKey(extension))
@@ -393,6 +427,13 @@ namespace COMTRADEConverter
                     m_fileTypeAssociations[extension].DynamicInvoke();
                 }
             }
+
+            Files.Clear();
+        }
+
+        public void ClearFileList()
+        {
+            Files.Clear();
         }
 
         #endregion

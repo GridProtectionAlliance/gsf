@@ -5,35 +5,55 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:COMTRADEConverter"
         mc:Ignorable="d"
-        Title="MainWindow" Height="800" Width="1200">
-    <StackPanel ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
-        <Menu>
+        Title="COMTRADE Converter Utility" Height="800" Width="600">
+    <DockPanel 
+        ScrollViewer.CanContentScroll="True"
+        ScrollViewer.HorizontalScrollBarVisibility="Auto"
+        ScrollViewer.VerticalScrollBarVisibility="Auto">
+        <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File" >
-                <MenuItem Header="_Open" Click="OpenClicked" />
-                <MenuItem Header="Process Files" Click="ProcessFilesClicked" />
+                <MenuItem Header="_Add Files" Click="AddFilesClicked" />
+                <MenuItem Header="Clear Files" Click="ClearFilesClicked" />
+                <MenuItem Header="Change Destination" Click="BrowseButtonClick" />
+                <MenuItem Header="Convert Files" Click="GoButtonClicked" />
             </MenuItem>
-            <MenuItem Header="_Go" />
-            <MenuItem Header="_Exit" />
-        </Menu>        
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition />
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition />
-            </Grid.RowDefinitions>
-            <StackPanel Grid.Column="0">
-                <Grid Background="Silver" Width="500" Height="500" AllowDrop="True" />
-            </StackPanel>
-            <StackPanel Grid.Column="1">
-                <Label>
-                    File List
-                </Label>
-                <TextBox Name="FileListBox" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
-                    Files
-                </TextBox>
-            </StackPanel>
-        </Grid>
-    </StackPanel>
+            <MenuItem Header="Errors" />
+        </Menu>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+            <StackPanel.Resources>
+                <Style TargetType="{x:Type Button}">
+                    <Setter Property="Margin" Value="10, 5, 0, 5" />
+                </Style>
+            </StackPanel.Resources>
+            <Button
+            Content="Add files"
+            Click="AddFilesClicked" />
+            <Button 
+                Content="Clear file list"
+                Click="ClearFilesClicked"/>
+            <Button
+                Content="Convert Files"
+                Click="GoButtonClicked"/>
+        </StackPanel>
+        <DockPanel DockPanel.Dock="Top">
+            <DockPanel DockPanel.Dock="Bottom">
+                <TextBlock 
+                    DockPanel.Dock="Left" 
+                    Text="Destination: " />
+                <Button
+                    DockPanel.Dock="Right"
+                    Click="BrowseButtonClick"
+                    Content="Browse"/>
+                <TextBox 
+                    DockPanel.Dock="Right"
+                    Text="{Binding ExportPath, Mode=TwoWay}"/>
+            </DockPanel>
+            <ListBox
+                ItemsSource="{Binding Files, Mode=OneWay}"
+                Background="LightGray"
+                AllowDrop="True"
+                Drop="FileListDrop"
+                />
+        </DockPanel>
+    </DockPanel>
 </Window>
