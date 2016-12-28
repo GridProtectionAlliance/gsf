@@ -69,7 +69,6 @@ namespace COMTRADEConverter
             };
 
             Files = new ObservableCollection<string>();
-            Files.Add("Drag and drop files here or use the add files button");
             m_exceptionList = new List<Exception>();
             ExportPath = @"C:\Users\sjenks\Documents\COMTRADE Converter Test Data\Output";
         }

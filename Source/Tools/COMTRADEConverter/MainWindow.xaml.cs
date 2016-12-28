@@ -31,6 +31,7 @@ namespace COMTRADEConverter
         {
             InitializeComponent();
             m_viewModel = new COMTRADEConverterViewModel();
+            m_viewModel.AddFiles( new string[] { "Drag and drop files here or use the add files button", "Double click on a file to remove it." } );
             DataContext = m_viewModel;
         }
 
