@@ -35,14 +35,22 @@ namespace COMTRADEConverter
             DataContext = m_viewModel;
         }
 
+        #region EventHandlers
+
         private void AddFilesClicked(object sender, RoutedEventArgs e)
         {
-            string filter= "Disturbance Files|*.dat;*.d00;*.rcd;*.rcl;*.pqd;*.eve;*.sel"
-                + "|COMTRADE Files|*.dat;*.d00|EMAX Files|*.rcd;*.rcl|PQDIF Files|*.pqd|SEL Files|*.eve;*.sel|All Files|*.*";
+            string filter = "Disturbance Files|*.dat;*.d00;*.rcd;*.rcl;*.pqd;*.eve;*.sel|"
+                + "COMTRADE Files|*.dat;*.d00|EMAX Files|*.rcd;*.rcl|PQDIF Files|*.pqd|SEL Files|*.eve;*.sel|All Files|*.*";
             OpenFileDialog dialog = new OpenFileDialog() { Multiselect = true, Filter = filter };
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.Cancel)
                 return;
             m_viewModel.AddFiles(dialog.FileNames);
+        }
+
+        private void FileListDrop(object sender, System.Windows.DragEventArgs e)
+        {
+            string[] newFiles = (string[])e.Data.GetData(System.Windows.Forms.DataFormats.FileDrop);
+            m_viewModel.AddFiles(newFiles);
         }
 
         private void GoButtonClicked(object sender, RoutedEventArgs e)
@@ -51,12 +59,6 @@ namespace COMTRADEConverter
                 BrowseButtonClick(sender, e);
 
             m_viewModel.ProcessFiles();
-        }
-
-        private void FileListDrop(object sender, System.Windows.DragEventArgs e)
-        {
-            string[] newFiles = (string[])e.Data.GetData(System.Windows.Forms.DataFormats.FileDrop);
-            m_viewModel.AddFiles(newFiles);
         }
 
         private void BrowseButtonClick(object sender, RoutedEventArgs e)
@@ -74,7 +76,10 @@ namespace COMTRADEConverter
         private void FileListDoubleClick(object sender, MouseButtonEventArgs e)
         {
             System.Windows.Controls.ListBox fileList = (System.Windows.Controls.ListBox)sender;
-            m_viewModel.Files.Remove(fileList.SelectedItem.ToString());
+            if (fileList.SelectedItem != null)
+                m_viewModel.Files.Remove(fileList.SelectedItem.ToString());
         }
+
+        #endregion
     }
 }
