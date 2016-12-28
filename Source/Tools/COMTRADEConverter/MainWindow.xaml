@@ -13,21 +13,21 @@
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File" >
                 <MenuItem Header="_Add Files" Click="AddFilesClicked" />
-                <MenuItem Header="Clear Files" Click="ClearFilesClicked" />
-                <MenuItem Header="Change Destination" Click="BrowseButtonClick" />
-                <MenuItem Header="Convert Files" Click="GoButtonClicked" />
+                <MenuItem Header="Clear _Files" Click="ClearFilesClicked" />
+                <MenuItem Header="Change _Destination" Click="BrowseButtonClick" />
+                <MenuItem Header="_Convert Files" Click="GoButtonClicked" />
             </MenuItem>
-            <MenuItem Header="Errors" />
+            <MenuItem Header="_Errors" />
         </Menu>
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
             <StackPanel.Resources>
                 <Style TargetType="{x:Type Button}">
-                    <Setter Property="Margin" Value="10, 5, 0, 5" />
+                    <Setter Property="Margin" Value="5, 5, 0, 5" />
                 </Style>
             </StackPanel.Resources>
             <Button
-            Content="Add files"
-            Click="AddFilesClicked" />
+                Content="Add files"
+                Click="AddFilesClicked" />
             <Button 
                 Content="Clear file list"
                 Click="ClearFilesClicked"/>
@@ -35,26 +35,25 @@
                 Content="Convert Files"
                 Click="GoButtonClicked"/>
         </StackPanel>
-        <DockPanel DockPanel.Dock="Top">
-            <DockPanel DockPanel.Dock="Bottom">
-                <TextBlock 
-                    DockPanel.Dock="Left" 
-                    Text="Destination: " />
-                <Button
-                    DockPanel.Dock="Right"
-                    Click="BrowseButtonClick"
-                    Content="Browse"/>
-                <TextBox 
-                    DockPanel.Dock="Right"
-                    Text="{Binding ExportPath, Mode=TwoWay}"/>
-            </DockPanel>
-            <ListBox
-                ItemsSource="{Binding Files, Mode=OneWay}"
-                Background="LightGray"
-                AllowDrop="True"
-                Drop="FileListDrop"
-                MouseDoubleClick="FileListDoubleClick"
-                />
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,5">
+            <TextBlock Margin="5,0,0,0"
+                DockPanel.Dock="Left" 
+                Text="Destination:" />
+            <Button Margin="0,0,5,0"
+                DockPanel.Dock="Right"
+                Click="BrowseButtonClick"
+                Content="Browse"/>
+            <TextBox 
+                Margin="5,0,5,0"
+                DockPanel.Dock="Right"
+                Text="{Binding ExportPath, Mode=TwoWay}"/>
         </DockPanel>
+        <ListBox Margin="5,0,5,5"
+            ItemsSource="{Binding Files, Mode=OneWay}"
+            Background="LightGray"
+            AllowDrop="True"
+            Drop="FileListDrop"
+            MouseDoubleClick="FileListDoubleClick"
+            />
     </DockPanel>
 </Window>
