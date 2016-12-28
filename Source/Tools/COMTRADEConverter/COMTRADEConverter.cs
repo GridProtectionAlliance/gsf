@@ -34,14 +34,12 @@ namespace COMTRADEConverter
         // Delegates
         private delegate void ProcessFile();
 
-        // Events
-
         // Fields
         private string m_currentFilePath;
         private string m_currentFileDirectory;
         private string m_currentFileRootName;
-
         private string m_exportPath;
+
         private ObservableCollection<string> m_files;
         private IList<ParsedChannel> m_channels;
         private List<Exception> m_exceptionList;
@@ -124,7 +122,7 @@ namespace COMTRADEConverter
             }
             set
             {
-                m_exceptionList = value;
+                SetProperty(ref m_exceptionList, value);
             }
         }
 
@@ -380,27 +378,6 @@ namespace COMTRADEConverter
             }
         }
 
-        // Has no references because functionality moved to WriteDataFile, but keeping it for now just in case.
-        private List<double[]> ConvertChannelsToFrames() //Maybe there is a better term than "frames"?
-        {
-            List<double[]> frames = new List<double[]>();
-            int sampleCount = m_channels[0].YValues.Count;
-
-            for (int sampleNumber = 0; sampleNumber < sampleCount; sampleNumber++)
-            {
-                double[] frame = new double[m_channels.Count];
-                int i = 0;
-                foreach (ParsedChannel channel in m_channels)
-                {
-                    frame[i] = (double)channel.YValues[sampleNumber];
-                    i++;
-                }
-                frames.Add(frame);
-            }
-
-            return frames;
-        }
-
         // Shamelessly copy pasted from the XDAWaveFormDataParser
         // Thanks other Stephen
         private ParsedChannel MakeParsedChannel(ChannelInstance channel)
@@ -553,22 +530,6 @@ namespace COMTRADEConverter
         }
 
         #endregion
-
-        #endregion
-
-        #region [ Operators ]
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Fields
-
-        // Static Constructor
-
-        // Static Properties
-
-        // Static Methods
 
         #endregion
     }
