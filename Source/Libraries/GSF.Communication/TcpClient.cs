@@ -945,12 +945,11 @@ namespace GSF.Communication
                     m_receiveState = receiveState;
                 }
 
-
-                    // Start receiving data
-                    if (m_payloadAware)
-                        ReceivePayloadAwareAsync(receiveState);
-                    else
-                        ReceivePayloadUnawareAsync(receiveState);
+                // Start receiving data
+                if (m_payloadAware)
+                    ReceivePayloadAwareAsync(receiveState);
+                else
+                    ReceivePayloadUnawareAsync(receiveState);
 
                 // Further socket interactions are handled through the SslStream
                 // object, so the SocketAsyncEventArgs is no longer needed
