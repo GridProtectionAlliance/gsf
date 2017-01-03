@@ -637,7 +637,10 @@ namespace GSF.Communication
 
                     // Store connectState in m_connectState so that calls to Disconnect
                     // and Dispose can dispose resources and cancel asynchronous loops
-                    m_connectState = connectState;
+                    using (m_connectState)
+                    {
+                        m_connectState = connectState;
+                    }
 
                     OnConnectionAttempt();
                     m_connectWaitHandle.Reset();
@@ -770,7 +773,10 @@ namespace GSF.Communication
 
                     // Store sendState in m_sendState so that calls to Disconnect
                     // and Dispose can dispose resources and cancel asynchronous loops
-                    m_sendState = sendState;
+                    using (m_sendState)
+                    {
+                        m_sendState = sendState;
+                    }
 
                     // Check the state of cancellation one more time before
                     // proceeding to the next step of the connection loop
@@ -792,7 +798,10 @@ namespace GSF.Communication
 
                     // Store receiveState in m_receiveState so that calls to Disconnect
                     // and Dispose can dispose resources and cancel asynchronous loops
-                    m_receiveState = receiveState;
+                    using (m_receiveState)
+                    {
+                        m_receiveState = receiveState;
+                    }
 
                     // Start receiving data
                     if (m_payloadAware)
@@ -905,7 +914,10 @@ namespace GSF.Communication
 
                 // Store sendState in m_sendState so that calls to Disconnect
                 // and Dispose can dispose resources and cancel asynchronous loops
-                m_sendState = sendState;
+                using (m_sendState)
+                {
+                    m_sendState = sendState;
+                }
 
                 // Check the state of cancellation one more time before
                 // proceeding to the next step of the connection loop
@@ -928,13 +940,17 @@ namespace GSF.Communication
 
                 // Store receiveState in m_receiveState so that calls to Disconnect
                 // and Dispose can dispose resources and cancel asynchronous loops
-                m_receiveState = receiveState;
+                using (m_receiveState)
+                {
+                    m_receiveState = receiveState;
+                }
 
-                // Start receiving data
-                if (m_payloadAware)
-                    ReceivePayloadAwareAsync(receiveState);
-                else
-                    ReceivePayloadUnawareAsync(receiveState);
+
+                    // Start receiving data
+                    if (m_payloadAware)
+                        ReceivePayloadAwareAsync(receiveState);
+                    else
+                        ReceivePayloadUnawareAsync(receiveState);
 
                 // Further socket interactions are handled through the SslStream
                 // object, so the SocketAsyncEventArgs is no longer needed
