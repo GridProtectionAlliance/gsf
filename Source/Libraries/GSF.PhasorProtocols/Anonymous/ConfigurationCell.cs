@@ -60,6 +60,8 @@ namespace GSF.PhasorProtocols.Anonymous
         private long m_deviceErrors;
         private long m_measurementsReceived;
         private long m_measurementsExpected;
+        private long m_measurementsWithError;
+        private long m_measurementsDefined;
         private object m_source;
 
         #endregion
@@ -279,6 +281,36 @@ namespace GSF.PhasorProtocols.Anonymous
             set
             {
                 m_measurementsExpected = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the number of measurements received while this <see cref="IDevice"/> was reporting errors.
+        /// </summary>
+        public long MeasurementsWithError
+        {
+            get
+            {
+                return m_measurementsWithError;
+            }
+            set
+            {
+                m_measurementsWithError = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the number of measurements (per frame) defined for this <see cref="ConfigurationCell"/>.
+        /// </summary>
+        public long MeasurementsDefined
+        {
+            get
+            {
+                return m_measurementsDefined;
+            }
+            set
+            {
+                m_measurementsDefined = value;
             }
         }
 

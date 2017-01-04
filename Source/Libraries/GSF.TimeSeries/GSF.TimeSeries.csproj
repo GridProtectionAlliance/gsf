@@ -174,7 +174,6 @@
     <Compile Include="Transport\CompactMeasurement.cs" />
     <Compile Include="Transport\IClientSubscription.cs" />
     <Compile Include="Transport\SignalIndexCache.cs" />
-    <Compile Include="Transport\SourceDevice.cs" />
     <Compile Include="Transport\SubscriptionInfo.cs" />
     <Compile Include="Transport\SynchronizedClientSubscription.cs" />
     <Compile Include="Transport\TemporalClientSubscriptionProxy.cs" />

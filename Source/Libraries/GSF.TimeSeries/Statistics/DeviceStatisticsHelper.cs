@@ -40,6 +40,7 @@ namespace GSF.TimeSeries.Statistics
 
         private long m_lastUpdateTicks;
         private int m_measurementsInSecond;
+        private int m_errorsInSecond;
         private double m_expectedMeasurements;
 
         #endregion
@@ -104,12 +105,26 @@ namespace GSF.TimeSeries.Statistics
         }
 
         /// <summary>
+        /// Increases the count of the number of measurements received while the device is reporting errors.
+        /// </summary>
+        /// <param name="count">The number of measurements received while the device is reporting errors since the last time this method was called.</param>
+        /// <remarks>
+        /// Call this each time measurements with errors have been received by the device in order
+        /// to properly track the <see cref="IDevice.MeasurementsWithError"/> statistic.
+        /// </remarks>
+        public void AddToMeasurementsWithError(int count)
+        {
+            Interlocked.Add(ref m_errorsInSecond, count);
+        }
+
+        /// <summary>
         /// Updates the statistics for the number of measurements received and the number
         /// of measurements expected in the <see cref="IDevice"/> wrapped by this helper.
         /// </summary>
         /// <remarks>
         /// Call this periodically, preferably on a slow timer (e.g., once per second),
-        /// in order to update the <see cref="IDevice.MeasurementsReceived"/> and
+        /// in order to update the <see cref="IDevice.MeasurementsReceived"/>,
+        /// <see cref="IDevice.MeasurementsWithError"/>, and
         /// <see cref="IDevice.MeasurementsExpected"/> statistics.
         /// </remarks>
         public void Update()
@@ -124,7 +139,8 @@ namespace GSF.TimeSeries.Statistics
         /// <param name="nowTicks">The current time, in ticks.</param>
         /// <remarks>
         /// Call this periodically, preferably on a slow timer (e.g., once per second),
-        /// in order to update the <see cref="IDevice.MeasurementsReceived"/> and
+        /// in order to update the <see cref="IDevice.MeasurementsReceived"/>,
+        /// <see cref="IDevice.MeasurementsWithError"/>, and
         /// <see cref="IDevice.MeasurementsExpected"/> statistics. This method is preferred
         /// when tracking statistics for multiple <see cref="IDevice"/>s to reduce the number
         /// of calls to <see cref="DateTime.UtcNow"/>.
@@ -132,6 +148,7 @@ namespace GSF.TimeSeries.Statistics
         public void Update(long nowTicks)
         {
             int measurementsInSecond = Interlocked.Exchange(ref m_measurementsInSecond, 0);
+            int errorsInSecond = Interlocked.Exchange(ref m_errorsInSecond, 0);
             long expectedMeasurementsInSecond;
             double diff;
 
@@ -142,6 +159,7 @@ namespace GSF.TimeSeries.Statistics
                 expectedMeasurementsInSecond = (long)m_expectedMeasurements;
 
                 m_device.MeasurementsReceived += measurementsInSecond;
+                m_device.MeasurementsWithError += errorsInSecond;
                 m_device.MeasurementsExpected += expectedMeasurementsInSecond;
 
                 m_expectedMeasurements -= expectedMeasurementsInSecond;

@@ -37,7 +37,7 @@ namespace GSF.TimeSeries.Statistics
             IDevice device = source as IDevice;
 
             if ((object)device != null)
-                statistic = s_statisticValueCache.GetDifference(device, device.DataQualityErrors, "DataQualityErrors");
+                statistic = s_statisticValueCache.GetDifference(device, device.DataQualityErrors, nameof(device.DataQualityErrors));
 
             return statistic;
         }
@@ -54,7 +54,7 @@ namespace GSF.TimeSeries.Statistics
             IDevice device = source as IDevice;
 
             if ((object)device != null)
-                statistic = s_statisticValueCache.GetDifference(device, device.TimeQualityErrors, "TimeQualityErrors");
+                statistic = s_statisticValueCache.GetDifference(device, device.TimeQualityErrors, nameof(device.TimeQualityErrors));
 
             return statistic;
         }
@@ -71,7 +71,7 @@ namespace GSF.TimeSeries.Statistics
             IDevice device = source as IDevice;
 
             if ((object)device != null)
-                statistic = s_statisticValueCache.GetDifference(device, device.DeviceErrors, "DeviceErrors");
+                statistic = s_statisticValueCache.GetDifference(device, device.DeviceErrors, nameof(device.DeviceErrors));
 
             return statistic;
         }
@@ -88,7 +88,7 @@ namespace GSF.TimeSeries.Statistics
             IDevice device = source as IDevice;
 
             if ((object)device != null)
-                statistic = s_statisticValueCache.GetDifference(device, device.MeasurementsReceived, "MeasurementsReceived");
+                statistic = s_statisticValueCache.GetDifference(device, device.MeasurementsReceived, nameof(device.MeasurementsReceived));
 
             return statistic;
         }
@@ -105,7 +105,41 @@ namespace GSF.TimeSeries.Statistics
             IDevice device = source as IDevice;
 
             if ((object)device != null)
-                statistic = s_statisticValueCache.GetDifference(device, device.MeasurementsExpected, "MeasurementsExpected");
+                statistic = s_statisticValueCache.GetDifference(device, device.MeasurementsExpected, nameof(device.MeasurementsExpected));
+
+            return statistic;
+        }
+
+        /// <summary>
+        /// Calculates expected number of measurements received while device was reporting errors during last reporting interval.
+        /// </summary>
+        /// <param name="source">Source Device.</param>
+        /// <param name="arguments">Any needed arguments for statistic calculation.</param>
+        /// <returns>Measurements Expected Statistic.</returns>
+        private static double GetDeviceStatistic_MeasurementsWithError(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            IDevice device = source as IDevice;
+
+            if ((object)device != null)
+                statistic = s_statisticValueCache.GetDifference(device, device.MeasurementsWithError, nameof(device.MeasurementsWithError));
+
+            return statistic;
+        }
+
+        /// <summary>
+        /// Calculates number of defined measurements from device during last reporting interval.
+        /// </summary>
+        /// <param name="source">Source Device.</param>
+        /// <param name="arguments">Any needed arguments for statistic calculation.</param>
+        /// <returns>Defined Measurements Statistic.</returns>
+        private static double GetDeviceStatistic_MeasurementsDefined(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            IDevice device = source as IDevice;
+
+            if ((object)device != null)
+                statistic = device.MeasurementsDefined;
 
             return statistic;
         }

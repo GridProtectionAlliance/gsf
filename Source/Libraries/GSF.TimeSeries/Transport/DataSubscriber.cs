@@ -152,6 +152,8 @@ namespace GSF.TimeSeries.Transport
             private long m_deviceErrors;
             private long m_measurementsReceived;
             private double m_measurementsExpected;
+            private long m_measurementsWithError;
+            private long m_measurementsDefined;
 
             private bool m_disposed;
 
@@ -275,6 +277,30 @@ namespace GSF.TimeSeries.Transport
                 set
                 {
                     Interlocked.Exchange(ref m_measurementsExpected, value);
+                }
+            }
+
+            public long MeasurementsWithError
+            {
+                get
+                {
+                    return Interlocked.Read(ref m_measurementsWithError);
+                }
+                set
+                {
+                    Interlocked.Exchange(ref m_measurementsWithError, value);
+                }
+            }
+
+            public long MeasurementsDefined
+            {
+                get
+                {
+                    return Interlocked.Read(ref m_measurementsDefined);
+                }
+                set
+                {
+                    Interlocked.Exchange(ref m_measurementsDefined, value);
                 }
             }
 
@@ -3049,7 +3075,10 @@ namespace GSF.TimeSeries.Transport
                                     foreach (IGrouping<Ticks, IMeasurement> frame in deviceGroup.GroupBy(measurement => measurement.Timestamp))
                                     {
                                         // Determine the number of measurements received with valid values
+                                        const MeasurementStateFlags ErrorFlags = MeasurementStateFlags.BadData | MeasurementStateFlags.BadTime | MeasurementStateFlags.SystemError;
+                                        Func<MeasurementStateFlags, bool> hasError = stateFlags => (stateFlags & ErrorFlags) != MeasurementStateFlags.Normal;
                                         int measurementsReceived = frame.Count(measurement => !double.IsNaN(measurement.Value));
+                                        int measurementsWithError = frame.Count(measurement => !double.IsNaN(measurement.Value) && hasError(measurement.StateFlags));
 
                                         IMeasurement statusFlags = null;
                                         IMeasurement frequency = null;
@@ -3086,20 +3115,32 @@ namespace GSF.TimeSeries.Transport
                                                 statisticsHelper.Device.DeviceErrors++;
 
                                             measurementsReceived--;
+
+                                            if (hasError(statusFlags.StateFlags))
+                                                measurementsWithError--;
                                         }
 
                                         // Zero is not a valid value for frequency.
                                         // If frequency is zero, invalidate both frequency and delta frequency
                                         if ((object)frequency != null && frequency.Value == 0.0D)
                                         {
-                                            if ((object)deltaFrequency != null)
+                                            if ((object)deltaFrequency != null && !double.IsNaN(deltaFrequency.Value))
                                                 measurementsReceived -= 2;
                                             else
                                                 measurementsReceived--;
+
+                                            if (hasError(frequency.StateFlags))
+                                            {
+                                                if ((object)deltaFrequency != null && !double.IsNaN(deltaFrequency.Value))
+                                                    measurementsWithError -= 2;
+                                                else
+                                                    measurementsWithError--;
+                                            }
                                         }
 
                                         // Track the number of measurements received
                                         statisticsHelper.AddToMeasurementsReceived(measurementsReceived);
+                                        statisticsHelper.AddToMeasurementsWithError(measurementsWithError);
                                     }
                                 }
                             }
@@ -4417,9 +4458,13 @@ namespace GSF.TimeSeries.Transport
 
                 foreach (IGrouping<DeviceStatisticsHelper<SubscribedDevice>, Guid> group in groups)
                 {
-                    group.Key.ExpectedMeasurementsPerSecond = group
+                    int[] frameRates = group
                         .Select(signalID => GetFramesPerSecond(measurementTable, signalID))
-                        .Sum();
+                        .Where(frameRate => frameRate != 0)
+                        .ToArray();
+
+                    group.Key.Device.MeasurementsDefined = frameRates.Length;
+                    group.Key.ExpectedMeasurementsPerSecond = frameRates.Sum();
                 }
             }
             catch (Exception ex)

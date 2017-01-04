@@ -261,13 +261,15 @@ namespace GSF.TimeSeries
                                                 "Average number of IP datagrams (or bytes on Mono) received by this process per second."
                                               };
 
-            string[] DeviceStatNames = { "Data Quality Errors", "Time Quality Errors", "Device Errors", "Measurements Received", "Measurements Expected" };
+            string[] DeviceStatNames = { "Data Quality Errors", "Time Quality Errors", "Device Errors", "Measurements Received", "Measurements Expected", "Measurements With Error", "Measurements Defined" };
 
             string[] DeviceStatDescriptions = { "Number of data quality errors reported by device during last reporting interval.",
                                                 "Number of time quality errors reported by device during last reporting interval.",
                                                 "Number of device errors reported by device during last reporting interval.",
                                                 "Number of measurements received from device during last reporting interval.",
-                                                "Expected number of measurements received from device during last reporting interval."
+                                                "Expected number of measurements received from device during last reporting interval.",
+                                                "Number of measurements recevied while device was reporting errors during last reporting interval.",
+                                                "Number of defined measurements from device during last reporting interval."
                                               };
 
             string[] SubscriberStatNames = { "Subscriber Connected", "Subscriber Authenticated", "Processed Measurements", "Total Bytes Received", "Authorized Signal Count", "Unauthorized Signal Count", "Lifetime Measurements", "Lifetime Bytes Received", "Minimum Measurements Per Second", "Maximum Measurements Per Second", "Average Measurements Per Second", "Lifetime Minimum Latency", "Lifetime Maximum Latency", "Lifetime Average Latency" };

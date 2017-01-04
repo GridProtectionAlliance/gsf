@@ -72,5 +72,23 @@ namespace GSF.TimeSeries
             get;
             set;
         }
+
+        /// <summary>
+        /// Gets or sets the number of measurements recevied while this <see cref="IDevice"/> was reporting errors.
+        /// </summary>
+        long MeasurementsWithError
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the number of measurements (per frame) defined for this <see cref="IDevice"/>.
+        /// </summary>
+        long MeasurementsDefined
+        {
+            get;
+            set;
+        }
     }
 }

@@ -1762,9 +1762,15 @@ namespace PhasorProtocolAdapters
 
                         // Track measurement count statistics for this device
                         if (m_countOnlyMappedMeasurements)
+                        {
                             statisticsHelper.AddToMeasurementsReceived(CountMappedMeasurements(parsedDevice, deviceMappedMeasurements));
+                            statisticsHelper.AddToMeasurementsWithError(CountMappedMeasurementsWithError(parsedDevice, deviceMappedMeasurements));
+                        }
                         else
+                        {
                             statisticsHelper.AddToMeasurementsReceived(CountParsedMeasurements(parsedDevice));
+                            statisticsHelper.AddToMeasurementsWithError(CountParsedMeasurementsWithError(parsedDevice));
+                        }
 
                         mappedMeasurements.AddRange(deviceMappedMeasurements);
                         deviceMappedMeasurements.Clear();
@@ -1812,6 +1818,20 @@ namespace PhasorProtocolAdapters
             return frequencyValue.Frequency == 0.0D
                 ? mappedMeasurements.Count(measurement => !double.IsNaN(measurement.Value) && frequencyValue.Measurements.All(freq => measurement.Key != freq.Key))
                 : mappedMeasurements.Count(measurement => !double.IsNaN(measurement.Value));
+        }
+
+        private int CountMappedMeasurementsWithError(IDataCell parsedDevice, List<IMeasurement> mappedMeasurements)
+        {
+            const MeasurementStateFlags ErrorFlags = MeasurementStateFlags.BadData | MeasurementStateFlags.BadTime | MeasurementStateFlags.SystemError;
+            Func<MeasurementStateFlags, bool> hasError = stateFlags => (stateFlags & ErrorFlags) != MeasurementStateFlags.Normal;
+            IFrequencyValue frequencyValue = parsedDevice.FrequencyValue;
+
+            // Ignore frequency measurements when
+            // frequency value is zero - some PDCs use
+            // zero for missing frequency values
+            return frequencyValue.Frequency == 0.0D
+                ? mappedMeasurements.Count(measurement => hasError(measurement.StateFlags) && !double.IsNaN(measurement.Value) && frequencyValue.Measurements.All(freq => measurement.Key != freq.Key))
+                : mappedMeasurements.Count(measurement => hasError(measurement.StateFlags) && !double.IsNaN(measurement.Value));
         }
 
         // Could parsed measurements for this device
@@ -1866,6 +1886,67 @@ namespace PhasorProtocolAdapters
                 foreach (IMeasurement measurement in frequencyValue.Measurements)
                 {
                     if (!double.IsNaN(measurement.Value))
+                        parsedMeasurementCount++;
+                }
+            }
+
+            return parsedMeasurementCount;
+        }
+
+        // Could parsed measurements for this device
+        private int CountParsedMeasurementsWithError(IDataCell parsedDevice)
+        {
+            const MeasurementStateFlags ErrorFlags = MeasurementStateFlags.BadData | MeasurementStateFlags.BadTime | MeasurementStateFlags.SystemError;
+            Func<MeasurementStateFlags, bool> hasError = stateFlags => (stateFlags & ErrorFlags) != MeasurementStateFlags.Normal;
+            int parsedMeasurementCount = 0;
+
+            var phasorValues = parsedDevice.PhasorValues;
+            var digitalValues = parsedDevice.DigitalValues;
+            var analogValues = parsedDevice.AnalogValues;
+            var frequencyValue = parsedDevice.FrequencyValue;
+            int count;
+
+            count = phasorValues.Count;
+
+            for (int x = 0; x < count; x++)
+            {
+                foreach (IMeasurement measurement in phasorValues[x].Measurements)
+                {
+                    if (hasError(measurement.StateFlags) && !double.IsNaN(measurement.Value))
+                        parsedMeasurementCount++;
+                }
+            }
+
+            count = digitalValues.Count;
+
+            for (int x = 0; x < count; x++)
+            {
+                foreach (IMeasurement measurement in digitalValues[x].Measurements)
+                {
+                    if (hasError(measurement.StateFlags) && !double.IsNaN(measurement.Value))
+                        parsedMeasurementCount++;
+                }
+            }
+
+            count = analogValues.Count;
+
+            for (int x = 0; x < count; x++)
+            {
+                foreach (IMeasurement measurement in analogValues[x].Measurements)
+                {
+                    if (hasError(measurement.StateFlags) && !double.IsNaN(measurement.Value))
+                        parsedMeasurementCount++;
+                }
+            }
+
+            // Ignore frequency measurements when
+            // frequency value is zero - some PDCs use
+            // zero for missing frequency values
+            if (frequencyValue.Frequency != 0.0D)
+            {
+                foreach (IMeasurement measurement in frequencyValue.Measurements)
+                {
+                    if (hasError(measurement.StateFlags) && !double.IsNaN(measurement.Value))
                         parsedMeasurementCount++;
                 }
             }
@@ -1962,6 +2043,7 @@ namespace PhasorProtocolAdapters
                     foreach (DeviceStatisticsHelper<ConfigurationCell> statisticsHelper in StatisticsHelpers)
                     {
                         measurementsPerFrame = measurementTable.Select($"SignalReference LIKE '{statisticsHelper.Device.IDLabel}-%' AND SignalType <> 'FLAG' AND SignalType <> 'STAT'").Length;
+                        statisticsHelper.Device.MeasurementsDefined = measurementsPerFrame;
                         statisticsHelper.ExpectedMeasurementsPerSecond = configurationFrame.FrameRate * measurementsPerFrame;
                         statisticsHelper.Reset(now);
                     }
