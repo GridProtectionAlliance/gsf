@@ -246,6 +246,8 @@ namespace GSF.Net.Ftp
 
         private void TestTransferResult()
         {
+            m_session.ControlChannel.RefreshResponse();
+
             int responseCode = m_session.ControlChannel.LastResponse.Code;
 
             if (responseCode == FtpResponse.ClosingDataChannel)
