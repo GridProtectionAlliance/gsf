@@ -45,6 +45,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         private int? m_vendorDeviceId;
         private int m_accessId;
         private int m_parentAccessId;
+        private int m_frameRate;
         private bool m_include;
         private int m_digitalCount;
         private int m_analogCount;
@@ -79,7 +80,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 if (m_acronym.Length > 200)
                     m_acronym = m_acronym.Substring(0, 200);
 
-                OnPropertyChanged("Acronym");
+                OnPropertyChanged(nameof(Acronym));
                 Existing = (Device.GetDevice(null, "WHERE Acronym = '" + m_acronym.ToUpper() + "'") != null);
             }
         }
@@ -101,7 +102,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 else
                     m_name = value;
 
-                OnPropertyChanged("Name");
+                OnPropertyChanged(nameof(Name));
             }
         }
 
@@ -117,7 +118,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_longitude = value;
-                OnPropertyChanged("Longitude");
+                OnPropertyChanged(nameof(Longitude));
             }
         }
 
@@ -133,7 +134,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_latitude = value;
-                OnPropertyChanged("Latitude");
+                OnPropertyChanged(nameof(Latitude));
             }
         }
 
@@ -149,7 +150,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_vendorDeviceId = value;
-                OnPropertyChanged("VendorDeviceID");
+                OnPropertyChanged(nameof(VendorDeviceID));
             }
         }
 
@@ -165,7 +166,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_accessId = value;
-                OnPropertyChanged("AccessID");
+                OnPropertyChanged(nameof(AccessID));
             }
         }
 
@@ -181,7 +182,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_parentAccessId = value;
-                OnPropertyChanged("ParentAccessID");
+                OnPropertyChanged(nameof(ParentAccessID));
             }
         }
 
@@ -197,7 +198,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_include = value;
-                OnPropertyChanged("Include");
+                OnPropertyChanged(nameof(Include));
             }
         }
 
@@ -213,7 +214,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_digitalCount = value;
-                OnPropertyChanged("DigitalCount");
+                OnPropertyChanged(nameof(DigitalCount));
             }
         }
 
@@ -229,7 +230,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_analogCount = value;
-                OnPropertyChanged("AnalogCount");
+                OnPropertyChanged(nameof(AnalogCount));
             }
         }
 
@@ -245,7 +246,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_addDigitals = value;
-                OnPropertyChanged("AddDigitals");
+                OnPropertyChanged(nameof(AddDigitals));
             }
         }
 
@@ -261,7 +262,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_addAnalogs = value;
-                OnPropertyChanged("AddAnalogs");
+                OnPropertyChanged(nameof(AddAnalogs));
             }
         }
 
@@ -277,7 +278,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_existing = value;
-                OnPropertyChanged("Existing");
+                OnPropertyChanged(nameof(Existing));
                 if (m_existing)
                     StatusColor = "green";
                 else
@@ -297,7 +298,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_statusColor = value;
-                OnPropertyChanged("StatusColor");
+                OnPropertyChanged(nameof(StatusColor));
             }
         }
 
@@ -313,7 +314,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             set
             {
                 m_phasorList = value;
-                OnPropertyChanged("PhasorList");
+                OnPropertyChanged(nameof(PhasorList));
             }
         }
 

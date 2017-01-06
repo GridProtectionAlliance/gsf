@@ -87,6 +87,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         private string m_pdcAcronym;
         private string m_pdcName;
         private int m_pdcVendorDeviceID;
+        private int m_pdcFrameRate;
         private int m_companyID;
         private int m_historianID;
         private int m_interconnectionID;
@@ -133,6 +134,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             m_protocolLookupList = Protocol.GetLookupList(null);
             m_vendorDeviceLookupList = VendorDevice.GetLookupList(null, true);
             m_protocolList = Protocol.Load(null);
+            PdcFrameRate = 30;
             StepsEnabled = true;
             StepOneExpanded = true;
             NewDeviceConfiguration = true;
@@ -185,7 +187,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             private set
             {
                 m_stepsEnabled = value;
-                OnPropertyChanged("StepsEnabled");
+                OnPropertyChanged(nameof(StepsEnabled));
             }
         }
 
@@ -201,7 +203,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_stepOneExpanded = value;
-                OnPropertyChanged("StepOneExpanded");
+                OnPropertyChanged(nameof(StepOneExpanded));
             }
         }
 
@@ -217,7 +219,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_stepTwoExpanded = value;
-                OnPropertyChanged("StepTwoExpanded");
+                OnPropertyChanged(nameof(StepTwoExpanded));
             }
         }
 
@@ -233,7 +235,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_stepThreeExpanded = value;
-                OnPropertyChanged("StepThreeExpanded");
+                OnPropertyChanged(nameof(StepThreeExpanded));
             }
         }
 
@@ -249,7 +251,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_connectionFileName = value;
-                OnPropertyChanged("ConnectionFileName");
+                OnPropertyChanged(nameof(ConnectionFileName));
             }
         }
 
@@ -265,7 +267,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_configurationFileName = value;
-                OnPropertyChanged("ConfigurationFileName");
+                OnPropertyChanged(nameof(ConfigurationFileName));
             }
         }
 
@@ -281,7 +283,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_iniFileName = value;
-                OnPropertyChanged("IniFileName");
+                OnPropertyChanged(nameof(IniFileName));
             }
         }
 
@@ -352,7 +354,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_connectionString = value;
-                OnPropertyChanged("ConnectionString");
+                OnPropertyChanged(nameof(ConnectionString));
             }
         }
 
@@ -368,7 +370,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_alternateCommandChannel = value;
-                OnPropertyChanged("AlternateCommandChannel");
+                OnPropertyChanged(nameof(AlternateCommandChannel));
             }
         }
 
@@ -384,7 +386,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_accessID = value;
-                OnPropertyChanged("AccessID");
+                OnPropertyChanged(nameof(AccessID));
             }
         }
 
@@ -400,7 +402,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_protocolID = value;
-                OnPropertyChanged("ProtocolID");
+                OnPropertyChanged(nameof(ProtocolID));
                 ProtocolAcronym = m_protocolLookupList[m_protocolID];
             }
         }
@@ -417,8 +419,8 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_protocolAcronym = value;
-                OnPropertyChanged("ProtocolAcronym");
-                OnPropertyChanged("ProtocolIsBpaPdcStream");
+                OnPropertyChanged(nameof(ProtocolAcronym));
+                OnPropertyChanged(nameof(ProtocolIsBpaPdcStream));
             }
         }
 
@@ -449,7 +451,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_connectToConcentrator = value;
-                OnPropertyChanged("ConnectToConcentrator");
+                OnPropertyChanged(nameof(ConnectToConcentrator));
                 ValidatePdcAcronym();
             }
         }
@@ -466,7 +468,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_pdcID = value;
-                OnPropertyChanged("PdcID");
+                OnPropertyChanged(nameof(PdcID));
             }
         }
 
@@ -498,7 +500,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_pdcMessage = value;
-                OnPropertyChanged("PdcMessage");
+                OnPropertyChanged(nameof(PdcMessage));
             }
         }
 
@@ -514,7 +516,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_pdcName = value;
-                OnPropertyChanged("PdcName");
+                OnPropertyChanged(nameof(PdcName));
             }
         }
 
@@ -530,7 +532,23 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_pdcVendorDeviceID = value;
-                OnPropertyChanged("PdcVendorDeviceID");
+                OnPropertyChanged(nameof(PdcVendorDeviceID));
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets frame rate for this configuration.
+        /// </summary>
+        public int PdcFrameRate
+        {
+            get
+            {
+                return m_pdcFrameRate;
+            }
+            set
+            {
+                m_pdcFrameRate = value;
+                OnPropertyChanged(nameof(PdcFrameRate));
             }
         }
 
@@ -546,7 +564,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_companyID = value;
-                OnPropertyChanged("CompanyID");
+                OnPropertyChanged(nameof(CompanyID));
             }
         }
 
@@ -562,7 +580,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_historianID = value;
-                OnPropertyChanged("HistorianID");
+                OnPropertyChanged(nameof(HistorianID));
             }
         }
 
@@ -578,7 +596,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_interconnectionID = value;
-                OnPropertyChanged("InterconnectionID");
+                OnPropertyChanged(nameof(InterconnectionID));
             }
         }
 
@@ -594,7 +612,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_skipDisableRealTimeData = value;
-                OnPropertyChanged("SkipDisableRealTimeData");
+                OnPropertyChanged(nameof(SkipDisableRealTimeData));
             }
         }
 
@@ -610,7 +628,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_requestConfigurationPopupIsOpen = value;
-                OnPropertyChanged("RequestConfigurationPopupIsOpen");
+                OnPropertyChanged(nameof(RequestConfigurationPopupIsOpen));
             }
         }
 
@@ -626,7 +644,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_requestConfigurationPopupText = value;
-                OnPropertyChanged("RequestConfigurationPopupText");
+                OnPropertyChanged(nameof(RequestConfigurationPopupText));
             }
         }
 
@@ -642,7 +660,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_requestConfigurationSuccess = value;
-                OnPropertyChanged("RequestConfigurationSuccess");
+                OnPropertyChanged(nameof(RequestConfigurationSuccess));
             }
         }
 
@@ -768,7 +786,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_configurationSummary = value;
-                OnPropertyChanged("ConfigurationSummary");
+                OnPropertyChanged(nameof(ConfigurationSummary));
             }
         }
 
@@ -822,7 +840,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             set
             {
                 m_newDeviceConfiguration = value;
-                OnPropertyChanged("NewDeviceConfiguration");
+                OnPropertyChanged(nameof(NewDeviceConfiguration));
             }
         }
 
@@ -1067,6 +1085,8 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
             if ((object)m_configurationFrame != null)
             {
+                PdcFrameRate = m_configurationFrame.FrameRate;
+
                 foreach (IConfigurationCell cell in m_configurationFrame.Cells)
                 {
                     Device existingDevice = Device.GetDevice(null, "WHERE Acronym = '" + cell.StationName.Replace(" ", "_").Replace("'", "").ToUpper() + "'");
@@ -1495,6 +1515,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     device.HistorianID = HistorianID == 0 ? (int?)null : HistorianID;
                     device.ProtocolID = ProtocolID == 0 ? (int?)null : ProtocolID;
                     device.InterconnectionID = InterconnectionID == 0 ? (int?)null : InterconnectionID;
+                    device.FramesPerSecond = PdcFrameRate;
                     device.SkipDisableRealTimeData = SkipDisableRealTimeData;
                     device.ConnectionString = GenerateConnectionString();
                     device.Enabled = true;
@@ -1545,7 +1566,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         device.HistorianID = HistorianID == 0 ? (int?)null : HistorianID;
                         device.ProtocolID = ProtocolID == 0 ? (int?)null : ProtocolID;
                         device.InterconnectionID = InterconnectionID == 0 ? (int?)null : InterconnectionID;
-
+                        device.FramesPerSecond = PdcFrameRate;
                         device.SkipDisableRealTimeData = SkipDisableRealTimeData;
                         device.Enabled = true;
                         device.Longitude = inputWizardDevice.Longitude;

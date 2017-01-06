@@ -236,6 +236,8 @@
                     <TextBlock Grid.Row="14" Grid.Column="0" Text="Interconnection"/>
                     <ComboBox Grid.Row="14" Grid.Column="1" ItemsSource="{Binding Source={StaticResource InterconnectionLookupList}}" DisplayMemberPath="Value"
                         SelectedItem="{tsfBinding:Column Path=DataContext.InterconnectionID, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=1}, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource InterconnectionLookupList}}"/>
+                    <TextBlock Grid.Row="14" Grid.Column="2" Text="Defined Frame Rate"/>
+                    <TextBox Grid.Row="14" Grid.Column="3" Name="PdcFrameRateTextBox" Text="{tsfBinding:Column Path=DataContext.PdcFrameRate, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}" Width="{StaticResource XXXSmallItemSize}" />
                 </Grid>
             </Expander>
 
