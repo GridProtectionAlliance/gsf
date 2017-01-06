@@ -31,6 +31,7 @@ using System.Text;
 using System.Windows.Forms.DataVisualization.Charting;
 using GSF.Historian;
 using GSF.Historian.Files;
+using GSF.Units;
 using Root.Reports;
 using Encoder = System.Drawing.Imaging.Encoder;
 
@@ -79,6 +80,7 @@ namespace StatHistorianReportGenerator
         private string m_level3Alias;
 
         private List<DeviceStats> m_deviceStatsList;
+        private float m_systemUpTime;
 
         #endregion
 
@@ -260,7 +262,8 @@ namespace StatHistorianReportGenerator
             // Page one
             verticalMillimeters = PageMarginMillimeters;
             verticalMillimeters += InsertTitle(fontDefinition, pageOne, verticalMillimeters) + SpacingMillimeters;
-            verticalMillimeters += InsertReportDate(fontDefinition, pageOne, verticalMillimeters) + 2.0D * SpacingMillimeters;
+            verticalMillimeters += InsertReportDate(fontDefinition, pageOne, verticalMillimeters);
+            verticalMillimeters += InsertSystemUpTime(fontDefinition, pageOne, verticalMillimeters) + 1.5D * SpacingMillimeters;
 
             verticalMillimeters += InsertSectionHeader(fontDefinition, pageOne, verticalMillimeters, "5-day Device Data Completeness");
             verticalMillimeters += InsertFiveDaySummary(report, fontDefinition, pageOne, verticalMillimeters) + SpacingMillimeters;
@@ -336,6 +339,7 @@ namespace StatHistorianReportGenerator
                 statisticsReader.ArchiveFilePath = locator.ArchiveFilePath;
                 statisticsReader.Open();
 
+                m_systemUpTime = statisticsReader.Read("SYSTEM", 15).Values.SingleOrDefault()?.LastOrDefault().Value ?? 0.0F;
                 measurementsReceived = statisticsReader.Read("PMU", 4);
                 measurementsExpected = statisticsReader.Read("PMU", 5);
                 dataQualityErrors = statisticsReader.Read("PMU", 1);
@@ -425,6 +429,15 @@ namespace StatHistorianReportGenerator
             FontProp font = new FontProp(fontDefinition, 0.0D);
             font.rSizePoint = 14.0D;
             page.AddCB_MM(verticalMillimeters + font.rSizeMM, new RepString(font, m_reportDate.ToLongDateString()));
+            return 1.8D * font.rSizeMM;
+        }
+
+        // Inserts the up-time of the system onto the given page.
+        private double InsertSystemUpTime(FontDef fontDefinition, Page page, double verticalMillimeters)
+        {
+            FontProp font = new FontProp(fontDefinition, 0.0D);
+            font.rSizePoint = 10.0D;
+            page.AddCB_MM(verticalMillimeters + font.rSizeMM, new RepString(font, $"System Up-Time: {new Time(m_systemUpTime).ToString()}"));
             return font.rSizeMM;
         }
 
