@@ -23,9 +23,9 @@
 //
 //******************************************************************************************************
 
-using System.Linq;
 using GSF.TimeSeries.Transport;
 
+// ReSharper disable UnusedParameter.Local
 namespace GSF.TimeSeries.Statistics
 {
     internal static class GatewayStatistics
@@ -87,7 +87,7 @@ namespace GSF.TimeSeries.Statistics
             DataSubscriber subscriber = source as DataSubscriber;
 
             if ((object)subscriber != null)
-                statistic = subscriber.GetAuthorizedSignalIDs().Count();
+                statistic = subscriber.GetAuthorizedSignalIDs().Length;
 
             return statistic;
         }
@@ -98,7 +98,7 @@ namespace GSF.TimeSeries.Statistics
             DataSubscriber subscriber = source as DataSubscriber;
 
             if ((object)subscriber != null)
-                statistic = subscriber.GetUnauthorizedSignalIDs().Count();
+                statistic = subscriber.GetUnauthorizedSignalIDs().Length;
 
             return statistic;
         }
@@ -187,6 +187,17 @@ namespace GSF.TimeSeries.Statistics
 
             if ((object)subscriber != null)
                 statistic = subscriber.LifetimeAverageLatency;
+
+            return statistic;
+        }
+
+        private static double GetSubscriberStatistic_UpTime(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            DataSubscriber subscriber = source as DataSubscriber;
+
+            if ((object)subscriber != null)
+                statistic = subscriber.RunTime;
 
             return statistic;
         }
@@ -339,6 +350,17 @@ namespace GSF.TimeSeries.Statistics
 
             if ((object)publisher != null)
                 statistic = s_statisticValueCache.GetDifference(publisher, publisher.BufferBlockRetransmissions, "BufferBlockRetransmissions");
+
+            return statistic;
+        }
+
+        private static double GetPublisherStatistic_UpTime(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            DataPublisher publisher = source as DataPublisher;
+
+            if ((object)publisher != null)
+                statistic = publisher.RunTime;
 
             return statistic;
         }

@@ -179,6 +179,11 @@ namespace GSF.IO
             }
         }
 
+        /// <summary>
+        /// Gets the up-time calculation for run-time log, i.e., <see cref="RunningTime"/> - <see cref="StartTime"/> (10-second resolution).
+        /// </summary>
+        public TimeSpan UpTime => m_runningTime - m_startTime;
+
         /// <summary>        
         /// Gets or sets a boolean value that indicates whether the run-time log is enabled.
         /// </summary>
@@ -200,22 +205,10 @@ namespace GSF.IO
         /// <summary>
         /// Gets a flag that indicates whether the object has been disposed.
         /// </summary>
-        public bool IsDisposed
-        {
-            get
-            {
-                return m_disposed;
-            }
-        }
+        public bool IsDisposed => m_disposed;
 
         // Gets the name of the run-time log
-        string IProvideStatus.Name
-        {
-            get
-            {
-                return FilePath.GetFileNameWithoutExtension(m_fileName.ToNonNullString("undefined"));
-            }
-        }
+        string IProvideStatus.Name => FilePath.GetFileNameWithoutExtension(m_fileName.ToNonNullString("undefined"));
 
         /// <summary>
         /// Gets the current status details about <see cref="RunTimeLog"/>.
@@ -235,6 +228,8 @@ namespace GSF.IO
                 status.AppendFormat("            Last stop time: {0}", m_stopTime.ToString(DateTimeFormat, CultureInfo.InvariantCulture));
                 status.AppendLine();
                 status.AppendFormat("         Last running time: {0}", m_runningTime.ToString(DateTimeFormat, CultureInfo.InvariantCulture));
+                status.AppendLine();
+                status.AppendFormat("             Total up time: {0}", UpTime.ToElapsedTimeString());
                 status.AppendLine();
 
                 return status.ToString();

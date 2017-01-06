@@ -45,7 +45,6 @@ namespace GSF.PhasorProtocols.UI.DataModels
         private int? m_vendorDeviceId;
         private int m_accessId;
         private int m_parentAccessId;
-        private int m_frameRate;
         private bool m_include;
         private int m_digitalCount;
         private int m_analogCount;

@@ -60,6 +60,7 @@ using GSF.Threading;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Configuration;
 using GSF.TimeSeries.Reports;
+using GSF.TimeSeries.Statistics;
 using GSF.Units;
 
 namespace GSF.TimeSeries
@@ -305,6 +306,9 @@ namespace GSF.TimeSeries
             m_runTimeLog.FileName = "RunTimeLog.txt";
             m_runTimeLog.ProcessException += ProcessExceptionHandler;
             m_runTimeLog.Initialize();
+
+            // Use this run-time log for system up-time calculations
+            PerformanceStatistics.SystemRunTimeLog = m_runTimeLog;
 
             // Initialize Iaon session
             m_iaonSession = new IaonSession();
@@ -1451,7 +1455,7 @@ namespace GSF.TimeSeries
             if (m_serviceHelper.StatusLog != null)
                 m_serviceHelper.StatusLog.LogException += LogExceptionHandler;
 
-            if (m_serviceHelper.ErrorLogger != null && m_serviceHelper.ErrorLogger.ErrorLog != null)
+            if (m_serviceHelper.ErrorLogger?.ErrorLog != null)
                 m_serviceHelper.ErrorLogger.ErrorLog.LogException += LogExceptionHandler;
 
             m_serviceHelper.OnStart(args);

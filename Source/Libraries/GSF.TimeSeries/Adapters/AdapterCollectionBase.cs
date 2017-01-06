@@ -116,6 +116,8 @@ namespace GSF.TimeSeries.Adapters
         private readonly Dictionary<uint, LogicalThread> m_lifecycleThreads;
         private readonly LogicalThreadLocal<T> m_activeItem;
         private bool m_enabled;
+        private long m_startTime;
+        private long m_stopTime;
         private bool m_disposed;
 
         #endregion
@@ -561,6 +563,30 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
+        /// Gets the total amount of time, in seconds, that the adapter has been active.
+        /// </summary>
+        public virtual Time RunTime
+        {
+            get
+            {
+                Ticks processingTime = 0;
+
+                if (m_startTime > 0)
+                {
+                    if (m_stopTime > 0)
+                        processingTime = m_stopTime - m_startTime;
+                    else
+                        processingTime = DateTime.UtcNow.Ticks - m_startTime;
+                }
+
+                if (processingTime < 0)
+                    processingTime = 0;
+
+                return processingTime.ToSeconds();
+            }
+        }
+
+        /// <summary>
         /// Gets the total number of measurements processed thus far by each <see cref="IAdapter"/> implementation
         /// in the <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>
@@ -600,6 +626,16 @@ namespace GSF.TimeSeries.Adapters
                     Start();
             }
         }
+
+        /// <summary>
+        /// Gets the UTC time this <see cref="AdapterCollectionBase{T}"/> was started.
+        /// </summary>
+        public Ticks StartTime => m_startTime;
+
+        /// <summary>
+        /// Gets the UTC time this <see cref="AdapterCollectionBase{T}"/> was stopped.
+        /// </summary>
+        public Ticks StopTime => m_stopTime;
 
         /// <summary>
         /// Gets a flag that indicates whether the object has been disposed.
@@ -1056,6 +1092,8 @@ namespace GSF.TimeSeries.Adapters
             if (!m_enabled)
             {
                 m_enabled = true;
+                m_stopTime = 0;
+                m_startTime = DateTime.UtcNow.Ticks;
 
                 ResetStatistics();
 
@@ -1093,6 +1131,7 @@ namespace GSF.TimeSeries.Adapters
             if (m_enabled)
             {
                 m_enabled = false;
+                m_stopTime = DateTime.UtcNow.Ticks;
 
                 lock (this)
                 {

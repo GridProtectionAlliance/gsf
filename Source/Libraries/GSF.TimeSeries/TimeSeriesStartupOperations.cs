@@ -243,7 +243,9 @@ namespace GSF.TimeSeries
             const string PublisherStatisticDeleteFormat = "DELETE FROM Statistic WHERE Source = 'Publisher' AND SignalIndex <= {0}";
 
             // Names and descriptions for each of the statistics
-            string[] SystemStatNames = { "CPU Usage", "Average CPU Usage", "Memory Usage", "Average Memory Usage", "Thread Count", "Average Thread Count", "Threading Contention Rate", "Average Threading Contention Rate", "IO Usage", "Average IO Usage", "IP Data Send Rate", "Average IP Data Send Rate", "IP Data Receive Rate", "Average IP Data Receive Rate" };
+
+            // NOTE: !! The statistic names defined in the following array are used to define associated function names (minus spaces) - as a result, do *not* leisurely change these statistic names without understanding the consequences
+            string[] SystemStatNames = { "CPU Usage", "Average CPU Usage", "Memory Usage", "Average Memory Usage", "Thread Count", "Average Thread Count", "Threading Contention Rate", "Average Threading Contention Rate", "IO Usage", "Average IO Usage", "IP Data Send Rate", "Average IP Data Send Rate", "IP Data Receive Rate", "Average IP Data Receive Rate", "Up Time" };
 
             string[] SystemStatDescriptions = { "Percentage of CPU currently used by this process.",
                                                 "Average percentage of CPU used by this process.",
@@ -258,9 +260,11 @@ namespace GSF.TimeSeries
                                                 "Number of IP datagrams (or bytes on Mono) currently sent by this process per second.",
                                                 "Average number of IP datagrams (or bytes on Mono) sent by this process per second.",
                                                 "Number of IP datagrams (or bytes on Mono) currently received by this process per second.",
-                                                "Average number of IP datagrams (or bytes on Mono) received by this process per second."
+                                                "Average number of IP datagrams (or bytes on Mono) received by this process per second.",
+                                                "Total number of seconds system has been running."
                                               };
 
+            // NOTE: !! The statistic names defined in the following array are used to define associated function names (minus spaces) - as a result, do *not* leisurely change these statistic names without understanding the consequences
             string[] DeviceStatNames = { "Data Quality Errors", "Time Quality Errors", "Device Errors", "Measurements Received", "Measurements Expected", "Measurements With Error", "Measurements Defined" };
 
             string[] DeviceStatDescriptions = { "Number of data quality errors reported by device during last reporting interval.",
@@ -268,11 +272,11 @@ namespace GSF.TimeSeries
                                                 "Number of device errors reported by device during last reporting interval.",
                                                 "Number of measurements received from device during last reporting interval.",
                                                 "Expected number of measurements received from device during last reporting interval.",
-                                                "Number of measurements recevied while device was reporting errors during last reporting interval.",
+                                                "Number of measurements received while device was reporting errors during last reporting interval.",
                                                 "Number of defined measurements from device during last reporting interval."
                                               };
 
-            string[] SubscriberStatNames = { "Subscriber Connected", "Subscriber Authenticated", "Processed Measurements", "Total Bytes Received", "Authorized Signal Count", "Unauthorized Signal Count", "Lifetime Measurements", "Lifetime Bytes Received", "Minimum Measurements Per Second", "Maximum Measurements Per Second", "Average Measurements Per Second", "Lifetime Minimum Latency", "Lifetime Maximum Latency", "Lifetime Average Latency" };
+            string[] SubscriberStatNames = { "Subscriber Connected", "Subscriber Authenticated", "Processed Measurements", "Total Bytes Received", "Authorized Signal Count", "Unauthorized Signal Count", "Lifetime Measurements", "Lifetime Bytes Received", "Minimum Measurements Per Second", "Maximum Measurements Per Second", "Average Measurements Per Second", "Lifetime Minimum Latency", "Lifetime Maximum Latency", "Lifetime Average Latency", "Up Time" };
 
             string[] SubscriberStatDescriptions = { "Boolean value representing if the subscriber was continually connected during last reporting interval.",
                                                     "Boolean value representing if the subscriber was authenticated to the publisher during last reporting interval.",
@@ -287,14 +291,15 @@ namespace GSF.TimeSeries
                                                     "The average number of measurements received per second during the last reporting interval.",
                                                     "Minimum latency from output stream, in milliseconds, during the lifetime of the subscriber.",
                                                     "Maximum latency from output stream, in milliseconds, during the lifetime of the subscriber.",
-                                                    "Average latency from output stream, in milliseconds, during the lifetime of the subscriber."
+                                                    "Average latency from output stream, in milliseconds, during the lifetime of the subscriber.",
+                                                    "Total number of seconds subscriber has been running."
                                                   };
 
-            string[] SubscriberStatMethodSuffix = { "Connected", "Authenticated", "ProcessedMeasurements", "TotalBytesReceived", "AuthorizedCount", "UnauthorizedCount", "LifetimeMeasurements", "LifetimeBytesReceived", "MinimumMeasurementsPerSecond", "MaximumMeasurementsPerSecond", "AverageMeasurementsPerSecond", "LifetimeMinimumLatency", "LifetimeMaximumLatency", "LifetimeAverageLatency", "LifetimeMinimumLatency", "LifetimeMaximumLatency", "LifetimeAverageLatency" };
-            string[] SubscriberStatTypes = { "System.Boolean", "System.Boolean", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int64", "System.Int64", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int32" };
-            string[] SubscriberStatFormats = { "{0}", "{0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0} ms", "{0:N0} ms", "{0:N0} ms" };
+            string[] SubscriberStatMethodSuffix = { "Connected", "Authenticated", "ProcessedMeasurements", "TotalBytesReceived", "AuthorizedCount", "UnauthorizedCount", "LifetimeMeasurements", "LifetimeBytesReceived", "MinimumMeasurementsPerSecond", "MaximumMeasurementsPerSecond", "AverageMeasurementsPerSecond", "LifetimeMinimumLatency", "LifetimeMaximumLatency", "LifetimeAverageLatency", "LifetimeMinimumLatency", "LifetimeMaximumLatency", "LifetimeAverageLatency", "UpTime" };
+            string[] SubscriberStatTypes = { "System.Boolean", "System.Boolean", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int64", "System.Int64", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Double" };
+            string[] SubscriberStatFormats = { "{0}", "{0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0} ms", "{0:N0} ms", "{0:N0} ms", "{0:N3} s" };
 
-            string[] PublisherStatNames = { "Publisher Connected", "Connected Clients", "Processed Measurements", "Total Bytes Sent", "Lifetime Measurements", "Lifetime Bytes Sent", "Minimum Measurements Per Second", "Maximum Measurements Per Second", "Average Measurements Per Second", "Lifetime Minimum Latency", "Lifetime Maximum Latency", "Lifetime Average Latency" };
+            string[] PublisherStatNames = { "Publisher Connected", "Connected Clients", "Processed Measurements", "Total Bytes Sent", "Lifetime Measurements", "Lifetime Bytes Sent", "Minimum Measurements Per Second", "Maximum Measurements Per Second", "Average Measurements Per Second", "Lifetime Minimum Latency", "Lifetime Maximum Latency", "Lifetime Average Latency", "Up Time" };
 
             string[] PublisherStatDescriptions = { "Boolean value representing if the publisher was continually connected during last reporting interval.",
                                                    "Number of clients connected to the command channel of the publisher during last reporting interval.",
@@ -307,12 +312,13 @@ namespace GSF.TimeSeries
                                                    "The average number of measurements sent per second during the last reporting interval.",
                                                     "Minimum latency from output stream, in milliseconds, during the lifetime of the publisher.",
                                                     "Maximum latency from output stream, in milliseconds, during the lifetime of the publisher.",
-                                                    "Average latency from output stream, in milliseconds, during the lifetime of the publisher."
+                                                    "Average latency from output stream, in milliseconds, during the lifetime of the publisher.",
+                                                    "Total number of seconds publisher has been running."
                                                  };
 
-            string[] PublisherStatMethodSuffix = { "Connected", "ConnectedClientCount", "ProcessedMeasurements", "TotalBytesSent", "LifetimeMeasurements", "LifetimeBytesSent", "MinimumMeasurementsPerSecond", "MaximumMeasurementsPerSecond", "AverageMeasurementsPerSecond", "LifetimeMinimumLatency", "LifetimeMaximumLatency", "LifetimeAverageLatency" };
-            string[] PublisherStatTypes = { "System.Boolean", "System.Int32", "System.Int32", "System.Int32", "System.Int64", "System.Int64", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int32" };
-            string[] PublisherStatFormats = { "{0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0} ms", "{0:N0} ms", "{0:N0} ms" };
+            string[] PublisherStatMethodSuffix = { "Connected", "ConnectedClientCount", "ProcessedMeasurements", "TotalBytesSent", "LifetimeMeasurements", "LifetimeBytesSent", "MinimumMeasurementsPerSecond", "MaximumMeasurementsPerSecond", "AverageMeasurementsPerSecond", "LifetimeMinimumLatency", "LifetimeMaximumLatency", "LifetimeAverageLatency", "UpTime" };
+            string[] PublisherStatTypes = { "System.Boolean", "System.Int32", "System.Int32", "System.Int32", "System.Int64", "System.Int64", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Double" };
+            string[] PublisherStatFormats = { "{0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0} ms", "{0:N0} ms", "{0:N0} ms", "{0:N3} s" };
 
             // Query for count values to ensure existence of these records
             int statConfigEntityCount = Convert.ToInt32(database.Connection.ExecuteScalar(StatConfigEntityCountFormat));
@@ -350,7 +356,7 @@ namespace GSF.TimeSeries
                 database.Connection.ExecuteNonQuery(string.Format(StatEngineInsertFormat, nodeIDQueryString));
 
             // Ensure that system statistics exist
-            if (systemStatCount != SystemStatNames.Length)
+            if (systemStatCount < SystemStatNames.Length)
             {
                 database.Connection.ExecuteNonQuery(string.Format(SystemStatisticDeleteFormat, SystemStatNames.Length));
 
@@ -365,7 +371,7 @@ namespace GSF.TimeSeries
             }
 
             // Ensure that system statistics exist
-            if (deviceStatCount != DeviceStatNames.Length)
+            if (deviceStatCount < DeviceStatNames.Length)
             {
                 database.Connection.ExecuteNonQuery(string.Format(DeviceStatisticDeleteFormat, DeviceStatNames.Length));
 
@@ -380,7 +386,7 @@ namespace GSF.TimeSeries
             }
 
             // Ensure that subscriber statistics exist
-            if (subscriberStatCount != SubscriberStatNames.Length)
+            if (subscriberStatCount < SubscriberStatNames.Length)
             {
                 database.Connection.ExecuteNonQuery(string.Format(SubscriberStatisticDeleteFormat, SubscriberStatNames.Length));
 
@@ -396,8 +402,8 @@ namespace GSF.TimeSeries
                 }
             }
 
-            // Ensure that subscriber statistics exist
-            if (publisherStatCount != PublisherStatNames.Length)
+            // Ensure that publisher statistics exist
+            if (publisherStatCount < PublisherStatNames.Length)
             {
                 database.Connection.ExecuteNonQuery(string.Format(PublisherStatisticDeleteFormat, PublisherStatNames.Length));
 

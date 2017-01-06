@@ -24,11 +24,15 @@
 //******************************************************************************************************
 
 using GSF.Diagnostics;
+using GSF.IO;
 
 namespace GSF.TimeSeries.Statistics
 {
     internal static class PerformanceStatistics
     {
+        // Run-time log used to calculate system run-time
+        internal static RunTimeLog SystemRunTimeLog;
+
         #region [ CPU Usage ]
 
         private static double GetSystemStatistic_CPUUsage(object source, string arguments)
@@ -191,7 +195,7 @@ namespace GSF.TimeSeries.Statistics
 
         #region [ IP Data Send Rate ]
 
-        private static double GetSystemStatistic_DatagramSendRate(object source, string arguments)
+        private static double GetSystemStatistic_IPDataSendRate(object source, string arguments)
         {
             double statistic = double.NaN;
             PerformanceMonitor perfMon = source as PerformanceMonitor;
@@ -205,7 +209,10 @@ namespace GSF.TimeSeries.Statistics
             return statistic;
         }
 
-        private static double GetSystemStatistic_AverageDatagramSendRate(object source, string arguments)
+        // Historical name - function may be used by older database configurations
+        private static double GetSystemStatistic_DatagramSendRate(object source, string arguments) => GetSystemStatistic_IPDataSendRate(source, arguments);
+
+        private static double GetSystemStatistic_AverageIPDataSendRate(object source, string arguments)
         {
             double statistic = double.NaN;
             PerformanceMonitor perfMon = source as PerformanceMonitor;
@@ -219,11 +226,14 @@ namespace GSF.TimeSeries.Statistics
             return statistic;
         }
 
+        // Historical name - function may be used by older database configurations
+        private static double GetSystemStatistic_AverageDatagramSendRate(object source, string arguments) => GetSystemStatistic_AverageIPDataSendRate(source, arguments);
+
         #endregion
 
         #region [ IP Data Receive Rate ]
 
-        private static double GetSystemStatistic_DatagramReceiveRate(object source, string arguments)
+        private static double GetSystemStatistic_IPDataReceiveRate(object source, string arguments)
         {
             double statistic = double.NaN;
             PerformanceMonitor perfMon = source as PerformanceMonitor;
@@ -237,7 +247,10 @@ namespace GSF.TimeSeries.Statistics
             return statistic;
         }
 
-        private static double GetSystemStatistic_AverageDatagramReceiveRate(object source, string arguments)
+        // Historical name - function may be used by older database configurations
+        private static double GetSystemStatistic_DatagramReceiveRate(object source, string arguments) => GetSystemStatistic_IPDataReceiveRate(source, arguments);
+
+        private static double GetSystemStatistic_AverageIPDataReceiveRate(object source, string arguments)
         {
             double statistic = double.NaN;
             PerformanceMonitor perfMon = source as PerformanceMonitor;
@@ -247,6 +260,23 @@ namespace GSF.TimeSeries.Statistics
                 if ((object)perfMon.IPDataReceiveRate != null)
                     statistic = perfMon.IPDataReceiveRate.AverageValue;
             }
+
+            return statistic;
+        }
+
+        // Historical name - function may be used by older database configurations
+        private static double GetSystemStatistic_AverageDatagramReceiveRate(object source, string arguments) => GetSystemStatistic_AverageIPDataReceiveRate(source, arguments);
+
+        #endregion
+
+        #region [ System Uptime ]
+
+        private static double GetSystemStatistic_UpTime(object source, string arguments)
+        {
+            double statistic = double.NaN;
+
+            if (!(SystemRunTimeLog?.IsDisposed ?? true))
+                statistic = SystemRunTimeLog.UpTime.TotalSeconds;
 
             return statistic;
         }
