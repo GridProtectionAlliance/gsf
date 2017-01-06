@@ -265,7 +265,7 @@ namespace StatHistorianReportGenerator
             verticalMillimeters += InsertSectionHeader(fontDefinition, pageOne, verticalMillimeters, "5-day Device Data Completeness");
             verticalMillimeters += InsertFiveDaySummary(report, fontDefinition, pageOne, verticalMillimeters) + SpacingMillimeters;
 
-            verticalMillimeters += InsertSectionHeader(fontDefinition, pageOne, verticalMillimeters, "Percent of Devices with Acceptable Quality (30 days)");
+            verticalMillimeters += InsertSectionHeader(fontDefinition, pageOne, verticalMillimeters, "Percent of Devices with Acceptable Availability (30 days)");
             verticalMillimeters += InsertBarChart(pageOne, verticalMillimeters) + SpacingMillimeters;
 
             verticalMillimeters += InsertSectionHeader(fontDefinition, pageOne, verticalMillimeters, "Definitions");
@@ -702,7 +702,7 @@ namespace StatHistorianReportGenerator
                 "Level 1: Offline - Devices which did not report on the report date, but have reported at some time during the 30 days prior to the report date." + Environment.NewLine +
                 "Level 0: Failed - Devices which have not reported during the 30 days prior to the report date." + Environment.NewLine +
                 "Completeness: Percentage of measurements received over total measurements expected, per device." + Environment.NewLine +
-                "Acceptable Quality: Devices which are in Level 4 or Level 3.";
+                "Acceptable Availability: Devices which are in Level 4 or Level 3.";
 
             // Break the definitions text into lines
             string[] lines = definitionsText.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
