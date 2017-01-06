@@ -142,7 +142,7 @@ namespace StatHistorianReportGenerator
 
             return m_metadataRecords
                 .Where(record => record.Synonym1.EndsWith(signalReferenceEnding))
-                .ToDictionary(record => record, record => m_archiveReader.ReadData(record.HistorianID, StartTime, EndTime));
+                .ToDictionary(record => record, record => m_archiveReader.ReadData(record.HistorianID, StartTime, EndTime, false));
         }
 
         /// <summary>
@@ -156,7 +156,7 @@ namespace StatHistorianReportGenerator
         /// </remarks>
         public IEnumerable<IDataPoint> Read(IEnumerable<int> historianIDs)
         {
-            return m_archiveReader.ReadData(historianIDs, StartTime, EndTime);
+            return m_archiveReader.ReadData(historianIDs, StartTime, EndTime, false);
         }
 
         /// <summary>

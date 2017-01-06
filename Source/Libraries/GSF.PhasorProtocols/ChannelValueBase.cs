@@ -204,7 +204,10 @@ namespace GSF.PhasorProtocols
                 Value = GetCompositeValue(valueIndex)
             };
 
-            measurement.StateFlags = (Parent.SynchronizationIsValid && measurement.Timestamp.Value != -1 ? MeasurementStateFlags.Normal : MeasurementStateFlags.BadTime) | (Parent.DataIsValid ? MeasurementStateFlags.Normal : MeasurementStateFlags.BadData);
+            measurement.StateFlags =
+                (Parent.SynchronizationIsValid && measurement.Timestamp.Value != -1 ? MeasurementStateFlags.Normal : MeasurementStateFlags.BadTime) |
+                (Parent.DataIsValid ? MeasurementStateFlags.Normal : MeasurementStateFlags.BadData) |
+                (Parent.DeviceError ? MeasurementStateFlags.SystemError : MeasurementStateFlags.Normal);
 
             return measurement;
         }

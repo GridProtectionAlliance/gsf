@@ -625,8 +625,14 @@ namespace DataQualityMonitoring
                 if (firstRaisedAlarm != activeAlarm)
                     LogStateChange(measurement.ID, activeAlarm, firstRaisedAlarm, measurement.Timestamp, measurement.Value);
 
-                if ((object)firstRaisedAlarm != null && firstRaisedAlarm.Severity > AlarmSeverity.None)
-                    alarms.Statistics.IncrementCounter(firstRaisedAlarm);
+                const MeasurementStateFlags ErrorFlags = MeasurementStateFlags.BadData | MeasurementStateFlags.BadTime | MeasurementStateFlags.SystemError;
+                Func<MeasurementStateFlags, bool> hasError = flags => (flags & ErrorFlags) != MeasurementStateFlags.Normal;
+
+                if (hasError(measurement.StateFlags))
+                {
+                    if ((object)firstRaisedAlarm != null && firstRaisedAlarm.Severity > AlarmSeverity.None)
+                        alarms.Statistics.IncrementCounter(firstRaisedAlarm);
+                }
             }
 
             if (alarmEvents.Count > 0)

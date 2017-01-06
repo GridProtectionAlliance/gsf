@@ -46,8 +46,11 @@ namespace StatHistorianReportGenerator
         private class DeviceStats
         {
             public string Name;
-            public Aggregate MeasurementsExpected;
             public Aggregate MeasurementsReceived;
+            public Aggregate MeasurementsWithError;
+            public Aggregate DataErrors;
+            public Aggregate TimeErrors;
+            public Aggregate DeviceErrors;
             public Dictionary<string, SignalStats> SignalStatsLookup;
 
             public double GetMeasurementsLatched(int index)
@@ -64,7 +67,7 @@ namespace StatHistorianReportGenerator
 
             public double GetCorrectness(int index)
             {
-                return 100.0D * (MeasurementsReceived[index] - GetMeasurementsLatched(index) - GetMeasurementsUnreasonable(index)) / MeasurementsExpected[index];
+                return 100.0D * (MeasurementsReceived[index] - MeasurementsWithError[index] - GetMeasurementsLatched(index) - GetMeasurementsUnreasonable(index)) / MeasurementsReceived[index];
             }
         }
 
@@ -303,15 +306,24 @@ namespace StatHistorianReportGenerator
                         deviceStats = deviceStatsLookup.GetOrAdd(GetDeviceNameForStat(record.Synonym1), name => new DeviceStats()
                         {
                             Name = name,
-                            MeasurementsExpected = new Aggregate(ReportDays),
                             MeasurementsReceived = new Aggregate(ReportDays),
+                            MeasurementsWithError = new Aggregate(ReportDays),
+                            DataErrors = new Aggregate(ReportDays),
+                            TimeErrors = new Aggregate(ReportDays),
+                            DeviceErrors = new Aggregate(ReportDays),
                             SignalStatsLookup = new Dictionary<string, SignalStats>()
                         });
 
-                        if (record.Synonym1.EndsWith("!PMU-ST5", StringComparison.Ordinal))
-                            aggregateLookup[record.HistorianID] = deviceStats.MeasurementsExpected;
+                        if (record.Synonym1.EndsWith("!PMU-ST6", StringComparison.Ordinal))
+                            aggregateLookup[record.HistorianID] = deviceStats.MeasurementsWithError;
                         else if (record.Synonym1.EndsWith("!PMU-ST4", StringComparison.Ordinal))
                             aggregateLookup[record.HistorianID] = deviceStats.MeasurementsReceived;
+                        else if (record.Synonym1.EndsWith("!PMU-ST3", StringComparison.Ordinal))
+                            aggregateLookup[record.HistorianID] = deviceStats.DeviceErrors;
+                        else if (record.Synonym1.EndsWith("!PMU-ST2", StringComparison.Ordinal))
+                            aggregateLookup[record.HistorianID] = deviceStats.TimeErrors;
+                        else if (record.Synonym1.EndsWith("!PMU-ST1", StringComparison.Ordinal))
+                            aggregateLookup[record.HistorianID] = deviceStats.DataErrors;
                     }
                     else if (IsDesiredSignalStat(record.Synonym1))
                     {
@@ -320,8 +332,11 @@ namespace StatHistorianReportGenerator
                         deviceStats = deviceStatsLookup.GetOrAdd(GetDeviceNameForSignal(signalName), name => new DeviceStats()
                         {
                             Name = name,
-                            MeasurementsExpected = new Aggregate(ReportDays),
                             MeasurementsReceived = new Aggregate(ReportDays),
+                            MeasurementsWithError = new Aggregate(ReportDays),
+                            DataErrors = new Aggregate(ReportDays),
+                            TimeErrors = new Aggregate(ReportDays),
+                            DeviceErrors = new Aggregate(ReportDays),
                             SignalStatsLookup = new Dictionary<string, SignalStats>()
                         });
 
@@ -426,8 +441,8 @@ namespace StatHistorianReportGenerator
             double tableWidthMillimeters;
             double rowHeightMillimeters;
 
-            double measurementsExpected;
             double measurementsReceived;
+            double measurementsWithError;
             double measurementsLatched;
             double measurementsUnreasonable;
 
@@ -463,6 +478,7 @@ namespace StatHistorianReportGenerator
             {
                 "",
                 "Good",
+                "Error",
                 "Latched",
                 "Unreasonable",
             };
@@ -481,17 +497,18 @@ namespace StatHistorianReportGenerator
                 .Max();
 
             // Get the text for the measurement counts in the second column of the table
-            measurementsExpected = m_deviceStatsList.Sum(deviceStats => deviceStats.MeasurementsExpected[ReportDays - 5]);
             measurementsReceived = m_deviceStatsList.Sum(deviceStats => deviceStats.MeasurementsReceived[ReportDays - 5]);
+            measurementsWithError = m_deviceStatsList.Sum(deviceStats => deviceStats.MeasurementsWithError[ReportDays - 5]);
             measurementsLatched = m_deviceStatsList.Sum(deviceStats => deviceStats.GetMeasurementsLatched(ReportDays - 5));
             measurementsUnreasonable = m_deviceStatsList.Sum(deviceStats => deviceStats.GetMeasurementsUnreasonable(ReportDays - 5));
 
             dayOneText = new string[]
             {
                 (m_reportDate - TimeSpan.FromDays(4.0D)).ToString("MM/dd"),
-                ((measurementsReceived - measurementsLatched - measurementsUnreasonable) / measurementsExpected).ToString("0.00%"),
-                (measurementsLatched / measurementsExpected).ToString("0.00%"),
-                (measurementsUnreasonable / measurementsExpected).ToString("0.00%")
+                ((measurementsReceived - measurementsWithError - measurementsLatched - measurementsUnreasonable) / measurementsReceived).ToString("0.00%"),
+                (measurementsWithError / measurementsReceived).ToString("0.00%"),
+                (measurementsLatched / measurementsReceived).ToString("0.00%"),
+                (measurementsUnreasonable / measurementsReceived).ToString("0.00%")
             };
 
             dayOneFonts = dayOneText
@@ -508,17 +525,18 @@ namespace StatHistorianReportGenerator
                 .Max();
 
             // Get the text for the measurement counts in the third column of the table
-            measurementsExpected = m_deviceStatsList.Sum(deviceStats => deviceStats.MeasurementsExpected[ReportDays - 4]);
             measurementsReceived = m_deviceStatsList.Sum(deviceStats => deviceStats.MeasurementsReceived[ReportDays - 4]);
+            measurementsWithError = m_deviceStatsList.Sum(deviceStats => deviceStats.MeasurementsWithError[ReportDays - 4]);
             measurementsLatched = m_deviceStatsList.Sum(deviceStats => deviceStats.GetMeasurementsLatched(ReportDays - 4));
             measurementsUnreasonable = m_deviceStatsList.Sum(deviceStats => deviceStats.GetMeasurementsUnreasonable(ReportDays - 4));
 
             dayTwoText = new string[]
             {
                 (m_reportDate - TimeSpan.FromDays(3.0D)).ToString("MM/dd"),
-                ((measurementsReceived - measurementsLatched - measurementsUnreasonable) / measurementsExpected).ToString("0.00%"),
-                (measurementsLatched / measurementsExpected).ToString("0.00%"),
-                (measurementsUnreasonable / measurementsExpected).ToString("0.00%")
+                ((measurementsReceived - measurementsWithError - measurementsLatched - measurementsUnreasonable) / measurementsReceived).ToString("0.00%"),
+                (measurementsWithError / measurementsReceived).ToString("0.00%"),
+                (measurementsLatched / measurementsReceived).ToString("0.00%"),
+                (measurementsUnreasonable / measurementsReceived).ToString("0.00%")
             };
 
             dayTwoFonts = dayTwoText
@@ -535,17 +553,18 @@ namespace StatHistorianReportGenerator
                 .Max();
 
             // Get the text for the measurement counts in the fourth column of the table
-            measurementsExpected = m_deviceStatsList.Sum(deviceStats => deviceStats.MeasurementsExpected[ReportDays - 3]);
             measurementsReceived = m_deviceStatsList.Sum(deviceStats => deviceStats.MeasurementsReceived[ReportDays - 3]);
+            measurementsWithError = m_deviceStatsList.Sum(deviceStats => deviceStats.MeasurementsWithError[ReportDays - 3]);
             measurementsLatched = m_deviceStatsList.Sum(deviceStats => deviceStats.GetMeasurementsLatched(ReportDays - 3));
             measurementsUnreasonable = m_deviceStatsList.Sum(deviceStats => deviceStats.GetMeasurementsUnreasonable(ReportDays - 3));
 
             dayThreeText = new string[]
             {
                 (m_reportDate - TimeSpan.FromDays(2.0D)).ToString("MM/dd"),
-                ((measurementsReceived - measurementsLatched - measurementsUnreasonable) / measurementsExpected).ToString("0.00%"),
-                (measurementsLatched / measurementsExpected).ToString("0.00%"),
-                (measurementsUnreasonable / measurementsExpected).ToString("0.00%")
+                ((measurementsReceived - measurementsWithError - measurementsLatched - measurementsUnreasonable) / measurementsReceived).ToString("0.00%"),
+                (measurementsWithError / measurementsReceived).ToString("0.00%"),
+                (measurementsLatched / measurementsReceived).ToString("0.00%"),
+                (measurementsUnreasonable / measurementsReceived).ToString("0.00%")
             };
 
             dayThreeFonts = dayThreeText
@@ -562,17 +581,18 @@ namespace StatHistorianReportGenerator
                 .Max();
 
             // Get the text for the measurement counts in the fifth column of the table
-            measurementsExpected = m_deviceStatsList.Sum(deviceStats => deviceStats.MeasurementsExpected[ReportDays - 2]);
             measurementsReceived = m_deviceStatsList.Sum(deviceStats => deviceStats.MeasurementsReceived[ReportDays - 2]);
+            measurementsWithError = m_deviceStatsList.Sum(deviceStats => deviceStats.MeasurementsWithError[ReportDays - 2]);
             measurementsLatched = m_deviceStatsList.Sum(deviceStats => deviceStats.GetMeasurementsLatched(ReportDays - 2));
             measurementsUnreasonable = m_deviceStatsList.Sum(deviceStats => deviceStats.GetMeasurementsUnreasonable(ReportDays - 2));
 
             dayFourText = new string[]
             {
                 (m_reportDate - TimeSpan.FromDays(1.0D)).ToString("MM/dd"),
-                ((measurementsReceived - measurementsLatched - measurementsUnreasonable) / measurementsExpected).ToString("0.00%"),
-                (measurementsLatched / measurementsExpected).ToString("0.00%"),
-                (measurementsUnreasonable / measurementsExpected).ToString("0.00%")
+                ((measurementsReceived - measurementsWithError - measurementsLatched - measurementsUnreasonable) / measurementsReceived).ToString("0.00%"),
+                (measurementsWithError / measurementsReceived).ToString("0.00%"),
+                (measurementsLatched / measurementsReceived).ToString("0.00%"),
+                (measurementsUnreasonable / measurementsReceived).ToString("0.00%")
             };
 
             dayFourFonts = dayFourText
@@ -589,17 +609,18 @@ namespace StatHistorianReportGenerator
                 .Max();
 
             // Get the text for the measurement counts in the sixth column of the table
-            measurementsExpected = m_deviceStatsList.Sum(deviceStats => deviceStats.MeasurementsExpected[ReportDays - 1]);
             measurementsReceived = m_deviceStatsList.Sum(deviceStats => deviceStats.MeasurementsReceived[ReportDays - 1]);
+            measurementsWithError = m_deviceStatsList.Sum(deviceStats => deviceStats.MeasurementsWithError[ReportDays - 1]);
             measurementsLatched = m_deviceStatsList.Sum(deviceStats => deviceStats.GetMeasurementsLatched(ReportDays - 1));
             measurementsUnreasonable = m_deviceStatsList.Sum(deviceStats => deviceStats.GetMeasurementsUnreasonable(ReportDays - 1));
 
             dayFiveText = new string[]
             {
                 (m_reportDate).ToString("MM/dd"),
-                ((measurementsReceived - measurementsLatched - measurementsUnreasonable) / measurementsExpected).ToString("0.00%"),
-                (measurementsLatched / measurementsExpected).ToString("0.00%"),
-                (measurementsUnreasonable / measurementsExpected).ToString("0.00%")
+                ((measurementsReceived - measurementsWithError - measurementsLatched - measurementsUnreasonable) / measurementsReceived).ToString("0.00%"),
+                (measurementsWithError / measurementsReceived).ToString("0.00%"),
+                (measurementsLatched / measurementsReceived).ToString("0.00%"),
+                (measurementsUnreasonable / measurementsReceived).ToString("0.00%")
             };
 
             dayFiveFonts = dayFiveText
@@ -674,9 +695,10 @@ namespace StatHistorianReportGenerator
             double lineHeightMillimeters;
 
             string definitionsText = "Good: Measurements received which are neither latched nor unreasonable." + Environment.NewLine +
+                                     "Error: Measurements received while the device is reporting an error state." + Environment.NewLine +
                                      "Latched: Measurements received which have maintained the same value for an extended period of time." + Environment.NewLine +
                                      "Unreasonable: Measurements received whose values have fallen outside of the range defined by reasonability constraints." + Environment.NewLine +
-                                     "Correctness: Percentage of good measurements over total measurements expected, per device.";
+                                     "Correctness: Percentage of good measurements over total measurements received, per device.";
 
             // Break the definitions text into lines
             string[] lines = definitionsText.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
@@ -760,14 +782,14 @@ namespace StatHistorianReportGenerator
             signalHeaderFont.bBold = true;
 
             // Set up the column header and the initial values for the column widths
-            deviceHeaders = new string[] { "Name", "Correctness" };
+            deviceHeaders = new string[] { "Name", "Correctness", "Data Errors", "Time Errors", "Device Errors" };
             signalHeaders = new string[] { "Name", "Latched", "Unreasonable", "Total" };
             deviceColumnWidthMillimeters = deviceHeaders.Select(deviceHeaderFont.rGetTextWidthMM).ToArray();
             signalColumnWidthMillimeters = signalHeaders.Select(deviceHeaderFont.rGetTextWidthMM).ToArray();
 
             badDevices = m_deviceStatsList
-                .Where(dev => dev.GetMeasurementsLatched(ReportDays - 1) + dev.GetMeasurementsUnreasonable(ReportDays - 1) > 0)
-                .OrderByDescending(dev => (dev.GetMeasurementsLatched(ReportDays - 1) + dev.GetMeasurementsUnreasonable(ReportDays - 1)) / dev.MeasurementsExpected[ReportDays - 1])
+                .Where(dev => dev.MeasurementsWithError[ReportDays - 1] + dev.GetMeasurementsLatched(ReportDays - 1) + dev.GetMeasurementsUnreasonable(ReportDays - 1) > 0)
+                .OrderByDescending(dev => (dev.MeasurementsWithError[ReportDays - 1] + dev.GetMeasurementsLatched(ReportDays - 1) + dev.GetMeasurementsUnreasonable(ReportDays - 1)) / dev.MeasurementsReceived[ReportDays - 1])
                 .ToList();
 
             deviceIndex = 0;
@@ -776,9 +798,12 @@ namespace StatHistorianReportGenerator
 
             foreach (DeviceStats deviceStats in badDevices)
             {
-                deviceDetails[deviceIndex] = new string[2];
+                deviceDetails[deviceIndex] = new string[deviceHeaders.Length];
                 deviceDetails[deviceIndex][0] = deviceStats.Name;
                 deviceDetails[deviceIndex][1] = deviceStats.GetCorrectness(ReportDays - 1).ToString("0.##") + "%";
+                deviceDetails[deviceIndex][2] = deviceStats.DataErrors[ReportDays - 1].ToString("#,##0");
+                deviceDetails[deviceIndex][3] = deviceStats.TimeErrors[ReportDays - 1].ToString("#,##0");
+                deviceDetails[deviceIndex][4] = deviceStats.DeviceErrors[ReportDays - 1].ToString("#,##0");
                 deviceColumnWidthMillimeters = deviceColumnWidthMillimeters.Zip(deviceDetails[deviceIndex], (currentWidth, text) => Math.Max(currentWidth, deviceRowFont.rGetTextWidthMM(text))).ToArray();
 
                 badSignals = deviceStats.SignalStatsLookup.Values
@@ -791,7 +816,7 @@ namespace StatHistorianReportGenerator
 
                 foreach (SignalStats signalStats in badSignals)
                 {
-                    signalDetails[deviceIndex][signalIndex] = new string[4];
+                    signalDetails[deviceIndex][signalIndex] = new string[signalHeaders.Length];
                     signalDetails[deviceIndex][signalIndex][0] = signalStats.Name;
                     signalDetails[deviceIndex][signalIndex][1] = signalStats.MeasurementsLatched[ReportDays - 1].ToString("#,##0");
                     signalDetails[deviceIndex][signalIndex][2] = signalStats.MeasurementsUnreasonable[ReportDays - 1].ToString("#,##0");
@@ -935,8 +960,8 @@ namespace StatHistorianReportGenerator
             Series goodSeries = new Series();
             Series badSeries = new Series();
 
-            double measurementsExpected;
             double measurementsReceived;
+            double measurementsWithError;
             double measurementsLatched;
             double measurementsUnreasonable;
 
@@ -956,13 +981,13 @@ namespace StatHistorianReportGenerator
 
             for (int i = 0; i < Month; i++)
             {
-                measurementsExpected = m_deviceStatsList.Sum(deviceStats => deviceStats.MeasurementsExpected[i]);
                 measurementsReceived = m_deviceStatsList.Sum(deviceStats => deviceStats.MeasurementsReceived[i]);
+                measurementsWithError = m_deviceStatsList.Sum(deviceStats => deviceStats.MeasurementsWithError[i]);
                 measurementsLatched = m_deviceStatsList.Sum(deviceStats => deviceStats.GetMeasurementsLatched(i));
                 measurementsUnreasonable = m_deviceStatsList.Sum(deviceStats => deviceStats.GetMeasurementsUnreasonable(i));
 
-                goodSeries.Points.AddXY((m_reportDate - TimeSpan.FromDays(Month - i - 1)), (measurementsReceived - measurementsLatched - measurementsUnreasonable) / measurementsExpected * 100.0D);
-                badSeries.Points.AddXY((m_reportDate - TimeSpan.FromDays(Month - i - 1)), (measurementsLatched + measurementsUnreasonable) / measurementsExpected * 100.0D);
+                goodSeries.Points.AddXY((m_reportDate - TimeSpan.FromDays(Month - i - 1)), (measurementsReceived - measurementsWithError - measurementsLatched - measurementsUnreasonable) / measurementsReceived * 100.0D);
+                badSeries.Points.AddXY((m_reportDate - TimeSpan.FromDays(Month - i - 1)), (measurementsWithError + measurementsLatched + measurementsUnreasonable) / measurementsReceived * 100.0D);
             }
 
             chart.Width = 2400;
