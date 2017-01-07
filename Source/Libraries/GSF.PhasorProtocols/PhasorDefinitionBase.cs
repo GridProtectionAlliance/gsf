@@ -181,9 +181,9 @@ namespace GSF.PhasorProtocols
         #region [ Methods ]
 
         /// <summary>
-        /// Gets the string respresentation of this <see cref="PhasorDefinitionBase"/>.
+        /// Gets the string representation of this <see cref="PhasorDefinitionBase"/>.
         /// </summary>
-        /// <returns>String respresentation of this <see cref="PhasorDefinitionBase"/>.</returns>
+        /// <returns>String representation of this <see cref="PhasorDefinitionBase"/>.</returns>
         public override string ToString()
         {
             return (PhasorType == PhasorType.Current ? "I: " : "V: ") + Label;

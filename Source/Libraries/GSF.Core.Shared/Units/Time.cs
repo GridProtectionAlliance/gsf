@@ -274,7 +274,7 @@ namespace GSF.Units
         /// <remarks>
         /// Note that this ToString overload will not display fractional seconds. To allow display of
         /// fractional seconds, or completely remove second resolution from the textual representation,
-        /// use the <see cref="ToString(int,double)"/> overload instead.
+        /// use the <see cref="ToString(int, double)"/> overload instead.
         /// </remarks>
         /// <returns>
         /// The string representation of the value of this instance, consisting of the number of
@@ -525,6 +525,9 @@ namespace GSF.Units
         /// </returns>
         public string ToString(string format, IFormatProvider provider)
         {
+            if (string.IsNullOrEmpty(format))
+                return ToString();
+
             return m_value.ToString(format, provider);
         }
 

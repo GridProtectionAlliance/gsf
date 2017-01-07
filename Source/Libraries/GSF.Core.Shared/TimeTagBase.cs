@@ -76,6 +76,13 @@ namespace GSF
     {
         #region [ Members ]
 
+        // Constants
+
+        /// <summary>
+        /// Default format for <see cref="TimeTagBase"/> implementations.
+        /// </summary>
+        public const string DefaultFormat = "yyyy-MM-dd HH:mm:ss.fff";
+
         // Fields
         private readonly long m_baseDateOffsetTicks;
         private readonly decimal m_seconds;
@@ -169,7 +176,7 @@ namespace GSF
         /// <returns>A <see cref="string"/> value representing the timetag.</returns>
         public override string ToString()
         {
-            return ToString("yyyy-MM-dd HH:mm:ss.fff");
+            return ToString(DefaultFormat);
         }
 
         /// <summary>
@@ -189,7 +196,7 @@ namespace GSF
         /// <returns><see cref="string"/> of textual representation for timetag.</returns>
         public virtual string ToString(IFormatProvider provider)
         {
-            return ToDateTime().ToString(provider);
+            return ToDateTime().ToString(DefaultFormat, provider);
         }
 
         /// <summary>
@@ -201,7 +208,7 @@ namespace GSF
         /// <returns><see cref="string"/> of textual representation for timetag.</returns>
         public virtual string ToString(string format, IFormatProvider provider)
         {
-            return ToDateTime().ToString(format, provider);
+            return ToDateTime().ToString(string.IsNullOrEmpty(format) ? DefaultFormat : format, provider);
         }
 
         /// <summary>

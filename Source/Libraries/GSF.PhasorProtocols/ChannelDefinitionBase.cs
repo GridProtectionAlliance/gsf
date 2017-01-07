@@ -406,9 +406,9 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets the string respresentation of this <see cref="ChannelDefinitionBase"/>.
+        /// Gets the string representation of this <see cref="ChannelDefinitionBase"/>.
         /// </summary>
-        /// <returns>String respresentation of this <see cref="ChannelDefinitionBase"/>.</returns>
+        /// <returns>String representation of this <see cref="ChannelDefinitionBase"/>.</returns>
         public override string ToString()
         {
             return Label;

@@ -150,9 +150,9 @@ namespace GSF.PhasorProtocols
         #region [ Methods ]
 
         /// <summary>
-        /// Gets the string respresentation of this <see cref="ChannelCellBase"/>.
+        /// Gets the string representation of this <see cref="ChannelCellBase"/>.
         /// </summary>
-        /// <returns>String respresentation of this <see cref="ChannelCellBase"/>.</returns>
+        /// <returns>String representation of this <see cref="ChannelCellBase"/>.</returns>
         public override string ToString()
         {
             return IDCode.ToString();

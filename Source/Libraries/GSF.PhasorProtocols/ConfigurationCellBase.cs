@@ -648,9 +648,9 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets the string respresentation of this <see cref="ConfigurationCellBase"/>.
+        /// Gets the string representation of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
-        /// <returns>String respresentation of this <see cref="ConfigurationCellBase"/>.</returns>
+        /// <returns>String representation of this <see cref="ConfigurationCellBase"/>.</returns>
         public override string ToString()
         {
             string stationName = StationName;
