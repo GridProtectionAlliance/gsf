@@ -216,6 +216,9 @@ namespace GSF.Net.Ftp
                 m_ftpFileCommandRoutine(m_remoteFile);
                 m_streamCopyRoutine(remoteStream, localStream);
 
+                // Dispose remote stream before testing file transfer result to ensure
+                // we have received the server's response to the file transfer command
+                remoteStream.Dispose();
                 TestTransferResult();
 
                 m_session.Host.OnEndFileTransfer(m_localFile, m_remoteFile, m_transferDirection);
@@ -246,8 +249,6 @@ namespace GSF.Net.Ftp
 
         private void TestTransferResult()
         {
-            m_session.ControlChannel.RefreshResponse();
-
             int responseCode = m_session.ControlChannel.LastResponse.Code;
 
             if (responseCode == FtpResponse.ClosingDataChannel)
