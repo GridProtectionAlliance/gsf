@@ -484,6 +484,9 @@ namespace GSF.Units
         /// </returns>
         public string ToString(string format)
         {
+            if (string.IsNullOrEmpty(format))
+                return ToString();
+
             return m_value.ToString(format);
         }
 
@@ -1120,7 +1123,7 @@ namespace GSF.Units
         public static string ToElapsedTimeString(double seconds, int secondPrecision, string[] timeNames = null, double minimumSubSecondResolution = SI.Milli)
         {
             // One year of seconds estimated for display use as 365.2425 days, i.e., 31,556,952 seconds
-            const int SecondsPerYear = 31556952;
+            const double SecondsPerYear = 31556952.0D;
 
             if (minimumSubSecondResolution > SI.Milli)
                 throw new ArgumentOutOfRangeException(nameof(minimumSubSecondResolution), "Must be less than or equal to " + SI.Milli);
