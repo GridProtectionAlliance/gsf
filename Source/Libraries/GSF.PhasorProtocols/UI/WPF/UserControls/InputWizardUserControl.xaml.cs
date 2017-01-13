@@ -178,7 +178,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
             }
             else if (m_dataContext.StepThreeExpanded)
             {
-                if (ValidatePMUNames())
+                if (!m_dataContext.ConnectToConcentrator || ValidatePMUNames())
                 {
                     m_dataContext.SavePDC();
                     m_dataContext.SaveConfiguration();
