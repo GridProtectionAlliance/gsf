@@ -106,7 +106,7 @@ namespace GSF.Web.Hubs
         /// <remarks>
         /// This method should be called within implementing SignalR hub when stop is called.
         /// </remarks>
-        public void EndSession()
+        public virtual void EndSession()
         {
             EndSession(m_hub?.Context?.ConnectionId);
         }
