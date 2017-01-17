@@ -58,7 +58,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ErrorMessagesWindow.xaml.cs">
+      <DependentUpon>ErrorMessagesWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ViewModelBase.cs" />
+    <Page Include="ErrorMessagesWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

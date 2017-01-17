@@ -220,6 +220,7 @@ namespace COMTRADEConverter
             }
             catch (Exception e)
             {
+                e.Data.Add("File", m_currentFilePath);
                 ExceptionList.Add(e);
             }
         }
