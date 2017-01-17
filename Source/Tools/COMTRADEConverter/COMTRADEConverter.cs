@@ -42,7 +42,7 @@ namespace COMTRADEConverter
 
         private ObservableCollection<string> m_files;
         private IList<ParsedChannel> m_channels;
-        private List<Exception> m_exceptionList;
+        private ObservableCollection<Exception> m_exceptionList;
 
         #endregion
 
@@ -67,7 +67,7 @@ namespace COMTRADEConverter
             };
 
             Files = new ObservableCollection<string>();
-            m_exceptionList = new List<Exception>();
+            m_exceptionList = new ObservableCollection<Exception>();
             ExportPath = @"C:\Users\sjenks\Documents\COMTRADE Converter Test Data\Output";
         }
 
@@ -114,7 +114,7 @@ namespace COMTRADEConverter
             }
         }
 
-        public List<Exception> ExceptionList
+        public ObservableCollection<Exception> ExceptionList
         {
             get
             {
@@ -147,6 +147,7 @@ namespace COMTRADEConverter
             }
             catch (Exception e)
             {
+                e.Source = m_currentFileRootName;
                 ExceptionList.Add(e);
             }
         }
@@ -220,7 +221,7 @@ namespace COMTRADEConverter
             }
             catch (Exception e)
             {
-                e.Data.Add("File", m_currentFilePath);
+                e.Source = m_currentFileRootName;
                 ExceptionList.Add(e);
             }
         }
@@ -265,116 +266,7 @@ namespace COMTRADEConverter
             }
             catch (Exception e)
             {
-                ExceptionList.Add(e);
-            }
-
-        }
-
-        #endregion
-
-        #region SELEVE Methods
-
-        private void ProcessSELEVE()
-        {
-            ParseSELEVE();
-            WriteDataFile(WriteSchemaFile());
-        }
-
-        // Shamelessly copy pasted from the XDAWaveFormDataParser
-        // Thanks other Stephen
-        private void ParseSELEVE()
-        {
-            try
-            {
-                EventFile parsedFile;
-
-                // Parse event file
-                parsedFile = EventFile.Parse(m_currentFilePath);
-
-                // Convert to common channel format
-                if (parsedFile.EventReports.Count > 0)
-                {
-                    m_channels = parsedFile.EventReports
-                        .SelectMany(report => report.AnalogSection.AnalogChannels.Select(channel => MakeParsedChannel(report, channel)))
-                        .ToList();
-                }
-                else if (parsedFile.CommaSeparatedEventReports.Count > 0)
-                {
-                    m_channels = parsedFile.CommaSeparatedEventReports
-                        .SelectMany(report => report.AnalogSection.AnalogChannels.Select(channel => MakeParsedChannel(report, channel)))
-                        .ToList();
-                }
-            }
-            catch (Exception e)
-            {
-                ExceptionList.Add(e);
-            }
-        }
-
-        #endregion
-
-        #region Common Methods
-
-        private Schema WriteSchemaFile()
-        {
-            try
-            {
-                DateTime? startTime = m_channels[0].TimeValues[0];
-                int sampleCount = m_channels[0].YValues.Count;
-                IEnumerable<ChannelMetadata> metadata = m_channels.Select(ConvertToChannelMetadata);
-
-                string configFileName = Path.Combine(m_exportPath, m_currentFileRootName + ".cfg");
-                StreamWriter configFileWriter = new StreamWriter(new FileStream(configFileName, FileMode.Create, FileAccess.Write), Encoding.ASCII);
-
-                Schema schema = Writer.CreateSchema(metadata, "Station Name", "DeviceID", startTime.GetValueOrDefault(), sampleCount, includeFracSecDefinition: false, isBinary: false);
-
-                configFileWriter.Write(schema.FileImage);
-                configFileWriter.Flush();
-
-                return schema;
-            }
-            catch (Exception e)
-            {
-                ExceptionList.Add(e);
-                return new Schema(); //TODO: Maybe come up with a good default Schema
-            }
-        }
-
-        private void WriteDataFile(Schema schema)
-        {
-            try
-            {
-                int sampleCount = m_channels[0].YValues.Count;
-
-                string dataFileName = Path.Combine(m_exportPath, m_currentFileRootName + ".dat");
-                StreamWriter dataFileWriter = new StreamWriter(new FileStream(dataFileName, FileMode.Create, FileAccess.Write), Encoding.ASCII);
-                FileStream dataFileStream = (FileStream)dataFileWriter.BaseStream;
-
-                for (int sample = 0; sample < sampleCount; sample++)
-                {
-                    double[] frame = new double[m_channels.Count];
-                    int channelIndex = 0;
-                    foreach (ParsedChannel channel in m_channels)
-                    {
-                        try
-                        {
-                            if (channel.YValues.Count > sample)
-                                frame[channelIndex++] = (double)channel.YValues[sample];
-                            else
-                                frame[channelIndex++] = 0.0;
-                        }
-                        catch (Exception e)
-                        {
-                            m_exceptionList.Add(e);
-                        }
-                    }
-                    // TODO: Ask Other Stephen how this ever worked when I had sample++ in
-                    Writer.WriteNextRecordAscii(dataFileWriter, schema, m_channels[0].TimeValues[sample], frame, (uint)sample, injectFracSecValue: false);
-                }
-                dataFileWriter.Flush();
-            }
-            catch (Exception e)
-            {
+                e.Source = m_currentFileRootName;
                 ExceptionList.Add(e);
             }
         }
@@ -420,8 +312,48 @@ namespace COMTRADEConverter
                     .Cast<object>()
                     .ToList();
             }
-
             return parsedChannel;
+        }
+
+
+        #endregion
+
+        #region SELEVE Methods
+
+        private void ProcessSELEVE()
+        {
+            ParseSELEVE();
+            WriteDataFile(WriteSchemaFile());
+        }
+
+        // Shamelessly copy pasted from the XDAWaveFormDataParser
+        // Thanks other Stephen
+        private void ParseSELEVE()
+        {
+            try
+            {
+                // Parse event file
+                EventFile parsedFile = EventFile.Parse(m_currentFilePath);
+
+                // Convert to common channel format
+                if (parsedFile.EventReports.Count > 0)
+                {
+                    m_channels = parsedFile.EventReports
+                        .SelectMany(report => report.AnalogSection.AnalogChannels.Select(channel => MakeParsedChannel(report, channel)))
+                        .ToList();
+                }
+                else if (parsedFile.CommaSeparatedEventReports.Count > 0)
+                {
+                    m_channels = parsedFile.CommaSeparatedEventReports
+                        .SelectMany(report => report.AnalogSection.AnalogChannels.Select(channel => MakeParsedChannel(report, channel)))
+                        .ToList();
+                }
+            }
+            catch (Exception e)
+            {
+                e.Source = m_currentFileRootName;
+                ExceptionList.Add(e);
+            }
         }
 
         // Shamelessly copy pasted from the XDAWaveFormDataParser
@@ -468,6 +400,76 @@ namespace COMTRADEConverter
             };
 
             return parsedChannel;
+        }
+
+        #endregion
+
+        #region Common Methods
+
+        private Schema WriteSchemaFile()
+        {
+            try
+            {
+                DateTime? startTime = m_channels[0].TimeValues[0];
+                int sampleCount = m_channels[0].YValues.Count;
+                IEnumerable<ChannelMetadata> metadata = m_channels.Select(ConvertToChannelMetadata);
+
+                string configFileName = Path.Combine(m_exportPath, m_currentFileRootName + ".cfg");
+                StreamWriter configFileWriter = new StreamWriter(new FileStream(configFileName, FileMode.Create, FileAccess.Write), Encoding.ASCII);
+
+                Schema schema = Writer.CreateSchema(metadata, "Station Name", "DeviceID", startTime.GetValueOrDefault(), sampleCount, includeFracSecDefinition: false, isBinary: false);
+
+                configFileWriter.Write(schema.FileImage);
+                configFileWriter.Flush();
+
+                return schema;
+            }
+            catch (Exception e)
+            {
+                e.Source = m_currentFileRootName;
+                ExceptionList.Add(e);
+                return new Schema(); //TODO: Maybe come up with a good default Schema
+            }
+        }
+
+        private void WriteDataFile(Schema schema)
+        {
+            try
+            {
+                int sampleCount = m_channels[0].YValues.Count;
+
+                string dataFileName = Path.Combine(m_exportPath, m_currentFileRootName + ".dat");
+                StreamWriter dataFileWriter = new StreamWriter(new FileStream(dataFileName, FileMode.Create, FileAccess.Write), Encoding.ASCII);
+                FileStream dataFileStream = (FileStream)dataFileWriter.BaseStream;
+
+                for (int sample = 0; sample < sampleCount; sample++)
+                {
+                    double[] frame = new double[m_channels.Count];
+                    int channelIndex = 0;
+                    foreach (ParsedChannel channel in m_channels)
+                    {
+                        try
+                        {
+                            if (channel.YValues.Count > sample)
+                                frame[channelIndex++] = (double)channel.YValues[sample];
+                            else
+                                frame[channelIndex++] = 0.0;
+                        }
+                        catch (Exception e)
+                        {
+                            m_exceptionList.Add(e);
+                        }
+                    }
+                    // TODO: Ask Other Stephen how this ever worked when I had sample++ in
+                    Writer.WriteNextRecordAscii(dataFileWriter, schema, m_channels[0].TimeValues[sample], frame, (uint)sample, injectFracSecValue: false);
+                }
+                dataFileWriter.Flush();
+            }
+            catch (Exception e)
+            {
+                e.Source = m_currentFileRootName;
+                ExceptionList.Add(e);
+            }
         }
 
         // Shamelessly copy pasted from XDAWaveFormDataParser

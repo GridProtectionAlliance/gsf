@@ -82,9 +82,7 @@ namespace COMTRADEConverter
 
         private void ErrorsButtonCLicked(object sender, RoutedEventArgs e)
         {
-            ErrorMessagesWindow errorWindow = new ErrorMessagesWindow();
-            errorWindow.DataContext = m_viewModel;
-
+            ErrorMessagesWindow errorWindow = new ErrorMessagesWindow {DataContext = m_viewModel};
             errorWindow.Show();
         }
 

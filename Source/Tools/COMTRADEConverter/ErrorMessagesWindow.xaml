@@ -5,18 +5,16 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:COMTRADEConverter"
         mc:Ignorable="d"
-        Title="ErrorMessagesWindow" Height="300" Width="300">
+        Title="ErrorMessagesWindow" Height="300" Width="1280">
     <DockPanel Margin="5,0,5,5">
-        <ListBox DockPanel.Dock="Left"
+        <ListView DockPanel.Dock="Left"
             ItemsSource="{Binding ExceptionList, Mode=OneWay}">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <DockPanel>
-                        <TextBlock
-                            Text="{Binding Message, Mode=OneWay}"/>
-                    </DockPanel>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Offender" DisplayMemberBinding="{Binding Source}" />
+                    <GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" />
+                </GridView>
+            </ListView.View>
+        </ListView>
     </DockPanel>
 </Window>
