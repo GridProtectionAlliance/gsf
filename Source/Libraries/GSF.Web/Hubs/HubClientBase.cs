@@ -48,15 +48,24 @@ namespace GSF.Web.Hubs
         /// Gets reference to SignalR hub client browser DOM functionality.
         /// </summary>
         /// <remarks>
-        /// <para>
         /// This property can be used to call registered Javascript hub functions.
-        /// </para>
-        /// <para>
-        /// Note that attempting to access this property from self-created hub instance, i.e., a manually created instance
-        /// instead of one created by SignalR, will cause a null-reference exception.
-        /// </para>
         /// </remarks>
-        public dynamic ClientScript => m_clientScript ?? (m_clientScript = HubInstance?.Clients?.Client(ConnectionID));
+        public dynamic ClientScript
+        {
+            get
+            {
+                // Attempting to access this property from self-created hub instance, i.e., a manually created
+                // instance instead of one created by SignalR, will cause a null-reference exception.
+                try
+                {
+                    return m_clientScript ?? (m_clientScript = HubInstance?.Clients?.Client(ConnectionID));
+                }
+                catch (NullReferenceException)
+                {
+                    return null;
+                }
+            }
+        }
 
         /// <summary>
         /// Gets or sets reference to SignalR hub instance.
@@ -146,16 +155,7 @@ namespace GSF.Web.Hubs
         {
             // Send status message to hub client
             if (logToClient)
-            {
-                try
-                {
-                    ClientScript?.sendInfoMessage(message, type == UpdateType.Information ? 2000 : -1);
-                }
-                catch (NullReferenceException)
-                {
-                    // Client script unavailable for self-created hub instances
-                }
-            }
+                ClientScript?.sendInfoMessage(message, type == UpdateType.Information ? 2000 : -1);
 
             // Send status message to program host
             LogStatusMessageFunction?.Invoke(message, type);
@@ -175,16 +175,7 @@ namespace GSF.Web.Hubs
         {
             // Send exception to hub client
             if (logToClient)
-            {
-                try
-                {
-                    ClientScript?.sendErrorMessage(ex.Message, -1);
-                }
-                catch (NullReferenceException)
-                {
-                    // Client script unavailable for self-created hub instances
-                }
-            }
+                ClientScript?.sendErrorMessage(ex.Message, -1);
 
             // Send exception to program host
             LogExceptionFunction?.Invoke(ex);
