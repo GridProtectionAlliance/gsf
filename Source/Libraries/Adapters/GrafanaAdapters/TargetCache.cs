@@ -26,16 +26,18 @@ using System.Runtime.Caching;
 
 namespace GrafanaAdapters
 {
-    internal static class TargetCache
+    // Usage Note: Each type T should be unique unless cache can be safely shared
+    internal static class TargetCache<T>
     {
+        // ReSharper disable once StaticMemberInGenericType
         private static readonly MemoryCache s_targetCache;
 
         static TargetCache()
         {
-            s_targetCache = new MemoryCache("GrafanaTargetCache");
+            s_targetCache = new MemoryCache($"GrafanaTargetCache-{typeof(T).Name}");
         }
 
-        internal static T GetOrAdd<T>(string target, Func<T> valueFactory)
+        internal static T GetOrAdd(string target, Func<T> valueFactory)
         {
             Lazy<T> newValue = new Lazy<T>(valueFactory);
             Lazy<T> oldValue = s_targetCache.AddOrGetExisting(target, newValue, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(1.0D) }) as Lazy<T>;
@@ -49,6 +51,25 @@ namespace GrafanaAdapters
                 s_targetCache.Remove(target);
                 throw;
             }
+        }
+
+        internal static bool GetLastAndUpdate(string target, out T oldValue, T newValue)
+        {
+            bool foundExisting = false;
+
+            if (s_targetCache.Contains(target))
+            {
+                oldValue = (T)s_targetCache.Get(target);
+                foundExisting = true;
+            }
+            else
+            {
+                oldValue = default(T);                
+            }
+
+            s_targetCache.Set(target, newValue, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(1.0D) });
+
+            return foundExisting;
         }
     }
 }

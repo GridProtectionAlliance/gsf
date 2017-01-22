@@ -25,14 +25,37 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using GSF.Collections;
+using GSF.NumericalAnalysis;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.Web;
 
+// ReSharper disable PossibleMultipleEnumeration
 namespace GrafanaAdapters
 {
+    #region [ Enumerations ]
+
+    internal enum Aggregate
+    {
+        Average,
+        Minimum,
+        Maximum,
+        Total,
+        Range,
+        Count,
+        TimeInt,
+        Derivative,
+        StdDev,
+        StDevSamp,
+        None
+    }
+
+    #endregion
+
     /// <summary>
     /// Represents a base implementation for Grafana data sources.
     /// </summary>
@@ -79,24 +102,345 @@ namespace GrafanaAdapters
 
                 DateTime startTime = request.range.from.ParseJsonTimestamp();
                 DateTime stopTime = request.range.to.ParseJsonTimestamp();
-                HashSet<string> targets = new HashSet<string>(request.targets.Select(target => target.target), StringComparer.OrdinalIgnoreCase);
+                int maxDataPoints = request.maxDataPoints;
 
-                foreach (string target in request.targets.Select(target => target.target))
-                    targets.UnionWith(TargetCache.GetOrAdd(target, () => AdapterBase.ParseInputMeasurementKeys(Metadata, false, target).Select(key => key.TagFromKey(Metadata)).ToArray()));
+                return QueryTimeSeriesValuesFromTargets(request.targets.Select(target => target.target), startTime, stopTime, maxDataPoints, cancellationToken);
+            },
+            cancellationToken);
+        }        
+
+        private List<TimeSeriesValues> QueryTimeSeriesValuesFromTargets(IEnumerable<string> targets, DateTime startTime, DateTime stopTime, int maxDataPoints, CancellationToken cancellationToken)
+        {
+            // A single target might look like the following:
+            // PPA:15; STAT:20; SUM(COUNT(PPA:8; PPA:9; PPA:10)); FILTER ActiveMeasurements WHERE SignalType = 'VPHA'; RANGE(PPA:99; SUM(FILTER ActiveMeasurements WHERE SignalType = 'FREQ'; STAT:12))
+
+            List<TimeSeriesValues> results = new List<TimeSeriesValues>();
+            HashSet<string> targetSet = new HashSet<string>(targets, StringComparer.OrdinalIgnoreCase); // Targets include user provided input, so casing should be ignored
+            HashSet<string> reducedTargetSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            List<Match> aggregateExpressions = new List<Match>();
+
+            foreach (string target in targetSet)
+            {
+                // Find any aggregate expressions in target
+                Match[] aggregates = TargetCache<Match[]>.GetOrAdd(target, () =>
+                {
+                    lock (s_aggregateExpressions)
+                        return s_aggregateExpressions.Matches(target).Cast<Match>().ToArray();
+                });
+
+                if (aggregates.Length > 0)
+                {
+                    aggregateExpressions.AddRange(aggregates);
+
+                    // Reduce target to non-aggregate expressions - important so later split on ';' succeeds properly
+                    string reducedTarget = target;
+
+                    foreach (string aggregate in aggregates.Select(match => match.Value))
+                        reducedTarget = reducedTarget.Replace(aggregate, "");
+
+                    reducedTargetSet.Add(reducedTarget);
+                }
+                else
+                {
+                    reducedTargetSet.Add(target);
+                }
+            }
+
+            if (aggregateExpressions.Count > 0)
+            {
+                // Parse aggregate expressions
+                Tuple<Aggregate, string, bool>[] parsedAggregates = aggregateExpressions.Select(ParseAggregate).ToArray();
+
+                // Execute aggregate expressions
+                foreach (Tuple<Aggregate, string, bool> parsedAggregate in parsedAggregates)
+                    results.AddRange(ExecuteAggregate(parsedAggregate, startTime, stopTime, maxDataPoints, cancellationToken));
+
+                // Use reduced target set that excludes any aggregate expressions
+                targetSet = reducedTargetSet;
+            }
+
+            // Query any remaining targets
+            if (targetSet.Count > 0)
+            {
+                // Expand target set to include point tags for all parsed inputs
+                foreach (string target in targetSet.Select(target => target.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)).SelectMany(currentTargets => currentTargets))
+                    targetSet.UnionWith(TargetCache<string[]>.GetOrAdd(target, () => AdapterBase.ParseInputMeasurementKeys(Metadata, false, target).Select(key => key.TagFromKey(Metadata)).ToArray()));
 
                 Dictionary<ulong, string> targetMap = new Dictionary<ulong, string>();
 
-                foreach (string target in targets)
+                // Target set now contains both original expressions and newly parsed individual point tags - to create final point list we
+                // are only interested in the point tags, provided either by direct user entry or derived by parsing filter expressions
+                foreach (string target in targetSet)
                 {
-                    MeasurementKey key = TargetCache.GetOrAdd(target, () => target.KeyFromTag(Metadata));
+                    // Reduce all targets down to a dictionary of point ID's mapped to point tags
+                    MeasurementKey key = TargetCache<MeasurementKey>.GetOrAdd(target, () => target.KeyFromTag(Metadata));
 
                     if (key != MeasurementKey.Undefined)
                         targetMap[key.ID] = target;
                 }
 
-                return QueryTimeSeriesValues(startTime, stopTime, request.maxDataPoints, targetMap, cancellationToken);
-            },
-            cancellationToken);
+                // Query underlying data source for data
+                results.AddRange(QueryTimeSeriesValues(startTime, stopTime, maxDataPoints, targetMap, cancellationToken));
+            }
+
+            return results;
+        }
+
+        private Tuple<Aggregate, string, bool> ParseAggregate(Match aggregate)
+        {
+            bool setOperation = aggregate.Groups[0].Success;
+            string aggregateExpression = setOperation ? aggregate.Value.Substring(3) : aggregate.Value;
+
+            return TargetCache<Tuple<Aggregate, string, bool>>.GetOrAdd(aggregateExpression, () =>
+            {
+                Match filterMatch;
+
+                // Look for average aggregate
+                lock (s_averageExpression)
+                    filterMatch = s_averageExpression.Match(aggregateExpression);
+
+                if (filterMatch.Success)
+                    return new Tuple<Aggregate, string, bool>(Aggregate.Average, filterMatch.Result("${Expression}").Trim(), setOperation);
+
+                // Look for minimum aggregate
+                lock (s_minimumExpression)
+                    filterMatch = s_minimumExpression.Match(aggregateExpression);
+
+                if (filterMatch.Success)
+                    return new Tuple<Aggregate, string, bool>(Aggregate.Minimum, filterMatch.Result("${Expression}").Trim(), setOperation);
+
+                // Look for maximum aggregate
+                lock (s_maximumExpression)
+                    filterMatch = s_maximumExpression.Match(aggregateExpression);
+
+                if (filterMatch.Success)
+                    return new Tuple<Aggregate, string, bool>(Aggregate.Maximum, filterMatch.Result("${Expression}").Trim(), setOperation);
+
+                // Look for total aggregate
+                lock (s_totalExpression)
+                    filterMatch = s_totalExpression.Match(aggregateExpression);
+
+                if (filterMatch.Success)
+                    return new Tuple<Aggregate, string, bool>(Aggregate.Total, filterMatch.Result("${Expression}").Trim(), setOperation);
+
+                // Look for range aggregate
+                lock (s_rangeExpression)
+                    filterMatch = s_rangeExpression.Match(aggregateExpression);
+
+                if (filterMatch.Success)
+                    return new Tuple<Aggregate, string, bool>(Aggregate.Range, filterMatch.Result("${Expression}").Trim(), setOperation);
+
+                // Look for count aggregate
+                lock (s_countExpression)
+                    filterMatch = s_countExpression.Match(aggregateExpression);
+
+                if (filterMatch.Success)
+                    return new Tuple<Aggregate, string, bool>(Aggregate.Count, filterMatch.Result("${Expression}").Trim(), setOperation);
+
+                // Look for time integration aggregate
+                lock (s_timeIntExpression)
+                    filterMatch = s_timeIntExpression.Match(aggregateExpression);
+
+                if (filterMatch.Success)
+                    return new Tuple<Aggregate, string, bool>(Aggregate.TimeInt, filterMatch.Result("${Expression}").Trim(), setOperation);
+
+                // Look for derivative aggregate
+                lock (s_derivativeExpression)
+                    filterMatch = s_derivativeExpression.Match(aggregateExpression);
+
+                if (filterMatch.Success)
+                    return new Tuple<Aggregate, string, bool>(Aggregate.Derivative, filterMatch.Result("${Expression}").Trim(), setOperation);
+
+                // Look for standard deviation aggregate
+                lock (s_stdDevExpression)
+                    filterMatch = s_stdDevExpression.Match(aggregateExpression);
+
+                if (filterMatch.Success)
+                    return new Tuple<Aggregate, string, bool>(Aggregate.StdDev, filterMatch.Result("${Expression}").Trim(), setOperation);
+
+                // Look for sampled-based standard deviation aggregate
+                lock (s_stdDevSampExpression)
+                    filterMatch = s_stdDevSampExpression.Match(aggregateExpression);
+
+                if (filterMatch.Success)
+                    return new Tuple<Aggregate, string, bool>(Aggregate.StDevSamp, filterMatch.Result("${Expression}").Trim(), setOperation);
+
+                // Target is not a recognized aggregate
+                return new Tuple<Aggregate, string, bool>(Aggregate.None, aggregateExpression, false);
+            });
+        }
+
+        private List<TimeSeriesValues> ExecuteAggregate(Tuple<Aggregate, string, bool> parsedAggregate, DateTime startTime, DateTime stopTime, int maxDataPoints, CancellationToken cancellationToken)
+        {
+            List<TimeSeriesValues> results = new List<TimeSeriesValues>();
+            Aggregate aggregate = parsedAggregate.Item1;
+            string expression = parsedAggregate.Item2;
+            bool setOperation = parsedAggregate.Item3;
+            List<TimeSeriesValues> dataset = QueryTimeSeriesValuesFromTargets(new[] { expression }, startTime, stopTime, maxDataPoints, cancellationToken);
+            double[] currentSeries, currentTimes, lastSeries;
+
+            if (dataset.Count == 0 || cancellationToken.IsCancellationRequested)
+                return results;
+
+            if (setOperation)
+            {
+                TimeSeriesValues result = new TimeSeriesValues
+                {
+                    target = $"Set{aggregate}({expression})",
+                    datapoints = new List<double[]>()
+                };
+
+                IEnumerable<double> values = dataset.Select(series => series.datapoints).SelectMany(points => points[TimeSeriesValues.Value]);
+                IEnumerable<double> times = dataset.Select(series => series.datapoints).SelectMany(points => points[TimeSeriesValues.Time]);
+
+                switch (aggregate)
+                {
+                    case Aggregate.Average:
+                        result.datapoints.Add(new [] { values.Average(), times.Max() });
+                        break;
+                    case Aggregate.Minimum:
+                        List<TimeSeriesValues> minSet = ExecuteAggregate(new Tuple<Aggregate, string, bool>(aggregate, expression, false), startTime, stopTime, maxDataPoints, cancellationToken);
+                        result = minSet.MinBy(value => value.datapoints[0][TimeSeriesValues.Value]);
+                        result.target = $"SetMinimum = {result.target}";
+                        break;
+                    case Aggregate.Maximum:
+                        List<TimeSeriesValues> maxSet = ExecuteAggregate(new Tuple<Aggregate, string, bool>(aggregate, expression, false), startTime, stopTime, maxDataPoints, cancellationToken);
+                        result = maxSet.MaxBy(value => value.datapoints[0][TimeSeriesValues.Value]);
+                        result.target = $"SetMaximum = {result.target}";
+                        break;
+                    case Aggregate.Total:
+                        result.datapoints.Add(new [] { values.Sum(), times.Max() });
+                        break;
+                    case Aggregate.Range:
+                        result.datapoints.Add(new [] { values.Max() - values.Min(), times.Max() });
+                        break;
+                    case Aggregate.Count:
+                        result.datapoints.Add(new [] { values.Count(), times.Max() });
+                        break;
+                    case Aggregate.TimeInt:
+                        double integratedValue = 0.0D;
+                        currentSeries = values.ToArray();
+                        currentTimes = times.ToArray();
+
+                        for (int i = 1; i < currentSeries.Length; i++)
+                            integratedValue += currentSeries[i] * (currentTimes[i] - currentTimes[i - 1]);
+
+                        result.datapoints.Add(new [] { integratedValue, times.Max() });
+                        break;
+                    case Aggregate.Derivative:
+                        currentSeries = values.ToArray();
+                        currentTimes = times.ToArray();
+
+                        if (!TargetCache<double[]>.GetLastAndUpdate(result.target, out lastSeries, currentSeries))
+                            lastSeries = currentSeries;
+
+                        for (int i = 0; i < currentSeries.Length; i++)
+                            result.datapoints.Add(new [] { currentSeries[i] - lastSeries[i], currentTimes[i] });
+
+                        break;
+                    case Aggregate.StdDev:
+                        result.datapoints.Add(new [] { values.StandardDeviation(), times.Max() });
+                        break;
+                    case Aggregate.StDevSamp:
+                        result.datapoints.Add(new [] { values.StandardDeviation(true), times.Max() });
+                        break;
+                }
+
+                results.Add(result);
+            }
+            else
+            {
+                foreach (TimeSeriesValues source in dataset)
+                {
+                    TimeSeriesValues result = new TimeSeriesValues
+                    {
+                        target = $"{aggregate}({source.target})",
+                        datapoints = new List<double[]>()
+                    };
+
+                    IEnumerable<double> values = source.datapoints.Select(points => points[TimeSeriesValues.Value]);
+                    IEnumerable<double> times = source.datapoints.Select(points => points[TimeSeriesValues.Time]);
+                    double lastTime = source.datapoints[source.datapoints.Count - 1][TimeSeriesValues.Time];
+
+                    switch (aggregate)
+                    {
+                        case Aggregate.Average:
+                            result.datapoints.Add(new [] { values.Average(), lastTime });
+                            break;
+                        case Aggregate.Minimum:
+                            double minValue = double.MaxValue;
+                            int minIndex = 0;
+                            currentSeries = values.ToArray();
+
+                            for (int i = 0; i < currentSeries.Length; i++)
+                            {
+                                if (currentSeries[i] < minValue)
+                                {
+                                    minValue = currentSeries[i];
+                                    minIndex = i;
+                                }
+                            }
+
+                            result.datapoints.Add(new [] { minValue, times.ElementAt(minIndex) });
+                            break;
+                        case Aggregate.Maximum:
+                            double maxValue = double.MinValue;
+                            int maxIndex = 0;
+                            currentSeries = values.ToArray();
+
+                            for (int i = 0; i < currentSeries.Length; i++)
+                            {
+                                if (currentSeries[i] > maxValue)
+                                {
+                                    maxValue = currentSeries[i];
+                                    maxIndex = i;
+                                }
+                            }
+
+                            result.datapoints.Add(new [] { maxValue, times.ElementAt(maxIndex) });
+                            break;
+                        case Aggregate.Total:
+                            result.datapoints.Add(new [] { values.Sum(), lastTime });
+                            break;
+                        case Aggregate.Range:
+                            result.datapoints.Add(new [] { values.Max() - values.Min(), lastTime });
+                            break;
+                        case Aggregate.Count:
+                            result.datapoints.Add(new [] { source.datapoints.Count, lastTime });
+                            break;
+                        case Aggregate.TimeInt:
+                            double integratedValue = 0.0D;
+
+                            for (int i = 1; i < source.datapoints.Count; i++)
+                                integratedValue += source.datapoints[i][TimeSeriesValues.Value] *
+                                    (source.datapoints[i][TimeSeriesValues.Time] - source.datapoints[i - 1][TimeSeriesValues.Time]);
+
+                            result.datapoints.Add(new [] { integratedValue, lastTime });
+                            break;
+                        case Aggregate.Derivative:
+                            currentSeries = values.ToArray();
+                            currentTimes = times.ToArray();
+
+                            if (!TargetCache<double[]>.GetLastAndUpdate(source.target, out lastSeries, currentSeries))
+                                lastSeries = currentSeries;
+
+                            for (int i = 0; i < currentSeries.Length; i++)
+                                result.datapoints.Add(new [] { currentSeries[i] - lastSeries[i], currentTimes[i] });
+
+                            break;
+                        case Aggregate.StdDev:
+                            result.datapoints.Add(new [] { values.StandardDeviation(), lastTime });
+                            break;
+                        case Aggregate.StDevSamp:
+                            result.datapoints.Add(new [] { values.StandardDeviation(true), lastTime });
+                            break;
+                    }
+
+                    results.Add(result);
+                }
+            }
+
+            return results;
         }
 
         /// <summary>
@@ -124,8 +468,7 @@ namespace GrafanaAdapters
                 return Metadata.Tables["ActiveMeasurements"]
                     .Select($"ID LIKE '{InstanceName}:%'")
                     .Take(MaximumSearchTargetsPerRequest)
-                    .Select(row => $"{row["PointTag"]}")
-                    .ToArray();
+                    .Select(row => $"{row["PointTag"]}").ToArray();
             });
         }
 
@@ -154,8 +497,7 @@ namespace GrafanaAdapters
                     {
                         AnnotationResponse response = new AnnotationResponse
                         {
-                            annotation = request.annotation,
-                            time = datapoint[TimeSeriesValues.Time]
+                            annotation = request.annotation, time = datapoint[TimeSeriesValues.Time]
                         };
 
                         type.PopulateResponse(response, target, definition, datapoint, Metadata);
@@ -166,6 +508,44 @@ namespace GrafanaAdapters
             }
 
             return responses;
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly Regex s_aggregateExpressions;
+        private static readonly Regex s_averageExpression;
+        private static readonly Regex s_minimumExpression;
+        private static readonly Regex s_maximumExpression;
+        private static readonly Regex s_totalExpression;
+        private static readonly Regex s_rangeExpression;
+        private static readonly Regex s_countExpression;
+        private static readonly Regex s_timeIntExpression;
+        private static readonly Regex s_derivativeExpression;
+        private static readonly Regex s_stdDevExpression;
+        private static readonly Regex s_stdDevSampExpression;
+
+        // Static Constructor
+        static GrafanaDataSourceBase()
+        {
+            const string ExtractAggregateExpression = @"{0}\s*\(\s*(?<Expression>.+)\s*\)";
+
+            // RegEx instance to find all aggregates
+            s_aggregateExpressions = new Regex(@"(SET)?\w+\s*\(([^)]+[\)\s]*)\)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+            // RegEx instances to identify specific aggregates and extract internal expressions
+            s_averageExpression = new Regex(string.Format(ExtractAggregateExpression, "(Average|Avg)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_minimumExpression = new Regex(string.Format(ExtractAggregateExpression, "(Minimum|Min)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_maximumExpression = new Regex(string.Format(ExtractAggregateExpression, "(Maximum|Max)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_totalExpression = new Regex(string.Format(ExtractAggregateExpression, "(Total|Sum)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_rangeExpression = new Regex(string.Format(ExtractAggregateExpression, "Range"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_countExpression = new Regex(string.Format(ExtractAggregateExpression, "Count"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_timeIntExpression = new Regex(string.Format(ExtractAggregateExpression, "(TimeIntegration|TimeInt)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_derivativeExpression = new Regex(string.Format(ExtractAggregateExpression, "(Derivative|Der)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_stdDevExpression = new Regex(string.Format(ExtractAggregateExpression, "StdDev"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_stdDevSampExpression = new Regex(string.Format(ExtractAggregateExpression, "StdDevSamp"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
         }
 
         #endregion

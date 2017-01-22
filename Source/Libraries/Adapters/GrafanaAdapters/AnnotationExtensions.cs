@@ -182,7 +182,7 @@ namespace GrafanaAdapters
 
             string query = annotation.query ?? "";
 
-            Tuple<AnnotationType, bool> result = TargetCache.GetOrAdd(query, () =>
+            Tuple<AnnotationType, bool> result = TargetCache<Tuple<AnnotationType, bool>>.GetOrAdd(query, () =>
             {
                 AnnotationType type = AnnotationType.Undefined;
                 string tableName, expression, sortField;
@@ -260,7 +260,7 @@ namespace GrafanaAdapters
 
             string query = annotation.query ?? "";
 
-            return TargetCache.GetOrAdd(query, () =>
+            return TargetCache<Dictionary<string, DataRow>>.GetOrAdd(query, () =>
             {
                 DataRow[] rows;
 
@@ -373,7 +373,7 @@ namespace GrafanaAdapters
         private static DataRow GetTargetMetaData(DataSet source, object value)
         {
             string target = value.ToNonNullNorWhiteSpace(Guid.Empty.ToString());
-            return TargetCache.GetOrAdd(target, () => GetMetaData(source, "ActiveMeasurements", $"ID = '{GetTargetFromGuid(target)}'"));
+            return TargetCache<DataRow>.GetOrAdd(target, () => GetMetaData(source, "ActiveMeasurements", $"ID = '{GetTargetFromGuid(target)}'"));
         }
 
         private static string GetAlarmCondition(DataRow defintion)
