@@ -544,8 +544,8 @@ namespace GrafanaAdapters
             s_countExpression = new Regex(string.Format(ExtractAggregateExpression, "Count"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_timeIntExpression = new Regex(string.Format(ExtractAggregateExpression, "(TimeIntegration|TimeInt)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_derivativeExpression = new Regex(string.Format(ExtractAggregateExpression, "(Derivative|Der)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_stdDevExpression = new Regex(string.Format(ExtractAggregateExpression, "StdDev"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_stdDevSampExpression = new Regex(string.Format(ExtractAggregateExpression, "StdDevSamp"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_stdDevExpression = new Regex(string.Format(ExtractAggregateExpression, "(StandardDeviation|StdDev)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_stdDevSampExpression = new Regex(string.Format(ExtractAggregateExpression, "(StandardDeviationSample|StdDevSamp)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
         }
 
         #endregion
