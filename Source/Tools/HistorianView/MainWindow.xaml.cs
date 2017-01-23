@@ -1005,7 +1005,10 @@ namespace HistorianView
                                     // rows are not added for duplicate timestamps
                                     if (m_alignTimestampsInExport || row[index] == null)
                                     {
-                                        row[index] = point.Value.ToString();
+                                        row[index] = (m_exportFileType == FileType.ComtradeAscii || m_exportFileType == FileType.ComtradeBinary)
+                                            ? point.Value.ToString(CultureInfo.InvariantCulture)
+                                            : point.Value.ToString();
+
                                         break;
                                     }
                                 }
@@ -1136,7 +1139,7 @@ namespace HistorianView
                     // exported - the end user will need to cipher out which rows come first based on the data.
                     foreach (string[] row in pair.Value)
                     {
-                        Writer.WriteNextRecordBinary(dataFileStream, schema, pair.Key.ToDateTime().Ticks, row.Select(value => double.Parse(value ?? double.NaN.ToString())).ToArray(), sample++);
+                        Writer.WriteNextRecordBinary(dataFileStream, schema, pair.Key.ToDateTime().Ticks, row.Select(value => double.Parse(value ?? double.NaN.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture)).ToArray(), sample++);
                     }
                 }
             }
@@ -1150,7 +1153,7 @@ namespace HistorianView
                     // exported - the end user will need to cipher out which rows come first based on the data.
                     foreach (string[] row in pair.Value)
                     {
-                        Writer.WriteNextRecordAscii(dataFileWriter, schema, pair.Key.ToDateTime().Ticks, row.Select(value => double.Parse(value ?? double.NaN.ToString())).ToArray(), sample++);
+                        Writer.WriteNextRecordAscii(dataFileWriter, schema, pair.Key.ToDateTime().Ticks, row.Select(value => double.Parse(value ?? double.NaN.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture)).ToArray(), sample++);
                     }
                 }
 
@@ -1176,7 +1179,7 @@ namespace HistorianView
             line.Append("Average,");
             foreach (double average in averages)
             {
-                line.Append(average);
+                line.Append(ToCsvValue(average.ToString()));
                 line.Append(',');
             }
             line.Remove(line.Length - 1, 1);
@@ -1186,7 +1189,7 @@ namespace HistorianView
             line.Append("Maximum,");
             foreach (double max in maximums)
             {
-                line.Append(max);
+                line.Append(ToCsvValue(max.ToString()));
                 line.Append(',');
             }
             line.Remove(line.Length - 1, 1);
@@ -1196,7 +1199,7 @@ namespace HistorianView
             line.Append("Minimum,");
             foreach (double min in minimums)
             {
-                line.Append(min);
+                line.Append(ToCsvValue(min.ToString()));
                 line.Append(',');
             }
             line.Remove(line.Length - 1, 1);
@@ -1209,9 +1212,7 @@ namespace HistorianView
 
             foreach (MetadataRecord record in metadata.Keys.Select(wrapper => wrapper.GetMetadata()))
             {
-                line.Append(record.Name);
-                line.Append(' ');
-                line.Append(record.Description.Replace(',', '-'));
+                line.Append(ToCsvValue($"{record.Name} {record.Description.Replace(',', '-')}"));
                 line.Append(',');
             }
 
@@ -1230,12 +1231,12 @@ namespace HistorianView
                 // exported - the end user will need to cipher out which rows come first based on the data.
                 foreach (string[] row in pair.Value)
                 {
-                    line.Append(time);
+                    line.Append(ToCsvValue(time.ToString()));
                     line.Append(',');
 
                     foreach (string value in row)
                     {
-                        line.Append(value ?? double.NaN.ToString());
+                        line.Append(ToCsvValue(value ?? double.NaN.ToString()));
                         line.Append(',');
                     }
 
@@ -1244,6 +1245,15 @@ namespace HistorianView
                     line.Clear();
                 }
             }
+        }
+
+        // Wraps the value in quotes if it contains a comma.
+        private string ToCsvValue(string value)
+        {
+            if (value.Contains(','))
+                return value.QuoteWrap();
+
+            return value;
         }
 
         // Sets the x-axis boundaries of the chart based on the current start time and end time.

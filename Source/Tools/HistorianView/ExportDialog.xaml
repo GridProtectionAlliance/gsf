@@ -37,7 +37,7 @@
         </StackPanel>
         
         <Label Name="NominalFrequencyLabel" Grid.Row="2" Grid.Column="0" Content="Nominal Frequency" Style="{StaticResource CellStyle}" Visibility="Collapsed" />
-        <StackPanel Name="NominalFrequencyStackPanel" Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Style="{StaticResource CellStyle}" Visibility="Collapsed">
+        <StackPanel Name="NominalFrequencyStackPanel" Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Style="{StaticResource CellStyle}" Visibility="Collapsed">
             <TextBox Name="NominalFrequencyTextBox" Width="50" HorizontalContentAlignment="Right" Text="60" TextChanged="NominalFrequencyTextBox_TextChanged" />
             <Label Content="Hz" />
         </StackPanel>
