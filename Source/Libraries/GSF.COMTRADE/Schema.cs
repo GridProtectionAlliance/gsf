@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -458,7 +459,7 @@ namespace GSF.COMTRADE
                 }
 
                 // Write line frequency
-                fileImage.AppendLine(NominalFrequency.ToString());
+                fileImage.AppendLine(NominalFrequency.ToString(CultureInfo.InvariantCulture));
 
                 // Write total number of sample rates
                 fileImage.AppendLine(TotalSampleRates.ToString());
@@ -477,7 +478,7 @@ namespace GSF.COMTRADE
                 fileImage.AppendLine(FileType.ToString().ToUpper());
 
                 // Write time factor
-                fileImage.AppendLine(TimeFactor.ToString());
+                fileImage.AppendLine(TimeFactor.ToString(CultureInfo.InvariantCulture));
 
                 return fileImage.ToString();
             }
