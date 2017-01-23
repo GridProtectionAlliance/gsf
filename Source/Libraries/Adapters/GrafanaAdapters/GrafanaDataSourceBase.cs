@@ -162,8 +162,11 @@ namespace GrafanaAdapters
             // Query any remaining targets
             if (targetSet.Count > 0)
             {
+                // Split remaining targets on semi-colon, this way even multiple filter expressions can be used as inputs to aggregations
+                string[] allTargets = targetSet.Select(target => target.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)).SelectMany(currentTargets => currentTargets).ToArray();
+
                 // Expand target set to include point tags for all parsed inputs
-                foreach (string target in targetSet.Select(target => target.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)).SelectMany(currentTargets => currentTargets))
+                foreach (string target in allTargets)
                     targetSet.UnionWith(TargetCache<string[]>.GetOrAdd(target, () => AdapterBase.ParseInputMeasurementKeys(Metadata, false, target).Select(key => key.TagFromKey(Metadata)).ToArray()));
 
                 Dictionary<ulong, string> targetMap = new Dictionary<ulong, string>();
@@ -188,10 +191,9 @@ namespace GrafanaAdapters
 
         private Tuple<Aggregate, string, bool> ParseAggregate(Match aggregate)
         {
-            bool setOperation = aggregate.Groups[0].Success;
+            bool setOperation = aggregate.Groups[1].Success;
             string aggregateExpression = setOperation ? aggregate.Value.Substring(3) : aggregate.Value;
-
-            return TargetCache<Tuple<Aggregate, string, bool>>.GetOrAdd(aggregateExpression, () =>
+            Tuple <Aggregate, string, bool> result = TargetCache<Tuple<Aggregate, string, bool>>.GetOrAdd(aggregate.Value, () =>
             {
                 Match filterMatch;
 
@@ -268,6 +270,11 @@ namespace GrafanaAdapters
                 // Target is not a recognized aggregate
                 return new Tuple<Aggregate, string, bool>(Aggregate.None, aggregateExpression, false);
             });
+
+            if (result.Item1 == Aggregate.None)
+                throw new InvalidOperationException($"Unrecognized aggregate type \"{aggregateExpression}\"");
+
+            return result;
         }
 
         private List<TimeSeriesValues> ExecuteAggregate(Tuple<Aggregate, string, bool> parsedAggregate, DateTime startTime, DateTime stopTime, int maxDataPoints, CancellationToken cancellationToken)
@@ -277,7 +284,7 @@ namespace GrafanaAdapters
             string expression = parsedAggregate.Item2;
             bool setOperation = parsedAggregate.Item3;
             List<TimeSeriesValues> dataset = QueryTimeSeriesValuesFromTargets(new[] { expression }, startTime, stopTime, maxDataPoints, cancellationToken);
-            double[] currentSeries, currentTimes, lastSeries;
+            double[] currentSeries, currentTimes;
 
             if (dataset.Count == 0 || cancellationToken.IsCancellationRequested)
                 return results;
@@ -331,11 +338,8 @@ namespace GrafanaAdapters
                         currentSeries = values.ToArray();
                         currentTimes = times.ToArray();
 
-                        if (!TargetCache<double[]>.GetLastAndUpdate(result.target, out lastSeries, currentSeries))
-                            lastSeries = currentSeries;
-
-                        for (int i = 0; i < currentSeries.Length; i++)
-                            result.datapoints.Add(new [] { currentSeries[i] - lastSeries[i], currentTimes[i] });
+                        for (int i = 1; i < currentSeries.Length; i++)
+                            result.datapoints.Add(new [] { currentSeries[i] - currentSeries[i -1], currentTimes[i] });
 
                         break;
                     case Aggregate.StdDev:
@@ -421,11 +425,8 @@ namespace GrafanaAdapters
                             currentSeries = values.ToArray();
                             currentTimes = times.ToArray();
 
-                            if (!TargetCache<double[]>.GetLastAndUpdate(source.target, out lastSeries, currentSeries))
-                                lastSeries = currentSeries;
-
-                            for (int i = 0; i < currentSeries.Length; i++)
-                                result.datapoints.Add(new [] { currentSeries[i] - lastSeries[i], currentTimes[i] });
+                            for (int i = 1; i < currentSeries.Length; i++)
+                                result.datapoints.Add(new[] { currentSeries[i] - currentSeries[i - 1], currentTimes[i] });
 
                             break;
                         case Aggregate.StdDev:
