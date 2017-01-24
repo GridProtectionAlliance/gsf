@@ -107,12 +107,12 @@ namespace GrafanaAdapters
                 return QueryTimeSeriesValuesFromTargets(request.targets.Select(target => target.target), startTime, stopTime, maxDataPoints, cancellationToken);
             },
             cancellationToken);
-        }        
+        }
 
         private List<TimeSeriesValues> QueryTimeSeriesValuesFromTargets(IEnumerable<string> targets, DateTime startTime, DateTime stopTime, int maxDataPoints, CancellationToken cancellationToken)
         {
             // A single target might look like the following:
-            // PPA:15; STAT:20; SUM(COUNT(PPA:8; PPA:9; PPA:10)); FILTER ActiveMeasurements WHERE SignalType = 'VPHA'; RANGE(PPA:99; SUM(FILTER ActiveMeasurements WHERE SignalType = 'FREQ'; STAT:12))
+            // PPA:15; STAT:20; SETSUM(COUNT(PPA:8; PPA:9; PPA:10)); FILTER ActiveMeasurements WHERE SignalType = 'VPHA'; RANGE(PPA:99; SUM(FILTER ActiveMeasurements WHERE SignalType = 'FREQ'; STAT:12))
 
             List<TimeSeriesValues> results = new List<TimeSeriesValues>();
             HashSet<string> targetSet = new HashSet<string>(targets, StringComparer.OrdinalIgnoreCase); // Targets include user provided input, so casing should be ignored
@@ -138,7 +138,8 @@ namespace GrafanaAdapters
                     foreach (string aggregate in aggregates.Select(match => match.Value))
                         reducedTarget = reducedTarget.Replace(aggregate, "");
 
-                    reducedTargetSet.Add(reducedTarget);
+                    if (!string.IsNullOrWhiteSpace(reducedTarget))
+                        reducedTargetSet.Add(reducedTarget);
                 }
                 else
                 {
@@ -149,7 +150,7 @@ namespace GrafanaAdapters
             if (aggregateExpressions.Count > 0)
             {
                 // Parse aggregate expressions
-                Tuple<Aggregate, string, bool>[] parsedAggregates = aggregateExpressions.Select(ParseAggregate).ToArray();
+                IEnumerable<Tuple<Aggregate, string, bool>> parsedAggregates = aggregateExpressions.Select(ParseAggregate);
 
                 // Execute aggregate expressions
                 foreach (Tuple<Aggregate, string, bool> parsedAggregate in parsedAggregates)
@@ -193,7 +194,7 @@ namespace GrafanaAdapters
         {
             bool setOperation = aggregate.Groups[1].Success;
             string aggregateExpression = setOperation ? aggregate.Value.Substring(3) : aggregate.Value;
-            Tuple <Aggregate, string, bool> result = TargetCache<Tuple<Aggregate, string, bool>>.GetOrAdd(aggregate.Value, () =>
+            Tuple<Aggregate, string, bool> result = TargetCache<Tuple<Aggregate, string, bool>>.GetOrAdd(aggregate.Value, () =>
             {
                 Match filterMatch;
 
@@ -239,20 +240,6 @@ namespace GrafanaAdapters
                 if (filterMatch.Success)
                     return new Tuple<Aggregate, string, bool>(Aggregate.Count, filterMatch.Result("${Expression}").Trim(), setOperation);
 
-                // Look for time integration aggregate
-                lock (s_timeIntExpression)
-                    filterMatch = s_timeIntExpression.Match(aggregateExpression);
-
-                if (filterMatch.Success)
-                    return new Tuple<Aggregate, string, bool>(Aggregate.TimeInt, filterMatch.Result("${Expression}").Trim(), setOperation);
-
-                // Look for derivative aggregate
-                lock (s_derivativeExpression)
-                    filterMatch = s_derivativeExpression.Match(aggregateExpression);
-
-                if (filterMatch.Success)
-                    return new Tuple<Aggregate, string, bool>(Aggregate.Derivative, filterMatch.Result("${Expression}").Trim(), setOperation);
-
                 // Look for standard deviation aggregate
                 lock (s_stdDevExpression)
                     filterMatch = s_stdDevExpression.Match(aggregateExpression);
@@ -267,6 +254,23 @@ namespace GrafanaAdapters
                 if (filterMatch.Success)
                     return new Tuple<Aggregate, string, bool>(Aggregate.StDevSamp, filterMatch.Result("${Expression}").Trim(), setOperation);
 
+                if (!setOperation)
+                {
+                    // Look for time integration aggregate
+                    lock (s_timeIntExpression)
+                        filterMatch = s_timeIntExpression.Match(aggregateExpression);
+
+                    if (filterMatch.Success)
+                        return new Tuple<Aggregate, string, bool>(Aggregate.TimeInt, filterMatch.Result("${Expression}").Trim(), false);
+
+                    // Look for derivative aggregate
+                    lock (s_derivativeExpression)
+                        filterMatch = s_derivativeExpression.Match(aggregateExpression);
+
+                    if (filterMatch.Success)
+                        return new Tuple<Aggregate, string, bool>(Aggregate.Derivative, filterMatch.Result("${Expression}").Trim(), false);
+                }
+
                 // Target is not a recognized aggregate
                 return new Tuple<Aggregate, string, bool>(Aggregate.None, aggregateExpression, false);
             });
@@ -280,74 +284,89 @@ namespace GrafanaAdapters
         private List<TimeSeriesValues> ExecuteAggregate(Tuple<Aggregate, string, bool> parsedAggregate, DateTime startTime, DateTime stopTime, int maxDataPoints, CancellationToken cancellationToken)
         {
             List<TimeSeriesValues> results = new List<TimeSeriesValues>();
+            List<TimeSeriesValues> dataset;
+            TimeSeriesValues result;
+
             Aggregate aggregate = parsedAggregate.Item1;
             string expression = parsedAggregate.Item2;
             bool setOperation = parsedAggregate.Item3;
-            List<TimeSeriesValues> dataset = QueryTimeSeriesValuesFromTargets(new[] { expression }, startTime, stopTime, maxDataPoints, cancellationToken);
-            double[] currentSeries, currentTimes;
+
+            // Handle min and max set operations as special cases
+            if (setOperation && (aggregate == Aggregate.Minimum || aggregate == Aggregate.Maximum))
+            {
+                // Execute expression as a non-set function to get min/max of each series
+                dataset = ExecuteAggregate(new Tuple<Aggregate, string, bool>(aggregate, expression, false), startTime, stopTime, maxDataPoints, cancellationToken);
+
+                if (aggregate == Aggregate.Minimum)
+                {
+                    result = dataset.MinBy(series => series.datapoints[0][TimeSeriesValues.Value]);
+                    result.target = $"SetMinimum = {result.target}";
+                }
+                else
+                {
+                    result = dataset.MaxBy(series => series.datapoints[0][TimeSeriesValues.Value]);
+                    result.target = $"SetMaximum = {result.target}";
+                }
+
+                results.Add(result);
+                return results;
+            }
+
+            // Query aggregate expression to get series data
+            dataset = QueryTimeSeriesValuesFromTargets(new[] { expression }, startTime, stopTime, maxDataPoints, cancellationToken);
 
             if (dataset.Count == 0 || cancellationToken.IsCancellationRequested)
                 return results;
 
             if (setOperation)
             {
-                TimeSeriesValues result = new TimeSeriesValues
+                result = new TimeSeriesValues
                 {
                     target = $"Set{aggregate}({expression})",
                     datapoints = new List<double[]>()
                 };
 
                 IEnumerable<double> values = dataset.Select(series => series.datapoints).SelectMany(points => points[TimeSeriesValues.Value]);
-                IEnumerable<double> times = dataset.Select(series => series.datapoints).SelectMany(points => points[TimeSeriesValues.Time]);
+                double lastTime = dataset.Select(series => series.datapoints).SelectMany(points => points[TimeSeriesValues.Time]).Max();
 
                 switch (aggregate)
                 {
                     case Aggregate.Average:
-                        result.datapoints.Add(new [] { values.Average(), times.Max() });
-                        break;
-                    case Aggregate.Minimum:
-                        List<TimeSeriesValues> minSet = ExecuteAggregate(new Tuple<Aggregate, string, bool>(aggregate, expression, false), startTime, stopTime, maxDataPoints, cancellationToken);
-                        result = minSet.MinBy(value => value.datapoints[0][TimeSeriesValues.Value]);
-                        result.target = $"SetMinimum = {result.target}";
-                        break;
-                    case Aggregate.Maximum:
-                        List<TimeSeriesValues> maxSet = ExecuteAggregate(new Tuple<Aggregate, string, bool>(aggregate, expression, false), startTime, stopTime, maxDataPoints, cancellationToken);
-                        result = maxSet.MaxBy(value => value.datapoints[0][TimeSeriesValues.Value]);
-                        result.target = $"SetMaximum = {result.target}";
+                        result.datapoints.Add(new[] { values.Average(), lastTime });
                         break;
                     case Aggregate.Total:
-                        result.datapoints.Add(new [] { values.Sum(), times.Max() });
+                        result.datapoints.Add(new[] { values.Sum(), lastTime });
                         break;
                     case Aggregate.Range:
-                        result.datapoints.Add(new [] { values.Max() - values.Min(), times.Max() });
+                        result.datapoints.Add(new[] { values.Max() - values.Min(), lastTime });
                         break;
                     case Aggregate.Count:
-                        result.datapoints.Add(new [] { values.Count(), times.Max() });
-                        break;
-                    case Aggregate.TimeInt:
-                        double integratedValue = 0.0D;
-                        currentSeries = values.ToArray();
-                        currentTimes = times.ToArray();
-
-                        for (int i = 1; i < currentSeries.Length; i++)
-                            integratedValue += currentSeries[i] * (currentTimes[i] - currentTimes[i - 1]);
-
-                        result.datapoints.Add(new [] { integratedValue, times.Max() });
-                        break;
-                    case Aggregate.Derivative:
-                        currentSeries = values.ToArray();
-                        currentTimes = times.ToArray();
-
-                        for (int i = 1; i < currentSeries.Length; i++)
-                            result.datapoints.Add(new [] { currentSeries[i] - currentSeries[i -1], currentTimes[i] });
-
+                        result.datapoints.Add(new[] { values.Count(), lastTime });
                         break;
                     case Aggregate.StdDev:
-                        result.datapoints.Add(new [] { values.StandardDeviation(), times.Max() });
+                        result.datapoints.Add(new[] { values.StandardDeviation(), lastTime });
                         break;
                     case Aggregate.StDevSamp:
-                        result.datapoints.Add(new [] { values.StandardDeviation(true), times.Max() });
+                        result.datapoints.Add(new[] { values.StandardDeviation(true), lastTime });
                         break;
+                    //case Aggregate.TimeInt:
+                    //    double integratedValue = 0.0D;
+                    //    currentSeries = values.ToArray();
+                    //    currentTimes = times.ToArray();
+
+                    //    for (int i = 1; i < currentSeries.Length; i++)
+                    //        integratedValue += currentSeries[i] * (currentTimes[i] - currentTimes[i - 1]);
+
+                    //    result.datapoints.Add(new [] { integratedValue, lastTime });
+                    //    break;
+                    //case Aggregate.Derivative:
+                    //    currentSeries = values.ToArray();
+                    //    currentTimes = times.ToArray();
+
+                    //    for (int i = 1; i < currentSeries.Length; i++)
+                    //        result.datapoints.Add(new[] { currentSeries[i] - currentSeries[i - 1], currentTimes[i] });
+
+                    //    break;
                 }
 
                 results.Add(result);
@@ -356,84 +375,82 @@ namespace GrafanaAdapters
             {
                 foreach (TimeSeriesValues source in dataset)
                 {
-                    TimeSeriesValues result = new TimeSeriesValues
+                    result = new TimeSeriesValues
                     {
                         target = $"{aggregate}({source.target})",
                         datapoints = new List<double[]>()
                     };
 
                     IEnumerable<double> values = source.datapoints.Select(points => points[TimeSeriesValues.Value]);
-                    IEnumerable<double> times = source.datapoints.Select(points => points[TimeSeriesValues.Time]);
                     double lastTime = source.datapoints[source.datapoints.Count - 1][TimeSeriesValues.Time];
+                    double value;
 
                     switch (aggregate)
                     {
-                        case Aggregate.Average:
-                            result.datapoints.Add(new [] { values.Average(), lastTime });
-                            break;
                         case Aggregate.Minimum:
                             double minValue = double.MaxValue;
                             int minIndex = 0;
-                            currentSeries = values.ToArray();
 
-                            for (int i = 0; i < currentSeries.Length; i++)
+                            for (int i = 0; i < source.datapoints.Count; i++)
                             {
-                                if (currentSeries[i] < minValue)
+                                value = source.datapoints[i][TimeSeriesValues.Value];
+
+                                if (value < minValue)
                                 {
-                                    minValue = currentSeries[i];
+                                    minValue = value;
                                     minIndex = i;
                                 }
                             }
 
-                            result.datapoints.Add(new [] { minValue, times.ElementAt(minIndex) });
+                            result.datapoints.Add(new[] { minValue, source.datapoints[minIndex][TimeSeriesValues.Time] });
                             break;
                         case Aggregate.Maximum:
                             double maxValue = double.MinValue;
                             int maxIndex = 0;
-                            currentSeries = values.ToArray();
 
-                            for (int i = 0; i < currentSeries.Length; i++)
+                            for (int i = 0; i < source.datapoints.Count; i++)
                             {
-                                if (currentSeries[i] > maxValue)
+                                value = source.datapoints[i][TimeSeriesValues.Value];
+
+                                if (value > maxValue)
                                 {
-                                    maxValue = currentSeries[i];
+                                    maxValue = value;
                                     maxIndex = i;
                                 }
                             }
 
-                            result.datapoints.Add(new [] { maxValue, times.ElementAt(maxIndex) });
+                            result.datapoints.Add(new[] { maxValue, source.datapoints[maxIndex][TimeSeriesValues.Time] });
+                            break;
+                        case Aggregate.Average:
+                            result.datapoints.Add(new[] { values.Average(), lastTime });
                             break;
                         case Aggregate.Total:
-                            result.datapoints.Add(new [] { values.Sum(), lastTime });
+                            result.datapoints.Add(new[] { values.Sum(), lastTime });
                             break;
                         case Aggregate.Range:
-                            result.datapoints.Add(new [] { values.Max() - values.Min(), lastTime });
+                            result.datapoints.Add(new[] { values.Max() - values.Min(), lastTime });
                             break;
                         case Aggregate.Count:
-                            result.datapoints.Add(new [] { source.datapoints.Count, lastTime });
+                            result.datapoints.Add(new[] { source.datapoints.Count, lastTime });
+                            break;
+                        case Aggregate.StdDev:
+                            result.datapoints.Add(new[] { values.StandardDeviation(), lastTime });
+                            break;
+                        case Aggregate.StDevSamp:
+                            result.datapoints.Add(new[] { values.StandardDeviation(true), lastTime });
                             break;
                         case Aggregate.TimeInt:
                             double integratedValue = 0.0D;
 
                             for (int i = 1; i < source.datapoints.Count; i++)
-                                integratedValue += source.datapoints[i][TimeSeriesValues.Value] *
-                                    (source.datapoints[i][TimeSeriesValues.Time] - source.datapoints[i - 1][TimeSeriesValues.Time]);
+                                integratedValue += source.datapoints[i][TimeSeriesValues.Value] * (source.datapoints[i][TimeSeriesValues.Time] - source.datapoints[i - 1][TimeSeriesValues.Time]);
 
-                            result.datapoints.Add(new [] { integratedValue, lastTime });
+                            result.datapoints.Add(new[] { integratedValue, lastTime });
                             break;
                         case Aggregate.Derivative:
-                            currentSeries = values.ToArray();
-                            currentTimes = times.ToArray();
+                            for (int i = 1; i < source.datapoints.Count; i++)
+                                result.datapoints.Add(new[] { source.datapoints[i][TimeSeriesValues.Value] - source.datapoints[i -1][TimeSeriesValues.Value], source.datapoints[i][TimeSeriesValues.Time] });
 
-                            for (int i = 1; i < currentSeries.Length; i++)
-                                result.datapoints.Add(new[] { currentSeries[i] - currentSeries[i - 1], currentTimes[i] });
-
-                            break;
-                        case Aggregate.StdDev:
-                            result.datapoints.Add(new [] { values.StandardDeviation(), lastTime });
-                            break;
-                        case Aggregate.StDevSamp:
-                            result.datapoints.Add(new [] { values.StandardDeviation(true), lastTime });
                             break;
                     }
 
@@ -464,13 +481,7 @@ namespace GrafanaAdapters
             // TODO: Make openHistorian Grafana data source metric query more interactive, adding drop-downs and/or query builders
 
             // For now, just return a truncated list of tag names
-            return Task.Factory.StartNew(() =>
-            {
-                return Metadata.Tables["ActiveMeasurements"]
-                    .Select($"ID LIKE '{InstanceName}:%'")
-                    .Take(MaximumSearchTargetsPerRequest)
-                    .Select(row => $"{row["PointTag"]}").ToArray();
-            });
+            return Task.Factory.StartNew(() => { return Metadata.Tables["ActiveMeasurements"].Select($"ID LIKE '{InstanceName}:%'").Take(MaximumSearchTargetsPerRequest).Select(row => $"{row["PointTag"]}").ToArray(); });
         }
 
         /// <summary>
@@ -498,7 +509,8 @@ namespace GrafanaAdapters
                     {
                         AnnotationResponse response = new AnnotationResponse
                         {
-                            annotation = request.annotation, time = datapoint[TimeSeriesValues.Time]
+                            annotation = request.annotation,
+                            time = datapoint[TimeSeriesValues.Time]
                         };
 
                         type.PopulateResponse(response, target, definition, datapoint, Metadata);
