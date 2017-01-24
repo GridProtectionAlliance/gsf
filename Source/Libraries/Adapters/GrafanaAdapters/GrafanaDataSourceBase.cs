@@ -39,7 +39,7 @@ namespace GrafanaAdapters
 {
     #region [ Enumerations ]
 
-    internal enum Aggregate
+    internal enum SeriesFunction
     {
         Average,
         Minimum,
@@ -47,10 +47,17 @@ namespace GrafanaAdapters
         Total,
         Range,
         Count,
-        TimeInt,
-        Derivative,
         StdDev,
         StDevSamp,
+        /// <summary>
+        /// Returns a series of values that represent the difference between consecutive values in the source series.
+        /// </summary>
+        Difference,
+        /// <summary>
+        /// Returns a series of values that represent the rate of change, per second, for the difference between consecutive values in the source series.
+        /// </summary>
+        Derivative,
+        TimeInt,
         None
     }
 
@@ -88,7 +95,7 @@ namespace GrafanaAdapters
         #region [ Methods ]
 
         /// <summary>
-        /// Queries openHistorian as a Grafana data source.
+        /// Queries data source returning data as Grafana time-series data set.
         /// </summary>
         /// <param name="request">Query request.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
@@ -117,26 +124,26 @@ namespace GrafanaAdapters
             List<TimeSeriesValues> results = new List<TimeSeriesValues>();
             HashSet<string> targetSet = new HashSet<string>(targets, StringComparer.OrdinalIgnoreCase); // Targets include user provided input, so casing should be ignored
             HashSet<string> reducedTargetSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            List<Match> aggregateExpressions = new List<Match>();
+            List<Match> seriesFunctions = new List<Match>();
 
             foreach (string target in targetSet)
             {
-                // Find any aggregate expressions in target
-                Match[] aggregates = TargetCache<Match[]>.GetOrAdd(target, () =>
+                // Find any series functions in target
+                Match[] matchedFunctions = TargetCache<Match[]>.GetOrAdd(target, () =>
                 {
-                    lock (s_aggregateExpressions)
-                        return s_aggregateExpressions.Matches(target).Cast<Match>().ToArray();
+                    lock (s_seriesFunctions)
+                        return s_seriesFunctions.Matches(target).Cast<Match>().ToArray();
                 });
 
-                if (aggregates.Length > 0)
+                if (matchedFunctions.Length > 0)
                 {
-                    aggregateExpressions.AddRange(aggregates);
+                    seriesFunctions.AddRange(matchedFunctions);
 
-                    // Reduce target to non-aggregate expressions - important so later split on ';' succeeds properly
+                    // Reduce target to non-function expressions - important so later split on ';' succeeds properly
                     string reducedTarget = target;
 
-                    foreach (string aggregate in aggregates.Select(match => match.Value))
-                        reducedTarget = reducedTarget.Replace(aggregate, "");
+                    foreach (string expression in matchedFunctions.Select(match => match.Value))
+                        reducedTarget = reducedTarget.Replace(expression, "");
 
                     if (!string.IsNullOrWhiteSpace(reducedTarget))
                         reducedTargetSet.Add(reducedTarget);
@@ -147,23 +154,23 @@ namespace GrafanaAdapters
                 }
             }
 
-            if (aggregateExpressions.Count > 0)
+            if (seriesFunctions.Count > 0)
             {
-                // Parse aggregate expressions
-                IEnumerable<Tuple<Aggregate, string, bool>> parsedAggregates = aggregateExpressions.Select(ParseAggregate);
+                // Parse series functions
+                IEnumerable<Tuple<SeriesFunction, string, bool>> parsedFunctions = seriesFunctions.Select(ParseSeriesFunction);
 
-                // Execute aggregate expressions
-                foreach (Tuple<Aggregate, string, bool> parsedAggregate in parsedAggregates)
-                    results.AddRange(ExecuteAggregate(parsedAggregate, startTime, stopTime, maxDataPoints, cancellationToken));
+                // Execute series functions
+                foreach (Tuple<SeriesFunction, string, bool> parsedFunction in parsedFunctions)
+                    results.AddRange(ExecuteSeriesFunction(parsedFunction, startTime, stopTime, maxDataPoints, cancellationToken));
 
-                // Use reduced target set that excludes any aggregate expressions
+                // Use reduced target set that excludes any series functions
                 targetSet = reducedTargetSet;
             }
 
             // Query any remaining targets
             if (targetSet.Count > 0)
             {
-                // Split remaining targets on semi-colon, this way even multiple filter expressions can be used as inputs to aggregations
+                // Split remaining targets on semi-colon, this way even multiple filter expressions can be used as inputs to functions
                 string[] allTargets = targetSet.Select(target => target.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)).SelectMany(currentTargets => currentTargets).ToArray();
 
                 // Expand target set to include point tags for all parsed inputs
@@ -190,114 +197,118 @@ namespace GrafanaAdapters
             return results;
         }
 
-        private Tuple<Aggregate, string, bool> ParseAggregate(Match aggregate)
+        private Tuple<SeriesFunction, string, bool> ParseSeriesFunction(Match matchedFunction)
         {
-            bool setOperation = aggregate.Groups[1].Success;
-            string aggregateExpression = setOperation ? aggregate.Value.Substring(3) : aggregate.Value;
-            Tuple<Aggregate, string, bool> result = TargetCache<Tuple<Aggregate, string, bool>>.GetOrAdd(aggregate.Value, () =>
+            bool setOperation = matchedFunction.Groups[1].Success;
+            string expression = setOperation ? matchedFunction.Value.Substring(3) : matchedFunction.Value;
+            Tuple<SeriesFunction, string, bool> result = TargetCache<Tuple<SeriesFunction, string, bool>>.GetOrAdd(matchedFunction.Value, () =>
             {
                 Match filterMatch;
 
-                // Look for average aggregate
+                // Look for average function
                 lock (s_averageExpression)
-                    filterMatch = s_averageExpression.Match(aggregateExpression);
+                    filterMatch = s_averageExpression.Match(expression);
 
                 if (filterMatch.Success)
-                    return new Tuple<Aggregate, string, bool>(Aggregate.Average, filterMatch.Result("${Expression}").Trim(), setOperation);
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.Average, filterMatch.Result("${Expression}").Trim(), setOperation);
 
-                // Look for minimum aggregate
+                // Look for minimum function
                 lock (s_minimumExpression)
-                    filterMatch = s_minimumExpression.Match(aggregateExpression);
+                    filterMatch = s_minimumExpression.Match(expression);
 
                 if (filterMatch.Success)
-                    return new Tuple<Aggregate, string, bool>(Aggregate.Minimum, filterMatch.Result("${Expression}").Trim(), setOperation);
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.Minimum, filterMatch.Result("${Expression}").Trim(), setOperation);
 
-                // Look for maximum aggregate
+                // Look for maximum function
                 lock (s_maximumExpression)
-                    filterMatch = s_maximumExpression.Match(aggregateExpression);
+                    filterMatch = s_maximumExpression.Match(expression);
 
                 if (filterMatch.Success)
-                    return new Tuple<Aggregate, string, bool>(Aggregate.Maximum, filterMatch.Result("${Expression}").Trim(), setOperation);
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.Maximum, filterMatch.Result("${Expression}").Trim(), setOperation);
 
-                // Look for total aggregate
+                // Look for total function
                 lock (s_totalExpression)
-                    filterMatch = s_totalExpression.Match(aggregateExpression);
+                    filterMatch = s_totalExpression.Match(expression);
 
                 if (filterMatch.Success)
-                    return new Tuple<Aggregate, string, bool>(Aggregate.Total, filterMatch.Result("${Expression}").Trim(), setOperation);
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.Total, filterMatch.Result("${Expression}").Trim(), setOperation);
 
-                // Look for range aggregate
+                // Look for range function
                 lock (s_rangeExpression)
-                    filterMatch = s_rangeExpression.Match(aggregateExpression);
+                    filterMatch = s_rangeExpression.Match(expression);
 
                 if (filterMatch.Success)
-                    return new Tuple<Aggregate, string, bool>(Aggregate.Range, filterMatch.Result("${Expression}").Trim(), setOperation);
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.Range, filterMatch.Result("${Expression}").Trim(), setOperation);
 
-                // Look for count aggregate
+                // Look for count function
                 lock (s_countExpression)
-                    filterMatch = s_countExpression.Match(aggregateExpression);
+                    filterMatch = s_countExpression.Match(expression);
 
                 if (filterMatch.Success)
-                    return new Tuple<Aggregate, string, bool>(Aggregate.Count, filterMatch.Result("${Expression}").Trim(), setOperation);
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.Count, filterMatch.Result("${Expression}").Trim(), setOperation);
 
-                // Look for standard deviation aggregate
+                // Look for standard deviation function
                 lock (s_stdDevExpression)
-                    filterMatch = s_stdDevExpression.Match(aggregateExpression);
+                    filterMatch = s_stdDevExpression.Match(expression);
 
                 if (filterMatch.Success)
-                    return new Tuple<Aggregate, string, bool>(Aggregate.StdDev, filterMatch.Result("${Expression}").Trim(), setOperation);
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.StdDev, filterMatch.Result("${Expression}").Trim(), setOperation);
 
-                // Look for sampled-based standard deviation aggregate
+                // Look for sampled-based standard deviation function
                 lock (s_stdDevSampExpression)
-                    filterMatch = s_stdDevSampExpression.Match(aggregateExpression);
+                    filterMatch = s_stdDevSampExpression.Match(expression);
 
                 if (filterMatch.Success)
-                    return new Tuple<Aggregate, string, bool>(Aggregate.StDevSamp, filterMatch.Result("${Expression}").Trim(), setOperation);
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.StDevSamp, filterMatch.Result("${Expression}").Trim(), setOperation);
 
-                if (!setOperation)
-                {
-                    // Look for time integration aggregate
-                    lock (s_timeIntExpression)
-                        filterMatch = s_timeIntExpression.Match(aggregateExpression);
+                // Look for difference function
+                lock (s_differenceExpression)
+                    filterMatch = s_differenceExpression.Match(expression);
 
-                    if (filterMatch.Success)
-                        return new Tuple<Aggregate, string, bool>(Aggregate.TimeInt, filterMatch.Result("${Expression}").Trim(), false);
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.Difference, filterMatch.Result("${Expression}").Trim(), setOperation);
 
-                    // Look for derivative aggregate
-                    lock (s_derivativeExpression)
-                        filterMatch = s_derivativeExpression.Match(aggregateExpression);
+                // Look for derivative function
+                lock (s_derivativeExpression)
+                    filterMatch = s_derivativeExpression.Match(expression);
 
-                    if (filterMatch.Success)
-                        return new Tuple<Aggregate, string, bool>(Aggregate.Derivative, filterMatch.Result("${Expression}").Trim(), false);
-                }
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.Derivative, filterMatch.Result("${Expression}").Trim(), setOperation);
 
-                // Target is not a recognized aggregate
-                return new Tuple<Aggregate, string, bool>(Aggregate.None, aggregateExpression, false);
+                // Look for time integration function
+                lock (s_timeIntExpression)
+                    filterMatch = s_timeIntExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.TimeInt, filterMatch.Result("${Expression}").Trim(), setOperation);
+
+                // Target is not a recognized function
+                return new Tuple<SeriesFunction, string, bool>(SeriesFunction.None, expression, false);
             });
 
-            if (result.Item1 == Aggregate.None)
-                throw new InvalidOperationException($"Unrecognized aggregate type \"{aggregateExpression}\"");
+            if (result.Item1 == SeriesFunction.None)
+                throw new InvalidOperationException($"Unrecognized series function \"{expression}\"");
 
             return result;
         }
 
-        private List<TimeSeriesValues> ExecuteAggregate(Tuple<Aggregate, string, bool> parsedAggregate, DateTime startTime, DateTime stopTime, int maxDataPoints, CancellationToken cancellationToken)
+        private List<TimeSeriesValues> ExecuteSeriesFunction(Tuple<SeriesFunction, string, bool> parsedFunction, DateTime startTime, DateTime stopTime, int maxDataPoints, CancellationToken cancellationToken)
         {
             List<TimeSeriesValues> results = new List<TimeSeriesValues>();
             List<TimeSeriesValues> dataset;
             TimeSeriesValues result;
 
-            Aggregate aggregate = parsedAggregate.Item1;
-            string expression = parsedAggregate.Item2;
-            bool setOperation = parsedAggregate.Item3;
+            SeriesFunction seriesFunction = parsedFunction.Item1;
+            string expression = parsedFunction.Item2;
+            bool setOperation = parsedFunction.Item3;
 
             // Handle min and max set operations as special cases
-            if (setOperation && (aggregate == Aggregate.Minimum || aggregate == Aggregate.Maximum))
+            if (setOperation && (seriesFunction == SeriesFunction.Minimum || seriesFunction == SeriesFunction.Maximum))
             {
                 // Execute expression as a non-set function to get min/max of each series
-                dataset = ExecuteAggregate(new Tuple<Aggregate, string, bool>(aggregate, expression, false), startTime, stopTime, maxDataPoints, cancellationToken);
+                dataset = ExecuteSeriesFunction(new Tuple<SeriesFunction, string, bool>(seriesFunction, expression, false), startTime, stopTime, maxDataPoints, cancellationToken);
 
-                if (aggregate == Aggregate.Minimum)
+                if (seriesFunction == SeriesFunction.Minimum)
                 {
                     result = dataset.MinBy(series => series.datapoints[0][TimeSeriesValues.Value]);
                     result.target = $"SetMinimum = {result.target}";
@@ -312,61 +323,71 @@ namespace GrafanaAdapters
                 return results;
             }
 
-            // Query aggregate expression to get series data
+            // Query function expression to get series data
             dataset = QueryTimeSeriesValuesFromTargets(new[] { expression }, startTime, stopTime, maxDataPoints, cancellationToken);
 
             if (dataset.Count == 0 || cancellationToken.IsCancellationRequested)
                 return results;
 
+            double[] currentSeries, currentTimes;
+
             if (setOperation)
             {
                 result = new TimeSeriesValues
                 {
-                    target = $"Set{aggregate}({expression})",
+                    target = $"Set{seriesFunction}({expression})",
                     datapoints = new List<double[]>()
                 };
 
                 IEnumerable<double> values = dataset.Select(series => series.datapoints).SelectMany(points => points[TimeSeriesValues.Value]);
-                double lastTime = dataset.Select(series => series.datapoints).SelectMany(points => points[TimeSeriesValues.Time]).Max();
+                IEnumerable<double> times = dataset.Select(series => series.datapoints).SelectMany(points => points[TimeSeriesValues.Value]);
 
-                switch (aggregate)
+                switch (seriesFunction)
                 {
-                    case Aggregate.Average:
-                        result.datapoints.Add(new[] { values.Average(), lastTime });
+                    case SeriesFunction.Average:
+                        result.datapoints.Add(new[] { values.Average(), times.Max() });
                         break;
-                    case Aggregate.Total:
-                        result.datapoints.Add(new[] { values.Sum(), lastTime });
+                    case SeriesFunction.Total:
+                        result.datapoints.Add(new[] { values.Sum(), times.Max() });
                         break;
-                    case Aggregate.Range:
-                        result.datapoints.Add(new[] { values.Max() - values.Min(), lastTime });
+                    case SeriesFunction.Range:
+                        result.datapoints.Add(new[] { values.Max() - values.Min(), times.Max() });
                         break;
-                    case Aggregate.Count:
-                        result.datapoints.Add(new[] { values.Count(), lastTime });
+                    case SeriesFunction.Count:
+                        result.datapoints.Add(new[] { values.Count(), times.Max() });
                         break;
-                    case Aggregate.StdDev:
-                        result.datapoints.Add(new[] { values.StandardDeviation(), lastTime });
+                    case SeriesFunction.StdDev:
+                        result.datapoints.Add(new[] { values.StandardDeviation(), times.Max() });
                         break;
-                    case Aggregate.StDevSamp:
-                        result.datapoints.Add(new[] { values.StandardDeviation(true), lastTime });
+                    case SeriesFunction.StDevSamp:
+                        result.datapoints.Add(new[] { values.StandardDeviation(true), times.Max() });
                         break;
-                    //case Aggregate.TimeInt:
-                    //    double integratedValue = 0.0D;
-                    //    currentSeries = values.ToArray();
-                    //    currentTimes = times.ToArray();
+                    case SeriesFunction.Difference:
+                        currentSeries = values.ToArray();
+                        currentTimes = times.ToArray();
 
-                    //    for (int i = 1; i < currentSeries.Length; i++)
-                    //        integratedValue += currentSeries[i] * (currentTimes[i] - currentTimes[i - 1]);
+                        for (int i = 1; i < currentSeries.Length; i++)
+                            result.datapoints.Add(new[] { currentSeries[i] - currentSeries[i - 1], currentTimes[i] });
 
-                    //    result.datapoints.Add(new [] { integratedValue, lastTime });
-                    //    break;
-                    //case Aggregate.Derivative:
-                    //    currentSeries = values.ToArray();
-                    //    currentTimes = times.ToArray();
+                        break;
+                    case SeriesFunction.Derivative:
+                        currentSeries = values.ToArray();
+                        currentTimes = times.ToArray();
 
-                    //    for (int i = 1; i < currentSeries.Length; i++)
-                    //        result.datapoints.Add(new[] { currentSeries[i] - currentSeries[i - 1], currentTimes[i] });
+                        for (int i = 1; i < currentSeries.Length; i++)
+                            result.datapoints.Add(new[] { (currentSeries[i] - currentSeries[i - 1]) / (currentTimes[i] - currentTimes[i - 1]), currentTimes[i] });
 
-                    //    break;
+                        break;
+                    case SeriesFunction.TimeInt:
+                        double integratedValue = 0.0D;
+                        currentSeries = values.ToArray();
+                        currentTimes = times.ToArray();
+
+                        for (int i = 1; i < currentSeries.Length; i++)
+                            integratedValue += currentSeries[i] * (currentTimes[i] - currentTimes[i - 1]);
+
+                        result.datapoints.Add(new[] { integratedValue, times.Max() });
+                        break;
                 }
 
                 results.Add(result);
@@ -377,7 +398,7 @@ namespace GrafanaAdapters
                 {
                     result = new TimeSeriesValues
                     {
-                        target = $"{aggregate}({source.target})",
+                        target = $"{seriesFunction}({source.target})",
                         datapoints = new List<double[]>()
                     };
 
@@ -385,9 +406,9 @@ namespace GrafanaAdapters
                     double lastTime = source.datapoints[source.datapoints.Count - 1][TimeSeriesValues.Time];
                     double value;
 
-                    switch (aggregate)
+                    switch (seriesFunction)
                     {
-                        case Aggregate.Minimum:
+                        case SeriesFunction.Minimum:
                             double minValue = double.MaxValue;
                             int minIndex = 0;
 
@@ -404,7 +425,7 @@ namespace GrafanaAdapters
 
                             result.datapoints.Add(new[] { minValue, source.datapoints[minIndex][TimeSeriesValues.Time] });
                             break;
-                        case Aggregate.Maximum:
+                        case SeriesFunction.Maximum:
                             double maxValue = double.MinValue;
                             int maxIndex = 0;
 
@@ -421,36 +442,39 @@ namespace GrafanaAdapters
 
                             result.datapoints.Add(new[] { maxValue, source.datapoints[maxIndex][TimeSeriesValues.Time] });
                             break;
-                        case Aggregate.Average:
+                        case SeriesFunction.Average:
                             result.datapoints.Add(new[] { values.Average(), lastTime });
                             break;
-                        case Aggregate.Total:
+                        case SeriesFunction.Total:
                             result.datapoints.Add(new[] { values.Sum(), lastTime });
                             break;
-                        case Aggregate.Range:
+                        case SeriesFunction.Range:
                             result.datapoints.Add(new[] { values.Max() - values.Min(), lastTime });
                             break;
-                        case Aggregate.Count:
+                        case SeriesFunction.Count:
                             result.datapoints.Add(new[] { source.datapoints.Count, lastTime });
                             break;
-                        case Aggregate.StdDev:
+                        case SeriesFunction.StdDev:
                             result.datapoints.Add(new[] { values.StandardDeviation(), lastTime });
                             break;
-                        case Aggregate.StDevSamp:
+                        case SeriesFunction.StDevSamp:
                             result.datapoints.Add(new[] { values.StandardDeviation(true), lastTime });
                             break;
-                        case Aggregate.TimeInt:
+                        case SeriesFunction.Difference:
+                            for (int i = 1; i < source.datapoints.Count; i++)
+                                result.datapoints.Add(new[] { source.datapoints[i][TimeSeriesValues.Value] - source.datapoints[i - 1][TimeSeriesValues.Value], source.datapoints[i][TimeSeriesValues.Time] });
+                            break;
+                        case SeriesFunction.Derivative:                            
+                            for (int i = 1; i < source.datapoints.Count; i++)
+                                result.datapoints.Add(new[] { (source.datapoints[i][TimeSeriesValues.Value] - source.datapoints[i - 1][TimeSeriesValues.Value]) / source.datapoints[i][TimeSeriesValues.Time] - source.datapoints[i - 1][TimeSeriesValues.Time], source.datapoints[i][TimeSeriesValues.Time] });
+                            break;
+                        case SeriesFunction.TimeInt:
                             double integratedValue = 0.0D;
 
                             for (int i = 1; i < source.datapoints.Count; i++)
                                 integratedValue += source.datapoints[i][TimeSeriesValues.Value] * (source.datapoints[i][TimeSeriesValues.Time] - source.datapoints[i - 1][TimeSeriesValues.Time]);
 
                             result.datapoints.Add(new[] { integratedValue, lastTime });
-                            break;
-                        case Aggregate.Derivative:
-                            for (int i = 1; i < source.datapoints.Count; i++)
-                                result.datapoints.Add(new[] { source.datapoints[i][TimeSeriesValues.Value] - source.datapoints[i -1][TimeSeriesValues.Value], source.datapoints[i][TimeSeriesValues.Time] });
-
                             break;
                     }
 
@@ -473,19 +497,19 @@ namespace GrafanaAdapters
         protected abstract List<TimeSeriesValues> QueryTimeSeriesValues(DateTime startTime, DateTime stopTime, int maxDataPoints, Dictionary<ulong, string> targetMap, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Search openHistorian for a target.
+        /// Search data source for a target.
         /// </summary>
         /// <param name="request">Search target.</param>
         public Task<string[]> Search(Target request)
         {
-            // TODO: Make openHistorian Grafana data source metric query more interactive, adding drop-downs and/or query builders
+            // TODO: Make Grafana data source metric query more interactive, adding drop-downs and/or query builders
 
             // For now, just return a truncated list of tag names
             return Task.Factory.StartNew(() => { return Metadata.Tables["ActiveMeasurements"].Select($"ID LIKE '{InstanceName}:%'").Take(MaximumSearchTargetsPerRequest).Select(row => $"{row["PointTag"]}").ToArray(); });
         }
 
         /// <summary>
-        /// Queries openHistorian for annotations in a time-range (e.g., Alarms).
+        /// Queries data source for annotations in a time-range (e.g., Alarms).
         /// </summary>
         /// <param name="request">Annotation request.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
@@ -528,37 +552,39 @@ namespace GrafanaAdapters
         #region [ Static ]
 
         // Static Fields
-        private static readonly Regex s_aggregateExpressions;
+        private static readonly Regex s_seriesFunctions;
         private static readonly Regex s_averageExpression;
         private static readonly Regex s_minimumExpression;
         private static readonly Regex s_maximumExpression;
         private static readonly Regex s_totalExpression;
         private static readonly Regex s_rangeExpression;
         private static readonly Regex s_countExpression;
-        private static readonly Regex s_timeIntExpression;
-        private static readonly Regex s_derivativeExpression;
         private static readonly Regex s_stdDevExpression;
         private static readonly Regex s_stdDevSampExpression;
+        private static readonly Regex s_differenceExpression;
+        private static readonly Regex s_derivativeExpression;
+        private static readonly Regex s_timeIntExpression;
 
         // Static Constructor
         static GrafanaDataSourceBase()
         {
-            const string ExtractAggregateExpression = @"{0}\s*\(\s*(?<Expression>.+)\s*\)";
+            const string GetExpression = @"{0}\s*\(\s*(?<Expression>.+)\s*\)";
 
-            // RegEx instance to find all aggregates
-            s_aggregateExpressions = new Regex(@"(SET)?\w+\s*\(([^)]+[\)\s]*)\)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            // RegEx instance to find all series functions
+            s_seriesFunctions = new Regex(@"(SET)?\w+\s*\(([^)]+[\)\s]*)\)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-            // RegEx instances to identify specific aggregates and extract internal expressions
-            s_averageExpression = new Regex(string.Format(ExtractAggregateExpression, "(Average|Avg)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_minimumExpression = new Regex(string.Format(ExtractAggregateExpression, "(Minimum|Min)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_maximumExpression = new Regex(string.Format(ExtractAggregateExpression, "(Maximum|Max)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_totalExpression = new Regex(string.Format(ExtractAggregateExpression, "(Total|Sum)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_rangeExpression = new Regex(string.Format(ExtractAggregateExpression, "Range"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_countExpression = new Regex(string.Format(ExtractAggregateExpression, "Count"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_timeIntExpression = new Regex(string.Format(ExtractAggregateExpression, "(TimeIntegration|TimeInt)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_derivativeExpression = new Regex(string.Format(ExtractAggregateExpression, "(Derivative|Der)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_stdDevExpression = new Regex(string.Format(ExtractAggregateExpression, "(StandardDeviation|StdDev)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_stdDevSampExpression = new Regex(string.Format(ExtractAggregateExpression, "(StandardDeviationSample|StdDevSamp)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            // RegEx instances to identify specific functions and extract internal expressions
+            s_averageExpression = new Regex(string.Format(GetExpression, "(Average|Avg|Mean)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_minimumExpression = new Regex(string.Format(GetExpression, "(Minimum|Min)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_maximumExpression = new Regex(string.Format(GetExpression, "(Maximum|Max)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_totalExpression = new Regex(string.Format(GetExpression, "(Total|Sum)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_rangeExpression = new Regex(string.Format(GetExpression, "Range"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_countExpression = new Regex(string.Format(GetExpression, "Count"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_stdDevExpression = new Regex(string.Format(GetExpression, "(StandardDeviation|StdDev)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_stdDevSampExpression = new Regex(string.Format(GetExpression, "(StandardDeviationSample|StdDevSamp)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_differenceExpression = new Regex(string.Format(GetExpression, "(Difference|Diff)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_derivativeExpression = new Regex(string.Format(GetExpression, "(Derivative|Derv)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_timeIntExpression = new Regex(string.Format(GetExpression, "(TimeIntegration|TimeInt)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
         }
 
         #endregion
