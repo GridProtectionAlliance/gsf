@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Globalization;
 
 namespace GSF.COMTRADE
 {
@@ -76,7 +77,7 @@ namespace GSF.COMTRADE
         public override string ToString()
         {
             // samp,endsamp
-            return string.Format("{0},{1}", Rate, EndSample);
+            return string.Format("{0},{1}", Rate.ToString(CultureInfo.InvariantCulture), EndSample);
         }
 
         #endregion
