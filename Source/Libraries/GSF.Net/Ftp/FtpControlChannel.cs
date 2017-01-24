@@ -475,7 +475,7 @@ namespace GSF.Net.Ftp
             }
             else
             {
-                throw new FtpCommandException("Failed to enter passive mode.", m_lastResponse);
+                throw new FtpCommandException("Failed to enter passive mode. - " + m_lastResponse.Code + " - " + m_lastResponse.Message, m_lastResponse);
             }
         }
 
