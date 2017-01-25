@@ -32,6 +32,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
+using GSF;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.Units.EE;
@@ -50,6 +51,7 @@ namespace PowerCalculations
         // Constants
         private const double DefaultLowFrequencyThreshold = 57.0D;
         private const double DefaultHighFrequencyThreshold = 62.0D;
+        private const bool DefaultReportUnreasonableResultsAsNaN = false;
 
         // Fields
         private double m_averageFrequency;
@@ -70,10 +72,10 @@ namespace PowerCalculations
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets low frequency reasonability threshold.
+        /// Gets or sets low frequency reasonability threshold, inclusive.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines low frequency reasonability threshold.")]
+        [Description("Defines low frequency reasonability threshold. Value is inclusive, i.e., frequency will be unreasonable at and beyond specified threshold.")]
         [DefaultValue(DefaultLowFrequencyThreshold)]
         public double LowFrequencyThreshold
         {
@@ -82,12 +84,24 @@ namespace PowerCalculations
         }
 
         /// <summary>
-        /// Gets or sets high frequency reasonability threshold.
+        /// Gets or sets high frequency reasonability threshold, inclusive.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines high frequency reasonability threshold.")]
+        [Description("Defines high frequency reasonability threshold. Value is inclusive, i.e., frequency will be unreasonable at and beyond specified threshold.")]
         [DefaultValue(DefaultHighFrequencyThreshold)]
         public double HighFrequencyThreshold
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if unreasonable results should be reported as NaN.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines flag that determines if unreasonable results should be reported as NaN.")]
+        [DefaultValue(DefaultReportUnreasonableResultsAsNaN)]
+        public bool ReportUnreasonableResultsAsNaN
         {
             get;
             set;
@@ -105,6 +119,8 @@ namespace PowerCalculations
                 status.AppendFormat("   Low frequency threshold: {0:N3} Hz", LowFrequencyThreshold);
                 status.AppendLine();
                 status.AppendFormat("  High frequency threshold: {0:N3} Hz", HighFrequencyThreshold);
+                status.AppendLine();
+                status.AppendFormat("Report unreasonable as NaN: {0}", ReportUnreasonableResultsAsNaN);
                 status.AppendLine();
                 status.AppendFormat("    Last average frequency: {0:N3} Hz", m_averageFrequency);
                 status.AppendLine();
@@ -142,6 +158,11 @@ namespace PowerCalculations
                 HighFrequencyThreshold = threshold;
             else
                 HighFrequencyThreshold = DefaultHighFrequencyThreshold;
+
+            if (settings.TryGetValue("ReportUnreasonableResultsAsNaN", out setting))
+                ReportUnreasonableResultsAsNaN = setting.ParseBoolean();
+            else
+                ReportUnreasonableResultsAsNaN = DefaultReportUnreasonableResultsAsNaN;
 
             // Validate input measurements
             List<MeasurementKey> validInputMeasurementKeys = new List<MeasurementKey>();
@@ -222,6 +243,18 @@ namespace PowerCalculations
                     m_averageFrequency = total / count;
                     m_maximumFrequency = maximumFrequency;
                     m_minimumFrequency = minimumFrequency;
+                }
+
+                if (ReportUnreasonableResultsAsNaN)
+                {
+                    if (m_averageFrequency <= LowFrequencyThreshold && m_averageFrequency >= HighFrequencyThreshold)
+                        m_averageFrequency = double.NaN;
+
+                    if (m_maximumFrequency <= LowFrequencyThreshold && m_maximumFrequency >= HighFrequencyThreshold)
+                        m_maximumFrequency = double.NaN;
+
+                    if (m_minimumFrequency <= LowFrequencyThreshold && m_minimumFrequency >= HighFrequencyThreshold)
+                        m_minimumFrequency = double.NaN;
                 }
 
                 // Provide calculated measurements for external consumption
