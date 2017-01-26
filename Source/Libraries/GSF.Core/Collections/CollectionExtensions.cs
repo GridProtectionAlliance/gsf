@@ -360,14 +360,121 @@ namespace GSF.Collections
         }
 
         /// <summary>
+        /// Gets the median item(s) from an enumeration, i.e., one return item for odd lengths, two for even lengths.
+        /// </summary>
+        /// <remarks>
+        /// If enumeration length is even, two items will be returned representing the items in the middle of the set;
+        /// otherwise, if the enumeration length is odd, one item will be returned from exactly the middle of the set.
+        /// </remarks>
+        /// <typeparam name="T"><see cref="Type"/> of elements in the <paramref name="source"/></typeparam>
+        /// <param name="source">An enumeration over which to find the median element(s).</param>
+        /// <returns>The median item(s) from an enumeration, or <c>null</c> if <paramref name="source"/> is <c>null</c>.</returns>
+        public static T[] Median<T>(this IEnumerable<T> source)
+        {
+            if ((object)source == null)
+                return null;
+
+            T[] values = source as T[] ?? source.ToArray();
+
+            if (values.Length < 3)
+                return values;
+
+            List<T> results = new List<T>();
+
+            bool isEven = values.Length % 2 == 0;
+            int midIndex = values.Length / 2;
+
+            if (isEven)
+                results.Add(values[midIndex - 1]);
+
+            results.Add(values[midIndex]);
+
+            return results.ToArray();
+        }
+
+        /// <summary>
+        /// Returns the majority value in the collection, or default type value if no item represents the majority.
+        /// </summary>
+        /// <typeparam name="TSource"><see cref="Type"/> of elements in the <paramref name="source"/>.</typeparam>
+        /// <typeparam name="TKey">The generic type of the objects to be compared.</typeparam>
+        /// <param name="source">An enumeration over which to find the majority element.</param>
+        /// <param name="keySelector">A delegate that takes an object and produces the key for comparison.</param>
+        /// <param name="forwardSearch"><c>true</c> to search forward in <paramref name="source"/>; otherwise <c>false</c> to search backwards.</param>
+        /// <param name="comparer">The <see cref="IEqualityComparer{TKey}" /> implementation to use when comparing keys, or <c>null</c> to use the default comparer for the type of the key.</param>
+        /// <returns>The majority value in the collection.</returns>
+        public static TSource MajorityBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, bool forwardSearch = true, IEqualityComparer<TKey> comparer = null)
+        {
+            return source.MajorityBy(default(TSource), keySelector, forwardSearch, comparer);
+        }
+
+        /// <summary>
+        /// Returns the majority value in the collection, or <paramref name="defaultValue"/> if no item represents the majority.
+        /// </summary>
+        /// <typeparam name="TSource"><see cref="Type"/> of elements in the <paramref name="source"/>.</typeparam>
+        /// <typeparam name="TKey">The generic type of the objects to be compared.</typeparam>
+        /// <param name="source">An enumeration over which to find the majority element.</param>
+        /// <param name="defaultValue">Default value to return if no item represents the majority.</param>
+        /// <param name="keySelector">A delegate that takes an object and produces the key for comparison.</param>
+        /// <param name="forwardSearch"><c>true</c> to search forward in <paramref name="source"/>; otherwise <c>false</c> to search backwards.</param>
+        /// <param name="comparer">The <see cref="IEqualityComparer{TKey}" /> implementation to use when comparing keys, or <c>null</c> to use the default comparer for the type of the key.</param>
+        /// <returns>The majority value in the collection.</returns>
+        public static TSource MajorityBy<TSource, TKey>(this IEnumerable<TSource> source, TSource defaultValue, Func<TSource, TKey> keySelector, bool forwardSearch = true, IEqualityComparer<TKey> comparer = null)
+        {
+            TSource majority = defaultValue;
+
+            if ((object)source == null)
+                return majority;
+
+            TSource[] values;
+
+            if (forwardSearch)
+                values = source as TSource[] ?? source.ToArray();
+            else
+                values = source.Reverse().ToArray();
+
+            if (values.Length > 1)
+            {
+                Dictionary<TKey, Tuple<int, TSource>> itemCounts = new Dictionary<TKey, Tuple<int, TSource>>(comparer);
+
+                // Count each number of items in the list
+                foreach (TSource value in values)
+                {
+                    Tuple<int, TSource> valueCount;
+                    TKey key = keySelector(value);
+
+                    if (itemCounts.TryGetValue(key, out valueCount))
+                    {
+                        int count = valueCount.Item1 + 1;
+                        itemCounts[key] = new Tuple<int, TSource>(count, valueCount.Item2);
+                    }
+                    else
+                    {
+                        itemCounts.Add(key, new Tuple<int, TSource>(1, value));
+                    }
+                }
+
+                // Find the largest number of items in the list
+                KeyValuePair<TKey, Tuple<int, TSource>> maxItem = itemCounts.Max((a, b) => a.Value.Item1 < b.Value.Item1 ? -1 : (a.Value.Item1 > b.Value.Item1 ? 1 : 0));
+
+                // If item with largest count has a plural majority, then it is the majority item
+                if (maxItem.Value.Item1 > 1)
+                    majority = maxItem.Value.Item2;
+            }
+
+            return majority;
+        }
+
+        /// <summary>
         /// Returns the majority value in the collection, or default type value if no item represents the majority.
         /// </summary>
         /// <typeparam name="T"><see cref="Type"/> of elements in the <paramref name="source"/>.</typeparam>
         /// <param name="source">An enumeration over which to find the majority element.</param>
+        /// <param name="forwardSearch"><c>true</c> to search forward in <paramref name="source"/>; otherwise <c>false</c> to search backwards.</param>
+        /// <param name="comparer">The <see cref="IEqualityComparer{T}" /> implementation to use when comparing keys, or <c>null</c> to use the default comparer for the type of the key.</param>
         /// <returns>The majority value in the collection.</returns>
-        public static T Majority<T>(this IEnumerable<T> source)
+        public static T Majority<T>(this IEnumerable<T> source, bool forwardSearch = true, IEqualityComparer<T> comparer = null)
         {
-            return source.Majority(default(T));
+            return source.Majority(default(T), forwardSearch, comparer);
         }
 
         /// <summary>
@@ -376,22 +483,32 @@ namespace GSF.Collections
         /// <typeparam name="T"><see cref="Type"/> of elements in the <paramref name="source"/>.</typeparam>
         /// <param name="source">An enumeration over which to find the majority element.</param>
         /// <param name="defaultValue">Default value to return if no item represents the majority.</param>
+        /// <param name="forwardSearch"><c>true</c> to search forward in <paramref name="source"/>; otherwise <c>false</c> to search backwards.</param>
+        /// <param name="comparer">The <see cref="IEqualityComparer{T}" /> implementation to use when comparing keys, or <c>null</c> to use the default comparer for the type of the key.</param>
         /// <returns>The majority value in the collection.</returns>
-        public static T Majority<T>(this IEnumerable<T> source, T defaultValue)
+        public static T Majority<T>(this IEnumerable<T> source, T defaultValue, bool forwardSearch = true, IEqualityComparer<T> comparer = null)
         {
             T majority = defaultValue;
 
             if ((object)source == null)
                 return majority;
 
-            if (source.Count() > 1)
+            T[] values;
+
+            if (forwardSearch)
+                values = source as T[] ?? source.ToArray();
+            else
+                values = source.Reverse().ToArray();
+
+            if (values.Length > 1)
             {
-                Dictionary<T, int> itemCounts = new Dictionary<T, int>();
-                int count;
+                Dictionary<T, int> itemCounts = new Dictionary<T, int>(comparer);
 
                 // Count each number of items in the list
-                foreach (T item in source)
+                foreach (T item in values)
                 {
+                    int count;
+
                     if (itemCounts.TryGetValue(item, out count))
                     {
                         count++;
@@ -404,18 +521,84 @@ namespace GSF.Collections
                 }
 
                 // Find the largest number of items in the list
-                KeyValuePair<T, int> maxItem = itemCounts.Max((a, b) => (a.Value < b.Value ? -1 : (a.Value > b.Value ? 1 : 0)));
+                KeyValuePair<T, int> maxItem = itemCounts.Max((a, b) => a.Value < b.Value ? -1 : (a.Value > b.Value ? 1 : 0));
 
                 // If item with largest count has a plural majority, then it is the majority item
                 if (maxItem.Value > 1)
                     majority = maxItem.Key;
             }
-            else
-            {
-                majority = source.FirstOrDefault();
-            }
 
             return majority;
+        }
+
+        /// <summary>
+        /// Returns the minority value in the collection, or default type value if no item represents the majority.
+        /// </summary>
+        /// <typeparam name="TSource"><see cref="Type"/> of elements in the <paramref name="source"/>.</typeparam>
+        /// <typeparam name="TKey">The generic type of the objects to be compared.</typeparam>
+        /// <param name="source">An enumeration over which to find the majority element.</param>
+        /// <param name="keySelector">A delegate that takes an object and produces the key for comparison.</param>
+        /// <param name="forwardSearch"><c>true</c> to search forward in <paramref name="source"/>; otherwise <c>false</c> to search backwards.</param>
+        /// <param name="comparer">The <see cref="IEqualityComparer{TKey}" /> implementation to use when comparing keys, or <c>null</c> to use the default comparer for the type of the key.</param>
+        /// <returns>The minority value in the collection.</returns>
+        public static TSource MinorityBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, bool forwardSearch = true, IEqualityComparer<TKey> comparer = null)
+        {
+            return source.MinorityBy(default(TSource), keySelector, forwardSearch, comparer);
+        }
+
+        /// <summary>
+        /// Returns the minority value in the collection, or <paramref name="defaultValue"/> if no item represents the majority.
+        /// </summary>
+        /// <typeparam name="TSource"><see cref="Type"/> of elements in the <paramref name="source"/>.</typeparam>
+        /// <typeparam name="TKey">The generic type of the objects to be compared.</typeparam>
+        /// <param name="source">An enumeration over which to find the majority element.</param>
+        /// <param name="defaultValue">Default value to return if no item represents the majority.</param>
+        /// <param name="keySelector">A delegate that takes an object and produces the key for comparison.</param>
+        /// <param name="forwardSearch"><c>true</c> to search forward in <paramref name="source"/>; otherwise <c>false</c> to search backwards.</param>
+        /// <param name="comparer">The <see cref="IEqualityComparer{TKey}" /> implementation to use when comparing keys, or <c>null</c> to use the default comparer for the type of the key.</param>
+        /// <returns>The majority value in the collection.</returns>
+        public static TSource MinorityBy<TSource, TKey>(this IEnumerable<TSource> source, TSource defaultValue, Func<TSource, TKey> keySelector, bool forwardSearch = true, IEqualityComparer<TKey> comparer = null)
+        {
+            TSource minority = defaultValue;
+
+            if ((object)source == null)
+                return minority;
+
+            TSource[] values;
+
+            if (forwardSearch)
+                values = source as TSource[] ?? source.ToArray();
+            else
+                values = source.Reverse().ToArray();
+
+            if (values.Length > 1)
+            {
+                Dictionary<TKey, Tuple<int, TSource>> itemCounts = new Dictionary<TKey, Tuple<int, TSource>>(comparer);
+
+                // Count each number of items in the list
+                foreach (TSource value in values)
+                {
+                    Tuple<int, TSource> valueCount;
+                    TKey key = keySelector(value);
+
+                    if (itemCounts.TryGetValue(key, out valueCount))
+                    {
+                        int count = valueCount.Item1 + 1;
+                        itemCounts[key] = new Tuple<int, TSource>(count, valueCount.Item2);
+                    }
+                    else
+                    {
+                        itemCounts.Add(key, new Tuple<int, TSource>(1, value));
+                    }
+                }
+
+
+                // Find the smallest number of items in the list
+                KeyValuePair<TKey, Tuple<int, TSource>> minItem = itemCounts.Min((a, b) => a.Value.Item1 < b.Value.Item1 ? -1 : (a.Value.Item1 > b.Value.Item1 ? 1 : 0));
+                minority = minItem.Value.Item2;
+            }
+
+            return minority;
         }
 
         /// <summary>
@@ -423,10 +606,12 @@ namespace GSF.Collections
         /// </summary>
         /// <typeparam name="T"><see cref="Type"/> of elements in the <paramref name="source"/>.</typeparam>
         /// <param name="source">An enumeration over which to find the minority element.</param>
+        /// <param name="forwardSearch"><c>true</c> to search forward in <paramref name="source"/>; otherwise <c>false</c> to search backwards.</param>
+        /// <param name="comparer">The <see cref="IEqualityComparer{T}" /> implementation to use when comparing keys, or <c>null</c> to use the default comparer for the type of the key.</param>
         /// <returns>The minority value in the collection.</returns>
-        public static T Minority<T>(this IEnumerable<T> source)
+        public static T Minority<T>(this IEnumerable<T> source, bool forwardSearch = true, IEqualityComparer<T> comparer = null)
         {
-            return source.Minority(default(T));
+            return source.Minority(default(T), forwardSearch, comparer);
         }
 
         /// <summary>
@@ -435,22 +620,32 @@ namespace GSF.Collections
         /// <typeparam name="T"><see cref="Type"/> of elements in the <paramref name="source"/>.</typeparam>
         /// <param name="source">An enumeration over which to find the minority element.</param>
         /// <param name="defaultValue">Default value to return if no item represents the minority.</param>
+        /// <param name="forwardSearch"><c>true</c> to search forward in <paramref name="source"/>; otherwise <c>false</c> to search backwards.</param>
+        /// <param name="comparer">The <see cref="IEqualityComparer{T}" /> implementation to use when comparing keys, or <c>null</c> to use the default comparer for the type of the key.</param>
         /// <returns>The minority value in the collection.</returns>
-        public static T Minority<T>(this IEnumerable<T> source, T defaultValue)
+        public static T Minority<T>(this IEnumerable<T> source, T defaultValue, bool forwardSearch = true, IEqualityComparer<T> comparer = null)
         {
             T minority = defaultValue;
 
             if ((object)source == null)
                 return minority;
 
-            if (source.Count() > 1)
+            T[] values;
+
+            if (forwardSearch)
+                values = source as T[] ?? source.ToArray();
+            else
+                values = source.Reverse().ToArray();
+
+            if (values.Length > 1)
             {
-                Dictionary<T, int> itemCounts = new Dictionary<T, int>();
-                int count;
+                Dictionary<T, int> itemCounts = new Dictionary<T, int>(comparer);
 
                 // Count each number of items in the list
-                foreach (T item in source)
+                foreach (T item in values)
                 {
+                    int count;
+
                     if (itemCounts.TryGetValue(item, out count))
                     {
                         count++;
@@ -463,12 +658,8 @@ namespace GSF.Collections
                 }
 
                 // Find the smallest number of items in the list
-                KeyValuePair<T, int> minItem = itemCounts.Min((a, b) => (a.Value < b.Value ? -1 : (a.Value > b.Value ? 1 : 0)));
+                KeyValuePair<T, int> minItem = itemCounts.Min((a, b) => a.Value < b.Value ? -1 : (a.Value > b.Value ? 1 : 0));
                 minority = minItem.Key;
-            }
-            else
-            {
-                minority = source.FirstOrDefault();
             }
 
             return minority;
@@ -483,9 +674,7 @@ namespace GSF.Collections
         public static void AddRange<T>(this IList<T> collection, IEnumerable<T> items)
         {
             foreach (T item in items)
-            {
                 collection.Add(item);
-            }
         }
 
         /// <summary>
@@ -499,9 +688,7 @@ namespace GSF.Collections
         public static void UpdateRange<T>(this IList<T> collection, int index, IEnumerable<T> items)
         {
             foreach (T item in items)
-            {
                 collection[index++] = item;
-            }
         }
 
         /// <summary>
@@ -517,9 +704,7 @@ namespace GSF.Collections
             List<T> result = new List<T>();
 
             for (int i = index; i < index + count; i++)
-            {
                 result.Add(collection[i]);
-            }
 
             return result;
         }
