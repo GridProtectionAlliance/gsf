@@ -70,6 +70,8 @@ namespace GSF.Net.Ftp
             m_ctrl = ctrl;
             m_tcpClient = client;
             m_stream = client.GetStream();
+            m_stream.ReadTimeout = ctrl.Timeout;
+            m_stream.WriteTimeout = ctrl.Timeout;
             m_session.BeginDataTransfer(this);
         }
 
