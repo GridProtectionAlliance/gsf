@@ -905,11 +905,19 @@ namespace GSF.Collections
         /// <typeparam name="TKey">The type of the keys to be compared.</typeparam>
         /// <param name="source">The collection of source objects.</param>
         /// <param name="keySelector">The function used to access the keys of the source objects.</param>
+        /// <param name="forwardSearch"><c>true</c> to search forward in <paramref name="source"/>; otherwise <c>false</c> to search backwards.</param>
         /// <returns>The elements from <paramref name="source"/> whose keys are distinct.</returns>
-        public static IEnumerable<TSource> DistinctBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector)
+        public static IEnumerable<TSource> DistinctBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, bool forwardSearch = true)
         {
+            if (forwardSearch)
+                return source
+                    .Select(obj => new DistinctByWrapper<TKey, TSource>(keySelector(obj), obj))
+                    .Distinct()
+                    .Select(wrapper => wrapper.Value);
+
             return source
                 .Select(obj => new DistinctByWrapper<TKey, TSource>(keySelector(obj), obj))
+                .Reverse()
                 .Distinct()
                 .Select(wrapper => wrapper.Value);
         }

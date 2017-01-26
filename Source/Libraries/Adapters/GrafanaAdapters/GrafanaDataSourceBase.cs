@@ -33,7 +33,6 @@ using GSF.NumericalAnalysis;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.Web;
-using Random = GSF.Security.Cryptography.Random;
 
 // ReSharper disable PossibleMultipleEnumeration
 namespace GrafanaAdapters
@@ -70,13 +69,21 @@ namespace GrafanaAdapters
         /// </summary>
         Count,
         /// <summary>
+        /// Returns a series of values that represent the unique set of values in the source series.
+        /// </summary>
+        Distinct,
+        /// <summary>
+        /// Returns a series of values that represent the absolute value each of the values in the source series.
+        /// </summary>
+        AbsoluteValue,
+        /// <summary>
         /// Returns a single value that represents the standard deviation of the values in the source series.
         /// </summary>
-        StdDev,
+        StandardDeviation,
         /// <summary>
         /// Returns a single value that represents the standard deviation, using sample calculation, of the values in the source series.
         /// </summary>
-        StDevSamp,
+        StandardDeviationSample,
         /// <summary>
         /// Returns a single value that represents the median of the values in the source series.
         /// </summary>
@@ -86,15 +93,18 @@ namespace GrafanaAdapters
         /// </summary>
         Mode,
         /// <summary>
-        /// Returns a series of N values that are the largest in the source series. N is a positive integer value greater than zero.
+        /// Returns a series of N values that are the largest in the source series.
+        /// N is a positive integer value, representing a total, that is greater than zero.
         /// </summary>
         Top,
         /// <summary>
-        /// Returns a series of N values that are the smallest in the source series. N is a positive integer value greater than zero.
+        /// Returns a series of N, or N% of total, values that are the smallest in the source series.
+        /// N is either a positive integer value, representing a total, that is greater than zero - or - a floating point value, representing a percentage, that must range from greater than 0 to less than or equal to 100.
         /// </summary>
         Bottom,
         /// <summary>
-        /// Returns a series of N values that are a random sample of the values in the source series. N is a positive integer value greater than zero.
+        /// Returns a series of N, or N% of total, values that are a random sample of the values in the source series.
+        /// N is either a positive integer value, representing a total, that is greater than zero - or - a floating point value, representing a percentage, that must range from greater than 0 to less than or equal to 100.
         /// </summary>
         Random,
         /// <summary>
@@ -106,7 +116,8 @@ namespace GrafanaAdapters
         /// </summary>
         Last,
         /// <summary>
-        /// Returns a single value that represents the Nth order percentile for the sorted values in the source series. N is a floating point value that must range from 0 to 100.
+        /// Returns a single value that represents the Nth order percentile for the sorted values in the source series.
+        /// N is a floating point value, representing a percentage, that must range from 0 to 100.
         /// </summary>
         Percentile,
         /// <summary>
@@ -124,7 +135,7 @@ namespace GrafanaAdapters
         /// <summary>
         /// Returns a single value that represents the time-based integration, i.e., the sum of V(n) * (T(n) - T(n-1)), of the values in the source series.
         /// </summary>
-        TimeInt,
+        TimeIntegration,
         /// <summary>
         /// Not a recognized function.
         /// </summary>
@@ -317,19 +328,33 @@ namespace GrafanaAdapters
                 if (filterMatch.Success)
                     return new Tuple<SeriesFunction, string, bool>(SeriesFunction.Count, filterMatch.Result("${Expression}").Trim(), setOperation);
 
-                // Look for standard deviation function
-                lock (s_stdDevExpression)
-                    filterMatch = s_stdDevExpression.Match(expression);
+                // Look for distinct function
+                lock (s_distinctExpression)
+                    filterMatch = s_distinctExpression.Match(expression);
 
                 if (filterMatch.Success)
-                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.StdDev, filterMatch.Result("${Expression}").Trim(), setOperation);
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.Distinct, filterMatch.Result("${Expression}").Trim(), setOperation);
+
+                // Look for absolute value function
+                lock (s_absoluteValueExpression)
+                    filterMatch = s_absoluteValueExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.AbsoluteValue, filterMatch.Result("${Expression}").Trim(), setOperation);
+
+                // Look for standard deviation function
+                lock (s_standardDeviationExpression)
+                    filterMatch = s_standardDeviationExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.StandardDeviation, filterMatch.Result("${Expression}").Trim(), setOperation);
 
                 // Look for sampled-based standard deviation function
-                lock (s_stdDevSampExpression)
-                    filterMatch = s_stdDevSampExpression.Match(expression);
+                lock (s_standardDeviationSampleExpression)
+                    filterMatch = s_standardDeviationSampleExpression.Match(expression);
 
                 if (filterMatch.Success)
-                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.StDevSamp, filterMatch.Result("${Expression}").Trim(), setOperation);
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.StandardDeviationSample, filterMatch.Result("${Expression}").Trim(), setOperation);
 
                 // Look for median function
                 lock (s_medianExpression)
@@ -409,11 +434,11 @@ namespace GrafanaAdapters
                     return new Tuple<SeriesFunction, string, bool>(SeriesFunction.Derivative, filterMatch.Result("${Expression}").Trim(), setOperation);
 
                 // Look for time integration function
-                lock (s_timeIntExpression)
-                    filterMatch = s_timeIntExpression.Match(expression);
+                lock (s_timeIntegrationExpression)
+                    filterMatch = s_timeIntegrationExpression.Match(expression);
 
                 if (filterMatch.Success)
-                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.TimeInt, filterMatch.Result("${Expression}").Trim(), setOperation);
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.TimeIntegration, filterMatch.Result("${Expression}").Trim(), setOperation);
 
                 // Target is not a recognized function
                 return new Tuple<SeriesFunction, string, bool>(SeriesFunction.None, expression, false);
@@ -459,11 +484,10 @@ namespace GrafanaAdapters
             // Extract any needed function parameters
             int parameterCount = s_parameterCounts[seriesFunction]; // Safe: no lock needed since content doesn't change
             string[] parameters = new string[0];
-            int index;
 
-            if (parameterCount > 1)
+            if (parameterCount > 0)
             {
-                index = 0;
+                int index = 0;
 
                 for (int i = 0; i < parameterCount && index > -1; i++)
                     index = expression.IndexOf(',', index);
@@ -483,8 +507,6 @@ namespace GrafanaAdapters
             if (dataset.Count == 0 || cancellationToken.IsCancellationRequested)
                 return results;
 
-            HashSet<int> indexes;
-            double[] currentSeries, currentTimes;
             double percent;
             int count;
 
@@ -496,6 +518,7 @@ namespace GrafanaAdapters
                     datapoints = new List<double[]>()
                 };
 
+                double[] currentSeries, currentTimes;
                 IEnumerable<double> values = dataset.Select(series => series.datapoints).SelectMany(points => points[TimeSeriesValues.Value]);
                 IEnumerable<double> times = dataset.Select(series => series.datapoints).SelectMany(points => points[TimeSeriesValues.Time]);
                 IEnumerable<Tuple<TimeSeriesValues, double>> valuesWithSource = dataset.SelectMany(series => series.datapoints.Select(points => new Tuple<TimeSeriesValues, double>(series, points[TimeSeriesValues.Value])));
@@ -520,70 +543,129 @@ namespace GrafanaAdapters
                         result = createNewResult();
                         result.datapoints.Add(new[] { values.Count(), times.Max() });
                         break;
-                    case SeriesFunction.StdDev:
+                    case SeriesFunction.Distinct:
+                        result = createNewResult();
+                        result.datapoints.AddRange(dataset.SelectMany(series => series.datapoints).DistinctBy(point => point[TimeSeriesValues.Value], false));
+                        break;
+                    case SeriesFunction.AbsoluteValue:
+                        result = createNewResult();
+                        currentSeries = values.ToArray();
+                        currentTimes = times.ToArray();
+
+                        for (int i = 0; i < currentSeries.Length; i++)
+                            result.datapoints.Add(new[] { Math.Abs(currentSeries[i]), currentTimes[i] });
+
+                        break;
+                    case SeriesFunction.StandardDeviation:
                         result = createNewResult();
                         result.datapoints.Add(new[] { values.StandardDeviation(), times.Max() });
                         break;
-                    case SeriesFunction.StDevSamp:
+                    case SeriesFunction.StandardDeviationSample:
                         result = createNewResult();
                         result.datapoints.Add(new[] { values.StandardDeviation(true), times.Max() });
                         break;
                     case SeriesFunction.Median:
-                        result = dataset.Median().Last();
-                        result.target = $"SetMedian = {result.target}";
+                        Tuple<TimeSeriesValues, double> median = valuesWithSource.Median().Last();
+                        result = createNewResult();
+                        result.datapoints.Add(new[] { median.Item2, median.Item1.datapoints.Reverse<double[]>().First(points => points[TimeSeriesValues.Value] == median.Item2)[TimeSeriesValues.Time] });
+                        result.target = $"SetMedian = {median.Item1.target}";
                         break;
                     case SeriesFunction.Mode:
                         Tuple<TimeSeriesValues, double> mode = valuesWithSource.MajorityBy(valuesWithSource.Last(), key => key.Item2, false);
                         result = createNewResult();
                         result.datapoints.Add(new[] { mode.Item2, mode.Item1.datapoints.Reverse<double[]>().First(points => points[TimeSeriesValues.Value] == mode.Item2)[TimeSeriesValues.Time] });
-                        result.target = $"SetMode = {result.target}";
+                        result.target = $"SetMode = {mode.Item1.target}";
                         break;
                     case SeriesFunction.Top:
-                        if (!int.TryParse(parameters[0], out count) || count < 1)
-                            throw new FormatException($"Could not parse \"{parameters[0]}\" as an integer or value is less than one.");
+                        if (parameters[0].Contains("%"))
+                        {
+                            percent = ParsePercentage(parameters[0], false);
+                            count = (int)(dataset.Sum(series => series.datapoints.Count) * (percent / 100.0D));
 
-                        results.AddRange(dataset.Take(count));
+                            if (count == 0)
+                                count = 1;
+                        }
+                        else
+                        {
+                            count = ParseCount(parameters[0]);
+                        }
+
+                        // Is there a use case to want top items from dataset?
+                        //results.AddRange(dataset.Take(count));
+
+                        result = createNewResult();
+                        result.datapoints.AddRange(dataset.SelectMany(series => series.datapoints).Take(count));
                         break;
                     case SeriesFunction.Bottom:
-                        if (!int.TryParse(parameters[0], out count) || count < 1)
-                            throw new FormatException($"Could not parse \"{parameters[0]}\" as an integer or value is less than one.");
+                        if (parameters[0].Contains("%"))
+                        {
+                            percent = ParsePercentage(parameters[0], false);
+                            count = (int)(dataset.Sum(series => series.datapoints.Count) * (percent / 100.0D));
 
-                        results.AddRange(dataset.Reverse<TimeSeriesValues>().Take(count));
+                            if (count == 0)
+                                count = 1;
+                        }
+                        else
+                        {
+                            count = ParseCount(parameters[0]);
+                        }
+
+                        // Is there a use case to want bottom items from dataset?
+                        //results.AddRange(dataset.Reverse<TimeSeriesValues>().Take(count));
+
+                        result = createNewResult();
+                        result.datapoints.AddRange(dataset.SelectMany(series => series.datapoints).Reverse().Take(count));
                         break;
                     case SeriesFunction.Random:
-                        if (!int.TryParse(parameters[0], out count) || count < 1)
-                            throw new FormatException($"Could not parse \"{parameters[0]}\" as an integer or value is less than one.");
+                        count = ParseCount(parameters[0]);
 
                         if (count > dataset.Count)
                             count = dataset.Count;
 
-                        indexes = new HashSet<int>();
+                        List<int> indexes = new List<int>(Enumerable.Range(0, dataset.Count));
+                        indexes.Scramble();
 
-                        while (indexes.Count < count)
-                        {
-                            index = Random.Int32Between(0, dataset.Count - 1);
-
-                            if (!indexes.Contains(index))
-                            {
-                                indexes.Add(index);
-                                results.Add(dataset[index]);
-                            }
-                        }
+                        results.AddRange(indexes.Take(count).Select(index => dataset[index]));
                         break;
                     case SeriesFunction.First:
                         result = dataset.First();
+                        result.datapoints = new List<double[]>(new[] { result.datapoints.First() });    // First point of first series
                         result.target = $"SetFirst = {result.target}";
                         break;
                     case SeriesFunction.Last:
                         result = dataset.Last();
+                        result.datapoints = new List<double[]>(new[] { result.datapoints.Last() });    // Last point of last series
                         result.target = $"SetLast = {result.target}";
                         break;
                     case SeriesFunction.Percentile:
-                        if (!double.TryParse(parameters[0], out percent) || percent <= 0.0D || percent >= 100.0D)
-                            throw new FormatException($"Could not parse \"{parameters[0]}\" as a floating-point number or value is outside range of 0 to 100.");
+                        percent = ParsePercentage(parameters[0], false);
+                        List<Tuple<TimeSeriesValues, double>> combinedSet = valuesWithSource.ToList();
+                        combinedSet.Sort((a, b) => a.Item2 < b.Item2 ? -1 : (a.Item2 > b.Item2 ? 1 : 0));
 
-                        // TODO: Do percentile function...
+                        if (percent == 0.0D)
+                        {
+                            result = combinedSet.First().Item1;
+                            result.target = $"SetPercentile = {result.target}";
+                        }
+                        else if (percent == 100.0D)
+                        {
+                            result = combinedSet.Last().Item1;
+                            result.target = $"SetPercentile = {result.target}";
+                        }
+                        else
+                        {
+                            double n = (combinedSet.Count - 1) * (percent / 100.0D) + 1.0D;
+                            int k = (int)n;
+                            double d = n - k;
+                            double k0 = combinedSet[k - 1].Item2;
+                            double k1 = combinedSet[k].Item2;
+                            List<double[]> kvals = combinedSet[k].Item1.datapoints;
+                            IEnumerable<double> ktimes = kvals.Select(points => points[TimeSeriesValues.Time]);
 
+                            result = createNewResult();
+                            result.datapoints.Add(new[] { k0 + d * (k1 - k0), ktimes.ElementAt((int)((kvals.Count - 1) * (percent / 100.0D))) });
+                            result.target = $"SetPercentile = {combinedSet[k].Item1.target}";
+                        }
                         break;
                     case SeriesFunction.Difference:
                         result = createNewResult();
@@ -611,7 +693,7 @@ namespace GrafanaAdapters
                             result.datapoints.Add(new[] { (currentSeries[i] - currentSeries[i - 1]) / (currentTimes[i] - currentTimes[i - 1]), currentTimes[i] });
 
                         break;
-                    case SeriesFunction.TimeInt:
+                    case SeriesFunction.TimeIntegration:
                         double integratedValue = 0.0D;
 
                         result = createNewResult();
@@ -690,10 +772,16 @@ namespace GrafanaAdapters
                         case SeriesFunction.Count:
                             result.datapoints.Add(new[] { source.datapoints.Count, lastTime });
                             break;
-                        case SeriesFunction.StdDev:
+                        case SeriesFunction.Distinct:
+                            result.datapoints.AddRange(source.datapoints.DistinctBy(point => point[TimeSeriesValues.Value], false));
+                            break;
+                        case SeriesFunction.AbsoluteValue:
+                            result.datapoints.AddRange(source.datapoints.Select(point => new[] { Math.Abs(point[TimeSeriesValues.Value]), point[TimeSeriesValues.Time] }));
+                            break;
+                        case SeriesFunction.StandardDeviation:
                             result.datapoints.Add(new[] { values.StandardDeviation(), lastTime });
                             break;
-                        case SeriesFunction.StDevSamp:
+                        case SeriesFunction.StandardDeviationSample:
                             result.datapoints.Add(new[] { values.StandardDeviation(true), lastTime });
                             break;
                         case SeriesFunction.Median:
@@ -704,36 +792,47 @@ namespace GrafanaAdapters
                             result.datapoints.Add(new[] { mode, source.datapoints.Reverse<double[]>().First(points => points[TimeSeriesValues.Value] == mode)[TimeSeriesValues.Time] });
                             break;
                         case SeriesFunction.Top:
-                            if (!int.TryParse(parameters[0], out count) || count < 1)
-                                throw new FormatException($"Could not parse \"{parameters[0]}\" as an integer or value is less than one.");
+                            if (parameters[0].Contains("%"))
+                            {
+                                percent = ParsePercentage(parameters[0], false);
+                                count = (int)(source.datapoints.Count * (percent / 100.0D));
+
+                                if (count == 0)
+                                    count = 1;
+                            }
+                            else
+                            {
+                                count = ParseCount(parameters[0]);
+                            }
 
                             result.datapoints.AddRange(source.datapoints.Take(count));
                             break;
                         case SeriesFunction.Bottom:
-                            if (!int.TryParse(parameters[0], out count) || count < 1)
-                                throw new FormatException($"Could not parse \"{parameters[0]}\" as an integer or value is less than one.");
+                            if (parameters[0].Contains("%"))
+                            {
+                                percent = ParsePercentage(parameters[0], false);
+                                count = (int)(source.datapoints.Count * (percent / 100.0D));
+
+                                if (count == 0)
+                                    count = 1;
+                            }
+                            else
+                            {
+                                count = ParseCount(parameters[0]);
+                            }
 
                             result.datapoints.AddRange(source.datapoints.Reverse<double[]>().Take(count));
                             break;
                         case SeriesFunction.Random:
-                            if (!int.TryParse(parameters[0], out count) || count < 1)
-                                throw new FormatException($"Could not parse \"{parameters[0]}\" as an integer or value is less than one.");
+                            count = ParseCount(parameters[0]);
 
                             if (count > source.datapoints.Count)
                                 count = source.datapoints.Count;
 
-                            indexes = new HashSet<int>();
+                            List<int> indexes = new List<int>(Enumerable.Range(0, source.datapoints.Count));
+                            indexes.Scramble();
 
-                            while (indexes.Count < count)
-                            {
-                                index = Random.Int32Between(0, source.datapoints.Count - 1);
-
-                                if (!indexes.Contains(index))
-                                {
-                                    indexes.Add(index);
-                                    result.datapoints.Add(source.datapoints[index]);
-                                }
-                            }
+                            result.datapoints.AddRange(indexes.Take(count).Select(index => source.datapoints[index]));
                             break;
                         case SeriesFunction.First:
                             result.datapoints.Add(source.datapoints.First());
@@ -742,11 +841,27 @@ namespace GrafanaAdapters
                             result.datapoints.Add(source.datapoints.Last());
                             break;
                         case SeriesFunction.Percentile:
-                            if (!double.TryParse(parameters[0], out percent) || percent <= 0.0D || percent >= 100.0D)
-                                throw new FormatException($"Could not parse \"{parameters[0]}\" as a floating-point number or value is outside range of 0 to 100.");
+                            percent = ParsePercentage(parameters[0], true);
+                            source.datapoints.Sort((a, b) => a[TimeSeriesValues.Value] < b[TimeSeriesValues.Value] ? -1 : (a[TimeSeriesValues.Value] > b[TimeSeriesValues.Value] ? 1 : 0));
+                            count = source.datapoints.Count;
 
-                            // TODO: Do percentile function...
-
+                            if (percent == 0.0D)
+                            {
+                                result.datapoints.Add(source.datapoints.First());
+                            }
+                            else if (percent == 100.0D)
+                            {
+                                result.datapoints.Add(source.datapoints.Last());
+                            }
+                            else
+                            {
+                                double n = (count - 1) * (percent / 100.0D) + 1.0D;
+                                int k = (int)n;
+                                double d = n - k;
+                                double k0 = source.datapoints[k - 1][TimeSeriesValues.Value];
+                                double k1 = source.datapoints[k][TimeSeriesValues.Value];
+                                result.datapoints.Add(new[] { k0 + d * (k1 - k0), source.datapoints[k][TimeSeriesValues.Time] });
+                            }
                             break;
                         case SeriesFunction.Difference:
                             for (int i = 1; i < source.datapoints.Count; i++)
@@ -760,10 +875,10 @@ namespace GrafanaAdapters
                             break;
                         case SeriesFunction.Derivative:
                             for (int i = 1; i < source.datapoints.Count; i++)
-                                result.datapoints.Add(new[] { (source.datapoints[i][TimeSeriesValues.Value] - source.datapoints[i - 1][TimeSeriesValues.Value]) / source.datapoints[i][TimeSeriesValues.Time] - source.datapoints[i - 1][TimeSeriesValues.Time], source.datapoints[i][TimeSeriesValues.Time] });
+                                result.datapoints.Add(new[] { (source.datapoints[i][TimeSeriesValues.Value] - source.datapoints[i - 1][TimeSeriesValues.Value]) / (source.datapoints[i][TimeSeriesValues.Time] - source.datapoints[i - 1][TimeSeriesValues.Time]), source.datapoints[i][TimeSeriesValues.Time] });
 
                             break;
-                        case SeriesFunction.TimeInt:
+                        case SeriesFunction.TimeIntegration:
                             double integratedValue = 0.0D;
 
                             for (int i = 1; i < source.datapoints.Count; i++)
@@ -778,6 +893,45 @@ namespace GrafanaAdapters
             }
 
             return results;
+        }
+
+        private int ParseCount(string parameter)
+        {
+            int count;
+
+            if (!int.TryParse(parameter, out count) || count < 1)
+                throw new FormatException($"Could not parse \"{parameter}\" as an integer value.");
+
+            if (count < 1)
+                throw new ArgumentOutOfRangeException($"Count \"{parameter}\" is less than one.");
+
+            return count;
+        }
+
+        private double ParsePercentage(string parameter, bool includeZero)
+        {
+            double percent;
+
+            parameter = parameter.Trim();
+
+            if (parameter.EndsWith("%"))
+                parameter = parameter.Substring(0, parameter.Length - 1);
+
+            if (!double.TryParse(parameter, out percent))
+                throw new FormatException($"Could not parse \"{parameter}\" as a floating-point value.");
+
+            if (includeZero)
+            {
+                if (percent < 0.0D || percent > 100.0D)
+                    throw new ArgumentOutOfRangeException($"Percentage \"{parameter}\" is outside range of 0 to 100, inclusive.");
+            }
+            else
+            {
+                if (percent <= 0.0D || percent > 100.0D)
+                    throw new ArgumentOutOfRangeException($"Percentage \"{parameter}\" is outside range of greater than 0 and less than or equal to 100.");
+            }
+
+            return percent;
         }
 
         /// <summary>
@@ -854,8 +1008,10 @@ namespace GrafanaAdapters
         private static readonly Regex s_totalExpression;
         private static readonly Regex s_rangeExpression;
         private static readonly Regex s_countExpression;
-        private static readonly Regex s_stdDevExpression;
-        private static readonly Regex s_stdDevSampExpression;
+        private static readonly Regex s_distinctExpression;
+        private static readonly Regex s_absoluteValueExpression;
+        private static readonly Regex s_standardDeviationExpression;
+        private static readonly Regex s_standardDeviationSampleExpression;
         private static readonly Regex s_medianExpression;
         private static readonly Regex s_modeExpression;
         private static readonly Regex s_topExpression;
@@ -867,7 +1023,7 @@ namespace GrafanaAdapters
         private static readonly Regex s_differenceExpression;
         private static readonly Regex s_timeDifferenceExpression;
         private static readonly Regex s_derivativeExpression;
-        private static readonly Regex s_timeIntExpression;
+        private static readonly Regex s_timeIntegrationExpression;
         private static readonly Dictionary<SeriesFunction, int> s_parameterCounts;
 
         // Static Constructor
@@ -885,8 +1041,10 @@ namespace GrafanaAdapters
             s_totalExpression = new Regex(string.Format(GetExpression, "(Total|Sum)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_rangeExpression = new Regex(string.Format(GetExpression, "Range"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_countExpression = new Regex(string.Format(GetExpression, "Count"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_stdDevExpression = new Regex(string.Format(GetExpression, "(StandardDeviation|StdDev)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_stdDevSampExpression = new Regex(string.Format(GetExpression, "(StandardDeviationSample|StdDevSamp)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_distinctExpression = new Regex(string.Format(GetExpression, "(Distinct|Unique)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_absoluteValueExpression = new Regex(string.Format(GetExpression, "(AbsoluteValue|Abs)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_standardDeviationExpression = new Regex(string.Format(GetExpression, "(StandardDeviation|StdDev)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_standardDeviationSampleExpression = new Regex(string.Format(GetExpression, "(StandardDeviationSample|StdDevSamp)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_medianExpression = new Regex(string.Format(GetExpression, "(Median|Med|Mid)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_modeExpression = new Regex(string.Format(GetExpression, "Mode"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_topExpression = new Regex(string.Format(GetExpression, "Top"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -898,7 +1056,7 @@ namespace GrafanaAdapters
             s_differenceExpression = new Regex(string.Format(GetExpression, "(Difference|Diff)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_timeDifferenceExpression = new Regex(string.Format(GetExpression, "(TimeDifference|TimeDiff|Elapsed)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_derivativeExpression = new Regex(string.Format(GetExpression, "(Derivative|Der)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_timeIntExpression = new Regex(string.Format(GetExpression, "(TimeIntegration|TimeInt)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_timeIntegrationExpression = new Regex(string.Format(GetExpression, "(TimeIntegration|TimeInt)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
             s_parameterCounts = new Dictionary<SeriesFunction, int>();
 
@@ -908,8 +1066,10 @@ namespace GrafanaAdapters
             s_parameterCounts[SeriesFunction.Total] = 0;
             s_parameterCounts[SeriesFunction.Range] = 0;
             s_parameterCounts[SeriesFunction.Count] = 0;
-            s_parameterCounts[SeriesFunction.StdDev] = 0;
-            s_parameterCounts[SeriesFunction.StDevSamp] = 0;
+            s_parameterCounts[SeriesFunction.Distinct] = 0;
+            s_parameterCounts[SeriesFunction.AbsoluteValue] = 0;
+            s_parameterCounts[SeriesFunction.StandardDeviation] = 0;
+            s_parameterCounts[SeriesFunction.StandardDeviationSample] = 0;
             s_parameterCounts[SeriesFunction.Median] = 0;
             s_parameterCounts[SeriesFunction.Mode] = 0;
             s_parameterCounts[SeriesFunction.Top] = 1;
@@ -921,7 +1081,7 @@ namespace GrafanaAdapters
             s_parameterCounts[SeriesFunction.Difference] = 0;
             s_parameterCounts[SeriesFunction.TimeDifference] = 0;
             s_parameterCounts[SeriesFunction.Derivative] = 0;
-            s_parameterCounts[SeriesFunction.TimeInt] = 0;
+            s_parameterCounts[SeriesFunction.TimeIntegration] = 0;
         }
 
         #endregion
