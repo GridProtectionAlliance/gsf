@@ -93,8 +93,8 @@ namespace GrafanaAdapters
         /// </summary>
         Mode,
         /// <summary>
-        /// Returns a series of N values that are the largest in the source series.
-        /// N is a positive integer value, representing a total, that is greater than zero.
+        /// Returns a series of N, or N% of total, values that are the largest in the source series.
+        /// N is either a positive integer value, representing a total, that is greater than zero - or - a floating point value, representing a percentage, that must range from greater than 0 to less than or equal to 100.
         /// </summary>
         Top,
         /// <summary>
@@ -498,7 +498,7 @@ namespace GrafanaAdapters
                 if (parameters.Length == parameterCount)
                     expression = expression.Substring(index + 1).Trim();
                 else
-                    throw new FormatException($"Expected {parameterCount} parameter{(parameterCount == 1 ? "" : "s")}, received {parameters.Length} in: \"{expression}\"");
+                    throw new FormatException($"Expected {parameterCount + 1} parameters, received {parameters.Length + 1} in: \"{expression}\"");
             }
 
             // Query function expression to get series data
@@ -617,7 +617,18 @@ namespace GrafanaAdapters
                         result.datapoints.AddRange(dataset.SelectMany(series => series.datapoints).Reverse().Take(count));
                         break;
                     case SeriesFunction.Random:
-                        count = ParseCount(parameters[0]);
+                        if (parameters[0].Contains("%"))
+                        {
+                            percent = ParsePercentage(parameters[0], false);
+                            count = (int)(dataset.Sum(series => series.datapoints.Count) * (percent / 100.0D));
+
+                            if (count == 0)
+                                count = 1;
+                        }
+                        else
+                        {
+                            count = ParseCount(parameters[0]);
+                        }
 
                         if (count > dataset.Count)
                             count = dataset.Count;
