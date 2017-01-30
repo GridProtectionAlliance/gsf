@@ -228,11 +228,11 @@ namespace GrafanaAdapters
         /// </remarks>
         TimeIntegration,
         /// <summary>
-        /// Returns a series of values that represent a decimated set of the values in the source series based on the specified interval N, in seconds .
-        /// N is a floating-point value that must be greater than zero that represents the desired time interval for the returned data.
+        /// Returns a series of values that represent a decimated set of the values in the source series based on the specified interval N, in seconds.
+        /// N is a floating-point value that must be greater than zero that represents the desired time interval, in seconds, for the returned data.
         /// </summary>
         /// <remarks>
-        /// Example: <c>Interval(Seconds, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHM')</c><br/>
+        /// Example: <c>Interval(0.5, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHM')</c><br/>
         /// Variants: Interval, Int
         /// </remarks>
         Interval,
