@@ -291,9 +291,22 @@ namespace GrafanaAdapters
 
                 DateTime startTime = request.range.from.ParseJsonTimestamp();
                 DateTime stopTime = request.range.to.ParseJsonTimestamp();
-                int maxDataPoints = request.maxDataPoints;
+                double maxDataPoints = request.maxDataPoints * 1.05D;
+                List<TimeSeriesValues> result = new List<TimeSeriesValues>();
 
-                return QueryTimeSeriesValuesFromTargets(request.targets.Select(target => target.target), startTime, stopTime, maxDataPoints, cancellationToken);
+                foreach (TimeSeriesValues series in QueryTimeSeriesValuesFromTargets(request.targets.Select(target => target.target), startTime, stopTime, request.maxDataPoints, cancellationToken))
+                {
+                    // Make a final pass through data to decimate returned point volume (for graphing purposes), if needed
+                    if (series.datapoints.Count > maxDataPoints)
+                    {
+                        double indexFactor = series.datapoints.Count / (double)request.maxDataPoints;
+                        series.datapoints = Enumerable.Range(0, request.maxDataPoints).Select(index => series.datapoints[(int)(index * indexFactor)]).ToList();
+                    }
+
+                    result.Add(series);
+                }
+
+                return result;
             },
             cancellationToken);
         }
@@ -348,12 +361,11 @@ namespace GrafanaAdapters
             return responses;
         }
 
-        private List<TimeSeriesValues> QueryTimeSeriesValuesFromTargets(IEnumerable<string> targets, DateTime startTime, DateTime stopTime, int maxDataPoints, CancellationToken cancellationToken)
+        private IEnumerable<TimeSeriesValues> QueryTimeSeriesValuesFromTargets(IEnumerable<string> targets, DateTime startTime, DateTime stopTime, int maxDataPoints, CancellationToken cancellationToken)
         {
             // A single target might look like the following:
             // PPA:15; STAT:20; SETSUM(COUNT(PPA:8; PPA:9; PPA:10)); FILTER ActiveMeasurements WHERE SignalType = 'VPHA'; RANGE(PPA:99; SUM(FILTER ActiveMeasurements WHERE SignalType = 'FREQ'; STAT:12))
 
-            List<TimeSeriesValues> results = new List<TimeSeriesValues>();
             HashSet<string> targetSet = new HashSet<string>(targets, StringComparer.OrdinalIgnoreCase); // Targets include user provided input, so casing should be ignored
             HashSet<string> reducedTargetSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             List<Match> seriesFunctions = new List<Match>();
@@ -393,7 +405,8 @@ namespace GrafanaAdapters
 
                 // Execute series functions
                 foreach (Tuple<SeriesFunction, string, bool> parsedFunction in parsedFunctions)
-                    results.AddRange(ExecuteSeriesFunction(parsedFunction, startTime, stopTime, maxDataPoints, cancellationToken));
+                    foreach (TimeSeriesValues series in ExecuteSeriesFunction(parsedFunction, startTime, stopTime, cancellationToken))
+                        yield return series;
 
                 // Use reduced target set that excludes any series functions
                 targetSet = reducedTargetSet;
@@ -423,13 +436,479 @@ namespace GrafanaAdapters
                 }
 
                 // Query underlying data source for data
-                results.AddRange(QueryTimeSeriesValues(startTime, stopTime, maxDataPoints, targetMap, cancellationToken));
+                foreach (TimeSeriesValues series in QueryTimeSeriesValues(startTime, stopTime, maxDataPoints, targetMap, cancellationToken))
+                    yield return series;
             }
-
-            return results;
         }
 
-        private Tuple<SeriesFunction, string, bool> ParseSeriesFunction(Match matchedFunction)
+        private IEnumerable<TimeSeriesValues> ExecuteSeriesFunction(Tuple<SeriesFunction, string, bool> parsedFunction, DateTime startTime, DateTime stopTime, CancellationToken cancellationToken)
+        {
+            IEnumerable<TimeSeriesValues> dataset;
+            TimeSeriesValues result;
+
+            SeriesFunction seriesFunction = parsedFunction.Item1;
+            string expression = parsedFunction.Item2;
+            bool setOperation = parsedFunction.Item3;
+
+            // Handle edge-case set operations
+            if (setOperation && (seriesFunction == SeriesFunction.Minimum || seriesFunction == SeriesFunction.Maximum))
+            {
+                // Execute expression as a non-set function to get result of each series
+                dataset = ExecuteSeriesFunction(new Tuple<SeriesFunction, string, bool>(seriesFunction, expression, false), startTime, stopTime, cancellationToken);
+
+                if (seriesFunction == SeriesFunction.Minimum)
+                {
+                    result = dataset.MinBy(series => series.datapoints[0][TimeSeriesValues.Value]);
+                    result.target = $"SetMinimum = {result.target}";
+                }
+                else
+                {
+                    result = dataset.MaxBy(series => series.datapoints[0][TimeSeriesValues.Value]);
+                    result.target = $"SetMaximum = {result.target}";
+                }
+
+                yield return result;
+            }
+
+            // Extract any needed function parameters
+            int parameterCount = s_parameterCounts[seriesFunction]; // Safe: no lock needed since content doesn't change
+            string[] parameters = new string[0];
+
+            if (parameterCount > 0)
+            {
+                int index = 0;
+
+                for (int i = 0; i < parameterCount && index > -1; i++)
+                    index = expression.IndexOf(',', index + 1);
+
+                if (index > -1)
+                    parameters = expression.Substring(0, index).Split(',');
+
+                if (parameters.Length == parameterCount)
+                    expression = expression.Substring(index + 1).Trim();
+                else
+                    throw new FormatException($"Expected {parameterCount + 1} parameters, received {parameters.Length + 1} in: {seriesFunction}({expression})");
+            }
+
+            // Query function expression to get series data - for best results, data source should not decimate data needed for aggregate calculations
+            dataset = QueryTimeSeriesValuesFromTargets(new[] { expression }, startTime, stopTime, int.MaxValue, cancellationToken);
+
+            if (!dataset.Any() || cancellationToken.IsCancellationRequested)
+                yield break;
+
+            double percent;
+            int count;
+
+            if (setOperation)
+            {
+                result = new TimeSeriesValues
+                {
+                    target = $"Set{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{expression})",
+                    datapoints = new List<double[]>()
+                };
+
+                double[] currentSeries, currentTimes;
+                IEnumerable<double> values = dataset.SelectMany(series => series.datapoints.Select(points => points[TimeSeriesValues.Value]));
+                IEnumerable<double> times = dataset.SelectMany(series => series.datapoints.Select(points => points[TimeSeriesValues.Time]));
+                IEnumerable<Tuple<TimeSeriesValues, double>> valuesWithSource = dataset.SelectMany(series => series.datapoints.Select(points => new Tuple<TimeSeriesValues, double>(series, points[TimeSeriesValues.Value])));
+
+                switch (seriesFunction)
+                {
+                    case SeriesFunction.Average:
+                        result.datapoints.Add(new[] { values.Average(), times.Max() });
+                        break;
+                    case SeriesFunction.Total:
+                        result.datapoints.Add(new[] { values.Sum(), times.Max() });
+                        break;
+                    case SeriesFunction.Range:
+                        result.datapoints.Add(new[] { values.Max() - values.Min(), times.Max() });
+                        break;
+                    case SeriesFunction.Count:
+                        result.datapoints.Add(new[] { values.Count(), times.Max() });
+                        break;
+                    case SeriesFunction.Distinct:
+                        result.datapoints.AddRange(dataset.SelectMany(series => series.datapoints).DistinctBy(point => point[TimeSeriesValues.Value], false));
+                        break;
+                    case SeriesFunction.AbsoluteValue:
+                        currentSeries = values.ToArray();
+                        currentTimes = times.ToArray();
+
+                        for (int i = 0; i < currentSeries.Length; i++)
+                            result.datapoints.Add(new[] { Math.Abs(currentSeries[i]), currentTimes[i] });
+
+                        break;
+                    case SeriesFunction.StandardDeviation:
+                        result.datapoints.Add(new[] { values.StandardDeviation(), times.Max() });
+                        break;
+                    case SeriesFunction.StandardDeviationSample:
+                        result.datapoints.Add(new[] { values.StandardDeviation(true), times.Max() });
+                        break;
+                    case SeriesFunction.Median:
+                        Tuple<TimeSeriesValues, double> median = valuesWithSource.Median().Last();
+                        result.datapoints.Add(new[] { median.Item2, median.Item1.datapoints.Reverse<double[]>().First(points => points[TimeSeriesValues.Value] == median.Item2)[TimeSeriesValues.Time] });
+                        result.target = $"SetMedian = {median.Item1.target}";
+                        break;
+                    case SeriesFunction.Mode:
+                        Tuple<TimeSeriesValues, double> mode = valuesWithSource.MajorityBy(valuesWithSource.Last(), key => key.Item2, false);
+                        result.datapoints.Add(new[] { mode.Item2, mode.Item1.datapoints.Reverse<double[]>().First(points => points[TimeSeriesValues.Value] == mode.Item2)[TimeSeriesValues.Time] });
+                        result.target = $"SetMode = {mode.Item1.target}";
+                        break;
+                    case SeriesFunction.Top:
+                        // Is there a use case to want top items from dataset? e.g.:
+                        //results.AddRange(dataset.Take(count));
+                        count = ParseCount(parameters[0], dataset.Sum(series => series.datapoints.Count));
+                        result.datapoints.AddRange(dataset.SelectMany(series => series.datapoints).Take(count));
+                        break;
+                    case SeriesFunction.Bottom:
+                        // Is there a use case to want bottom items from dataset? e.g.:
+                        //results.AddRange(dataset.Reverse<TimeSeriesValues>().Take(count));
+                        count = ParseCount(parameters[0], dataset.Sum(series => series.datapoints.Count));
+                        result.datapoints.AddRange(dataset.SelectMany(series => series.datapoints).Reverse().Take(count));
+                        break;
+                    case SeriesFunction.Random:
+                        currentSeries = values.ToArray();
+                        currentTimes = times.ToArray();
+                        count = ParseCount(parameters[0], currentSeries.Length);
+
+                        if (count > currentSeries.Length)
+                            count = currentSeries.Length;
+
+                        bool normalizeTime = parameters[1].Trim().ParseBoolean();
+                        double timeStep = (currentTimes[currentTimes.Length - 1] - currentTimes[0]) / count;
+                        List<int> indexes = new List<int>(Enumerable.Range(0, currentSeries.Length));
+
+                        indexes.Scramble();
+                        result.datapoints.AddRange(indexes.Take(count).Select((index, i) => new[] { currentSeries[index], normalizeTime ? currentTimes[0] + i * timeStep : currentTimes[index] }));
+                        break;
+                    case SeriesFunction.First:
+                        result = dataset.First();
+                        result.datapoints = new List<double[]>(new[] { result.datapoints.First() });    // First point of first series
+                        result.target = $"SetFirst = {result.target}";
+                        break;
+                    case SeriesFunction.Last:
+                        result = dataset.Last();
+                        result.datapoints = new List<double[]>(new[] { result.datapoints.Last() });     // Last point of last series
+                        result.target = $"SetLast = {result.target}";
+                        break;
+                    case SeriesFunction.Percentile:
+                        percent = ParsePercentage(parameters[0]);
+                        List<Tuple<TimeSeriesValues, double>> combinedSet = valuesWithSource.ToList();
+                        combinedSet.Sort((a, b) => a.Item2 < b.Item2 ? -1 : (a.Item2 > b.Item2 ? 1 : 0));
+
+                        if (percent == 0.0D)
+                        {
+                            result = combinedSet.First().Item1;
+                            result.datapoints = new List<double[]>(new[] { result.datapoints.First() });    // First point of first series
+                            result.target = $"SetPercentile = {result.target}";
+                        }
+                        else if (percent == 100.0D)
+                        {
+                            result = combinedSet.Last().Item1;
+                            result.datapoints = new List<double[]>(new[] { result.datapoints.Last() });     // Last point of last series
+                            result.target = $"SetPercentile = {result.target}";
+                        }
+                        else
+                        {
+                            double n = (combinedSet.Count - 1) * (percent / 100.0D) + 1.0D;
+                            int k = (int)n;
+                            double d = n - k;
+                            double k0 = combinedSet[k - 1].Item2;
+                            double k1 = combinedSet[k].Item2;
+                            List<double[]> kvals = combinedSet[k].Item1.datapoints;
+                            IEnumerable<double> ktimes = kvals.Select(points => points[TimeSeriesValues.Time]);
+
+                            result.datapoints.Add(new[] { k0 + d * (k1 - k0), ktimes.ElementAt((int)((kvals.Count - 1) * (percent / 100.0D))) });
+                            result.target = $"SetPercentile = {combinedSet[k].Item1.target}";
+                        }
+                        break;
+                    case SeriesFunction.Difference:
+                        currentSeries = values.ToArray();
+                        currentTimes = times.ToArray();
+
+                        for (int i = 1; i < currentSeries.Length; i++)
+                            result.datapoints.Add(new[] { currentSeries[i] - currentSeries[i - 1], currentTimes[i] });
+
+                        break;
+                    case SeriesFunction.TimeDifference:
+                        currentTimes = times.ToArray();
+
+                        for (int i = 1; i < currentTimes.Length; i++)
+                            result.datapoints.Add(new[] { currentTimes[i] - currentTimes[i - 1], currentTimes[i] });
+
+                        break;
+                    case SeriesFunction.Derivative:
+                        currentSeries = values.ToArray();
+                        currentTimes = times.ToArray();
+
+                        for (int i = 1; i < currentSeries.Length; i++)
+                            result.datapoints.Add(new[] { (currentSeries[i] - currentSeries[i - 1]) / (currentTimes[i] - currentTimes[i - 1]), currentTimes[i] });
+
+                        break;
+                    case SeriesFunction.TimeIntegration:
+                        double integratedValue = 0.0D;
+                        currentSeries = values.ToArray();
+                        currentTimes = times.ToArray();
+
+                        for (int i = 1; i < currentSeries.Length; i++)
+                            integratedValue += currentSeries[i] * (currentTimes[i] - currentTimes[i - 1]);
+
+                        result.datapoints.Add(new[] { integratedValue, times.Max() });
+                        break;
+                }
+
+                yield return result;
+            }
+            else
+            {
+                foreach (TimeSeriesValues series in dataset)
+                {
+                    result = new TimeSeriesValues
+                    {
+                        target = $"{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{series.target})",
+                        datapoints = new List<double[]>()
+                    };
+
+                    IEnumerable<double> values = series.datapoints.Select(points => points[TimeSeriesValues.Value]);
+                    double lastTime = series.datapoints[series.datapoints.Count - 1][TimeSeriesValues.Time];
+                    double value;
+
+                    switch (seriesFunction)
+                    {
+                        case SeriesFunction.Minimum:
+                            double minValue = double.MaxValue;
+                            int minIndex = 0;
+
+                            for (int i = 0; i < series.datapoints.Count; i++)
+                            {
+                                value = series.datapoints[i][TimeSeriesValues.Value];
+
+                                if (value < minValue)
+                                {
+                                    minValue = value;
+                                    minIndex = i;
+                                }
+                            }
+
+                            result.datapoints.Add(new[] { minValue, series.datapoints[minIndex][TimeSeriesValues.Time] });
+                            break;
+                        case SeriesFunction.Maximum:
+                            double maxValue = double.MinValue;
+                            int maxIndex = 0;
+
+                            for (int i = 0; i < series.datapoints.Count; i++)
+                            {
+                                value = series.datapoints[i][TimeSeriesValues.Value];
+
+                                if (value > maxValue)
+                                {
+                                    maxValue = value;
+                                    maxIndex = i;
+                                }
+                            }
+
+                            result.datapoints.Add(new[] { maxValue, series.datapoints[maxIndex][TimeSeriesValues.Time] });
+                            break;
+                        case SeriesFunction.Average:
+                            result.datapoints.Add(new[] { values.Average(), lastTime });
+                            break;
+                        case SeriesFunction.Total:
+                            result.datapoints.Add(new[] { values.Sum(), lastTime });
+                            break;
+                        case SeriesFunction.Range:
+                            result.datapoints.Add(new[] { values.Max() - values.Min(), lastTime });
+                            break;
+                        case SeriesFunction.Count:
+                            result.datapoints.Add(new[] { series.datapoints.Count, lastTime });
+                            break;
+                        case SeriesFunction.Distinct:
+                            result.datapoints.AddRange(series.datapoints.DistinctBy(point => point[TimeSeriesValues.Value], false));
+                            break;
+                        case SeriesFunction.AbsoluteValue:
+                            result.datapoints.AddRange(series.datapoints.Select(point => new[] { Math.Abs(point[TimeSeriesValues.Value]), point[TimeSeriesValues.Time] }));
+                            break;
+                        case SeriesFunction.StandardDeviation:
+                            result.datapoints.Add(new[] { values.StandardDeviation(), lastTime });
+                            break;
+                        case SeriesFunction.StandardDeviationSample:
+                            result.datapoints.Add(new[] { values.StandardDeviation(true), lastTime });
+                            break;
+                        case SeriesFunction.Median:
+                            result.datapoints.Add(new[] { values.Median().Average(), lastTime });
+                            break;
+                        case SeriesFunction.Mode:
+                            double mode = values.Majority(values.Last(), false);
+                            result.datapoints.Add(new[] { mode, series.datapoints.Reverse<double[]>().First(points => points[TimeSeriesValues.Value] == mode)[TimeSeriesValues.Time] });
+                            break;
+                        case SeriesFunction.Top:
+                            count = ParseCount(parameters[0], series.datapoints.Count);
+                            result.datapoints.AddRange(series.datapoints.Take(count));
+                            break;
+                        case SeriesFunction.Bottom:
+                            count = ParseCount(parameters[0], series.datapoints.Count);
+                            result.datapoints.AddRange(series.datapoints.Reverse<double[]>().Take(count));
+                            break;
+                        case SeriesFunction.Random:
+                            count = ParseCount(parameters[0], series.datapoints.Count);
+
+                            if (count > series.datapoints.Count)
+                                count = series.datapoints.Count;
+
+                            bool normalizeTime = parameters[1].Trim().ParseBoolean();
+                            double timeStep = (series.datapoints[series.datapoints.Count - 1][TimeSeriesValues.Time] - series.datapoints[0][TimeSeriesValues.Time]) / count;
+                            List<int> indexes = new List<int>(Enumerable.Range(0, series.datapoints.Count));
+
+                            indexes.Scramble();
+                            result.datapoints.AddRange(indexes.Take(count).Select((index, i) => new[] { series.datapoints[index][TimeSeriesValues.Value], normalizeTime ? series.datapoints[0][TimeSeriesValues.Time] + i * timeStep : series.datapoints[index][TimeSeriesValues.Time] }));
+                            break;
+                        case SeriesFunction.First:
+                            result.datapoints.Add(series.datapoints.First());
+                            break;
+                        case SeriesFunction.Last:
+                            result.datapoints.Add(series.datapoints.Last());
+                            break;
+                        case SeriesFunction.Percentile:
+                            percent = ParsePercentage(parameters[0]);
+                            series.datapoints.Sort((a, b) => a[TimeSeriesValues.Value] < b[TimeSeriesValues.Value] ? -1 : (a[TimeSeriesValues.Value] > b[TimeSeriesValues.Value] ? 1 : 0));
+                            count = series.datapoints.Count;
+
+                            if (percent == 0.0D)
+                            {
+                                result.datapoints.Add(series.datapoints.First());
+                            }
+                            else if (percent == 100.0D)
+                            {
+                                result.datapoints.Add(series.datapoints.Last());
+                            }
+                            else
+                            {
+                                double n = (count - 1) * (percent / 100.0D) + 1.0D;
+                                int k = (int)n;
+                                double d = n - k;
+                                double k0 = series.datapoints[k - 1][TimeSeriesValues.Value];
+                                double k1 = series.datapoints[k][TimeSeriesValues.Value];
+                                result.datapoints.Add(new[] { k0 + d * (k1 - k0), series.datapoints[k][TimeSeriesValues.Time] });
+                            }
+                            break;
+                        case SeriesFunction.Difference:
+                            for (int i = 1; i < series.datapoints.Count; i++)
+                                result.datapoints.Add(new[] { series.datapoints[i][TimeSeriesValues.Value] - series.datapoints[i - 1][TimeSeriesValues.Value], series.datapoints[i][TimeSeriesValues.Time] });
+
+                            break;
+                        case SeriesFunction.TimeDifference:
+                            for (int i = 1; i < series.datapoints.Count; i++)
+                                result.datapoints.Add(new[] { series.datapoints[i][TimeSeriesValues.Time] - series.datapoints[i - 1][TimeSeriesValues.Time], series.datapoints[i][TimeSeriesValues.Time] });
+
+                            break;
+                        case SeriesFunction.Derivative:
+                            for (int i = 1; i < series.datapoints.Count; i++)
+                                result.datapoints.Add(new[] { (series.datapoints[i][TimeSeriesValues.Value] - series.datapoints[i - 1][TimeSeriesValues.Value]) / (series.datapoints[i][TimeSeriesValues.Time] - series.datapoints[i - 1][TimeSeriesValues.Time]), series.datapoints[i][TimeSeriesValues.Time] });
+
+                            break;
+                        case SeriesFunction.TimeIntegration:
+                            double integratedValue = 0.0D;
+
+                            for (int i = 1; i < series.datapoints.Count; i++)
+                                integratedValue += series.datapoints[i][TimeSeriesValues.Value] * (series.datapoints[i][TimeSeriesValues.Time] - series.datapoints[i - 1][TimeSeriesValues.Time]);
+
+                            result.datapoints.Add(new[] { integratedValue, lastTime });
+                            break;
+                    }
+
+                    yield return result;
+                }
+            }
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly Regex s_seriesFunctions;
+        private static readonly Regex s_averageExpression;
+        private static readonly Regex s_minimumExpression;
+        private static readonly Regex s_maximumExpression;
+        private static readonly Regex s_totalExpression;
+        private static readonly Regex s_rangeExpression;
+        private static readonly Regex s_countExpression;
+        private static readonly Regex s_distinctExpression;
+        private static readonly Regex s_absoluteValueExpression;
+        private static readonly Regex s_standardDeviationExpression;
+        private static readonly Regex s_standardDeviationSampleExpression;
+        private static readonly Regex s_medianExpression;
+        private static readonly Regex s_modeExpression;
+        private static readonly Regex s_topExpression;
+        private static readonly Regex s_bottomExpression;
+        private static readonly Regex s_randomExpression;
+        private static readonly Regex s_firstExpression;
+        private static readonly Regex s_lastExpression;
+        private static readonly Regex s_percentileExpression;
+        private static readonly Regex s_differenceExpression;
+        private static readonly Regex s_timeDifferenceExpression;
+        private static readonly Regex s_derivativeExpression;
+        private static readonly Regex s_timeIntegrationExpression;
+        private static readonly Dictionary<SeriesFunction, int> s_parameterCounts;
+
+        // Static Constructor
+        static GrafanaDataSourceBase()
+        {
+            const string GetExpression = @"{0}\s*\(\s*(?<Expression>.+)\s*\)";
+
+            // RegEx instance to find all series functions
+            s_seriesFunctions = new Regex(@"(SET)?\w+\s*\(([^)]+[\)\s]*)\)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+            // RegEx instances to identify specific functions and extract internal expressions
+            s_averageExpression = new Regex(string.Format(GetExpression, "(Average|Avg|Mean)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_minimumExpression = new Regex(string.Format(GetExpression, "(Minimum|Min)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_maximumExpression = new Regex(string.Format(GetExpression, "(Maximum|Max)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_totalExpression = new Regex(string.Format(GetExpression, "(Total|Sum)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_rangeExpression = new Regex(string.Format(GetExpression, "Range"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_countExpression = new Regex(string.Format(GetExpression, "Count"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_distinctExpression = new Regex(string.Format(GetExpression, "(Distinct|Unique)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_absoluteValueExpression = new Regex(string.Format(GetExpression, "(AbsoluteValue|Abs)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_standardDeviationExpression = new Regex(string.Format(GetExpression, "(StandardDeviation|StdDev)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_standardDeviationSampleExpression = new Regex(string.Format(GetExpression, "(StandardDeviationSample|StdDevSamp)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_medianExpression = new Regex(string.Format(GetExpression, "(Median|Med|Mid)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_modeExpression = new Regex(string.Format(GetExpression, "Mode"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_topExpression = new Regex(string.Format(GetExpression, "Top"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_bottomExpression = new Regex(string.Format(GetExpression, "(Bottom|Bot)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_randomExpression = new Regex(string.Format(GetExpression, "(Random|Rnd|Sample)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_firstExpression = new Regex(string.Format(GetExpression, "First"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_lastExpression = new Regex(string.Format(GetExpression, "Last"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_percentileExpression = new Regex(string.Format(GetExpression, "(Percentile|Pctl)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_differenceExpression = new Regex(string.Format(GetExpression, "(Difference|Diff)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_timeDifferenceExpression = new Regex(string.Format(GetExpression, "(TimeDifference|TimeDiff|Elapsed)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_derivativeExpression = new Regex(string.Format(GetExpression, "(Derivative|Der)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_timeIntegrationExpression = new Regex(string.Format(GetExpression, "(TimeIntegration|TimeInt)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+            s_parameterCounts = new Dictionary<SeriesFunction, int>();
+
+            s_parameterCounts[SeriesFunction.Average] = 0;
+            s_parameterCounts[SeriesFunction.Minimum] = 0;
+            s_parameterCounts[SeriesFunction.Maximum] = 0;
+            s_parameterCounts[SeriesFunction.Total] = 0;
+            s_parameterCounts[SeriesFunction.Range] = 0;
+            s_parameterCounts[SeriesFunction.Count] = 0;
+            s_parameterCounts[SeriesFunction.Distinct] = 0;
+            s_parameterCounts[SeriesFunction.AbsoluteValue] = 0;
+            s_parameterCounts[SeriesFunction.StandardDeviation] = 0;
+            s_parameterCounts[SeriesFunction.StandardDeviationSample] = 0;
+            s_parameterCounts[SeriesFunction.Median] = 0;
+            s_parameterCounts[SeriesFunction.Mode] = 0;
+            s_parameterCounts[SeriesFunction.Top] = 1;
+            s_parameterCounts[SeriesFunction.Bottom] = 1;
+            s_parameterCounts[SeriesFunction.Random] = 2;
+            s_parameterCounts[SeriesFunction.First] = 0;
+            s_parameterCounts[SeriesFunction.Last] = 0;
+            s_parameterCounts[SeriesFunction.Percentile] = 1;
+            s_parameterCounts[SeriesFunction.Difference] = 0;
+            s_parameterCounts[SeriesFunction.TimeDifference] = 0;
+            s_parameterCounts[SeriesFunction.Derivative] = 0;
+            s_parameterCounts[SeriesFunction.TimeIntegration] = 0;
+        }
+
+        // Static Methods
+        private static Tuple<SeriesFunction, string, bool> ParseSeriesFunction(Match matchedFunction)
         {
             bool setOperation = matchedFunction.Groups[1].Success;
             string expression = setOperation ? matchedFunction.Value.Substring(3) : matchedFunction.Value;
@@ -601,389 +1080,7 @@ namespace GrafanaAdapters
             return result;
         }
 
-        private List<TimeSeriesValues> ExecuteSeriesFunction(Tuple<SeriesFunction, string, bool> parsedFunction, DateTime startTime, DateTime stopTime, int maxDataPoints, CancellationToken cancellationToken)
-        {
-            List<TimeSeriesValues> results = new List<TimeSeriesValues>();
-            List<TimeSeriesValues> dataset;
-            TimeSeriesValues result;
-
-            SeriesFunction seriesFunction = parsedFunction.Item1;
-            string expression = parsedFunction.Item2;
-            bool setOperation = parsedFunction.Item3;
-
-            // Handle edge-case set operations
-            if (setOperation && (seriesFunction == SeriesFunction.Minimum || seriesFunction == SeriesFunction.Maximum))
-            {
-                // Execute expression as a non-set function to get result of each series
-                dataset = ExecuteSeriesFunction(new Tuple<SeriesFunction, string, bool>(seriesFunction, expression, false), startTime, stopTime, maxDataPoints, cancellationToken);
-
-                if (seriesFunction == SeriesFunction.Minimum)
-                {
-                    result = dataset.MinBy(series => series.datapoints[0][TimeSeriesValues.Value]);
-                    result.target = $"SetMinimum = {result.target}";
-                }
-                else
-                {
-                    result = dataset.MaxBy(series => series.datapoints[0][TimeSeriesValues.Value]);
-                    result.target = $"SetMaximum = {result.target}";
-                }
-
-                results.Add(result);
-                return results;
-            }
-
-            // Extract any needed function parameters
-            int parameterCount = s_parameterCounts[seriesFunction]; // Safe: no lock needed since content doesn't change
-            string[] parameters = new string[0];
-
-            if (parameterCount > 0)
-            {
-                int index = 0;
-
-                for (int i = 0; i < parameterCount && index > -1; i++)
-                    index = expression.IndexOf(',', index + 1);
-
-                if (index > -1)
-                    parameters = expression.Substring(0, index).Split(',');
-
-                if (parameters.Length == parameterCount)
-                    expression = expression.Substring(index + 1).Trim();
-                else
-                    throw new FormatException($"Expected {parameterCount + 1} parameters, received {parameters.Length + 1} in: {seriesFunction}({expression})");
-            }
-
-            // Query function expression to get series data
-            dataset = QueryTimeSeriesValuesFromTargets(new[] { expression }, startTime, stopTime, maxDataPoints, cancellationToken);
-
-            if (dataset.Count == 0 || cancellationToken.IsCancellationRequested)
-                return results;
-
-            double percent;
-            int count;
-
-            if (setOperation)
-            {
-                result = new TimeSeriesValues
-                {
-                    target = $"Set{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{expression})",
-                    datapoints = new List<double[]>()
-                };
-
-                double[] currentSeries, currentTimes;
-                IEnumerable<double> values = dataset.SelectMany(series => series.datapoints.Select(points => points[TimeSeriesValues.Value]));
-                IEnumerable<double> times = dataset.SelectMany(series => series.datapoints.Select(points => points[TimeSeriesValues.Time]));
-                IEnumerable<Tuple<TimeSeriesValues, double>> valuesWithSource = dataset.SelectMany(series => series.datapoints.Select(points => new Tuple<TimeSeriesValues, double>(series, points[TimeSeriesValues.Value])));
-
-                switch (seriesFunction)
-                {
-                    case SeriesFunction.Average:
-                        result.datapoints.Add(new[] { values.Average(), times.Max() });
-                        break;
-                    case SeriesFunction.Total:
-                        result.datapoints.Add(new[] { values.Sum(), times.Max() });
-                        break;
-                    case SeriesFunction.Range:
-                        result.datapoints.Add(new[] { values.Max() - values.Min(), times.Max() });
-                        break;
-                    case SeriesFunction.Count:
-                        result.datapoints.Add(new[] { values.Count(), times.Max() });
-                        break;
-                    case SeriesFunction.Distinct:
-                        result.datapoints.AddRange(dataset.SelectMany(series => series.datapoints).DistinctBy(point => point[TimeSeriesValues.Value], false));
-                        break;
-                    case SeriesFunction.AbsoluteValue:
-                        currentSeries = values.ToArray();
-                        currentTimes = times.ToArray();
-
-                        for (int i = 0; i < currentSeries.Length; i++)
-                            result.datapoints.Add(new[] { Math.Abs(currentSeries[i]), currentTimes[i] });
-
-                        break;
-                    case SeriesFunction.StandardDeviation:
-                        result.datapoints.Add(new[] { values.StandardDeviation(), times.Max() });
-                        break;
-                    case SeriesFunction.StandardDeviationSample:
-                        result.datapoints.Add(new[] { values.StandardDeviation(true), times.Max() });
-                        break;
-                    case SeriesFunction.Median:
-                        Tuple<TimeSeriesValues, double> median = valuesWithSource.Median().Last();
-                        result.datapoints.Add(new[] { median.Item2, median.Item1.datapoints.Reverse<double[]>().First(points => points[TimeSeriesValues.Value] == median.Item2)[TimeSeriesValues.Time] });
-                        result.target = $"SetMedian = {median.Item1.target}";
-                        break;
-                    case SeriesFunction.Mode:
-                        Tuple<TimeSeriesValues, double> mode = valuesWithSource.MajorityBy(valuesWithSource.Last(), key => key.Item2, false);
-                        result.datapoints.Add(new[] { mode.Item2, mode.Item1.datapoints.Reverse<double[]>().First(points => points[TimeSeriesValues.Value] == mode.Item2)[TimeSeriesValues.Time] });
-                        result.target = $"SetMode = {mode.Item1.target}";
-                        break;
-                    case SeriesFunction.Top:
-                        // Is there a use case to want top items from dataset? e.g.:
-                        //results.AddRange(dataset.Take(count));
-                        count = ParseCount(parameters[0], dataset.Sum(series => series.datapoints.Count));
-                        result.datapoints.AddRange(dataset.SelectMany(series => series.datapoints).Take(count));
-                        break;
-                    case SeriesFunction.Bottom:
-                        // Is there a use case to want bottom items from dataset? e.g.:
-                        //results.AddRange(dataset.Reverse<TimeSeriesValues>().Take(count));
-                        count = ParseCount(parameters[0], dataset.Sum(series => series.datapoints.Count));
-                        result.datapoints.AddRange(dataset.SelectMany(series => series.datapoints).Reverse().Take(count));
-                        break;
-                    case SeriesFunction.Random:
-                        currentSeries = values.ToArray();
-                        currentTimes = times.ToArray();
-                        count = ParseCount(parameters[0], currentSeries.Length);
-
-                        if (count > currentSeries.Length)
-                            count = currentSeries.Length;
-
-                        bool normalizeTime = parameters[1].Trim().ParseBoolean();
-                        double timeStep = (currentTimes[currentTimes.Length - 1] - currentTimes[0]) / count;
-                        List<int> indexes = new List<int>(Enumerable.Range(0, currentSeries.Length));
-
-                        indexes.Scramble();
-                        result.datapoints.AddRange(indexes.Take(count).Select((index, i) => new[] { currentSeries[index], normalizeTime ? currentTimes[0] + i * timeStep : currentTimes[index] }));
-                        break;
-                    case SeriesFunction.First:
-                        result = dataset.First();
-                        result.datapoints = new List<double[]>(new[] { result.datapoints.First() });    // First point of first series
-                        result.target = $"SetFirst = {result.target}";
-                        break;
-                    case SeriesFunction.Last:
-                        result = dataset.Last();
-                        result.datapoints = new List<double[]>(new[] { result.datapoints.Last() });     // Last point of last series
-                        result.target = $"SetLast = {result.target}";
-                        break;
-                    case SeriesFunction.Percentile:
-                        percent = ParsePercentage(parameters[0]);
-                        List<Tuple<TimeSeriesValues, double>> combinedSet = valuesWithSource.ToList();
-                        combinedSet.Sort((a, b) => a.Item2 < b.Item2 ? -1 : (a.Item2 > b.Item2 ? 1 : 0));
-
-                        if (percent == 0.0D)
-                        {
-                            result = combinedSet.First().Item1;
-                            result.datapoints = new List<double[]>(new[] { result.datapoints.First() });    // First point of first series
-                            result.target = $"SetPercentile = {result.target}";
-                        }
-                        else if (percent == 100.0D)
-                        {
-                            result = combinedSet.Last().Item1;
-                            result.datapoints = new List<double[]>(new[] { result.datapoints.Last() });     // Last point of last series
-                            result.target = $"SetPercentile = {result.target}";
-                        }
-                        else
-                        {
-                            double n = (combinedSet.Count - 1) * (percent / 100.0D) + 1.0D;
-                            int k = (int)n;
-                            double d = n - k;
-                            double k0 = combinedSet[k - 1].Item2;
-                            double k1 = combinedSet[k].Item2;
-                            List<double[]> kvals = combinedSet[k].Item1.datapoints;
-                            IEnumerable<double> ktimes = kvals.Select(points => points[TimeSeriesValues.Time]);
-
-                            result.datapoints.Add(new[] { k0 + d * (k1 - k0), ktimes.ElementAt((int)((kvals.Count - 1) * (percent / 100.0D))) });
-                            result.target = $"SetPercentile = {combinedSet[k].Item1.target}";
-                        }
-                        break;
-                    case SeriesFunction.Difference:
-                        currentSeries = values.ToArray();
-                        currentTimes = times.ToArray();
-
-                        for (int i = 1; i < currentSeries.Length; i++)
-                            result.datapoints.Add(new[] { currentSeries[i] - currentSeries[i - 1], currentTimes[i] });
-
-                        break;
-                    case SeriesFunction.TimeDifference:
-                        currentTimes = times.ToArray();
-
-                        for (int i = 1; i < currentTimes.Length; i++)
-                            result.datapoints.Add(new[] { currentTimes[i] - currentTimes[i - 1], currentTimes[i] });
-
-                        break;
-                    case SeriesFunction.Derivative:
-                        currentSeries = values.ToArray();
-                        currentTimes = times.ToArray();
-
-                        for (int i = 1; i < currentSeries.Length; i++)
-                            result.datapoints.Add(new[] { (currentSeries[i] - currentSeries[i - 1]) / (currentTimes[i] - currentTimes[i - 1]), currentTimes[i] });
-
-                        break;
-                    case SeriesFunction.TimeIntegration:
-                        double integratedValue = 0.0D;
-                        currentSeries = values.ToArray();
-                        currentTimes = times.ToArray();
-
-                        for (int i = 1; i < currentSeries.Length; i++)
-                            integratedValue += currentSeries[i] * (currentTimes[i] - currentTimes[i - 1]);
-
-                        result.datapoints.Add(new[] { integratedValue, times.Max() });
-                        break;
-                }
-
-                results.Add(result);
-            }
-            else
-            {
-                foreach (TimeSeriesValues series in dataset)
-                {
-                    result = new TimeSeriesValues
-                    {
-                        target = $"{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{series.target})",
-                        datapoints = new List<double[]>()
-                    };
-
-                    IEnumerable<double> values = series.datapoints.Select(points => points[TimeSeriesValues.Value]);
-                    double lastTime = series.datapoints[series.datapoints.Count - 1][TimeSeriesValues.Time];
-                    double value;
-
-                    switch (seriesFunction)
-                    {
-                        case SeriesFunction.Minimum:
-                            double minValue = double.MaxValue;
-                            int minIndex = 0;
-
-                            for (int i = 0; i < series.datapoints.Count; i++)
-                            {
-                                value = series.datapoints[i][TimeSeriesValues.Value];
-
-                                if (value < minValue)
-                                {
-                                    minValue = value;
-                                    minIndex = i;
-                                }
-                            }
-
-                            result.datapoints.Add(new[] { minValue, series.datapoints[minIndex][TimeSeriesValues.Time] });
-                            break;
-                        case SeriesFunction.Maximum:
-                            double maxValue = double.MinValue;
-                            int maxIndex = 0;
-
-                            for (int i = 0; i < series.datapoints.Count; i++)
-                            {
-                                value = series.datapoints[i][TimeSeriesValues.Value];
-
-                                if (value > maxValue)
-                                {
-                                    maxValue = value;
-                                    maxIndex = i;
-                                }
-                            }
-
-                            result.datapoints.Add(new[] { maxValue, series.datapoints[maxIndex][TimeSeriesValues.Time] });
-                            break;
-                        case SeriesFunction.Average:
-                            result.datapoints.Add(new[] { values.Average(), lastTime });
-                            break;
-                        case SeriesFunction.Total:
-                            result.datapoints.Add(new[] { values.Sum(), lastTime });
-                            break;
-                        case SeriesFunction.Range:
-                            result.datapoints.Add(new[] { values.Max() - values.Min(), lastTime });
-                            break;
-                        case SeriesFunction.Count:
-                            result.datapoints.Add(new[] { series.datapoints.Count, lastTime });
-                            break;
-                        case SeriesFunction.Distinct:
-                            result.datapoints.AddRange(series.datapoints.DistinctBy(point => point[TimeSeriesValues.Value], false));
-                            break;
-                        case SeriesFunction.AbsoluteValue:
-                            result.datapoints.AddRange(series.datapoints.Select(point => new[] { Math.Abs(point[TimeSeriesValues.Value]), point[TimeSeriesValues.Time] }));
-                            break;
-                        case SeriesFunction.StandardDeviation:
-                            result.datapoints.Add(new[] { values.StandardDeviation(), lastTime });
-                            break;
-                        case SeriesFunction.StandardDeviationSample:
-                            result.datapoints.Add(new[] { values.StandardDeviation(true), lastTime });
-                            break;
-                        case SeriesFunction.Median:
-                            result.datapoints.Add(new[] { values.Median().Average(), lastTime });
-                            break;
-                        case SeriesFunction.Mode:
-                            double mode = values.Majority(values.Last(), false);
-                            result.datapoints.Add(new[] { mode, series.datapoints.Reverse<double[]>().First(points => points[TimeSeriesValues.Value] == mode)[TimeSeriesValues.Time] });
-                            break;
-                        case SeriesFunction.Top:
-                            count = ParseCount(parameters[0], series.datapoints.Count);
-                            result.datapoints.AddRange(series.datapoints.Take(count));
-                            break;
-                        case SeriesFunction.Bottom:
-                            count = ParseCount(parameters[0], series.datapoints.Count);
-                            result.datapoints.AddRange(series.datapoints.Reverse<double[]>().Take(count));
-                            break;
-                        case SeriesFunction.Random:
-                            count = ParseCount(parameters[0], series.datapoints.Count);
-
-                            if (count > series.datapoints.Count)
-                                count = series.datapoints.Count;
-
-                            bool normalizeTime = parameters[1].Trim().ParseBoolean();
-                            double timeStep = (series.datapoints[series.datapoints.Count - 1][TimeSeriesValues.Time] - series.datapoints[0][TimeSeriesValues.Time]) / count;
-                            List<int> indexes = new List<int>(Enumerable.Range(0, series.datapoints.Count));
-
-                            indexes.Scramble();
-                            result.datapoints.AddRange(indexes.Take(count).Select((index, i) => new[] { series.datapoints[index][TimeSeriesValues.Value], normalizeTime ? series.datapoints[0][TimeSeriesValues.Time] + i * timeStep : series.datapoints[index][TimeSeriesValues.Time] }));
-                            break;
-                        case SeriesFunction.First:
-                            result.datapoints.Add(series.datapoints.First());
-                            break;
-                        case SeriesFunction.Last:
-                            result.datapoints.Add(series.datapoints.Last());
-                            break;
-                        case SeriesFunction.Percentile:
-                            percent = ParsePercentage(parameters[0]);
-                            series.datapoints.Sort((a, b) => a[TimeSeriesValues.Value] < b[TimeSeriesValues.Value] ? -1 : (a[TimeSeriesValues.Value] > b[TimeSeriesValues.Value] ? 1 : 0));
-                            count = series.datapoints.Count;
-
-                            if (percent == 0.0D)
-                            {
-                                result.datapoints.Add(series.datapoints.First());
-                            }
-                            else if (percent == 100.0D)
-                            {
-                                result.datapoints.Add(series.datapoints.Last());
-                            }
-                            else
-                            {
-                                double n = (count - 1) * (percent / 100.0D) + 1.0D;
-                                int k = (int)n;
-                                double d = n - k;
-                                double k0 = series.datapoints[k - 1][TimeSeriesValues.Value];
-                                double k1 = series.datapoints[k][TimeSeriesValues.Value];
-                                result.datapoints.Add(new[] { k0 + d * (k1 - k0), series.datapoints[k][TimeSeriesValues.Time] });
-                            }
-                            break;
-                        case SeriesFunction.Difference:
-                            for (int i = 1; i < series.datapoints.Count; i++)
-                                result.datapoints.Add(new[] { series.datapoints[i][TimeSeriesValues.Value] - series.datapoints[i - 1][TimeSeriesValues.Value], series.datapoints[i][TimeSeriesValues.Time] });
-
-                            break;
-                        case SeriesFunction.TimeDifference:
-                            for (int i = 1; i < series.datapoints.Count; i++)
-                                result.datapoints.Add(new[] { series.datapoints[i][TimeSeriesValues.Time] - series.datapoints[i - 1][TimeSeriesValues.Time], series.datapoints[i][TimeSeriesValues.Time] });
-
-                            break;
-                        case SeriesFunction.Derivative:
-                            for (int i = 1; i < series.datapoints.Count; i++)
-                                result.datapoints.Add(new[] { (series.datapoints[i][TimeSeriesValues.Value] - series.datapoints[i - 1][TimeSeriesValues.Value]) / (series.datapoints[i][TimeSeriesValues.Time] - series.datapoints[i - 1][TimeSeriesValues.Time]), series.datapoints[i][TimeSeriesValues.Time] });
-
-                            break;
-                        case SeriesFunction.TimeIntegration:
-                            double integratedValue = 0.0D;
-
-                            for (int i = 1; i < series.datapoints.Count; i++)
-                                integratedValue += series.datapoints[i][TimeSeriesValues.Value] * (series.datapoints[i][TimeSeriesValues.Time] - series.datapoints[i - 1][TimeSeriesValues.Time]);
-
-                            result.datapoints.Add(new[] { integratedValue, lastTime });
-                            break;
-                    }
-
-                    results.Add(result);
-                }
-            }
-
-            return results;
-        }
-
-        private int ParseCount(string parameter, int length)
+        private static int ParseCount(string parameter, int length)
         {
             int count;
 
@@ -1007,7 +1104,7 @@ namespace GrafanaAdapters
             return count;
         }
 
-        private double ParsePercentage(string parameter, bool includeZero = true)
+        private static double ParsePercentage(string parameter, bool includeZero = true)
         {
             double percent;
 
@@ -1031,94 +1128,6 @@ namespace GrafanaAdapters
             }
 
             return percent;
-        }
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Fields
-        private static readonly Regex s_seriesFunctions;
-        private static readonly Regex s_averageExpression;
-        private static readonly Regex s_minimumExpression;
-        private static readonly Regex s_maximumExpression;
-        private static readonly Regex s_totalExpression;
-        private static readonly Regex s_rangeExpression;
-        private static readonly Regex s_countExpression;
-        private static readonly Regex s_distinctExpression;
-        private static readonly Regex s_absoluteValueExpression;
-        private static readonly Regex s_standardDeviationExpression;
-        private static readonly Regex s_standardDeviationSampleExpression;
-        private static readonly Regex s_medianExpression;
-        private static readonly Regex s_modeExpression;
-        private static readonly Regex s_topExpression;
-        private static readonly Regex s_bottomExpression;
-        private static readonly Regex s_randomExpression;
-        private static readonly Regex s_firstExpression;
-        private static readonly Regex s_lastExpression;
-        private static readonly Regex s_percentileExpression;
-        private static readonly Regex s_differenceExpression;
-        private static readonly Regex s_timeDifferenceExpression;
-        private static readonly Regex s_derivativeExpression;
-        private static readonly Regex s_timeIntegrationExpression;
-        private static readonly Dictionary<SeriesFunction, int> s_parameterCounts;
-
-        // Static Constructor
-        static GrafanaDataSourceBase()
-        {
-            const string GetExpression = @"{0}\s*\(\s*(?<Expression>.+)\s*\)";
-
-            // RegEx instance to find all series functions
-            s_seriesFunctions = new Regex(@"(SET)?\w+\s*\(([^)]+[\)\s]*)\)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-            // RegEx instances to identify specific functions and extract internal expressions
-            s_averageExpression = new Regex(string.Format(GetExpression, "(Average|Avg|Mean)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_minimumExpression = new Regex(string.Format(GetExpression, "(Minimum|Min)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_maximumExpression = new Regex(string.Format(GetExpression, "(Maximum|Max)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_totalExpression = new Regex(string.Format(GetExpression, "(Total|Sum)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_rangeExpression = new Regex(string.Format(GetExpression, "Range"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_countExpression = new Regex(string.Format(GetExpression, "Count"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_distinctExpression = new Regex(string.Format(GetExpression, "(Distinct|Unique)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_absoluteValueExpression = new Regex(string.Format(GetExpression, "(AbsoluteValue|Abs)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_standardDeviationExpression = new Regex(string.Format(GetExpression, "(StandardDeviation|StdDev)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_standardDeviationSampleExpression = new Regex(string.Format(GetExpression, "(StandardDeviationSample|StdDevSamp)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_medianExpression = new Regex(string.Format(GetExpression, "(Median|Med|Mid)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_modeExpression = new Regex(string.Format(GetExpression, "Mode"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_topExpression = new Regex(string.Format(GetExpression, "Top"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_bottomExpression = new Regex(string.Format(GetExpression, "(Bottom|Bot)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_randomExpression = new Regex(string.Format(GetExpression, "(Random|Rnd|Sample)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_firstExpression = new Regex(string.Format(GetExpression, "First"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_lastExpression = new Regex(string.Format(GetExpression, "Last"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_percentileExpression = new Regex(string.Format(GetExpression, "(Percentile|Pctl)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_differenceExpression = new Regex(string.Format(GetExpression, "(Difference|Diff)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_timeDifferenceExpression = new Regex(string.Format(GetExpression, "(TimeDifference|TimeDiff|Elapsed)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_derivativeExpression = new Regex(string.Format(GetExpression, "(Derivative|Der)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_timeIntegrationExpression = new Regex(string.Format(GetExpression, "(TimeIntegration|TimeInt)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-            s_parameterCounts = new Dictionary<SeriesFunction, int>();
-
-            s_parameterCounts[SeriesFunction.Average] = 0;
-            s_parameterCounts[SeriesFunction.Minimum] = 0;
-            s_parameterCounts[SeriesFunction.Maximum] = 0;
-            s_parameterCounts[SeriesFunction.Total] = 0;
-            s_parameterCounts[SeriesFunction.Range] = 0;
-            s_parameterCounts[SeriesFunction.Count] = 0;
-            s_parameterCounts[SeriesFunction.Distinct] = 0;
-            s_parameterCounts[SeriesFunction.AbsoluteValue] = 0;
-            s_parameterCounts[SeriesFunction.StandardDeviation] = 0;
-            s_parameterCounts[SeriesFunction.StandardDeviationSample] = 0;
-            s_parameterCounts[SeriesFunction.Median] = 0;
-            s_parameterCounts[SeriesFunction.Mode] = 0;
-            s_parameterCounts[SeriesFunction.Top] = 1;
-            s_parameterCounts[SeriesFunction.Bottom] = 1;
-            s_parameterCounts[SeriesFunction.Random] = 2;
-            s_parameterCounts[SeriesFunction.First] = 0;
-            s_parameterCounts[SeriesFunction.Last] = 0;
-            s_parameterCounts[SeriesFunction.Percentile] = 1;
-            s_parameterCounts[SeriesFunction.Difference] = 0;
-            s_parameterCounts[SeriesFunction.TimeDifference] = 0;
-            s_parameterCounts[SeriesFunction.Derivative] = 0;
-            s_parameterCounts[SeriesFunction.TimeIntegration] = 0;
         }
 
         #endregion
