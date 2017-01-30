@@ -33,6 +33,7 @@ using GSF.Collections;
 using GSF.NumericalAnalysis;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using GSF.Units;
 using GSF.Web;
 
 // ReSharper disable PossibleMultipleEnumeration
@@ -227,6 +228,15 @@ namespace GrafanaAdapters
         /// </remarks>
         TimeIntegration,
         /// <summary>
+        /// Returns a series of values that represent a decimated set of the values in the source series based on the specified interval N, in seconds .
+        /// N is a floating-point value that must be greater than zero that represents the desired time interval for the returned data.
+        /// </summary>
+        /// <remarks>
+        /// Example: <c>Interval(Seconds, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHM')</c><br/>
+        /// Variants: Interval, Int
+        /// </remarks>
+        Interval,
+        /// <summary>
         /// Not a recognized function.
         /// </summary>
         None
@@ -291,7 +301,7 @@ namespace GrafanaAdapters
 
                 DateTime startTime = request.range.from.ParseJsonTimestamp();
                 DateTime stopTime = request.range.to.ParseJsonTimestamp();
-                double maxDataPoints = request.maxDataPoints * 1.05D;
+                int maxDataPoints = (int)(request.maxDataPoints * 1.05D);
                 List<TimeSeriesValues> result = new List<TimeSeriesValues>();
 
                 foreach (TimeSeriesValues series in QueryTimeSeriesValuesFromTargets(request.targets.Select(target => target.target), startTime, stopTime, request.maxDataPoints, cancellationToken))
@@ -496,7 +506,7 @@ namespace GrafanaAdapters
             if (!dataset.Any() || cancellationToken.IsCancellationRequested)
                 yield break;
 
-            double percent;
+            double percent, value;
             int count;
 
             if (setOperation)
@@ -654,6 +664,22 @@ namespace GrafanaAdapters
 
                         result.datapoints.Add(new[] { integratedValue, times.Max() });
                         break;
+                    case SeriesFunction.Interval:
+                        value = ParseValue(parameters[0]) / SI.Milli;
+                        currentSeries = values.ToArray();
+                        currentTimes = times.ToArray();
+                        double lastTime = 0.0D;
+
+                        for (int i = 0; i < currentTimes.Length; i++)
+                        {
+                            if (currentTimes[i] - lastTime > value)
+                            {
+                                result.datapoints.Add(new[] { currentSeries[i], currentTimes[i] });
+                                lastTime = currentTimes[i];
+                            }
+                        }
+
+                        break;
                 }
 
                 yield return result;
@@ -670,7 +696,6 @@ namespace GrafanaAdapters
 
                     IEnumerable<double> values = series.datapoints.Select(points => points[TimeSeriesValues.Value]);
                     double lastTime = series.datapoints[series.datapoints.Count - 1][TimeSeriesValues.Time];
-                    double value;
 
                     switch (seriesFunction)
                     {
@@ -812,6 +837,20 @@ namespace GrafanaAdapters
 
                             result.datapoints.Add(new[] { integratedValue, lastTime });
                             break;
+                        case SeriesFunction.Interval:
+                            value = ParseValue(parameters[0]) / SI.Milli;
+                            lastTime = 0.0D;
+
+                            for (int i = 0; i < series.datapoints.Count; i++)
+                            {
+                                if (series.datapoints[i][TimeSeriesValues.Time] - lastTime > value)
+                                {
+                                    result.datapoints.Add(series.datapoints[i]);
+                                    lastTime = series.datapoints[i][TimeSeriesValues.Time];
+                                }
+                            }
+
+                            break;
                     }
 
                     yield return result;
@@ -847,6 +886,7 @@ namespace GrafanaAdapters
         private static readonly Regex s_timeDifferenceExpression;
         private static readonly Regex s_derivativeExpression;
         private static readonly Regex s_timeIntegrationExpression;
+        private static readonly Regex s_intervalExpression;
         private static readonly Dictionary<SeriesFunction, int> s_parameterCounts;
 
         // Static Constructor
@@ -880,6 +920,7 @@ namespace GrafanaAdapters
             s_timeDifferenceExpression = new Regex(string.Format(GetExpression, "(TimeDifference|TimeDiff|Elapsed)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_derivativeExpression = new Regex(string.Format(GetExpression, "(Derivative|Der)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_timeIntegrationExpression = new Regex(string.Format(GetExpression, "(TimeIntegration|TimeInt)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_intervalExpression = new Regex(string.Format(GetExpression, "(Interval|Int)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
             s_parameterCounts = new Dictionary<SeriesFunction, int>();
 
@@ -905,6 +946,7 @@ namespace GrafanaAdapters
             s_parameterCounts[SeriesFunction.TimeDifference] = 0;
             s_parameterCounts[SeriesFunction.Derivative] = 0;
             s_parameterCounts[SeriesFunction.TimeIntegration] = 0;
+            s_parameterCounts[SeriesFunction.Interval] = 1;
         }
 
         // Static Methods
@@ -1070,6 +1112,13 @@ namespace GrafanaAdapters
                 if (filterMatch.Success)
                     return new Tuple<SeriesFunction, string, bool>(SeriesFunction.TimeIntegration, filterMatch.Result("${Expression}").Trim(), setOperation);
 
+                // Look for interval function
+                lock (s_intervalExpression)
+                    filterMatch = s_intervalExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.Interval, filterMatch.Result("${Expression}").Trim(), setOperation);
+
                 // Target is not a recognized function
                 return new Tuple<SeriesFunction, string, bool>(SeriesFunction.None, expression, false);
             });
@@ -1102,6 +1151,29 @@ namespace GrafanaAdapters
             }
 
             return count;
+        }
+
+        private static double ParseValue(string parameter, bool includeZero = false)
+        {
+            double value;
+
+            parameter = parameter.Trim();
+
+            if (!double.TryParse(parameter, out value))
+                throw new FormatException($"Could not parse '{parameter}' as a floating-point value.");
+
+            if (includeZero)
+            {
+                if (value < 0.0D)
+                    throw new ArgumentOutOfRangeException($"Value '{parameter}' is less than zero.");
+            }
+            else
+            {
+                if (value <= 0.0D)
+                    throw new ArgumentOutOfRangeException($"Value '{parameter}' is less than or equal to zero.");
+            }
+
+            return value;
         }
 
         private static double ParsePercentage(string parameter, bool includeZero = true)
