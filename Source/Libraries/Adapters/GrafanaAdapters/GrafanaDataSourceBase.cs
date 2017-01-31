@@ -284,7 +284,7 @@ namespace GrafanaAdapters
         /// <param name="targetMap">Point ID's</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>Queried data source data in time-series values format.</returns>
-        protected abstract List<TimeSeriesValues> QueryTimeSeriesValues(DateTime startTime, DateTime stopTime, int maxDataPoints, Dictionary<ulong, string> targetMap, CancellationToken cancellationToken);
+        protected abstract IEnumerable<TimeSeriesValues> QueryTimeSeriesValues(DateTime startTime, DateTime stopTime, int maxDataPoints, Dictionary<ulong, string> targetMap, CancellationToken cancellationToken);
 
         /// <summary>
         /// Queries data source returning data as Grafana time-series data set.
