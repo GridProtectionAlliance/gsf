@@ -111,6 +111,15 @@ namespace GrafanaAdapters
         /// </remarks>
         AbsoluteValue,
         /// <summary>
+        /// Returns a series of values that represent the rounded value, with N fractional digits, of each of the values in the source series.
+        /// N, optional, is a positive integer value representing the number of decimal places in the return value - defaults to 0.
+        /// </summary>
+        /// <remarks>
+        /// Example: <c>Round(3, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
+        /// Variants: Round
+        /// </remarks>
+        Round,
+        /// <summary>
         /// Returns a single value that represents the standard deviation of the values in the source series.
         /// </summary>
         /// <remarks>
@@ -169,7 +178,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <remarks>
         /// Example: <c>Random(25%, FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
-        /// Variants: Random, Rnd, Sample
+        /// Variants: Random, Rand, Sample
         /// </remarks>
         Random,
         /// <summary>
@@ -598,6 +607,15 @@ namespace GrafanaAdapters
                             result.datapoints.Add(new[] { Math.Abs(currentSeries[i]), currentTimes[i] });
 
                         break;
+                    case SeriesFunction.Round:
+                        currentSeries = values.ToArray();
+                        currentTimes = times.ToArray();
+                        count = parameters.Length == 0 ? 0 : ParseInt(parameters[0]);
+
+                        for (int i = 0; i < currentSeries.Length; i++)
+                            result.datapoints.Add(new[] { Math.Round(currentSeries[i], count), currentTimes[i] });
+
+                        break;
                     case SeriesFunction.StandardDeviation:
                         result.datapoints.Add(new[] { values.StandardDeviation(), times.Max() });
                         break;
@@ -731,7 +749,7 @@ namespace GrafanaAdapters
                         result.datapoints.Add(new[] { integratedValue, times.Max() });
                         break;
                     case SeriesFunction.Interval:
-                        value = ParseValue(parameters[0]) / SI.Milli;
+                        value = ParseFloat(parameters[0]) / SI.Milli;
                         currentSeries = values.ToArray();
                         currentTimes = times.ToArray();
                         double lastTime = 0.0D;
@@ -816,6 +834,10 @@ namespace GrafanaAdapters
                             break;
                         case SeriesFunction.AbsoluteValue:
                             result.datapoints.AddRange(series.datapoints.Select(point => new[] { Math.Abs(point[TimeSeriesValues.Value]), point[TimeSeriesValues.Time] }));
+                            break;
+                        case SeriesFunction.Round:
+                            count = parameters.Length == 0 ? 0 : ParseInt(parameters[0]);
+                            result.datapoints.AddRange(series.datapoints.Select(point => new[] { Math.Round(point[TimeSeriesValues.Value], count), point[TimeSeriesValues.Time] }));
                             break;
                         case SeriesFunction.StandardDeviation:
                             result.datapoints.Add(new[] { values.StandardDeviation(), lastTime });
@@ -925,7 +947,7 @@ namespace GrafanaAdapters
                             result.datapoints.Add(new[] { integratedValue, lastTime });
                             break;
                         case SeriesFunction.Interval:
-                            value = ParseValue(parameters[0]) / SI.Milli;
+                            value = ParseFloat(parameters[0]) / SI.Milli;
                             lastTime = 0.0D;
 
                             for (int i = 0; i < series.datapoints.Count; i++)
@@ -959,6 +981,7 @@ namespace GrafanaAdapters
         private static readonly Regex s_countExpression;
         private static readonly Regex s_distinctExpression;
         private static readonly Regex s_absoluteValueExpression;
+        private static readonly Regex s_roundExpression;
         private static readonly Regex s_standardDeviationExpression;
         private static readonly Regex s_standardDeviationSampleExpression;
         private static readonly Regex s_medianExpression;
@@ -994,13 +1017,14 @@ namespace GrafanaAdapters
             s_countExpression = new Regex(string.Format(GetExpression, "Count"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_distinctExpression = new Regex(string.Format(GetExpression, "(Distinct|Unique)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_absoluteValueExpression = new Regex(string.Format(GetExpression, "(AbsoluteValue|Abs)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_roundExpression = new Regex(string.Format(GetExpression, "Round"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_standardDeviationExpression = new Regex(string.Format(GetExpression, "(StandardDeviation|StdDev)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_standardDeviationSampleExpression = new Regex(string.Format(GetExpression, "(StandardDeviationSample|StdDevSamp)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_medianExpression = new Regex(string.Format(GetExpression, "(Median|Med|Mid)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_modeExpression = new Regex(string.Format(GetExpression, "Mode"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_topExpression = new Regex(string.Format(GetExpression, "Top"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_bottomExpression = new Regex(string.Format(GetExpression, "(Bottom|Bot)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_randomExpression = new Regex(string.Format(GetExpression, "(Random|Rnd|Sample)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_randomExpression = new Regex(string.Format(GetExpression, "(Random|Rand|Sample)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_firstExpression = new Regex(string.Format(GetExpression, "First"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_lastExpression = new Regex(string.Format(GetExpression, "Last"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_percentileExpression = new Regex(string.Format(GetExpression, "(Percentile|Pctl)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -1021,6 +1045,7 @@ namespace GrafanaAdapters
                 [SeriesFunction.Count] = 0,
                 [SeriesFunction.Distinct] = 0,
                 [SeriesFunction.AbsoluteValue] = 0,
+                [SeriesFunction.Round] = 0,
                 [SeriesFunction.StandardDeviation] = 0,
                 [SeriesFunction.StandardDeviationSample] = 0,
                 [SeriesFunction.Median] = 0,
@@ -1050,6 +1075,7 @@ namespace GrafanaAdapters
                 [SeriesFunction.Count] = 0,
                 [SeriesFunction.Distinct] = 0,
                 [SeriesFunction.AbsoluteValue] = 0,
+                [SeriesFunction.Round] = 1,
                 [SeriesFunction.StandardDeviation] = 0,
                 [SeriesFunction.StandardDeviationSample] = 0,
                 [SeriesFunction.Median] = 0,
@@ -1132,6 +1158,13 @@ namespace GrafanaAdapters
 
                 if (filterMatch.Success)
                     return new Tuple<SeriesFunction, string, bool>(SeriesFunction.AbsoluteValue, filterMatch.Result("${Expression}").Trim(), setOperation);
+
+                // Look for round function
+                lock (s_roundExpression)
+                    filterMatch = s_roundExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.Round, filterMatch.Result("${Expression}").Trim(), setOperation);
 
                 // Look for standard deviation function
                 lock (s_standardDeviationExpression)
@@ -1248,6 +1281,52 @@ namespace GrafanaAdapters
             return result;
         }
 
+        private static int ParseInt(string parameter, bool includeZero = true)
+        {
+            int value;
+
+            parameter = parameter.Trim();
+
+            if (!int.TryParse(parameter, out value))
+                throw new FormatException($"Could not parse '{parameter}' as an integer value.");
+
+            if (includeZero)
+            {
+                if (value < 0)
+                    throw new ArgumentOutOfRangeException($"Value '{parameter}' is less than zero.");
+            }
+            else
+            {
+                if (value <= 0)
+                    throw new ArgumentOutOfRangeException($"Value '{parameter}' is less than or equal to zero.");
+            }
+
+            return value;
+        }
+
+        private static double ParseFloat(string parameter, bool includeZero = false)
+        {
+            double value;
+
+            parameter = parameter.Trim();
+
+            if (!double.TryParse(parameter, out value))
+                throw new FormatException($"Could not parse '{parameter}' as a floating-point value.");
+
+            if (includeZero)
+            {
+                if (value < 0.0D)
+                    throw new ArgumentOutOfRangeException($"Value '{parameter}' is less than zero.");
+            }
+            else
+            {
+                if (value <= 0.0D)
+                    throw new ArgumentOutOfRangeException($"Value '{parameter}' is less than or equal to zero.");
+            }
+
+            return value;
+        }
+
         private static int ParseCount(string parameter, int length)
         {
             int count;
@@ -1270,29 +1349,6 @@ namespace GrafanaAdapters
             }
 
             return count;
-        }
-
-        private static double ParseValue(string parameter, bool includeZero = false)
-        {
-            double value;
-
-            parameter = parameter.Trim();
-
-            if (!double.TryParse(parameter, out value))
-                throw new FormatException($"Could not parse '{parameter}' as a floating-point value.");
-
-            if (includeZero)
-            {
-                if (value < 0.0D)
-                    throw new ArgumentOutOfRangeException($"Value '{parameter}' is less than zero.");
-            }
-            else
-            {
-                if (value <= 0.0D)
-                    throw new ArgumentOutOfRangeException($"Value '{parameter}' is less than or equal to zero.");
-            }
-
-            return value;
         }
 
         private static double ParsePercentage(string parameter, bool includeZero = true)
