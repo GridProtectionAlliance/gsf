@@ -317,7 +317,7 @@ namespace GrafanaAdapters
                 int maxDataPoints = (int)(request.maxDataPoints * 1.05D);
                 List<TimeSeriesValues> result = new List<TimeSeriesValues>();
 
-                foreach (TimeSeriesValues series in QueryTimeSeriesValuesFromTargets(request.targets.Select(target => target.target), startTime, stopTime, request.maxDataPoints, cancellationToken))
+                foreach (TimeSeriesValues series in QueryTimeSeriesValuesFromTargets(request.targets.Select(target => target.target.Trim()), startTime, stopTime, request.maxDataPoints, cancellationToken))
                 {
                     // Make a final pass through data to decimate returned point volume (for graphing purposes), if needed
                     if (series.datapoints.Count > maxDataPoints)
@@ -1006,7 +1006,7 @@ namespace GrafanaAdapters
             const string GetExpression = @"^{0}\s*\(\s*(?<Expression>.+)\s*\)";
 
             // RegEx instance to find all series functions
-            s_seriesFunctions = new Regex(@"(SET)?\w+\s*\(([^)]+[\)\s]*)\)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_seriesFunctions = new Regex(@"^(SET)?\w+\s*\((([^\(\)]|(?<counter>\()|(?<-counter>\)))*(?(counter)(?!)))\)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
             // RegEx instances to identify specific functions and extract internal expressions
             s_averageExpression = new Regex(string.Format(GetExpression, "(Average|Avg|Mean)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
