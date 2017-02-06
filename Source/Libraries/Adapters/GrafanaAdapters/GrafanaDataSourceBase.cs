@@ -120,6 +120,30 @@ namespace GrafanaAdapters
         /// </remarks>
         Round,
         /// <summary>
+        /// Returns a series of values that represent the smallest integral value that is less than or equal to each of the values in the source series.
+        /// </summary>
+        /// <remarks>
+        /// Example: <c>Floor(FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
+        /// Variants: Floor
+        /// </remarks>
+        Floor,
+        /// <summary>
+        /// Returns a series of values that represent the smallest integral value that is greater than or equal to each of the values in the source series.
+        /// </summary>
+        /// <remarks>
+        /// Example: <c>Ceiling(FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
+        /// Variants: Ceiling, Ceil
+        /// </remarks>
+        Ceiling,
+        /// <summary>
+        /// Returns a series of values that represent the integral part of each of the values in the source series.
+        /// </summary>
+        /// <remarks>
+        /// Example: <c>Truncate(FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
+        /// Variants: Truncate, Trunc
+        /// </remarks>
+        Truncate,
+        /// <summary>
         /// Returns a single value that represents the standard deviation of the values in the source series.
         /// </summary>
         /// <remarks>
@@ -619,6 +643,30 @@ namespace GrafanaAdapters
                             result.datapoints.Add(new[] { Math.Round(currentSeries[i], count), currentTimes[i] });
 
                         break;
+                    case SeriesFunction.Floor:
+                        currentSeries = values.ToArray();
+                        currentTimes = times.ToArray();
+
+                        for (int i = 0; i < currentSeries.Length; i++)
+                            result.datapoints.Add(new[] { Math.Floor(currentSeries[i]), currentTimes[i] });
+
+                        break;
+                    case SeriesFunction.Ceiling:
+                        currentSeries = values.ToArray();
+                        currentTimes = times.ToArray();
+
+                        for (int i = 0; i < currentSeries.Length; i++)
+                            result.datapoints.Add(new[] { Math.Ceiling(currentSeries[i]), currentTimes[i] });
+
+                        break;
+                    case SeriesFunction.Truncate:
+                        currentSeries = values.ToArray();
+                        currentTimes = times.ToArray();
+
+                        for (int i = 0; i < currentSeries.Length; i++)
+                            result.datapoints.Add(new[] { Math.Truncate(currentSeries[i]), currentTimes[i] });
+
+                        break;
                     case SeriesFunction.StandardDeviation:
                         result.datapoints.Add(new[] { values.StandardDeviation(), times.Max() });
                         break;
@@ -842,6 +890,15 @@ namespace GrafanaAdapters
                             count = parameters.Length == 0 ? 0 : ParseInt(parameters[0]);
                             result.datapoints.AddRange(series.datapoints.Select(point => new[] { Math.Round(point[TimeSeriesValues.Value], count), point[TimeSeriesValues.Time] }));
                             break;
+                        case SeriesFunction.Floor:
+                            result.datapoints.AddRange(series.datapoints.Select(point => new[] { Math.Floor(point[TimeSeriesValues.Value]), point[TimeSeriesValues.Time] }));
+                            break;
+                        case SeriesFunction.Ceiling:
+                            result.datapoints.AddRange(series.datapoints.Select(point => new[] { Math.Ceiling(point[TimeSeriesValues.Value]), point[TimeSeriesValues.Time] }));
+                            break;
+                        case SeriesFunction.Truncate:
+                            result.datapoints.AddRange(series.datapoints.Select(point => new[] { Math.Truncate(point[TimeSeriesValues.Value]), point[TimeSeriesValues.Time] }));
+                            break;
                         case SeriesFunction.StandardDeviation:
                             result.datapoints.Add(new[] { values.StandardDeviation(), lastTime });
                             break;
@@ -985,6 +1042,9 @@ namespace GrafanaAdapters
         private static readonly Regex s_distinctExpression;
         private static readonly Regex s_absoluteValueExpression;
         private static readonly Regex s_roundExpression;
+        private static readonly Regex s_floorExpression;
+        private static readonly Regex s_ceilingExpression;
+        private static readonly Regex s_truncateExpression;
         private static readonly Regex s_standardDeviationExpression;
         private static readonly Regex s_standardDeviationSampleExpression;
         private static readonly Regex s_medianExpression;
@@ -1021,6 +1081,9 @@ namespace GrafanaAdapters
             s_distinctExpression = new Regex(string.Format(GetExpression, "(Distinct|Unique)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_absoluteValueExpression = new Regex(string.Format(GetExpression, "(AbsoluteValue|Abs)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_roundExpression = new Regex(string.Format(GetExpression, "Round"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_floorExpression = new Regex(string.Format(GetExpression, "Floor"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_ceilingExpression = new Regex(string.Format(GetExpression, "(Ceiling|Ceil)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_truncateExpression = new Regex(string.Format(GetExpression, "(Truncate|Trunc)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_standardDeviationExpression = new Regex(string.Format(GetExpression, "(StandardDeviation|StdDev)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_standardDeviationSampleExpression = new Regex(string.Format(GetExpression, "(StandardDeviationSample|StdDevSamp)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_medianExpression = new Regex(string.Format(GetExpression, "(Median|Med|Mid)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -1049,6 +1112,9 @@ namespace GrafanaAdapters
                 [SeriesFunction.Distinct] = 0,
                 [SeriesFunction.AbsoluteValue] = 0,
                 [SeriesFunction.Round] = 0,
+                [SeriesFunction.Floor] = 0,
+                [SeriesFunction.Ceiling] = 0,
+                [SeriesFunction.Truncate] = 0,
                 [SeriesFunction.StandardDeviation] = 0,
                 [SeriesFunction.StandardDeviationSample] = 0,
                 [SeriesFunction.Median] = 0,
@@ -1078,6 +1144,9 @@ namespace GrafanaAdapters
                 [SeriesFunction.Distinct] = 0,
                 [SeriesFunction.AbsoluteValue] = 0,
                 [SeriesFunction.Round] = 1,
+                [SeriesFunction.Floor] = 0,
+                [SeriesFunction.Ceiling] = 0,
+                [SeriesFunction.Truncate] = 0,
                 [SeriesFunction.StandardDeviation] = 0,
                 [SeriesFunction.StandardDeviationSample] = 0,
                 [SeriesFunction.Median] = 0,
@@ -1167,6 +1236,27 @@ namespace GrafanaAdapters
 
                 if (filterMatch.Success)
                     return new Tuple<SeriesFunction, string, bool>(SeriesFunction.Round, filterMatch.Result("${Expression}").Trim(), setOperation);
+
+                // Look for floor function
+                lock (s_floorExpression)
+                    filterMatch = s_floorExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.Floor, filterMatch.Result("${Expression}").Trim(), setOperation);
+
+                // Look for ceiling function
+                lock (s_ceilingExpression)
+                    filterMatch = s_ceilingExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.Ceiling, filterMatch.Result("${Expression}").Trim(), setOperation);
+
+                // Look for truncate function
+                lock (s_truncateExpression)
+                    filterMatch = s_truncateExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.Truncate, filterMatch.Result("${Expression}").Trim(), setOperation);
 
                 // Look for standard deviation function
                 lock (s_standardDeviationExpression)
