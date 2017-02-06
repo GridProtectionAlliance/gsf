@@ -491,6 +491,7 @@ namespace GrafanaAdapters
                 }
 
                 yield return result;
+                yield break;
             }
 
             // Parse out function parameters and target expression
