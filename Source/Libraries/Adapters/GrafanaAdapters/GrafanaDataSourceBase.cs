@@ -558,6 +558,8 @@ namespace GrafanaAdapters
             string[] parameters = expressionParameters.Item1;
             string targetExpression = expressionParameters.Item2;   // Final function parameter is always target expression
 
+            // TODO: Consider rearchitecting to execute on one target at a time so that base data source enumeration can be operated on directly - this would scale better and use less memory
+
             // Query function expression to get series data - for best results, data source should not decimate data needed for aggregate calculations
             dataset = QueryTimeSeriesValuesFromTargets(new[] { targetExpression }, startTime, stopTime, int.MaxValue, cancellationToken);
 
@@ -1062,7 +1064,6 @@ namespace GrafanaAdapters
                 [SeriesFunction.TimeIntegration] = 0,
                 [SeriesFunction.Interval] = 1
             };
-
 
             // Define optional parameter counts for each function
             s_optionalParameters = new Dictionary<SeriesFunction, int>
