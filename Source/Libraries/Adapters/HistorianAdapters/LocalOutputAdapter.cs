@@ -417,6 +417,7 @@ namespace HistorianAdapters
             m_archive.OutOfSequenceDataReceived += m_archive_OutOfSequenceDataReceived;
 
             m_archive.Initialize();
+            m_archivePath = FilePath.GetDirectoryName(m_archive.FileName);
 
             // Provide web service support.
             m_dataServices = new DataServices();
