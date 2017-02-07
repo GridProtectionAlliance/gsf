@@ -447,11 +447,8 @@ namespace GrafanaAdapters
 
             if (seriesFunctions.Count > 0)
             {
-                // Parse series functions
-                IEnumerable<Tuple<SeriesFunction, string, bool>> parsedFunctions = seriesFunctions.Select(ParseSeriesFunction);
-
                 // Execute series functions
-                foreach (Tuple<SeriesFunction, string, bool> parsedFunction in parsedFunctions)
+                foreach (Tuple<SeriesFunction, string, bool> parsedFunction in seriesFunctions.Select(ParseSeriesFunction))
                     foreach (TimeSeriesValues series in ExecuteSeriesFunction(parsedFunction, startTime, stopTime, cancellationToken))
                         yield return series;
 
@@ -1069,7 +1066,7 @@ namespace GrafanaAdapters
             const string GetExpression = @"^{0}\s*\(\s*(?<Expression>.+)\s*\)";
 
             // RegEx instance to find all series functions
-            s_seriesFunctions = new Regex(@"^(SET)?\w+\s*\((([^\(\)]|(?<counter>\()|(?<-counter>\)))*(?(counter)(?!)))\)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_seriesFunctions = new Regex(@"(SET)?\w+\s*(?<!\s+IN\s+)\((([^\(\)]|(?<counter>\()|(?<-counter>\)))*(?(counter)(?!)))\)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
             // RegEx instances to identify specific functions and extract internal expressions
             s_averageExpression = new Regex(string.Format(GetExpression, "(Average|Avg|Mean)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -1168,10 +1165,10 @@ namespace GrafanaAdapters
         // Static Methods
         private static Tuple<SeriesFunction, string, bool> ParseSeriesFunction(Match matchedFunction)
         {
-            bool setOperation = matchedFunction.Groups[1].Success;
-            string expression = setOperation ? matchedFunction.Value.Substring(3) : matchedFunction.Value;
             Tuple<SeriesFunction, string, bool> result = TargetCache<Tuple<SeriesFunction, string, bool>>.GetOrAdd(matchedFunction.Value, () =>
             {
+                bool setOperation = matchedFunction.Groups[1].Success;
+                string expression = setOperation ? matchedFunction.Value.Substring(3) : matchedFunction.Value;
                 Match filterMatch;
 
                 // Look for average function
@@ -1368,7 +1365,7 @@ namespace GrafanaAdapters
             });
 
             if (result.Item1 == SeriesFunction.None)
-                throw new InvalidOperationException($"Unrecognized series function '{expression}'");
+                throw new InvalidOperationException($"Unrecognized series function '{matchedFunction.Value}'");
 
             return result;
         }
