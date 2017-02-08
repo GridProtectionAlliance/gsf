@@ -310,10 +310,10 @@ namespace GSF.TimeSeries
                                                    "The minimum number of measurements sent per second during the last reporting interval.",
                                                    "The maximum number of measurements sent per second during the last reporting interval.",
                                                    "The average number of measurements sent per second during the last reporting interval.",
-                                                    "Minimum latency from output stream, in milliseconds, during the lifetime of the publisher.",
-                                                    "Maximum latency from output stream, in milliseconds, during the lifetime of the publisher.",
-                                                    "Average latency from output stream, in milliseconds, during the lifetime of the publisher.",
-                                                    "Total number of seconds publisher has been running."
+                                                   "Minimum latency from output stream, in milliseconds, during the lifetime of the publisher.",
+                                                   "Maximum latency from output stream, in milliseconds, during the lifetime of the publisher.",
+                                                   "Average latency from output stream, in milliseconds, during the lifetime of the publisher.",
+                                                   "Total number of seconds publisher has been running."
                                                  };
 
             string[] PublisherStatMethodSuffix = { "Connected", "ConnectedClientCount", "ProcessedMeasurements", "TotalBytesSent", "LifetimeMeasurements", "LifetimeBytesSent", "MinimumMeasurementsPerSecond", "MaximumMeasurementsPerSecond", "AverageMeasurementsPerSecond", "LifetimeMinimumLatency", "LifetimeMaximumLatency", "LifetimeAverageLatency", "UpTime" };
