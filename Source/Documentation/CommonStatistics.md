@@ -1,3 +1,5 @@
+# Common Time-Series Statistics
+
 | Source | Tag Suffix | Name | Description |
 |--------|:----------:|------|-------------|
 | Device | !PMU-ST1 | Data Quality Errors | Number of data quality errors reported by device during last reporting interval. |
