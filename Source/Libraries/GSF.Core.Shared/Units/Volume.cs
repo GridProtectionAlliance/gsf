@@ -287,10 +287,16 @@ namespace GSF.Units
             if ((object)value == null)
                 return 1;
 
-            if (!(value is double) && !(value is Volume))
+            double num;
+            if (value is double)
+                num = (double)value;
+
+            else if (value is Volume)
+                num = (Volume)value;
+
+            else
                 throw new ArgumentException("Argument must be a Double or a Volume");
 
-            double num = (double)value;
             return (m_value < num ? -1 : (m_value > num ? 1 : 0));
         }
 

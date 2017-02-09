@@ -152,10 +152,17 @@ namespace GSF.Units
             if ((object)value == null)
                 return 1;
 
-            if (!(value is double) && !(value is Current))
+            double num;
+
+            if (value is double)
+                num = (double)value;
+
+            else if (value is Current)
+                num = (Current)value;
+
+            else
                 throw new ArgumentException("Argument must be a Double or a Current");
 
-            double num = (double)value;
             return (m_value < num ? -1 : (m_value > num ? 1 : 0));
         }
 

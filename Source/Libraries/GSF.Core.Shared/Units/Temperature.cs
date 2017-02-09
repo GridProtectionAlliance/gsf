@@ -226,10 +226,17 @@ namespace GSF.Units
             if ((object)value == null)
                 return 1;
 
-            if (!(value is double) && !(value is Temperature))
+            double num;
+
+            if (value is double)
+                num = (double)value;
+
+            else if (value is Temperature)
+                num = (Temperature)value;
+
+            else
                 throw new ArgumentException("Argument must be a Double or a Temperature");
 
-            double num = (double)value;
             return (m_value < num ? -1 : (m_value > num ? 1 : 0));
         }
 
