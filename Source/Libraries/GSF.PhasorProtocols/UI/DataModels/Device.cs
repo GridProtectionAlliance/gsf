@@ -1212,11 +1212,9 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     if (row.ConvertField<bool>("IsConcentrator"))
                     {
                         ObservableCollection<Device> devices = GetDevices(database, " WHERE ParentID = " + row.ConvertField<int>("ID"));
-                        if (devices != null)
-                        {
-                            foreach (Device device in devices)
-                                deviceList[device.ID] = device.Acronym;
-                        }
+
+                        foreach (Device device in devices)
+                            deviceList[device.ID] = device.Acronym;
                     }
                     else
                     {
@@ -1653,11 +1651,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
                 DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM DeviceDetail " + whereClause);
+                ObservableCollection<Device> deviceList = new ObservableCollection<Device>();
 
                 if (deviceTable.Rows.Count == 0)
-                    return null;
+                    return deviceList;
 
-                ObservableCollection<Device> deviceList = new ObservableCollection<Device>();
                 foreach (DataRow row in deviceTable.Rows)
                 {
                     deviceList.Add(new Device
