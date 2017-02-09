@@ -190,7 +190,7 @@ namespace GSF.Units
                 num = (double)value;
 
             else if (value is Charge)
-                num = (Volume)value;
+                num = (Charge)value;
 
             else
                 throw new ArgumentException("Argument must be a Double or a Charge");
