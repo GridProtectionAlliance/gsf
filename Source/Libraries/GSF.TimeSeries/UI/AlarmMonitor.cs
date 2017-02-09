@@ -117,7 +117,7 @@ namespace GSF.TimeSeries.UI
             m_dataSubscriber.NewMeasurements += m_dataSubscriber_NewMeasurements;
             m_dataSubscriber.ProcessException += m_dataSubscriber_ProcessException;
             m_dataSubscriber.ConnectionString = GetDataPublisherConnectionString();
-            m_dataSubscriber.OperationalModes |= OperationalModes.UseCommonSerializationFormat | OperationalModes.CompressSignalIndexCache | OperationalModes.CompressPayloadData;
+            m_dataSubscriber.OperationalModes |= OperationalModes.UseCommonSerializationFormat | OperationalModes.CompressSignalIndexCache;
             m_dataSubscriber.DataLossInterval = -1;
             m_dataSubscriber.Initialize();
 
