@@ -5,7 +5,6 @@
 | Device | Data Quality Errors | Number of data quality errors reported by device during last reporting interval. |
 | Device | Time Quality Errors | Number of time quality errors reported by device during last reporting interval. |
 | Device | Measurements Received | Number of measurements received from device during last reporting interval. |
-| Source | Name | Description |
 | Device | Device Errors | Number of device errors reported by device during last reporting interval. |
 | Device | Measurements Expected | Expected number of measurements received from device during last reporting interval. |
 | Device | Measurements With Error | Number of measurements received while device was reporting errors during last reporting interval. |
