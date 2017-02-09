@@ -336,6 +336,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Content", "Content", "{4261
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{D3215BAD-9EA1-463D-8035-181F9F60C2EE}"
 	ProjectSection(SolutionItems) = preProject
+		Documentation\CommonStatistics.md = Documentation\CommonStatistics.md
 		Documentation\FilterExpressions.md = Documentation\FilterExpressions.md
 	EndProjectSection
 EndProject
