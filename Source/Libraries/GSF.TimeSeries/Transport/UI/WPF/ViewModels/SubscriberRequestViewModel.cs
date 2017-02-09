@@ -45,6 +45,7 @@ using GSF.Security.Cryptography;
 using GSF.ServiceProcess;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.Commands;
+using GSF.TimeSeries.UI.DataModels;
 using GSF.Units;
 using Microsoft.Win32;
 using Random = GSF.Security.Cryptography.Random;
@@ -1368,6 +1369,17 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             device.Enabled = m_securityMode == SecurityMode.None;  // TODO: Is this good logic? What if I want to tweak my subscribed measurement filter before I synchronize metadata?
             device.IsConcentrator = true;
             device.ProtocolID = GetGatewayProtocolID();
+
+            IList<int> historianIDs = Historian.LoadKeys(null);
+            IList<Historian> historians = Historian.Load(null, historianIDs);
+
+            int? historianID = historians
+                .Where(historian => historian.Acronym != "STAT")
+                .Select(historian => (int?)historian.ID)
+                .FirstOrDefault();
+
+            if ((object)historianID != null)
+                device.HistorianID = historianID.GetValueOrDefault();
 
             if (UseUdpDataChannel)
                 device.ConnectionString = string.Format(UdpConnectionStringFormat, SecurityMode, UdpDataChannelPort, Hostname, PublisherPort, securitySpecificSettings, dataGapRecoverySettings);
