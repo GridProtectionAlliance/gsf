@@ -3548,7 +3548,12 @@ namespace GSF.TimeSeries.Transport
                             command.Transaction = transaction;
 
                         // Query the actual record ID based on the known run-time ID for this subscriber device
-                        int parentID = Convert.ToInt32(command.ExecuteScalar($"SELECT SourceID FROM Runtime WHERE ID = {ID} AND SourceTable='Device'", m_metadataSynchronizationTimeout));
+                        object sourceID = command.ExecuteScalar($"SELECT SourceID FROM Runtime WHERE ID = {ID} AND SourceTable='Device'", m_metadataSynchronizationTimeout);
+
+                        if (sourceID == null || sourceID == DBNull.Value)
+                            return;
+
+                        int parentID = Convert.ToInt32(sourceID);
 
                         // Validate that the subscriber device is marked as a concentrator (we are about to associate children devices with it)
                         if (!command.ExecuteScalar($"SELECT IsConcentrator FROM Device WHERE ID = {parentID}", m_metadataSynchronizationTimeout).ToString().ParseBoolean())
