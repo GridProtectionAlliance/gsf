@@ -18,17 +18,17 @@ FILTER <TableName> [TOP n] WHERE <Expression> [ORDER BY <SortField>]
 
 ## Examples
 
-An example input filter to only pass measurements with the company of `GSF` and type of `Frequency(FREQ)`.
+An example input filter to only pass measurements with the company of `GPA` and type of `Frequency(FREQ)`.
 ```sql
 inputMeasurementKeys = {
     FILTER ActiveMeasurements WHERE Company='GPA' AND SignalType='FREQ' ORDER BY ID
 };
 ```
 
-An example input filter to only pass `Statistics(STAT)` measurments.
+An example input filter to only pass first 20 `Statistics(STAT)` measurments.
 ```sql
 inputMeasurementKeys = {
-    FILTER ActiveMeasurements WHERE SignalType = 'STAT'
+    FILTER TOP 20 ActiveMeasurements WHERE SignalType = 'STAT'
 };
 ```
 
