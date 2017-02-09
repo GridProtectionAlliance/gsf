@@ -116,7 +116,7 @@
             </Grid>
         </GroupBox>
 
-        <Button Content="Save" HorizontalAlignment="Right" Margin="10,10,10,-25" Padding="2" Command="{Binding SaveCommand}" />
+        <Button Content="Next" HorizontalAlignment="Right" Margin="10,10,10,-25" Padding="2" Command="{Binding NextCommand}" />
 
         <StackPanel HorizontalAlignment="Center">
             <TextBlock TextAlignment="Center" FontSize="14" FontWeight="Bold">

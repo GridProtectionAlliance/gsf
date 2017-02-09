@@ -749,12 +749,12 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// <summary>
         /// Gets the command that executes when the user chooses to save their subscriber.
         /// </summary>
-        public ICommand SaveCommand
+        public ICommand NextCommand
         {
             get
             {
                 if ((object)m_saveCommand == null)
-                    m_saveCommand = new RelayCommand(SaveInternal, () => true);
+                    m_saveCommand = new RelayCommand(Save, () => true);
 
                 return m_saveCommand;
             }
@@ -1295,7 +1295,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             }
         }
 
-        private void SaveInternal()
+        private void Save()
         {
             try
             {
@@ -1376,7 +1376,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
 
             try
             {
-                Device.Save(null, device);
+                Device.SaveWithAnalogsDigitals(null, device, false, 0, 0);
             }
             catch (ApplicationException ex)
             {
