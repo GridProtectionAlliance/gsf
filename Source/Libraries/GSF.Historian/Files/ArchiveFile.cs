@@ -2574,50 +2574,60 @@ namespace GSF.Historian.Files
 
         internal void OpenStream()
         {
-            if (File.Exists(m_fileName))
+            try
             {
-                int attempts = 0;
-
-                while (true)
+                if (File.Exists(m_fileName))
                 {
-                    try
-                    {
-                        attempts++;
-                        m_fileStream = new FileStream(m_fileName, FileMode.Open, m_fileAccessMode, FileShare.ReadWrite);
-                        m_fat = new ArchiveFileAllocationTable(this);
-                        break;
-                    }
-                    catch
-                    {
-                        if (attempts >= 4)
-                            throw;
+                    int attempts = 0;
 
-                        Thread.Sleep(500);
+                    while (true)
+                    {
+                        try
+                        {
+                            attempts++;
+                            m_fileStream = new FileStream(m_fileName, FileMode.Open, m_fileAccessMode, FileShare.ReadWrite);
+                            m_fat = new ArchiveFileAllocationTable(this);
+                            break;
+                        }
+                        catch
+                        {
+                            m_fileStream?.Dispose();
+
+                            if (attempts >= 4)
+                                throw;
+
+                            Thread.Sleep(500);
+                        }
                     }
                 }
-            }
-            else if (m_fileAccessMode == FileAccess.Read)
-            {
-                // File does not exist, so we create a placeholder file in the temp directory
-                m_fileStream = new FileStream(Path.GetTempFileName(), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
-                m_fat = new ArchiveFileAllocationTable(this);
-                m_fat.FileStartTime = TimeTag.MaxValue;
-                m_fat.FileEndTime = TimeTag.MaxValue;
+                else if (m_fileAccessMode == FileAccess.Read)
+                {
+                    // File does not exist, so we create a placeholder file in the temp directory
+                    m_fileStream = new FileStream(Path.GetTempFileName(), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+                    m_fat = new ArchiveFileAllocationTable(this);
+                    m_fat.FileStartTime = TimeTag.MaxValue;
+                    m_fat.FileEndTime = TimeTag.MaxValue;
 
-                // Manually call file monitoring event if file watchers are not enabled
-                if (!m_monitorNewArchiveFiles)
-                    FileWatcher_Created(this, new FileSystemEventArgs(WatcherChangeTypes.Created, FilePath.GetAbsolutePath(m_fileName), FilePath.GetFileName(m_fileName)));
-            }
-            else
-            {
-                // File does not exist, so we have to create it and initialize it.
-                m_fileStream = new FileStream(m_fileName, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
-                m_fat = new ArchiveFileAllocationTable(this);
-                m_fat.Save(true);
+                    // Manually call file monitoring event if file watchers are not enabled
+                    if (!m_monitorNewArchiveFiles)
+                        FileWatcher_Created(this, new FileSystemEventArgs(WatcherChangeTypes.Created, FilePath.GetAbsolutePath(m_fileName), FilePath.GetFileName(m_fileName)));
+                }
+                else
+                {
+                    // File does not exist, so we have to create it and initialize it.
+                    m_fileStream = new FileStream(m_fileName, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+                    m_fat = new ArchiveFileAllocationTable(this);
+                    m_fat.Save(true);
 
-                // Manually call file monitoring event if file watchers are not enabled
-                if (!m_monitorNewArchiveFiles)
-                    FileWatcher_Created(this, new FileSystemEventArgs(WatcherChangeTypes.Created, FilePath.GetAbsolutePath(m_fileName), FilePath.GetFileName(m_fileName)));
+                    // Manually call file monitoring event if file watchers are not enabled
+                    if (!m_monitorNewArchiveFiles)
+                        FileWatcher_Created(this, new FileSystemEventArgs(WatcherChangeTypes.Created, FilePath.GetAbsolutePath(m_fileName), FilePath.GetFileName(m_fileName)));
+                }
+            }
+            catch
+            {
+                m_fileStream?.Dispose();
+                throw;
             }
         }
 

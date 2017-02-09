@@ -52,30 +52,27 @@ namespace GrafanaAdapters
                 m_parent = parent;
             }
 
-            protected override List<TimeSeriesValues> QueryTimeSeriesValues(DateTime startTime, DateTime stopTime, int maxDataPoints, Dictionary<ulong, string> targetMap, CancellationToken cancellationToken)
+            protected override IEnumerable<TimeSeriesValues> QueryTimeSeriesValues(DateTime startTime, DateTime stopTime, int maxDataPoints, Dictionary<ulong, string> targetMap, CancellationToken cancellationToken)
             {
-                List<TimeSeriesValues> queriedTimeSeriesValues = new List<TimeSeriesValues>();
                 long baseTicks = UnixTimeTag.BaseTicks.Value;
 
-                if (targetMap.Count > 0)
+                if (targetMap.Count <= 0)
+                    yield break;
+
+                foreach (ulong measurementID in targetMap.Keys)
                 {
-                    foreach (ulong measurementID in targetMap.Keys)
-                    {
-                        if (cancellationToken.IsCancellationRequested)
-                            break;
+                    if (cancellationToken.IsCancellationRequested)
+                        break;
 
-                        TimeSeriesValues series = new TimeSeriesValues { target = targetMap[measurementID], datapoints = new List<double[]>() };
-                        IDataPoint[] data = m_parent.Archive.ReadData((int)measurementID, startTime, stopTime, false).ToArray();
-                        int interval = data.Length / maxDataPoints + 1;
-                        int pointCount = 0;
+                    TimeSeriesValues series = new TimeSeriesValues { target = targetMap[measurementID], datapoints = new List<double[]>() };
+                    IDataPoint[] data = m_parent.Archive.ReadData((int)measurementID, startTime, stopTime, false).ToArray();
+                    int interval = data.Length / maxDataPoints + 1;
+                    int pointCount = 0;
 
-                        series.datapoints.AddRange(data.Where(point => pointCount++ % interval == 0).Select(point => new[] { point.Value, (point.Time.ToDateTime().Ticks - baseTicks) / (double)Ticks.PerMillisecond }));
+                    series.datapoints.AddRange(data.Where(point => pointCount++ % interval == 0).Select(point => new[] { point.Value, (point.Time.ToDateTime().Ticks - baseTicks) / (double)Ticks.PerMillisecond }));
 
-                        queriedTimeSeriesValues.Add(series);
-                    }
+                    yield return series;
                 }
-
-                return queriedTimeSeriesValues;
             }
         }
 

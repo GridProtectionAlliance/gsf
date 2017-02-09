@@ -339,7 +339,11 @@ namespace StatHistorianReportGenerator
                 statisticsReader.ArchiveFilePath = locator.ArchiveFilePath;
                 statisticsReader.Open();
 
-                m_systemUpTime = statisticsReader.Read("SYSTEM", 15).Values.SingleOrDefault()?.LastOrDefault()?.Value ?? 0.0F;
+                m_systemUpTime = statisticsReader.Read("SYSTEM", 15)
+                    .Where(kvp => kvp.Key.GeneralFlags.Enabled)
+                    .SingleOrDefault().Value?
+                    .LastOrDefault()?.Value ?? 0.0F;
+
                 measurementsReceived = statisticsReader.Read("PMU", 4);
                 measurementsExpected = statisticsReader.Read("PMU", 5);
                 dataQualityErrors = statisticsReader.Read("PMU", 1);

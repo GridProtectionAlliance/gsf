@@ -116,7 +116,10 @@ namespace GSF.Web.Security
             {
                 using (AdoDataConnection connection = new AdoDataConnection(SettingsCategory))
                 {
-                    AuthorizationCache.UserIDs.TryAdd(userName, connection.ExecuteScalar<Guid?>("SELECT ID FROM UserAccount WHERE Name={0}", UserInfo.UserNameToSID(userName)) ?? Guid.Empty);
+                    Guid? userID = connection.ExecuteScalar<Guid?>("SELECT ID FROM UserAccount WHERE Name={0}", UserInfo.UserNameToSID(userName));
+
+                    if ((object)userID != null)
+                        AuthorizationCache.UserIDs.TryAdd(userName, userID.GetValueOrDefault());
                 }
             }
 

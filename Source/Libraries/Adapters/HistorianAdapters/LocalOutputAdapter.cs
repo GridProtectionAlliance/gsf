@@ -418,6 +418,9 @@ namespace HistorianAdapters
 
             m_archive.Initialize();
 
+            // The archive path may have changed based on the configuration file
+            m_archivePath = FilePath.GetDirectoryName(m_archive.FileName);
+
             // Provide web service support.
             m_dataServices = new DataServices();
             m_dataServices.AdapterCreated += DataServices_AdapterCreated;

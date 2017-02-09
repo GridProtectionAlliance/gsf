@@ -32,7 +32,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
+using GSF;
 using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 using GSF.Units.EE;
 using PhasorProtocolAdapters;
 
@@ -47,14 +49,15 @@ namespace PowerCalculations
         #region [ Members ]
 
         // Constants
-        private const double LoFrequency = 57.0D;
-        private const double HiFrequency = 62.0D;
+        private const double DefaultLowFrequencyThreshold = 57.0D;
+        private const double DefaultHighFrequencyThreshold = 62.0D;
+        private const bool DefaultReportUnreasonableResultsAsNaN = false;
 
         // Fields
         private double m_averageFrequency;
         private double m_maximumFrequency;
         private double m_minimumFrequency;
-        private readonly ConcurrentDictionary<Guid, int> m_lastValues = new ConcurrentDictionary<Guid, int>();
+        private readonly ConcurrentDictionary<Guid, Tuple<int, long>> m_lastValues = new ConcurrentDictionary<Guid, Tuple<int, long>>();
 
         // Important: Make sure output definition defines points in the following order
         private enum Output
@@ -69,6 +72,42 @@ namespace PowerCalculations
         #region [ Properties ]
 
         /// <summary>
+        /// Gets or sets low frequency reasonability threshold, inclusive.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines low frequency reasonability threshold. Value is inclusive, i.e., frequency will be unreasonable at and beyond specified threshold.")]
+        [DefaultValue(DefaultLowFrequencyThreshold)]
+        public double LowFrequencyThreshold
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets high frequency reasonability threshold, inclusive.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines high frequency reasonability threshold. Value is inclusive, i.e., frequency will be unreasonable at and beyond specified threshold.")]
+        [DefaultValue(DefaultHighFrequencyThreshold)]
+        public double HighFrequencyThreshold
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if unreasonable results should be reported as NaN.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Defines flag that determines if unreasonable results should be reported as NaN.")]
+        [DefaultValue(DefaultReportUnreasonableResultsAsNaN)]
+        public bool ReportUnreasonableResultsAsNaN
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Returns the detailed status of the <see cref="AverageFrequency"/> calculator.
         /// </summary>
         public override string Status
@@ -77,11 +116,17 @@ namespace PowerCalculations
             {
                 StringBuilder status = new StringBuilder();
 
-                status.AppendFormat("    Last average frequency: {0}", m_averageFrequency);
+                status.AppendFormat("   Low frequency threshold: {0:N3} Hz", LowFrequencyThreshold);
                 status.AppendLine();
-                status.AppendFormat("    Last maximum frequency: {0}", m_maximumFrequency);
+                status.AppendFormat("  High frequency threshold: {0:N3} Hz", HighFrequencyThreshold);
                 status.AppendLine();
-                status.AppendFormat("    Last minimum frequency: {0}", m_minimumFrequency);
+                status.AppendFormat("Report unreasonable as NaN: {0}", ReportUnreasonableResultsAsNaN);
+                status.AppendLine();
+                status.AppendFormat("    Last average frequency: {0:N3} Hz", m_averageFrequency);
+                status.AppendLine();
+                status.AppendFormat("    Last maximum frequency: {0:N3} Hz", m_maximumFrequency);
+                status.AppendLine();
+                status.AppendFormat("    Last minimum frequency: {0:N3} Hz", m_minimumFrequency);
                 status.AppendLine();
                 status.Append(base.Status);
 
@@ -98,6 +143,26 @@ namespace PowerCalculations
         public override void Initialize()
         {
             base.Initialize();
+
+            Dictionary<string, string> settings = Settings;
+            string setting;
+            double threshold;
+
+            // Get settings
+            if (settings.TryGetValue("LowFrequencyThreshold", out setting) && double.TryParse(setting, out threshold))
+                LowFrequencyThreshold = threshold;
+            else
+                LowFrequencyThreshold = DefaultLowFrequencyThreshold;
+
+            if (settings.TryGetValue("HighFrequencyThreshold", out setting) && double.TryParse(setting, out threshold))
+                HighFrequencyThreshold = threshold;
+            else
+                HighFrequencyThreshold = DefaultHighFrequencyThreshold;
+
+            if (settings.TryGetValue("ReportUnreasonableResultsAsNaN", out setting))
+                ReportUnreasonableResultsAsNaN = setting.ParseBoolean();
+            else
+                ReportUnreasonableResultsAsNaN = DefaultReportUnreasonableResultsAsNaN;
 
             // Validate input measurements
             List<MeasurementKey> validInputMeasurementKeys = new List<MeasurementKey>();
@@ -128,41 +193,40 @@ namespace PowerCalculations
         {
             if (frame.Measurements.Count > 0)
             {
-                const double hzResolution = 1000.0; // three decimal places
-
-                double frequency;
-                double frequencyTotal;
-                double maximumFrequency = LoFrequency;
-                double minimumFrequency = HiFrequency;
-                int adjustedFrequency;
-                int lastValue;
-                int total;
-
-                frequencyTotal = 0.0D;
-                total = 0;
+                double total = 0.0D;
+                double maximumFrequency = LowFrequencyThreshold;
+                double minimumFrequency = HighFrequencyThreshold;
+                int count = 0;
 
                 foreach (IMeasurement measurement in frame.Measurements.Values)
                 {
-                    frequency = measurement.AdjustedValue;
-                    adjustedFrequency = (int)(frequency * hzResolution);
+                    double frequency = measurement.AdjustedValue;
 
-                    // Do some simple flat line avoidance...
-                    if (m_lastValues.TryGetValue(measurement.ID, out lastValue))
+                    // Do some simple flat line avoidance, validating at three decimal places...
+                    int truncatedFrequency = (int)(frequency * 1000.0D);
+
+                    Tuple<int, long> lastValues = m_lastValues.GetOrAdd(measurement.ID, id => new Tuple<int, long>(truncatedFrequency, 0L));
+                    long flatLineCount = lastValues.Item2;
+
+                    if (lastValues.Item1 == truncatedFrequency)
                     {
-                        if (lastValue == adjustedFrequency)
-                            frequency = 0.0D;
-                        else
-                            m_lastValues[measurement.ID] = adjustedFrequency;
+                        flatLineCount++;
+
+                        // If value remains the same more than 4 times, assume flat-line value
+                        if (flatLineCount > 4L)
+                            frequency = double.NaN;
                     }
                     else
                     {
-                        m_lastValues[measurement.ID] = adjustedFrequency;
+                        flatLineCount = 0L;
                     }
 
+                    m_lastValues[measurement.ID] = new Tuple<int, long>(truncatedFrequency, flatLineCount);
+
                     // Validate frequency
-                    if (frequency > LoFrequency && frequency < HiFrequency)
+                    if (!double.IsNaN(frequency) && frequency > LowFrequencyThreshold && frequency < HighFrequencyThreshold)
                     {
-                        frequencyTotal += frequency;
+                        total += frequency;
 
                         if (frequency > maximumFrequency)
                             maximumFrequency = frequency;
@@ -170,15 +234,27 @@ namespace PowerCalculations
                         if (frequency < minimumFrequency)
                             minimumFrequency = frequency;
 
-                        total++;
+                        count++;
                     }
                 }
 
-                if (total > 0)
+                if (count > 0)
                 {
-                    m_averageFrequency = (frequencyTotal / total);
+                    m_averageFrequency = total / count;
                     m_maximumFrequency = maximumFrequency;
                     m_minimumFrequency = minimumFrequency;
+                }
+
+                if (ReportUnreasonableResultsAsNaN)
+                {
+                    if (m_averageFrequency <= LowFrequencyThreshold && m_averageFrequency >= HighFrequencyThreshold)
+                        m_averageFrequency = double.NaN;
+
+                    if (m_maximumFrequency <= LowFrequencyThreshold && m_maximumFrequency >= HighFrequencyThreshold)
+                        m_maximumFrequency = double.NaN;
+
+                    if (m_minimumFrequency <= LowFrequencyThreshold && m_minimumFrequency >= HighFrequencyThreshold)
+                        m_minimumFrequency = double.NaN;
                 }
 
                 // Provide calculated measurements for external consumption

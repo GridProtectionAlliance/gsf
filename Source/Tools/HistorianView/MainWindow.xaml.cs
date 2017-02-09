@@ -490,7 +490,7 @@ namespace HistorianView
 
             if (!m_currentTimeCheckBox.IsChecked.GetValueOrDefault())
             {
-                startTimeBuilder.Append(m_startTime.ToString("MM/dd/yyyy HH:mm:ss.fff"));
+                startTimeBuilder.Append(m_startTime.ToString("MM/dd/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture));
             }
             else
             {
@@ -508,7 +508,7 @@ namespace HistorianView
             if (m_currentTimeCheckBox.IsChecked.GetValueOrDefault())
                 return "*";
 
-            return m_endTime.ToString("MM/dd/yyyy HH:mm:ss.fff");
+            return m_endTime.ToString("MM/dd/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture);
         }
 
         private void OpenArchives(IEnumerable<string> archiveLocations)
@@ -657,13 +657,13 @@ namespace HistorianView
             // Determine the values of start time, end time, chart resolution, and show disabled points
             value = (string)root.Attribute("startTime") ?? string.Empty;
 
-            if (DateTime.TryParse(value, out dateTimeValue))
+            if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTimeValue))
             {
                 m_currentTimeCheckBox.IsChecked = false;
 
                 StartTime = dateTimeValue;
 
-                if (DateTime.TryParse((string)root.Attribute("endTime"), out dateTimeValue))
+                if (DateTime.TryParse((string)root.Attribute("endTime"), CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTimeValue))
                     EndTime = dateTimeValue;
                 else
                     EndTime = StartTime + TimeSpan.FromMinutes(5.0D);
@@ -1005,7 +1005,10 @@ namespace HistorianView
                                     // rows are not added for duplicate timestamps
                                     if (m_alignTimestampsInExport || row[index] == null)
                                     {
-                                        row[index] = point.Value.ToString();
+                                        row[index] = (m_exportFileType == FileType.ComtradeAscii || m_exportFileType == FileType.ComtradeBinary)
+                                            ? point.Value.ToString(CultureInfo.InvariantCulture)
+                                            : point.Value.ToString();
+
                                         break;
                                     }
                                 }
@@ -1136,7 +1139,7 @@ namespace HistorianView
                     // exported - the end user will need to cipher out which rows come first based on the data.
                     foreach (string[] row in pair.Value)
                     {
-                        Writer.WriteNextRecordBinary(dataFileStream, schema, pair.Key.ToDateTime().Ticks, row.Select(value => double.Parse(value ?? double.NaN.ToString())).ToArray(), sample++);
+                        Writer.WriteNextRecordBinary(dataFileStream, schema, pair.Key.ToDateTime().Ticks, row.Select(value => double.Parse(value ?? double.NaN.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture)).ToArray(), sample++);
                     }
                 }
             }
@@ -1150,7 +1153,7 @@ namespace HistorianView
                     // exported - the end user will need to cipher out which rows come first based on the data.
                     foreach (string[] row in pair.Value)
                     {
-                        Writer.WriteNextRecordAscii(dataFileWriter, schema, pair.Key.ToDateTime().Ticks, row.Select(value => double.Parse(value ?? double.NaN.ToString())).ToArray(), sample++);
+                        Writer.WriteNextRecordAscii(dataFileWriter, schema, pair.Key.ToDateTime().Ticks, row.Select(value => double.Parse(value ?? double.NaN.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture)).ToArray(), sample++);
                     }
                 }
 
@@ -1176,7 +1179,7 @@ namespace HistorianView
             line.Append("Average,");
             foreach (double average in averages)
             {
-                line.Append(average);
+                line.Append(ToCsvValue(average.ToString()));
                 line.Append(',');
             }
             line.Remove(line.Length - 1, 1);
@@ -1186,7 +1189,7 @@ namespace HistorianView
             line.Append("Maximum,");
             foreach (double max in maximums)
             {
-                line.Append(max);
+                line.Append(ToCsvValue(max.ToString()));
                 line.Append(',');
             }
             line.Remove(line.Length - 1, 1);
@@ -1196,7 +1199,7 @@ namespace HistorianView
             line.Append("Minimum,");
             foreach (double min in minimums)
             {
-                line.Append(min);
+                line.Append(ToCsvValue(min.ToString()));
                 line.Append(',');
             }
             line.Remove(line.Length - 1, 1);
@@ -1209,9 +1212,7 @@ namespace HistorianView
 
             foreach (MetadataRecord record in metadata.Keys.Select(wrapper => wrapper.GetMetadata()))
             {
-                line.Append(record.Name);
-                line.Append(' ');
-                line.Append(record.Description.Replace(',', '-'));
+                line.Append(ToCsvValue($"{record.Name} {record.Description.Replace(',', '-')}"));
                 line.Append(',');
             }
 
@@ -1230,12 +1231,12 @@ namespace HistorianView
                 // exported - the end user will need to cipher out which rows come first based on the data.
                 foreach (string[] row in pair.Value)
                 {
-                    line.Append(time);
+                    line.Append(ToCsvValue(time.ToString()));
                     line.Append(',');
 
                     foreach (string value in row)
                     {
-                        line.Append(value ?? double.NaN.ToString());
+                        line.Append(ToCsvValue(value ?? double.NaN.ToString()));
                         line.Append(',');
                     }
 
@@ -1244,6 +1245,15 @@ namespace HistorianView
                     line.Clear();
                 }
             }
+        }
+
+        // Wraps the value in quotes if it contains a comma.
+        private string ToCsvValue(string value)
+        {
+            if (value.Contains(','))
+                return value.QuoteWrap();
+
+            return value;
         }
 
         // Sets the x-axis boundaries of the chart based on the current start time and end time.
@@ -1384,57 +1394,31 @@ namespace HistorianView
         // Occurs when the starting date is changed.
         private void StartTimeDatePicker_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
         {
-            StringBuilder dateString = new StringBuilder();
-
-            dateString.Append(m_startTimeDatePicker.SelectedDate.GetValueOrDefault().ToString("MM/dd/yyyy"));
-            dateString.Append(' ');
-            dateString.Append(m_startTime.ToString("HH:mm:ss.fff"));
-
-            // Converts any date format style to US format and clubs both in dateString. 
-            const string Format = "MM/dd/yyyy HH:mm:ss.fff";
-            m_startTime = DateTime.ParseExact(dateString.ToString(), Format, CultureInfo.CreateSpecificCulture("en-US"), DateTimeStyles.None);
+            m_startTime = m_startTimeDatePicker.SelectedDate.GetValueOrDefault().Date + m_startTime.TimeOfDay;
         }
 
         // Occurs when the ending date is changed.
         private void EndTimeDatePicker_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
         {
-            StringBuilder dateString = new StringBuilder();
-
-            dateString.Append(m_endTimeDatePicker.SelectedDate.GetValueOrDefault().ToString("MM/dd/yyyy"));
-            dateString.Append(' ');
-            dateString.Append(m_endTime.ToString("HH:mm:ss.fff"));
-
-            // Converts any date format style to US format and clubs both in dateString.
-            const string Format = "MM/dd/yyyy HH:mm:ss.fff";
-            m_endTime = DateTime.ParseExact(dateString.ToString(), Format, CultureInfo.CreateSpecificCulture("en-US"), DateTimeStyles.None);
+            m_endTime = m_endTimeDatePicker.SelectedDate.GetValueOrDefault().Date + m_endTime.TimeOfDay;
         }
 
         // Occurs when the user changes the starting time.
         private void StartTimeTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            StringBuilder dateString = new StringBuilder();
-            DateTime startTime;
+            TimeSpan startTime;
 
-            dateString.Append(m_startTime.ToString("MM/dd/yyyy"));
-            dateString.Append(' ');
-            dateString.Append(m_startTimeTextBox.Text);
-
-            if (DateTime.TryParse(dateString.ToString(), out startTime))
-                m_startTime = startTime;
+            if (TimeSpan.TryParse(m_startTimeTextBox.Text, out startTime))
+                m_startTime = m_startTime.Date + startTime;
         }
 
         // Occurs when the user changes the ending time.
         private void EndTimeTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            StringBuilder dateString = new StringBuilder();
-            DateTime endTime;
+            TimeSpan endTime;
 
-            dateString.Append(m_endTime.ToString("MM/dd/yyyy"));
-            dateString.Append(' ');
-            dateString.Append(m_endTimeTextBox.Text);
-
-            if (DateTime.TryParse(dateString.ToString(), out endTime))
-                m_endTime = endTime;
+            if (TimeSpan.TryParse(m_endTimeTextBox.Text, out endTime))
+                m_endTime = m_endTime.Date + endTime;
         }
 
         // Filters text input so that only numbers can be entered into the text box.

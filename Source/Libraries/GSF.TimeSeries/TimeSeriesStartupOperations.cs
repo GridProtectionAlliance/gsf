@@ -295,7 +295,7 @@ namespace GSF.TimeSeries
                                                     "Total number of seconds subscriber has been running."
                                                   };
 
-            string[] SubscriberStatMethodSuffix = { "Connected", "Authenticated", "ProcessedMeasurements", "TotalBytesReceived", "AuthorizedCount", "UnauthorizedCount", "LifetimeMeasurements", "LifetimeBytesReceived", "MinimumMeasurementsPerSecond", "MaximumMeasurementsPerSecond", "AverageMeasurementsPerSecond", "LifetimeMinimumLatency", "LifetimeMaximumLatency", "LifetimeAverageLatency", "LifetimeMinimumLatency", "LifetimeMaximumLatency", "LifetimeAverageLatency", "UpTime" };
+            string[] SubscriberStatMethodSuffix = { "Connected", "Authenticated", "ProcessedMeasurements", "TotalBytesReceived", "AuthorizedCount", "UnauthorizedCount", "LifetimeMeasurements", "LifetimeBytesReceived", "MinimumMeasurementsPerSecond", "MaximumMeasurementsPerSecond", "AverageMeasurementsPerSecond", "LifetimeMinimumLatency", "LifetimeMaximumLatency", "LifetimeAverageLatency", "UpTime" };
             string[] SubscriberStatTypes = { "System.Boolean", "System.Boolean", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int64", "System.Int64", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Int32", "System.Double" };
             string[] SubscriberStatFormats = { "{0}", "{0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0} ms", "{0:N0} ms", "{0:N0} ms", "{0:N3} s" };
 
@@ -310,10 +310,10 @@ namespace GSF.TimeSeries
                                                    "The minimum number of measurements sent per second during the last reporting interval.",
                                                    "The maximum number of measurements sent per second during the last reporting interval.",
                                                    "The average number of measurements sent per second during the last reporting interval.",
-                                                    "Minimum latency from output stream, in milliseconds, during the lifetime of the publisher.",
-                                                    "Maximum latency from output stream, in milliseconds, during the lifetime of the publisher.",
-                                                    "Average latency from output stream, in milliseconds, during the lifetime of the publisher.",
-                                                    "Total number of seconds publisher has been running."
+                                                   "Minimum latency from output stream, in milliseconds, during the lifetime of the publisher.",
+                                                   "Maximum latency from output stream, in milliseconds, during the lifetime of the publisher.",
+                                                   "Average latency from output stream, in milliseconds, during the lifetime of the publisher.",
+                                                   "Total number of seconds publisher has been running."
                                                  };
 
             string[] PublisherStatMethodSuffix = { "Connected", "ConnectedClientCount", "ProcessedMeasurements", "TotalBytesSent", "LifetimeMeasurements", "LifetimeBytesSent", "MinimumMeasurementsPerSecond", "MaximumMeasurementsPerSecond", "AverageMeasurementsPerSecond", "LifetimeMinimumLatency", "LifetimeMaximumLatency", "LifetimeAverageLatency", "UpTime" };

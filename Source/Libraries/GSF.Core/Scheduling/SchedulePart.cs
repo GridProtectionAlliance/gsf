@@ -91,7 +91,13 @@ namespace GSF.Scheduling
         /// Values for the <see cref="SchedulePart"/> were specified using the 'n1,n2,nn' text syntax. Included values 
         /// are specific legal values for the <see cref="DateTimePart"/> that the <see cref="SchedulePart"/> represents.
         /// </summary>
-        Specific
+        Specific,
+        /// <summary>
+        /// Values for the <see cref="SchedulePart"/> were specified using the 'n1-nn/n' text syntax. Included values 
+        /// are legal values for the <see cref="DateTimePart"/> that the <see cref="SchedulePart"/> represents that
+        /// are within the specified range and that are divisible by 'n'. 
+        /// </summary>
+        RangeWithEveryN
     }
 
     #endregion
@@ -140,36 +146,18 @@ namespace GSF.Scheduling
         /// <summary>
         /// Gets the text used to specify the values for the <see cref="SchedulePart"/> object.
         /// </summary>
-        public string ValueText
-        {
-            get
-            {
-                return m_valueText;
-            }
-        }
+        public string ValueText => m_valueText;
 
         /// <summary>
         /// Gets the <see cref="DateTimePart"/> that the <see cref="SchedulePart"/> object represents.
         /// </summary>
-        public DateTimePart DateTimePart
-        {
-            get
-            {
-                return m_dateTimePart;
-            }
-        }
+        public DateTimePart DateTimePart => m_dateTimePart;
 
         /// <summary>
         /// Gets the <see cref="SchedulePartTextSyntax"/> used in the <see cref="ValueText"/> for specifying the 
         /// values of the <see cref="SchedulePart"/> object.
         /// </summary>
-        public SchedulePartTextSyntax ValueTextSyntax
-        {
-            get
-            {
-                return m_valueTextSyntax;
-            }
-        }
+        public SchedulePartTextSyntax ValueTextSyntax => m_valueTextSyntax;
 
         /// <summary>
         /// Gets a meaningful description of the <see cref="SchedulePart"/> object.
@@ -178,17 +166,23 @@ namespace GSF.Scheduling
         {
             get
             {
+                string[] range;
+
                 switch (m_valueTextSyntax)
                 {
                     case SchedulePartTextSyntax.Any:
-                        return "Any " + m_dateTimePart.ToString();
+                        return $"Any {m_dateTimePart}";
                     case SchedulePartTextSyntax.EveryN:
-                        return "Every " + m_valueText.Split('/')[1] + " " + m_dateTimePart.ToString();
+                        return $"Every {m_valueText.Split('/')[1]} {m_dateTimePart}(s)";
                     case SchedulePartTextSyntax.Range:
-                        string[] range = m_valueText.Split('-');
-                        return m_dateTimePart.ToString() + " " + range[0] + " to " + range[1];
+                        range = m_valueText.Split('-');
+                        return $"{m_dateTimePart} {range[0]} to {range[1]}";
                     case SchedulePartTextSyntax.Specific:
-                        return m_dateTimePart.ToString() + " " + m_valueText;
+                        return $"{m_dateTimePart} {m_valueText}";
+                    case SchedulePartTextSyntax.RangeWithEveryN:
+                        range = m_valueText.Split('-');
+                        string[] interval = range[1].Split('/');
+                        return $"{range[0]} to {interval[0]} every {interval[1]} {m_dateTimePart}(s)";
                     default:
                         return "";
                 }
@@ -198,13 +192,7 @@ namespace GSF.Scheduling
         /// <summary>
         /// Gets the list of values for the <see cref="SchedulePart"/> object specified using <see cref="ValueText"/>.
         /// </summary>
-        public List<int> Values
-        {
-            get
-            {
-                return m_values;
-            }
-        }
+        public List<int> Values => m_values;
 
         #endregion
 
@@ -263,6 +251,7 @@ namespace GSF.Scheduling
 
             m_values = new List<int>();
 
+            // Match literal asterisk
             if (Regex.Match(schedulePart, "^(\\*){1}$").Success)
             {
                 // ^(\*){1}$             Matches: *
@@ -271,15 +260,32 @@ namespace GSF.Scheduling
 
                 return true;
             }
+
+            if (Regex.Match(schedulePart, "^(\\d+\\-\\d+/\\d+){1}$").Success)
+            {
+                // ^(\d+\-\d+/\d+){1}$   Matches: [any digit]-[any digit]/[any digit]
+                string[] range = schedulePart.Split('-');
+                string[] parts = range[1].Split('/');
+                int lowRange = Convert.ToInt32(range[0]);
+                int highRange = Convert.ToInt32(parts[0]);
+                int interval = Convert.ToInt32(parts[1]);
+
+                if (lowRange < highRange && lowRange >= minValue && highRange <= maxValue && interval > 0 && interval >= minValue && interval <= maxValue)
+                {
+                    m_valueTextSyntax = SchedulePartTextSyntax.RangeWithEveryN;
+                    PopulateValues(lowRange, highRange, interval);
+                    return true;
+                }
+            }
             else if (Regex.Match(schedulePart, "^(\\*/\\d+){1}$").Success)
             {
                 // ^(\*/\d+){1}$         Matches: */[any digit]
                 int interval = Convert.ToInt32(schedulePart.Split('/')[1]);
+
                 if (interval > 0 && interval >= minValue && interval <= maxValue)
                 {
                     m_valueTextSyntax = SchedulePartTextSyntax.EveryN;
                     PopulateValues(minValue, maxValue, interval);
-
                     return true;
                 }
             }
@@ -289,11 +295,11 @@ namespace GSF.Scheduling
                 string[] range = schedulePart.Split('-');
                 int lowRange = Convert.ToInt32(range[0]);
                 int highRange = Convert.ToInt32(range[1]);
+
                 if (lowRange < highRange && lowRange >= minValue && highRange <= maxValue)
                 {
                     m_valueTextSyntax = SchedulePartTextSyntax.Range;
                     PopulateValues(lowRange, highRange, 1);
-
                     return true;
                 }
             }
@@ -302,21 +308,17 @@ namespace GSF.Scheduling
                 // ^((\d+,?)+){1}$       Matches: [any digit] AND [any digit], ..., [any digit]
                 m_valueTextSyntax = SchedulePartTextSyntax.Specific;
 
-                int value;
-
                 foreach (string part in schedulePart.Split(','))
                 {
+                    int value;
+
                     if (int.TryParse(part, out value))
                     {
                         if (!(value >= minValue && value <= maxValue))
-                        {
                             return false;
-                        }
-                        else
-                        {
-                            if (!m_values.Contains(value))
-                                m_values.Add(value);
-                        }
+
+                        if (!m_values.Contains(value))
+                            m_values.Add(value);
                     }
                     else
                     {
@@ -333,9 +335,7 @@ namespace GSF.Scheduling
         private void PopulateValues(int fromValue, int toValue, int stepValue)
         {
             for (int i = fromValue; i <= toValue; i += stepValue)
-            {
                 m_values.Add(i);
-            }
         }
 
         #endregion

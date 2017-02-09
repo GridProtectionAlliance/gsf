@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using GSF.Collections;
 using GSF.PhasorProtocols;
 using GSF.Units.EE;
@@ -640,13 +641,13 @@ namespace GSF.COMTRADE
             values[2] = PhaseID;
             values[3] = CircuitComponent;
             values[4] = Units;
-            values[5] = Multiplier.ToString();
-            values[6] = Adder.ToString();
-            values[7] = Skew.ToString();
+            values[5] = Multiplier.ToString(CultureInfo.InvariantCulture);
+            values[6] = Adder.ToString(CultureInfo.InvariantCulture);
+            values[7] = Skew.ToString(CultureInfo.InvariantCulture);
             values[8] = MinValue.ToString();
             values[9] = MaxValue.ToString();
-            values[10] = PrimaryRatio.ToString();
-            values[11] = SecondaryRatio.ToString();
+            values[10] = PrimaryRatio.ToString(CultureInfo.InvariantCulture);
+            values[11] = SecondaryRatio.ToString(CultureInfo.InvariantCulture);
             values[12] = ScalingIdentifier.ToString();
 
             return values.ToDelimitedString(',');

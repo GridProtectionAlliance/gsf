@@ -22,6 +22,8 @@
 //       Added new header and license agreement.
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  01/19/2017 - J. Ritchie Carroll
+//       Added option to handle sample size calculations, i.e., n - 1
 //
 //******************************************************************************************************
 
@@ -31,88 +33,84 @@ using System.Linq;
 
 namespace GSF.NumericalAnalysis
 {
-    /// <summary>Defines extension functions related to numerical analysis over a sequence of data.</summary>
+    /// <summary>
+    /// Defines extension functions related to numerical analysis over a sequence of data.
+    /// </summary>
     public static class NumericalAnalysisExtensions
     {
-        /// <summary>Computes the standard deviation over a sequence of double values.</summary>
+        /// <summary>
+        /// Computes the standard deviation over a sequence of <see cref="double"/> values.
+        /// </summary>
         /// <param name="source">Source data sample.</param>
+        /// <param name="calculateForSample">Set to <c>true</c> to calculate for estimated population size, or <c>false</c> for full population.</param>
         /// <returns>The standard deviation of the sequence.</returns>
-        /// <exception cref="ArgumentNullException">source is null</exception>
-        public static double StandardDeviation(this IEnumerable<double> source)
+        /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="source"/> does not contain enough values to produce a result.</exception>
+        public static double StandardDeviation(this IEnumerable<double> source, bool calculateForSample = false)
         {
             if ((object)source == null)
                 throw new ArgumentNullException(nameof(source), "source is null");
 
-            double sampleAverage = source.Average();
-            double totalVariance = 0.0D;
-            double dataPointDeviation;
-            int sampleCount = 0;
+            double[] values = source as double[] ?? source.ToArray();
+            int sampleCount = values.Length - (calculateForSample ? 1 : 0);
 
-            foreach (double item in source)
-            {
-                dataPointDeviation = item - sampleAverage;
-                totalVariance += dataPointDeviation * dataPointDeviation;
-                sampleCount++;
-            }
+            if (sampleCount < 1)
+                throw new ArgumentOutOfRangeException(nameof(source), "Not enough sample values provided to produce a result");
 
-            if (sampleCount > 0)
-                return Math.Sqrt(totalVariance / sampleCount);
-            else
-                return 0.0D;
+            double sampleAverage = values.Average();
+            double totalVariance = values.Select(item => item - sampleAverage).Select(deviation => deviation * deviation).Sum();
+
+            return Math.Sqrt(totalVariance / sampleCount);
         }
 
-        /// <summary>Computes the standard deviation over a sequence of decimal values.</summary>
+        /// <summary>
+        /// Computes the standard deviation over a sequence of <see cref="decimal"/> values.
+        /// </summary>
         /// <param name="source">Source data sample.</param>
+        /// <param name="calculateForSample">Set to <c>true</c> to calculate for estimated population size, or <c>false</c> for full population.</param>
         /// <returns>The standard deviation of the sequence.</returns>
-        /// <exception cref="ArgumentNullException">source is null</exception>
-        public static decimal StandardDeviation(this IEnumerable<decimal> source)
+        /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="source"/> does not contain enough values to produce a result.</exception>
+        public static decimal StandardDeviation(this IEnumerable<decimal> source, bool calculateForSample = false)
         {
             if ((object)source == null)
                 throw new ArgumentNullException(nameof(source), "source is null");
 
-            decimal sampleAverage = source.Average();
-            decimal totalVariance = 0;
-            decimal dataPointDeviation;
-            int sampleCount = 0;
+            decimal[] values = source as decimal[] ?? source.ToArray();
+            int sampleCount = values.Length - (calculateForSample ? 1 : 0);
 
-            foreach (decimal item in source)
-            {
-                dataPointDeviation = item - sampleAverage;
-                totalVariance += dataPointDeviation * dataPointDeviation;
-                sampleCount++;
-            }
+            if (sampleCount < 1)
+                throw new ArgumentOutOfRangeException(nameof(source), "Not enough sample values provided to produce a result");
 
-            if (sampleCount > 0)
-                return (decimal)Math.Sqrt((double)(totalVariance / sampleCount));
-            else
-                return 0;
+            decimal sampleAverage = values.Average();
+            decimal totalVariance = values.Select(item => item - sampleAverage).Select(deviation => deviation * deviation).Sum();
+
+            return (decimal)Math.Sqrt((double)(totalVariance / sampleCount));
         }
 
-        /// <summary>Computes the standard deviation over a sequence of float values.</summary>
+        /// <summary>
+        /// Computes the standard deviation over a sequence of <see cref="float"/> values.
+        /// </summary>
         /// <param name="source">Source data sample.</param>
+        /// <param name="calculateForSample">Set to <c>true</c> to calculate for estimated population size, or <c>false</c> for full population.</param>
         /// <returns>The standard deviation of the sequence.</returns>
-        /// <exception cref="ArgumentNullException">source is null</exception>
-        public static float StandardDeviation(this IEnumerable<float> source)
+        /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="source"/> does not contain enough values to produce a result.</exception>
+        public static float StandardDeviation(this IEnumerable<float> source, bool calculateForSample = false)
         {
             if ((object)source == null)
                 throw new ArgumentNullException(nameof(source), "source is null");
 
-            float sampleAverage = source.Average();
-            float totalVariance = 0.0F;
-            float dataPointDeviation;
-            int sampleCount = 0;
+            float[] values = source as float[] ?? source.ToArray();
+            int sampleCount = values.Length - (calculateForSample ? 1 : 0);
 
-            foreach (float item in source)
-            {
-                dataPointDeviation = item - sampleAverage;
-                totalVariance += dataPointDeviation * dataPointDeviation;
-                sampleCount++;
-            }
+            if (sampleCount < 1)
+                throw new ArgumentOutOfRangeException(nameof(source), "Not enough sample values provided to produce a result");
 
-            if (sampleCount > 0)
-                return (float)Math.Sqrt((double)(totalVariance / sampleCount));
-            else
-                return 0.0F;
+            float sampleAverage = values.Average();
+            float totalVariance = values.Select(item => item - sampleAverage).Select(deviation => deviation * deviation).Sum();
+
+            return (float)Math.Sqrt(totalVariance / sampleCount);
         }
     }
 }
