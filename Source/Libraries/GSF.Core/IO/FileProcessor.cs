@@ -1278,6 +1278,16 @@ namespace GSF.IO
                 if (Interlocked.Exchange(ref waitHandleLock, null) == null)
                     waitHandle.Unregister(null);
 
+#if MONO
+                try
+                {
+                    timeout = !m_waitObject?.WaitOne(0);
+                }
+                catch (ObjectDisposedException)
+                {
+                }
+#endif
+
                 if (!timeout)
                     return;
 
@@ -1530,6 +1540,6 @@ namespace GSF.IO
             });
         }
 
-        #endregion
+#endregion
     }
 }

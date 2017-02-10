@@ -166,6 +166,10 @@ namespace GSF.Threading
                 if (Interlocked.Exchange(ref waitHandleLock, null) == null)
                     waitHandle.Unregister(null);
 
+#if MONO
+                timeout = !waitObj.WaitOne(0);
+#endif
+
                 if (!timeout)
                     return;
 
@@ -196,7 +200,11 @@ namespace GSF.Threading
                 // Even if the callback timed out, another thread may cancel
                 // the cancellation token before we are able to dispose of it
                 // so we explicitly cancel the token in order to be sure
+#if !MONO
                 timeout = timeout && cancellationToken.Cancel();
+#else
+                timeout = !waitObj.WaitOne(0) && cancellationToken.Cancel();
+#endif
 
                 // Both the callback thread and the caller thread will
                 // attempt to set the wait handle lock to null, and the
