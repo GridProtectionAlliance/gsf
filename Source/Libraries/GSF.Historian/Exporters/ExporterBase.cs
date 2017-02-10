@@ -209,7 +209,7 @@ namespace GSF.Historian.Exporters
         /// Gets the <see cref="Export"/>s associated with the exporter.
         /// </summary>
         /// <remarks>
-        /// WARNING: <see cref="Exports"/> is therad unsafe. Synchronized access is required.
+        /// WARNING: <see cref="Exports"/> is thread unsafe. Synchronized access is required.
         /// </remarks>
         public IList<Export> Exports
         {
@@ -223,7 +223,7 @@ namespace GSF.Historian.Exporters
         /// Gets the <see cref="DataListener"/>s providing real-time time-series data to the exporter.
         /// </summary>
         /// <remarks>
-        /// WARNING: <see cref="Listeners"/> is therad unsafe. Synchronized access is required.
+        /// WARNING: <see cref="Listeners"/> is thread unsafe. Synchronized access is required.
         /// </remarks>
         public IList<DataListener> Listeners
         {

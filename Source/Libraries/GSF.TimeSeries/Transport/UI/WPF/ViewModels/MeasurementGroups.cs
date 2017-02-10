@@ -122,6 +122,19 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
 
             base.Save();
 
+            try
+            {
+                // Note that a ReloadConfig will reload the security context on the DataPublisher
+                CommonFunctions.SendCommandToService("ReloadConfig");
+            }
+            catch (Exception ex)
+            {
+                if ((object)ex.InnerException != null)
+                    CommonFunctions.LogException(null, "Save " + DataModelName, ex.InnerException);
+                else
+                    CommonFunctions.LogException(null, "Save " + DataModelName, ex);
+            }
+
             if (IsNewRecord)
                 CurrentItem = ItemsSource.FirstOrDefault(group => group.Name == groupName);
         }

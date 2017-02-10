@@ -148,9 +148,6 @@
     <Compile Include="UserControls\MeasurementPagerUserControl.xaml.cs">
       <DependentUpon>MeasurementPagerUserControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UserControls\MeasurementUserControl.xaml.cs">
-      <DependentUpon>MeasurementUserControl.xaml</DependentUpon>
-    </Compile>
     <Compile Include="UserControls\MonitoringUserControl.xaml.cs">
       <DependentUpon>MonitoringUserControl.xaml</DependentUpon>
     </Compile>
@@ -315,10 +312,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UserControls\MeasurementPagerUserControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="UserControls\MeasurementUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
