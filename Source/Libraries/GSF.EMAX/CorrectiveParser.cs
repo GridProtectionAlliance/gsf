@@ -50,6 +50,8 @@ namespace GSF.EMAX
 
         #endregion
 
+        #region [ Constructors ]
+
         /// <summary>
         /// Creates a new instance of the <see cref="CorrectiveParser"/> class.
         /// </summary>
@@ -57,6 +59,8 @@ namespace GSF.EMAX
         {
             m_parser = new Parser();
         }
+
+        #endregion
 
         #region [ Properties ]
 
