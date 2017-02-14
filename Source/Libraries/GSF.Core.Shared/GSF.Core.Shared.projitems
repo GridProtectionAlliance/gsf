@@ -100,6 +100,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)IO\StreamExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)LittleEndian.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)NtpTimeTag.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NullableWeakReference.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)NumericalAnalysis\Euclidean.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)NumericalAnalysis\GaussianDistribution.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)NumericalAnalysis\Interpolation\InverseDistanceWeightingFunction.cs" />
