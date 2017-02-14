@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  TimeSeriesValues.cs - Gbtc
+//  DataSourceValue.cs - Gbtc
 //
-//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,47 +16,31 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/12/2016 - Ritchie Carroll
+//  02/13/2017 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System.Collections.Generic;
-
 namespace GrafanaAdapters
 {
     /// <summary>
-    /// Defines a Grafana time-series values.
+    /// Defines a structure that represents an individual time-series value from a data source.
     /// </summary>
-    /// <remarks>
-    /// This structure is serialized and returned to Grafana via JSON.
-    /// </remarks>
-    public class TimeSeriesValues
+    public struct DataSourceValue
     {
         /// <summary>
-        /// Data point index for value.
+        /// Query target, e.g., a point-tag.
         /// </summary>
-        public const int Value = 0;
+        public string Target;
 
         /// <summary>
-        /// Data point index for time.
+        /// Queried value.
         /// </summary>
-        public const int Time = 1;
+        public double Value;
 
         /// <summary>
-        /// Defines a Grafana time-series value point source.
+        /// Timestamp, in Unix epoch seconds, of queried value.
         /// </summary>
-        public string target;
-
-        /// <summary>
-        /// Defines a Grafana time-series value data.
-        /// </summary>
-        /// <remarks>
-        /// "datapoints":[
-        ///       [622,1450754160000],
-        ///       [365,1450754220000]
-        /// ]
-        /// </remarks>
-        public List<double[]> datapoints;
+        public double Time;
     }
 }

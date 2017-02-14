@@ -43,7 +43,7 @@ namespace GrafanaAdapters
         #region [ Members ]
 
         // Nested Types
-        private class HistorianDataSource : GrafanaDataSourceBase
+        private sealed class HistorianDataSource : GrafanaDataSourceBase
         {
             private readonly GrafanaDataService m_parent;
 
@@ -52,27 +52,16 @@ namespace GrafanaAdapters
                 m_parent = parent;
             }
 
-            protected override IEnumerable<TimeSeriesValues> QueryTimeSeriesValues(DateTime startTime, DateTime stopTime, int maxDataPoints, Dictionary<ulong, string> targetMap, CancellationToken cancellationToken)
+            protected override IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, int maxDataPoints, ulong pointID, string target, CancellationToken cancellationToken)
             {
                 long baseTicks = UnixTimeTag.BaseTicks.Value;
 
-                if (targetMap.Count <= 0)
-                    yield break;
-
-                foreach (ulong measurementID in targetMap.Keys)
+                return m_parent.Archive.ReadData((int)pointID, startTime, stopTime, false).Select(dataPoint => new DataSourceValue
                 {
-                    if (cancellationToken.IsCancellationRequested)
-                        break;
-
-                    TimeSeriesValues series = new TimeSeriesValues { target = targetMap[measurementID], datapoints = new List<double[]>() };
-                    IDataPoint[] data = m_parent.Archive.ReadData((int)measurementID, startTime, stopTime, false).ToArray();
-                    int interval = data.Length / maxDataPoints + 1;
-                    int pointCount = 0;
-
-                    series.datapoints.AddRange(data.Where(point => pointCount++ % interval == 0).Select(point => new[] { point.Value, (point.Time.ToDateTime().Ticks - baseTicks) / (double)Ticks.PerMillisecond }));
-
-                    yield return series;
-                }
+                    Target = target,
+                    Value = dataPoint.Value,
+                    Time = (dataPoint.Time.ToDateTime().Ticks - baseTicks) / (double)Ticks.PerMillisecond
+                });
             }
         }
 

@@ -64,6 +64,7 @@
     <Compile Include="AnnotationResponse.cs" />
     <Compile Include="AnnotationType.cs" />
     <Compile Include="Column.cs" />
+    <Compile Include="DataSourceValueGroup.cs" />
     <Compile Include="GrafanaDataService.cs" />
     <Compile Include="GrafanaDataSourceBase.cs" />
     <Compile Include="IGrafanaDataService.cs" />
@@ -74,6 +75,7 @@
     <Compile Include="Table.cs" />
     <Compile Include="Target.cs" />
     <Compile Include="TargetCache.cs" />
+    <Compile Include="DataSourceValue.cs" />
     <Compile Include="TimeSeriesValues.cs" />
   </ItemGroup>
   <ItemGroup>

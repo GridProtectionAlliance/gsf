@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  TimeSeriesValues.cs - Gbtc
+//  DataSourceValueGroup.cs - Gbtc
 //
-//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/12/2016 - Ritchie Carroll
+//  02/14/2017 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -26,37 +26,21 @@ using System.Collections.Generic;
 namespace GrafanaAdapters
 {
     /// <summary>
-    /// Defines a Grafana time-series values.
+    /// Defines a class that represents an enumeration of <see cref="DataSourceValue"/> for a given target.
     /// </summary>
     /// <remarks>
-    /// This structure is serialized and returned to Grafana via JSON.
+    /// This is a group construct keyed on <see cref="Target"/> for data source value enumerations.
     /// </remarks>
-    public class TimeSeriesValues
+    public class DataSourceValueGroup
     {
         /// <summary>
-        /// Data point index for value.
+        /// Query target, e.g., a point-tag, representative of all <see cref="Source"/> values.
         /// </summary>
-        public const int Value = 0;
+        public string Target;
 
         /// <summary>
-        /// Data point index for time.
+        /// Data source values enumerable.
         /// </summary>
-        public const int Time = 1;
-
-        /// <summary>
-        /// Defines a Grafana time-series value point source.
-        /// </summary>
-        public string target;
-
-        /// <summary>
-        /// Defines a Grafana time-series value data.
-        /// </summary>
-        /// <remarks>
-        /// "datapoints":[
-        ///       [622,1450754160000],
-        ///       [365,1450754220000]
-        /// ]
-        /// </remarks>
-        public List<double[]> datapoints;
+        public IEnumerable<DataSourceValue> Source;
     }
 }
