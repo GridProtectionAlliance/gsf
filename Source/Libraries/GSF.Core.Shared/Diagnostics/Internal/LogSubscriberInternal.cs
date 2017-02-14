@@ -67,14 +67,14 @@ namespace GSF.Diagnostics
         /// <summary>
         /// Since weak references are linked to this class, this is a common one that everyone can use when storing this weak reference.
         /// </summary>
-        public readonly WeakReference Reference;
+        public readonly NullableWeakReference Reference;
 
         /// <summary>
         /// Creates a <see cref="LogSubscriberInternal"/>
         /// </summary>
         public LogSubscriberInternal(Action recalculateRoutingTable)
         {
-            Reference = new WeakReference(this);
+            Reference = new NullableWeakReference(this);
             m_recalculateRoutingTable = recalculateRoutingTable;
             m_syncRoot = new object();
             m_allSubscriptions = null;
@@ -225,7 +225,7 @@ namespace GSF.Diagnostics
         {
             m_disposed = true;
             m_allSubscriptions = null;
-            Reference.Target = null;
+            Reference.Clear();
         }
 
         public static readonly LogSubscriberInternal DisposedSubscriber;

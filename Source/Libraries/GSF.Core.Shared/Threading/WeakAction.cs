@@ -40,7 +40,7 @@ namespace GSF.Threading
     /// an can be quickly executed without the overhead of using reflection.
     /// </remarks>
     [SuppressMessage("Microsoft.Usage", "CA2237:MarkISerializableTypesWithSerializable")]
-    public class WeakAction : WeakReference
+    public class WeakAction : NullableWeakReference
     {
         private bool m_isStatic;
         private readonly Action<object> m_compiledMethod;
@@ -81,13 +81,13 @@ namespace GSF.Threading
         /// <summary>
         /// Clears <see cref="Action"/> callback target.
         /// </summary>
-        public void Clear()
+        public override void Clear()
         {
             //Note, the race condition that exists here would simply cause
             //A static method exit anyway since Target is always null for static 
             //methods.
             m_isStatic = false;
-            Target = null;
+            base.Clear();
         }
     }
 
@@ -100,7 +100,7 @@ namespace GSF.Threading
     /// an can be quickly executed without the overhead of using reflection.
     /// </remarks>
     [SuppressMessage("Microsoft.Usage", "CA2237:MarkISerializableTypesWithSerializable")]
-    public class WeakAction<T> : WeakReference
+    public class WeakAction<T> : NullableWeakReference
     {
         private bool m_isStatic;
         private readonly Action<object,T> m_compiledMethod;
@@ -141,13 +141,13 @@ namespace GSF.Threading
         /// <summary>
         /// Clears <see cref="Action"/> callback target.
         /// </summary>
-        public void Clear()
+        public override void Clear()
         {
             //Note, the race condition that exists here would simply cause
             //A static method exit anyway since Target is always null for static 
             //methods.
             m_isStatic = false;
-            Target = null;
+            base.Clear();
         }
     }
 

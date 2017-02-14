@@ -40,7 +40,7 @@ namespace GSF.Diagnostics
         private readonly object m_syncRoot;
         private readonly Dictionary<Type, LogPublisherInternal> m_typeIndexCache;
         private readonly List<LogPublisherInternal> m_allPublishers;
-        private readonly List<WeakReference> m_subscribers;
+        private readonly List<NullableWeakReference> m_subscribers;
         private readonly ConcurrentQueue<Tuple<LogMessage, LogPublisherInternal>> m_messages;
         private readonly ScheduledTask m_routingTask;
         private readonly ScheduledTask m_calculateRoutingTable;
@@ -58,7 +58,7 @@ namespace GSF.Diagnostics
             m_syncRoot = new object();
             m_typeIndexCache = new Dictionary<Type, LogPublisherInternal>();
             m_allPublishers = new List<LogPublisherInternal>();
-            m_subscribers = new List<WeakReference>();
+            m_subscribers = new List<NullableWeakReference>();
             m_messages = new ConcurrentQueue<Tuple<LogMessage, LogPublisherInternal>>();
 
             // Since ScheduledTask calls ShutdownHandler, which calls Logger. This initialization method cannot occur

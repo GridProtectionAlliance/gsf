@@ -37,7 +37,7 @@ namespace GSF.Diagnostics
         /// <summary>
         /// All of the routes that made up this filter collection
         /// </summary>
-        public List<Tuple<MessageAttributeFilter, WeakReference>> Routes = new List<Tuple<MessageAttributeFilter, WeakReference>>();
+        public List<Tuple<MessageAttributeFilter, NullableWeakReference>> Routes = new List<Tuple<MessageAttributeFilter, NullableWeakReference>>();
 
         public void Add(MessageAttributeFilter filter, LogSubscriberInternal subscriber)
         {
