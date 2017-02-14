@@ -251,8 +251,11 @@ namespace GSF.Units
         /// </returns>
         public override bool Equals(object obj)
         {
-            if (obj is double || obj is Angle)
+            if (obj is double)
                 return Equals((double)obj);
+
+            else if (obj is Angle)
+                return Equals((Angle)obj);
 
             return false;
         }

@@ -280,8 +280,11 @@ namespace GSF.Units
         /// </returns>
         public override bool Equals(object obj)
         {
-            if (obj is double || obj is Temperature)
+            if (obj is double)
                 return Equals((double)obj);
+
+            else if (obj is Temperature)
+                return Equals((Temperature)obj);
 
             return false;
         }

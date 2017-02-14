@@ -296,8 +296,11 @@ namespace GSF.Units
         /// </returns>
         public override bool Equals(object obj)
         {
-            if (obj is double || obj is Energy)
+            if (obj is double)
                 return Equals((double)obj);
+
+            else if (obj is Energy)
+                return Equals((Energy)obj);
 
             return false;
         }

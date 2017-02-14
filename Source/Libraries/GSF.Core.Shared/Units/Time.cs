@@ -416,8 +416,14 @@ namespace GSF.Units
         /// </returns>
         public override bool Equals(object obj)
         {
-            if (obj is double || obj is Time || obj is TimeSpan)
+            if (obj is double)
+                return Equals((double)obj);
+
+            else if (obj is Time)
                 return Equals((Time)obj);
+
+            else if (obj is TimeSpan)
+                return Equals((TimeSpan)obj);
 
             return false;
         }

@@ -203,10 +203,17 @@ namespace GSF.Units
             if ((object)value == null)
                 return 1;
 
-            if (!(value is double) && !(value is Mass))
+            double num;
+
+            if (value is double)
+                num = (double)value;
+
+            else if (value is Mass)
+                num = (Mass)value;
+
+            else
                 throw new ArgumentException("Argument must be a Double or a Mass");
 
-            double num = (double)value;
             return (m_value < num ? -1 : (m_value > num ? 1 : 0));
         }
 
@@ -250,8 +257,11 @@ namespace GSF.Units
         /// </returns>
         public override bool Equals(object obj)
         {
-            if (obj is double || obj is Mass)
+            if (obj is double)
                 return Equals((double)obj);
+
+            else if (obj is Mass)
+                return Equals((Mass)obj);
 
             return false;
         }

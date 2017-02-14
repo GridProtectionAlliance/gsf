@@ -206,8 +206,11 @@ namespace GSF.Units
         /// </returns>
         public override bool Equals(object obj)
         {
-            if (obj is double || obj is Voltage)
+            if (obj is double)
                 return Equals((double)obj);
+
+            else if (obj is Voltage)
+                return Equals((Voltage)obj);
 
             return false;
         }

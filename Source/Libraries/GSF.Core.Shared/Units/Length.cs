@@ -279,8 +279,11 @@ namespace GSF.Units
         /// </returns>
         public override bool Equals(object obj)
         {
-            if (obj is double || obj is Length)
+            if (obj is double)
                 return Equals((double)obj);
+
+            else if (obj is Length)
+                return Equals((Length)obj);
 
             return false;
         }

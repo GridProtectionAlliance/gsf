@@ -249,8 +249,11 @@ namespace GSF.Units
         /// </returns>
         public override bool Equals(object obj)
         {
-            if (obj is double || obj is Speed)
+            if (obj is double)
                 return Equals((double)obj);
+
+            else if (obj is Speed)
+                return Equals((Speed)obj);
 
             return false;
         }
