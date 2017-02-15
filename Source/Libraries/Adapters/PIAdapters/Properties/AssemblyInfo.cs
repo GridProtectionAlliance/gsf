@@ -46,6 +46,6 @@ using System.Runtime.InteropServices;
 [assembly: Guid("D8064F6E-0B5D-4CBB-884E-75A2E11CA779")]
 
 // Assembly identity attributes.
-[assembly: AssemblyVersion("2.1.447.0")]
-[assembly: AssemblyFileVersion("2.1.447.0")]
-[assembly: AssemblyInformationalVersion("2.1.447-beta")]
+[assembly: AssemblyVersion("2.1.448.0")]
+[assembly: AssemblyFileVersion("2.1.448.0")]
+[assembly: AssemblyInformationalVersion("2.1.448-beta")]
