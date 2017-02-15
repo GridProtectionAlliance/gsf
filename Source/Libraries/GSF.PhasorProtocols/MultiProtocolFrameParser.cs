@@ -3315,6 +3315,19 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
+        /// Sends the specified raw command to the remote device.
+        /// </summary>
+        /// <param name="rawCommand"><see cref="ushort"/> to send to the remote device.</param>
+        /// <remarks>
+        /// Command will only be sent if <see cref="DeviceSupportsCommands"/> is <c>true</c> and <see cref="MultiProtocolFrameParser"/>.
+        /// </remarks>
+        /// <returns>A <see cref="WaitHandle"/>.</returns>
+        public WaitHandle SendRawDeviceCommand(ushort rawCommand)
+        {
+            return SendDeviceCommand((DeviceCommand)rawCommand);
+        }
+
+        /// <summary>
         /// Sends the specified <see cref="DeviceCommand"/> to the remote device.
         /// </summary>
         /// <param name="command"><see cref="DeviceCommand"/> to send to the remote device.</param>
