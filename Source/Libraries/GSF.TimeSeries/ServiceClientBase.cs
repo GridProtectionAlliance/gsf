@@ -165,7 +165,7 @@ namespace GSF.TimeSeries
         /// <param name="args">Service start arguments.</param>
         public virtual void Start(string[] args)
         {
-            string userInput = null;
+            string userInput = string.Empty;
             Arguments arguments = new Arguments(string.Join(" ", Arguments.ToArgs(Environment.CommandLine).Where(arg => !arg.StartsWith("--filter=", StringComparison.OrdinalIgnoreCase)).Skip(1)));
 
             if (arguments.Exists("OrderedArg1") && arguments.Exists("restart"))
@@ -287,7 +287,7 @@ namespace GSF.TimeSeries
                 long lastConnectAttempt = 0;
 
                 // Connect to service and send commands.
-                while (!string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
+                while ((object)userInput != null && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
                 {
                     try
                     {
@@ -328,10 +328,10 @@ namespace GSF.TimeSeries
                             Connect(username.ToString(), password.ToString());
                         }
 
-                        while (m_authenticated && m_clientHelper.Enabled && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
+                        while (m_authenticated && m_clientHelper.Enabled && (object)userInput != null && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
                         {
                             // Wait for a command from the user. 
-                            userInput = System.Console.ReadLine();
+                            userInput = System.Console.ReadLine()?.Trim();
 
                             // Write a blank line to the console.
                             WriteLine();
