@@ -46,21 +46,21 @@ namespace GrafanaAdapters
         private sealed class HistorianDataSource : GrafanaDataSourceBase
         {
             private readonly GrafanaDataService m_parent;
+            private readonly long m_baseTicks;
 
             public HistorianDataSource(GrafanaDataService parent)
             {
                 m_parent = parent;
+                m_baseTicks = UnixTimeTag.BaseTicks.Value;
             }
 
-            protected override IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, int maxDataPoints, ulong pointID, string target, CancellationToken cancellationToken)
+            protected override IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, bool decimate, Dictionary<ulong, string> targetMap)
             {
-                long baseTicks = UnixTimeTag.BaseTicks.Value;
-
-                return m_parent.Archive.ReadData((int)pointID, startTime, stopTime, false).Select(dataPoint => new DataSourceValue
+                return m_parent.Archive.ReadData(targetMap.Keys.Select(pointID => (int)pointID), startTime, stopTime, false).Select(dataPoint => new DataSourceValue
                 {
-                    Target = target,
+                    Target = targetMap[(ulong)dataPoint.HistorianID],
                     Value = dataPoint.Value,
-                    Time = (dataPoint.Time.ToDateTime().Ticks - baseTicks) / (double)Ticks.PerMillisecond
+                    Time = (dataPoint.Time.ToDateTime().Ticks - m_baseTicks) / (double)Ticks.PerMillisecond
                 });
             }
         }

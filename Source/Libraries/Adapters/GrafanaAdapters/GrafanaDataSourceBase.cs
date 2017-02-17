@@ -52,6 +52,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Example: <c>Average(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Average, Avg, Mean
+        /// Execution: Immediate enumeration.
         /// </remarks>
         Average,
         /// <summary>
@@ -60,6 +61,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Example: <c>Minimum(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Minimum, Min
+        /// Execution: Immediate enumeration.
         /// </remarks>
         Minimum,
         /// <summary>
@@ -68,6 +70,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Example: <c>Maximum(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Maximum, Max
+        /// Execution: Immediate enumeration.
         /// </remarks>
         Maximum,
         /// <summary>
@@ -76,6 +79,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Example: <c>Total(FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
         /// Variants: Total, Sum
+        /// Execution: Immediate enumeration.
         /// </remarks>
         Total,
         /// <summary>
@@ -84,6 +88,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Example: <c>Range(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Range
+        /// Execution: Immediate enumeration.
         /// </remarks>
         Range,
         /// <summary>
@@ -92,6 +97,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Example: <c>Count(PPA:1; PPA:2; PPA:3)</c><br/>
         /// Variants: Count
+        /// Execution: Immediate enumeration.
         /// </remarks>
         Count,
         /// <summary>
@@ -100,6 +106,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Example: <c>Distinct(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Distinct, Unique
+        /// Execution: Deferred enumeration.
         /// </remarks>
         Distinct,
         /// <summary>
@@ -108,8 +115,29 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Example: <c>AbsoluteValue(FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
         /// Variants: AbsoluteValue, Abs
+        /// Execution: Deferred enumeration.
         /// </remarks>
         AbsoluteValue,
+        /// <summary>
+        /// Returns a series of values that represent each of the values in the source series added with N.
+        /// N is a floating point value representing an additive offset to be applied to each value the source series.
+        /// </summary>
+        /// <remarks>
+        /// Example: <c>Add(-1.5, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
+        /// Variants: Add
+        /// Execution: Deferred enumeration.
+        /// </remarks>
+        Add,
+        /// <summary>
+        /// Returns a series of values that represent each of the values in the source series multiplied by N.
+        /// N is a floating point value representing a multiplicative factor to be applied to each value the source series.
+        /// </summary>
+        /// <remarks>
+        /// Example: <c>Multiply(0.5, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
+        /// Variants: Multiply
+        /// Execution: Deferred enumeration.
+        /// </remarks>
+        Multiply,
         /// <summary>
         /// Returns a series of values that represent the rounded value, with N fractional digits, of each of the values in the source series.
         /// N, optional, is a positive integer value representing the number of decimal places in the return value - defaults to 0.
@@ -117,6 +145,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Example: <c>Round(3, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Round
+        /// Execution: Deferred enumeration.
         /// </remarks>
         Round,
         /// <summary>
@@ -125,6 +154,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Example: <c>Floor(FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
         /// Variants: Floor
+        /// Execution: Deferred enumeration.
         /// </remarks>
         Floor,
         /// <summary>
@@ -133,6 +163,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Example: <c>Ceiling(FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
         /// Variants: Ceiling, Ceil
+        /// Execution: Deferred enumeration.
         /// </remarks>
         Ceiling,
         /// <summary>
@@ -141,6 +172,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Example: <c>Truncate(FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
         /// Variants: Truncate, Trunc
+        /// Execution: Deferred enumeration.
         /// </remarks>
         Truncate,
         /// <summary>
@@ -149,6 +181,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Example: <c>StandardDeviation(FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
         /// Variants: StandardDeviation, StdDev
+        /// Execution: Immediate in-memory array load.
         /// </remarks>
         StandardDeviation,
         /// <summary>
@@ -157,6 +190,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Example: <c>StandardDeviationSample(FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
         /// Variants: StandardDeviationSample, StdDevSamp
+        /// Execution: Immediate in-memory array load.
         /// </remarks>
         StandardDeviationSample,
         /// <summary>
@@ -165,6 +199,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Example: <c>Median(FILTER ActiveMeasurements WHERE SignalType='ALOG')</c><br/>
         /// Variants: Median, Med, Mid
+        /// Execution: Immediate in-memory array load.
         /// </remarks>
         Median,
         /// <summary>
@@ -173,54 +208,65 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Example: <c>Mode(FILTER TOP 5 ActiveMeasurements WHERE SignalType='DIGI')</c><br/>
         /// Variants: Mode
+        /// Execution: Immediate in-memory array load.
         /// </remarks>
         Mode,
         /// <summary>
         /// Returns a series of N, or N% of total, values that are the largest in the source series.
-        /// N is either a positive integer value, representing a total, that is greater than zero - or - a floating point value, representing a percentage, that must range from greater than 0 to less than or equal to 100.
+        /// N is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
+        /// representing a percentage, that must range from greater than 0 to less than or equal to 100.
         /// Second parameter, optional, is a boolean flag representing if time in dataset should be normalized - defaults to true.
         /// </summary>
         /// <remarks>
         /// Example: <c>Top(50%, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Top
+        /// Execution: Immediate in-memory array load.
         /// </remarks>
         Top,
         /// <summary>
         /// Returns a series of N, or N% of total, values that are the smallest in the source series.
-        /// N is either a positive integer value, representing a total, that is greater than zero - or - a floating point value, representing a percentage, that must range from greater than 0 to less than or equal to 100.
+        /// N is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
+        /// representing a percentage, that must range from greater than 0 to less than or equal to 100.
         /// Second parameter, optional, is a boolean flag representing if time in dataset should be normalized - defaults to true.
         /// </summary>
         /// <remarks>
         /// Example: <c>Bottom(100, false, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Bottom, Bot
+        /// Execution: Immediate in-memory array load.
         /// </remarks>
         Bottom,
         /// <summary>
         /// Returns a series of N, or N% of total, values that are a random sample of the values in the source series.
-        /// N is either a positive integer value, representing a total, that is greater than zero - or - a floating point value, representing a percentage, that must range from greater than 0 to less than or equal to 100.
+        /// N is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
+        /// representing a percentage, that must range from greater than 0 to less than or equal to 100.
         /// Second parameter, optional, is a boolean flag representing if time in dataset should be normalized - defaults to true.
         /// </summary>
         /// <remarks>
         /// Example: <c>Random(25%, FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
         /// Variants: Random, Rand, Sample
+        /// Execution: Immediate in-memory array load.
         /// </remarks>
         Random,
         /// <summary>
         /// Returns a series of N, or N% of total, values from the start of the source series.
-        /// N, optional, is either a positive integer value, representing a total, that is greater than zero - or - a floating point value, representing a percentage, that must range from greater than 0 to less than or equal to 100 - defaults to 1.
+        /// N, optional, is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
+        /// representing a percentage, that must range from greater than 0 to less than or equal to 100 - defaults to 1.
         /// </summary>
         /// <remarks>
         /// Example: <c>First(5%, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: First
+        /// Execution: Immediate in-memory array load.
         /// </remarks>
         First,
         /// <summary>
         /// Returns a series of N, or N% of total, values from the end of the source series.
-        /// N, optional, is either a positive integer value, representing a total, that is greater than zero - or - a floating point value, representing a percentage, that must range from greater than 0 to less than or equal to 100 - defaults to 1.
+        /// N, optional, is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
+        /// representing a percentage, that must range from greater than 0 to less than or equal to 100 - defaults to 1.
         /// </summary>
         /// <remarks>
         /// Example: <c>Last(150, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Last
+        /// Execution: Immediate in-memory array load.
         /// </remarks>
         Last,
         /// <summary>
@@ -230,6 +276,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Example: <c>Percentile(10%, FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
         /// Variants: Percentile, Pctl
+        /// Execution: Immediate in-memory array load.
         /// </remarks>
         Percentile,
         /// <summary>
@@ -238,6 +285,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Example: <c>Difference(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Difference, Diff
+        /// Execution: Deferred enumeration.
         /// </remarks>
         Difference,
         /// <summary>
@@ -246,6 +294,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Example: <c>TimeDifference(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: TimeDifference, TimeDiff
+        /// Execution: Deferred enumeration.
         /// </remarks>
         TimeDifference,
         /// <summary>
@@ -254,6 +303,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Example: <c>Derivative(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
         /// Variants: Derivative, Der
+        /// Execution: Deferred enumeration.
         /// </remarks>
         Derivative,
         /// <summary>
@@ -262,15 +312,19 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Example: <c>TimeIntegration(FILTER ActiveMeasurements WHERE SignalType='CALC' AND PointTag LIKE '%-MW:%')</c><br/>
         /// Variants: TimeIntegration, TimeInt
+        /// Execution: Immediate enumeration.
         /// </remarks>
         TimeIntegration,
         /// <summary>
         /// Returns a series of values that represent a decimated set of the values in the source series based on the specified interval N, in seconds.
-        /// N is a floating-point value that must be greater than zero that represents the desired time interval, in seconds, for the returned data.
+        /// N is a floating-point value that must be greater than or equal to zero that represents the desired time interval, in seconds, for the returned data.
+        /// Setting N value to zero will request non-decimated, full resolution data from the data source. A zero value will always produce the most accurate
+        /// aggregation calculation results but will increase query burden for large time ranges.
         /// </summary>
         /// <remarks>
-        /// Example: <c>Interval(0.5, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHM')</c><br/>
+        /// Example: <c>Sum(Interval(0, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHM'))</c><br/>
         /// Variants: Interval, Int
+        /// Execution: Deferred enumeration.
         /// </remarks>
         Interval,
         /// <summary>
@@ -378,16 +432,16 @@ namespace GrafanaAdapters
                 DateTime startTime = request.range.from.ParseJsonTimestamp();
                 DateTime stopTime = request.range.to.ParseJsonTimestamp();
                 int maxDataPoints = (int)(request.maxDataPoints * 1.05D);
-                List<TimeSeriesValues> result = new List<TimeSeriesValues>();
 
-                foreach (DataSourceValueGroup dataValues in QueryTargets(request.targets.Select(target => target.target.Trim()), startTime, stopTime, request.maxDataPoints, cancellationToken))
+                DataSourceValueGroup[] valueGroups = QueryTargets(request.targets.Select(target => target.target.Trim()), startTime, stopTime, true, cancellationToken).ToArray();
+
+                // Establish result series sequentially so that order remains consistent between calls
+                List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues { target = valueGroup.Target }).ToList();
+
+                Parallel.ForEach(result, new ParallelOptions { CancellationToken = cancellationToken }, series =>
                 {
-                    result.Add(new TimeSeriesValues
-                    {
-                        target = dataValues.Target,
-                        datapoints = dataValues.Source.Select(dataValue => new[] { dataValue.Value, dataValue.Time }).ToList()
-                    });
-                }
+                    series.datapoints = valueGroups.First(group => group.Target.Equals(series.target)).Source.Select(dataValue => new[] { dataValue.Value, dataValue.Time }).ToList();
+                });
 
                 // Make a final pass through data to decimate returned point volume (for graphing purposes), if needed
                 foreach (TimeSeriesValues series in result)
@@ -409,17 +463,15 @@ namespace GrafanaAdapters
         /// </summary>
         /// <param name="startTime">Start-time for query.</param>
         /// <param name="stopTime">Stop-time for query.</param>
-        /// <param name="maxDataPoints">Maximum data points to return.</param>
-        /// <param name="pointID">ID of target to query.</param>
-        /// <param name="target">Specified target, e.g., point-tag.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <param name="decimate">Flag that determines if data should be decimated over provided time range.</param>
+        /// <param name="targetMap">Set of IDs with associated targets to query.</param>
         /// <returns>Queried data source data in terms of value and time.</returns>
-        protected abstract IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, int maxDataPoints, ulong pointID, string target, CancellationToken cancellationToken);
+        protected abstract IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, bool decimate, Dictionary<ulong, string> targetMap);
 
-        private IEnumerable<DataSourceValueGroup> QueryTargets(IEnumerable<string> targets, DateTime startTime, DateTime stopTime, int maxDataPoints, CancellationToken cancellationToken)
+        private IEnumerable<DataSourceValueGroup> QueryTargets(IEnumerable<string> targets, DateTime startTime, DateTime stopTime, bool decimate, CancellationToken cancellationToken)
         {
             // A single target might look like the following:
-            // PPA:15; STAT:20; SETSUM(COUNT(PPA:8; PPA:9; PPA:10)); FILTER ActiveMeasurements WHERE SignalType = 'VPHA'; RANGE(PPA:99; SUM(FILTER ActiveMeasurements WHERE SignalType = 'FREQ'; STAT:12))
+            // PPA:15; STAT:20; SETSUM(COUNT(PPA:8; PPA:9; PPA:10)); FILTER ActiveMeasurements WHERE SignalType IN ('IPHA', 'VPHA'); RANGE(PPA:99; SUM(FILTER ActiveMeasurements WHERE SignalType = 'FREQ'; STAT:12))
 
             HashSet<string> targetSet = new HashSet<string>(targets, StringComparer.OrdinalIgnoreCase); // Targets include user provided input, so casing should be ignored
             HashSet<string> reducedTargetSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -457,15 +509,8 @@ namespace GrafanaAdapters
             {
                 // Execute series functions
                 foreach (Tuple<SeriesFunction, string, bool> parsedFunction in seriesFunctions.Select(ParseSeriesFunction))
-                {
-                    foreach (DataSourceValueGroup dataValues in ExecuteSeriesFunction(parsedFunction, startTime, stopTime, cancellationToken))
-                    {
-                        if (cancellationToken.IsCancellationRequested)
-                            yield break;
-
-                        yield return dataValues;
-                    }
-                }
+                    foreach (DataSourceValueGroup valueGroup in ExecuteSeriesFunction(parsedFunction, startTime, stopTime, decimate, cancellationToken))
+                        yield return valueGroup;
 
                 // Use reduced target set that excludes any series functions
                 targetSet = reducedTargetSet;
@@ -494,22 +539,22 @@ namespace GrafanaAdapters
                         targetMap[key.ID] = target;
                 }
 
-                // Query underlying data source for each target
-                foreach (KeyValuePair<ulong, string> target in targetMap)
-                {
-                    if (cancellationToken.IsCancellationRequested)
-                        yield break;
+                long readCount = 0;
 
+                // Query underlying data source for each target
+                List<DataSourceValue> dataValues = QueryDataSourceValues(startTime, stopTime, decimate, targetMap)
+                    .TakeWhile(dataValue => readCount++ % 10000 != 0 || !cancellationToken.IsCancellationRequested).ToList();
+
+                foreach (KeyValuePair<ulong, string> target in targetMap)
                     yield return new DataSourceValueGroup
                     {
                         Target = target.Value,
-                        Source = QueryDataSourceValues(startTime, stopTime, maxDataPoints, target.Key, target.Value, cancellationToken)
+                        Source = dataValues.Where(dataValue => dataValue.Target.Equals(target.Value))
                     };
-                }               
             }
         }
 
-        private IEnumerable<DataSourceValueGroup> ExecuteSeriesFunction(Tuple<SeriesFunction, string, bool> parsedFunction, DateTime startTime, DateTime stopTime, CancellationToken cancellationToken)
+        private IEnumerable<DataSourceValueGroup> ExecuteSeriesFunction(Tuple<SeriesFunction, string, bool> parsedFunction, DateTime startTime, DateTime stopTime, bool decimate, CancellationToken cancellationToken)
         {
             SeriesFunction seriesFunction = parsedFunction.Item1;
             string expression = parsedFunction.Item2;
@@ -580,8 +625,12 @@ namespace GrafanaAdapters
             string[] parameters = expressionParameters.Item1;
             string targetExpression = expressionParameters.Item2;   // Final function parameter is always target expression
 
-            // Query function expression to get series data - for accurate results, data source should not decimate data needed for aggregate calculations
-            IEnumerable<DataSourceValueGroup> dataset = QueryTargets(new[] { targetExpression }, startTime, stopTime, int.MaxValue, cancellationToken);
+            // When accurate calculation results are requested, query data source at full resolution
+            if (seriesFunction == SeriesFunction.Interval && ParseFloat(parameters[0]) == 0.0D)
+                decimate = false;
+
+            // Query function expression to get series data
+            IEnumerable<DataSourceValueGroup> dataset = QueryTargets(new[] { targetExpression }, startTime, stopTime, decimate, cancellationToken);
 
             if (setOperation)
             {
@@ -589,7 +638,7 @@ namespace GrafanaAdapters
                 DataSourceValueGroup result = new DataSourceValueGroup
                 {
                     Target = $"Set{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{targetExpression})",
-                    Source = ExecuteSeriesFunctionOverSource(dataset.SelectMany(source => source.Source), seriesFunction, parameters)
+                    Source = ExecuteSeriesFunctionOverSource(dataset.AsParallel().SelectMany(source => source.Source), seriesFunction, parameters)
                 };
 
                 // Handle edge-case set operations - for these functions there is data in the target series as well
@@ -604,20 +653,15 @@ namespace GrafanaAdapters
             else
             {
                 foreach (DataSourceValueGroup dataValues in dataset)
-                {
                     yield return new DataSourceValueGroup
                     {
                         Target = $"{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{dataValues.Target})",
                         Source = ExecuteSeriesFunctionOverSource(dataValues.Source, seriesFunction, parameters)
                     };
-                }
             }
         }
 
         // Design philosophy: whenever possible this function should delay source enumeration since source data sets could be very large.
-        // Possible future optimizations:
-        //   (1) If data source supports a fast "count" estimate for a point in a time range, many functions could be further optimized by not flattening data source to get count
-        //   (2) If user does need high-accuracy for aggregations, an option could allow data sources that support query decimation to reduce returned data volume
         private static IEnumerable<DataSourceValue> ExecuteSeriesFunctionOverSource(IEnumerable<DataSourceValue> source, SeriesFunction seriesFunction, string[] parameters)
         {
             DataSourceValue[] values;
@@ -633,7 +677,7 @@ namespace GrafanaAdapters
                 return dataValue.Value;
             });
 
-            double baseTime, timeStep;
+            double baseTime, timeStep, value;
             bool normalizeTime;
             int count;
 
@@ -710,6 +754,20 @@ namespace GrafanaAdapters
                     break;
                 case SeriesFunction.AbsoluteValue:
                     foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = Math.Abs(dataValue.Value), Time = dataValue.Time, Target = dataValue.Target }))
+                        yield return dataValue;
+
+                    break;
+                case SeriesFunction.Add:
+                    value = ParseFloat(parameters[0], false);
+
+                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value + value, Time = dataValue.Time, Target = dataValue.Target }))
+                        yield return dataValue;
+
+                    break;
+                case SeriesFunction.Multiply:
+                    value = ParseFloat(parameters[0], false);
+
+                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value * value, Time = dataValue.Time, Target = dataValue.Target }))
                         yield return dataValue;
 
                     break;
@@ -909,7 +967,7 @@ namespace GrafanaAdapters
                     }
                     break;
                 case SeriesFunction.Interval:
-                    double value = ParseFloat(parameters[0]) / SI.Milli;
+                    value = ParseFloat(parameters[0]) / SI.Milli;
 
                     foreach (DataSourceValue dataValue in source)
                     {
@@ -945,6 +1003,8 @@ namespace GrafanaAdapters
         private static readonly Regex s_countExpression;
         private static readonly Regex s_distinctExpression;
         private static readonly Regex s_absoluteValueExpression;
+        private static readonly Regex s_addExpression;
+        private static readonly Regex s_multiplyExpression;
         private static readonly Regex s_roundExpression;
         private static readonly Regex s_floorExpression;
         private static readonly Regex s_ceilingExpression;
@@ -984,6 +1044,8 @@ namespace GrafanaAdapters
             s_countExpression = new Regex(string.Format(GetExpression, "Count"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_distinctExpression = new Regex(string.Format(GetExpression, "(Distinct|Unique)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_absoluteValueExpression = new Regex(string.Format(GetExpression, "(AbsoluteValue|Abs)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_addExpression = new Regex(string.Format(GetExpression, "Add"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_multiplyExpression = new Regex(string.Format(GetExpression, "Multiply"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_roundExpression = new Regex(string.Format(GetExpression, "Round"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_floorExpression = new Regex(string.Format(GetExpression, "Floor"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_ceilingExpression = new Regex(string.Format(GetExpression, "(Ceiling|Ceil)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -1015,6 +1077,8 @@ namespace GrafanaAdapters
                 [SeriesFunction.Count] = 0,
                 [SeriesFunction.Distinct] = 0,
                 [SeriesFunction.AbsoluteValue] = 0,
+                [SeriesFunction.Add] = 1,
+                [SeriesFunction.Multiply] = 1,
                 [SeriesFunction.Round] = 0,
                 [SeriesFunction.Floor] = 0,
                 [SeriesFunction.Ceiling] = 0,
@@ -1047,6 +1111,8 @@ namespace GrafanaAdapters
                 [SeriesFunction.Count] = 0,
                 [SeriesFunction.Distinct] = 0,
                 [SeriesFunction.AbsoluteValue] = 0,
+                [SeriesFunction.Add] = 0,
+                [SeriesFunction.Multiply] = 0,
                 [SeriesFunction.Round] = 1,
                 [SeriesFunction.Floor] = 0,
                 [SeriesFunction.Ceiling] = 0,
@@ -1133,6 +1199,20 @@ namespace GrafanaAdapters
 
                 if (filterMatch.Success)
                     return new Tuple<SeriesFunction, string, bool>(SeriesFunction.AbsoluteValue, filterMatch.Result("${Expression}").Trim(), setOperation);
+
+                // Look for add function
+                lock (s_addExpression)
+                    filterMatch = s_addExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.Add, filterMatch.Result("${Expression}").Trim(), setOperation);
+
+                // Look for multiply function
+                lock (s_multiplyExpression)
+                    filterMatch = s_multiplyExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.Multiply, filterMatch.Result("${Expression}").Trim(), setOperation);
 
                 // Look for round function
                 lock (s_roundExpression)
@@ -1300,7 +1380,7 @@ namespace GrafanaAdapters
             return value;
         }
 
-        private static double ParseFloat(string parameter, bool includeZero = false)
+        private static double ParseFloat(string parameter, bool validateGTEZero = true)
         {
             double value;
 
@@ -1309,16 +1389,8 @@ namespace GrafanaAdapters
             if (!double.TryParse(parameter, out value))
                 throw new FormatException($"Could not parse '{parameter}' as a floating-point value.");
 
-            if (includeZero)
-            {
-                if (value < 0.0D)
-                    throw new ArgumentOutOfRangeException($"Value '{parameter}' is less than zero.");
-            }
-            else
-            {
-                if (value <= 0.0D)
-                    throw new ArgumentOutOfRangeException($"Value '{parameter}' is less than or equal to zero.");
-            }
+            if (validateGTEZero && value < 0.0D)
+                throw new ArgumentOutOfRangeException($"Value '{parameter}' is less than zero.");
 
             return value;
         }
