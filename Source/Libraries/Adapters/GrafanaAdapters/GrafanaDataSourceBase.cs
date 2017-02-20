@@ -50,8 +50,9 @@ namespace GrafanaAdapters
         /// Returns a single value that represents the mean of the values in the source series.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>Average(expression)</c><br/>
         /// Example: <c>Average(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
-        /// Variants: Average, Avg, Mean
+        /// Variants: Average, Avg, Mean<br/>
         /// Execution: Immediate enumeration.
         /// </remarks>
         Average,
@@ -59,8 +60,9 @@ namespace GrafanaAdapters
         /// Returns a single value that is the minimum of the values in the source series.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>Minimum(expression)</c><br/>
         /// Example: <c>Minimum(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
-        /// Variants: Minimum, Min
+        /// Variants: Minimum, Min<br/>
         /// Execution: Immediate enumeration.
         /// </remarks>
         Minimum,
@@ -68,8 +70,9 @@ namespace GrafanaAdapters
         /// Returns a single value that is the maximum of the values in the source series.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>Maximum(expression)</c><br/>
         /// Example: <c>Maximum(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
-        /// Variants: Maximum, Max
+        /// Variants: Maximum, Max<br/>
         /// Execution: Immediate enumeration.
         /// </remarks>
         Maximum,
@@ -77,17 +80,19 @@ namespace GrafanaAdapters
         /// Returns a single value that represents the sum of the values in the source series.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>Total(expression)</c><br/>
         /// Example: <c>Total(FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
-        /// Variants: Total, Sum
+        /// Variants: Total, Sum<br/>
         /// Execution: Immediate enumeration.
         /// </remarks>
         Total,
         /// <summary>
-        /// Returns a single value that represents the range, i.e., maximum - minimum, of the values in the source series.
+        /// Returns a single value that represents the range, i.e., <c>maximum - minimum</c>, of the values in the source series.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>Range(expression)</c><br/>
         /// Example: <c>Range(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
-        /// Variants: Range
+        /// Variants: Range<br/>
         /// Execution: Immediate enumeration.
         /// </remarks>
         Range,
@@ -95,8 +100,9 @@ namespace GrafanaAdapters
         /// Returns a single value that is the count of the values in the source series.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>Count(expression)</c><br/>
         /// Example: <c>Count(PPA:1; PPA:2; PPA:3)</c><br/>
-        /// Variants: Count
+        /// Variants: Count<br/>
         /// Execution: Immediate enumeration.
         /// </remarks>
         Count,
@@ -104,8 +110,9 @@ namespace GrafanaAdapters
         /// Returns a series of values that represent the unique set of values in the source series.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>Distinct(expression)</c><br/>
         /// Example: <c>Distinct(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
-        /// Variants: Distinct, Unique
+        /// Variants: Distinct, Unique<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         Distinct,
@@ -113,8 +120,9 @@ namespace GrafanaAdapters
         /// Returns a series of values that represent the absolute value each of the values in the source series.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>AbsoluteValue(expression)</c><br/>
         /// Example: <c>AbsoluteValue(FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
-        /// Variants: AbsoluteValue, Abs
+        /// Variants: AbsoluteValue, Abs<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         AbsoluteValue,
@@ -123,8 +131,9 @@ namespace GrafanaAdapters
         /// N is a floating point value representing an additive offset to be applied to each value the source series.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>Add(N, expression)</c><br/>
         /// Example: <c>Add(-1.5, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
-        /// Variants: Add
+        /// Variants: Add<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         Add,
@@ -133,8 +142,9 @@ namespace GrafanaAdapters
         /// N is a floating point value representing a multiplicative factor to be applied to each value the source series.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>Multiply(N, expression)</c><br/>
         /// Example: <c>Multiply(0.5, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
-        /// Variants: Multiply
+        /// Variants: Multiply<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         Multiply,
@@ -143,8 +153,9 @@ namespace GrafanaAdapters
         /// N, optional, is a positive integer value representing the number of decimal places in the return value - defaults to 0.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>Round([N], expression)</c><br/>
         /// Example: <c>Round(3, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
-        /// Variants: Round
+        /// Variants: Round<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         Round,
@@ -152,8 +163,9 @@ namespace GrafanaAdapters
         /// Returns a series of values that represent the smallest integral value that is less than or equal to each of the values in the source series.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>Floor(expression)</c><br/>
         /// Example: <c>Floor(FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
-        /// Variants: Floor
+        /// Variants: Floor<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         Floor,
@@ -161,8 +173,9 @@ namespace GrafanaAdapters
         /// Returns a series of values that represent the smallest integral value that is greater than or equal to each of the values in the source series.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>Ceiling(expression)</c><br/>
         /// Example: <c>Ceiling(FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
-        /// Variants: Ceiling, Ceil
+        /// Variants: Ceiling, Ceil<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         Ceiling,
@@ -170,8 +183,9 @@ namespace GrafanaAdapters
         /// Returns a series of values that represent the integral part of each of the values in the source series.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>Truncate(expression)</c><br/>
         /// Example: <c>Truncate(FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
-        /// Variants: Truncate, Trunc
+        /// Variants: Truncate, Trunc<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         Truncate,
@@ -179,8 +193,9 @@ namespace GrafanaAdapters
         /// Returns a single value that represents the standard deviation of the values in the source series.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>StandardDeviation(expression)</c><br/>
         /// Example: <c>StandardDeviation(FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
-        /// Variants: StandardDeviation, StdDev
+        /// Variants: StandardDeviation, StdDev<br/>
         /// Execution: Immediate in-memory array load.
         /// </remarks>
         StandardDeviation,
@@ -188,8 +203,9 @@ namespace GrafanaAdapters
         /// Returns a single value that represents the standard deviation, using sample calculation, of the values in the source series.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>StandardDeviationSample(expression)</c><br/>
         /// Example: <c>StandardDeviationSample(FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
-        /// Variants: StandardDeviationSample, StdDevSamp
+        /// Variants: StandardDeviationSample, StdDevSamp<br/>
         /// Execution: Immediate in-memory array load.
         /// </remarks>
         StandardDeviationSample,
@@ -197,8 +213,9 @@ namespace GrafanaAdapters
         /// Returns a single value that represents the median of the values in the source series.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>Median(expression)</c><br/>
         /// Example: <c>Median(FILTER ActiveMeasurements WHERE SignalType='ALOG')</c><br/>
-        /// Variants: Median, Med, Mid
+        /// Variants: Median, Med, Mid<br/>
         /// Execution: Immediate in-memory array load.
         /// </remarks>
         Median,
@@ -206,66 +223,72 @@ namespace GrafanaAdapters
         /// Returns a single value that represents the mode of the values in the source series.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>Mode(expression)</c><br/>
         /// Example: <c>Mode(FILTER TOP 5 ActiveMeasurements WHERE SignalType='DIGI')</c><br/>
-        /// Variants: Mode
+        /// Variants: Mode<br/>
         /// Execution: Immediate in-memory array load.
         /// </remarks>
         Mode,
         /// <summary>
         /// Returns a series of N, or N% of total, values that are the largest in the source series.
         /// N is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
-        /// representing a percentage, that must range from greater than 0 to less than or equal to 100.
+        /// suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100.
         /// Second parameter, optional, is a boolean flag representing if time in dataset should be normalized - defaults to true.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>Top(N|N%, [normalizeTime], expression)</c><br/>
         /// Example: <c>Top(50%, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
-        /// Variants: Top
+        /// Variants: Top<br/>
         /// Execution: Immediate in-memory array load.
         /// </remarks>
         Top,
         /// <summary>
         /// Returns a series of N, or N% of total, values that are the smallest in the source series.
         /// N is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
-        /// representing a percentage, that must range from greater than 0 to less than or equal to 100.
+        /// suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100.
         /// Second parameter, optional, is a boolean flag representing if time in dataset should be normalized - defaults to true.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>Bottom(N|N%, [normalizeTime], expression)</c><br/>
         /// Example: <c>Bottom(100, false, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
-        /// Variants: Bottom, Bot
+        /// Variants: Bottom, Bot<br/>
         /// Execution: Immediate in-memory array load.
         /// </remarks>
         Bottom,
         /// <summary>
         /// Returns a series of N, or N% of total, values that are a random sample of the values in the source series.
         /// N is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
-        /// representing a percentage, that must range from greater than 0 to less than or equal to 100.
+        /// suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100.
         /// Second parameter, optional, is a boolean flag representing if time in dataset should be normalized - defaults to true.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>Random(N|N%, [normalizeTime], expression)</c><br/>
         /// Example: <c>Random(25%, FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
-        /// Variants: Random, Rand, Sample
+        /// Variants: Random, Rand, Sample<br/>
         /// Execution: Immediate in-memory array load.
         /// </remarks>
         Random,
         /// <summary>
         /// Returns a series of N, or N% of total, values from the start of the source series.
         /// N, optional, is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
-        /// representing a percentage, that must range from greater than 0 to less than or equal to 100 - defaults to 1.
+        /// suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100 - defaults to 1.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>First([N|N%], expression)</c><br/>
         /// Example: <c>First(5%, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
-        /// Variants: First
+        /// Variants: First<br/>
         /// Execution: Immediate in-memory array load.
         /// </remarks>
         First,
         /// <summary>
         /// Returns a series of N, or N% of total, values from the end of the source series.
         /// N, optional, is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
-        /// representing a percentage, that must range from greater than 0 to less than or equal to 100 - defaults to 1.
+        /// suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100 - defaults to 1.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>Last([N|N%], expression)</c><br/>
         /// Example: <c>Last(150, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
-        /// Variants: Last
+        /// Variants: Last<br/>
         /// Execution: Immediate in-memory array load.
         /// </remarks>
         Last,
@@ -274,8 +297,9 @@ namespace GrafanaAdapters
         /// N is a floating point value, representing a percentage, that must range from 0 to 100.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>Percentile(N[%], expression)</c><br/>
         /// Example: <c>Percentile(10%, FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
-        /// Variants: Percentile, Pctl
+        /// Variants: Percentile, Pctl<br/>
         /// Execution: Immediate in-memory array load.
         /// </remarks>
         Percentile,
@@ -283,8 +307,9 @@ namespace GrafanaAdapters
         /// Returns a series of values that represent the difference between consecutive values in the source series.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>Difference(expression)</c><br/>
         /// Example: <c>Difference(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
-        /// Variants: Difference, Diff
+        /// Variants: Difference, Diff<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         Difference,
@@ -292,8 +317,9 @@ namespace GrafanaAdapters
         /// Returns a series of values that represent the time difference, in seconds, between consecutive values in the source series.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>TimeDifference(expression)</c><br/>
         /// Example: <c>TimeDifference(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
-        /// Variants: TimeDifference, TimeDiff
+        /// Variants: TimeDifference, TimeDiff<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         TimeDifference,
@@ -301,17 +327,19 @@ namespace GrafanaAdapters
         /// Returns a series of values that represent the rate of change, per second, for the difference between consecutive values in the source series.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>Derivative(expression)</c><br/>
         /// Example: <c>Derivative(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
-        /// Variants: Derivative, Der
+        /// Variants: Derivative, Der<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         Derivative,
         /// <summary>
-        /// Returns a single value that represents the time-based integration, i.e., the sum of V(n) * (T(n) - T(n-1)), of the values in the source series.
+        /// Returns a single value that represents the time-based integration, i.e., the sum of <c>V(n) * (T(n) - T(n-1))</c>, of the values in the source series.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>TimeIntegration(expression)</c><br/>
         /// Example: <c>TimeIntegration(FILTER ActiveMeasurements WHERE SignalType='CALC' AND PointTag LIKE '%-MW:%')</c><br/>
-        /// Variants: TimeIntegration, TimeInt
+        /// Variants: TimeIntegration, TimeInt<br/>
         /// Execution: Immediate enumeration.
         /// </remarks>
         TimeIntegration,
@@ -322,8 +350,9 @@ namespace GrafanaAdapters
         /// aggregation calculation results but will increase query burden for large time ranges.
         /// </summary>
         /// <remarks>
+        /// Signature: <c>Interval(N, expression)</c><br/>
         /// Example: <c>Sum(Interval(0, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHM'))</c><br/>
-        /// Variants: Interval, Int
+        /// Variants: Interval, Int<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         Interval,
@@ -658,362 +687,6 @@ namespace GrafanaAdapters
                         Target = $"{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{dataValues.Target})",
                         Source = ExecuteSeriesFunctionOverSource(dataValues.Source, seriesFunction, parameters)
                     };
-            }
-        }
-
-        // Design philosophy: whenever possible this function should delay source enumeration since source data sets could be very large.
-        private static IEnumerable<DataSourceValue> ExecuteSeriesFunctionOverSource(IEnumerable<DataSourceValue> source, SeriesFunction seriesFunction, string[] parameters)
-        {
-            DataSourceValue[] values;
-            DataSourceValue result;
-            double lastValue = double.NaN;
-            double lastTime = 0.0D;
-            string lastTarget = null;
-
-            IEnumerable<double> trackedValues = source.Select(dataValue =>
-            {
-                lastTime = dataValue.Time;
-                lastTarget = dataValue.Target;
-                return dataValue.Value;
-            });
-
-            double baseTime, timeStep, value;
-            bool normalizeTime;
-            int count;
-
-            switch (seriesFunction)
-            {
-                case SeriesFunction.Minimum:
-                    DataSourceValue minValue = new DataSourceValue { Value = double.MaxValue };
-
-                    foreach (DataSourceValue dataValue in source)
-                    {
-                        if (dataValue.Value <= minValue.Value)
-                            minValue = dataValue;
-                    }
-
-                    if (minValue.Time > 0.0D)
-                        yield return minValue;
-
-                    break;
-                case SeriesFunction.Maximum:
-                    DataSourceValue maxValue = new DataSourceValue { Value = double.MinValue };
-
-                    foreach (DataSourceValue dataValue in source)
-                    {
-                        if (dataValue.Value >= maxValue.Value)
-                            maxValue = dataValue;
-                    }
-
-                    if (maxValue.Time > 0.0D)
-                        yield return maxValue;
-
-                    break;
-                case SeriesFunction.Average:
-                    result.Value = trackedValues.Average();
-                    result.Time = lastTime;
-                    result.Target = lastTarget;
-                    yield return result;
-                    break;
-                case SeriesFunction.Total:
-                    result.Value = trackedValues.Sum();
-                    result.Time = lastTime;
-                    result.Target = lastTarget;
-                    yield return result;
-                    break;
-                case SeriesFunction.Range:
-                    DataSourceValue rangeMin = new DataSourceValue { Value = double.MaxValue };
-                    DataSourceValue rangeMax = new DataSourceValue { Value = double.MinValue };
-
-                    foreach (DataSourceValue dataValue in source)
-                    {
-                        if (dataValue.Value <= rangeMin.Value)
-                            rangeMin = dataValue;
-
-                        if (dataValue.Value >= rangeMax.Value)
-                            rangeMax = dataValue;
-                    }
-
-                    if (rangeMin.Time > 0.0D && rangeMax.Time > 0.0D)
-                    {
-                        result = rangeMax;
-                        result.Value = rangeMax.Value - rangeMin.Value;
-                        yield return result;
-                    }
-                    break;
-                case SeriesFunction.Count:
-                    result.Value = trackedValues.Count();
-                    result.Time = lastTime;
-                    result.Target = lastTarget;
-                    yield return result;
-                    break;
-                case SeriesFunction.Distinct:
-                    foreach (DataSourceValue dataValue in source.DistinctBy(dataValue => dataValue.Value))
-                        yield return dataValue;
-
-                    break;
-                case SeriesFunction.AbsoluteValue:
-                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = Math.Abs(dataValue.Value), Time = dataValue.Time, Target = dataValue.Target }))
-                        yield return dataValue;
-
-                    break;
-                case SeriesFunction.Add:
-                    value = ParseFloat(parameters[0], false);
-
-                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value + value, Time = dataValue.Time, Target = dataValue.Target }))
-                        yield return dataValue;
-
-                    break;
-                case SeriesFunction.Multiply:
-                    value = ParseFloat(parameters[0], false);
-
-                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value * value, Time = dataValue.Time, Target = dataValue.Target }))
-                        yield return dataValue;
-
-                    break;
-                case SeriesFunction.Round:
-                    count = parameters.Length == 0 ? 0 : ParseInt(parameters[0]);
-
-                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = Math.Round(dataValue.Value, count), Time = dataValue.Time, Target = dataValue.Target }))
-                        yield return dataValue;
-
-                    break;
-                case SeriesFunction.Floor:
-                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = Math.Floor(dataValue.Value), Time = dataValue.Time, Target = dataValue.Target }))
-                        yield return dataValue;
-
-                    break;
-                case SeriesFunction.Ceiling:
-                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = Math.Ceiling(dataValue.Value), Time = dataValue.Time, Target = dataValue.Target }))
-                        yield return dataValue;
-
-                    break;
-                case SeriesFunction.Truncate:
-                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = Math.Truncate(dataValue.Value), Time = dataValue.Time, Target = dataValue.Target }))
-                        yield return dataValue;
-
-                    break;
-                case SeriesFunction.StandardDeviation:
-                    result.Value = trackedValues.StandardDeviation();
-                    result.Time = lastTime;
-                    result.Target = lastTarget;
-                    yield return result;
-                    break;
-                case SeriesFunction.StandardDeviationSample:
-                    result.Value = trackedValues.StandardDeviation(true);
-                    result.Time = lastTime;
-                    result.Target = lastTarget;
-                    yield return result;
-                    break;
-                case SeriesFunction.Median:
-                    values = source.Median();
-
-                    if (values.Length == 0)
-                        yield break;
-
-                    result = values.Last();
-
-                    if (values.Length > 1)
-                        result.Value = values.Select(dataValue => dataValue.Value).Average();
-
-                    yield return result;
-                    break;
-                case SeriesFunction.Mode:
-                    values = source.ToArray();
-                    yield return values.MajorityBy(values.Last(), dataValue => dataValue.Value, false);
-                    break;
-                case SeriesFunction.Top:
-                    values = source.ToArray();
-
-                    if (values.Length == 0)
-                        yield break;
-
-                    count = ParseCount(parameters[0], values.Length);
-
-                    if (count > values.Length)
-                        count = values.Length;
-
-                    normalizeTime = parameters.Length == 1 || parameters[1].Trim().ParseBoolean();
-                    baseTime = values[0].Time;
-                    timeStep = (values[values.Length - 1].Time - baseTime) / (count - 1).NotZero(1);
-                    Array.Sort(values, (a, b) => a.Value < b.Value ? -1 : (a.Value > b.Value ? 1 : 0));
-
-                    foreach (DataSourceValue dataValue in values.Take(count).Select((dataValue, i) => new DataSourceValue { Value = dataValue.Value, Time = normalizeTime ? baseTime + i * timeStep : dataValue.Time }))
-                        yield return dataValue;
-
-                    break;
-                case SeriesFunction.Bottom:
-                    values = source.ToArray();
-
-                    if (values.Length == 0)
-                        yield break;
-
-                    count = ParseCount(parameters[0], values.Length);
-
-                    if (count > values.Length)
-                        count = values.Length;
-
-                    normalizeTime = parameters.Length == 1 || parameters[1].Trim().ParseBoolean();
-                    baseTime = values[0].Time;
-                    timeStep = (values[values.Length - 1].Time - baseTime) / (count - 1).NotZero(1);
-                    Array.Sort(values, (a, b) => a.Value > b.Value ? -1 : (a.Value < b.Value ? 1 : 0));
-
-                    foreach (DataSourceValue dataValue in values.Take(count).Select((dataValue, i) => new DataSourceValue { Value = dataValue.Value, Time = normalizeTime ? baseTime + i * timeStep : dataValue.Time }))
-                        yield return dataValue;
-
-                    break;
-                case SeriesFunction.Random:
-                    values = source.ToArray();
-
-                    if (values.Length == 0)
-                        yield break;
-
-                    count = ParseCount(parameters[0], values.Length);
-
-                    if (count > values.Length)
-                        count = values.Length;
-
-                    normalizeTime = parameters.Length == 1 || parameters[1].Trim().ParseBoolean();
-                    baseTime = values[0].Time;
-                    timeStep = (values[values.Length - 1].Time - baseTime) / (count - 1).NotZero(1);
-                    List<int> indexes = new List<int>(Enumerable.Range(0, values.Length));
-                    indexes.Scramble();
-
-                    foreach (DataSourceValue dataValue in indexes.Take(count).Select((index, i) => new DataSourceValue { Value = values[index].Value, Time = normalizeTime ? baseTime + i * timeStep : values[index].Time }))
-                        yield return dataValue;
-
-                    break;
-                case SeriesFunction.First:
-                    values = source.ToArray();
-
-                    if (values.Length == 0)
-                        yield break;
-
-                    count = parameters.Length == 0 ? 1 : ParseCount(parameters[0], values.Length);
-
-                    if (count > values.Length)
-                        count = values.Length;
-
-                    for (int i = 0; i < count; i++)
-                        yield return values[i];
-
-                    break;
-                case SeriesFunction.Last:
-                    values = source.ToArray();
-
-                    if (values.Length == 0)
-                        yield break;
-
-                    count = parameters.Length == 0 ? 1 : ParseCount(parameters[0], values.Length);
-
-                    if (count > values.Length)
-                        count = values.Length;
-
-                    for (int i = 0; i < count; i++)
-                        yield return values[values.Length - 1 - i];
-
-                    break;
-                case SeriesFunction.Percentile:
-                    double percent = ParsePercentage(parameters[0]);
-                    values = source.ToArray();
-
-                    if (values.Length == 0)
-                        yield break;
-
-                    Array.Sort(values, (a, b) => a.Value < b.Value ? -1 : (a.Value > b.Value ? 1 : 0));
-                    count = values.Length;
-
-                    if (percent == 0.0D)
-                    {
-                        yield return values.First();
-                    }
-                    else if (percent == 100.0D)
-                    {
-                        yield return values.Last();
-                    }
-                    else
-                    {
-                        double n = (count - 1) * (percent / 100.0D) + 1.0D;
-                        int k = (int)n;
-                        DataSourceValue kData = values[k];
-                        double d = n - k;
-                        double k0 = values[k - 1].Value;
-                        double k1 = kData.Value;
-
-                        result.Value = k0 + d * (k1 - k0);
-                        result.Time = kData.Time;
-                        result.Target = kData.Target;
-                        yield return result;
-                    }
-                    break;
-                case SeriesFunction.Difference:
-                    foreach (DataSourceValue dataValue in source)
-                    {
-                        if (lastTime > 0.0D)
-                            yield return new DataSourceValue { Value = dataValue.Value - lastValue, Time = dataValue.Time};
-
-                        lastValue = dataValue.Value;
-                        lastTime = dataValue.Time;
-                    }
-                    break;
-                case SeriesFunction.TimeDifference:
-                    foreach (DataSourceValue dataValue in source)
-                    {
-                        if (lastTime > 0.0D)
-                            yield return new DataSourceValue { Value = dataValue.Time - lastTime, Time = dataValue.Time};
-
-                        lastTime = dataValue.Time;
-                    }
-                    break;
-                case SeriesFunction.Derivative:
-                    foreach (DataSourceValue dataValue in source)
-                    {
-                        if (lastTime > 0.0D)
-                            yield return new DataSourceValue { Value = (dataValue.Value - lastValue) / (dataValue.Time - lastTime), Time = dataValue.Time};
-
-                        lastValue = dataValue.Value;
-                        lastTime = dataValue.Time;
-                    }
-                    break;
-                case SeriesFunction.TimeIntegration:
-                    result.Value = 0.0D;
-
-                    foreach (DataSourceValue dataValue in source)
-                    {
-                        if (lastTime > 0.0D)
-                            result.Value += dataValue.Value * (dataValue.Time - lastTime);
-
-                        lastTime = dataValue.Time;
-                        lastTarget = dataValue.Target;
-                    }
-
-                    if (lastTime > 0.0D)
-                    {
-                        result.Time = lastTime;
-                        result.Target = lastTarget;
-                        yield return result;
-                    }
-                    break;
-                case SeriesFunction.Interval:
-                    value = ParseFloat(parameters[0]) / SI.Milli;
-
-                    foreach (DataSourceValue dataValue in source)
-                    {
-                        if (lastTime > 0.0D)
-                        {
-                            if (dataValue.Time - lastTime > value)
-                            {
-                                lastTime = dataValue.Time;
-                                yield return dataValue;
-                            }
-                        }
-                        else
-                        {
-                            lastTime = dataValue.Time;
-                            yield return dataValue;
-                        }
-                    }
-                    break;
             }
         }
 
@@ -1385,6 +1058,362 @@ namespace GrafanaAdapters
             return result;
         }
 
+        // Design philosophy: whenever possible this function should delay source enumeration since source data sets could be very large.
+        private static IEnumerable<DataSourceValue> ExecuteSeriesFunctionOverSource(IEnumerable<DataSourceValue> source, SeriesFunction seriesFunction, string[] parameters)
+        {
+            DataSourceValue[] values;
+            DataSourceValue result;
+            double lastValue = double.NaN;
+            double lastTime = 0.0D;
+            string lastTarget = null;
+
+            IEnumerable<double> trackedValues = source.Select(dataValue =>
+            {
+                lastTime = dataValue.Time;
+                lastTarget = dataValue.Target;
+                return dataValue.Value;
+            });
+
+            double baseTime, timeStep, value;
+            bool normalizeTime;
+            int count;
+
+            switch (seriesFunction)
+            {
+                case SeriesFunction.Minimum:
+                    DataSourceValue minValue = new DataSourceValue { Value = double.MaxValue };
+
+                    foreach (DataSourceValue dataValue in source)
+                    {
+                        if (dataValue.Value <= minValue.Value)
+                            minValue = dataValue;
+                    }
+
+                    if (minValue.Time > 0.0D)
+                        yield return minValue;
+
+                    break;
+                case SeriesFunction.Maximum:
+                    DataSourceValue maxValue = new DataSourceValue { Value = double.MinValue };
+
+                    foreach (DataSourceValue dataValue in source)
+                    {
+                        if (dataValue.Value >= maxValue.Value)
+                            maxValue = dataValue;
+                    }
+
+                    if (maxValue.Time > 0.0D)
+                        yield return maxValue;
+
+                    break;
+                case SeriesFunction.Average:
+                    result.Value = trackedValues.Average();
+                    result.Time = lastTime;
+                    result.Target = lastTarget;
+                    yield return result;
+                    break;
+                case SeriesFunction.Total:
+                    result.Value = trackedValues.Sum();
+                    result.Time = lastTime;
+                    result.Target = lastTarget;
+                    yield return result;
+                    break;
+                case SeriesFunction.Range:
+                    DataSourceValue rangeMin = new DataSourceValue { Value = double.MaxValue };
+                    DataSourceValue rangeMax = new DataSourceValue { Value = double.MinValue };
+
+                    foreach (DataSourceValue dataValue in source)
+                    {
+                        if (dataValue.Value <= rangeMin.Value)
+                            rangeMin = dataValue;
+
+                        if (dataValue.Value >= rangeMax.Value)
+                            rangeMax = dataValue;
+                    }
+
+                    if (rangeMin.Time > 0.0D && rangeMax.Time > 0.0D)
+                    {
+                        result = rangeMax;
+                        result.Value = rangeMax.Value - rangeMin.Value;
+                        yield return result;
+                    }
+                    break;
+                case SeriesFunction.Count:
+                    result.Value = trackedValues.Count();
+                    result.Time = lastTime;
+                    result.Target = lastTarget;
+                    yield return result;
+                    break;
+                case SeriesFunction.Distinct:
+                    foreach (DataSourceValue dataValue in source.DistinctBy(dataValue => dataValue.Value))
+                        yield return dataValue;
+
+                    break;
+                case SeriesFunction.AbsoluteValue:
+                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = Math.Abs(dataValue.Value), Time = dataValue.Time, Target = dataValue.Target }))
+                        yield return dataValue;
+
+                    break;
+                case SeriesFunction.Add:
+                    value = ParseFloat(parameters[0], false);
+
+                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value + value, Time = dataValue.Time, Target = dataValue.Target }))
+                        yield return dataValue;
+
+                    break;
+                case SeriesFunction.Multiply:
+                    value = ParseFloat(parameters[0], false);
+
+                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = dataValue.Value * value, Time = dataValue.Time, Target = dataValue.Target }))
+                        yield return dataValue;
+
+                    break;
+                case SeriesFunction.Round:
+                    count = parameters.Length == 0 ? 0 : ParseInt(parameters[0]);
+
+                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = Math.Round(dataValue.Value, count), Time = dataValue.Time, Target = dataValue.Target }))
+                        yield return dataValue;
+
+                    break;
+                case SeriesFunction.Floor:
+                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = Math.Floor(dataValue.Value), Time = dataValue.Time, Target = dataValue.Target }))
+                        yield return dataValue;
+
+                    break;
+                case SeriesFunction.Ceiling:
+                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = Math.Ceiling(dataValue.Value), Time = dataValue.Time, Target = dataValue.Target }))
+                        yield return dataValue;
+
+                    break;
+                case SeriesFunction.Truncate:
+                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = Math.Truncate(dataValue.Value), Time = dataValue.Time, Target = dataValue.Target }))
+                        yield return dataValue;
+
+                    break;
+                case SeriesFunction.StandardDeviation:
+                    result.Value = trackedValues.StandardDeviation();
+                    result.Time = lastTime;
+                    result.Target = lastTarget;
+                    yield return result;
+                    break;
+                case SeriesFunction.StandardDeviationSample:
+                    result.Value = trackedValues.StandardDeviation(true);
+                    result.Time = lastTime;
+                    result.Target = lastTarget;
+                    yield return result;
+                    break;
+                case SeriesFunction.Median:
+                    values = source.Median();
+
+                    if (values.Length == 0)
+                        yield break;
+
+                    result = values.Last();
+
+                    if (values.Length > 1)
+                        result.Value = values.Select(dataValue => dataValue.Value).Average();
+
+                    yield return result;
+                    break;
+                case SeriesFunction.Mode:
+                    values = source.ToArray();
+                    yield return values.MajorityBy(values.Last(), dataValue => dataValue.Value, false);
+                    break;
+                case SeriesFunction.Top:
+                    values = source.ToArray();
+
+                    if (values.Length == 0)
+                        yield break;
+
+                    count = ParseCount(parameters[0], values.Length);
+
+                    if (count > values.Length)
+                        count = values.Length;
+
+                    normalizeTime = parameters.Length == 1 || parameters[1].Trim().ParseBoolean();
+                    baseTime = values[0].Time;
+                    timeStep = (values[values.Length - 1].Time - baseTime) / (count - 1).NotZero(1);
+                    Array.Sort(values, (a, b) => a.Value < b.Value ? -1 : (a.Value > b.Value ? 1 : 0));
+
+                    foreach (DataSourceValue dataValue in values.Take(count).Select((dataValue, i) => new DataSourceValue { Value = dataValue.Value, Time = normalizeTime ? baseTime + i * timeStep : dataValue.Time }))
+                        yield return dataValue;
+
+                    break;
+                case SeriesFunction.Bottom:
+                    values = source.ToArray();
+
+                    if (values.Length == 0)
+                        yield break;
+
+                    count = ParseCount(parameters[0], values.Length);
+
+                    if (count > values.Length)
+                        count = values.Length;
+
+                    normalizeTime = parameters.Length == 1 || parameters[1].Trim().ParseBoolean();
+                    baseTime = values[0].Time;
+                    timeStep = (values[values.Length - 1].Time - baseTime) / (count - 1).NotZero(1);
+                    Array.Sort(values, (a, b) => a.Value > b.Value ? -1 : (a.Value < b.Value ? 1 : 0));
+
+                    foreach (DataSourceValue dataValue in values.Take(count).Select((dataValue, i) => new DataSourceValue { Value = dataValue.Value, Time = normalizeTime ? baseTime + i * timeStep : dataValue.Time }))
+                        yield return dataValue;
+
+                    break;
+                case SeriesFunction.Random:
+                    values = source.ToArray();
+
+                    if (values.Length == 0)
+                        yield break;
+
+                    count = ParseCount(parameters[0], values.Length);
+
+                    if (count > values.Length)
+                        count = values.Length;
+
+                    normalizeTime = parameters.Length == 1 || parameters[1].Trim().ParseBoolean();
+                    baseTime = values[0].Time;
+                    timeStep = (values[values.Length - 1].Time - baseTime) / (count - 1).NotZero(1);
+                    List<int> indexes = new List<int>(Enumerable.Range(0, values.Length));
+                    indexes.Scramble();
+
+                    foreach (DataSourceValue dataValue in indexes.Take(count).Select((index, i) => new DataSourceValue { Value = values[index].Value, Time = normalizeTime ? baseTime + i * timeStep : values[index].Time }))
+                        yield return dataValue;
+
+                    break;
+                case SeriesFunction.First:
+                    values = source.ToArray();
+
+                    if (values.Length == 0)
+                        yield break;
+
+                    count = parameters.Length == 0 ? 1 : ParseCount(parameters[0], values.Length);
+
+                    if (count > values.Length)
+                        count = values.Length;
+
+                    for (int i = 0; i < count; i++)
+                        yield return values[i];
+
+                    break;
+                case SeriesFunction.Last:
+                    values = source.ToArray();
+
+                    if (values.Length == 0)
+                        yield break;
+
+                    count = parameters.Length == 0 ? 1 : ParseCount(parameters[0], values.Length);
+
+                    if (count > values.Length)
+                        count = values.Length;
+
+                    for (int i = 0; i < count; i++)
+                        yield return values[values.Length - 1 - i];
+
+                    break;
+                case SeriesFunction.Percentile:
+                    double percent = ParsePercentage(parameters[0]);
+                    values = source.ToArray();
+
+                    if (values.Length == 0)
+                        yield break;
+
+                    Array.Sort(values, (a, b) => a.Value < b.Value ? -1 : (a.Value > b.Value ? 1 : 0));
+                    count = values.Length;
+
+                    if (percent == 0.0D)
+                    {
+                        yield return values.First();
+                    }
+                    else if (percent == 100.0D)
+                    {
+                        yield return values.Last();
+                    }
+                    else
+                    {
+                        double n = (count - 1) * (percent / 100.0D) + 1.0D;
+                        int k = (int)n;
+                        DataSourceValue kData = values[k];
+                        double d = n - k;
+                        double k0 = values[k - 1].Value;
+                        double k1 = kData.Value;
+
+                        result.Value = k0 + d * (k1 - k0);
+                        result.Time = kData.Time;
+                        result.Target = kData.Target;
+                        yield return result;
+                    }
+                    break;
+                case SeriesFunction.Difference:
+                    foreach (DataSourceValue dataValue in source)
+                    {
+                        if (lastTime > 0.0D)
+                            yield return new DataSourceValue { Value = dataValue.Value - lastValue, Time = dataValue.Time };
+
+                        lastValue = dataValue.Value;
+                        lastTime = dataValue.Time;
+                    }
+                    break;
+                case SeriesFunction.TimeDifference:
+                    foreach (DataSourceValue dataValue in source)
+                    {
+                        if (lastTime > 0.0D)
+                            yield return new DataSourceValue { Value = dataValue.Time - lastTime, Time = dataValue.Time };
+
+                        lastTime = dataValue.Time;
+                    }
+                    break;
+                case SeriesFunction.Derivative:
+                    foreach (DataSourceValue dataValue in source)
+                    {
+                        if (lastTime > 0.0D)
+                            yield return new DataSourceValue { Value = (dataValue.Value - lastValue) / (dataValue.Time - lastTime), Time = dataValue.Time };
+
+                        lastValue = dataValue.Value;
+                        lastTime = dataValue.Time;
+                    }
+                    break;
+                case SeriesFunction.TimeIntegration:
+                    result.Value = 0.0D;
+
+                    foreach (DataSourceValue dataValue in source)
+                    {
+                        if (lastTime > 0.0D)
+                            result.Value += dataValue.Value * (dataValue.Time - lastTime);
+
+                        lastTime = dataValue.Time;
+                        lastTarget = dataValue.Target;
+                    }
+
+                    if (lastTime > 0.0D)
+                    {
+                        result.Time = lastTime;
+                        result.Target = lastTarget;
+                        yield return result;
+                    }
+                    break;
+                case SeriesFunction.Interval:
+                    value = ParseFloat(parameters[0]) / SI.Milli;
+
+                    foreach (DataSourceValue dataValue in source)
+                    {
+                        if (lastTime > 0.0D)
+                        {
+                            if (dataValue.Time - lastTime > value)
+                            {
+                                lastTime = dataValue.Time;
+                                yield return dataValue;
+                            }
+                        }
+                        else
+                        {
+                            lastTime = dataValue.Time;
+                            yield return dataValue;
+                        }
+                    }
+                    break;
+            }
+        }
+
         private static int ParseInt(string parameter, bool includeZero = true)
         {
             int value;
@@ -1417,8 +1446,11 @@ namespace GrafanaAdapters
             if (!double.TryParse(parameter, out value))
                 throw new FormatException($"Could not parse '{parameter}' as a floating-point value.");
 
-            if (validateGTEZero && value < 0.0D)
-                throw new ArgumentOutOfRangeException($"Value '{parameter}' is less than zero.");
+            if (validateGTEZero)
+            {
+                if (value < 0.0D)
+                    throw new ArgumentOutOfRangeException($"Value '{parameter}' is less than zero.");
+            }
 
             return value;
         }
