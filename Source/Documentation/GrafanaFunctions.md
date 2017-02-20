@@ -151,7 +151,7 @@ Returns a series of values that represent the smallest integral value that is gr
 
 * Signature: `Ceiling(expression)`
 * Example: `Ceiling(FILTER ActiveMeasurements WHERE SignalType='IPHM')`
-* Variants: `Ceiling`
+* Variants: `Ceiling`, `Ceil`
 * Execution: Deferred enumeration
 
 ## Truncate
