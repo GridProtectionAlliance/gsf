@@ -338,6 +338,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentat
 	ProjectSection(SolutionItems) = preProject
 		Documentation\CommonStatistics.md = Documentation\CommonStatistics.md
 		Documentation\FilterExpressions.md = Documentation\FilterExpressions.md
+		Documentation\GrafanaFunctions.md = Documentation\GrafanaFunctions.md
 	EndProjectSection
 EndProject
 Project("{7CF6DF6D-3B04-46F8-A40B-537D21BCA0B4}") = "GridSolutionsFrameworkHelp", "Documentation\GridSolutionsFrameworkHelp\GridSolutionsFrameworkHelp.shfbproj", "{0505F4C3-FCF9-4533-9181-F712889071D8}"
