@@ -6,6 +6,7 @@ Note that each function can be used over a set of available series by prefixing 
 
 * [Average](#average)
 * [Minimum](#minimum)
+* [Maximum](#maximum)
 * [Total](#total)
 * [Range](#range)
 * [Count](#count)
