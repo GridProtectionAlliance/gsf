@@ -807,6 +807,10 @@ namespace GrafanaAdapters
                     break;
                 case SeriesFunction.Median:
                     values = source.Median();
+
+                    if (values.Length == 0)
+                        yield break;
+
                     result = values.Last();
 
                     if (values.Length > 1)
@@ -820,6 +824,10 @@ namespace GrafanaAdapters
                     break;
                 case SeriesFunction.Top:
                     values = source.ToArray();
+
+                    if (values.Length == 0)
+                        yield break;
+
                     count = ParseCount(parameters[0], values.Length);
 
                     if (count > values.Length)
@@ -836,6 +844,10 @@ namespace GrafanaAdapters
                     break;
                 case SeriesFunction.Bottom:
                     values = source.ToArray();
+
+                    if (values.Length == 0)
+                        yield break;
+
                     count = ParseCount(parameters[0], values.Length);
 
                     if (count > values.Length)
@@ -852,6 +864,10 @@ namespace GrafanaAdapters
                     break;
                 case SeriesFunction.Random:
                     values = source.ToArray();
+
+                    if (values.Length == 0)
+                        yield break;
+
                     count = ParseCount(parameters[0], values.Length);
 
                     if (count > values.Length)
@@ -869,6 +885,10 @@ namespace GrafanaAdapters
                     break;
                 case SeriesFunction.First:
                     values = source.ToArray();
+
+                    if (values.Length == 0)
+                        yield break;
+
                     count = parameters.Length == 0 ? 1 : ParseCount(parameters[0], values.Length);
 
                     if (count > values.Length)
@@ -880,6 +900,10 @@ namespace GrafanaAdapters
                     break;
                 case SeriesFunction.Last:
                     values = source.ToArray();
+
+                    if (values.Length == 0)
+                        yield break;
+
                     count = parameters.Length == 0 ? 1 : ParseCount(parameters[0], values.Length);
 
                     if (count > values.Length)
@@ -892,6 +916,10 @@ namespace GrafanaAdapters
                 case SeriesFunction.Percentile:
                     double percent = ParsePercentage(parameters[0]);
                     values = source.ToArray();
+
+                    if (values.Length == 0)
+                        yield break;
+
                     Array.Sort(values, (a, b) => a.Value < b.Value ? -1 : (a.Value > b.Value ? 1 : 0));
                     count = values.Length;
 
@@ -1399,7 +1427,10 @@ namespace GrafanaAdapters
         {
             int count;
 
-            if (length > 0 && parameter.Contains("%"))
+            if (length == 0)
+                return 0;
+
+            if (parameter.Contains("%"))
             {
                 double percent = ParsePercentage(parameter, false);
                 count = (int)(length * (percent / 100.0D));
