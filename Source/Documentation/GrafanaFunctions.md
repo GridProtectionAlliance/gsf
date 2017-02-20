@@ -16,8 +16,8 @@ Note that each function can be used over a set of available series by prefixing 
 * [Multiply](#multiply)
 * [Round](#round)
 * [Floor](#floor)
-* [Ceiling](#Ceiling)
-* [Truncate](#Truncate)
+* [Ceiling](#ceiling)
+* [Truncate](#truncate)
 * [StandardDeviation](#standarddeviation)
 * [StandardDeviationSample](#standarddeviationsample)
 * [Median](#median)
@@ -72,7 +72,7 @@ Returns a single value that represents the sum of the values in the source serie
 
 ## Range
 
-Returns a single value that represents the range, i.e., maximum - minimum, of the values in the source series.
+Returns a single value that represents the range, i.e., `maximum - minimum`, of the values in the source series.
 
 * Signature: `Range(expression)`
 * Example: `Range(FILTER ActiveMeasurements WHERE SignalType='FREQ')`
