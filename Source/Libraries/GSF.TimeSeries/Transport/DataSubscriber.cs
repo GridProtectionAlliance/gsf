@@ -3484,7 +3484,7 @@ namespace GSF.TimeSeries.Transport
                 }
 
                 // Start unsynchronized subscription
-#pragma warning disable 0618
+                #pragma warning disable 0618
                 UnsynchronizedSubscribe(true, false, filterExpression.ToString(), dataChannel);
             }
             else if (metaDataRefreshCompleted)
@@ -3797,9 +3797,6 @@ namespace GSF.TimeSeries.Transport
                             // Define SQL statement to retrieve measurement's associated device ID, i.e., actual record ID, based on measurement's signal ID
                             string queryMeasurementDeviceIDSql = database.ParameterizedQueryString("SELECT DeviceID FROM Measurement WHERE SignalID = {0}", "signalID");
 
-                            // Define SQL statement to remove device records that no longer exist in the meta-data
-                            string deleteMeasurementSql = database.ParameterizedQueryString("DELETE FROM Measurement WHERE SignalID = {0}", "signalID");
-
                             // Load signal type ID's from local database associated with their acronym for proper signal type translation
                             Dictionary<string, int> signalTypeIDs = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
@@ -3810,6 +3807,28 @@ namespace GSF.TimeSeries.Transport
                                 if (!string.IsNullOrWhiteSpace(signalTypeAcronym))
                                     signalTypeIDs[signalTypeAcronym] = row.ConvertField<int>("ID");
                             }
+
+                            // Define local signal type ID deletion exclusion set
+                            List<int> excludedSignalTypeIDs = new List<int>();
+                            int signalTypeID;
+
+                            // We are intentionally ignoring CALC and ALRM signals during measurement deletion since if you have subscribed to a device and subsequently created local
+                            // calculations and alarms associated with this device, these signals are locally owned and not part of the publisher subscription stream. As a result any
+                            // CALC or ALRM measurements that are created at source and then removed could be orphaned in subscriber. The best fix would be to have a simple flag that
+                            // clearly designates that a measurement was created locally and is not part of the remote synchronization set.
+                            if (signalTypeIDs.TryGetValue("CALC", out signalTypeID))
+                                excludedSignalTypeIDs.Add(signalTypeID);
+
+                            if (signalTypeIDs.TryGetValue("ALRM", out signalTypeID))
+                                excludedSignalTypeIDs.Add(signalTypeID);
+
+                            string exclusionExpression = "";
+
+                            if (excludedSignalTypeIDs.Count > 0)
+                                exclusionExpression = $" AND NOT SignalTypeID IN ({excludedSignalTypeIDs.ToDelimitedString(',')})";
+
+                            // Define SQL statement to remove device records that no longer exist in the meta-data
+                            string deleteMeasurementSql = database.ParameterizedQueryString($"DELETE FROM Measurement WHERE SignalID = {{0}}{exclusionExpression}", "signalID");
 
                             // Determine which measurement rows should be synchronized based on operational mode flags
                             if (ReceiveInternalMetadata && ReceiveExternalMetadata)
