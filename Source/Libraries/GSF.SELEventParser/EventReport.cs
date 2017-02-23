@@ -235,22 +235,24 @@ namespace GSF.SELEventParser
             // Parse the analog section of the report
             eventReport.AnalogSection = AnalogSection.Parse(eventReport.Header.EventTime, lines, ref index);
 
-            // skip digitals for now
-            while (!lines[index].ToLower().Contains("group settings") && index < lines.Length) { ++index; }
-            ++index;
-            // Parse Group settings
-            eventReport.GroupSetting = Settings.Parse(lines, ref index);
-            EventFile.SkipBlanks(lines, ref index);
+            if (lines.Length < index)
+            {
+                // skip digitals for now
+                while (!lines[index].ToLower().Contains("group settings") && index < lines.Length) { ++index; }
+                ++index;
+                // Parse Group settings
+                eventReport.GroupSetting = Settings.Parse(lines, ref index);
+                EventFile.SkipBlanks(lines, ref index);
 
-            // Parse Logic control equations
-            ++index;
-            EventFile.SkipBlanks(lines, ref index);
-            eventReport.ControlEquations = ControlEquation.Parse(lines, ref index);
-            EventFile.SkipBlanks(lines, ref index);
+                // Parse Logic control equations
+                ++index;
+                EventFile.SkipBlanks(lines, ref index);
+                eventReport.ControlEquations = ControlEquation.Parse(lines, ref index);
+                EventFile.SkipBlanks(lines, ref index);
 
-            // Parse Global Settings
-            eventReport.GlobalSetting = Settings.Parse(lines, ref index);
-
+                // Parse Global Settings
+                eventReport.GlobalSetting = Settings.Parse(lines, ref index);
+            }
             return eventReport;
         }
 
