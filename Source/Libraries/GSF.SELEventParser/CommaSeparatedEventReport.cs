@@ -323,11 +323,14 @@ namespace GSF.SELEventParser
             while (!lines[index].ToUpper().Contains("FREQ"))
                 ++index;
 
-            commaSeparatedEventReport.AverageFrequency = Convert.ToDouble(lines[++index].Split(',')[0]);
-            commaSeparatedEventReport.SamplesPerCycleAnalog = Convert.ToInt32(lines[index].Split(',')[1]);
-            commaSeparatedEventReport.SamplesPerCycleDigital = Convert.ToInt32(lines[index].Split(',')[2]);
-            commaSeparatedEventReport.NumberOfCycles = Convert.ToInt32(lines[index].Split(',')[3]);
-            commaSeparatedEventReport.Event = lines[index].Split(',')[4].Replace("\"", "");
+            List<string> sampleStatHeader = lines[index].Split(',').ToList();
+            List<string> sampleStats = lines[++index].Split(',').ToList();
+
+            commaSeparatedEventReport.AverageFrequency = Convert.ToDouble(sampleStats[sampleStatHeader.FindIndex(x => x.ToUpper().Contains("FREQ"))]);
+            commaSeparatedEventReport.SamplesPerCycleAnalog = Convert.ToInt32(sampleStats[sampleStatHeader.FindIndex(x => x.ToUpper().Contains("SAM/CYC_A"))]);
+            commaSeparatedEventReport.SamplesPerCycleDigital = Convert.ToInt32(sampleStats[sampleStatHeader.FindIndex(x => x.ToUpper().Contains("SAM/CYC_D"))]);
+            commaSeparatedEventReport.NumberOfCycles = Convert.ToInt32(sampleStats[sampleStatHeader.FindIndex(x => x.ToUpper().Contains("NUM_OF_CYC"))]);
+            commaSeparatedEventReport.Event = sampleStats[sampleStatHeader.FindIndex(x => x.ToUpper().Contains("EVENT"))].Replace("/","");
 
             while (!lines[index].ToUpper().Contains("IA"))
                 ++index;
