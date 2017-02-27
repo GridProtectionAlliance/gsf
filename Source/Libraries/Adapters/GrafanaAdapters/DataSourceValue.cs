@@ -39,7 +39,7 @@ namespace GrafanaAdapters
         public double Value;
 
         /// <summary>
-        /// Timestamp, in Unix epoch seconds, of queried value.
+        /// Timestamp, in Unix epoch milliseconds, of queried value.
         /// </summary>
         public double Time;
     }

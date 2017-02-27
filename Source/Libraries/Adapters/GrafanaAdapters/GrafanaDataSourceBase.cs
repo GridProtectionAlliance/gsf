@@ -334,7 +334,8 @@ namespace GrafanaAdapters
         /// </remarks>
         Derivative,
         /// <summary>
-        /// Returns a single value that represents the time-based integration, i.e., the sum of <c>V(n) * (T(n) - T(n-1))</c>, of the values in the source series.
+        /// Returns a single value that represents the time-based integration, i.e., the sum of <c>V(n) * (T(n) - T(n-1))</c> where time difference is
+        /// calculated in hours, of the values in the source series.
         /// </summary>
         /// <remarks>
         /// Signature: <c>TimeIntegration(expression)</c><br/>
@@ -488,7 +489,7 @@ namespace GrafanaAdapters
         }
 
         /// <summary>
-        /// Starts a query that will read data source values, given a point ID and target, over a time range.
+        /// Starts a query that will read data source values, given a set of point IDs and targets, over a time range.
         /// </summary>
         /// <param name="startTime">Start-time for query.</param>
         /// <param name="stopTime">Stop-time for query.</param>
@@ -570,7 +571,7 @@ namespace GrafanaAdapters
 
                 long readCount = 0;
 
-                // Query underlying data source for each target
+                // Query underlying data source for each target - to prevent parallel read from data source we enumerate immediately
                 List<DataSourceValue> dataValues = QueryDataSourceValues(startTime, stopTime, decimate, targetMap)
                     .TakeWhile(dataValue => readCount++ % 10000 != 0 || !cancellationToken.IsCancellationRequested).ToList();
 
@@ -667,7 +668,7 @@ namespace GrafanaAdapters
                 DataSourceValueGroup result = new DataSourceValueGroup
                 {
                     Target = $"Set{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{targetExpression})",
-                    Source = ExecuteSeriesFunctionOverSource(dataset.AsParallel().SelectMany(source => source.Source), seriesFunction, parameters)
+                    Source = ExecuteSeriesFunctionOverSource(dataset.AsParallel().WithCancellation(cancellationToken).SelectMany(source => source.Source), seriesFunction, parameters)
                 };
 
                 // Handle edge-case set operations - for these functions there is data in the target series as well
