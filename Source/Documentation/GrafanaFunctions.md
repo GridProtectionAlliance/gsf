@@ -296,7 +296,8 @@ Returns a series of values that represent the rate of change, per second, for th
 
 ## TimeIntegration
 
-Returns a single value that represents the time-based integration, i.e., the sum of `V(n) * (T(n) - T(n-1))`, of the values in the source series.
+Returns a single value that represents the time-based integration, i.e., the sum of `V(n) * (T(n) - T(n-1))` where time difference is
+calculated in hours, of the values in the source series.
 
 * Signature: `TimeIntegration(expression)`
 * Example: `TimeIntegration(FILTER ActiveMeasurements WHERE SignalType='CALC' AND PointTag LIKE '%-MW:%')`

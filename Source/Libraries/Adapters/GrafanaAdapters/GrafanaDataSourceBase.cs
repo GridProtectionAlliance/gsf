@@ -1357,7 +1357,7 @@ namespace GrafanaAdapters
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            yield return new DataSourceValue { Value = dataValue.Time - lastTime, Time = dataValue.Time };
+                            yield return new DataSourceValue { Value = (dataValue.Time - lastTime) * SI.Milli, Time = dataValue.Time };
 
                         lastTime = dataValue.Time;
                     }
@@ -1366,7 +1366,7 @@ namespace GrafanaAdapters
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            yield return new DataSourceValue { Value = (dataValue.Value - lastValue) / (dataValue.Time - lastTime), Time = dataValue.Time };
+                            yield return new DataSourceValue { Value = (dataValue.Value - lastValue) / ((dataValue.Time - lastTime) * SI.Milli), Time = dataValue.Time };
 
                         lastValue = dataValue.Value;
                         lastTime = dataValue.Time;
@@ -1378,7 +1378,7 @@ namespace GrafanaAdapters
                     foreach (DataSourceValue dataValue in source)
                     {
                         if (lastTime > 0.0D)
-                            result.Value += dataValue.Value * (dataValue.Time - lastTime);
+                            result.Value += dataValue.Value * ((dataValue.Time - lastTime) * SI.Milli / 3600.0D);
 
                         lastTime = dataValue.Time;
                         lastTarget = dataValue.Target;
