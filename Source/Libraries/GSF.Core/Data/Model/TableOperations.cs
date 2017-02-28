@@ -52,6 +52,10 @@ namespace GSF.Data.Model
         private const string AddNewSqlFormat = "INSERT INTO {0}({1}) VALUES ({2})";
         private const string UpdateSqlFormat = "UPDATE {0} SET {1} WHERE {2}";
         private const string DeleteSqlFormat = "DELETE FROM {0} WHERE {1}";
+        private const string TableNamePrefixToken = "<!TNP/>";
+        private const string TableNameSuffixToken = "<!TNS/>";
+        private const string FieldListPrefixToken = "<!FLP/>";
+        private const string FieldListSuffixToken = "<!FLS/>";
 
         // Fields
         private readonly AdoDataConnection m_connection;
@@ -78,8 +82,24 @@ namespace GSF.Data.Model
         /// Creates a new <see cref="TableOperations{T}"/>.
         /// </summary>
         /// <param name="connection"><see cref="AdoDataConnection"/> instance to use for database operations.</param>
+        /// <param name="customTokens">Custom run-time tokens to apply to any modeled <see cref="AmendExpressionAttribute"/> values.</param>
         /// <exception cref="ArgumentNullException"><paramref name="connection"/> cannot be <c>null</c>.</exception>
-        public TableOperations(AdoDataConnection connection)
+        /// <remarks>
+        /// The <paramref name="customTokens"/> can be used to apply run-time tokens to any defined <see cref="AmendExpressionAttribute"/> values,
+        /// for example, for the following amendment expression applied to a modeled class:
+        /// <code>
+        /// [AmendExpression("TOP {count}", 
+        ///     TargetExpression = TargetExpression.FieldList,
+        ///     AffixPosition = AffixPosition.Prefix,
+        ///     StatementTypes = StatementTypes.SelectSet)]]
+        /// </code>
+        /// The <paramref name="customTokens"/> key/value pairs could be set as follows at run-time:
+        /// <code>
+        /// int count = 200;
+        /// customTokens = new[] { new KeyValuePair&lt;string, string&gt;("{count}", $"{count}") };
+        /// </code>
+        /// </remarks>
+        public TableOperations(AdoDataConnection connection, KeyValuePair<string, string>[] customTokens = null)
         {
             if ((object)connection == null)
                 throw new ArgumentNullException(nameof(connection));
@@ -142,6 +162,88 @@ namespace GSF.Data.Model
                     }
                 }
             }
+
+            // Handle any modeled expression amendments
+            if ((object)s_expressionAmendments != null)
+            {
+                foreach (Tuple<DatabaseType, TargetExpression, StatementTypes, AffixPosition, string> expressionAmendment in s_expressionAmendments)
+                {
+                    // See if expression amendment applies to current database type
+                    if (expressionAmendment.Item1 != m_connection.DatabaseType)
+                        continue;
+
+                    // Get expression amendment properties
+                    TargetExpression targetExpression = expressionAmendment.Item2;
+                    StatementTypes statementTypes = expressionAmendment.Item3;
+                    AffixPosition affixPosition = expressionAmendment.Item4;
+                    string amendmentText = expressionAmendment.Item5;
+                    string tableNameToken = affixPosition == AffixPosition.Prefix ? TableNamePrefixToken : TableNameSuffixToken;
+                    string fieldListToken = affixPosition == AffixPosition.Prefix ? FieldListPrefixToken : FieldListSuffixToken;
+                    string targetToken = targetExpression == TargetExpression.TableName ? tableNameToken : fieldListToken;
+
+                    // Apply amendment to target statement types
+                    if (statementTypes.HasFlag(StatementTypes.SelectCount) && targetExpression == TargetExpression.TableName)
+                        m_countSql = m_countSql.Replace(targetToken, amendmentText);
+
+                    if (statementTypes.HasFlag(StatementTypes.SelectSet))
+                    {
+                        m_orderBySql = m_orderBySql.Replace(targetToken, amendmentText);
+                        m_orderByWhereSql = m_orderByWhereSql.Replace(targetToken, amendmentText);
+                    }
+
+                    if (statementTypes.HasFlag(StatementTypes.SelectRow))
+                        m_selectSql = m_selectSql.Replace(targetToken, amendmentText);
+
+                    if (statementTypes.HasFlag(StatementTypes.Insert))
+                        m_addNewSql = m_addNewSql.Replace(targetToken, amendmentText);
+
+                    if (statementTypes.HasFlag(StatementTypes.Update))
+                    {
+                        m_updateSql = m_updateSql.Replace(targetToken, amendmentText);
+                        m_updateWhereSql = m_updateWhereSql.Replace(targetToken, amendmentText);
+                    }
+
+                    if (statementTypes.HasFlag(StatementTypes.Delete))
+                    {
+                        m_deleteSql = m_deleteSql.Replace(targetToken, amendmentText);
+                        m_deleteWhereSql = m_deleteWhereSql.Replace(targetToken, amendmentText);
+                    }
+                }
+
+                // Remove any remaining tokens from instance expressions
+                Func<string, string> removeRemainingTokens = sql => sql
+                    .Replace(TableNamePrefixToken, "")
+                    .Replace(TableNameSuffixToken, "")
+                    .Replace(FieldListPrefixToken, "")
+                    .Replace(FieldListSuffixToken, "");
+
+                m_countSql = removeRemainingTokens(m_countSql);
+                m_orderBySql = removeRemainingTokens(m_orderBySql);
+                m_orderByWhereSql = removeRemainingTokens(m_orderByWhereSql);
+                m_selectSql = removeRemainingTokens(m_selectSql);
+                m_addNewSql = removeRemainingTokens(m_addNewSql);
+                m_updateSql = removeRemainingTokens(m_updateSql);
+                m_updateWhereSql = removeRemainingTokens(m_updateWhereSql);
+                m_deleteSql = removeRemainingTokens(m_deleteSql);
+                m_deleteWhereSql = removeRemainingTokens(m_deleteWhereSql);
+
+                // Execute replacements on any provided custom run-time tokens
+                if ((object)customTokens != null)
+                {
+                    foreach (KeyValuePair<string, string> customToken in customTokens)
+                    {
+                        m_countSql = m_countSql.Replace(customToken.Key, customToken.Value);
+                        m_orderBySql = m_orderBySql.Replace(customToken.Key, customToken.Value);
+                        m_orderByWhereSql = m_orderByWhereSql.Replace(customToken.Key, customToken.Value);
+                        m_selectSql = m_selectSql.Replace(customToken.Key, customToken.Value);
+                        m_addNewSql = m_addNewSql.Replace(customToken.Key, customToken.Value);
+                        m_updateSql = m_updateSql.Replace(customToken.Key, customToken.Value);
+                        m_updateWhereSql = m_updateWhereSql.Replace(customToken.Key, customToken.Value);
+                        m_deleteSql = m_deleteSql.Replace(customToken.Key, customToken.Value);
+                        m_deleteWhereSql = m_deleteWhereSql.Replace(customToken.Key, customToken.Value);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -149,12 +251,30 @@ namespace GSF.Data.Model
         /// </summary>
         /// <param name="connection"><see cref="AdoDataConnection"/> instance to use for database operations.</param>
         /// <param name="exceptionHandler">Delegate to handle table operation exceptions.</param>
+        /// <param name="customTokens">Custom run-time tokens to apply to any modeled <see cref="AmendExpressionAttribute"/> values.</param>
         /// <remarks>
+        /// <para>
         /// When exception handler is provided, table operations will not throw exceptions for database calls, any
         /// encountered exceptions will be passed to handler for processing.
+        /// </para>
+        /// <para>
+        /// The <paramref name="customTokens"/> can be used to apply run-time tokens to any defined <see cref="AmendExpressionAttribute"/> values,
+        /// for example, for the following amendment expression applied to a modeled class:
+        /// <code>
+        /// [AmendExpression("TOP {count}", 
+        ///     TargetExpression = TargetExpression.FieldList,
+        ///     AffixPosition = AffixPosition.Prefix,
+        ///     StatementTypes = StatementTypes.SelectSet)]]
+        /// </code>
+        /// The <paramref name="customTokens"/> key/value pairs could be set as follows at run-time:
+        /// <code>
+        /// int count = 200;
+        /// customTokens = new[] { new KeyValuePair&lt;string, string&gt;("{count}", $"{count}") };
+        /// </code>
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="connection"/> cannot be <c>null</c>.</exception>
-        public TableOperations(AdoDataConnection connection, Action<Exception> exceptionHandler) : this(connection)
+        public TableOperations(AdoDataConnection connection, Action<Exception> exceptionHandler, KeyValuePair<string, string>[] customTokens = null) : this(connection, customTokens)
         {
             m_exceptionHandler = exceptionHandler;
         }
@@ -1062,6 +1182,7 @@ namespace GSF.Data.Model
         private static readonly PropertyInfo[] s_primaryKeyProperties;
         private static readonly Dictionary<DatabaseType, bool> s_escapedTableNameTargets;
         private static readonly Dictionary<string, Dictionary<DatabaseType, bool>> s_escapedFieldNameTargets;
+        private static readonly List<Tuple<DatabaseType, TargetExpression, StatementTypes, AffixPosition, string>> s_expressionAmendments;
         private static readonly string s_countSql;
         private static readonly string s_orderBySql;
         private static readonly string s_orderByWhereSql;
@@ -1106,6 +1227,12 @@ namespace GSF.Data.Model
 
             if (typeof(T).TryGetAttributes(out useEscapedNameAttributes))
                 s_escapedTableNameTargets = DeriveEscapedNameTargets(useEscapedNameAttributes);
+
+            // Check for expression amendments
+            AmendExpressionAttribute[] amendExpressionAttributes;
+
+            if (typeof(T).TryGetAttributes(out amendExpressionAttributes))
+                s_expressionAmendments = DeriveExpressionAmendments(amendExpressionAttributes);
 
             s_properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(property => property.CanRead && property.CanWrite)
@@ -1227,6 +1354,18 @@ namespace GSF.Data.Model
             if ((object)s_escapedTableNameTargets != null)
                 tableName = $"\"{tableName}\"";
 
+            if ((object)s_expressionAmendments != null)
+            {
+                // Add tokens to primary expressions for easy replacement
+                tableName = $"{TableNamePrefixToken}{tableName}{TableNameSuffixToken}";
+                primaryKeyFields.Insert(0, FieldListPrefixToken);
+                primaryKeyFields.Append(FieldListSuffixToken);
+                addNewFields.Insert(0, FieldListPrefixToken);
+                addNewFields.Append(FieldListSuffixToken);
+                updateFormat.Insert(0, FieldListPrefixToken);
+                updateFormat.Append(FieldListSuffixToken);
+            }
+
             s_countSql = string.Format(CountSqlFormat, tableName);
             s_orderBySql = string.Format(OrderBySqlFormat, primaryKeyFields, tableName);
             s_orderByWhereSql = string.Format(OrderByWhereSqlFormat, primaryKeyFields, tableName);
@@ -1283,6 +1422,49 @@ namespace GSF.Data.Model
             }
 
             return escapedNameTargets;
+        }
+
+        private static List<Tuple<DatabaseType, TargetExpression, StatementTypes, AffixPosition, string>> DeriveExpressionAmendments(AmendExpressionAttribute[] amendExpressionAttributes)
+        {
+            if (amendExpressionAttributes == null || amendExpressionAttributes.Length == 0)
+                return null;
+
+            List<Tuple<DatabaseType, TargetExpression, StatementTypes, AffixPosition, string>> typedExpressionAmendments = new List<Tuple<DatabaseType, TargetExpression, StatementTypes, AffixPosition, string>>();
+            List<Tuple<DatabaseType, TargetExpression, StatementTypes, AffixPosition, string>> untypedExpressionAmendments = new List<Tuple<DatabaseType, TargetExpression, StatementTypes, AffixPosition, string>>();
+            List<Tuple<DatabaseType, TargetExpression, StatementTypes, AffixPosition, string>> expressionAmendments;
+
+            foreach (AmendExpressionAttribute attribute in amendExpressionAttributes)
+            {
+                if ((object)attribute == null)
+                    continue;
+
+                DatabaseType[] databaseTypes;
+
+                // If any attribute has no database target type specified, then all database types are assumed
+                if (attribute.TargetDatabaseType == null)
+                {
+                    databaseTypes = Enum.GetValues(typeof(DatabaseType)).Cast<DatabaseType>().ToArray();
+                    expressionAmendments = untypedExpressionAmendments;
+                }
+                else
+                {
+                    databaseTypes = new[] { attribute.TargetDatabaseType.Value };
+                    expressionAmendments = typedExpressionAmendments;
+                }
+
+                foreach (DatabaseType databaseType in databaseTypes)
+                {
+                    string amendmentText = attribute.AmendmentText.Trim();
+                    amendmentText = attribute.AffixPosition == AffixPosition.Prefix ? $"{amendmentText} " : $" {amendmentText}";
+                    expressionAmendments.Add(new Tuple<DatabaseType, TargetExpression, StatementTypes, AffixPosition, string>(databaseType, attribute.TargetExpression, attribute.StatementTypes, attribute.AffixPosition, amendmentText));
+                }
+            }
+
+            // Sort expression amendments with a specified database type higher in the execution order to allow for database specific overrides
+            expressionAmendments = new List<Tuple<DatabaseType, TargetExpression, StatementTypes, AffixPosition, string>>(typedExpressionAmendments);
+            expressionAmendments.AddRange(untypedExpressionAmendments);
+
+            return expressionAmendments.Count > 0 ? expressionAmendments : null;
         }
 
         private static string ValueList(IReadOnlyList<object> values)

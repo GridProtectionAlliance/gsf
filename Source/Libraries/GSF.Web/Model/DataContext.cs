@@ -63,6 +63,7 @@ namespace GSF.Web.Model
         private readonly IRazorEngine m_razorEngine;
         private readonly Dictionary<Type, object> m_tableOperations;
         private readonly Action<Exception> m_exceptionHandler;
+        private Dictionary<Type, KeyValuePair<string, string>[]> m_customTableOperationTokens;
         private readonly Dictionary<string, Tuple<string, string>> m_fieldValidationParameters;
         private readonly List<Tuple<string, string>> m_fieldValueInitializers;
         private readonly List<Tuple<string, string, string, bool>> m_readonlyHotLinkFields;
@@ -240,6 +241,30 @@ namespace GSF.Web.Model
             }
         }
 
+        /// <summary>
+        /// Gets dictionary of per-model custom tokens to use with <see cref="AmendExpressionAttribute"/> values for <see cref="TableOperations{T}"/> in this <see cref="DataContext"/> .
+        /// </summary>
+        /// <remarks>
+        /// The returned dictionary can be used to apply run-time tokens to any defined <see cref="AmendExpressionAttribute"/> values,
+        /// for example, for the following amendment expression applied to a modeled class:
+        /// <code>
+        /// [AmendExpression("TOP {count}", 
+        ///     TargetExpression = TargetExpression.FieldList,
+        ///     AffixPosition = AffixPosition.Prefix,
+        ///     StatementTypes = StatementTypes.SelectSet)]]
+        /// public class MyTable
+        /// {
+        ///     string MyField;
+        /// }
+        /// </code>
+        /// The per-model key/value pairs could be set as follows at run-time:
+        /// <code>
+        /// int count = 200;
+        /// dataContext.CustomTableOperationTokens[typeof(MyTable)] = new[] { new KeyValuePair&lt;string, string&gt;("{count}", $"{count}") };
+        /// </code>
+        /// </remarks>        
+        public Dictionary<Type, KeyValuePair<string, string>[]> CustomTableOperationTokens => m_customTableOperationTokens ?? (m_customTableOperationTokens = new Dictionary<Type, KeyValuePair<string, string>[]>());
+
         #endregion
 
         #region [ Methods ]
@@ -283,7 +308,12 @@ namespace GSF.Web.Model
         /// <returns>Table operations for the specified modeled table <typeparamref name="TModel"/>.</returns>
         public TableOperations<TModel> Table<TModel>() where TModel : class, new()
         {
-            return m_tableOperations.GetOrAdd(typeof(TModel), type => new TableOperations<TModel>(Connection, m_exceptionHandler)) as TableOperations<TModel>;
+            KeyValuePair<string, string>[] customTokens = null;
+
+            if ((object)m_customTableOperationTokens != null)
+                m_customTableOperationTokens.TryGetValue(typeof(TModel), out customTokens);
+
+            return m_tableOperations.GetOrAdd(typeof(TModel), type => new TableOperations<TModel>(Connection, m_exceptionHandler, customTokens)) as TableOperations<TModel>;
         }
 
         /// <summary>
@@ -293,7 +323,12 @@ namespace GSF.Web.Model
         /// <returns>Table operations for the specified modeled table type <paramref name="model"/>.</returns>
         public ITableOperations Table(Type model)
         {
-            return m_tableOperations.GetOrAdd(model, type => Activator.CreateInstance(typeof(TableOperations<>).MakeGenericType(model), Connection, m_exceptionHandler)) as ITableOperations;
+            KeyValuePair<string, string>[] customTokens = null;
+
+            if ((object)m_customTableOperationTokens != null)
+                m_customTableOperationTokens.TryGetValue(model, out customTokens);
+
+            return m_tableOperations.GetOrAdd(model, type => Activator.CreateInstance(typeof(TableOperations<>).MakeGenericType(model), Connection, m_exceptionHandler, customTokens)) as ITableOperations;
         }
 
         /// <summary>
