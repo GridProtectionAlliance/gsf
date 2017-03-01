@@ -86,7 +86,7 @@ namespace GSF.Data.Model
         /// <exception cref="ArgumentNullException"><paramref name="connection"/> cannot be <c>null</c>.</exception>
         /// <remarks>
         /// The <paramref name="customTokens"/> can be used to apply run-time tokens to any defined <see cref="AmendExpressionAttribute"/> values,
-        /// for example, for the following amendment expression applied to a modeled class:
+        /// for example, given the following amendment expression applied to a modeled class:
         /// <code>
         /// [AmendExpression("TOP {count}", 
         ///     TargetExpression = TargetExpression.FieldList,
@@ -259,7 +259,7 @@ namespace GSF.Data.Model
         /// </para>
         /// <para>
         /// The <paramref name="customTokens"/> can be used to apply run-time tokens to any defined <see cref="AmendExpressionAttribute"/> values,
-        /// for example, for the following amendment expression applied to a modeled class:
+        /// for example, given the following amendment expression applied to a modeled class:
         /// <code>
         /// [AmendExpression("TOP {count}", 
         ///     TargetExpression = TargetExpression.FieldList,

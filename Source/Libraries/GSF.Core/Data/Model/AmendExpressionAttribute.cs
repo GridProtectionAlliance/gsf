@@ -101,11 +101,11 @@ namespace GSF.Data.Model
     /// </summary>
     /// <remarks>
     /// <para>
-    /// As an example, this can be used to add table hints, e.g., <c>WITH (NOLOCK)</c> for select statements in
+    /// As an example, this can be used to add table hints, e.g., <c>WITH (NOLOCK)</c>, for select statements in
     /// SQL Server.
     /// </para>
     /// <para>
-    /// Applying the <see cref="AmendExpressionAttribute"/> to a modeled table with no specified database type parameters
+    /// Applying the <see cref="AmendExpressionAttribute"/> to a modeled table with no specified database type parameter
     /// will be meant to infer that the amendment be used for all database types. Using a specific database type as a
     /// parameter to the attribute, e.g., <c>[AmendExpression("WITH (NOLOCK)", DatabaseType.SQLServer)]</c>, means the
     /// amendment text will only be applied to the specific database - however, the attribute allows multiple instances
@@ -173,7 +173,8 @@ namespace GSF.Data.Model
         }
 
         /// <summary>
-        /// Creates a new <see cref="AmendExpressionAttribute"/> that will request application of amendment text for any database.
+        /// Creates a new <see cref="AmendExpressionAttribute"/> that will request application of <paramref name="amendmentText"/>
+        /// for any database.
         /// </summary>
         /// <param name="amendmentText">Amendment text to apply.</param>
         public AmendExpressionAttribute(string amendmentText)
@@ -186,8 +187,8 @@ namespace GSF.Data.Model
         }
 
         /// <summary>
-        /// Creates a new <see cref="AmendExpressionAttribute"/> that will request application of amendment text for the
-        /// specified <see cref="DatabaseType"/>.
+        /// Creates a new <see cref="AmendExpressionAttribute"/> that will request application of <paramref name="amendmentText"/>
+        /// for the specified <paramref name="targetDatabaseType"/>.
         /// </summary>
         /// <param name="amendmentText">Amendment text to apply.</param>
         /// <param name="targetDatabaseType">Target <see cref="DatabaseType"/> for amendment text.</param>
