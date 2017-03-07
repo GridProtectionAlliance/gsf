@@ -209,7 +209,7 @@ namespace GSF.Web
         {
             Tuple<string, int>[] linesAndLengths = script
                 .Split(new[] { Environment.NewLine }, StringSplitOptions.None)
-                .Select(line => new Tuple<string, int>(line, line.Length - line.TrimStart(' ').Length))
+                .Select(line => new Tuple<string, int>(line, line.Length - line.TrimStart(null).Length))
                 .ToArray();
 
             int minLength = linesAndLengths

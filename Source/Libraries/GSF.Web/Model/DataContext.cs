@@ -825,42 +825,42 @@ namespace GSF.Web.Model
 
             if (!string.IsNullOrWhiteSpace(queryRecordCountMethod))
                 javascript.Append($@"
-                    viewModel.setQueryRecordCount(function (filterText) {{
-                        return {hubScriptName}.{queryRecordCountMethod}({(keyValues == null ? "" : $"{keyValues}, ")} filterText);
+                    viewModel.setQueryRecordCount(function(filterText) {{
+                        return {hubScriptName}.{queryRecordCountMethod}({(keyValues == null ? "" : $"{keyValues}, ")}filterText);
                     }});
                 ".FixForwardSpacing());
 
             if (!string.IsNullOrWhiteSpace(queryRecordsMethod))
                 javascript.Append($@"
-                    viewModel.setQueryRecords(function (sortField, ascending, page, pageSize, filterText) {{
+                    viewModel.setQueryRecords(function(sortField, ascending, page, pageSize, filterText) {{
                         return {hubScriptName}.{queryRecordsMethod}({(keyValues == null ? "" : $"{keyValues}, ")}sortField, ascending, page, pageSize, filterText);
                     }});
                 ".FixForwardSpacing());
 
             if (!string.IsNullOrWhiteSpace(deleteRecordMethod))
                 javascript.Append($@"
-                    viewModel.setDeleteRecord(function (keyValues) {{
+                    viewModel.setDeleteRecord(function(keyValues) {{
                         return {hubScriptName}.{deleteRecordMethod}({Enumerable.Range(0, Table<TModel>().GetPrimaryKeyFieldNames().Length).Select(index => $"keyValues[{index}]").ToDelimitedString(", ")});
                     }});
                 ".FixForwardSpacing());
 
             if (!string.IsNullOrWhiteSpace(createNewRecordMethod))
                 javascript.Append($@"
-                    viewModel.setNewRecord(function () {{
+                    viewModel.setNewRecord(function() {{
                         return {hubScriptName}.{createNewRecordMethod}();
                     }});
                 ".FixForwardSpacing());
 
             if (!string.IsNullOrWhiteSpace(addNewRecordMethod))
                 javascript.Append($@"
-                    viewModel.setAddNewRecord(function (record) {{
+                    viewModel.setAddNewRecord(function(record) {{
                         return {hubScriptName}.{addNewRecordMethod}(record);
                     }});
                 ".FixForwardSpacing());
 
             if (!string.IsNullOrWhiteSpace(updateMethod))
                 javascript.Append($@"
-                    viewModel.setUpdateRecord(function (record) {{
+                    viewModel.setUpdateRecord(function(record) {{
                         return {hubScriptName}.{updateMethod}(record);
                     }});
                 ".FixForwardSpacing());
