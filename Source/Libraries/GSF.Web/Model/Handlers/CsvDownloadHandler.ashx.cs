@@ -188,7 +188,7 @@ namespace GSF.Web.Model.Handlers
             string sortField = requestParameters["SortField"];
             bool sortAscending = requestParameters["SortAscending"].ParseBoolean();
             bool showDeleted = requestParameters["ShowDeleted"].ParseBoolean();
-            string[] parentKeys = requestParameters["ParentKeys"].Split(',');
+            string[] parentKeys = requestParameters["ParentKeys"].Split(',').Select(parentKey => parentKey.Replace(','.RegexEncode(), ",")).ToArray();
 
             if (string.IsNullOrEmpty(modelName))
                 throw new ArgumentNullException(nameof(modelName), "Cannot download CSV data: no model type name was specified.");
@@ -301,20 +301,20 @@ namespace GSF.Web.Model.Handlers
 
                     // Add any parent key restriction parameters
                     if (parentKeys.Length > 0 && parentKeys[0].Length > 0)
-                        queryRecordCountParameters.AddRange(parentKeys.Select((s,i) =>
+                    {
+                        queryRecordCountParameters.AddRange(parentKeys.Select((value, i) =>
                         {
                             Type type = queryRecordCount.GetParameters()[i].ParameterType;
+
                             if (type == typeof(string))
-                            {
-                                return (object)s;
-                            }
-                            else if(type == typeof(Guid))
-                            {
-                                return (object)Guid.Parse(s);
-                    
-                            }
-                            return Convert.ChangeType(s, type);
+                                return (object)value;
+
+                            if (type == typeof(Guid))
+                                return (object)Guid.Parse(value);
+
+                            return Convert.ChangeType(value, type);
                         }));
+                    }
 
                     // Add parameters for query records from query record count parameters - they match up to this point
                     queryRecordsParameters.AddRange(queryRecordCountParameters);

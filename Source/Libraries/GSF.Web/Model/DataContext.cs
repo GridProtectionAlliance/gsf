@@ -811,29 +811,29 @@ namespace GSF.Web.Model
             string addNewRecordMethod = recordOperations[(int)RecordOperation.AddNewRecord]?.Item1.ToCamelCase();
             string updateMethod = recordOperations[(int)RecordOperation.UpdateRecord]?.Item1.ToCamelCase();
 
-            string keyValues = null;
+            string parentKeyParams = null;
 
             if (parentKeys.Length > 0)
             {
-                keyValues = parentKeys.ToDelimitedString(", ");
-                viewBag.ParentKeys = keyValues;
+                viewBag.ParentKeys = string.Join(",", parentKeys.Select(parentKey => parentKey.ToString().Replace(",", ','.RegexEncode())));
+                parentKeyParams = string.Join(", ", parentKeys.Select(parentKey => (Common.IsNumericType(parentKey) ? $"{parentKey}" : $"\"{parentKey}\"").JavaScriptEncode()));
             }
 
             // If modeled table has IsDeletedField marker, the showDeleted parameter should come first in DataHub operations
             if (showDeletedValue != null)
-                keyValues = keyValues != null ? $"{showDeletedValue}, {keyValues}" : showDeletedValue;
+                parentKeyParams = parentKeyParams != null ? $"{showDeletedValue}, {parentKeyParams}" : showDeletedValue;
 
             if (!string.IsNullOrWhiteSpace(queryRecordCountMethod))
                 javascript.Append($@"
                     viewModel.setQueryRecordCount(function(filterText) {{
-                        return {hubScriptName}.{queryRecordCountMethod}({(keyValues == null ? "" : $"{keyValues}, ")}filterText);
+                        return {hubScriptName}.{queryRecordCountMethod}({(parentKeyParams == null ? "" : $"{parentKeyParams}, ")}filterText);
                     }});
                 ".FixForwardSpacing());
 
             if (!string.IsNullOrWhiteSpace(queryRecordsMethod))
                 javascript.Append($@"
                     viewModel.setQueryRecords(function(sortField, ascending, page, pageSize, filterText) {{
-                        return {hubScriptName}.{queryRecordsMethod}({(keyValues == null ? "" : $"{keyValues}, ")}sortField, ascending, page, pageSize, filterText);
+                        return {hubScriptName}.{queryRecordsMethod}({(parentKeyParams == null ? "" : $"{parentKeyParams}, ")}sortField, ascending, page, pageSize, filterText);
                     }});
                 ".FixForwardSpacing());
 

@@ -413,11 +413,13 @@ namespace GSF
             return (IsReference(item) && !(item is string));
         }
 
-        /// <summary>Determines if given item is numeric.</summary>
+        /// <summary>
+        /// Determines if given <paramref name="item"/> is a numeric type.
+        /// </summary>
         /// <param name="item">Object to evaluate.</param>
-        /// <returns>Result of evaluation as a <see cref="bool"/>.</returns>
+        /// <returns><c>true</c> if <paramref name="item"/> is a numeric type; otherwise, <c>false</c>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsNumeric(object item)
+        public static bool IsNumericType(object item)
         {
             IConvertible convertible = item as IConvertible;
 
@@ -438,11 +440,31 @@ namespace GSF
                     case TypeCode.Double:
                     case TypeCode.Decimal:
                         return true;
-                    case TypeCode.Char:
-                    case TypeCode.String:
-                        double result;
-                        return double.TryParse(convertible.ToString(null), out result);
                 }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Determines if given <paramref name="item"/> is, or can be interpreted to be, a numeric type.
+        /// </summary>
+        /// <param name="item">Object to evaluate.</param>
+        /// <returns><c>true</c> if <paramref name="item"/> is, or can be interpreted to be, a numeric type; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// If type of <paramref name="item"/> is a <see cref="char"/> or a <see cref="string"/>, then if value can be parsed as a numeric
+        /// value, result will be <c>true</c>.
+        /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsNumeric(object item)
+        {
+            if (IsNumericType(item))
+                return true;
+
+            if (item is char || item is string)
+            {
+                double result;
+                return double.TryParse(item.ToString(), out result);
             }
 
             return false;

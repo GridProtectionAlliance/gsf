@@ -597,12 +597,7 @@ namespace GSF.Identity
         /// Gets all the groups associated with the user - this includes local groups and Active Directory groups if applicable.
         /// </summary>
         /// <remarks>
-        /// <para>
         /// Groups names are prefixed with their associated domain, computer name or BUILTIN.
-        /// </para>
-        /// <para>
-        /// This method always returns an empty string array (i.e., a string array with no elements) under Mono deployments.
-        /// </para>
         /// </remarks>
         public string[] Groups
         {
@@ -616,12 +611,7 @@ namespace GSF.Identity
         /// Gets the local groups the user is a member of.
         /// </summary>
         /// <remarks>
-        /// <para>
         /// Groups names are prefixed with BUILTIN or computer name.
-        /// </para>
-        /// <para>
-        /// This method always returns an empty string array (i.e., a string array with no elements) under Mono deployments.
-        /// </para>
         /// </remarks>
         public string[] LocalGroups
         {
@@ -1010,9 +1000,6 @@ namespace GSF.Identity
         /// Impersonates the defined privileged domain account.
         /// </summary>
         /// <returns>An <see cref="WindowsImpersonationContext"/> if privileged domain account has been defined, otherwise null.</returns>
-        /// <remarks>
-        /// This method always returns <c>null</c> under Mono deployments.
-        /// </remarks>
         public WindowsImpersonationContext ImpersonatePrivilegedAccount()
         {
             if (!string.IsNullOrEmpty(m_privilegedDomain) &&
@@ -1203,9 +1190,6 @@ namespace GSF.Identity
         /// <param name="userName">Username of user to authenticate.</param>
         /// <param name="password">Password of user to authenticate.</param>
         /// <returns>true if the user credentials are authenticated successfully; otherwise false.</returns>
-        /// <remarks>
-        /// This method always returns <c>null</c> under Mono deployments.
-        /// </remarks>
         /// <example>
         /// This example shows how to validate a user's credentials:
         /// <code>
@@ -1245,9 +1229,6 @@ namespace GSF.Identity
         /// <param name="password">Password of user to authenticate.</param>
         /// <param name="errorMessage">Error message returned, if authentication fails.</param>
         /// <returns>true if the user credentials are authenticated successfully; otherwise false.</returns>
-        /// <remarks>
-        /// This method always returns <c>null</c> under Mono deployments.
-        /// </remarks>
         /// <example>
         /// This example shows how to validate a user's credentials and retrieve an error message if validation fails: 
         /// <code>
@@ -1290,12 +1271,7 @@ namespace GSF.Identity
         /// <param name="password">Password of user to impersonate.</param>
         /// <returns>A <see cref="WindowsImpersonationContext"/> object of the impersonated user.</returns>
         /// <remarks>
-        /// <para>
         /// After impersonating a user the code executes under the impersonated user's identity.
-        /// </para>
-        /// <para>
-        /// This method always returns <c>null</c> under Mono deployments.
-        /// </para>
         /// </remarks>
         /// <example>
         /// This example shows how to impersonate a user:
