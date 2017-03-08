@@ -230,10 +230,6 @@ namespace GSF.Web.Hubs
 
         #endregion
 
-        #region [ Operators ]
-
-        #endregion
-
         #region [ Static ]
 
         // Static Fields
