@@ -1029,7 +1029,7 @@ namespace PhasorProtocolAdapters
             }
 
             if (settings.TryGetValue("useAdjustedValue", out setting))
-                m_useAdjustedValue = Boolean.Parse(setting);
+                m_useAdjustedValue = setting.ParseBoolean();
             else
                 m_useAdjustedValue = true;
 
