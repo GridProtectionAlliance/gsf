@@ -1193,10 +1193,10 @@ namespace PhasorProtocolAdapters
                         }
                     }
 
-                    m_baseConfigurationFrame.Cells.Add(cell);
-
                     // Maintain a local dictionary of full length acronym cell indexes
                     acronymIndexes[acronym] = m_baseConfigurationFrame.Cells.Count;
+
+                    m_baseConfigurationFrame.Cells.Add(cell);
                 }
                 catch (Exception ex)
                 {
