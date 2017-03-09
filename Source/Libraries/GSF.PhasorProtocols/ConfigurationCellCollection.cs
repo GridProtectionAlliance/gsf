@@ -83,8 +83,8 @@ namespace GSF.PhasorProtocols
         /// <returns><c>true</c> if the <see cref="ConfigurationCellCollection"/> contains an element with the specified <paramref name="stationName"/>; otherwise, <c>false</c>.</returns>
         public virtual bool TryGetByStationName(string stationName, out IConfigurationCell configurationCell)
         {
-            configurationCell = this.FirstOrDefault(cell => string.Compare(cell.StationName, stationName, true) == 0);
-            return (configurationCell != null);
+            configurationCell = this.FirstOrDefault(cell => stationName.TruncateRight(cell.MaximumStationNameLength).Equals(cell.StationName, StringComparison.OrdinalIgnoreCase));
+            return (object)configurationCell != null;
         }
 
         /// <summary>
@@ -98,8 +98,8 @@ namespace GSF.PhasorProtocols
         /// <returns><c>true</c> if the <see cref="ConfigurationCellCollection"/> contains an element with the specified <paramref name="label"/>; otherwise, <c>false</c>.</returns>
         public virtual bool TryGetByIDLabel(string label, out IConfigurationCell configurationCell)
         {
-            configurationCell = this.FirstOrDefault(cell => string.Compare(cell.IDLabel, label, true) == 0);
-            return (configurationCell != null);
+            configurationCell = this.FirstOrDefault(cell => label.Equals(cell.IDLabel.TruncateRight(cell.IDLabelLength), StringComparison.OrdinalIgnoreCase));
+            return (object)configurationCell != null;
         }
 
         /// <summary>
@@ -114,7 +114,7 @@ namespace GSF.PhasorProtocols
         public virtual bool TryGetByIDCode(ushort idCode, out IConfigurationCell configurationCell)
         {
             configurationCell = this.FirstOrDefault(cell => cell.IDCode == idCode);
-            return (configurationCell != null);
+            return (object)configurationCell != null;
         }
 
         /// <summary>
@@ -124,7 +124,7 @@ namespace GSF.PhasorProtocols
         /// <returns>Index of the <see cref="ConfigurationCellCollection"/> that contains the specified <paramref name="label"/>; otherwise, <c>-1</c>.</returns>
         public virtual int IndexOfIDLabel(string label)
         {
-            return this.IndexOf(cell => string.Compare(cell.IDLabel, label, true) == 0);
+            return this.IndexOf(cell => label.Equals(cell.IDLabel.TruncateRight(cell.IDLabelLength), StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>
@@ -134,7 +134,7 @@ namespace GSF.PhasorProtocols
         /// <returns>Index of the <see cref="ConfigurationCellCollection"/> that contains the specified <paramref name="stationName"/>; otherwise, <c>-1</c>.</returns>
         public virtual int IndexOfStationName(string stationName)
         {
-            return this.IndexOf(cell => string.Compare(cell.StationName, stationName, true) == 0);
+            return this.IndexOf(cell => stationName.TruncateRight(cell.MaximumStationNameLength).Equals(cell.StationName, StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>

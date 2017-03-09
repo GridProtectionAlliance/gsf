@@ -1071,6 +1071,7 @@ namespace PhasorProtocolAdapters
 
             // Define a protocol independent configuration frame
             m_baseConfigurationFrame = new ConfigurationFrame(m_idCode, DateTime.UtcNow.Ticks, (ushort)base.FramesPerSecond);
+            Dictionary<string, int> acronymIndexes = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
             // Define configuration cells (i.e., PMU's that will appear in outgoing data stream)
             foreach (DataRow deviceRow in DataSource.Tables["OutputStreamDevices"].Select($"ParentID={ID}", "LoadOrder"))
@@ -1104,11 +1105,11 @@ namespace PhasorProtocolAdapters
                     cell.PhasorCoordinateFormat = (CoordinateFormat)Enum.Parse(typeof(CoordinateFormat), string.IsNullOrEmpty(formatString) ? m_coordinateFormat.ToString() : formatString, true);
 
                     // Assign device identification labels
+                    string acronym = deviceRow["Acronym"].ToString();
                     cell.IDLabel = deviceRow["Name"].ToString().TruncateRight(cell.IDLabelLength).Trim();
-                    label = deviceRow["Acronym"].ToString().TruncateRight(cell.MaximumStationNameLength).Trim();
 
                     // Station name is serialized to configuration frame
-                    cell.StationName = label;
+                    cell.StationName = acronym.TruncateRight(cell.MaximumStationNameLength).Trim();
 
                     // Define all the phasors configured for this device
                     foreach (DataRow phasorRow in DataSource.Tables["OutputStreamDevicePhasors"].Select($"OutputStreamDeviceID={deviceID}", "LoadOrder"))
@@ -1193,6 +1194,9 @@ namespace PhasorProtocolAdapters
                     }
 
                     m_baseConfigurationFrame.Cells.Add(cell);
+
+                    // Maintain a local dictionary of full length acronym cell indexes
+                    acronymIndexes[acronym] = m_baseConfigurationFrame.Cells.Count;
                 }
                 catch (Exception ex)
                 {
@@ -1253,7 +1257,7 @@ namespace PhasorProtocolAdapters
                         {
                             // We cache these indices locally to speed up initialization as we'll be
                             // requesting them for the same devices over and over
-                            signal.CellIndex = m_baseConfigurationFrame.Cells.IndexOfStationName(signal.Acronym);
+                            signal.CellIndex = acronymIndexes[signal.Acronym];
                             signalCellIndexes.Add(signal.Acronym, signal.CellIndex);
                         }
                     }

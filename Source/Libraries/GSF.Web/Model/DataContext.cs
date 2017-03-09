@@ -816,7 +816,7 @@ namespace GSF.Web.Model
             if (parentKeys.Length > 0)
             {
                 viewBag.ParentKeys = string.Join(",", parentKeys.Select(parentKey => parentKey.ToString().Replace(",", ','.RegexEncode())));
-                parentKeyParams = string.Join(", ", parentKeys.Select(parentKey => (Common.IsNumericType(parentKey) ? $"{parentKey}" : $"\"{parentKey}\"").JavaScriptEncode()));
+                parentKeyParams = string.Join(", ", parentKeys.Select(parentKey => Common.IsNumericType(parentKey) ? $"{parentKey}" : $"\"{parentKey.ToString().JavaScriptEncode()}\""));
             }
 
             // If modeled table has IsDeletedField marker, the showDeleted parameter should come first in DataHub operations
