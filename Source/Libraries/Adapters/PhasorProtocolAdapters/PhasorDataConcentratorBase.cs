@@ -1071,7 +1071,7 @@ namespace PhasorProtocolAdapters
 
             // Define a protocol independent configuration frame
             m_baseConfigurationFrame = new ConfigurationFrame(m_idCode, DateTime.UtcNow.Ticks, (ushort)base.FramesPerSecond);
-            Dictionary<string, int> acronymIndexes = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, int> signalCellIndexes = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
             // Define configuration cells (i.e., PMU's that will appear in outgoing data stream)
             foreach (DataRow deviceRow in DataSource.Tables["OutputStreamDevices"].Select($"ParentID={ID}", "LoadOrder"))
@@ -1194,7 +1194,7 @@ namespace PhasorProtocolAdapters
                     }
 
                     // Maintain a local dictionary of full length acronym cell indexes
-                    acronymIndexes[acronym] = m_baseConfigurationFrame.Cells.Count;
+                    signalCellIndexes[acronym] = m_baseConfigurationFrame.Cells.Count;
 
                     m_baseConfigurationFrame.Cells.Add(cell);
                 }
@@ -1208,8 +1208,6 @@ namespace PhasorProtocolAdapters
 
             // Create new lookup table for signal references
             Dictionary<MeasurementKey, SignalReference[]> signalReferences = new Dictionary<MeasurementKey, SignalReference[]>();
-
-            Dictionary<string, int> signalCellIndexes = new Dictionary<string, int>();
             SignalReference signal;
             SignalReference lastSignal = new SignalReference("__-UNKNOWN");
             MeasurementKey measurementKey;
@@ -1254,12 +1252,7 @@ namespace PhasorProtocolAdapters
                     {
                         // Lookup cell index by acronym - doing this work upfront will save a huge amount of work during primary measurement sorting
                         if (!signalCellIndexes.TryGetValue(signal.Acronym, out signal.CellIndex))
-                        {
-                            // We cache these indices locally to speed up initialization as we'll be
-                            // requesting them for the same devices over and over
-                            signal.CellIndex = acronymIndexes[signal.Acronym];
-                            signalCellIndexes.Add(signal.Acronym, signal.CellIndex);
-                        }
+                            signal.CellIndex = -1;
                     }
 
                     // No need to define this measurement for sorting unless it has a destination in the outgoing frame
