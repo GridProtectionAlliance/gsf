@@ -349,7 +349,7 @@ namespace GSF.Configuration
                     continue;
 
                 object propertyValue = property.PropertyInfo.GetValue(settingsObject);
-                string propertyName = property.Names.First();
+                string propertyName = key ?? property.Names.First();
 
                 foreach (ValidationAttribute attr in property.ValidationAttributes)
                     attr.Validate(propertyValue, propertyName);
