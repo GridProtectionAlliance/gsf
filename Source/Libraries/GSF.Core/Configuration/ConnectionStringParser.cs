@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  10/14/2013 - Stephen C. Wills
 //       Generated original version of source code.
+//  03/10/2017 - J. Ritchie Carroll
+//       Added checks for validation attributes.
 //
 //******************************************************************************************************
 
@@ -25,12 +27,14 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Xml.Linq;
 using GSF.Reflection;
 
+// ReSharper disable StaticMemberInGenericType
 namespace GSF.Configuration
 {
     /// <summary>
@@ -78,6 +82,11 @@ namespace GSF.Configuration
             public bool Required;
 
             /// <summary>
+            /// Gets all validation attributes that may be applied to the property.
+            /// </summary>
+            public ValidationAttribute[] ValidationAttributes;
+
+            /// <summary>
             /// Creates a new instance of the <see cref="ConnectionStringProperty"/> class.
             /// </summary>
             /// <param name="propertyInfo">The <see cref="PropertyInfo"/> object.</param>
@@ -89,7 +98,7 @@ namespace GSF.Configuration
                 Type converterType;
 
                 PropertyInfo = propertyInfo;
-                Names = propertyInfo.TryGetAttribute(out settingNameAttribute) ? settingNameAttribute.Names : new string[] { propertyInfo.Name };
+                Names = propertyInfo.TryGetAttribute(out settingNameAttribute) ? settingNameAttribute.Names : new[] { propertyInfo.Name };
                 Required = !propertyInfo.TryGetAttribute(out defaultValueAttribute);
                 DefaultValue = !Required ? defaultValueAttribute.Value : null;
 
@@ -100,6 +109,8 @@ namespace GSF.Configuration
                     if ((object)converterType != null)
                         Converter = (TypeConverter)Activator.CreateInstance(converterType);
                 }
+
+                propertyInfo.TryGetAttributes(out ValidationAttributes);
             }
         }
 
@@ -333,6 +344,15 @@ namespace GSF.Configuration
                     property.PropertyInfo.SetValue(settingsObject, property.DefaultValue);
                 else
                     throw new ArgumentException("Unable to parse required connection string parameter because it does not exist in the connection string.", property.Names.First());
+
+                if ((object)property.ValidationAttributes == null)
+                    continue;
+
+                object propertyValue = property.PropertyInfo.GetValue(settingsObject);
+                string propertyName = property.Names.First();
+
+                foreach (ValidationAttribute attr in property.ValidationAttributes)
+                    attr.Validate(propertyValue, propertyName);
             }
         }
 
@@ -379,10 +399,10 @@ namespace GSF.Configuration
         #region [ Static ]
 
         // Static Fields
-        private static ConcurrentDictionary<Type, ConnectionStringProperty[]> s_allPropertiesLookup = new ConcurrentDictionary<Type, ConnectionStringProperty[]>();
-        private static ConcurrentDictionary<Type, ConnectionStringProperty[]> s_explicitPropertiesLookup = new ConcurrentDictionary<Type, ConnectionStringProperty[]>();
+        private static readonly ConcurrentDictionary<Type, ConnectionStringProperty[]> s_allPropertiesLookup = new ConcurrentDictionary<Type, ConnectionStringProperty[]>();
+        private static readonly ConcurrentDictionary<Type, ConnectionStringProperty[]> s_explicitPropertiesLookup = new ConcurrentDictionary<Type, ConnectionStringProperty[]>();
 
-        private static Func<Type, ConnectionStringProperty[]> s_allPropertiesFactory = t =>
+        private static readonly Func<Type, ConnectionStringProperty[]> s_allPropertiesFactory = t =>
         {
             SerializeSettingAttribute attribute;
 
@@ -393,7 +413,7 @@ namespace GSF.Configuration
                 .ToArray();
         };
 
-        private static Func<Type, ConnectionStringProperty[]> s_explicitPropertiesFactory = t =>
+        private static readonly Func<Type, ConnectionStringProperty[]> s_explicitPropertiesFactory = t =>
         {
             SerializeSettingAttribute attribute;
 
@@ -422,8 +442,8 @@ namespace GSF.Configuration
                 : (string)element;
 
             return value.Any(reserved.Contains)
-                ? string.Format("{0}={{{1}}}", name, value)
-                : string.Format("{0}={1}", name, value);
+                ? $"{name}={{{value}}}"
+                : $"{name}={value}";
         }
 
         /// <summary>
@@ -440,7 +460,7 @@ namespace GSF.Configuration
             settings = connectionString.ParseKeyValuePairs();
 
             if (settings.Count != 1)
-                throw new InvalidOperationException(string.Format("Connection string does not define exactly one root element: {0}", connectionString));
+                throw new InvalidOperationException($"Connection string does not define exactly one root element: {connectionString}");
 
             root = new XElement(settings.Keys.First());
             SetXMLContent(root, settings.Values.First());
@@ -521,9 +541,9 @@ namespace GSF.Configuration
         #region [ Static ]
 
         // Static Fields
-        private static ConcurrentDictionary<Type, ConnectionStringProperty[]> s_connectionStringPropertiesLookup = new ConcurrentDictionary<Type, ConnectionStringProperty[]>();
+        private static readonly ConcurrentDictionary<Type, ConnectionStringProperty[]> s_connectionStringPropertiesLookup = new ConcurrentDictionary<Type, ConnectionStringProperty[]>();
 
-        private static Func<Type, ConnectionStringProperty[]> s_valueFactory = t =>
+        private static readonly Func<Type, ConnectionStringProperty[]> s_valueFactory = t =>
         {
             TParameterAttribute attribute;
 
@@ -573,7 +593,7 @@ namespace GSF.Configuration
                 nestedSettingsObject = property.GetValue(settingsObject);
 
                 if (nestedSettingsObject != null)
-                    builder.Append(string.Format("; {0}={{ {1} }}", GetNames(property).First(), ComposeConnectionString(nestedSettingsObject)));
+                    builder.Append($"; {GetNames(property).First()}={{ {ComposeConnectionString(nestedSettingsObject)} }}");
             }
 
             return builder.ToString().Trim(';', ' ');
@@ -632,7 +652,7 @@ namespace GSF.Configuration
             if (property.TryGetAttribute(out settingNameAttribute))
                 return settingNameAttribute.Names;
 
-            return new string[] { property.Name };
+            return new[] { property.Name };
         }
     }
 }
