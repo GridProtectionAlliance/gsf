@@ -37,9 +37,9 @@ namespace GSF.SELEventParser
         private Firmware m_firmware;
         private int m_eventNumber;
         private AnalogSection m_analogSection;
-        private Dictionary<string, string> m_groupSettings;
-        private Dictionary<string, string> m_controlEquations;
-        private Dictionary<string, string> m_globalSettings;
+        private Dictionary<string, string> m_groupSettings = new Dictionary<string, string>();
+        private Dictionary<string, string> m_controlEquations = new Dictionary<string, string>();
+        private Dictionary<string, string> m_globalSettings = new Dictionary<string, string>();
 
         #endregion
 
