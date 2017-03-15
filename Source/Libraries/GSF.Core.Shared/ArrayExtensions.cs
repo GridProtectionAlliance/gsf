@@ -457,7 +457,7 @@ namespace GSF
                             // If sequence doesn't match, search for next first-item
                             if (array[index + x].CompareTo(sequenceToFind[x]) != 0)
                             {
-                                index = Array.IndexOf(array, sequenceToFind[0], index + 1, length - (index + 1));
+                                index = Array.IndexOf(array, sequenceToFind[0], index + 1, (startIndex + length) - (index + 1));
                                 break;
                             }
 
