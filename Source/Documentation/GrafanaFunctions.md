@@ -282,7 +282,7 @@ Returns a series of values that represent the time difference, in seconds, betwe
 
 * Signature: `TimeDifference(expression)`
 * Example: `TimeDifference(FILTER ActiveMeasurements WHERE SignalType='FREQ')`
-* Variants: `TimeDifference`, `TimeDiff`
+* Variants: `TimeDifference`, `TimeDiff`, `Elapsed`
 * Execution: Deferred enumeration
 
 ## Derivative

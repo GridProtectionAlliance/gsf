@@ -319,7 +319,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Signature: <c>TimeDifference(expression)</c><br/>
         /// Example: <c>TimeDifference(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
-        /// Variants: TimeDifference, TimeDiff<br/>
+        /// Variants: TimeDifference, TimeDiff, Elapsed<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         TimeDifference,
