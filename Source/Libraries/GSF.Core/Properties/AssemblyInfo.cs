@@ -28,10 +28,10 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // Assembly identity attributes.
-[assembly: AssemblyVersion("2.1.467.0")]
+[assembly: AssemblyVersion("2.1.468.0")]
 
 [assembly: SuppressMessage("Microsoft.Usage", "CA2243:AttributeStringLiteralsShouldParseCorrectly")]
-[assembly: AssemblyInformationalVersion("2.1.467-beta")]
+[assembly: AssemblyInformationalVersion("2.1.468")]
 
 // Informational attributes.
 [assembly: AssemblyCompany("Grid Protection Alliance")]
