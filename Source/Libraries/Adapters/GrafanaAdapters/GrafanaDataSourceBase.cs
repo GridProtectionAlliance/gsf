@@ -238,7 +238,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Signature: <c>Top(N|N%, [normalizeTime], expression)</c><br/>
         /// Example: <c>Top(50%, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
-        /// Variants: Top<br/>
+        /// Variants: Top, Largest<br/>
         /// Execution: Immediate in-memory array load.
         /// </remarks>
         Top,
@@ -251,7 +251,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Signature: <c>Bottom(N|N%, [normalizeTime], expression)</c><br/>
         /// Example: <c>Bottom(100, false, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
-        /// Variants: Bottom, Bot<br/>
+        /// Variants: Bottom, Bot, Smallest<br/>
         /// Execution: Immediate in-memory array load.
         /// </remarks>
         Bottom,
@@ -756,8 +756,8 @@ namespace GrafanaAdapters
             s_standardDeviationSampleExpression = new Regex(string.Format(GetExpression, "(StandardDeviationSample|StdDevSamp)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_medianExpression = new Regex(string.Format(GetExpression, "(Median|Med|Mid)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_modeExpression = new Regex(string.Format(GetExpression, "Mode"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_topExpression = new Regex(string.Format(GetExpression, "Top"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_bottomExpression = new Regex(string.Format(GetExpression, "(Bottom|Bot)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_topExpression = new Regex(string.Format(GetExpression, "(Top|Largest)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_bottomExpression = new Regex(string.Format(GetExpression, "(Bottom|Bot|Smallest)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_randomExpression = new Regex(string.Format(GetExpression, "(Random|Rand|Sample)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_firstExpression = new Regex(string.Format(GetExpression, "First"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_lastExpression = new Regex(string.Format(GetExpression, "Last"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
