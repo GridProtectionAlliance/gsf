@@ -211,6 +211,11 @@ namespace GSF.SELEventParser
 
         public static EventReport Parse(string[] lines, ref int index)
         {
+            return Parse(60.0D, lines, ref index);
+        }
+
+        public static EventReport Parse(double systemFrequency, string[] lines, ref int index)
+        {
             EventReport eventReport = new EventReport();
             int firmwareIndex;
 
@@ -233,7 +238,7 @@ namespace GSF.SELEventParser
             EventFile.SkipBlanks(lines, ref index);
 
             // Parse the analog section of the report
-            eventReport.AnalogSection = AnalogSection.Parse(eventReport.Header.EventTime, lines, ref index);
+            eventReport.AnalogSection = AnalogSection.Parse(eventReport.Header.EventTime, systemFrequency, lines, ref index);
 
             if (lines.Length < index)
             {

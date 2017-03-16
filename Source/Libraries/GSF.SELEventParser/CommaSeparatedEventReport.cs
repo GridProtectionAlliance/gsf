@@ -288,6 +288,11 @@ namespace GSF.SELEventParser
 
         public static CommaSeparatedEventReport Parse(string[] lines, ref int index)
         {
+            return Parse(60.0D, lines, ref index);
+        }
+
+        public static CommaSeparatedEventReport Parse(double systemFrequency, string[] lines, ref int index)
+        {
             CommaSeparatedEventReport commaSeparatedEventReport = new CommaSeparatedEventReport();
             commaSeparatedEventReport.Firmware = new Firmware();
             commaSeparatedEventReport.Header = new Header();
@@ -370,7 +375,7 @@ namespace GSF.SELEventParser
             }
 
             commaSeparatedEventReport.InitialReadingIndex = ++index;
-            int timeStepTicks = Convert.ToInt32(Math.Round(10000000.0 / commaSeparatedEventReport.AverageFrequency / commaSeparatedEventReport.SamplesPerCycleAnalog));
+            int timeStepTicks = Convert.ToInt32(Math.Round(10000000.0 / systemFrequency / commaSeparatedEventReport.SamplesPerCycleAnalog));
 
             while (!lines[index].ToUpper().Contains("SETTINGS"))
             {
