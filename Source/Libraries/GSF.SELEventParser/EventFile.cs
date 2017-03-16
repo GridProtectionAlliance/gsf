@@ -116,6 +116,11 @@ namespace GSF.SELEventParser
 
         public static EventFile Parse(string filename)
         {
+            return Parse(filename, 60.0D);
+        }
+
+        public static EventFile Parse(string filename, double systemFrequency)
+        {
             string[] lineSeparators = { "\r\n", "\n\r", "\r", "\n" };
 
             EventFile parsedFile = new EventFile();
@@ -146,7 +151,7 @@ namespace GSF.SELEventParser
 
                 if (command.ToUpper().Contains("EVE"))
                 {
-                    parsedEventReport = EventReport.Parse(lines, ref lineIndex);
+                    parsedEventReport = EventReport.Parse(systemFrequency, lines, ref lineIndex);
                     parsedEventReport.Command = command;
                     parsedFile.Add(parsedEventReport);
                 }
