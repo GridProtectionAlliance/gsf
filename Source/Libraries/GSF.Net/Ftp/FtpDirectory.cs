@@ -550,7 +550,7 @@ namespace GSF.Net.Ftp
         {
             InitHashtable();
 
-            FtpDataStream stream = m_session.ControlChannel.GetPassiveDataStream(TransferDirection.Upload);
+            FtpDataStream stream = m_session.ControlChannel.GetDataStream(TransferDirection.Upload);
 
             try
             {

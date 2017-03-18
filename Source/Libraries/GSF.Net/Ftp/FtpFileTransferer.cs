@@ -211,7 +211,8 @@ namespace GSF.Net.Ftp
                     localStream = new FileStream(m_localFile, FileMode.OpenOrCreate);
                 else
                     localStream = new FileStream(m_localFile, FileMode.Open, FileAccess.Read);
-                remoteStream = m_session.ControlChannel.GetPassiveDataStream(m_transferDirection);
+
+                remoteStream = m_session.ControlChannel.GetDataStream(m_transferDirection);
 
                 m_ftpFileCommandRoutine(m_remoteFile);
                 m_streamCopyRoutine(remoteStream, localStream);

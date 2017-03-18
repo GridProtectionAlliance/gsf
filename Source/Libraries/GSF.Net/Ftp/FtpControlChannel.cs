@@ -46,9 +46,12 @@
 using System;
 using System.Collections;
 using System.IO;
+using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace GSF.Net.Ftp
 {
@@ -89,6 +92,10 @@ namespace GSF.Net.Ftp
         private string m_server;
         private int m_port;
         private int m_timeout;
+        private bool m_passive;
+        private IPAddress m_activeAddress;
+        private Range<int> m_activePortRange;
+        private int m_lastActivePort;
         private TransferMode m_currentTransferMode;
         private FtpResponse m_lastResponse;
         private bool m_disposed;
@@ -103,6 +110,7 @@ namespace GSF.Net.Ftp
             m_server = "localhost";
             m_port = 21;
             m_timeout = 30000;
+            m_passive = true;
             m_sessionHost = host;
             m_currentTransferMode = TransferMode.Unknown;
         }
@@ -155,6 +163,51 @@ namespace GSF.Net.Ftp
             set
             {
                 m_timeout = value;
+            }
+        }
+
+        internal bool Passive
+        {
+            get
+            {
+                return m_passive;
+            }
+            set
+            {
+                m_passive = value;
+            }
+        }
+
+        internal IPAddress ActiveAddress
+        {
+            get
+            {
+                return m_activeAddress ?? (m_activeAddress = Dns.GetHostEntry(Dns.GetHostName()).AddressList.FirstOrDefault(addr => addr.AddressFamily == AddressFamily.InterNetwork));
+            }
+            set
+            {
+                m_activeAddress = value;
+            }
+        }
+
+        internal Range<int> DataChannelPortRange
+        {
+            get
+            {
+                return m_activePortRange;
+            }
+            set
+            {
+                if (value.Start <= IPEndPoint.MinPort)
+                    throw new ArgumentException($"Minimum port in range must be greater than {IPEndPoint.MinPort}.", nameof(value));
+
+                if (value.End > IPEndPoint.MaxPort)
+                    throw new ArgumentException($"Maximum port in range must be less than or equal to {IPEndPoint.MaxPort}.", nameof(value));
+
+                if (value.Start > value.End)
+                    throw new ArgumentException("Start port must be less than or equal to end port.");
+
+                m_activePortRange = value;
             }
         }
 
@@ -400,7 +453,7 @@ namespace GSF.Net.Ftp
             try
             {
                 Type(TransferMode.Ascii);
-                FtpDataStream dataStream = GetPassiveDataStream();
+                FtpDataStream dataStream = GetDataStream();
                 Queue lineQueue = new Queue();
 
                 Command("LIST");
@@ -434,6 +487,80 @@ namespace GSF.Net.Ftp
             }
         }
 
+        internal FtpDataStream GetDataStream()
+        {
+            return GetDataStream(TransferDirection.Download);
+        }
+
+        internal FtpDataStream GetDataStream(TransferDirection direction)
+        {
+            return m_passive ? GetPassiveDataStream(direction) : GetActiveDataStream(direction);
+        }
+
+        internal FtpDataStream GetActiveDataStream()
+        {
+            return GetActiveDataStream(TransferDirection.Download);
+        }
+
+        internal FtpDataStream GetActiveDataStream(TransferDirection direction)
+        {
+            IPAddress address = ActiveAddress;
+            byte[] addressBytes = address.GetAddressBytes();
+
+            int firstPort = GetActivePort();
+            int port = firstPort;
+
+            while (true)
+            {
+                try
+                {
+                    TcpListener listener = new TcpListener(address, port);
+                    TcpClient client;
+
+                    listener.Start();
+
+                    try
+                    {
+                        port = (listener.LocalEndpoint as IPEndPoint)?.Port ?? 0;
+                        Command($"PORT {addressBytes[0]},{addressBytes[1]},{addressBytes[2]},{addressBytes[3]},{port / 256},{port % 256}");
+
+                        for (int i = 0; !listener.Pending(); i++)
+                        {
+                            if (i * 200 >= m_timeout)
+                                throw new TimeoutException("Timeout expired while waiting for connection on active FTP data channel.");
+
+                            Thread.Sleep(200);
+                        }
+
+                        client = listener.AcceptTcpClient();
+
+                        if (direction == TransferDirection.Download)
+                            return new FtpInputDataStream(this, client);
+                        else
+                            return new FtpOutputDataStream(this, client);
+                    }
+                    finally
+                    {
+                        listener.Stop();
+                    }
+                }
+                catch (IOException ie)
+                {
+                    throw new Exception("Failed to open active port (" + port + ") data connection due to IO exception: " + ie.Message + ".", ie);
+                }
+                catch (SocketException se)
+                {
+                    if (se.SocketErrorCode != SocketError.AddressAlreadyInUse)
+                        throw new Exception("Failed to open active port (" + port + ") data connection due to socket exception: " + se.Message + ".", se);
+                }
+
+                port = GetActivePort();
+
+                if (port == firstPort)
+                    throw new Exception($"All ports in active port range ({m_activePortRange.Start}-{m_activePortRange.End}) are already in use.");
+            }
+        }
+
         internal FtpDataStream GetPassiveDataStream()
         {
             return GetPassiveDataStream(TransferDirection.Download);
@@ -462,6 +589,21 @@ namespace GSF.Net.Ftp
             {
                 throw new Exception("Failed to open passive port (" + port + ") data connection due to socket exception: " + se.Message + ".", se);
             }
+        }
+
+        private int GetActivePort()
+        {
+            if ((object)m_activePortRange == null)
+                return 0;
+
+            if (m_lastActivePort == 0)
+                m_lastActivePort = GSF.Security.Cryptography.Random.Int32Between(m_activePortRange.Start, m_activePortRange.End);
+            else if (m_lastActivePort == m_activePortRange.End)
+                m_lastActivePort = m_activePortRange.Start;
+            else
+                m_lastActivePort++;
+
+            return m_lastActivePort;
         }
 
         private int GetPassivePort()

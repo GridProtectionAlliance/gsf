@@ -238,7 +238,7 @@ namespace GSF.Net.Ftp
             if (offset != 0)
                 Session.ControlChannel.REST(offset);
 
-            FtpDataStream stream = Session.ControlChannel.GetPassiveDataStream(dir);
+            FtpDataStream stream = Session.ControlChannel.GetDataStream(dir);
 
             try
             {

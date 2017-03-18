@@ -72,6 +72,38 @@ namespace GSF
         #region [ Methods ]
 
         /// <summary>
+        /// Determines whether the range contains the given value.
+        /// </summary>
+        /// <param name="value">The value to be compared with.</param>
+        /// <returns>True if the value exists within the range; false otherwise.</returns>
+        public bool Contains(T value)
+        {
+            return Contains(value, Comparer<T>.Default);
+        }
+
+        /// <summary>
+        /// Determines whether the range contains the given value.
+        /// </summary>
+        /// <param name="value">The value to be compared with.</param>
+        /// <param name="comparer">The comparer used to compare objects of type <typeparamref name="T"/>.</param>
+        /// <returns>True if the value exists within the range; false otherwise.</returns>
+        public bool Contains(T value, IComparer<T> comparer)
+        {
+            return Contains(value, comparer.Compare);
+        }
+
+        /// <summary>
+        /// Determines whether the range contains the given value.
+        /// </summary>
+        /// <param name="value">The value to be compared with.</param>
+        /// <param name="comparison">The comparison used to compare objects of type <typeparamref name="T"/>.</param>
+        /// <returns>True if the value exists within the range; false otherwise.</returns>
+        public bool Contains(T value, Comparison<T> comparison)
+        {
+            return comparison(m_start, value) <= 0 && comparison(value, m_end) <= 0;
+        }
+
+        /// <summary>
         /// Determines whether the range overlaps with the given range.
         /// </summary>
         /// <param name="range">The range to be compared with.</param>

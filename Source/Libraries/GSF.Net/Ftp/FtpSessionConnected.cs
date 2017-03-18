@@ -42,6 +42,7 @@
 #endregion
 
 using System;
+using System.Net;
 using System.Threading;
 
 namespace GSF.Net.Ftp
@@ -112,6 +113,54 @@ namespace GSF.Net.Ftp
             get
             {
                 return m_ctrlChannel.Timeout;
+            }
+            set
+            {
+                throw new InvalidOperationException();
+            }
+        }
+
+        public bool Passive
+        {
+            get
+            {
+                return m_ctrlChannel.Passive;
+            }
+            set
+            {
+                throw new InvalidOperationException();
+            }
+        }
+
+        public IPAddress ActiveAddress
+        {
+            get
+            {
+                return m_ctrlChannel.ActiveAddress;
+            }
+            set
+            {
+                throw new InvalidOperationException();
+            }
+        }
+
+        public int MinActivePort
+        {
+            get
+            {
+                return m_ctrlChannel.DataChannelPortRange.Start;
+            }
+            set
+            {
+                throw new InvalidOperationException();
+            }
+        }
+
+        public int MaxActivePort
+        {
+            get
+            {
+                return m_ctrlChannel.DataChannelPortRange.End;
             }
             set
             {
