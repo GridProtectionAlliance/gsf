@@ -265,7 +265,7 @@ namespace GSF.Net.Ftp
         /// Gets or sets the IP address to send with the PORT command.
         /// </summary>
         [Browsable(true), Category("Configuration"), Description("Specify IP address to send with PORT command."), DefaultValue(null)]
-        string ActiveAddress
+        public string ActiveAddress
         {
             get
             {
@@ -287,7 +287,7 @@ namespace GSF.Net.Ftp
         /// used when listening for connections in active mode.
         /// </summary>
         [Browsable(true), Category("Configuration"), Description("Specify minimum port in range of active ports."), DefaultValue(0)]
-        int MinActivePort
+        public int MinActivePort
         {
             get
             {
@@ -304,7 +304,7 @@ namespace GSF.Net.Ftp
         /// used when listening for connections in active mode.
         /// </summary>
         [Browsable(true), Category("Configuration"), Description("Specify maximum port in range of active ports."), DefaultValue(0)]
-        int MaxActivePort
+        public int MaxActivePort
         {
             get
             {
