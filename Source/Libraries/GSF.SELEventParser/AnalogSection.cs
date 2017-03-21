@@ -242,6 +242,7 @@ namespace GSF.SELEventParser
                     currentLine = currentLine.Remove(analogEndIndex);
 
                 analogs = currentLine
+                    .Replace("-", " -")
                     .Split((char[])null, StringSplitOptions.RemoveEmptyEntries)
                     .TakeWhile(field => double.TryParse(field, out analog))
                     .Select(field => analog)
