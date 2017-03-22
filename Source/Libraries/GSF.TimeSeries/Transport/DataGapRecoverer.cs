@@ -834,14 +834,18 @@ namespace GSF.TimeSeries.Transport
         /// <returns><c>true</c> if log was flushed successfully; otherwise, <c>false</c> if flush timed out.</returns>
         public bool FlushLog(int timeout = Timeout.Infinite)
         {
-            if (m_disposed)
-                throw new InvalidOperationException("Data gap recoverer has been disposed. Cannot flush log.");
+            try
+            {
+                // Wait for process completion if in progress
+                if (!m_disposed && m_dataGapRecoveryCompleted.Wait(timeout))
+                    return m_dataGapLog?.Flush().Wait(timeout) ?? false;
 
-            // Wait for process completion if in progress
-            if (m_dataGapRecoveryCompleted.Wait(timeout))
-                return m_dataGapLog?.Flush().Wait(timeout) ?? false;
-
-            return false;
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         // Can only start data gap processing when end time of recovery range is beyond recovery start delay

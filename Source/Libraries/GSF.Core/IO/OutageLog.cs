@@ -80,10 +80,12 @@ namespace GSF.IO
         private readonly ShortSynchronizedOperation m_writeLogOperation;
         private readonly ShortSynchronizedOperation m_condenseLogOperation;
         private readonly object m_readWriteLock;
+        private SafeFileWatcher m_logFileWatcher;
         private volatile bool m_postponeWriteOperations;
         private long m_totalReads;
         private long m_totalWrites;
         private long m_totalCondenses;
+        private long m_totalChanges;
         private string m_fileName;
         private bool m_enabled;
         private bool m_disposed;
@@ -131,6 +133,11 @@ namespace GSF.IO
                     throw new ArgumentNullException(nameof(value));
 
                 m_fileName = FilePath.GetAbsolutePath(FilePath.GetValidFilePath(value));
+
+                LogFileWatcher = new SafeFileWatcher(FilePath.GetDirectoryName(m_fileName), FilePath.GetFileName(m_fileName))
+                {
+                    NotifyFilter = NotifyFilters.CreationTime | NotifyFilters.LastWrite
+                };
             }
         }
 
@@ -153,31 +160,42 @@ namespace GSF.IO
         /// <summary>
         /// Gets a flag that indicates whether the object has been disposed.
         /// </summary>
-        public bool IsDisposed
-        {
-            get
-            {
-                return m_disposed;
-            }
-        }
+        public bool IsDisposed => m_disposed;
 
         // Gets the name of the outage log
-        string IProvideStatus.Name
-        {
-            get
-            {
-                return FilePath.GetFileNameWithoutExtension(m_fileName.ToNonNullString("undefined"));
-            }
-        }
+        string IProvideStatus.Name => FilePath.GetFileNameWithoutExtension(m_fileName.ToNonNullString("undefined"));
 
         /// <summary>
         /// Gets locking object for <see cref="OutageLog"/>.
         /// </summary>
-        protected internal object ReadWriteLock
+        protected internal object ReadWriteLock => m_readWriteLock;
+
+        private SafeFileWatcher LogFileWatcher
         {
             get
             {
-                return m_readWriteLock;
+                return m_logFileWatcher;
+            }
+            set
+            {
+                if ((object)m_logFileWatcher != null)
+                {
+                    m_logFileWatcher.EnableRaisingEvents = false;
+                    m_logFileWatcher.Created -= m_logFileWatcher_Changed;
+                    m_logFileWatcher.Changed -= m_logFileWatcher_Changed;
+
+                    if (m_logFileWatcher != value)
+                        m_logFileWatcher.Dispose();
+                }
+
+                m_logFileWatcher = value;
+
+                if ((object)m_logFileWatcher != null)
+                {
+                    m_logFileWatcher.Created += m_logFileWatcher_Changed;
+                    m_logFileWatcher.Changed += m_logFileWatcher_Changed;
+                    m_logFileWatcher.EnableRaisingEvents = true;
+                }
             }
         }
 
@@ -201,6 +219,8 @@ namespace GSF.IO
                 status.AppendFormat("   Actively condensing log: {0} - {1:N0} total condenses (with action)", m_condenseLogOperation.IsRunning, m_totalCondenses);
                 status.AppendLine();
                 status.AppendFormat("           Outage log size: {0:N0} outages", Count);
+                status.AppendLine();
+                status.AppendFormat("    Monitoring for updates: {0}", (object)LogFileWatcher != null);
                 status.AppendLine();
 
                 return status.ToString();
@@ -238,6 +258,8 @@ namespace GSF.IO
                             m_writeLogWaitHandle.Set();
                             m_writeLogWaitHandle.Dispose();
                         }
+
+                        LogFileWatcher = null;
                     }
                 }
                 finally
@@ -554,6 +576,29 @@ namespace GSF.IO
         {
             if (m_enabled && !m_postponeWriteOperations)
                 m_writeLogOperation.RunOnceAsync();
+        }
+
+        private void m_logFileWatcher_Changed(object sender, FileSystemEventArgs e)
+        {
+            try
+            {
+                SpinWait waiter = new SpinWait();
+
+                while (m_writeLogOperation.IsRunning)
+                    waiter.SpinOnce();
+
+                m_totalChanges++;
+
+                // Initiate a read operation an external change is detected
+                if (m_totalChanges > m_totalWrites)
+                    m_readLogOperation.RunOnceAsync();
+
+                m_totalChanges = m_totalWrites;
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException($"Failed to initiate read after detected external outage log change: {ex.Message}", ex));
+            }
         }
 
         #endregion
