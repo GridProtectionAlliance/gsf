@@ -756,7 +756,7 @@ namespace GSF.TimeSeries.Transport
             m_dataGapLog.Initialize();
 
             // Setup data gap processor to process items one at a time, a 5-second minimum period is established between each gap processing
-            m_dataGapLogProcessor = new OutageLogProcessor(m_dataGapLog, ProcessDataGap, CanProcessDataGap, ex => OnProcessException(MessageLevel.Warning, ex), GSF.Common.Max(5000, (int)(m_recoveryStartDelay * SI.Milli)));
+            m_dataGapLogProcessor = new OutageLogProcessor(m_dataGapLog, ProcessDataGap, CanProcessDataGap, ex => OnProcessException(MessageLevel.Warning, ex), GSF.Common.Max(5000, (int)(m_recoveryStartDelay * 1000.0D)));
         }
 
         /// <summary>
