@@ -291,17 +291,23 @@
     if (showSearchFilter) {
         pageControlScripts.AppendFormat(@"
             $(""#pageHeader"").append(""{0}"");
-
+            
+            var searchFilterTimeout = null;
             $(""#searchFilter"").on(""keyup"", function (e) {{
                 const searchText = $(""#searchFilter"").val();
 
-                if (searchText.length === 0) {{
-                    viewModel.filterText = """";
-                    viewModel.queryPageRecords();
-                }} else {{
-                    viewModel.filterText = searchText;
-                    viewModel.queryPageRecords();
-                }}
+                if(searchFilterTimeout != null)
+                    clearTimeout(searchFilterTimeout);
+                searchFilterTimeout = setTimeout(function(){{
+                    searchFilterTimeout = null;
+                    if (searchText.length === 0) {{
+                        viewModel.filterText = """";
+                        viewModel.queryPageRecords();
+                    }} else {{
+                        viewModel.filterText = searchText;
+                        viewModel.queryPageRecords();
+                    }}
+                }}, 500);              
             }});
         ", Raw(SearchFilter().ToString().RemoveDuplicateWhiteSpace().Replace("\r\n", "")));
     }
