@@ -54,7 +54,7 @@ namespace GrafanaAdapters
                 m_baseTicks = UnixTimeTag.BaseTicks.Value;
             }
 
-            protected override IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, bool decimate, Dictionary<ulong, string> targetMap)
+            protected override IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, string interval, bool decimate, Dictionary<ulong, string> targetMap)
             {
                 return m_parent.Archive.ReadData(targetMap.Keys.Select(pointID => (int)pointID), startTime, stopTime, false).Select(dataPoint => new DataSourceValue
                 {

@@ -238,7 +238,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Signature: <c>Top(N|N%, [normalizeTime], expression)</c><br/>
         /// Example: <c>Top(50%, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
-        /// Variants: Top<br/>
+        /// Variants: Top, Largest<br/>
         /// Execution: Immediate in-memory array load.
         /// </remarks>
         Top,
@@ -251,7 +251,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Signature: <c>Bottom(N|N%, [normalizeTime], expression)</c><br/>
         /// Example: <c>Bottom(100, false, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
-        /// Variants: Bottom, Bot<br/>
+        /// Variants: Bottom, Bot, Smallest<br/>
         /// Execution: Immediate in-memory array load.
         /// </remarks>
         Bottom,
@@ -319,7 +319,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Signature: <c>TimeDifference(expression)</c><br/>
         /// Example: <c>TimeDifference(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
-        /// Variants: TimeDifference, TimeDiff<br/>
+        /// Variants: TimeDifference, TimeDiff, Elapsed<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         TimeDifference,
@@ -463,7 +463,7 @@ namespace GrafanaAdapters
                 DateTime stopTime = request.range.to.ParseJsonTimestamp();
                 int maxDataPoints = (int)(request.maxDataPoints * 1.05D);
 
-                DataSourceValueGroup[] valueGroups = QueryTargets(request.targets.Select(target => target.target.Trim()), startTime, stopTime, true, cancellationToken).ToArray();
+                DataSourceValueGroup[] valueGroups = QueryTargets(request.targets.Select(target => target.target.Trim()), startTime, stopTime, request.interval, true, cancellationToken).ToArray();
 
                 // Establish result series sequentially so that order remains consistent between calls
                 List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues { target = valueGroup.Target }).ToList();
@@ -493,12 +493,13 @@ namespace GrafanaAdapters
         /// </summary>
         /// <param name="startTime">Start-time for query.</param>
         /// <param name="stopTime">Stop-time for query.</param>
+        /// <param name="interval">Interval from Grafana request.</param>
         /// <param name="decimate">Flag that determines if data should be decimated over provided time range.</param>
         /// <param name="targetMap">Set of IDs with associated targets to query.</param>
         /// <returns>Queried data source data in terms of value and time.</returns>
-        protected abstract IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, bool decimate, Dictionary<ulong, string> targetMap);
+        protected abstract IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, string interval, bool decimate, Dictionary<ulong, string> targetMap);
 
-        private IEnumerable<DataSourceValueGroup> QueryTargets(IEnumerable<string> targets, DateTime startTime, DateTime stopTime, bool decimate, CancellationToken cancellationToken)
+        private IEnumerable<DataSourceValueGroup> QueryTargets(IEnumerable<string> targets, DateTime startTime, DateTime stopTime, string interval, bool decimate, CancellationToken cancellationToken)
         {
             // A single target might look like the following:
             // PPA:15; STAT:20; SETSUM(COUNT(PPA:8; PPA:9; PPA:10)); FILTER ActiveMeasurements WHERE SignalType IN ('IPHA', 'VPHA'); RANGE(PPA:99; SUM(FILTER ActiveMeasurements WHERE SignalType = 'FREQ'; STAT:12))
@@ -539,7 +540,7 @@ namespace GrafanaAdapters
             {
                 // Execute series functions
                 foreach (Tuple<SeriesFunction, string, bool> parsedFunction in seriesFunctions.Select(ParseSeriesFunction))
-                    foreach (DataSourceValueGroup valueGroup in ExecuteSeriesFunction(parsedFunction, startTime, stopTime, decimate, cancellationToken))
+                    foreach (DataSourceValueGroup valueGroup in ExecuteSeriesFunction(parsedFunction, startTime, stopTime, interval, decimate, cancellationToken))
                         yield return valueGroup;
 
                 // Use reduced target set that excludes any series functions
@@ -572,7 +573,7 @@ namespace GrafanaAdapters
                 long readCount = 0;
 
                 // Query underlying data source for each target - to prevent parallel read from data source we enumerate immediately
-                List<DataSourceValue> dataValues = QueryDataSourceValues(startTime, stopTime, decimate, targetMap)
+                List<DataSourceValue> dataValues = QueryDataSourceValues(startTime, stopTime, interval, decimate, targetMap)
                     .TakeWhile(dataValue => readCount++ % 10000 != 0 || !cancellationToken.IsCancellationRequested).ToList();
 
                 foreach (KeyValuePair<ulong, string> target in targetMap)
@@ -584,7 +585,7 @@ namespace GrafanaAdapters
             }
         }
 
-        private IEnumerable<DataSourceValueGroup> ExecuteSeriesFunction(Tuple<SeriesFunction, string, bool> parsedFunction, DateTime startTime, DateTime stopTime, bool decimate, CancellationToken cancellationToken)
+        private IEnumerable<DataSourceValueGroup> ExecuteSeriesFunction(Tuple<SeriesFunction, string, bool> parsedFunction, DateTime startTime, DateTime stopTime, string interval, bool decimate, CancellationToken cancellationToken)
         {
             SeriesFunction seriesFunction = parsedFunction.Item1;
             string expression = parsedFunction.Item2;
@@ -660,7 +661,7 @@ namespace GrafanaAdapters
                 decimate = false;
 
             // Query function expression to get series data
-            IEnumerable<DataSourceValueGroup> dataset = QueryTargets(new[] { targetExpression }, startTime, stopTime, decimate, cancellationToken);
+            IEnumerable<DataSourceValueGroup> dataset = QueryTargets(new[] { targetExpression }, startTime, stopTime, interval, decimate, cancellationToken);
 
             if (setOperation)
             {
@@ -756,8 +757,8 @@ namespace GrafanaAdapters
             s_standardDeviationSampleExpression = new Regex(string.Format(GetExpression, "(StandardDeviationSample|StdDevSamp)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_medianExpression = new Regex(string.Format(GetExpression, "(Median|Med|Mid)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_modeExpression = new Regex(string.Format(GetExpression, "Mode"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_topExpression = new Regex(string.Format(GetExpression, "Top"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_bottomExpression = new Regex(string.Format(GetExpression, "(Bottom|Bot)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_topExpression = new Regex(string.Format(GetExpression, "(Top|Largest)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_bottomExpression = new Regex(string.Format(GetExpression, "(Bottom|Bot|Smallest)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_randomExpression = new Regex(string.Format(GetExpression, "(Random|Rand|Sample)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_firstExpression = new Regex(string.Format(GetExpression, "First"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_lastExpression = new Regex(string.Format(GetExpression, "Last"), RegexOptions.Compiled | RegexOptions.IgnoreCase);

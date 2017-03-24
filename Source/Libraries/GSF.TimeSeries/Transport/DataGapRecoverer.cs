@@ -90,6 +90,16 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public const bool DefaultUseMillisecondResolution = true;
 
+        /// <summary>
+        /// Default value for <see cref="StartRecoveryBuffer"/>.
+        /// </summary>
+        public const double DefaultStartRecoveryBuffer = -20.0D;
+
+        /// <summary>
+        /// Default value for <see cref="EndRecoveryBuffer"/>.
+        /// </summary>
+        public const double DefaultEndRecoveryBuffer = 10.0D;
+
         // Events
 
         /// <summary>
@@ -160,6 +170,8 @@ namespace GSF.TimeSeries.Transport
             m_recoveryStartDelay = DefaultRecoveryStartDelay;
             m_minimumRecoverySpan = DefaultMinimumRecoverySpan;
             m_maximumRecoverySpan = DefaultMaximumRecoverySpan;
+            StartRecoveryBuffer = DefaultStartRecoveryBuffer;
+            EndRecoveryBuffer = DefaultEndRecoveryBuffer;
 
             string loggingPath = FilePath.GetDirectoryName(FilePath.GetAbsolutePath(DataSubscriber.DefaultLoggingPath));
 
@@ -452,6 +464,24 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Gets or sets start buffer time, in seconds, to add to start of outage window to ensure all missing data is recovered.
+        /// </summary>
+        public double StartRecoveryBuffer
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets end buffer time, in seconds, to add to end of outage window to ensure all missing data is recovered.
+        /// </summary>
+        public double EndRecoveryBuffer
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets or sets any additional constraint parameters that will be supplied to adapters in temporal
         /// subscription used when recovering data for an <see cref="Outage"/>.
         /// </summary>
@@ -545,6 +575,10 @@ namespace GSF.TimeSeries.Transport
                 status.AppendFormat(" Recovery processing speed: {0}", RecoveryProcessingInterval < 0 ? "Default" : (RecoveryProcessingInterval == 0 ? "As fast as possible" : RecoveryProcessingInterval.ToString("N0") + " milliseconds"));
                 status.AppendLine();
                 status.AppendFormat("Use millisecond resolution: {0}", UseMillisecondResolution);
+                status.AppendLine();
+                status.AppendFormat("     Start recovery buffer: {0:N2} seconds", StartRecoveryBuffer);
+                status.AppendLine();
+                status.AppendFormat("       End recovery buffer: {0:N2} seconds", EndRecoveryBuffer);
                 status.AppendLine();
                 status.AppendFormat("              Logging path: {0}", FilePath.TrimFileName(m_loggingPath.ToNonNullNorWhiteSpace(FilePath.GetAbsolutePath("")), 51));
                 status.AppendLine();
@@ -682,6 +716,12 @@ namespace GSF.TimeSeries.Transport
             if (settings.TryGetValue("useMillisecondResolution", out setting))
                 UseMillisecondResolution = setting.ParseBoolean();
 
+            if (settings.TryGetValue("startRecoveryBuffer", out setting) && double.TryParse(setting, out timeInterval))
+                StartRecoveryBuffer = timeInterval;
+
+            if (settings.TryGetValue("endRecoveryBuffer", out setting) && double.TryParse(setting, out timeInterval))
+                EndRecoveryBuffer = timeInterval;
+
             // Get logging path, if any has been defined
             if (settings.TryGetValue("loggingPath", out setting))
             {
@@ -716,7 +756,7 @@ namespace GSF.TimeSeries.Transport
             m_dataGapLog.Initialize();
 
             // Setup data gap processor to process items one at a time, a 5-second minimum period is established between each gap processing
-            m_dataGapLogProcessor = new OutageLogProcessor(m_dataGapLog, ProcessDataGap, CanProcessDataGap, ex => OnProcessException(MessageLevel.Warning, ex), GSF.Common.Max(5000, (int)(m_recoveryStartDelay * SI.Milli)));
+            m_dataGapLogProcessor = new OutageLogProcessor(m_dataGapLog, ProcessDataGap, CanProcessDataGap, ex => OnProcessException(MessageLevel.Warning, ex), GSF.Common.Max(5000, (int)(m_recoveryStartDelay * 1000.0D)));
         }
 
         /// <summary>
@@ -745,7 +785,7 @@ namespace GSF.TimeSeries.Transport
             if (dataGapSpan >= m_minimumRecoverySpan && dataGapSpan <= m_maximumRecoverySpan)
             {
                 // Since local clock may float we add some buffer around recovery window
-                m_dataGapLog.Add(new Outage(startTime.AddSeconds(-10.0D), endTime.AddSeconds(10.0D)));
+                m_dataGapLog.Add(new Outage(startTime.AddSeconds(StartRecoveryBuffer), endTime.AddSeconds(EndRecoveryBuffer)));
                 return true;
             }
 
@@ -794,14 +834,18 @@ namespace GSF.TimeSeries.Transport
         /// <returns><c>true</c> if log was flushed successfully; otherwise, <c>false</c> if flush timed out.</returns>
         public bool FlushLog(int timeout = Timeout.Infinite)
         {
-            if (m_disposed)
-                throw new InvalidOperationException("Data gap recoverer has been disposed. Cannot flush log.");
+            try
+            {
+                // Wait for process completion if in progress
+                if (!m_disposed && m_dataGapRecoveryCompleted.Wait(timeout))
+                    return m_dataGapLog?.Flush().Wait(timeout) ?? false;
 
-            // Wait for process completion if in progress
-            if (m_dataGapRecoveryCompleted.Wait(timeout))
-                return m_dataGapLog?.Flush().Wait(timeout) ?? false;
-
-            return false;
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         // Can only start data gap processing when end time of recovery range is beyond recovery start delay

@@ -46,6 +46,7 @@
 using System;
 using System.ComponentModel;
 using System.Drawing;
+using System.Net;
 
 // This FTP library is based on a similar C# library found on "The Code Project" web site originally written by
 // Alex Kwok (no license specified), then enhanced by Uwe Keim (licensed under The Code Project Open License).
@@ -241,6 +242,77 @@ namespace GSF.Net.Ftp
             set
             {
                 m_currentState.Timeout = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the passive/active mode of the server.
+        /// </summary>
+        [Browsable(true), Category("Configuration"), Description("Specify passive/active mode of FTP server."), DefaultValue(true)]
+        public bool Passive
+        {
+            get
+            {
+                return m_currentState.Passive;
+            }
+            set
+            {
+                m_currentState.Passive = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the IP address to send with the PORT command.
+        /// </summary>
+        [Browsable(true), Category("Configuration"), Description("Specify IP address to send with PORT command."), DefaultValue(null)]
+        public string ActiveAddress
+        {
+            get
+            {
+                return m_currentState.ActiveAddress.ToString();
+            }
+            set
+            {
+                IPAddress address;
+
+                if (IPAddress.TryParse(value, out address))
+                    m_currentState.ActiveAddress = address;
+                else
+                    m_currentState.ActiveAddress = null;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the minimum value in the range of ports
+        /// used when listening for connections in active mode.
+        /// </summary>
+        [Browsable(true), Category("Configuration"), Description("Specify minimum port in range of active ports."), DefaultValue(0)]
+        public int MinActivePort
+        {
+            get
+            {
+                return m_currentState.MinActivePort;
+            }
+            set
+            {
+                m_currentState.MinActivePort = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum value in the range of ports
+        /// used when listening for connections in active mode.
+        /// </summary>
+        [Browsable(true), Category("Configuration"), Description("Specify maximum port in range of active ports."), DefaultValue(0)]
+        public int MaxActivePort
+        {
+            get
+            {
+                return m_currentState.MaxActivePort;
+            }
+            set
+            {
+                m_currentState.MaxActivePort = value;
             }
         }
 

@@ -42,6 +42,7 @@
 #endregion
 
 using System;
+using System.Net;
 
 namespace GSF.Net.Ftp
 {
@@ -54,6 +55,10 @@ namespace GSF.Net.Ftp
         private string m_server;
         private int m_port;
         private int m_timeout;
+        private bool m_passive;
+        private IPAddress m_activeAddress;
+        private int m_minActivePort;
+        private int m_maxActivePort;
         private readonly bool m_caseInsensitive;
         private bool m_disposed;
 
@@ -63,6 +68,7 @@ namespace GSF.Net.Ftp
 
         internal FtpSessionDisconnected(FtpClient h, bool caseInsensitive)
         {
+            m_passive = true;
             m_timeout = 30000;
             m_port = 21;
             m_host = h;
@@ -114,6 +120,54 @@ namespace GSF.Net.Ftp
             set
             {
                 m_timeout = value;
+            }
+        }
+
+        public bool Passive
+        {
+            get
+            {
+                return m_passive;
+            }
+            set
+            {
+                m_passive = value;
+            }
+        }
+
+        public IPAddress ActiveAddress
+        {
+            get
+            {
+                return m_activeAddress;
+            }
+            set
+            {
+                m_activeAddress = value;
+            }
+        }
+
+        public int MinActivePort
+        {
+            get
+            {
+                return m_minActivePort;
+            }
+            set
+            {
+                m_minActivePort = value;
+            }
+        }
+
+        public int MaxActivePort
+        {
+            get
+            {
+                return m_maxActivePort;
+            }
+            set
+            {
+                m_maxActivePort = value;
             }
         }
 
@@ -193,6 +247,12 @@ namespace GSF.Net.Ftp
             ctrl.Server = m_server;
             ctrl.Port = m_port;
             ctrl.Timeout = m_timeout;
+            ctrl.Passive = m_passive;
+            ctrl.ActiveAddress = m_activeAddress;
+
+            if (m_minActivePort > 0 && m_maxActivePort > 0)
+                ctrl.DataChannelPortRange = new Range<int>(m_minActivePort, m_maxActivePort);
+
             ctrl.Connect();
 
             try

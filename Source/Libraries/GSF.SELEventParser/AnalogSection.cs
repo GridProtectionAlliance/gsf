@@ -35,7 +35,7 @@ namespace GSF.SELEventParser
         // Fields
         private Channel<DateTime> m_timeChannel;
         private List<Channel<double>> m_analogChannels;
-        private List<Channel<bool>> m_digitalChannels; 
+        private List<Channel<bool>> m_digitalChannels;
 
         #endregion
 
@@ -46,7 +46,6 @@ namespace GSF.SELEventParser
             m_timeChannel = new Channel<DateTime>() { Name = "Time" };
             m_analogChannels = new List<Channel<double>>();
             m_digitalChannels = new List<Channel<bool>>();
-
         }
 
         #endregion
@@ -89,7 +88,6 @@ namespace GSF.SELEventParser
             }
         }
 
-
         #endregion
 
         #region [ Methods ]
@@ -111,6 +109,11 @@ namespace GSF.SELEventParser
         // Static Methods
 
         public static AnalogSection Parse(DateTime eventTime, string[] lines, ref int index)
+        {
+            return Parse(eventTime, 60.0D, lines, ref index);
+        }
+
+        public static AnalogSection Parse(DateTime eventTime, double systemFrequency, string[] lines, ref int index)
         {
             const string CycleHeader = @"^\[\d+\]$";
 
@@ -239,6 +242,7 @@ namespace GSF.SELEventParser
                     currentLine = currentLine.Remove(analogEndIndex);
 
                 analogs = currentLine
+                    .Replace("-", " -")
                     .Split((char[])null, StringSplitOptions.RemoveEmptyEntries)
                     .TakeWhile(field => double.TryParse(field, out analog))
                     .Select(field => analog)
@@ -276,7 +280,7 @@ namespace GSF.SELEventParser
 
             // Determine the time per sample, in ticks
             firstCycleCount = analogSection.AnalogChannels.First().Cycles.First().Samples.Count;
-            timePerSample = TimeSpan.TicksPerSecond / (60L * firstCycleCount);
+            timePerSample = TimeSpan.TicksPerSecond / (long)(systemFrequency * firstCycleCount);
 
             for (int i = 0; i < sampleCount; i++)
             {

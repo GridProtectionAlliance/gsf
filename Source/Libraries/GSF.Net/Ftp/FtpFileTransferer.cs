@@ -207,13 +207,14 @@ namespace GSF.Net.Ftp
 
                 m_session.Host.OnBeginFileTransfer(m_localFile, m_remoteFile, m_transferDirection);
 
+                remoteStream = m_session.ControlChannel.GetDataStream(m_transferDirection);
+                m_ftpFileCommandRoutine(m_remoteFile);
+
                 if (m_transferDirection == TransferDirection.Download)
-                    localStream = new FileStream(m_localFile, FileMode.OpenOrCreate);
+                    localStream = new FileStream(m_localFile, FileMode.Create);
                 else
                     localStream = new FileStream(m_localFile, FileMode.Open, FileAccess.Read);
-                remoteStream = m_session.ControlChannel.GetPassiveDataStream(m_transferDirection);
 
-                m_ftpFileCommandRoutine(m_remoteFile);
                 m_streamCopyRoutine(remoteStream, localStream);
 
                 // Dispose remote stream before testing file transfer result to ensure

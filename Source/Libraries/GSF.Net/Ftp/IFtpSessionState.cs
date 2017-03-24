@@ -42,6 +42,7 @@
 #endregion
 
 using System;
+using System.Net;
 
 namespace GSF.Net.Ftp
 {
@@ -65,6 +66,28 @@ namespace GSF.Net.Ftp
         /// read and write operations, defaults to 30 seconds.
         /// </summary>
         int Timeout { get; set; }
+
+        /// <summary>
+        /// Gets or sets the passive/active mode of the FTP server.
+        /// </summary>
+        bool Passive { get; set; }
+
+        /// <summary>
+        /// Gets or sets the IP address to send with the PORT command.
+        /// </summary>
+        IPAddress ActiveAddress { get; set; }
+
+        /// <summary>
+        /// Gets or sets the minimum value in the range of ports
+        /// used when listening for connections in active mode.
+        /// </summary>
+        int MinActivePort { get; set; }
+
+        /// <summary>
+        /// Gets or sets the maximum value in the range of ports
+        /// used when listening for connections in active mode.
+        /// </summary>
+        int MaxActivePort { get; set; }
 
         /// <summary>
         /// Gets or sets current FTP session directory.

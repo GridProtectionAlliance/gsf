@@ -230,7 +230,7 @@ namespace GSF.Historian.Files
 
             buffer.ValidateParameters(startIndex, length);
 
-            LittleEndian.CopyBytes(Time.Value, buffer, startIndex);
+            LittleEndian.CopyBytes((double)Time.Value, buffer, startIndex);
             LittleEndian.CopyBytes(Flags, buffer, startIndex + 8);
             LittleEndian.CopyBytes(Value, buffer, startIndex + 12);
 
