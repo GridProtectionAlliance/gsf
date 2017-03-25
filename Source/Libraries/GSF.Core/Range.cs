@@ -104,6 +104,38 @@ namespace GSF
         }
 
         /// <summary>
+        /// Determines whether the range contains the given range.
+        /// </summary>
+        /// <param name="range">The range to be compared with.</param>
+        /// <returns>True if the given range exists within this range; false otherwise.</returns>
+        public bool Contains(Range<T> range)
+        {
+            return Contains(range, Comparer<T>.Default);
+        }
+
+        /// <summary>
+        /// Determines whether the range contains the given range.
+        /// </summary>
+        /// <param name="range">The range to be compared with.</param>
+        /// <param name="comparer">The comparer used to compare objects of type <typeparamref name="T"/>.</param>
+        /// <returns>True if the given range exists within this range; false otherwise.</returns>
+        public bool Contains(Range<T> range, IComparer<T> comparer)
+        {
+            return Contains(range, comparer.Compare);
+        }
+
+        /// <summary>
+        /// Determines whether the range contains the given range.
+        /// </summary>
+        /// <param name="range">The range to be compared with.</param>
+        /// <param name="comparison">The comparison used to compare objects of type <typeparamref name="T"/>.</param>
+        /// <returns>True if the given range exists within this range; false otherwise.</returns>
+        public bool Contains(Range<T> range, Comparison<T> comparison)
+        {
+            return comparison(m_start, range.m_start) <= 0 && comparison(range.m_end, m_end) <= 0;
+        }
+
+        /// <summary>
         /// Determines whether the range overlaps with the given range.
         /// </summary>
         /// <param name="range">The range to be compared with.</param>

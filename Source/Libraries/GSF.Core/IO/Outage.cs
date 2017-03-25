@@ -30,7 +30,7 @@ namespace GSF.IO
     /// <summary>
     /// Represents an outage as a start time and an end time.
     /// </summary>
-    public class Outage : Range<DateTimeOffset>
+    public class Outage : Range<DateTimeOffset>, IEquatable<Outage>
     {
         #region [ Constructors ]
 
@@ -52,6 +52,49 @@ namespace GSF.IO
         {
             if (startTime > endTime)
                 throw new ArgumentException("Outage start time is past end time");
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Determines if this <see cref="Outage"/> equals another object.
+        /// </summary>
+        /// <param name="obj">The object to be compared.</param>
+        /// <returns>True if the objects are equal; false otherwise.</returns>
+        public override bool Equals(object obj)
+        {
+            Outage other = obj as Outage;
+
+            return ((object)other != null)
+                ? Equals(other)
+                : false;
+        }
+
+        /// <summary>
+        /// Determines if this <see cref="Outage"/> equals another outage.
+        /// </summary>
+        /// <param name="other">The outage to be compared.</param>
+        /// <returns>True if the outages are equal; false otherwise.</returns>
+        public bool Equals(Outage other)
+        {
+            return Start == other.Start && End == other.End;
+        }
+
+        /// <summary>
+        /// Gets the hash code for this <see cref="Outage"/>.
+        /// </summary>
+        /// <returns>The hash code for the outage.</returns>
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 31 + Start.GetHashCode();
+                hash = hash * 31 + End.GetHashCode();
+                return hash;
+            }
         }
 
         #endregion

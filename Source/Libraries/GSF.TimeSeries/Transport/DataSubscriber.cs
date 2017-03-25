@@ -4289,7 +4289,6 @@ namespace GSF.TimeSeries.Transport
                 try
                 {
                     m_dataGapRecoverer.Enabled = false;
-                    m_dataGapRecoverer.FlushLogAsync();
                 }
                 catch (Exception ex)
                 {

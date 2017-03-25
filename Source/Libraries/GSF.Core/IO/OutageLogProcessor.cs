@@ -22,7 +22,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Specialized;
 using System.Threading;
 using GSF.Threading;
 
@@ -71,7 +70,7 @@ namespace GSF.IO
                 throw new ArgumentNullException(nameof(processExceptionHandler));
 
             m_outageLog = outageLog;
-            m_outageLog.CollectionChanged += outageLog_CollectionChanged;
+            m_outageLog.LogModified += outageLog_CollectionChanged;
 
             m_processOutageFunction = processOutageFunction;
             m_canProcessOutageFunction = canProcessOutageFunction;
@@ -139,7 +138,10 @@ namespace GSF.IO
                     if (disposing)
                     {
                         if ((object)m_outageLog != null)
-                            m_outageLog.CollectionChanged -= outageLog_CollectionChanged;
+                        {
+                            m_outageLog.LogModified -= outageLog_CollectionChanged;
+                            m_outageLog.Dispose();
+                        }
                     }
                 }
                 finally
@@ -149,7 +151,7 @@ namespace GSF.IO
             }
         }
 
-        private void outageLog_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void outageLog_CollectionChanged(object sender, EventArgs e)
         {
             // Outage log has changed, kick off processing of next outage
             m_operation.RunOnceAsync();
@@ -165,11 +167,7 @@ namespace GSF.IO
                 Outage nextOutage = null;
 
                 // Get next outage for processing, if any
-                lock (m_outageLog.ReadWriteLock)
-                {
-                    if (m_outageLog.Count > 0)
-                        nextOutage = m_outageLog[0];
-                }
+                nextOutage = m_outageLog.First();
 
                 if ((object)nextOutage != null)
                 {
@@ -181,10 +179,7 @@ namespace GSF.IO
                             m_processOutageFunction(nextOutage);
 
                             // Outage processed successfully, attempt to clear it from the log
-                            lock (m_outageLog.ReadWriteLock)
-                            {
-                                m_outageLog.Remove(nextOutage);
-                            }
+                            m_outageLog.Remove(nextOutage);
                         }
                     }
                     finally

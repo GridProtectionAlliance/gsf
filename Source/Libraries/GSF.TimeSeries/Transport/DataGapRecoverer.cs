@@ -510,9 +510,6 @@ namespace GSF.TimeSeries.Transport
             {
                 m_enabled = value;
 
-                if ((object)m_dataGapLog != null)
-                    m_dataGapLog.Enabled = m_enabled;
-
                 if ((object)m_dataGapLogProcessor != null)
                     m_dataGapLogProcessor.Enabled = m_enabled;
 
@@ -652,7 +649,6 @@ namespace GSF.TimeSeries.Transport
                         if ((object)m_dataGapLog != null)
                         {
                             m_dataGapLog.ProcessException -= Common_ProcessException;
-                            m_dataGapLog.Dispose();
                             m_dataGapLog = null;
                         }
 
@@ -808,46 +804,6 @@ namespace GSF.TimeSeries.Transport
             return false;
         }
 
-        /// <summary>
-        /// Queues up a flush to happen asynchronously.
-        /// </summary>
-        public void FlushLogAsync()
-        {
-            ThreadPool.QueueUserWorkItem(start => FlushLog());
-        }
-
-        /// <summary>
-        /// Blocks calling thread until data gap <see cref="OutageLog"/> has been flushed to disk.
-        /// </summary>
-        /// <param name="timeout">Optional time-out for waiting thread block. Defaults to waiting indefinitely.</param>
-        /// <remarks>
-        /// <para>
-        /// Data gap log is automatically persisted to disk as <see cref="Outage"/> items are added or removed from the log.
-        /// This function only exists to force a flush and block calling thread until flush has completed.
-        /// </para>
-        /// <para>
-        /// Function first waits for any pending data gap operation to complete then waits for data gap log to
-        /// be flushed. Both waits use the same <paramref name="timeout"/> value, as a result it is possible that
-        /// total wait time could be longer than specified wait time.
-        /// </para>
-        /// </remarks>
-        /// <returns><c>true</c> if log was flushed successfully; otherwise, <c>false</c> if flush timed out.</returns>
-        public bool FlushLog(int timeout = Timeout.Infinite)
-        {
-            try
-            {
-                // Wait for process completion if in progress
-                if (!m_disposed && m_dataGapRecoveryCompleted.Wait(timeout))
-                    return m_dataGapLog?.Flush().Wait(timeout) ?? false;
-
-                return false;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
         // Can only start data gap processing when end time of recovery range is beyond recovery start delay
         private bool CanProcessDataGap(Outage dataGap)
         {
@@ -891,8 +847,7 @@ namespace GSF.TimeSeries.Transport
                 dataGap = new Outage(new DateTime(GSF.Common.Max((Ticks)dataGap.Start.Ticks, m_mostRecentRecoveredTime - (m_subscriptionInfo.UseMillisecondResolution ? Ticks.PerMillisecond : 1L)), DateTimeKind.Utc), dataGap.End);
 
                 // Re-insert adjusted data gap at the top of the processing queue
-                m_dataGapLog.Insert(0, dataGap);
-                FlushLogAsync();
+                m_dataGapLog.Add(dataGap);
 
                 if (m_measurementsRecoveredForDataGap == 0)
                     OnStatusMessage(MessageLevel.Warning, $"Failed to establish temporal session. Data recovery for period \"{m_subscriptionInfo.StartTime}\" - \"{m_subscriptionInfo.StopTime}\" will be re-attempted.");

@@ -23,14 +23,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
-using GSF.Threading;
 
 namespace GSF.IO
 {
@@ -48,9 +45,28 @@ namespace GSF.IO
     /// synchronized when simultaneously accessed from different threads.
     /// </para>
     /// </remarks>
-    public class OutageLog : ObservableCollection<Outage>, ISupportLifecycle, IProvideStatus
+    public class OutageLog : IProvideStatus, IDisposable
     {
         #region [ Members ]
+
+        // Nested Types
+        private static class File
+        {
+            public static StreamReader OpenText(string path)
+            {
+                return new StreamReader(new FileStream(path, FileMode.OpenOrCreate, FileAccess.Read));
+            }
+
+            public static FileStream OpenWrite(string path)
+            {
+                return new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+            }
+
+            public static DateTime GetLastWriteTimeUtc(string path)
+            {
+                return System.IO.File.GetLastWriteTimeUtc(path);
+            }
+        }
 
         // Constants
 
@@ -60,6 +76,11 @@ namespace GSF.IO
         public const string DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
 
         // Events
+
+        /// <summary>
+        /// Event is raised when the outage log is modified.
+        /// </summary>
+        public event EventHandler LogModified;
 
         /// <summary>
         /// Event is raised when there is an exception encountered while processing outage log.
@@ -75,17 +96,13 @@ namespace GSF.IO
         public event EventHandler Disposed;
 
         // Fields
-        private readonly ManualResetEventSlim m_writeLogWaitHandle;
-        private readonly ShortSynchronizedOperation m_readLogOperation;
-        private readonly ShortSynchronizedOperation m_writeLogOperation;
-        private readonly ShortSynchronizedOperation m_condenseLogOperation;
-        private readonly object m_readWriteLock;
-        private volatile bool m_postponeWriteOperations;
+        private readonly List<Outage> m_outages;
+        private SafeFileWatcher m_logFileWatcher;
+        private string m_fileName;
+        private int m_suppressFileWatcher;
+        private long m_lastReadTime;
         private long m_totalReads;
         private long m_totalWrites;
-        private long m_totalCondenses;
-        private string m_fileName;
-        private bool m_enabled;
         private bool m_disposed;
 
         #endregion
@@ -97,11 +114,7 @@ namespace GSF.IO
         /// </summary>
         public OutageLog()
         {
-            m_writeLogWaitHandle = new ManualResetEventSlim(false);
-            m_readLogOperation = new ShortSynchronizedOperation(ReadLog);
-            m_writeLogOperation = new ShortSynchronizedOperation(WriteLog);
-            m_condenseLogOperation = new ShortSynchronizedOperation(CondenseLog);
-            m_readWriteLock = new object();
+            m_outages = new List<Outage>();
         }
 
         /// <summary>
@@ -131,53 +144,39 @@ namespace GSF.IO
                     throw new ArgumentNullException(nameof(value));
 
                 m_fileName = FilePath.GetAbsolutePath(FilePath.GetValidFilePath(value));
-            }
-        }
 
-        /// <summary>        
-        /// Gets or sets a boolean value that indicates whether the run-time log is enabled.
-        /// </summary>
-        public virtual bool Enabled
-        {
-            get
-            {
-                return m_enabled;
-            }
-            set
-            {
-                m_enabled = value;
-                QueueWriteLog();
+                LogFileWatcher = new SafeFileWatcher(FilePath.GetDirectoryName(m_fileName), FilePath.GetFileName(m_fileName))
+                {
+                    NotifyFilter = NotifyFilters.LastWrite
+                };
             }
         }
 
         /// <summary>
-        /// Gets a flag that indicates whether the object has been disposed.
+        /// Gets the full list of outages in the log.
         /// </summary>
-        public bool IsDisposed
+        public List<Outage> Outages
         {
             get
             {
-                return m_disposed;
-            }
-        }
-
-        // Gets the name of the outage log
-        string IProvideStatus.Name
-        {
-            get
-            {
-                return FilePath.GetFileNameWithoutExtension(m_fileName.ToNonNullString("undefined"));
+                using (GetFileLock(File.OpenText))
+                {
+                    return new List<Outage>(m_outages);
+                }
             }
         }
 
         /// <summary>
-        /// Gets locking object for <see cref="OutageLog"/>.
+        /// Gets the number of outages in the log.
         /// </summary>
-        protected internal object ReadWriteLock
+        public int Count
         {
             get
             {
-                return m_readWriteLock;
+                using (GetFileLock(File.OpenText))
+                {
+                    return m_outages.Count;
+                }
             }
         }
 
@@ -192,20 +191,53 @@ namespace GSF.IO
 
                 status.AppendFormat("      Outage log file name: {0}", FilePath.TrimFileName(m_fileName.ToNonNullString("undefined"), 51));
                 status.AppendLine();
-                status.AppendFormat("      Log flushing enabled: {0}", Enabled);
+                status.AppendFormat("               Total reads: {0:N0}", m_totalReads);
                 status.AppendLine();
-                status.AppendFormat("      Actively reading log: {0} - {1:N0} total reads", m_readLogOperation.IsRunning, m_totalReads);
-                status.AppendLine();
-                status.AppendFormat("      Actively writing log: {0} - {1:N0} total writes", m_writeLogOperation.IsRunning, m_totalWrites);
-                status.AppendLine();
-                status.AppendFormat("   Actively condensing log: {0} - {1:N0} total condenses (with action)", m_condenseLogOperation.IsRunning, m_totalCondenses);
+                status.AppendFormat("              Total writes: {0:N0}", m_totalWrites);
                 status.AppendLine();
                 status.AppendFormat("           Outage log size: {0:N0} outages", Count);
+                status.AppendLine();
+                status.AppendFormat("    Monitoring for updates: {0}", (object)LogFileWatcher != null);
                 status.AppendLine();
 
                 return status.ToString();
             }
         }
+
+        /// <summary>
+        /// Gets a flag that indicates whether the object has been disposed.
+        /// </summary>
+        public bool IsDisposed => m_disposed;
+
+        private SafeFileWatcher LogFileWatcher
+        {
+            get
+            {
+                return m_logFileWatcher;
+            }
+            set
+            {
+                if ((object)m_logFileWatcher != null)
+                {
+                    m_logFileWatcher.EnableRaisingEvents = false;
+                    m_logFileWatcher.Changed -= m_logFileWatcher_Changed;
+
+                    if (m_logFileWatcher != value)
+                        m_logFileWatcher.Dispose();
+                }
+
+                m_logFileWatcher = value;
+
+                if ((object)m_logFileWatcher != null)
+                {
+                    m_logFileWatcher.Changed += m_logFileWatcher_Changed;
+                    m_logFileWatcher.EnableRaisingEvents = true;
+                }
+            }
+        }
+
+        // Gets the name of the outage log
+        string IProvideStatus.Name => FilePath.GetFileNameWithoutExtension(m_fileName.ToNonNullString("undefined"));
 
         #endregion
 
@@ -231,14 +263,7 @@ namespace GSF.IO
                 try
                 {
                     if (disposing)
-                    {
-                        if ((object)m_writeLogWaitHandle != null)
-                        {
-                            // Signal any waiting threads
-                            m_writeLogWaitHandle.Set();
-                            m_writeLogWaitHandle.Dispose();
-                        }
-                    }
+                        LogFileWatcher = null;
                 }
                 finally
                 {
@@ -269,9 +294,11 @@ namespace GSF.IO
 
             m_totalReads = 0;
             m_totalWrites = 0;
-            m_totalCondenses = 0;
 
-            m_readLogOperation.RunOnce();
+            using (StreamReader reader = GetFileLock(File.OpenText))
+            {
+                m_outages.AddRange(ReadLog(reader));
+            }
         }
 
         /// <summary>
@@ -285,275 +312,236 @@ namespace GSF.IO
         }
 
         /// <summary>
-        /// Requests that outage log be flushed to disk.
+        /// Adds an outage to the <see cref="OutageLog"/>.
         /// </summary>
-        /// <remarks>
-        /// Any change in <see cref="OutageLog"/> contents will automatically queue a log file flush.
-        /// This function only exists to force a flush and allow consumer to use returned wait handle
-        /// to block calling thread until flush has completed.
-        /// </remarks>
-        /// <returns>
-        /// Wait handle that can block a calling thread until flush completes.
-        /// </returns>
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        public ManualResetEventSlim Flush()
+        /// <param name="outage">Outage to be added.</param>
+        public void Add(Outage outage)
         {
-            m_writeLogWaitHandle.Reset();
-            m_writeLogOperation.RunOnceAsync();
+            bool modified;
 
-            return m_writeLogWaitHandle;
+            using (FileStream stream = GetFileLock(File.OpenWrite))
+            using (StreamReader reader = new StreamReader(stream))
+            using (StreamWriter writer = new StreamWriter(stream))
+            {
+                List<Outage> outages = ReadLog(reader);
+                modified = !m_outages.SequenceEqual(outages);
+                outages.AddRange(m_outages);
+                outages.Add(Align(outage));
+                outages = Outage.MergeOverlapping(outages).ToList();
+                modified |= !m_outages.SequenceEqual(outages);
+
+                if (modified)
+                {
+                    m_outages.Clear();
+                    m_outages.AddRange(outages);
+                    stream.SetLength(0L);
+                    WriteLog(writer);
+                }
+            }
+
+            if (modified)
+                LogModified?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
-        /// Initiates a log read.
+        /// Gets the first outage in the list of outages.
         /// </summary>
-        protected void InitiateRead()
+        /// <returns>The first outage, or null if there are no outages.</returns>
+        public Outage First()
         {
-            m_readLogOperation.RunOnceAsync();
+            using (GetFileLock(File.OpenText))
+            {
+                return m_outages.FirstOrDefault();
+            }
         }
 
         /// <summary>
-        /// Initiates a log write.
+        /// Removes the given outage from the outage log.
         /// </summary>
-        protected void InitiateWrite()
+        /// <param name="outage">The outage to be removed from the outage log.</param>
+        /// <returns>True if the outage was removed; false otherwise.</returns>
+        public bool Remove(Outage outage)
         {
-            m_writeLogOperation.RunOnceAsync();
+            bool removed;
+            bool modified;
+
+            using (FileStream stream = GetFileLock(File.OpenWrite))
+            using (StreamReader reader = new StreamReader(stream))
+            using (StreamWriter writer = new StreamWriter(stream))
+            {
+                List<Outage> outages = ReadLog(reader);
+                modified = !m_outages.SequenceEqual(outages);
+                outages.AddRange(m_outages);
+                outages = Outage.MergeOverlapping(outages).ToList();
+                removed = outages.Remove(outage);
+                modified |= !m_outages.SequenceEqual(outages);
+
+                if (modified)
+                {
+                    m_outages.Clear();
+                    m_outages.AddRange(outages);
+                    stream.SetLength(0L);
+                    WriteLog(writer);
+                }
+            }
+
+            if (modified)
+                LogModified?.Invoke(this, EventArgs.Empty);
+
+            return removed;
         }
 
         // Reads the outage log.
-        private void ReadLog()
+        private List<Outage> ReadLog(StreamReader reader)
         {
-            try
+            string line;
+            string[] times;
+            DateTimeOffset startTime, endTime;
+            List<Outage> outages = new List<Outage>();
+
+            while ((object)(line = reader.ReadLine()) != null)
             {
-                if (string.IsNullOrWhiteSpace(m_fileName))
-                    throw new NullReferenceException("No outage log file name was specified");
+                if (string.IsNullOrWhiteSpace(line))
+                    continue;
 
-                List<Outage> outages = new List<Outage>();
+                times = line.Split(';');
 
-                if (File.Exists(m_fileName))
-                {
-                    using (StreamReader reader = File.OpenText(m_fileName))
-                    {
-                        string line;
-                        string[] times;
-                        DateTimeOffset startTime, endTime;
-
-                        while ((object)(line = reader.ReadLine()) != null)
-                        {
-                            if (string.IsNullOrWhiteSpace(line))
-                                continue;
-
-                            times = line.Split(';');
-
-                            if (times.Length == 2 &&
-                                DateTimeOffset.TryParseExact(times[0].Trim(), DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out startTime) &&
-                                DateTimeOffset.TryParseExact(times[1].Trim(), DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out endTime))
-                            {
-                                try
-                                {
-                                    outages.Add(new Outage(startTime, endTime));
-                                }
-                                catch (Exception ex)
-                                {
-                                    OnProcessException(new InvalidOperationException($"Failed to create outage from \"{line}\": {ex.Message}", ex));
-                                }
-                            }
-                            else
-                            {
-                                OnProcessException(new FormatException("Invalid date-time format. Failed to parse start and end times from: " + line));
-                            }
-                        }
-                    }
-                }
-
-                lock (m_readWriteLock)
+                if (times.Length == 2 &&
+                    DateTimeOffset.TryParseExact(times[0].Trim(), DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out startTime) &&
+                    DateTimeOffset.TryParseExact(times[1].Trim(), DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out endTime))
                 {
                     try
                     {
-                        // Don't kick off write log operations during load
-                        m_postponeWriteOperations = true;
-
-                        Clear();
-
-                        foreach (Outage outage in outages)
-                        {
-                            Add(outage);
-                        }
+                        outages.Add(new Outage(startTime, endTime));
                     }
-                    finally
+                    catch (Exception ex)
                     {
-                        m_postponeWriteOperations = false;
+                        OnProcessException(new InvalidOperationException($"Failed to create outage from \"{line}\": {ex.Message}", ex));
                     }
                 }
+                else
+                {
+                    OnProcessException(new FormatException("Invalid date-time format. Failed to parse start and end times from: " + line));
+                }
+            }
 
-                m_totalReads++;
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(new InvalidOperationException("Failed to read outage log: " + ex.Message, ex));
-            }
+            m_totalReads++;
+
+            return outages;
         }
 
         // Writes the outage log - times are in a human readable format.
-        private void WriteLog()
+        private void WriteLog(StreamWriter writer)
         {
+            bool isBackground = Thread.CurrentThread.IsBackground;
+
             try
             {
-                if (string.IsNullOrWhiteSpace(m_fileName))
-                    throw new NullReferenceException("No outage log file name was specified");
+                Thread.CurrentThread.IsBackground = false;
 
-                Outage[] outages;
-
-                lock (m_readWriteLock)
+                foreach (Outage outage in m_outages)
                 {
-                    outages = this.ToArray();
+                    writer.WriteLine("{0};{1}",
+                        outage.Start.ToUniversalTime().ToString(DateTimeFormat, CultureInfo.InvariantCulture),
+                        outage.End.ToUniversalTime().ToString(DateTimeFormat, CultureInfo.InvariantCulture));
                 }
 
-                using (StreamWriter writer = File.CreateText(m_fileName))
-                {
-                    foreach (Outage outage in outages)
-                    {
-                        writer.WriteLine("{0};{1}",
-                            outage.Start.ToString(DateTimeFormat, CultureInfo.InvariantCulture),
-                            outage.End.ToString(DateTimeFormat, CultureInfo.InvariantCulture));
-                    }
-                }
-
-                if (!m_disposed)
-                    m_writeLogWaitHandle.Set();
-
+                Interlocked.Exchange(ref m_suppressFileWatcher, 1);
                 m_totalWrites++;
             }
-            catch (Exception ex)
+            finally
             {
-                OnProcessException(new InvalidOperationException("Failed to write outage log: " + ex.Message, ex));
+                Thread.CurrentThread.IsBackground = isBackground;
             }
         }
 
-        // Condenses the outage log (i.e., reduces the overlapping outages into single outages)
-        private void CondenseLog()
+        // Gets a lock on the file using the given lock function.
+        private T GetFileLock<T>(Func<string, T> lockFunction)
         {
-            List<Outage> mergedOutages;
-            bool originalPostponeState;
-            int count;
+            const int Delay = 200;
+            const int MaxRetries = 5000 / Delay;
+            int retries = 0;
 
-            lock (m_readWriteLock)
+            while (true)
             {
-                originalPostponeState = m_postponeWriteOperations;
-
                 try
                 {
-                    // Don't kick off write log operations during load
-                    m_postponeWriteOperations = true;
-
-                    // Merge all overlapping outages
-                    mergedOutages = Outage.MergeOverlapping(this.OrderBy(outage => outage.Start)).ToList();
-
-                    // Get the current total number of outages
-                    count = Count;
-
-                    // Any changes to the collection will trigger another condense operation
-                    // so make sure to check whether this condense operation is necessary
-                    // before attempting to modify the collection
-                    if (count == mergedOutages.Count)
-                        return;
-
-                    Clear();
-
-                    foreach (Outage outage in mergedOutages)
-                        Add(outage);
-
-                    m_totalCondenses++;
+                    return lockFunction(m_fileName);
                 }
-                finally
+                catch (IOException)
                 {
-                    m_postponeWriteOperations = originalPostponeState;
-                    QueueWriteLog();
+                    if (retries >= MaxRetries)
+                        throw;
                 }
+
+                Thread.Sleep(Delay);
+                retries++;
             }
         }
 
-        /// <summary>
-        /// Raises <see cref="ProcessException"/> event.
-        /// </summary>
-        /// <param name="ex">Processing <see cref="Exception"/>.</param>
-        protected virtual void OnProcessException(Exception ex)
+        // Raises ProcessException event.
+        private void OnProcessException(Exception ex)
         {
             if ((object)ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(ex));
         }
 
-        /// <summary>
-        /// Removes all elements from the <see cref="OutageLog"/>.
-        /// </summary>
-        protected override void ClearItems()
+        // Watches for changes to the log and adds additional outages.
+        private void m_logFileWatcher_Changed(object sender, FileSystemEventArgs e)
         {
-            base.ClearItems();
-            QueueWriteLog();
+            long lastWriteTime = File.GetLastWriteTimeUtc(m_fileName).Ticks;
+
+            if (Interlocked.Exchange(ref m_lastReadTime, lastWriteTime) == lastWriteTime)
+                return;
+
+            if (Interlocked.CompareExchange(ref m_suppressFileWatcher, 0, 1) == 1)
+                return;
+
+            ThreadPool.QueueUserWorkItem(state =>
+            {
+                try
+                {
+                    bool modified;
+
+                    using (FileStream stream = GetFileLock(File.OpenWrite))
+                    using (StreamReader reader = new StreamReader(stream))
+                    using (StreamWriter writer = new StreamWriter(stream))
+                    {
+
+                        List<Outage> outages = ReadLog(reader);
+                        modified = !m_outages.SequenceEqual(outages);
+
+                        if (modified)
+                        {
+                            outages.AddRange(m_outages);
+                            m_outages.Clear();
+                            m_outages.AddRange(Outage.MergeOverlapping(outages));
+                            stream.SetLength(0L);
+                            WriteLog(writer);
+                        }
+                    }
+
+                    if (modified)
+                        LogModified?.Invoke(this, EventArgs.Empty);
+                }
+                catch (Exception ex)
+                {
+                    OnProcessException(ex);
+                }
+            });
         }
 
-        /// <summary>
-        /// Removes the element at the specified index of the <see cref="OutageLog"/>.
-        /// </summary>
-        /// <param name="index">The zero-based index of the element to remove.</param>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="index"/> is less than zero.-or-
-        /// <paramref name="index"/> is equal to or greater than <see cref="Collection{T}.Count"/>.
-        /// </exception>
-        protected override void RemoveItem(int index)
+        // Because the outage log saves timestamps down to the millisecond,
+        // we must forcefully align incoming outages to the nearest millisecond.
+        private Outage Align(Outage outage)
         {
-            base.RemoveItem(index);
-            QueueWriteLog();
-        }
+            DateTimeOffset start = outage.Start.AddTicks(-(outage.Start.Ticks % TimeSpan.TicksPerMillisecond));
+            DateTimeOffset end = outage.End.AddTicks(-(outage.End.Ticks % TimeSpan.TicksPerMillisecond));
 
-        /// <summary>
-        /// Moves the item at the specified index to a new location in the <see cref="OutageLog"/>.
-        /// </summary>
-        /// <param name="oldIndex">The zero-based index specifying the location of the <see cref="Outage"/> to be moved.</param>
-        /// <param name="newIndex">The zero-based index specifying the new location of the <see cref="Outage"/>.</param>
-        protected override void MoveItem(int oldIndex, int newIndex)
-        {
-            base.MoveItem(oldIndex, newIndex);
-            QueueWriteLog();
-        }
+            if (start == outage.Start && end == outage.End)
+                return outage;
 
-        /// <summary>
-        /// Inserts an element into the <see cref="OutageLog"/> at the specified index.
-        /// </summary>
-        /// <param name="index">The zero-based index at which <paramref name="outage"/> should be inserted.</param>
-        /// <param name="outage">The <see cref="Outage"/> to insert.</param>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="index"/> is less than zero.-or-
-        /// <paramref name="index"/> is greater than <see cref="Collection{T}.Count"/>.
-        /// </exception>
-        protected override void InsertItem(int index, Outage outage)
-        {
-            base.InsertItem(index, outage);
-            m_condenseLogOperation.RunOnceAsync();
-            QueueWriteLog();
-        }
-
-        /// <summary>
-        /// Replaces the element at the specified index.
-        /// </summary>
-        /// <param name="index">The zero-based index of the element to replace.</param>
-        /// <param name="outage">The new <see cref="Outage"/> for the element at the specified index.</param>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="index"/> is less than zero.-or-
-        /// <paramref name="index"/> is greater than <see cref="Collection{T}.Count"/>.
-        /// </exception>
-        protected override void SetItem(int index, Outage outage)
-        {
-            base.SetItem(index, outage);
-            m_condenseLogOperation.RunOnceAsync();
-            QueueWriteLog();
-        }
-
-        // Queues a write log operation after any kind of change to the outage log.
-        private void QueueWriteLog()
-        {
-            if (m_enabled && !m_postponeWriteOperations)
-                m_writeLogOperation.RunOnceAsync();
+            return new Outage(start, end);
         }
 
         #endregion
