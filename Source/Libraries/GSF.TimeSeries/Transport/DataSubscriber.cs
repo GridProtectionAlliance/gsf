@@ -2682,7 +2682,7 @@ namespace GSF.TimeSeries.Transport
         /// Remove a data gap from data gap recovery.
         /// </summary>
         /// <param name="timeString">The string representing the data gap.</param>
-        [AdapterCommand("Logs a data gap for data gap recovery.", "Administrator", "Editor")]
+        [AdapterCommand("Removes a data gap from data gap recovery.", "Administrator", "Editor")]
         public virtual string RemoveDataGap(string timeString)
         {
             DateTimeOffset start = default(DateTimeOffset);
@@ -2715,7 +2715,7 @@ namespace GSF.TimeSeries.Transport
         /// Displays the contents of the outage log.
         /// </summary>
         /// <returns>The contents of the outage log.</returns>
-        [AdapterCommand("Logs a data gap for data gap recovery.", "Administrator", "Editor")]
+        [AdapterCommand("Displays data gaps queued for data gap recovery.", "Administrator", "Editor", "Viewer")]
         public virtual string DumpOutageLog()
         {
             if (m_dataGapRecoveryEnabled && (object)m_dataGapRecoverer != null)
