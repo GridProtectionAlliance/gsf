@@ -41,8 +41,8 @@ namespace GSF.IO
     /// operated on even through host application restarts until the outages are processed.
     /// </para>
     /// <para>
-    /// No members in the <see cref="OutageLog"/> are guaranteed to be thread safe. Make sure any calls are
-    /// synchronized when simultaneously accessed from different threads.
+    /// All members in the <see cref="OutageLog"/> are guaranteed to be thread safe. File locks are used to
+    /// provide synchronization so that the file can stay up-to-date with changes made in the application.
     /// </para>
     /// </remarks>
     public class OutageLog : IProvideStatus, IDisposable
@@ -486,7 +486,7 @@ namespace GSF.IO
                 ProcessException(this, new EventArgs<Exception>(ex));
         }
 
-        // Watches for changes to the log and adds additional outages.
+        // Watches for changes to the log and adds additional outages entered by external processes.
         private void m_logFileWatcher_Changed(object sender, FileSystemEventArgs e)
         {
             long lastWriteTime = File.GetLastWriteTimeUtc(m_fileName).Ticks;
@@ -507,7 +507,6 @@ namespace GSF.IO
                     using (StreamReader reader = new StreamReader(stream))
                     using (StreamWriter writer = new StreamWriter(stream))
                     {
-
                         List<Outage> outages = ReadLog(reader);
                         modified = !m_outages.SequenceEqual(outages);
 
@@ -531,8 +530,8 @@ namespace GSF.IO
             });
         }
 
-        // Because the outage log saves timestamps down to the millisecond,
-        // we must forcefully align incoming outages to the nearest millisecond.
+        // Because the outage log file stores timestamps down to the millisecond,
+        // we must forcibly align incoming outages to the nearest millisecond.
         private Outage Align(Outage outage)
         {
             DateTimeOffset start = outage.Start.AddTicks(-(outage.Start.Ticks % TimeSpan.TicksPerMillisecond));
