@@ -145,6 +145,7 @@ namespace GSF.TimeSeries.Transport
         private Time m_recoveryStartDelay;
         private Time m_minimumRecoverySpan;
         private Time m_maximumRecoverySpan;
+        private Outage m_currentDataGap;
         private Ticks m_mostRecentRecoveredTime;
         private long m_measurementsRecoveredForDataGap;
         private long m_measurementsRecoveredOverLastInterval;
@@ -579,6 +580,16 @@ namespace GSF.TimeSeries.Transport
                 status.AppendLine();
                 status.AppendFormat("              Logging path: {0}", FilePath.TrimFileName(m_loggingPath.ToNonNullNorWhiteSpace(FilePath.GetAbsolutePath("")), 51));
                 status.AppendLine();
+                status.AppendFormat("Last recovered measurement: {0}", ((DateTime)m_mostRecentRecoveredTime).ToString(OutageLog.DateTimeFormat));
+                status.AppendLine();
+
+                Outage currentDataGap = m_currentDataGap;
+
+                if ((object)currentDataGap != null)
+                {
+                    status.AppendFormat("      Currently recovering: {0};{1}", currentDataGap.Start.ToString(OutageLog.DateTimeFormat), currentDataGap.End.ToString(OutageLog.DateTimeFormat));
+                    status.AppendLine();
+                }
 
                 if ((object)m_temporalSubscription != null)
                 {
@@ -873,8 +884,14 @@ namespace GSF.TimeSeries.Transport
             // Start temporal data recovery session
             m_temporalSubscription.Subscribe(m_subscriptionInfo);
 
+            // Save the currently processing data gap for reporting
+            m_currentDataGap = dataGap;
+
             // Wait for process completion - success or fail
             m_dataGapRecoveryCompleted.Wait();
+
+            // Clear the currently processing data gap
+            m_currentDataGap = null;
 
             // If temporal session failed to connect, retry data recovery for this outage
             if (m_abnormalTermination)
