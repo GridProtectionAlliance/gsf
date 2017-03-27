@@ -760,12 +760,13 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <param name="startTime">Start time of data gap.</param>
         /// <param name="endTime">End time of data gap.</param>
+        /// <param name="forceLog">Indicates whether to skip data gap validation and force the outage to be logged.</param>
         /// <returns><c>true</c> if data gap was logged for processing; otherwise, <c>false</c>.</returns>
         /// <remarks>
         /// Data gap will not be logged for processing if the <paramref name="startTime"/> and <paramref name="endTime"/> do not represent
         /// a valid time span for recovery according to <see cref="MinimumRecoverySpan"/> and <see cref="MaximumRecoverySpan"/>.
         /// </remarks>
-        public bool LogDataGap(DateTimeOffset startTime, DateTimeOffset endTime)
+        public bool LogDataGap(DateTimeOffset startTime, DateTimeOffset endTime, bool forceLog = false)
         {
             if (m_disposed)
                 throw new InvalidOperationException("Data gap recoverer has been disposed. Cannot log data gap for processing.");
@@ -778,7 +779,7 @@ namespace GSF.TimeSeries.Transport
             Time dataGapSpan = (endTime - startTime).TotalSeconds;
 
             // Only log data gap for processing if it is in an acceptable time span for recovery
-            if (dataGapSpan >= m_minimumRecoverySpan && dataGapSpan <= m_maximumRecoverySpan)
+            if (forceLog || dataGapSpan >= m_minimumRecoverySpan && dataGapSpan <= m_maximumRecoverySpan)
             {
                 // Since local clock may float we add some buffer around recovery window
                 m_dataGapLog.Add(new Outage(startTime.AddSeconds(StartRecoveryBuffer), endTime.AddSeconds(EndRecoveryBuffer)));
@@ -802,6 +803,41 @@ namespace GSF.TimeSeries.Transport
             OnStatusMessage(MessageLevel.Info, $"Skipped data gap recovery for {Time.ToElapsedTimeString(dataGapSpan, 2)} of missed data - outside configured {rangeLimitText} range of {Time.ToElapsedTimeString(rangeLimit, 2)}.");
 
             return false;
+        }
+
+        /// <summary>
+        /// Removes a data gap from the outage log so that it will not be processed.
+        /// </summary>
+        /// <param name="startTime">Start time of data gap.</param>
+        /// <param name="endTime">End time of data gap.</param>
+        /// <returns>True if the data gap was successfully removed; false otherwise.</returns>
+        public bool RemoveDataGap(DateTimeOffset startTime, DateTimeOffset endTime)
+        {
+            if (m_disposed)
+                throw new InvalidOperationException("Data gap recoverer has been disposed. Cannot log data gap for processing.");
+
+            if ((object)m_dataGapLog == null)
+                throw new InvalidOperationException("Data gap recoverer has not been initialized. Cannot log data gap for processing.");
+
+            // Since local clock may float we add some buffer around recovery window
+            return m_dataGapLog.Remove(new Outage(startTime, endTime));
+        }
+
+        /// <summary>
+        /// Produces a dump of the contents of the outage log.
+        /// </summary>
+        /// <returns>The contents of the outage log.</returns>
+        public string DumpOutageLog()
+        {
+            List<Outage> outages = m_dataGapLog.Outages;
+            StringBuilder dump = new StringBuilder();
+
+            foreach (Outage outage in outages)
+                dump.AppendLine($"{outage.Start.ToString(OutageLog.DateTimeFormat)};{outage.End.ToString(OutageLog.DateTimeFormat)}");
+
+            dump.AppendLine($"Count: {outages.Count} outages");
+
+            return dump.ToString();
         }
 
         // Can only start data gap processing when end time of recovery range is beyond recovery start delay

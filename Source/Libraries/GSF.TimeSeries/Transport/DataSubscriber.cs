@@ -58,6 +58,7 @@ using GSF.Units;
 using Random = GSF.Security.Cryptography.Random;
 using TcpClient = GSF.Communication.TcpClient;
 using UdpClient = GSF.Communication.UdpClient;
+using System.Globalization;
 
 #pragma warning disable 672
 
@@ -2645,6 +2646,82 @@ namespace GSF.TimeSeries.Transport
         public virtual void RefreshMetadata()
         {
             SendServerCommand(ServerCommand.MetaDataRefresh, m_metadataFilters);
+        }
+
+        /// <summary>
+        /// Log a data gap for data gap recovery.
+        /// </summary>
+        /// <param name="timeString">The string representing the data gap.</param>
+        [AdapterCommand("Logs a data gap for data gap recovery.", "Administrator", "Editor")]
+        public virtual void LogDataGap(string timeString)
+        {
+            DateTimeOffset start = default(DateTimeOffset);
+            DateTimeOffset end = default(DateTimeOffset);
+            string[] split = timeString.Split(';');
+
+            if (!m_dataGapRecoveryEnabled)
+                throw new InvalidOperationException("Data gap recovery is not enabled.");
+
+            if (split.Length != 2)
+                throw new FormatException("Invalid format for time string - ex: 2014-03-27 02:10:47.566;2014-03-27 02:10:59.733");
+
+            string startTime = split[0];
+            string endTime = split[1];
+
+            bool parserSuccessful =
+                DateTimeOffset.TryParse(startTime, CultureInfo.CurrentCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out start) &&
+                DateTimeOffset.TryParse(endTime, CultureInfo.CurrentCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out end);
+
+            if (!parserSuccessful)
+                throw new FormatException("Invalid format for time string - ex: 2014-03-27 02:10:47.566;2014-03-27 02:10:59.733");
+
+            m_dataGapRecoverer?.LogDataGap(start, end, true);
+        }
+
+        /// <summary>
+        /// Remove a data gap from data gap recovery.
+        /// </summary>
+        /// <param name="timeString">The string representing the data gap.</param>
+        [AdapterCommand("Logs a data gap for data gap recovery.", "Administrator", "Editor")]
+        public virtual string RemoveDataGap(string timeString)
+        {
+            DateTimeOffset start = default(DateTimeOffset);
+            DateTimeOffset end = default(DateTimeOffset);
+            string[] split = timeString.Split(';');
+
+            if (!m_dataGapRecoveryEnabled)
+                throw new InvalidOperationException("Data gap recovery is not enabled.");
+
+            if (split.Length != 2)
+                throw new FormatException("Invalid format for time string - ex: 2014-03-27 02:10:47.566;2014-03-27 02:10:59.733");
+
+            string startTime = split[0];
+            string endTime = split[1];
+
+            bool parserSuccessful =
+                DateTimeOffset.TryParse(startTime, CultureInfo.CurrentCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out start) &&
+                DateTimeOffset.TryParse(endTime, CultureInfo.CurrentCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowInnerWhite, out end);
+
+            if (!parserSuccessful)
+                throw new FormatException("Invalid format for time string - ex: 2014-03-27 02:10:47.566;2014-03-27 02:10:59.733");
+
+            if (m_dataGapRecoverer?.RemoveDataGap(start, end) ?? false)
+                return "Data gap successfully removed.";
+            else
+                return "Data gap not found.";
+        }
+
+        /// <summary>
+        /// Displays the contents of the outage log.
+        /// </summary>
+        /// <returns>The contents of the outage log.</returns>
+        [AdapterCommand("Logs a data gap for data gap recovery.", "Administrator", "Editor")]
+        public virtual string DumpOutageLog()
+        {
+            if (m_dataGapRecoveryEnabled && (object)m_dataGapRecoverer != null)
+                return Environment.NewLine + m_dataGapRecoverer.DumpOutageLog();
+
+            throw new InvalidOperationException("Data gap recovery not enabled");
         }
 
         /// <summary>
