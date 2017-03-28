@@ -777,7 +777,7 @@ namespace GSF.TimeSeries
             CategorizedSettingsElementCollection remotingServer;
 
             string certificatePath;
-            CertificateGenerator certificateGenerator;
+            CertificateGenerator certificateGenerator = null;
             X509Certificate2 certificate = null;
 
             if (string.IsNullOrWhiteSpace(ServiceName))
@@ -791,7 +791,7 @@ namespace GSF.TimeSeries
                 remotingServer.Add("CertificateFile", $"{ServiceName}.cer", "Path to the local certificate used by this server for authentication.");
                 certificatePath = FilePath.GetAbsolutePath(remotingServer["CertificateFile"].Value);
 
-                certificateGenerator = new CertificateGenerator
+                certificateGenerator = new CertificateGenerator()
                 {
                     Issuer = ServiceName,
                     CertificatePath = certificatePath
@@ -805,7 +805,15 @@ namespace GSF.TimeSeries
             }
             catch (Exception ex)
             {
-                EventLog.WriteEntry(ServiceName, string.Format("{0}{3}{1}{3}{2}", ex.Message, ex.GetType().FullName, ex.StackTrace, Environment.NewLine), EventLogEntryType.Error, 0);
+                string message = string.Join(Environment.NewLine, new[]
+                {
+                    ex.ToString(),
+                    string.Empty,
+                    "Debug info:",
+                    string.Join(Environment.NewLine, certificateGenerator?.DebugLog)
+                });
+
+                EventLog.WriteEntry(ServiceName, message, EventLogEntryType.Error, 0);
             }
         }
 

@@ -46,6 +46,19 @@ namespace GSF.Net.Security
         private string m_issuer;
         private string[] m_subjectNames;
         private string m_certificatePath;
+        private List<string> m_debugLog;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="CertificateGenerator"/> class.
+        /// </summary>
+        public CertificateGenerator()
+        {
+            m_debugLog = new List<string>();
+        }
 
         #endregion
 
@@ -98,6 +111,17 @@ namespace GSF.Net.Security
             }
         }
 
+        /// <summary>
+        /// Gets a list of detailed log messages
+        /// </summary>
+        public List<string> DebugLog
+        {
+            get
+            {
+                return new List<string>(m_debugLog);
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -119,6 +143,8 @@ namespace GSF.Net.Security
             ProcessStartInfo processInfo;
             string makeCertPath;
 
+            m_debugLog.Clear();
+
             stores = new List<X509Store>()
             {
                 new X509Store(StoreName.My, StoreLocation.LocalMachine),
@@ -129,13 +155,27 @@ namespace GSF.Net.Security
             certificatePath = FilePath.GetAbsolutePath(CertificatePath);
 
             if (File.Exists(certificatePath))
+                m_debugLog.Add($"Searching for existing certificate...found ({certificatePath})");
+            else
+                m_debugLog.Add($"Searching for existing certificate...not found ({certificatePath})");
+
+            if (File.Exists(certificatePath))
             {
                 try
                 {
                     certificate = new X509Certificate2(certificatePath);
                 }
-                catch (CryptographicException)
+                catch (CryptographicException ex)
                 {
+                    string message = string.Join(Environment.NewLine, new[]
+                    {
+                        string.Empty,
+                        $"Error opening existing certificate:",
+                        ex.ToString(),
+                        string.Empty
+                    });
+
+                    m_debugLog.Add(message);
                 }
             }
 
@@ -143,15 +183,30 @@ namespace GSF.Net.Security
             {
                 TryOpenStores(stores, OpenFlags.ReadOnly);
 
+                if (stores.Count == 0)
+                    m_debugLog.Add($"Opening certificate stores with readonly access...failed");
+                else if (stores.Count == 1)
+                    m_debugLog.Add($"Opening certificate stores with readonly access...opened {stores[0].Location} store");
+                else
+                    m_debugLog.Add($"Opening certificate stores with readonly access...success");
+
                 // If a valid certificate exists on the certificate path,
                 // search the certificate stores to determine if we have
                 // access to its private key
                 if ((object)certificate != null)
                 {
+                    bool canAccessPrivateKey;
+
                     storedCertificates = stores.SelectMany(store => store.Certificates.Cast<X509Certificate2>()).ToList();
                     FindMatchingCertificates(storedCertificates, certificate);
+                    canAccessPrivateKey = storedCertificates.Any(CanAccessPrivateKey);
 
-                    if (storedCertificates.Any(CanAccessPrivateKey))
+                    if (canAccessPrivateKey)
+                        m_debugLog.Add($"Attempting to access existing certificate's private key...success");
+                    else
+                        m_debugLog.Add($"Attempting to access existing certificate's private key...failed");
+
+                    if (canAccessPrivateKey)
                         return certificate;
                 }
 
@@ -160,6 +215,11 @@ namespace GSF.Net.Security
                 commonNameList = GetCommonNameList();
                 storedCertificates = stores.SelectMany(store => store.Certificates.Cast<X509Certificate2>()).ToList();
                 certificate = storedCertificates.FirstOrDefault(storedCertificate => storedCertificate.Issuer.Equals(commonNameList) && CanAccessPrivateKey(storedCertificate));
+
+                if ((object)certificate != null)
+                    m_debugLog.Add($"Searching stores for a usable certificate with accessible private key...success");
+                else
+                    m_debugLog.Add($"Searching stores for a usable certificate with accessible private key...failed");
 
                 // If such a certificate exists, generate the certificate file and return the result
                 if ((object)certificate != null)
@@ -183,6 +243,13 @@ namespace GSF.Net.Security
                 // Ensure that we can write to the certificate
                 // stores before generating a new certificate
                 TryOpenStores(stores, OpenFlags.ReadWrite);
+
+                if (stores.Count == 0)
+                    m_debugLog.Add($"Opening certificate stores with read-write access...failed");
+                else if (stores.Count == 1)
+                    m_debugLog.Add($"Opening certificate stores with read-write access...opened {stores[0].Location} store");
+                else
+                    m_debugLog.Add($"Opening certificate stores with read-write access...success");
             }
             finally
             {
@@ -192,9 +259,14 @@ namespace GSF.Net.Security
             // Attempt to use makecert to create a new self-signed certificate
             makeCertPath = FilePath.GetAbsolutePath("makecert.exe");
 
-            foreach (X509Store store in stores)
+            if (File.Exists(makeCertPath))
+                m_debugLog.Add("Searching for makecert utility to generate a new certificate...success");
+            else
+                m_debugLog.Add("Searching for makecert utility to generate a new certificate...failed");
+
+            if (File.Exists(makeCertPath))
             {
-                if (File.Exists(makeCertPath))
+                foreach (X509Store store in stores)
                 {
                     processInfo = new ProcessStartInfo(makeCertPath);
                     processInfo.Arguments = string.Format("-r -pe -n \"{0}\" -ss My -sr {1} \"{2}\"", commonNameList, store.Location, certificatePath);
@@ -204,10 +276,15 @@ namespace GSF.Net.Security
                     {
                         makeCertProcess.WaitForExit();
                     }
-                }
 
-                if (File.Exists(certificatePath))
-                    return new X509Certificate2(certificatePath);
+                    if (File.Exists(certificatePath))
+                        m_debugLog.Add($"Attemping to generate a new certificate in the {store.Location} store... success");
+                    else
+                        m_debugLog.Add($"Attemping to generate a new certificate in the {store.Location} store... failed");
+
+                    if (File.Exists(certificatePath))
+                        return new X509Certificate2(certificatePath);
+                }
             }
 
             // All attempts to generate the certificate failed, so we must throw an exception
