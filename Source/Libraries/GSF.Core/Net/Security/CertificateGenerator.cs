@@ -29,6 +29,7 @@ using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using GSF.IO;
 
 namespace GSF.Net.Security
@@ -167,13 +168,12 @@ namespace GSF.Net.Security
                 }
                 catch (CryptographicException ex)
                 {
-                    string message = string.Join(Environment.NewLine, new[]
-                    {
-                        string.Empty,
-                        $"Error opening existing certificate:",
-                        ex.ToString(),
-                        string.Empty
-                    });
+                    string message = new StringBuilder()
+                        .AppendLine()
+                        .AppendLine("Error opening existing certificate:")
+                        .AppendLine(ex.ToString())
+                        .AppendLine()
+                        .ToString();
 
                     m_debugLog.Add(message);
                 }

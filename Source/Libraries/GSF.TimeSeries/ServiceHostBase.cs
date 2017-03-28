@@ -805,13 +805,12 @@ namespace GSF.TimeSeries
             }
             catch (Exception ex)
             {
-                string message = string.Join(Environment.NewLine, new[]
-                {
-                    ex.ToString(),
-                    string.Empty,
-                    "Debug info:",
-                    string.Join(Environment.NewLine, certificateGenerator?.DebugLog)
-                });
+                string message = new StringBuilder()
+                    .AppendLine(ex.ToString())
+                    .AppendLine()
+                    .AppendLine("Debug info:")
+                    .AppendLine(string.Join(Environment.NewLine, certificateGenerator?.DebugLog))
+                    .ToString();
 
                 EventLog.WriteEntry(ServiceName, message, EventLogEntryType.Error, 0);
             }
