@@ -285,15 +285,15 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Data\PostgreSQL\GSFSchema.sql">
+    <None Include="Data\PostgreSQL\GSFSchema.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Data\PostgreSQL\InitialDataSet.sql">
+    </None>
+    <None Include="Data\PostgreSQL\InitialDataSet.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Data\PostgreSQL\SampleDataSet.sql">
+    </None>
+    <None Include="Data\PostgreSQL\SampleDataSet.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
