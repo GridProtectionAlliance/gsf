@@ -345,6 +345,24 @@ namespace GSF.Data.Model
         #region [ Methods ]
 
         /// <summary>
+        /// Queries database and returns a single modeled table record for the specified <paramref name="restriction"/>.
+        /// </summary>
+        /// <param name="restriction">Record restriction to apply.</param>
+        /// <returns>A single modeled table record for the queried record.</returns>
+        /// <remarks>
+        /// If no record is found for specified <paramref name="restriction"/>, <c>null</c> will be returned.
+        /// </remarks>
+        public T QueryRecord(RecordRestriction restriction)
+        {
+            return QueryRecords(null, restriction, 1).FirstOrDefault();
+        }
+
+        object ITableOperations.QueryRecord(RecordRestriction restriction)
+        {
+            return QueryRecord(restriction);
+        }
+
+        /// <summary>
         /// Queries database and returns modeled table records for the specified parameters.
         /// </summary>
         /// <param name="orderByExpression">Field name expression used for sort order, include ASC or DESC as needed - does not include ORDER BY; defaults to primary keys.</param>
@@ -840,6 +858,28 @@ namespace GSF.Data.Model
         public int AddNewRecord(DataRow row)
         {
             return AddNewRecord(LoadRecord(row));
+        }
+
+        /// <summary>
+        /// Adds the specified modeled table <paramref name="record"/> to the database if the
+        /// record has not defined any of its primary key values; otherwise, the database will
+        /// be updated with the specified modeled table <paramref name="record"/>.
+        /// </summary>
+        /// <param name="record">Record to add or update.</param>
+        /// <returns>Number of rows affected.</returns>
+        public int AddNewOrUpdateRecord(T record)
+        {
+            return s_primaryKeyProperties.All(property => Common.IsDefaultValue(property.GetValue(record))) ? AddNewRecord(record) : UpdateRecord(record);
+        }
+
+        int ITableOperations.AddNewOrUpdateRecord(object value)
+        {
+            T record = value as T;
+
+            if (record == null)
+                throw new ArgumentException($"Cannot add new or update record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
+
+            return AddNewOrUpdateRecord(record);
         }
 
         /// <summary>

@@ -86,6 +86,15 @@ namespace GSF.Data.Model
             get;
             set;
         }
+        /// <summary>
+        /// Queries database and returns a single modeled table record for the specified <paramref name="restriction"/>.
+        /// </summary>
+        /// <param name="restriction">Record restriction to apply.</param>
+        /// <returns>A single modeled table record for the queried record.</returns>
+        /// <remarks>
+        /// If no record is found for specified <paramref name="restriction"/>, <c>null</c> will be returned.
+        /// </remarks>
+        object QueryRecord(RecordRestriction restriction);
 
         /// <summary>
         /// Queries database and returns modeled table records for the specified parameters.
@@ -221,6 +230,15 @@ namespace GSF.Data.Model
         /// <param name="row"><see cref="DataRow"/> of queried data to be added.</param>
         /// <returns>Number of rows affected.</returns>
         int AddNewRecord(DataRow row);
+        
+        /// <summary>
+        /// Adds the specified modeled table <paramref name="record"/> to the database if the
+        /// record has not defined any of its primary key values; otherwise, the database will
+        /// be updated with the specified modeled table <paramref name="record"/>.
+        /// </summary>
+        /// <param name="record">Record to add or update.</param>
+        /// <returns>Number of rows affected.</returns>
+        int AddNewOrUpdateRecord(object record);
 
         /// <summary>
         /// Gets the primary key values from the specified <paramref name="record"/>.
