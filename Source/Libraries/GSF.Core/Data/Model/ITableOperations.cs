@@ -86,6 +86,7 @@ namespace GSF.Data.Model
             get;
             set;
         }
+
         /// <summary>
         /// Queries database and returns a single modeled table record for the specified <paramref name="restriction"/>.
         /// </summary>
@@ -95,6 +96,35 @@ namespace GSF.Data.Model
         /// If no record is found for specified <paramref name="restriction"/>, <c>null</c> will be returned.
         /// </remarks>
         object QueryRecord(RecordRestriction restriction);
+
+        /// <summary>
+        /// Queries database and returns a single modeled table record for the specified SQL filter
+        /// expression and parameters.
+        /// </summary>
+        /// <param name="filterExpression">
+        /// Filter SQL expression for restriction as a composite format string - does not include WHERE.
+        /// When escaping is needed for field names, use standard ANSI quotes.
+        /// </param>
+        /// <param name="parameters">Restriction parameter values.</param>
+        /// <remarks>
+        /// </remarks>
+        /// <returns>A single modeled table record for the queried record.</returns>
+        /// <remarks>
+        /// <para>
+        /// If no record is found for specified filter expression and parameters, <c>null</c> will be returned.
+        /// </para>
+        /// <para>
+        /// Each indexed parameter, e.g., "{0}", in the composite format <paramref name="filterExpression"/>
+        /// will be converted into query parameters where each of the corresponding values in the
+        /// <paramref name="parameters"/> collection will be applied as <see cref="IDbDataParameter"/>
+        /// values to an executed <see cref="IDbCommand"/> query.
+        /// </para>
+        /// <para>
+        /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
+        /// will be updated to reflect what is defined in the user model.
+        /// </para>
+        /// </remarks>
+        object QueryRecord(string filterExpression, params object[] parameters);
 
         /// <summary>
         /// Queries database and returns modeled table records for the specified parameters.
@@ -194,6 +224,29 @@ namespace GSF.Data.Model
         int DeleteRecord(RecordRestriction restriction);
 
         /// <summary>
+        /// Deletes the records referenced by the specified SQL filter expression and parameters.
+        /// </summary>
+        /// <param name="filterExpression">
+        /// Filter SQL expression for restriction as a composite format string - does not include WHERE.
+        /// When escaping is needed for field names, use standard ANSI quotes.
+        /// </param>
+        /// <param name="parameters">Restriction parameter values.</param>
+        /// <returns>Number of rows affected.</returns>
+        /// <remarks>
+        /// <para>
+        /// Each indexed parameter, e.g., "{0}", in the composite format <paramref name="filterExpression"/>
+        /// will be converted into query parameters where each of the corresponding values in the
+        /// <paramref name="parameters"/> collection will be applied as <see cref="IDbDataParameter"/>
+        /// values to an executed <see cref="IDbCommand"/> query.
+        /// </para>
+        /// <para>
+        /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
+        /// will be updated to reflect what is defined in the user model.
+        /// </para>
+        /// </remarks>
+        int DeleteRecord(string filterExpression, params object[] parameters);
+
+        /// <summary>
         /// Updates the database with the specified modeled table <paramref name="record"/>.
         /// </summary>
         /// <param name="record">Record to update.</param>
@@ -206,6 +259,34 @@ namespace GSF.Data.Model
         int UpdateRecord(object record, RecordRestriction restriction = null);
 
         /// <summary>
+        /// Updates the database with the specified modeled table <paramref name="record"/>.
+        /// </summary>
+        /// <param name="record">Record to update.</param>
+        /// <param name="filterExpression">
+        /// Filter SQL expression for restriction as a composite format string - does not include WHERE.
+        /// When escaping is needed for field names, use standard ANSI quotes.
+        /// </param>
+        /// <param name="parameters">Restriction parameter values.</param>
+        /// <returns>Number of rows affected.</returns>
+        /// <remarks>
+        /// <para>
+        /// Record restriction is only used for custom update expressions or in cases where modeled
+        /// table has no defined primary keys.
+        /// </para>
+        /// <para>
+        /// Each indexed parameter, e.g., "{0}", in the composite format <paramref name="filterExpression"/>
+        /// will be converted into query parameters where each of the corresponding values in the
+        /// <paramref name="parameters"/> collection will be applied as <see cref="IDbDataParameter"/>
+        /// values to an executed <see cref="IDbCommand"/> query.
+        /// </para>
+        /// <para>
+        /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
+        /// will be updated to reflect what is defined in the user model.
+        /// </para>
+        /// </remarks>
+        int UpdateRecord(object record, string filterExpression, params object[] parameters);
+
+        /// <summary>
         /// Updates the database with the specified <paramref name="row"/>.
         /// </summary>
         /// <param name="row"><see cref="DataRow"/> of queried data to be updated.</param>
@@ -216,6 +297,34 @@ namespace GSF.Data.Model
         /// table has no defined primary keys.
         /// </remarks>
         int UpdateRecord(DataRow row, RecordRestriction restriction = null);
+
+        /// <summary>
+        /// Updates the database with the specified <paramref name="row"/>.
+        /// </summary>
+        /// <param name="row"><see cref="DataRow"/> of queried data to be updated.</param>
+        /// <param name="filterExpression">
+        /// Filter SQL expression for restriction as a composite format string - does not include WHERE.
+        /// When escaping is needed for field names, use standard ANSI quotes.
+        /// </param>
+        /// <param name="parameters">Restriction parameter values.</param>
+        /// <returns>Number of rows affected.</returns>
+        /// <remarks>
+        /// <para>
+        /// Record restriction is only used for custom update expressions or in cases where modeled
+        /// table has no defined primary keys.
+        /// </para>
+        /// <para>
+        /// Each indexed parameter, e.g., "{0}", in the composite format <paramref name="filterExpression"/>
+        /// will be converted into query parameters where each of the corresponding values in the
+        /// <paramref name="parameters"/> collection will be applied as <see cref="IDbDataParameter"/>
+        /// values to an executed <see cref="IDbCommand"/> query.
+        /// </para>
+        /// <para>
+        /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
+        /// will be updated to reflect what is defined in the user model.
+        /// </para>
+        /// </remarks>
+        int UpdateRecord(DataRow row, string filterExpression, params object[] parameters);
 
         /// <summary>
         /// Adds the specified modeled table <paramref name="record"/> to the database.
