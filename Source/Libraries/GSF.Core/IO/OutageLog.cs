@@ -458,25 +458,7 @@ namespace GSF.IO
         // Gets a lock on the file using the given lock function.
         private T GetFileLock<T>(Func<string, T> lockFunction)
         {
-            const int Delay = 200;
-            const int MaxRetries = 5000 / Delay;
-            int retries = 0;
-
-            while (true)
-            {
-                try
-                {
-                    return lockFunction(m_fileName);
-                }
-                catch (IOException)
-                {
-                    if (retries >= MaxRetries)
-                        throw;
-                }
-
-                Thread.Sleep(Delay);
-                retries++;
-            }
+            return FilePath.GetFileLock(m_fileName, lockFunction);
         }
 
         // Raises ProcessException event.
