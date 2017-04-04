@@ -751,16 +751,10 @@ namespace GSF.TimeSeries.Statistics
             List<DataRow> statisticMeasurements;
             long statisticMeasurementCount = 0L;
 
-            bool reenable;
-
             lock (m_statisticsLock)
             {
                 // Empty the statistics list
                 m_statistics.Clear();
-
-                // Turn off statistic calculation timer while statistics are being reloaded
-                reenable = m_statisticCalculationTimer.Enabled;
-                m_statisticCalculationTimer.Enabled = false;
 
                 // Load all defined statistics
                 foreach (DataRow row in DataSource.Tables["Statistics"].Select("Enabled <> 0", "Source, SignalIndex"))
@@ -861,11 +855,6 @@ namespace GSF.TimeSeries.Statistics
             }
 
             OnStatusMessage(MessageLevel.Info, $"Loaded {m_statistics.Count} statistic calculation definitions and {statisticMeasurementCount} statistic measurement definitions.");
-
-            if (reenable)
-            {
-                m_statisticCalculationTimer.Enabled = true;
-            }
         }
 
         private void CalculateStatistics()
