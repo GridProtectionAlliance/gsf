@@ -1535,7 +1535,7 @@ namespace GSF.IO
                     DateTime lastCompactTime = DateTime.UtcNow;
                     m_processedFiles.Compact();
                     m_lastCompactTime = lastCompactTime;
-                    m_lastCompactDuration = m_lastCompactTime - DateTime.UtcNow;
+                    m_lastCompactDuration = DateTime.UtcNow - m_lastCompactTime;
                 }
             });
         }
