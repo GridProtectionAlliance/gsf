@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
 
@@ -107,7 +108,7 @@ namespace GSF.Security.Model
         /// Use Active Directory authentication field.
         /// </summary>
         [Label("Use Active Directory Authentication")]
-        [InitialValue("true")]
+        [DefaultValue(true)]
         public bool UseADAuthentication { get; set; }
 
         /// <summary>

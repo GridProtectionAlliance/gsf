@@ -24,9 +24,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -343,6 +345,21 @@ namespace GSF.Data.Model
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Creates a new modeled record instance, applying any modeled default values as specified by a
+        /// <see cref="DefaultValueAttribute"/> on the model properties.
+        /// </summary>
+        /// <returns>New modeled record instance with any defined default values applied.</returns>
+        public T NewRecord()
+        {
+            return s_createRecordInstance();
+        }
+
+        object ITableOperations.NewRecord()
+        {
+            return NewRecord();
+        }
 
         /// <summary>
         /// Queries database and returns a single modeled table record for the specified <paramref name="restriction"/>.
@@ -1370,6 +1387,7 @@ namespace GSF.Data.Model
         private static readonly string s_primaryKeyFields;
         private static readonly string s_searchFilterSql;
         private static readonly bool s_hasPrimaryKeyIdentityField;
+        private static readonly Func<T> s_createRecordInstance;
 
         // Static Constructor
         [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
@@ -1555,6 +1573,7 @@ namespace GSF.Data.Model
             s_addNewProperties = addNewProperties.ToArray();
             s_updateProperties = updateProperties.ToArray();
             s_primaryKeyProperties = primaryKeyProperties.ToArray();
+            s_createRecordInstance = CreateRecordInstance();
         }
 
         // Static Methods
@@ -1659,6 +1678,44 @@ namespace GSF.Data.Model
             }
 
             return delimitedString.ToString();
+        }
+
+        private static Func<T> CreateRecordInstance()
+        {
+            Type type = typeof(T);
+            ConstructorInfo constructor = type.GetConstructor(Type.EmptyTypes);
+
+            if ((object)constructor == null)
+                return () => { throw new InvalidOperationException($"No parameterless constructor exists for type \"{type.FullName}\"."); };
+
+            List<Expression> expressions = new List<Expression>();
+            ParameterExpression newRecordInstance = Expression.Variable(type);
+            DefaultValueAttribute attribute;
+
+            // Create new record instance and assign to local variable
+            expressions.Add(Expression.Assign(newRecordInstance, Expression.New(constructor)));
+
+            // Find any defined default value attributes for properties and assign them to new record instance
+            foreach (PropertyInfo property in s_properties.Values)
+            {
+                if (property.TryGetAttribute(out attribute))
+                {
+                    try
+                    {
+                        expressions.Add(Expression.Call(newRecordInstance, property.SetMethod, Expression.Constant(attribute.Value, property.PropertyType)));
+                    }
+                    catch (Exception ex)
+                    {
+                        return () => { throw new ArgumentException($"Error evaluating default value attribute for property \"{type.FullName}.{property.Name}\": {ex.Message}", property.Name, ex); };
+                    }
+                }
+            }
+
+            // Return new record instance
+            expressions.Add(newRecordInstance);
+
+            // Return a delegate to compiled function block
+            return Expression.Lambda<Func<T>>(Expression.Block(new[] { newRecordInstance }, expressions)).Compile();
         }
 
         #endregion

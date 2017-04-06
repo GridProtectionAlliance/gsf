@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections;
+using System.ComponentModel;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 
@@ -86,6 +87,13 @@ namespace GSF.Data.Model
             get;
             set;
         }
+
+        /// <summary>
+        /// Creates a new modeled record instance, applying any modeled default values as specified by a
+        /// <see cref="DefaultValueAttribute"/> on the model properties.
+        /// </summary>
+        /// <returns>New modeled record instance with any defined default values applied.</returns>
+        object NewRecord();
 
         /// <summary>
         /// Queries database and returns a single modeled table record for the specified <paramref name="restriction"/>.

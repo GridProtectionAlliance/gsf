@@ -23,6 +23,7 @@
 
 using System;
 
+// TODO: Consider moving to another namespace, attribute is not directly used by TableOperations
 namespace GSF.Data.Model
 {
     /// <summary>

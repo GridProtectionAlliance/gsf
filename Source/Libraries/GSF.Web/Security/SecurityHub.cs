@@ -441,7 +441,7 @@ namespace GSF.Web.Security
         [RecordOperation(typeof(UserAccount), RecordOperation.CreateNewRecord)]
         public UserAccount NewUserAccount()
         {
-            return new UserAccount();
+            return DataContext.Table<UserAccount>().NewRecord();
         }
 
         /// <summary>
@@ -531,7 +531,7 @@ namespace GSF.Web.Security
         [RecordOperation(typeof(SecurityGroup), RecordOperation.CreateNewRecord)]
         public SecurityGroup NewSecurityGroup()
         {
-            return new SecurityGroup();
+            return DataContext.Table<SecurityGroup>().NewRecord();
         }
 
         /// <summary>
