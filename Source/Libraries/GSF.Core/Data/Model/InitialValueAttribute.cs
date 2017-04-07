@@ -37,15 +37,16 @@ namespace GSF.Data.Model
     /// <c>[InitialValue("(new Date()).addDays(30)")]</c>
     /// </para>
     /// <para>
-    /// Note that the <see cref="DefaultValueAttribute"/> should be used to set any constant values
-    /// that should be set for new modeled record instances, these will get assigned when using the
-    /// <see cref="TableOperations{T}.NewRecord"/> function. The <see cref="InitialValueAttribute"/>
+    /// Note that the <see cref="DefaultValueAttribute"/> should be used to set any constant values that
+    /// should be set for new modeled record instances and <see cref="DefaultValueExpressionAttribute"/>
+    /// should be used for applying server-side run-time defaults, either of these will get assigned when
+    /// using the <see cref="TableOperations{T}.NewRecord"/> function. The <see cref="InitialValueAttribute"/>
     /// is used to initialize the property value using an expression that gets evaluated in the
     /// target environment, e.g., Javascript in a web page.
     /// </para>
     /// </remarks>
     [AttributeUsage(AttributeTargets.Property)]
-    public /*sealed*/ class InitialValueAttribute : Attribute
+    public sealed class InitialValueAttribute : Attribute
     {
         /// <summary>
         /// Gets the initial value expression for a modeled table field.

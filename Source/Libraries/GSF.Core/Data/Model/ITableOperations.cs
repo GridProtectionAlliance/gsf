@@ -90,7 +90,8 @@ namespace GSF.Data.Model
 
         /// <summary>
         /// Creates a new modeled record instance, applying any modeled default values as specified by a
-        /// <see cref="DefaultValueAttribute"/> on the model properties.
+        /// <see cref="DefaultValueAttribute"/> or <see cref="DefaultValueExpressionAttribute"/> on the
+        /// model properties.
         /// </summary>
         /// <returns>New modeled record instance with any defined default values applied.</returns>
         object NewRecord();
