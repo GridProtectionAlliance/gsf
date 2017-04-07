@@ -258,8 +258,7 @@ namespace LoadImpedanceCalcs
                             ["LINEADMITTANCEANGLE"] = "Line Admittance Angle"
                         };
 
-                        int signalTypeID = connection.ExecuteScalar<int?>("SELECT ID FROM SignalType WHERE Acronym='CALC'") ?? 10;
-                        measurements = GetOutputMeasurements(measurementTable, device.ID, signalTypeID, tieLineID, sendDevice, receiveDevice, outputTypes);
+                        measurements = GetOutputMeasurements(measurementTable, device.ID, tieLineID, sendDevice, receiveDevice, outputTypes);
 
                         // Define input measurement keys connection string parameter
                         adapterConnectionString["OutputMeasurements"] = string.Join("; ", measurements);
@@ -440,7 +439,7 @@ namespace LoadImpedanceCalcs
             return actionAdapter;
         }
 
-        private static string[] GetOutputMeasurements(TableOperations<Measurement> measurementTable, int deviceID, int signalTypeID, string tieLineID, string sender, string receiver, OrderedDictionary outputTypes)
+        private static string[] GetOutputMeasurements(TableOperations<Measurement> measurementTable, int deviceID, string tieLineID, string sender, string receiver, OrderedDictionary outputTypes)
         {
             List<Measurement> measurements = new List<Measurement>();
 
@@ -458,7 +457,6 @@ namespace LoadImpedanceCalcs
                     measurement.DeviceID = deviceID;
                     measurement.PointTag = pointTag;
                     measurement.SignalReference = pointTag;
-                    //measurement.SignalTypeID = signalTypeID;
                     measurement.Description = description;
                     measurement.Enabled = true;
 
