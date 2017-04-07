@@ -23,6 +23,7 @@
 
 using System;
 using System.ComponentModel.DataAnnotations;
+using GSF;
 using GSF.Data.Model;
 
 namespace LoadImpedanceCalcs.Model

@@ -22,9 +22,8 @@
 //******************************************************************************************************
 
 using System;
-using ExpressionEvaluator;
 
-namespace GSF.Data.Model
+namespace GSF
 {
     /// <summary>
     /// Defines a C# expression attribute that when evaluated will specify the default value for a property.

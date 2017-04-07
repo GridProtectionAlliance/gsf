@@ -108,7 +108,7 @@
     <Compile Include="Console\CommandException.cs" />
     <Compile Include="Console\CommandResponse.cs" />
     <Compile Include="Collections\IPagedList.cs" />
-    <Compile Include="Data\Model\DefaultValueExpressionAttribute.cs" />
+    <Compile Include="DefaultValueExpressionAttribute.cs" />
     <Compile Include="Data\Model\ITableOperations.cs" />
     <Compile Include="Data\Model\SearchableAttribute.cs" />
     <Compile Include="Data\Model\AmendExpressionAttribute.cs" />

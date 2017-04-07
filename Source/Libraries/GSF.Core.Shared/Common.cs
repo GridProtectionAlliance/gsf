@@ -523,5 +523,23 @@ namespace GSF
             // 1 is the smallest so pick the smaller of 2 and 3
             return (comp2to3 <= 0) ? value2 : value3;
         }
+
+        /// <summary>
+        /// Returns <paramref name="value"/> if not <c>null</c>; otherwise <paramref name="nonNullValue"/>.
+        /// </summary>
+        /// <param name="value">Value to test.</param>
+        /// <param name="nonNullValue">Value to return if primary value is null.</param>
+        /// <returns><paramref name="value"/> if not <c>null</c>; otherwise <paramref name="nonNullValue"/>.</returns>
+        /// <remarks>
+        /// This function is useful when using evaluated code parsers based on older versions of .NET, e.g.,
+        /// the RazorEngine or the ExpressionEvaluator.
+        /// </remarks>
+        public static object NotNull(object value, object nonNullValue)
+        {
+            if (nonNullValue == null)
+                return new ArgumentNullException(nameof(nonNullValue));
+
+            return value == null || value is DBNull ? nonNullValue : value;
+        }
     }
 }
