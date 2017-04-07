@@ -455,17 +455,12 @@ namespace LoadImpedanceCalcs
                 {
                     measurement = measurementTable.NewRecord();
 
-                    measurement.SignalID = Guid.NewGuid();
                     measurement.DeviceID = deviceID;
                     measurement.PointTag = pointTag;
                     measurement.SignalReference = pointTag;
-                    measurement.SignalTypeID = signalTypeID;
+                    //measurement.SignalTypeID = signalTypeID;
                     measurement.Description = description;
                     measurement.Enabled = true;
-                    measurement.CreatedOn = DateTime.UtcNow;
-                    measurement.CreatedBy = currentUserID;
-                    measurement.UpdatedOn = DateTime.UtcNow;
-                    measurement.UpdatedBy = currentUserID;
 
                     measurementTable.AddNewRecord(measurement);
                     measurement = measurementTable.QueryRecord("PointTag = {0}", pointTag);

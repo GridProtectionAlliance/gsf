@@ -24,7 +24,7 @@
 using System;
 using System.ComponentModel;
 
-// TODO: Consider renaming to InitialExpressionAttribute, adding a target language property and moving to another namespace, attribute is not directly used by TableOperations
+// TODO: Consider moving to another namespace, attribute is not directly used by TableOperations
 namespace GSF.Data.Model
 { 
     /// <summary>
@@ -45,7 +45,7 @@ namespace GSF.Data.Model
     /// </para>
     /// </remarks>
     [AttributeUsage(AttributeTargets.Property)]
-    public sealed class InitialValueAttribute : Attribute
+    public /*sealed*/ class InitialValueAttribute : Attribute
     {
         /// <summary>
         /// Gets the initial value expression for a modeled table field.

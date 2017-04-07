@@ -31,129 +31,60 @@ namespace LoadImpedanceCalcs.Model
     public class Measurement
     {
         [PrimaryKey(true)]
-        public int PointID
-        {
-            get;
-            set;
-        }
+        public int PointID { get; set; }
 
-        public Guid SignalID
-        {
-            get;
-            set;
-        }
+        [DefaultValueExpression("Guid.NewGuid()")]
+        public Guid SignalID { get; set; }
 
-        public int? HistorianID
-        {
-            get;
-            set;
-        }
+        public int? HistorianID { get; set; }
 
-        public int? DeviceID
-        {
-            get;
-            set;
-        }
+        public int? DeviceID { get; set; }
 
         [Required]
         [StringLength(200)]
-        public string PointTag
-        {
-            get;
-            set;
-        }
+        public string PointTag { get; set; }
 
-        public string AlternateTag
-        {
-            get;
-            set;
-        }
+        public string AlternateTag { get; set; }
 
-        public int SignalTypeID
-        {
-            get;
-            set;
-        }
+        //[DefaultValueExpression("Connection.ExecuteScalar('SELECT ID FROM SignalType WHERE Acronym=\\'CALC\\'')")]
+        [DefaultValueExpression("NotNull(Connection.ExecuteScalar('SELECT ID FROM SignalType WHERE Acronym=\\'CALC\\''), 10)")]
+        public int SignalTypeID { get; set; }
 
-        public int? PhasorSourceIndex
-        {
-            get;
-            set;
-        }
+        public int? PhasorSourceIndex { get; set; }
 
         [Required]
         [StringLength(200)]
-        public string SignalReference
-        {
-            get;
-            set;
-        }
+        public string SignalReference { get; set; }
 
         [DefaultValue(0.0D)]
-        public double Adder
-        {
-            get;
-            set;
-        }
+        public double Adder { get; set; }
 
         [DefaultValue(1.0D)]
-        public double Multiplier
-        {
-            get;
-            set;
-        }
+        public double Multiplier { get; set; }
 
-        public string Description
-        {
-            get;
-            set;
-        }
+        public string Description { get; set; }
 
         [DefaultValue(true)]
-        public bool Internal
-        {
-            get;
-            set;
-        }
+        public bool Internal { get; set; }
 
-        public bool Subscribed
-        {
-            get;
-            set;
-        }
+        public bool Subscribed { get; set; }
 
-        public bool Enabled
-        {
-            get;
-            set;
-        }
+        public bool Enabled { get; set; }
 
-        public DateTime CreatedOn
-        {
-            get;
-            set;
-        }
+        [DefaultValueExpression("DateTime.UtcNow")]
+        public DateTime CreatedOn { get; set; }
 
         [Required]
         [StringLength(200)]
-        public string CreatedBy
-        {
-            get;
-            set;
-        }
+        [DefaultValueExpression("UserInfo.CurrentUserID")]
+        public string CreatedBy { get; set; }
 
-        public DateTime UpdatedOn
-        {
-            get;
-            set;
-        }
+        [DefaultValueExpression("DateTime.UtcNow")]
+        public DateTime UpdatedOn { get; set; }
 
         [Required]
         [StringLength(200)]
-        public string UpdatedBy
-        {
-            get;
-            set;
-        }
+        [DefaultValueExpression("UserInfo.CurrentUserID")]
+        public string UpdatedBy { get; set; }
     }
 }

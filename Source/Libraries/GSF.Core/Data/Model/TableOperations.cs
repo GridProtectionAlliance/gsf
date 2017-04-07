@@ -32,10 +32,14 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using ExpressionEvaluator;
+using ExpressionEvaluator.Parser;
 using GSF.Collections;
+using GSF.Identity;
 using GSF.Reflection;
 
 // ReSharper disable StaticMemberInGenericType
+// ReSharper disable UnusedMember.Local
 namespace GSF.Data.Model
 {
     /// <summary>
@@ -45,6 +49,36 @@ namespace GSF.Data.Model
     public class TableOperations<T> : ITableOperations where T : class, new()
     {
         #region [ Members ]
+
+        // Nested Types
+        private class CurrentScope
+        {
+            // Define instance variables exposed to DefaultValueExpressionAttribute expressions
+            #pragma warning disable 414
+            public TableOperations<T> TableOperations;
+            public AdoDataConnection Connection;
+            #pragma warning restore 414
+
+            // Define handy functions exposed to DefaultValueExpressionAttribute expressions
+            public object NotNull<TReturn>(object value, TReturn nonNullValue) => Common.NotNull(value, nonNullValue);
+        }
+
+        private class DefaultValueExpressionParser : ExpressionCompiler
+        {
+            public DefaultValueExpressionParser(string expression, ParameterExpression currentScope)
+            {
+                TypeRegistry = s_typeRegistry;
+
+                Parser = new AntlrParser(expression)
+                {
+                    ReturnType = typeof(CurrentScope)
+                };
+
+                BuildTree(currentScope);
+            }
+
+            protected override void ClearCompiledMethod() { }
+        }
 
         // Constants
         private const string CountSqlFormat = "SELECT COUNT(*) FROM {0}";
@@ -75,6 +109,7 @@ namespace GSF.Data.Model
         private readonly string m_deleteSql;
         private readonly string m_deleteWhereSql;
         private readonly string m_searchFilterSql;
+        private readonly CurrentScope m_currentScope;
 
         #endregion
 
@@ -117,6 +152,12 @@ namespace GSF.Data.Model
             m_deleteSql = s_deleteSql;
             m_deleteWhereSql = s_deleteWhereSql;
             m_searchFilterSql = s_searchFilterSql;
+
+            m_currentScope = new CurrentScope
+            {
+                TableOperations = this,
+                Connection = connection
+            };
 
             // When any escape targets are defined for the modeled identifiers, i.e., table or field names,
             // the static SQL statements are defined with ANSI standard escape delimiters. We check if the
@@ -353,7 +394,7 @@ namespace GSF.Data.Model
         /// <returns>New modeled record instance with any defined default values applied.</returns>
         public T NewRecord()
         {
-            return s_createRecordInstance();
+            return s_createRecordInstance(m_currentScope);
         }
 
         object ITableOperations.NewRecord()
@@ -1387,7 +1428,8 @@ namespace GSF.Data.Model
         private static readonly string s_primaryKeyFields;
         private static readonly string s_searchFilterSql;
         private static readonly bool s_hasPrimaryKeyIdentityField;
-        private static readonly Func<T> s_createRecordInstance;
+        private static readonly Func<CurrentScope, T> s_createRecordInstance;
+        private static readonly TypeRegistry s_typeRegistry;
 
         // Static Constructor
         [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
@@ -1573,8 +1615,23 @@ namespace GSF.Data.Model
             s_addNewProperties = addNewProperties.ToArray();
             s_updateProperties = updateProperties.ToArray();
             s_primaryKeyProperties = primaryKeyProperties.ToArray();
+
+            // Setup default type registry for parsing default value expression attributes
+            s_typeRegistry = new TypeRegistry();
+            s_typeRegistry.RegisterDefaultTypes();
+            s_typeRegistry.RegisterType<Guid>();
+            s_typeRegistry.RegisterType<UserInfo>();
+            s_typeRegistry.RegisterType("Common", typeof(Common));
+
             s_createRecordInstance = CreateRecordInstance();
         }
+
+        // Static Properties
+
+        /// <summary>
+        /// Gets <see cref="TypeRegistry"/> instance used for evaluating <see cref="DefaultValueExpressionAttribute"/> instances.
+        /// </summary>
+        public static TypeRegistry DefaultTypeRegistry => s_typeRegistry;
 
         // Static Methods
         private static string GetFieldName(PropertyInfo property)
@@ -1680,17 +1737,19 @@ namespace GSF.Data.Model
             return delimitedString.ToString();
         }
 
-        private static Func<T> CreateRecordInstance()
+        private static Func<CurrentScope, T> CreateRecordInstance()
         {
             Type type = typeof(T);
             ConstructorInfo constructor = type.GetConstructor(Type.EmptyTypes);
 
             if ((object)constructor == null)
-                return () => { throw new InvalidOperationException($"No parameterless constructor exists for type \"{type.FullName}\"."); };
+                return scope => { throw new InvalidOperationException($"No parameterless constructor exists for type \"{type.FullName}\"."); };
 
             List<Expression> expressions = new List<Expression>();
             ParameterExpression newRecordInstance = Expression.Variable(type);
-            DefaultValueAttribute attribute;
+            ParameterExpression currentScopeParameter = Expression.Parameter(typeof(CurrentScope));
+            DefaultValueAttribute defaultValueAttribute;
+            DefaultValueExpressionAttribute defaultValueExpressionAttribute;
 
             // Create new record instance and assign to local variable
             expressions.Add(Expression.Assign(newRecordInstance, Expression.New(constructor)));
@@ -1698,15 +1757,27 @@ namespace GSF.Data.Model
             // Find any defined default value attributes for properties and assign them to new record instance
             foreach (PropertyInfo property in s_properties.Values)
             {
-                if (property.TryGetAttribute(out attribute))
+                if (property.TryGetAttribute(out defaultValueAttribute))
                 {
                     try
                     {
-                        expressions.Add(Expression.Call(newRecordInstance, property.SetMethod, Expression.Constant(attribute.Value, property.PropertyType)));
+                        expressions.Add(Expression.Call(newRecordInstance, property.SetMethod, Expression.Constant(defaultValueAttribute.Value, property.PropertyType)));
                     }
                     catch (Exception ex)
                     {
-                        return () => { throw new ArgumentException($"Error evaluating default value attribute for property \"{type.FullName}.{property.Name}\": {ex.Message}", property.Name, ex); };
+                        return scope => { throw new ArgumentException($"Error evaluating default value attribute for property \"{type.FullName}.{property.Name}\": {ex.Message}", property.Name, ex); };
+                    }
+                }
+                else if (property.TryGetAttribute(out defaultValueExpressionAttribute))
+                {
+                    try
+                    {
+                        DefaultValueExpressionParser expressionParser = new DefaultValueExpressionParser(defaultValueExpressionAttribute.Expression, currentScopeParameter);
+                        expressions.Add(Expression.Call(newRecordInstance, property.SetMethod, Expression.Convert(expressionParser.Expression, property.PropertyType)));
+                    }
+                    catch (Exception ex)
+                    {
+                        return scope => { throw new ArgumentException($"Error parsing default value expression attribute for property \"{type.FullName}.{property.Name}\": {ex.Message}", property.Name, ex); };
                     }
                 }
             }
@@ -1715,7 +1786,7 @@ namespace GSF.Data.Model
             expressions.Add(newRecordInstance);
 
             // Return a delegate to compiled function block
-            return Expression.Lambda<Func<T>>(Expression.Block(new[] { newRecordInstance }, expressions)).Compile();
+            return Expression.Lambda<Func<CurrentScope, T>>(Expression.Block(new[] { newRecordInstance }, expressions), currentScopeParameter).Compile();
         }
 
         #endregion

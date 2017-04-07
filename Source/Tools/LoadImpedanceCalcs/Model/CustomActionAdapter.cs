@@ -51,16 +51,20 @@ namespace LoadImpedanceCalcs.Model
 
         public bool Enabled { get; set; }
 
+        [DefaultValueExpression("DateTime.UtcNow")]
         public DateTime CreatedOn { get; set; }
 
         [Required]
         [StringLength(200)]
+        [DefaultValueExpression("UserInfo.CurrentUserID")]
         public string CreatedBy { get; set; }
 
-        public DateTime UpdatedOn { get; set; }
+        [DefaultValueExpression("DateTime.UtcNow")]
+        public DateTime UpdatedOn {  get; set; }
 
         [Required]
         [StringLength(200)]
+        [DefaultValueExpression("UserInfo.CurrentUserID")]
         public string UpdatedBy { get; set; }
     }
 }
