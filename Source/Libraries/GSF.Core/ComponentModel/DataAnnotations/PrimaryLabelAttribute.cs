@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  DefaultValueExpressionAttribute.cs - Gbtc
+//  PrimaryLabelAttribute.cs - Gbtc
 //
-//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,39 +16,40 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  04/07/2017 - J. Ritchie Carroll
+//  02/26/2016 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using System;
 
-namespace GSF
+namespace GSF.ComponentModel.DataAnnotations
 {
     /// <summary>
-    /// Defines a C# expression attribute that when evaluated will specify the default value for a property.
+    /// Defines an attribute that will define the field name that best represents the row identification to a user.
     /// </summary>
-    [AttributeUsage(AttributeTargets.All)]
-    public sealed class DefaultValueExpressionAttribute : Attribute
+    /// <remarks>
+    /// An example of when this would be used is during a record deletion confirmation, e.g:
+    /// Are you sure you want to delete "PrimaryLabel.FieldName.Value"?
+    /// </remarks>
+    [AttributeUsage(AttributeTargets.Class)]
+    public sealed class PrimaryLabelAttribute : Attribute
     {
         /// <summary>
-        /// Gets or sets C# expression that will evaluate to the desired default value.
+        /// Field name used as primary label.
         /// </summary>
-        public string Expression
+        public string FieldName
         {
             get;
         }
 
         /// <summary>
-        /// Creates a new <see cref="DefaultValueExpressionAttribute"/>
+        /// Creates a new <see cref="PrimaryLabelAttribute"/>.
         /// </summary>
-        /// <param name="expression">C# expression that will evaluate to the desired default value.</param>
-        public DefaultValueExpressionAttribute(string expression)
+        /// <param name="fieldName">Field name used as primary label.</param>
+        public PrimaryLabelAttribute(string fieldName)
         {
-            if (string.IsNullOrWhiteSpace(expression))
-                throw new ArgumentNullException(nameof(expression));
-
-            Expression = expression;
+            FieldName = fieldName;
         }
     }
 }

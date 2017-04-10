@@ -30,6 +30,7 @@ using System.Net.Http;
 using System.Text;
 using System.Web.Routing;
 using GSF.Collections;
+using GSF.ComponentModel.DataAnnotations;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Reflection;
@@ -939,10 +940,10 @@ namespace GSF.Web.Model
         /// Adds a new field value initializer.
         /// </summary>
         /// <param name="fieldName">Field name (as defined in model).</param>
-        /// <param name="initialValue">Javascript based initial value for field.</param>
-        public void AddFieldValueInitializer(string fieldName, string initialValue = null)
+        /// <param name="initialValueScript">Javascript based initial value for field.</param>
+        public void AddFieldValueInitializer(string fieldName, string initialValueScript = null)
         {
-            m_fieldValueInitializers.Add(new Tuple<string, string>(fieldName, initialValue ?? "\"\""));
+            m_fieldValueInitializers.Add(new Tuple<string, string>(fieldName, initialValueScript ?? "\"\""));
         }
 
         /// <summary>
@@ -951,10 +952,10 @@ namespace GSF.Web.Model
         /// <param name="fieldName">Field name (as defined in model).</param>
         public void AddFieldValueInitializer<TModel>(string fieldName) where TModel : class, new()
         {
-            InitialValueAttribute initialValueAttribute;
+            InitialValueScriptAttribute initialValueScriptAttribute;
 
-            if (Table<TModel>().TryGetFieldAttribute(fieldName, out initialValueAttribute))
-                AddFieldValueInitializer(fieldName, initialValueAttribute.InitialValue);
+            if (Table<TModel>().TryGetFieldAttribute(fieldName, out initialValueScriptAttribute))
+                AddFieldValueInitializer(fieldName, initialValueScriptAttribute.InitialValueScript);
         }
 
         /// <summary>

@@ -456,10 +456,6 @@ namespace GSF.Web.Security
                 record.Password = SecurityProviderUtility.EncryptPassword(record.Password);
 
             record.DefaultNodeID = DefaultNodeID;
-            record.CreatedBy = UserInfo.CurrentUserID;
-            record.CreatedOn = DateTime.UtcNow;
-            record.UpdatedBy = record.CreatedBy;
-            record.UpdatedOn = record.CreatedOn;
             DataContext.Table<UserAccount>().AddNewRecord(record);
         }
 
@@ -542,10 +538,6 @@ namespace GSF.Web.Security
         [RecordOperation(typeof(SecurityGroup), RecordOperation.AddNewRecord)]
         public void AddNewSecurityGroup(SecurityGroup record)
         {
-            record.CreatedBy = UserInfo.CurrentUserID;
-            record.CreatedOn = DateTime.UtcNow;
-            record.UpdatedBy = record.CreatedBy;
-            record.UpdatedOn = record.CreatedOn;
             DataContext.Table<SecurityGroup>().AddNewRecord(record);
         }
 

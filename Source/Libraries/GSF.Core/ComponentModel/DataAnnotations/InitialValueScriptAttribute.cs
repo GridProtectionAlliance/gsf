@@ -24,11 +24,10 @@
 using System;
 using System.ComponentModel;
 
-// TODO: Consider moving to another namespace, attribute is not directly used by TableOperations
-namespace GSF.Data.Model
-{ 
+namespace GSF.ComponentModel.DataAnnotations
+{
     /// <summary>
-    /// Defines an attribute that will define an initial value expression for a modeled table field
+    /// Defines an attribute that will define an initial value script for a modeled table field
     /// that will get evaluated and assigned in the target use environment, e.g., Javascript.
     /// </summary>
     /// <remarks>
@@ -37,16 +36,16 @@ namespace GSF.Data.Model
     /// <c>[InitialValue("(new Date()).addDays(30)")]</c>
     /// </para>
     /// <para>
-    /// Note that the <see cref="DefaultValueAttribute"/> should be used to set any constant values that
-    /// should be set for new modeled record instances and <see cref="DefaultValueExpressionAttribute"/>
-    /// should be used for applying server-side run-time defaults, either of these will get assigned when
-    /// using the <see cref="TableOperations{T}.NewRecord"/> function. The <see cref="InitialValueAttribute"/>
-    /// is used to initialize the property value using an expression that gets evaluated in the
-    /// target environment, e.g., Javascript in a web page.
+    /// Note that the <see cref="DefaultValueAttribute"/> should be used to set any constant values
+    /// for new modeled record instances and the <see cref="DefaultValueExpressionAttribute"/> should
+    /// be used for applying any needed server-side run-time defaults, either of these will get
+    /// assigned when using the <see cref="Data.Model.TableOperations{T}.NewRecord"/> function. The
+    /// <see cref="InitialValueScriptAttribute"/> is used to initialize the property value using an
+    /// expression that gets evaluated in the target environment.
     /// </para>
     /// </remarks>
     [AttributeUsage(AttributeTargets.Property)]
-    public sealed class InitialValueAttribute : Attribute
+    public sealed class InitialValueScriptAttribute : Attribute
     {
         /// <summary>
         /// Gets the initial value expression for a modeled table field.
@@ -54,18 +53,18 @@ namespace GSF.Data.Model
         /// <remarks>
         /// Expression should be in target language, e.g., Javascript.
         /// </remarks>
-        public string InitialValue
+        public string InitialValueScript
         {
             get;
         }
 
         /// <summary>
-        /// Creates a new <see cref="InitialValueAttribute"/>/
+        /// Creates a new <see cref="InitialValueScriptAttribute"/>/
         /// </summary>
-        /// <param name="initialValue">Initial value expression for a modeled table field.</param>
-        public InitialValueAttribute(string initialValue)
+        /// <param name="initialValueScript">Initial value expression for a modeled table field.</param>
+        public InitialValueScriptAttribute(string initialValueScript)
         {
-            InitialValue = initialValue;
+            InitialValueScript = initialValueScript;
         }
     }
 }

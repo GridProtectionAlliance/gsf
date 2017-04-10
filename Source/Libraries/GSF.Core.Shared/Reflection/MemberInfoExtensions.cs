@@ -49,6 +49,19 @@ namespace GSF.Reflection
         }
 
         /// <summary>
+        /// Returns a boolean flag that determines if the specified <typeparamref name="TAttribute"/> exists.
+        /// </summary>
+        /// <param name="member">The <see cref="MemberInfo"/> object over which to search attributes.</param>
+        /// <typeparam name="TMemberInfo"><see cref="MemberInfo"/> or derived type to get <see cref="Attribute"/> from.</typeparam>
+        /// <typeparam name="TAttribute"><see cref="Type"/> of <see cref="Attribute"/> to attempt to retrieve.</typeparam>
+        /// <returns><c>true</c> if attribute exists; otherwise, <c>false</c>.</returns>
+        public static bool AttributeExists<TMemberInfo, TAttribute>(this TMemberInfo member) where TMemberInfo : MemberInfo where TAttribute : Attribute
+        {
+            TAttribute value;
+            return member.TryGetAttribute(out value);
+        }
+
+        /// <summary>
         /// Attempts to get the specified <paramref name="attribute"/> from a <see cref="MemberInfo"/> object, returning <c>true</c> if it does.
         /// </summary>
         /// <param name="member">The <see cref="MemberInfo"/> object over which to search attributes.</param>

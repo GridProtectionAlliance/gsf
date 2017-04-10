@@ -388,9 +388,9 @@
         $(viewModel).on(""newRecord"", function(event, newRecord) {{
             // Set initial field values");
 
-        foreach (Tuple<string, string> initialValue in dataContext.FieldValueInitializers) {
+        foreach (Tuple<string, string> initialValueScript in dataContext.FieldValueInitializers) {
             pageControlScripts.AppendFormat("\r\n            newRecord.{0} = {1};",
-                initialValue.Item1, initialValue.Item2);
+                initialValueScript.Item1, initialValueScript.Item2);
         }
 
         pageControlScripts.Append("\r\n        });");

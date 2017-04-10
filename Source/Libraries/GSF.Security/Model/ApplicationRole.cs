@@ -23,6 +23,8 @@
 
 using System;
 using System.ComponentModel.DataAnnotations;
+using GSF.ComponentModel;
+using GSF.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
 
 namespace GSF.Security.Model
@@ -59,21 +61,29 @@ namespace GSF.Security.Model
         /// <summary>
         /// Created on field.
         /// </summary>
+        [DefaultValueExpression("DateTime.UtcNow")]
         public DateTime CreatedOn { get; set; }
 
         /// <summary>
         /// Created by field.
         /// </summary>
+        [Required]
+        [StringLength(200)]
+        [DefaultValueExpression("UserInfo.CurrentUserID")]
         public string CreatedBy { get; set; }
 
         /// <summary>
         /// Updated on field.
         /// </summary>
+        [DefaultValueExpression("this.CreatedOn")]
         public DateTime UpdatedOn { get; set; }
 
         /// <summary>
         /// Updated by field.
         /// </summary>
+        [Required]
+        [StringLength(200)]
+        [DefaultValueExpression("this.CreatedBy")]
         public string UpdatedBy { get; set; }
     }
 }

@@ -24,7 +24,7 @@
 using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using GSF;
+using GSF.ComponentModel;
 using GSF.Data.Model;
 
 namespace LoadImpedanceCalcs.Model
@@ -71,20 +71,32 @@ namespace LoadImpedanceCalcs.Model
 
         public bool Enabled { get; set; }
 
+        /// <summary>
+        /// Created on field.
+        /// </summary>
         [DefaultValueExpression("DateTime.UtcNow")]
         public DateTime CreatedOn { get; set; }
 
+        /// <summary>
+        /// Created by field.
+        /// </summary>
         [Required]
         [StringLength(200)]
         [DefaultValueExpression("UserInfo.CurrentUserID")]
         public string CreatedBy { get; set; }
 
-        [DefaultValueExpression("DateTime.UtcNow")]
+        /// <summary>
+        /// Updated on field.
+        /// </summary>
+        [DefaultValueExpression("this.CreatedOn")]
         public DateTime UpdatedOn { get; set; }
 
+        /// <summary>
+        /// Updated by field.
+        /// </summary>
         [Required]
         [StringLength(200)]
-        [DefaultValueExpression("UserInfo.CurrentUserID")]
+        [DefaultValueExpression("this.CreatedBy")]
         public string UpdatedBy { get; set; }
     }
 }

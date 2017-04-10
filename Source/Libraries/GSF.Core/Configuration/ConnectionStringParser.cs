@@ -32,6 +32,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Xml.Linq;
+using ExpressionEvaluator;
+using GSF.ComponentModel;
 using GSF.Reflection;
 
 // ReSharper disable StaticMemberInGenericType
@@ -90,17 +92,46 @@ namespace GSF.Configuration
             /// Creates a new instance of the <see cref="ConnectionStringProperty"/> class.
             /// </summary>
             /// <param name="propertyInfo">The <see cref="PropertyInfo"/> object.</param>
-            public ConnectionStringProperty(PropertyInfo propertyInfo)
+            /// <param name="typeRegistry">
+            /// Type registry to use when parsing <see cref="DefaultValueExpressionAttribute"/>
+            /// instances. Set to <c>null</c> for default registry.
+            /// </param>
+            public ConnectionStringProperty(PropertyInfo propertyInfo, TypeRegistry typeRegistry = null)
             {
                 SettingNameAttribute settingNameAttribute;
                 DefaultValueAttribute defaultValueAttribute;
+                DefaultValueExpressionAttribute defaultValueExpressionAttribute;
                 TypeConverterAttribute typeConverterAttribute;
                 Type converterType;
 
                 PropertyInfo = propertyInfo;
                 Names = propertyInfo.TryGetAttribute(out settingNameAttribute) ? settingNameAttribute.Names : new[] { propertyInfo.Name };
-                Required = !propertyInfo.TryGetAttribute(out defaultValueAttribute);
-                DefaultValue = !Required ? defaultValueAttribute.Value : null;
+
+                bool hasDefaultValue = propertyInfo.TryGetAttribute(out defaultValueAttribute);
+                bool hasDefaultValueExpression = propertyInfo.TryGetAttribute(out defaultValueExpressionAttribute);
+
+                Required = !hasDefaultValue && !hasDefaultValueExpression;
+
+                if (Required)
+                {
+                    DefaultValue = null;
+                }
+                else
+                {
+                    if ((object)defaultValueAttribute == null)
+                    {
+                        DefaultValueExpressionParser parser = new DefaultValueExpressionParser(defaultValueExpressionAttribute.Expression);                        
+
+                        if ((object)typeRegistry != null)
+                            parser.TypeRegistry = typeRegistry;
+
+                        DefaultValue = parser.Eval();
+                    }
+                    else
+                    {
+                        DefaultValue = defaultValueAttribute.Value;
+                    }
+                }
 
                 if (propertyInfo.TryGetAttribute(out typeConverterAttribute))
                 {
@@ -542,6 +573,7 @@ namespace GSF.Configuration
 
         // Static Fields
         private static readonly ConcurrentDictionary<Type, ConnectionStringProperty[]> s_connectionStringPropertiesLookup = new ConcurrentDictionary<Type, ConnectionStringProperty[]>();
+        private static TypeRegistry s_typeRegistry;
 
         private static readonly Func<Type, ConnectionStringProperty[]> s_valueFactory = t =>
         {
@@ -550,9 +582,41 @@ namespace GSF.Configuration
             return t.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(property => property.CanRead && property.CanWrite)
                 .Where(property => property.TryGetAttribute(out attribute))
-                .Select(property => new ConnectionStringProperty(property))
+                .Select(property => new ConnectionStringProperty(property, s_typeRegistry))
                 .ToArray();
         };
+
+        // Static Properties
+
+        /// <summary>
+        /// Gets <see cref="ExpressionEvaluator.TypeRegistry"/> instance used for evaluating encountered
+        /// instances of the <see cref="DefaultValueExpressionAttribute"/>.
+        /// </summary>
+        /// <remarks>
+        /// Accessing this property will create a unique type registry for the current attribute type
+        /// <typeparamref name="TParameterAttribute"/> which will initially contain the values found in
+        /// the <see cref="DefaultValueExpressionParser.DefaultTypeRegistry"/> and can be augmented with
+        /// custom types. Set to <c>null</c> to restore use of the default type registry.
+        /// </remarks>
+        public static TypeRegistry TypeRegistry
+        {
+            get
+            {
+                if ((object)s_typeRegistry == null)
+                {
+                    s_typeRegistry = new TypeRegistry();
+
+                    foreach (KeyValuePair<string, object> item in DefaultValueExpressionParser.DefaultTypeRegistry)
+                        s_typeRegistry.Add(item.Key, item.Value);
+                }
+
+                return s_typeRegistry;
+            }
+            set
+            {
+                s_typeRegistry = value;
+            }
+        }
 
         #endregion
     }

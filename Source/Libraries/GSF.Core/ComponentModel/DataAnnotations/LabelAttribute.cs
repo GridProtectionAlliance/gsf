@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  IsDeletedFlagAttribute.cs - Gbtc
+//  LabelAttribute.cs - Gbtc
 //
 //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,37 +16,36 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  2/29/2016 - J. Ritchie Carroll
+//  01/30/2016 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using System;
 
-// TODO: Consider moving to another namespace, attribute is not directly used by TableOperations
-namespace GSF.Data.Model
+namespace GSF.ComponentModel.DataAnnotations
 {
     /// <summary>
-    /// Defines an attribute that will define the field name that represents a record marked for deletion.
+    /// Defines an attribute that will define a UI label to used for a modeled table field.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class)]
-    public sealed class IsDeletedFlagAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Property)]
+    public sealed class LabelAttribute : Attribute
     {
         /// <summary>
-        /// Field name used as is-deleted record marker.
+        /// Gets UI label for modeled table field.
         /// </summary>
-        public string FieldName
+        public string Label
         {
             get;
         }
 
         /// <summary>
-        /// Creates a new <see cref="IsDeletedFlagAttribute"/>.
+        /// Creates a new <see cref="LabelAttribute"/>.
         /// </summary>
-        /// <param name="fieldName">Field name used as is-deleted record marker.</param>
-        public IsDeletedFlagAttribute(string fieldName)
+        /// <param name="label">UI label for modeled table field.</param>
+        public LabelAttribute(string label)
         {
-            FieldName = fieldName;
+            Label = label;
         }
     }
 }

@@ -23,6 +23,7 @@
 
 using System;
 using System.ComponentModel.DataAnnotations;
+using GSF.ComponentModel.DataAnnotations;
 using GSF.Data.Model;
 
 namespace GSF.Security.Model
@@ -54,7 +55,7 @@ namespace GSF.Security.Model
         /// <summary>
         /// Enabled field.
         /// </summary>
-        [InitialValue("true")]
+        [InitialValueScript("true")]
         public bool Enabled { get; set; }
 
         /// <summary>

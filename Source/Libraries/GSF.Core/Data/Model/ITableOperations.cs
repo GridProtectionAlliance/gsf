@@ -26,6 +26,7 @@ using System.Collections;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
+using GSF.ComponentModel;
 
 namespace GSF.Data.Model
 {
@@ -90,8 +91,8 @@ namespace GSF.Data.Model
 
         /// <summary>
         /// Creates a new modeled record instance, applying any modeled default values as specified by a
-        /// <see cref="DefaultValueAttribute"/> or <see cref="DefaultValueExpressionAttribute"/> on the
-        /// model properties.
+        /// <see cref="DefaultValueAttribute"/> or <see cref="DefaultValueExpressionAttribute"/>
+        /// on the model properties.
         /// </summary>
         /// <returns>New modeled record instance with any defined default values applied.</returns>
         object NewRecord();
