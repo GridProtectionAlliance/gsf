@@ -589,8 +589,9 @@ namespace GSF.Configuration
         // Static Properties
 
         /// <summary>
-        /// Gets <see cref="ExpressionEvaluator.TypeRegistry"/> instance used for evaluating encountered
-        /// instances of the <see cref="DefaultValueExpressionAttribute"/>.
+        /// Gets or sets <see cref="ExpressionEvaluator.TypeRegistry"/> instance used for evaluating
+        /// encountered instances of the <see cref="DefaultValueExpressionAttribute"/> on modeled
+        /// connection string values that are marked with <typeparamref name="TParameterAttribute"/>.
         /// </summary>
         /// <remarks>
         /// Accessing this property will create a unique type registry for the current attribute type

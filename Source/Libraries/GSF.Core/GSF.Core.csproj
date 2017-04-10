@@ -110,6 +110,7 @@
     <Compile Include="ComponentModel\DataAnnotations\LabelAttribute.cs" />
     <Compile Include="ComponentModel\DataAnnotations\NamespaceDoc.cs" />
     <Compile Include="ComponentModel\DefaultValueExpressionScopeBase.cs" />
+    <Compile Include="ComponentModel\EvaluationOrderAttribute.cs" />
     <Compile Include="ComponentModel\NamespaceDoc.cs" />
     <Compile Include="ComponentModel\DataAnnotations\PrimaryLabelAttribute.cs" />
     <Compile Include="Console\Command.cs" />

@@ -40,6 +40,15 @@ namespace GSF.ComponentModel
         }
 
         /// <summary>
+        /// Gets or sets value that determines if value should be cached after first evaluation. Defaults to <c>false</c>.
+        /// </summary>
+        public bool Cached
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Creates a new <see cref="DefaultValueExpressionAttribute"/>
         /// </summary>
         /// <param name="expression">C# expression that will evaluate to the desired default value.</param>

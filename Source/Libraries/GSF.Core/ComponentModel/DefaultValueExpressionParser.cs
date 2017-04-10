@@ -56,6 +56,9 @@ namespace GSF.ComponentModel
         // Static Fields
         private static readonly TypeRegistry s_typeRegistry;
         private static readonly Regex s_findThisKeywords;
+        private static readonly Dictionary<PropertyInfo, object> s_cachedExpressionValues;
+        internal static readonly MethodInfo s_addCachedValueMethod;
+        internal static readonly MethodInfo s_getCachedValueMethod;
 
         // Static Constructor
         static DefaultValueExpressionParser()
@@ -67,8 +70,14 @@ namespace GSF.ComponentModel
             s_typeRegistry.RegisterType<UserInfo>();
             s_typeRegistry.RegisterType("Common", typeof(Common));
 
-            // Define a regular expression to find "this" expressions
+            // Define a regular expression to find "this" keywords
             s_findThisKeywords = new Regex(@"(^this(?=[^\w]))|((?<=[^\w])this(?=[^\w]))|(^this$)", RegexOptions.Compiled | RegexOptions.Multiline);
+
+            // Define a table of cached default value expression values
+            s_cachedExpressionValues = new Dictionary<PropertyInfo, object>();
+            Type expressionParser = typeof(DefaultValueExpressionParser);
+            s_addCachedValueMethod = expressionParser.GetMethod("AddCachedValue", BindingFlags.Static | BindingFlags.NonPublic);
+            s_getCachedValueMethod = expressionParser.GetMethod("GetCachedValue", BindingFlags.Static | BindingFlags.NonPublic);
         }
 
         // Static Properties
@@ -85,11 +94,27 @@ namespace GSF.ComponentModel
         /// </summary>
         /// <param name="expression">Expression to search.</param>
         /// <param name="fieldName">Replacement value for "this" keyword usages.</param>
-        /// <returns>An expression with "this" keyword replaced with specified <paramref name="fieldName"/>.</returns>
+        /// <returns>An expression with "this" keywords replaced with specified <paramref name="fieldName"/>.</returns>
         public static string ReplaceThisKeywords(string expression, string fieldName)
         {
             lock (s_findThisKeywords)
                 return s_findThisKeywords.Replace(expression, fieldName);
+        }
+
+        internal static void AddCachedValue(PropertyInfo property, object value)
+        {
+            lock (s_cachedExpressionValues)
+                s_cachedExpressionValues.Add(property, value);
+        }
+
+        internal static object GetCachedValue(PropertyInfo property)
+        {
+            object value;
+
+            lock (s_cachedExpressionValues)
+                s_cachedExpressionValues.TryGetValue(property, out value);
+
+            return value;
         }
 
         #endregion
@@ -146,6 +171,19 @@ namespace GSF.ComponentModel
         /// Type registry to use when parsing <see cref="DefaultValueExpressionAttribute"/> instances, or <c>null</c>
         /// to use <see cref="DefaultValueExpressionParser.DefaultTypeRegistry"/>.
         /// </param>
+        /// <remarks>
+        /// This function is useful for generating a delegate to a compiled function that will create new
+        /// objects of type <typeparamref name="T"/> where properties of the type of have been decorated with
+        /// <see cref="DefaultValueAttribute"/> or <see cref="DefaultValueExpressionAttribute"/> attributes.
+        /// The newly created object will automatically have applied any defined default values as specified by
+        /// the encountered attributes. The generated delegate takes a parameter to a contextual object useful
+        /// for providing extra runtime data to <see cref="DefaultValueExpressionAttribute"/> attributes; the
+        /// parameter must be derived from <see cref="DefaultValueExpressionScopeBase{T}"/>. Any public fields,
+        /// methods or properties defined in the derived class will be automatically accessible from the
+        /// expressions declared in the <see cref="DefaultValueExpressionAttribute"/> attributes. By default,
+        /// the expressions will have access to the current <typeparamref name="T"/> instance by referencing the
+        /// <c>this</c> keyword, which is an alias to <see cref="DefaultValueExpressionScopeBase{T}.Instance"/>.
+        /// </remarks>
         /// <returns>
         /// Generated delegate that will create new <typeparamref name="T"/> instances with default values applied.
         /// </returns>
@@ -166,11 +204,15 @@ namespace GSF.ComponentModel
             ParameterExpression scopeParameter = Expression.Parameter(typeof(TExpressionScope));
             DefaultValueAttribute defaultValueAttribute;
             DefaultValueExpressionAttribute defaultValueExpressionAttribute;
+            EvaluationOrderAttribute evaluationOrderAttribute;
+
+            // Sort properties by any specified evaluation order
+            properties = properties.OrderBy(property => property.TryGetAttribute(out evaluationOrderAttribute) ? evaluationOrderAttribute.OrderIndex : 0);
 
             // Create new instance and assign to local variable
             expressions.Add(Expression.Assign(newInstance, Expression.New(constructor)));
 
-            // Assign new instance to "_instance" field of current scope parameter
+            // Assign new instance to "Instance" field of scope parameter
             expressions.Add(Expression.Assign(Expression.Field(scopeParameter, typeof(TExpressionScope).GetField("Instance")), newInstance));
 
             // Find any defined default value attributes for properties and assign them to new instance
@@ -197,7 +239,32 @@ namespace GSF.ComponentModel
                         // Parse default value expression
                         DefaultValueExpressionParser expressionParser = new DefaultValueExpressionParser(expression);
                         expressionParser.Parse(scopeParameter, typeRegistry);
-                        expressions.Add(Expression.Call(newInstance, property.SetMethod, Expression.Convert(expressionParser.Expression, property.PropertyType)));
+
+                        UnaryExpression getParsedValue = Expression.Convert(expressionParser.Expression, property.PropertyType);
+
+                        if (defaultValueExpressionAttribute.Cached)
+                        {
+                            ConstantExpression propertyInfo = Expression.Constant(property, typeof(PropertyInfo));
+                            ParameterExpression parsedValue = Expression.Variable(property.PropertyType);
+                            ParameterExpression cachedValue = Expression.Variable(typeof(object));
+
+                            BlockExpression addParsedValueToCache = Expression.Block(new[] { parsedValue },
+                                Expression.Assign(parsedValue, getParsedValue),
+                                Expression.Call(DefaultValueExpressionParser.s_addCachedValueMethod, propertyInfo, Expression.Convert(parsedValue, typeof(object))),
+                                Expression.Call(newInstance, property.SetMethod, parsedValue)
+                            );
+
+                            MethodCallExpression setCachedValue = Expression.Call(newInstance, property.SetMethod, Expression.Convert(cachedValue, property.PropertyType));
+
+                            expressions.Add(Expression.Block(new[] { cachedValue },
+                                Expression.Assign(cachedValue, Expression.Call(DefaultValueExpressionParser.s_getCachedValueMethod, propertyInfo)),
+                                Expression.IfThenElse(Expression.Equal(cachedValue, Expression.Constant(null)), addParsedValueToCache, setCachedValue)
+                            ));
+                        }
+                        else
+                        {
+                            expressions.Add(Expression.Call(newInstance, property.SetMethod, getParsedValue));
+                        }
                     }
                     catch (Exception ex)
                     {

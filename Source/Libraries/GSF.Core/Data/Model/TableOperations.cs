@@ -28,7 +28,6 @@ using System.ComponentModel;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -297,6 +296,11 @@ namespace GSF.Data.Model
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets <see cref="AdoDataConnection"/> instance associated with this <see cref="TableOperations{T}"/> used for database operations.
+        /// </summary>
+        public AdoDataConnection Connection => m_connection;
 
         /// <summary>
         /// Gets the table name defined for the modeled table, includes any escaping as defined in model.
@@ -1599,8 +1603,8 @@ namespace GSF.Data.Model
         // Static Properties
 
         /// <summary>
-        /// Gets <see cref="ExpressionEvaluator.TypeRegistry"/> instance used for evaluating encountered instances of the
-        /// <see cref="DefaultValueExpressionAttribute"/>.
+        /// Gets or sets <see cref="ExpressionEvaluator.TypeRegistry"/> instance used for evaluating encountered instances
+        /// of the <see cref="DefaultValueExpressionAttribute"/> on modeled table properties.
         /// </summary>
         /// <remarks>
         /// Accessing this property will create a unique type registry for the current type <typeparamref name="T"/> which

@@ -47,7 +47,7 @@ namespace LoadImpedanceCalcs.Model
 
         public string AlternateTag { get; set; }
 
-        [DefaultValueExpression("NotNull(Connection.ExecuteScalar('SELECT ID FROM SignalType WHERE Acronym=\\'CALC\\''), 10)")]
+        [DefaultValueExpression("NotNull(Connection.ExecuteScalar('SELECT ID FROM SignalType WHERE Acronym=\\'CALC\\''), 10)", Cached = true)]
         public int SignalTypeID { get; set; }
 
         public int? PhasorSourceIndex { get; set; }
