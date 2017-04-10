@@ -34,7 +34,7 @@ namespace GSF.ComponentModel
     /// <see cref="DefaultValueExpressionAttribute"/> attributes where one
     /// expression may be dependent on another. Note that properties are normally
     /// evaluated in the order in which they are defined in the class, using this
-    /// property allows the order of evaluation to be changed. 
+    /// attribute allows the order of evaluation to be changed. 
     /// </para>
     /// <para>
     /// When no <see cref="EvaluationOrderAttribute"/> is specified, the sort
