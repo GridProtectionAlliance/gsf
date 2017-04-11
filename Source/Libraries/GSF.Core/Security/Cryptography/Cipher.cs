@@ -430,6 +430,11 @@ namespace GSF.Security.Cryptography
         private static readonly Encoding s_textEncoding;
 
         /// <summary>
+        /// Gets a flag that determines if system will allow use of managed, i.e., non-FIPS compliant, security algorithms.
+        /// </summary>
+        public static bool SystemAllowsManagedEncryption => s_managedEncryption;
+
+        /// <summary>
         /// Static constructor for the <see cref="Cipher"/> class.
         /// </summary>
         static Cipher()
@@ -692,6 +697,15 @@ namespace GSF.Security.Cryptography
         public static SHA512 CreateSHA512()
         {
             return s_managedEncryption ? new SHA512Managed() : new SHA512CryptoServiceProvider() as SHA512;
+        }
+
+        /// <summary>
+        /// Creates an <see cref="Aes"/> encryption algorithm that respects current FIPS setting.
+        /// </summary>
+        /// <returns>New <see cref="Aes"/> encryption algorithm that respects current FIPS setting.</returns>
+        public static Aes CreateAes()
+        {
+            return s_managedEncryption ? new AesManaged() : new AesCryptoServiceProvider() as Aes;
         }
 
         /// <summary>
