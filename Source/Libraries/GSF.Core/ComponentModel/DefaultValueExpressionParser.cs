@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -32,6 +33,8 @@ using ExpressionEvaluator;
 using GSF.Identity;
 using GSF.Reflection;
 
+// ReSharper disable UnusedMember.Local
+// ReSharper disable StaticMemberInGenericType
 namespace GSF.ComponentModel
 {
     /// <summary>
@@ -131,7 +134,7 @@ namespace GSF.ComponentModel
         /// Type registry to use when parsing <see cref="DefaultValueExpressionAttribute"/> instances, or <c>null</c>
         /// to use <see cref="DefaultValueExpressionParser.DefaultTypeRegistry"/>.
         /// </param>
-        public void Parse(ParameterExpression scope, TypeRegistry typeRegistry = null)
+        public void Parse(Expression scope, TypeRegistry typeRegistry = null)
         {
             if ((object)scope == null)
                 throw new ArgumentNullException(nameof(scope));
@@ -150,15 +153,15 @@ namespace GSF.ComponentModel
 
         // Cached expression value dictionary is defined per type T to reduce contention
         private static readonly Dictionary<PropertyInfo, object> s_cachedExpressionValues;
-        internal static readonly MethodInfo s_addCachedValueMethod;
-        internal static readonly MethodInfo s_getCachedValueMethod;
+        private static readonly MethodInfo s_addCachedValueMethod;
+        private static readonly MethodInfo s_getCachedValueMethod;
 
         // Static Constructor
         static DefaultValueExpressionParser()
         {
             // Define a table of cached default value expression values
             s_cachedExpressionValues = new Dictionary<PropertyInfo, object>();
-            Type expressionParser = typeof(DefaultValueExpressionParser);
+            Type expressionParser = typeof(DefaultValueExpressionParser<T>);
             s_addCachedValueMethod = expressionParser.GetMethod("AddCachedValue", BindingFlags.Static | BindingFlags.NonPublic);
             s_getCachedValueMethod = expressionParser.GetMethod("GetCachedValue", BindingFlags.Static | BindingFlags.NonPublic);
         }
@@ -218,6 +221,7 @@ namespace GSF.ComponentModel
         /// Generated delegate that will create new <typeparamref name="T"/> instances with default values applied.
         /// </returns>
         /// <typeparam name="TExpressionScope"><see cref="DefaultValueExpressionScopeBase{T}"/> parameter type.</typeparam>
+        [SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
         public static Func<TExpressionScope, T> CreateInstance<TExpressionScope>(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null) where TExpressionScope : DefaultValueExpressionScopeBase<T>
         {
             Type type = typeof(T);

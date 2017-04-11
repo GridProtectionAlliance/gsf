@@ -43,6 +43,7 @@
 
 #endregion
 
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading;
 using GSF.IO;
@@ -194,6 +195,7 @@ namespace GSF.Net.Ftp
             }
         }
 
+        [SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times")]
         internal void StartTransfer()
         {
             FileStream localStream = null;

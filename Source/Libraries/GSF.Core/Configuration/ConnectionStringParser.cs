@@ -28,6 +28,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -599,6 +600,7 @@ namespace GSF.Configuration
         /// the <see cref="DefaultValueExpressionParser.DefaultTypeRegistry"/> and can be augmented with
         /// custom types. Set to <c>null</c> to restore use of the default type registry.
         /// </remarks>
+        [SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public static TypeRegistry TypeRegistry
         {
             get

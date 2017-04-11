@@ -1413,6 +1413,7 @@ namespace GSF.Data.Model
         private static TypeRegistry s_typeRegistry;
 
         // Static Constructor
+        [SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
         [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         static TableOperations()
         {
@@ -1611,6 +1612,7 @@ namespace GSF.Data.Model
         /// will initially contain the values found in the <see cref="DefaultValueExpressionParser.DefaultTypeRegistry"/>
         /// and can be augmented with custom types. Set to <c>null</c> to restore use of the default type registry.
         /// </remarks>
+        [SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public static TypeRegistry TypeRegistry
         {
             get
