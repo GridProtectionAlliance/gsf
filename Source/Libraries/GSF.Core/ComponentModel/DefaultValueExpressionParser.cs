@@ -224,17 +224,16 @@ namespace GSF.ComponentModel
         [SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
         public static Func<TExpressionScope, T> CreateInstance<TExpressionScope>(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null) where TExpressionScope : DefaultValueExpressionScopeBase<T>
         {
-            Type type = typeof(T);
-            ConstructorInfo constructor = type.GetConstructor(Type.EmptyTypes);
+            ConstructorInfo constructor = typeof(T).GetConstructor(Type.EmptyTypes);
 
             if ((object)constructor == null)
-                return scope => { throw new InvalidOperationException($"No parameterless constructor exists for type \"{type.FullName}\"."); };
+                return scope => { throw new InvalidOperationException($"No parameterless constructor exists for type \"{typeof(T).FullName}\"."); };
 
             if ((object)properties == null)
                 properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(property => property.CanRead && property.CanWrite);
 
             List<Expression> expressions = new List<Expression>();
-            ParameterExpression newInstance = Expression.Variable(type);
+            ParameterExpression newInstance = Expression.Variable(typeof(T));
             ParameterExpression scopeParameter = Expression.Parameter(typeof(TExpressionScope));
             DefaultValueAttribute defaultValueAttribute;
             DefaultValueExpressionAttribute defaultValueExpressionAttribute;
@@ -260,7 +259,7 @@ namespace GSF.ComponentModel
                     }
                     catch (Exception ex)
                     {
-                        return scope => { throw new ArgumentException($"Error evaluating default value attribute for property \"{type.FullName}.{property.Name}\": {ex.Message}", property.Name, ex); };
+                        return scope => { throw new ArgumentException($"Error evaluating default value attribute for property \"{typeof(T).FullName}.{property.Name}\": {ex.Message}", property.Name, ex); };
                     }
                 }
                 else if (property.TryGetAttribute(out defaultValueExpressionAttribute))
@@ -302,7 +301,7 @@ namespace GSF.ComponentModel
                     }
                     catch (Exception ex)
                     {
-                        return scope => { throw new ArgumentException($"Error parsing default value expression attribute for property \"{type.FullName}.{property.Name}\": {ex.Message}", property.Name, ex); };
+                        return scope => { throw new ArgumentException($"Error parsing default value expression attribute for property \"{typeof(T).FullName}.{property.Name}\": {ex.Message}", property.Name, ex); };
                     }
                 }
             }

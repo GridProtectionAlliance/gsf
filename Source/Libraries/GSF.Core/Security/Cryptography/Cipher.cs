@@ -659,6 +659,42 @@ namespace GSF.Security.Cryptography
         }
 
         /// <summary>
+        /// Creates a <see cref="SHA1"/> hashing algorithm that respects current FIPS setting.
+        /// </summary>
+        /// <returns>New <see cref="SHA1"/> hashing algorithm that respects current FIPS setting.</returns>
+        public static SHA1 CreateSHA1()
+        {
+            return s_managedEncryption ? new SHA1Managed() : new SHA1CryptoServiceProvider() as SHA1;
+        }
+
+        /// <summary>
+        /// Creates a <see cref="SHA256"/> hashing algorithm that respects current FIPS setting.
+        /// </summary>
+        /// <returns>New <see cref="SHA256"/> hashing algorithm that respects current FIPS setting.</returns>
+        public static SHA256 CreateSHA256()
+        {
+            return s_managedEncryption ? new SHA256Managed() : new SHA256CryptoServiceProvider() as SHA256;
+        }
+
+        /// <summary>
+        /// Creates a <see cref="SHA384"/> hashing algorithm that respects current FIPS setting.
+        /// </summary>
+        /// <returns>New <see cref="SHA384"/> hashing algorithm that respects current FIPS setting.</returns>
+        public static SHA384 CreateSHA384()
+        {
+            return s_managedEncryption ? new SHA384Managed() : new SHA384CryptoServiceProvider() as SHA384;
+        }
+
+        /// <summary>
+        /// Creates a <see cref="SHA512"/> hashing algorithm that respects current FIPS setting.
+        /// </summary>
+        /// <returns>New <see cref="SHA512"/> hashing algorithm that respects current FIPS setting.</returns>
+        public static SHA512 CreateSHA512()
+        {
+            return s_managedEncryption ? new SHA512Managed() : new SHA512CryptoServiceProvider() as SHA512;
+        }
+
+        /// <summary>
         /// Gets the Base64 encoded SHA-256 hash of given user password.
         /// </summary>
         /// <param name="password">User password to get hash for.</param>
@@ -678,14 +714,14 @@ namespace GSF.Security.Cryptography
             // Password hash doesn't exist, create one
             if (s_managedEncryption)
             {
-                hash = Convert.ToBase64String((new SHA256Managed()).ComputeHash(Encoding.Default.GetBytes(password)));
+                hash = Convert.ToBase64String(new SHA256Managed().ComputeHash(Encoding.Default.GetBytes(password)));
             }
             else
             {
                 // Switch from SHA256Managed to SHA256CryptoServiceProvider complying with FIPS
                 // http://msdn.microsoft.com/en-us/library/system.security.cryptography.sha256cryptoserviceprovider.aspx
                 // http://msdn.microsoft.com/en-us/library/system.security.cryptography.sha256managed.sha256managed.aspx
-                hash = Convert.ToBase64String((new SHA256CryptoServiceProvider()).ComputeHash(Encoding.Default.GetBytes(password)));
+                hash = Convert.ToBase64String(new SHA256CryptoServiceProvider().ComputeHash(Encoding.Default.GetBytes(password)));
             }
 
             return hash;
@@ -1074,7 +1110,7 @@ namespace GSF.Security.Cryptography
                         // Updates decryption progress.
                         if ((object)progressHandler != null)
                         {
-                            total += (read + lengthBuffer.Length);
+                            total += read + lengthBuffer.Length;
                             progress.Complete = total;
                         }
                     }
