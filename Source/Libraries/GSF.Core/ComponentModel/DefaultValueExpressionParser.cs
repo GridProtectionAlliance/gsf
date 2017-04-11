@@ -54,30 +54,21 @@ namespace GSF.ComponentModel
         #region [ Static ]
 
         // Static Fields
-        private static readonly TypeRegistry s_typeRegistry;
+        private static readonly TypeRegistry s_defaultTypeRegistry;
         private static readonly Regex s_findThisKeywords;
-        private static readonly Dictionary<PropertyInfo, object> s_cachedExpressionValues;
-        internal static readonly MethodInfo s_addCachedValueMethod;
-        internal static readonly MethodInfo s_getCachedValueMethod;
 
         // Static Constructor
         static DefaultValueExpressionParser()
         {
             // Setup default type registry for parsing default value expression attributes
-            s_typeRegistry = new TypeRegistry();
-            s_typeRegistry.RegisterDefaultTypes();
-            s_typeRegistry.RegisterType<Guid>();
-            s_typeRegistry.RegisterType<UserInfo>();
-            s_typeRegistry.RegisterType("Common", typeof(Common));
+            s_defaultTypeRegistry = new TypeRegistry();
+            s_defaultTypeRegistry.RegisterDefaultTypes();
+            s_defaultTypeRegistry.RegisterType<Guid>();
+            s_defaultTypeRegistry.RegisterType<UserInfo>();
+            s_defaultTypeRegistry.RegisterType("Common", typeof(Common));
 
             // Define a regular expression to find "this" keywords
             s_findThisKeywords = new Regex(@"(^this(?=[^\w]))|((?<=[^\w])this(?=[^\w]))|(^this$)", RegexOptions.Compiled | RegexOptions.Multiline);
-
-            // Define a table of cached default value expression values
-            s_cachedExpressionValues = new Dictionary<PropertyInfo, object>();
-            Type expressionParser = typeof(DefaultValueExpressionParser);
-            s_addCachedValueMethod = expressionParser.GetMethod("AddCachedValue", BindingFlags.Static | BindingFlags.NonPublic);
-            s_getCachedValueMethod = expressionParser.GetMethod("GetCachedValue", BindingFlags.Static | BindingFlags.NonPublic);
         }
 
         // Static Properties
@@ -85,7 +76,7 @@ namespace GSF.ComponentModel
         /// <summary>
         /// Gets the default <see cref="TypeRegistry"/> instance used for evaluating <see cref="DefaultValueExpressionAttribute"/> instances.
         /// </summary>
-        public static TypeRegistry DefaultTypeRegistry => s_typeRegistry;
+        public static TypeRegistry DefaultTypeRegistry => s_defaultTypeRegistry;
 
         // Static Methods
 
@@ -101,22 +92,6 @@ namespace GSF.ComponentModel
                 return s_findThisKeywords.Replace(expression, fieldName);
         }
 
-        internal static void AddCachedValue(PropertyInfo property, object value)
-        {
-            lock (s_cachedExpressionValues)
-                s_cachedExpressionValues.Add(property, value);
-        }
-
-        internal static object GetCachedValue(PropertyInfo property)
-        {
-            object value;
-
-            lock (s_cachedExpressionValues)
-                s_cachedExpressionValues.TryGetValue(property, out value);
-
-            return value;
-        }
-
         #endregion
     }
 
@@ -126,6 +101,13 @@ namespace GSF.ComponentModel
     /// <typeparam name="T">Type of expression to be parsed.</typeparam>
     public class DefaultValueExpressionParser<T> : CompiledExpression<T>
     {
+        #region [ Members ]
+
+        // Nested Types
+        private class MinimumScope : DefaultValueExpressionScopeBase<T> { }
+
+        #endregion
+
         #region [ Constructors ]
 
         /// <summary>
@@ -158,6 +140,54 @@ namespace GSF.ComponentModel
                 TypeRegistry = typeRegistry;
 
             BuildTree(scope);
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+
+        // Cached expression value dictionary is defined per type T to reduce contention
+        private static readonly Dictionary<PropertyInfo, object> s_cachedExpressionValues;
+        internal static readonly MethodInfo s_addCachedValueMethod;
+        internal static readonly MethodInfo s_getCachedValueMethod;
+
+        // Static Constructor
+        static DefaultValueExpressionParser()
+        {
+            // Define a table of cached default value expression values
+            s_cachedExpressionValues = new Dictionary<PropertyInfo, object>();
+            Type expressionParser = typeof(DefaultValueExpressionParser);
+            s_addCachedValueMethod = expressionParser.GetMethod("AddCachedValue", BindingFlags.Static | BindingFlags.NonPublic);
+            s_getCachedValueMethod = expressionParser.GetMethod("GetCachedValue", BindingFlags.Static | BindingFlags.NonPublic);
+        }
+
+        // Static Methods
+
+        /// <summary>
+        /// Generates a delegate that will create new instance of type <typeparamref name="T"/> object parameter
+        /// applying any specified <see cref="DefaultValueAttribute"/> or <see cref="DefaultValueExpressionAttribute"/>
+        /// instances that are declared on the type <typeparamref name="T"/> properties.
+        /// </summary>
+        /// <param name="properties">Specific properties to target, or <c>null</c> to target all properties.</param>
+        /// <param name="typeRegistry">
+        /// Type registry to use when parsing <see cref="DefaultValueExpressionAttribute"/> instances, or <c>null</c>
+        /// to use <see cref="DefaultValueExpressionParser.DefaultTypeRegistry"/>.
+        /// </param>
+        /// <remarks>
+        /// This function is useful for generating a delegate to a compiled function that will create new
+        /// objects of type <typeparamref name="T"/> where properties of the type of have been decorated with
+        /// <see cref="DefaultValueAttribute"/> or <see cref="DefaultValueExpressionAttribute"/> attributes.
+        /// The newly created object will automatically have applied any defined default values as specified by
+        /// the encountered attributes.
+        /// </remarks>
+        /// <returns>
+        /// Generated delegate that will create new <typeparamref name="T"/> instances with default values applied.
+        /// </returns>
+        public static Func<T> CreateInstance(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null)
+        {
+            return () => CreateInstance<MinimumScope>(properties, typeRegistry)(new MinimumScope());
         }
 
         /// <summary>
@@ -250,14 +280,14 @@ namespace GSF.ComponentModel
 
                             BlockExpression addParsedValueToCache = Expression.Block(new[] { parsedValue },
                                 Expression.Assign(parsedValue, getParsedValue),
-                                Expression.Call(DefaultValueExpressionParser.s_addCachedValueMethod, propertyInfo, Expression.Convert(parsedValue, typeof(object))),
+                                Expression.Call(s_addCachedValueMethod, propertyInfo, Expression.Convert(parsedValue, typeof(object))),
                                 Expression.Call(newInstance, property.SetMethod, parsedValue)
                             );
 
                             MethodCallExpression setCachedValue = Expression.Call(newInstance, property.SetMethod, Expression.Convert(cachedValue, property.PropertyType));
 
                             expressions.Add(Expression.Block(new[] { cachedValue },
-                                Expression.Assign(cachedValue, Expression.Call(DefaultValueExpressionParser.s_getCachedValueMethod, propertyInfo)),
+                                Expression.Assign(cachedValue, Expression.Call(s_getCachedValueMethod, propertyInfo)),
                                 Expression.IfThenElse(Expression.Equal(cachedValue, Expression.Constant(null)), addParsedValueToCache, setCachedValue)
                             ));
                         }
@@ -278,6 +308,22 @@ namespace GSF.ComponentModel
 
             // Return a delegate to compiled function block
             return Expression.Lambda<Func<TExpressionScope, T>>(Expression.Block(new[] { newInstance }, expressions), scopeParameter).Compile();
+        }
+
+        private static void AddCachedValue(PropertyInfo property, object value)
+        {
+            lock (s_cachedExpressionValues)
+                s_cachedExpressionValues.Add(property, value);
+        }
+
+        private static object GetCachedValue(PropertyInfo property)
+        {
+            object value;
+
+            lock (s_cachedExpressionValues)
+                s_cachedExpressionValues.TryGetValue(property, out value);
+
+            return value;
         }
 
         #endregion
