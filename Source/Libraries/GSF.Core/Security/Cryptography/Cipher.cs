@@ -103,7 +103,7 @@ namespace GSF.Security.Cryptography
     /// <remarks>
     /// This class exists to simplify usage of basic cryptography functionality.
     /// </remarks>
-    public static class Cipher
+    public static partial class Cipher
     {
         // Constants
         private const int KeyIndex = 0;
@@ -421,37 +421,21 @@ namespace GSF.Security.Cryptography
         }
 
         // Primary cryptographic key and initialization vector cache.
-        private static readonly KeyIVCache s_keyIVCache;
-
-        // Switch to turn off managed encryption and use wrappers over FIPS-compliant algorithms.
-        private static readonly bool s_managedEncryption;
+        private static KeyIVCache s_keyIVCache;
 
         // Set default encoding base Base64 strings
-        private static readonly Encoding s_textEncoding;
+        private static Encoding s_textEncoding;
 
         /// <summary>
-        /// Gets a flag that determines if system will allow use of managed, i.e., non-FIPS compliant, security algorithms.
+        /// Static constructor continuation for the <see cref="Cipher"/> class.
         /// </summary>
-        public static bool SystemAllowsManagedEncryption => s_managedEncryption;
-
-        /// <summary>
-        /// Static constructor for the <see cref="Cipher"/> class.
-        /// </summary>
-        static Cipher()
+        static partial void OnCreated()
         {
 #if MONO
-            // Common .NET FIPS wrapper algorithms are implemented as managed code under Mono, check status of Crimson project
-            s_managedEncryption = true;
             s_textEncoding = Encoding.Default;
 #else
-            const string fipsKeyOld = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa";
-            const string fipsKeyNew = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\FipsAlgorithmPolicy";
-
-            // Determine if the user needs to use FIPS-compliant algorithms
-            s_managedEncryption = (Registry.GetValue(fipsKeyNew, "Enabled", 0) ?? Registry.GetValue(fipsKeyOld, "FIPSAlgorithmPolicy", 0)).ToString() == "0";
             s_textEncoding = Encoding.Unicode;
 #endif
-
             KeyIVCache localKeyIVCache;
             string localCacheFileName = DefaultCacheFileName;
             double retryDelayInterval = DefaultRetryDelayInterval;
@@ -661,51 +645,6 @@ namespace GSF.Security.Cryptography
         public static string ExportKeyIV(string password, int keySize)
         {
             return s_keyIVCache.ExportKeyIV(password, keySize);
-        }
-
-        /// <summary>
-        /// Creates a <see cref="SHA1"/> hashing algorithm that respects current FIPS setting.
-        /// </summary>
-        /// <returns>New <see cref="SHA1"/> hashing algorithm that respects current FIPS setting.</returns>
-        public static SHA1 CreateSHA1()
-        {
-            return s_managedEncryption ? new SHA1Managed() : new SHA1CryptoServiceProvider() as SHA1;
-        }
-
-        /// <summary>
-        /// Creates a <see cref="SHA256"/> hashing algorithm that respects current FIPS setting.
-        /// </summary>
-        /// <returns>New <see cref="SHA256"/> hashing algorithm that respects current FIPS setting.</returns>
-        public static SHA256 CreateSHA256()
-        {
-            return s_managedEncryption ? new SHA256Managed() : new SHA256CryptoServiceProvider() as SHA256;
-        }
-
-        /// <summary>
-        /// Creates a <see cref="SHA384"/> hashing algorithm that respects current FIPS setting.
-        /// </summary>
-        /// <returns>New <see cref="SHA384"/> hashing algorithm that respects current FIPS setting.</returns>
-        public static SHA384 CreateSHA384()
-        {
-            return s_managedEncryption ? new SHA384Managed() : new SHA384CryptoServiceProvider() as SHA384;
-        }
-
-        /// <summary>
-        /// Creates a <see cref="SHA512"/> hashing algorithm that respects current FIPS setting.
-        /// </summary>
-        /// <returns>New <see cref="SHA512"/> hashing algorithm that respects current FIPS setting.</returns>
-        public static SHA512 CreateSHA512()
-        {
-            return s_managedEncryption ? new SHA512Managed() : new SHA512CryptoServiceProvider() as SHA512;
-        }
-
-        /// <summary>
-        /// Creates an <see cref="Aes"/> encryption algorithm that respects current FIPS setting.
-        /// </summary>
-        /// <returns>New <see cref="Aes"/> encryption algorithm that respects current FIPS setting.</returns>
-        public static Aes CreateAes()
-        {
-            return s_managedEncryption ? new AesManaged() : new AesCryptoServiceProvider() as Aes;
         }
 
         /// <summary>
