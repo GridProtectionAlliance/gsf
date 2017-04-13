@@ -92,6 +92,7 @@
 
     // Hide unauthorized controls as disallowed by Edit/AddNew/Delete roles - otherwise unauthorized controls will be disabled
     bool hideUnauthorizedControls = ViewBag.HideUnauthorizedControls ?? false;
+    bool hidePaginationButtons = ViewBag.HidePaginationButtons ?? false;
 
     HttpRequestMessage request = ViewBag.Request;
     string baseURL = request.RequestUri.AbsolutePath;
@@ -218,18 +219,21 @@
             <br />
             <hr class="half-break" />
         }
-        <div class="btn-group btn-group-sm">
-            <button type="button" class="btn btn-default" id="firstPageButton" data-bind="css: {'disabled': onFirstPage()}, enable: dataHubIsConnected() && !onFirstPage()"><span class="glyphicon glyphicon-backward"></span></button>
-            <button type="button" class="btn btn-default" id="previousPageButton" data-bind="css: {'disabled': onFirstPage()}, enable: dataHubIsConnected() && !onFirstPage()"><span class="glyphicon glyphicon-triangle-left"></span></button>
-        </div>
-        <input type="number" class="content input-sm" style="padding: 0 0 0 5px; width: 55px" id="selectedPage" data-bind="numeric, textInput: currentPage, enable: dataHubIsConnected" value="1">
-        &nbsp;of&nbsp;
-        <span data-bind="text: totalPages">1</span>
-        &nbsp;
-        <div class="btn-group btn-group-sm">
-            <button type="button" class="btn btn-default" id="nextPageButton" data-bind="css: {'disabled': onLastPage()}, enable: dataHubIsConnected() && !onLastPage()"><span class="glyphicon glyphicon-triangle-right"></span></button>
-            <button type="button" class="btn btn-default" id="lastPageButton" data-bind="css: {'disabled': onLastPage()}, enable: dataHubIsConnected() && !onLastPage()"><span class="glyphicon glyphicon-forward"></span></button>
-        </div>
+        @if (!hidePaginationButtons)
+        {
+            <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-default" id="firstPageButton" data-bind="css: {'disabled': onFirstPage()}, enable: dataHubIsConnected() && !onFirstPage()"><span class="glyphicon glyphicon-backward"></span></button>
+                <button type="button" class="btn btn-default" id="previousPageButton" data-bind="css: {'disabled': onFirstPage()}, enable: dataHubIsConnected() && !onFirstPage()"><span class="glyphicon glyphicon-triangle-left"></span></button>
+            </div>
+            <input type="number" class="content input-sm" style="padding: 0 0 0 5px; width: 55px" id="selectedPage" data-bind="numeric, textInput: currentPage, enable: dataHubIsConnected" value="1">
+            <span>&nbsp;of&nbsp;</span>    
+            <span data-bind="text: totalPages">1</span>
+            <span>&nbsp;</span>
+            <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-default" id="nextPageButton" data-bind="css: {'disabled': onLastPage()}, enable: dataHubIsConnected() && !onLastPage()"><span class="glyphicon glyphicon-triangle-right"></span></button>
+                <button type="button" class="btn btn-default" id="lastPageButton" data-bind="css: {'disabled': onLastPage()}, enable: dataHubIsConnected() && !onLastPage()"><span class="glyphicon glyphicon-forward"></span></button>
+            </div>
+        }
     </div>
 </div>
 <div id="addNewEditDialog" class="modal fade" role="dialog">
