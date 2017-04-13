@@ -115,6 +115,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\MethodBaseExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\MethodInfoExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\NamespaceDoc.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Security\Cryptography\Cipher.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ShortTime.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StringExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Threading\ActionExtensions.cs" />

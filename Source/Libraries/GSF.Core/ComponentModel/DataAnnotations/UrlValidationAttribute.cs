@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  DefaultValueExpressionAttribute.cs - Gbtc
+//  UrlValidationAttribute.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,48 +16,31 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  04/07/2017 - J. Ritchie Carroll
+//  04/13/2017 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System;
+using System.ComponentModel.DataAnnotations;
 
-namespace GSF.ComponentModel
+namespace GSF.ComponentModel.DataAnnotations
 {
     /// <summary>
-    /// Defines a C# expression attribute that when evaluated will specify the default value for a property.
+    /// Represents a <see cref="RegularExpressionAttribute"/> for validating URL's.
     /// </summary>
-    [AttributeUsage(AttributeTargets.All)]
-    public sealed class DefaultValueExpressionAttribute : Attribute
+    public class UrlValidationAttribute : RegularExpressionAttribute
     {
         /// <summary>
-        /// Gets or sets C# expression that will evaluate to the desired default value.
+        /// Defines the regular expression pattern used to validate value. 
         /// </summary>
-        public string Expression
-        {
-            get;
-        }
+        public const string ValidationPattern = @"^(?:(?:[a-zA-Z][a-zA-Z0-9.+-]*:\/\/)?[a-zA-Z0-9][a-zA-Z0-9.-]*(?::[0-9]+)?(?:\/[^ ""]*)?|mailto:[a-zA-Z0-9!#$%&'*+-\/=?^_`{|}~][a-zA-Z0-9!#$%&'*+-\/=?^_`{|}~.]*@[a-zA-Z0-9][a-zA-Z0-9.-]*)$";
 
         /// <summary>
-        /// Gets or sets value that determines if value should be cached after first evaluation. Defaults to <c>false</c>.
+        /// Creates a new <see cref="UrlValidationAttribute"/>.
         /// </summary>
-        public bool Cached
+        public UrlValidationAttribute() : base(ValidationPattern)
         {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="DefaultValueExpressionAttribute"/>
-        /// </summary>
-        /// <param name="expression">C# expression that will evaluate to the desired default value.</param>
-        public DefaultValueExpressionAttribute(string expression)
-        {
-            if (string.IsNullOrWhiteSpace(expression))
-                throw new ArgumentNullException(nameof(expression));
-
-            Expression = expression;
+            ErrorMessage = "Invalid URL.";
         }
     }
 }

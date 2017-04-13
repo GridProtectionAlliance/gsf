@@ -104,6 +104,13 @@ namespace GSF.Data.Model
         #region [ Operators ]
 
         /// <summary>
+        /// Implicitly converts a <see cref="string"/> based filter expression into a <see cref="RecordRestriction"/>.
+        /// </summary>
+        /// <param name="value">Operand.</param>
+        /// <returns>Record operation representing the specified filter expression.</returns>
+        public static implicit operator RecordRestriction(string value) => new RecordRestriction(value);
+
+        /// <summary>
         /// Combines two record restrictions with an AND condition.
         /// </summary>
         /// <param name="left"><see cref="RecordRestriction"/> left operand.</param>

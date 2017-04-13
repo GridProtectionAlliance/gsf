@@ -31,6 +31,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
 namespace GSF.Scheduling
@@ -223,6 +224,7 @@ namespace GSF.Scheduling
             }
         }
 
+        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         private bool ValidateAndPopulate(string schedulePart, DateTimePart dateTimePart)
         {
             int minValue = 0;

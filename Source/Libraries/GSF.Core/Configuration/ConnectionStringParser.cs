@@ -28,6 +28,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -589,8 +590,9 @@ namespace GSF.Configuration
         // Static Properties
 
         /// <summary>
-        /// Gets <see cref="ExpressionEvaluator.TypeRegistry"/> instance used for evaluating encountered
-        /// instances of the <see cref="DefaultValueExpressionAttribute"/>.
+        /// Gets or sets <see cref="ExpressionEvaluator.TypeRegistry"/> instance used for evaluating
+        /// encountered instances of the <see cref="DefaultValueExpressionAttribute"/> on modeled
+        /// connection string values that are marked with <typeparamref name="TParameterAttribute"/>.
         /// </summary>
         /// <remarks>
         /// Accessing this property will create a unique type registry for the current attribute type
@@ -598,6 +600,7 @@ namespace GSF.Configuration
         /// the <see cref="DefaultValueExpressionParser.DefaultTypeRegistry"/> and can be augmented with
         /// custom types. Set to <c>null</c> to restore use of the default type registry.
         /// </remarks>
+        [SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public static TypeRegistry TypeRegistry
         {
             get

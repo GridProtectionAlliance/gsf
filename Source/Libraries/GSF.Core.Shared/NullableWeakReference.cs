@@ -29,6 +29,7 @@ namespace GSF
     /// A <see cref="WeakReference"/> implementation that can have the <see cref="Target"/> object set to null.
     /// Natively, setting <see cref="WeakReference.Target"/> to null will throw an <see cref="InvalidOperationException"/>,
     /// </summary>
+    [Serializable]
     public class NullableWeakReference : WeakReference
     {
         private bool m_cleared;

@@ -103,7 +103,7 @@ namespace GSF.Security.Cryptography
     /// <remarks>
     /// This class exists to simplify usage of basic cryptography functionality.
     /// </remarks>
-    public static class Cipher
+    public static partial class Cipher
     {
         // Constants
         private const int KeyIndex = 0;
@@ -421,32 +421,21 @@ namespace GSF.Security.Cryptography
         }
 
         // Primary cryptographic key and initialization vector cache.
-        private static readonly KeyIVCache s_keyIVCache;
-
-        // Switch to turn off managed encryption and use wrappers over FIPS-compliant algorithms.
-        private static readonly bool s_managedEncryption;
+        private static KeyIVCache s_keyIVCache;
 
         // Set default encoding base Base64 strings
-        private static readonly Encoding s_textEncoding;
+        private static Encoding s_textEncoding;
 
         /// <summary>
-        /// Static constructor for the <see cref="Cipher"/> class.
+        /// Static constructor continuation for the <see cref="Cipher"/> class.
         /// </summary>
-        static Cipher()
+        static partial void OnCreated()
         {
 #if MONO
-            // Common .NET FIPS wrapper algorithms are implemented as managed code under Mono, check status of Crimson project
-            s_managedEncryption = true;
             s_textEncoding = Encoding.Default;
 #else
-            const string fipsKeyOld = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa";
-            const string fipsKeyNew = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\FipsAlgorithmPolicy";
-
-            // Determine if the user needs to use FIPS-compliant algorithms
-            s_managedEncryption = (Registry.GetValue(fipsKeyNew, "Enabled", 0) ?? Registry.GetValue(fipsKeyOld, "FIPSAlgorithmPolicy", 0)).ToString() == "0";
             s_textEncoding = Encoding.Unicode;
 #endif
-
             KeyIVCache localKeyIVCache;
             string localCacheFileName = DefaultCacheFileName;
             double retryDelayInterval = DefaultRetryDelayInterval;
@@ -678,14 +667,14 @@ namespace GSF.Security.Cryptography
             // Password hash doesn't exist, create one
             if (s_managedEncryption)
             {
-                hash = Convert.ToBase64String((new SHA256Managed()).ComputeHash(Encoding.Default.GetBytes(password)));
+                hash = Convert.ToBase64String(new SHA256Managed().ComputeHash(Encoding.Default.GetBytes(password)));
             }
             else
             {
                 // Switch from SHA256Managed to SHA256CryptoServiceProvider complying with FIPS
                 // http://msdn.microsoft.com/en-us/library/system.security.cryptography.sha256cryptoserviceprovider.aspx
                 // http://msdn.microsoft.com/en-us/library/system.security.cryptography.sha256managed.sha256managed.aspx
-                hash = Convert.ToBase64String((new SHA256CryptoServiceProvider()).ComputeHash(Encoding.Default.GetBytes(password)));
+                hash = Convert.ToBase64String(new SHA256CryptoServiceProvider().ComputeHash(Encoding.Default.GetBytes(password)));
             }
 
             return hash;
@@ -1074,7 +1063,7 @@ namespace GSF.Security.Cryptography
                         // Updates decryption progress.
                         if ((object)progressHandler != null)
                         {
-                            total += (read + lengthBuffer.Length);
+                            total += read + lengthBuffer.Length;
                             progress.Complete = total;
                         }
                     }
