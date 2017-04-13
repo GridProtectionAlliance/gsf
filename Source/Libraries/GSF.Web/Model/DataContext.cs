@@ -1156,7 +1156,7 @@ namespace GSF.Web.Model
                 AddFieldValidation(observableReference, regularExpressionAttribute.Pattern, regularExpressionAttribute.ErrorMessage ?? "Invalid format.");
 
                 if (!targetedFieldType && regularExpressionAttribute is AcronymValidationAttribute)
-                    customDataBinding = string.IsNullOrEmpty(customDataBinding) ? $"acronym: {fieldName}" : $", acronym: {fieldName}, {customDataBinding}";
+                    customDataBinding = string.IsNullOrEmpty(customDataBinding) ? $"acronym: {fieldName}" : $"acronym: {fieldName}, {customDataBinding}";
             }
 
             AddFieldValueInitializer<TModel>(fieldName);
