@@ -315,8 +315,8 @@ function PagedViewModel() {
     }
 
     self.calculateUnassignedFieldCount = function() {
-        // Derive unassigned field count based on existence of Bootstrap "has-error" class
-        self.unassignedFieldCount($("#addNewEditDialog div.form-group.has-error").length);
+        // Derive unassigned field count based on existence of "has-no-value" class
+        self.unassignedFieldCount($("#addNewEditDialog div.form-group.has-no-value").length);
     }
 
     self.refreshValidationErrors = function() {
@@ -595,6 +595,9 @@ var viewModel = new PagedViewModel();
         parseInputAttributes: true,
         allowHtmlMessages: true,
         messageTemplate: null,
+        decorateElement: true,
+        errorElementClass: "has-error",
+        errorMessageClass: "help-block",
         grouping: { deep: true, observable: true, live: true }
     }, true);
 

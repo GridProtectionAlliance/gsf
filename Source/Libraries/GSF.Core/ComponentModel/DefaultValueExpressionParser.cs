@@ -30,6 +30,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using ExpressionEvaluator;
+using GSF.Collections;
 using GSF.Identity;
 using GSF.Reflection;
 
@@ -279,7 +280,12 @@ namespace GSF.ComponentModel
                         {
                             ConstantExpression propertyInfo = Expression.Constant(property, typeof(PropertyInfo));
                             ParameterExpression parsedValue = Expression.Variable(property.PropertyType);
-                            ParameterExpression cachedValue = Expression.Variable(typeof(object));
+                            ParameterExpression cachedValue = Expression.Variable(typeof(Tuple<bool, object>));
+
+                            // ReSharper disable PossibleNullReferenceException
+                            MethodInfo getTupleItem1 = typeof(Tuple<bool, object>).GetProperty("Item1").GetMethod;
+                            MethodInfo getTupleItem2 = typeof(Tuple<bool, object>).GetProperty("Item2").GetMethod;
+                            // ReSharper restore PossibleNullReferenceException
 
                             BlockExpression addParsedValueToCache = Expression.Block(new[] { parsedValue },
                                 Expression.Assign(parsedValue, getParsedValue),
@@ -287,11 +293,11 @@ namespace GSF.ComponentModel
                                 Expression.Call(newInstance, property.SetMethod, parsedValue)
                             );
 
-                            MethodCallExpression setCachedValue = Expression.Call(newInstance, property.SetMethod, Expression.Convert(cachedValue, property.PropertyType));
+                            MethodCallExpression setCachedValue = Expression.Call(newInstance, property.SetMethod, Expression.Convert(Expression.Call(cachedValue, getTupleItem2), property.PropertyType));
 
                             expressions.Add(Expression.Block(new[] { cachedValue },
                                 Expression.Assign(cachedValue, Expression.Call(s_getCachedValueMethod, propertyInfo)),
-                                Expression.IfThenElse(Expression.Equal(cachedValue, Expression.Constant(null)), addParsedValueToCache, setCachedValue)
+                                Expression.IfThenElse(Expression.IsTrue(Expression.Call(cachedValue, getTupleItem1)), setCachedValue, addParsedValueToCache)
                             ));
                         }
                         else
@@ -316,17 +322,18 @@ namespace GSF.ComponentModel
         private static void AddCachedValue(PropertyInfo property, object value)
         {
             lock (s_cachedExpressionValues)
-                s_cachedExpressionValues.Add(property, value);
+                s_cachedExpressionValues.GetOrAdd(property, value);
         }
 
-        private static object GetCachedValue(PropertyInfo property)
+        private static Tuple<bool, object> GetCachedValue(PropertyInfo property)
         {
+            bool exists;
             object value;
 
             lock (s_cachedExpressionValues)
-                s_cachedExpressionValues.TryGetValue(property, out value);
+                exists = s_cachedExpressionValues.TryGetValue(property, out value);
 
-            return value;
+            return new Tuple<bool, object>(exists, value);
         }
 
         #endregion

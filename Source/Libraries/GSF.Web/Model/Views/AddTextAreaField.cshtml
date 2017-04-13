@@ -36,6 +36,7 @@
     string dependencyFieldName = ViewBag.DependencyFieldName;
     string toolTip = ViewBag.ToolTip;
     string inputSizeRestriction = maxLength > 0 ? string.Format(" maxlength=\"{0}\" size=\"{0}\"", maxLength) : "";
+    string requiredValue = required.ToString().ToLowerInvariant();
 
     if (!string.IsNullOrEmpty(dependencyFieldName))
     {
@@ -80,24 +81,12 @@
         toolTip = string.Format(" data-toggle=\"tooltip\" data-trigger=\"focus\" data-placement=\"auto bottom\" title=\"{0}\"", toolTip);
     }
 }
-@if (required)
-{
-    @Raw(string.IsNullOrEmpty(groupDataBinding) ? "" : string.Format("<div{0}>\r\n", groupDataBinding))
-    <div class="form-group" data-bind="css: {'has-error': isEmpty(@(Raw(fieldName))())@(Raw(requiredDataBinding)), 'has-feedback': isEmpty(@(Raw(fieldName))())@(Raw(requiredDataBinding))}"@Raw(toolTip)>
-        @if (fieldLabel.Length > 0) {
-        <label for="@Raw(fieldID)" @Raw(labelDataBinding)>@Raw(fieldLabel):</label>
-        }
-        <textarea rows="@rows" class="form-control" data-bind="textInput: @Raw(fieldName), attr: {'readonly': ($root.recordMode()===RecordMode.View ? true : undefined)}@Raw(customDataBinding)" id="@Raw(fieldID)"@Raw(inputSizeRestriction)@(string.IsNullOrEmpty(requiredDataBinding) ? " required" : "")></textarea>
-        <span class="glyphicon glyphicon-remove form-control-feedback" data-bind="visible: isEmpty(@(Raw(fieldName))())@(Raw(requiredDataBinding))"></span>
-    </div>
-    @Raw(string.IsNullOrEmpty(groupDataBinding) ? "" : "</div>\r\n")
-}
-else
-{
-    <div class="form-group"@Raw(groupDataBinding)@Raw(toolTip)>
-        @if (fieldLabel.Length > 0) {
-        <label for="@Raw(fieldID)" @Raw(labelDataBinding)>@Raw(fieldLabel):</label>
-        }
-        <textarea rows="@rows" class="form-control" data-bind="textInput: @Raw(fieldName), attr: {'readonly': ($root.recordMode()===RecordMode.View ? true : undefined)}@Raw(customDataBinding)" id="@Raw(fieldID)"@Raw(inputSizeRestriction)></textarea>
-    </div>
-}
+@Raw(string.IsNullOrEmpty(groupDataBinding) ? "" : string.Format("<div{0}>\r\n", groupDataBinding))
+<div class="form-group" data-bind="css: {'has-error': !fieldIsValid(@(Raw(fieldName)), @requiredValue)@(Raw(requiredDataBinding)), 'has-feedback': !fieldIsValid(@(Raw(fieldName)), @requiredValue)@(Raw(requiredDataBinding)), 'has-no-value': !fieldHasValue(@(Raw(fieldName)), @requiredValue)@(Raw(requiredDataBinding))}"@Raw(toolTip)>
+    @if (fieldLabel.Length > 0) {
+    <label for="@Raw(fieldID)" @Raw(labelDataBinding)>@Raw(fieldLabel):</label>
+    }
+    <textarea rows="@rows" class="form-control" data-bind="textInput: @Raw(fieldName), attr: {'readonly': ($root.recordMode()===RecordMode.View ? true : undefined)}@Raw(customDataBinding)" id="@Raw(fieldID)"@Raw(inputSizeRestriction)@(required && string.IsNullOrEmpty(requiredDataBinding) ? " required" : "")></textarea>
+    <span class="glyphicon glyphicon-remove form-control-feedback" data-bind="visible: !fieldIsValid(@(Raw(fieldName)), @requiredValue)@(Raw(requiredDataBinding))"></span>
+</div>
+@Raw(string.IsNullOrEmpty(groupDataBinding) ? "" : "</div>\r\n")

@@ -100,7 +100,7 @@
 }
 @if (required) {
     @Raw(string.IsNullOrEmpty(groupDataBinding) ? "" : string.Format("<div{0}>\r\n", groupDataBinding))
-    <div class="form-group" data-bind="css: {'has-error': !isNumber(@(Raw(fieldName))())@(Raw(requiredDataBinding)), 'has-feedback': !isNumber(@(Raw(fieldName))())@(Raw(requiredDataBinding))}"@Raw(toolTip)>        
+    <div class="form-group" data-bind="css: {'has-error': !isNumber(@(Raw(fieldName))())@(Raw(requiredDataBinding)), 'has-feedback': !isNumber(@(Raw(fieldName))())@(Raw(requiredDataBinding)), 'has-no-value': !isNumber(@(Raw(fieldName))())@(Raw(requiredDataBinding))}"@Raw(toolTip)>
         @if (fieldLabel.Length > 0) {
         <label for="@Raw(fieldID)"@Raw(labelDataBinding)>@Raw(fieldLabel):</label>
         }

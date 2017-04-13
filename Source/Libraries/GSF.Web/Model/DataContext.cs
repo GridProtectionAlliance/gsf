@@ -57,7 +57,7 @@ namespace GSF.Web.Model
         /// <summary>
         /// Defines the regular expression used to validate URLs. 
         /// </summary>
-        public const string UrlValidation = @"^(?:(?:[a-zA-Z][a-zA-Z0-9.+-]*:\/\/)?[a-zA-Z0-9][a-zA-Z0-9.-]*(?::[0-9]+)?(?:\/[^ ""]*)?|mailto:[a-zA-Z0-9!#$%&'*+-\/=?^_`{|}~][a-zA-Z0-9!#$%&'*+-\/=?^_`{|}~.]*@[a-zA-Z0-9][a-zA-Z0-9.-]*)$";
+        public const string UrlValidation = UrlValidationAttribute.ValidationPattern;
 
         // Fields
         private AdoDataConnection m_connection;
@@ -1108,6 +1108,7 @@ namespace GSF.Web.Model
             TableOperations<TModel> tableOperations = Table<TModel>();
             StringLengthAttribute stringLengthAttribute;
             RegularExpressionAttribute regularExpressionAttribute;
+            bool targetedFieldType = false;
 
             if (string.IsNullOrEmpty(inputType))
             {
@@ -1117,15 +1118,18 @@ namespace GSF.Web.Model
                 {
                     inputType = "number";
                     customDataBinding = string.IsNullOrEmpty(customDataBinding) ? "integer" : $"integer, {customDataBinding}";
+                    targetedFieldType = true;
                 }
                 else if (IsNumericType(fieldType))
                 {
                     inputType = "number";
                     customDataBinding = string.IsNullOrEmpty(customDataBinding) ? "numeric" : $"numeric, {customDataBinding}";
+                    targetedFieldType = true;
                 }
                 else if (fieldType == typeof(DateTime))
                 {
                     inputType = "date";
+                    targetedFieldType = true;
                 }
             } 
 
@@ -1150,6 +1154,9 @@ namespace GSF.Web.Model
                     observableReference = $"viewModel.{groupDataBinding.Substring(groupDataBinding.IndexOf('.') + 1)}";
 
                 AddFieldValidation(observableReference, regularExpressionAttribute.Pattern, regularExpressionAttribute.ErrorMessage ?? "Invalid format.");
+
+                if (!targetedFieldType && regularExpressionAttribute is AcronymValidationAttribute)
+                    customDataBinding = string.IsNullOrEmpty(customDataBinding) ? $"acronym: {fieldName}" : $", acronym: {fieldName}, {customDataBinding}";
             }
 
             AddFieldValueInitializer<TModel>(fieldName);
