@@ -864,6 +864,8 @@ void gsfts::Transport::DataSubscriber::SendServerCommand(uint8_t commandCode, st
 	uint32_t messageSize;
 	uint32_t bigEndianMessageSize;
 	uint8_t* bigEndianMessageSizePtr;
+	
+	int i;
 
 	messagePtr = (uint8_t*)&message[0];
 	messageSize = (uint32_t)(message.size() * CharSize);
