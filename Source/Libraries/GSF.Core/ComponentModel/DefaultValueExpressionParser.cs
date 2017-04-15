@@ -85,6 +85,17 @@ namespace GSF.ComponentModel
         // Static Methods
 
         /// <summary>
+        /// Returns a flag that determines if the "this" keyword exists with the specified <paramref name="expression"/>.
+        /// </summary>
+        /// <param name="expression">Expression to search.</param>
+        /// <returns><c>true</c> if "this" keyword exists in expression; otherwise, <c>false</c>.</returns>
+        public static bool HasThisKeywords(string expression)
+        {
+            lock (s_findThisKeywords)
+                return s_findThisKeywords.IsMatch(expression);
+        }
+
+        /// <summary>
         /// Replaces references to "this" keyword with a specified <paramref name="fieldName"/>.
         /// </summary>
         /// <param name="expression">Expression to search.</param>
@@ -238,10 +249,9 @@ namespace GSF.ComponentModel
             ParameterExpression scopeParameter = Expression.Parameter(typeof(TExpressionScope));
             DefaultValueAttribute defaultValueAttribute;
             DefaultValueExpressionAttribute defaultValueExpressionAttribute;
-            EvaluationOrderAttribute evaluationOrderAttribute;
 
             // Sort properties by any specified evaluation order
-            properties = properties.OrderBy(property => property.TryGetAttribute(out evaluationOrderAttribute) ? evaluationOrderAttribute.OrderIndex : 0);
+            properties = properties.OrderBy(property => property.TryGetAttribute(out defaultValueExpressionAttribute) ? defaultValueExpressionAttribute.EvaluationOrder : 0);
 
             // Create new instance and assign to local variable
             expressions.Add(Expression.Assign(newInstance, Expression.New(constructor)));
@@ -267,8 +277,17 @@ namespace GSF.ComponentModel
                 {
                     try
                     {
-                        // Replace all references to "this" with "Instance"
-                        string expression = DefaultValueExpressionParser.ReplaceThisKeywords(defaultValueExpressionAttribute.Expression, "Instance");
+                        string expression = defaultValueExpressionAttribute.Expression;
+                        
+                        // Check for "this" keywords in expression
+                        if (DefaultValueExpressionParser.HasThisKeywords(expression))
+                        {
+                            if (defaultValueExpressionAttribute.EvaluationOrder < 1)
+                                return scope => { throw new ArgumentException($"Default value expression attribute for property \"{typeof(T).FullName}.{property.Name}\" references the \"this\" keyword and must specify a positive \"EvaluationOrder\".", property.Name); };
+
+                            // Replace all references to "this" with "Instance"
+                            expression = DefaultValueExpressionParser.ReplaceThisKeywords(expression, "Instance");
+                        }
 
                         // Parse default value expression
                         DefaultValueExpressionParser expressionParser = new DefaultValueExpressionParser(expression);

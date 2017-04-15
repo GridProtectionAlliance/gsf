@@ -60,12 +60,12 @@ namespace LoadImpedanceCalcs.Model
         [DefaultValueExpression("UserInfo.CurrentUserID")]
         public string CreatedBy { get; set; }
 
-        [DefaultValueExpression("DateTime.UtcNow")]
-        public DateTime UpdatedOn {  get; set; }
+        [DefaultValueExpression("this.CreatedOn", EvaluationOrder = 1)]
+        public DateTime UpdatedOn { get; set; }
 
         [Required]
         [StringLength(200)]
-        [DefaultValueExpression("UserInfo.CurrentUserID")]
+        [DefaultValueExpression("this.CreatedBy", EvaluationOrder = 1)]
         public string UpdatedBy { get; set; }
     }
 }

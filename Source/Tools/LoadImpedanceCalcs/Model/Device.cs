@@ -61,6 +61,7 @@ namespace LoadImpedanceCalcs.Model
 
         public int? VendorDeviceID { get; set; }
 
+        [DefaultValueExpression("NotNull(Connection.ExecuteScalar('SELECT ID FROM Protocol WHERE Acronym=\\'VirtualInput\\''), 11)", Cached = true)]
         public int? ProtocolID { get; set; }
 
         public decimal? Longitude { get; set; }
@@ -110,22 +111,23 @@ namespace LoadImpedanceCalcs.Model
 
         public int LoadOrder { get; set; }
 
+        [DefaultValue(true)]
         public bool Enabled { get; set; }
 
         [DefaultValueExpression("DateTime.UtcNow")]
         public DateTime CreatedOn { get; set; }
 
         [Required]
-        [StringLength(200)]
+        [StringLength(50)]
         [DefaultValueExpression("UserInfo.CurrentUserID")]
         public string CreatedBy { get; set; }
 
-        [DefaultValueExpression("DateTime.UtcNow")]
+        [DefaultValueExpression("this.CreatedOn", EvaluationOrder = 1)]
         public DateTime UpdatedOn { get; set; }
 
         [Required]
-        [StringLength(200)]
-        [DefaultValueExpression("UserInfo.CurrentUserID")]
+        [StringLength(50)]
+        [DefaultValueExpression("this.CreatedBy", EvaluationOrder = 1)]
         public string UpdatedBy { get; set; }
     }
 }

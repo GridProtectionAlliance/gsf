@@ -195,8 +195,7 @@ namespace LoadImpedanceCalcs
                         adapterConnectionString["LeadTime"] = leadTime.ToString(CultureInfo.InvariantCulture);
 
                         // Get or add virtual device to associate new output measurements with
-                        int protocolID = connection.ExecuteScalar<int?>("SELECT ID FROM Protocol WHERE Acronym='VirtualInput'") ?? 11;
-                        Device device = GetOrAddDevice(deviceTable, sourceDevice, protocolID);                    
+                        Device device = GetOrAddDevice(deviceTable, sourceDevice);                    
 
                         if (simpleMode)
                         {
@@ -292,27 +291,20 @@ namespace LoadImpedanceCalcs
             }
         }
 
-        private static Device GetOrAddDevice(TableOperations<Device> deviceTable, string acronym, int protocolID)
+        private static Device GetOrAddDevice(TableOperations<Device> deviceTable, string acronym)
         {
-            Device device = deviceTable.QueryRecord("NodeID = {0} AND Acronym = {1}", nodeID, acronym);
+            Device device = deviceTable.QueryRecordWhere("NodeID = {0} AND Acronym = {1}", nodeID, acronym);
 
             if ((object)device == null)
             {
                 device = deviceTable.NewRecord();
 
                 device.NodeID = nodeID;
-                device.UniqueID = Guid.NewGuid();
                 device.Acronym = acronym;
                 device.Name = acronym;
-                device.ProtocolID = protocolID;
-                device.Enabled = true;
-                device.CreatedOn = DateTime.UtcNow;
-                device.CreatedBy = currentUserID;
-                device.UpdatedOn = DateTime.UtcNow;
-                device.UpdatedBy = currentUserID;
 
                 deviceTable.AddNewRecord(device);
-                device = deviceTable.QueryRecord("NodeID = {0} AND Acronym = {1}", nodeID, acronym);
+                device = deviceTable.QueryRecordWhere("NodeID = {0} AND Acronym = {1}", nodeID, acronym);
 
                 if ((object)device == null)
                     throw new InvalidOperationException($"Failed to lookup Device record with Acronym of \"{acronym}\".");
@@ -323,7 +315,7 @@ namespace LoadImpedanceCalcs
 
         private static Device GetDevice(TableOperations<Device> deviceTable, string acronym)
         {
-            Device device = deviceTable.QueryRecord("NodeID = {0} AND Acronym = {1}", nodeID, acronym);
+            Device device = deviceTable.QueryRecordWhere("NodeID = {0} AND Acronym = {1}", nodeID, acronym);
 
             if ((object)device == null)
                 Console.WriteLine($"Failed to lookup Device record with Acronym of \"{acronym}\"");
@@ -333,14 +325,14 @@ namespace LoadImpedanceCalcs
 
         private static Phasor[] GetPostiveSequencePhasors(TableOperations<Phasor> phasorTable, int deviceID)
         {
-            List<Phasor> phasors = phasorTable.QueryRecords("SourceIndex", new RecordRestriction("Phase = {0} AND DeviceID = {1}", "+", deviceID)).ToList();
+            List<Phasor> phasors = phasorTable.QueryRecordsWhere("Phase = '+' AND DeviceID = {0}", deviceID).OrderBy(phasor => phasor.SourceIndex).ToList();
             return new[] { phasors.FirstOrDefault(phasor => phasor.Type == "V"), phasors.FirstOrDefault(phasor => phasor.Type == "I") };
         }
 
         private static Measurement GetPhasorMeasurement(TableOperations<Measurement> measurementTable, string deviceAcronym, char phasorElement, int phasorIndex)
         {
             string signalReference = $"{deviceAcronym}-P{phasorElement}{phasorIndex}";
-            Measurement measurement = measurementTable.QueryRecord("SignalReference = {0}", signalReference);
+            Measurement measurement = measurementTable.QueryRecordWhere("SignalReference = {0}", signalReference);
 
             if ((object)measurement == null)
                 Console.WriteLine($"Failed to lookup Measurement record with SignalReference of \"{signalReference}\"");
@@ -350,7 +342,7 @@ namespace LoadImpedanceCalcs
 
         private static bool GetInputMeasurement(TableOperations<Measurement> measurementTable, string pointTag, List<string> inputMeasurements)
         {
-            Measurement measurement = measurementTable.QueryRecord("PointTag = {0}", pointTag);
+            Measurement measurement = measurementTable.QueryRecordWhere("PointTag = {0}", pointTag);
 
             if ((object)measurement == null)
             {
@@ -405,7 +397,7 @@ namespace LoadImpedanceCalcs
         private static CustomActionAdapter GetOrAddActionAdapter(TableOperations<CustomActionAdapter> actionAdapterTable, string tielineID, out bool newAdd)
         {
             string adapterName = $"IMPEDANCE_{tielineID}_CALC";
-            CustomActionAdapter actionAdapter = actionAdapterTable.QueryRecord("NodeID = {0} AND AdapterName = {1}", nodeID, adapterName);
+            CustomActionAdapter actionAdapter = actionAdapterTable.QueryRecordWhere("NodeID = {0} AND AdapterName = {1}", nodeID, adapterName);
 
             if ((object)actionAdapter == null)
             {
@@ -415,15 +407,11 @@ namespace LoadImpedanceCalcs
                 actionAdapter.AdapterName = adapterName;
                 actionAdapter.AssemblyName = AssemblyName;
                 actionAdapter.TypeName = TypeName;
-                actionAdapter.CreatedOn = DateTime.UtcNow;
-                actionAdapter.CreatedBy = currentUserID;
-                actionAdapter.UpdatedOn = DateTime.UtcNow;
-                actionAdapter.UpdatedBy = currentUserID;
 
                 actionAdapterTable.AddNewRecord(actionAdapter);
 
                 // Re-query newly added record to get auto-increment ID
-                actionAdapter = actionAdapterTable.QueryRecord("NodeID = {0} AND AdapterName = {1}", nodeID, adapterName);
+                actionAdapter = actionAdapterTable.QueryRecordWhere("NodeID = {0} AND AdapterName = {1}", nodeID, adapterName);
                 newAdd = true;
 
                 if ((object)actionAdapter == null)
@@ -448,7 +436,7 @@ namespace LoadImpedanceCalcs
                 string pointTag = $"IMPEDANCE_{tieLineID}-{outputType}:CV";
                 string description = $"{tieLineID} [{sender} => {receiver}] Calculated {outputTypes[outputType]} Value";
 
-                Measurement measurement = measurementTable.QueryRecord("PointTag = {0}", pointTag);
+                Measurement measurement = measurementTable.QueryRecordWhere("PointTag = {0}", pointTag);
 
                 if ((object)measurement == null)
                 {
@@ -461,7 +449,7 @@ namespace LoadImpedanceCalcs
                     measurement.Enabled = true;
 
                     measurementTable.AddNewRecord(measurement);
-                    measurement = measurementTable.QueryRecord("PointTag = {0}", pointTag);
+                    measurement = measurementTable.QueryRecordWhere("PointTag = {0}", pointTag);
 
                     if ((object)measurement == null)
                         throw new InvalidOperationException($"Failed to lookup Measurement record with PointTag of \"{pointTag}\".");

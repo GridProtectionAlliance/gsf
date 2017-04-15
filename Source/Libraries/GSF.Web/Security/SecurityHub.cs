@@ -148,7 +148,7 @@ namespace GSF.Web.Security
         /// <returns>Specified user account record.</returns>
         public UserAccount QueryUserAccountByName(string accountName)
         {
-            return DataContext.Table<UserAccount>().QueryRecords(restriction: new RecordRestriction("Name = {0}", accountName)).FirstOrDefault();
+            return DataContext.Table<UserAccount>().QueryRecordWhere("Name = {0}", accountName);
         }
         
         /// <summary>
@@ -211,8 +211,7 @@ namespace GSF.Web.Security
         /// <returns>Specified security group record.</returns>
         public SecurityGroup QuerySecurityGroupByName(string accountName)
         {
-            return DataContext.Table<SecurityGroup>().QueryRecords(restriction:
-                new RecordRestriction("Name = {0}", accountName)).FirstOrDefault();
+            return DataContext.Table<SecurityGroup>().QueryRecordWhere("Name = {0}", accountName);
         }
 
         /// <summary>
@@ -247,7 +246,7 @@ namespace GSF.Web.Security
         /// <returns><c>true</c> if user is in role; otherwise, <c>false</c>.</returns>
         public bool UserIsInRole(Guid userID, Guid roleID)
         {
-            return DataContext.Table<ApplicationRoleUserAccount>().QueryRecordCount(new RecordRestriction("UserAccountID={0} AND ApplicationRoleID={1}", userID, roleID)) > 0;
+            return DataContext.Table<ApplicationRoleUserAccount>().QueryRecordCountWhere("UserAccountID={0} AND ApplicationRoleID={1}", userID, roleID) > 0;
         }
 
         /// <summary>
@@ -283,7 +282,7 @@ namespace GSF.Web.Security
             if (!UserIsInRole(userID, roleID))
                 return false;
 
-            return DataContext.Table<ApplicationRoleUserAccount>().DeleteRecord(new RecordRestriction("UserAccountID={0} AND ApplicationRoleID={1}", userID, roleID)) > 0;
+            return DataContext.Table<ApplicationRoleUserAccount>().DeleteRecordWhere("UserAccountID={0} AND ApplicationRoleID={1}", userID, roleID) > 0;
         }
 
         /// <summary>
@@ -315,7 +314,7 @@ namespace GSF.Web.Security
         /// <returns><c>true</c> if group is in role; otherwise, <c>false</c>.</returns>
         public bool GroupIsInRole(Guid groupID, Guid roleID)
         {
-            return DataContext.Table<ApplicationRoleSecurityGroup>().QueryRecordCount(new RecordRestriction("SecurityGroupID={0} AND ApplicationRoleID={1}", groupID, roleID)) > 0;
+            return DataContext.Table<ApplicationRoleSecurityGroup>().QueryRecordCountWhere("SecurityGroupID={0} AND ApplicationRoleID={1}", groupID, roleID) > 0;
         }
 
         /// <summary>
@@ -351,7 +350,7 @@ namespace GSF.Web.Security
             if (!GroupIsInRole(groupID, roleID))
                 return false;
 
-            return DataContext.Table<ApplicationRoleSecurityGroup>().DeleteRecord(new RecordRestriction("SecurityGroupID={0} AND ApplicationRoleID={1}", groupID, roleID)) > 0;
+            return DataContext.Table<ApplicationRoleSecurityGroup>().DeleteRecordWhere("SecurityGroupID={0} AND ApplicationRoleID={1}", groupID, roleID) > 0;
         }
 
         /// <summary>
@@ -399,9 +398,7 @@ namespace GSF.Web.Security
         [RecordOperation(typeof(UserAccount), RecordOperation.QueryRecordCount)]
         public int QueryUserAccountCount(string filterText)
         {
-            TableOperations<UserAccount> tableOperations = DataContext.Table<UserAccount>();
-            RecordRestriction restriction = tableOperations.GetSearchRestriction(filterText);
-            return tableOperations.QueryRecordCount(restriction);
+            return DataContext.Table<UserAccount>().QueryRecordCount(filterText);
         }
 
         /// <summary>
@@ -417,9 +414,7 @@ namespace GSF.Web.Security
         [RecordOperation(typeof(UserAccount), RecordOperation.QueryRecords)]
         public IEnumerable<UserAccount> QueryUserAccounts(string sortField, bool ascending, int page, int pageSize, string filterText)
         {
-            TableOperations<UserAccount> tableOperations = DataContext.Table<UserAccount>();
-            RecordRestriction restriction = tableOperations.GetSearchRestriction(filterText);
-            return tableOperations.QueryRecords(sortField, ascending, page, pageSize, restriction);
+            return DataContext.Table<UserAccount>().QueryRecords(sortField, ascending, page, pageSize, filterText);
         }
 
         /// <summary>
@@ -505,7 +500,7 @@ namespace GSF.Web.Security
         [RecordOperation(typeof(SecurityGroup), RecordOperation.QueryRecords)]
         public IEnumerable<SecurityGroup> QuerySecurityGroups(string sortField, bool ascending, int page, int pageSize, string filterText)
         {
-            return DataContext.Table<SecurityGroup>().QueryRecords(sortField, ascending, page, pageSize);
+            return DataContext.Table<SecurityGroup>().QueryRecords(sortField, ascending, page, pageSize, filterText);
         }
 
         /// <summary>

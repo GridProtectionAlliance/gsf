@@ -2376,12 +2376,7 @@ namespace GSF.Data
         /// <returns>The value of the <see cref="DataColumn"/> specified by <paramref name="field"/>.</returns>
         public static object ConvertField(this DataRow row, string field, Type type)
         {
-            object defaultValue = null;
-
-            if (type.IsValueType)
-                defaultValue = Activator.CreateInstance(type);
-
-            return ConvertField(row, field, type, defaultValue);
+            return ConvertField(row, field, type, null);
         }
 
         /// <summary>
@@ -2397,7 +2392,7 @@ namespace GSF.Data
             object value = row.Field<object>(field);
 
             if (value == null || value == DBNull.Value)
-                return defaultValue;
+                return defaultValue ?? (type.IsValueType ? Activator.CreateInstance(type) : null);
 
             // If the value is an instance of the given type,
             // no type conversion is necessary

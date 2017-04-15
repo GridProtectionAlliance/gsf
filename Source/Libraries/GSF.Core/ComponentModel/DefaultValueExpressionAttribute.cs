@@ -40,9 +40,39 @@ namespace GSF.ComponentModel
         }
 
         /// <summary>
-        /// Gets or sets value that determines if value should be cached after first evaluation. Defaults to <c>false</c>.
+        /// Gets or sets value that determines if value should be cached after first evaluation.
+        /// Defaults to <c>false</c>.
         /// </summary>
         public bool Cached
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the numeric evaluation order for this expression. Defaults to zero.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This is useful for providing an order of operations to evaluations of
+        /// <see cref="DefaultValueExpressionAttribute"/> attributes where one expression may
+        /// be dependent on another. Note that properties are normally evaluated in the order
+        /// in which they are defined in the class, using this attribute allows the order of
+        /// evaluation to be changed. 
+        /// </para>
+        /// <para>
+        /// When no <see cref="EvaluationOrder"/> is specified, the sort order for a property
+        /// will be zero. Properties will be ordered numerically based on this value.
+        /// </para>
+        /// <para>
+        /// For any the <see cref="Expression"/> value that references the <c>this</c> keyword,
+        /// a positive evaluation order will be required.
+        /// </para>
+        /// <para>
+        /// See <see cref="DefaultValueExpressionParser{T}.CreateInstance{TExpressionScope}"/>.
+        /// </para>
+        /// </remarks>
+        public int EvaluationOrder
         {
             get;
             set;

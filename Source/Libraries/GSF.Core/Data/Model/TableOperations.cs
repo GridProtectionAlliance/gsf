@@ -389,16 +389,48 @@ namespace GSF.Data.Model
         /// <param name="restriction">Record restriction to apply.</param>
         /// <returns>A single modeled table record for the queried record.</returns>
         /// <remarks>
+        /// <para>
         /// If no record is found for specified <paramref name="restriction"/>, <c>null</c> will be returned.
+        /// </para>
+        /// <para>
+        /// This is a convenience call to <see cref="QueryRecords(string, RecordRestriction, int)"/>
+        /// specifying the <see cref="RecordRestriction"/> parameter with a limit of 1 record.
+        /// </para>
         /// </remarks>
         public T QueryRecord(RecordRestriction restriction)
         {
-            return QueryRecords(null, restriction, 1).FirstOrDefault();
+            return QueryRecord(null, restriction);
         }
 
         object ITableOperations.QueryRecord(RecordRestriction restriction)
         {
             return QueryRecord(restriction);
+        }
+
+        /// <summary>
+        /// Queries database and returns a single modeled table record for the specified <paramref name="restriction"/>,
+        /// execution of query will apply <paramref name="orderByExpression"/>.
+        /// </summary>
+        /// <param name="orderByExpression">Field name expression used for sort order, include ASC or DESC as needed - does not include ORDER BY; defaults to primary keys.</param>
+        /// <param name="restriction">Record restriction to apply.</param>
+        /// <returns>A single modeled table record for the queried record.</returns>
+        /// <remarks>
+        /// <para>
+        /// If no record is found for specified <paramref name="restriction"/>, <c>null</c> will be returned.
+        /// </para>
+        /// <para>
+        /// This is a convenience call to <see cref="QueryRecords(string, RecordRestriction, int)"/>
+        /// specifying the <see cref="RecordRestriction"/> parameter with a limit of 1 record.
+        /// </para>
+        /// </remarks>
+        public T QueryRecord(string orderByExpression, RecordRestriction restriction)
+        {
+            return QueryRecords(orderByExpression, restriction, 1).FirstOrDefault();
+        }
+
+        object ITableOperations.QueryRecord(string orderByExpression, RecordRestriction restriction)
+        {
+            return QueryRecord(orderByExpression, restriction);
         }
 
         /// <summary>
@@ -410,8 +442,6 @@ namespace GSF.Data.Model
         /// When escaping is needed for field names, use standard ANSI quotes.
         /// </param>
         /// <param name="parameters">Restriction parameter values.</param>
-        /// <remarks>
-        /// </remarks>
         /// <returns>A single modeled table record for the queried record.</returns>
         /// <remarks>
         /// <para>
@@ -427,15 +457,19 @@ namespace GSF.Data.Model
         /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
         /// will be updated to reflect what is defined in the user model.
         /// </para>
+        /// <para>
+        /// This is a convenience call to <see cref="QueryRecords(string, RecordRestriction, int)"/>
+        /// specifying the <see cref="RecordRestriction"/> parameter with a limit of 1 record.
+        /// </para>
         /// </remarks>
-        public T QueryRecord(string filterExpression, params object[] parameters)
+        public T QueryRecordWhere(string filterExpression, params object[] parameters)
         {
             return QueryRecord(new RecordRestriction(filterExpression, parameters));
         }
 
-        object ITableOperations.QueryRecord(string filterExpression, params object[] parameters)
+        object ITableOperations.QueryRecordWhere(string filterExpression, params object[] parameters)
         {
-            return QueryRecord(filterExpression, parameters);
+            return QueryRecordWhere(filterExpression, parameters);
         }
 
         /// <summary>
@@ -497,6 +531,63 @@ namespace GSF.Data.Model
         }
 
         /// <summary>
+        /// Queries database and returns modeled table records for the specified <paramref name="restriction"/>.
+        /// </summary>
+        /// <param name="restriction">Record restriction to apply.</param>
+        /// <returns>An enumerable of modeled table row instances for queried records.</returns>
+        /// <remarks>
+        /// <para>
+        /// This is a convenience call to <see cref="QueryRecords(string, RecordRestriction, int)"/> only
+        /// specifying the <see cref="RecordRestriction"/> parameter.
+        /// </para>
+        /// </remarks>
+        public IEnumerable<T> QueryRecords(RecordRestriction restriction)
+        {
+            return QueryRecords(null, restriction);
+        }
+
+        IEnumerable ITableOperations.QueryRecords(RecordRestriction restriction)
+        {
+            return QueryRecords(restriction);
+        }
+
+        /// <summary>
+        /// Queries database and returns modeled table records for the specified SQL filter expression
+        /// and parameters.
+        /// </summary>
+        /// <param name="filterExpression">
+        /// Filter SQL expression for restriction as a composite format string - does not include WHERE.
+        /// When escaping is needed for field names, use standard ANSI quotes.
+        /// </param>
+        /// <param name="parameters">Restriction parameter values.</param>
+        /// <returns>An enumerable of modeled table row instances for queried records.</returns>
+        /// <remarks>
+        /// <para>
+        /// Each indexed parameter, e.g., "{0}", in the composite format <paramref name="filterExpression"/>
+        /// will be converted into query parameters where each of the corresponding values in the
+        /// <paramref name="parameters"/> collection will be applied as <see cref="IDbDataParameter"/>
+        /// values to an executed <see cref="IDbCommand"/> query.
+        /// </para>
+        /// <para>
+        /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
+        /// will be updated to reflect what is defined in the user model.
+        /// </para>
+        /// <para>
+        /// This is a convenience call to <see cref="QueryRecords(string, RecordRestriction, int)"/> only
+        /// specifying the <see cref="RecordRestriction"/> parameter.
+        /// </para>
+        /// </remarks>
+        public IEnumerable<T> QueryRecordsWhere(string filterExpression, params object[] parameters)
+        {
+            return QueryRecords(new RecordRestriction(filterExpression, parameters));
+        }
+
+        IEnumerable ITableOperations.QueryRecordsWhere(string filterExpression, params object[] parameters)
+        {
+            return QueryRecordsWhere(filterExpression, parameters);
+        }
+
+        /// <summary>
         /// Queries database and returns modeled table records for the specified sorting, paging and search parameters.
         /// </summary>
         /// <param name="sortField">Field name to order-by.</param>
@@ -506,7 +597,13 @@ namespace GSF.Data.Model
         /// <param name="searchText">Text to search.</param>
         /// <returns>An enumerable of modeled table row instances for queried records.</returns>
         /// <remarks>
+        /// <para>
         /// This function is used for record paging. Primary keys are cached server-side, typically per user session, to maintain desired per-page sort order.
+        /// </para>
+        /// <para>
+        /// This is a convenience call to <see cref="QueryRecords(string, bool, int, int, RecordRestriction)"/> where restriction
+        /// is generated by <see cref="GetSearchRestriction(string)"/> using <paramref name="searchText"/>.
+        /// </para>
         /// </remarks>
         public IEnumerable<T> QueryRecords(string sortField, bool ascending, int page, int pageSize, string searchText)
         {
@@ -577,20 +674,28 @@ namespace GSF.Data.Model
         }
 
         /// <summary>
-        /// Gets the total record count for the modeled table based on search parameter.
+        /// Gets the record count for the modeled table based on search parameter.
         /// </summary>
         /// <param name="searchText">Text to search.</param>
-        /// <returns>Total record count for the modeled table.</returns>
+        /// <returns>Record count for the modeled table based on search parameter.</returns>
+        /// <remarks>
+        /// This is a convenience call to <see cref="QueryRecordCount(RecordRestriction)"/> where restriction
+        /// is generated by <see cref="GetSearchRestriction(string)"/>
+        /// </remarks>
         public int QueryRecordCount(string searchText)
         {
             return QueryRecordCount(GetSearchRestriction(searchText));
         }
 
         /// <summary>
-        /// Gets the total record count for the modeled table.
+        /// Gets the record count for the specified <paramref name="restriction"/> - or - total record
+        /// count for the modeled table if <paramref name="restriction"/> is <c>null</c>.
         /// </summary>
         /// <param name="restriction">Record restriction to apply, if any.</param>
-        /// <returns>Total record count for the modeled table.</returns>
+        /// <returns>
+        /// Record count for the specified <paramref name="restriction"/> - or - total record count
+        /// for the modeled table if <paramref name="restriction"/> is <c>null</c>.
+        /// </returns>
         public int QueryRecordCount(RecordRestriction restriction = null)
         {
             string sqlExpression = null;
@@ -616,6 +721,35 @@ namespace GSF.Data.Model
                 m_exceptionHandler(opex);
                 return -1;
             }
+        }
+
+        /// <summary>
+        /// Gets the record count for the modeled table for the specified SQL filter expression and parameters.
+        /// </summary>
+        /// <param name="filterExpression">
+        /// Filter SQL expression for restriction as a composite format string - does not include WHERE.
+        /// When escaping is needed for field names, use standard ANSI quotes.
+        /// </param>
+        /// <param name="parameters">Restriction parameter values.</param>
+        /// <returns>Record count for the modeled table for the specified parameters.</returns>
+        /// <remarks>
+        /// <para>
+        /// Each indexed parameter, e.g., "{0}", in the composite format <paramref name="filterExpression"/>
+        /// will be converted into query parameters where each of the corresponding values in the
+        /// <paramref name="parameters"/> collection will be applied as <see cref="IDbDataParameter"/>
+        /// values to an executed <see cref="IDbCommand"/> query.
+        /// </para>
+        /// <para>
+        /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
+        /// will be updated to reflect what is defined in the user model.
+        /// </para>
+        /// <para>
+        /// This is a convenience call to <see cref="QueryRecordCount(RecordRestriction)"/>.
+        /// </para>
+        /// </remarks>
+        public int QueryRecordCountWhere(string filterExpression, params object[] parameters)
+        {
+            return QueryRecordCount(new RecordRestriction(filterExpression, parameters));
         }
 
         /// <summary>
@@ -810,8 +944,11 @@ namespace GSF.Data.Model
         /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
         /// will be updated to reflect what is defined in the user model.
         /// </para>
+        /// <para>
+        /// This is a convenience call to <see cref="DeleteRecord(RecordRestriction)"/>.
+        /// </para>
         /// </remarks>
-        public int DeleteRecord(string filterExpression, params object[] parameters)
+        public int DeleteRecordWhere(string filterExpression, params object[] parameters)
         {
             return DeleteRecord(new RecordRestriction(filterExpression, parameters));
         }
@@ -895,7 +1032,8 @@ namespace GSF.Data.Model
         }
 
         /// <summary>
-        /// Updates the database with the specified modeled table <paramref name="record"/>.
+        /// Updates the database with the specified modeled table <paramref name="record"/>
+        /// referenced by the specified SQL filter expression and parameters.
         /// </summary>
         /// <param name="record">Record to update.</param>
         /// <param name="filterExpression">
@@ -919,20 +1057,23 @@ namespace GSF.Data.Model
         /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
         /// will be updated to reflect what is defined in the user model.
         /// </para>
+        /// <para>
+        /// This is a convenience call to <see cref="UpdateRecord(T, RecordRestriction)"/>.
+        /// </para>
         /// </remarks>
-        public int UpdateRecord(T record, string filterExpression, params object[] parameters)
+        public int UpdateRecordWhere(T record, string filterExpression, params object[] parameters)
         {
             return UpdateRecord(record, new RecordRestriction(filterExpression, parameters));
         }
 
-        int ITableOperations.UpdateRecord(object value, string filterExpression, params object[] parameters)
+        int ITableOperations.UpdateRecordWhere(object value, string filterExpression, params object[] parameters)
         {
             T record = value as T;
 
             if (record == null)
                 throw new ArgumentException($"Cannot update record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
 
-            return UpdateRecord(record, filterExpression, parameters);
+            return UpdateRecordWhere(record, filterExpression, parameters);
         }
 
         /// <summary>
@@ -951,7 +1092,8 @@ namespace GSF.Data.Model
         }
 
         /// <summary>
-        /// Updates the database with the specified <paramref name="row"/>.
+        /// Updates the database with the specified <paramref name="row"/>
+        /// referenced by the specified SQL filter expression and parameters.
         /// </summary>
         /// <param name="row"><see cref="DataRow"/> of queried data to be updated.</param>
         /// <param name="filterExpression">
@@ -975,8 +1117,11 @@ namespace GSF.Data.Model
         /// If needed, field names that are escaped with standard ANSI quotes in the filter expression
         /// will be updated to reflect what is defined in the user model.
         /// </para>
+        /// <para>
+        /// This is a convenience call to <see cref="UpdateRecord(DataRow, RecordRestriction)"/>.
+        /// </para>
         /// </remarks>
-        public int UpdateRecord(DataRow row, string filterExpression, params object[] parameters)
+        public int UpdateRecordWhere(DataRow row, string filterExpression, params object[] parameters)
         {
             return UpdateRecord(row, new RecordRestriction(filterExpression, parameters));
         }
