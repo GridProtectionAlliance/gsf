@@ -26,8 +26,8 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 
 // Assembly identity attributes.
-[assembly: AssemblyVersion("2.2.23.0")]
-[assembly: AssemblyInformationalVersion("2.2.23-beta")]
+[assembly: AssemblyVersion("2.2.24.0")]
+[assembly: AssemblyInformationalVersion("2.2.24-beta")]
 
 // Informational attributes.
 [assembly: AssemblyCompany("Grid Protection Alliance")]
