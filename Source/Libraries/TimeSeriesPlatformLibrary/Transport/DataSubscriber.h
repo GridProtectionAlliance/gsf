@@ -300,7 +300,11 @@ namespace Transport
 		//   ServerCommand::RotateCipherKeys
 		//   ServerCommand::UpdateProcessingInterval
 		//   ServerCommand::DefineOperationalModes
+		//   ServerCommand::ConfirmNotification
+		//   ServerCommand::ConfirmBufferBlock
+		//   ServerCommand::PublishCommandMeasurements
 		void SendServerCommand(uint8_t commandCode);
+		void SendServerCommand(uint8_t commandCode, std::string message);
 		void SendServerCommand(uint8_t commandCode, uint8_t* data, std::size_t offset, std::size_t length);
 
 		// Convenience method to send the currently defined and/or supported

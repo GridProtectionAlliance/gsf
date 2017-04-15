@@ -852,6 +852,38 @@ void gsfts::Transport::DataSubscriber::SendServerCommand(uint8_t commandCode)
 	SendServerCommand(commandCode, 0, 0, 0);
 }
 
+// Sends a command along with the given message to the server.
+void gsfts::Transport::DataSubscriber::SendServerCommand(uint8_t commandCode, std::string message)
+{
+	const std::size_t CharSize = sizeof(char);
+
+	uint32_t bufferSize;
+	std::vector<uint8_t> buffer;
+
+	uint8_t* messagePtr;
+	uint32_t messageSize;
+	uint32_t bigEndianMessageSize;
+	uint8_t* bigEndianMessageSizePtr;
+
+	messagePtr = (uint8_t*)&message[0];
+	messageSize = (uint32_t)(message.size() * CharSize);
+	bigEndianMessageSize = m_endianConverter.ConvertBigEndian(messageSize);
+	bigEndianMessageSizePtr = (uint8_t*)&bigEndianMessageSize;
+
+	bufferSize = 4 + messageSize;
+	buffer.reserve(bufferSize);
+
+	buffer[0] = bigEndianMessageSizePtr[0];
+	buffer[1] = bigEndianMessageSizePtr[1];
+	buffer[2] = bigEndianMessageSizePtr[2];
+	buffer[3] = bigEndianMessageSizePtr[3];
+
+	for (i = 0; i < messageSize; ++i)
+		buffer[4 + i] = messagePtr[i];
+
+	SendServerCommand(commandCode, &buffer[0], 0, bufferSize);
+}
+
 // Sends a command along with the given data to the server.
 void gsfts::Transport::DataSubscriber::SendServerCommand(uint8_t commandCode, uint8_t* data, std::size_t offset, std::size_t length)
 {

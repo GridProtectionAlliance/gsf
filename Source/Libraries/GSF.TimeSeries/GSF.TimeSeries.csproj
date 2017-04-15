@@ -148,6 +148,7 @@
     <Compile Include="Statistics\StatisticValueStateCache.cs" />
     <Compile Include="TimeSeriesStartupOperations.cs" />
     <Compile Include="BufferBlockMeasurement.cs" />
+    <Compile Include="Transport\CommandMeasurement.cs" />
     <Compile Include="Transport\SubscriberRightsLookup.cs" />
     <Compile Include="Transport\ClientConnection.cs" />
     <Compile Include="Transport\Common.cs" />
