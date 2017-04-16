@@ -23,6 +23,7 @@
 
 using System;
 using System.ComponentModel.DataAnnotations;
+using GSF.ComponentModel;
 using GSF.Data.Model;
 
 namespace GSF.Security.Model
@@ -79,6 +80,7 @@ namespace GSF.Security.Model
         /// <summary>
         /// Created on field.
         /// </summary>
+        [DefaultValueExpression("DateTime.UtcNow")]
         public DateTime CreatedOn
         {
             get; set;
