@@ -457,9 +457,6 @@ namespace LoadImpedanceCalcs
                 else
                 {
                     measurement.Description = description;
-                    measurement.UpdatedOn = DateTime.UtcNow;
-                    measurement.UpdatedBy = currentUserID;
-
                     measurementTable.UpdateRecord(measurement);
                 }
 

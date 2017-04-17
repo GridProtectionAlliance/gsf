@@ -49,7 +49,7 @@ namespace GSF.Data.Model
         #region [ Members ]
 
         // Nested Types
-        private class CurrentScope : DefaultValueExpressionScopeBase<T>
+        private class CurrentScope : ValueExpressionScopeBase<T>
         {
             // Define instance variables exposed to DefaultValueExpressionAttribute expressions
             #pragma warning disable 169, 414, 649
@@ -371,11 +371,22 @@ namespace GSF.Data.Model
         /// <returns>New modeled record instance with any defined default values applied.</returns>
         public T NewRecord()
         {
-            return s_createRecordInstance(new CurrentScope
+            try
             {
-                TableOperations = this,
-                Connection = m_connection
-            });
+                return s_createRecordInstance(new CurrentScope
+                {
+                    TableOperations = this,
+                    Connection = m_connection
+                });
+            }
+            catch (Exception ex)
+            {
+                if ((object)m_exceptionHandler == null)
+                    throw;
+
+                m_exceptionHandler(ex);
+                return null;
+            }
         }
 
         object ITableOperations.NewRecord()
@@ -967,6 +978,24 @@ namespace GSF.Data.Model
         {
             List<object> values = new List<object>();
 
+            try
+            {
+                s_updateRecordInstance(new CurrentScope
+                {
+                    Instance = record,
+                    TableOperations = this,
+                    Connection = m_connection
+                });
+            }
+            catch (Exception ex)
+            {
+                if ((object)m_exceptionHandler == null)
+                    throw;
+
+                m_exceptionHandler(ex);
+                return 0;
+            }
+
             if ((object)restriction == null)
             {
                 try
@@ -1555,6 +1584,7 @@ namespace GSF.Data.Model
         private static readonly string s_searchFilterSql;
         private static readonly bool s_hasPrimaryKeyIdentityField;
         private static readonly Func<CurrentScope, T> s_createRecordInstance;
+        private static readonly Action<CurrentScope> s_updateRecordInstance;
         private static TypeRegistry s_typeRegistry;
 
         // Static Constructor
@@ -1743,7 +1773,8 @@ namespace GSF.Data.Model
             s_addNewProperties = addNewProperties.ToArray();
             s_updateProperties = updateProperties.ToArray();
             s_primaryKeyProperties = primaryKeyProperties.ToArray();
-            s_createRecordInstance = DefaultValueExpressionParser<T>.CreateInstance<CurrentScope>(s_properties.Values, s_typeRegistry);
+            s_createRecordInstance = ValueExpressionParser<T>.CreateInstance<CurrentScope>(s_properties.Values, s_typeRegistry);
+            s_updateRecordInstance = ValueExpressionParser<T>.UpdateInstance<CurrentScope>(s_properties.Values, s_typeRegistry);
         }
 
         // Static Properties
@@ -1754,7 +1785,7 @@ namespace GSF.Data.Model
         /// </summary>
         /// <remarks>
         /// Accessing this property will create a unique type registry for the current type <typeparamref name="T"/> which
-        /// will initially contain the values found in the <see cref="DefaultValueExpressionParser.DefaultTypeRegistry"/>
+        /// will initially contain the values found in the <see cref="ValueExpressionParser.DefaultTypeRegistry"/>
         /// and can be augmented with custom types. Set to <c>null</c> to restore use of the default type registry.
         /// </remarks>
         [SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
@@ -1766,7 +1797,7 @@ namespace GSF.Data.Model
                 {
                     s_typeRegistry = new TypeRegistry();
 
-                    foreach (KeyValuePair<string, object> item in DefaultValueExpressionParser.DefaultTypeRegistry)
+                    foreach (KeyValuePair<string, object> item in ValueExpressionParser.DefaultTypeRegistry)
                         s_typeRegistry.Add(item.Key, item.Value);
                 }
 

@@ -121,7 +121,7 @@ namespace GSF.Configuration
                 {
                     if ((object)defaultValueAttribute == null)
                     {
-                        DefaultValueExpressionParser parser = new DefaultValueExpressionParser(defaultValueExpressionAttribute.Expression);                        
+                        ValueExpressionParser parser = new ValueExpressionParser(defaultValueExpressionAttribute.Expression);                        
 
                         if ((object)typeRegistry != null)
                             parser.TypeRegistry = typeRegistry;
@@ -597,7 +597,7 @@ namespace GSF.Configuration
         /// <remarks>
         /// Accessing this property will create a unique type registry for the current attribute type
         /// <typeparamref name="TParameterAttribute"/> which will initially contain the values found in
-        /// the <see cref="DefaultValueExpressionParser.DefaultTypeRegistry"/> and can be augmented with
+        /// the <see cref="ValueExpressionParser.DefaultTypeRegistry"/> and can be augmented with
         /// custom types. Set to <c>null</c> to restore use of the default type registry.
         /// </remarks>
         [SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
@@ -609,7 +609,7 @@ namespace GSF.Configuration
                 {
                     s_typeRegistry = new TypeRegistry();
 
-                    foreach (KeyValuePair<string, object> item in DefaultValueExpressionParser.DefaultTypeRegistry)
+                    foreach (KeyValuePair<string, object> item in ValueExpressionParser.DefaultTypeRegistry)
                         s_typeRegistry.Add(item.Key, item.Value);
                 }
 

@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  DefaultValueExpressionScopeBase.cs - Gbtc
+//  ValueExpressionScopeBase.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -25,22 +25,22 @@ namespace GSF.ComponentModel
 {
     /// <summary>
     /// Represent a base class used for providing contextual scope when evaluating
-    /// instances of the <see cref="DefaultValueExpressionAttribute"/>.
+    /// instances of the <see cref="ValueExpressionAttributeBase"/>.
     /// </summary>
     /// <remarks>
     /// This class should be extended with public instance fields that will be automatically
-    /// exposed to <see cref="DefaultValueExpressionAttribute"/> expressions.
+    /// exposed to <see cref="ValueExpressionAttributeBase"/> expressions.
     /// </remarks>
     /// <typeparam name="T">Type of associated instance.</typeparam>
-    public abstract class DefaultValueExpressionScopeBase<T>
+    public abstract class ValueExpressionScopeBase<T>
     {
         /// <summary>
         /// References the current <typeparamref name="T"/> instance.
         /// </summary>
         /// <remarks>
-        /// By using the <see cref="DefaultValueExpressionParser.ReplaceThisKeywords"/> function, expressions
+        /// By using the <see cref="ValueExpressionParser.ReplaceThisKeywords"/> function, expressions
         /// can reference the current <typeparamref name="T"/> instance using the <c>this</c> keyword.
-        /// See <see cref="DefaultValueExpressionParser{T}.CreateInstance{TExpressionScope}"/>.
+        /// See <see cref="ValueExpressionParser{T}.CreateInstance{TExpressionScope}"/>.
         /// </remarks>
         public T Instance;
 

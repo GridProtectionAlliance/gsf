@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  DefaultValueExpressionAttribute.cs - Gbtc
+//  UpdateValueExpressionAttribute.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  04/07/2017 - J. Ritchie Carroll
+//  04/16/2017 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -24,15 +24,15 @@
 namespace GSF.ComponentModel
 {
     /// <summary>
-    /// Defines a C# expression attribute that when evaluated will specify the default value for a property.
+    /// Defines a C# expression attribute that when evaluated will specify an updated value for a property.
     /// </summary>
-    public sealed class DefaultValueExpressionAttribute : ValueExpressionAttributeBase
+    public sealed class UpdateValueExpressionAttribute : ValueExpressionAttributeBase
     {
         /// <summary>
-        /// Creates a new <see cref="DefaultValueExpressionAttribute"/>
+        /// Creates a new <see cref="UpdateValueExpressionAttribute"/>
         /// </summary>
         /// <param name="expression">C# expression that will evaluate to the desired default value.</param>
-        public DefaultValueExpressionAttribute(string expression) : base(expression)
+        public UpdateValueExpressionAttribute(string expression) : base(expression)
         {
         }
     }
