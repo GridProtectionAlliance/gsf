@@ -107,6 +107,84 @@ namespace GSF.IO
         #region [ Methods ]
 
         /// <summary>
+        /// Returns the names of the subdirectories (including their paths) that match the specified search pattern in the specified directory, and optionally searches subdirectories.
+        /// </summary>
+        /// <param name="path">The relative or absolute path to the directory to search. This string is not case-sensitive.</param>
+        /// <param name="searchPattern">The search string to match against the names of subdirectories in <paramref name="path"/>. This parameter can contain a combination of valid literal and wildcard characters, but doesn't support regular expressions.</param>
+        /// <param name="searchOption">One of the enumeration values that specifies whether the search operation should include all subdirectories or only the current directory.</param>
+        /// <param name="exceptionHandler">Handles exceptions thrown during directory enumeration.</param>
+        /// <returns>An array of the full names (including paths) of the subdirectories that match the specified criteria, or an empty array if no directories are found.</returns>
+        public static string[] GetDirectories(string path, string searchPattern = "*", SearchOption searchOption = SearchOption.AllDirectories, Action<Exception> exceptionHandler = null)
+        {
+            return EnumerateDirectories(path, searchPattern, searchOption, exceptionHandler).ToArray();
+        }
+
+        /// <summary>
+        /// Returns an enumerable collection of file names that match a search pattern in a specified path, and optionally searches subdirectories.
+        /// </summary>
+        /// <param name="path">The relative or absolute path to the directory to search. This string is not case-sensitive.</param>
+        /// <param name="searchPattern">The search string to match against the names of directories in <paramref name="path"/>. This parameter can contain a combination of valid literal path and wildcard (* and ?) characters, but doesn't support regular expressions.</param>
+        /// <param name="searchOption">One of the enumeration values that specifies whether the search operation should include only the current directory or should include all subdirectories.</param>
+        /// <param name="exceptionHandler">Handles exceptions thrown during directory enumeration.</param>
+        /// <returns>An enumerable collection of the full names (including paths) for the directories in the directory specified by <paramref name="path"/> and that match the specified search pattern and option.</returns>
+        public static IEnumerable<string> EnumerateDirectories(string path, string searchPattern = "*", SearchOption searchOption = SearchOption.AllDirectories, Action<Exception> exceptionHandler = null)
+        {
+            try
+            {
+                return (searchOption == SearchOption.TopDirectoryOnly)
+                    ? Directory.EnumerateDirectories(path, searchPattern, SearchOption.TopDirectoryOnly)
+                    : Directory.EnumerateDirectories(path, searchPattern, SearchOption.TopDirectoryOnly)
+                        .Concat(Directory.EnumerateDirectories(path, "*", SearchOption.TopDirectoryOnly)
+                            .SelectMany(directory => EnumerateDirectories(directory, searchPattern, searchOption)));
+            }
+            catch (Exception ex)
+            {
+                exceptionHandler?.Invoke(ex);
+            }
+
+            return Enumerable.Empty<string>();
+        }
+
+        /// <summary>
+        /// Returns the names of files (including their paths) that match the specified search pattern in the specified directory, using a value to determine whether to search subdirectories.
+        /// </summary>
+        /// <param name="path">The relative or absolute path to the directory to search. This string is not case-sensitive.</param>
+        /// <param name="searchPattern">The search string to match against the names of files in <paramref name="path"/>. This parameter can contain a combination of valid literal path and wildcard (* and ?) characters, but doesn't support regular expressions.</param>
+        /// <param name="searchOption">One of the enumeration values that specifies whether the search operation should include all subdirectories or only the current directory.</param>
+        /// <param name="exceptionHandler">Handles exceptions thrown during file enumeration.</param>
+        /// <returns>An array of the full names (including paths) for the files in the specified directory that match the specified search pattern and option, or an empty array if no files are found.</returns>
+        public static string[] GetFiles(string path, string searchPattern = "*", SearchOption searchOption = SearchOption.AllDirectories, Action<Exception> exceptionHandler = null)
+        {
+            return EnumerateFiles(path, searchPattern, searchOption, exceptionHandler).ToArray();
+        }
+
+        /// <summary>
+        /// Returns an enumerable collection of file names that match a search pattern in a specified path, and optionally searches subdirectories.
+        /// </summary>
+        /// <param name="path">The relative or absolute path to the directory to search. This string is not case-sensitive.</param>
+        /// <param name="searchPattern">The search string to match against the names of files in <paramref name="path"/>. This parameter can contain a combination of valid literal path and wildcard (* and ?) characters, but doesn't support regular expressions.</param>
+        /// <param name="searchOption">One of the enumeration values that specifies whether the search operation should include only the current directory or should include all subdirectories.</param>
+        /// <param name="exceptionHandler">Handles exceptions thrown during file enumeration.</param>
+        /// <returns>An enumerable collection of the full names (including paths) for the files in the directory specified by <paramref name="path"/> and that match the specified search pattern and option.</returns>
+        public static IEnumerable<string> EnumerateFiles(string path, string searchPattern = "*", SearchOption searchOption = SearchOption.AllDirectories, Action<Exception> exceptionHandler = null)
+        {
+            try
+            {
+                return (searchOption == SearchOption.TopDirectoryOnly)
+                    ? Directory.EnumerateFiles(path, searchPattern, SearchOption.TopDirectoryOnly)
+                    : Directory.EnumerateFiles(path, searchPattern, SearchOption.TopDirectoryOnly)
+                        .Concat(Directory.EnumerateDirectories(path, "*", SearchOption.TopDirectoryOnly)
+                            .SelectMany(directory => EnumerateFiles(directory, searchPattern, searchOption)));
+            }
+            catch (Exception ex)
+            {
+                exceptionHandler?.Invoke(ex);
+            }
+
+            return Enumerable.Empty<string>();
+        }
+
+        /// <summary>
         /// Ensures the supplied path name is valid.
         /// </summary>
         /// <param name="filePath">The file path to be validated.</param>
