@@ -407,8 +407,9 @@ namespace GSF.IO
         /// inclusion of files under all subdirectories in the list.
         /// </summary>
         /// <param name="path">The path for which a list of files is to be returned.</param>
+        /// <param name="exceptionHandler">Handles exceptions thrown during file enumeration.</param>
         /// <returns>A list of files under the given path.</returns>
-        public static string[] GetFileList(string path)
+        public static string[] GetFileList(string path, Action<Exception> exceptionHandler = null)
         {
             string directory = GetDirectoryName(path);
             string filePattern = GetFileName(path);
@@ -427,7 +428,10 @@ namespace GSF.IO
                 directory = directory.Remove(directory.LastIndexOf("*", StringComparison.OrdinalIgnoreCase));
             }
 
-            return Directory.GetFiles(directory, filePattern, options);
+            if ((object)exceptionHandler == null)
+                return Directory.GetFiles(directory, filePattern, options);
+
+            return GetFiles(directory, filePattern, options, exceptionHandler);
         }
 
         /// <summary>
