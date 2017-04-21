@@ -192,6 +192,23 @@ namespace GSF.Net.Ftp
         #region [ Methods ]
 
         /// <summary>
+        /// Downloads remote file.
+        /// </summary>
+        public void Get()
+        {
+            Parent.GetFile(Name);
+        }
+
+        /// <summary>
+        /// Downloads remote file using alternate local filename.
+        /// </summary>
+        /// <param name="localFile">Local filename to use for download.</param>
+        public void Get(string localFile)
+        {
+            Parent.GetFile(localFile, Name);
+        }
+
+        /// <summary>
         /// Gets FTP input stream for file.
         /// </summary>
         /// <returns>FTP input stream for file.</returns>
