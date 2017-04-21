@@ -346,7 +346,7 @@ namespace GSF.IO
             try
             {
                 // Treating file system watcher like an unmanaged resource
-                m_fileSystemWatcher.Dispose();
+                m_fileSystemWatcher?.Dispose();
             }
             finally
             {
