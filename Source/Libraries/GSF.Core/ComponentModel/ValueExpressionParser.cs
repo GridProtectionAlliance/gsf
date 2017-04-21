@@ -78,7 +78,7 @@ namespace GSF.ComponentModel
         // Static Properties
 
         /// <summary>
-        /// Gets the default <see cref="TypeRegistry"/> instance used for evaluating <see cref="DefaultValueExpressionAttribute"/> instances.
+        /// Gets the default <see cref="TypeRegistry"/> instance used for evaluating <see cref="ValueExpressionAttributeBase"/> instances.
         /// </summary>
         public static TypeRegistry DefaultTypeRegistry => s_defaultTypeRegistry;
 
@@ -143,7 +143,7 @@ namespace GSF.ComponentModel
         /// </summary>
         /// <param name="scope">Parameter expression used to provide context to parsed instances.</param>
         /// <param name="typeRegistry">
-        /// Type registry to use when parsing <see cref="DefaultValueExpressionAttribute"/> instances, or <c>null</c>
+        /// Type registry to use when parsing <see cref="ValueExpressionAttributeBase"/> instances, or <c>null</c>
         /// to use <see cref="ValueExpressionParser.DefaultTypeRegistry"/>.
         /// </param>
         public void Parse(Expression scope, TypeRegistry typeRegistry = null)
@@ -206,6 +206,82 @@ namespace GSF.ComponentModel
         }
 
         /// <summary>
+        /// Generates a delegate that will create new instance of type <typeparamref name="T"/> object parameter
+        /// applying any specified <see cref="DefaultValueAttribute"/> or <typeparamref name="TValueExpressionAttribute"/>
+        /// instances that are declared on the type <typeparamref name="T"/> properties.
+        /// </summary>
+        /// <param name="properties">Specific properties to target, or <c>null</c> to target all properties.</param>
+        /// <param name="typeRegistry">
+        /// Type registry to use when parsing <typeparamref name="TValueExpressionAttribute"/> instances, or <c>null</c>
+        /// to use <see cref="ValueExpressionParser.DefaultTypeRegistry"/>.
+        /// </param>
+        /// <remarks>
+        /// This function is useful for generating a delegate to a compiled function that will create new
+        /// objects of type <typeparamref name="T"/> where properties of the type of have been decorated with
+        /// <see cref="DefaultValueAttribute"/> or <typeparamref name="TValueExpressionAttribute"/> attributes.
+        /// The newly created object will automatically have applied any defined default values as specified by
+        /// the encountered attributes.
+        /// </remarks>
+        /// <returns>
+        /// Generated delegate that will create new <typeparamref name="T"/> instances with default values applied.
+        /// </returns>
+        public static Func<T> CreateInstanceForType<TValueExpressionAttribute>(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null) where TValueExpressionAttribute : ValueExpressionAttributeBase
+        {
+            return () => CreateInstanceForType<TValueExpressionAttribute, MinimumScope>(properties, typeRegistry)(new MinimumScope());
+        }
+
+        /// <summary>
+        /// Generates a delegate that will update an instance of type <typeparamref name="T"/> accepting a
+        /// contextual <see cref="ValueExpressionScopeBase{T}"/> object parameter applying any specified
+        /// <see cref="UpdateValueExpressionAttribute"/> instances that are declared on the type
+        /// <typeparamref name="T"/> properties.
+        /// </summary>
+        /// <param name="properties">Specific properties to target, or <c>null</c> to target all properties.</param>
+        /// <param name="typeRegistry">
+        /// Type registry to use when parsing <see cref="UpdateValueExpressionAttribute"/> instances, or <c>null</c>
+        /// to use <see cref="ValueExpressionParser.DefaultTypeRegistry"/>.
+        /// </param>
+        /// <remarks>
+        /// This function is useful for generating a delegate to a compiled function that will update
+        /// objects of type <typeparamref name="T"/> where properties of the type of have been decorated
+        /// with <see cref="UpdateValueExpressionAttribute"/> attributes. The updated object will automatically
+        /// have applied any defined update values as specified by the encountered attributes.
+        /// </remarks>
+        /// <returns>
+        /// Generated delegate that will update <typeparamref name="T"/> instances with update expression values applied.
+        /// </returns>
+        public static Action UpdateInstance(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null)
+        {
+            return () => UpdateInstance<MinimumScope>(properties, typeRegistry)(new MinimumScope());
+        }
+
+        /// <summary>
+        /// Generates a delegate that will update an instance of type <typeparamref name="T"/> accepting a
+        /// contextual <see cref="ValueExpressionScopeBase{T}"/> object parameter applying any specified
+        /// <typeparamref name="TValueExpressionAttribute"/> instances that are declared on the type
+        /// <typeparamref name="T"/> properties.
+        /// </summary>
+        /// <param name="properties">Specific properties to target, or <c>null</c> to target all properties.</param>
+        /// <param name="typeRegistry">
+        /// Type registry to use when parsing <typeparamref name="TValueExpressionAttribute"/> instances, or <c>null</c>
+        /// to use <see cref="ValueExpressionParser.DefaultTypeRegistry"/>.
+        /// </param>
+        /// <remarks>
+        /// This function is useful for generating a delegate to a compiled function that will update
+        /// objects of type <typeparamref name="T"/> where properties of the type of have been decorated
+        /// with <typeparamref name="TValueExpressionAttribute"/> attributes. The updated object will automatically
+        /// have applied any defined update values as specified by the encountered attributes.
+        /// </remarks>
+        /// <returns>
+        /// Generated delegate that will update <typeparamref name="T"/> instances with update expression values applied.
+        /// </returns>
+        /// <typeparam name="TValueExpressionAttribute"><see cref="ValueExpressionAttributeBase"/> parameter type.</typeparam>
+        public static Action UpdateInstanceForType<TValueExpressionAttribute>(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null) where TValueExpressionAttribute : ValueExpressionAttributeBase
+        {
+            return () => UpdateInstanceForType<TValueExpressionAttribute, MinimumScope>(properties, typeRegistry)(new MinimumScope());
+        }
+
+        /// <summary>
         /// Generates a delegate that will create new instance of type <typeparamref name="T"/> accepting a
         /// contextual <see cref="ValueExpressionScopeBase{T}"/> object parameter applying any
         /// specified <see cref="DefaultValueAttribute"/> or <see cref="DefaultValueExpressionAttribute"/>
@@ -233,8 +309,42 @@ namespace GSF.ComponentModel
         /// Generated delegate that will create new <typeparamref name="T"/> instances with default values applied.
         /// </returns>
         /// <typeparam name="TExpressionScope"><see cref="ValueExpressionScopeBase{T}"/> parameter type.</typeparam>
-        [SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
         public static Func<TExpressionScope, T> CreateInstance<TExpressionScope>(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null) where TExpressionScope : ValueExpressionScopeBase<T>
+        {
+            return CreateInstanceForType<DefaultValueExpressionAttribute, TExpressionScope>(properties, typeRegistry);
+        }
+
+        /// <summary>
+        /// Generates a delegate that will create new instance of type <typeparamref name="T"/> accepting a
+        /// contextual <see cref="ValueExpressionScopeBase{T}"/> object parameter applying any
+        /// specified <see cref="DefaultValueAttribute"/> or <typeparamref name="TValueExpressionAttribute"/>
+        /// instances that are declared on the type <typeparamref name="T"/> properties.
+        /// </summary>
+        /// <param name="properties">Specific properties to target, or <c>null</c> to target all properties.</param>
+        /// <param name="typeRegistry">
+        /// Type registry to use when parsing <typeparamref name="TValueExpressionAttribute"/> instances, or <c>null</c>
+        /// to use <see cref="ValueExpressionParser.DefaultTypeRegistry"/>.
+        /// </param>
+        /// <remarks>
+        /// This function is useful for generating a delegate to a compiled function that will create new
+        /// objects of type <typeparamref name="T"/> where properties of the type of have been decorated with
+        /// <see cref="DefaultValueAttribute"/> or <typeparamref name="TValueExpressionAttribute"/> attributes.
+        /// The newly created object will automatically have applied any defined default values as specified by
+        /// the encountered attributes. The generated delegate takes a parameter to a contextual object useful
+        /// for providing extra runtime data to <typeparamref name="TValueExpressionAttribute"/> attributes; the
+        /// parameter must be derived from <see cref="ValueExpressionScopeBase{T}"/>. Any public fields,
+        /// methods or properties defined in the derived class will be automatically accessible from the
+        /// expressions declared in the <typeparamref name="TValueExpressionAttribute"/> attributes. By default,
+        /// the expressions will have access to the current <typeparamref name="T"/> instance by referencing the
+        /// <c>this</c> keyword, which is an alias to <see cref="ValueExpressionScopeBase{T}.Instance"/>.
+        /// </remarks>
+        /// <returns>
+        /// Generated delegate that will create new <typeparamref name="T"/> instances with expression values applied.
+        /// </returns>
+        /// <typeparam name="TValueExpressionAttribute"><see cref="ValueExpressionAttributeBase"/> parameter type.</typeparam>
+        /// <typeparam name="TExpressionScope"><see cref="ValueExpressionScopeBase{T}"/> parameter type.</typeparam>
+        [SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
+        public static Func<TExpressionScope, T> CreateInstanceForType<TValueExpressionAttribute, TExpressionScope>(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null) where TValueExpressionAttribute : ValueExpressionAttributeBase where TExpressionScope : ValueExpressionScopeBase<T>
         {
             ConstructorInfo constructor = typeof(T).GetConstructor(Type.EmptyTypes);
 
@@ -248,10 +358,10 @@ namespace GSF.ComponentModel
             ParameterExpression newInstance = Expression.Variable(typeof(T));
             ParameterExpression scopeParameter = Expression.Parameter(typeof(TExpressionScope));
             DefaultValueAttribute defaultValueAttribute;
-            DefaultValueExpressionAttribute defaultValueExpressionAttribute;
+            TValueExpressionAttribute valueExpressionAttribute;
 
             // Sort properties by any specified evaluation order
-            properties = properties.OrderBy(property => property.TryGetAttribute(out defaultValueExpressionAttribute) ? defaultValueExpressionAttribute.EvaluationOrder : 0);
+            properties = properties.OrderBy(property => property.TryGetAttribute(out valueExpressionAttribute) ? valueExpressionAttribute.EvaluationOrder : 0);
 
             // Create new instance and assign to local variable
             expressions.Add(Expression.Assign(newInstance, Expression.New(constructor)));
@@ -270,14 +380,14 @@ namespace GSF.ComponentModel
                     }
                     catch (Exception ex)
                     {
-                        return scope => { throw new ArgumentException($"Error evaluating default value attribute for property \"{typeof(T).FullName}.{property.Name}\": {ex.Message}", property.Name, ex); };
+                        return scope => { throw new ArgumentException($"Error evaluating \"DefaultValueAttribute\" for property \"{typeof(T).FullName}.{property.Name}\": {ex.Message}", property.Name, ex); };
                     }
                 }
-                else if (property.TryGetAttribute(out defaultValueExpressionAttribute))
+                else if (property.TryGetAttribute(out valueExpressionAttribute))
                 {
                     try
                     {
-                        expressions.Add(AssignParsedValueExpression(defaultValueExpressionAttribute, typeRegistry, property, scopeParameter, newInstance));
+                        expressions.Add(AssignParsedValueExpression(valueExpressionAttribute, typeRegistry, property, scopeParameter, newInstance));
                     }
                     catch (ArgumentException ex)
                     {
@@ -285,7 +395,7 @@ namespace GSF.ComponentModel
                     }
                     catch (Exception ex)
                     {
-                        return scope => { throw new ArgumentException($"Error parsing default value expression attribute for property \"{typeof(T).FullName}.{property.Name}\": {ex.Message}", property.Name, ex); };
+                        return scope => { throw new ArgumentException($"Error parsing \"{typeof(TValueExpressionAttribute).Name}\" value for property \"{typeof(T).FullName}.{property.Name}\": {ex.Message}", property.Name, ex); };
                     }
                 }
             }
@@ -305,7 +415,7 @@ namespace GSF.ComponentModel
         /// </summary>
         /// <param name="properties">Specific properties to target, or <c>null</c> to target all properties.</param>
         /// <param name="typeRegistry">
-        /// Type registry to use when parsing <see cref="DefaultValueExpressionAttribute"/> instances, or <c>null</c>
+        /// Type registry to use when parsing <see cref="UpdateValueExpressionAttribute"/> instances, or <c>null</c>
         /// to use <see cref="ValueExpressionParser.DefaultTypeRegistry"/>.
         /// </param>
         /// <remarks>
@@ -325,8 +435,42 @@ namespace GSF.ComponentModel
         /// Generated delegate that will update <typeparamref name="T"/> instances with update expression values applied.
         /// </returns>
         /// <typeparam name="TExpressionScope"><see cref="ValueExpressionScopeBase{T}"/> parameter type.</typeparam>
-        [SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
         public static Action<TExpressionScope> UpdateInstance<TExpressionScope>(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null) where TExpressionScope : ValueExpressionScopeBase<T>
+        {
+            return UpdateInstanceForType<UpdateValueExpressionAttribute, TExpressionScope>(properties, typeRegistry);
+        }
+
+        /// <summary>
+        /// Generates a delegate that will update an instance of type <typeparamref name="T"/> accepting a
+        /// contextual <see cref="ValueExpressionScopeBase{T}"/> object parameter applying any specified
+        /// <typeparamref name="TValueExpressionAttribute"/> instances that are declared on the type
+        /// <typeparamref name="T"/> properties.
+        /// </summary>
+        /// <param name="properties">Specific properties to target, or <c>null</c> to target all properties.</param>
+        /// <param name="typeRegistry">
+        /// Type registry to use when parsing <typeparamref name="TValueExpressionAttribute"/> instances, or <c>null</c>
+        /// to use <see cref="ValueExpressionParser.DefaultTypeRegistry"/>.
+        /// </param>
+        /// <remarks>
+        /// This function is useful for generating a delegate to a compiled function that will update
+        /// objects of type <typeparamref name="T"/> where properties of the type of have been decorated
+        /// with <typeparamref name="TValueExpressionAttribute"/> attributes. The updated object will automatically
+        /// have applied any defined update values as specified by the encountered attributes. The generated
+        /// delegate takes a parameter to a contextual object useful for providing extra runtime data to
+        /// <typeparamref name="TValueExpressionAttribute"/> attributes; the parameter must be derived from
+        /// <see cref="ValueExpressionScopeBase{T}"/>. Any public fields, methods or properties defined in the
+        /// derived class will be automatically accessible from the expressions declared in the
+        /// <typeparamref name="TValueExpressionAttribute"/> attributes. By default, the expressions will have
+        /// access to the current <typeparamref name="T"/> instance by referencing the <c>this</c> keyword,
+        /// which is an alias to <see cref="ValueExpressionScopeBase{T}.Instance"/>.
+        /// </remarks>
+        /// <returns>
+        /// Generated delegate that will update <typeparamref name="T"/> instances with expression values applied.
+        /// </returns>
+        /// <typeparam name="TValueExpressionAttribute"><see cref="ValueExpressionAttributeBase"/> parameter type.</typeparam>
+        /// <typeparam name="TExpressionScope"><see cref="ValueExpressionScopeBase{T}"/> parameter type.</typeparam>
+        [SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
+        public static Action<TExpressionScope> UpdateInstanceForType<TValueExpressionAttribute, TExpressionScope>(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null) where TValueExpressionAttribute : ValueExpressionAttributeBase where TExpressionScope : ValueExpressionScopeBase<T>
         {
             if ((object)properties == null)
                 properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(property => property.CanRead && property.CanWrite);
@@ -334,10 +478,10 @@ namespace GSF.ComponentModel
             List<Expression> expressions = new List<Expression>();
             ParameterExpression instance = Expression.Variable(typeof(T));
             ParameterExpression scopeParameter = Expression.Parameter(typeof(TExpressionScope));
-            UpdateValueExpressionAttribute updateValueExpressionAttribute;
+            TValueExpressionAttribute valueExpressionAttribute;
 
             // Sort properties by any specified evaluation order
-            properties = properties.OrderBy(property => property.TryGetAttribute(out updateValueExpressionAttribute) ? updateValueExpressionAttribute.EvaluationOrder : 0);
+            properties = properties.OrderBy(property => property.TryGetAttribute(out valueExpressionAttribute) ? valueExpressionAttribute.EvaluationOrder : 0);
 
             // Get "Instance" field of scope parameter and assign to local variable
             expressions.Add(Expression.Assign(instance, Expression.Field(scopeParameter, typeof(TExpressionScope).GetField("Instance"))));
@@ -345,11 +489,11 @@ namespace GSF.ComponentModel
             // Find any defined default value attributes for properties and assign them to new instance
             foreach (PropertyInfo property in properties)
             {
-                if (property.TryGetAttribute(out updateValueExpressionAttribute))
+                if (property.TryGetAttribute(out valueExpressionAttribute))
                 {
                     try
                     {
-                        expressions.Add(AssignParsedValueExpression(updateValueExpressionAttribute, typeRegistry, property, scopeParameter, instance));
+                        expressions.Add(AssignParsedValueExpression(valueExpressionAttribute, typeRegistry, property, scopeParameter, instance));
                     }
                     catch (ArgumentException ex)
                     {
@@ -357,7 +501,7 @@ namespace GSF.ComponentModel
                     }
                     catch (Exception ex)
                     {
-                        return scope => { throw new ArgumentException($"Error parsing update value expression attribute for property \"{typeof(T).FullName}.{property.Name}\": {ex.Message}", property.Name, ex); };
+                        return scope => { throw new ArgumentException($"Error parsing \"{typeof(TValueExpressionAttribute).Name}\" value for property \"{typeof(T).FullName}.{property.Name}\": {ex.Message}", property.Name, ex); };
                     }
                 }
             }
