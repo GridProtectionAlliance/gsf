@@ -209,6 +209,14 @@ namespace GSF.Net.Ftp
         }
 
         /// <summary>
+        /// Removes remote file.
+        /// </summary>
+        public void Remove()
+        {
+            Parent.RemoveFile(Name);
+        }
+
+        /// <summary>
         /// Gets FTP input stream for file.
         /// </summary>
         /// <returns>FTP input stream for file.</returns>
