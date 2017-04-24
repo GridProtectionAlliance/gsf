@@ -234,7 +234,8 @@ namespace GSF.ComponentModel
         /// Generates a delegate that will update an instance of type <typeparamref name="T"/> accepting a
         /// contextual <see cref="ValueExpressionScopeBase{T}"/> object parameter applying any specified
         /// <see cref="UpdateValueExpressionAttribute"/> instances that are declared on the type
-        /// <typeparamref name="T"/> properties.
+        /// <typeparamref name="T"/> properties. Target <typeparamref name="T"/> instance is accepted
+        /// as the parameter to the returned delegate <see cref="Action{T}"/>.
         /// </summary>
         /// <param name="properties">Specific properties to target, or <c>null</c> to target all properties.</param>
         /// <param name="typeRegistry">
@@ -250,16 +251,17 @@ namespace GSF.ComponentModel
         /// <returns>
         /// Generated delegate that will update <typeparamref name="T"/> instances with update expression values applied.
         /// </returns>
-        public static Action UpdateInstance(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null)
+        public static Action<T> UpdateInstance(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null)
         {
-            return () => UpdateInstance<MinimumScope>(properties, typeRegistry)(new MinimumScope());
+            return instance => UpdateInstance<MinimumScope>(properties, typeRegistry)(new MinimumScope { Instance = instance });
         }
 
         /// <summary>
         /// Generates a delegate that will update an instance of type <typeparamref name="T"/> accepting a
         /// contextual <see cref="ValueExpressionScopeBase{T}"/> object parameter applying any specified
         /// <typeparamref name="TValueExpressionAttribute"/> instances that are declared on the type
-        /// <typeparamref name="T"/> properties.
+        /// <typeparamref name="T"/> properties. Target <typeparamref name="T"/> instance is accepted
+        /// as the parameter to the returned delegate <see cref="Action{T}"/>.
         /// </summary>
         /// <param name="properties">Specific properties to target, or <c>null</c> to target all properties.</param>
         /// <param name="typeRegistry">
@@ -276,9 +278,9 @@ namespace GSF.ComponentModel
         /// Generated delegate that will update <typeparamref name="T"/> instances with update expression values applied.
         /// </returns>
         /// <typeparam name="TValueExpressionAttribute"><see cref="ValueExpressionAttributeBase"/> parameter type.</typeparam>
-        public static Action UpdateInstanceForType<TValueExpressionAttribute>(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null) where TValueExpressionAttribute : ValueExpressionAttributeBase
+        public static Action<T> UpdateInstanceForType<TValueExpressionAttribute>(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null) where TValueExpressionAttribute : ValueExpressionAttributeBase
         {
-            return () => UpdateInstanceForType<TValueExpressionAttribute, MinimumScope>(properties, typeRegistry)(new MinimumScope());
+            return instance => UpdateInstanceForType<TValueExpressionAttribute, MinimumScope>(properties, typeRegistry)(new MinimumScope { Instance = instance });
         }
 
         /// <summary>
@@ -411,7 +413,8 @@ namespace GSF.ComponentModel
         /// Generates a delegate that will update an instance of type <typeparamref name="T"/> accepting a
         /// contextual <see cref="ValueExpressionScopeBase{T}"/> object parameter applying any specified
         /// <see cref="UpdateValueExpressionAttribute"/> instances that are declared on the type
-        /// <typeparamref name="T"/> properties.
+        /// <typeparamref name="T"/> properties. Target <typeparamref name="T"/> instance needs to be
+        /// assigned to the <see cref="ValueExpressionScopeBase{T}.Instance"/> property prior to call.
         /// </summary>
         /// <param name="properties">Specific properties to target, or <c>null</c> to target all properties.</param>
         /// <param name="typeRegistry">
@@ -444,7 +447,8 @@ namespace GSF.ComponentModel
         /// Generates a delegate that will update an instance of type <typeparamref name="T"/> accepting a
         /// contextual <see cref="ValueExpressionScopeBase{T}"/> object parameter applying any specified
         /// <typeparamref name="TValueExpressionAttribute"/> instances that are declared on the type
-        /// <typeparamref name="T"/> properties.
+        /// <typeparamref name="T"/> properties. Target <typeparamref name="T"/> instance needs to be
+        /// assigned to the <see cref="ValueExpressionScopeBase{T}.Instance"/> property prior to call.
         /// </summary>
         /// <param name="properties">Specific properties to target, or <c>null</c> to target all properties.</param>
         /// <param name="typeRegistry">
