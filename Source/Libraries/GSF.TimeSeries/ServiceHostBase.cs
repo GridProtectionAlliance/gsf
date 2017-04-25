@@ -1993,7 +1993,7 @@ namespace GSF.TimeSeries
                                         {
                                             // Attempt to convert command parameters to the method parameter types
                                             object[] parameters = requestInfo.Request.Arguments.Skip(2)
-                                                .Select((arg, i) => arg.Value.ConvertToType<object>(parameterInfo[i].ParameterType))
+                                                .Select((arg, i) => arg.Value.ConvertToType(parameterInfo[i].ParameterType))
                                                 .Concat(requestInfo.Request.Attachments)
                                                 .Take(parameterInfo.Length)
                                                 .ToArray();

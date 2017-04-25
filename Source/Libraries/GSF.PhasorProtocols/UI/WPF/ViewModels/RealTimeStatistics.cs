@@ -367,7 +367,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 }
             }
 
-            return "".ConvertToType<object>(dataType);
+            return "".ConvertToType(dataType);
         }
 
         public void Stop()

@@ -442,7 +442,7 @@ namespace GSF.Configuration
                 if (string.IsNullOrEmpty(value))
                     return defaultValue;
 
-                return value.ConvertToType<T>(null, m_category.Section.File.Culture);
+                return value.ConvertToType<T>(m_category.Section.File.Culture);
             }
             catch
             {

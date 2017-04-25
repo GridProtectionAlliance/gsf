@@ -343,7 +343,7 @@ namespace GSF.Configuration
         {
             string setting = GetSettingName(name);
 
-            return DecryptValue(name, setting, RetrieveSetting(name, setting)).ConvertToType<T>(null, m_culture);
+            return DecryptValue(name, setting, RetrieveSetting(name, setting)).ConvertToType<T>(m_culture);
         }
 
         /// <summary>
@@ -356,7 +356,7 @@ namespace GSF.Configuration
         {
             string setting = GetSettingName(name);
 
-            return DecryptValue(name, setting, RetrieveSetting(name, setting)).ConvertToType<object>(type, m_culture);
+            return DecryptValue(name, setting, RetrieveSetting(name, setting)).ConvertToType(type, m_culture);
         }
 
         /// <summary>
@@ -369,7 +369,7 @@ namespace GSF.Configuration
         {
             string setting = GetSettingName(name);
 
-            value = DecryptValue(name, setting, RetrieveSetting(name, setting)).ConvertToType<T>(null, m_culture);
+            value = DecryptValue(name, setting, RetrieveSetting(name, setting)).ConvertToType<T>(m_culture);
         }
 
         // Encrypt setting value and return a base64 encoded value

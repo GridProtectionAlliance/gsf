@@ -855,7 +855,7 @@ namespace GSF.TimeSeries.UI
                 }
             }
 
-            return "".ConvertToType<object>(dataType);
+            return "".ConvertToType(dataType);
         }
 
         /// <summary>

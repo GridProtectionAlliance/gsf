@@ -163,6 +163,25 @@ namespace GSF
         /// </summary>
         /// <typeparam name="T"><see cref="Type"/> to convert string to.</typeparam>
         /// <param name="value">Source string to convert to type.</param>
+        /// <param name="culture"><see cref="CultureInfo"/> to use for the conversion.</param>
+        /// <returns><see cref="string"/> converted to specified <see cref="Type"/>; default value of specified type T if conversion fails.</returns>
+        /// <remarks>
+        /// This function makes use of a <see cref="TypeConverter"/> to convert this <see cref="string"/> to the specified type T,
+        /// the best way to make sure <paramref name="value"/> can be converted back to its original type is to use the same
+        /// <see cref="TypeConverter"/> to convert the original object to a <see cref="string"/>; see the
+        /// <see cref="Common.TypeConvertToString(object)"/> method for an easy way to do this.
+        /// </remarks>
+        public static T ConvertToType<T>(this string value, CultureInfo culture)
+        {
+            object obj = ConvertToType(value, typeof(T), culture) ?? default(T);
+            return (T)obj;
+        }
+
+        /// <summary>
+        /// Converts this string into the specified type.
+        /// </summary>
+        /// <typeparam name="T"><see cref="Type"/> to convert string to.</typeparam>
+        /// <param name="value">Source string to convert to type.</param>
         /// <param name="type"><see cref="Type"/> to convert string to.</param>
         /// <returns><see cref="string"/> converted to specified <see cref="Type"/>; default value of specified type T if conversion fails.</returns>
         /// <remarks>
@@ -171,9 +190,9 @@ namespace GSF
         /// <see cref="TypeConverter"/> to convert the original object to a <see cref="string"/>; see the
         /// <see cref="Common.TypeConvertToString(object)"/> method for an easy way to do this.
         /// </remarks>
-        public static T ConvertToType<T>(this string value, Type type)
+        public static object ConvertToType(this string value, Type type)
         {
-            return ConvertToType<T>(value, type, null);
+            return ConvertToType(value, type, null);
         }
 
         /// <summary>
@@ -190,15 +209,15 @@ namespace GSF
         /// <see cref="TypeConverter"/> to convert the original object to a <see cref="string"/>; see the
         /// <see cref="Common.TypeConvertToString(object)"/> method for an easy way to do this.
         /// </remarks>
-        public static T ConvertToType<T>(this string value, Type type, CultureInfo culture)
+        public static object ConvertToType(this string value, Type type, CultureInfo culture)
         {
             // Don't proceed further if string is empty.
             if (string.IsNullOrEmpty(value))
-                return default(T);
+                return null;
 
             // Initialize return type if not specified.
             if ((object)type == null)
-                type = typeof(T);
+                throw new ArgumentNullException(nameof(type));
 
             // Initialize culture info if not specified.
             if ((object)culture == null)
@@ -208,17 +227,17 @@ namespace GSF
             {
                 // Handle booleans as a special case to allow numeric entries as well as true/false
                 if (type == typeof(bool))
-                    return (T)(object)value.ParseBoolean();
+                    return value.ParseBoolean();
 
                 // Handle objects that have type converters (e.g., Enum, Color, Point, etc.)
                 TypeConverter converter = TypeDescriptor.GetConverter(type);
 
                 // ReSharper disable once AssignNullToNotNullAttribute
-                return (T)converter.ConvertFromString(null, culture, value);
+                return converter.ConvertFromString(null, culture, value);
             }
             catch
             {
-                return default(T);
+                return null;
             }
         }
 

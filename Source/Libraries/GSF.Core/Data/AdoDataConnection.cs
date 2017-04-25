@@ -659,30 +659,93 @@ namespace GSF.Data
         [StringFormatMethod("sqlFormat")]
         public T ExecuteScalar<T>(T defaultValue, int timeout, string sqlFormat, params object[] parameters)
         {
+            return (T)ExecuteScalar(typeof(T), defaultValue, timeout, sqlFormat, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="Connection"/>, and returns the value in the first column 
+        /// of the first row in the result set as type <paramref name="returnType"/>.
+        /// </summary>
+        /// <param name="returnType">The type to which the result of the query should be converted.</param>
+        /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
+        [StringFormatMethod("sqlFormat")]
+        public object ExecuteScalar(Type returnType, string sqlFormat, params object[] parameters)
+        {
+            return ExecuteScalar(returnType, DefaultTimeout, sqlFormat, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="Connection"/>, and returns the value in the first column 
+        /// of the first row in the result set as type <paramref name="returnType"/>.
+        /// </summary>
+        /// <param name="returnType">The type to which the result of the query should be converted.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
+        [StringFormatMethod("sqlFormat")]
+        public object ExecuteScalar(Type returnType, int timeout, string sqlFormat, params object[] parameters)
+        {
+            if (returnType.IsValueType)
+                return ExecuteScalar(returnType, Activator.CreateInstance(returnType), timeout, sqlFormat, parameters);
+
+            return ExecuteScalar(returnType, (object)null, timeout, sqlFormat, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="Connection"/>, and returns the value in the first column 
+        /// of the first row in the result set as type <paramref name="returnType"/>, substituting <paramref name="defaultValue"/>
+        /// if <see cref="DBNull.Value"/> is retrieved.
+        /// </summary>
+        /// <param name="returnType">The type to which the result of the query should be converted.</param>
+        /// <param name="defaultValue">The value to be substituted if <see cref="DBNull.Value"/> is retrieved.</param>
+        /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
+        [StringFormatMethod("sqlFormat")]
+        public object ExecuteScalar(Type returnType, object defaultValue, string sqlFormat, params object[] parameters)
+        {
+            return ExecuteScalar(returnType, defaultValue, DefaultTimeout, sqlFormat, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="Connection"/>, and returns the value in the first column 
+        /// of the first row in the result set as type <paramref name="returnType"/>, substituting <paramref name="defaultValue"/>
+        /// if <see cref="DBNull.Value"/> is retrieved.
+        /// </summary>
+        /// <param name="returnType">The type to which the result of the query should be converted.</param>
+        /// <param name="defaultValue">The value to be substituted if <see cref="DBNull.Value"/> is retrieved.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
+        [StringFormatMethod("sqlFormat")]
+        public object ExecuteScalar(Type returnType, object defaultValue, int timeout, string sqlFormat, params object[] parameters)
+        {
             object value = ExecuteScalar(timeout, sqlFormat, parameters);
 
             if ((object)value == null || value == DBNull.Value)
                 return defaultValue;
 
-            Type type = typeof(T);
-
             // Nullable types cannot be used in type conversion, but we can use Nullable.GetUnderlyingType()
             // to determine whether the type is nullable and convert to the underlying type instead
-            type = Nullable.GetUnderlyingType(type) ?? type;
+            Type type = Nullable.GetUnderlyingType(returnType) ?? returnType;
 
             // Handle Guids
             if (type == typeof(Guid))
-                return (T)(object)System.Guid.Parse(value.ToString());
+                return System.Guid.Parse(value.ToString());
 
             // Handle string types that may have a converter function (e.g., Enums)
             if (value is string)
-                return value.ToString().ConvertToType<T>(type);
+                return value.ToString().ConvertToType(type);
 
             // Handle native types
             if (value is IConvertible)
-                return (T)Convert.ChangeType(value, type);
+                return Convert.ChangeType(value, type);
 
-            return (T)value;
+            return value;
         }
 
         /// <summary>

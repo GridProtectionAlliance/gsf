@@ -410,7 +410,7 @@ namespace GSF.Configuration
         {
             return ((object)property.Converter != null)
                 ? property.Converter.ConvertFromString(value)
-                : value.ConvertToType<object>(property.PropertyInfo.PropertyType);
+                : value.ConvertToType(property.PropertyInfo.PropertyType);
         }
 
         /// <summary>
