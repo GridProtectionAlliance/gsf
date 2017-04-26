@@ -196,7 +196,7 @@ namespace GSF.Net.Ftp
         /// </summary>
         public void Get()
         {
-            Parent.GetFile(Name);
+            Get(Name);
         }
 
         /// <summary>
@@ -205,7 +205,9 @@ namespace GSF.Net.Ftp
         /// <param name="localFile">Local filename to use for download.</param>
         public void Get(string localFile)
         {
-            Parent.GetFile(localFile, Name);
+            string remoteFile = $"{m_parent.FullPath}/{Name}";
+            FtpFileTransferer transferer = new FtpFileTransferer(m_parent, localFile, remoteFile, Size, TransferDirection.Download);
+            transferer.StartTransfer();
         }
 
         /// <summary>
@@ -213,7 +215,9 @@ namespace GSF.Net.Ftp
         /// </summary>
         public void Remove()
         {
-            Parent.RemoveFile(Name);
+            string remoteFile = $"{m_parent.FullPath}/{Name}";
+            m_parent.Session.ControlChannel.DELE(remoteFile);
+            m_parent.ClearItems();
         }
 
         /// <summary>
