@@ -225,7 +225,9 @@ namespace GSF.Data.Model
         /// <param name="searchText">Text to search.</param>
         /// <returns>An enumerable of modeled table row instances for queried records.</returns>
         /// <para>
-        /// This function is used for record paging. Primary keys are cached server-side, typically per user session, to maintain desired per-page sort order.
+        /// This function is used for record paging. Primary keys are cached server-side, typically per user session,
+        /// to maintain desired per-page sort order. Call <see cref="ClearPrimaryKeyCache"/> to manually clear cache
+        /// when table contents are known to have changed.
         /// </para>
         /// <para>
         /// This is a convenience call to <see cref="QueryRecords(string, bool, int, int, RecordRestriction)"/> where restriction
@@ -243,7 +245,9 @@ namespace GSF.Data.Model
         /// <param name="restriction">Record restriction to apply, if any.</param>
         /// <returns>An enumerable of modeled table row instances for queried records.</returns>
         /// <remarks>
-        /// This function is used for record paging. Primary keys are cached server-side, typically per user session, to maintain desired per-page sort order.
+        /// This function is used for record paging. Primary keys are cached server-side, typically per user session,
+        /// to maintain desired per-page sort order. Call <see cref="ClearPrimaryKeyCache"/> to manually clear cache
+        /// when table contents are known to have changed.
         /// </remarks>
         IEnumerable QueryRecords(string sortField, bool ascending, int page, int pageSize, RecordRestriction restriction = null);
 
@@ -552,5 +556,27 @@ namespace GSF.Data.Model
         /// <see cref="SearchableAttribute"/> and specified <paramref name="searchText"/>.
         /// </returns>
         RecordRestriction GetSearchRestriction(string searchText);
+
+        /// <summary>
+        /// Calculates the size of the current primary key cache.
+        /// </summary>
+        /// <returns></returns>
+        int GetPrimaryKeyCacheSize();
+
+       /// <summary>
+       /// Clears the primary key cache for this <see cref="ITableOperations"/> instance.
+       /// </summary>
+       /// <remarks>
+       /// <para>
+       /// This method is intended to be used in conjunction with calls to the overloads for
+       /// <see cref="QueryRecords(string, bool, int, int, RecordRestriction)"/> which are
+       /// used for record pagination.
+       /// </para>
+       /// <para>
+       /// If record set is known to have changed outside purview of this class, this method
+       /// should be called so that primary key cache can be reloaded.
+       /// </para>
+       /// </remarks>
+        void ClearPrimaryKeyCache();
     }
 }

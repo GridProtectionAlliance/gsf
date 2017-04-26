@@ -65,11 +65,11 @@ namespace GSF.Web.Security
         /// <summary>
         /// Creates a new <see cref="SecurityHub"/> with the specified <see cref="DataContext"/> and logging functions.
         /// </summary>
-        /// <param name="dataContext">Data context to use for this hub; set to <c>null</c> for default security provider context.</param>
+        /// <param name="settingsCategory">Setting category that contains the connection settings. Defaults to "securityProvider".</param>
         /// <param name="logStatusMessageFunction">Delegate to use to log status messages, if any.</param>
         /// <param name="logExceptionFunction">Delegate to use to log exceptions, if any.</param>
-        public SecurityHub(DataContext dataContext, Action<string, UpdateType> logStatusMessageFunction, Action<Exception> logExceptionFunction) : 
-            this(dataContext, logStatusMessageFunction, logExceptionFunction, true)
+        public SecurityHub(string settingsCategory, Action<string, UpdateType> logStatusMessageFunction, Action<Exception> logExceptionFunction) : 
+            this(settingsCategory, logStatusMessageFunction, logExceptionFunction, true)
         {
             // Capture initial defaults
             if ((object)logStatusMessageFunction != null && (object)s_logStatusMessageFunction == null)
@@ -79,8 +79,8 @@ namespace GSF.Web.Security
                 s_logExceptionFunction = logExceptionFunction;
         }
 
-        private SecurityHub(DataContext dataContext, Action<string, UpdateType> logStatusMessageFunction, Action<Exception> logExceptionFunction, bool overload) :
-            base(dataContext ?? new DataContext("securityProvider"), logStatusMessageFunction ?? s_logStatusMessageFunction, logExceptionFunction ?? s_logExceptionFunction)
+        private SecurityHub(string settingsCategory, Action<string, UpdateType> logStatusMessageFunction, Action<Exception> logExceptionFunction, bool overload) :
+            base(settingsCategory ?? "securityProvider", logStatusMessageFunction ?? s_logStatusMessageFunction, logExceptionFunction ?? s_logExceptionFunction)
         {
         }
 

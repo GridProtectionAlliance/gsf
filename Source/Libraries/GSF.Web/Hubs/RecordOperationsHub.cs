@@ -40,7 +40,7 @@ namespace GSF.Web.Hubs
         #region [ Members ]
 
         // Fields
-        private readonly DataContext m_dataContext;
+        private readonly DataContextOperations m_dataContextOperations;
         private readonly Action<string, UpdateType> m_logStatusMessageFunction;
         private readonly Action<Exception> m_logExceptionFunction;
         private dynamic m_clientScript;
@@ -72,12 +72,12 @@ namespace GSF.Web.Hubs
         /// <summary>
         /// Creates a new <see cref="RecordOperationsHub{T}"/> with the specified <see cref="DataContext"/> and logging functions.
         /// </summary>
-        /// <param name="dataContext">Data context to use for this hub; set to <c>null</c> for default data context.</param>
+        /// <param name="settingsCategory">Setting category that contains the connection settings.</param>
         /// <param name="logStatusMessageFunction">Delegate to use to log status messages, if any.</param>
         /// <param name="logExceptionFunction">Delegate to use to log exceptions, if any.</param>
-        protected RecordOperationsHub(DataContext dataContext, Action<string, UpdateType> logStatusMessageFunction, Action<Exception> logExceptionFunction)
+        protected RecordOperationsHub(string settingsCategory, Action<string, UpdateType> logStatusMessageFunction, Action<Exception> logExceptionFunction)
         {
-            m_dataContext = dataContext ?? new DataContext(exceptionHandler: ex => LogException(ex));
+            m_dataContextOperations = new DataContextOperations(this, settingsCategory, logStatusMessageFunction, logExceptionFunction);
             m_logStatusMessageFunction = logStatusMessageFunction;
             m_logExceptionFunction = logExceptionFunction;
         }
@@ -100,9 +100,9 @@ namespace GSF.Web.Hubs
         public dynamic ClientScript => m_clientScript ?? (m_clientScript = Clients?.Client(ConnectionID));
 
         /// <summary>
-        /// Gets <see cref="Model.DataContext"/> created for this <see cref="RecordOperationsHub{T}"/> instance.
+        /// Gets <see cref="Model.DataContext"/> instance for the current SignalR hub session, creating it if needed.
         /// </summary>
-        public DataContext DataContext => m_dataContext;
+        public DataContext DataContext => m_dataContextOperations.DataContext;
 
         /// <summary>
         /// Gets active connection ID from current hub context or assigns one to use.
@@ -137,7 +137,9 @@ namespace GSF.Web.Hubs
                 try
                 {
                     if (disposing)
-                        m_dataContext?.Dispose();
+                    {
+                        m_clientScript = null;
+                    }
                 }
                 finally
                 {
@@ -171,7 +173,10 @@ namespace GSF.Web.Hubs
         public override Task OnDisconnected(bool stopCalled)
         {
             if (stopCalled)
+            {
+                m_dataContextOperations?.EndSession();
                 s_connectCount--;
+            }
 
             return base.OnDisconnected(stopCalled);
         }

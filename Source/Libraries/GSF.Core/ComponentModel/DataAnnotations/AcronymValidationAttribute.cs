@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace GSF.ComponentModel.DataAnnotations
@@ -29,7 +30,8 @@ namespace GSF.ComponentModel.DataAnnotations
     /// Represents a <see cref="RegularExpressionAttribute"/> for validating Acronyms, i.e., expressions
     /// that consist only of upper case letters, numbers, '!', '-', '@', '#', '_' , '.' or '$'.
     /// </summary>
-    public class AcronymValidationAttribute : RegularExpressionAttribute
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
+    public sealed class AcronymValidationAttribute : RegularExpressionAttribute
     {
         /// <summary>
         /// Defines the regular expression pattern used to validate value. 

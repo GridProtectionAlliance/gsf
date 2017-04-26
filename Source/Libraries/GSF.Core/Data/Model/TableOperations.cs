@@ -76,6 +76,7 @@ namespace GSF.Data.Model
         private Action<Exception> m_exceptionHandler;
         private IEnumerable<DataRow> m_primaryKeyCache;
         private string m_lastSortField;
+        private RecordRestriction m_lastRestriction;
         private bool m_useCaseSensitiveFieldNames;
         private readonly string m_countSql;
         private readonly string m_orderBySql;
@@ -609,7 +610,9 @@ namespace GSF.Data.Model
         /// <returns>An enumerable of modeled table row instances for queried records.</returns>
         /// <remarks>
         /// <para>
-        /// This function is used for record paging. Primary keys are cached server-side, typically per user session, to maintain desired per-page sort order.
+        /// This function is used for record paging. Primary keys are cached server-side, typically per user session,
+        /// to maintain desired per-page sort order. Call <see cref="ClearPrimaryKeyCache"/> to manually clear cache
+        /// when table contents are known to have changed.
         /// </para>
         /// <para>
         /// This is a convenience call to <see cref="QueryRecords(string, bool, int, int, RecordRestriction)"/> where restriction
@@ -636,14 +639,18 @@ namespace GSF.Data.Model
         /// <param name="restriction">Record restriction to apply, if any.</param>
         /// <returns>An enumerable of modeled table row instances for queried records.</returns>
         /// <remarks>
-        /// This function is used for record paging. Primary keys are cached server-side, typically per user session, to maintain desired per-page sort order.
+        /// <para>
+        /// This function is used for record paging. Primary keys are cached server-side, typically per user session,
+        /// to maintain desired per-page sort order. Call <see cref="ClearPrimaryKeyCache"/> to manually clear cache
+        /// when table contents are known to have changed.
+        /// </para>
         /// </remarks>
         public IEnumerable<T> QueryRecords(string sortField, bool ascending, int page, int pageSize, RecordRestriction restriction = null)
         {
             if (string.IsNullOrWhiteSpace(sortField))
                 sortField = s_fieldNames[s_primaryKeyProperties[0].Name];
 
-            if ((object)m_primaryKeyCache == null || string.Compare(sortField, m_lastSortField, StringComparison.OrdinalIgnoreCase) != 0)
+            if ((object)m_primaryKeyCache == null || !sortField.Equals(m_lastSortField, StringComparison.OrdinalIgnoreCase) || restriction != m_lastRestriction)
             {
                 string orderByExpression = $"{sortField}{(ascending ? "" : " DESC")}";
                 string sqlExpression = null;
@@ -660,7 +667,6 @@ namespace GSF.Data.Model
                         sqlExpression = string.Format(m_orderByWhereSql, UpdateFieldNames(restriction.FilterExpression), orderByExpression);
                         m_primaryKeyCache = m_connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable();
                     }
-
                 }
                 catch (Exception ex)
                 {
@@ -674,6 +680,7 @@ namespace GSF.Data.Model
                 }
 
                 m_lastSortField = sortField;
+                m_lastRestriction = restriction;
             }
 
             return m_primaryKeyCache.ToPagedList(page, pageSize).Select(row => LoadRecord(row.ItemArray)).Where(record => record != null);
@@ -1477,6 +1484,34 @@ namespace GSF.Data.Model
             }
 
             return new RecordRestriction(multiKeyWordFilter.ToString(), keyWords.SelectMany(keyWord => new object[] { $"%{keyWord}%", keyWord }).ToArray());
+        }
+
+        /// <summary>
+        /// Calculates the size of the current primary key cache.
+        /// </summary>
+        /// <returns></returns>
+        public int GetPrimaryKeyCacheSize()
+        {
+            return m_primaryKeyCache?.Count() ?? 0;
+        }
+
+        /// <summary>
+        /// Clears the primary key cache for this <see cref="TableOperations{T}"/> instance.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This method is intended to be used in conjunction with calls to the overloads for
+        /// <see cref="QueryRecords(string, bool, int, int, RecordRestriction)"/> which are
+        /// used for record pagination.
+        /// </para>
+        /// <para>
+        /// If record set is known to have changed outside purview of this class, this method
+        /// should be called so that primary key cache can be reloaded.
+        /// </para>
+        /// </remarks>
+        public void ClearPrimaryKeyCache()
+        {
+            m_primaryKeyCache = null;
         }
 
         // Derive table name, escaping it if requested by model

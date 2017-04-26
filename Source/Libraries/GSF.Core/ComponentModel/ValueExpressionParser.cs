@@ -225,6 +225,7 @@ namespace GSF.ComponentModel
         /// <returns>
         /// Generated delegate that will create new <typeparamref name="T"/> instances with default values applied.
         /// </returns>
+        [SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
         public static Func<T> CreateInstanceForType<TValueExpressionAttribute>(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null) where TValueExpressionAttribute : ValueExpressionAttributeBase
         {
             return () => CreateInstanceForType<TValueExpressionAttribute, MinimumScope>(properties, typeRegistry)(new MinimumScope());
@@ -278,6 +279,7 @@ namespace GSF.ComponentModel
         /// Generated delegate that will update <typeparamref name="T"/> instances with update expression values applied.
         /// </returns>
         /// <typeparam name="TValueExpressionAttribute"><see cref="ValueExpressionAttributeBase"/> parameter type.</typeparam>
+        [SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
         public static Action<T> UpdateInstanceForType<TValueExpressionAttribute>(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null) where TValueExpressionAttribute : ValueExpressionAttributeBase
         {
             return instance => UpdateInstanceForType<TValueExpressionAttribute, MinimumScope>(properties, typeRegistry)(new MinimumScope { Instance = instance });
@@ -345,6 +347,7 @@ namespace GSF.ComponentModel
         /// </returns>
         /// <typeparam name="TValueExpressionAttribute"><see cref="ValueExpressionAttributeBase"/> parameter type.</typeparam>
         /// <typeparam name="TExpressionScope"><see cref="ValueExpressionScopeBase{T}"/> parameter type.</typeparam>
+        [SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
         [SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
         public static Func<TExpressionScope, T> CreateInstanceForType<TValueExpressionAttribute, TExpressionScope>(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null) where TValueExpressionAttribute : ValueExpressionAttributeBase where TExpressionScope : ValueExpressionScopeBase<T>
         {
@@ -473,6 +476,7 @@ namespace GSF.ComponentModel
         /// </returns>
         /// <typeparam name="TValueExpressionAttribute"><see cref="ValueExpressionAttributeBase"/> parameter type.</typeparam>
         /// <typeparam name="TExpressionScope"><see cref="ValueExpressionScopeBase{T}"/> parameter type.</typeparam>
+        [SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
         [SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
         public static Action<TExpressionScope> UpdateInstanceForType<TValueExpressionAttribute, TExpressionScope>(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null) where TValueExpressionAttribute : ValueExpressionAttributeBase where TExpressionScope : ValueExpressionScopeBase<T>
         {
@@ -562,12 +566,14 @@ namespace GSF.ComponentModel
             return Expression.Call(instance, property.SetMethod, getParsedValue);
         }
 
+        // Function referenced through reflection - see s_addCachedValueMethod
         private static void AddCachedValue(PropertyInfo property, object value)
         {
             lock (s_cachedExpressionValues)
                 s_cachedExpressionValues.GetOrAdd(property, value);
         }
 
+        // Function referenced through reflection - see s_getCachedValueMethod
         private static Tuple<bool, object> GetCachedValue(PropertyInfo property)
         {
             bool exists;

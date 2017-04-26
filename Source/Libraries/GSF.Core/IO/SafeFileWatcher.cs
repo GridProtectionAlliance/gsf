@@ -23,6 +23,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Security;
 
@@ -338,6 +339,7 @@ namespace GSF.IO
         /// Releases the unmanaged resources used by the <see cref="SafeFileWatcher"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "m_fileSystemWatcher")]
         protected virtual void Dispose(bool disposing)
         {
             if (m_disposed)

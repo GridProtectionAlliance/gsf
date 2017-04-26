@@ -180,10 +180,9 @@ namespace GSF
         /// <summary>
         /// Converts this string into the specified type.
         /// </summary>
-        /// <typeparam name="T"><see cref="Type"/> to convert string to.</typeparam>
         /// <param name="value">Source string to convert to type.</param>
         /// <param name="type"><see cref="Type"/> to convert string to.</param>
-        /// <returns><see cref="string"/> converted to specified <see cref="Type"/>; default value of specified type T if conversion fails.</returns>
+        /// <returns><see cref="string"/> converted to specified <see cref="Type"/>; default value of specified type if conversion fails.</returns>
         /// <remarks>
         /// This function makes use of a <see cref="TypeConverter"/> to convert this <see cref="string"/> to the specified <paramref name="type"/>,
         /// the best way to make sure <paramref name="value"/> can be converted back to its original type is to use the same
@@ -198,11 +197,10 @@ namespace GSF
         /// <summary>
         /// Converts this string into the specified type.
         /// </summary>
-        /// <typeparam name="T"><see cref="Type"/> to convert string to.</typeparam>
         /// <param name="value">Source string to convert to type.</param>
         /// <param name="type"><see cref="Type"/> to convert string to.</param>
         /// <param name="culture"><see cref="CultureInfo"/> to use for the conversion.</param>
-        /// <returns><see cref="string"/> converted to specified <see cref="Type"/>; default value of specified type T if conversion fails.</returns>
+        /// <returns><see cref="string"/> converted to specified <see cref="Type"/>; default value of specified type if conversion fails.</returns>
         /// <remarks>
         /// This function makes use of a <see cref="TypeConverter"/> to convert this <see cref="string"/> to the specified <paramref name="type"/>,
         /// the best way to make sure <paramref name="value"/> can be converted back to its original type is to use the same

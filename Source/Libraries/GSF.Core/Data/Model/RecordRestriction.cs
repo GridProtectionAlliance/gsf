@@ -21,17 +21,19 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using GSF.Collections;
 
 namespace GSF.Data.Model
 {
     /// <summary>
     /// Defines a parameterized record restriction that can be applied to queries.
     /// </summary>
-    public class RecordRestriction
+    public class RecordRestriction : IEquatable<RecordRestriction>
     {
         #region [ Members ]
 
@@ -53,24 +55,16 @@ namespace GSF.Data.Model
         /// will be updated to reflect what is defined in the user model.
         /// </para>
         /// </remarks>
-        public string FilterExpression;
+        public readonly string FilterExpression;
 
         /// <summary>
         /// Defines restriction parameter values.
         /// </summary>
-        public object[] Parameters;
+        public readonly object[] Parameters;
 
         #endregion
 
         #region [ Constructors ]
-
-        /// <summary>
-        /// Creates a new parameterized <see cref="RecordRestriction"/>.
-        /// </summary>
-        public RecordRestriction()
-        {
-            Parameters = new object[0];
-        }
 
         /// <summary>
         /// Creates a new parameterized <see cref="RecordRestriction"/> with the specified SQL filter
@@ -99,6 +93,45 @@ namespace GSF.Data.Model
             Parameters = parameters;
         }
 
+        /// <summary>
+        /// Determines whether the specified object is equal to the current object.
+        /// </summary>
+        /// <param name="obj">An object to compare with this object.</param>
+        /// <returns><c>true</c> if the current object is equal to the <paramref name="obj" /> parameter; otherwise, <c>false</c>.</returns>
+        public override bool Equals(object obj)
+        {
+            RecordRestriction other = obj as RecordRestriction;
+            return (object)other != null && Equals(other);
+        }
+
+        /// <summary>
+        /// Indicates whether the current object is equal to another object of the same type.
+        /// </summary>
+        /// <param name="other">An object to compare with this object.</param>
+        /// <returns><c>true</c> if the current object is equal to the <paramref name="other" /> parameter; otherwise, <c>false</c>.</returns>
+        public bool Equals(RecordRestriction other)
+        {
+            if (ReferenceEquals(this, other))
+                return true;
+
+            if (FilterExpression.Equals(other?.FilterExpression, StringComparison.Ordinal))
+                return Parameters.CompareTo(other?.Parameters, true) == 0;
+
+            return false;
+        }
+
+        /// <summary>
+        /// Serves as the default hash function.
+        /// </summary>
+        /// <returns>A hash code for the current <see cref="RecordRestriction"/>.</returns>
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((FilterExpression?.GetHashCode() ?? 0) * 397) ^ (Parameters?.GetHashCode() ?? 0);
+            }
+        }
+
         #endregion
 
         #region [ Operators ]
@@ -109,6 +142,34 @@ namespace GSF.Data.Model
         /// <param name="value">Operand.</param>
         /// <returns>Record operation representing the specified filter expression.</returns>
         public static implicit operator RecordRestriction(string value) => new RecordRestriction(value);
+
+        /// <summary>
+        /// Compares to record restrictions for equality.
+        /// </summary>
+        /// <param name="left"><see cref="RecordRestriction"/> left operand.</param>
+        /// <param name="right"><see cref="RecordRestriction"/> right operand.</param>
+        /// <returns><c>true</c> if record restrictions are equal; otherwise, <c>false</c>.</returns>
+        public static bool operator ==(RecordRestriction left, RecordRestriction right)
+        {
+            if ((object)left == null && (object)right == null)
+                return true;
+
+            return left?.Equals(right) ?? false;
+        }
+
+        /// <summary>
+        /// Compares to record restrictions for inequality.
+        /// </summary>
+        /// <param name="left"><see cref="RecordRestriction"/> left operand.</param>
+        /// <param name="right"><see cref="RecordRestriction"/> right operand.</param>
+        /// <returns><c>true</c> if record restrictions are not equal; otherwise, <c>false</c>.</returns>
+        public static bool operator !=(RecordRestriction left, RecordRestriction right)
+        {
+            if ((object)left == null && (object)right == null)
+                return false;
+
+            return !left?.Equals(right) ?? true;
+        }
 
         /// <summary>
         /// Combines two record restrictions with an AND condition.
@@ -124,7 +185,6 @@ namespace GSF.Data.Model
         /// <c>null</c>, empty or whitespace and the other parameter's filter expression is defined, then
         /// the parameter that has a filter expression will be returned.
         /// </remarks>
-        [SuppressMessage("Microsoft.Design", "CA1013:OverloadOperatorEqualsOnOverloadingAddAndSubtract")]
         public static RecordRestriction operator +(RecordRestriction left, RecordRestriction right)
         {
             return CombineAnd(left, right);

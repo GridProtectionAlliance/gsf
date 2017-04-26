@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace GSF.ComponentModel.DataAnnotations
@@ -28,7 +29,8 @@ namespace GSF.ComponentModel.DataAnnotations
     /// <summary>
     /// Represents a <see cref="RegularExpressionAttribute"/> for validating URL's.
     /// </summary>
-    public class UrlValidationAttribute : RegularExpressionAttribute
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
+    public sealed class UrlValidationAttribute : RegularExpressionAttribute
     {
         /// <summary>
         /// Defines the regular expression pattern used to validate value. 
