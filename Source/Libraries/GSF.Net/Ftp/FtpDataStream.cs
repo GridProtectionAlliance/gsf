@@ -183,10 +183,18 @@ namespace GSF.Net.Ftp
         /// </summary>
         public override void Close()
         {
+            Close(false);
+        }
+
+        internal void Close(bool error)
+        {
             if (!IsClosed)
             {
                 CloseConnection();
-                m_ctrl.RefreshResponse();
+
+                if (!error)
+                    m_ctrl.RefreshResponse();
+
                 m_ctrl.Session.EndDataTransfer();
             }
         }

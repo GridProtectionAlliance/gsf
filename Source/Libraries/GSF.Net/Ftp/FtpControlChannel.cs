@@ -453,24 +453,27 @@ namespace GSF.Net.Ftp
             try
             {
                 Type(TransferMode.Ascii);
-                FtpDataStream dataStream = GetDataStream();
                 Queue lineQueue = new Queue();
 
-                Command("LIST");
-
-                if (m_lastResponse.Code != FtpResponse.DataChannelOpenedTransferStart && m_lastResponse.Code != FtpResponse.FileOkBeginOpenDataChannel)
-                    throw new FtpCommandException(errorMsgListing, m_lastResponse);
-
-                StreamReader lineReader = new StreamReader(dataStream, Encoding.Default);
-                string line = lineReader.ReadLine();
-
-                while ((object)line != null)
+                using (FtpDataStream dataStream = GetDataStream())
+                using (StreamReader lineReader = new StreamReader(dataStream, Encoding.Default))
                 {
-                    lineQueue.Enqueue(line);
-                    line = lineReader.ReadLine();
-                }
+                    Command("LIST");
 
-                lineReader.Close();
+                    if (m_lastResponse.Code != FtpResponse.DataChannelOpenedTransferStart && m_lastResponse.Code != FtpResponse.FileOkBeginOpenDataChannel)
+                    {
+                        dataStream.Close(true);
+                        throw new FtpCommandException(errorMsgListing, m_lastResponse);
+                    }
+
+                    string line = lineReader.ReadLine();
+
+                    while ((object)line != null)
+                    {
+                        lineQueue.Enqueue(line);
+                        line = lineReader.ReadLine();
+                    }
+                }
 
                 if (m_lastResponse.Code != FtpResponse.ClosingDataChannel)
                     throw new FtpCommandException(errorMsgListing, m_lastResponse);
