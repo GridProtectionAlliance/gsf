@@ -726,6 +726,10 @@ namespace GSF.Data
         {
             object value = ExecuteScalar(timeout, sqlFormat, parameters);
 
+            // It's important that we do not validate the default value to determine
+            // whether it is assignable to the return type because this method is
+            // sometimes used to return null for value types in default value
+            // expressions where nullable types are not supported
             if ((object)value == null || value == DBNull.Value)
                 return defaultValue;
 
