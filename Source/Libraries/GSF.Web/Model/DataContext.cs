@@ -62,7 +62,7 @@ namespace GSF.Web.Model
         // Fields
         private AdoDataConnection m_connection;
         private readonly IRazorEngine m_razorEngine;
-        private readonly Dictionary<Type, object> m_tableOperations;
+        private Dictionary<Type, ITableOperations> m_tableOperationsCache;
         private readonly Action<Exception> m_exceptionHandler;
         private Dictionary<Type, KeyValuePair<string, string>[]> m_customTableOperationTokens;
         private readonly Dictionary<string, Tuple<string, string>> m_fieldValidationParameters;
@@ -94,7 +94,6 @@ namespace GSF.Web.Model
         {
             m_connection = connection;
             m_razorEngine = razorEngine ?? RazorEngine<CSharpEmbeddedResource>.Default;
-            m_tableOperations = new Dictionary<Type, object>();
             m_exceptionHandler = exceptionHandler;
             m_fieldValidationParameters = new Dictionary<string, Tuple<string, string>>();
             m_fieldValueInitializers = new List<Tuple<string, string>>();
@@ -113,7 +112,6 @@ namespace GSF.Web.Model
         public DataContext(string settingsCategory, IRazorEngine razorEngine = null, Action<Exception> exceptionHandler = null)
         {
             m_razorEngine = razorEngine ?? RazorEngine<CSharpEmbeddedResource>.Default;
-            m_tableOperations = new Dictionary<Type, object>();
             m_exceptionHandler = exceptionHandler;
             m_fieldValidationParameters = new Dictionary<string, Tuple<string, string>>();
             m_fieldValueInitializers = new List<Tuple<string, string>>();
@@ -266,6 +264,21 @@ namespace GSF.Web.Model
         /// </remarks>        
         public Dictionary<Type, KeyValuePair<string, string>[]> CustomTableOperationTokens => m_customTableOperationTokens ?? (m_customTableOperationTokens = new Dictionary<Type, KeyValuePair<string, string>[]>());
 
+        /// <summary>
+        /// Gets or sets cache of table operations, creating it if needed.
+        /// </summary>
+        internal Dictionary<Type, ITableOperations> TableOperationsCache
+        {
+            get
+            {
+                return m_tableOperationsCache ?? (m_tableOperationsCache = new Dictionary<Type, ITableOperations>());
+            }
+            set
+            {
+                m_tableOperationsCache = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -314,7 +327,7 @@ namespace GSF.Web.Model
             if ((object)m_customTableOperationTokens != null)
                 m_customTableOperationTokens.TryGetValue(typeof(TModel), out customTokens);
 
-            return m_tableOperations.GetOrAdd(typeof(TModel), type => new TableOperations<TModel>(Connection, m_exceptionHandler, customTokens)) as TableOperations<TModel>;
+            return TableOperationsCache.GetOrAdd(typeof(TModel), type => new TableOperations<TModel>(Connection, m_exceptionHandler, customTokens)) as TableOperations<TModel>;
         }
 
         /// <summary>
@@ -329,7 +342,7 @@ namespace GSF.Web.Model
             if ((object)m_customTableOperationTokens != null)
                 m_customTableOperationTokens.TryGetValue(model, out customTokens);
 
-            return m_tableOperations.GetOrAdd(model, type => Activator.CreateInstance(typeof(TableOperations<>).MakeGenericType(model), Connection, m_exceptionHandler, customTokens)) as ITableOperations;
+            return TableOperationsCache.GetOrAdd(model, type => Activator.CreateInstance(typeof(TableOperations<>).MakeGenericType(model), Connection, m_exceptionHandler, customTokens) as ITableOperations);
         }
 
         /// <summary>

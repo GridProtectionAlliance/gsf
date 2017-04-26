@@ -79,6 +79,7 @@ namespace GSF.Web.Security
                 s_logExceptionFunction = logExceptionFunction;
         }
 
+        // ReSharper disable once UnusedParameter.Local
         private SecurityHub(string settingsCategory, Action<string, UpdateType> logStatusMessageFunction, Action<Exception> logExceptionFunction, bool overload) :
             base(settingsCategory ?? "securityProvider", logStatusMessageFunction ?? s_logStatusMessageFunction, logExceptionFunction ?? s_logExceptionFunction)
         {

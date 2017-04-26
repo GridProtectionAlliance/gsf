@@ -40,6 +40,7 @@ namespace GSF.Web.Hubs
         #region [ Members ]
 
         // Fields
+        private DataContext m_dataContext;
         private readonly DataContextOperations m_dataContextOperations;
         private readonly Action<string, UpdateType> m_logStatusMessageFunction;
         private readonly Action<Exception> m_logExceptionFunction;
@@ -100,9 +101,12 @@ namespace GSF.Web.Hubs
         public dynamic ClientScript => m_clientScript ?? (m_clientScript = Clients?.Client(ConnectionID));
 
         /// <summary>
-        /// Gets <see cref="Model.DataContext"/> instance for the current SignalR hub session, creating it if needed.
+        /// Gets <see cref="Model.DataContext"/> created for this <see cref="RecordOperationsHub{T}"/> instance.
         /// </summary>
-        public DataContext DataContext => m_dataContextOperations.DataContext;
+        /// <remarks>
+        /// Table operations for data context are cached per user session.
+        /// </remarks>
+        public DataContext DataContext => m_dataContext ?? (m_dataContext = m_dataContextOperations.DataContext);
 
         /// <summary>
         /// Gets active connection ID from current hub context or assigns one to use.
@@ -137,9 +141,7 @@ namespace GSF.Web.Hubs
                 try
                 {
                     if (disposing)
-                    {
-                        m_clientScript = null;
-                    }
+                        m_dataContext?.Dispose();
                 }
                 finally
                 {

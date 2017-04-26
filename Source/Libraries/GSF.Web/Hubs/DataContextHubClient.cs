@@ -21,6 +21,9 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using GSF.Data.Model;
 using GSF.Web.Model;
 using Microsoft.AspNet.SignalR;
 
@@ -34,8 +37,19 @@ namespace GSF.Web.Hubs
         #region [ Members ]
 
         // Fields
-        private DataContext m_dataContext;
-        private bool m_disposed;
+        private readonly Dictionary<Type, ITableOperations> m_tableOperationsCache;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="DataContextHubClient"/>.
+        /// </summary>
+        public DataContextHubClient()
+        {
+            m_tableOperationsCache = new Dictionary<Type, ITableOperations>();
+        }
 
         #endregion
 
@@ -44,27 +58,13 @@ namespace GSF.Web.Hubs
         /// <summary>
         /// Gets <see cref="Model.DataContext"/> instance for the current SignalR hub session, creating it if needed.
         /// </summary>
-        public DataContext GetDataContext(string settingsCategory) => m_dataContext ?? (m_dataContext = new DataContext(settingsCategory ?? "systemSettings", exceptionHandler: ex => LogException(ex)));
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="DataContextHubClient"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
+        public DataContext GetDataContext(string settingsCategory)
         {
-            if (!m_disposed)
+            // Create a new data context using cached table operations
+            return new DataContext(settingsCategory ?? "systemSettings", exceptionHandler: ex => LogException(ex))
             {
-                try
-                {
-                    if (disposing)
-                        m_dataContext?.Dispose();
-                }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
-            }
+                TableOperationsCache = m_tableOperationsCache
+            };
         }
 
         #endregion
