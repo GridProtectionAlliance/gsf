@@ -75,6 +75,7 @@ namespace GSF.Security.Model
         /// Updated on field.
         /// </summary>
         [DefaultValueExpression("this.CreatedOn", EvaluationOrder = 1)]
+        [UpdateValueExpression("DateTime.UtcNow")]
         public DateTime UpdatedOn { get; set; }
 
         /// <summary>
@@ -83,6 +84,7 @@ namespace GSF.Security.Model
         [Required]
         [StringLength(200)]
         [DefaultValueExpression("this.CreatedBy", EvaluationOrder = 1)]
+        [UpdateValueExpression("UserInfo.CurrentUserID")]
         public string UpdatedBy { get; set; }
     }
 }

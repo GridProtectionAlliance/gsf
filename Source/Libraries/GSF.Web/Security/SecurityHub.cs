@@ -467,8 +467,6 @@ namespace GSF.Web.Security
                 record.Password = SecurityProviderUtility.EncryptPassword(record.Password);
 
             record.DefaultNodeID = DefaultNodeID;
-            record.UpdatedBy = UserInfo.CurrentUserID;
-            record.UpdatedOn = DateTime.UtcNow;
             DataContext.Table<UserAccount>().UpdateRecord(record);
         }
 
@@ -545,8 +543,6 @@ namespace GSF.Web.Security
         [RecordOperation(typeof(SecurityGroup), RecordOperation.UpdateRecord)]
         public void UpdateSecurityGroup(SecurityGroup record)
         {
-            record.UpdatedBy = UserInfo.CurrentUserID;
-            record.UpdatedOn = DateTime.UtcNow;
             DataContext.Table<SecurityGroup>().UpdateRecord(record);
         }
 

@@ -104,6 +104,7 @@
     <Compile Include="Collections\FileBackedLookupTable.cs" />
     <Compile Include="Collections\RollingWindow.cs" />
     <Compile Include="Common.cs" />
+    <Compile Include="ComponentModel\DataAnnotations\EmailValidationAttribute.cs" />
     <Compile Include="ComponentModel\DataAnnotations\AcronymValidationAttribute.cs" />
     <Compile Include="ComponentModel\DataAnnotations\UrlValidationAttribute.cs" />
     <Compile Include="ComponentModel\ValueExpressionAttributeBase.cs" />
