@@ -59,10 +59,10 @@ namespace GSF.Data.Model
         }
 
         // Constants
-        private const string CountSqlFormat = "SELECT COUNT(*) FROM {0}";
-        private const string OrderBySqlFormat = "SELECT {0} FROM {1} ORDER BY {{0}}";
-        private const string OrderByWhereSqlFormat = "SELECT {0} FROM {1} WHERE {{0}} ORDER BY {{1}}";
-        private const string SelectSqlFormat = "SELECT * FROM {0} WHERE {1}";
+        private const string SelectCountSqlFormat = "SELECT COUNT(*) FROM {0}";
+        private const string SelectSetSqlFormat = "SELECT {0} FROM {1} ORDER BY {{0}}";
+        private const string SelectSetWhereSqlFormat = "SELECT {0} FROM {1} WHERE {{0}} ORDER BY {{1}}";
+        private const string SelectRowSqlFormat = "SELECT * FROM {0} WHERE {1}";
         private const string AddNewSqlFormat = "INSERT INTO {0}({1}) VALUES ({2})";
         private const string UpdateSqlFormat = "UPDATE {0} SET {1} WHERE {2}";
         private const string DeleteSqlFormat = "DELETE FROM {0} WHERE {1}";
@@ -78,10 +78,12 @@ namespace GSF.Data.Model
         private string m_lastSortField;
         private RecordRestriction m_lastRestriction;
         private bool m_useCaseSensitiveFieldNames;
-        private readonly string m_countSql;
-        private readonly string m_orderBySql;
-        private readonly string m_orderByWhereSql;
-        private readonly string m_selectSql;
+        private readonly string m_selectCountSql;
+        private readonly string m_selectSetSql;
+        private readonly string m_selectSetWhereSql;
+        private readonly string m_selectKeysSql;
+        private readonly string m_selectKeysWhereSql;
+        private readonly string m_selectRowSql;
         private readonly string m_addNewSql;
         private readonly string m_updateSql;
         private readonly string m_updateWhereSql;
@@ -120,10 +122,12 @@ namespace GSF.Data.Model
                 throw new ArgumentNullException(nameof(connection));
 
             m_connection = connection;
-            m_countSql = s_countSql;
-            m_orderBySql = s_orderBySql;
-            m_orderByWhereSql = s_orderByWhereSql;
-            m_selectSql = s_selectSql;
+            m_selectCountSql = s_selectCountSql;
+            m_selectSetSql = s_selectSetSql;
+            m_selectSetWhereSql = s_selectSetWhereSql;
+            m_selectKeysSql = s_selectKeysSql;
+            m_selectKeysWhereSql = s_selectKeysWhereSql;
+            m_selectRowSql = s_selectRowSql;
             m_addNewSql = s_addNewSql;
             m_updateSql = s_updateSql;
             m_updateWhereSql = s_updateWhereSql;
@@ -143,10 +147,12 @@ namespace GSF.Data.Model
 
                 if (!derivedTableName.Equals(ansiEscapedTableName))
                 {
-                    m_countSql = m_countSql.Replace(ansiEscapedTableName, derivedTableName);
-                    m_orderBySql = m_orderBySql.Replace(ansiEscapedTableName, derivedTableName);
-                    m_orderByWhereSql = m_orderByWhereSql.Replace(ansiEscapedTableName, derivedTableName);
-                    m_selectSql = m_selectSql.Replace(ansiEscapedTableName, derivedTableName);
+                    m_selectCountSql = m_selectCountSql.Replace(ansiEscapedTableName, derivedTableName);
+                    m_selectSetSql = m_selectSetSql.Replace(ansiEscapedTableName, derivedTableName);
+                    m_selectSetWhereSql = m_selectSetWhereSql.Replace(ansiEscapedTableName, derivedTableName);
+                    m_selectKeysSql = m_selectKeysSql.Replace(ansiEscapedTableName, derivedTableName);
+                    m_selectKeysWhereSql = m_selectKeysWhereSql.Replace(ansiEscapedTableName, derivedTableName);
+                    m_selectRowSql = m_selectRowSql.Replace(ansiEscapedTableName, derivedTableName);
                     m_addNewSql = m_addNewSql.Replace(ansiEscapedTableName, derivedTableName);
                     m_updateSql = m_updateSql.Replace(ansiEscapedTableName, derivedTableName);
                     m_updateWhereSql = m_updateWhereSql.Replace(ansiEscapedTableName, derivedTableName);
@@ -165,9 +171,9 @@ namespace GSF.Data.Model
 
                     if (!derivedFieldName.Equals(ansiEscapedFieldName))
                     {
-                        m_orderBySql = m_orderBySql.Replace(ansiEscapedFieldName, derivedFieldName);
-                        m_orderByWhereSql = m_orderByWhereSql.Replace(ansiEscapedFieldName, derivedFieldName);
-                        m_selectSql = m_selectSql.Replace(ansiEscapedFieldName, derivedFieldName);
+                        m_selectKeysSql = m_selectKeysSql.Replace(ansiEscapedFieldName, derivedFieldName);
+                        m_selectKeysWhereSql = m_selectKeysWhereSql.Replace(ansiEscapedFieldName, derivedFieldName);
+                        m_selectRowSql = m_selectRowSql.Replace(ansiEscapedFieldName, derivedFieldName);
                         m_addNewSql = m_addNewSql.Replace(ansiEscapedFieldName, derivedFieldName);
                         m_updateSql = m_updateSql.Replace(ansiEscapedFieldName, derivedFieldName);
                         m_updateWhereSql = m_updateWhereSql.Replace(ansiEscapedFieldName, derivedFieldName);
@@ -198,16 +204,18 @@ namespace GSF.Data.Model
 
                     // Apply amendment to target statement types
                     if (statementTypes.HasFlag(StatementTypes.SelectCount) && targetExpression == TargetExpression.TableName)
-                        m_countSql = m_countSql.Replace(targetToken, amendmentText);
+                        m_selectCountSql = m_selectCountSql.Replace(targetToken, amendmentText);
 
                     if (statementTypes.HasFlag(StatementTypes.SelectSet))
                     {
-                        m_orderBySql = m_orderBySql.Replace(targetToken, amendmentText);
-                        m_orderByWhereSql = m_orderByWhereSql.Replace(targetToken, amendmentText);
+                        m_selectSetSql = m_selectSetSql.Replace(targetToken, amendmentText);
+                        m_selectSetWhereSql = m_selectSetWhereSql.Replace(targetToken, amendmentText);
+                        m_selectKeysSql = m_selectKeysSql.Replace(targetToken, amendmentText);
+                        m_selectKeysWhereSql = m_selectKeysWhereSql.Replace(targetToken, amendmentText);
                     }
 
                     if (statementTypes.HasFlag(StatementTypes.SelectRow))
-                        m_selectSql = m_selectSql.Replace(targetToken, amendmentText);
+                        m_selectRowSql = m_selectRowSql.Replace(targetToken, amendmentText);
 
                     if (statementTypes.HasFlag(StatementTypes.Insert))
                         m_addNewSql = m_addNewSql.Replace(targetToken, amendmentText);
@@ -232,10 +240,12 @@ namespace GSF.Data.Model
                     .Replace(FieldListPrefixToken, "")
                     .Replace(FieldListSuffixToken, "");
 
-                m_countSql = removeRemainingTokens(m_countSql);
-                m_orderBySql = removeRemainingTokens(m_orderBySql);
-                m_orderByWhereSql = removeRemainingTokens(m_orderByWhereSql);
-                m_selectSql = removeRemainingTokens(m_selectSql);
+                m_selectCountSql = removeRemainingTokens(m_selectCountSql);
+                m_selectSetSql = removeRemainingTokens(m_selectSetSql);
+                m_selectSetWhereSql = removeRemainingTokens(m_selectSetWhereSql);
+                m_selectKeysSql = removeRemainingTokens(m_selectKeysSql);
+                m_selectKeysWhereSql = removeRemainingTokens(m_selectKeysWhereSql);
+                m_selectRowSql = removeRemainingTokens(m_selectRowSql);
                 m_addNewSql = removeRemainingTokens(m_addNewSql);
                 m_updateSql = removeRemainingTokens(m_updateSql);
                 m_updateWhereSql = removeRemainingTokens(m_updateWhereSql);
@@ -247,10 +257,12 @@ namespace GSF.Data.Model
                 {
                     foreach (KeyValuePair<string, string> customToken in customTokens)
                     {
-                        m_countSql = m_countSql.Replace(customToken.Key, customToken.Value);
-                        m_orderBySql = m_orderBySql.Replace(customToken.Key, customToken.Value);
-                        m_orderByWhereSql = m_orderByWhereSql.Replace(customToken.Key, customToken.Value);
-                        m_selectSql = m_selectSql.Replace(customToken.Key, customToken.Value);
+                        m_selectCountSql = m_selectCountSql.Replace(customToken.Key, customToken.Value);
+                        m_selectSetSql = m_selectSetSql.Replace(customToken.Key, customToken.Value);
+                        m_selectSetWhereSql = m_selectSetWhereSql.Replace(customToken.Key, customToken.Value);
+                        m_selectKeysSql = m_selectKeysSql.Replace(customToken.Key, customToken.Value);
+                        m_selectKeysWhereSql = m_selectKeysWhereSql.Replace(customToken.Key, customToken.Value);
+                        m_selectRowSql = m_selectRowSql.Replace(customToken.Key, customToken.Value);
                         m_addNewSql = m_addNewSql.Replace(customToken.Key, customToken.Value);
                         m_updateSql = m_updateSql.Replace(customToken.Key, customToken.Value);
                         m_updateWhereSql = m_updateWhereSql.Replace(customToken.Key, customToken.Value);
@@ -508,22 +520,22 @@ namespace GSF.Data.Model
                     // No record limit specified
                     if ((object)restriction == null)
                     {
-                        sqlExpression = string.Format(m_orderBySql, orderByExpression);
-                        return m_connection.RetrieveData(sqlExpression).AsEnumerable().Select(row => LoadRecord(GetPrimaryKeys(row)));
+                        sqlExpression = string.Format(m_selectSetSql, orderByExpression);
+                        return m_connection.RetrieveData(sqlExpression).AsEnumerable().Select(row => LoadRecord(row));
                     }
 
-                    sqlExpression = string.Format(m_orderByWhereSql, UpdateFieldNames(restriction.FilterExpression), orderByExpression);
-                    return m_connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable().Select(row => LoadRecord(GetPrimaryKeys(row)));
+                    sqlExpression = string.Format(m_selectSetWhereSql, UpdateFieldNames(restriction.FilterExpression), orderByExpression);
+                    return m_connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable().Select(row => LoadRecord(row));
                 }
 
                 if ((object)restriction == null)
                 {
-                    sqlExpression = string.Format(m_orderBySql, orderByExpression);
-                    return m_connection.RetrieveData(sqlExpression).AsEnumerable().Take(limit).Select(row => LoadRecord(GetPrimaryKeys(row)));
+                    sqlExpression = string.Format(m_selectSetSql, orderByExpression);
+                    return m_connection.RetrieveData(sqlExpression).AsEnumerable().Take(limit).Select(row => LoadRecord(row));
                 }
 
-                sqlExpression = string.Format(m_orderByWhereSql, UpdateFieldNames(restriction.FilterExpression), orderByExpression);
-                return m_connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable().Take(limit).Select(row => LoadRecord(GetPrimaryKeys(row)));
+                sqlExpression = string.Format(m_selectSetWhereSql, UpdateFieldNames(restriction.FilterExpression), orderByExpression);
+                return m_connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable().Take(limit).Select(row => LoadRecord(row));
             }
             catch (Exception ex)
             {
@@ -659,12 +671,12 @@ namespace GSF.Data.Model
                 {
                     if ((object)restriction == null)
                     {
-                        sqlExpression = string.Format(m_orderBySql, orderByExpression);
+                        sqlExpression = string.Format(m_selectKeysSql, orderByExpression);
                         m_primaryKeyCache = m_connection.RetrieveData(sqlExpression).AsEnumerable();
                     }
                     else
                     {
-                        sqlExpression = string.Format(m_orderByWhereSql, UpdateFieldNames(restriction.FilterExpression), orderByExpression);
+                        sqlExpression = string.Format(m_selectKeysWhereSql, UpdateFieldNames(restriction.FilterExpression), orderByExpression);
                         m_primaryKeyCache = m_connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable();
                     }
                 }
@@ -722,11 +734,11 @@ namespace GSF.Data.Model
             {
                 if ((object)restriction == null)
                 {
-                    sqlExpression = m_countSql;
+                    sqlExpression = m_selectCountSql;
                     return m_connection.ExecuteScalar<int>(sqlExpression);
                 }
 
-                sqlExpression = $"{m_countSql} WHERE {UpdateFieldNames(restriction.FilterExpression)}";
+                sqlExpression = $"{m_selectCountSql} WHERE {UpdateFieldNames(restriction.FilterExpression)}";
                 return m_connection.ExecuteScalar<int>(sqlExpression, restriction.Parameters);
             }
             catch (Exception ex)
@@ -779,11 +791,11 @@ namespace GSF.Data.Model
         {
             try
             {
-                return LoadRecord(m_connection.RetrieveRow(m_selectSql, primaryKeys));
+                return LoadRecord(m_connection.RetrieveRow(m_selectRowSql, primaryKeys));
             }
             catch (Exception ex)
             {
-                InvalidOperationException opex = new InvalidOperationException($"Exception during record load for {typeof(T).Name} \"{m_selectSql}, {ValueList(primaryKeys)}\": {ex.Message}", ex);
+                InvalidOperationException opex = new InvalidOperationException($"Exception during record load for {typeof(T).Name} \"{m_selectRowSql}, {ValueList(primaryKeys)}\": {ex.Message}", ex);
 
                 if ((object)m_exceptionHandler == null)
                     throw opex;
@@ -1606,10 +1618,12 @@ namespace GSF.Data.Model
         private static readonly Dictionary<DatabaseType, bool> s_escapedTableNameTargets;
         private static readonly Dictionary<string, Dictionary<DatabaseType, bool>> s_escapedFieldNameTargets;
         private static readonly List<Tuple<DatabaseType, TargetExpression, StatementTypes, AffixPosition, string>> s_expressionAmendments;
-        private static readonly string s_countSql;
-        private static readonly string s_orderBySql;
-        private static readonly string s_orderByWhereSql;
-        private static readonly string s_selectSql;
+        private static readonly string s_selectCountSql;
+        private static readonly string s_selectSetSql;
+        private static readonly string s_selectSetWhereSql;
+        private static readonly string s_selectKeysSql;
+        private static readonly string s_selectKeysWhereSql;
+        private static readonly string s_selectRowSql;
         private static readonly string s_addNewSql;
         private static readonly string s_updateSql;
         private static readonly string s_updateWhereSql;
@@ -1631,6 +1645,7 @@ namespace GSF.Data.Model
             StringBuilder addNewFormat = new StringBuilder();
             StringBuilder updateFormat = new StringBuilder();
             StringBuilder whereFormat = new StringBuilder();
+            StringBuilder allFields = new StringBuilder("*");
             StringBuilder primaryKeyFields = new StringBuilder();
             StringBuilder searchFilterSql = new StringBuilder();
             List<PropertyInfo> addNewProperties = new List<PropertyInfo>();
@@ -1786,6 +1801,8 @@ namespace GSF.Data.Model
             {
                 // Add tokens to primary expressions for easy replacement
                 tableName = $"{TableNamePrefixToken}{tableName}{TableNameSuffixToken}";
+                allFields.Insert(0, FieldListPrefixToken);
+                allFields.Append(FieldListSuffixToken);
                 primaryKeyFields.Insert(0, FieldListPrefixToken);
                 primaryKeyFields.Append(FieldListSuffixToken);
                 addNewFields.Insert(0, FieldListPrefixToken);
@@ -1794,10 +1811,12 @@ namespace GSF.Data.Model
                 updateFormat.Append(FieldListSuffixToken);
             }
 
-            s_countSql = string.Format(CountSqlFormat, tableName);
-            s_orderBySql = string.Format(OrderBySqlFormat, primaryKeyFields, tableName);
-            s_orderByWhereSql = string.Format(OrderByWhereSqlFormat, primaryKeyFields, tableName);
-            s_selectSql = string.Format(SelectSqlFormat, tableName, whereFormat);
+            s_selectCountSql = string.Format(SelectCountSqlFormat, tableName);
+            s_selectSetSql = string.Format(SelectSetSqlFormat, allFields, tableName);
+            s_selectSetWhereSql = string.Format(SelectSetWhereSqlFormat, allFields, tableName);
+            s_selectKeysSql = string.Format(SelectSetSqlFormat, primaryKeyFields, tableName);
+            s_selectKeysWhereSql = string.Format(SelectSetWhereSqlFormat, primaryKeyFields, tableName);
+            s_selectRowSql = string.Format(SelectRowSqlFormat, tableName, whereFormat);
             s_addNewSql = string.Format(AddNewSqlFormat, tableName, addNewFields, addNewFormat);
             s_updateSql = string.Format(UpdateSqlFormat, tableName, updateFormat, string.Format(whereFormat.ToString(), updateWhereOffsets.ToArray()));
             s_deleteSql = string.Format(DeleteSqlFormat, tableName, whereFormat);
