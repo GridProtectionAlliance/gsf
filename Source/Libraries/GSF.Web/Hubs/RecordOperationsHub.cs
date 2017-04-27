@@ -176,17 +176,19 @@ namespace GSF.Web.Hubs
         /// <returns>A <see cref="Task" /></returns>
         public override Task OnDisconnected(bool stopCalled)
         {
-            // Update any primary key caches for session
-            if ((object)m_dataContext != null && (object)m_dataContextOperations != null)
-            {
-                foreach (KeyValuePair<Type, ITableOperations> item in m_dataContext.TableOperationsCache)
-                    m_dataContextOperations.PrimaryKeyCache[item.Key] = item.Value.PrimaryKeyCache;
-            }
-
             if (stopCalled)
             {
                 m_dataContextOperations?.EndSession();
                 s_connectCount--;
+            }
+            else
+            {
+                // Update any primary key caches for session
+                if ((object)m_dataContext != null && (object)m_dataContextOperations != null)
+                {
+                    foreach (KeyValuePair<Type, ITableOperations> item in m_dataContext.TableOperationsCache)
+                        m_dataContextOperations.PrimaryKeyCache[item.Key] = item.Value.PrimaryKeyCache;
+                }
             }
 
             return base.OnDisconnected(stopCalled);
