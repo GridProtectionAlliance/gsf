@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Data;
 using Microsoft.AspNet.SignalR.Hubs;
 using GSF.Web.Model;
@@ -51,10 +51,11 @@ namespace GSF.Web.Hubs
         /// <summary>
         /// Gets primary key cache for current session.
         /// </summary>
-        public Dictionary<Type, DataTable> PrimaryKeyCache => HubClient.PrimaryKeyCache;
+        public ConcurrentDictionary<Type, DataTable> PrimaryKeySessionCache => HubClient.PrimaryKeySessionCache;
 
         /// <summary>
-        /// Gets <see cref="Model.DataContext"/> instance for the current SignalR hub session, creating it if needed.
+        /// Gets a new <see cref="Model.DataContext"/> instance for the current SignalR hub session, applying
+        /// any existing primary key caches.
         /// </summary>
         public DataContext DataContext => HubClient.GetDataContext(m_settingsCategory);
     }

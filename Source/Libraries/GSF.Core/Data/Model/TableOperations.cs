@@ -536,21 +536,21 @@ namespace GSF.Data.Model
                     if ((object)restriction == null)
                     {
                         sqlExpression = string.Format(m_selectSetSql, orderByExpression);
-                        return m_connection.RetrieveData(sqlExpression).AsEnumerable().Select(row => LoadRecord(row));
+                        return m_connection.RetrieveData(sqlExpression).AsEnumerable().Select(LoadRecord);
                     }
 
                     sqlExpression = string.Format(m_selectSetWhereSql, UpdateFieldNames(restriction.FilterExpression), orderByExpression);
-                    return m_connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable().Select(row => LoadRecord(row));
+                    return m_connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable().Select(LoadRecord);
                 }
 
                 if ((object)restriction == null)
                 {
                     sqlExpression = string.Format(m_selectSetSql, orderByExpression);
-                    return m_connection.RetrieveData(sqlExpression).AsEnumerable().Take(limit).Select(row => LoadRecord(row));
+                    return m_connection.RetrieveData(sqlExpression).AsEnumerable().Take(limit).Select(LoadRecord);
                 }
 
                 sqlExpression = string.Format(m_selectSetWhereSql, UpdateFieldNames(restriction.FilterExpression), orderByExpression);
-                return m_connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable().Take(limit).Select(row => LoadRecord(row));
+                return m_connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable().Take(limit).Select(LoadRecord);
             }
             catch (Exception ex)
             {

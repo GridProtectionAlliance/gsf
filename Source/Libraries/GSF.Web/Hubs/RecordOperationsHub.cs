@@ -42,10 +42,10 @@ namespace GSF.Web.Hubs
         #region [ Members ]
 
         // Fields
-        private DataContext m_dataContext;
         private readonly DataContextOperations m_dataContextOperations;
         private readonly Action<string, UpdateType> m_logStatusMessageFunction;
         private readonly Action<Exception> m_logExceptionFunction;
+        private DataContext m_dataContext;
         private dynamic m_clientScript;
         private string m_connectionID;
         private bool m_disposed;
@@ -95,20 +95,20 @@ namespace GSF.Web.Hubs
         public RecordOperationsCache RecordOperationsCache => s_recordOperationsCache;
 
         /// <summary>
+        /// Gets <see cref="Model.DataContext"/> created for this <see cref="RecordOperationsHub{T}"/> instance.
+        /// </summary>
+        /// <remarks>
+        /// Primary key caches for data context table operations are cached per user session.
+        /// </remarks>
+        public DataContext DataContext => m_dataContext ?? (m_dataContext = m_dataContextOperations.DataContext);
+
+        /// <summary>
         /// Gets reference to SignalR hub client browser DOM functionality.
         /// </summary>
         /// <remarks>
         /// This property can be used to call registered Javascript hub functions.
         /// </remarks>
         public dynamic ClientScript => m_clientScript ?? (m_clientScript = Clients?.Client(ConnectionID));
-
-        /// <summary>
-        /// Gets <see cref="Model.DataContext"/> created for this <see cref="RecordOperationsHub{T}"/> instance.
-        /// </summary>
-        /// <remarks>
-        /// Table operations for data context are cached per user session.
-        /// </remarks>
-        public DataContext DataContext => m_dataContext ?? (m_dataContext = m_dataContextOperations.DataContext);
 
         /// <summary>
         /// Gets active connection ID from current hub context or assigns one to use.
@@ -143,7 +143,16 @@ namespace GSF.Web.Hubs
                 try
                 {
                     if (disposing)
+                    {
+                        // Update any primary key caches for session
+                        if ((object)m_dataContext != null && (object)m_dataContextOperations != null)
+                        {
+                            foreach (KeyValuePair<Type, ITableOperations> item in m_dataContext.TableOperationsCache)
+                                m_dataContextOperations.PrimaryKeySessionCache[item.Key] = item.Value.PrimaryKeyCache;
+                        }
+
                         m_dataContext?.Dispose();
+                    }
                 }
                 finally
                 {
@@ -180,15 +189,6 @@ namespace GSF.Web.Hubs
             {
                 m_dataContextOperations?.EndSession();
                 s_connectCount--;
-            }
-            else
-            {
-                // Update any primary key caches for session
-                if ((object)m_dataContext != null && (object)m_dataContextOperations != null)
-                {
-                    foreach (KeyValuePair<Type, ITableOperations> item in m_dataContext.TableOperationsCache)
-                        m_dataContextOperations.PrimaryKeyCache[item.Key] = item.Value.PrimaryKeyCache;
-                }
             }
 
             return base.OnDisconnected(stopCalled);

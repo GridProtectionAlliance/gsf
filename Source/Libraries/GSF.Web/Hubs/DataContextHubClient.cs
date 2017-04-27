@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using Microsoft.AspNet.SignalR;
@@ -37,7 +38,7 @@ namespace GSF.Web.Hubs
         #region [ Members ]
 
         // Fields
-        private readonly Dictionary<Type, DataTable> m_primaryKeyCache;
+        private readonly ConcurrentDictionary<Type, DataTable> m_primaryKeySessionCache;
 
         #endregion
 
@@ -48,7 +49,7 @@ namespace GSF.Web.Hubs
         /// </summary>
         public DataContextHubClient()
         {
-            m_primaryKeyCache = new Dictionary<Type, DataTable>();
+            m_primaryKeySessionCache = new ConcurrentDictionary<Type, DataTable>();
         }
 
         #endregion
@@ -58,21 +59,22 @@ namespace GSF.Web.Hubs
         /// <summary>
         /// Gets primary key cache for current session.
         /// </summary>
-        public Dictionary<Type, DataTable> PrimaryKeyCache => m_primaryKeyCache;
+        public ConcurrentDictionary<Type, DataTable> PrimaryKeySessionCache => m_primaryKeySessionCache;
 
         #endregion
 
         #region [ Methods ]
 
         /// <summary>
-        /// Gets <see cref="Model.DataContext"/> instance for the current SignalR hub session, creating it if needed.
+        /// Gets a new <see cref="Model.DataContext"/> instance for the current SignalR hub session, applying
+        /// any existing primary key caches.
         /// </summary>
         public DataContext GetDataContext(string settingsCategory)
         {
             // Create a new data context using session based primary key cache
             return new DataContext(settingsCategory ?? "systemSettings", exceptionHandler: ex => LogException(ex))
             {
-                PrimaryKeyCache = m_primaryKeyCache
+                PrimaryKeySessionCache = m_primaryKeySessionCache
             };
         }
 

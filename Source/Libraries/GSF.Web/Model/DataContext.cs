@@ -64,7 +64,7 @@ namespace GSF.Web.Model
         private AdoDataConnection m_connection;
         private readonly IRazorEngine m_razorEngine;
         private readonly Dictionary<Type, ITableOperations> m_tableOperationsCache;
-        private Dictionary<Type, DataTable> m_primaryKeyCache;
+        private ConcurrentDictionary<Type, DataTable> m_primaryKeySessionCache;
         private readonly Action<Exception> m_exceptionHandler;
         private Dictionary<Type, KeyValuePair<string, string>[]> m_customTableOperationTokens;
         private readonly Dictionary<string, Tuple<string, string>> m_fieldValidationParameters;
@@ -276,15 +276,15 @@ namespace GSF.Web.Model
         /// <summary>
         /// Gets or sets session based primary key cache of table operations, creating it if needed.
         /// </summary>
-        internal Dictionary<Type, DataTable> PrimaryKeyCache
+        internal ConcurrentDictionary<Type, DataTable> PrimaryKeySessionCache
         {
             get
             {
-                return m_primaryKeyCache ?? (m_primaryKeyCache = new Dictionary<Type, DataTable>());
+                return m_primaryKeySessionCache ?? (m_primaryKeySessionCache = new ConcurrentDictionary<Type, DataTable>());
             }
             set
             {
-                m_primaryKeyCache = value;
+                m_primaryKeySessionCache = value;
             }
         }
 
@@ -341,7 +341,7 @@ namespace GSF.Web.Model
                 DataTable primaryKeyCache;
                 TableOperations<TModel> tableOperations = new TableOperations<TModel>(Connection, m_exceptionHandler, customTokens);
 
-                if (PrimaryKeyCache.TryGetValue(type, out primaryKeyCache))
+                if (PrimaryKeySessionCache.TryGetValue(type, out primaryKeyCache))
                     tableOperations.PrimaryKeyCache = primaryKeyCache;
 
                 return tableOperations;
@@ -366,7 +366,8 @@ namespace GSF.Web.Model
                 DataTable primaryKeyCache;
                 ITableOperations tableOperations = Activator.CreateInstance(typeof(TableOperations<>).MakeGenericType(model), Connection, m_exceptionHandler, customTokens) as ITableOperations;
 
-                if (PrimaryKeyCache.TryGetValue(type, out primaryKeyCache))
+                // ReSharper disable once PossibleNullReferenceException
+                if (PrimaryKeySessionCache.TryGetValue(type, out primaryKeyCache))
                     tableOperations.PrimaryKeyCache = primaryKeyCache;
 
                 return tableOperations;
