@@ -74,7 +74,7 @@ namespace GSF.Data.Model
         // Fields
         private readonly AdoDataConnection m_connection;
         private Action<Exception> m_exceptionHandler;
-        private IEnumerable<DataRow> m_primaryKeyCache;
+        private DataTable m_primaryKeyCache;
         private string m_lastSortField;
         private RecordRestriction m_lastRestriction;
         private bool m_useCaseSensitiveFieldNames;
@@ -369,6 +369,21 @@ namespace GSF.Data.Model
             set
             {
                 m_useCaseSensitiveFieldNames = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets primary key cache.
+        /// </summary>
+        public DataTable PrimaryKeyCache
+        {
+            get
+            {
+                return m_primaryKeyCache;
+            }
+            set
+            {
+                m_primaryKeyCache = value;
             }
         }
 
@@ -672,12 +687,12 @@ namespace GSF.Data.Model
                     if ((object)restriction == null)
                     {
                         sqlExpression = string.Format(m_selectKeysSql, orderByExpression);
-                        m_primaryKeyCache = m_connection.RetrieveData(sqlExpression).AsEnumerable();
+                        m_primaryKeyCache = m_connection.RetrieveData(sqlExpression);
                     }
                     else
                     {
                         sqlExpression = string.Format(m_selectKeysWhereSql, UpdateFieldNames(restriction.FilterExpression), orderByExpression);
-                        m_primaryKeyCache = m_connection.RetrieveData(sqlExpression, restriction.Parameters).AsEnumerable();
+                        m_primaryKeyCache = m_connection.RetrieveData(sqlExpression, restriction.Parameters);
                     }
                 }
                 catch (Exception ex)
@@ -695,7 +710,7 @@ namespace GSF.Data.Model
                 m_lastRestriction = restriction;
             }
 
-            return m_primaryKeyCache.ToPagedList(page, pageSize).Select(row => LoadRecord(row.ItemArray)).Where(record => record != null);
+            return m_primaryKeyCache.AsEnumerable().ToPagedList(page, pageSize).Select(row => LoadRecord(row.ItemArray)).Where(record => record != null);
         }
 
         IEnumerable ITableOperations.QueryRecords(string sortField, bool ascending, int page, int pageSize, RecordRestriction restriction)
@@ -1504,7 +1519,7 @@ namespace GSF.Data.Model
         /// <returns></returns>
         public int GetPrimaryKeyCacheSize()
         {
-            return m_primaryKeyCache?.Count() ?? 0;
+            return m_primaryKeyCache?.Rows.Count ?? 0;
         }
 
         /// <summary>

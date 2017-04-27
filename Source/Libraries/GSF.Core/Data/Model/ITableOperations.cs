@@ -88,6 +88,15 @@ namespace GSF.Data.Model
             get;
             set;
         }
+        
+        /// <summary>
+        /// Gets or sets primary key cache.
+        /// </summary>
+        DataTable PrimaryKeyCache
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Creates a new modeled record instance, applying any modeled default values as specified by a

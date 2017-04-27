@@ -22,11 +22,13 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using GSF.Web.Model;
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Configuration;
 using Microsoft.AspNet.SignalR.Hubs;
+using GSF.Data.Model;
+using GSF.Web.Model;
 
 // ReSharper disable StaticMemberInGenericType
 namespace GSF.Web.Hubs
@@ -174,6 +176,13 @@ namespace GSF.Web.Hubs
         /// <returns>A <see cref="Task" /></returns>
         public override Task OnDisconnected(bool stopCalled)
         {
+            // Update any primary key caches for session
+            if ((object)m_dataContext != null && (object)m_dataContextOperations != null)
+            {
+                foreach (KeyValuePair<Type, ITableOperations> item in m_dataContext.TableOperationsCache)
+                    m_dataContextOperations.PrimaryKeyCache[item.Key] = item.Value.PrimaryKeyCache;
+            }
+
             if (stopCalled)
             {
                 m_dataContextOperations?.EndSession();

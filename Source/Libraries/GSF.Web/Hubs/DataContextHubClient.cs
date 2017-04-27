@@ -23,9 +23,9 @@
 
 using System;
 using System.Collections.Generic;
-using GSF.Data.Model;
-using GSF.Web.Model;
+using System.Data;
 using Microsoft.AspNet.SignalR;
+using GSF.Web.Model;
 
 namespace GSF.Web.Hubs
 {
@@ -37,7 +37,7 @@ namespace GSF.Web.Hubs
         #region [ Members ]
 
         // Fields
-        private readonly Dictionary<Type, ITableOperations> m_tableOperationsCache;
+        private readonly Dictionary<Type, DataTable> m_primaryKeyCache;
 
         #endregion
 
@@ -48,8 +48,17 @@ namespace GSF.Web.Hubs
         /// </summary>
         public DataContextHubClient()
         {
-            m_tableOperationsCache = new Dictionary<Type, ITableOperations>();
+            m_primaryKeyCache = new Dictionary<Type, DataTable>();
         }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets primary key cache for current session.
+        /// </summary>
+        public Dictionary<Type, DataTable> PrimaryKeyCache => m_primaryKeyCache;
 
         #endregion
 
@@ -60,10 +69,10 @@ namespace GSF.Web.Hubs
         /// </summary>
         public DataContext GetDataContext(string settingsCategory)
         {
-            // Create a new data context using cached table operations
+            // Create a new data context using session based primary key cache
             return new DataContext(settingsCategory ?? "systemSettings", exceptionHandler: ex => LogException(ex))
             {
-                TableOperationsCache = m_tableOperationsCache
+                PrimaryKeyCache = m_primaryKeyCache
             };
         }
 
