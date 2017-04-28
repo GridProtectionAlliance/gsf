@@ -24,8 +24,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using GSF.Configuration;
-using GSF.Data;
 using GSF.Data.Model;
 using GSF.Identity;
 using GSF.Security;
@@ -96,35 +94,7 @@ namespace GSF.Web.Security
         /// <summary>
         /// Gets current default Node ID for security.
         /// </summary>
-        public static readonly Guid DefaultNodeID;
-
-        // Static Constructor
-        static SecurityHub()
-        {
-            CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
-
-            // Retrieve default NodeID
-            DefaultNodeID = Guid.Parse(systemSettings["NodeID"].Value.ToNonNullString(Guid.NewGuid().ToString()));
-
-            // Determine whether the node exists in the database and create it if it doesn't
-            if (DefaultNodeID != Guid.Empty)
-            {
-                using (AdoDataConnection connection = new AdoDataConnection("securityProvider"))
-                {
-                    const string NodeCountFormat = "SELECT COUNT(*) FROM Node";
-                    const string NodeInsertFormat = "INSERT INTO Node(Name, Description, Enabled) VALUES('Default', 'Default node', 1)";
-                    const string NodeUpdateFormat = "UPDATE Node SET ID = {0}";
-
-                    int nodeCount = connection.ExecuteScalar<int?>(NodeCountFormat) ?? 0;
-
-                    if (nodeCount == 0)
-                    {
-                        connection.ExecuteNonQuery(NodeInsertFormat);
-                        connection.ExecuteNonQuery(NodeUpdateFormat, connection.Guid(DefaultNodeID));
-                    }
-                }
-            }
-        }
+        public static readonly Guid DefaultNodeID = AdoSecurityProvider.DefaultNodeID;
 
         #endregion
 
@@ -386,6 +356,15 @@ namespace GSF.Web.Security
             return UserInfo.SIDToAccountName(sid ?? "");
         }
 
+        /// <summary>
+        /// Gets the default NodeID based on the current configuration.
+        /// </summary>
+        /// <returns>Default NodeID based on the current configuration.</returns>
+        public Guid GetDefaultNodeID()
+        {
+            return DefaultNodeID;
+        }
+    
         #endregion
 
         #region [ UserAccount Table Operations ]
@@ -451,7 +430,6 @@ namespace GSF.Web.Security
             if (!record.UseADAuthentication && !string.IsNullOrWhiteSpace(record.Password))
                 record.Password = SecurityProviderUtility.EncryptPassword(record.Password);
 
-            record.DefaultNodeID = DefaultNodeID;
             DataContext.Table<UserAccount>().AddNewRecord(record);
         }
 
@@ -466,7 +444,6 @@ namespace GSF.Web.Security
             if (!record.UseADAuthentication && !string.IsNullOrWhiteSpace(record.Password))
                 record.Password = SecurityProviderUtility.EncryptPassword(record.Password);
 
-            record.DefaultNodeID = DefaultNodeID;
             DataContext.Table<UserAccount>().UpdateRecord(record);
         }
 

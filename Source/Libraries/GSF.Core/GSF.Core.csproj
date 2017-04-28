@@ -60,8 +60,8 @@
       <HintPath>..\..\Dependencies\NuGet\Antlr.3.5.0.2\lib\Antlr3.Runtime.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="ExpressionEvaluator, Version=2.0.3.0, Culture=neutral, PublicKeyToken=90d9f15d622e2348, processorArchitecture=MSIL">
-      <HintPath>..\..\Dependencies\NuGet\ExpressionEvaluator.2.0.3.0\lib\net40\ExpressionEvaluator.dll</HintPath>
+    <Reference Include="ExpressionEvaluator, Version=2.0.4.0, Culture=neutral, PublicKeyToken=90d9f15d622e2348, processorArchitecture=MSIL">
+      <HintPath>..\..\Dependencies\NuGet\ExpressionEvaluator.2.0.4.0\lib\net40\ExpressionEvaluator.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Mono.Security">
@@ -333,9 +333,6 @@
     <None Include="GSF.Core.nuspec" />
     <None Include="GSF.Core.ruleset" />
     <None Include="packages.GSF.Core.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="LICENSE.txt" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="..\GSF.Core.Shared\GSF.Core.Shared.projitems" Label="Shared" />

@@ -214,13 +214,7 @@ namespace GSF.Net.Ftp
         /// <summary>
         /// Last response from control channel.
         /// </summary>
-        public FtpResponse LastResponse
-        {
-            get
-            {
-                return m_lastResponse;
-            }
-        }
+        public FtpResponse LastResponse => m_lastResponse;
 
         internal FtpSessionConnected Session
         {
@@ -456,7 +450,7 @@ namespace GSF.Net.Ftp
                 Queue lineQueue = new Queue();
 
                 using (FtpDataStream dataStream = GetDataStream())
-                using (StreamReader lineReader = new StreamReader(dataStream, Encoding.Default))
+                using (StreamReader lineReader = new StreamReader(dataStream, Encoding.Default, true, 1024, true))
                 {
                     Command("LIST");
 

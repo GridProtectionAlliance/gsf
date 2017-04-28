@@ -45,7 +45,9 @@ using System.Threading;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
+using GSF.Data.Model;
 using GSF.Identity;
+using GSF.Security.Model;
 
 namespace GSF.Security
 {
@@ -341,23 +343,23 @@ namespace GSF.Security
                 foreach (string securityTable in s_securityTables)
                 {
                     if (!securityContext.Tables.Contains(securityTable))
-                        throw new SecurityException(string.Format("Failed to load a valid security context - missing table '{0}'. Cannot proceed with user authentication.", securityTable));
+                        throw new SecurityException($"Failed to load a valid security context - missing table '{securityTable}'. Cannot proceed with user authentication.");
                 }
 
                 if (securityContext.Tables[ApplicationRoleTable].Rows.Count == 0)
-                    throw new SecurityException(string.Format("Failed to load a valid security context - no application roles were found for node ID '{0}', verify the node ID in the config file '{1}'. Cannot proceed with user authentication.", s_nodeID, ConfigurationFile.Current.Configuration.FilePath));
+                    throw new SecurityException($"Failed to load a valid security context - no application roles were found for node ID '{DefaultNodeID}', verify the node ID in the config file '{ConfigurationFile.Current.Configuration.FilePath}'. Cannot proceed with user authentication.");
 
                 DataRow userAccount = null;
                 Guid userAccountID = Guid.Empty;
                 string userSID = UserInfo.UserNameToSID(UserData.Username);
 
                 // Filter user account data for the current user.
-                DataRow[] userAccounts = securityContext.Tables[UserAccountTable].Select(string.Format("Name = '{0}'", EncodeEscapeSequences(userSID)));
+                DataRow[] userAccounts = securityContext.Tables[UserAccountTable].Select($"Name = '{EncodeEscapeSequences(userSID)}'");
 
                 // If SID based lookup failed, try lookup by user name.  Note that is critical that SID based lookup
                 // take precedence over name based lookup for proper cross-platform authentication.
                 if (userAccounts.Length == 0)
-                    userAccounts = securityContext.Tables[UserAccountTable].Select(string.Format("Name = '{0}'", EncodeEscapeSequences(UserData.Username)));
+                    userAccounts = securityContext.Tables[UserAccountTable].Select($"Name = '{EncodeEscapeSequences(UserData.Username)}'");
 
                 if (userAccounts.Length == 0)
                 {
@@ -437,7 +439,7 @@ namespace GSF.Security
                 if (userAccountID != Guid.Empty)
                 {
                     // Filter explicitly assigned security groups for current user
-                    DataRow[] userGroups = securityContext.Tables[SecurityGroupUserAccountTable].Select(string.Format("UserAccountID = '{0}'", EncodeEscapeSequences(userAccountID.ToString())));
+                    DataRow[] userGroups = securityContext.Tables[SecurityGroupUserAccountTable].Select($"UserAccountID = '{EncodeEscapeSequences(userAccountID.ToString())}'");
 
                     foreach (DataRow row in userGroups)
                     {
@@ -450,7 +452,7 @@ namespace GSF.Security
                         }
                         else
                         {
-                            DataRow[] securityGroups = securityContext.Tables[SecurityGroupTable].Select(string.Format("ID = '{0}'", EncodeEscapeSequences(row["SecurityGroupID"].ToString())));
+                            DataRow[] securityGroups = securityContext.Tables[SecurityGroupTable].Select($"ID = '{EncodeEscapeSequences(row["SecurityGroupID"].ToString())}'");
 
                             if (securityGroups.Length > 0)
                                 securityGroup = securityGroups[0];
@@ -480,7 +482,7 @@ namespace GSF.Security
 
                 // Filter explicitly assigned application roles for current user - this will return an empty set if no
                 // explicitly defined roles exist for the user -or- user doesn't exist in the database.
-                DataRow[] userApplicationRoles = securityContext.Tables[ApplicationRoleUserAccountTable].Select(string.Format("UserAccountID = '{0}'", EncodeEscapeSequences(userAccountID.ToString())));
+                DataRow[] userApplicationRoles = securityContext.Tables[ApplicationRoleUserAccountTable].Select($"UserAccountID = '{EncodeEscapeSequences(userAccountID.ToString())}'");
 
                 // If no explicitly assigned application roles are found for the current user, we check for implicitly assigned
                 // application roles based on the role assignments of the groups the user is a member of.
@@ -497,12 +499,12 @@ namespace GSF.Security
                         string groupSID = UserInfo.GroupNameToSID(groupName);
 
                         // Locate associated security group record
-                        DataRow[] securityGroups = securityContext.Tables[SecurityGroupTable].Select(string.Format("Name = '{0}'", EncodeEscapeSequences(groupSID)));
+                        DataRow[] securityGroups = securityContext.Tables[SecurityGroupTable].Select($"Name = '{EncodeEscapeSequences(groupSID)}'");
 
                         // If SID based lookup failed, try lookup by group name.  Note that is critical that SID based lookup
                         // take precedence over name based lookup for proper cross-platform authentication.
                         if (securityGroups.Length == 0)
-                            securityGroups = securityContext.Tables[SecurityGroupTable].Select(string.Format("Name = '{0}'", EncodeEscapeSequences(groupName)));
+                            securityGroups = securityContext.Tables[SecurityGroupTable].Select($"Name = '{EncodeEscapeSequences(groupName)}'");
 
                         if (securityGroups.Length > 0)
                         {
@@ -510,7 +512,7 @@ namespace GSF.Security
                             DataRow securityGroup = securityGroups[0];
 
                             if (!Convert.IsDBNull(securityGroup["ID"]))
-                                implicitRoles.AddRange(securityContext.Tables[ApplicationRoleSecurityGroupTable].Select(string.Format("SecurityGroupID = '{0}'", EncodeEscapeSequences(securityGroup["ID"].ToString()))));
+                                implicitRoles.AddRange(securityContext.Tables[ApplicationRoleSecurityGroupTable].Select($"SecurityGroupID = '{EncodeEscapeSequences(securityGroup["ID"].ToString())}'"));
                         }
                     }
 
@@ -532,7 +534,7 @@ namespace GSF.Security
                     }
                     else
                     {
-                        DataRow[] applicationRoles = securityContext.Tables[ApplicationRoleTable].Select(string.Format("ID = '{0}'", EncodeEscapeSequences(role["ApplicationRoleID"].ToString())));
+                        DataRow[] applicationRoles = securityContext.Tables[ApplicationRoleTable].Select($"ID = '{EncodeEscapeSequences(role["ApplicationRoleID"].ToString())}'");
 
                         if (applicationRoles.Length > 0)
                             applicationRole = applicationRoles[0];
@@ -579,23 +581,23 @@ namespace GSF.Security
             // can authenticate current credentials for pass through authentication, if desired.
             if (!UserData.IsDefined)
             {
-                AuthenticationFailureReason = string.Format("User \"{0}\" is not defined.", UserData.LoginID);
+                AuthenticationFailureReason = $"User \"{UserData.LoginID}\" is not defined.";
             }
             else if (UserData.IsDisabled)
             {
-                AuthenticationFailureReason = string.Format("User \"{0}\" is disabled.", UserData.LoginID);
+                AuthenticationFailureReason = $"User \"{UserData.LoginID}\" is disabled.";
             }
             else if (UserData.IsLockedOut)
             {
-                AuthenticationFailureReason = string.Format("User \"{0}\" is locked out.", UserData.LoginID);
+                AuthenticationFailureReason = $"User \"{UserData.LoginID}\" is locked out.";
             }
             else if (UserData.PasswordChangeDateTime != DateTime.MinValue && UserData.PasswordChangeDateTime <= DateTime.UtcNow)
             {
-                AuthenticationFailureReason = string.Format("User \"{0}\" has an expired password or password has not been set.", UserData.LoginID);
+                AuthenticationFailureReason = $"User \"{UserData.LoginID}\" has an expired password or password has not been set.";
             }
             else if (UserData.Roles.Count == 0)
             {
-                AuthenticationFailureReason = string.Format("User \"{0}\" has not been assigned any roles and therefore has no rights. Contact your administrator.", UserData.LoginID);
+                AuthenticationFailureReason = $"User \"{UserData.LoginID}\" has not been assigned any roles and therefore has no rights. Contact your administrator.";
             }
             else
             {
@@ -754,7 +756,7 @@ namespace GSF.Security
         {
             if ((object)UserData != null && !string.IsNullOrWhiteSpace(UserData.Username))
             {
-                string message = string.Format("User \"{0}\" login attempt {1}.", UserData.Username, loginSuccess ? "succeeded using " + (m_successfulPassThroughAuthentication ? "pass-through authentication" : "user acquired password") : "failed");
+                string message = $"User \"{UserData.Username}\" login attempt {(loginSuccess ? "succeeded using " + (m_successfulPassThroughAuthentication ? "pass-through authentication" : "user acquired password") : "failed")}.";
                 EventLogEntryType entryType = loginSuccess ? EventLogEntryType.SuccessAudit : EventLogEntryType.FailureAudit;
 
                 // Suffix authentication failure reason on failed logins if available
@@ -859,14 +861,14 @@ namespace GSF.Security
                         if (currentRoles.Count == 0)
                         {
                             // New user access granted
-                            message = string.Format("Initial Encounter: user \"{0}\" attempted login with no assigned roles.", UserData.Username);
+                            message = $"Initial Encounter: user \"{UserData.Username}\" attempted login with no assigned roles.";
                             entryType = EventLogEntryType.FailureAudit;
                             rolesChanged = true;
                         }
                         else
                         {
                             // New user access granted
-                            message = string.Format("Initial Encounter: user \"{0}\" granted access with role{1} \"{2}\".", UserData.Username, currentRoles.Count == 1 ? "" : "s", currentRoles.ToDelimitedString(", "));
+                            message = $"Initial Encounter: user \"{UserData.Username}\" granted access with role{(currentRoles.Count == 1 ? "" : "s")} \"{currentRoles.ToDelimitedString(", ")}\".";
                             entryType = EventLogEntryType.Information;
                             rolesChanged = true;
                         }
@@ -876,14 +878,14 @@ namespace GSF.Security
                         if (currentRoles.Count == 0)
                         {
                             // New user access granted
-                            message = string.Format("Subsequent Encounter: user \"{0}\" attempted login with no assigned roles - role assignment that existed at last login was \"{1}\".", UserData.Username, cachedRoles.ToDelimitedString(", "));
+                            message = $"Subsequent Encounter: user \"{UserData.Username}\" attempted login with no assigned roles - role assignment that existed at last login was \"{cachedRoles.ToDelimitedString(", ")}\".";
                             entryType = EventLogEntryType.FailureAudit;
                             rolesChanged = true;
                         }
                         else
                         {
                             // User role access changed
-                            message = string.Format("Subsequent Encounter: user \"{0}\" granted access with new role{1} \"{2}\" - role assignment is different from last login, was \"{3}\".", UserData.Username, currentRoles.Count == 1 ? "" : "s", currentRoles.ToDelimitedString(", "), cachedRoles.ToDelimitedString(", "));
+                            message = $"Subsequent Encounter: user \"{UserData.Username}\" granted access with new role{(currentRoles.Count == 1 ? "" : "s")} \"{currentRoles.ToDelimitedString(", ")}\" - role assignment is different from last login, was \"{cachedRoles.ToDelimitedString(", ")}\".";
                             entryType = EventLogEntryType.Warning;
                             rolesChanged = true;
                         }
@@ -893,13 +895,13 @@ namespace GSF.Security
                         if (currentRoles.Count == 0)
                         {
                             // New user access granted
-                            message = string.Format("Subsequent Encounter: user \"{0}\" attempted login with no assigned roles - same as last login attempt.", UserData.Username);
+                            message = $"Subsequent Encounter: user \"{UserData.Username}\" attempted login with no assigned roles - same as last login attempt.";
                             entryType = EventLogEntryType.FailureAudit;
                             rolesChanged = true;
                         }
                         else
                         {
-                            message = string.Format("Subsequent Encounter: user \"{0}\" granted access with role{1} \"{2}\" - role assignment is the same as last login.", UserData.Username, currentRoles.Count == 1 ? "" : "s", currentRoles.ToDelimitedString(", "));
+                            message = $"Subsequent Encounter: user \"{UserData.Username}\" granted access with role{(currentRoles.Count == 1 ? "" : "s")} \"{currentRoles.ToDelimitedString(", ")}\" - role assignment is the same as last login.";
                             entryType = EventLogEntryType.SuccessAudit;
                         }
                     }
@@ -943,7 +945,10 @@ namespace GSF.Security
             ApplicationRoleSecurityGroupTable   // Application role assignments for security groups
         };
 
-        private static readonly Guid s_nodeID;
+        /// <summary>
+        /// Gets current default Node ID for security.
+        /// </summary>
+        public static readonly Guid DefaultNodeID;
 
         // Static Constructor
         static AdoSecurityProvider()
@@ -955,7 +960,28 @@ namespace GSF.Security
             systemSettings.Add("NodeID", Guid.NewGuid().ToString(), "Unique Node ID");
 
             // Get NodeID as currently defined in configuration file
-            s_nodeID = systemSettings["NodeID"].ValueAs<Guid>();
+            DefaultNodeID = Guid.Parse(systemSettings["NodeID"].Value.ToNonNullString(Guid.NewGuid().ToString()));
+
+            // Determine whether the node exists in the database and create it if it doesn't
+            if (DefaultNodeID != Guid.Empty)
+            {
+                using (AdoDataConnection connection = new AdoDataConnection(DefaultSettingsCategory))
+                {
+                    const string NodeCountFormat = "SELECT COUNT(*) FROM Node";
+                    const string NodeInsertFormat = "INSERT INTO Node(Name, Description, Enabled) VALUES('Default', 'Default node', 1)";
+                    const string NodeUpdateFormat = "UPDATE Node SET ID = {0}";
+
+                    int nodeCount = connection.ExecuteScalar<int?>(NodeCountFormat) ?? 0;
+
+                    if (nodeCount == 0)
+                    {
+                        connection.ExecuteNonQuery(NodeInsertFormat);
+                        connection.ExecuteNonQuery(NodeUpdateFormat, connection.Guid(DefaultNodeID));
+                    }
+                }
+            }
+
+            TableOperations<UserAccount>.TypeRegistry.RegisterType<AdoSecurityProvider>();
         }
 
         // Static Methods
@@ -973,7 +999,7 @@ namespace GSF.Security
             // Read the security context tables from the database connection
             foreach (string securityTable in s_securityTables)
             {
-                AddSecurityContextTable(connection, securityContext, securityTable, securityTable == ApplicationRoleTable ? s_nodeID : default(Guid));
+                AddSecurityContextTable(connection, securityContext, securityTable, securityTable == ApplicationRoleTable ? DefaultNodeID : default(Guid));
             }
 
             // Always cache security context after successful extraction
@@ -1010,9 +1036,9 @@ namespace GSF.Security
             string tableQuery;
 
             if (nodeID == default(Guid))
-                tableQuery = string.Format("SELECT * FROM {0}", tableName);
+                tableQuery = $"SELECT * FROM {tableName}";
             else
-                tableQuery = string.Format("SELECT * FROM {0} WHERE NodeID = '{1}'", tableName, nodeID);
+                tableQuery = $"SELECT * FROM {tableName} WHERE NodeID = '{nodeID}'";
 
             using (IDataReader reader = connection.ExecuteReader(tableQuery))
             {

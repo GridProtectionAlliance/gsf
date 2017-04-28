@@ -82,6 +82,7 @@ namespace GSF.Security.Model
         /// Default Node ID field.
         /// </summary>
         [Required]
+        [DefaultValueExpression("AdoSecurityProvider.DefaultNodeID")]
         public Guid DefaultNodeID { get; set; }
 
         /// <summary>

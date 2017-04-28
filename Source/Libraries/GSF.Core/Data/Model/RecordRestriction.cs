@@ -23,7 +23,6 @@
 
 using System;
 using System.Data;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using GSF.Collections;
