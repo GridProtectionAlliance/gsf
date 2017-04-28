@@ -299,6 +299,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                                                 Expanded = false,
                                                                 Selected = false,
                                                                 Selectable = measurement.Field<string>("SignalAcronym") == "IPHM" || measurement.Field<string>("SignalAcronym") == "IPHA" || measurement.Field<string>("SignalAcronym") == "VPHM" || measurement.Field<string>("SignalAcronym") == "VPHA" || measurement.Field<string>("SignalAcronym") == "FREQ",
+                                                                LongTimeTag = "N/A",
                                                                 TimeTag = "N/A",
                                                                 Value = "--",
                                                                 Quality = "N/A",
@@ -359,6 +360,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                                     Expanded = false,
                                                     Selected = false,
                                                     Selectable = measurement.Field<string>("SignalAcronym") == "IPHM" || measurement.Field<string>("SignalAcronym") == "IPHA" || measurement.Field<string>("SignalAcronym") == "VPHM" || measurement.Field<string>("SignalAcronym") == "VPHA" || measurement.Field<string>("SignalAcronym") == "FREQ",
+                                                    LongTimeTag = "N/A",
                                                     TimeTag = "N/A",
                                                     Value = "--",
                                                     Quality = "N/A",
@@ -419,6 +421,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                                     Expanded = false,
                                                     Selected = false,
                                                     Selectable = measurement.Field<string>("SignalAcronym") == "IPHM" || measurement.Field<string>("SignalAcronym") == "IPHA" || measurement.Field<string>("SignalAcronym") == "VPHM" || measurement.Field<string>("SignalAcronym") == "VPHA" || measurement.Field<string>("SignalAcronym") == "FREQ",
+                                                    LongTimeTag = "N/A",
                                                     TimeTag = "N/A",
                                                     Value = "--",
                                                     Quality = "N/A",
@@ -829,6 +832,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         private bool m_expanded;
         private bool m_selected;
         private bool m_selectable;
+        private string m_longTimeTag;
         private string m_timeTag;
         private string m_value;
         private string m_quality;
@@ -1132,6 +1136,22 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 m_selectable = value;
                 OnPropertyChanged(nameof(Selectable));
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets LongTimeTag for <see cref="RealTimeMeasurement"/> data.
+        /// </summary>
+        public string LongTimeTag
+        {
+            get
+            {
+                return m_longTimeTag;
+            }
+            set
+            {
+                m_longTimeTag = value;
+                OnPropertyChanged(nameof(LongTimeTag));
             }
         }
 

@@ -698,6 +698,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
                                     if (m_selectedMeasurements.TryGetValue(tempSignalID, out measurement))
                                     {
                                         measurement.Value = tempValue.ToString("0.###");
+                                        measurement.LongTimeTag = newMeasurement.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff");
                                         measurement.TimeTag = newMeasurement.Timestamp.ToString("HH:mm:ss.fff");
                                         measurement.Quality = newMeasurement.ValueQualityIsGood() ? "GOOD" : "UNKNOWN";
                                     }

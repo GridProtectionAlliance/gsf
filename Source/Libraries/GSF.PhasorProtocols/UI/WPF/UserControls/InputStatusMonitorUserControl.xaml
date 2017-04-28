@@ -242,7 +242,7 @@
                         <Button Content="{Binding Path=ShortSignalReference}" Template="{StaticResource HyperlinkStyleButtonTemplate}" ToolTip="{tsfBinding:Column Path=Description}" Height="Auto" Width="{tsfBinding:Column Path=MaximumShortSignalReferenceWidth}"
                                 Click="ButtonMeasurement_Click"/>
                         <TextBlock Text="{tsfBinding:Column Path=Value}" Width="Auto"
-                                   Foreground="{tsfBinding:Column Path=Quality, Converter={StaticResource StringToStatusColorConverter}}" ToolTip="{tsfBinding:Column Path=TimeTag}" HorizontalAlignment="Left" Margin="5,0,5,0"/>
+                                   Foreground="{tsfBinding:Column Path=Quality, Converter={StaticResource StringToStatusColorConverter}}" ToolTip="{tsfBinding:Column Path=LongTimeTag}" HorizontalAlignment="Left" Margin="5,0,5,0"/>
                         <TextBlock Text="{tsfBinding:Column Path=EngineeringUnit}" Width="Auto"/>
                     </StackPanel>
                     
