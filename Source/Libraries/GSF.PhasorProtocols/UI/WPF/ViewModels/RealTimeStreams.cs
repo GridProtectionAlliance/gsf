@@ -440,7 +440,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
                             if (newMeasurement.Timestamp > realTimeMeasurement.LastUpdated)
                             {
-                                realTimeMeasurement.Quality = newMeasurement.ValueQualityIsGood() ? "GOOD" : "BAD";
+                                realTimeMeasurement.Quality = newMeasurement.ValueQualityIsGood() && newMeasurement.TimestampQualityIsGood() ? "GOOD" : "BAD";
                                 realTimeMeasurement.LongTimeTag = newMeasurement.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff");
                                 realTimeMeasurement.TimeTag = newMeasurement.Timestamp.ToString("HH:mm:ss.fff");
                                 realTimeMeasurement.Value = newMeasurement.AdjustedValue.ToString("0.###");

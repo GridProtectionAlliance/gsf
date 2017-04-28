@@ -551,12 +551,16 @@ namespace GSF.TimeSeries.Transport
                     // Create a new set of measurements that represent the latest known values setting value to NaN if it is old
                     foreach (TemporalMeasurement measurement in LatestMeasurements)
                     {
+                        MeasurementStateFlags timeQuality = measurement.Timestamp.TimeIsValid(RealTime, measurement.LagTime, measurement.LeadTime)
+                            ? MeasurementStateFlags.Normal
+                            : MeasurementStateFlags.BadTime;
+
                         newMeasurement = new Measurement
                         {
                             Metadata = measurement.Metadata,
-                            Value = measurement.GetValue(RealTime),
+                            Value = measurement.Value,
                             Timestamp = measurement.Timestamp,
-                            StateFlags = measurement.StateFlags
+                            StateFlags = measurement.StateFlags | timeQuality
                         };
 
                         currentMeasurements.Add(newMeasurement);
