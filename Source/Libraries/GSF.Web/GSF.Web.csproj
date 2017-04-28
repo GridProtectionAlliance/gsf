@@ -248,7 +248,6 @@
     <EmbeddedResource Include="Security\Views\Users.cshtml" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
     <None Include="GSF.Web.nuspec" />
     <None Include="packages.config" />
     <None Include="PostBuildSetup.bat" />

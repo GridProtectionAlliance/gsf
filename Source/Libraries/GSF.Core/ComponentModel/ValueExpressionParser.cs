@@ -121,6 +121,13 @@ namespace GSF.ComponentModel
         // Nested Types
         private class MinimumScope : ValueExpressionScopeBase<T> { }
 
+        private class EvaluationOrderException : Exception
+        {
+            public EvaluationOrderException(string message) : base(message)
+            {
+            }
+        }
+
         #endregion
 
         #region [ Constructors ]
@@ -202,7 +209,8 @@ namespace GSF.ComponentModel
         /// </returns>
         public static Func<T> CreateInstance(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null)
         {
-            return () => CreateInstance<MinimumScope>(properties, typeRegistry)(new MinimumScope());
+            Func<MinimumScope, T> createInstanceFunction = CreateInstance<MinimumScope>(properties, typeRegistry);
+            return () => createInstanceFunction(new MinimumScope());
         }
 
         /// <summary>
@@ -228,7 +236,8 @@ namespace GSF.ComponentModel
         [SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
         public static Func<T> CreateInstanceForType<TValueExpressionAttribute>(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null) where TValueExpressionAttribute : ValueExpressionAttributeBase
         {
-            return () => CreateInstanceForType<TValueExpressionAttribute, MinimumScope>(properties, typeRegistry)(new MinimumScope());
+            Func<MinimumScope, T> createInstanceFunction = CreateInstanceForType<TValueExpressionAttribute, MinimumScope>(properties, typeRegistry);
+            return () => createInstanceFunction(new MinimumScope());
         }
 
         /// <summary>
@@ -254,7 +263,8 @@ namespace GSF.ComponentModel
         /// </returns>
         public static Action<T> UpdateInstance(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null)
         {
-            return instance => UpdateInstance<MinimumScope>(properties, typeRegistry)(new MinimumScope { Instance = instance });
+            Action<MinimumScope> updateInstanceFunction = UpdateInstance<MinimumScope>(properties, typeRegistry);
+            return instance => updateInstanceFunction(new MinimumScope { Instance = instance });
         }
 
         /// <summary>
@@ -282,7 +292,8 @@ namespace GSF.ComponentModel
         [SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
         public static Action<T> UpdateInstanceForType<TValueExpressionAttribute>(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null) where TValueExpressionAttribute : ValueExpressionAttributeBase
         {
-            return instance => UpdateInstanceForType<TValueExpressionAttribute, MinimumScope>(properties, typeRegistry)(new MinimumScope { Instance = instance });
+            Action<MinimumScope> updateInstanceFunction = UpdateInstanceForType<TValueExpressionAttribute, MinimumScope>(properties, typeRegistry);
+            return instance => updateInstanceFunction(new MinimumScope { Instance = instance });
         }
 
         /// <summary>
@@ -394,9 +405,10 @@ namespace GSF.ComponentModel
                     {
                         expressions.Add(AssignParsedValueExpression(valueExpressionAttribute, typeRegistry, property, scopeParameter, newInstance));
                     }
-                    catch (ArgumentException ex)
+                    catch (EvaluationOrderException ex)
                     {
-                        return scope => { throw ex; };
+                        // Need to wrap exceptions in order to keep original call stack
+                        return scope => { throw new InvalidOperationException(ex.Message, ex); };
                     }
                     catch (Exception ex)
                     {
@@ -503,9 +515,10 @@ namespace GSF.ComponentModel
                     {
                         expressions.Add(AssignParsedValueExpression(valueExpressionAttribute, typeRegistry, property, scopeParameter, instance));
                     }
-                    catch (ArgumentException ex)
+                    catch (EvaluationOrderException ex)
                     {
-                        return scope => { throw ex; };
+                        // Need to wrap exceptions in order to keep original call stack
+                        return scope => { throw new InvalidOperationException(ex.Message, ex); };
                     }
                     catch (Exception ex)
                     {
@@ -526,7 +539,7 @@ namespace GSF.ComponentModel
             if (ValueExpressionParser.HasThisKeywords(expression))
             {
                 if (valueExpressionAttribute.EvaluationOrder < 1)
-                    throw new ArgumentException($"Value expression attribute for property \"{typeof(T).FullName}.{property.Name}\" references the \"this\" keyword and must specify a positive \"EvaluationOrder\".", property.Name);
+                    throw new EvaluationOrderException($"Value expression attribute for property \"{typeof(T).FullName}.{property.Name}\" references the \"this\" keyword and must specify a positive \"EvaluationOrder\".");
 
                 // Replace all references to "this" with "Instance"
                 expression = ValueExpressionParser.ReplaceThisKeywords(expression, "Instance");

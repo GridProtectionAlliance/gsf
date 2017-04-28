@@ -46,6 +46,7 @@ using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
+using GSF.Diagnostics;
 using GSF.Identity;
 using GSF.Security.Model;
 
@@ -965,19 +966,26 @@ namespace GSF.Security
             // Determine whether the node exists in the database and create it if it doesn't
             if (DefaultNodeID != Guid.Empty)
             {
-                using (AdoDataConnection connection = new AdoDataConnection(DefaultSettingsCategory))
+                try
                 {
-                    const string NodeCountFormat = "SELECT COUNT(*) FROM Node";
-                    const string NodeInsertFormat = "INSERT INTO Node(Name, Description, Enabled) VALUES('Default', 'Default node', 1)";
-                    const string NodeUpdateFormat = "UPDATE Node SET ID = {0}";
-
-                    int nodeCount = connection.ExecuteScalar<int?>(NodeCountFormat) ?? 0;
-
-                    if (nodeCount == 0)
+                    using (AdoDataConnection connection = new AdoDataConnection(DefaultSettingsCategory))
                     {
-                        connection.ExecuteNonQuery(NodeInsertFormat);
-                        connection.ExecuteNonQuery(NodeUpdateFormat, connection.Guid(DefaultNodeID));
+                        const string NodeCountFormat = "SELECT COUNT(*) FROM Node";
+                        const string NodeInsertFormat = "INSERT INTO Node(Name, Description, Enabled) VALUES('Default', 'Default node', 1)";
+                        const string NodeUpdateFormat = "UPDATE Node SET ID = {0}";
+
+                        int nodeCount = connection.ExecuteScalar<int?>(NodeCountFormat) ?? 0;
+
+                        if (nodeCount == 0)
+                        {
+                            connection.ExecuteNonQuery(NodeInsertFormat);
+                            connection.ExecuteNonQuery(NodeUpdateFormat, connection.Guid(DefaultNodeID));
+                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    Logger.SwallowException(ex, "AdoSecurityProvider: Failed to create default database node ID");
                 }
             }
 
