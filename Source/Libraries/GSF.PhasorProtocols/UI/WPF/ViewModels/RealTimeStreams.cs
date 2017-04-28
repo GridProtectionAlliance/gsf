@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -473,24 +474,21 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         if (device.ID != null && device.ID > 0)
                         {
                             // Check to see if device has statistic measurements which define the number of errors reported by the device
-                            if (!RealTimeStatistic.InputStreamStatistics.ContainsKey((int)device.ID))
+                            if (RealTimeStatistic.DevicesWithStatisticMeasurements.TryGetValue((int)device.ID, out statisticMeasurements))
                             {
-                                if (RealTimeStatistic.DevicesWithStatisticMeasurements.TryGetValue((int)device.ID, out statisticMeasurements))
+                                // If there are any reported errors, force color to yellow
+                                foreach (StatisticMeasurement statisticMeasurement in statisticMeasurements)
                                 {
-                                    // If there are any reported errors, force color to yellow
-                                    foreach (StatisticMeasurement statisticMeasurement in statisticMeasurements)
-                                    {
-                                        int value;
+                                    int value;
 
-                                        bool yellow =
-                                            StatisticsEngine.RegexMatch(statisticMeasurement.SignalReference, "PMU") &&
-                                            statisticMeasurement.StatisticName == "Measurements With Error" &&
-                                            int.TryParse(statisticMeasurement.Value, out value) &&
-                                            value > 0;
+                                    bool yellow =
+                                        StatisticsEngine.RegexMatch(statisticMeasurement.SignalReference, "PMU") &&
+                                        statisticMeasurement.StatisticName == "Measurements With Error" &&
+                                        int.TryParse(statisticMeasurement.Value, NumberStyles.AllowThousands, CultureInfo.CurrentCulture, out value) &&
+                                        value > 0;
 
-                                        if (yellow)
-                                            device.StatusColor = "Yellow";
-                                    }
+                                    if (yellow)
+                                        device.StatusColor = "Yellow";
                                 }
                             }
                         }
