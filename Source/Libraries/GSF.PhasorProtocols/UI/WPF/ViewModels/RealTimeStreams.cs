@@ -580,13 +580,23 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
             if (m_subscribedUnsynchronized && !string.IsNullOrEmpty(m_allSignalIDs))
             {
+                double lagTime;
+                double leadTime;
+
+                if (!double.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("LagTime")?.ToString(), out lagTime))
+                    lagTime = 60.0D;
+
+                if (!double.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("LagTime")?.ToString(), out leadTime))
+                    leadTime = 60.0D;
+
                 info = new UnsynchronizedSubscriptionInfo(true);
 
                 info.UseCompactMeasurementFormat = true;
                 info.FilterExpression = m_allSignalIDs;
                 info.IncludeTime = true;
-                info.LagTime = 60.0D;
-                info.LeadTime = 60.0D;
+                info.UseLocalClockAsRealTime = IsolatedStorageManager.ReadFromIsolatedStorage("UseLocalClockAsRealTime").ToNonNullString("true").ParseBoolean();
+                info.LagTime = lagTime;
+                info.LeadTime = leadTime;
                 info.PublishInterval = m_refreshInterval;
 
                 if (historical)

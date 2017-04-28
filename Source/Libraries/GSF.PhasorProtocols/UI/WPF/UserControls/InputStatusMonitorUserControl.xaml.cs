@@ -87,7 +87,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
         private int m_framesPerSecond = 30;                                                             // Sample rate of the data from subscription API/Data Resolution
         private double m_leadTime = 1.0;
         private double m_lagTime = 3.0;
-        private bool m_useLocalClockAsRealtime;
+        private bool m_useLocalClockAsRealtime = true;
         private bool m_ignoreBadTimestamps;
         private int m_chartRefreshInterval = 66;
         private int m_statisticsDataRefershInterval = 10;
