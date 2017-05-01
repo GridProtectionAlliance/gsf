@@ -610,7 +610,7 @@ namespace GSF.Configuration
                     s_typeRegistry = new TypeRegistry();
 
                     foreach (KeyValuePair<string, object> item in ValueExpressionParser.DefaultTypeRegistry)
-                        s_typeRegistry.Add(item.Key, item.Value);
+                        s_typeRegistry[item.Key] = item.Value;
                 }
 
                 return s_typeRegistry;
