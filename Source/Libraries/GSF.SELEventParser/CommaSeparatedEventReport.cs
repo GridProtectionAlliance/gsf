@@ -15,9 +15,9 @@ namespace GSF.SELEventParser
         private int m_eventNumber;
         private AnalogSection m_analogSection;
         private double m_averageFrequency;
-        private int m_samplesPerCycleAnalog;
-        private int m_samplesPerCycleDigital;
-        private int m_numberOfCycles;
+        private double m_samplesPerCycleAnalog;
+        private double m_samplesPerCycleDigital;
+        private double m_numberOfCycles;
         private string m_event;
         private int m_triggerIndex;
         private int m_initialReadingIndex;
@@ -110,7 +110,7 @@ namespace GSF.SELEventParser
             }
         }
 
-        public int SamplesPerCycleAnalog
+        public double SamplesPerCycleAnalog
         {
             get
             {
@@ -122,7 +122,7 @@ namespace GSF.SELEventParser
             }
         }
 
-        public int SamplesPerCycleDigital
+        public double SamplesPerCycleDigital
         {
             get
             {
@@ -134,7 +134,7 @@ namespace GSF.SELEventParser
             }
         }
 
-        public int NumberOfCycles
+        public double NumberOfCycles
         {
             get
             {
@@ -312,7 +312,7 @@ namespace GSF.SELEventParser
 
             // Parse the report firmware id and checksum
             commaSeparatedEventReport.Firmware.ID = lines[index].Split(',')[0].Split('=')[1].Split('"')[0];
-            commaSeparatedEventReport.Firmware.Checksum = Convert.ToInt32(lines[index].Split(',')[1].Replace("\"", ""), 16);
+            //commaSeparatedEventReport.Firmware.Checksum = Convert.ToInt32(lines[index].Split(',')[1].Replace("\"", ""), 16);
 
             while (!lines[index].ToUpper().Contains("MONTH"))
                 ++index;
@@ -332,9 +332,9 @@ namespace GSF.SELEventParser
             List<string> sampleStats = lines[++index].Split(',').ToList();
 
             commaSeparatedEventReport.AverageFrequency = Convert.ToDouble(sampleStats[sampleStatHeader.FindIndex(x => x.ToUpper().Contains("FREQ"))]);
-            commaSeparatedEventReport.SamplesPerCycleAnalog = Convert.ToInt32(sampleStats[sampleStatHeader.FindIndex(x => x.ToUpper().Contains("SAM/CYC_A"))]);
-            commaSeparatedEventReport.SamplesPerCycleDigital = Convert.ToInt32(sampleStats[sampleStatHeader.FindIndex(x => x.ToUpper().Contains("SAM/CYC_D"))]);
-            commaSeparatedEventReport.NumberOfCycles = Convert.ToInt32(sampleStats[sampleStatHeader.FindIndex(x => x.ToUpper().Contains("NUM_OF_CYC"))]);
+            commaSeparatedEventReport.SamplesPerCycleAnalog = Convert.ToDouble(sampleStats[sampleStatHeader.FindIndex(x => x.ToUpper().Contains("SAM/CYC_A"))]);
+            commaSeparatedEventReport.SamplesPerCycleDigital = Convert.ToDouble(sampleStats[sampleStatHeader.FindIndex(x => x.ToUpper().Contains("SAM/CYC_D"))]);
+            commaSeparatedEventReport.NumberOfCycles = Convert.ToDouble(sampleStats[sampleStatHeader.FindIndex(x => x.ToUpper().Contains("NUM_OF_CYC"))]);
             commaSeparatedEventReport.Event = sampleStats[sampleStatHeader.FindIndex(x => x.ToUpper().Contains("EVENT"))].Replace("/","");
 
             while (!lines[index].ToUpper().Contains("IA"))
@@ -344,32 +344,19 @@ namespace GSF.SELEventParser
 
             string[] fields = lines[index].Split(',');
 
-            foreach (string name in fields)
+            int fieldIndex = 0;
+
+            while(fields[fieldIndex].Trim('"').ToUpper() != "TRIG")
             {
-                if(name.Length < 10 && (
-                   name.ToUpper().Contains("IA") || 
-                   name.ToUpper().Contains("IB") || 
-                   name.ToUpper().Contains("IC") || 
-                   name.ToUpper().Contains("IN") || 
-                   (!name.ToUpper().Contains("TRIG") && name.ToUpper().Contains("IG")) || 
-                   name.ToUpper().Contains("VA") || 
-                   name.ToUpper().Contains("VB") || 
-                   name.ToUpper().Contains("VC") ||
-                   name.ToUpper().Contains("VS") ||
-                   name.ToUpper().Contains("VDC") ||
-                   name.ToUpper().Contains("FREQ")
-                   ))
-                {
-                    commaSeparatedEventReport.AnalogSection.AnalogChannels.Add(new Channel<double>());
-                    commaSeparatedEventReport.AnalogSection.AnalogChannels[commaSeparatedEventReport.AnalogSection.AnalogChannels.Count - 1].Name = name.Split('(')[0].Trim('"');
-                }
+                commaSeparatedEventReport.AnalogSection.AnalogChannels.Add(new Channel<double>());
+                commaSeparatedEventReport.AnalogSection.AnalogChannels[commaSeparatedEventReport.AnalogSection.AnalogChannels.Count - 1].Name = fields[fieldIndex++].Split('(')[0].Trim('"');
             }
 
-            foreach(string channel in fields[12].Split(' '))
+            foreach (string channel in fields[++fieldIndex].Split(' '))
             {
-                if(channel != "\"")
+                if (channel != "\"")
                 {
-                    commaSeparatedEventReport.AnalogSection.DigitalChannels.Add(new Channel<bool>());
+                    commaSeparatedEventReport.AnalogSection.DigitalChannels.Add(new Channel<bool?>());
                     commaSeparatedEventReport.AnalogSection.DigitalChannels[commaSeparatedEventReport.AnalogSection.DigitalChannels.Count - 1].Name = channel.Trim('"');
                 }
             }
@@ -380,30 +367,27 @@ namespace GSF.SELEventParser
             while (!lines[index].ToUpper().Contains("SETTINGS"))
             {
                 int diff = commaSeparatedEventReport.TriggerIndex - index - commaSeparatedEventReport.InitialReadingIndex;
+                commaSeparatedEventReport.AnalogSection.TimeChannel.Samples.Add(commaSeparatedEventReport.Header.EventTime.AddTicks(-1 * timeStepTicks * diff));
 
-                commaSeparatedEventReport.AnalogSection.TimeChannel.Samples.Add(commaSeparatedEventReport.Header.EventTime.AddTicks(-1*timeStepTicks * diff));
-                commaSeparatedEventReport.AnalogSection.AnalogChannels[0].Samples.Add(Convert.ToDouble(lines[index].Split(',')[0])*(fields[0].ToUpper().Contains("KV")? 1000 : 1));
-                commaSeparatedEventReport.AnalogSection.AnalogChannels[1].Samples.Add(Convert.ToDouble(lines[index].Split(',')[1])*(fields[1].ToUpper().Contains("KV")? 1000 : 1));
-                commaSeparatedEventReport.AnalogSection.AnalogChannels[2].Samples.Add(Convert.ToDouble(lines[index].Split(',')[2])*(fields[2].ToUpper().Contains("KV")? 1000 : 1));
-                commaSeparatedEventReport.AnalogSection.AnalogChannels[3].Samples.Add(Convert.ToDouble(lines[index].Split(',')[3])*(fields[3].ToUpper().Contains("KV")? 1000 : 1));
-                commaSeparatedEventReport.AnalogSection.AnalogChannels[4].Samples.Add(Convert.ToDouble(lines[index].Split(',')[4])*(fields[4].ToUpper().Contains("KV")? 1000 : 1));
-                commaSeparatedEventReport.AnalogSection.AnalogChannels[5].Samples.Add(Convert.ToDouble(lines[index].Split(',')[5])*(fields[5].ToUpper().Contains("KV")? 1000 : 1));
-                commaSeparatedEventReport.AnalogSection.AnalogChannels[6].Samples.Add(Convert.ToDouble(lines[index].Split(',')[6])*(fields[6].ToUpper().Contains("KV")? 1000 : 1));
-                commaSeparatedEventReport.AnalogSection.AnalogChannels[7].Samples.Add(Convert.ToDouble(lines[index].Split(',')[7])*(fields[7].ToUpper().Contains("KV")? 1000 : 1));
-                commaSeparatedEventReport.AnalogSection.AnalogChannels[8].Samples.Add(Convert.ToDouble(lines[index].Split(',')[8])*(fields[8].ToUpper().Contains("KV")? 1000 : 1));
-                commaSeparatedEventReport.AnalogSection.AnalogChannels[9].Samples.Add(Convert.ToDouble(lines[index].Split(',')[9])*(fields[9].ToUpper().Contains("KV")? 1000 : 1));
-                commaSeparatedEventReport.AnalogSection.AnalogChannels[10].Samples.Add(Convert.ToDouble(lines[index].Split(',')[10]));
-
-                string digitals = lines[index].Split(',')[12].Replace("\"", "");
-                int forEachIndex = 0;
-
-                foreach (Channel<bool> channel in commaSeparatedEventReport.AnalogSection.DigitalChannels)
+                int channelIndex = 0;
+                foreach (var analogChannel in commaSeparatedEventReport.AnalogSection.AnalogChannels)
                 {
-
-                    channel.Samples.Add(Convert.ToString(Convert.ToInt32(digitals[forEachIndex/4].ToString(), 16), 2).PadLeft(4, '0')[forEachIndex%4] == '1');
-                    ++forEachIndex;
+                    analogChannel.Samples.Add(Convert.ToDouble(lines[index].Split(',')[channelIndex]) * (fields[channelIndex++].ToUpper().Contains("KV") ? 1000 : 1));
                 }
 
+                string digitals = lines[index].Split(',')[++channelIndex].Replace("\"", "");
+
+                int forEachIndex = 0;
+
+                foreach (Channel<bool?> channel in commaSeparatedEventReport.AnalogSection.DigitalChannels)
+                {
+
+                    if(digitals == "")
+                        channel.Samples.Add(null);
+                    else
+                        channel.Samples.Add(Convert.ToString(Convert.ToInt32(digitals[forEachIndex / 4].ToString(), 16), 2).PadLeft(4, '0')[forEachIndex % 4] == '1');
+                    ++forEachIndex;
+                }
                 ++index;
             }
 

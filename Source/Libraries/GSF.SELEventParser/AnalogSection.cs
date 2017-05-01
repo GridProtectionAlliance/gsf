@@ -35,7 +35,7 @@ namespace GSF.SELEventParser
         // Fields
         private Channel<DateTime> m_timeChannel;
         private List<Channel<double>> m_analogChannels;
-        private List<Channel<bool>> m_digitalChannels;
+        private List<Channel<bool?>> m_digitalChannels;
 
         #endregion
 
@@ -45,7 +45,7 @@ namespace GSF.SELEventParser
         {
             m_timeChannel = new Channel<DateTime>() { Name = "Time" };
             m_analogChannels = new List<Channel<double>>();
-            m_digitalChannels = new List<Channel<bool>>();
+            m_digitalChannels = new List<Channel<bool?>>();
         }
 
         #endregion
@@ -76,7 +76,7 @@ namespace GSF.SELEventParser
             }
         }
 
-        public List<Channel<bool>> DigitalChannels
+        public List<Channel<bool?>> DigitalChannels
         {
             get
             {
@@ -97,7 +97,7 @@ namespace GSF.SELEventParser
             return m_analogChannels.FirstOrDefault(channel => channel.Name == name);
         }
 
-        public Channel<bool> GetDigitalChannel(string name)
+        public Channel<bool?> GetDigitalChannel(string name)
         {
             return m_digitalChannels.FirstOrDefault(channel => channel.Name == name);
         }
