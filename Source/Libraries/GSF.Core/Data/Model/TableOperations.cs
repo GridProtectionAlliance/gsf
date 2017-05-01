@@ -51,7 +51,7 @@ namespace GSF.Data.Model
         // Nested Types
         private class CurrentScope : ValueExpressionScopeBase<T>
         {
-            // Define instance variables exposed to DefaultValueExpressionAttribute expressions
+            // Define instance variables exposed to ValueExpressionAttributeBase expressions
             #pragma warning disable 169, 414, 649
             public TableOperations<T> TableOperations;
             public AdoDataConnection Connection;
@@ -116,7 +116,7 @@ namespace GSF.Data.Model
         /// customTokens = new[] { new KeyValuePair&lt;string, string&gt;("{count}", $"{count}") };
         /// </code>
         /// </remarks>
-        public TableOperations(AdoDataConnection connection, KeyValuePair<string, string>[] customTokens = null)
+        public TableOperations(AdoDataConnection connection, IEnumerable<KeyValuePair<string, string>> customTokens = null)
         {
             if ((object)connection == null)
                 throw new ArgumentNullException(nameof(connection));
@@ -301,7 +301,7 @@ namespace GSF.Data.Model
         /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="connection"/> cannot be <c>null</c>.</exception>
-        public TableOperations(AdoDataConnection connection, Action<Exception> exceptionHandler, KeyValuePair<string, string>[] customTokens = null) : this(connection, customTokens)
+        public TableOperations(AdoDataConnection connection, Action<Exception> exceptionHandler, IEnumerable<KeyValuePair<string, string>> customTokens = null) : this(connection, customTokens)
         {
             m_exceptionHandler = exceptionHandler;
         }
@@ -1850,7 +1850,7 @@ namespace GSF.Data.Model
 
         /// <summary>
         /// Gets or sets <see cref="ExpressionEvaluator.TypeRegistry"/> instance used for evaluating encountered instances
-        /// of the <see cref="DefaultValueExpressionAttribute"/> on modeled table properties.
+        /// of the <see cref="ValueExpressionAttributeBase"/> on modeled table properties.
         /// </summary>
         /// <remarks>
         /// Accessing this property will create a unique type registry for the current type <typeparamref name="T"/> which

@@ -66,7 +66,7 @@ namespace GSF.Web.Model
         private readonly Dictionary<Type, ITableOperations> m_tableOperationsCache;
         private ConcurrentDictionary<Type, DataTable> m_primaryKeySessionCache;
         private readonly Action<Exception> m_exceptionHandler;
-        private Dictionary<Type, KeyValuePair<string, string>[]> m_customTableOperationTokens;
+        private Dictionary<Type, IEnumerable<KeyValuePair<string, string>>> m_customTableOperationTokens;
         private readonly Dictionary<string, Tuple<string, string>> m_fieldValidationParameters;
         private readonly List<Tuple<string, string>> m_fieldValueInitializers;
         private readonly List<Tuple<string, string, string, bool>> m_readonlyHotLinkFields;
@@ -266,7 +266,7 @@ namespace GSF.Web.Model
         /// dataContext.CustomTableOperationTokens[typeof(MyTable)] = new[] { new KeyValuePair&lt;string, string&gt;("{count}", $"{count}") };
         /// </code>
         /// </remarks>        
-        public Dictionary<Type, KeyValuePair<string, string>[]> CustomTableOperationTokens => m_customTableOperationTokens ?? (m_customTableOperationTokens = new Dictionary<Type, KeyValuePair<string, string>[]>());
+        public Dictionary<Type, IEnumerable<KeyValuePair<string, string>>> CustomTableOperationTokens => m_customTableOperationTokens ?? (m_customTableOperationTokens = new Dictionary<Type, IEnumerable<KeyValuePair<string, string>>>());
 
         /// <summary>
         /// Gets table operations cache for data context.
@@ -331,7 +331,7 @@ namespace GSF.Web.Model
         /// <returns>Table operations for the specified modeled table <typeparamref name="TModel"/>.</returns>
         public TableOperations<TModel> Table<TModel>() where TModel : class, new()
         {
-            KeyValuePair<string, string>[] customTokens = null;
+            IEnumerable<KeyValuePair<string, string>> customTokens = null;
 
             if ((object)m_customTableOperationTokens != null)
                 m_customTableOperationTokens.TryGetValue(typeof(TModel), out customTokens);
@@ -356,7 +356,7 @@ namespace GSF.Web.Model
         /// <returns>Table operations for the specified modeled table type <paramref name="model"/>.</returns>
         public ITableOperations Table(Type model)
         {
-            KeyValuePair<string, string>[] customTokens = null;
+            IEnumerable<KeyValuePair<string, string>> customTokens = null;
 
             if ((object)m_customTableOperationTokens != null)
                 m_customTableOperationTokens.TryGetValue(model, out customTokens);
