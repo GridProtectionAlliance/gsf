@@ -988,8 +988,6 @@ namespace GSF.Security
                     Logger.SwallowException(ex, "AdoSecurityProvider: Failed to create default database node ID");
                 }
             }
-
-            TableOperations<UserAccount>.TypeRegistry.RegisterType<AdoSecurityProvider>();
         }
 
         // Static Methods

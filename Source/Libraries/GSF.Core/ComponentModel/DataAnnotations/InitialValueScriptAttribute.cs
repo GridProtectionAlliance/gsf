@@ -33,15 +33,15 @@ namespace GSF.ComponentModel.DataAnnotations
     /// <remarks>
     /// <para>
     /// Example to set initial value to 30 days from now using a Javascript expression:
-    /// <c>[InitialValue("(new Date()).addDays(30)")]</c>
+    /// <c>[InitialValueScript("(new Date()).addDays(30)")]</c>
     /// </para>
     /// <para>
     /// Note that the <see cref="DefaultValueAttribute"/> should be used to set any constant values
     /// for new modeled record instances and the <see cref="DefaultValueExpressionAttribute"/> should
-    /// be used for applying any needed server-side run-time defaults, either of these will get
-    /// assigned when using the <see cref="Data.Model.TableOperations{T}.NewRecord"/> function. The
-    /// <see cref="InitialValueScriptAttribute"/> is used to initialize the property value using an
-    /// expression that gets evaluated in the target environment.
+    /// be used for applying any needed server-side run-time expression defaults, either of these will
+    /// get assigned when using the <see cref="Data.Model.TableOperations{T}.NewRecord"/> function.
+    /// The <see cref="InitialValueScriptAttribute"/> is used to initialize the property value using
+    /// an expression that gets evaluated in the target environment.
     /// </para>
     /// </remarks>
     [AttributeUsage(AttributeTargets.Property)]

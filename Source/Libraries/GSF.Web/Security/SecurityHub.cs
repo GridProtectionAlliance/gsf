@@ -91,6 +91,8 @@ namespace GSF.Web.Security
         private static Action<string, UpdateType> s_logStatusMessageFunction;
         private static Action<Exception> s_logExceptionFunction;
 
+        // Static Properties
+
         /// <summary>
         /// Gets current default Node ID for security.
         /// </summary>

@@ -1842,6 +1842,12 @@ namespace GSF.Data.Model
             s_addNewProperties = addNewProperties.ToArray();
             s_updateProperties = updateProperties.ToArray();
             s_primaryKeyProperties = primaryKeyProperties.ToArray();
+
+            // Create an instance of modeled table to allow any static functionality to be initialized,
+            // such as registering and custom types or symbols that may be useful for value expressions
+            ValueExpressionParser<T>.InitializeType();
+
+            // Generated compiled create new and update record functions for modeled table
             s_createRecordInstance = ValueExpressionParser<T>.CreateInstance<CurrentScope>(s_properties.Values, s_typeRegistry);
             s_updateRecordInstance = ValueExpressionParser<T>.UpdateInstance<CurrentScope>(s_properties.Values, s_typeRegistry);
         }

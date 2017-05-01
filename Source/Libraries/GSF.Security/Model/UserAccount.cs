@@ -40,6 +40,11 @@ namespace GSF.Security.Model
     [PrimaryLabel("Name")]
     public class UserAccount
     {
+        static UserAccount()
+        {
+            TableOperations<UserAccount>.TypeRegistry.RegisterType<AdoSecurityProvider>();
+        }
+
         /// <summary>
         /// Unique user account ID field.
         /// </summary>

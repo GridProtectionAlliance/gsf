@@ -188,6 +188,34 @@ namespace GSF.ComponentModel
         // Static Methods
 
         /// <summary>
+        /// Validates that any static type <typeparamref name="T"/> functionality is initialized.
+        /// </summary>
+        /// <remarks>
+        /// As long as type <typeparamref name="T"/> defines a parameterless constructor, this method
+        /// will create an instance of the modeled class so that any defined static functionality will
+        /// be initialized. Calling this method in advance of any of the static create or update delegate
+        /// generation functions will allow modeled types to self-register any custom symbols and types
+        /// that may be used during evaluation of value expressions attributes, e.g.:
+        /// <code>
+        /// static MyModel()
+        /// {
+        ///     TableOperations&lt;MyModel&gt;.TypeRegistry.RegisterType&lt;MyType&gt;();
+        /// }
+        /// </code>
+        /// </remarks>
+        /// <returns>
+        /// <c>true</c> if type <typeparamref name="T"/> supports a parameterless constructor and was
+        /// successfully initialized; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool InitializeType()
+        {
+            if ((object)typeof(T).GetConstructor(Type.EmptyTypes) != null)
+                return (object)Activator.CreateInstance<T>() != null;
+
+            return false;
+        }
+
+        /// <summary>
         /// Generates a delegate that will create new instance of type <typeparamref name="T"/> object parameter
         /// applying any specified <see cref="DefaultValueAttribute"/> or <see cref="DefaultValueExpressionAttribute"/>
         /// instances that are declared on the type <typeparamref name="T"/> properties.
