@@ -41,6 +41,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Security;
 using System.Text;
@@ -100,6 +101,11 @@ namespace GSF.Console
         #region [ Members ]
 
         // Constants
+
+        /// <summary>
+        /// Regular expression pattern for tokenizing a list of arguments.
+        /// </summary>
+        public const string TokenRegex = @"(?:(?<Open>"")(?:[^\\""]*(?:\\.)*)*(?<Close-Open>"")(?(Open)(?!))|\S)+";
 
         /// <summary>
         /// Default value for <see cref="OrderedArgID"/>.
@@ -450,6 +456,11 @@ namespace GSF.Console
 
         #region [ Static ]
 
+        // Static Fields
+        private static readonly Regex CompiledTokenRegex = new Regex(TokenRegex, RegexOptions.Compiled);
+
+        // Static Methods
+
         /// <summary>
         /// This function can be used to parse a single parameterized string and turn it into an array of parameters.
         /// </summary>
@@ -457,59 +468,11 @@ namespace GSF.Console
         /// <returns>Array of parameters.</returns>
         public static string[] ParseCommand(string command)
         {
-            List<string> parsedCommand = new List<string>();
-
-            if (!string.IsNullOrEmpty(command))
-            {
-                string encodedQuote = Guid.NewGuid().ToString();
-                string encodedSpace = Guid.NewGuid().ToString();
-                StringBuilder encodedCommand = new StringBuilder();
-                bool argumentInQuotes = false;
-                char currentCharacter;
-                string argument;
-
-                // Encodes embedded quotes. It allows embedded/nested quotes encoded as \".
-                command = command.Replace("\\\"", encodedQuote);
-
-                // Combines any quoted strings into a single arg by encoding embedded spaces.
-                for (int x = 0; x < command.Length; x++)
-                {
-                    currentCharacter = command[x];
-
-                    if (currentCharacter == '\"')
-                    {
-                        if (argumentInQuotes)
-                            argumentInQuotes = false;
-                        else
-                            argumentInQuotes = true;
-                    }
-
-                    if (argumentInQuotes)
-                    {
-                        if (currentCharacter == ' ')
-                            encodedCommand.Append(encodedSpace);
-                        else
-                            encodedCommand.Append(currentCharacter);
-                    }
-                    else
-                    {
-                        encodedCommand.Append(currentCharacter);
-                    }
-                }
-
-                command = encodedCommand.ToString();
-
-                // Parses every argument out by space and combine any quoted strings into a single arg.
-                foreach (string arg in command.Split(' '))
-                {
-                    // Adds tokenized argument, making sure to unencode any embedded quotes or spaces.
-                    argument = arg.Replace(encodedQuote, "\"").Replace(encodedSpace, " ").Trim();
-                    if (argument.Length > 0)
-                        parsedCommand.Add(argument);
-                }
-            }
-
-            return parsedCommand.ToArray();
+            lock (CompiledTokenRegex)
+                return CompiledTokenRegex.Matches(command)
+                    .Cast<Match>()
+                    .Select(match => match.Value)
+                    .ToArray();
         }
 
         /// <summary>
