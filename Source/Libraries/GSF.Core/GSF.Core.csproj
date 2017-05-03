@@ -107,6 +107,8 @@
     <Compile Include="ComponentModel\DataAnnotations\EmailValidationAttribute.cs" />
     <Compile Include="ComponentModel\DataAnnotations\AcronymValidationAttribute.cs" />
     <Compile Include="ComponentModel\DataAnnotations\UrlValidationAttribute.cs" />
+    <Compile Include="ComponentModel\EvaluationOrderException.cs" />
+    <Compile Include="ComponentModel\TypeConvertedValueExpressionAttribute.cs" />
     <Compile Include="ComponentModel\ValueExpressionAttributeBase.cs" />
     <Compile Include="ComponentModel\UpdateValueExpressionAttribute.cs" />
     <Compile Include="ComponentModel\ValueExpressionParser.cs" />

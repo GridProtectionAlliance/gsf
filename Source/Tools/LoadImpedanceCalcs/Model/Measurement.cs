@@ -31,6 +31,8 @@ namespace LoadImpedanceCalcs.Model
 {
     public class Measurement
     {
+        public static string Test;
+
         [PrimaryKey(true)]
         public int PointID { get; set; }
 
@@ -47,7 +49,7 @@ namespace LoadImpedanceCalcs.Model
 
         public string AlternateTag { get; set; }
 
-        [DefaultValueExpression("NotNull(Connection.ExecuteScalar('SELECT ID FROM SignalType WHERE Acronym=\\'CALC\\''), 10)", Cached = true)]
+        [DefaultValueExpression("Connection.ExecuteScalar(typeof(int), (object)10, 'SELECT ID FROM SignalType WHERE Acronym=\\'CALC\\'')", Cached = true)]
         public int SignalTypeID { get; set; }
 
         public int? PhasorSourceIndex { get; set; }

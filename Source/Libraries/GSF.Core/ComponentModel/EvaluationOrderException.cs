@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  DefaultValueExpressionAttribute.cs - Gbtc
+//  EvaluationOrderException.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  04/07/2017 - J. Ritchie Carroll
+//  05/03/2017 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -26,16 +26,16 @@ using System;
 namespace GSF.ComponentModel
 {
     /// <summary>
-    /// Defines a C# expression attribute that when evaluated will specify the default value for a property.
+    /// Represents an exception related to <see cref="ValueExpressionAttributeBase.EvaluationOrder"/> values.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Property)]
-    public sealed class DefaultValueExpressionAttribute : ValueExpressionAttributeBase
+    [Serializable]
+    public class EvaluationOrderException : Exception
     {
         /// <summary>
-        /// Creates a new <see cref="DefaultValueExpressionAttribute"/>
+        /// Creates a new <see cref="EvaluationOrderException"/>.
         /// </summary>
-        /// <param name="expression">C# expression that will evaluate to the desired default value.</param>
-        public DefaultValueExpressionAttribute(string expression) : base(expression)
+        /// <param name="message">Exception message.</param>
+        public EvaluationOrderException(string message) : base(message)
         {
         }
     }

@@ -75,7 +75,7 @@ namespace GSF
         /// MacOSX or Unix. Note that all flavors of Linux will show up as <see cref="PlatformID.Unix"/>.
         /// </para>
         /// </remarks>        
-        public static readonly bool IsPosixEnvironment = (Path.DirectorySeparatorChar == '/');   // This is how Mono source often checks this
+        public static readonly bool IsPosixEnvironment = Path.DirectorySeparatorChar == '/';   // This is how Mono source often checks this
 
         /// <summary>
         /// Determines if the code base is currently running under Mono.
@@ -84,7 +84,7 @@ namespace GSF
         /// This property can be used to make a run-time determination if Windows or Mono based .NET is being used. However, it is
         /// highly recommended to use the MONO compiler directive wherever possible instead of determining this at run-time.
         /// </remarks>
-        public static bool IsMono = ((object)Type.GetType("Mono.Runtime") != null);
+        public static bool IsMono = (object)Type.GetType("Mono.Runtime") != null;
 
         /// <summary>Returns one of two strongly-typed objects.</summary>
         /// <returns>One of two objects, depending on the evaluation of given expression.</returns>
@@ -102,7 +102,7 @@ namespace GSF
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T IIf<T>(bool expression, T truePart, T falsePart)
         {
-            return (expression ? truePart : falsePart);
+            return expression ? truePart : falsePart;
         }
 
         /// <summary>Creates a strongly-typed Array.</summary>
@@ -176,7 +176,7 @@ namespace GSF
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ToNonNullString<T>(this T value) where T : class
         {
-            return ((object)value == null || value is DBNull ? "" : value.ToString());
+            return (object)value == null || value is DBNull ? "" : value.ToString();
         }
 
         /// <summary>
@@ -192,7 +192,7 @@ namespace GSF
             if ((object)nonNullValue == null)
                 throw new ArgumentNullException(nameof(nonNullValue));
 
-            return ((object)value == null || value is DBNull ? nonNullValue : value.ToString());
+            return (object)value == null || value is DBNull ? nonNullValue : value.ToString();
         }
 
         // We handle strings as a special version of the ToNullNullString extension to handle documentation a little differently
@@ -205,7 +205,7 @@ namespace GSF
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ToNonNullString(this string value)
         {
-            return ((object)value == null ? "" : value);
+            return (object)value == null ? "" : value;
         }
 
         /// <summary>
@@ -226,7 +226,7 @@ namespace GSF
 
             string valueAsString = value.ToString();
 
-            return (string.IsNullOrEmpty(valueAsString) ? nonNullNorEmptyValue : valueAsString);
+            return string.IsNullOrEmpty(valueAsString) ? nonNullNorEmptyValue : valueAsString;
         }
 
         /// <summary>
@@ -247,7 +247,7 @@ namespace GSF
 
             string valueAsString = value.ToString();
 
-            return (string.IsNullOrWhiteSpace(valueAsString) ? nonNullNorWhiteSpaceValue : valueAsString);
+            return string.IsNullOrWhiteSpace(valueAsString) ? nonNullNorWhiteSpaceValue : valueAsString;
         }
 
         /// <summary>
@@ -261,8 +261,9 @@ namespace GSF
         /// Returned value will never be null, if no value exists an empty string ("") will be returned.
         /// </para>
         /// <para>
-        /// You can use the <see cref="StringExtensions.ConvertToType{T}(string)"/> string extension method to
-        /// convert the string back to its original <see cref="Type"/>.
+        /// You can use the <see cref="StringExtensions.ConvertToType{T}(string)"/> string extension
+        /// method or <see cref="TypeConvertFromString(string, Type)"/> to convert the string back to its
+        /// original <see cref="Type"/>.
         /// </para>
         /// </remarks>
         public static string TypeConvertToString(object value)
@@ -282,8 +283,9 @@ namespace GSF
         /// Returned value will never be null, if no value exists an empty string ("") will be returned.
         /// </para>
         /// <para>
-        /// You can use the <see cref="StringExtensions.ConvertToType{T}(string)"/> string extension method to
-        /// convert the string back to its original <see cref="Type"/>.
+        /// You can use the <see cref="StringExtensions.ConvertToType{T}(string, CultureInfo)"/> string
+        /// extension method or <see cref="TypeConvertFromString(string, Type, CultureInfo)"/> to convert
+        /// the string back to its original <see cref="Type"/>.
         /// </para>
         /// </remarks>
         public static string TypeConvertToString(object value, CultureInfo culture)
@@ -317,15 +319,71 @@ namespace GSF
             }
         }
 
-        /// <summary>Gets a high-resolution number of seconds, including fractional seconds, that have
-        /// elapsed since 12:00:00 midnight, January 1, 0001.</summary>
-        public static double SystemTimer
+        /// <summary>
+        /// Converts this string into the specified type.
+        /// </summary>
+        /// <param name="value">Source string to convert to type.</param>
+        /// <param name="type"><see cref="Type"/> to convert string to.</param>
+        /// <returns>
+        /// <see cref="string"/> converted to specified <see cref="Type"/>; default value of
+        /// specified type if conversion fails.
+        /// </returns>
+        /// <remarks>
+        /// <para>
+        /// This function makes use of a <see cref="TypeConverter"/> to convert <paramref name="value"/>
+        /// to the specified <paramref name="type"/>, the best way to make sure <paramref name="value"/>
+        /// can be converted back to its original type is to use the same <see cref="TypeConverter"/> to
+        /// convert the original object to a <see cref="string"/>; see the
+        /// <see cref="TypeConvertToString(object)"/> method for an easy way to do this.
+        /// </para>
+        /// <para>
+        /// This function varies from <see cref="StringExtensions.ConvertToType{T}(string)"/>  in that it
+        /// will use the default value for the <paramref name="type"/> parameter if <paramref name="value"/>
+        /// is empty or <c>null</c>.
+        /// </para>
+        /// </remarks>
+        public static object TypeConvertFromString(string value, Type type)
         {
-            get
-            {
-                return Ticks.ToSeconds(DateTime.UtcNow.Ticks);
-            }
+            return TypeConvertFromString(value, type, null);
         }
+
+        /// <summary>
+        /// Converts this string into the specified type.
+        /// </summary>
+        /// <param name="value">Source string to convert to type.</param>
+        /// <param name="type"><see cref="Type"/> to convert string to.</param>
+        /// <param name="culture"><see cref="CultureInfo"/> to use for the conversion.</param>
+        /// <returns>
+        /// <see cref="string"/> converted to specified <see cref="Type"/>; default value of
+        /// specified type if conversion fails.
+        /// </returns>
+        /// <remarks>
+        /// <para>
+        /// This function makes use of a <see cref="TypeConverter"/> to convert <paramref name="value"/>
+        /// to the specified <paramref name="type"/>, the best way to make sure <paramref name="value"/>
+        /// can be converted back to its original type is to use the same <see cref="TypeConverter"/> to
+        /// convert the original object to a <see cref="string"/>; see the
+        /// <see cref="TypeConvertToString(object)"/> method for an easy way to do this.
+        /// </para>
+        /// <para>
+        /// This function varies from <see cref="StringExtensions.ConvertToType{T}(string, CultureInfo)"/>
+        /// in that it will use the default value for the <paramref name="type"/> parameter if
+        /// <paramref name="value"/> is empty or <c>null</c>.
+        /// </para>
+        /// </remarks>
+        public static object TypeConvertFromString(string value, Type type, CultureInfo culture)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                value = Activator.CreateInstance(type).ToString();
+
+            return value.ConvertToType(type, culture);
+        }
+
+        /// <summary>
+        /// Gets a high-resolution number of seconds, including fractional seconds, that have
+        /// elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </summary>
+        public static double SystemTimer => Ticks.ToSeconds(DateTime.UtcNow.Ticks);
 
         /// <summary>Determines if given item is equal to its default value (e.g., null or 0.0).</summary>
         /// <param name="item">Object to evaluate.</param>
@@ -354,33 +412,33 @@ namespace GSF
                     switch (convertible.GetTypeCode())
                     {
                         case TypeCode.Boolean:
-                            return ((bool)item == default(bool));
+                            return (bool)item == default(bool);
                         case TypeCode.SByte:
-                            return ((sbyte)item == default(sbyte));
+                            return (sbyte)item == default(sbyte);
                         case TypeCode.Byte:
-                            return ((byte)item == default(byte));
+                            return (byte)item == default(byte);
                         case TypeCode.Int16:
-                            return ((short)item == default(short));
+                            return (short)item == default(short);
                         case TypeCode.UInt16:
-                            return ((ushort)item == default(ushort));
+                            return (ushort)item == default(ushort);
                         case TypeCode.Int32:
-                            return ((int)item == default(int));
+                            return (int)item == default(int);
                         case TypeCode.UInt32:
-                            return ((uint)item == default(uint));
+                            return (uint)item == default(uint);
                         case TypeCode.Int64:
-                            return ((long)item == default(long));
+                            return (long)item == default(long);
                         case TypeCode.UInt64:
-                            return ((ulong)item == default(ulong));
+                            return (ulong)item == default(ulong);
                         case TypeCode.Single:
-                            return ((float)item == default(float));
+                            return (float)item == default(float);
                         case TypeCode.Double:
-                            return ((double)item == default(double));
+                            return (double)item == default(double);
                         case TypeCode.Decimal:
-                            return ((decimal)item == default(decimal));
+                            return (decimal)item == default(decimal);
                         case TypeCode.Char:
-                            return ((char)item == default(char));
+                            return (char)item == default(char);
                         case TypeCode.DateTime:
-                            return ((DateTime)item == default(DateTime));
+                            return (DateTime)item == default(DateTime);
                     }
                 }
                 catch (InvalidCastException)
@@ -410,7 +468,7 @@ namespace GSF
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNonStringReference(object item)
         {
-            return (IsReference(item) && !(item is string));
+            return IsReference(item) && !(item is string);
         }
 
         /// <summary>
@@ -514,14 +572,14 @@ namespace GSF
 
             // If 3 is the smallest, pick the smaller of 1 and 2
             if (comp1to3 >= 0 && comp2to3 >= 0)
-                return (comp1to2 <= 0) ? value1 : value2;
+                return comp1to2 <= 0 ? value1 : value2;
 
             // If 2 is the smallest, pick the smaller of 1 and 3
             if (comp1to2 >= 0 && comp2to3 <= 0)
-                return (comp1to3 <= 0) ? value1 : value3;
+                return comp1to3 <= 0 ? value1 : value3;
 
             // 1 is the smallest so pick the smaller of 2 and 3
-            return (comp2to3 <= 0) ? value2 : value3;
+            return comp2to3 <= 0 ? value2 : value3;
         }
 
         /// <summary>

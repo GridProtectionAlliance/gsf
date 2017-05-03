@@ -121,7 +121,7 @@ namespace GSF.Configuration
                 {
                     if ((object)defaultValueAttribute == null)
                     {
-                        ValueExpressionParser parser = new ValueExpressionParser(defaultValueExpressionAttribute.Expression);                        
+                        ValueExpressionParser parser = new ValueExpressionParser(defaultValueExpressionAttribute, propertyInfo);
 
                         if ((object)typeRegistry != null)
                             parser.TypeRegistry = typeRegistry;

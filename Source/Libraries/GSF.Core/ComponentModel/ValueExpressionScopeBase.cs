@@ -43,17 +43,5 @@ namespace GSF.ComponentModel
         /// See <see cref="ValueExpressionParser{T}.CreateInstance{TExpressionScope}"/>.
         /// </remarks>
         public T Instance;
-
-        /// <summary>
-        /// Returns <paramref name="nonNullValue"/> if <paramref name="value"/> is null.
-        /// </summary>
-        /// <typeparam name="TReturn">Strongly typed non-null value.</typeparam>
-        /// <param name="value">Value to test.</param>
-        /// <param name="nonNullValue">Value to return if primary value is null.</param>
-        /// <returns><paramref name="value"/> if not <c>null</c>; otherwise <paramref name="nonNullValue"/>.</returns>
-        /// <remarks>
-        /// This function is useful for parameter type matching when using the ExpressionEvaluator.
-        /// </remarks>
-        public object NotNull<TReturn>(object value, TReturn nonNullValue) => Common.NotNull(value, nonNullValue);
     }
 }

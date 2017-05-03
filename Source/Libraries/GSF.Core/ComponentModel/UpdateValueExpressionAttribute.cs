@@ -28,7 +28,7 @@ namespace GSF.ComponentModel
     /// <summary>
     /// Defines a C# expression attribute that when evaluated will specify an updated value for a property.
     /// </summary>
-    [AttributeUsage(AttributeTargets.All)]
+    [AttributeUsage(AttributeTargets.Property)]
     public sealed class UpdateValueExpressionAttribute : ValueExpressionAttributeBase
     {
         /// <summary>

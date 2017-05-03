@@ -440,6 +440,7 @@ namespace GSF.Net.Ftp
                 throw new FtpCommandException("Failed to rename file from " + oldName + " to " + newName + ".", m_lastResponse);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times", Justification = "StreamReader leaves stream open so that outer using can close")]
         internal Queue List(bool passive)
         {
             const string errorMsgListing = "Error when listing server directory.";

@@ -32,7 +32,6 @@ using GSF;
 using GSF.Console;
 using GSF.Data;
 using GSF.Data.Model;
-using GSF.Identity;
 using GSF.IO;
 using LoadImpedanceCalcs.Model;
 using Phasor = LoadImpedanceCalcs.Model.Phasor;
@@ -44,7 +43,6 @@ namespace LoadImpedanceCalcs
     {
         private const string DefaultSourceApp = "SIEGate";
         private const string DefaultSourceDevice = "IMPEDANCE";
-        private const string DefaultUserID = "AUTOGEN";
         private const double DefaultLagTime = 3.0D;
         private const double DefaultLeadTime = 5.0D;
         private const int DefaultFramesPerSecond = 30;
@@ -53,7 +51,6 @@ namespace LoadImpedanceCalcs
         private const int RequiredArgumentCount = 1;
 
         private static Guid nodeID;
-        private static string currentUserID;
 
         static int Main()
         {
@@ -123,8 +120,6 @@ namespace LoadImpedanceCalcs
                 using (AdoDataConnection connection = new AdoDataConnection(connectionString, dataProviderString))
                 using (StreamReader reader = File.OpenText(sourceFileName))
                 {
-                    currentUserID = UserInfo.CurrentUserID ?? DefaultUserID;
-
                     TableOperations<Device> deviceTable = new TableOperations<Device>(connection);
                     TableOperations<Measurement> measurementTable = new TableOperations<Measurement>(connection);
                     TableOperations<Phasor> phasorTable = new TableOperations<Phasor>(connection);
@@ -419,8 +414,6 @@ namespace LoadImpedanceCalcs
             }
             else
             {
-                actionAdapter.UpdatedOn = DateTime.UtcNow;
-                actionAdapter.UpdatedBy = currentUserID;
                 newAdd = false;
             }
 

@@ -274,7 +274,7 @@ namespace GSF.Data.Model
         }
 
         /// <summary>
-        /// Creates a new <see cref="TableOperations{T}"/>.
+        /// Creates a new <see cref="TableOperations{T}"/> using provided <paramref name="exceptionHandler"/>.
         /// </summary>
         /// <param name="connection"><see cref="AdoDataConnection"/> instance to use for database operations.</param>
         /// <param name="exceptionHandler">Delegate to handle table operation exceptions.</param>
@@ -1514,9 +1514,9 @@ namespace GSF.Data.Model
         }
 
         /// <summary>
-        /// Calculates the size of the current primary key cache.
+        /// Calculates the size of the current primary key cache, in number of records.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Number of records in the current primary key cache.</returns>
         public int GetPrimaryKeyCacheSize()
         {
             return m_primaryKeyCache?.Rows.Count ?? 0;
@@ -1844,10 +1844,10 @@ namespace GSF.Data.Model
             s_primaryKeyProperties = primaryKeyProperties.ToArray();
 
             // Create an instance of modeled table to allow any static functionality to be initialized,
-            // such as registering and custom types or symbols that may be useful for value expressions
+            // such as registering any custom types or symbols that may be useful for value expressions
             ValueExpressionParser<T>.InitializeType();
 
-            // Generated compiled create new and update record functions for modeled table
+            // Generate compiled "create new" and "update" record functions for modeled table
             s_createRecordInstance = ValueExpressionParser<T>.CreateInstance<CurrentScope>(s_properties.Values, s_typeRegistry);
             s_updateRecordInstance = ValueExpressionParser<T>.UpdateInstance<CurrentScope>(s_properties.Values, s_typeRegistry);
         }

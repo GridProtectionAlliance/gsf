@@ -61,7 +61,7 @@ namespace LoadImpedanceCalcs.Model
 
         public int? VendorDeviceID { get; set; }
 
-        [DefaultValueExpression("NotNull(Connection.ExecuteScalar('SELECT ID FROM Protocol WHERE Acronym=\\'VirtualInput\\''), 11)", Cached = true)]
+        [DefaultValueExpression("Connection.ExecuteScalar(typeof(int), (object)11, 'SELECT ID FROM Protocol WHERE Acronym=\\'VirtualInput\\'')", Cached = true)]
         public int? ProtocolID { get; set; }
 
         public decimal? Longitude { get; set; }
@@ -88,7 +88,7 @@ namespace LoadImpedanceCalcs.Model
         [DefaultValue(5.0D)]
         public double ParsingExceptionWindow { get; set; }
 
-        [DefaultValue(5)]
+        [DefaultValue(5.0D)]
         public double DelayedConnectionInterval { get; set; }
 
         [DefaultValue(true)]
