@@ -1,7 +1,7 @@
-﻿//******************************************************************************************************
-//  ValueExpressionAttributeBase.cs - Gbtc
+//******************************************************************************************************
+//  IValueExpressionAttribute.cs - Gbtc
 //
-//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright � 2017, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,41 +16,20 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  04/07/2017 - J. Ritchie Carroll
+//  05/04/2017 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System;
 using System.Reflection;
 
 namespace GSF.ComponentModel
 {
     /// <summary>
-    /// Represents a base attribute class for C# expressions that when evaluated will specify a new value for a property.
+    /// Defines an interface for value expression attributes.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Property)]
-    public abstract class ValueExpressionAttributeBase : Attribute, IValueExpressionAttribute
+    public interface IValueExpressionAttribute
     {
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Creates a new <see cref="ValueExpressionAttributeBase"/>
-        /// </summary>
-        /// <param name="expression">C# expression that will evaluate to the desired value.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="expression"/> cannot be <c>null</c>.</exception>
-        protected ValueExpressionAttributeBase(string expression)
-        {
-            if (string.IsNullOrWhiteSpace(expression))
-                throw new ArgumentNullException(nameof(expression));
-
-            Expression = expression;
-        }
-
-        #endregion
-
-        #region [ Properties ]
-
         /// <summary>
         /// Gets C# expression that will evaluate to the desired value.
         /// </summary>
@@ -61,20 +40,13 @@ namespace GSF.ComponentModel
         /// replace any <c>this</c> keywords with <c>Instance</c> so as to properly
         /// reference the modeled <see cref="ValueExpressionScopeBase{T}.Instance"/>.
         /// </remarks>
-        public string Expression
-        {
-            get;
-        }
+        string Expression { get; }
 
         /// <summary>
         /// Gets or sets value that determines if value should be cached after first evaluation.
         /// Defaults to <c>false</c>.
         /// </summary>
-        public bool Cached
-        {
-            get;
-            set;
-        }
+        bool Cached { get; set; }
 
         /// <summary>
         /// Gets or sets the numeric evaluation order for this expression. Defaults to zero.
@@ -99,15 +71,7 @@ namespace GSF.ComponentModel
         /// See <see cref="ValueExpressionParser{T}.CreateInstance{TExpressionScope}"/>.
         /// </para>
         /// </remarks>
-        public int EvaluationOrder
-        {
-            get;
-            set;
-        }
-
-        #endregion
-
-        #region [ Methods ]
+        int EvaluationOrder { get; set; }
 
         /// <summary>
         /// Gets the <see cref="Expression"/> based value used to update a modeled property.
@@ -122,8 +86,11 @@ namespace GSF.ComponentModel
         /// <para>
         /// The property update value is typically used to assign expression values to a modeled type.
         /// </para>
+        /// <para>
+        /// Default implementation should return <c>Expression</c>.
+        /// </para>
         /// </remarks>
-        public virtual string GetPropertyUpdateValue(PropertyInfo property) => Expression;
+        string GetPropertyUpdateValue(PropertyInfo property);
 
         /// <summary>
         /// Gets the modeled property based value used to update the <see cref="Expression"/>.
@@ -140,9 +107,10 @@ namespace GSF.ComponentModel
         /// to expressions allowing synchronization of a model with an external source, e.g., a
         /// user interface element.
         /// </para>
+        /// <para>
+        /// Default implementation should return <c>$"Instance.{property.Name}"</c>.
+        /// </para>
         /// </remarks>
-        public virtual string GetExpressionUpdateValue(PropertyInfo property) => $"Instance.{property.Name}";
-
-        #endregion
+        string GetExpressionUpdateValue(PropertyInfo property);
     }
 }

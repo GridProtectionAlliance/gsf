@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  ValueExpressionScopeBase.cs - Gbtc
+//  IValueExpressionScope.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  04/10/2017 - Ritchie Carroll
+//  05/04/2017 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -24,15 +24,10 @@
 namespace GSF.ComponentModel
 {
     /// <summary>
-    /// Represent a base class used for providing contextual scope when evaluating
-    /// instances of the <see cref="ValueExpressionAttributeBase"/>.
+    /// Defines an interface used for providing contextual scope when evaluating
+    /// instances of the <see cref="IValueExpressionAttribute"/>.
     /// </summary>
-    /// <remarks>
-    /// This class should be extended with public instance fields that will be automatically
-    /// exposed to <see cref="ValueExpressionAttributeBase"/> expressions.
-    /// </remarks>
-    /// <typeparam name="T">Type of associated instance.</typeparam>
-    public abstract class ValueExpressionScopeBase<T> : IValueExpressionScope<T>
+    public interface IValueExpressionScope<T>
     {
         /// <summary>
         /// Gets or sets the current <typeparamref name="T"/> instance.
@@ -42,6 +37,6 @@ namespace GSF.ComponentModel
         /// can reference the current <typeparamref name="T"/> instance using the <c>this</c> keyword.
         /// See <see cref="ValueExpressionParser{T}.CreateInstance{TExpressionScope}"/>.
         /// </remarks>
-        public T Instance { get; set; }
+        T Instance { get; set; }
     }
 }
