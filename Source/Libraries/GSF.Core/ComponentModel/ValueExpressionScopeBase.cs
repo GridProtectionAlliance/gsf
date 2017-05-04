@@ -31,7 +31,7 @@ namespace GSF.ComponentModel
     /// This class should be extended with public instance fields that will be automatically
     /// exposed to <see cref="ValueExpressionAttributeBase"/> expressions.
     /// </remarks>
-    /// <typeparam name="T">Type of associated instance.</typeparam>
+    /// <typeparam name="T">Type of associated model.</typeparam>
     public abstract class ValueExpressionScopeBase<T> : IValueExpressionScope<T>
     {
         /// <summary>

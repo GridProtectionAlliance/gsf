@@ -158,7 +158,7 @@ namespace GSF.ComponentModel
     /// <summary>
     /// Represents a typed parser for <see cref="IValueExpressionAttribute"/> instances.
     /// </summary>
-    /// <typeparam name="T">Type of expression to be parsed.</typeparam>
+    /// <typeparam name="T">Type of associated model.</typeparam>
     public class ValueExpressionParser<T> : CompiledExpression<T>
     {
         #region [ Members ]
@@ -187,7 +187,7 @@ namespace GSF.ComponentModel
         /// </summary>
         /// <param name="valueExpressionAttribute">Source <see cref="IValueExpressionAttribute"/> instance.</param>
         /// <param name="property">Source <see cref="PropertyInfo"/> instance.</param>
-        public ValueExpressionParser(IValueExpressionAttribute valueExpressionAttribute, PropertyInfo property) : base(DeriveExpression(null, valueExpressionAttribute, property))
+        public ValueExpressionParser(IValueExpressionAttribute valueExpressionAttribute, PropertyInfo property) : this(DeriveExpression(null, valueExpressionAttribute, property))
         {
         }
 

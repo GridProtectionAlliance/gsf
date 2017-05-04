@@ -27,6 +27,7 @@ namespace GSF.ComponentModel
     /// Defines an interface used for providing contextual scope when evaluating
     /// instances of the <see cref="IValueExpressionAttribute"/>.
     /// </summary>
+    /// <typeparam name="T">Type of associated model.</typeparam>
     public interface IValueExpressionScope<T>
     {
         /// <summary>
