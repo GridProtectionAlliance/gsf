@@ -23,6 +23,7 @@
 
 using System;
 using System.Reflection;
+using ExpressionEvaluator;
 
 namespace GSF.ComponentModel
 {
@@ -39,17 +40,31 @@ namespace GSF.ComponentModel
         /// <summary>
         /// Gets the return <see cref="Type"/> for this <see cref="ValueExpressionAttributeBase.Expression"/>.
         /// </summary>
+        /// <remarks>
+        /// When value is <c>null</c>, the <see cref="ValueExpressionAttributeBase.Expression"/> will be
+        /// pre-parsed in an attempt to auto-derive the return type. Note that when using this attribute,
+        /// it often will be necessary to assign the current <see cref="TypeRegistry"/> so that the parser
+        /// will have access to needed symbols. If the expression's return type is known in advance, it
+        /// is optimal to provide it in the attribute constructor.
+        /// </remarks>
         public Type ReturnType
         {
             get;
+            private set;
         }
 
         /// <summary>
         /// Creates a new <see cref="TypeConvertedValueExpressionAttribute"/>
         /// </summary>
         /// <param name="expression">C# expression that will evaluate to the type converted property value.</param>
-        /// <param name="returnType">Return type for specified C# <paramref name="expression"/>.</param>
-        public TypeConvertedValueExpressionAttribute(string expression, Type returnType) : base(expression)
+        /// <param name="returnType">
+        /// Return type for specified C# <paramref name="expression"/>; defaults to <c>null</c> to auto-derive
+        /// the <paramref name="expression"/> return type by pre-parsing expression.
+        /// </param>
+        /// <remarks>
+        /// When the <paramref name="returnType"/> is known in advance, it is optimal to provide it.
+        /// </remarks>
+        public TypeConvertedValueExpressionAttribute(string expression, Type returnType = null) : base(expression)
         {
             ReturnType = returnType;
         }
@@ -73,6 +88,9 @@ namespace GSF.ComponentModel
         public override string GetPropertyUpdateValue(PropertyInfo property)
         {
             Type sourceType = property.PropertyType;
+
+            if ((object)ReturnType == null)
+                DeriveReturnType();
 
             if (ReturnType == sourceType)
                 return $"{Expression}";
@@ -103,6 +121,9 @@ namespace GSF.ComponentModel
         /// </remarks>
         public override string GetExpressionUpdateValue(PropertyInfo property)
         {
+            if ((object)ReturnType == null)
+                DeriveReturnType();
+
             if (ReturnType == property.PropertyType)
                 return $"Instance.{property.Name}";
 
@@ -110,6 +131,19 @@ namespace GSF.ComponentModel
                 return $"Common.TypeConvertToString(Instance.{property.Name})";
 
             return $"Convert.ChangeType(Instance.{property.Name}, typeof({ReturnType.FullName}))";
+        }
+
+        private void DeriveReturnType()
+        {
+            try
+            {
+                ValueExpressionParser parser = new ValueExpressionParser(Expression) { TypeRegistry = TypeRegistry };
+                ReturnType = parser.Eval().GetType();
+            }
+            catch
+            {
+                ReturnType = typeof(object);
+            }
         }
     }
 }

@@ -604,6 +604,9 @@ namespace GSF.ComponentModel
 
                     try
                     {
+                        // Pass along any provided type registry in case attribute needs to pre-parse expression
+                        valueExpressionAttribute.TypeRegistry = typeRegistry;
+
                         expressions.Add(AssignParsedValueExpression(valueExpressionAttribute, typeRegistry, property, scopeParameter, newInstance, out expression));
                     }
                     catch (EvaluationOrderException ex)
@@ -723,6 +726,9 @@ namespace GSF.ComponentModel
 
                     try
                     {
+                        // Pass along any provided type registry in case attribute needs to pre-parse expression
+                        valueExpressionAttribute.TypeRegistry = typeRegistry;
+
                         expressions.Add(AssignParsedValueExpression(valueExpressionAttribute, typeRegistry, property, scopeParameter, instance, out expression));
                     }
                     catch (EvaluationOrderException ex)
@@ -838,6 +844,9 @@ namespace GSF.ComponentModel
 
                     try
                     {
+                        // Pass along any provided type registry in case attribute needs to pre-parse expression
+                        valueExpressionAttribute.TypeRegistry = typeRegistry;
+
                         // Derive left assignment operand from raw expression, i.e., not from GetPropertyUpdateValue:
                         string leftOperand = DeriveExpression(valueExpressionAttribute.Expression, valueExpressionAttribute, property);
                         string rightOperand = DeriveExpression(valueExpressionAttribute.GetExpressionUpdateValue(property), valueExpressionAttribute, property);

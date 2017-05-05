@@ -21,7 +21,9 @@
 //
 //******************************************************************************************************
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using ExpressionEvaluator;
 
 namespace GSF.ComponentModel
 {
@@ -72,6 +74,13 @@ namespace GSF.ComponentModel
         /// </para>
         /// </remarks>
         int EvaluationOrder { get; set; }
+
+        /// <summary>
+        /// Gets or sets any <see cref="ExpressionEvaluator.TypeRegistry"/> to use if the attribute
+        /// <see cref="Expression"/> needs to be pre-parsed.
+        /// </summary>
+        [SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly", Justification = "TypeRegistry needs to be assigned when needed - default value is null")]
+        TypeRegistry TypeRegistry { get; set; }
 
         /// <summary>
         /// Gets the <see cref="Expression"/> based value used to update a modeled property.
