@@ -140,8 +140,8 @@ namespace GSF.SELEventParser
             EventReport parsedEventReport;
             EventHistory parsedEventHistory;
             CommaSeparatedEventReport parsedCommaSeparatedEventReport;
-
-            while (lineIndex < lines.Length)
+            bool parsed = false;
+            while (lineIndex < lines.Length && !parsed)
             {
                 // Parse next command from the file
                 command = ParseCommand(lines, ref lineIndex);
@@ -154,18 +154,41 @@ namespace GSF.SELEventParser
                     parsedEventReport = EventReport.Parse(systemFrequency, lines, ref lineIndex);
                     parsedEventReport.Command = command;
                     parsedFile.Add(parsedEventReport);
+                    parsed = true;
                 }
-                else if (command.ToUpper().Contains("CEV"))
+                else if (command.ToUpper().Contains("CEV") || filename.ToUpper().Contains(".CEV"))
                 {
                     parsedCommaSeparatedEventReport = CommaSeparatedEventReport.Parse(lines, ref lineIndex);
                     parsedCommaSeparatedEventReport.Command = (command.ToUpper().Contains("FID") ? command.Split('\"')[0] : command);
                     parsedFile.Add(parsedCommaSeparatedEventReport);
+                    parsed = true;
                 }
                 else if (command.ToUpper().Contains("HIS"))
                 {
                     parsedEventHistory = EventHistory.Parse(lines, ref lineIndex);
                     parsedEventHistory.Command = command;
                     parsedFile.Add(parsedEventHistory);
+                    parsed = true;
+                }
+                else
+                {
+                    // We do not know what type of file we are reading because the console command may be missing from the top of the file.  
+                    // We can attempt to glean if it is a cev by checking if the 3rd line can be split by commas.
+                    if(lines[2].Split(',').Count() > 1)
+                    {
+                        parsedCommaSeparatedEventReport = CommaSeparatedEventReport.Parse(lines, ref lineIndex);
+                        parsedCommaSeparatedEventReport.Command = (command.ToUpper().Contains("FID") ? command.Split('\"')[0] : command);
+                        parsedFile.Add(parsedCommaSeparatedEventReport);
+                        parsed = true;
+                    }
+                    else if(!lines.Where(x => x.Contains("FID")).Contains(","))
+                    {
+                        parsedEventReport = EventReport.Parse(systemFrequency, lines, ref lineIndex);
+                        parsedEventReport.Command = command;
+                        parsedFile.Add(parsedEventReport);
+                        parsed = true;
+                    }
+
                 }
 
                 // Skip to the next nonblank line
