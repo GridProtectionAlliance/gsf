@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace GSF.SELEventParser
 {
@@ -364,7 +365,7 @@ namespace GSF.SELEventParser
             commaSeparatedEventReport.InitialReadingIndex = ++index;
             int timeStepTicks = Convert.ToInt32(Math.Round(10000000.0 / systemFrequency / commaSeparatedEventReport.SamplesPerCycleAnalog));
 
-            while (!lines[index].ToUpper().Contains("SETTINGS"))
+            while (!lines[index].ToUpper().Contains("SETTINGS") && lines[index].ToUpper() != string.Empty)
             {
                 int diff = commaSeparatedEventReport.TriggerIndex - index - commaSeparatedEventReport.InitialReadingIndex;
                 commaSeparatedEventReport.AnalogSection.TimeChannel.Samples.Add(commaSeparatedEventReport.Header.EventTime.AddTicks(-1 * timeStepTicks * diff));
@@ -378,11 +379,10 @@ namespace GSF.SELEventParser
                 string digitals = lines[index].Split(',')[++channelIndex].Replace("\"", "");
 
                 int forEachIndex = 0;
-
                 foreach (Channel<bool?> channel in commaSeparatedEventReport.AnalogSection.DigitalChannels)
                 {
 
-                    if(digitals == "")
+                    if(digitals == "" || !Regex.IsMatch(digitals, @"\A\b[0-9a-fA-F]+\b\Z"))
                         channel.Samples.Add(null);
                     else
                         channel.Samples.Add(Convert.ToString(Convert.ToInt32(digitals[forEachIndex / 4].ToString(), 16), 2).PadLeft(4, '0')[forEachIndex % 4] == '1');
@@ -391,25 +391,35 @@ namespace GSF.SELEventParser
                 ++index;
             }
 
-            //skip "SETTINGS" AND " LINES
-            if(lines[index].ToUpper() == "SETTINGS")
-                ++index;
-            if (lines[index] == "\"")
-                ++index;
+            try
+            {
+                //skip "SETTINGS" AND " LINES
+                if (lines[index].ToUpper() == "SETTINGS")
+                    ++index;
+                if (lines[index] == "\"")
+                    ++index;
 
-            EventFile.SkipBlanks(lines, ref index);
-            // SKIP GROUP 1 AND GROUP SETTINGS lINES
-            if (lines[index].ToUpper() == "GROUP 1")
-                ++index;
-            if (lines[index].ToUpper() == "GROUP SETTINGS:")
-                ++index;
+                EventFile.SkipBlanks(lines, ref index);
+                // SKIP GROUP 1 AND GROUP SETTINGS lINES
+                if (lines[index].ToUpper() == "GROUP 1")
+                    ++index;
+                if (lines[index].ToUpper() == "GROUP SETTINGS:")
+                    ++index;
 
-            commaSeparatedEventReport.GroupSetting = Settings.Parse(lines, ref index);
-            EventFile.SkipBlanks(lines, ref index);
-            ++index;
-            commaSeparatedEventReport.ControlEquations = ControlEquation.Parse(lines, ref index);
-            EventFile.SkipBlanks(lines, ref index);
-            commaSeparatedEventReport.GlobalSetting = Settings.Parse(lines, ref index);
+                commaSeparatedEventReport.GroupSetting = Settings.Parse(lines, ref index);
+                EventFile.SkipBlanks(lines, ref index);
+                ++index;
+                commaSeparatedEventReport.ControlEquations = ControlEquation.Parse(lines, ref index);
+                EventFile.SkipBlanks(lines, ref index);
+                commaSeparatedEventReport.GlobalSetting = Settings.Parse(lines, ref index);
+            }
+            catch(IndexOutOfRangeException)
+            {
+                if(index < lines.Length)
+                {
+                    throw;
+                }
+            }
 
             return commaSeparatedEventReport;
         }
