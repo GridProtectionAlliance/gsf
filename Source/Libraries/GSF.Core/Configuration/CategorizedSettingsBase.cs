@@ -34,7 +34,10 @@
 using System;
 using System.ComponentModel;
 using System.Configuration;
+using ExpressionEvaluator;
+using GSF.ComponentModel;
 
+// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.Configuration
 {
     /// <summary>
@@ -160,7 +163,7 @@ namespace GSF.Configuration
         /// will serialized into the section labeled by the <paramref name="categoryName"/> value.
         /// </para>
         /// <para>
-        /// Note that some .NET languages (e.g., Visual Basic) will not initialize member elements before call to constuctor,
+        /// Note that some .NET languages (e.g., Visual Basic) will not initialize member elements before call to constructor,
         /// in this case <paramref name="initialize"/> should be set to <c>false</c>, then the <see cref="SettingsBase.Initialize"/>
         /// method should be called manually after all properties have been initialized. Alternately, consider using the
         /// <see cref="DefaultValueAttribute"/> on the fields or properties and this will be used to initialize the values.
@@ -344,6 +347,227 @@ namespace GSF.Configuration
 
             return GetAttributeValue<UserScopedSettingAttribute, SettingScope>(name, SettingScope.Application, attribute => SettingScope.User);
         }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// Represents the base class for application settings that are synchronized with a categorized section in a configuration file
+    /// and will perform bi-directional synchronization of elements marked with <see cref="TypeConvertedValueExpressionAttribute"/> 
+    /// to an external source, e.g., user interface elements.
+    /// </summary>
+    /// <remarks>
+    /// Consumer will need to call <see cref="CategorizedSettingsBase{TValueExpressionAttribute,TCategorizedSettings}.UpdateProperties"/> method when modeled
+    /// external sources are updated to ensure properties stay in-sync with external source.
+    /// </remarks>
+    /// <typeparam name="TCategorizedSettings">Type of derived <see cref="CategorizedSettingsBase{TCategorizedSettings}"/>.</typeparam>
+    public abstract class CategorizedSettingsBase<TCategorizedSettings> : CategorizedSettingsBase<TypeConvertedValueExpressionAttribute, TCategorizedSettings> where TCategorizedSettings : CategorizedSettingsBase
+    {
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="CategorizedSettingsBase{TCategorizedSettings}"/> class for the application's configuration file.
+        /// </summary>
+        /// <param name="categoryName">Name of default category to use to get and set settings from configuration file.</param>
+        /// <param name="typeRegistry">
+        /// Type registry to use when parsing <see cref="TypeConvertedValueExpressionAttribute"/> instances, or <c>null</c>
+        /// to use <see cref="ValueExpressionParser.DefaultTypeRegistry"/>.
+        /// </param>
+        protected CategorizedSettingsBase(string categoryName, TypeRegistry typeRegistry = null)
+            : this(ConfigurationFile.Current, categoryName, true, false, true, typeRegistry)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="CategorizedSettingsBase{TCategorizedSettings}"/> class for the application's configuration file.
+        /// </summary>
+        /// <param name="categoryName">Name of default category to use to get and set settings from configuration file.</param>
+        /// <param name="useCategoryAttributes">Determines if category attributes will be used for category names.</param>
+        /// <param name="requireSerializeSettingAttribute">
+        /// Assigns flag that determines if <see cref="SerializeSettingAttribute"/> is required
+        /// to exist before a field or property is serialized to the configuration file.
+        /// </param>
+        /// <param name="typeRegistry">
+        /// Type registry to use when parsing <see cref="TypeConvertedValueExpressionAttribute"/> instances, or <c>null</c>
+        /// to use <see cref="ValueExpressionParser.DefaultTypeRegistry"/>.
+        /// </param>
+        /// <remarks>
+        /// If <paramref name="useCategoryAttributes"/> is false, all settings will be placed in section labeled by the
+        /// <paramref name="categoryName"/> value; otherwise, if a <see cref="CategoryAttribute"/> exists on a field or
+        /// property then the member value will serialized into the configuration file in a section labeled the same
+        /// as the <see cref="CategoryAttribute.Category"/> value and if the attribute doesn't exist the member value
+        /// will serialized into the section labeled by the <paramref name="categoryName"/> value.
+        /// </remarks>
+        protected CategorizedSettingsBase(string categoryName, bool useCategoryAttributes, bool requireSerializeSettingAttribute, TypeRegistry typeRegistry = null)
+            : this(ConfigurationFile.Current, categoryName, useCategoryAttributes, requireSerializeSettingAttribute, true, typeRegistry)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="CategorizedSettingsBase{TCategorizedSettings}"/> class for the application's configuration file.
+        /// </summary>
+        /// <param name="configFile">Configuration file used for accessing settings.</param>
+        /// <param name="categoryName">Name of default category to use to get and set settings from configuration file.</param>
+        /// <param name="useCategoryAttributes">Determines if category attributes will be used for category names.</param>
+        /// <param name="requireSerializeSettingAttribute">
+        /// Assigns flag that determines if <see cref="SerializeSettingAttribute"/> is required
+        /// to exist before a field or property is serialized to the configuration file.
+        /// </param>
+        /// <param name="initialize">Determines if <see cref="SettingsBase.Initialize"/> method should be called from constructor.</param>
+        /// <param name="typeRegistry">
+        /// Type registry to use when parsing <see cref="TypeConvertedValueExpressionAttribute"/> instances, or <c>null</c>
+        /// to use <see cref="ValueExpressionParser.DefaultTypeRegistry"/>.
+        /// </param>
+        /// <remarks>
+        /// <para>
+        /// If <paramref name="useCategoryAttributes"/> is false, all settings will be placed in section labeled by the
+        /// <paramref name="categoryName"/> value; otherwise, if a <see cref="CategoryAttribute"/> exists on a field or
+        /// property then the member value will serialized into the configuration file in a section labeled the same
+        /// as the <see cref="CategoryAttribute.Category"/> value and if the attribute doesn't exist the member value
+        /// will serialized into the section labeled by the <paramref name="categoryName"/> value.
+        /// </para>
+        /// <para>
+        /// Note that some .NET languages (e.g., Visual Basic) will not initialize member elements before call to constructor,
+        /// in this case <paramref name="initialize"/> should be set to <c>false</c>, then the <see cref="SettingsBase.Initialize"/>
+        /// method should be called manually after all properties have been initialized. Alternately, consider using the
+        /// <see cref="DefaultValueAttribute"/> on the fields or properties and this will be used to initialize the values.
+        /// </para>
+        /// </remarks>
+        protected CategorizedSettingsBase(ConfigurationFile configFile, string categoryName, bool useCategoryAttributes, bool requireSerializeSettingAttribute, bool initialize, TypeRegistry typeRegistry = null)
+            : base(configFile, categoryName, useCategoryAttributes, requireSerializeSettingAttribute, initialize, typeRegistry)
+        {
+        }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// Represents the base class for application settings that are synchronized with a categorized section in a configuration file
+    /// and will perform bi-directional synchronization of elements marked with <typeparamref name="TValueExpressionAttribute"/> to
+    /// an external source, e.g., user interface elements.
+    /// </summary>
+    /// <remarks>
+    /// Consumer will need to call <see cref="UpdateProperties"/> method when modeled external sources are updated to ensure properties
+    /// stay in-sync with external source.
+    /// </remarks>
+    /// <typeparam name="TValueExpressionAttribute">Type of <see cref="IValueExpressionAttribute"/> used for run-time value synchronization.</typeparam>
+    /// <typeparam name="TCategorizedSettings">Type of derived <see cref="CategorizedSettingsBase{TValueExpressionAttribute,TCategorizedSettings}"/>.</typeparam>
+    public abstract class CategorizedSettingsBase<TValueExpressionAttribute, TCategorizedSettings> : CategorizedSettingsBase where TValueExpressionAttribute : Attribute, IValueExpressionAttribute where TCategorizedSettings : CategorizedSettingsBase
+    {
+        #region [ Members ]
+
+        // Fields
+        private readonly Action<TCategorizedSettings> m_updateExpressions;
+        private readonly Action<TCategorizedSettings> m_updateProperties;
+        private readonly TCategorizedSettings m_instance;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="CategorizedSettingsBase{TValueExpressionAttribute,TCategorizedSettings}"/> class for the application's configuration file.
+        /// </summary>
+        /// <param name="categoryName">Name of default category to use to get and set settings from configuration file.</param>
+        /// <param name="typeRegistry">
+        /// Type registry to use when parsing <typeparamref name="TValueExpressionAttribute"/> instances, or <c>null</c>
+        /// to use <see cref="ValueExpressionParser.DefaultTypeRegistry"/>.
+        /// </param>
+        protected CategorizedSettingsBase(string categoryName, TypeRegistry typeRegistry = null)
+            : this(ConfigurationFile.Current, categoryName, true, false, true, typeRegistry)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="CategorizedSettingsBase{TValueExpressionAttribute,TCategorizedSettings}"/> class for the application's configuration file.
+        /// </summary>
+        /// <param name="categoryName">Name of default category to use to get and set settings from configuration file.</param>
+        /// <param name="useCategoryAttributes">Determines if category attributes will be used for category names.</param>
+        /// <param name="requireSerializeSettingAttribute">
+        /// Assigns flag that determines if <see cref="SerializeSettingAttribute"/> is required
+        /// to exist before a field or property is serialized to the configuration file.
+        /// </param>
+        /// <param name="typeRegistry">
+        /// Type registry to use when parsing <typeparamref name="TValueExpressionAttribute"/> instances, or <c>null</c>
+        /// to use <see cref="ValueExpressionParser.DefaultTypeRegistry"/>.
+        /// </param>
+        /// <remarks>
+        /// If <paramref name="useCategoryAttributes"/> is false, all settings will be placed in section labeled by the
+        /// <paramref name="categoryName"/> value; otherwise, if a <see cref="CategoryAttribute"/> exists on a field or
+        /// property then the member value will serialized into the configuration file in a section labeled the same
+        /// as the <see cref="CategoryAttribute.Category"/> value and if the attribute doesn't exist the member value
+        /// will serialized into the section labeled by the <paramref name="categoryName"/> value.
+        /// </remarks>
+        protected CategorizedSettingsBase(string categoryName, bool useCategoryAttributes, bool requireSerializeSettingAttribute, TypeRegistry typeRegistry = null)
+            : this(ConfigurationFile.Current, categoryName, useCategoryAttributes, requireSerializeSettingAttribute, true, typeRegistry)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="CategorizedSettingsBase{TValueExpressionAttribute,TCategorizedSettings}"/> class for the application's configuration file.
+        /// </summary>
+        /// <param name="configFile">Configuration file used for accessing settings.</param>
+        /// <param name="categoryName">Name of default category to use to get and set settings from configuration file.</param>
+        /// <param name="useCategoryAttributes">Determines if category attributes will be used for category names.</param>
+        /// <param name="requireSerializeSettingAttribute">
+        /// Assigns flag that determines if <see cref="SerializeSettingAttribute"/> is required
+        /// to exist before a field or property is serialized to the configuration file.
+        /// </param>
+        /// <param name="initialize">Determines if <see cref="SettingsBase.Initialize"/> method should be called from constructor.</param>
+        /// <param name="typeRegistry">
+        /// Type registry to use when parsing <typeparamref name="TValueExpressionAttribute"/> instances, or <c>null</c>
+        /// to use <see cref="ValueExpressionParser.DefaultTypeRegistry"/>.
+        /// </param>
+        /// <remarks>
+        /// <para>
+        /// If <paramref name="useCategoryAttributes"/> is false, all settings will be placed in section labeled by the
+        /// <paramref name="categoryName"/> value; otherwise, if a <see cref="CategoryAttribute"/> exists on a field or
+        /// property then the member value will serialized into the configuration file in a section labeled the same
+        /// as the <see cref="CategoryAttribute.Category"/> value and if the attribute doesn't exist the member value
+        /// will serialized into the section labeled by the <paramref name="categoryName"/> value.
+        /// </para>
+        /// <para>
+        /// Note that some .NET languages (e.g., Visual Basic) will not initialize member elements before call to constructor,
+        /// in this case <paramref name="initialize"/> should be set to <c>false</c>, then the <see cref="SettingsBase.Initialize"/>
+        /// method should be called manually after all properties have been initialized. Alternately, consider using the
+        /// <see cref="DefaultValueAttribute"/> on the fields or properties and this will be used to initialize the values.
+        /// </para>
+        /// </remarks>
+        protected CategorizedSettingsBase(ConfigurationFile configFile, string categoryName, bool useCategoryAttributes, bool requireSerializeSettingAttribute, bool initialize, TypeRegistry typeRegistry = null)
+            : base(configFile, categoryName, useCategoryAttributes, requireSerializeSettingAttribute, false)
+        {
+            // Compile delegates to handle updating expressions and properties
+            m_updateExpressions = ValueExpressionParser<TCategorizedSettings>.UpdateExpressionsForType<TValueExpressionAttribute>(null, typeRegistry);
+            m_updateProperties = ValueExpressionParser<TCategorizedSettings>.UpdateInstanceForType<TValueExpressionAttribute>(null, typeRegistry);
+            m_instance = (TCategorizedSettings)(object)this;
+
+            if (!initialize)
+                return;
+
+            // Update instance properties with modeled value expressions evaluated and applied, in this case,
+            // any initial modeled value expressions values get applied as the default setting values
+            m_updateProperties(m_instance);
+
+            // Load current config file settings
+            Initialize();
+
+            // Apply loaded settings to modeled value expressions
+            m_updateExpressions(m_instance);
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Refresh property values from modeled value expressions.
+        /// </summary>
+        public void UpdateProperties() => m_updateProperties(m_instance);
+
+        /// <summary>
+        /// Refresh modeled value expressions from property values.
+        /// </summary>
+        public void UpdateExpressions() => m_updateExpressions(m_instance);
 
         #endregion
     }

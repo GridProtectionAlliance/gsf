@@ -605,15 +605,7 @@ namespace GSF.Configuration
         {
             get
             {
-                if ((object)s_typeRegistry == null)
-                {
-                    s_typeRegistry = new TypeRegistry();
-
-                    foreach (KeyValuePair<string, object> item in ValueExpressionParser.DefaultTypeRegistry)
-                        s_typeRegistry[item.Key] = item.Value;
-                }
-
-                return s_typeRegistry;
+                return s_typeRegistry ?? (s_typeRegistry = ValueExpressionParser.DefaultTypeRegistry.Clone());
             }
             set
             {

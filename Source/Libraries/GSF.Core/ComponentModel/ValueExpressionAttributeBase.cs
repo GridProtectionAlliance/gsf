@@ -38,7 +38,7 @@ namespace GSF.ComponentModel
         /// Creates a new <see cref="ValueExpressionAttributeBase"/>
         /// </summary>
         /// <param name="expression">C# expression that will evaluate to the desired value.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="expression"/> cannot be <c>null</c>.</exception>
+        /// <exception cref="ArgumentNullException">Parameter <paramref name="expression"/> cannot be <c>null</c>.</exception>
         protected ValueExpressionAttributeBase(string expression)
         {
             if (string.IsNullOrWhiteSpace(expression))

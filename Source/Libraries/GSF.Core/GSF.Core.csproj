@@ -111,6 +111,7 @@
     <Compile Include="ComponentModel\IValueExpressionAttribute.cs" />
     <Compile Include="ComponentModel\IValueExpressionScope.cs" />
     <Compile Include="ComponentModel\TypeConvertedValueExpressionAttribute.cs" />
+    <Compile Include="ComponentModel\TypeRegistryExtensions.cs" />
     <Compile Include="ComponentModel\ValueExpressionAttributeBase.cs" />
     <Compile Include="ComponentModel\UpdateValueExpressionAttribute.cs" />
     <Compile Include="ComponentModel\ValueExpressionParser.cs" />

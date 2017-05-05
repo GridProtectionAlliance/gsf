@@ -58,7 +58,7 @@ namespace GSF.Configuration
     /// See <a href="http://msdn.microsoft.com/en-us/library/ayybcxe5.aspx">MSDN</a> for details.
     /// </remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public abstract class SettingsBase : IDisposable, IEnumerable<string>, IEnumerable
+    public abstract class SettingsBase : IDisposable, IEnumerable<string>
     {
         #region [ Members ]
 
@@ -313,9 +313,9 @@ namespace GSF.Configuration
             string setting = GetSettingName(name);
 
             if ((object)value == null)
-                CreateSetting(name, setting, EncryptValue(name, setting, ""));
+                CreateSetting(name, setting, EncryptValue(name, ""));
             else
-                CreateSetting(name, setting, EncryptValue(name, setting, Common.TypeConvertToString(value, m_culture)));
+                CreateSetting(name, setting, EncryptValue(name, Common.TypeConvertToString(value, m_culture)));
         }
 
         /// <summary>
@@ -328,9 +328,9 @@ namespace GSF.Configuration
             string setting = GetSettingName(name);
 
             if ((object)value == null)
-                StoreSetting(name, setting, EncryptValue(name, setting, ""));
+                StoreSetting(name, setting, EncryptValue(name, ""));
             else
-                StoreSetting(name, setting, EncryptValue(name, setting, Common.TypeConvertToString(value, m_culture)));
+                StoreSetting(name, setting, EncryptValue(name, Common.TypeConvertToString(value, m_culture)));
         }
 
         /// <summary>
@@ -343,7 +343,7 @@ namespace GSF.Configuration
         {
             string setting = GetSettingName(name);
 
-            return DecryptValue(name, setting, RetrieveSetting(name, setting)).ConvertToType<T>(m_culture);
+            return DecryptValue(name, RetrieveSetting(name, setting)).ConvertToType<T>(m_culture);
         }
 
         /// <summary>
@@ -356,7 +356,7 @@ namespace GSF.Configuration
         {
             string setting = GetSettingName(name);
 
-            return DecryptValue(name, setting, RetrieveSetting(name, setting)).ConvertToType(type, m_culture);
+            return DecryptValue(name, RetrieveSetting(name, setting)).ConvertToType(type, m_culture);
         }
 
         /// <summary>
@@ -369,11 +369,11 @@ namespace GSF.Configuration
         {
             string setting = GetSettingName(name);
 
-            value = DecryptValue(name, setting, RetrieveSetting(name, setting)).ConvertToType<T>(m_culture);
+            value = DecryptValue(name, RetrieveSetting(name, setting)).ConvertToType<T>(m_culture);
         }
 
         // Encrypt setting value and return a base64 encoded value
-        private string EncryptValue(string name, string setting, string value)
+        private string EncryptValue(string name, string value)
         {
             // If encrypt attribute has been applied, encrypt value
             if (GetEncryptStatus(name))
@@ -383,7 +383,7 @@ namespace GSF.Configuration
         }
 
         // Decrypt setting value
-        private string DecryptValue(string name, string setting, string value)
+        private string DecryptValue(string name, string value)
         {
             // If encrypt attribute has been applied, decrypt value
             if (GetEncryptStatus(name))
@@ -542,7 +542,7 @@ namespace GSF.Configuration
             ExecuteActionForMembers(memberAction, properties);
         }
 
-        // Execute specified action over specified memembers
+        // Execute specified action over specified members
         private void ExecuteActionForMembers<T>(Action<T> memberAction, T[] members) where T : MemberInfo
         {
             SerializeSettingAttribute attribute;
@@ -553,7 +553,7 @@ namespace GSF.Configuration
                 // See if serialize setting attribute exists
                 if (member.TryGetAttribute(out attribute))
                 {
-                    // Found serialze setting attribute, perform action if setting is true
+                    // Found serialize setting attribute, perform action if setting is true
                     if (attribute.Serialize)
                         memberAction(member);
                 }
