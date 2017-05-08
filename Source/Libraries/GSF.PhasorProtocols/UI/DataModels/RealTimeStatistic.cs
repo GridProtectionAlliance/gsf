@@ -412,7 +412,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 ObservableCollection<Statistic> statisticDefinitions = Statistic.Load(database);
 
                 // Get statistics measurements.
-                DataTable statisticMeasurements = database.Connection.RetrieveData(database.AdapterType, database.ParameterizedQueryString("SELECT SignalID, ID, DeviceID, PointID, PointTag, SignalReference " +
+                DataTable statisticMeasurements = database.Connection.RetrieveData(database.AdapterType, database.ParameterizedQueryString("SELECT SignalID, ID, DeviceID, PointID, PointTag, SignalReference, Description " +
                     "FROM StatisticMeasurement WHERE NodeID = {0}", "nodeID"), DefaultTimeout, database.CurrentNodeID());
 
                 // Assign min and max point IDs as we will need them to request data from web service.
@@ -458,8 +458,9 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     string measurementSource = keyvaluepair.Value;
                     Debug.WriteLine(measurementSource);
                     string signalReference = measurement.Field<string>("SignalReference");
-                    int measurementIndex = Convert.ToInt32(signalReference.Substring(signalReference.LastIndexOf("-ST") + 3));
-                    Statistic statisticDefinition = new Statistic();
+                    int signalReferenceIndex = signalReference.LastIndexOf("-ST");
+                    int measurementIndex = (signalReferenceIndex != -1) ? Convert.ToInt32(signalReference.Substring(signalReference.LastIndexOf("-ST") + 3)) : -1;
+                    Statistic statisticDefinition = null;
 
                     foreach (Statistic statistic in statisticDefinitions)
                     {
@@ -479,12 +480,12 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         PointTag = measurement.Field<string>("PointTag"),
                         SignalReference = signalReference,
                         Source = measurementSource,
-                        StatisticName = statisticDefinition.Name,
-                        StatisticDescription = statisticDefinition.Description,
-                        DataType = statisticDefinition.DataType,
-                        DisplayFormat = statisticDefinition.DisplayFormat,
-                        ConnectedState = statisticDefinition.IsConnectedState,
-                        LoadOrder = statisticDefinition.LoadOrder,
+                        StatisticName = statisticDefinition?.Name ?? measurement.Field<string>("Description"),
+                        StatisticDescription = statisticDefinition?.Description ?? measurement.Field<string>("Description"),
+                        DataType = statisticDefinition?.DataType ?? "System.Double",
+                        DisplayFormat = statisticDefinition?.DisplayFormat ?? "{0}",
+                        ConnectedState = statisticDefinition?.IsConnectedState ?? false,
+                        LoadOrder = statisticDefinition?.LoadOrder ?? 0,
                         TimeTag = "n/a",
                         Quality = "n/a",
                         Value = "--"
