@@ -1179,12 +1179,12 @@ namespace GSF.PhasorProtocols.UI.DataModels
             get
             {
                 bool hex;
-                int hexValue;
+                uint hexValue;
 
                 hex = m_engineeringUnit.ToNonNullString().Trim().ToUpperInvariant() == "HEX";
 
-                if (hex && int.TryParse(m_value, out hexValue))
-                    return hexValue.ToString("X");
+                if (hex && uint.TryParse(m_value, out hexValue))
+                    return hexValue.ToString("X8");
 
                 return m_value;
             }
