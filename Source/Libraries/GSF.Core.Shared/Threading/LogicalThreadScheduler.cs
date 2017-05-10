@@ -82,6 +82,9 @@ namespace GSF.Threading
             }
             set
             {
+                if (value <= 0)
+                    throw new ArgumentException("Max thread count must be greater than zero", nameof(value));
+
                 int diff = value - m_maxThreadCount;
                 int inactiveThreads = Math.Min(diff, m_logicalThreads.Count);
 
