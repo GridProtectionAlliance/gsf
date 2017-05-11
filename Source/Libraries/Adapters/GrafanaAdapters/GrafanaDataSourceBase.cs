@@ -358,6 +358,17 @@ namespace GrafanaAdapters
         /// </remarks>
         Interval,
         /// <summary>
+        /// Renames a series with the specified label value. If multiple series are targeted, labels will be indexed starting at one, e.g., if there are three
+        /// series in the target expression with a label value of "Max", series would be labeled as "Max1", "Max2" and "Max3".
+        /// </summary>
+        /// <remarks>
+        /// Signature: <c>Label(value, expression)</c><br/>
+        /// Example: <c>Label('AvgFreq', SetAvg(FILTER TOP 20 ActiveMeasurements WHERE SignalType LIKE 'FREQ'))</c><br/>
+        /// Variants: Label, Name<br/>
+        /// Execution: Deferred enumeration.
+        /// </remarks>
+        Label,
+        /// <summary>
         /// Not a recognized function.
         /// </summary>
         None
@@ -663,32 +674,55 @@ namespace GrafanaAdapters
             // Query function expression to get series data
             IEnumerable<DataSourceValueGroup> dataset = QueryTargets(new[] { targetExpression }, startTime, stopTime, interval, decimate, cancellationToken);
 
-            if (setOperation)
+            // Handle label function as a special edge case
+            if (seriesFunction == SeriesFunction.Label)
             {
-                // Flatten all series into a single enumerable for set operations
-                DataSourceValueGroup result = new DataSourceValueGroup
-                {
-                    Target = $"Set{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{targetExpression})",
-                    Source = ExecuteSeriesFunctionOverSource(dataset.AsParallel().WithCancellation(cancellationToken).SelectMany(source => source.Source), seriesFunction, parameters)
-                };
+                // Derive label
+                string label = parameters[0];
 
-                // Handle edge-case set operations - for these functions there is data in the target series as well
-                if (seriesFunction == SeriesFunction.Minimum || seriesFunction == SeriesFunction.Maximum || seriesFunction == SeriesFunction.Median || seriesFunction == SeriesFunction.Mode)
+                if (label.StartsWith("\"") || label.StartsWith("'"))
+                    label = label.Substring(1, label.Length - 2);
+
+                DataSourceValueGroup[] groups = dataset.ToArray();
+
+                for (int i = 0; i < groups.Length; i++)
                 {
-                    DataSourceValue dataValue = result.Source.First();
-                    result.Target = $"Set{seriesFunction} = {dataValue.Target}";
+                    yield return new DataSourceValueGroup
+                    {
+                        Target = $"{label}{(groups.Length > 1 ? $" {i + 1}" : "")}",
+                        Source = groups[i].Source
+                    };
                 }
-
-                yield return result;
             }
             else
             {
-                foreach (DataSourceValueGroup dataValues in dataset)
-                    yield return new DataSourceValueGroup
+                if (setOperation)
+                {
+                    // Flatten all series into a single enumerable for set operations
+                    DataSourceValueGroup result = new DataSourceValueGroup
                     {
-                        Target = $"{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{dataValues.Target})",
-                        Source = ExecuteSeriesFunctionOverSource(dataValues.Source, seriesFunction, parameters)
+                        Target = $"Set{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{targetExpression})",
+                        Source = ExecuteSeriesFunctionOverSource(dataset.AsParallel().WithCancellation(cancellationToken).SelectMany(source => source.Source), seriesFunction, parameters)
                     };
+
+                    // Handle edge-case set operations - for these functions there is data in the target series as well
+                    if (seriesFunction == SeriesFunction.Minimum || seriesFunction == SeriesFunction.Maximum || seriesFunction == SeriesFunction.Median || seriesFunction == SeriesFunction.Mode)
+                    {
+                        DataSourceValue dataValue = result.Source.First();
+                        result.Target = $"Set{seriesFunction} = {dataValue.Target}";
+                    }
+
+                    yield return result;
+                }
+                else
+                {
+                    foreach (DataSourceValueGroup dataValues in dataset)
+                        yield return new DataSourceValueGroup
+                        {
+                            Target = $"{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{dataValues.Target})",
+                            Source = ExecuteSeriesFunctionOverSource(dataValues.Source, seriesFunction, parameters)
+                        };
+                }
             }
         }
 
@@ -727,6 +761,7 @@ namespace GrafanaAdapters
         private static readonly Regex s_derivativeExpression;
         private static readonly Regex s_timeIntegrationExpression;
         private static readonly Regex s_intervalExpression;
+        private static readonly Regex s_labelExpression;
         private static readonly Dictionary<SeriesFunction, int> s_requiredParameters;
         private static readonly Dictionary<SeriesFunction, int> s_optionalParameters;
 
@@ -768,6 +803,7 @@ namespace GrafanaAdapters
             s_derivativeExpression = new Regex(string.Format(GetExpression, "(Derivative|Der)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_timeIntegrationExpression = new Regex(string.Format(GetExpression, "(TimeIntegration|TimeInt)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_intervalExpression = new Regex(string.Format(GetExpression, "(Interval|Int)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_labelExpression = new Regex(string.Format(GetExpression, "(Label|Name)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
             // Define required parameter counts for each function
             s_requiredParameters = new Dictionary<SeriesFunction, int>
@@ -800,7 +836,8 @@ namespace GrafanaAdapters
                 [SeriesFunction.TimeDifference] = 0,
                 [SeriesFunction.Derivative] = 0,
                 [SeriesFunction.TimeIntegration] = 0,
-                [SeriesFunction.Interval] = 1
+                [SeriesFunction.Interval] = 1,
+                [SeriesFunction.Label] = 1
             };
 
             // Define optional parameter counts for each function
@@ -834,7 +871,8 @@ namespace GrafanaAdapters
                 [SeriesFunction.TimeDifference] = 0,
                 [SeriesFunction.Derivative] = 0,
                 [SeriesFunction.TimeIntegration] = 0,
-                [SeriesFunction.Interval] = 0
+                [SeriesFunction.Interval] = 0,
+                [SeriesFunction.Label] = 0
             };
         }
 
@@ -1049,6 +1087,13 @@ namespace GrafanaAdapters
 
                 if (filterMatch.Success)
                     return new Tuple<SeriesFunction, string, bool>(SeriesFunction.Interval, filterMatch.Result("${Expression}").Trim(), setOperation);
+
+                // Look for label function
+                lock (s_labelExpression)
+                    filterMatch = s_labelExpression.Match(expression);
+
+                if (filterMatch.Success)
+                    return new Tuple<SeriesFunction, string, bool>(SeriesFunction.Label, filterMatch.Result("${Expression}").Trim(), setOperation);
 
                 // Target is not a recognized function
                 return new Tuple<SeriesFunction, string, bool>(SeriesFunction.None, expression, false);
