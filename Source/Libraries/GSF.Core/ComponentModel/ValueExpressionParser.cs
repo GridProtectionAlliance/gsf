@@ -267,9 +267,9 @@ namespace GSF.ComponentModel
         }
 
         /// <summary>
-        /// Generates a delegate that will create new instance of type <typeparamref name="T"/> object parameter
-        /// applying any specified <see cref="DefaultValueAttribute"/> or <see cref="DefaultValueExpressionAttribute"/>
-        /// instances that are declared on the type <typeparamref name="T"/> properties.
+        /// Generates a delegate that will create new instance of type <typeparamref name="T"/> applying any specified
+        /// <see cref="DefaultValueAttribute"/> or <see cref="DefaultValueExpressionAttribute"/> instances that are
+        /// declared on the type <typeparamref name="T"/> properties.
         /// </summary>
         /// <param name="properties">Specific properties to target, or <c>null</c> to target all properties.</param>
         /// <param name="typeRegistry">
@@ -296,9 +296,9 @@ namespace GSF.ComponentModel
         }
 
         /// <summary>
-        /// Generates a delegate that will create new instance of type <typeparamref name="T"/> object parameter
-        /// applying any specified <see cref="DefaultValueAttribute"/> or <typeparamref name="TValueExpressionAttribute"/>
-        /// instances that are declared on the type <typeparamref name="T"/> properties.
+        /// Generates a delegate that will create new instance of type <typeparamref name="T"/> applying any specified
+        /// <see cref="DefaultValueAttribute"/> or <typeparamref name="TValueExpressionAttribute"/> instances that are
+        /// declared on the type <typeparamref name="T"/> properties.
         /// </summary>
         /// <param name="properties">Specific properties to target, or <c>null</c> to target all properties.</param>
         /// <param name="typeRegistry">
@@ -318,11 +318,74 @@ namespace GSF.ComponentModel
         /// <returns>
         /// Generated delegate that will create new <typeparamref name="T"/> instances with default values applied.
         /// </returns>
+        /// <typeparam name="TValueExpressionAttribute"><see cref="IValueExpressionAttribute"/> parameter type.</typeparam>
         [SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
         public static Func<T> CreateInstanceForType<TValueExpressionAttribute>(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null) where TValueExpressionAttribute : Attribute, IValueExpressionAttribute
         {
             Func<MinimumScope, T> createInstanceFunction = CreateInstanceForType<TValueExpressionAttribute, MinimumScope>(properties, typeRegistry);
             return () => createInstanceFunction(new MinimumScope());
+        }
+
+        /// <summary>
+        /// Generates a delegate that will update an instance of type <typeparamref name="T"/> applying any specified
+        /// <see cref="DefaultValueAttribute"/> or <see cref="DefaultValueExpressionAttribute"/> instances that are
+        /// declared on the type <typeparamref name="T"/> properties. Target <typeparamref name="T"/> instance is
+        /// accepted as the parameter to the returned delegate <see cref="Action{T}"/>.
+        /// </summary>
+        /// <param name="properties">Specific properties to target, or <c>null</c> to target all properties.</param>
+        /// <param name="typeRegistry">
+        /// Type registry to use when parsing <see cref="DefaultValueExpressionAttribute"/> instances, or <c>null</c>
+        /// to use <see cref="ValueExpressionParser.DefaultTypeRegistry"/>.
+        /// </param>
+        /// <remarks>
+        /// This function is useful for generating a delegate to a compiled function that will update
+        /// objects of type <typeparamref name="T"/> where properties of the type of have been decorated with
+        /// <see cref="DefaultValueAttribute"/> or <see cref="DefaultValueExpressionAttribute"/> attributes.
+        /// The updated object will automatically have applied any defined default values as specified by
+        /// the encountered attributes.
+        /// <note type="note">
+        /// This function will assign evaluated expression values to properties in an existing model.
+        /// </note>
+        /// </remarks>
+        /// <returns>
+        /// Generated delegate that will update <typeparamref name="T"/> instances with default values applied.
+        /// </returns>
+        public static Action<T> ApplyDefaults(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null)
+        {
+            Action<MinimumScope> applyDefaultsFunction = ApplyDefaults<MinimumScope>(properties, typeRegistry);
+            return instance => applyDefaultsFunction(new MinimumScope { Instance = instance });
+        }
+
+        /// <summary>
+        /// Generates a delegate that will update an instance of type <typeparamref name="T"/> applying any specified
+        /// <see cref="DefaultValueAttribute"/> or <typeparamref name="TValueExpressionAttribute"/> instances that are
+        /// declared on the type <typeparamref name="T"/> properties. Target <typeparamref name="T"/> instance is
+        /// accepted as the parameter to the returned delegate <see cref="Action{T}"/>.
+        /// </summary>
+        /// <param name="properties">Specific properties to target, or <c>null</c> to target all properties.</param>
+        /// <param name="typeRegistry">
+        /// Type registry to use when parsing <typeparamref name="TValueExpressionAttribute"/> instances, or <c>null</c>
+        /// to use <see cref="ValueExpressionParser.DefaultTypeRegistry"/>.
+        /// </param>
+        /// <remarks>
+        /// This function is useful for generating a delegate to a compiled function that will update
+        /// objects of type <typeparamref name="T"/> where properties of the type of have been decorated with
+        /// <see cref="DefaultValueAttribute"/> or <typeparamref name="TValueExpressionAttribute"/> attributes.
+        /// The updated object will automatically have applied any defined default values as specified by
+        /// the encountered attributes.
+        /// <note type="note">
+        /// This function will assign evaluated expression values to properties in an existing model.
+        /// </note>
+        /// </remarks>
+        /// <returns>
+        /// Generated delegate that will update <typeparamref name="T"/> instances with default values applied.
+        /// </returns>
+        /// <typeparam name="TValueExpressionAttribute"><see cref="IValueExpressionAttribute"/> parameter type.</typeparam>
+        [SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
+        public static Action<T> ApplyDefaultsForType<TValueExpressionAttribute>(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null) where TValueExpressionAttribute : Attribute, IValueExpressionAttribute
+        {
+            Action<MinimumScope> applyDefaultsFunction = ApplyDefaultsForType<TValueExpressionAttribute, MinimumScope>(properties, typeRegistry);
+            return instance => applyDefaultsFunction(new MinimumScope { Instance = instance });
         }
 
         /// <summary>
@@ -626,6 +689,139 @@ namespace GSF.ComponentModel
 
             // Return a delegate to compiled function block            
             return Expression.Lambda<Func<TExpressionScope, T>>(Expression.Block(new[] { newInstance }, expressions), scopeParameter).Compile();
+        }
+
+        /// <summary>
+        /// Generates a delegate that will update an instance of type <typeparamref name="T"/> accepting
+        /// a contextual <see cref="IValueExpressionScope{T}"/> object parameter applying any specified
+        /// <see cref="DefaultValueAttribute"/> or <see cref="DefaultValueExpressionAttribute"/>
+        /// instances that are declared on the type <typeparamref name="T"/> properties. Target
+        /// <typeparamref name="T"/> instance needs to be assigned to the
+        /// <see cref="IValueExpressionScope{T}.Instance"/> property prior to call.
+        /// </summary>
+        /// <param name="properties">Specific properties to target, or <c>null</c> to target all properties.</param>
+        /// <param name="typeRegistry">
+        /// Type registry to use when parsing <see cref="DefaultValueExpressionAttribute"/> instances, or <c>null</c>
+        /// to use <see cref="ValueExpressionParser.DefaultTypeRegistry"/>.
+        /// </param>
+        /// <remarks>
+        /// This function is useful for generating a delegate to a compiled function that will update
+        /// objects of type <typeparamref name="T"/> where properties of the type of have been decorated with
+        /// <see cref="DefaultValueAttribute"/> or <see cref="DefaultValueExpressionAttribute"/> attributes.
+        /// The updated object will automatically have applied any defined default values as specified by
+        /// the encountered attributes. The generated delegate takes a parameter to a contextual object useful
+        /// for providing extra runtime data to <see cref="DefaultValueExpressionAttribute"/> attributes; the
+        /// parameter must be derived from <see cref="IValueExpressionScope{T}"/>. Any public fields,
+        /// methods or properties defined in the derived class will be automatically accessible from the
+        /// expressions declared in the <see cref="DefaultValueExpressionAttribute"/> attributes. By default,
+        /// the expressions will have access to the current <typeparamref name="T"/> instance by referencing the
+        /// <c>this</c> keyword, which is an alias to <see cref="IValueExpressionScope{T}.Instance"/>.
+        /// <note type="note">
+        /// This function will assign evaluated expression values to properties in an existing model.
+        /// </note>
+        /// </remarks>
+        /// <returns>
+        /// Generated delegate that will update <typeparamref name="T"/> instances with expression values applied.
+        /// </returns>
+        /// <typeparam name="TExpressionScope"><see cref="IValueExpressionScope{T}"/> parameter type.</typeparam>
+        public static Action<TExpressionScope> ApplyDefaults<TExpressionScope>(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null) where TExpressionScope : IValueExpressionScope<T>
+        {
+            return ApplyDefaultsForType<DefaultValueExpressionAttribute, TExpressionScope>(properties, typeRegistry);
+        }
+
+        /// <summary>
+        /// Generates a delegate that will update an instance of type <typeparamref name="T"/> accepting
+        /// a contextual <see cref="IValueExpressionScope{T}"/> object parameter applying any specified
+        /// <see cref="DefaultValueAttribute"/> or <typeparamref name="TValueExpressionAttribute"/>
+        /// instances that are declared on the type <typeparamref name="T"/> properties. Target
+        /// <typeparamref name="T"/> instance needs to be assigned to the
+        /// <see cref="IValueExpressionScope{T}.Instance"/> property prior to call.
+        /// </summary>
+        /// <param name="properties">Specific properties to target, or <c>null</c> to target all properties.</param>
+        /// <param name="typeRegistry">
+        /// Type registry to use when parsing <typeparamref name="TValueExpressionAttribute"/> instances, or <c>null</c>
+        /// to use <see cref="ValueExpressionParser.DefaultTypeRegistry"/>.
+        /// </param>
+        /// <remarks>
+        /// This function is useful for generating a delegate to a compiled function that will update
+        /// objects of type <typeparamref name="T"/> where properties of the type of have been decorated with
+        /// <see cref="DefaultValueAttribute"/> or <typeparamref name="TValueExpressionAttribute"/> attributes.
+        /// The updated object will automatically have applied any defined default values as specified by
+        /// the encountered attributes. The generated delegate takes a parameter to a contextual object useful
+        /// for providing extra runtime data to <typeparamref name="TValueExpressionAttribute"/> attributes; the
+        /// parameter must be derived from <see cref="IValueExpressionScope{T}"/>. Any public fields,
+        /// methods or properties defined in the derived class will be automatically accessible from the
+        /// expressions declared in the <typeparamref name="TValueExpressionAttribute"/> attributes. By default,
+        /// the expressions will have access to the current <typeparamref name="T"/> instance by referencing the
+        /// <c>this</c> keyword, which is an alias to <see cref="IValueExpressionScope{T}.Instance"/>.
+        /// <note type="note">
+        /// This function will assign evaluated expression values to properties in an existing model.
+        /// </note>
+        /// </remarks>
+        /// <returns>
+        /// Generated delegate that will update <typeparamref name="T"/> instances with expression values applied.
+        /// </returns>
+        /// <typeparam name="TValueExpressionAttribute"><see cref="IValueExpressionAttribute"/> parameter type.</typeparam>
+        /// <typeparam name="TExpressionScope"><see cref="IValueExpressionScope{T}"/> parameter type.</typeparam>
+        [SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter")]
+        [SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
+        public static Action<TExpressionScope> ApplyDefaultsForType<TValueExpressionAttribute, TExpressionScope>(IEnumerable<PropertyInfo> properties = null, TypeRegistry typeRegistry = null) where TValueExpressionAttribute : Attribute, IValueExpressionAttribute where TExpressionScope : IValueExpressionScope<T>
+        {
+            if ((object)properties == null)
+                properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(property => property.CanRead && property.CanWrite);
+
+            List<Expression> expressions = new List<Expression>();
+            ParameterExpression instance = Expression.Variable(typeof(T));
+            ParameterExpression scopeParameter = Expression.Parameter(typeof(TExpressionScope));
+            DefaultValueAttribute defaultValueAttribute;
+            TValueExpressionAttribute valueExpressionAttribute;
+
+            // Sort properties by any specified evaluation order
+            properties = properties.OrderBy(property => property.TryGetAttribute(out valueExpressionAttribute) ? valueExpressionAttribute.EvaluationOrder : 0);
+
+            // Get "Instance" property of scope parameter and assign to local variable
+            MethodInfo getInstance = typeof(TExpressionScope).GetProperty("Instance").GetMethod;
+            expressions.Add(Expression.Assign(instance, Expression.Call(scopeParameter, getInstance)));
+
+            // Find any defined value attributes for properties and assign them to instance
+            foreach (PropertyInfo property in properties)
+            {
+                if (property.TryGetAttribute(out defaultValueAttribute))
+                {
+                    try
+                    {
+                        expressions.Add(Expression.Call(instance, property.SetMethod, Expression.Constant(defaultValueAttribute.Value, property.PropertyType)));
+                    }
+                    catch (Exception ex)
+                    {
+                        return scope => { throw new ArgumentException($"Error evaluating \"DefaultValueAttribute\" for property \"{typeof(T).FullName}.{property.Name}\": {ex.Message}", property.Name, ex); };
+                    }
+                }
+                else if (property.TryGetAttribute(out valueExpressionAttribute))
+                {
+                    string expression = null;
+
+                    try
+                    {
+                        // Pass along any provided type registry in case attribute needs to pre-parse expression
+                        valueExpressionAttribute.TypeRegistry = typeRegistry;
+
+                        expressions.Add(AssignParsedValueExpression(valueExpressionAttribute, typeRegistry, property, scopeParameter, instance, out expression));
+                    }
+                    catch (EvaluationOrderException ex)
+                    {
+                        // Need to wrap exceptions in order to keep original call stack
+                        return scope => { throw new InvalidOperationException(ex.Message, ex); };
+                    }
+                    catch (Exception ex)
+                    {
+                        return scope => { throw new ArgumentException($"Error parsing \"{typeof(TValueExpressionAttribute).Name}\" for property \"{typeof(T).FullName}.{property.Name}\": {ex.Message} for expression \"{expression ?? "undefined"}\"", property.Name, ex); };
+                    }
+                }
+            }
+
+            // Return a delegate to compiled function block
+            return Expression.Lambda<Action<TExpressionScope>>(Expression.Block(new[] { instance }, expressions), scopeParameter).Compile();
         }
 
         /// <summary>

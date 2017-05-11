@@ -107,6 +107,14 @@ namespace GSF.Data.Model
         object NewRecord();
 
         /// <summary>
+        /// Applies the default values on the specified modeled table <paramref name="record"/>
+        /// where any of the properties are marked with either <see cref="DefaultValueAttribute"/>
+        /// or <see cref="DefaultValueExpressionAttribute"/>.
+        /// </summary>
+        /// <param name="record">Record to update.</param>
+        void ApplyRecordDefaults(object record);
+
+        /// <summary>
         /// Queries database and returns a single modeled table record for the specified <paramref name="restriction"/>.
         /// </summary>
         /// <param name="restriction">Record restriction to apply.</param>

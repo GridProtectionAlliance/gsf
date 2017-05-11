@@ -423,6 +423,42 @@ namespace GSF.Data.Model
         }
 
         /// <summary>
+        /// Applies the default values on the specified modeled table <paramref name="record"/>
+        /// where any of the properties are marked with either <see cref="DefaultValueAttribute"/>
+        /// or <see cref="DefaultValueExpressionAttribute"/>.
+        /// </summary>
+        /// <param name="record">Record to update.</param>
+        public void ApplyRecordDefaults(T record)
+        {
+            try
+            {
+                s_applyRecordDefaults(new CurrentScope
+                {
+                    Instance = record,
+                    TableOperations = this,
+                    Connection = m_connection
+                });
+            }
+            catch (Exception ex)
+            {
+                if ((object)m_exceptionHandler == null)
+                    throw;
+
+                m_exceptionHandler(ex);
+            }
+        }
+
+        void ITableOperations.ApplyRecordDefaults(object value)
+        {
+            T record = value as T;
+
+            if (record == null)
+                throw new ArgumentException($"Cannot apply defaults for record of type \"{value?.GetType().Name ?? "null"}\", expected \"{typeof(T).Name}\"", nameof(value));
+
+            ApplyRecordDefaults(record);
+        }
+
+        /// <summary>
         /// Queries database and returns a single modeled table record for the specified <paramref name="restriction"/>.
         /// </summary>
         /// <param name="restriction">Record restriction to apply.</param>
@@ -1657,6 +1693,7 @@ namespace GSF.Data.Model
         private static readonly bool s_hasPrimaryKeyIdentityField;
         private static readonly Func<CurrentScope, T> s_createRecordInstance;
         private static readonly Action<CurrentScope> s_updateRecordInstance;
+        private static readonly Action<CurrentScope> s_applyRecordDefaults;
         private static TypeRegistry s_typeRegistry;
 
         // Static Constructor
@@ -1858,6 +1895,7 @@ namespace GSF.Data.Model
             // Generate compiled "create new" and "update" record functions for modeled table
             s_createRecordInstance = ValueExpressionParser<T>.CreateInstance<CurrentScope>(s_properties.Values, s_typeRegistry);
             s_updateRecordInstance = ValueExpressionParser<T>.UpdateInstance<CurrentScope>(s_properties.Values, s_typeRegistry);
+            s_applyRecordDefaults = ValueExpressionParser<T>.ApplyDefaults<CurrentScope>(s_properties.Values, s_typeRegistry);
         }
 
         // Static Properties
