@@ -33,6 +33,7 @@ Note that each function can be used over a set of available series by prefixing 
 * [Derivative](#derivative)
 * [TimeIntegration](#timeintegration)
 * [Interval](#interval)
+* [Label](#label)
 
 ## Average
 
@@ -314,4 +315,13 @@ aggregation calculation results but will increase query burden on data source fo
 * Signature: `Interval(N, expression)`
 * Example: `Sum(Interval(0, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHM'))`
 * Variants: `Interval`, `Int`
+* Execution: Deferred enumeration
+
+## Label
+
+Renames a series with the specified label value. If multiple series are targeted, labels will be indexed starting at one, e.g., if there are three series in the target expression with a label value of "Max", series would be labeled as "Max 1", "Max 2" and "Max 3".
+
+* Signature: `Label(value, expression)`
+* Example: `Label('AvgFreq', SetAvg(FILTER TOP 20 ActiveMeasurements WHERE SignalType LIKE 'FREQ'))`
+* Variants: `Label`, `Name`
 * Execution: Deferred enumeration
