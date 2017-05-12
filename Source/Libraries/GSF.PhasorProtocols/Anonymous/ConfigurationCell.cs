@@ -49,10 +49,10 @@ namespace GSF.PhasorProtocols.Anonymous
 
         // Add cached signal type and statistical tracking information to our protocol independent configuration cell
         private readonly string[][] m_generatedSignalReferenceCache;
-        private readonly MeasurementMetadata[][] m_generatedMeasurementMetadataCache;
+        private readonly MeasurementKey[][] m_generatedMeasurementKeyCache;
         
         // Keep track of the object that was last used to lookup the MeasurementMetadata. If objects changes, cache must be recomputed.
-        private Dictionary<string, MeasurementMetadata> m_metadataLookupObject;
+        private Dictionary<string, MeasurementKey> m_keyLookupObject;
         private Ticks m_lastReportTime;
         private long m_totalFrames;
         private long m_dataQualityErrors;
@@ -87,7 +87,7 @@ namespace GSF.PhasorProtocols.Anonymous
         {
             // Create a cached signal reference dictionary for generated signal references
             m_generatedSignalReferenceCache = new string[Enum.GetValues(typeof(SignalKind)).Length][];
-            m_generatedMeasurementMetadataCache = new MeasurementMetadata[Enum.GetValues(typeof(SignalKind)).Length][];
+            m_generatedMeasurementKeyCache = new MeasurementKey[Enum.GetValues(typeof(SignalKind)).Length][];
 
             m_analogDataFormat = DataFormat.FloatingPoint;
             m_frequencyDataFormat = DataFormat.FloatingPoint;
@@ -105,7 +105,7 @@ namespace GSF.PhasorProtocols.Anonymous
         {
             // Create a cached signal reference dictionary for generated signal references
             m_generatedSignalReferenceCache = new string[Enum.GetValues(typeof(SignalKind)).Length][];
-            m_generatedMeasurementMetadataCache = new MeasurementMetadata[Enum.GetValues(typeof(SignalKind)).Length][];
+            m_generatedMeasurementKeyCache = new MeasurementKey[Enum.GetValues(typeof(SignalKind)).Length][];
 
             // Deserialize configuration cell
             m_lastReportTime = info.GetInt64("lastReportTime");
@@ -413,36 +413,36 @@ namespace GSF.PhasorProtocols.Anonymous
         /// <param name="lookup">A lookup table by signal reference.</param>
         /// <param name="type"><see cref="SignalKind"/> to request signal reference for.</param>
         /// <returns>The <see cref="MeasurementMetadata"/> for a given <see cref="SignalKind"/>; otherwise <c>null</c> if value does not exist.</returns>
-        public MeasurementMetadata GetMetadata(Dictionary<string, MeasurementMetadata> lookup, SignalKind type)
+        public MeasurementMetadata GetMetadata(Dictionary<string, MeasurementKey> lookup, SignalKind type)
         {
             // Clear the cache if the lookup dictionary has changed.
             // Since the instance of Lookup is effectively readonly as implemented in PhasorMeasurementMapper
             // a simple reference check is all that is needed. If it could be modified, this would likely be a
             // concurrent dictionary instead.
-            if (m_metadataLookupObject != lookup)
+            if (m_keyLookupObject != lookup)
             {
-                Array.Clear(m_generatedMeasurementMetadataCache, 0, m_generatedMeasurementMetadataCache.Length);
-                m_metadataLookupObject = lookup;
+                Array.Clear(m_generatedMeasurementKeyCache, 0, m_generatedMeasurementKeyCache.Length);
+                m_keyLookupObject = lookup;
             }
 
             // Gets the cache for the supplied SignalKind
             int typeIndex = (int)type;
-            MeasurementMetadata[] metadataArray = m_generatedMeasurementMetadataCache[typeIndex];
+            MeasurementKey[] keyArray = m_generatedMeasurementKeyCache[typeIndex];
 
             // If this SignalKind is null, create the sub array and generate all item lookups
-            if ((object)metadataArray == null)
+            if ((object)keyArray == null)
             {
-                metadataArray = new MeasurementMetadata[1];
-                m_generatedMeasurementMetadataCache[typeIndex] = metadataArray;
+                keyArray = new MeasurementKey[1];
+                m_generatedMeasurementKeyCache[typeIndex] = keyArray;
 
                 string signalReference = GetSignalReference(type);
-                MeasurementMetadata metadata;
+                MeasurementKey key;
 
-                if (lookup.TryGetValue(signalReference, out metadata))
-                    metadataArray[0] = metadata;
+                if (lookup.TryGetValue(signalReference, out key))
+                    keyArray[0] = key;
             }
 
-            return metadataArray[0];
+            return keyArray[0].Metadata;
         }
 
         /// <summary>
@@ -453,40 +453,40 @@ namespace GSF.PhasorProtocols.Anonymous
         /// <param name="index">Index <see cref="SignalKind"/> to request signal reference for.</param>
         /// <param name="count">Number of signals defined for this <see cref="SignalKind"/>.</param>
         /// <returns>The MeasurementMetadata for a given <see cref="SignalKind"/>. Null if it does not exist.</returns>
-        public MeasurementMetadata GetMetadata(Dictionary<string, MeasurementMetadata> lookup, SignalKind type, int index, int count)
+        public MeasurementMetadata GetMetadata(Dictionary<string, MeasurementKey> lookup, SignalKind type, int index, int count)
         {
             // Clear the cache if the lookup dictionary has changed.
             // Since the instance of Lookup is effectively readonly as implemented in PhasorMeasurementMapper
             // a simple reference check is all that is needed. If it could be modified, this would likely be a
             // concurrent dictionary instead.
-            if (m_metadataLookupObject != lookup)
+            if (m_keyLookupObject != lookup)
             {
-                Array.Clear(m_generatedMeasurementMetadataCache, 0, m_generatedMeasurementMetadataCache.Length);
-                m_metadataLookupObject = lookup;
+                Array.Clear(m_generatedMeasurementKeyCache, 0, m_generatedMeasurementKeyCache.Length);
+                m_keyLookupObject = lookup;
             }
 
             // Gets the cache for the supplied SignalKind
             int typeIndex = (int)type;
-            MeasurementMetadata[] metadataArray = m_generatedMeasurementMetadataCache[typeIndex];
+            MeasurementKey[] keyArray = m_generatedMeasurementKeyCache[typeIndex];
 
             // If this SignalKind is null, create the sub array and generate all item lookups, also, rebuild
             // if the count is not the same. This could be because a new config frame was received.
-            if ((object)metadataArray == null || metadataArray.Length != count)
+            if ((object)keyArray == null || keyArray.Length != count)
             {
-                metadataArray = new MeasurementMetadata[count];
-                m_generatedMeasurementMetadataCache[typeIndex] = metadataArray;
+                keyArray = new MeasurementKey[count];
+                m_generatedMeasurementKeyCache[typeIndex] = keyArray;
 
                 for (int x = 0; x < count; x++)
                 {
                     string signalReference = GetSignalReference(type, x, count);
-                    MeasurementMetadata metadata;
+                    MeasurementKey key;
 
-                    if (lookup.TryGetValue(signalReference, out metadata))
-                        metadataArray[x] = metadata;
+                    if (lookup.TryGetValue(signalReference, out key))
+                        keyArray[x] = key;
                 }
             }
 
-            return metadataArray[index];
+            return keyArray[index].Metadata;
         }
 
         /// <summary>

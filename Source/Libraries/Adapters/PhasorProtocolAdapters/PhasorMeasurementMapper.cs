@@ -140,7 +140,7 @@ namespace PhasorProtocolAdapters
         // Fields
         private MultiProtocolFrameParser m_frameParser;
         private IConfigurationFrame m_lastConfigurationFrame;
-        private Dictionary<string, MeasurementMetadata> m_definedMeasurements;
+        private Dictionary<string, MeasurementKey> m_definedMeasurements;
         private ConcurrentDictionary<ushort, DeviceStatisticsHelper<ConfigurationCell>> m_definedDevices;
         private ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>> m_labelDefinedDevices;
         private readonly ConcurrentDictionary<string, long> m_undefinedDevices;
@@ -187,7 +187,7 @@ namespace PhasorProtocolAdapters
         private long m_lifetimeMinimumLatency;
         private long m_lifetimeMaximumLatency;
         private long m_lifetimeLatencyFrames;
-        private MeasurementMetadata m_qualityFlagsMetadata;
+        private MeasurementKey m_qualityFlagsKey;
         private int m_lastMeasurementMappedCount = 4;
         private bool m_disposed;
 
@@ -1227,11 +1227,11 @@ namespace PhasorProtocolAdapters
         // Load active device measurements for this mapper connection
         private void LoadDeviceMeasurements()
         {
-            MeasurementMetadata definedMeasurement;
+            MeasurementKey definedMeasurement;
             Guid signalID;
             string signalReference;
 
-            Dictionary<string, MeasurementMetadata> definedMeasurements = new Dictionary<string, MeasurementMetadata>();
+            Dictionary<string, MeasurementKey> definedMeasurements = new Dictionary<string, MeasurementKey>();
 
             foreach (DataRow row in DataSourceLookups.GetLookupCache(DataSource).ActiveMeasurements.LookupByDeviceID(SharedMappingID))
             {
@@ -1247,7 +1247,7 @@ namespace PhasorProtocolAdapters
                         MeasurementKey key = MeasurementKey.LookUpOrCreate(signalID, row["ID"].ToString());
 
                         // Create a measurement with a reference associated with this adapter
-                        definedMeasurement = key.Metadata;
+                        definedMeasurement = key;
 
                         // Add measurement to definition list keyed by signal reference
                         if (!definedMeasurements.ContainsKey(signalReference))
@@ -1263,14 +1263,14 @@ namespace PhasorProtocolAdapters
             m_definedMeasurements = definedMeasurements;
 
             // Cache signal reference name for connected device quality flags - in normal usage, name will not change for adapter lifetime
-            definedMeasurements.TryGetValue(SignalReference.ToString(Name, SignalKind.Quality), out m_qualityFlagsMetadata);
+            definedMeasurements.TryGetValue(SignalReference.ToString(Name, SignalKind.Quality), out m_qualityFlagsKey);
 
             // Update output measurements that input adapter can provide such that it can participate in connect on demand
             if (definedMeasurements.Count > 0)
             {
-                Func<MeasurementMetadata, IMeasurement> converter = measurement => new Measurement()
+                Func<MeasurementKey, IMeasurement> converter = measurement => new Measurement()
                 {
-                    Metadata = measurement
+                    Metadata = measurement.Metadata
                 };
 
                 OutputMeasurements = definedMeasurements.Values.Select(converter).ToArray();
@@ -1686,7 +1686,7 @@ namespace PhasorProtocolAdapters
             }
 
             // Map quality flags (QF) from device frame, if any
-            MapMeasurementAttributes(mappedMeasurements, m_qualityFlagsMetadata, frame.GetQualityFlagsMeasurement());
+            MapMeasurementAttributes(mappedMeasurements, m_qualityFlagsKey?.Metadata, frame.GetQualityFlagsMeasurement());
 
             // Loop through each parsed device in the data frame
             foreach (IDataCell parsedDevice in frame.Cells)

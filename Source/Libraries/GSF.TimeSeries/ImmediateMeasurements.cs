@@ -305,7 +305,10 @@ namespace GSF.TimeSeries
 
             // Set new value updating state flags if value was updated...
             if (measurement.SetValue(newMeasurement.Timestamp, newMeasurement.Value))
+            {
+                measurement.Metadata = newMeasurement.Metadata;
                 measurement.StateFlags = newMeasurement.StateFlags;
+            }
         }
 
         /// <summary>Retrieves the specified immediate temporal measurement, creating it if needed.</summary>
