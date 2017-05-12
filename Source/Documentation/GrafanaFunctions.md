@@ -1,8 +1,24 @@
 # GSF Grafana Functions
 
-The Grafana interfaces defined in the Grid Solutions Framework allow for aggregation and operational functions on a per-series and per-set basis.
-The following defines the available functions that are available for a data source implementing the GSF Grafana interface, e.g., openHistorian.
-Note that each function can be used over a set of available series by prefixing the function name with `Set`.
+The Grafana interfaces defined in the Grid Solutions Framework allow for aggregation and operational functions on a per-series and per-set basis. The following defines the available functions that are available for a data source implementing the GSF Grafana interface, e.g., openHistorian.
+
+## Group Operations
+
+Each Grafana series function can be operated on in aggregate using a group operator prefix:
+
+### Set
+
+Series functions can operate over the set of defined series, producing a single result series, where the target function is executed over each series horizontally end-to-end by prefixing the function name with `Set`.
+
+* Example: `SetAverage(FILTER ActiveMeasurements WHERE SignalType='FREQ')`
+
+### Slice
+
+Series functions can operate over the set of defined series, producing a single result series, where the target function is executed over each series as group vertically per time-slice by prefixing the function name with `Slice`. When operating on a set of series data with slice function, a new required parameter for time tolerance will be introduced as the first parameter to the function. The parameter is a floating-point value that must be greater than or equal to zero that represents the desired time tolerance, in seconds, for the time slice.
+
+* Example: `SliceSum(0.0333, FILTER ActiveMeasurements WHERE SignalType='IPHM')`
+
+## Series Functions
 
 * [Average](#average)
 * [Minimum](#minimum)
@@ -307,14 +323,29 @@ calculated in hours, of the values in the source series.
 
 ## Interval
 
-Returns a series of values that represent a decimated set of the values in the source series based on the specified interval N, in seconds.
-N is a floating-point value that must be greater than or equal to zero that represents the desired time interval, in seconds, for the returned data.
-Setting N value to zero will request non-decimated, full resolution data from the data source. A zero value will always produce the most accurate
-aggregation calculation results but will increase query burden on data source for large time ranges.
+Returns a series of values that represent a decimated set of the values in the source series based on the specified interval N, in seconds. N is a floating-point value that must be greater than or equal to zero that represents the desired time interval, in seconds, for the returned data. Setting N value to zero will request non-decimated, full resolution data from the data source. A zero value will always produce the most accurate aggregation calculation results but will increase query burden on data source for large time ranges.
 
 * Signature: `Interval(N, expression)`
 * Example: `Sum(Interval(0, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHM'))`
 * Variants: `Interval`
+* Execution: Deferred enumeration
+
+## UnwrapAngle
+
+Returns a series of values that represent an adjusted set of angles that are unwrapped, per specified angle units, so that a comparable mathematical operation can be executed. For example, for angles that wrap between -180 and +180 degrees, this algorithm unwraps the values to make the values mathematically comparable. The units parameter, optional, specifies the type of angle units and must be one of the following: Degrees, Radians, Grads, ArcMinutes, ArcSeconds or AngularMil - defaults to Degrees.
+
+* Signature: `UnwrapAngle(units, expression)`
+* Example: `UnwrapAngle(Degrees, FSX_PMU2-PA1:VH; REA_PMU3-PA2:VH)`
+* Variants: `UnwrapAngle`
+* Execution: Immediate in-memory array load
+
+## WrapAngle
+
+Returns a series of values that represent an adjusted set of angles that are wrapped, per specified angle units, so that angle values are consistently between -180 and +180 degrees. The units parameter, optional, specifies the type of angle units and must be one of the following: Degrees, Radians, Grads, ArcMinutes, ArcSeconds or AngularMil - defaults to Degrees.
+
+* Signature: `WrapAngle(units, expression)`
+* Example: `WrapAngle(Radians, FILTER TOP 5 ActiveMeasurements WHERE SignalType LIKE '%PHA')`
+* Variants: `WrapAngle`
 * Execution: Deferred enumeration
 
 ## Label
@@ -322,6 +353,6 @@ aggregation calculation results but will increase query burden on data source fo
 Renames a series with the specified label value. If multiple series are targeted, labels will be indexed starting at one, e.g., if there are three series in the target expression with a label value of "Max", series would be labeled as "Max 1", "Max 2" and "Max 3".
 
 * Signature: `Label(value, expression)`
-* Example: `Label('AvgFreq', SetAvg(FILTER TOP 20 ActiveMeasurements WHERE SignalType LIKE 'FREQ'))`
+* Example: `Label('AvgFreq', SetAvg(FILTER TOP 20 ActiveMeasurements WHERE SignalType='FREQ'))`
 * Variants: `Label`, `Name`
 * Execution: Deferred enumeration
