@@ -314,7 +314,7 @@ aggregation calculation results but will increase query burden on data source fo
 
 * Signature: `Interval(N, expression)`
 * Example: `Sum(Interval(0, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHM'))`
-* Variants: `Interval`, `Int`
+* Variants: `Interval`
 * Execution: Deferred enumeration
 
 ## Label
