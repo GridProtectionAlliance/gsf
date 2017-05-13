@@ -14,7 +14,7 @@ Series functions can operate over the set of defined series, producing a single 
 
 ### Slice
 
-Series functions can operate over the set of defined series, producing a single result series, where the target function is executed over each series as a group, vertically, per time-slice by prefixing the function name with `Slice`. When operating on a set of series data with slice function, a new required parameter for time tolerance will be introduced as the first parameter to the function. The parameter is a floating-point value that must be greater than or equal to zero that represents the desired time tolerance, in seconds, for the time slice.
+Series functions can operate over the set of defined series, producing a single result series, where the target function is executed over each series as a group, vertically, per time-slice by prefixing the function name with `Slice`. When operating on a set of series data with a slice function, a new required parameter for time tolerance will be introduced as the first parameter to the function. The parameter is a floating-point value that must be greater than or equal to zero that represents the desired time tolerance, in seconds, for the time slice.
 
 * Example: `SliceSum(0.0333, FILTER ActiveMeasurements WHERE SignalType='IPHM')`
 
