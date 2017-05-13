@@ -8,13 +8,13 @@ Each Grafana series function can be operated on in aggregate using a group opera
 
 ### Set
 
-Series functions can operate over the set of defined series, producing a single result series, where the target function is executed over each series horizontally end-to-end by prefixing the function name with `Set`.
+Series functions can operate over the set of defined series, producing a single result series, where the target function is executed over each series, horizontally, end-to-end by prefixing the function name with `Set`.
 
 * Example: `SetAverage(FILTER ActiveMeasurements WHERE SignalType='FREQ')`
 
 ### Slice
 
-Series functions can operate over the set of defined series, producing a single result series, where the target function is executed over each series as group vertically per time-slice by prefixing the function name with `Slice`. When operating on a set of series data with slice function, a new required parameter for time tolerance will be introduced as the first parameter to the function. The parameter is a floating-point value that must be greater than or equal to zero that represents the desired time tolerance, in seconds, for the time slice.
+Series functions can operate over the set of defined series, producing a single result series, where the target function is executed over each series as a group, vertically, per time-slice by prefixing the function name with `Slice`. When operating on a set of series data with slice function, a new required parameter for time tolerance will be introduced as the first parameter to the function. The parameter is a floating-point value that must be greater than or equal to zero that represents the desired time tolerance, in seconds, for the time slice.
 
 * Example: `SliceSum(0.0333, FILTER ActiveMeasurements WHERE SignalType='IPHM')`
 
@@ -334,7 +334,7 @@ Returns a series of values that represent a decimated set of the values in the s
 
 Returns a series of values that represent an adjusted set of angles that are unwrapped, per specified angle units, so that a comparable mathematical operation can be executed. For example, for angles that wrap between -180 and +180 degrees, this algorithm unwraps the values to make the values mathematically comparable. The units parameter, optional, specifies the type of angle units and must be one of the following: Degrees, Radians, Grads, ArcMinutes, ArcSeconds or AngularMil - defaults to Degrees.
 
-* Signature: `UnwrapAngle(units, expression)`
+* Signature: `UnwrapAngle([units], expression)`
 * Example: `UnwrapAngle(Degrees, FSX_PMU2-PA1:VH; REA_PMU3-PA2:VH)`
 * Variants: `UnwrapAngle`
 * Execution: Immediate in-memory array load
@@ -343,7 +343,7 @@ Returns a series of values that represent an adjusted set of angles that are unw
 
 Returns a series of values that represent an adjusted set of angles that are wrapped, per specified angle units, so that angle values are consistently between -180 and +180 degrees. The units parameter, optional, specifies the type of angle units and must be one of the following: Degrees, Radians, Grads, ArcMinutes, ArcSeconds or AngularMil - defaults to Degrees.
 
-* Signature: `WrapAngle(units, expression)`
+* Signature: `WrapAngle([units], expression)`
 * Example: `WrapAngle(Radians, FILTER TOP 5 ActiveMeasurements WHERE SignalType LIKE '%PHA')`
 * Variants: `WrapAngle`
 * Execution: Deferred enumeration
