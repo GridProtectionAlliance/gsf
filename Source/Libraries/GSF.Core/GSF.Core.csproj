@@ -129,6 +129,7 @@
     <Compile Include="ComponentModel\DefaultValueExpressionAttribute.cs" />
     <Compile Include="Data\Model\NonRecordFieldAttribute.cs" />
     <Compile Include="Data\Model\ITableOperations.cs" />
+    <Compile Include="Data\Model\RootQueryRestrictionAttribute.cs" />
     <Compile Include="Data\Model\SearchableAttribute.cs" />
     <Compile Include="Data\Model\AmendExpressionAttribute.cs" />
     <Compile Include="Data\Model\UseEscapedNameAttribute.cs" />

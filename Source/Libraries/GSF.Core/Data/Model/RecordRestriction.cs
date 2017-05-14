@@ -133,6 +133,27 @@ namespace GSF.Data.Model
 
         #endregion
 
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets <see cref="Parameters"/> field value for the specified <paramref name="index"/>.
+        /// </summary>
+        /// <param name="index">Index into <see cref="Parameters"/> field array.</param>
+        /// <returns><see cref="Parameters"/> field value for the specified <paramref name="index"/>.</returns>
+        public object this[int index]
+        {
+            get
+            {
+                return Parameters[index];
+            }
+            set
+            {
+                Parameters[index] = value;
+            }
+        }
+
+        #endregion
+
         #region [ Operators ]
 
         /// <summary>
@@ -310,7 +331,7 @@ namespace GSF.Data.Model
 
             return new RecordRestriction($"({left.FilterExpression}) {operation} ({string.Format(right.FilterExpression, offsetArgs)})", parameters);
         }
-    }
 
-    #endregion
+        #endregion
+    }
 }

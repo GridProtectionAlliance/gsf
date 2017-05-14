@@ -97,6 +97,14 @@ namespace GSF.Data.Model
             get;
             set;
         }
+        /// <summary>
+        /// Gets or sets root record restriction that applies to query table operations.
+        /// </summary>
+        RecordRestriction RootQueryRestriction
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Creates a new modeled record instance, applying any modeled default values as specified by a

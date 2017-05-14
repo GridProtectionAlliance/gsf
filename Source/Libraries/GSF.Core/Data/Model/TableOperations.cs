@@ -77,6 +77,7 @@ namespace GSF.Data.Model
         private DataTable m_primaryKeyCache;
         private string m_lastSortField;
         private RecordRestriction m_lastRestriction;
+        private RecordRestriction m_rootQueryRestriction;
         private bool m_useCaseSensitiveFieldNames;
         private readonly string m_selectCountSql;
         private readonly string m_selectSetSql;
@@ -134,6 +135,7 @@ namespace GSF.Data.Model
             m_deleteSql = s_deleteSql;
             m_deleteWhereSql = s_deleteWhereSql;
             m_searchFilterSql = s_searchFilterSql;
+            m_rootQueryRestriction = s_rootQueryRestriction;
 
             // When any escape targets are defined for the modeled identifiers, i.e., table or field names,
             // the static SQL statements are defined with ANSI standard escape delimiters. We check if the
@@ -387,6 +389,21 @@ namespace GSF.Data.Model
             }
         }
 
+        /// <summary>
+        /// Gets or sets root record restriction that applies to query table operations.
+        /// </summary>
+        public RecordRestriction RootQueryRestriction
+        {
+            get
+            {
+                return m_rootQueryRestriction;
+            }
+            set
+            {
+                m_rootQueryRestriction = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -566,6 +583,9 @@ namespace GSF.Data.Model
 
             try
             {
+                if ((object)m_rootQueryRestriction != null)
+                    restriction = m_rootQueryRestriction + restriction;
+
                 if (limit < 1)
                 {
                     // No record limit specified
@@ -720,6 +740,9 @@ namespace GSF.Data.Model
 
                 try
                 {
+                    if ((object)m_rootQueryRestriction != null)
+                        restriction = m_rootQueryRestriction + restriction;
+
                     if ((object)restriction == null)
                     {
                         sqlExpression = string.Format(m_selectKeysSql, orderByExpression);
@@ -783,6 +806,9 @@ namespace GSF.Data.Model
 
             try
             {
+                if ((object)m_rootQueryRestriction != null)
+                    restriction = m_rootQueryRestriction + restriction;
+
                 if ((object)restriction == null)
                 {
                     sqlExpression = m_selectCountSql;
@@ -1677,6 +1703,7 @@ namespace GSF.Data.Model
         private static readonly Dictionary<DatabaseType, bool> s_escapedTableNameTargets;
         private static readonly Dictionary<string, Dictionary<DatabaseType, bool>> s_escapedFieldNameTargets;
         private static readonly List<Tuple<DatabaseType, TargetExpression, StatementTypes, AffixPosition, string>> s_expressionAmendments;
+        private static readonly RecordRestriction s_rootQueryRestriction;
         private static readonly string s_selectCountSql;
         private static readonly string s_selectSetSql;
         private static readonly string s_selectSetWhereSql;
@@ -1735,6 +1762,12 @@ namespace GSF.Data.Model
 
             if (typeof(T).TryGetAttributes(out amendExpressionAttributes))
                 s_expressionAmendments = DeriveExpressionAmendments(amendExpressionAttributes);
+
+            // Check for root query restriction
+            RootQueryRestrictionAttribute rootQueryRestrictionAttribute;
+
+            if (typeof(T).TryGetAttribute(out rootQueryRestrictionAttribute))
+                s_rootQueryRestriction = new RecordRestriction(rootQueryRestrictionAttribute.FilterExpression, rootQueryRestrictionAttribute.Parameters);
 
             s_properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(property => property.CanRead && property.CanWrite)
