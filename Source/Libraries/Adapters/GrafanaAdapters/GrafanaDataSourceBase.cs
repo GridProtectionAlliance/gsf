@@ -366,7 +366,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Signature: <c>UnwrapAngle(units, expression)</c><br/>
         /// Example: <c>UnwrapAngle(Degrees, FSX_PMU2-PA1:VH; REA_PMU3-PA2:VH)</c><br/>
-        /// Variants: UnwrapAngle<br/>
+        /// Variants: UnwrapAngle, Unwrap<br/>
         /// Execution: Immediate in-memory array load.
         /// </remarks>
         UnwrapAngle,
@@ -378,7 +378,7 @@ namespace GrafanaAdapters
         /// <remarks>
         /// Signature: <c>WrapAngle(units, expression)</c><br/>
         /// Example: <c>WrapAngle(Radians, FILTER TOP 5 ActiveMeasurements WHERE SignalType LIKE '%PHA')</c><br/>
-        /// Variants: WrapAngle<br/>
+        /// Variants: WrapAngle, Wrap<br/>
         /// Execution: Deferred enumeration.
         /// </remarks>
         WrapAngle,
@@ -908,8 +908,8 @@ namespace GrafanaAdapters
             s_derivativeExpression = new Regex(string.Format(GetExpression, "(Derivative|Der)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_timeIntegrationExpression = new Regex(string.Format(GetExpression, "(TimeIntegration|TimeInt)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_intervalExpression = new Regex(string.Format(GetExpression, "Interval"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_unwrapAngleExpression = new Regex(string.Format(GetExpression, "Unwrap"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            s_wrapAngleExpression = new Regex(string.Format(GetExpression, "Wrap"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_unwrapAngleExpression = new Regex(string.Format(GetExpression, "(UnwrapAngle|Unwrap)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_wrapAngleExpression = new Regex(string.Format(GetExpression, "(WrapAngle|Wrap)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
             s_labelExpression = new Regex(string.Format(GetExpression, "(Label|Name)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
             // Define required parameter counts for each function
