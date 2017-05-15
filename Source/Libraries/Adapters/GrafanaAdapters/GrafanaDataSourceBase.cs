@@ -802,7 +802,7 @@ namespace GrafanaAdapters
                         // Flatten all series into a single enumerable
                         yield return new DataSourceValueGroup
                         {
-                            Target = $"Set{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{targetExpression})",
+                            Target = $"Slice{seriesFunction}({string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{targetExpression})",
                             Source = ExecuteSeriesFunctionOverTimeSlices(scanner, seriesFunction, parameters)
                         };
 
@@ -824,7 +824,8 @@ namespace GrafanaAdapters
         {
             // Execute series function over a set of points from each series at the same time-slice
             while (!scanner.DataReadComplete)
-                yield return ExecuteSeriesFunctionOverSource(scanner.ReadNextTimeSlice(), seriesFunction, parameters).FirstOrDefault();
+                foreach (DataSourceValue dataValue in ExecuteSeriesFunctionOverSource(scanner.ReadNextTimeSlice(), seriesFunction, parameters))
+                    yield return dataValue;
         }
 
         #endregion
