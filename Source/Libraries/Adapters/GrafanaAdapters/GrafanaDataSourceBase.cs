@@ -1602,7 +1602,7 @@ namespace GrafanaAdapters
 
                     values = source.ToArray();
 
-                    foreach (DataSourceValue dataValue in Angle.Unwrap(values.Select(dataValue => GetAngleValue(dataValue.Value, angleUnits))).Select((angle, index) => new DataSourceValue { Value = angle, Time = values[index].Time, Target = values[index].Target }))
+                    foreach (DataSourceValue dataValue in Angle.Unwrap(values.Select(dataValue => FromAngleValue(dataValue.Value, angleUnits))).Select((angle, index) => new DataSourceValue { Value = ToAngleValue(angle, angleUnits), Time = values[index].Time, Target = values[index].Target }))
                         yield return dataValue;
 
                     break;
@@ -1610,14 +1610,14 @@ namespace GrafanaAdapters
                     if (parameters.Length == 0 || !Enum.TryParse(parameters[0], true, out angleUnits))
                         angleUnits = AngleUnits.Degrees;
 
-                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = GetAngleValue(dataValue.Value, angleUnits).ToRange(-Math.PI, false), Time = dataValue.Time, Target = dataValue.Target }))
+                    foreach (DataSourceValue dataValue in source.Select(dataValue => new DataSourceValue { Value = ToAngleValue(FromAngleValue(dataValue.Value, angleUnits).ToRange(-Math.PI, false), angleUnits), Time = dataValue.Time, Target = dataValue.Target }))
                         yield return dataValue;
 
                     break;
             }
         }
 
-        private static Angle GetAngleValue(double value, AngleUnits units)
+        private static Angle FromAngleValue(double value, AngleUnits units)
         {
             switch (units)
             {
@@ -1633,6 +1633,27 @@ namespace GrafanaAdapters
                     return Angle.FromArcSeconds(value);
                 case AngleUnits.AngularMil:
                     return Angle.FromAngularMil(value);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(units), units, null);
+            }
+        }
+
+        private static double ToAngleValue(Angle value, AngleUnits units)
+        {
+            switch (units)
+            {
+                case AngleUnits.Radians:
+                    return value;
+                case AngleUnits.Degrees:
+                    return value.ToDegrees();
+                case AngleUnits.Grads:
+                    return value.ToGrads();
+                case AngleUnits.ArcMinutes:
+                    return value.ToArcMinutes();
+                case AngleUnits.ArcSeconds:
+                    return value.ToArcSeconds();
+                case AngleUnits.AngularMil:
+                    return value.ToAngularMil();
                 default:
                     throw new ArgumentOutOfRangeException(nameof(units), units, null);
             }
